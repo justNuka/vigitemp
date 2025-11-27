@@ -2,9 +2,7 @@
 
 import SideBar from "@/app/components/sideBarMetrology";
 import CardAlarm from '@/app/components/card-alarm';
-import { HiOutlineViewGrid } from "react-icons/hi";
-
-import { PiList } from "react-icons/pi";
+import { Grid3x3, List } from "lucide-react";
 
 // import { useHorizontalScroll } from "@/app/libs/utils_client";
 import { scrollHorizontally } from "@/app/libs/utils_client";
@@ -169,7 +167,7 @@ export default function Alarmes() {
                                 key="carousel" 
                                 title={
                                     <div className="flex items-center space-x-2">
-                                        <HiOutlineViewGrid size={20} color='dimgray'/>
+                                        <Grid3x3 size={20} color='dimgray'/>
                                     </div>
                                 } 
                             />
@@ -178,7 +176,7 @@ export default function Alarmes() {
                                 key="liste" 
                                 title={
                                     <div className="flex items-center space-x-2">
-                                        <PiList size={20} color='dimgray'/>
+                                        <List size={20} color='dimgray'/>
                                     </div>
                                 } 
                             />

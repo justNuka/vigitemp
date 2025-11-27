@@ -1,10 +1,11 @@
 'use client'
 import { Button, Skeleton } from "@heroui/react";
 import axios from "axios";
-import React, { useEffect, useState } from "react";
-import { Area, AreaChart, CartesianGrid, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import React, { useEffect, useState, useRef } from "react";
+import { Line } from "react-chartjs-2";
+import { getFullScreenOptions } from "@/app/libs/chartjs-config";
 import {customActiveDotGraph} from "./customActiveDotGraph";
-import { RxShare2 } from "react-icons/rx";
+import { Share2 } from "lucide-react";
 import {ZonedDateTime, fromDate} from "@internationalized/date";
 import { ZonedDateTimeToString } from "@/app/libs/utils_client";
 
@@ -58,42 +59,18 @@ export default function MonitoringGraphFullScreenZoomRefineCleanUp(this: any, { 
     const [YaxisMin, setYaxisMin] = useState<number>(0);
     const [YaxisMax, setYaxisMax] = useState<number>(0);
 
-    const [zoomState, setZoomState] = useState({
-        data: [] as type_Data[],
-        left: '',
-        right: '',
-        refAreaLeft: ''!,
-        refAreaRight: ''!
-    });
-    // const [zoomState, setZoomState] = useState<{
-    //     data: type_Data[];
-    //     left: string;
-    //     right: string;
-    //     refAreaLeft: string;
-    //     refAreaRight: string;
-    // }>({
-    //     data: [],
-    //     left: 'undefined',
-    //     right: 'undefined',
-    //     refAreaLeft: 'undefined',
-    //     refAreaRight: 'undefined'
-    // });
+    const [displayData, setDisplayData] = useState<type_Data[]>([]);
+    const chartRef = useRef<any>(null);
 
     useEffect(()=>{
         console.log("useeffect initiale")
         fetchData();
     }, [])
 
-    // useEffect(()=>{
-    //     updateGraphic();
-    // }, [data])
-
     useEffect(()=>{
-        console.log("useeffect zoomState.data")
-        // console.log(zoomState.data)
+        console.log("useeffect displayData")
         updateGraphic();
-        // fetchData();
-    }, [zoomState.data])
+    }, [displayData])
 
     useEffect(()=>{
         // console.log(eventHistory)
@@ -404,7 +381,7 @@ export default function MonitoringGraphFullScreenZoomRefineCleanUp(this: any, { 
                                         className='transition-colors-opacity m-3 p-2 min-w-14 max-w-17 min-h-14 max-h-14 rounded-full bg-white border-[#d6d6d6] border-1'
                                         disableRipple
                                         startContent={
-                                            <RxShare2  size={25}/>
+                                            <Share2  size={25}/>
                                         }
                                         onPress={() => {}}
                                     />

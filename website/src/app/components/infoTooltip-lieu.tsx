@@ -3,7 +3,7 @@
 import { Button, Modal, ModalBody, ModalContent, ModalHeader, Tooltip, useDisclosure } from '@heroui/react';
 import React from 'react';
 // import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { GoInfo } from "react-icons/go";
+import { Info } from "lucide-react";
 
 
 
@@ -64,7 +64,7 @@ const InfoTooltipLieu: React.FC<InfoTooltipProps> = ({ moduleName, sondeName }) 
                     className='px-2 mx-0 min-w-24 min-h-10 bg-transparent'
                     disableRipple
                     startContent={
-                        <GoInfo size={26} color="black"/>
+                        <Info size={26} color="black"/>
                     }
                     onPress={() => handleOpen()}
 

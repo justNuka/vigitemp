@@ -1,14 +1,10 @@
 'use client'
 import { Skeleton } from "@heroui/react";
 import axios from "axios";
-import React, { useEffect, useState } from "react";
-import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import CustomTooltip from "./customTooltipGraph";
-import { FaRegSnowflake } from "react-icons/fa";
-import { TiHomeOutline } from "react-icons/ti";
-import { CgSmartHomeRefrigerator } from "react-icons/cg";
-import { TbWashTemperature1 } from "react-icons/tb";
-import { PiOven, PiThermometerHotFill } from "react-icons/pi";
+import React, { useEffect, useState, useRef } from "react";
+import { Line } from "react-chartjs-2";
+import { getDefaultMonitoringOptions } from "@/app/libs/chartjs-config";
+import { Snowflake, Home, Refrigerator, Thermometer, Microwave, ThermometerSun } from "lucide-react";
 import { EtuveIcon } from "./svg/EtuveIcon";
 import { useTransitionRouter } from "next-view-transitions";
 
@@ -29,19 +25,14 @@ export default function MonitoringGraph({ idLieu, NomLieu } : {
     idLieu:string,
     NomLieu:string,
 }){
-    // const mountedRef = useRef(true);
-    const [containerWidth, setcontainerWidth] = useState<number>();
+    const chartRef = useRef<any>(null);
 
     const [data, setData] = useState<type_Data[]>([]);
     const [isDataLoaded, setDataLoaded] = useState<boolean>(false);
-    // const [dataType, setdataType] = useState<string>();
     const [dataXaxis, setdataXaxis] = useState<string[]>([]);
     const [consigneSup, setconsigneSup] = useState<number>();
     const [consigneInf, setconsigneInf] = useState<number>();
     const [unite, setUnite] = useState<string>("");
-
-    // const [ip, setIp] = useState<string>("");
-    // const [isNotified, setNotified] = useState<boolean>(false);
     const [typeLieu, setTypeLieu] = useState<string>("");
 
     const [YaxisMin, setYaxisMin] = useState<number>(0);
@@ -188,31 +179,31 @@ export default function MonitoringGraph({ idLieu, NomLieu } : {
 
     
 
-    // useEffect(() => {
-    //     if (isDataLoaded){   
-    //         if (isNotified){
-    //             toast.success("Vous recevrez les alertes concernant le lieu " + NomLieu, {
-    //                 position: "top-center",
-    //                 duration:3000,
-    //                 style:{
-    //                     background:"#E6FAF0",
-    //                     color: "#1A8853",
-    //                     border: "#1A8853"
-    //                 }
-    //             });
-    //         } else if(!isNotified){
-    //             toast.success("Vous ne recevrez plus les alertes concernant le lieu " + NomLieu, {
-    //                 position: "top-center",
-    //                 duration:3000,
-    //                 style:{
-    //                     background:"#E6FAF0",
-    //                     color: "#1A8853",
-    //                     border: "#1A8853"
-    //                 }
-    //             });
-    //         }         // ← the trick
-    //     }
-    // }, [isNotified])
+    // Préparer les données pour Chart.js
+    const chartData = {
+        labels: data.map(d => d.DateHeureMesure),
+        datasets: [
+            {
+                label: 'Température',
+                data: data.map(d => d.Valeur),
+                borderColor: '#FFBD50',
+                backgroundColor: (context: any) => {
+                    const ctx = context.chart.ctx;
+                    const gradient = ctx.createLinearGradient(0, 0, 0, context.chart.height);
+                    gradient.addColorStop(0, 'rgba(255, 189, 80, 0.1)');
+                    gradient.addColorStop(1, 'rgba(255, 189, 80, 0)');
+                    return gradient;
+                },
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+            },
+        ],
+    };
+
+    const chartOptions = getDefaultMonitoringOptions(unite, YaxisMin, YaxisMax);
 
     const router = useTransitionRouter();
     return (
@@ -226,13 +217,13 @@ export default function MonitoringGraph({ idLieu, NomLieu } : {
                             </div>
                             <div className="absolute flex text-center items-center align-middle justify-center h-full w-[20%] right-0 top-0 rounded-tr-lg rounded-l-lg transition-background">
                             
-                            {(typeLieu == "AMBIANCE")? <TiHomeOutline size={24} title="Ambiance"/>:""}
-                            {(typeLieu == "RÉFRIGÉRATEUR_CONGÉLATEUR")? <CgSmartHomeRefrigerator size={24} title="Réfrigérateur/Congélateur"/>:""}
+                            {(typeLieu == "AMBIANCE")? <div title="Ambiance"><Home size={24} /></div>:""}
+                            {(typeLieu == "RÉFRIGÉRATEUR_CONGÉLATEUR")? <div title="Réfrigérateur/Congélateur"><Refrigerator size={24} /></div>:""}
                             {/* {(typeLieu == "ÉTUVE_ENCEINTE_CLIMATIQUE")? <div title="Étuve/Enceinte climatique"><EtuveIcon size={24} /></div>:""} */}
-                            {(typeLieu == "ÉTUVE_ENCEINTE_CLIMATIQUE")? <PiThermometerHotFill  size={24} title="Étuve/Enceinte climatique"/>:""}
-                            {(typeLieu == "CHAMBRE_FROIDE")? <FaRegSnowflake size={22} title="Chambre froide"/>:""}
-                            {(typeLieu == "BAIN_MARIE_CUVE")? <TbWashTemperature1 size={24} title="Bain marie/Cuve"/>:""}
-                            {(typeLieu == "FOUR")? <PiOven  size={24} title="Four"/>:""}
+                            {(typeLieu == "ÉTUVE_ENCEINTE_CLIMATIQUE")? <div title="Étuve/Enceinte climatique"><ThermometerSun  size={24} /></div>:""}
+                            {(typeLieu == "CHAMBRE_FROIDE")? <div title="Chambre froide"><Snowflake size={22} /></div>:""}
+                            {(typeLieu == "BAIN_MARIE_CUVE")? <div title="Bain marie/Cuve"><Thermometer size={24} /></div>:""}
+                            {(typeLieu == "FOUR")? <div title="Four"><Microwave  size={24} /></div>:""}
                              
                             {/* onClick={() =>{
                             //     if(!isNotified == true){
@@ -275,42 +266,72 @@ export default function MonitoringGraph({ idLieu, NomLieu } : {
                             </div> */}
                         </div>
                         
-                        <ResponsiveContainer id={'container-'+idLieu} width="100%" height="100%" className="absolute top-0 left-0 w-full h-full object-cover pt-12"
-                            onResize={() =>{
-                                var container = document.getElementById("container-" + idLieu)
-                                if (container){
-                                    // console.log(data)
-                                    setcontainerWidth(container.offsetWidth)
-                                }
-                            }}
-                        >
-                            
-                            <AreaChart width={730} height={250} data={data} margin={{ top: 0, left: -5, right: 40, bottom: 0 }} className="font-mono">
-                                <defs>
-                                    <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#FFBD50" stopOpacity={0.1}/>
-                                    <stop offset="100%" stopColor="#FFBD50" stopOpacity={0}/>
-                                    </linearGradient>
-                                </defs>
-                                <XAxis dataKey="DateHeureMesure" interval={0} allowDuplicatedCategory={true} tick={{ dx: 5 }} tickMargin={30} angle={-90} mirror axisLine={false} padding="no-gap"  tickFormatter={(tick, index)=> {return (dataXaxis[index] != '00/00')?dataXaxis[index]:''}} />
-                                <YAxis hide type='number' domain={[() => YaxisMin,() => YaxisMax]}/>
-                                <CartesianGrid strokeDasharray="5 5"  horizontal={false} vertical ={false} />
-                                <Tooltip  
-                                    content={<CustomTooltip/>}
-                                    position={{x:(containerWidth)?containerWidth-140:0,y:0}}
-                                    defaultIndex={data.length-1}
-                                    isAnimationActive={false}
-                                    // cursor={<Rectangle fill="red" stroke="red" x={xMouse} y={50} width={50} height={50} /> }
-                                    active={true}
-                                    // cursor={<CustomCursor activeDotPos={activeDotPos}/>}
-                                    
-                                    // allowEscapeViewBox={{x:false, y:false}}
-                                />
-                                <Area type="monotone" dataKey="Valeur" stroke="#FFBD50" strokeWidth={2} fillOpacity={1} fill="url(#colorUv)" />
-                                <ReferenceLine y={consigneInf} label={{value: consigneInf+ unite, dy:-12,dx:10, position:'insideLeft'}} stroke="red" strokeDasharray="3 4"/>
-                                <ReferenceLine y={consigneSup} label={{value: consigneSup+ unite, dy:-12,dx:10, position:'insideLeft'}} stroke="red" strokeDasharray="3 4"/>
-                            </AreaChart>
-                        </ResponsiveContainer>
+                        <div className="absolute top-0 left-0 w-full h-full pt-12 px-4 pb-4">
+                            <Line 
+                                ref={chartRef}
+                                data={chartData} 
+                                options={{
+                                    ...chartOptions,
+                                    scales: {
+                                        ...chartOptions.scales,
+                                        x: {
+                                            ...chartOptions.scales?.x,
+                                            ticks: {
+                                                ...chartOptions.scales?.x?.ticks,
+                                                callback: (value, index) => {
+                                                    return dataXaxis[index] !== '00/00' ? dataXaxis[index] : '';
+                                                },
+                                            },
+                                        },
+                                    },
+                                    plugins: {
+                                        ...chartOptions.plugins,
+                                        annotation: {
+                                            annotations: {
+                                                consigneInf: {
+                                                    type: 'line',
+                                                    yMin: consigneInf,
+                                                    yMax: consigneInf,
+                                                    borderColor: 'red',
+                                                    borderWidth: 2,
+                                                    borderDash: [3, 4],
+                                                    label: {
+                                                        display: true,
+                                                        content: `${consigneInf}${unite}`,
+                                                        position: 'start',
+                                                        backgroundColor: 'transparent',
+                                                        color: 'red',
+                                                        padding: 4,
+                                                        font: {
+                                                            size: 11,
+                                                        },
+                                                    },
+                                                },
+                                                consigneSup: {
+                                                    type: 'line',
+                                                    yMin: consigneSup,
+                                                    yMax: consigneSup,
+                                                    borderColor: 'red',
+                                                    borderWidth: 2,
+                                                    borderDash: [3, 4],
+                                                    label: {
+                                                        display: true,
+                                                        content: `${consigneSup}${unite}`,
+                                                        position: 'start',
+                                                        backgroundColor: 'transparent',
+                                                        color: 'red',
+                                                        padding: 4,
+                                                        font: {
+                                                            size: 11,
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                }} 
+                            />
+                        </div>
                         
                     </>
                     :  

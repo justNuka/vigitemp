@@ -1,6 +1,5 @@
 import { BreadcrumbItem, Breadcrumbs, Button, Chip, Divider } from "@heroui/react";
-import { IoFilterOutline } from 'react-icons/io5';
-import { IoMdCloseCircle } from "react-icons/io";
+import { Filter as FilterIcon, XCircle } from 'lucide-react';
 import { useEffect, useLayoutEffect, useState } from "react";
 import axios from "axios";
 
@@ -158,8 +157,8 @@ export default function GroupFilter(this: any, {GroupsLieuxIDs, selectedGroups, 
                             size="lg"
                             radius="md" 
                             variant='flat' 
-                            endContent =  {<IoMdCloseCircle color="#FF7D00"/>}
-                            // endContent =  {<IoMdCloseCircle color="#808080"/>}
+                            endContent =  {<XCircle color="#FF7D00"/>}
+                            // endContent =  {<XCircle color="#808080"/>}
                             onClose={()=>removeGroupToFilters(group)}
                             className="ml-2"
                             classNames={{
@@ -175,7 +174,7 @@ export default function GroupFilter(this: any, {GroupsLieuxIDs, selectedGroups, 
                     size="lg"
                     radius="full" 
                     variant='flat' 
-                    endContent =  {<IoMdCloseCircle color="#FE6862"/>}
+                    endContent =  {<XCircle color="#FE6862"/>}
                     onClose={()=>{}}
                     className=""
                     classNames={{
@@ -201,7 +200,7 @@ export default function GroupFilter(this: any, {GroupsLieuxIDs, selectedGroups, 
                         size="lg"
                         radius="md" 
                         variant='flat' 
-                        endContent =  {<IoMdCloseCircle color="#75D0E6"/>}
+                        endContent =  {<XCircle color="#75D0E6"/>}
                         onClose={()=>addGroupToFilters(group)}
                         classNames={{
                             base: "bg-white outline-1 outline outline-[#d6d6d6] text-small text-black",

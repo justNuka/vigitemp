@@ -1,10 +1,11 @@
 'use client'
 import { Button, Skeleton } from "@heroui/react";
 import axios from "axios";
-import React, { useEffect, useState } from "react";
-import { Area, AreaChart, CartesianGrid, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import React, { useEffect, useState, useRef } from "react";
+import { Line } from "react-chartjs-2";
+import { getFullScreenOptions } from "@/app/libs/chartjs-config";
 import {customActiveDotGraph} from "./customActiveDotGraph";
-import { RxShare2 } from "react-icons/rx";
+import { Share2 } from "lucide-react";
 import {ZonedDateTime, fromDate} from "@internationalized/date";
 import { ZonedDateTimeToString } from "@/app/libs/utils_client";
 
@@ -52,13 +53,8 @@ export default function MonitoringGraphFullScreen(this: any, { idLieu, NomLieu, 
     const [YaxisMin, setYaxisMin] = useState<number>(0);
     const [YaxisMax, setYaxisMax] = useState<number>(0);
 
-    const [zoomState, setZoomState] = useState({
-        data: data.slice(),
-        left: '',
-        right: '',
-        refAreaLeft: ''!,
-        refAreaRight: ''!
-      });
+    const [displayData, setDisplayData] = useState<type_Data[]>([]);
+    const chartRef = useRef<any>(null);
 
     useEffect(()=>{
         console.log(eventHistory)
@@ -69,31 +65,31 @@ export default function MonitoringGraphFullScreen(this: any, { idLieu, NomLieu, 
     }, [eventHistory])
 
     useEffect(()=>{
-        console.log(zoomState.data)
+        console.log(displayData)
         
-    }, [zoomState.data])
+    }, [displayData])
 
 
-    function updateXaxisLabels(){
+    function updateXaxisLabels(dataToProcess: type_Data[]){
         var firstXaxisShift:boolean; // en fonction du nombres de tick, décalage du premier label pour pas qu'il soit coupé par le bord de la div
-        if (zoomState.data.length != data.length && zoomState.data.length < 150){
+        if (dataToProcess.length != data.length && dataToProcess.length < 150){
             firstXaxisShift = false;
         } else {
             firstXaxisShift = true;
         }
 
-        if (Array.isArray(zoomState.data)) {                
-            if (zoomState.data.length > 0){
+        if (Array.isArray(dataToProcess)) {                
+            if (dataToProcess.length > 0){
 
-                // console.log(zoomState.data);
+                // console.log(dataToProcess);
                 var tmp_xAxis:string[] = [];
                 var dateFormatee;
-                for(let mesure of zoomState.data){
+                for(let mesure of dataToProcess){
                     dateFormatee = (new Date(mesure.DateHeureMesure).getDate() < 10 ? '0' : '') + new Date(mesure.DateHeureMesure).getDate() + "/" + (new Date(mesure.DateHeureMesure).getMonth()+1 < 10 ? '0' : '') + (new Date(mesure.DateHeureMesure).getMonth()+1).toString()
                     // console.log(Math.ceil(tmp_arrayData.length/5));
-                    if(zoomState.data.length>0){
+                    if(dataToProcess.length>0){
                         if (firstXaxisShift) {
-                            if (!tmp_xAxis.includes(dateFormatee) && tmp_xAxis.length > Math.ceil(zoomState.data.length/100)){
+                            if (!tmp_xAxis.includes(dateFormatee) && tmp_xAxis.length > Math.ceil(dataToProcess.length/100)){
                                 // console.log("longueur: " + tmp_xAxis.length)
                                 // if (!tmp_xAxis.includes(dateFormatee)){
                                 tmp_xAxis.push(dateFormatee);
@@ -257,79 +253,16 @@ export default function MonitoringGraphFullScreen(this: any, { idLieu, NomLieu, 
 
     useEffect(() => {
         if(data.length > 0 ){
-            setZoomState((prevState) => ({
-                ...prevState,
-                data: data.slice(),
-                refAreaLeft: '',
-                refAreaRight: '',
-                left: data[0].DateHeureMesure,
-                right: data[data.length-2].DateHeureMesure
-            }));
+            setDisplayData(data.slice());
+            updateXaxisLabels(data);
         }
         
     }, [data]); // Only run when data changes
 
-    useEffect(() => {
-        // console.log(zoomState);
-        updateXaxisLabels();
-
-    }, [zoomState]); // Only run when data changes
-
-    function zoom() {
-        setAnimation(false);
-        var { refAreaLeft, refAreaRight } = zoomState;
-        const { data } = zoomState;
-    
-        if (refAreaLeft === refAreaRight || refAreaRight === '') {
-            setZoomState(prevState => ({ 
-                ...prevState,
-                refAreaLeft: '',
-                refAreaRight: '',
-            }))
-            return;
-        }
-    
-        // xAxis domain
-        if (refAreaLeft > refAreaRight) [refAreaLeft, refAreaRight] = [refAreaRight, refAreaLeft];
-    
-        // yAxis domain
-        var finderStart:number = data.findIndex(obj => obj.DateHeureMesure === refAreaLeft);
-        if (finderStart === -1) finderStart = 0;
-
-        var finderEnd:number = data.findIndex(obj => obj.DateHeureMesure === refAreaRight);
-        if (finderEnd === -1) finderEnd = data.length - 1;
-    
-        setZoomState({
-            data: data.slice(finderStart, finderEnd+1),
-            left: refAreaLeft,
-            right: refAreaRight,
-            refAreaLeft: '',
-            refAreaRight: ''
-        });
-    }
-    
     function zoomOut() {
-        setAnimation(false);
-        // const { data } = zoomState;
-        setZoomState(() => ({
-            data: data.slice(),
-            left: data[0].DateHeureMesure,
-            right: data[data.length-1].DateHeureMesure,
-            refAreaLeft: '',
-            refAreaRight: ''
-        }));
-    }
-
-    function glassEffect() {
-    setAnimation(false);
-    // const { data } = zoomState;
-    setZoomState(() => ({
-        data: data.slice(),
-        left: data[0].DateHeureMesure,
-        right: data[data.length-1].DateHeureMesure,
-        refAreaLeft: '',
-        refAreaRight: ''
-    }));
+        if (chartRef.current) {
+            chartRef.current.resetZoom();
+        }
     }
 
 
@@ -340,7 +273,7 @@ export default function MonitoringGraphFullScreen(this: any, { idLieu, NomLieu, 
             {isDataLoaded
             ? 
                 <>  
-                    {zoomState.data.length == 0 || data.length == 0
+                    {displayData.length == 0 || data.length == 0
                     ? 
                         <>
                             <div className="rounded-lg absolute h-full w-full">
@@ -382,7 +315,7 @@ export default function MonitoringGraphFullScreen(this: any, { idLieu, NomLieu, 
                                         className='transition-colors-opacity m-3 p-2 min-w-14 max-w-17 min-h-14 max-h-14 rounded-full bg-white border-[#d6d6d6] border-1'
                                         disableRipple
                                         startContent={
-                                            <RxShare2  size={25}/>
+                                            <Share2  size={25}/>
                                         }
                                         onPress={() => {}}
                                     />
@@ -391,84 +324,47 @@ export default function MonitoringGraphFullScreen(this: any, { idLieu, NomLieu, 
                                 ''
                             }                   
                             
-                            <ResponsiveContainer  debounce={200} id={'container-'+idLieu} width="100%" height="100%" className="absolute overflow-hidden top-0 left-0 w-full h-full object-cover">
-                                
-                                <AreaChart width={730} height={250} data={zoomState.data} margin={{ top: 0, left: 0, right: 40, bottom: 0 }} className="font-mono overflow-visible"
-                                    onMouseDown={(e) => setZoomState(prevState => ({ 
-                                        ...prevState,
-                                        refAreaLeft: e.activeLabel || ''
-                                    }))}
-                                    onMouseMove={(e) => zoomState.refAreaLeft && setZoomState(prevState => ({
-                                        ...prevState,
-                                        refAreaRight: e.activeLabel || ''
-                                    }))}
-                                    // eslint-disable-next-line react/jsx-no-bind
-                                    onMouseUp={zoom.bind(this)}
-                                >
-                                    <defs>
-                                        <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#FFBD50" stopOpacity={0.1}/>
-                                            <stop offset="100%" stopColor="#FFBD50" stopOpacity={0}/>
-                                        </linearGradient>
-                                    </defs>
-                                    <XAxis dataKey="DateHeureMesure" interval={0} allowDuplicatedCategory={true} allowDataOverflow={false} tick={{ dx: 5 }} tickMargin={30} angle={-90} mirror axisLine={false} padding="no-gap"  tickFormatter={(tick, index)=> {return (dataXaxis[index] != '00/00')?dataXaxis[index]:''}} />
-                                    <YAxis hide type='number' domain={[() => YaxisMin,() => YaxisMax]}/>
-                                    <CartesianGrid strokeDasharray="5 5"  horizontal={false} vertical ={false} />
-                                    <Tooltip  
-                                        content={() => null}
-                                        // position={{x:(containerWidth)?containerWidth-140:0,y:0}}
-                                        defaultIndex={data.length-1}
-                                        isAnimationActive={false}
-                                        // cursor={<Rectangle fill="red" stroke="red" x={xMouse} y={50} width={50} height={50} /> }
-                                        active={true}
-                                        // cursor={<CustomCursor activeDotPos={activeDotPos}/>}
-                                        
-                                        // allowEscapeViewBox={{x:false, y:false}}
-                                    />
-                                    
-                                    <ReferenceLine y={consigneInf} label={{value: consigneInf+ unite, dy:-12,dx:10, position:'insideLeft'}} stroke="red" strokeDasharray="3 4"/>
-                                    <ReferenceLine y={consigneSup} label={{value: consigneSup+ unite, dy:-12,dx:10, position:'insideLeft'}} stroke="red" strokeDasharray="3 4"/>
-                                    {eventHistory[0] != undefined && eventHistory[0].startDate != undefined && eventHistory[0].endDate != undefined ? (
-                                        <ReferenceArea x1={eventHistory[0].startDate} x2={eventHistory[0].endDate} opacity={0.2} fill="#49aee0" strokeOpacity={1} strokeWidth={1}/>
-                                    ) : null}
-
-
-                                    {eventHistory[0] != undefined && eventHistory[0].startDate != "" && eventHistory[0].endDate == ""
-                                    ? (
-                                        <div>
-                                            <ReferenceLine x={eventHistory[0].startDate} stroke="red" strokeDasharray="3 4"/>
-                                            <ReferenceLine x={"2025-03-10 11:24:00.874"} stroke="red" strokeDasharray="3 4">
-
-                                            </ReferenceLine>
-                                            <ReferenceLine x={"2025-03-10T07:27:30.453Z"} stroke="red" strokeDasharray="3 4"/>
-                                        </div>
-                                        
-                                    ) : null}
-                                    
-                                    {/* <ReferenceLine x={"2025-03-10T10:24:00.874Z"} stroke="red" segment={[{x:15,y:25}]} ifOverflow="visible">
-                                        <YAxis height={50}/>
-                                    </ReferenceLine> */}
-                                    
-                                    <Area type="monotone" dataKey="Valeur" stroke="#FFBD50" strokeWidth={2} fillOpacity={1} fill="url(#colorUv)" activeDot={customActiveDotGraph} isAnimationActive={isAnimated}/>
-
-
-                                    {zoomState.refAreaLeft && zoomState.refAreaRight ? (
-                                        <ReferenceArea x1={zoomState.refAreaLeft} x2={zoomState.refAreaRight} opacity={0.2} fill="#49aee0" strokeOpacity={1} strokeWidth={1}/>
-                                    ) : null}
-                                </AreaChart>
-                            </ResponsiveContainer>
+                            <div className="absolute overflow-hidden top-0 left-0 w-full h-full object-cover">
+                                <Line 
+                                    ref={chartRef}
+                                    data={{
+                                        labels: displayData.map(d => d.DateHeureMesure),
+                                        datasets: [{
+                                            label: 'Température',
+                                            data: displayData.map(d => d.Valeur),
+                                            borderColor: '#FFBD50',
+                                            backgroundColor: (context: any) => {
+                                                const ctx = context.chart.ctx;
+                                                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                                                gradient.addColorStop(0.05, 'rgba(255, 189, 80, 0.1)');
+                                                gradient.addColorStop(1, 'rgba(255, 189, 80, 0)');
+                                                return gradient;
+                                            },
+                                            borderWidth: 2,
+                                            fill: true,
+                                            tension: 0.4,
+                                            pointRadius: 0,
+                                            pointHoverRadius: 6,
+                                            pointHoverBackgroundColor: '#FFBD50',
+                                            pointHoverBorderColor: '#fff',
+                                            pointHoverBorderWidth: 2
+                                        }]
+                                    }}
+                                    options={getFullScreenOptions(unite, YaxisMin, YaxisMax, consigneInf, consigneSup, true)}
+                                />
+                            </div>
 
                             <div className="absolute left-full -translate-x-full text-right py-3 px-4 font-mono">
                                 <div className="flex items-center justify-end whitespace-nowrap">
                                     <Button 
                                         size='sm'
-                                        className={`${zoomState.data.length != data.length?'opacity-100 pointer-events-auto':'opacity-0 pointer-events-none'} transition-opacity min-w-14 max-w-17 z-50 rounded-full text-[0.90rem] bg-white border-[#d6d6d6] border-1 font-sans mr-5`}
+                                        className="transition-opacity min-w-14 max-w-17 z-50 rounded-full text-[0.90rem] bg-white border-[#d6d6d6] border-1 font-sans mr-5"
                                         disableRipple
                                         onPress={() => zoomOut()}
                                     >
                                         Réinitialiser le zoom
                                     </Button>
-                                    Historique des mesures du {ZonedDateTimeToString(fromDate(new Date(zoomState.left), "CET"))} au {ZonedDateTimeToString(fromDate(new Date(zoomState.right), "CET"))}
+                                    Historique des mesures du {ZonedDateTimeToString(fromDate(new Date(displayData[0]?.DateHeureMesure || data[0]?.DateHeureMesure), "CET"))} au {ZonedDateTimeToString(fromDate(new Date(displayData[displayData.length-1]?.DateHeureMesure || data[data.length-1]?.DateHeureMesure), "CET"))}
                                 </div>
                                 <div>
                                     Dernière mesure du {ZonedDateTimeToString(fromDate(new Date(data[data.length-1].DateHeureMesure), "CET"), 1)} : <b>{data[data.length-1].Valeur}{data[data.length-1].Unite}</b>

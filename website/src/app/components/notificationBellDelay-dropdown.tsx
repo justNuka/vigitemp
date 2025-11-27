@@ -1,11 +1,9 @@
 'use client'
 import React, { useEffect, useState } from "react";
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button, Tooltip} from "@heroui/react";
-import { FaBell, FaRegBell } from "react-icons/fa";
-import { RiArrowDropDownLine } from "react-icons/ri";
+import { Bell, BellOff, ChevronDown, Moon } from "lucide-react";
 import axios from "axios";
 import { POST_disableNotification, POST_enableNotification } from "@/app/libs/utils_server";
-import { TbZzz } from "react-icons/tb";
 import { fromDate } from "@internationalized/date";
 
 // function DateToString(date:ZonedDateTime, typephrase:number = 0){
@@ -297,14 +295,14 @@ export default function NotificationBellDelay({ idLieu, isNotified, setNotified,
                     disableRipple
                     startContent={
                         isNotified?
-                            <FaBell size={22} color="black"/>
+                            <Bell size={22} color="black"/>
                         :
                             infosLieux.DateHeure_reactivationAlarme == null?
-                                <FaRegBell size={22} color="black"/>
+                                <BellOff size={22} color="black"/>
                             :
                                 <div>
-                                    <FaRegBell size={22} color="black" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
-                                    <TbZzz   size={20} color="black" className="absolute top-1/3 left-2/3 -translate-x-1/2 -translate-y-1/2"/>
+                                    <BellOff size={22} color="black" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"/>
+                                    <Moon size={20} color="black" className="absolute top-1/3 left-2/3 -translate-x-1/2 -translate-y-1/2"/>
                                 </div >
                     }
                     onPress={ () => {
@@ -325,7 +323,7 @@ export default function NotificationBellDelay({ idLieu, isNotified, setNotified,
                         className='px-0 mx-0 min-w-6 data-[hover=true]:bg-transparent group-data-[focus=true]:bg-transparent bg-transparent'
                         disableRipple
                         startContent={
-                            <RiArrowDropDownLine size={25}/>
+                            <ChevronDown size={25}/>
                         }
                     />
                 </DropdownTrigger>

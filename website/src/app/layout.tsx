@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import localFont from 'next/font/local';
 
-import {Toaster} from "react-hot-toast";
+import {Toaster} from "sonner";
 import {Providers} from "./providers";
 import HeaderGradient from "@/app/components/header-gradient";
 
@@ -69,7 +69,7 @@ export default function RootLayout({
             <html lang="en">
                 <body id='background' className={`${poppins.variable} font-sans ${kodemono.variable} font-mono bg-[#F7F7F7]`}>
                     {/* <div className="-zs-50"> */}
-                    <Toaster position="bottom-right" />
+                    <Toaster position="bottom-right" richColors />
                     {/* </div> */}
                     <HeaderGradient/>
                     <Providers>

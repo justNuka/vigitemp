@@ -1,5 +1,5 @@
 import { Button, Chip } from "@heroui/react";
-import { IoFilterOutline } from 'react-icons/io5';
+import { Filter as FilterIcon } from 'lucide-react';
 
 export default function Filter() {
 
@@ -10,7 +10,7 @@ export default function Filter() {
                 className='transition-colors-opacity data-[hover=true]:bg-gray-50 group-data-[focus=true]:bg-white bg-white border-[#d6d6d6] border-1'
                 disableRipple
                 startContent={
-                    <IoFilterOutline />
+                    <FilterIcon />
                 }>
                 Filtres
             </Button>

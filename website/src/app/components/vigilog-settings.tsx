@@ -2,7 +2,7 @@
 import { Button, Checkbox, CircularProgress, Divider, Slider } from "@heroui/react";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 export default function VigilogSettings() {
     const [slider, setSlider] = useState<number[]>([-25, 25]);

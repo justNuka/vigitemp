@@ -3,7 +3,7 @@
 import { use, useEffect, useLayoutEffect, useState } from "react";
 import axios from "axios";
 import { Button, DatePicker, Divider, Skeleton } from "@heroui/react";
-import { IoArrowBack } from "react-icons/io5";
+import { ArrowLeft } from "lucide-react";
 import { useTransitionRouter } from "next-view-transitions";
 import {fromDate, getLocalTimeZone, now, ZonedDateTime} from "@internationalized/date";
 import {I18nProvider} from "@react-aria/i18n";
@@ -112,7 +112,7 @@ export default function Surveillance(
                                     className='transition-colors-opacity px-0 mx-0 min-w-14 min-h-10 rounded-full data-[hover=true]:bg-gray-50 group-data-[focus=true]:bg-white bg-white border-[#d6d6d6] border-1'
                                     disableRipple
                                     startContent={
-                                        <IoArrowBack  size={25}/>
+                                        <ArrowLeft  size={25}/>
                                     }
                                     onPress={()=>router.push('/surveillance')}
                                 />
@@ -195,7 +195,7 @@ export default function Surveillance(
                                     className=' px-0 mx-0 min-w-10 min-h-14 rounded-full  group-data-[focus=true]:bg-white data-[hover=true]:opacity-100 opacity-hover:[data-hover=true]:opacity-100 bg-white border-[#d6d6d6] border-1'
                                     disableRipple
                                     startContent={
-                                        <IoArrowBack size={25} className={`${isHistorySizeLocked?'rotate-180':'rotate-0'} transition-all`}/>
+                                        <ArrowLeft size={25} className={`${isHistorySizeLocked?'rotate-180':'rotate-0'} transition-all`}/>
                                     }
                                     onPress={()=>setHistorySizeLocked(!isHistorySizeLocked)}
                                 />
