@@ -2,7 +2,10 @@
 
 ## Vue d'ensemble
 
-**Vigitemp Agent** est une **application Windows** (system tray) qui sert d'interface entre les capteurs LogTag USB, le site web Next.js, et l'utilisateur Windows via des alertes visuelles.
+**Vigitemp Agent** est une **application Windows Desktop** qui tourne en arrière-plan (system tray) et fait le pont entre:
+1. Les **capteurs LogTag USB** (dock + sonde température)
+2. Le **site web Next.js** (interface utilisateur)
+3. L'**utilisateur Windows** (alertes visuelles pop-up)
 
 ### Caractéristiques principales
 
@@ -11,28 +14,214 @@
 - **UI :** Windows Forms
 - **Plateforme :** Windows 7+ (x86)
 - **Port HTTP :** 8000 (serveur local)
+- **Point d'entrée :** `HttpServer.cs` → `Main()`
 
 ---
 
-## Responsabilités
+## Rôle et responsabilités
 
 ### 1. Interface capteurs LogTag USB
-- Détection automatique du dock LogTag branché en USB
-- Lecture des données stockées dans les capteurs
-- Configuration des seuils de température (haute/basse)
-- Téléchargement de l'historique complet des mesures
+**Manipulation physique des sondes de température**
 
-### 2. Serveur HTTP local
-- Exposition d'une API REST sur le port 8000
-- Communication avec le site web Next.js
-- Endpoints pour la gestion des capteurs et des alertes
-- Support des requêtes depuis localhost et IP locale
+- **Détection dock USB** : Vérifie automatiquement si un dock LogTag est branché
+- **Lecture données** : Récupère l'historique complet des mesures stockées dans la sonde
+- **Configuration seuils** : Permet de définir les températures min/max (alarmes)
+- **Interrogation instantanée** : Peut lire la température actuelle sur demande du site web
+
+**Technologies utilisées :**
+- DLL propriétaire `LogTagIO29.dll` (fournie par LogTag)
+- SDK encapsulé dans `LogTagNET2.9V2.cs`
+- Fonctions clés : `OpenAccess()`, `GetInfo2()`, `GetData2()`, `SetInfo2()`
+
+### 2. Serveur HTTP local (Port 8000)
+**API REST pour communication avec le site web**
+
+L'agent écoute sur **2 adresses** :
+- `http://127.0.0.1:8000/` (localhost)
+- `http://[IP_locale]:8000/` (accès réseau local)
+
+**Pourquoi 2 adresses ?**
+- Localhost : site web accède depuis le même PC
+- IP locale : site web peut être hébergé sur un autre PC du réseau
+
+**Endpoints disponibles :**
+```
+POST /alarm?action=show&idLieu=X    → Affiche alerte pour le lieu X
+POST /alarm?action=hide&idLieu=X    → Cache alerte pour le lieu X
+GET  /getdata?idLieu=X               → Télécharge historique LogTag
+POST /setinfo?idLieu=X               → Configure seuils température
+GET  /getinfo?idLieu=X               → Lit config actuelle LogTag
+```
 
 ### 3. Interface utilisateur Windows
-- Icône persistante dans la barre système (system tray)
-- Pop-ups d'alertes visuelles automatiques
-- Menu contextuel pour configuration
-- Fenêtre d'alerte toujours au premier plan
+**Gestion des alertes visuelles**
+
+- **System Tray** : Icône permanente dans la barre des tâches (en bas à droite)
+- **Pop-up alarmes** : Fenêtre `Form_Alert` qui s'affiche automatiquement
+- **Always On Top** : La fenêtre reste au premier plan (impossible à ignorer)
+- **Menu contextuel** : Clic droit sur l'icône → Exit
+
+---
+
+## Flux de données complet (Exemples concrets)
+
+### Scénario 1 : Téléchargement historique LogTag
+
+**Contexte :** L'utilisateur clique sur "Télécharger" dans le site web Next.js pour récupérer les 500 dernières mesures stockées dans un capteur LogTag.
+
+**Déroulement :**
+
+1. **Site web envoie requête** :
+   ```javascript
+   // website/src/app/api/logtag/download/route.ts
+   fetch('http://127.0.0.1:8000/DownloadLogTagData?idLieu=5')
+   ```
+
+2. **Agent reçoit requête** → `HttpServer.cs`
+   ```csharp
+   if (req.HttpMethod == "POST" && req.Url.AbsolutePath.StartsWith("/DownloadLogTagData"))
+   ```
+
+3. **Détection dock LogTag** :
+   ```csharp
+   HINSTANCE hInstance = GetModuleHandle(null);
+   LOGTAG_HANDLE hLogTag = LogTag.OpenAccess(hInstance);
+   
+   if (hLogTag == 0) {
+       return "Erreur: Impossible d'accéder au logtag";
+   }
+   ```
+
+4. **Vérification dock connecté** :
+   ```csharp
+   UInt16 portCount = 0;
+   LogTag.GetPortInfo(null, ref portCount, 4);
+   
+   if (portCount == 0) {
+       return "Aucun docker logtag connecté";
+   }
+   if (portCount > 1) {
+       return "Plusieurs docker connectés";  // Erreur!
+   }
+   ```
+
+5. **Ouverture communication USB** :
+   ```csharp
+   LOGTAG_PORTINFO[] tabPortInfo = new LOGTAG_PORTINFO[portCount];
+   LogTag.GetPortInfo(tabPortInfo, ref portCount, 4);
+   LogTag.OpenIO(hLogTag, tabPortInfo);  // Connexion au dock
+   ```
+
+6. **Lecture info capteur** :
+   ```csharp
+   LOGTAG_INFO[] ltinfo = new LOGTAG_INFO[1];
+   LOGTAG_SENSOR[] ltsensor = new LOGTAG_SENSOR[1];
+   LogTag.GetInfo2(hLogTag, ltinfo, ltsensor);
+   
+   // Extraction numéro de série
+   string serialNumber = "";
+   for (int i = 0; i < ltinfo[0].szChannelInfo.Length; i += 2) {
+       serialNumber += (char)ltinfo[0].szChannelInfo[i];
+   }
+   // Résultat: "TL52-1-3543218"
+   ```
+
+7. **Téléchargement mesures** :
+   ```csharp
+   LOGTAG_READING[] ltreading = new LOGTAG_READING[ltinfo[0].dwNumOfReadings];
+   ltinfo[0].dwReadingsCount = ltinfo[0].dwNumOfReadings;  // Ex: 500
+   LogTag.GetData2(hLogTag, ltinfo, ltsensor, ltreading);
+   
+   // ltreading[0] = { time: 1732713600, temp: 22.5 }
+   // ltreading[1] = { time: 1732713660, temp: 22.3 }
+   // ...
+   // ltreading[499] = { time: 1732743600, temp: 21.8 }
+   ```
+
+8. **Génération ID récupération** :
+   ```csharp
+   string id_recuperationMesure = DateTime.Now.ToString("yyyyMMddHHmmss");
+   // Ex: "20251127143025"
+   ```
+
+9. **Insertion en masse BDD** :
+   ```csharp
+   for (int i = 0; i < ltreading.Length; i++) {
+       DateTime dateTime = UnixTimeToDateTime(ltreading[i].dwTime);
+       double temperature = ltreading[i].fValue;
+       
+       db.AddMesure(
+           serialNumber,           // "TL52-1-3543218"
+           temperature,            // 22.5
+           "°C",
+           id_recuperationMesure  // "20251127143025"
+       );
+   }
+   ```
+
+10. **Réponse JSON au site** :
+    ```json
+    {
+      "res": "true",
+      "details": "Données téléchargées avec succès",
+      "id_recuperation": "20251127143025",
+      "nombre_mesures": 500,
+      "serialNumber": "TL52-1-3543218"
+    }
+    ```
+
+### Scénario 2 : Réception alarme du serveur
+
+**Contexte :** Le service Windows `Vigitemp Serveur` détecte une température trop élevée (28.5°C > 25°C) dans la "Chambre froide n°3" (idLieu=5).
+
+**Déroulement :**
+
+1. **Serveur envoie notification** :
+   ```csharp
+   // VigitempServeur → Sensor.cs
+   HttpClient client = new HttpClient();
+   client.PostAsync("http://192.168.1.100:8000/alarm?action=show&idLieu=5", null);
+   ```
+
+2. **Agent reçoit requête** → `HttpServer.cs`
+   ```csharp
+   if (req.Url.AbsolutePath.StartsWith("/alarm"))
+   {
+       string action = postParams["action"];   // "show"
+       int idLieu = int.Parse(postParams["idLieu"]);  // 5
+   ```
+
+3. **Vérification action** :
+   ```csharp
+   if (action == "show") {
+       // Ajouter à la liste si pas déjà présent
+       if (!idLieuxEnAlarmes.Contains(idLieu)) {
+           idLieuxEnAlarmes.Add(idLieu);
+       }
+   }
+   else if (action == "hide") {
+       // Retirer de la liste
+       idLieuxEnAlarmes.Remove(idLieu);
+   }
+   ```
+
+4. **Mise à jour visuelle** :
+   ```csharp
+   // Invoke sur thread UI (Windows Forms)
+   frm_alert.Invoke((MethodInvoker)delegate {
+       if (idLieuxEnAlarmes.Count > 0) {
+           frm_alert.showAlert();  // Affiche pop-up
+       } else {
+           frm_alert.hideAlert();  // Cache pop-up
+       }
+   });
+   ```
+
+5. **Form_Alert s'affiche** :
+   - Fenêtre toujours au premier plan
+   - Fond rouge avec icône alarme
+   - Liste des lieux en alarme
+   - Bouton "Voir sur le site" → Ouvre navigateur
 
 ---
 

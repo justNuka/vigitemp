@@ -1,36 +1,186 @@
-# Backend - Vigitemp Server (C#)
+# Backend - Vigitemp Serveur (C#)
 
 ## Vue d'ensemble
 
-**Vigitemp Server** est un **service Windows** écrit en C# qui collecte automatiquement les mesures de température depuis des capteurs série (ports COM) et gère le système d'alertes en temps réel.
+**Vigitemp Serveur** est un **service Windows** (tourne en arrière-plan 24/7) qui interroge automatiquement des capteurs de température branchés en série (ports COM) et déclenche des alertes si les seuils sont dépassés.
 
 ### Caractéristiques principales
 
 - **Type :** Service Windows (Windows Service)
 - **Framework :** .NET Framework 4.8
 - **Plateforme :** Windows Server / Windows 10+
-- **Architecture :** Multi-thread avec timers asynchrones
-- **Base de données :** MySQL (2 schémas : `vigitemp` et `vigitemp_mesure`)
+- **Architecture :** Multi-thread (1 thread par serveur de capteurs)
+- **Base de données :** MySQL
+  - `vigitemp` : Configuration (lieux, capteurs, seuils)
+  - `vigitemp_mesure` : Historique mesures
+- **Point d'entrée :** `VigitempServeur.cs` → `OnStart()`
 
 ---
 
-## Responsabilités
+## Rôle et responsabilités
 
 ### 1. Collecte automatique de mesures
-- Interrogation périodique des capteurs série (ports COM)
-- Support de 7 types de capteurs différents
-- Stockage des mesures dans `vigitemp_mesure`
+**Interrogation périodique des capteurs physiques**
 
-### 2. Gestion des alertes
-- Détection dépassement de seuils (température haute/basse)
-- Enregistrement alarmes dans `vigitemp.alarmes`
-- Notification Agent C# via HTTP (port 8000)
+**Fonctionnement :**
+- Le service interroge chaque capteur selon sa fréquence configurée (30s, 60s, 300s, etc.)
+- Chaque capteur est sur un port série (COM1, COM2, COM3...)
+- Support de **7 types de capteurs** différents :
+  - `IN` (Temperature standard)
+  - `IE` (Temperature externe)
+  - `IP` (Temperature + pression)
+  - `IC` (Temperature + courant)
+  - `IH` (Humidité)
+  - `EN` (Energie)
+  - `HN` (Humidité + energie)
+
+**Exemple de communication série :**
+```csharp
+// Envoi d'une commande au capteur IH (humidité)
+port.Write("SM" + adresse + "0000000000000000");
+// Ex: "SM05430000000000000" pour le capteur à l'adresse 0543
+
+// Le capteur répond avec: R0543R[poidsFort][poidsFaible]'
+// Décodage: resistance = (poidsFort * 256 + poidsFaible - 2048)
+// Conversion: humidité = (resistance * coeffX + coeffConstant)
+```
+
+### 2. Gestion des alertes en temps réel
+**Détection et notification des dépassements de seuils**
+
+**Processus complet :**
+
+1. **Lecture de la mesure** (ex: 28.5°C)
+2. **Comparaison avec les seuils** (ex: min=18°C, max=25°C)
+3. **Dépassement détecté** → 28.5 > 25
+4. **Vérification statut alarme** :
+   - Si notification active → Afficher pop-up
+   - Si alarme snooze → Attendre fin snooze
+5. **Notification Agent** :
+   ```csharp
+   client.PostAsync("http://192.168.1.100:8000/alarm?action=show&idLieu=5", null);
+   ```
+6. **Enregistrement BDD** :
+   ```sql
+   INSERT INTO vigitemp.alarmes (idLieu, dateDebut, valeur, type)
+   VALUES (5, '2025-11-27 14:30:00', 28.5, 'HAUTE');
+   ```
 
 ### 3. Service Windows robuste
-- Démarrage automatique au boot Windows
-- Gestion arrêt/redémarrage propre
-- Logging dans Event Viewer Windows + fichier texte
-- Fonctionnement 24/7
+**Fonctionnement continu et fiable**
+
+- **Démarrage automatique** : Se lance au boot Windows
+- **Multi-threading** : Un thread par groupe de capteurs (par IdServeur)
+- **Gestion d'erreurs** : Retry automatique si port COM occupé
+- **Logging** :
+  - Event Viewer Windows (`Application` → `New Vigitemp Serveur`)
+  - Fichier texte `C:\Users\User\Desktop\log.txt`
+- **Arrêt propre** : Fermeture de tous les ports COM avant arrêt
+
+---
+
+## Flux de données complet (Exemple concret)
+
+### Scénario : Capteur IH (Humidité) - Lieu "Chambre froide n°3"
+
+**Configuration dans la base :**
+```sql
+-- Table: vigitemp.lieux
+idLieu: 5
+NomLieu: "Chambre froide n°3"
+idServeur: 1
+frequence: 60  -- Interrogation toutes les 60 secondes
+PortSerie: "COM3"
+SondeNumeroSerie: "IH054321"
+SondeAdresse: "0543"
+Consigne_Inf: 2.0°C
+Consigne_Sup: 8.0°C
+```
+
+**Déroulement automatique (toutes les 60 secondes) :**
+
+1. **Timer déclenche** → `ThreadServeur.Process()` appelé
+2. **Ouverture port série** :
+   ```csharp
+   SerialPort port = new SerialPort("COM3", 9600);
+   port.Open();
+   ```
+
+3. **Envoi commande** au capteur :
+   ```csharp
+   port.Write("SM05430000000000000");
+   //        └─┬─┘└─┬┘
+   //          │   └─ Adresse capteur (0543)
+   //          └─── Commande "SM" (Send Measure)
+   ```
+
+4. **Réception réponse** du capteur (via port série) :
+   ```
+   R0543R[12][245]'
+   //└─┬┘ └─┬┘ └──┬─┘
+   //  │    │     └─ Poids faible (245)
+   //  │    └─────── Poids fort (12)
+   //  └────────────┬─ Confirmation numéro série
+   ```
+
+5. **Décodage mesure** :
+   ```csharp
+   int resistance = (12 * 256 + 245 - 2048);  // = 1317
+   
+   // Récupération coefficients calibrage depuis BDD
+   (double coeffX, double coeffConstant) = db.getCoeffCalibrageBySerialNumber("IH054321");
+   // Exemple: coeffX = 0.05, coeffConstant = -10
+   
+   double humidite = (1317 * 0.05 + (-10));  // = 55.85%
+   ```
+
+6. **Sauvegarde dans BDD** :
+   ```sql
+   INSERT INTO vigitemp_mesure.mesure_IH054321 
+   (DateHeureMesure, Valeur, Resistance, Unite) 
+   VALUES ('2025-11-27 14:30:00', 55.85, '1317', '%HR');
+   ```
+
+7. **Vérification seuils** → Pas de dépassement (2% < 55.85% < 8% ❌ - erreur config!)
+   
+8. **Fermeture port** :
+   ```csharp
+   port.Close();
+   ```
+
+### Cas d'alarme (température trop élevée)
+
+**Capteur :** `IN123456` (température)  
+**Mesure :** 28.5°C  
+**Seuils :** min=18°C, max=25°C  
+
+**Déclenchement alarme :**
+
+1. **Détection dépassement** :
+   ```csharp
+   if (28.5 > 25.0) {  // VRAI
+       // Alarme déclenchée!
+   }
+   ```
+
+2. **Enregistrement alarme** :
+   ```sql
+   INSERT INTO vigitemp.alarmes 
+   (idLieu, dateDebut, valeur, type) 
+   VALUES (5, '2025-11-27 14:30:00', 28.5, 'HAUTE');
+   ```
+
+3. **Notification Agent C#** :
+   ```csharp
+   HttpClient client = new HttpClient();
+   client.PostAsync("http://192.168.1.100:8000/alarm?action=show&idLieu=5", null);
+   //                └──────────────┬────────────┘
+   //                               └─ IP du PC avec Agent Windows
+   ```
+
+4. **Agent affiche pop-up** sur le PC Windows avec l'icône rouge
+
+5. **Site web** affiche l'alerte en temps réel (via API Next.js)
 
 ---
 
