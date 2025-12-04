@@ -1,12 +1,12 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../../src/generated/@prisma-db-main"
+  output   = "../src/generated/prisma"
 }
 
 // Base de données principale (vigitemp) - configuration, users, sensors, alarms, etc.
+// URL configurée dans prisma.config.ts via env("DATABASE_URL")
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 // Note: Pour vigitemp_mesure (time-series), nous créerons un second schéma
@@ -801,7 +801,7 @@ model t_sonde_typemesure {
 model t_utilisateur {
   IdUtilisateur                Int                            @id @default(autoincrement())
   Login                        String?                        @unique(map: "Login") @db.VarChar(64)
-  Mot_de_passe                 String?                        @db.VarChar(60)
+  Mot_de_passe                 String?                        @db.VarChar(32)
   Date_Validite                DateTime?                      @db.Date
   Date_Creation                DateTime?                      @db.Date
   Archive                      Boolean?                       @default(false)
