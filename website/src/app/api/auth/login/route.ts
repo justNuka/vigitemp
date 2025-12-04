@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username required"),
@@ -30,9 +31,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify password (in production, use bcrypt)
-    // For now, simple comparison (TEMP - should hash passwords)
-    if (user.Mot_de_passe !== password) {
+    // Vérifier que l'utilisateur a un mot de passe
+    if (!user.Mot_de_passe) {
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 }
+      );
+    }
+
+    // Vérifier le mot de passe avec bcrypt
+    const passwordValid = await bcrypt.compare(password, user.Mot_de_passe);
+    
+    if (!passwordValid) {
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 }
