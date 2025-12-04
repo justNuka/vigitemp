@@ -379,7 +379,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # VS Code files for those working on multiple tools
-.vscode/*
+#.vscode/* Désactivé pour laisser le fichier mcp.json sur github
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json

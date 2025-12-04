@@ -1,0 +1,9 @@
+{
+  "registries": {
+    "@shadcn": "https://registry.shadcn.com/r/{name}.json",
+    "@react-bits": "https://reactbits.dev/r/{name}.json",
+    "@magicui": "https://magicui.design/r/{name}",
+    "@scrollxui": "https://www.scrollxui.dev/registry/{name}.json",
+    "@heroui": "https://heroui.dev/r/{name}.json"
+  }
+}
