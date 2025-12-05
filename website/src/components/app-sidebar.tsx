@@ -28,6 +28,7 @@ import {
   LogOut,
   Volume2,
   VolumeX,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ const mainNavItems: NavItem[] = [
 ];
 
 const settingsNavItems: NavItem[] = [
+  { title: "Mon profil", href: "/profile", icon: User },
   { title: "Paramétrage", href: "/settings", icon: Settings },
   { title: "Utilisateurs", href: "/users", icon: Users },
   { title: "Journal d'audit", href: "/audit", icon: FileText },

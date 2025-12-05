@@ -1,0 +1,231 @@
+"use cache";
+
+import { cacheTag } from "next/cache";
+import { prisma } from "@/lib/prisma";
+
+/**
+ * Composant serveur pour charger les données du dashboard
+ * Cache automatique avec Next.js 16 Cache Components
+ */
+
+/**
+ * Statistiques principales du dashboard
+ */
+export async function ServerDashboardStats() {
+  "use cache";
+  cacheTag("dashboard-stats");
+
+  const [totalLocations, activeAlarms, okSensors, warningSensors, criticalSensors] =
+    await Promise.all([
+      prisma.t_lieu.count({ where: { Archive: false } }),
+      prisma.t_alarme.count({
+        where: {
+          Acquite: false,
+          Alarme_Vrai: true,
+        },
+      }),
+      prisma.t_lieu.count({ where: { Archive: false, Lieu_Etat: "O" } }),
+      prisma.t_lieu.count({ where: { Archive: false, Lieu_Etat: "P" } }),
+      prisma.t_lieu.count({ where: { Archive: false, Lieu_Etat: "A" } }),
+    ]);
+
+  return {
+    totalLocations,
+    activeAlarms,
+    okSensors,
+    warningSensors,
+    criticalSensors,
+  };
+}
+
+/**
+ * Capteurs critiques pour affichage prioritaire sur le dashboard
+ */
+export async function ServerCriticalSensors() {
+  "use cache";
+  cacheTag("dashboard-critical-sensors");
+
+  const criticalLocations = await prisma.t_lieu.findMany({
+    where: {
+      Archive: false,
+      Lieu_Etat: "A", // État critique
+    },
+    include: {
+      t_site: {
+        select: {
+          IdSite: true,
+          CodeSite: true,
+          LibelleSite: true,
+        },
+      },
+    },
+    orderBy: {
+      DernierDateHeure: "desc",
+    },
+    take: 4, // Top 4 pour le dashboard
+  });
+
+  return criticalLocations.map((lieu) => ({
+    id: lieu.IdLieu.toString(),
+    name: lieu.Nom_Lieu || "Capteur sans nom",
+    type: "temperature" as const,
+    status: "critical" as const,
+    currentValue: lieu.DernierValeur !== null ? parseFloat(lieu.DernierValeur.toString()) : null,
+    unit: lieu.DernierUnite || "°C",
+    minThreshold: lieu.Consigne_Inf ?? 0,
+    maxThreshold: lieu.Consigne_Sup ?? 30,
+    lastMeasurement: lieu.DernierDateHeure || null,
+    isActive: !lieu.Archive,
+    location: {
+      id: lieu.IdSite?.toString() || "0",
+      name: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
+        ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
+        : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || "Non assigné",
+      description: null,
+      siteGroup: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
+        ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
+        : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || null,
+      isActive: true,
+    },
+  }));
+}
+
+/**
+ * Alarmes actives récentes pour le tableau du dashboard
+ */
+export async function ServerActiveAlarms() {
+  "use cache";
+  cacheTag("dashboard-active-alarms");
+
+  const alarms = await prisma.t_alarme.findMany({
+    where: {
+      Acquite: false,
+      Alarme_Vrai: true,
+    },
+    include: {
+      t_lieu: {
+        include: {
+          t_site: {
+            select: {
+              IdSite: true,
+              CodeSite: true,
+              LibelleSite: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      DateHeureDebut: "desc",
+    },
+    take: 5, // Top 5 pour le dashboard
+  });
+
+  return alarms.map((alarm) => ({
+    id: alarm.IdAlarme.toString(),
+    sensorId: alarm.IdLieu?.toString() || "0",
+    locationId: alarm.t_lieu?.IdSite?.toString() || "0",
+    type: alarm.Type === "H" ? ("high" as const) : ("low" as const),
+    status: alarm.Acquite ? ("acknowledged" as const) : ("active" as const),
+    value: alarm.Valeur !== null ? parseFloat(alarm.Valeur.toString()) : 0,
+    threshold: 0, // Pas de champ threshold direct dans t_alarme
+    triggeredAt: alarm.DateHeureDebut || new Date(),
+    acknowledgedAt: alarm.Acquite ? alarm.DateHeureFin : null,
+    acknowledgedBy: alarm.Acquite ? "user" : null,
+    resolvedAt: alarm.DateHeureFin,
+    comment: null,
+    sensor: {
+      id: alarm.IdLieu?.toString() || "0",
+      name: alarm.t_lieu?.Nom_Lieu || "Capteur sans nom",
+      type: "temperature" as const,
+      status: "critical" as const,
+      currentValue: alarm.Valeur !== null ? parseFloat(alarm.Valeur.toString()) : null,
+      unit: alarm.Unite || "°C",
+      locationId: alarm.t_lieu?.IdSite?.toString() || "0",
+      minThreshold: alarm.t_lieu?.Consigne_Inf ?? 0,
+      maxThreshold: alarm.t_lieu?.Consigne_Sup ?? 30,
+      measurementFrequency: 60,
+      alarmDelay: 0,
+      lastMeasurement: alarm.t_lieu?.DernierDateHeure || null,
+      isActive: !alarm.t_lieu?.Archive,
+    },
+    location: {
+      id: alarm.t_lieu?.IdLieu.toString() || "0",
+      name: alarm.t_lieu?.t_site?.CodeSite && alarm.t_lieu?.t_site?.LibelleSite
+        ? `${alarm.t_lieu.t_site.CodeSite} - ${alarm.t_lieu.t_site.LibelleSite}`
+        : alarm.t_lieu?.t_site?.CodeSite || alarm.t_lieu?.t_site?.LibelleSite || "Non assigné",
+      description: null,
+      siteGroup: alarm.t_lieu?.t_site?.CodeSite && alarm.t_lieu?.t_site?.LibelleSite
+        ? `${alarm.t_lieu.t_site.CodeSite} - ${alarm.t_lieu.t_site.LibelleSite}`
+        : alarm.t_lieu?.t_site?.CodeSite || alarm.t_lieu?.t_site?.LibelleSite || null,
+      isActive: true,
+    },
+  }));
+}
+
+/**
+ * Aperçu des capteurs (8 premiers pour le dashboard)
+ */
+export async function ServerSensorOverview() {
+  "use cache";
+  cacheTag("dashboard-sensor-overview");
+
+  const locations = await prisma.t_lieu.findMany({
+    where: {
+      Archive: false,
+    },
+    include: {
+      t_site: {
+        select: {
+          IdSite: true,
+          CodeSite: true,
+          LibelleSite: true,
+        },
+      },
+    },
+    orderBy: {
+      DernierDateHeure: "desc",
+    },
+    take: 8, // 8 premiers pour le dashboard
+  });
+
+  return locations.map((lieu) => {
+    const status = mapSensorStatus(lieu.Lieu_Etat);
+    return {
+      id: lieu.IdLieu.toString(),
+      name: lieu.Nom_Lieu || "Capteur sans nom",
+      type: "temperature" as const,
+      status: status === "offline" ? "warning" : status, // Map offline to warning for compatibility
+      currentValue: lieu.DernierValeur !== null ? parseFloat(lieu.DernierValeur.toString()) : null,
+      unit: lieu.DernierUnite || "°C",
+      minThreshold: lieu.Consigne_Inf ?? 0,
+      maxThreshold: lieu.Consigne_Sup ?? 30,
+      lastMeasurement: lieu.DernierDateHeure || null,
+      isActive: !lieu.Archive,
+      location: {
+        id: lieu.IdSite?.toString() || "0",
+        name: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
+          ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
+          : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || "Non assigné",
+        description: null,
+        siteGroup: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
+          ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
+          : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || null,
+        isActive: true,
+      },
+    };
+  });
+}
+
+function mapSensorStatus(etat: string | null): "ok" | "warning" | "critical" | "offline" {
+  switch (etat) {
+    case "O":
+      return "ok";
+    case "P":
+      return "warning";
+    case "A":
+      return "critical";
+    default:
+      return "offline";
+  }
+}

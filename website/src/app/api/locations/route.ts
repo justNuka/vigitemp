@@ -34,16 +34,21 @@ export async function GET(req: NextRequest) {
     });
 
     // Transform to API format
-    const formatted = locations.map((loc: any) => ({
-      id: loc.IdLieu,
-      name: loc.Nom_Lieu,
-      site: loc.IdSite || null,
-      status: loc.Lieu_Etat,
-      sensorCount: loc.t_sonde?.length || 0,
-      okSensors: loc.t_sonde?.filter((s: any) => s.Etat_Sonde === "O").length || 0,
-      warningSensors: loc.t_sonde?.filter((s: any) => s.Etat_Sonde === "P").length || 0,
-      criticalSensors: loc.t_sonde?.filter((s: any) => s.Etat_Sonde === "A").length || 0,
-    }));
+    const formatted = locations.map((loc: any) => {
+      // Ensure t_sonde is an array
+      const sensors = Array.isArray(loc.t_sonde) ? loc.t_sonde : [];
+      
+      return {
+        id: loc.IdLieu,
+        name: loc.Nom_Lieu,
+        site: loc.IdSite || null,
+        status: loc.Lieu_Etat,
+        sensorCount: sensors.length,
+        okSensors: sensors.filter((s: any) => s.Etat_Sonde === "O").length,
+        warningSensors: sensors.filter((s: any) => s.Etat_Sonde === "P").length,
+        criticalSensors: sensors.filter((s: any) => s.Etat_Sonde === "A").length,
+      };
+    });
 
     return NextResponse.json(formatted);
   } catch (error) {

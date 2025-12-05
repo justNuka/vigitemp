@@ -1,25 +1,55 @@
-"use client";
-
-import { useQuery } from "@tanstack/react-query";
+import { Suspense } from "react";
+import { Metadata } from "next";
+import { ServerAuditLogs, ServerAuditStats } from "./server-audit-logs";
+import { AuditClient } from "./audit-client";
 import { PageHeader } from "@/components/page-header";
-import { AuditLogTable } from "@/components/audit-log-table";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
-import { auditApi, alarmsApi } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
+import { alarmsApi } from "@/lib/api";
 
-export default function AuditPage() {
-  const { data: auditLogs, isLoading, refetch } = useQuery({
-    queryKey: ["audit"],
-    queryFn: () => auditApi.getAll({ limit: 100 }),
-  });
+export const metadata: Metadata = {
+  title: "Audit - Vigitemp",
+  description: "Journal d'audit et historique des événements",
+};
 
-  const { data: alarms } = useQuery({
-    queryKey: ["alarms", "active"],
-    queryFn: () => alarmsApi.getActive(),
-  });
+// Skeleton pour la table d'audit
+function AuditLoadingSkeleton() {
+  return (
+    <div className="p-4 md:p-6 space-y-6">
+      <div className="flex justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        <Skeleton className="h-10 w-64" />
+      </div>
+      <Card className="p-4">
+        <div className="space-y-3">
+          {[...Array(10)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
 
-  const activeAlarms = alarms?.filter((a) => a.status === "active") || [];
+async function getActiveAlarms() {
+  try {
+    const alarms = await alarmsApi.getActive();
+    return alarms.filter((a) => a.status === "active");
+  } catch {
+    return [];
+  }
+}
+
+export default async function AuditPage() {
+  // Chargement parallèle des données côté serveur avec cache
+  const [logsData, statsData, activeAlarms] = await Promise.all([
+    ServerAuditLogs(100),
+    ServerAuditStats(),
+    getActiveAlarms(),
+  ]);
 
   return (
     <div className="flex flex-col min-h-full">
@@ -29,36 +59,9 @@ export default function AuditPage() {
         activeAlarms={activeAlarms.length}
       />
 
-      <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold">Dernières activités</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              {auditLogs?.length || 0} événement{(auditLogs?.length ?? 0) > 1 ? "s" : ""}
-            </p>
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refetch()}
-            className="gap-2"
-            data-testid="button-refresh"
-          >
-            <RefreshCw className="h-4 w-4" />
-            <span className="hidden sm:inline">Actualiser</span>
-          </Button>
-        </div>
-
-        <Card>
-          <CardContent className="p-0">
-            <AuditLogTable
-              logs={auditLogs || []}
-              isLoading={isLoading}
-            />
-          </CardContent>
-        </Card>
-      </main>
+      <Suspense fallback={<AuditLoadingSkeleton />}>
+        <AuditClient logs={logsData} />
+      </Suspense>
     </div>
   );
 }

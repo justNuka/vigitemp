@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 
 const createUserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  displayName: z.string().optional(),
+  nom: z.string().min(1, "Nom requis"),
+  prenom: z.string().min(1, "Prénom requis"),
+  email: z.string().email("Email invalide"),
   role: z.enum(["admin", "user"]).default("user"),
 });
 
@@ -59,18 +62,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Parse displayName into Prenom and Nom
-    const parts = (data.displayName || data.username).split(" ");
-    const prenom = parts[0];
-    const nom = parts.length > 1 ? parts.slice(1).join(" ") : "";
+    // Hash password with bcrypt
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    // Create user (in production, hash password with bcrypt)
+    // Create user
     const user = await prisma.t_utilisateur.create({
       data: {
         Login: data.username,
-        Mot_de_passe: data.password, // TEMP: should hash password
-        Prenom: prenom,
-        Nom: nom,
+        Mot_de_passe: hashedPassword,
+        Prenom: data.prenom,
+        Nom: data.nom,
+        Adresse_Email: data.email,
         ProfilUtilisateur: data.role,
         Archive: false,
         Date_Creation: new Date(),

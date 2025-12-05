@@ -23,6 +23,7 @@ export async function GET(
         t_site: {
           select: {
             IdSite: true,
+            CodeSite: true,
             LibelleSite: true,
           },
         },
@@ -42,7 +43,9 @@ export async function GET(
       lastUpdate: lieu.DernierDateHeure?.toISOString() || new Date().toISOString(),
       location: {
         id: lieu.IdSite || 0,
-        name: lieu.t_site?.LibelleSite || "Unknown",
+        name: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
+          ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
+          : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || "Unknown",
       },
       minThreshold: lieu.Consigne_Inf,
       maxThreshold: lieu.Consigne_Sup,
@@ -79,6 +82,7 @@ export async function PATCH(
         t_site: {
           select: {
             IdSite: true,
+            CodeSite: true,
             LibelleSite: true,
           },
         },
@@ -91,7 +95,9 @@ export async function PATCH(
       status: lieu.Lieu_Etat === "O" ? "ok" : lieu.Lieu_Etat === "P" ? "warning" : "critical",
       location: {
         id: lieu.IdSite || 0,
-        name: lieu.t_site?.LibelleSite || "Unknown",
+        name: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
+          ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
+          : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || "Unknown",
       },
     });
   } catch (error) {

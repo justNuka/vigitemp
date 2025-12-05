@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
@@ -76,6 +77,9 @@ export async function PATCH(
         Valeur: value,
       },
     });
+
+    // Invalider le cache pour forcer le rechargement des settings
+    revalidateTag("settings-data", "default");
 
     return NextResponse.json({
       key: `${setting.Section}:${setting.MotCle}`,

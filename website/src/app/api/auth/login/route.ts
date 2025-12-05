@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { generateToken } from "@/lib/jwt";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username required"),
@@ -49,10 +50,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create session token (simple implementation)
-    const sessionToken = Buffer.from(
-      `${user.IdUtilisateur}:${Date.now()}:${Math.random()}`
-    ).toString("base64");
+    // Generate JWT token
+    const token = generateToken({
+      userId: user.IdUtilisateur,
+      username: user.Login || "user",
+      role: user.t_profil?.ProfilUtilisateur || "user",
+    });
 
     // Return user data
     const userData = {
@@ -60,13 +63,13 @@ export async function POST(req: NextRequest) {
       username: user.Login || "user",
       displayName: `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login || "user",
       role: user.t_profil?.ProfilUtilisateur || "user",
-      sessionToken,
+      token,
     };
 
     const response = NextResponse.json(userData);
 
-    // Set session cookie
-    response.cookies.set("session", sessionToken, {
+    // Set JWT cookie
+    response.cookies.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

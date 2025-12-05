@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 
 const updateUserSchema = z.object({
-  displayName: z.string().optional(),
+  nom: z.string().optional(),
+  prenom: z.string().optional(),
+  email: z.string().email().optional(),
   password: z.string().min(6).optional(),
   role: z.enum(["admin", "user"]).optional(),
 });
@@ -58,19 +61,16 @@ export async function PATCH(
     const data = updateUserSchema.parse(body);
 
     const updateData: any = {};
-    if (data.password) updateData.Mot_de_passe = data.password; // TEMP: should hash
-    if (data.role) updateData.ProfilUtilisateur = data.role;
-
-    // Parse displayName into Prenom and Nom if provided
-    if (data.displayName) {
-      const parts = data.displayName.split(" ");
-      if (parts.length > 1) {
-        updateData.Prenom = parts[0];
-        updateData.Nom = parts.slice(1).join(" ");
-      } else {
-        updateData.Prenom = data.displayName;
-      }
+    
+    // Hash password if provided
+    if (data.password) {
+      updateData.Mot_de_passe = await bcrypt.hash(data.password, 10);
     }
+    
+    if (data.role) updateData.ProfilUtilisateur = data.role;
+    if (data.nom) updateData.Nom = data.nom;
+    if (data.prenom) updateData.Prenom = data.prenom;
+    if (data.email) updateData.Adresse_Email = data.email;
 
     const user = await prisma.t_utilisateur.update({
       where: { IdUtilisateur: userId },

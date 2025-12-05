@@ -240,6 +240,14 @@
     --input: 217 20% 90%;
     --ring: 217 91% 60%;
     
+    /* Sidebar colors - Light mode avec fond clair harmonieux */
+    --sidebar: 217 20% 97%;           /* Gris très clair, presque blanc */
+    --sidebar-foreground: 217 20% 20%;   /* Texte foncé pour contraste */
+    --sidebar-accent: 217 20% 92%;    /* Gris clair pour hover/active */
+    --sidebar-accent-foreground: 217 20% 15%;
+    --sidebar-border: 217 20% 88%;
+    --sidebar-ring: 217 91% 60%;
+    
     /* Charts avec palette Replit */
     --chart-1: 217 91% 60%; /* Blue MC2 */
     --chart-2: 38 92% 50%;  /* Yellow */
@@ -283,6 +291,14 @@
     --border: 217 20% 22%;
     --input: 217 20% 22%;
     --ring: 217 91% 65%;
+    
+    /* Sidebar colors - Dark mode (même que light pour cohérence) */
+    --sidebar: 217 27% 10%;           /* #14181F */
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-accent: 217 27% 18%;    /* Plus clair pour hover/active */
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 217 27% 15%;
+    --sidebar-ring: 217 91% 65%;
     
     /* Charts avec palette Replit (dark mode) */
     --chart-1: 217 91% 65%; /* Blue MC2 */

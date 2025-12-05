@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
         t_site: {
           select: {
             IdSite: true,
+            CodeSite: true,
             LibelleSite: true,
           },
         },
@@ -52,8 +53,12 @@ export async function GET(req: NextRequest) {
       lastUpdate: lieu.DernierDateHeure?.toISOString() || new Date().toISOString(),
       location: {
         id: lieu.IdSite || 0,
-        name: lieu.t_site?.LibelleSite || "Unknown",
-        siteGroup: lieu.t_site?.LibelleSite || null,
+        name: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
+          ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
+          : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || "Unknown",
+        siteGroup: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
+          ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
+          : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || null,
       },
       minThreshold: lieu.Consigne_Inf,
       maxThreshold: lieu.Consigne_Sup,
@@ -88,6 +93,7 @@ export async function POST(req: NextRequest) {
         t_site: {
           select: {
             IdSite: true,
+            CodeSite: true,
             LibelleSite: true,
           },
         },
@@ -101,7 +107,9 @@ export async function POST(req: NextRequest) {
         status: "ok",
         location: {
           id: lieu.t_site?.IdSite || 0,
-          name: lieu.t_site?.LibelleSite || "Unknown",
+          name: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
+            ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
+            : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || "Unknown",
         },
       },
       { status: 201 }
