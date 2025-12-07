@@ -394,13 +394,13 @@ export default function MonitoringGraphFullScreen(this: any, { idLieu, NomLieu, 
                             <ResponsiveContainer  debounce={200} id={'container-'+idLieu} width="100%" height="100%" className="absolute overflow-hidden top-0 left-0 w-full h-full object-cover">
                                 
                                 <AreaChart width={730} height={250} data={zoomState.data} margin={{ top: 0, left: 0, right: 40, bottom: 0 }} className="font-mono overflow-visible"
-                                    onMouseDown={(e) => setZoomState(prevState => ({ 
+                                    onMouseDown={(e) => setZoomState(prevState => ({
                                         ...prevState,
-                                        refAreaLeft: e.activeLabel || ''
+                                        refAreaLeft: String(e.activeLabel || '')
                                     }))}
                                     onMouseMove={(e) => zoomState.refAreaLeft && setZoomState(prevState => ({
                                         ...prevState,
-                                        refAreaRight: e.activeLabel || ''
+                                        refAreaRight: String(e.activeLabel || '')
                                     }))}
                                     // eslint-disable-next-line react/jsx-no-bind
                                     onMouseUp={zoom.bind(this)}

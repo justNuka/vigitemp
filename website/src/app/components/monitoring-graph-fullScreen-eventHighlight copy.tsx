@@ -709,11 +709,11 @@ export default function MonitoringGraphFullScreen_EventHighlightCopy(this: any, 
                                 <AreaChart width={730} height={250} data={zoomState.data} margin={{ top: 0, left: 0, right: 40, bottom: 0 }} className="font-mono overflow-visible"
                                     onMouseDown={(e) => {setZoomState(prevState => ({ 
                                         ...prevState,
-                                        refAreaLeft: e.activeLabel || ''
+                                        refAreaLeft: String(e.activeLabel || '')
                                     }));/*console.log("onMouseDown")*/}}
                                     onMouseMove={(e) => {zoomState.refAreaLeft && setZoomState(prevState => ({
                                         ...prevState,
-                                        refAreaRight: e.activeLabel || ''
+                                        refAreaRight: String(e.activeLabel || '')
                                     }));/*console.log("onMouseMove")*/}}
                                     // // eslint-disable-next-line react/jsx-no-bind
                                     onMouseUp={zoom.bind(this)}

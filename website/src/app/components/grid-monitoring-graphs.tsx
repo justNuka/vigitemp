@@ -1,6 +1,6 @@
 'use client'
 import React, { useLayoutEffect, useState } from "react";
-import MonitoringGraph from "./monitoring-graph";
+import MonitoringCard from "./monitoring-card";
 import axios from "axios";
 import SearchBar from "./filter/searchFilters";
 import GroupFilter from "./filter/groupFilter";
@@ -124,10 +124,11 @@ export default function GridMonitoringGraphs({ SideBar } : {
             </div>
             <div className="grid md:grid-cols-2 desktop:grid-cols-3 2xl:grid-cols-5 grid-flow-row gap-10 h-full ">
                 { items.map((lieu, index) => (
-                        <MonitoringGraph 
+                        <MonitoringCard 
                             key={index} 
                             idLieu={lieu.IdLieu || `unknown-${index}`} 
-                            NomLieu={lieu.Nom_Lieu || `unknown-${index}`} 
+                            NomLieu={lieu.Nom_Lieu || `unknown-${index}`}
+                            SondeNumeroSerie={lieu.SondeNumeroSerie}
                         />
                     ))
                 }

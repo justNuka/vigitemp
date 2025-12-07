@@ -1,6 +1,5 @@
 'use client';
-import { Link, Navbar, NavbarBrand, NavbarContent, NavbarMenu, NavbarMenuItem, NavbarMenuToggle } from "@heroui/react";
-import {Tabs, Tab} from "@heroui/tabs";
+import { Link, Navbar, NavbarBrand, NavbarContent, NavbarMenu, NavbarMenuItem, NavbarMenuToggle, Tabs, Tab } from "@heroui/react";
 import {VigitempLogo} from "@/app/components/VigitempLogo";
 import AccountDropdown from "@/app/components/account-dropdown";
 import { usePathname } from "next/navigation";

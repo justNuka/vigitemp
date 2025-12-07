@@ -532,11 +532,11 @@ export default function MonitoringGraphFullScreenZoomRefine(this: any, { idLieu,
                                 <AreaChart width={730} height={250} data={zoomState.data} margin={{ top: 0, left: 0, right: 40, bottom: 0 }} className="font-mono overflow-visible"
                                     onMouseDown={(e) => setZoomState(prevState => ({ 
                                         ...prevState,
-                                        refAreaLeft: e.activeLabel || ''
+                                        refAreaLeft: String(e.activeLabel || '')
                                     }))}
                                     onMouseMove={(e) => zoomState.refAreaLeft && setZoomState(prevState => ({
                                         ...prevState,
-                                        refAreaRight: e.activeLabel || ''
+                                        refAreaRight: String(e.activeLabel || '')
                                     }))}
                                     // eslint-disable-next-line react/jsx-no-bind
                                     onMouseUp={(e) => zoom(e)}
