@@ -16,13 +16,13 @@ export async function POST(req: NextRequest) {
     maxAge: 0,
   });
 
-  // Créer l'audit de déconnexion (manuelle)
+  // Créer l'audit de déconnexion automatique (timeout)
   if (user) {
     await createAuditLog({
       code: AUDIT_CODES.DECONNEXION,
       username: user.username,
       userProfile: user.role,
-      comment: `Déconnexion de l'utilisateur ${user.username}`,
+      comment: `Déconnexion automatique de l'utilisateur ${user.username} (inactivité)`,
     });
   }
 

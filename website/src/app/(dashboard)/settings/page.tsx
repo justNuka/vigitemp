@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 // Skeleton pour les paramètres
 function SettingsLoadingSkeleton() {
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-4xl">
+    <div className="p-4 md:p-6 space-y-6">
       <Card className="p-6">
         <Skeleton className="h-6 w-32 mb-4" />
         <div className="space-y-4">

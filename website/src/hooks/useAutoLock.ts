@@ -33,10 +33,10 @@ export function useAutoLock() {
     return { enabled: true, duration: DEFAULT_DURATION };
   }, []);
 
-  // Fonction de logout
+  // Fonction de logout automatique
   const handleLogout = useCallback(async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await fetch("/api/auth/logout-auto", { method: "POST" });
       router.push("/login?reason=inactivity");
     } catch (error) {
       console.error("Erreur lors du logout automatique:", error);

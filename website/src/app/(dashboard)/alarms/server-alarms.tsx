@@ -17,12 +17,11 @@ export async function ServerAlarms(status?: AlarmStatus) {
 
   if (status === "active") {
     where.Acquite = false;
-    where.DateHeureFin = null;
   } else if (status === "acknowledged") {
     where.Acquite = true;
-    where.DateHeureFin = null;
   } else if (status === "resolved") {
-    where.DateHeureFin = { not: null };
+    // Pour l'instant, pas d'alarmes résolues - tout est basé sur Acquite
+    where.Acquite = null; // Aucune alarme ne correspondra
   }
 
   const alarms = await prisma.t_alarme.findMany({
@@ -47,7 +46,7 @@ export async function ServerAlarms(status?: AlarmStatus) {
     type: (alarm.Type === "H" ? "high" : "low") as "high" | "low",
     value: alarm.Valeur || 0,
     threshold: 0, // Threshold from t_lieu if needed
-    status: alarm.DateHeureFin ? ("resolved" as const) : alarm.Acquite ? ("acknowledged" as const) : ("active" as const),
+    status: alarm.Acquite ? ("acknowledged" as const) : ("active" as const),
     triggeredAt: alarm.DateHeureDebut || new Date(),
     acknowledgedAt: alarm.Acquite ? alarm.DateHeureDebut : null,
     resolvedAt: alarm.DateHeureFin || null,
@@ -88,13 +87,13 @@ export async function ServerAlarmStats() {
 
   const [activeCount, acknowledgedCount, resolvedCount] = await Promise.all([
     prisma.t_alarme.count({
-      where: { Acquite: false, DateHeureFin: null },
+      where: { Acquite: false },
     }),
     prisma.t_alarme.count({
-      where: { Acquite: true, DateHeureFin: null },
+      where: { Acquite: true },
     }),
     prisma.t_alarme.count({
-      where: { DateHeureFin: { not: null } },
+      where: { Acquite: null }, // Pour l'instant, pas d'alarmes résolues
     }),
   ]);
 

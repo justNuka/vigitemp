@@ -5,7 +5,6 @@ import { usePasswordRules } from "@/hooks/usePasswordRules";
 import { validatePassword, calculatePasswordStrength } from "@/lib/password-validation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -17,24 +16,55 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, XCircle, Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { PageHeader } from "@/components/page-header";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+// Schéma de validation Zod
+const changePasswordSchema = z.object({
+  oldPassword: z.string().min(1, "L'ancien mot de passe est requis"),
+  newPassword: z.string().min(1, "Le nouveau mot de passe est requis"),
+  confirmPassword: z.string().min(1, "La confirmation est requise"),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Les mots de passe ne correspondent pas",
+  path: ["confirmPassword"],
+});
+
+type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 
 export default function ProfilePage() {
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { data: rules, isLoading: rulesLoading } = usePasswordRules();
   const { toast } = useToast();
 
+  const form = useForm<ChangePasswordFormValues>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      oldPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
   // Validation en temps réel
+  const newPassword = form.watch("newPassword");
   const validation = rules ? validatePassword(newPassword, rules) : null;
   const passwordStrength = calculatePasswordStrength(newPassword);
-  const passwordsMatch = newPassword === confirmPassword && confirmPassword.length > 0;
+  const passwordsMatch = newPassword === form.watch("confirmPassword") && form.watch("confirmPassword").length > 0;
 
   const getStrengthColor = (strength: number) => {
     if (strength < 25) return "bg-red-500";
@@ -50,8 +80,7 @@ export default function ProfilePage() {
     return "Fort";
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: ChangePasswordFormValues) => {
     setError(null);
 
     if (!validation?.isValid) {
@@ -59,28 +88,17 @@ export default function ProfilePage() {
       return;
     }
 
-    if (!passwordsMatch) {
-      setError("Les mots de passe ne correspondent pas");
-      return;
-    }
-
-    setIsSubmitting(true);
-
     try {
       const response = await fetch("/api/profile/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          oldPassword,
-          newPassword,
-          confirmPassword,
-        }),
+        body: JSON.stringify(data),
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Erreur lors du changement de mot de passe");
+        throw new Error(responseData.error || "Erreur lors du changement de mot de passe");
       }
 
       // Succès !
@@ -90,13 +108,9 @@ export default function ProfilePage() {
       });
 
       // Réinitialiser le formulaire
-      setOldPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      form.reset();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Une erreur est survenue");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -109,77 +123,95 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container max-w-2xl py-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Changer le mot de passe</CardTitle>
-          <CardDescription>
-            Modifiez votre mot de passe en respectant les règles de sécurité
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Ancien mot de passe */}
-            <div className="space-y-2">
-              <Label htmlFor="oldPassword">Ancien mot de passe</Label>
-              <div className="relative">
-                <Input
-                  id="oldPassword"
-                  type={showOldPassword ? "text" : "password"}
-                  value={oldPassword}
-                  onChange={(e) => setOldPassword(e.target.value)}
-                  placeholder="Entrez votre ancien mot de passe"
-                  required
-                  disabled={isSubmitting}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                  onClick={() => setShowOldPassword(!showOldPassword)}
-                  disabled={isSubmitting}
-                >
-                  {showOldPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
+    <div className="flex flex-col min-h-full">
+      <PageHeader
+        title="Mon profil"
+        description="Gérez vos informations personnelles et vos paramètres de sécurité"
+        activeAlarms={0}
+      />
+      
+      <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
+        <Card>
+          <CardHeader>
+            <CardTitle>Changer le mot de passe</CardTitle>
+            <CardDescription>
+              Modifiez votre mot de passe en respectant les règles de sécurité
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {/* Ancien mot de passe */}
+                <FormField
+                  control={form.control}
+                  name="oldPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ancien mot de passe</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            type={showOldPassword ? "text" : "password"}
+                            placeholder="Entrez votre ancien mot de passe"
+                            disabled={form.formState.isSubmitting}
+                            {...field}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                            onClick={() => setShowOldPassword(!showOldPassword)}
+                            disabled={form.formState.isSubmitting}
+                          >
+                            {showOldPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </Button>
-              </div>
-            </div>
-
-            {/* Nouveau mot de passe */}
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">Nouveau mot de passe</Label>
-              <div className="relative">
-                <Input
-                  id="newPassword"
-                  type={showNewPassword ? "text" : "password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Entrez votre nouveau mot de passe"
-                  required
-                  disabled={isSubmitting}
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                  disabled={isSubmitting}
-                >
-                  {showNewPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
 
-              {/* Indicateur de force */}
-              {newPassword && (
+                {/* Nouveau mot de passe */}
+                <FormField
+                  control={form.control}
+                  name="newPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nouveau mot de passe</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            type={showNewPassword ? "text" : "password"}
+                            placeholder="Entrez votre nouveau mot de passe"
+                            disabled={form.formState.isSubmitting}
+                            {...field}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            disabled={form.formState.isSubmitting}
+                          >
+                            {showNewPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                      
+                      {/* Indicateur de force */}
+                      {newPassword && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Force du mot de passe :</span>
@@ -219,79 +251,89 @@ export default function ProfilePage() {
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-
-            {/* Confirmer mot de passe */}
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirmez votre nouveau mot de passe"
-                  required
-                  disabled={isSubmitting}
+                      )}
+                    </FormItem>
+                  )}
                 />
+
+                {/* Confirmer mot de passe */}
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Confirmer le mot de passe</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="Confirmez votre nouveau mot de passe"
+                            disabled={form.formState.isSubmitting}
+                            {...field}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            disabled={form.formState.isSubmitting}
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </FormControl>
+                      {form.watch("confirmPassword") && (
+                        <div className="flex items-center gap-2 text-sm mt-2">
+                          {passwordsMatch ? (
+                            <>
+                              <CheckCircle2 className="h-4 w-4 text-green-600" />
+                              <span className="text-green-600">Les mots de passe correspondent</span>
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="h-4 w-4 text-red-600" />
+                              <span className="text-red-600">Les mots de passe ne correspondent pas</span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Erreur */}
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Bouton submit */}
                 <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  disabled={isSubmitting}
+                  type="submit"
+                  className="w-full"
+                  disabled={form.formState.isSubmitting || !validation?.isValid || !passwordsMatch}
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                  {form.formState.isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Changement en cours...
+                    </>
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    "Changer le mot de passe"
                   )}
                 </Button>
-              </div>
-              {confirmPassword && (
-                <div className="flex items-center gap-2 text-sm">
-                  {passwordsMatch ? (
-                    <>
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span className="text-green-600">Les mots de passe correspondent</span>
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="h-4 w-4 text-red-600" />
-                      <span className="text-red-600">Les mots de passe ne correspondent pas</span>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Erreur */}
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            {/* Bouton submit */}
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting || !validation?.isValid || !passwordsMatch}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Changement en cours...
-                </>
-              ) : (
-                "Changer le mot de passe"
-              )}
-            </Button>
-          </form>
+              </form>
+            </Form>
         </CardContent>
       </Card>
+      </main>
     </div>
   );
 }

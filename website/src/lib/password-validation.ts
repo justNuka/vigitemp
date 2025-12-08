@@ -87,17 +87,15 @@ export function validatePassword(
 /**
  * Vérifie si un mot de passe a déjà été utilisé par l'utilisateur
  * @param userId ID de l'utilisateur
- * @param newPasswordHash Hash du nouveau mot de passe
- * @param historyCount Nombre d'anciens mots de passe à vérifier
+ * @param newPassword Le nouveau mot de passe en clair
  * @returns true si le mot de passe est déjà utilisé, false sinon
  */
 export async function checkPasswordHistory(
   userId: number,
-  newPassword: string,
-  historyCount: number
+  newPassword: string
 ): Promise<{ isReused: boolean; matchingHash?: string }> {
   try {
-    // Récupérer les N derniers anciens mots de passe
+    // Récupérer TOUS les anciens mots de passe (historique complet)
     const oldPasswords = await prisma.t_ancienmotpasse.findMany({
       where: {
         IdUtilisateur: userId,
@@ -108,7 +106,6 @@ export async function checkPasswordHistory(
       orderBy: {
         IdAncienMotPasse: "desc",
       },
-      take: historyCount,
     });
 
     // Récupérer aussi le mot de passe actuel

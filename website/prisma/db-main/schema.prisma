@@ -134,7 +134,7 @@ model t_alarme_message {
 model t_ancienmotpasse {
   IdAncienMotPasse Int            @id @default(autoincrement())
   IdUtilisateur    Int?
-  MotDePasse       String?        @db.VarChar(32)
+  MotDePasse       String?        @db.VarChar(60)
   t_utilisateur    t_utilisateur? @relation(fields: [IdUtilisateur], references: [IdUtilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_UTILISATEUR_ANCIENMDP_new")
 
   @@index([IdUtilisateur], map: "IdUtilisateur")

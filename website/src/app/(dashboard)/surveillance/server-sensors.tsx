@@ -42,6 +42,11 @@ export async function ServerSensors() {
     maxThreshold: lieu.Consigne_Sup ?? 30,
     lastMeasurement: lieu.DernierDateHeure || null,
     isActive: !lieu.Archive,
+    // Ajout des champs pour MonitoringCard
+    SondeNumeroSerie: lieu.SondeNumeroSerie,
+    Lieu_Etat: lieu.Lieu_Etat,
+    IdLieu: lieu.IdLieu,
+    Frequence: lieu.Frequence,
     location: {
       id: lieu.IdLieu.toString(),
       name: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite

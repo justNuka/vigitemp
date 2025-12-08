@@ -62,7 +62,7 @@ export function LoginForm() {
         <div className="flex flex-col items-center text-center space-y-3">
           <Logo size="lg" showText />
           <span className="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">
-            Version Light
+            Licence Light
           </span>
         </div>
 

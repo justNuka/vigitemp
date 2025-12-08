@@ -44,16 +44,16 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <AppSidebar
-          activeAlarms={activeAlarmsCount}
-          currentUser={currentUser}
-          onLogout={handleLogout}
-        />
-        <main className="flex-1 overflow-y-auto bg-background">
-          {children}
-        </main>
-      </div>
-    </SidebarProvider>
+        <div className="flex min-h-screen w-full">
+          <AppSidebar
+            activeAlarms={activeAlarmsCount}
+            currentUser={currentUser}
+            onLogout={handleLogout}
+          />
+          <main className="flex-1 overflow-y-auto bg-background">
+            {children}
+          </main>
+        </div>
+      </SidebarProvider>
   );
 }

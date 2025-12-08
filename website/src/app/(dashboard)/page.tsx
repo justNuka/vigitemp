@@ -87,6 +87,7 @@ export default async function DashboardPage() {
           criticalSensors={criticalSensors}
           activeAlarms={activeAlarms}
           sensorOverview={sensorOverview}
+          totalActiveAlarms={stats.activeAlarms}
         />
       </Suspense>
     </div>

@@ -193,7 +193,7 @@ export function SettingsClient({ settings: initialSettings }: Props) {
   };
 
   return (
-    <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in max-w-4xl">
+    <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       <Card>
         <CardHeader>
           <CardTitle>Général</CardTitle>

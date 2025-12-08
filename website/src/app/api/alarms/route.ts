@@ -10,12 +10,11 @@ export async function GET(req: NextRequest) {
 
     if (status === "active") {
       where.Acquite = false;
-      where.DateHeureFin = null;
     } else if (status === "acknowledged") {
       where.Acquite = true;
-      where.DateHeureFin = null;
     } else if (status === "resolved") {
-      where.DateHeureFin = { not: null };
+      // Pour l'instant, pas d'alarmes résolues - tout est basé sur Acquite
+      where.Acquite = null; // Aucune alarme ne correspondra
     }
 
     const alarms = await prisma.t_alarme.findMany({

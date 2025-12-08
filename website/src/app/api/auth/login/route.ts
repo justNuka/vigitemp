@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { generateToken } from "@/lib/jwt";
+import { createAuditLog, AUDIT_CODES } from "@/lib/audit";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username required"),
@@ -74,6 +75,14 @@ export async function POST(req: NextRequest) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+
+    // Créer l'audit de connexion
+    await createAuditLog({
+      code: AUDIT_CODES.CONNEXION,
+      username: user.Login || "unknown",
+      userProfile: user.t_profil?.ProfilUtilisateur || "user",
+      comment: `Connexion de l'utilisateur ${user.Login}`,
     });
 
     return response;

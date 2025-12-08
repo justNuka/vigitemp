@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
       min_lowercase: parseInt(rulesParams.find(p => p.MotCle === "password_min_lowercase")?.Valeur || "1", 10),
       min_numbers: parseInt(rulesParams.find(p => p.MotCle === "password_min_numbers")?.Valeur || "1", 10),
       min_special: parseInt(rulesParams.find(p => p.MotCle === "password_min_special")?.Valeur || "1", 10),
-      history_count: parseInt(rulesParams.find(p => p.MotCle === "password_history_count")?.Valeur || "5", 10),
+      history_count: 0, // Not used anymore, but kept for type compatibility
     };
 
     // 7. Valider le nouveau mot de passe
@@ -103,17 +103,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 8. Vérifier l'historique des mots de passe
+    // 8. Vérifier l'historique des mots de passe (tous les anciens mots de passe)
     const historyCheck = await checkPasswordHistory(
       user.userId,
-      newPassword,
-      rules.history_count
+      newPassword
     );
 
     if (historyCheck.isReused) {
       return NextResponse.json(
         {
-          error: `Vous ne pouvez pas réutiliser l'un de vos ${rules.history_count} derniers mots de passe`,
+          error: "Vous ne pouvez pas réutiliser l'un de vos anciens mots de passe",
         },
         { status: 400 }
       );

@@ -21,7 +21,6 @@ export async function ServerDashboardStats() {
       prisma.t_alarme.count({
         where: {
           Acquite: false,
-          Alarme_Vrai: true,
         },
       }),
       prisma.t_lieu.count({ where: { Archive: false, Lieu_Etat: "O" } }),
@@ -100,7 +99,6 @@ export async function ServerActiveAlarms() {
   const alarms = await prisma.t_alarme.findMany({
     where: {
       Acquite: false,
-      Alarme_Vrai: true,
     },
     include: {
       t_lieu: {

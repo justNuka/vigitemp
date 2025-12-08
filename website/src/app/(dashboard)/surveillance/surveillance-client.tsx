@@ -4,11 +4,13 @@ import { useState, useMemo, useCallback } from "react";
 import { useCurrentTime } from "@/hooks/use-current-time";
 import { PageHeader } from "@/components/page-header";
 import { SensorsGrid } from "./sensors-grid-client";
+import { MonitoringCardsGrid } from "./monitoring-cards-grid";
 import { SurveillanceFilters } from "./surveillance-filters";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { SensorWithLocation, Location } from "@/lib/api";
 
 type StatusFilter = "all" | "ok" | "warning" | "critical";
+type ViewMode = "status" | "graphs";
 
 interface FilterState {
   siteId: number | null;
@@ -31,6 +33,7 @@ interface Props {
 
 export function SurveillancePageClient({ sensors, locations, stats }: Props) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [viewMode, setViewMode] = useState<ViewMode>("graphs");
   const [filters, setFilters] = useState<FilterState>({ siteId: null, groupId: null });
   const currentTime = useCurrentTime();
 
@@ -82,6 +85,18 @@ export function SurveillancePageClient({ sensors, locations, stats }: Props) {
     setFilters(newFilters);
   }, []);
 
+  const handleSurveillanceToggle = useCallback(async (idLieu: number, newState: boolean) => {
+    try {
+      // TODO: Appeler l'API pour mettre à jour le statut de surveillance
+      console.log(`Toggle surveillance for lieu ${idLieu}: ${newState ? 'Active' : 'Inactive'}`);
+      // await axios.patch(`/api/locations/${idLieu}`, {
+      //   Lieu_Etat: newState ? 'A' : 'I'
+      // });
+    } catch (error) {
+      console.error("Error toggling surveillance:", error);
+    }
+  }, []);
+
   return (
     <>
       <PageHeader
@@ -93,39 +108,64 @@ export function SurveillancePageClient({ sensors, locations, stats }: Props) {
           {/* Filtres par site/groupe */}
           <SurveillanceFilters onFilterChange={handleFilterChange} />
 
-          {/* Filtres par statut */}
+          {/* Onglet Vue: Graphiques ou Status */}
           <Tabs
-            value={statusFilter}
-            onValueChange={(v: string) => setStatusFilter(v as StatusFilter)}
+            value={viewMode}
+            onValueChange={(v: string) => setViewMode(v as ViewMode)}
             className="w-full sm:w-auto"
           >
-            <TabsList className="grid grid-cols-4 w-full sm:w-auto">
-              <TabsTrigger value="all" data-testid="tab-all">
-                Toutes ({filteredStats.total})
+            <TabsList className="grid grid-cols-2 w-full sm:w-auto">
+              <TabsTrigger value="graphs">
+                Graphiques
               </TabsTrigger>
-              <TabsTrigger value="ok" data-testid="tab-ok" className="gap-1">
-                <span className="hidden sm:inline">OK</span>
-                <span className="text-success">({filteredStats.ok})</span>
-              </TabsTrigger>
-              <TabsTrigger value="warning" data-testid="tab-warning" className="gap-1">
-                <span className="hidden sm:inline">Attention</span>
-                <span className="text-warning">({filteredStats.warning})</span>
-              </TabsTrigger>
-              <TabsTrigger value="critical" data-testid="tab-critical" className="gap-1">
-                <span className="hidden sm:inline">Critique</span>
-                <span className="text-destructive">({filteredStats.critical})</span>
+              <TabsTrigger value="status">
+                Statuts
               </TabsTrigger>
             </TabsList>
           </Tabs>
+
+          {/* Filtres par statut (uniquement en mode status) */}
+          {viewMode === "status" && (
+            <Tabs
+              value={statusFilter}
+              onValueChange={(v: string) => setStatusFilter(v as StatusFilter)}
+              className="w-full sm:w-auto"
+            >
+              <TabsList className="grid grid-cols-4 w-full sm:w-auto">
+                <TabsTrigger value="all" data-testid="tab-all">
+                  Toutes ({filteredStats.total})
+                </TabsTrigger>
+                <TabsTrigger value="ok" data-testid="tab-ok" className="gap-1">
+                  <span className="hidden sm:inline">OK</span>
+                  <span className="text-success">({filteredStats.ok})</span>
+                </TabsTrigger>
+                <TabsTrigger value="warning" data-testid="tab-warning" className="gap-1">
+                  <span className="hidden sm:inline">Attention</span>
+                  <span className="text-warning">({filteredStats.warning})</span>
+                </TabsTrigger>
+                <TabsTrigger value="critical" data-testid="tab-critical" className="gap-1">
+                  <span className="hidden sm:inline">Critique</span>
+                  <span className="text-destructive">({filteredStats.critical})</span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
         </div>
       </PageHeader>
 
-      <SensorsGrid
-        sensors={filteredSensors}
-        locations={locations}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-      />
+      {viewMode === "status" ? (
+        <SensorsGrid
+          sensors={filteredSensors}
+          locations={locations}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+        />
+      ) : (
+        <MonitoringCardsGrid 
+          sensors={filteredSensors}
+          onSurveillanceToggle={handleSurveillanceToggle}
+        />
+      )}
     </>
   );
 }

@@ -19,6 +19,7 @@ interface DashboardClientProps {
   criticalSensors: SensorWithLocation[];
   activeAlarms: AlarmWithDetails[];
   sensorOverview: SensorWithLocation[];
+  totalActiveAlarms: number;
 }
 
 /**
@@ -29,6 +30,7 @@ export function DashboardClient({
   criticalSensors,
   activeAlarms,
   sensorOverview,
+  totalActiveAlarms,
 }: DashboardClientProps) {
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
@@ -39,9 +41,9 @@ export function DashboardClient({
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive" />
               Alarmes actives
-              {activeAlarms.length > 0 && (
+              {totalActiveAlarms > 0 && (
                 <Badge variant="destructive" className="ml-2">
-                  {activeAlarms.length}
+                  {totalActiveAlarms}
                 </Badge>
               )}
             </h2>

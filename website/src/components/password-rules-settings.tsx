@@ -19,7 +19,6 @@ export function PasswordRulesSettings() {
     min_lowercase: 1,
     min_numbers: 1,
     min_special: 1,
-    history_count: 5,
   });
 
   // Initialiser les valeurs éditées quand les règles sont chargées
@@ -40,16 +39,13 @@ export function PasswordRulesSettings() {
     setIsSaving(true);
     try {
       // Sauvegarder chaque paramètre
-      const updates = [
-        { key: "security:password_min_length", value: editedRules.min_length.toString() },
-        { key: "security:password_min_uppercase", value: editedRules.min_uppercase.toString() },
-        { key: "security:password_min_lowercase", value: editedRules.min_lowercase.toString() },
-        { key: "security:password_min_numbers", value: editedRules.min_numbers.toString() },
-        { key: "security:password_min_special", value: editedRules.min_special.toString() },
-        { key: "security:password_history_count", value: editedRules.history_count.toString() },
-      ];
-
-      // Mettre à jour chaque paramètre
+    const updates = [
+      { key: "security:password_min_length", value: editedRules.min_length.toString() },
+      { key: "security:password_min_uppercase", value: editedRules.min_uppercase.toString() },
+      { key: "security:password_min_lowercase", value: editedRules.min_lowercase.toString() },
+      { key: "security:password_min_numbers", value: editedRules.min_numbers.toString() },
+      { key: "security:password_min_special", value: editedRules.min_special.toString() },
+    ];      // Mettre à jour chaque paramètre
       for (const update of updates) {
         await fetch(`/api/settings/${update.key}`, {
           method: "PATCH",
@@ -76,8 +72,7 @@ export function PasswordRulesSettings() {
       editedRules.min_uppercase !== rules.min_uppercase ||
       editedRules.min_lowercase !== rules.min_lowercase ||
       editedRules.min_numbers !== rules.min_numbers ||
-      editedRules.min_special !== rules.min_special ||
-      editedRules.history_count !== rules.history_count);
+      editedRules.min_special !== rules.min_special);
 
   if (isLoading) {
     return (
@@ -182,25 +177,6 @@ export function PasswordRulesSettings() {
           />
           <p className="text-xs text-muted-foreground">
             Nombre minimum de caractères spéciaux (!@#$%^&*)
-          </p>
-        </div>
-
-        {/* Historique */}
-        <div className="space-y-2">
-          <Label htmlFor="history_count">
-            Historique des mots de passe
-          </Label>
-          <Input
-            id="history_count"
-            type="number"
-            min={0}
-            max={20}
-            value={editedRules.history_count}
-            onChange={(e) => handleChange("history_count", e.target.value)}
-            disabled={isSaving}
-          />
-          <p className="text-xs text-muted-foreground">
-            Nombre d&apos;anciens mots de passe à vérifier (0-20)
           </p>
         </div>
       </div>
