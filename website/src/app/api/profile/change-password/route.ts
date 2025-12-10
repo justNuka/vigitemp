@@ -5,6 +5,8 @@ import { validatePassword, checkPasswordHistory } from "@/lib/password-validatio
 import { PasswordRules } from "@/lib/api";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { log } from "@/lib/logger";
+import { getRequestContext } from "@/lib/api-logger";
 
 const changePasswordSchema = z.object({
   oldPassword: z.string().min(1, "L'ancien mot de passe est requis"),
@@ -129,15 +131,20 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 11. Mettre à jour le mot de passe
+    // 11. Mettre à jour le mot de passe et la date de dernière modification
     await prisma.t_utilisateur.update({
       where: { IdUtilisateur: user.userId },
       data: {
         Mot_de_passe: hashedPassword,
+        DateDerniereModificationMDP: new Date(),
       },
     });
 
-    // 12. Succès !
+    // 12. Logger le changement de mot de passe
+    const { ip } = getRequestContext(req);
+    log.auth.passwordChange(user.username, user.userId, ip, false);
+
+    // 13. Succès !
     return NextResponse.json({
       message: "Mot de passe changé avec succès",
     });

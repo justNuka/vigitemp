@@ -6,3 +6,8 @@ node_modules
 # Prisma generated clients
 /src/generated/@prisma-db-main/
 /src/generated/@prisma-db-mesure/
+
+# Logs
+/logs/
+*.log
+*.log.*

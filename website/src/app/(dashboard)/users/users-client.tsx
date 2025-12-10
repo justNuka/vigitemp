@@ -9,15 +9,22 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, Shield, User as UserIcon, Eye, EyeOff, RefreshCw, CheckCircle2, XCircle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { UserPlus, Shield, User as UserIcon, Eye, EyeOff, RefreshCw, CheckCircle2, XCircle, Calendar as CalendarIcon, Pencil, AlertTriangle } from "lucide-react";
 import { usersApi, type User, type CreateUserInput } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { usePasswordRules } from "@/hooks/usePasswordRules";
+import { useProfiles } from "@/hooks/useProfiles";
 import { validatePassword } from "@/lib/password-validation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import {
   Form,
   FormControl,
@@ -40,19 +47,45 @@ const createUserSchema = z.object({
   nom: z.string().min(1, "Le nom est requis"),
   prenom: z.string().min(1, "Le prénom est requis"),
   email: z.string().email("Email invalide"),
-  role: z.enum(["user", "admin"]),
+  profileId: z.string().min(1, "Le profil est requis"),
+  hasExpiryDate: z.boolean().default(false),
+  expiryDate: z.date().optional(),
 }).refine((data) => data.password === data.passwordConfirm, {
   message: "Les mots de passe ne correspondent pas",
   path: ["passwordConfirm"],
+}).refine((data) => !data.hasExpiryDate || data.expiryDate, {
+  message: "La date de validité est requise quand activée",
+  path: ["expiryDate"],
+});
+
+const editUserSchema = z.object({
+  nom: z.string().min(1, "Le nom est requis"),
+  prenom: z.string().min(1, "Le prénom est requis"),
+  email: z.string().email("Email invalide"),
+  profileId: z.string().min(1, "Le profil est requis"),
+  hasExpiryDate: z.boolean().default(false),
+  expiryDate: z.date().optional(),
+  password: z.string().optional(),
+  passwordConfirm: z.string().optional(),
+}).refine((data) => !data.password || data.password === data.passwordConfirm, {
+  message: "Les mots de passe ne correspondent pas",
+  path: ["passwordConfirm"],
+}).refine((data) => !data.hasExpiryDate || data.expiryDate, {
+  message: "La date de validité est requise quand activée",
+  path: ["expiryDate"],
 });
 
 type CreateUserFormValues = z.infer<typeof createUserSchema>;
+type EditUserFormValues = z.infer<typeof editUserSchema>;
 
 export function UsersClient({ users }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: rules, isLoading: rulesLoading } = usePasswordRules();
+  const { data: profiles, isLoading: profilesLoading } = useProfiles();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
@@ -65,9 +98,29 @@ export function UsersClient({ users }: Props) {
       nom: "",
       prenom: "",
       email: "",
-      role: "user",
+      profileId: "",
+      hasExpiryDate: false,
+      expiryDate: undefined,
     },
   });
+
+  const hasExpiryDate = form.watch("hasExpiryDate");
+
+  const editForm = useForm<EditUserFormValues>({
+    resolver: zodResolver(editUserSchema),
+    defaultValues: {
+      nom: "",
+      prenom: "",
+      email: "",
+      profileId: "",
+      hasExpiryDate: false,
+      expiryDate: undefined,
+      password: "",
+      passwordConfirm: "",
+    },
+  });
+
+  const hasEditExpiryDate = editForm.watch("hasExpiryDate");
 
   // Validation en temps réel du mot de passe
   const currentPassword = form.watch("password");
@@ -130,6 +183,59 @@ export function UsersClient({ users }: Props) {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => usersApi.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      router.refresh();
+      toast.success("Utilisateur modifié avec succès");
+      setIsEditDialogOpen(false);
+      setSelectedUser(null);
+      editForm.reset();
+    },
+    onError: () => {
+      toast.error("Erreur lors de la modification");
+    },
+  });
+
+  const archiveMutation = useMutation({
+    mutationFn: (id: string) => usersApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      router.refresh();
+      toast.success("Compte archivé avec succès");
+      setIsEditDialogOpen(false);
+      setSelectedUser(null);
+      editForm.reset();
+    },
+    onError: () => {
+      toast.error("Erreur lors de l'archivage");
+    },
+  });
+
+  const handleArchiveUser = () => {
+    if (!selectedUser) return;
+    
+    if (confirm(`Êtes-vous sûr de vouloir archiver le compte de ${selectedUser.username} ? Le compte sera désactivé et l'utilisateur ne pourra plus se connecter.`)) {
+      archiveMutation.mutate(selectedUser.id);
+    }
+  };
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    editForm.reset({
+      nom: user.nom || "",
+      prenom: user.prenom || "",
+      email: user.email || "",
+      profileId: user.role,
+      hasExpiryDate: false,
+      expiryDate: undefined,
+      password: "",
+      passwordConfirm: "",
+    });
+    setIsEditDialogOpen(true);
+  };
+
   const onSubmit = (data: CreateUserFormValues) => {
     // Vérifier les règles de mot de passe
     if (validation && !validation.isValid) {
@@ -137,9 +243,22 @@ export function UsersClient({ users }: Props) {
       return;
     }
 
-    // Créer l'utilisateur (sans passwordConfirm)
-    const { passwordConfirm, ...userData } = data;
+    // Créer l'utilisateur (sans passwordConfirm et hasExpiryDate)
+    const { passwordConfirm, hasExpiryDate, ...userData } = data;
     createMutation.mutate(userData);
+  };
+
+  const onEditSubmit = (data: EditUserFormValues) => {
+    if (!selectedUser) return;
+
+    // Préparer les données (enlever passwordConfirm, hasExpiryDate, et password vide)
+    const { passwordConfirm, hasExpiryDate, password, ...userData } = data;
+    const updateData = {
+      ...userData,
+      ...(password ? { password } : {}),
+    };
+
+    updateMutation.mutate({ id: selectedUser.id, data: updateData });
   };
 
   return (
@@ -379,25 +498,106 @@ export function UsersClient({ users }: Props) {
 
                 <FormField
                   control={form.control}
-                  name="role"
+                  name="profileId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Rôle</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormLabel>Profil *</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={profilesLoading}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner un rôle" />
+                            <SelectValue placeholder="Sélectionner un profil" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="user">Utilisateur</SelectItem>
-                          <SelectItem value="admin">Administrateur</SelectItem>
+                          {profiles?.map((profile) => (
+                            <SelectItem key={profile.id} value={profile.name}>
+                              {profile.name}
+                              {profile.description && (
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  ({profile.description})
+                                </span>
+                              )}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
+                      <FormDescription>
+                        Le profil détermine les autorisations de l'utilisateur
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="hasExpiryDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">
+                          Date de validité
+                        </FormLabel>
+                        <FormDescription>
+                          Définir une date d'expiration pour le compte
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                {hasExpiryDate && (
+                  <FormField
+                    control={form.control}
+                    name="expiryDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Date d'expiration *</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP", { locale: fr })
+                                ) : (
+                                  <span>Sélectionner une date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) =>
+                                date < new Date(new Date().setHours(0, 0, 0, 0))
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormDescription>
+                          Le compte sera automatiquement désactivé à cette date
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
@@ -405,6 +605,210 @@ export function UsersClient({ users }: Props) {
                   </Button>
                   <Button type="submit" disabled={createMutation.isPending}>
                     {createMutation.isPending ? "Création..." : "Créer"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog d'édition d'utilisateur */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Modifier l'utilisateur</DialogTitle>
+              <DialogDescription>
+                Modifier les informations de {selectedUser?.username}
+              </DialogDescription>
+            </DialogHeader>
+
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="nom"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nom *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Doe" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="prenom"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Prénom *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="John" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={editForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email *</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="john.doe@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="profileId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Profil *</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={profilesLoading}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un profil" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {profiles?.map((profile) => (
+                            <SelectItem key={profile.id} value={profile.name}>
+                              {profile.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editForm.control}
+                  name="hasExpiryDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Date de validité</FormLabel>
+                        <FormDescription>Définir une date d'expiration</FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                {hasEditExpiryDate && (
+                  <FormField
+                    control={editForm.control}
+                    name="expiryDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Date d'expiration *</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
+                              >
+                                {field.value ? format(field.value, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                <div className="space-y-2 pt-4 border-t">
+                  <p className="text-sm font-medium">Changer le mot de passe (optionnel)</p>
+                  <FormField
+                    control={editForm.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nouveau mot de passe</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="Laisser vide pour ne pas modifier" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="passwordConfirm"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirmer le mot de passe</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="Confirmer le mot de passe" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Zone de danger */}
+                <div className="space-y-3 pt-4 border-t border-destructive/20">
+                  <div className="flex items-center gap-2 text-destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <p className="text-sm font-medium">Zone de danger</p>
+                  </div>
+                  <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">Archiver ce compte</p>
+                        <p className="text-xs text-muted-foreground">
+                          Le compte sera désactivé et l'utilisateur ne pourra plus se connecter. Cette action peut être annulée en réactivant le compte.
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleArchiveUser}
+                        disabled={archiveMutation.isPending || !selectedUser?.isActive}
+                        className="shrink-0"
+                      >
+                        {archiveMutation.isPending ? "Archivage..." : "Archiver"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                    Annuler
+                  </Button>
+                  <Button type="submit" disabled={updateMutation.isPending}>
+                    {updateMutation.isPending ? "Modification..." : "Modifier"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -424,8 +828,9 @@ export function UsersClient({ users }: Props) {
                 <TableHead>Login</TableHead>
                 <TableHead>Nom complet</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Rôle</TableHead>
+                <TableHead>Profil</TableHead>
                 <TableHead>Statut</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -435,15 +840,26 @@ export function UsersClient({ users }: Props) {
                   <TableCell>{user.displayName}</TableCell>
                   <TableCell className="text-muted-foreground">{user.email || "-"}</TableCell>
                   <TableCell>
-                    <Badge variant={user.role === "admin" ? "default" : "secondary"} className="gap-1">
-                      {user.role === "admin" ? <Shield className="h-3 w-3" /> : <UserIcon className="h-3 w-3" />}
-                      {user.role === "admin" ? "Admin" : "Utilisateur"}
+                    <Badge variant="outline" className="gap-1">
+                      <Shield className="h-3 w-3" />
+                      {user.role}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant={user.isActive ? "default" : "secondary"}>
                       {user.isActive ? "Actif" : "Inactif"}
                     </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditUser(user)}
+                      className="gap-2"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Modifier
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

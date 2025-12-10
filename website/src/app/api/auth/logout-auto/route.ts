@@ -21,8 +21,8 @@ export async function POST(req: NextRequest) {
     await createAuditLog({
       code: AUDIT_CODES.DECONNEXION,
       username: user.username,
-      userProfile: user.role,
-      comment: `Déconnexion automatique de l'utilisateur ${user.username} (inactivité)`,
+      userProfile: user.profile,
+      comment: `Déconnexion de l'utilisateur ${user.username} (inactivité)`,
     });
   }
 

@@ -7,11 +7,16 @@ import { prismaMesure } from "@/lib/prisma";
  * Composant serveur pour charger les logs d'audit depuis la base de données
  * Utilise le cache Next.js 16 pour optimiser les performances
  */
-export async function ServerAuditLogs(limit = 100) {
+export async function ServerAuditLogs(limit = 100, codeFilter?: string) {
   "use cache";
   cacheTag("audit-logs");
 
+  const whereClause = codeFilter 
+    ? { CodeJournal: codeFilter }
+    : {};
+
   const logs = await prismaMesure.ts_journal.findMany({
+    where: whereClause,
     take: limit,
     orderBy: { DateHeureJournal: "desc" },
     select: {

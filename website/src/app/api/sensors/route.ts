@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { log } from "@/lib/logger";
+import { getRequestContext } from "@/lib/api-logger";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 const createSensorSchema = z.object({
   name: z.string().min(1, "Name required"),
@@ -76,6 +79,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const currentUser = getAuthenticatedUser(req);
+    const { ip } = getRequestContext(req);
+    
     const body = await req.json();
     const data = createSensorSchema.parse(body);
 
@@ -99,6 +105,21 @@ export async function POST(req: NextRequest) {
         },
       },
     });
+
+    // Log sensor creation
+    log.data.create(
+      "Capteur",
+      lieu.IdLieu,
+      currentUser?.username || "System",
+      currentUser?.userId || 0,
+      ip,
+      {
+        name: data.name,
+        locationId: data.locationId,
+        minThreshold: data.minThreshold,
+        maxThreshold: data.maxThreshold,
+      }
+    );
 
     return NextResponse.json(
       {

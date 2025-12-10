@@ -2,13 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { log } from "@/lib/logger";
+import { getRequestContext } from "@/lib/api-logger";
+import { getAuthenticatedUser } from "@/lib/auth";
+import { revalidateTag } from "next/cache";
 
 const updateUserSchema = z.object({
   nom: z.string().optional(),
   prenom: z.string().optional(),
   email: z.string().email().optional(),
   password: z.string().min(6).optional(),
-  role: z.enum(["admin", "user"]).optional(),
+  profileId: z.string().optional(),
+  expiryDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
 });
 
 export async function GET(
@@ -55,6 +60,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = getAuthenticatedUser(req);
+    const { ip } = getRequestContext(req);
+    
     const { id } = await params;
     const userId = parseInt(id);
     const body = await req.json();
@@ -65,12 +73,15 @@ export async function PATCH(
     // Hash password if provided
     if (data.password) {
       updateData.Mot_de_passe = await bcrypt.hash(data.password, 10);
+      updateData.DateDerniereModificationMDP = new Date();
+      updateData.MotDePasseTemporaire = false;
     }
     
-    if (data.role) updateData.ProfilUtilisateur = data.role;
+    if (data.profileId) updateData.ProfilUtilisateur = data.profileId;
     if (data.nom) updateData.Nom = data.nom;
     if (data.prenom) updateData.Prenom = data.prenom;
     if (data.email) updateData.Adresse_Email = data.email;
+    if (data.expiryDate !== undefined) updateData.Date_Validite = data.expiryDate;
 
     const user = await prisma.t_utilisateur.update({
       where: { IdUtilisateur: userId },
@@ -83,6 +94,26 @@ export async function PATCH(
         },
       },
     });
+
+    // Log user update
+    const changes: any = {};
+    if (data.nom) changes.nom = data.nom;
+    if (data.prenom) changes.prenom = data.prenom;
+    if (data.email) changes.email = data.email;
+    if (data.profileId) changes.profile = data.profileId;
+    if (data.password) changes.passwordChanged = true;
+    
+    log.data.update(
+      "Utilisateur",
+      userId,
+      currentUser?.username || "System",
+      currentUser?.userId || 0,
+      ip,
+      changes
+    );
+
+    // Invalider le cache des utilisateurs
+    revalidateTag("users-data", "default");
 
     return NextResponse.json({
       id: user.IdUtilisateur,
@@ -111,14 +142,36 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = getAuthenticatedUser(req);
+    const { ip } = getRequestContext(req);
+    
     const { id } = await params;
     const userId = parseInt(id);
+
+    // Get user info before deletion
+    const userToDelete = await prisma.t_utilisateur.findUnique({
+      where: { IdUtilisateur: userId },
+      select: { Login: true },
+    });
 
     // Soft delete
     await prisma.t_utilisateur.update({
       where: { IdUtilisateur: userId },
       data: { Archive: true },
     });
+
+    // Log user deletion
+    log.data.delete(
+      "Utilisateur",
+      userId,
+      currentUser?.username || "System",
+      currentUser?.userId || 0,
+      ip,
+      `Archive de l'utilisateur ${userToDelete?.Login || userId}`
+    );
+
+    // Invalider le cache des utilisateurs
+    revalidateTag("users-data", "default");
 
     return NextResponse.json({ success: true });
   } catch (error) {

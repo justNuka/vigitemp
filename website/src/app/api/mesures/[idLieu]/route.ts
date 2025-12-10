@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prismaMesure } from "@/lib/prisma";
+import {
+  getCachedMeasurements,
+  setCachedMeasurements,
+  shouldRefreshCache,
+} from "@/lib/measurement-cache";
 
 export async function GET(
   req: NextRequest,
@@ -8,9 +13,12 @@ export async function GET(
   try {
     const { idLieu } = await params;
     const searchParams = req.nextUrl.searchParams;
-    const rowNumber = parseInt(searchParams.get("rowNumber") || "125");
+    // Limit maximum to 125 measurements for performance
+    const rowNumberParam = parseInt(searchParams.get("rowNumber") || "125");
+    const rowNumber = Math.min(rowNumberParam, 125); // Cap at 125
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+    const forceFresh = searchParams.get("fresh") === "true"; // Allow forcing a fresh fetch
 
     const idLieuInt = parseInt(idLieu);
     if (isNaN(idLieuInt)) {
@@ -18,6 +26,19 @@ export async function GET(
         { error: "Invalid idLieu parameter" },
         { status: 400 }
       );
+    }
+
+    // Check cache first (unless forcing fresh data or using date range)
+    if (!forceFresh && !startDate && !endDate) {
+      const cached = getCachedMeasurements(idLieuInt);
+      if (cached) {
+        // Return cached data with cache headers
+        const response = NextResponse.json(cached);
+        // Use short cache for "fresh" requests, longer for client-side cache
+        response.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=900");
+        response.headers.set("X-Cache", "HIT");
+        return response;
+      }
     }
 
     // Build where clause
@@ -33,13 +54,17 @@ export async function GET(
       };
     }
 
-    // Get measurements from ts_graphique (time-series database)
-    const measurements = await prismaMesure.ts_graphique.findMany({
-      where: whereClause,
+    // Get measurements from ts_mesure (time-series database)
+    // Filter out null values for chart plotting
+    const measurements = await prismaMesure.ts_mesure.findMany({
+      where: {
+        ...whereClause,
+        Valeur: { not: null }, // Exclude null values from graph
+      },
       take: rowNumber,
       orderBy: { DateHeureMesure: "desc" },
       select: {
-        IdGraphique: true,
+        IdMesure: true,
         DateHeureMesure: true,
         Valeur: true,
         Unite: true,
@@ -77,7 +102,7 @@ export async function GET(
       });
 
       return {
-        id: m.IdGraphique?.toString() || "",
+        id: m.IdMesure?.toString() || "",
         Valeur: m.Valeur !== null ? parseFloat(m.Valeur.toString()) : 0,
         Unite: m.Unite || "°C",
         DateHeureMesure: dateDisplay,
@@ -91,7 +116,17 @@ export async function GET(
       };
     });
 
-    return NextResponse.json(formattedMeasurements);
+    // Cache the fetched measurements for future requests
+    if (!startDate && !endDate) {
+      setCachedMeasurements(idLieuInt, formattedMeasurements);
+    }
+
+    const response = NextResponse.json(formattedMeasurements);
+    // Cache headers: 15 minutes on server, 15 minutes stale-while-revalidate on client
+    // This matches the sensor measurement frequency (~15 minutes between readings)
+    response.headers.set("Cache-Control", "public, s-maxage=900, stale-while-revalidate=900");
+    response.headers.set("X-Cache", "MISS");
+    return response;
   } catch (error) {
     console.error("Get measurements error:", error);
     return NextResponse.json(

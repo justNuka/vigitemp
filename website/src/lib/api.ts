@@ -302,7 +302,8 @@ export type CreateUserInput = {
   nom: string;
   prenom: string;
   email: string;
-  role: "admin" | "user";
+  profileId: string;
+  expiryDate?: Date;
 };
 export type UpdateUserInput = Partial<Omit<CreateUserInput, "password">> & {
   password?: string;

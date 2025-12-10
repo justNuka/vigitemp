@@ -35,6 +35,7 @@ function UsersLoadingSkeleton() {
 }
 
 async function getActiveAlarms() {
+  "use cache";
   try {
     const alarms = await alarmsApi.getActive();
     return alarms.filter((a) => a.status === "active");

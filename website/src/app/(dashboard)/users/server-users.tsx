@@ -33,7 +33,7 @@ export async function ServerUsers() {
     nom: user.Nom || "",
     prenom: user.Prenom || "",
     email: user.Adresse_Email || "",
-    role: user.ProfilUtilisateur === "admin" ? ("admin" as const) : ("user" as const),
+    role: user.ProfilUtilisateur || "user",
     isActive: !user.Archive,
     createdAt: user.Date_Creation || new Date(),
   }));

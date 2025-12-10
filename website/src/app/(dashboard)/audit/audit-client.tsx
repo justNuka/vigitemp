@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AuditLogTable } from "@/components/audit-log-table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,17 +9,53 @@ import { RefreshCw, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { AuditLog } from "@/lib/api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Props {
   logs: AuditLog[];
 }
 
+interface AuditCode {
+  CodeJournal: string;
+  Commentaire: string | null;
+}
+
 export function AuditClient({ logs }: Props) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [codeFilter, setCodeFilter] = useState<string>("all");
+  const [auditCodes, setAuditCodes] = useState<AuditCode[]>([]);
+
+  // Fetch audit codes on mount
+  useEffect(() => {
+    const fetchCodes = async () => {
+      try {
+        const response = await fetch("/api/audit/codes");
+        if (response.ok) {
+          const data = await response.json();
+          setAuditCodes(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch audit codes:", error);
+      }
+    };
+    fetchCodes();
+  }, []);
 
   // Client-side filtering
   const filteredLogs = logs.filter((log) => {
+    // Filter by code
+    if (codeFilter !== "all" && log.action !== codeFilter) {
+      return false;
+    }
+    
+    // Filter by search query
     if (!searchQuery) return true;
     
     const query = searchQuery.toLowerCase();
@@ -46,7 +82,22 @@ export function AuditClient({ logs }: Props) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+          <Select value={codeFilter} onValueChange={setCodeFilter}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="Tous les codes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les codes</SelectItem>
+              {auditCodes.map((code) => (
+                <SelectItem key={code.CodeJournal} value={code.CodeJournal}>
+                  {code.CodeJournal}
+                  {code.Commentaire && ` - ${code.Commentaire}`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <div className="relative flex-1 sm:flex-initial">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input

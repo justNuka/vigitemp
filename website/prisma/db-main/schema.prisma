@@ -3,21 +3,9 @@ generator client {
   output   = "../../src/generated/@prisma-db-main"
 }
 
-// Base de données principale (vigitemp) - configuration, users, sensors, alarms, etc.
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
-}
-
-// Note: Pour vigitemp_mesure (time-series), nous créerons un second schéma
-// Les deux bases seront accessibles via des clients Prisma séparés
-
-model liste_clients {
-  IDClient                    Int     @id @default(2)
-  Nom                         String? @default("MC2") @db.VarChar(50)
-  Num_Compte                  String? @default("9633000000") @db.VarChar(50)
-  VigiServ_Dernier_Date_Heure String? @db.LongText
-  VigiTel_Dernier_Date_Heure  String? @db.LongText
 }
 
 model t_actionneur {
@@ -93,37 +81,6 @@ model t_alarme {
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model t_alarme_archive {
-  IdAlarme                Int       @id @default(autoincrement())
-  DateHeureDebut          DateTime? @db.DateTime(0)
-  Valeur                  Float?
-  Type                    String?   @db.VarChar(1)
-  DateHeureFin            DateTime? @db.DateTime(0)
-  Alarme_Vrai             Boolean?  @default(false)
-  IdLieu                  Int?
-  SondeNumeroSerie        String?   @db.VarChar(50)
-  Unite                   String?   @db.VarChar(10)
-  Acquite                 Boolean?  @default(true)
-  DateHeureDerniereMesure DateTime? @db.DateTime(0)
-  AlarmePourVigiTel       Boolean?  @default(false)
-  MailEnvoye              Boolean?
-  TelAcquite              Boolean?
-  DateHeureArchiveAlarme  DateTime? @default(now()) @db.DateTime(0)
-
-  @@index([Acquite], map: "Alarme_Acquite_IDX")
-  @@index([Alarme_Vrai], map: "Alarme_Alarme_Vrai_IDX")
-  @@index([DateHeureDebut], map: "Alarme_Date_Heure_Alarme_IDX")
-  @@index([DateHeureFin], map: "Alarme_Date_Heure_Fin_Alar_IDX")
-  @@index([DateHeureArchiveAlarme], map: "Alarme_Date_heure_Debut_Al_IDX")
-  @@index([DateHeureDerniereMesure], map: "Alarme_Date_heure_Derniere_IDX")
-  @@index([SondeNumeroSerie], map: "Alarme_Num_Sonde_IDX")
-  @@index([IdLieu], map: "Alarme_Numero_lieu_IDX")
-  @@index([Type], map: "Alarme_Type_Alarme_IDX")
-  @@index([Unite], map: "Alarme_Unite_IDX")
-  @@index([Valeur], map: "Alarme_Valeur_IDX")
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model t_alarme_message {
   IdAlarmeMessage   Int     @id @default(autoincrement())
   CodeAlarmeMessage String? @unique(map: "CodeAlarmeMessage") @db.VarChar(20)
@@ -134,7 +91,7 @@ model t_alarme_message {
 model t_ancienmotpasse {
   IdAncienMotPasse Int            @id @default(autoincrement())
   IdUtilisateur    Int?
-  MotDePasse       String?        @db.VarChar(60)
+  MotDePasse       String?        @db.VarChar(32)
   t_utilisateur    t_utilisateur? @relation(fields: [IdUtilisateur], references: [IdUtilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_UTILISATEUR_ANCIENMDP_new")
 
   @@index([IdUtilisateur], map: "IdUtilisateur")
@@ -324,7 +281,7 @@ model t_etalontype {
 model t_groupe {
   IdGroupe                          Int                            @id @default(autoincrement())
   NomGroupe                         String?                        @unique(map: "Groupe_NomGroupe_IDX") @db.VarChar(64)
-  NumeroRegroupement                t_groupe_NumeroRegroupement    @default(dbgenerated("1"))
+  NumeroRegroupement                t_groupe_NumeroRegroupement    @default(GROUPE_1)
   Archive                           Boolean?                       @default(false)
   t_liaison_utilisateur_groupe      t_liaison_utilisateur_groupe[]
   t_lieu_t_lieu_IdGroupe1Tot_groupe t_lieu[]                       @relation("t_lieu_IdGroupe1Tot_groupe")
@@ -367,8 +324,10 @@ model t_lieu {
   IdLieu                              Int                @id @default(autoincrement())
   IdGroupe1                           Int?
   IdGroupe2                           Int?
+  IdSite                              Int?
   Nom_Lieu                            String?            @db.VarChar(20)
   Commentaire                         String?            @db.LongText
+  SondeNumeroSerie                    String?            @db.VarChar(50)
   Consigne                            Float?
   Consigne_Sup                        Float?
   Consigne_Sup_Corrigee               Float?
@@ -390,14 +349,12 @@ model t_lieu {
   Position_Plan_Y                     BigInt?
   Date_Creation                       DateTime?          @db.Date
   Archive                             Boolean?           @default(false)
-  SondeNumeroSerie                    String?            @db.VarChar(50)
   Tel_Actif                           Boolean?           @default(false)
   Tel_Code                            String?            @db.VarChar(4)
   Tel_Son_Lieu                        String?            @db.VarChar(260)
   IdActionneur                        Int?
   ModeSerotheque                      Boolean?           @default(false)
   CoefSensibilite                     Int?
-  IdSite                              Int?
   IdPDF                               Int?
   DataLogger                          Boolean?           @default(false)
   EMT                                 Float?
@@ -411,7 +368,6 @@ model t_lieu {
   bLieuEnAlarme                       Int?               @db.TinyInt
   bLieuAlarmeTermineeNonAcquitee      Int?               @db.TinyInt
   bLieuEnPreAlarme                    Int?               @db.TinyInt
-  blieuAlarmeDesactivee               Int?               @db.TinyInt
   IdAlarme                            Int?
   Lieu_Etat_N1                        String?            @db.VarChar(1)
   DernierDateEtalonnage               DateTime?          @db.Date
@@ -449,7 +405,7 @@ model t_lieu {
   @@index([SondeNumeroSerie], map: "Lieu_Numero_serie_IDX")
   @@index([Tel_Actif], map: "Lieu_Tel_Actif_IDX")
   @@index([Tel_Code], map: "Lieu_Tel_Code_IDX")
-  @@index([Tel_Son_Lieu(length: 255)], map: "Lieu_Tel_Son_Lieu_IDX")
+  @@index([Tel_Son_Lieu], map: "Lieu_Tel_Son_Lieu_IDX")
 }
 
 model t_lieu_planning {
@@ -589,7 +545,7 @@ model t_logsonde {
   Archive                        Int?      @db.TinyInt
 
   @@id([IdLogSonde, NumSerie])
-  @@index([Archive], map: "WDIDX_t_logsonde_Archive")
+  @@index([Archive], map: "WDIDX_T_LogSonde_Archive")
 }
 
 model t_logtournee {
@@ -726,6 +682,8 @@ model t_postes_clients {
   Nom                        String?   @db.VarChar(50)
   Prenom                     String?   @db.VarChar(50)
   DateHeureDerniereConnexion DateTime? @db.DateTime(0)
+  Chemin_VigiSurv            String?   @db.VarChar(100)
+  Sversion                   String?   @db.VarChar(100)
 }
 
 model t_profil {
@@ -750,7 +708,7 @@ model t_sonde {
   IdSonde          Int            @id @default(autoincrement())
   Adresse_sonde    String?        @db.VarChar(50)
   SondeNumeroSerie String?        @unique(map: "Numero_serie") @db.VarChar(50)
-  Port_serie       Int?           @db.SmallInt
+  Port_serie       Int?           @db.TinyInt
   Etat_Sonde       String?        @db.VarChar(1)
   IdModule         Int?
   Relai_1          String?        @db.VarChar(50)
@@ -819,6 +777,10 @@ model t_utilisateur {
   Adresse_Email                String?                        @db.VarChar(100)
   Chemin_VigiSurv              String?                        @db.VarChar(100)
   Sversion                     String?                        @db.VarChar(100)
+  DateDerniereModificationMDP  DateTime?                      @db.DateTime(0)
+  ResetPasswordToken           String?                        @db.VarChar(255)
+  ResetPasswordExpires         DateTime?                      @db.DateTime(0)
+  MotDePasseTemporaire         Boolean?                       @default(false)
   t_ancienmotpasse             t_ancienmotpasse[]
   t_liaison_utilisateur_groupe t_liaison_utilisateur_groupe[]
   t_profil                     t_profil?                      @relation(fields: [ProfilUtilisateur], references: [ProfilUtilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_PROFIL_UTILISATEUR")

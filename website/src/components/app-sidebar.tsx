@@ -29,6 +29,7 @@ import {
   Volume2,
   VolumeX,
   User,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ const settingsNavItems: NavItem[] = [
   { title: "Mon profil", href: "/profile", icon: User },
   { title: "Paramétrage", href: "/settings", icon: Settings },
   { title: "Utilisateurs", href: "/users", icon: Users },
+  { title: "Profils", href: "/profils", icon: Shield },
   { title: "Journal d'audit", href: "/audit", icon: FileText },
 ];
 
@@ -194,7 +196,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
                 {currentUser.displayName}
               </p>
               <p className="text-xs text-muted-foreground capitalize">
-                {currentUser.role === "admin" ? "Administrateur" : "Utilisateur"}
+                {currentUser.profile}
               </p>
             </div>
             <Button
