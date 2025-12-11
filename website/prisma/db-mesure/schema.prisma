@@ -38,6 +38,7 @@ model ts_graphique {
   Consigne_Inf           Float?
   Unite                  String?  @db.VarChar(10)
   SondeNumeroSerie       String?  @db.VarChar(50)
+  IdSonde                Int?
   IdLieu                 Int
   ValeurNull             Int      @default(0) @db.TinyInt
   Frequence              Int?     @default(0)
@@ -50,6 +51,7 @@ model ts_graphique {
   @@index([DateHeureMesure], map: "WDIDX_ts_graphique_DateHeureMesure")
   @@index([Etat_Alarme], map: "WDIDX_ts_graphique_Etat_Alarme")
   @@index([IdLieu], map: "WDIDX_ts_graphique_IdLieu")
+  @@index([IdSonde, DateHeureMesure], map: "idx_ts_graphique_idsonde_date")
 }
 
 model ts_journal {

@@ -5,6 +5,17 @@ import { EmptyState } from "@/components/empty-state";
 import type { SensorWithLocation } from "@/lib/api";
 import { Activity } from "lucide-react";
 
+/**
+ * MonitoringCardsGrid - Version optimisée
+ * 
+ * ⚠️ IMPORTANT: Le lazy loading a été DESACTIVÉ temporairement
+ * Raison: Chaque fetch parallèle prenait 37-38 secondes
+ * 
+ * Solution en cours: Serveur C# va maintenir un cache
+ * Une fois en place, ce composant utilisera des données pré-cachées
+ * 
+ * Affiche tous les sensors passés en props (sans pagination côté front)
+ */
 interface MonitoringCardsGridProps {
   sensors: SensorWithLocation[];
   onSurveillanceToggle?: (idLieu: number, newState: boolean) => void;
@@ -32,7 +43,7 @@ export function MonitoringCardsGrid({
         {sensors.map((sensor) => (
           <MonitoringCard
             key={sensor.id}
-            idLieu={(sensor as any).IdLieu || parseInt(sensor.id)}
+            idLieu={parseInt(sensor.id)}
             nomLieu={sensor.name}
             sondeNumeroSerie={(sensor as any).SondeNumeroSerie}
             lieuEtat={(sensor as any).Lieu_Etat}

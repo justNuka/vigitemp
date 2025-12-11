@@ -810,3 +810,6 @@ enum t_groupe_NumeroRegroupement {
   GROUPE_1 @map("1")
   GROUPE_2 @map("2")
 }
+
+/// Cache des 125 dernières mesures pour chaque sonde
+
