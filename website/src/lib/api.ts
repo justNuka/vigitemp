@@ -204,9 +204,13 @@ export type AlarmWithDetails = {
 export type Location = {
   id: string;
   name: string;
-  description: string | null;
-  siteGroup: string | null;
-  isActive: boolean;
+  description?: string | null;
+  siteGroup?: string | null;
+  isActive?: boolean;
+  siteId?: number;
+  groupId1?: number | null;
+  groupId2?: number | null;
+  site?: string;
 };
 
 export type Sensor = {

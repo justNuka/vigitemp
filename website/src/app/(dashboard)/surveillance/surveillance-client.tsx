@@ -14,7 +14,7 @@ type ViewMode = "status" | "graphs";
 
 interface FilterState {
   siteId: number | null;
-  groupId: number | null;
+  groupIds: number[]; // Changed from single groupId to array
 }
 
 interface Stats {
@@ -34,7 +34,7 @@ interface Props {
 export function SurveillancePageClient({ sensors, locations, stats }: Props) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("graphs");
-  const [filters, setFilters] = useState<FilterState>({ siteId: null, groupId: null });
+  const [filters, setFilters] = useState<FilterState>({ siteId: null, groupIds: [] });
   const currentTime = useCurrentTime();
 
   // Filtrer les sensors selon site/groupe
@@ -49,15 +49,18 @@ export function SurveillancePageClient({ sensors, locations, stats }: Props) {
         }
       }
 
-      // Filtre par groupe
-      if (filters.groupId !== null) {
-        // Vérifier si la location du sensor correspond au groupe sélectionné
+      // Filtre par groupe(s) - now supports multiple groups
+      if (filters.groupIds.length > 0) {
+        // Vérifier si la location du sensor correspond à au moins un groupe sélectionné
         const location = locations.find((loc) => loc.id === sensor.location.id);
-        if (
-          !location ||
-          ((location as any).IdGroupe1 !== filters.groupId &&
-            (location as any).IdGroupe2 !== filters.groupId)
-        ) {
+        if (!location) {
+          return false;
+        }
+        const locationGroupIds = [(location as any).IdGroupe1, (location as any).IdGroupe2].filter(
+          (id) => id !== null && id !== undefined
+        );
+        // Check if any of the location's groups match the selected groups
+        if (!locationGroupIds.some((groupId) => filters.groupIds.includes(groupId))) {
           return false;
         }
       }

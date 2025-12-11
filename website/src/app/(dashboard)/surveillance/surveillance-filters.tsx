@@ -10,13 +10,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { groupsApi, sitesApi, type Group, type Site } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Building2, FolderTree } from "lucide-react";
+import { Building2, FolderTree, X } from "lucide-react";
 
 interface FilterState {
   siteId: number | null;
-  groupId: number | null;
+  groupIds: number[]; // Changed from single groupId to array
 }
 
 interface Props {
@@ -34,11 +35,11 @@ export function SurveillanceFilters({ onFilterChange }: Props) {
         try {
           return JSON.parse(saved);
         } catch {
-          return { siteId: null, groupId: null };
+          return { siteId: null, groupIds: [] };
         }
       }
     }
-    return { siteId: null, groupId: null };
+    return { siteId: null, groupIds: [] };
   });
 
   // Charger les sites
@@ -66,12 +67,26 @@ export function SurveillanceFilters({ onFilterChange }: Props) {
     }));
   };
 
-  const handleGroupChange = (value: string) => {
+  const handleGroupToggle = (groupId: number) => {
     setFilters((prev) => ({
       ...prev,
-      groupId: value === "all" ? null : parseInt(value, 10),
+      groupIds: prev.groupIds.includes(groupId)
+        ? prev.groupIds.filter((id) => id !== groupId)
+        : [...prev.groupIds, groupId],
     }));
   };
+
+  const removeGroup = (groupId: number) => {
+    setFilters((prev) => ({
+      ...prev,
+      groupIds: prev.groupIds.filter((id) => id !== groupId),
+    }));
+  };
+
+  const selectedGroupsNames = groups
+    ?.filter((g) => filters.groupIds.includes(g.id))
+    .map((g) => g.name)
+    .join(", ") || "Aucun sélectionné";
 
   return (
     <div className="flex flex-col sm:flex-row gap-4">
@@ -100,28 +115,66 @@ export function SurveillanceFilters({ onFilterChange }: Props) {
         )}
       </div>
 
-      {/* Filtre par Groupe */}
-      <div className="flex items-center gap-2 min-w-[200px]">
+      {/* Filtre par Groupe(s) - Multi-select */}
+      <div className="flex items-center gap-2 flex-1">
         <FolderTree className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         {groupsLoading ? (
           <Skeleton className="h-10 w-full" />
         ) : (
-          <Select
-            value={filters.groupId?.toString() || "all"}
-            onValueChange={handleGroupChange}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Tous les groupes" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les groupes</SelectItem>
+          <div className="relative w-full">
+            <button
+              className="w-full h-10 px-3 py-2 rounded-md border border-input bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-left"
+              onClick={() => {
+                // Toggle dropdown - could be improved with a proper dropdown component
+              }}
+            >
+              <span className="text-sm">
+                {filters.groupIds.length === 0
+                  ? "Tous les groupes"
+                  : `${filters.groupIds.length} groupe(s) sélectionné(s)`}
+              </span>
+            </button>
+
+            {/* Selected groups tags */}
+            {filters.groupIds.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {groups
+                  ?.filter((g) => filters.groupIds.includes(g.id))
+                  .map((group) => (
+                    <div
+                      key={group.id}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-primary text-primary-foreground rounded-full text-sm"
+                    >
+                      <span>{group.name}</span>
+                      <button
+                        onClick={() => removeGroup(group.id)}
+                        className="ml-1 hover:opacity-80"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            )}
+
+            {/* Dropdown list of groups */}
+            <div className="mt-2 border rounded-md p-2 bg-white max-h-48 overflow-y-auto">
               {groups?.map((group) => (
-                <SelectItem key={group.id} value={group.id.toString()}>
-                  {group.name}
-                </SelectItem>
+                <label
+                  key={group.id}
+                  className="flex items-center gap-2 p-2 hover:bg-accent rounded cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={filters.groupIds.includes(group.id)}
+                    onChange={() => handleGroupToggle(group.id)}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm">{group.name}</span>
+                </label>
               ))}
-            </SelectContent>
-          </Select>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -319,6 +319,21 @@ model t_liaison_utilisateur_groupe {
   @@index([IdUtilisateur], map: "IdUtilisateur_IDX")
 }
 
+model t_liaison_utilisateur_site {
+  IdLiaison      Int       @id @default(autoincrement())
+  IdUtilisateur  Int
+  IdSite         Int
+  DateAffectation DateTime? @default(now()) @db.DateTime(0)
+  t_utilisateur  t_utilisateur @relation(fields: [IdUtilisateur], references: [IdUtilisateur], onDelete: Cascade, onUpdate: NoAction, map: "FK_UTILISATEUR_LIAISON_SITE")
+  t_site         t_site    @relation(fields: [IdSite], references: [IdSite], onDelete: Cascade, onUpdate: NoAction, map: "FK_SITE_LIAISON_UTILISATEUR")
+
+  @@unique([IdUtilisateur, IdSite], map: "UK_USER_SITE")
+  @@index([IdUtilisateur], map: "IDX_IdUtilisateur")
+  @@index([IdSite], map: "IDX_IdSite")
+  @@index([DateAffectation], map: "IDX_DateAffectation")
+}
+
+
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model t_lieu {
   IdLieu                              Int                @id @default(autoincrement())
@@ -702,6 +717,7 @@ model t_site {
   Commentaire String?  @db.VarChar(200)
   Archive     Boolean? @default(false)
   t_lieu      t_lieu[]
+  t_liaison_utilisateur_site t_liaison_utilisateur_site[]
 }
 
 model t_sonde {
@@ -783,6 +799,7 @@ model t_utilisateur {
   MotDePasseTemporaire         Boolean?                       @default(false)
   t_ancienmotpasse             t_ancienmotpasse[]
   t_liaison_utilisateur_groupe t_liaison_utilisateur_groupe[]
+  t_liaison_utilisateur_site   t_liaison_utilisateur_site[]
   t_profil                     t_profil?                      @relation(fields: [ProfilUtilisateur], references: [ProfilUtilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_PROFIL_UTILISATEUR")
 
   @@index([Archive], map: "Utilisateur_Archive_IDX")
