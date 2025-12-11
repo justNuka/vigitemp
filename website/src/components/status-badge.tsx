@@ -11,7 +11,11 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-const statusConfig = {
+const statusConfig: Record<string, {
+  label: string;
+  dotClass: string;
+  badgeClass: string;
+}> = {
   ok: {
     label: "OK",
     dotClass: "bg-success",
@@ -27,6 +31,11 @@ const statusConfig = {
     dotClass: "bg-destructive animate-pulse-subtle",
     badgeClass: "bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/20",
   },
+  offline: {
+    label: "Hors ligne",
+    dotClass: "bg-muted-foreground",
+    badgeClass: "bg-muted text-muted-foreground border-muted-foreground/30",
+  },
 };
 
 export function StatusBadge({
@@ -36,7 +45,8 @@ export function StatusBadge({
   size = "default",
   className,
 }: StatusBadgeProps) {
-  const config = statusConfig[status];
+  // Fallback to "ok" if status is invalid
+  const config = statusConfig[status] || statusConfig.ok;
   const displayLabel = label ?? config.label;
 
   return (

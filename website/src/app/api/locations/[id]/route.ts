@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { log } from "@/lib/logger";
+import { getRequestContext } from "@/lib/api-logger";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 const updateLocationSchema = z.object({
   name: z.string().optional(),
@@ -64,6 +67,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = getAuthenticatedUser(req);
+    const { ip } = getRequestContext(req);
+    
     const { id } = await params;
     const locationId = parseInt(id);
     const body = await req.json();
@@ -77,6 +83,20 @@ export async function PATCH(
       where: { IdLieu: locationId },
       data: updateData,
     });
+
+    // Log location update
+    const changes: any = {};
+    if (data.name) changes.name = data.name;
+    if (data.site !== undefined) changes.site = data.site;
+    
+    log.data.update(
+      "Lieu",
+      locationId,
+      currentUser?.username || "System",
+      currentUser?.userId || 0,
+      ip,
+      changes
+    );
 
     return NextResponse.json({
       id: location.IdLieu,

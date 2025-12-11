@@ -1,21 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { verifyToken } from "@/lib/jwt";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = req.cookies.get("session")?.value;
+    const token = req.cookies.get("token")?.value;
 
-    if (!session) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Decode session token (simple implementation)
-    const decoded = Buffer.from(session, "base64").toString();
-    const userId = parseInt(decoded.split(":")[0]);
+    // Verify JWT token
+    const payload = verifyToken(token);
 
-    if (!userId) {
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 });
+    if (!payload) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
+
+    const userId = payload.userId;
 
     // Get user from database
     const user = await prisma.t_utilisateur.findUnique({

@@ -128,6 +128,17 @@ export const settingsApi = {
       method: "PATCH",
       body: JSON.stringify({ value }),
     }),
+  getPasswordRules: () => fetcher<PasswordRules>("/settings/password-rules"),
+};
+
+// Groups
+export const groupsApi = {
+  getAll: () => fetcher<Group[]>("/groups"),
+};
+
+// Sites
+export const sitesApi = {
+  getAll: () => fetcher<Site[]>("/sites"),
 };
 
 // Auth
@@ -193,9 +204,13 @@ export type AlarmWithDetails = {
 export type Location = {
   id: string;
   name: string;
-  description: string | null;
-  siteGroup: string | null;
-  isActive: boolean;
+  description?: string | null;
+  siteGroup?: string | null;
+  isActive?: boolean;
+  siteId?: number;
+  groupId1?: number | null;
+  groupId2?: number | null;
+  site?: string;
 };
 
 export type Sensor = {
@@ -232,8 +247,12 @@ export type User = {
   id: string;
   username: string;
   displayName: string;
+  nom: string;
+  prenom: string;
+  email: string;
   role: "admin" | "user";
   isActive: boolean;
+  createdAt: Date;
 };
 
 export type AuditLog = {
@@ -253,6 +272,25 @@ export type Setting = {
   description: string | null;
 };
 
+export type Group = {
+  id: number;
+  name: string;
+};
+
+export type Site = {
+  id: number;
+  name: string;
+};
+
+export type PasswordRules = {
+  min_length: number;
+  min_uppercase: number;
+  min_lowercase: number;
+  min_numbers: number;
+  min_special: number;
+  history_count: number;
+};
+
 export type CreateSensorInput = Omit<
   Sensor,
   "id" | "currentValue" | "lastMeasurement"
@@ -265,8 +303,11 @@ export type UpdateLocationInput = Partial<CreateLocationInput>;
 export type CreateUserInput = {
   username: string;
   password: string;
-  displayName: string;
-  role: "admin" | "user";
+  nom: string;
+  prenom: string;
+  email: string;
+  profileId: string;
+  expiryDate?: Date;
 };
 export type UpdateUserInput = Partial<Omit<CreateUserInput, "password">> & {
   password?: string;

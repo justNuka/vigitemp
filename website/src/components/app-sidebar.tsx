@@ -28,6 +28,8 @@ import {
   LogOut,
   Volume2,
   VolumeX,
+  User,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -48,8 +50,10 @@ const mainNavItems: NavItem[] = [
 ];
 
 const settingsNavItems: NavItem[] = [
+  { title: "Mon profil", href: "/profile", icon: User },
   { title: "Paramétrage", href: "/settings", icon: Settings },
   { title: "Utilisateurs", href: "/users", icon: Users },
+  { title: "Profils", href: "/profils", icon: Shield },
   { title: "Journal d'audit", href: "/audit", icon: FileText },
 ];
 
@@ -72,13 +76,13 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-4">
-        <Link href="/" className="flex items-center">
+      <SidebarHeader className="p-4 flex flex-col items-center">
+        <Link href="/" className="flex items-center justify-center">
           <Logo size="md" />
         </Link>
-        <Badge variant="secondary" className="mt-2 w-fit text-xs">
-          Version Light
-        </Badge>
+        <span className="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20 mt-2">
+          Licence Light
+        </span>
       </SidebarHeader>
 
       <SidebarSeparator />
@@ -192,7 +196,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
                 {currentUser.displayName}
               </p>
               <p className="text-xs text-muted-foreground capitalize">
-                {currentUser.role === "admin" ? "Administrateur" : "Utilisateur"}
+                {currentUser.profile}
               </p>
             </div>
             <Button

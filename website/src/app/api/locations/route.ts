@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { log } from "@/lib/logger";
+import { getRequestContext } from "@/lib/api-logger";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 const createLocationSchema = z.object({
   name: z.string().min(1, "Name required"),
@@ -34,16 +37,21 @@ export async function GET(req: NextRequest) {
     });
 
     // Transform to API format
-    const formatted = locations.map((loc: any) => ({
-      id: loc.IdLieu,
-      name: loc.Nom_Lieu,
-      site: loc.IdSite || null,
-      status: loc.Lieu_Etat,
-      sensorCount: loc.t_sonde?.length || 0,
-      okSensors: loc.t_sonde?.filter((s: any) => s.Etat_Sonde === "O").length || 0,
-      warningSensors: loc.t_sonde?.filter((s: any) => s.Etat_Sonde === "P").length || 0,
-      criticalSensors: loc.t_sonde?.filter((s: any) => s.Etat_Sonde === "A").length || 0,
-    }));
+    const formatted = locations.map((loc: any) => {
+      // Ensure t_sonde is an array
+      const sensors = Array.isArray(loc.t_sonde) ? loc.t_sonde : [];
+      
+      return {
+        id: loc.IdLieu,
+        name: loc.Nom_Lieu,
+        site: loc.IdSite || null,
+        status: loc.Lieu_Etat,
+        sensorCount: sensors.length,
+        okSensors: sensors.filter((s: any) => s.Etat_Sonde === "O").length,
+        warningSensors: sensors.filter((s: any) => s.Etat_Sonde === "P").length,
+        criticalSensors: sensors.filter((s: any) => s.Etat_Sonde === "A").length,
+      };
+    });
 
     return NextResponse.json(formatted);
   } catch (error) {
@@ -57,6 +65,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const currentUser = getAuthenticatedUser(req);
+    const { ip } = getRequestContext(req);
+    
     const body = await req.json();
     const data = createLocationSchema.parse(body);
 
@@ -68,6 +79,19 @@ export async function POST(req: NextRequest) {
         Lieu_Etat: "O",
       },
     });
+
+    // Log location creation
+    log.data.create(
+      "Lieu",
+      location.IdLieu,
+      currentUser?.username || "System",
+      currentUser?.userId || 0,
+      ip,
+      {
+        name: data.name,
+        site: data.site,
+      }
+    );
 
     return NextResponse.json(
       {

@@ -4,17 +4,25 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useQuery } from "@tanstack/react-query";
 import { alarmsApi, authApi } from "@/lib/api";
+import { useAutoLock } from "@/hooks/useAutoLock";
+import { useRefreshInterval } from "@/hooks/useRefreshInterval";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Activer le verrouillage automatique pour toutes les pages protégées
+  useAutoLock();
+
+  // Obtenir l'intervalle de rafraîchissement depuis les paramètres
+  const { refreshInterval } = useRefreshInterval();
+
   // Fetch active alarms count for sidebar badge
   const { data: alarms } = useQuery({
     queryKey: ["alarms", "active"],
     queryFn: () => alarmsApi.getActive(),
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: refreshInterval,
   });
 
   // Fetch current user
@@ -36,16 +44,16 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <AppSidebar
-          activeAlarms={activeAlarmsCount}
-          currentUser={currentUser}
-          onLogout={handleLogout}
-        />
-        <main className="flex-1 overflow-y-auto bg-background">
-          {children}
-        </main>
-      </div>
-    </SidebarProvider>
+        <div className="flex min-h-screen w-full">
+          <AppSidebar
+            activeAlarms={activeAlarmsCount}
+            currentUser={currentUser}
+            onLogout={handleLogout}
+          />
+          <main className="flex-1 overflow-y-auto bg-background">
+            {children}
+          </main>
+        </div>
+      </SidebarProvider>
   );
 }
