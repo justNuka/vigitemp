@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { log } from "@/lib/logger";
+import { getRequestContext } from "@/lib/api-logger";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 const acknowledgeSchema = z.object({
   comment: z.string().optional(),
@@ -11,29 +14,13 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = getAuthenticatedUser(req);
+    const { ip } = getRequestContext(req);
+    
     const { id } = await params;
     const alarmId = parseInt(id);
     const body = await req.json();
     const { comment } = acknowledgeSchema.parse(body);
-
-    // Get current user from session
-    const session = req.cookies.get("session")?.value;
-    let userId = 0;
-    let userName = "System";
-
-    if (session) {
-      const decoded = Buffer.from(session, "base64").toString();
-      userId = parseInt(decoded.split(":")[0]);
-
-      const user = await prisma.t_utilisateur.findUnique({
-        where: { IdUtilisateur: userId },
-        select: { Prenom: true, Nom: true },
-      });
-
-      if (user) {
-        userName = `${user.Prenom || ""} ${user.Nom || ""}`.trim();
-      }
-    }
 
     const alarm = await prisma.t_alarme.update({
       where: { IdAlarme: alarmId },
@@ -51,11 +38,21 @@ export async function POST(
       },
     });
 
+    // Log alarm acknowledgement (code ACQ from audit table)
+    log.alarm.acknowledge(
+      alarm.t_lieu?.Nom_Lieu || "Unknown",
+      alarm.t_lieu?.IdLieu || 0,
+      currentUser?.username || "System",
+      currentUser?.userId || 0,
+      ip,
+      comment || "Alarme acquittée"
+    );
+
     return NextResponse.json({
       id: alarm.IdAlarme,
       status: "acknowledged",
       acknowledgedAt: new Date().toISOString(),
-      acknowledgedBy: userName,
+      acknowledgedBy: currentUser?.username || "System",
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

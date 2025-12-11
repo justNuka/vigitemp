@@ -1,10 +1,11 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../../src/generated/@prisma-db-mesure"
 }
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_MESURE_URL")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
@@ -72,24 +73,6 @@ model ts_journal {
 model ts_journal_code {
   CodeJournal String  @id @db.VarChar(50)
   Commentaire String? @db.VarChar(200)
-}
-
-model ts_journalhisto {
-  IdServeurBDD           Int       @default(0)
-  IdJournal              Int       @default(0)
-  CodeJournal            String?   @default("") @db.VarChar(50)
-  Commentaire            String?   @db.LongText
-  NomUtilisateur         String?   @default("") @db.VarChar(50)
-  ProfilUtilisateur      String?   @default("") @db.VarChar(50)
-  DateHeureJournal       DateTime? @db.DateTime(0)
-  IdLieu                 Int?
-  CommentaireUtilisateur String?   @db.LongText
-
-  @@id([IdServeurBDD, IdJournal])
-  @@index([CodeJournal], map: "Journal_CodeJournal_IDX")
-  @@index([DateHeureJournal], map: "Journal_DateHeure_IDX")
-  @@index([NomUtilisateur], map: "Journal_Nomutilisateur_IDX")
-  @@index([ProfilUtilisateur], map: "Journal_ProfilUtilisateur_IDX")
 }
 
 model ts_logmesures {
@@ -197,35 +180,6 @@ model ts_mesureetalonnage {
 
   @@id([IdServeurBDD, IdMesureEtalonnage])
   @@index([SondeNumeroserie], map: "MesureSonde_IdEtalonnage_IDX")
-}
-
-model ts_mesurehisto {
-  IdServeurBDD           Int      @default(0)
-  IdMesure               Int      @default(0)
-  DateHeureMesure        DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
-  Valeur                 Float?
-  Resistance             Float?
-  Nb_decimal             Int?     @db.TinyInt
-  Consigne               Float?
-  Consigne_Sup           Float?
-  Consigne_Inf           Float?
-  Unite                  String?  @default("") @db.VarChar(10)
-  SondeNumeroSerie       String?  @default("") @db.VarChar(50)
-  IdLieu                 Int      @default(0)
-  ValeurNull             Int      @default(0) @db.TinyInt
-  Frequence              Int?
-  Etat_Alarme            Boolean? @default(false)
-  Consigne_Inf_PreAlarme Float?
-  Consigne_Sup_PreAlarme Float?
-  Moyenne                Float?
-
-  @@id([IdServeurBDD, IdMesure, DateHeureMesure, IdLieu, ValeurNull])
-  @@index([DateHeureMesure], map: "Mesure_Date_mesure_IDX")
-  @@index([Etat_Alarme], map: "Mesure_Etat_Alarme_IDX")
-  @@index([IdLieu], map: "Mesure_Numero_lieu_IDX")
-  @@index([ValeurNull], map: "Mesure_ValeurNull")
-  @@index([DateHeureMesure, IdLieu], map: "Mesure_date_lieu")
-  @@index([IdLieu], map: "Mesure_lieu")
 }
 
 model ts_mesuretest {

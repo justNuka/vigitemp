@@ -14,6 +14,7 @@ export async function GET() {
         t_site: {
           select: {
             IdSite: true,
+            CodeSite: true,
             LibelleSite: true,
           },
         },
@@ -30,7 +31,9 @@ export async function GET() {
       lastUpdate: location.DernierDateHeure?.toISOString() || new Date().toISOString(),
       location: {
         id: location.IdLieu,
-        name: location.Nom_Lieu || "Unknown",
+        name: location.t_site?.CodeSite && location.t_site?.LibelleSite
+          ? `${location.t_site.CodeSite} - ${location.t_site.LibelleSite}`
+          : location.t_site?.CodeSite || location.t_site?.LibelleSite || "Unknown",
       },
       minThreshold: location.Consigne_Inf,
       maxThreshold: location.Consigne_Sup,

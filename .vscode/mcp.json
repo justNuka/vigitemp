@@ -10,6 +10,10 @@
       "command": "npx",
       "args": ["shadcn@latest", "mcp"]
     },
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
+    },
     "Prisma-Local": {
       "command": "npx",
       "args": ["-y", "prisma", "mcp"]

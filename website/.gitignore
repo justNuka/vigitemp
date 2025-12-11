@@ -1,5 +1,13 @@
 node_modules
 # Keep environment variables out of version control
 .env
+.env.local
 
-/src/generated/prisma
+# Prisma generated clients
+/src/generated/@prisma-db-main/
+/src/generated/@prisma-db-mesure/
+
+# Logs
+/logs/
+*.log
+*.log.*

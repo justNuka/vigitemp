@@ -1,12 +1,11 @@
 /**
- * Prisma Client Instances (Prisma v7 with Driver Adapters)
+ * Prisma Client Instances (Prisma v6 - Classic Mode)
  * 
  * Ce fichier exporte deux clients Prisma pour accéder aux deux bases de données:
  * - prisma: Base principale vigitemp (config, users, sensors, alarms, etc.)
  * - prismaMesure: Base time-series vigitemp_mesure (mesures, journal, historiques)
  * 
- * Prisma v7 nécessite des adapters de base de données pour toutes les connexions.
- * Nous utilisons @prisma/adapter-mariadb qui est compatible avec MySQL.
+ * Prisma v6 se connecte directement via les URLs dans les schémas.
  * 
  * Utilisation:
  * import { prisma, prismaMesure } from '@/lib/prisma'
@@ -17,7 +16,6 @@
 
 import { PrismaClient } from '../generated/@prisma-db-main/client'
 import { PrismaClient as PrismaMesureClient } from '../generated/@prisma-db-mesure/client'
-import { PrismaMariaDb } from '@prisma/adapter-mariadb'
 
 // Singleton pattern pour éviter de créer plusieurs instances
 const globalForPrisma = globalThis as unknown as {
@@ -28,9 +26,10 @@ const globalForPrisma = globalThis as unknown as {
 // Lazy initialization function for main database client
 function getPrismaClient() {
   if (!globalForPrisma.prisma) {
-    // PrismaMariaDb accepte directement la connection string
-    const adapter = new PrismaMariaDb(process.env.DATABASE_URL!)
-    globalForPrisma.prisma = new PrismaClient({ adapter })
+    console.log('🔍 DATABASE_URL:', process.env.DATABASE_URL ? 'définie' : '❌ MANQUANTE')
+    globalForPrisma.prisma = new PrismaClient({
+      log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+    })
   }
   return globalForPrisma.prisma
 }
@@ -38,9 +37,9 @@ function getPrismaClient() {
 // Lazy initialization function for time-series database client
 function getPrismaMesureClient() {
   if (!globalForPrisma.prismaMesure) {
-    // PrismaMariaDb accepte directement la connection string
-    const adapter = new PrismaMariaDb(process.env.DATABASE_MESURE_URL!)
-    globalForPrisma.prismaMesure = new PrismaMesureClient({ adapter })
+    globalForPrisma.prismaMesure = new PrismaMesureClient({
+      log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+    })
   }
   return globalForPrisma.prismaMesure
 }

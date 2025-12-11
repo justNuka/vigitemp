@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { log } from "@/lib/logger";
+import { getRequestContext } from "@/lib/api-logger";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = getAuthenticatedUser(req);
+    const { ip } = getRequestContext(req);
+    
     const { id } = await params;
     const alarmId = parseInt(id);
 
@@ -22,6 +28,16 @@ export async function POST(
           },
         },
       },
+    });
+
+    // Log alarm resolution
+    log.audit("ALARM_RESOLVED", {
+      user: currentUser?.username || "System",
+      userId: currentUser?.userId || 0,
+      ip,
+      resource: `Alarme: ${alarm.t_lieu?.Nom_Lieu || "Unknown"}`,
+      resourceId: alarmId,
+      changes: { resolvedAt: alarm.DateHeureFin },
     });
 
     return NextResponse.json({

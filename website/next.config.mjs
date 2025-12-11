@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    // Masquer les warnings de source maps en dev (faux positifs Next.js 16)
+    onDemandEntries: {
+        maxInactiveAge: 25 * 1000,
+        pagesBufferLength: 2,
+    },
     images: {
         remotePatterns: [
             {
@@ -20,7 +25,8 @@ const nextConfig = {
                 ]
             }
         ]
-    }
+    },
+    cacheComponents: true,
 };
 
 

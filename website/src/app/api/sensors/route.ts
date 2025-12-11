@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { log } from "@/lib/logger";
+import { getRequestContext } from "@/lib/api-logger";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 const createSensorSchema = z.object({
   name: z.string().min(1, "Name required"),
@@ -35,6 +38,7 @@ export async function GET(req: NextRequest) {
         t_site: {
           select: {
             IdSite: true,
+            CodeSite: true,
             LibelleSite: true,
           },
         },
@@ -52,8 +56,12 @@ export async function GET(req: NextRequest) {
       lastUpdate: lieu.DernierDateHeure?.toISOString() || new Date().toISOString(),
       location: {
         id: lieu.IdSite || 0,
-        name: lieu.t_site?.LibelleSite || "Unknown",
-        siteGroup: lieu.t_site?.LibelleSite || null,
+        name: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
+          ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
+          : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || "Unknown",
+        siteGroup: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
+          ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
+          : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || null,
       },
       minThreshold: lieu.Consigne_Inf,
       maxThreshold: lieu.Consigne_Sup,
@@ -71,6 +79,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const currentUser = getAuthenticatedUser(req);
+    const { ip } = getRequestContext(req);
+    
     const body = await req.json();
     const data = createSensorSchema.parse(body);
 
@@ -88,11 +99,27 @@ export async function POST(req: NextRequest) {
         t_site: {
           select: {
             IdSite: true,
+            CodeSite: true,
             LibelleSite: true,
           },
         },
       },
     });
+
+    // Log sensor creation
+    log.data.create(
+      "Capteur",
+      lieu.IdLieu,
+      currentUser?.username || "System",
+      currentUser?.userId || 0,
+      ip,
+      {
+        name: data.name,
+        locationId: data.locationId,
+        minThreshold: data.minThreshold,
+        maxThreshold: data.maxThreshold,
+      }
+    );
 
     return NextResponse.json(
       {
@@ -101,7 +128,9 @@ export async function POST(req: NextRequest) {
         status: "ok",
         location: {
           id: lieu.t_site?.IdSite || 0,
-          name: lieu.t_site?.LibelleSite || "Unknown",
+          name: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
+            ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
+            : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || "Unknown",
         },
       },
       { status: 201 }

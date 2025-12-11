@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { log } from "@/lib/logger";
+import { getRequestContext } from "@/lib/api-logger";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 const updateSettingSchema = z.object({
   value: z.string(),
@@ -51,6 +55,9 @@ export async function PATCH(
   { params }: { params: Promise<{ key: string }> }
 ) {
   try {
+    const currentUser = getAuthenticatedUser(req);
+    const { ip } = getRequestContext(req);
+    
     const { key } = await params;
     const body = await req.json();
     const { value } = updateSettingSchema.parse(body);
@@ -58,6 +65,16 @@ export async function PATCH(
     const [section, motCle] = key.split(":");
     const sectionVal = section || "";
     const motCleVal = motCle || key;
+
+    // Get old value for logging
+    const oldSetting = await prisma.t_parametre.findUnique({
+      where: {
+        Section_MotCle: {
+          Section: sectionVal,
+          MotCle: motCleVal,
+        },
+      },
+    });
 
     // Upsert the setting
     const setting = await prisma.t_parametre.upsert({
@@ -76,6 +93,19 @@ export async function PATCH(
         Valeur: value,
       },
     });
+
+    // Log configuration change
+    log.config.change(
+      key,
+      currentUser?.username || "System",
+      currentUser?.userId || 0,
+      ip,
+      oldSetting?.Valeur || "N/A",
+      value
+    );
+
+    // Invalider le cache pour forcer le rechargement des settings
+    revalidateTag("settings-data", "default");
 
     return NextResponse.json({
       key: `${setting.Section}:${setting.MotCle}`,

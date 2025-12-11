@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { log } from "@/lib/logger";
+import { getRequestContext } from "@/lib/api-logger";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 const updateSensorSchema = z.object({
   name: z.string().optional(),
@@ -23,6 +26,7 @@ export async function GET(
         t_site: {
           select: {
             IdSite: true,
+            CodeSite: true,
             LibelleSite: true,
           },
         },
@@ -42,7 +46,9 @@ export async function GET(
       lastUpdate: lieu.DernierDateHeure?.toISOString() || new Date().toISOString(),
       location: {
         id: lieu.IdSite || 0,
-        name: lieu.t_site?.LibelleSite || "Unknown",
+        name: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
+          ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
+          : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || "Unknown",
       },
       minThreshold: lieu.Consigne_Inf,
       maxThreshold: lieu.Consigne_Sup,
@@ -61,6 +67,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = getAuthenticatedUser(req);
+    const { ip } = getRequestContext(req);
+    
     const { id } = await params;
     const sensorId = parseInt(id);
     const body = await req.json();
@@ -79,11 +88,28 @@ export async function PATCH(
         t_site: {
           select: {
             IdSite: true,
+            CodeSite: true,
             LibelleSite: true,
           },
         },
       },
     });
+
+    // Log sensor update
+    const changes: any = {};
+    if (data.name) changes.name = data.name;
+    if (data.minThreshold !== undefined) changes.minThreshold = data.minThreshold;
+    if (data.maxThreshold !== undefined) changes.maxThreshold = data.maxThreshold;
+    if (data.unit) changes.unit = data.unit;
+    
+    log.data.update(
+      "Capteur",
+      sensorId,
+      currentUser?.username || "System",
+      currentUser?.userId || 0,
+      ip,
+      changes
+    );
 
     return NextResponse.json({
       id: lieu.IdLieu,
@@ -91,7 +117,9 @@ export async function PATCH(
       status: lieu.Lieu_Etat === "O" ? "ok" : lieu.Lieu_Etat === "P" ? "warning" : "critical",
       location: {
         id: lieu.IdSite || 0,
-        name: lieu.t_site?.LibelleSite || "Unknown",
+        name: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
+          ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
+          : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || "Unknown",
       },
     });
   } catch (error) {
@@ -115,14 +143,33 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const currentUser = getAuthenticatedUser(req);
+    const { ip } = getRequestContext(req);
+    
     const { id } = await params;
     const sensorId = parseInt(id);
+
+    // Get sensor info before deletion
+    const sensorToDelete = await prisma.t_lieu.findUnique({
+      where: { IdLieu: sensorId },
+      select: { Nom_Lieu: true },
+    });
 
     // Soft delete by setting Archive to true
     await prisma.t_lieu.update({
       where: { IdLieu: sensorId },
       data: { Archive: true },
     });
+
+    // Log sensor deletion
+    log.data.delete(
+      "Capteur",
+      sensorId,
+      currentUser?.username || "System",
+      currentUser?.userId || 0,
+      ip,
+      `Archive du capteur ${sensorToDelete?.Nom_Lieu || sensorId}`
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

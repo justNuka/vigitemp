@@ -86,7 +86,9 @@ export function SensorCard({ sensor, onClick, className }: SensorCardProps) {
         <div className="flex items-end justify-between gap-2">
           <div className="flex items-baseline gap-1">
             <span className="text-3xl md:text-4xl font-bold data-value">
-              {sensor.currentValue !== null ? sensor.currentValue.toFixed(1) : "--"}
+              {sensor.currentValue != null && typeof sensor.currentValue === 'number' 
+                ? sensor.currentValue.toFixed(1) 
+                : "--"}
             </span>
             <span className="text-sm text-muted-foreground font-medium">
               {sensor.unit}

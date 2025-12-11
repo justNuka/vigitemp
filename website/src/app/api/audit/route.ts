@@ -5,9 +5,16 @@ export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
     const limit = parseInt(searchParams.get("limit") || "100");
+    const codeFilter = searchParams.get("code");
+
+    // Build where clause
+    const whereClause = codeFilter 
+      ? { CodeJournal: codeFilter }
+      : {};
 
     // Get audit logs from time-series database
     const logs = await prismaMesure.ts_journal.findMany({
+      where: whereClause,
       take: limit,
       orderBy: { DateHeureJournal: "desc" },
       select: {
