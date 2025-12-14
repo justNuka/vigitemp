@@ -29,45 +29,45 @@ export async function ServerAlarms(status?: AlarmStatus) {
     include: {
       t_lieu: {
         select: {
-          IdLieu: true,
+          Id_Lieu: true,
           Nom_Lieu: true,
         },
       },
     },
-    orderBy: { DateHeureDebut: "desc" },
+    orderBy: { Date_Heure_Debut: "desc" },
     take: 100,
   });
 
   // Transform to API format (AlarmWithDetails)
   const formatted = alarms.map((alarm) => ({
-    id: alarm.IdAlarme.toString(),
-    sensorId: alarm.IdLieu?.toString() || "0",
-    locationId: alarm.IdLieu?.toString() || "0",
+    id: alarm.Id_Alarme.toString(),
+    sensorId: alarm.Id_Lieu?.toString() || "0",
+    locationId: alarm.Id_Lieu?.toString() || "0",
     type: (alarm.Type === "H" ? "high" : "low") as "high" | "low",
     value: alarm.Valeur || 0,
     threshold: 0, // Threshold from t_lieu if needed
-    status: alarm.Acquite ? ("acknowledged" as const) : ("active" as const),
-    triggeredAt: alarm.DateHeureDebut || new Date(),
-    acknowledgedAt: alarm.Acquite ? alarm.DateHeureDebut : null,
-    resolvedAt: alarm.DateHeureFin || null,
+    status: alarm.Acquitee ? ("acknowledged" as const) : ("active" as const),
+    triggeredAt: alarm.Date_Heure_Debut || new Date(),
+    acknowledgedAt: alarm.Acquitee ? alarm.Date_Heure_Debut : null,
+    resolvedAt: alarm.Date_Heure_Fin || null,
     acknowledgedBy: null,
     comment: null,
     sensor: {
-      id: alarm.IdLieu?.toString() || "0",
+      id: alarm.Id_Lieu?.toString() || "0",
       name: alarm.t_lieu?.Nom_Lieu || "Unknown",
       type: "temperature",
       unit: alarm.Unite || "°C",
-      locationId: alarm.IdLieu?.toString() || "0",
+      locationId: alarm.Id_Lieu?.toString() || "0",
       currentValue: alarm.Valeur || null,
       minThreshold: 0,
       maxThreshold: 30,
       measurementFrequency: 60,
       alarmDelay: 0,
-      lastMeasurement: alarm.DateHeureDerniereMesure || null,
+      lastMeasurement: alarm.Date_Heure_Derniere_Mesure || null,
       isActive: true,
     },
     location: {
-      id: alarm.IdLieu?.toString() || "0",
+      id: alarm.Id_Lieu?.toString() || "0",
       name: alarm.t_lieu?.Nom_Lieu || "Unknown",
       description: null,
       siteGroup: null,
@@ -87,13 +87,13 @@ export async function ServerAlarmStats() {
 
   const [activeCount, acknowledgedCount, resolvedCount] = await Promise.all([
     prisma.t_alarme.count({
-      where: { Acquite: false },
+      where: { Acquitee: false },
     }),
     prisma.t_alarme.count({
-      where: { Acquite: true },
+      where: { Acquitee: true },
     }),
     prisma.t_alarme.count({
-      where: { Acquite: null }, // Pour l'instant, pas d'alarmes résolues
+      where: { Acquitee: null }, // Pour l'instant, pas d'alarmes résolues
     }),
   ]);
 

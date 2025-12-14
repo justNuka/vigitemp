@@ -9,21 +9,21 @@ export async function GET(req: NextRequest) {
 
     // Build where clause
     const whereClause = codeFilter 
-      ? { CodeJournal: codeFilter }
+      ? { Code_Journal: codeFilter }
       : {};
 
     // Get audit logs from time-series database
-    const logs = await prismaMesure.ts_journal.findMany({
+    const logs = await prismaMesure.tm_journal.findMany({
       where: whereClause,
       take: limit,
-      orderBy: { DateHeureJournal: "desc" },
+      orderBy: { Date_Heure_Journal: "desc" },
       select: {
-        IdJournal: true,
-        DateHeureJournal: true,
-        CodeJournal: true,
+        Id_Journal: true,
+        Date_Heure_Journal: true,
+        Code_Journal: true,
         Commentaire: true,
-        NomUtilisateur: true,
-        IdLieu: true,
+        Nom_Utilisateur: true,
+        Id_Lieu: true,
       },
     });
 

@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(limitParam, 125); // Cap at 125
 
     // Get recent measurements from time-series database
-    const measurements = await prismaMesure.ts_mesure.findMany({
+    const measurements = await prismaMesure.tm_mesure.findMany({
       take: limit,
       orderBy: { DateHeureMesure: "desc" },
       select: {

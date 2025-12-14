@@ -32,7 +32,7 @@ export async function GET(
     }
 
     // Récupérer les 125 dernières mesures depuis ts_graphique
-    const mesures = await prismaMesure.ts_graphique.findMany({
+    const mesures = await prismaMesure.tm_graphique.findMany({
       where: { IdSonde: sondeId },
       select: {
         DateHeureMesure: true,

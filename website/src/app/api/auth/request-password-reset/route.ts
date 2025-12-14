@@ -6,7 +6,7 @@ import crypto from "crypto";
 import { z } from "zod";
 
 const requestResetSchema = z.object({
-  email: z.string().email("Email invalide"),
+  email: z.email("Email invalide"),
 });
 
 /**
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     const user = await prisma.t_utilisateur.findFirst({
       where: {
         Adresse_Email: email,
-        Archive: false,
+        Est_Archive: false,
       },
     });
 
@@ -55,10 +55,10 @@ export async function POST(req: NextRequest) {
 
     // Save hashed token to database
     await prisma.t_utilisateur.update({
-      where: { IdUtilisateur: user.IdUtilisateur },
+      where: { Id_Utilisateur: user.Id_Utilisateur },
       data: {
-        ResetPasswordToken: hashedToken,
-        ResetPasswordExpires: expiresAt,
+        Reset_Password_Token: hashedToken,
+        Reset_Password_Expires: expiresAt,
       },
     });
 

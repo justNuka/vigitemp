@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
     }
 
-    const codes = await prismaMesure.ts_journal_code.findMany({
+    const codes = await prismaMesure.tm_journal_code.findMany({
       orderBy: { CodeJournal: "asc" },
     });
 

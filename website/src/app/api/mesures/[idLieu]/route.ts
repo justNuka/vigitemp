@@ -56,7 +56,7 @@ export async function GET(
 
     // Get measurements from ts_mesure (time-series database)
     // Filter out null values for chart plotting
-    const measurements = await prismaMesure.ts_mesure.findMany({
+    const measurements = await prismaMesure.tm_mesure.findMany({
       where: {
         ...whereClause,
         Valeur: { not: null }, // Exclude null values from graph

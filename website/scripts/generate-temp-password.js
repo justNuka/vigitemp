@@ -1,7 +1,7 @@
 // Script Node.js pour générer un hash bcrypt
 const bcrypt = require('bcryptjs');
 
-const password = 'Admin123!'; // Mot de passe temporaire
+const password = 'Test123!'; // Mot de passe temporaire
 const hash = bcrypt.hashSync(password, 10);
 
 console.log('========================================');

@@ -21,21 +21,18 @@ export async function GET(req: NextRequest) {
 
     // Get user from database
     const user = await prisma.t_utilisateur.findUnique({
-      where: { IdUtilisateur: userId },
-      include: {
-        t_profil: true,
-      },
+      where: { Id_Utilisateur: userId },
     });
 
-    if (!user || user.Archive) {
+    if (!user || user.Est_Archive) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     return NextResponse.json({
-      id: user.IdUtilisateur,
+      id: user.Id_Utilisateur,
       username: user.Login || "user",
       displayName: `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login || "user",
-      role: user.t_profil?.ProfilUtilisateur || "user",
+      role: user.Profil_Utilisateur || "user",
     });
   } catch (error) {
     console.error("Get current user error:", error);

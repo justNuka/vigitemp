@@ -23,28 +23,28 @@ export async function GET(
     }
 
     const sites = await prisma.t_liaison_utilisateur_site.findMany({
-      where: { IdUtilisateur: userId },
+      where: { Id_Utilisateur: userId },
       select: {
-        IdSite: true,
-        DateAffectation: true,
+        Id_Site: true,
+        Date_Affectation: true,
         t_site: {
           select: {
-            IdSite: true,
-            CodeSite: true,
-            LibelleSite: true,
+            Id_Site: true,
+            Code_Site: true,
+            Libelle_Site: true,
             Archive: true,
           },
         },
       },
-      orderBy: { DateAffectation: "desc" },
+      orderBy: { Date_Affectation: "desc" },
     });
 
     const formattedSites = sites.map(liaison => ({
-      idSite: liaison.t_site.IdSite,
-      codeSite: liaison.t_site.CodeSite,
-      libelleSite: liaison.t_site.LibelleSite,
+      idSite: liaison.t_site.Id_Site,
+      codeSite: liaison.t_site.Code_Site,
+      libelleSite: liaison.t_site.Libelle_Site,
       archive: liaison.t_site.Archive,
-      assignedAt: liaison.DateAffectation,
+      assignedAt: liaison.Date_Affectation,
     }));
 
     return NextResponse.json(formattedSites);
@@ -76,7 +76,7 @@ export async function POST(
 
     // Check if site exists
     const site = await prisma.t_site.findUnique({
-      where: { IdSite: idSite },
+      where: { Id_Site: idSite },
     });
 
     if (!site) {
@@ -88,7 +88,7 @@ export async function POST(
 
     // Check if user exists
     const user = await prisma.t_utilisateur.findUnique({
-      where: { IdUtilisateur: userId },
+      where: { Id_Utilisateur: userId },
     });
 
     if (!user) {
@@ -101,9 +101,9 @@ export async function POST(
     // Check if liaison already exists
     const existingLiaison = await prisma.t_liaison_utilisateur_site.findUnique({
       where: {
-        IdUtilisateur_IdSite: {
-          IdUtilisateur: userId,
-          IdSite: idSite,
+        Id_Utilisateur_Id_Site: {
+          Id_Utilisateur: userId,
+          Id_Site: idSite,
         },
       },
     });
@@ -118,17 +118,17 @@ export async function POST(
     // Create new liaison
     const liaison = await prisma.t_liaison_utilisateur_site.create({
       data: {
-        IdUtilisateur: userId,
-        IdSite: idSite,
+        Id_Utilisateur: userId,
+        Id_Site: idSite,
       },
       select: {
-        IdSite: true,
-        DateAffectation: true,
+        Id_Site: true,
+        Date_Affectation: true,
         t_site: {
           select: {
-            IdSite: true,
-            CodeSite: true,
-            LibelleSite: true,
+            Id_Site: true,
+            Code_Site: true,
+            Libelle_Site: true,
           },
         },
       },
@@ -137,10 +137,10 @@ export async function POST(
     return NextResponse.json({
       message: "Site assigned to user successfully",
       site: {
-        idSite: liaison.t_site.IdSite,
-        codeSite: liaison.t_site.CodeSite,
-        libelleSite: liaison.t_site.LibelleSite,
-        assignedAt: liaison.DateAffectation,
+        idSite: liaison.t_site.Id_Site,
+        codeSite: liaison.t_site.Code_Site,
+        libelleSite: liaison.t_site.Libelle_Site,
+        assignedAt: liaison.Date_Affectation,
       },
     });
   } catch (error) {

@@ -16,7 +16,7 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
     // Récupérer tous les lieux
     const allLocations = await prisma.t_lieu.findMany({
       select: {
-        IdLieu: true,
+        Id_Lieu: true,
       },
     });
 
@@ -25,9 +25,9 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
     // Récupérer les dernières mesures pour calculer les statuts
     const measurementsByLocation = await Promise.all(
       allLocations.map(async (location) => {
-        const lastMeasurement = await prismaMesure.ts_mesure.findFirst({
+        const lastMeasurement = await prismaMesure.tm_mesure.findFirst({
           where: {
-            IdLieu: location.IdLieu,
+            IdLieu: location.Id_Lieu,
           },
           orderBy: {
             DateHeureMesure: "desc",
@@ -38,7 +38,7 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
         });
 
         return {
-          idLieu: location.IdLieu,
+          idLieu: location.Id_Lieu,
           etatAlarme: lastMeasurement?.Etat_Alarme ?? 0,
         };
       })

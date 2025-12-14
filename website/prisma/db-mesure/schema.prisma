@@ -8,228 +8,103 @@ datasource db {
   url      = env("DATABASE_MESURE_URL")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-model ts_compteur_id_backup {
-  Compteur         String? @db.Char(50)
-  Id_mesure        Int?
-  Id_journal       Int?
-  Id_mesure_histo  Int?
-  Id_journal_histo Int?
+model tm_graphique {
+  Id_Graphique            Int
+  Date_Heure_Mesure       DateTime @default(now()) @db.DateTime(0)
+  Valeur                  Float?   @db.Float
+  Resistance              Float?   @db.Float
+  Nb_Decimal              Int?
+  Consigne                Float?   @db.Float
+  Consigne_Sup            Float?   @db.Float
+  Consigne_Inf            Float?   @db.Float
+  Unite                   String?  @db.VarChar(10)
+  Sonde_Numero_Serie      String?  @db.VarChar(50)
+  Id_Sonde                Int?
+  Id_Lieu                 Int
+  Valeur_Null             Int
+  Frequence               Int?
+  Etat_Alarme             Int      @default(0) @db.TinyInt
+  Consigne_Inf_Pre_Alarme Float?   @db.Float
+  Consigne_Sup_Pre_Alarme Float?   @db.Float
 
-  @@ignore
-}
-
-model ts_compteur_idtable {
-  IdServeurBDD Int
-  NomTable     String @default("") @db.VarChar(100)
-  CompteurID   Int
-
-  @@id([IdServeurBDD, NomTable])
-}
-
-model ts_graphique {
-  IdGraphique            Int      @default(autoincrement())
-  DateHeureMesure        DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
-  Valeur                 Float?   @default(0)
-  Resistance             Float?   @default(0)
-  Nb_decimal             Int?     @default(0) @db.TinyInt
-  Consigne               Float?   @default(0)
-  Consigne_Sup           Float?
-  Consigne_Inf           Float?
-  Unite                  String?  @db.VarChar(10)
-  SondeNumeroSerie       String?  @db.VarChar(50)
-  IdSonde                Int?
-  IdLieu                 Int
-  ValeurNull             Int      @default(0) @db.TinyInt
-  Frequence              Int?     @default(0)
-  Etat_Alarme            Int      @default(0) @db.TinyInt
-  Consigne_Inf_PreAlarme Float?
-  Consigne_Sup_PreAlarme Float?
-
-  @@id([IdGraphique, DateHeureMesure, IdLieu, ValeurNull, Etat_Alarme])
-  @@index([ValeurNull], map: "Graphique_ValeurNull")
-  @@index([DateHeureMesure], map: "WDIDX_ts_graphique_DateHeureMesure")
+  @@id([Id_Graphique, Date_Heure_Mesure, Id_Lieu, Valeur_Null, Etat_Alarme])
+  @@index([Valeur_Null], map: "Graphique_ValeurNull")
+  @@index([Date_Heure_Mesure], map: "WDIDX_ts_graphique_DateHeureMesure")
   @@index([Etat_Alarme], map: "WDIDX_ts_graphique_Etat_Alarme")
-  @@index([IdLieu], map: "WDIDX_ts_graphique_IdLieu")
-  @@index([IdSonde, DateHeureMesure], map: "idx_ts_graphique_idsonde_date")
+  @@index([Id_Lieu], map: "WDIDX_ts_graphique_IdLieu")
+  @@index([Id_Sonde, Date_Heure_Mesure(sort: Desc)], map: "idx_ts_graphique_idsonde_date")
 }
 
-model ts_journal {
-  IdServeurBDD           Int       @default(0)
-  IdJournal              Int       @default(0)
-  CodeJournal            String?   @default("") @db.VarChar(50)
-  Commentaire            String?   @db.LongText
-  NomUtilisateur         String?   @default("") @db.VarChar(50)
-  ProfilUtilisateur      String?   @default("") @db.VarChar(50)
-  DateHeureJournal       DateTime? @db.DateTime(0)
-  IdLieu                 Int?
-  CommentaireUtilisateur String?   @db.LongText
+model tm_journal {
+  Id_Serveur_BDD          Int
+  Id_Journal              Int
+  Code_Journal            String?   @db.VarChar(50)
+  Commentaire             String?   @db.LongText
+  Nom_Utilisateur         String?   @db.VarChar(50)
+  Profil_Utilisateur      String?   @db.VarChar(50)
+  Date_Heure_Journal      DateTime? @db.DateTime(0)
+  Id_Lieu                 Int?
+  Commentaire_Utilisateur String?   @db.LongText
 
-  @@id([IdServeurBDD, IdJournal])
-  @@index([CodeJournal], map: "Journal_CodeJournal_IDX")
-  @@index([DateHeureJournal], map: "Journal_DateHeure_IDX")
-  @@index([NomUtilisateur], map: "Journal_Nomutilisateur_IDX")
-  @@index([ProfilUtilisateur], map: "Journal_ProfilUtilisateur_IDX")
+  @@id([Id_Serveur_BDD, Id_Journal])
+  @@index([Code_Journal], map: "Journal_CodeJournal_IDX")
+  @@index([Date_Heure_Journal], map: "Journal_DateHeure_IDX")
+  @@index([Nom_Utilisateur], map: "Journal_Nomutilisateur_IDX")
+  @@index([Profil_Utilisateur], map: "Journal_ProfilUtilisateur_IDX")
 }
 
-model ts_journal_code {
-  CodeJournal String  @id @db.VarChar(50)
-  Commentaire String? @db.VarChar(200)
+model tm_journal_code {
+  Code_Journal String  @id @db.VarChar(50)
+  Commentaire  String? @db.VarChar(200)
 }
 
-model ts_logmesures {
-  IdLogMesures      Int      @id @default(autoincrement())
-  IdReception       Int?
-  DateHeureMesure   DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
-  Valeur            Float?
-  bEstHorsConsignes Int?     @db.TinyInt
-  bEstEnAlarme      Int?     @db.TinyInt
-  bMarqueur         Int?     @db.TinyInt
-  Details           String?  @db.VarChar(200)
+model tm_compteur_id_table {
+  Id_Serveur_BDD Int
+  Nom_Table      String @db.VarChar(100)
+  Compteur_Id    Int?
 
-  @@index([DateHeureMesure], map: "WDIDX_Ts_LogMesures_DateHeureMesure")
-  @@index([IdReception], map: "WDIDX_Ts_LogMesures_IdReception")
+  @@id([Id_Serveur_BDD, Nom_Table])
 }
 
-model ts_mesure {
-  IdServeurBDD           Int      @default(0)
-  IdMesure               Int      @default(0)
-  DateHeureMesure        DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.DateTime(0)
-  Valeur                 Float?
-  Resistance             Float?
-  Nb_decimal             Int?     @db.TinyInt
-  Consigne               Float?
-  Consigne_Sup           Float?
-  Consigne_Inf           Float?
-  Unite                  String?  @default("") @db.VarChar(10)
-  SondeNumeroSerie       String?  @default("") @db.VarChar(50)
-  IdLieu                 Int      @default(0)
-  ValeurNull             Int      @default(0) @db.TinyInt
-  Frequence              Int?
-  Etat_Alarme            Boolean? @default(false)
-  Consigne_Inf_PreAlarme Float?
-  Consigne_Sup_PreAlarme Float?
-  Moyenne                Float?
+model tm_datalogger_mesures {
+  Id_Datalogger_Mesures Int      @id
+  Id_Reception          Int?
+  Date_Heure_Mesure     DateTime @default(now()) @db.DateTime(0)
+  Valeur                Float?   @db.Float
+  Est_Hors_Consignes    Int?     @db.TinyInt
+  Est_En_Alarme         Int?     @db.TinyInt
+  Est_Marqueur          Int?     @db.TinyInt
+  Details               String?  @db.VarChar(200)
 
-  @@id([IdServeurBDD, IdMesure, DateHeureMesure, IdLieu, ValeurNull])
-  @@index([DateHeureMesure], map: "Mesure_Date_mesure_IDX")
-  @@index([Etat_Alarme], map: "Mesure_Etat_Alarme_IDX")
-  @@index([IdLieu], map: "Mesure_Numero_lieu_IDX")
-  @@index([ValeurNull], map: "Mesure_ValeurNull")
-  @@index([DateHeureMesure, IdLieu], map: "Mesure_date_lieu")
-  @@index([IdLieu], map: "Mesure_lieu")
+  @@index([Date_Heure_Mesure], map: "WDIDX_Ts_LogMesures_DateHeureMesure")
+  @@index([Id_Reception], map: "WDIDX_Ts_LogMesures_IdReception")
 }
 
-model ts_mesurecalibrage {
-  IdServeurBDD      Int      @default(0)
-  IdMesureCalibrage Int      @default(0)
-  Valeur            String   @default("") @db.VarChar(50)
-  Resistance        String   @default("") @db.VarChar(50)
-  SondeNumeroSerie  String   @default("") @db.VarChar(50)
-  ValeurNull        Int      @db.TinyInt
-  DateHeure         DateTime @default(now()) @db.Timestamp(0)
+model tm_mesures {
+  Id_Serveur_BDD          Int      @default(0)
+  Id_Mesure               Int      @default(0)
+  Date_Heure_Mesure       DateTime @db.DateTime(0)
+  Valeur                  Float?   @db.Float
+  Valeur_Brute            Float?   @db.Float
+  Nb_Decimal              Int?
+  Consigne                Float?   @db.Float
+  Consigne_Sup            Float?   @db.Float
+  Consigne_Inf            Float?   @db.Float
+  Unite                   String?  @default("") @db.VarChar(10)
+  Sonde_Numero_Serie      String?  @default("") @db.VarChar(50)
+  Id_Lieu                 Int      @default(0)
+  Est_Valeur_Null         Int      @default(0) @db.TinyInt
+  Frequence               Int?
+  Est_Etat_Alarme         Boolean  @default(false)
+  Consigne_Inf_Pre_Alarme Float?   @db.Float
+  Consigne_Sup_Pre_Alarme Float?   @db.Float
+  Moyenne                 Float?   @db.Float
 
-  @@id([IdServeurBDD, IdMesureCalibrage])
-  @@index([SondeNumeroSerie], map: "Sonde")
-  @@index([DateHeure], map: "WDIDX_MesureCE_DateHeure")
-  @@index([Resistance], map: "WDIDX_MesureCE_Resistance")
-  @@index([Valeur], map: "WDIDX_MesureCE_Valeur")
-  @@index([ValeurNull], map: "WDIDX_MesureCE_ValeurNull")
-}
-
-model ts_mesurecalibrageetalon {
-  IdServeurBDD            Int      @default(0)
-  IdMesureCalibrageEtalon Int      @default(0)
-  Valeur                  String   @default("") @db.VarChar(50)
-  Resistance              String   @default("") @db.VarChar(50)
-  EtalonNumeroSerie       String   @default("") @db.VarChar(50)
-  ValeurNull              Int      @db.TinyInt
-  DateHeure               DateTime @default(now()) @db.Timestamp(0)
-
-  @@id([IdServeurBDD, IdMesureCalibrageEtalon])
-  @@index([EtalonNumeroSerie], map: "Etalon")
-  @@index([DateHeure], map: "WDIDX_MesureCE_DateHeure")
-  @@index([Resistance], map: "WDIDX_MesureCE_Resistance")
-  @@index([Valeur], map: "WDIDX_MesureCE_Valeur")
-  @@index([ValeurNull], map: "WDIDX_MesureCE_ValeurNull")
-}
-
-model ts_mesureetalon {
-  IdServeurBDD      Int      @default(0)
-  IdMesureEtalon    Int      @default(0)
-  Resistance        Float
-  EtalonNumeroSerie String   @default("") @db.VarChar(50)
-  ValeurNull        Int      @db.TinyInt
-  DateHeure         DateTime @db.DateTime(0)
-  Message_Erreur    String   @default("") @db.VarChar(50)
-
-  @@id([IdServeurBDD, IdMesureEtalon])
-  @@index([DateHeure], map: "WDIDX_MesureEtalon_DateHeure")
-  @@index([Message_Erreur], map: "WDIDX_MesureEtalon_Message_Erreur")
-  @@index([Resistance], map: "WDIDX_MesureEtalon_Resistance")
-  @@index([EtalonNumeroSerie], map: "WDIDX_MesureEtalon_Sonde")
-  @@index([ValeurNull], map: "WDIDX_MesureEtalon_ValeurNull")
-}
-
-model ts_mesureetalonnage {
-  IdServeurBDD       Int       @default(0)
-  IdMesureEtalonnage Int       @default(0)
-  SondeNumeroserie   String?   @db.VarChar(50)
-  NumeroOrdre        Int?
-  MesureSonde        String?   @db.VarChar(50)
-  MesureEtalon       String?   @db.VarChar(50)
-  DateHeure          DateTime? @db.DateTime(0)
-
-  @@id([IdServeurBDD, IdMesureEtalonnage])
-  @@index([SondeNumeroserie], map: "MesureSonde_IdEtalonnage_IDX")
-}
-
-model ts_mesuretest {
-  IdServeurBDD     Int      @default(0)
-  IdMesureTest     Int      @default(0)
-  Resistance       Float
-  SondeNumeroSerie String   @unique(map: "Sonde") @default("") @db.VarChar(50)
-  ValeurNull       Int      @db.TinyInt
-  DateHeure        DateTime @default(now()) @db.Timestamp(0)
-  NombreTotal      Int      @default(0)
-  NombreRecu       Int      @default(0)
-
-  @@id([IdServeurBDD, IdMesureTest])
-  @@index([DateHeure], map: "WDIDX_MesureTest_DateHeure")
-  @@index([NombreRecu], map: "WDIDX_MesureTest_NombreRecu")
-  @@index([NombreTotal], map: "WDIDX_MesureTest_NombreTotal")
-  @@index([ValeurNull], map: "WDIDX_MesureTest_ValeurNull")
-}
-
-model ts_mesuretestetalon {
-  IdServeurBDD       Int      @default(0)
-  IdMesureTestEtalon Int      @default(0)
-  Resistance         Float
-  EtalonNumeroSerie  String   @unique(map: "Etalon") @default("") @db.VarChar(50)
-  ValeurNull         Int      @db.TinyInt
-  DateHeure          DateTime @default(now()) @db.Timestamp(0)
-  NombreTotal        Int      @default(0)
-  NombreRecu         Int      @default(0)
-
-  @@id([IdServeurBDD, IdMesureTestEtalon])
-  @@index([DateHeure], map: "WDIDX_MesureTest_DateHeure")
-  @@index([NombreRecu], map: "WDIDX_MesureTest_NombreRecu")
-  @@index([NombreTotal], map: "WDIDX_MesureTest_NombreTotal")
-  @@index([ValeurNull], map: "WDIDX_MesureTest_ValeurNull")
-}
-
-model ts_modedegrade {
-  IdModeDegrade     Int       @id @default(0)
-  IdUtilisateur     Int?
-  DateHeureCreation DateTime? @db.DateTime(0)
-  RequeteSQL        String?   @db.VarChar(500)
-  RequeteArchivee   Boolean   @default(false)
-  DateHeureArchive  DateTime? @db.DateTime(0)
-}
-
-model ts_parametre {
-  CleParametre         String  @id @default("") @db.VarChar(20)
-  ValeurParametre      String? @db.VarChar(50)
-  GroupeParametre      String? @db.VarChar(50)
-  CommentaireParametre String? @db.VarChar(100)
+  @@id([Id_Serveur_BDD, Id_Mesure, Date_Heure_Mesure, Id_Lieu, Est_Valeur_Null])
+  @@index([Date_Heure_Mesure], map: "Mesure_Date_mesure_IDX")
+  @@index([Est_Etat_Alarme], map: "Mesure_Etat_Alarme_IDX")
+  @@index([Id_Lieu], map: "Mesure_Numero_lieu_IDX")
+  @@index([Est_Valeur_Null], map: "Mesure_ValeurNull")
+  @@index([Date_Heure_Mesure, Id_Lieu], map: "Mesure_date_lieu")
+  @@index([Id_Lieu], map: "Mesure_lieu")
 }

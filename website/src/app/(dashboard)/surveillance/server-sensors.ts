@@ -14,7 +14,7 @@ export async function ServerSensors(): Promise<SensorWithLocation[]> {
         t_site: true,
       },
       orderBy: {
-        IdLieu: "desc",
+        Id_Lieu: "desc",
       },
     });
 
@@ -22,9 +22,9 @@ export async function ServerSensors(): Promise<SensorWithLocation[]> {
     const sensorsWithMeasurements = await Promise.all(
       locations.map(async (location) => {
         // Récupérer la dernière mesure
-        const lastMeasurement = await prismaMesure.ts_mesure.findFirst({
+        const lastMeasurement = await prismaMesure.tm_mesure.findFirst({
           where: {
-            IdLieu: location.IdLieu,
+            IdLieu: location.Id_Lieu,
           },
           orderBy: {
             DateHeureMesure: "desc",
@@ -42,7 +42,7 @@ export async function ServerSensors(): Promise<SensorWithLocation[]> {
           "ok";
 
         return {
-          id: location.IdLieu.toString(),
+          id: location.Id_Lieu.toString(),
           name: location.Nom_Lieu,
           type: "temperature", // À adapter selon le type réel
           unit: "°C",
@@ -53,15 +53,15 @@ export async function ServerSensors(): Promise<SensorWithLocation[]> {
           isActive: location.Lieu_Etat === "A",
           status,
           location: {
-            id: location.IdLieu.toString(),
+            id: location.Id_Lieu.toString(),
             name: location.Nom_Lieu,
             description: null,
             siteGroup: null,
             isActive: location.Lieu_Etat === "A",
-            siteId: location.IdSite,
-            groupId1: location.IdGroupe1,
-            groupId2: location.IdGroupe2,
-            site: location.t_site?.LibelleSite ?? "",
+            siteId: location.Id_Site,
+            groupId1: location.Id_Groupe1,
+            groupId2: location.Id_Groupe2,
+            site: location.t_site?.Libelle_Site ?? "",
           },
         } as SensorWithLocation;
       })

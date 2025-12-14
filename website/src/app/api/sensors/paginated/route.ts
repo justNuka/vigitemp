@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
     const locationsWithMeasurements = await Promise.all(
       locations.map(async (location) => {
         // Récupérer la dernière mesure
-        const lastMeasurement = await prismaMesure.ts_mesure.findFirst({
+        const lastMeasurement = await prismaMesure.tm_mesure.findFirst({
           where: {
             IdLieu: location.IdLieu,
           },

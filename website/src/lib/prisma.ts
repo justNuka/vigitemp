@@ -11,7 +11,7 @@
  * import { prisma, prismaMesure } from '@/lib/prisma'
  * 
  * const users = await prisma.t_utilisateur.findMany()
- * const mesures = await prismaMesure.ts_mesure.findMany()
+ * const mesures = await prismaMesure.tm_mesure.findMany()
  */
 
 import { PrismaClient } from '../generated/@prisma-db-main/client'

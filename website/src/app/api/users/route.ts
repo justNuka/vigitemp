@@ -23,21 +23,14 @@ export async function GET() {
   try {
     const users = await prisma.t_utilisateur.findMany({
       where: { Archive: false },
-      include: {
-        t_profil: {
-          select: {
-            ProfilUtilisateur: true,
-          },
-        },
-      },
       orderBy: { Login: "asc" },
     });
 
     const formatted = users.map((user: any) => ({
-      id: user.IdUtilisateur,
+      id: user.Id_Utilisateur,
       username: user.Login,
       displayName: `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login,
-      role: user.t_profil?.ProfilUtilisateur || "user",
+      role: user.Profil_Utilisateur || "user",
       status: !user.Archive ? "active" : "inactive",
       createdAt: user.Date_Creation?.toISOString() || null,
     }));
@@ -82,37 +75,30 @@ export async function POST(req: NextRequest) {
     const user = await prisma.t_utilisateur.create({
       data: {
         Login: data.username,
-        Mot_de_passe: hashedPassword,
+        Mot_De_Passe: hashedPassword,
         Prenom: data.prenom,
         Nom: data.nom,
         Adresse_Email: data.email,
-        ProfilUtilisateur: data.profileId,
+        Profil_Utilisateur: data.profileId,
         Archive: false,
         Date_Creation: new Date(),
-        DateDerniereModificationMDP: new Date(),
+        Date_Derniere_Modification_MDP: new Date(),
         Date_Validite: data.expiryDate || null,
-        MotDePasseTemporaire: true,
-      },
-      include: {
-        t_profil: {
-          select: {
-            ProfilUtilisateur: true,
-          },
-        },
+        Mot_De_Passe_Temporaire: true,
       },
     });
 
     // Log user creation
     log.data.create(
       "Utilisateur",
-      user.IdUtilisateur,
+      user.Id_Utilisateur,
       currentUser?.username || "System",
       currentUser?.userId || 0,
       ip,
       {
         username: user.Login,
         email: user.Adresse_Email,
-        profile: user.ProfilUtilisateur,
+        profile: user.Profil_Utilisateur,
       }
     );
 
@@ -144,10 +130,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
-        id: user.IdUtilisateur,
+        id: user.Id_Utilisateur,
         username: user.Login,
         displayName: `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login,
-        role: user.t_profil?.ProfilUtilisateur || "user",
+        role: user.Profil_Utilisateur || "user",
         status: "active",
       },
       { status: 201 }

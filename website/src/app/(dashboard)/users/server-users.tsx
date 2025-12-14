@@ -13,12 +13,12 @@ export async function ServerUsers() {
 
   const users = await prisma.t_utilisateur.findMany({
     select: {
-      IdUtilisateur: true,
+      Id_Utilisateur: true,
       Login: true,
       Nom: true,
       Prenom: true,
       Adresse_Email: true,
-      ProfilUtilisateur: true,
+      Profil_Utilisateur: true,
       Archive: true,
       Date_Creation: true,
     },
@@ -27,13 +27,13 @@ export async function ServerUsers() {
 
   // Transform to User format
   const formatted = users.map((user) => ({
-    id: user.IdUtilisateur.toString(),
+    id: user.Id_Utilisateur.toString(),
     username: user.Login || "",
     displayName: `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login || "",
     nom: user.Nom || "",
     prenom: user.Prenom || "",
     email: user.Adresse_Email || "",
-    role: user.ProfilUtilisateur || "user",
+    role: user.Profil_Utilisateur || "user",
     isActive: !user.Archive,
     createdAt: user.Date_Creation || new Date(),
   }));

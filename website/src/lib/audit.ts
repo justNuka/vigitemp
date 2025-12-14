@@ -35,29 +35,28 @@ export async function createAuditLog({
 }: CreateAuditLogParams) {
   try {
     // Récupérer le prochain ID de journal
-    const maxId = await prismaMesure.ts_journal.aggregate({
+    const maxId = await prismaMesure.tm_journal.aggregate({
       _max: {
-        IdJournal: true,
+        Id_Journal: true,
       },
       where: {
-        IdServeurBDD: 0,
+        Id_Serveur_BDD: 0,
       },
     });
 
-    const nextId = (maxId._max.IdJournal || 0) + 1;
-
+    const nextId = (maxId._max.Id_Journal || 0) + 1;
     // Créer l'entrée d'audit
-    await prismaMesure.ts_journal.create({
+    await prismaMesure.tm_journal.create({
       data: {
-        IdServeurBDD: 0,
-        IdJournal: nextId,
-        CodeJournal: code,
-        NomUtilisateur: username,
-        ProfilUtilisateur: userProfile,
-        DateHeureJournal: new Date(),
+        Id_Serveur_BDD: 0,
+        Id_Journal: nextId,
+        Code_Journal: code,
+        Nom_Utilisateur: username,
+        Profil_Utilisateur: userProfile,
+        Date_Heure_Journal: new Date(),
         Commentaire: comment,
-        CommentaireUtilisateur: userComment,
-        IdLieu: idLieu,
+        Commentaire_Utilisateur: userComment,
+        Id_Lieu: idLieu,
       },
     });
 
@@ -113,15 +112,15 @@ export async function getAuditLogs({
   }
 
   const [logs, total] = await Promise.all([
-    prismaMesure.ts_journal.findMany({
+    prismaMesure.tm_journal.findMany({
       where,
       orderBy: {
-        DateHeureJournal: "desc",
+        Date_Heure_Journal: "desc",
       },
       take: limit,
       skip,
     }),
-    prismaMesure.ts_journal.count({ where }),
+    prismaMesure.tm_journal.count({ where }),
   ]);
 
   return {

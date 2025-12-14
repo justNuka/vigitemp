@@ -12,8 +12,8 @@ model t_actionneur {
   Id_Actionneur    Int                @id @default(autoincrement())
   Num_Serie        String?            @db.VarChar(50)
   Type             Int?
-  Etat             Boolean?           @default(false)
-  Demande          Boolean?           @default(false)
+  Est_Etat         Boolean?           @default(false)
+  Est_Demande      Boolean?           @default(false)
   Commentaire      String?            @db.VarChar(255)
   Port_Serie       Int?
   Id_Module        Int?
@@ -21,17 +21,17 @@ model t_actionneur {
   Relai_2          String?            @db.VarChar(50)
   Relai_3          String?            @db.VarChar(50)
   Relai_4          String?            @db.VarChar(50)
-  Test             Boolean?           @default(false)
+  Est_Test         Boolean?           @default(false)
   Libelle_Erreur   String?            @db.VarChar(50)
   Id_Plan          Int?
   Position_Plan_X  BigInt?
   Position_Plan_Y  BigInt?
-  Archive          Boolean?           @default(false)
+  Est_Archive      Boolean?           @default(false)
   Id_Serveur       Int?               @default(1)
   t_plan           t_plan?            @relation(fields: [Id_Plan], references: [IdPlan], onDelete: NoAction, onUpdate: NoAction, map: "FK_PLAN_ACTIONNEUR")
   t_actionneurtype t_actionneur_type? @relation(fields: [Type], references: [Type], onDelete: NoAction, onUpdate: NoAction, map: "FK_TYPE_ACTIONNEUR")
 
-  @@index([Etat], map: "Actionneur_Etat_IDX")
+  @@index([Est_Etat], map: "Actionneur_Etat_IDX")
   @@index([Id_Module], map: "Actionneur_IDModule_IDX")
   @@index([Id_Plan], map: "Actionneur_IDPlan_IDX")
   @@index([Num_Serie], map: "Actionneur_Num_Serie_IDX")
@@ -45,20 +45,20 @@ model t_alarme {
   Valeur                       Float?    @db.Float
   Type                         String?   @db.VarChar(1)
   Date_Heure_Fin               DateTime? @db.DateTime(0)
-  Alarme_Vrai                  Boolean?  @default(false)
+  Est_Alarme_Vrai              Boolean?  @default(false)
   Id_Lieu                      Int?
   Sonde_Numero_Serie           String?   @db.VarChar(50)
   Unite                        String?   @db.VarChar(10)
-  Acquitee                     Boolean?  @default(false)
+  Est_Acquitee                 Boolean?  @default(false)
   Date_Heure_Derniere_Mesure   DateTime? @db.DateTime(0)
   Date_Heure_Debut_Alarme_Vrai DateTime? @db.DateTime(0)
-  Alarme_Pour_VigiTel          Boolean?  @default(false)
-  Mail_Envoye                  Boolean?
-  Tel_Acquitee                 Boolean?
+  Est_Alarme_Pour_VigiTel      Boolean?  @default(false)
+  Est_Mail_Envoye              Boolean?
+  Est_Tel_Acquitee             Boolean?
   t_lieu                       t_lieu?   @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ALARME")
 
-  @@index([Acquitee], map: "Alarme_Acquite_IDX")
-  @@index([Alarme_Vrai], map: "Alarme_Alarme_Vrai_IDX")
+  @@index([Est_Acquitee], map: "Alarme_Acquite_IDX")
+  @@index([Est_Alarme_Vrai], map: "Alarme_Alarme_Vrai_IDX")
   @@index([Date_Heure_Debut], map: "Alarme_Date_Heure_Alarme_IDX")
   @@index([Date_Heure_Fin], map: "Alarme_Date_Heure_Fin_Alar_IDX")
   @@index([Date_Heure_Debut_Alarme_Vrai], map: "Alarme_Date_heure_Debut_Al_IDX")
@@ -83,32 +83,32 @@ model t_autorisation {
   Code_Autorisation             String?                         @db.VarChar(50)
   Libelle_Autorisation          String?                         @db.VarChar(50)
   Commentaire                   String?                         @db.VarChar(200)
-  Acces_Admin                   Boolean?                        @default(false)
-  Acces_Metrologie              Boolean?                        @default(false)
-  Acces_Surveillance            Boolean?                        @default(false)
-  Acces_VigiLog                 Boolean?                        @default(false)
+  A_Acces_Admin                 Boolean?                        @default(false)
+  A_Acces_Metrologie            Boolean?                        @default(false)
+  A_Acces_Surveillance          Boolean?                        @default(false)
+  A_Acces_VigiLog               Boolean?                        @default(false)
   t_liaison_profil_autorisation t_liaison_profil_autorisation[]
 
   @@index([Code_Autorisation], map: "autorisation_CodeAutorisation_IDX")
 }
 
 model t_bain {
-  Id_Bain     Int      @id @default(autoincrement())
-  Model       String?  @db.VarChar(50)
-  Reference   String?  @db.VarChar(50)
-  Stabilite   Float?   @db.Float
-  Homogeneite Float?   @db.Float
-  Contenu     String?  @db.VarChar(50)
-  Reserve_MC2 Boolean? @default(false)
-  Archive     Boolean? @default(false)
+  Id_Bain         Int      @id @default(autoincrement())
+  Model           String?  @db.VarChar(50)
+  Reference       String?  @db.VarChar(50)
+  Stabilite       Float?   @db.Float
+  Homogeneite     Float?   @db.Float
+  Contenu         String?  @db.VarChar(50)
+  Est_Reserve_MC2 Boolean? @default(false)
+  Est_Archive     Boolean? @default(false)
 
   @@index([Model], map: "Bain_Model_IDX")
   @@index([Reference], map: "Bain_Reference_IDX")
 }
 
 model t_calibrage {
-  Date_Heure_Calibrage DateTime? @db.DateTime(0)
   Id_Calibrage         Int       @id @default(autoincrement())
+  Date_Heure_Calibrage DateTime? @db.DateTime(0)
   Sonde_Numero_Serie   String?   @db.VarChar(50)
   Coeff_X2             Float?    @db.Float
   Coeff_X              Float?    @db.Float
@@ -122,10 +122,10 @@ model t_calibrage {
   SE_Numero_Certif     String?   @db.VarChar(50)
   Mesure_Etalon1       Float?    @db.Float
   Mesure_Etalon2       Float?    @db.Float
-  Valeur_Brute1        String?   @db.VarChar(50)
-  Valeur_Brute2        String?   @db.VarChar(50)
-  Ancienne_Mesure1     String?   @db.VarChar(50)
-  Ancienne_Mesure2     String?   @db.VarChar(50)
+  Valeur_Brute1        Float?    @db.Float
+  Valeur_Brute2        Float?    @db.Float
+  Ancienne_Mesure1     Float?    @db.Float
+  Ancienne_Mesure2     Float?    @db.Float
   Nouvelle_Mesure1     Float?    @db.Float
   Nouvelle_Mesure2     Float?    @db.Float
   Id_Bain              Int?
@@ -167,10 +167,10 @@ model t_certif_mesure {
 model t_etalon {
   Id_Etalon           Int      @id @default(autoincrement())
   Etalon_Numero_Serie String?  @unique(map: "EtalonNumeroSerie_IDX") @db.VarChar(50)
-  Archive             Boolean? @default(false)
+  Est_Archive         Boolean? @default(false)
   Etat_Etalon         String?  @db.VarChar(1)
   Port_Serie          String?  @db.VarChar(10)
-  Sonde_Externe       Boolean?
+  Est_Sonde_Externe   Boolean?
   Resolution          String?  @db.VarChar(50)
   Incertitude         String?  @db.VarChar(50)
   Nb_Decimale         Int?
@@ -213,11 +213,11 @@ model t_etalonnage {
 }
 
 model t_etalonnage_mesure {
-  Id_Etalonnage_Mesure_Sonde Int     @id @default(autoincrement())
+  Id_Etalonnage_Mesure_Sonde Int    @id @default(autoincrement())
   Id_Etalonnage              Int?
   Numero_Ordre               Int?
-  Mesure_Sonde               String? @db.VarChar(50)
-  Mesure_Etalon              String? @db.VarChar(50)
+  Mesure_Sonde               Float? @db.Float
+  Mesure_Etalon              Float? @db.Float
 
   @@index([Id_Etalonnage], map: "MesureSonde_IdEtalonnage_IDX")
 }
@@ -226,7 +226,7 @@ model t_groupe {
   Id_Groupe           Int      @id @default(autoincrement())
   Nom_Groupe          String?  @unique(map: "Groupe_NomGroupe_IDX") @db.VarChar(64)
   Numero_Regroupement String?  @db.VarChar(1)
-  Archive             Boolean? @default(false)
+  Est_Archive         Boolean? @default(false)
 
   @@index([Numero_Regroupement], map: "Groupe_NumeroRegroupement_IDX")
 }
@@ -280,35 +280,35 @@ model t_lieu {
   Id_Site                              Int?
   Nom_Lieu                             String?                    @db.VarChar(20)
   Sonde_Numero_Serie                   String?                    @db.VarChar(50)
-  Consigne                             Float?
-  Consigne_Sup                         Float?
-  Consigne_Sup_Corrigee                Float?
-  Consigne_Sup_Active                  Boolean?                   @default(true)
+  Consigne                             Float?                     @db.Float
+  Consigne_Sup                         Float?                     @db.Float
+  Consigne_Sup_Corrigee                Float?                     @db.Float
+  Est_Consigne_Sup_Active              Boolean?                   @default(true)
   Consigne_Sup_Pre_Alarme              Float?                     @db.Float
-  Consigne_Sup_Pre_Alarme_Active       Boolean?
-  Consigne_Inf                         Float?
-  Consigne_Inf_Corrigee                Float?
-  Consigne_Inf_Active                  Boolean?                   @default(true)
+  Est_Consigne_Sup_Pre_Alarme_Active   Boolean?
+  Consigne_Inf                         Float?                     @db.Float
+  Consigne_Inf_Corrigee                Float?                     @db.Float
+  Est_Consigne_Inf_Active              Boolean?                   @default(true)
   Consigne_Inf_Pre_Alarme              Float?                     @db.Float
-  Consigne_Inf_Pre_Alarme_Active       Boolean?
+  Est_Consigne_Inf_Pre_Alarme_Active   Boolean?
   Frequence                            Int?
-  Lieu_Etat                            String?                    @db.VarChar(1)
+  Lieu_Etat                            String?                    @db.VarChar(100)
   Retard_Alarme_Haut                   Int?
   Retard_Alarme_Bas                    Int?
   Id_Plan                              Int?
   Position_Plan_X                      BigInt?
   Position_Plan_Y                      BigInt?
   Date_Creation                        DateTime?                  @db.Date
-  Archive                              Boolean?                   @default(false)
-  Tel_Actif                            Boolean?                   @default(false)
+  Est_Archive                          Boolean?                   @default(false)
+  Est_Tel_Actif                        Boolean?                   @default(false)
   Tel_Code                             String?                    @db.VarChar(4)
   Tel_Son_Lieu                         String?                    @db.VarChar(260)
   Id_Actionneur                        Int?
-  Mode_Serotheque                      Boolean?                   @default(false)
+  Est_Mode_Serotheque                  Boolean?                   @default(false)
   Coef_Sensibilite                     Int?
   Id_PDF                               Int?
-  DataLogger                           Boolean?                   @default(false)
-  EMT                                  Float?
+  Est_DataLogger                       Boolean?                   @default(false)
+  EMT                                  Float?                     @db.Float
   EMT_Choix_Mode                       Int?                       @default(1)
   EMT_Sonde                            Float?                     @db.Float
   Retard_Alarme_Changement_Consigne    Int?
@@ -316,20 +316,20 @@ model t_lieu {
   Derniere_Valeur                      Float?                     @db.Float
   Derniere_Unite                       String?                    @db.VarChar(10)
   Derniere_Nb_Decimal                  Int?
-  Lieu_En_Alarme                       Int?                       @db.TinyInt
-  Lieu_Alarme_Termee_Non_Acquittee     Int?                       @db.TinyInt
-  Lieu_En_Pre_Alarme                   Int?                       @db.TinyInt
+  Est_Lieu_En_Alarme                   Int?                       @db.TinyInt
+  Est_Lieu_Alarme_Termee_Non_Acquittee Int?                       @db.TinyInt
+  Est_Lieu_En_Pre_Alarme               Int?                       @db.TinyInt
   Id_Alarme                            Int?
-  Lieu_Etat_N1                         String?                    @db.VarChar(1)
+  Lieu_Etat_N1                         String?                    @db.VarChar(50)
   Derniere_Date_Etalonnage             DateTime?                  @db.Date
   Derniere_Erreur_Justesse             String?                    @db.VarChar(50)
   Derniere_Incertitude                 String?                    @db.VarChar(50)
   Retard_Non_Reponse                   Int?
   Date_Heure_Derniere_Reponse          DateTime?                  @db.DateTime(0)
   Date_Heure_Derniere_Reponse_Recue_OK DateTime?                  @db.DateTime(0)
-  Correction_Ej                        Boolean?                   @default(false)
-  Derive                               Float?                     @default(0)
-  Correction_derive                    Boolean?                   @default(false)
+  Est_Correction_Ej                    Int?                       @default(0) @db.TinyInt
+  Derive                               Float?                     @default(0) @db.Float
+  Est_Correction_derive                Boolean?                   @default(false)
   Derniere_Valeur_Null                 Int?                       @default(0)
   t_alarme                             t_alarme[]
   t_pdf                                t_pdf?                     @relation(fields: [Id_PDF], references: [Id_PDF], onDelete: NoAction, onUpdate: NoAction, map: "FK_PDF_LIEU")
@@ -346,14 +346,14 @@ model t_lieu {
   @@index([Id_Groupe2], map: "IdGroupe2")
   @@index([Id_PDF], map: "IdPDF")
   @@index([Id_Site], map: "IdSite")
-  @@index([Archive], map: "Lieu_Archive_IDX")
+  @@index([Est_Archive], map: "Lieu_Archive_IDX")
   @@index([Date_Creation], map: "Lieu_Date_Creation_IDX")
   @@index([Id_Actionneur], map: "Lieu_IDActionneur_IDX")
   @@index([Id_Plan], map: "Lieu_IDPlan_IDX")
   @@index([Lieu_Etat], map: "Lieu_Lieu_Etat_IDX")
   @@index([Nom_Lieu], map: "Lieu_Nom_Lieu_IDX")
   @@index([Sonde_Numero_Serie], map: "Lieu_Numero_serie_IDX")
-  @@index([Tel_Actif], map: "Lieu_Tel_Actif_IDX")
+  @@index([Est_Tel_Actif], map: "Lieu_Tel_Actif_IDX")
   @@index([Tel_Code], map: "Lieu_Tel_Code_IDX")
   @@index([Tel_Son_Lieu], map: "Lieu_Tel_Son_Lieu_IDX")
 }
@@ -361,26 +361,26 @@ model t_lieu {
 model t_lieu_planning {
   Id_Lieu_Planning     Int      @id @default(autoincrement())
   Id_Lieu              Int?
-  Id_Jour              Boolean?
-  Actif                Boolean? @default(true)
+  Est_Id_Jour          Boolean?
+  Est_Actif            Boolean? @default(true)
   Heure_Debut_Periode1 String?  @default("0000") @db.VarChar(4)
   Heure_Fin_Periode1   String?  @default("0000") @db.VarChar(4)
   Heure_Debut_Periode2 String?  @default("0000") @db.VarChar(4)
   Heure_Fin_Periode2   String?  @default("0000") @db.VarChar(4)
   t_lieu               t_lieu?  @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_PLANNING")
 
-  @@unique([Id_Lieu, Id_Jour], map: "IdLieuJour")
+  @@unique([Id_Lieu, Est_Id_Jour], map: "IdLieuJour")
   @@index([Id_Lieu], map: "IdLieu")
 }
 
 model t_lieu_tel_num {
-  Id_Tel_Num     Int      @id @default(autoincrement())
-  Id_Lieu        Int?
-  Numero_Ordre   Int?
-  Id_Utilisateur Int?
-  Via_Telephone  Boolean?
-  Via_Email      Boolean?
-  t_lieu         t_lieu?  @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_TEL_NUM")
+  Id_Tel_Num        Int      @id @default(autoincrement())
+  Id_Lieu           Int?
+  Numero_Ordre      Int?
+  Id_Utilisateur    Int?
+  Est_Via_Telephone Boolean?
+  Est_Via_Email     Boolean?
+  t_lieu            t_lieu?  @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_TEL_NUM")
 
   @@index([Id_Utilisateur], map: "IdIntervenant_NDX")
   @@index([Id_Lieu], map: "IdLieu")
@@ -408,11 +408,11 @@ model t_module {
 }
 
 model t_module_type {
-  Id_Module_Type      Int      @id @default(autoincrement())
-  Type_Module         Int?     @unique(map: "UK_Type_Module") @db.SmallInt
-  Libelle_Type_Module String?  @db.VarChar(50)
-  Libelle_Module      String?  @db.VarChar(100)
-  Flag_Affiche_Plan   Boolean? @default(false)
+  Id_Module_Type        Int      @id @default(autoincrement())
+  Type_Module           Int?     @unique(map: "UK_Type_Module") @db.SmallInt
+  Libelle_Type_Module   String?  @db.VarChar(50)
+  Libelle_Module        String?  @db.VarChar(100)
+  Est_Flag_Affiche_Plan Boolean? @default(false)
 }
 
 model t_parametre {
@@ -437,7 +437,7 @@ model t_plan {
   IdPlan       Int            @id @default(autoincrement())
   Image        Bytes?
   Titre        String?        @unique(map: "Plan_Titre_IDX") @db.VarChar(50)
-  Archive      Boolean?       @default(false)
+  Est_Archive  Boolean?       @default(false)
   t_actionneur t_actionneur[]
   t_lieu       t_lieu[]
 }
@@ -456,7 +456,7 @@ model t_profil {
   Id_Profil                     Int                             @id @default(autoincrement())
   Profil_Utilisateur            String?                         @unique(map: "Profil_ProfilUtilisateur_IDX") @db.VarChar(50)
   Commentaire                   String?                         @db.VarChar(100)
-  MC2                           Boolean?                        @default(false)
+  Est_MC2                       Boolean?                        @default(false)
   t_liaison_profil_autorisation t_liaison_profil_autorisation[]
 }
 
@@ -465,7 +465,7 @@ model t_site {
   Code_Site                  String?                      @unique(map: "CodeSite_IDX") @db.VarChar(20)
   Libelle_Site               String?                      @db.VarChar(50)
   Commentaire                String?                      @db.VarChar(200)
-  Archive                    Boolean?                     @default(false)
+  Est_Archive                Boolean?                     @default(false)
   t_liaison_utilisateur_site t_liaison_utilisateur_site[]
   t_lieu                     t_lieu[]
 }
@@ -483,7 +483,7 @@ model t_sonde {
   Relai_4            String?  @db.VarChar(50)
   Frequence_Mesure   Int?
   Frequence_Recup    Int?
-  Sonde_Reformee     Boolean?
+  Est_Sonde_Reformee Boolean?
   Etat_Sonde_N1      String?  @db.VarChar(1)
   Id_Serveur         Int?
   t_lieu             t_lieu[]
@@ -504,7 +504,7 @@ model t_sonde_type {
   Id_Sonde_Type      Int      @id @default(autoincrement())
   Sonde_Type         String?  @unique(map: "Sonde_Type") @db.VarChar(50)
   Libelle_Sonde_Type String?  @db.VarChar(50)
-  Gestion_Relais     Boolean?
+  Est_Gestion_Relais Boolean?
 }
 
 model t_utilisateur {
@@ -513,10 +513,9 @@ model t_utilisateur {
   Mot_De_Passe                   String?                        @db.VarChar(60)
   Date_Validite                  DateTime?                      @db.Date
   Date_Creation                  DateTime?                      @db.Date
-  Archive                        Boolean?                       @default(false)
+  Est_Archive                    Boolean?                       @default(false)
   Profil_Utilisateur             String?                        @db.VarChar(50)
   Date_Heure_Derniere_Connexion  DateTime?                      @db.DateTime(0)
-  Date_Heure_Connexion           DateTime?                      @db.DateTime(0)
   Adresse_IP_Connexion           String?                        @db.VarChar(15)
   Nom_Machine_Connexion          String?                        @db.VarChar(50)
   Id_Site                        Int?
@@ -528,17 +527,17 @@ model t_utilisateur {
   Date_Derniere_Modification_MDP DateTime?                      @db.DateTime(0)
   Reset_Password_Token           String?                        @db.VarChar(255)
   Reset_Password_Expires         DateTime?                      @db.DateTime(0)
-  Mot_De_Passe_Temporaire        Boolean?                       @default(false)
+  Est_Mot_De_Passe_Temporaire    Boolean?                       @default(false)
   t_ancien_mot_de_passe          t_ancien_mot_de_passe[]
   t_liaison_utilisateur_groupe   t_liaison_utilisateur_groupe[]
   t_liaison_utilisateur_site     t_liaison_utilisateur_site[]
 
-  @@index([Archive], map: "Utilisateur_Archive_IDX")
+  @@index([Est_Archive], map: "Utilisateur_Archive_IDX")
   @@index([Profil_Utilisateur], map: "Utilisateur_ProfilUtilisateur_IDX")
 }
 
 model liste_clients {
-  IdClient                     Int       @id @default(autoincrement())
+  Id_Client                    Int       @id @default(autoincrement())
   Nom                          String    @db.VarChar(100)
   Num_Compte                   String?   @unique(map: "UK_Num_Compte") @db.VarChar(50)
   VigiServ_Derniere_Date_Heure DateTime? @db.DateTime(0)
@@ -546,17 +545,17 @@ model liste_clients {
 }
 
 model t_actionneur_type {
-  IdActionneurType Int            @id @default(autoincrement())
-  Type             Int?           @unique(map: "Type")
-  Description      String?        @db.VarChar(50)
-  Gere_Relais      Boolean?       @default(false)
-  t_actionneur     t_actionneur[]
+  Id_Actionneur_Type Int            @id @default(autoincrement())
+  Type               Int?           @unique(map: "Type")
+  Description        String?        @db.VarChar(50)
+  Gere_Relais        Boolean?       @default(false)
+  t_actionneur       t_actionneur[]
 }
 
 model t_ancien_mot_de_passe {
   Id_Ancien_Mot_De_Passe Int            @id @default(autoincrement())
   Id_Utilisateur         Int?
-  Mot_De_Passe           String?        @db.VarChar(32)
+  Mot_De_Passe           String?        @db.VarChar(100)
   t_utilisateur          t_utilisateur? @relation(fields: [Id_Utilisateur], references: [Id_Utilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_UTILISATEUR_ANCIENMDP_new")
 
   @@index([Id_Utilisateur], map: "IdUtilisateur")
@@ -572,14 +571,14 @@ model t_commentaire_acquittement_alarme {
 }
 
 model t_datalogger_alarme {
-  IdLogAlarme  Int      @id @default(autoincrement())
-  IdReception  Int?
-  DateDebut    DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
-  DateFin      DateTime @default(dbgenerated("'0000-00-00 00:00:00'")) @db.Timestamp(0)
-  bEstAcquitte Int?     @db.TinyInt
-  Commentaire  String?  @db.VarChar(100)
+  Id_Log_Alarme Int      @id
+  Id_Reception  Int?     @db.TinyInt
+  Date_Debut    DateTime @db.DateTime(0)
+  Date_Fin      DateTime @db.DateTime(0)
+  Est_Acquitte  Int?     @db.TinyInt
+  Commentaire   String?  @db.VarChar(200)
 
-  @@index([IdReception], map: "WDIDX_T_logalarme_IdReception")
+  @@index([Id_Reception], map: "WDIDX_T_logalarme_IdReception")
 }
 
 model t_datalogger_coursier {
@@ -700,14 +699,14 @@ model t_datalogger_tournee {
 }
 
 model t_etalon_type {
-  Id_Etalon_Type Int      @id @default(autoincrement())
-  Type_Etalon    String?  @unique(map: "UK_Type_Etalon") @db.VarChar(50)
-  Nom            String?  @db.VarChar(30)
-  Descriptif     String?  @db.VarChar(100)
-  Id_Type        Int?     @db.TinyInt
-  Saisie_Module  Boolean?
-  Sonde_Externe  Boolean?
-  Resolution     String?  @db.VarChar(50)
+  Id_Etalon_Type    Int      @id @default(autoincrement())
+  Type_Etalon       String?  @unique(map: "UK_Type_Etalon") @db.VarChar(50)
+  Nom               String?  @db.VarChar(30)
+  Descriptif        String?  @db.VarChar(100)
+  Id_Type           Int?     @db.TinyInt
+  Est_Saisie_Module Boolean?
+  Est_Sonde_Externe Boolean?
+  Resolution        String?  @db.VarChar(50)
 }
 
 model t_planning_alarme {
@@ -758,12 +757,12 @@ model t_planning_heure_bascule {
 }
 
 model t_sonde_type_mesure {
-  Id_Sonde_Type_Mesure      Int      @id @default(autoincrement())
-  Sonde_Type_Mesure         String?  @unique(map: "Sonde_Type_Mesure") @db.VarChar(50)
-  Libelle_Sonde_Type_Mesure String?  @db.VarChar(255)
-  Flag_Relais               Boolean?
-  Flag_Affiche_Information  Boolean?
-  Unite_Mesure              String?  @db.VarChar(20)
-  Libelle_Unite_Mesure      String?  @db.VarChar(50)
-  Reserve_MC2               String?  @db.VarChar(50)
+  Id_Sonde_Type_Mesure         Int      @id @default(autoincrement())
+  Sonde_Type_Mesure            String?  @unique(map: "Sonde_Type_Mesure") @db.VarChar(50)
+  Libelle_Sonde_Type_Mesure    String?  @db.VarChar(255)
+  Est_Flag_Relais              Boolean?
+  Est_Flag_Affiche_Information Boolean?
+  Unite_Mesure                 String?  @db.VarChar(20)
+  Libelle_Unite_Mesure         String?  @db.VarChar(50)
+  Reserve_MC2                  String?  @db.VarChar(50)
 }

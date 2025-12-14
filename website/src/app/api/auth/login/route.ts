@@ -23,18 +23,7 @@ export async function POST(req: NextRequest) {
     const user = await prisma.t_utilisateur.findFirst({
       where: {
         Login: username,
-        Archive: false,
-      },
-      include: {
-        t_profil: {
-          include: {
-            t_liaison_profil_autorisation: {
-              include: {
-                t_autorisation: true,
-              },
-            },
-          },
-        },
+        Est_Archive: false,
       },
     });
 
@@ -47,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Vérifier que l'utilisateur a un mot de passe
-    if (!user.Mot_de_passe) {
+    if (!user.Mot_De_Passe) {
       log.auth.login(username, ip, false, "No password set");
       return NextResponse.json(
         { error: "Invalid credentials" },
@@ -56,7 +45,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Vérifier le mot de passe avec bcrypt
-    const passwordValid = await bcrypt.compare(password, user.Mot_de_passe);
+    const passwordValid = await bcrypt.compare(password, user.Mot_De_Passe as string);
     
     if (!passwordValid) {
       log.auth.login(username, ip, false, "Invalid password");
@@ -84,9 +73,9 @@ export async function POST(req: NextRequest) {
     const expiryEnabled = expiryParams?.Valeur === "true";
     const expiryDays = parseInt(expiryDaysParam?.Valeur || "90");
 
-    if (expiryEnabled && user.DateDerniereModificationMDP) {
+    if (expiryEnabled && user.Date_Derniere_Modification_MDP) {
       const daysSinceLastChange = Math.floor(
-        (Date.now() - new Date(user.DateDerniereModificationMDP).getTime()) / (1000 * 60 * 60 * 24)
+        (Date.now() - new Date(user.Date_Derniere_Modification_MDP).getTime()) / (1000 * 60 * 60 * 24)
       );
 
       if (daysSinceLastChange >= expiryDays) {
@@ -102,36 +91,35 @@ export async function POST(req: NextRequest) {
     }
 
     // Vérifier si le mot de passe est temporaire (première connexion)
-    if (user.MotDePasseTemporaire) {
+    if (user.Est_Mot_De_Passe_Temporaire) {
       return NextResponse.json(
         {
           error: "temporary_password",
           message: "Vous devez changer votre mot de passe temporaire avant de continuer.",
           requirePasswordChange: true,
-          userId: user.IdUtilisateur,
+          userId: user.Id_Utilisateur,
         },
         { status: 403 }
       );
     }
+    // Generate JWT token — profile is stored as a string in `Profil_Utilisateur`.
+    // Authorizations relation is not available on `t_utilisateur` in the current schema,
+    // so default to an empty array here.
+    const authorizations: string[] = [];
 
-    // Generate JWT token with profile and authorizations
-    const authorizations = user.t_profil?.t_liaison_profil_autorisation?.map(
-      (liaison) => liaison.t_autorisation.CodeAutorisation
-    ) || [];
-    
     const token = generateToken({
-      userId: user.IdUtilisateur,
+      userId: user.Id_Utilisateur,
       username: user.Login || "user",
-      profile: user.t_profil?.ProfilUtilisateur || "user",
+      profile: user.Profil_Utilisateur || "user",
       authorizations,
     });
 
     // Return user data
     const userData = {
-      id: user.IdUtilisateur,
+      id: user.Id_Utilisateur,
       username: user.Login || "user",
       displayName: `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login || "user",
-      profile: user.t_profil?.ProfilUtilisateur || "user",
+      profile: user.Profil_Utilisateur || "user",
       authorizations,
       token,
     };
@@ -150,7 +138,7 @@ export async function POST(req: NextRequest) {
     await createAuditLog({
       code: AUDIT_CODES.CONNEXION,
       username: user.Login || "unknown",
-      userProfile: user.t_profil?.ProfilUtilisateur || "user",
+      userProfile: user.Profil_Utilisateur || "user",
       comment: `Connexion de l'utilisateur ${user.Login}`,
     });
 

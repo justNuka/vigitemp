@@ -20,13 +20,13 @@ export async function GET(
     const locationId = parseInt(id);
 
     const location = await prisma.t_lieu.findUnique({
-      where: { IdLieu: locationId },
+      where: { Id_Lieu: locationId },
       include: {
         t_sonde: {
-          where: { SondeReformee: false },
+          where: { Sonde_Reformee: false },
           select: {
-            IdSonde: true,
-            SondeNumeroSerie: true,
+            Id_Sonde: true,
+            Sonde_Numero_Serie: true,
             Etat_Sonde: true,
           },
         },
@@ -43,13 +43,13 @@ export async function GET(
     const sondes = Array.isArray(location.t_sonde) ? location.t_sonde : [];
     
     return NextResponse.json({
-      id: location.IdLieu,
+      id: location.Id_Lieu,
       name: location.Nom_Lieu,
-      site: location.IdSite,
+      site: location.Id_Site,
       status: location.Lieu_Etat,
       sensors: sondes.map((sensor: any) => ({
-        id: sensor.IdSonde,
-        serialNumber: sensor.SondeNumeroSerie,
+        id: sensor.Id_Sonde,
+        serialNumber: sensor.Sonde_Numero_Serie,
         status: sensor.Etat_Sonde,
       })),
     });
@@ -80,7 +80,7 @@ export async function PATCH(
     if (data.site !== undefined) updateData.IdSite = data.site;
 
     const location = await prisma.t_lieu.update({
-      where: { IdLieu: locationId },
+      where: { Id_Lieu: locationId },
       data: updateData,
     });
 
@@ -99,9 +99,9 @@ export async function PATCH(
     );
 
     return NextResponse.json({
-      id: location.IdLieu,
+      id: location.Id_Lieu,
       name: location.Nom_Lieu,
-      site: location.IdSite,
+      site: location.Id_Site,
       status: location.Lieu_Etat,
     });
   } catch (error) {

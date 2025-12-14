@@ -15,7 +15,7 @@ export async function ServerAuditLogs(limit = 100, codeFilter?: string) {
     ? { CodeJournal: codeFilter }
     : {};
 
-  const logs = await prismaMesure.ts_journal.findMany({
+  const logs = await prismaMesure.tm_journal.findMany({
     where: whereClause,
     take: limit,
     orderBy: { DateHeureJournal: "desc" },
@@ -51,13 +51,13 @@ export async function ServerAuditStats() {
   "use cache";
   cacheTag("audit-stats");
 
-  const totalLogs = await prismaMesure.ts_journal.count();
+  const totalLogs = await prismaMesure.tm_journal.count();
 
   // Get logs from last 24h
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
 
-  const recentLogs = await prismaMesure.ts_journal.count({
+  const recentLogs = await prismaMesure.tm_journal.count({
     where: {
       DateHeureJournal: {
         gte: yesterday,

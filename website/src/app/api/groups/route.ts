@@ -12,18 +12,18 @@ export async function GET() {
         Archive: false,
       },
       select: {
-        IdGroupe: true,
-        NomGroupe: true,
+        Id_Groupe: true,
+        Nom_Groupe: true,
       },
       orderBy: {
-        NomGroupe: "asc",
+        Nom_Groupe: "asc",
       },
     });
 
     // Mapper vers le format attendu par le front
     const formattedGroups = groups.map((group) => ({
-      id: group.IdGroupe,
-      name: group.NomGroupe || "Sans nom",
+      id: group.Id_Groupe,
+      name: group.Nom_Groupe || "Sans nom",
     }));
 
     return NextResponse.json(formattedGroups);

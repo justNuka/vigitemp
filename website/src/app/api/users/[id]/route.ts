@@ -25,14 +25,7 @@ export async function GET(
     const userId = parseInt(id);
 
     const user = await prisma.t_utilisateur.findUnique({
-      where: { IdUtilisateur: userId },
-      include: {
-        t_profil: {
-          select: {
-            ProfilUtilisateur: true,
-          },
-        },
-      },
+      where: { Id_Utilisateur: userId },
     });
 
     if (!user) {
@@ -40,10 +33,10 @@ export async function GET(
     }
 
     return NextResponse.json({
-      id: user.IdUtilisateur,
+      id: user.Id_Utilisateur,
       username: user.Login,
       displayName: `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login,
-      role: user.t_profil?.ProfilUtilisateur || "user",
+      role: user.Profil_Utilisateur || "user",
       status: !user.Archive ? "active" : "inactive",
     });
   } catch (error) {
@@ -72,27 +65,20 @@ export async function PATCH(
     
     // Hash password if provided
     if (data.password) {
-      updateData.Mot_de_passe = await bcrypt.hash(data.password, 10);
-      updateData.DateDerniereModificationMDP = new Date();
-      updateData.MotDePasseTemporaire = false;
+      updateData.Mot_De_Passe = await bcrypt.hash(data.password, 10);
+      updateData.Date_Derniere_Modification_MDP = new Date();
+      updateData.Mot_De_Passe_Temporaire = false;
     }
     
-    if (data.profileId) updateData.ProfilUtilisateur = data.profileId;
+    if (data.profileId) updateData.Profil_Utilisateur = data.profileId;
     if (data.nom) updateData.Nom = data.nom;
     if (data.prenom) updateData.Prenom = data.prenom;
     if (data.email) updateData.Adresse_Email = data.email;
     if (data.expiryDate !== undefined) updateData.Date_Validite = data.expiryDate;
 
     const user = await prisma.t_utilisateur.update({
-      where: { IdUtilisateur: userId },
+      where: { Id_Utilisateur: userId },
       data: updateData,
-      include: {
-        t_profil: {
-          select: {
-            ProfilUtilisateur: true,
-          },
-        },
-      },
     });
 
     // Log user update
@@ -116,10 +102,10 @@ export async function PATCH(
     revalidateTag("users-data", "default");
 
     return NextResponse.json({
-      id: user.IdUtilisateur,
+      id: user.Id_Utilisateur,
       username: user.Login,
       displayName: `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login,
-      role: user.t_profil?.ProfilUtilisateur || "user",
+      role: user.Profil_Utilisateur || "user",
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -150,13 +136,13 @@ export async function DELETE(
 
     // Get user info before deletion
     const userToDelete = await prisma.t_utilisateur.findUnique({
-      where: { IdUtilisateur: userId },
+      where: { Id_Utilisateur: userId },
       select: { Login: true },
     });
 
     // Soft delete
     await prisma.t_utilisateur.update({
-      where: { IdUtilisateur: userId },
+      where: { Id_Utilisateur: userId },
       data: { Archive: true },
     });
 

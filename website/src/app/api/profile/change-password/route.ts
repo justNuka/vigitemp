@@ -43,14 +43,14 @@ export async function POST(req: NextRequest) {
 
     // 4. Récupérer l'utilisateur depuis la base de données
     const dbUser = await prisma.t_utilisateur.findUnique({
-      where: { IdUtilisateur: user.userId },
+      where: { Id_Utilisateur: user.userId },
       select: {
-        IdUtilisateur: true,
-        Mot_de_passe: true,
+        Id_Utilisateur: true,
+        Mot_De_Passe: true,
       },
     });
 
-    if (!dbUser || !dbUser.Mot_de_passe) {
+    if (!dbUser || !dbUser.Mot_De_Passe) {
       return NextResponse.json(
         { error: "Utilisateur non trouvé" },
         { status: 404 }
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     // 5. Vérifier que l'ancien mot de passe est correct
     const isOldPasswordValid = await bcrypt.compare(
       oldPassword,
-      dbUser.Mot_de_passe
+      dbUser.Mot_De_Passe as string
     );
 
     if (!isOldPasswordValid) {
@@ -124,19 +124,19 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     // 10. Sauvegarder l'ancien mot de passe dans l'historique
-    await prisma.t_ancienmotpasse.create({
+    await prisma.t_ancien_mot_de_passe.create({
       data: {
-        IdUtilisateur: user.userId,
-        MotDePasse: dbUser.Mot_de_passe, // Ancien hash
+        Id_Utilisateur: user.userId,
+        Mot_De_Passe: dbUser.Mot_De_Passe as string,
       },
     });
 
     // 11. Mettre à jour le mot de passe et la date de dernière modification
     await prisma.t_utilisateur.update({
-      where: { IdUtilisateur: user.userId },
+      where: { Id_Utilisateur: user.userId },
       data: {
-        Mot_de_passe: hashedPassword,
-        DateDerniereModificationMDP: new Date(),
+        Mot_De_Passe: hashedPassword,
+        Date_Derniere_Modification_MDP: new Date(),
       },
     });
 

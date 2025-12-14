@@ -243,8 +243,8 @@ namespace Vigitemp_Serveur
                         object idServeur = dr_lieux["IDserveur"];
 
                         MySqlCommand cmd_vigitemp_mesure = this.connection_vigitemp_mesure.CreateCommand();
-                        cmd_vigitemp_mesure.CommandText = "INSERT INTO ts_mesure " +
-                                                            "(IdServeurBDD, DateHeureMesure, Valeur, Resistance, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, SondeNumeroSerie, IdLieu) " +
+                        cmd_vigitemp_mesure.CommandText = "INSERT INTO tm_mesures " +
+                                                            "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu) " +
                                                             "VALUES " +
                                                             "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu)";
 
@@ -525,9 +525,9 @@ namespace Vigitemp_Serveur
 
                 MySqlCommand cmd_vigitemp_mesure = this.connection_vigitemp_mesure.CreateCommand();
 
-                cmd_vigitemp_mesure.CommandText =   "SELECT * from ts_mesure " + 
-                                                    "WHERE IdLieu = " + p_IdLieu + " " +
-                                                    "ORDER BY DateHeureMesure DESC LIMIT 1";
+                cmd_vigitemp_mesure.CommandText =   "SELECT * from tm_mesures " + 
+                                                    "WHERE Id_Lieu = " + p_IdLieu + " " +
+                                                    "ORDER BY Date_Heure_Mesure DESC LIMIT 1";
 
 
                 VigitempServeur.Log(cmd_vigitemp_mesure.CommandText);

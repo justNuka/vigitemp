@@ -6,9 +6,9 @@ using System.Diagnostics;
 namespace Vigitemp_Serveur
 {
     /// <summary>
-    /// Service de cache utilisant la table ts_graphique
-    /// Insère les dernières mesures dans ts_graphique pour un accès ultra-rapide aux graphs
-    /// La table ts_graphique se vide régulièrement selon la politique de rétention
+    /// Service de cache utilisant la table tm_graphique
+    /// Insère les dernières mesures dans tm_graphique pour un accès ultra-rapide aux graphs
+    /// La table tm_graphique se vide régulièrement selon la politique de rétention
     /// </summary>
     class CacheService
     {
@@ -19,8 +19,8 @@ namespace Vigitemp_Serveur
         private static readonly string PASSWORD = "pass";
 
         /// <summary>
-        /// Insère une mesure dans ts_graphique pour le cache
-        /// Appelé après chaque insertion de mesure dans ts_mesure
+        /// Insère une mesure dans tm_graphique pour le cache
+        /// Appelé après chaque insertion de mesure dans tm_mesures
         /// </summary>
         public static void InsertMeasureToGraphique(
             int idSonde,
@@ -47,9 +47,9 @@ namespace Vigitemp_Serveur
 
                     MySqlCommand cmd = connection.CreateCommand();
                     cmd.CommandText = @"
-                        INSERT INTO ts_graphique 
-                        (DateHeureMesure, Valeur, Resistance, Consigne, Consigne_Sup, Consigne_Inf, 
-                         Unite, SondeNumeroSerie, IdSonde, IdLieu, Frequence, Etat_Alarme, ValeurNull)
+                        INSERT INTO tm_graphique 
+                        (Date_Heure_Mesure, Valeur, Resistance, Consigne, Consigne_Sup, Consigne_Inf, 
+                         Unite, Sonde_Numero_Serie, Id_Sonde, Id_Lieu, Frequence, Etat_Alarme, Valeur_Null)
                         VALUES 
                         (NOW(), @valeur, @resistance, @consigne, @consigneSup, @consigneInf, 
                          @unite, @sondeNumeroSerie, @idSonde, @idLieu, @frequence, @etatAlarme, 0)";
@@ -68,7 +68,7 @@ namespace Vigitemp_Serveur
 
                     cmd.ExecuteNonQuery();
 
-                    VigitempServeur.Log($"(InsertMeasureToGraphique) Mesure inséée dans ts_graphique pour idSonde={idSonde}");
+                    VigitempServeur.Log($"(InsertMeasureToGraphique) Mesure inséée dans tm_graphique pour idSonde={idSonde}");
                 }
                 catch (Exception ex)
                 {

@@ -22,12 +22,12 @@ export async function GET(req: NextRequest) {
       include: {
         t_lieu: {
           select: {
-            IdLieu: true,
+            Id_Lieu: true,
             Nom_Lieu: true,
           },
         },
       },
-      orderBy: { DateHeureDebut: "desc" },
+      orderBy: { Date_Heure_Debut: "desc" },
       take: 100,
     });
 

@@ -12,22 +12,22 @@ export async function GET() {
         Archive: false,
       },
       select: {
-        IdSite: true,
-        CodeSite: true,
-        LibelleSite: true,
+        Id_Site: true,
+        Code_Site: true,
+        Libelle_Site: true,
       },
       orderBy: [
-        { CodeSite: "asc" },
-        { LibelleSite: "asc" },
+        { Code_Site: "asc" },
+        { Libelle_Site: "asc" },
       ],
     });
 
     // Mapper vers le format attendu par le front
     const formattedSites = sites.map((site) => ({
-      id: site.IdSite,
-      name: site.CodeSite && site.LibelleSite
-        ? `${site.CodeSite} - ${site.LibelleSite}`
-        : site.CodeSite || site.LibelleSite || "Sans nom",
+      id: site.Id_Site,
+      name: site.Code_Site && site.Libelle_Site
+        ? `${site.Code_Site} - ${site.Libelle_Site}`
+        : site.Code_Site || site.Libelle_Site || "Sans nom",
     }));
 
     return NextResponse.json(formattedSites);
