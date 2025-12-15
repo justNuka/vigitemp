@@ -37,7 +37,7 @@ export async function GET(
       username: user.Login,
       displayName: `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login,
       role: user.Profil_Utilisateur || "user",
-      status: !user.Archive ? "active" : "inactive",
+      status: !user.Est_Archive ? "active" : "inactive",
     });
   } catch (error) {
     console.error("Get user error:", error);
@@ -67,7 +67,7 @@ export async function PATCH(
     if (data.password) {
       updateData.Mot_De_Passe = await bcrypt.hash(data.password, 10);
       updateData.Date_Derniere_Modification_MDP = new Date();
-      updateData.Mot_De_Passe_Temporaire = false;
+      updateData.Est_Mot_De_Passe_Temporaire = false;
     }
     
     if (data.profileId) updateData.Profil_Utilisateur = data.profileId;
@@ -143,7 +143,7 @@ export async function DELETE(
     // Soft delete
     await prisma.t_utilisateur.update({
       where: { Id_Utilisateur: userId },
-      data: { Archive: true },
+      data: { Est_Archive: true },
     });
 
     // Log user deletion

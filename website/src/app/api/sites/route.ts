@@ -9,7 +9,7 @@ export async function GET() {
   try {
     const sites = await prisma.t_site.findMany({
       where: {
-        Archive: false,
+        Est_Archive: false,
       },
       select: {
         Id_Site: true,

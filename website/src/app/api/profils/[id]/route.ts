@@ -38,7 +38,7 @@ export async function GET(
 
     const profile = await prisma.t_profil.findUnique({
       where: { Id_Profil: profileId },
-    });
+      include: {
         t_liaison_profil_autorisation: {
           include: {
             t_autorisation: true,
@@ -56,7 +56,7 @@ export async function GET(
 
     // Fetch users that belong to this profile
     const users = await prisma.t_utilisateur.findMany({
-      where: { Profil_Utilisateur: profile!.Profil_Utilisateur },
+      where: { Profil_Utilisateur: profile.Profil_Utilisateur },
       select: { Id_Utilisateur: true, Login: true, Nom: true, Prenom: true },
     });
 
@@ -64,7 +64,7 @@ export async function GET(
       id: profile.Id_Profil,
       name: profile.Profil_Utilisateur,
       description: profile.Commentaire,
-      mc2: profile.MC2,
+      mc2: profile.Est_MC2,
       userCount: users.length,
       users: users.map((u) => ({
         id: u.Id_Utilisateur,
@@ -76,10 +76,10 @@ export async function GET(
         code: liaison.t_autorisation.Code_Autorisation,
         label: liaison.t_autorisation.Libelle_Autorisation,
         description: liaison.t_autorisation.Commentaire,
-        fenAdmin: liaison.t_autorisation.Acces_Admin,
-        fenMetrologie: liaison.t_autorisation.Acces_Metrologie,
-        fenSurveillance: liaison.t_autorisation.Acces_Surveillance,
-        fenVigiLog: liaison.t_autorisation.Acces_VigiLog,
+        fenAdmin: liaison.t_autorisation.A_Acces_Admin,
+        fenMetrologie: liaison.t_autorisation.A_Acces_Metrologie,
+        fenSurveillance: liaison.t_autorisation.A_Acces_Surveillance,
+        fenVigiLog: liaison.t_autorisation.A_Acces_VigiLog,
       })),
     });
   } catch (error) {
@@ -159,7 +159,7 @@ export async function PATCH(
     const updateData: any = {};
     if (data.name !== undefined) updateData.Profil_Utilisateur = data.name;
     if (data.description !== undefined) updateData.Commentaire = data.description;
-    if (data.mc2 !== undefined) updateData.MC2 = data.mc2;
+    if (data.mc2 !== undefined) updateData.Est_MC2 = data.mc2;
 
     if (Object.keys(updateData).length > 0) {
       await prisma.t_profil.update({
@@ -172,15 +172,15 @@ export async function PATCH(
     if (data.authorizations !== undefined) {
       // Delete existing authorizations
       await prisma.t_liaison_profil_autorisation.deleteMany({
-        where: { Id_Profil: profileId },
+        where: { IdProfil: profileId },
       });
 
       // Create new authorizations
       if (data.authorizations.length > 0) {
         await prisma.t_liaison_profil_autorisation.createMany({
           data: data.authorizations.map((authId) => ({
-            Id_Profil: profileId,
-            Id_Autorisation: authId,
+            IdProfil: profileId,
+            IdAutorisation: authId,
           })),
         });
       }
@@ -219,7 +219,7 @@ export async function PATCH(
       id: updatedProfile!.Id_Profil,
       name: updatedProfile!.Profil_Utilisateur,
       description: updatedProfile!.Commentaire,
-      mc2: updatedProfile!.MC2,
+      mc2: updatedProfile!.Est_MC2,
       authorizations: updatedProfile!.t_liaison_profil_autorisation.map((liaison) => ({
         id: liaison.t_autorisation.Id_Autorisation,
         code: liaison.t_autorisation.Code_Autorisation,
@@ -305,10 +305,14 @@ export async function DELETE(
       );
     }
 
-    if (profile.t_utilisateur.length > 0) {
+    const userCount = await prisma.t_utilisateur.count({
+      where: { Profil_Utilisateur: profile.Profil_Utilisateur },
+    });
+
+    if (userCount > 0) {
       return NextResponse.json(
         {
-          error: `Impossible de supprimer ce profil car ${profile.t_utilisateur.length} utilisateur(s) l'utilise(nt)`,
+          error: `Impossible de supprimer ce profil car ${userCount} utilisateur(s) l'utilise(nt)`,
         },
         { status: 400 }
       );

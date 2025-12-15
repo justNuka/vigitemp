@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { SensorCard } from "@/components/sensor-card";
 import { LocationFilter } from "@/components/location-filter";
 import { EmptyState } from "@/components/empty-state";
@@ -55,6 +56,35 @@ export function SensorsGrid({ sensors, locations, statusFilter, onStatusFilterCh
       return true;
     });
   }, [sensors, statusFilter, selectedLocationId, selectedSiteGroup, searchQuery]);
+
+  // Virtualisation: calculer le nombre d'items par row selon viewMode
+  const columnsPerRow = useMemo(() => {
+    if (viewMode === "list") return 1;
+    // Grid: on assume ~4 colonnes (sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4)
+    // Adapté pour 4 colonnes par défaut
+    return 4;
+  }, [viewMode]);
+
+  // Créer les rows virtualisées (grouper les items par columns)
+  const rows = useMemo(() => {
+    const result = [];
+    for (let i = 0; i < filteredSensors.length; i += columnsPerRow) {
+      result.push(filteredSensors.slice(i, i + columnsPerRow));
+    }
+    return result;
+  }, [filteredSensors, columnsPerRow]);
+
+  // Virtualizer
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => parentRef.current?.parentElement || null,
+    estimateSize: () => viewMode === "grid" ? 400 : 150, // Item height estimation
+    overscan: 5, // Charger 5 items en avant/arrière pour le scroll
+  });
+
+  const virtualItems = virtualizer.getVirtualItems();
+  const totalSize = virtualizer.getTotalSize();
 
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
@@ -111,15 +141,44 @@ export function SensorsGrid({ sensors, locations, statusFilter, onStatusFilterCh
       ) : (
         <>
           <div
-            className={
-              viewMode === "grid"
-                ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                : "space-y-4"
-            }
+            ref={parentRef}
+            className="w-full overflow-y-auto max-h-[calc(100vh-200px)]"
           >
-            {filteredSensors.map((sensor) => (
-              <SensorCard key={sensor.id} sensor={sensor} />
-            ))}
+            <div
+              style={{
+                height: `${totalSize}px`,
+                width: "100%",
+                position: "relative",
+              }}
+            >
+              {virtualItems.map((virtualItem) => {
+                const row = rows[virtualItem.index];
+                return (
+                  <div
+                    key={virtualItem.key}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      transform: `translateY(${virtualItem.start}px)`,
+                    }}
+                  >
+                    <div
+                      className={
+                        viewMode === "grid"
+                          ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                          : "space-y-4"
+                      }
+                    >
+                      {row.map((sensor) => (
+                        <SensorCard key={sensor.id} sensor={sensor} />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           <div className="flex items-center justify-between text-sm text-muted-foreground pt-4">

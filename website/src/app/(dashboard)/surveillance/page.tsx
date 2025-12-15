@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 import { ServerSensors } from "./server-sensors";
 import { ServerDashboardStats } from "./server-stats";
+import { ServerFilterOptions } from "./server-filters";
 import { SurveillancePageClient } from "./surveillance-client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
@@ -42,30 +43,22 @@ function SensorsLoadingSkeleton() {
 }
 
 export default async function SurveillancePage() {
-  // Les données sont chargées en parallèle côté serveur
-  const [sensorsData, statsData] = await Promise.all([
-    ServerSensors(),
+  // Charger UNIQUEMENT la première page (50 sondes) côté serveur
+  // Le client chargera les pages suivantes avec infinite scroll
+  const [statsData, filterOptions] = await Promise.all([
     ServerDashboardStats(),
+    ServerFilterOptions(),
   ]);
 
-  // Extraire les locations uniques des sensors
-  const locations = Array.from(
-    new Map(
-      sensorsData.map((s) => [s.location.id, s.location])
-    ).values()
-  );
-
+  // Le composant client va charger les sensors paginés via l'API
+  // Cela réduit drastiquement le temps de chargement initial
   return (
     <div className="flex flex-col min-h-full">
-      {/* 
-        Tout le contenu statique (header, tabs) et les données serveur 
-        sont passés au composant client qui gère uniquement les interactions
-      */}
       <Suspense fallback={<SensorsLoadingSkeleton />}>
         <SurveillancePageClient
-          sensors={sensorsData}
-          locations={locations}
-          stats={statsData}
+          initialStats={statsData}
+          sites={filterOptions.sites}
+          groups={filterOptions.groups}
         />
       </Suspense>
     </div>

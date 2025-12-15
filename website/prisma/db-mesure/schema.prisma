@@ -21,18 +21,18 @@ model tm_graphique {
   Sonde_Numero_Serie      String?  @db.VarChar(50)
   Id_Sonde                Int?
   Id_Lieu                 Int
-  Valeur_Null             Int
+  Est_Valeur_Null         Boolean  @default(false)
   Frequence               Int?
-  Etat_Alarme             Int      @default(0) @db.TinyInt
+  Est_Etat_Alarme         Int      @default(0) @db.TinyInt
   Consigne_Inf_Pre_Alarme Float?   @db.Float
   Consigne_Sup_Pre_Alarme Float?   @db.Float
 
-  @@id([Id_Graphique, Date_Heure_Mesure, Id_Lieu, Valeur_Null, Etat_Alarme])
-  @@index([Valeur_Null], map: "Graphique_ValeurNull")
-  @@index([Date_Heure_Mesure], map: "WDIDX_ts_graphique_DateHeureMesure")
-  @@index([Etat_Alarme], map: "WDIDX_ts_graphique_Etat_Alarme")
-  @@index([Id_Lieu], map: "WDIDX_ts_graphique_IdLieu")
-  @@index([Id_Sonde, Date_Heure_Mesure(sort: Desc)], map: "idx_ts_graphique_idsonde_date")
+  @@id([Id_Graphique, Date_Heure_Mesure, Id_Lieu, Est_Valeur_Null, Est_Etat_Alarme])
+  @@index([Est_Valeur_Null], map: "IDX_Valeur_Null")
+  @@index([Date_Heure_Mesure], map: "IDX_Date_Heure_Mesure")
+  @@index([Est_Etat_Alarme], map: "IDX_Etat_Alarme")
+  @@index([Id_Lieu], map: "IDX_Id_Lieu")
+  @@index([Id_Sonde, Date_Heure_Mesure(sort: Desc)], map: "IDX_Id_Sonde_Date_Heure_Mesure")
 }
 
 model tm_journal {
@@ -47,10 +47,10 @@ model tm_journal {
   Commentaire_Utilisateur String?   @db.LongText
 
   @@id([Id_Serveur_BDD, Id_Journal])
-  @@index([Code_Journal], map: "Journal_CodeJournal_IDX")
-  @@index([Date_Heure_Journal], map: "Journal_DateHeure_IDX")
-  @@index([Nom_Utilisateur], map: "Journal_Nomutilisateur_IDX")
-  @@index([Profil_Utilisateur], map: "Journal_ProfilUtilisateur_IDX")
+  @@index([Code_Journal], map: "IDX_Code_Journal")
+  @@index([Date_Heure_Journal], map: "IDX_Date_Heure_Journal")
+  @@index([Nom_Utilisateur], map: "IDX_Nom_Utilisateur")
+  @@index([Profil_Utilisateur], map: "IDX_Profil_Utilisateur")
 }
 
 model tm_journal_code {
@@ -76,8 +76,8 @@ model tm_datalogger_mesures {
   Est_Marqueur          Int?     @db.TinyInt
   Details               String?  @db.VarChar(200)
 
-  @@index([Date_Heure_Mesure], map: "WDIDX_Ts_LogMesures_DateHeureMesure")
-  @@index([Id_Reception], map: "WDIDX_Ts_LogMesures_IdReception")
+  @@index([Date_Heure_Mesure], map: "IDX_Date_Heure_Mesure")
+  @@index([Id_Reception], map: "IDX_Id_Reception")
 }
 
 model tm_mesures {
@@ -101,10 +101,175 @@ model tm_mesures {
   Moyenne                 Float?   @db.Float
 
   @@id([Id_Serveur_BDD, Id_Mesure, Date_Heure_Mesure, Id_Lieu, Est_Valeur_Null])
-  @@index([Date_Heure_Mesure], map: "Mesure_Date_mesure_IDX")
-  @@index([Est_Etat_Alarme], map: "Mesure_Etat_Alarme_IDX")
+  @@index([Date_Heure_Mesure], map: "IDX_Date_Heure_Mesure")
+  @@index([Est_Etat_Alarme], map: "IDX_Est_Etat_Alarme")
+  @@index([Est_Valeur_Null], map: "IDX_Est_Valeur_Null")
+  @@index([Date_Heure_Mesure, Id_Lieu], map: "IDX_Date_Heure_Mesure_Id_Lieu")
   @@index([Id_Lieu], map: "Mesure_Numero_lieu_IDX")
-  @@index([Est_Valeur_Null], map: "Mesure_ValeurNull")
-  @@index([Date_Heure_Mesure, Id_Lieu], map: "Mesure_date_lieu")
   @@index([Id_Lieu], map: "Mesure_lieu")
+}
+
+model tm_journal_histo {
+  Id_Journal_Histo        Int       @default(autoincrement())
+  Id_Serveur_BDD          Int       @default(0)
+  Id_Journal              Int       @default(0)
+  Code_Journal            String?   @default("") @db.VarChar(50)
+  Commentaire             String?   @db.LongText
+  Nom_Utilisateur         String?   @default("") @db.VarChar(50)
+  Profil_Utilisateur      String?   @default("") @db.VarChar(50)
+  Date_Heure_Journal      DateTime? @db.DateTime(0)
+  Id_Lieu                 Int?
+  Commentaire_Utilisateur String?   @db.LongText
+
+  @@id([Id_Journal_Histo, Id_Serveur_BDD, Id_Journal])
+  @@index([Code_Journal], map: "IDX_Code_Journal")
+  @@index([Date_Heure_Journal], map: "IDX_Date_Heure_Journal")
+  @@index([Nom_Utilisateur], map: "IDX_Nom_Utilisateur")
+  @@index([Profil_Utilisateur], map: "IDX_Profil_Utilisateur")
+}
+
+model tm_mesure_calibrage {
+  Id_Mesure_Calibrage Int      @default(autoincrement())
+  Id_Serveur_BDD      Int      @default(0)
+  Valeur              String   @default("") @db.VarChar(50)
+  Resistance          String   @default("") @db.VarChar(50)
+  Sonde_Numero_Serie  String   @default("") @db.VarChar(50)
+  Est_Valeur_Null     Int      @db.TinyInt
+  Date_Heure          DateTime @default(now()) @db.Timestamp(0)
+
+  @@id([Id_Mesure_Calibrage, Id_Serveur_BDD])
+  @@index([Sonde_Numero_Serie], map: "IDX_Sonde_Numero_Serie")
+  @@index([Date_Heure], map: "IDX_Date_Heure")
+  @@index([Resistance], map: "IDX_Resistance")
+  @@index([Valeur], map: "IDX_Valeur")
+  @@index([Est_Valeur_Null], map: "IDX_Est_Valeur_Null")
+}
+
+model tm_mesure_calibrage_etalon {
+  Id_Mesure_Calibrage_Etalon Int      @default(autoincrement())
+  Id_Serveur_BDD             Int      @default(0)
+  Valeur                     String   @default("") @db.VarChar(50)
+  Resistance                 String   @default("") @db.VarChar(50)
+  Etalon_Numero_Serie        String   @default("") @db.VarChar(50)
+  Est_Valeur_Null            Int      @db.TinyInt
+  Date_Heure                 DateTime @default(now()) @db.Timestamp(0)
+
+  @@id([Id_Mesure_Calibrage_Etalon, Id_Serveur_BDD])
+  @@index([Etalon_Numero_Serie], map: "IDX_Etalon_Numero_Serie")
+  @@index([Date_Heure], map: "IDX_Date_Heure")
+  @@index([Resistance], map: "IDX_Resistance")
+  @@index([Valeur], map: "IDX_Valeur")
+  @@index([Est_Valeur_Null], map: "IDX_Est_Valeur_Null")
+}
+
+model tm_mesure_etalon {
+  Id_Mesure_Etalon    Int      @default(autoincrement())
+  Id_Serveur_BDD      Int      @default(0)
+  Resistance          Float
+  Etalon_Numero_Serie String   @default("") @db.VarChar(50)
+  Est_Valeur_Null     Int      @db.TinyInt
+  Date_Heure          DateTime @db.DateTime(0)
+  Message_Erreur      String   @default("") @db.VarChar(50)
+
+  @@id([Id_Mesure_Etalon, Id_Serveur_BDD])
+  @@index([Date_Heure], map: "IDX_Date_Heure")
+  @@index([Message_Erreur], map: "IDX_Message_Erreur")
+  @@index([Resistance], map: "IDX_Resistance")
+  @@index([Etalon_Numero_Serie], map: "IDX_Etalon_Numero_Serie")
+  @@index([Est_Valeur_Null], map: "IDX_Est_Valeur_Null")
+}
+
+model tm_mesure_etalonnage {
+  Id_Mesure_Etalonnage Int       @default(autoincrement())
+  Id_Serveur_BDD       Int       @default(0)
+  Sonde_Numero_serie   String?   @db.VarChar(50)
+  Numero_Ordre         Int?
+  Mesure_Sonde         String?   @db.VarChar(50)
+  Mesure_Etalon        String?   @db.VarChar(50)
+  Date_Heure           DateTime? @db.DateTime(0)
+
+  @@id([Id_Mesure_Etalonnage, Id_Serveur_BDD])
+  @@index([Sonde_Numero_serie], map: "IDX_Sonde_Numero_serie")
+}
+
+model tm_mesures_histo {
+  Id_Mesure               Int      @default(autoincrement())
+  Id_Serveur_BDD          Int      @default(0)
+  Date_Heure_Mesure       DateTime @default(now()) @db.DateTime(0)
+  Valeur                  Float?
+  Resistance              Float?
+  Nb_decimal              Int?     @db.TinyInt
+  Consigne                Float?   @db.Float
+  Consigne_Sup            Float?   @db.Float
+  Consigne_Inf            Float?   @db.Float
+  Unite                   String?  @default("") @db.VarChar(10)
+  Sonde_Numero_Serie      String?  @default("") @db.VarChar(50)
+  Id_Lieu                 Int      @default(0)
+  Est_Valeur_Null         Int      @default(0) @db.TinyInt
+  Frequence               Int?
+  Est_En_Alarme           Boolean? @default(false)
+  Consigne_Inf_Pre_Alarme Float?   @db.Float
+  Consigne_Sup_Pre_Alarme Float?   @db.Float
+  Moyenne                 Float?   @db.Float
+
+  @@id([Id_Mesure, Id_Serveur_BDD, Date_Heure_Mesure, Id_Lieu, Est_Valeur_Null])
+  @@index([Date_Heure_Mesure], map: "IDX_Date_Heure_Mesure")
+  @@index([Est_En_Alarme], map: "IDX_Est_En_Alarme")
+  @@index([Est_Valeur_Null], map: "IDX_Est_Valeur_Null")
+  @@index([Date_Heure_Mesure, Id_Lieu], map: "IDX_Date_Heure_Mesure_Id_Lieu")
+  @@index([Id_Lieu], map: "Mesure_Numero_lieu_IDX")
+  @@index([Id_Lieu], map: "Mesure_lieu")
+}
+
+model tm_mesures_test {
+  Id_Mesure_Test     Int      @default(autoincrement())
+  Id_Serveur_BDD     Int      @default(0)
+  Resistance         Float
+  Sonde_Numero_Serie String   @unique(map: "Sonde") @default("") @db.VarChar(50)
+  Est_Valeur_Null    Int      @db.TinyInt
+  Date_Heure         DateTime @default(now()) @db.Timestamp(0)
+  Nombre_Total       Int      @default(0)
+  Nombre_Recu        Int      @default(0)
+
+  @@id([Id_Mesure_Test, Id_Serveur_BDD])
+  @@index([Date_Heure], map: "IDX_Date_Heure")
+  @@index([Est_Valeur_Null], map: "IDX_Est_Valeur_Null")
+  @@index([Nombre_Recu], map: "IDX_Nombre_Recu")
+  @@index([Nombre_Total], map: "IDX_Nombre_Total")
+}
+
+model tm_mesures_test_etalon {
+  Id_Mesure_Test_Etalon Int      @default(autoincrement())
+  Id_Serveur_BDD        Int      @default(0)
+  Resistance            Float
+  Etalon_Numero_Serie   String   @unique(map: "Etalon") @default("") @db.VarChar(50)
+  Est_Valeur_Null       Int      @db.TinyInt
+  Date_Heure            DateTime @default(now()) @db.Timestamp(0)
+  Nombre_Total          Int      @default(0)
+  Nombre_Recu           Int      @default(0)
+
+  @@id([Id_Mesure_Test_Etalon, Id_Serveur_BDD])
+  @@index([Date_Heure], map: "IDX_Date_Heure")
+  @@index([Est_Valeur_Null], map: "IDX_Est_Valeur_Null")
+  @@index([Nombre_Recu], map: "IDX_Nombre_Recu")
+  @@index([Nombre_Total], map: "IDX_Nombre_Total")
+}
+
+model tm_mode_degrade {
+  Id_Mode_Degrade     Int       @id @default(autoincrement())
+  Id_Utilisateur      Int?
+  Date_Heure_Creation DateTime? @db.DateTime(0)
+  Requete_SQL         String?   @db.VarChar(500)
+  Est_Archivee        Boolean   @default(false)
+  Date_Heure_Archive  DateTime? @db.DateTime(0)
+}
+
+model tm_parametre {
+  Id_Parametre          Int     @default(autoincrement())
+  Cle_Parametre         String  @default("") @db.VarChar(20)
+  Valeur_Parametre      String? @db.VarChar(50)
+  Groupe_Parametre      String? @db.VarChar(50)
+  Commentaire_Parametre String? @db.VarChar(100)
+
+  @@id([Id_Parametre, Cle_Parametre])
 }

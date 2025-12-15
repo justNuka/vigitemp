@@ -250,7 +250,7 @@ export type User = {
   nom: string;
   prenom: string;
   email: string;
-  role: "admin" | "user";
+  role: string;
   isActive: boolean;
   createdAt: Date;
 };
@@ -288,7 +288,11 @@ export type PasswordRules = {
   min_lowercase: number;
   min_numbers: number;
   min_special: number;
+  // CFR21 parameters
+  cfr21_enabled: boolean;
   history_count: number;
+  expiry_days: number;
+  expiry_enabled: boolean;
 };
 
 export type CreateSensorInput = Omit<

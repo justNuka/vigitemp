@@ -25,21 +25,21 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
     // Récupérer les dernières mesures pour calculer les statuts
     const measurementsByLocation = await Promise.all(
       allLocations.map(async (location) => {
-        const lastMeasurement = await prismaMesure.tm_mesure.findFirst({
+        const lastMeasurement = await prismaMesure.tm_mesures.findFirst({
           where: {
-            IdLieu: location.Id_Lieu,
+            Id_Lieu: location.Id_Lieu,
           },
           orderBy: {
-            DateHeureMesure: "desc",
+            Date_Heure_Mesure: "desc",
           },
           select: {
-            Etat_Alarme: true,
+            Est_Etat_Alarme: true,
           },
         });
 
         return {
           idLieu: location.Id_Lieu,
-          etatAlarme: lastMeasurement?.Etat_Alarme ?? 0,
+          etatAlarme: lastMeasurement?.Est_Etat_Alarme ?? 0,
         };
       })
     );
@@ -55,7 +55,7 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
 
     const activeAlarms = await prisma.t_alarme.count({
       where: {
-        Alarme_Vrai: true, // État actif (alarme vraie)
+        Est_Alarme_Vrai: true, // État actif (alarme vraie)
       },
     });
 

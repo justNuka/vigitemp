@@ -1,20 +1,23 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useCurrentTime } from "@/hooks/use-current-time";
 import { PageHeader } from "@/components/page-header";
 import { SensorsGrid } from "./sensors-grid-client";
 import { MonitoringCardsGrid } from "./monitoring-cards-grid";
 import { SurveillanceFilters } from "./surveillance-filters";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import type { SensorWithLocation, Location } from "@/lib/api";
+import type { Site, Group } from "./server-filters";
 
 type StatusFilter = "all" | "ok" | "warning" | "critical";
 type ViewMode = "status" | "graphs";
 
 interface FilterState {
   siteId: number | null;
-  groupIds: number[]; // Changed from single groupId to array
+  groupIds: number[];
 }
 
 interface Stats {
@@ -25,91 +28,135 @@ interface Stats {
   activeAlarms: number;
 }
 
-interface Props {
+interface PaginatedResponse {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
   sensors: SensorWithLocation[];
-  locations: Location[];
-  stats: Stats;
 }
 
-export function SurveillancePageClient({ sensors, locations, stats }: Props) {
+interface Props {
+  initialStats: Stats;
+  sites: Site[];
+  groups: Group[];
+}
+
+export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("graphs");
   const [filters, setFilters] = useState<FilterState>({ siteId: null, groupIds: [] });
+  const [page, setPage] = useState(1);
   const currentTime = useCurrentTime();
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // Filtrer les sensors selon site/groupe
-  const filteredSensors = useMemo(() => {
-    return sensors.filter((sensor) => {
-      // Filtre par site
-      if (filters.siteId !== null) {
-        // Vérifier si la location du sensor correspond au site sélectionné
-        const location = locations.find((loc) => loc.id === sensor.location.id);
-        if (!location || (location as any).IdSite !== filters.siteId) {
-          return false;
-        }
+  // Charger les sensors paginés via API
+  const { data: paginatedData, isFetching, hasNextPage, fetchNextPage } = useQuery({
+    queryKey: ["sensors", page, filters.siteId, filters.groupIds],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "50",
+      });
+      if (filters.siteId) {
+        params.append("siteId", filters.siteId.toString());
       }
-
-      // Filtre par groupe(s) - now supports multiple groups
       if (filters.groupIds.length > 0) {
-        // Vérifier si la location du sensor correspond à au moins un groupe sélectionné
-        const location = locations.find((loc) => loc.id === sensor.location.id);
-        if (!location) {
-          return false;
-        }
-        const locationGroupIds = [(location as any).IdGroupe1, (location as any).IdGroupe2].filter(
-          (id) => id !== null && id !== undefined
-        );
-        // Check if any of the location's groups match the selected groups
-        if (!locationGroupIds.some((groupId) => filters.groupIds.includes(groupId))) {
-          return false;
-        }
+        params.append("groupIds", filters.groupIds.join(","));
       }
+      const res = await fetch(`/api/sensors/paginated?${params}`);
+      if (!res.ok) throw new Error("Failed to fetch sensors");
+      return res.json() as Promise<PaginatedResponse>;
+    },
+    staleTime: 30000, // 30 secondes
+  });
 
-      return true;
-    });
-  }, [sensors, locations, filters]);
+  // Récupérer les sensors actuels et les locations
+  const sensors = useMemo(() => {
+    return paginatedData?.sensors ?? [];
+  }, [paginatedData?.sensors]);
 
-  // Recalculer les stats basées sur les sensors filtrés
+  const locations = useMemo(() => {
+    if (!Array.isArray(sensors)) return [];
+    return Array.from(
+      new Map(
+        sensors.map((s) => [s.location.id, s.location])
+      ).values()
+    );
+  }, [sensors]);
+
+  // Recalculer les stats basées sur les sensors filtrés (pour cette page)
   const filteredStats = useMemo(() => {
-    const ok = filteredSensors.filter((s) => s.status === "ok").length;
-    const warning = filteredSensors.filter((s) => s.status === "warning").length;
-    const critical = filteredSensors.filter((s) => s.status === "critical").length;
+    if (!Array.isArray(sensors)) {
+      return {
+        total: paginatedData?.total ?? 0,
+        ok: 0,
+        warning: 0,
+        critical: 0,
+        activeAlarms: initialStats?.activeAlarms ?? 0,
+      };
+    }
+    const ok = sensors.filter((s) => s.status === "ok").length;
+    const warning = sensors.filter((s) => s.status === "warning").length;
+    const critical = sensors.filter((s) => s.status === "critical").length;
 
     return {
-      total: filteredSensors.length,
+      total: paginatedData?.total ?? 0,
       ok,
       warning,
       critical,
-      activeAlarms: stats.activeAlarms, // Keep global alarm count
+      activeAlarms: initialStats?.activeAlarms ?? 0,
     };
-  }, [filteredSensors, stats.activeAlarms]);
+  }, [sensors, paginatedData?.total, initialStats?.activeAlarms]);
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);
+    setPage(1); // Reset à la première page quand les filtres changent
   }, []);
 
   const handleSurveillanceToggle = useCallback(async (idLieu: number, newState: boolean) => {
     try {
-      // TODO: Appeler l'API pour mettre à jour le statut de surveillance
       console.log(`Toggle surveillance for lieu ${idLieu}: ${newState ? 'Active' : 'Inactive'}`);
-      // await axios.patch(`/api/locations/${idLieu}`, {
-      //   Lieu_Etat: newState ? 'A' : 'I'
-      // });
     } catch (error) {
       console.error("Error toggling surveillance:", error);
     }
   }, []);
+
+  // Charger la page suivante
+  const handleLoadMore = () => {
+    if (hasNextPage) {
+      setPage(p => p + 1);
+    }
+  };
+
+  // Intersection Observer pour infinite scroll optionnel
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && hasNextPage && !isFetching) {
+        handleLoadMore();
+      }
+    });
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetching]);
 
   return (
     <>
       <PageHeader
         title="Surveillance"
         description="Suivi en temps réel des sondes et capteurs"
-        activeAlarms={stats.activeAlarms}
+        activeAlarms={filteredStats.activeAlarms}
       >
         <div className="flex flex-col gap-4 w-full">
           {/* Filtres par site/groupe */}
-          <SurveillanceFilters onFilterChange={handleFilterChange} />
+          <SurveillanceFilters 
+            onFilterChange={handleFilterChange}
+            sites={sites}
+            groups={groups}
+          />
 
           {/* Onglet Vue: Graphiques ou Status */}
           <Tabs
@@ -157,17 +204,50 @@ export function SurveillancePageClient({ sensors, locations, stats }: Props) {
       </PageHeader>
 
       {viewMode === "status" ? (
-        <SensorsGrid
-          sensors={filteredSensors}
-          locations={locations}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-        />
+        <>
+          <SensorsGrid
+            sensors={sensors}
+            locations={locations}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+          />
+          {/* Load More Button */}
+          {hasNextPage && (
+            <div ref={loadMoreRef} className="flex justify-center py-6">
+              <Button
+                onClick={handleLoadMore}
+                disabled={isFetching}
+                variant="outline"
+              >
+                {isFetching ? "Chargement..." : "Charger plus"}
+              </Button>
+            </div>
+          )}
+          {!hasNextPage && page > 1 && (
+            <div className="text-center py-6 text-muted-foreground">
+              Toutes les sondes sont chargées
+            </div>
+          )}
+        </>
       ) : (
-        <MonitoringCardsGrid 
-          sensors={filteredSensors}
-          onSurveillanceToggle={handleSurveillanceToggle}
-        />
+        <>
+          <MonitoringCardsGrid 
+            sensors={sensors}
+            onSurveillanceToggle={handleSurveillanceToggle}
+          />
+          {/* Load More Button */}
+          {hasNextPage && (
+            <div ref={loadMoreRef} className="flex justify-center py-6">
+              <Button
+                onClick={handleLoadMore}
+                disabled={isFetching}
+                variant="outline"
+              >
+                {isFetching ? "Chargement..." : "Charger plus"}
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </>
   );

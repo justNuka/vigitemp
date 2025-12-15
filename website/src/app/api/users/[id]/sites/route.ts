@@ -32,7 +32,7 @@ export async function GET(
             Id_Site: true,
             Code_Site: true,
             Libelle_Site: true,
-            Archive: true,
+            Est_Archive: true,
           },
         },
       },
@@ -40,10 +40,10 @@ export async function GET(
     });
 
     const formattedSites = sites.map(liaison => ({
-      idSite: liaison.t_site.Id_Site,
-      codeSite: liaison.t_site.Code_Site,
-      libelleSite: liaison.t_site.Libelle_Site,
-      archive: liaison.t_site.Archive,
+      id_Site: liaison.t_site?.Id_Site,
+      code_Site: liaison.t_site?.Code_Site,
+      libelle_Site: liaison.t_site?.Libelle_Site,
+      archive: liaison.t_site?.Est_Archive,
       assignedAt: liaison.Date_Affectation,
     }));
 
@@ -65,9 +65,9 @@ export async function POST(
     const { id } = await params;
     const userId = parseInt(id);
     const body = await req.json();
-    const { idSite } = body;
+    const { id_Site } = body;
 
-    if (isNaN(userId) || !idSite) {
+    if (isNaN(userId) || !id_Site) {
       return NextResponse.json(
         { error: "Invalid user ID or site ID" },
         { status: 400 }
@@ -76,7 +76,7 @@ export async function POST(
 
     // Check if site exists
     const site = await prisma.t_site.findUnique({
-      where: { Id_Site: idSite },
+      where: { Id_Site: id_Site },
     });
 
     if (!site) {
@@ -103,7 +103,7 @@ export async function POST(
       where: {
         Id_Utilisateur_Id_Site: {
           Id_Utilisateur: userId,
-          Id_Site: idSite,
+          Id_Site: id_Site,
         },
       },
     });
@@ -119,7 +119,7 @@ export async function POST(
     const liaison = await prisma.t_liaison_utilisateur_site.create({
       data: {
         Id_Utilisateur: userId,
-        Id_Site: idSite,
+        Id_Site: id_Site,
       },
       select: {
         Id_Site: true,
@@ -137,9 +137,9 @@ export async function POST(
     return NextResponse.json({
       message: "Site assigned to user successfully",
       site: {
-        idSite: liaison.t_site.Id_Site,
-        codeSite: liaison.t_site.Code_Site,
-        libelleSite: liaison.t_site.Libelle_Site,
+        id_Site: liaison.t_site?.Id_Site,
+        code_Site: liaison.t_site?.Code_Site,
+        libelle_Site: liaison.t_site?.Libelle_Site,
         assignedAt: liaison.Date_Affectation,
       },
     });

@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     }
 
     const codes = await prismaMesure.tm_journal_code.findMany({
-      orderBy: { CodeJournal: "asc" },
+      orderBy: { Code_Journal: "asc" },
     });
 
     return NextResponse.json(codes);

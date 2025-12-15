@@ -19,7 +19,7 @@ export async function ServerUsers() {
       Prenom: true,
       Adresse_Email: true,
       Profil_Utilisateur: true,
-      Archive: true,
+      Est_Archive: true,
       Date_Creation: true,
     },
     orderBy: { Login: "asc" },
@@ -34,7 +34,7 @@ export async function ServerUsers() {
     prenom: user.Prenom || "",
     email: user.Adresse_Email || "",
     role: user.Profil_Utilisateur || "user",
-    isActive: !user.Archive,
+    isActive: !user.Est_Archive,
     createdAt: user.Date_Creation || new Date(),
   }));
 

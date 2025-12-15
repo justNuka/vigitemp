@@ -17,15 +17,15 @@ export async function ServerDashboardStats() {
 
   const [totalLocations, activeAlarms, okSensors, warningSensors, criticalSensors] =
     await Promise.all([
-      prisma.t_lieu.count({ where: { Archive: false } }),
+      prisma.t_lieu.count({ where: { Est_Archive: false } }),
       prisma.t_alarme.count({
         where: {
-          Acquitee: false,
+          Est_Acquitee: false,
         },
       }),
-      prisma.t_lieu.count({ where: { Archive: false, Lieu_Etat: "O" } }),
-      prisma.t_lieu.count({ where: { Archive: false, Lieu_Etat: "P" } }),
-      prisma.t_lieu.count({ where: { Archive: false, Lieu_Etat: "A" } }),
+      prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "O" } }),
+      prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "P" } }),
+      prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "A" } }),
     ]);
 
   return {
@@ -46,7 +46,7 @@ export async function ServerCriticalSensors() {
 
   const criticalLocations = await prisma.t_lieu.findMany({
     where: {
-      Archive: false,
+      Est_Archive: false,
       Lieu_Etat: "A", // État critique
     },
     include: {
@@ -74,7 +74,7 @@ export async function ServerCriticalSensors() {
     minThreshold: lieu.Consigne_Inf ?? 0,
     maxThreshold: lieu.Consigne_Sup ?? 30,
     lastMeasurement: lieu.Derniere_Date_Heure || null,
-    isActive: !lieu.Archive,
+    isActive: !lieu.Est_Archive,
     location: {
       id: lieu.Id_Site?.toString() || "0",
       name: lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
@@ -98,7 +98,7 @@ export async function ServerActiveAlarms() {
 
   const alarms = await prisma.t_alarme.findMany({
     where: {
-      Acquitee: false,
+      Est_Acquitee: false,
     },
     include: {
       t_lieu: {
@@ -124,12 +124,12 @@ export async function ServerActiveAlarms() {
     sensorId: alarm.Id_Lieu?.toString() || "0",
     locationId: alarm.t_lieu?.Id_Site?.toString() || "0",
     type: alarm.Type === "H" ? ("high" as const) : ("low" as const),
-    status: alarm.Acquitee ? ("acknowledged" as const) : ("active" as const),
+    status: alarm.Est_Acquitee ? ("acknowledged" as const) : ("active" as const),
     value: alarm.Valeur !== null ? parseFloat(alarm.Valeur.toString()) : 0,
     threshold: 0, // Pas de champ threshold direct dans t_alarme
     triggeredAt: alarm.Date_Heure_Debut || new Date(),
-    acknowledgedAt: alarm.Acquitee ? alarm.Date_Heure_Fin : null,
-    acknowledgedBy: alarm.Acquitee ? "user" : null,
+    acknowledgedAt: alarm.Est_Acquitee ? alarm.Date_Heure_Fin : null,
+    acknowledgedBy: alarm.Est_Acquitee ? "user" : null,
     resolvedAt: alarm.Date_Heure_Fin,
     comment: null,
     sensor: {
@@ -145,7 +145,7 @@ export async function ServerActiveAlarms() {
       measurementFrequency: 60,
       alarmDelay: 0,
       lastMeasurement: alarm.t_lieu?.Derniere_Date_Heure || null,
-      isActive: !alarm.t_lieu?.Archive,
+      isActive: !alarm.t_lieu?.Est_Archive,
     },
     location: {
       id: alarm.t_lieu?.Id_Lieu.toString() || "0",
@@ -170,7 +170,7 @@ export async function ServerSensorOverview() {
 
   const locations = await prisma.t_lieu.findMany({
     where: {
-      Archive: false,
+      Est_Archive: false,
     },
     include: {
       t_site: {
@@ -199,7 +199,7 @@ export async function ServerSensorOverview() {
       minThreshold: lieu.Consigne_Inf ?? 0,
       maxThreshold: lieu.Consigne_Sup ?? 30,
       lastMeasurement: lieu.Derniere_Date_Heure || null,
-      isActive: !lieu.Archive,
+      isActive: !lieu.Est_Archive,
       location: {
         id: lieu.Id_Site?.toString() || "0",
         name: lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site

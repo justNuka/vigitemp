@@ -43,37 +43,37 @@ export async function GET(
 
     // Build where clause
     const whereClause: any = {
-      IdLieu: idLieuInt,
+      Id_Lieu: idLieuInt,
     };
 
     // Add date range filter if provided
     if (startDate && endDate) {
-      whereClause.DateHeureMesure = {
+      whereClause.Date_Heure_Mesure = {
         gte: new Date(startDate),
         lte: new Date(endDate),
       };
     }
 
-    // Get measurements from ts_mesure (time-series database)
-    // Filter out null values for chart plotting
-    const measurements = await prismaMesure.tm_mesure.findMany({
+    // Get measurements from tm_graphique (aggregated time-series data)
+    // tm_graphique has much fewer rows than tm_mesures (50M+) and gets populated via triggers
+    const measurements = await prismaMesure.tm_graphique.findMany({
       where: {
         ...whereClause,
-        Valeur: { not: null }, // Exclude null values from graph
+        Est_Valeur_Null: false, // Exclude null values from graph
       },
       take: rowNumber,
-      orderBy: { DateHeureMesure: "desc" },
+      orderBy: { Date_Heure_Mesure: "desc" },
       select: {
-        IdMesure: true,
-        DateHeureMesure: true,
+        Id_Graphique: true,
+        Date_Heure_Mesure: true,
         Valeur: true,
         Unite: true,
         Consigne: true,
         Consigne_Sup: true,
         Consigne_Inf: true,
-        SondeNumeroSerie: true,
+        Sonde_Numero_Serie: true,
         Frequence: true,
-        Etat_Alarme: true,
+        Est_Etat_Alarme: true,
       },
     });
 
@@ -82,8 +82,8 @@ export async function GET(
 
     // Transform to API format
     const formattedMeasurements = chronologicalMeasurements.map((m: any) => {
-      const dateHeure = m.DateHeureMesure 
-        ? new Date(m.DateHeureMesure) 
+      const dateHeure = m.Date_Heure_Mesure 
+        ? new Date(m.Date_Heure_Mesure) 
         : new Date();
       
       // Format for display: DD/MM/YYYY HH:MM
@@ -102,7 +102,7 @@ export async function GET(
       });
 
       return {
-        id: m.IdMesure?.toString() || "",
+        id: m.Id_Graphique?.toString() || "",
         Valeur: m.Valeur !== null ? parseFloat(m.Valeur.toString()) : 0,
         Unite: m.Unite || "°C",
         DateHeureMesure: dateDisplay,
@@ -110,9 +110,9 @@ export async function GET(
         Consigne: m.Consigne !== null ? parseFloat(m.Consigne.toString()) : null,
         Consigne_Sup: m.Consigne_Sup !== null ? parseFloat(m.Consigne_Sup.toString()) : null,
         Consigne_Inf: m.Consigne_Inf !== null ? parseFloat(m.Consigne_Inf.toString()) : null,
-        SondeNumeroSerie: m.SondeNumeroSerie || "",
+        SondeNumeroSerie: m.Sonde_Numero_Serie || "",
         Frequence: m.Frequence || 15,
-        Etat_Alarme: m.Etat_Alarme || 0,
+        Etat_Alarme: m.Est_Etat_Alarme || 0,
       };
     });
 

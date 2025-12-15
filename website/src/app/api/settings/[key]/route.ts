@@ -20,9 +20,9 @@ export async function GET(
 
     const setting = await prisma.t_parametre.findUnique({
       where: { 
-        Section_MotCle: {
+        Section_Mot_Cle: {
           Section: section || "",
-          MotCle: motCle || key,
+          Mot_Cle: motCle || key,
         }
       },
     });
@@ -35,9 +35,9 @@ export async function GET(
     }
 
     return NextResponse.json({
-      key: `${setting.Section}:${setting.MotCle}`,
+      key: `${setting.Section}:${setting.Mot_Cle}`,
       section: setting.Section,
-      motCle: setting.MotCle,
+      motCle: setting.Mot_Cle,
       value: setting.Valeur || "",
       description: setting.Commentaire || null,
     });
@@ -69,9 +69,9 @@ export async function PATCH(
     // Get old value for logging
     const oldSetting = await prisma.t_parametre.findUnique({
       where: {
-        Section_MotCle: {
+        Section_Mot_Cle: {
           Section: sectionVal,
-          MotCle: motCleVal,
+          Mot_Cle: motCleVal,
         },
       },
     });
@@ -79,9 +79,9 @@ export async function PATCH(
     // Upsert the setting
     const setting = await prisma.t_parametre.upsert({
       where: {
-        Section_MotCle: {
+        Section_Mot_Cle: {
           Section: sectionVal,
-          MotCle: motCleVal,
+          Mot_Cle: motCleVal,
         },
       },
       update: {
@@ -89,7 +89,7 @@ export async function PATCH(
       },
       create: {
         Section: sectionVal,
-        MotCle: motCleVal,
+        Mot_Cle: motCleVal,
         Valeur: value,
       },
     });
@@ -108,9 +108,9 @@ export async function PATCH(
     revalidateTag("settings-data", "default");
 
     return NextResponse.json({
-      key: `${setting.Section}:${setting.MotCle}`,
+      key: `${setting.Section}:${setting.Mot_Cle}`,
       section: setting.Section,
-      motCle: setting.MotCle,
+      motCle: setting.Mot_Cle,
       value: setting.Valeur || "",
       description: setting.Commentaire || null,
     });

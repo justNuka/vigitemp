@@ -21,13 +21,13 @@ export async function ServerSettings() {
       },
       select: {
         Section: true,
-        MotCle: true,
+        Mot_Cle: true,
         Valeur: true,
         Commentaire: true,
       },
       orderBy: [
         { Section: "asc" },
-        { MotCle: "asc" },
+        { Mot_Cle: "asc" },
       ],
     });
 
@@ -42,7 +42,7 @@ export async function ServerSettings() {
     // Créer un Map des valeurs de la DB pour un accès rapide
     const dbSettingsMap = new Map(
       dbSettings.map((setting) => [
-        `${setting.Section}:${setting.MotCle}`,
+        `${setting.Section}:${setting.Mot_Cle}`,
         setting.Valeur || "false",
       ])
     );

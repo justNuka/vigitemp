@@ -46,13 +46,13 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
   { title: "Tableau de bord", href: "/", icon: LayoutDashboard },
   { title: "Surveillance", href: "/surveillance", icon: Activity },
-  { title: "Alarmes", href: "/alarms", icon: Bell },
+  { title: "Alarmes", href: "/alarmes", icon: Bell },
 ];
 
 const settingsNavItems: NavItem[] = [
-  { title: "Mon profil", href: "/profile", icon: User },
-  { title: "Paramétrage", href: "/settings", icon: Settings },
-  { title: "Utilisateurs", href: "/users", icon: Users },
+  { title: "Mon profil", href: "/profil", icon: User },
+  { title: "Paramétrage", href: "/parametres", icon: Settings },
+  { title: "Utilisateurs", href: "/utilisateurs", icon: Users },
   { title: "Profils", href: "/profils", icon: Shield },
   { title: "Journal d'audit", href: "/audit", icon: FileText },
 ];
@@ -68,7 +68,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
   const [isMuted, setIsMuted] = useState(false);
 
   const navItemsWithBadges = mainNavItems.map((item) => {
-    if (item.href === "/alarms" && activeAlarms > 0) {
+    if (item.href === "/alarmes" && activeAlarms > 0) {
       return { ...item, badge: activeAlarms, badgeVariant: "destructive" as const };
     }
     return item;
@@ -196,7 +196,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
                 {currentUser.displayName}
               </p>
               <p className="text-xs text-muted-foreground capitalize">
-                {currentUser.profile}
+                {currentUser.role}
               </p>
             </div>
             <Button

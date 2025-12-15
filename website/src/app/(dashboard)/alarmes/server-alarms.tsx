@@ -46,9 +46,9 @@ export async function ServerAlarms(status?: AlarmStatus) {
     type: (alarm.Type === "H" ? "high" : "low") as "high" | "low",
     value: alarm.Valeur || 0,
     threshold: 0, // Threshold from t_lieu if needed
-    status: alarm.Acquitee ? ("acknowledged" as const) : ("active" as const),
+    status: alarm.Est_Acquitee ? ("acknowledged" as const) : ("active" as const),
     triggeredAt: alarm.Date_Heure_Debut || new Date(),
-    acknowledgedAt: alarm.Acquitee ? alarm.Date_Heure_Debut : null,
+    acknowledgedAt: alarm.Est_Acquitee ? alarm.Date_Heure_Debut : null,
     resolvedAt: alarm.Date_Heure_Fin || null,
     acknowledgedBy: null,
     comment: null,
@@ -87,13 +87,13 @@ export async function ServerAlarmStats() {
 
   const [activeCount, acknowledgedCount, resolvedCount] = await Promise.all([
     prisma.t_alarme.count({
-      where: { Acquitee: false },
+      where: { Est_Acquitee: false },
     }),
     prisma.t_alarme.count({
-      where: { Acquitee: true },
+      where: { Est_Acquitee: true },
     }),
     prisma.t_alarme.count({
-      where: { Acquitee: null }, // Pour l'instant, pas d'alarmes résolues
+      where: { Est_Acquitee: null }, // Pour l'instant, pas d'alarmes résolues
     }),
   ]);
 

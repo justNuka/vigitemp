@@ -55,23 +55,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Vérifier l'expiration du mot de passe
-    const expiryParams = await prisma.t_parametre.findFirst({
+    // Vérifier l'expiration du mot de passe (paramètres CFR21)
+    const cfr21Params = await prisma.t_parametre.findMany({
       where: {
-        Section: "security:password",
-        MotCle: "expiry_enabled",
+        Section: "CFR21",
+      },
+      select: {
+        Mot_Cle: true,
+        Valeur: true,
       },
     });
 
-    const expiryDaysParam = await prisma.t_parametre.findFirst({
-      where: {
-        Section: "security:password",
-        MotCle: "expiry_days",
-      },
-    });
-
-    const expiryEnabled = expiryParams?.Valeur === "true";
-    const expiryDays = parseInt(expiryDaysParam?.Valeur || "90");
+    const expiryEnabled = cfr21Params.find(p => p.Mot_Cle === "ACTIVATION_EXPIRATION_MOT_DE_PASSE")?.Valeur === "1" || cfr21Params.find(p => p.Mot_Cle === "ACTIVATION_EXPIRATION_MOT_DE_PASSE")?.Valeur?.toLowerCase() === "true";
+    const expiryDays = parseInt(cfr21Params.find(p => p.Mot_Cle === "JOURS_VALIDITE_MOT_DE_PASSE")?.Valeur || "90");
 
     if (expiryEnabled && user.Date_Derniere_Modification_MDP) {
       const daysSinceLastChange = Math.floor(

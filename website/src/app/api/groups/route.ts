@@ -9,7 +9,7 @@ export async function GET() {
   try {
     const groups = await prisma.t_groupe.findMany({
       where: {
-        Archive: false,
+        Est_Archive: false,
       },
       select: {
         Id_Groupe: true,

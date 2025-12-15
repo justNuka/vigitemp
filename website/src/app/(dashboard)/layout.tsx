@@ -31,7 +31,7 @@ export default function DashboardLayout({
     queryFn: () => authApi.getCurrentUser(),
   });
 
-  const activeAlarmsCount = alarms?.filter((a) => a.status === "active").length ?? 0;
+  const activeAlarmsCount = alarms?.length ?? 0;
 
   const handleLogout = async () => {
     try {

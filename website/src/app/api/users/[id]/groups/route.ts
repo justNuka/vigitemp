@@ -32,7 +32,7 @@ export async function GET(
             Id_Groupe: true,
             Nom_Groupe: true,
             Numero_Regroupement: true,
-            Archive: true,
+            Est_Archive: true,
           },
         },
       },
@@ -45,7 +45,7 @@ export async function GET(
         idGroupe: liaison.t_groupe!.Id_Groupe,
         nomGroupe: liaison.t_groupe!.Nom_Groupe,
         numeroRegroupement: liaison.t_groupe!.Numero_Regroupement,
-        archive: liaison.t_groupe!.Archive,
+        archive: liaison.t_groupe!.Est_Archive,
       }));
 
     return NextResponse.json(formattedGroups);

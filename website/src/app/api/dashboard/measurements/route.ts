@@ -9,22 +9,22 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(limitParam, 125); // Cap at 125
 
     // Get recent measurements from time-series database
-    const measurements = await prismaMesure.tm_mesure.findMany({
+    const measurements = await prismaMesure.tm_mesures.findMany({
       take: limit,
-      orderBy: { DateHeureMesure: "desc" },
+      orderBy: { Date_Heure_Mesure: "desc" },
       select: {
-        IdMesure: true,
-        IdLieu: true,
-        DateHeureMesure: true,
+        Id_Mesure: true,
+        Id_Lieu: true,
+        Date_Heure_Mesure: true,
         Valeur: true,
       },
     });
 
     // Transform to API format
     const formattedMeasurements = measurements.map((m: any) => ({
-      id: m.IdMesure,
-      sensorId: m.IdLieu, // In vigitemp, measurements are per location not per sonde
-      timestamp: m.DateHeureMesure?.toISOString() || new Date().toISOString(),
+      id: m.Id_Mesure,
+      sensorId: m.Id_Lieu, // In vigitemp, measurements are per location not per sonde
+      timestamp: m.Date_Heure_Mesure?.toISOString() || new Date().toISOString(),
       value: m.Valeur !== null ? parseFloat(m.Valeur.toString()) : 0,
     }));
 

@@ -22,7 +22,7 @@ const createUserSchema = z.object({
 export async function GET() {
   try {
     const users = await prisma.t_utilisateur.findMany({
-      where: { Archive: false },
+      where: { Est_Archive: false },
       orderBy: { Login: "asc" },
     });
 
@@ -31,7 +31,7 @@ export async function GET() {
       username: user.Login,
       displayName: `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login,
       role: user.Profil_Utilisateur || "user",
-      status: !user.Archive ? "active" : "inactive",
+      status: !user.Est_Archive ? "active" : "inactive",
       createdAt: user.Date_Creation?.toISOString() || null,
     }));
 
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 
     // Check if username already exists
     const existing = await prisma.t_utilisateur.findFirst({
-      where: { Login: data.username, Archive: false },
+      where: { Login: data.username, Est_Archive: false },
     });
 
     if (existing) {
@@ -80,11 +80,11 @@ export async function POST(req: NextRequest) {
         Nom: data.nom,
         Adresse_Email: data.email,
         Profil_Utilisateur: data.profileId,
-        Archive: false,
+        Est_Archive: false,
         Date_Creation: new Date(),
         Date_Derniere_Modification_MDP: new Date(),
         Date_Validite: data.expiryDate || null,
-        Mot_De_Passe_Temporaire: true,
+        Est_Mot_De_Passe_Temporaire: true,
       },
     });
 

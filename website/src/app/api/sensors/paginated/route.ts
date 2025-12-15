@@ -1,143 +1,119 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, prismaMesure } from "@/lib/prisma";
-
-interface SensorWithLatestMeasurement {
-  id: number;
-  name: string;
-  location: {
-    id: number;
-    name: string;
-  };
-  latestMeasurement: {
-    value: number;
-    date: Date;
-  } | null;
-}
+import { getAuthenticatedUser } from "@/lib/auth";
+import { withLogging } from "@/lib/api-logger";
 
 /**
  * API Route optimisée pour le chargement des sensors avec pagination
- * Supporte:
- * - Pagination via offset/limit
- * - Filtrage par site/groupe
- * - Récupération des dernières mesures de manière efficace
  * 
  * Requête:
- * GET /api/sensors/paginated?offset=0&limit=8&siteId=1&groupIds=1,2
+ * GET /api/sensors/paginated?page=1&limit=50&siteId=1&groupIds=1,2
  */
-export async function GET(request: NextRequest) {
+export const GET = withLogging(async (request: NextRequest) => {
+  const user = getAuthenticatedUser(request);
+  if (!user) {
+    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
-    const offset = parseInt(searchParams.get("offset") || "0");
-    const limit = parseInt(searchParams.get("limit") || "8");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50")));
     const siteId = searchParams.get("siteId");
     const groupIdsStr = searchParams.get("groupIds");
-    const groupIds = groupIdsStr?.split(",").map(Number) || [];
+    const groupIds = groupIdsStr?.split(",").map(Number).filter(Boolean) || [];
 
-    // Validation
-    if (offset < 0 || limit < 1 || limit > 100) {
-      return NextResponse.json(
-        { error: "Invalid pagination parameters" },
-        { status: 400 }
-      );
-    }
+    const skip = (page - 1) * limit;
 
     // Construire la requête Prisma avec filtres
-    let whereCondition: any = {};
+    const where: any = {};
 
     if (siteId) {
-      whereCondition.IdSite = parseInt(siteId);
+      where.Id_Site = parseInt(siteId);
     }
 
     if (groupIds.length > 0) {
-      whereCondition.OR = [
-        { IdGroupe1: { in: groupIds } },
-        { IdGroupe2: { in: groupIds } },
+      where.OR = [
+        { Id_Groupe1: { in: groupIds } },
+        { Id_Groupe2: { in: groupIds } },
       ];
     }
 
+    // Récupérer le total
+    const total = await prisma.t_lieu.count({ where });
+
     // Récupérer les locations filtrées avec pagination
     const locations = await prisma.t_lieu.findMany({
-      where: whereCondition,
+      where,
       include: {
-        t_sonde: true, // Inclure les informations de sonde
+        t_sonde: true,
         t_site: true,
       },
-      skip: offset,
+      skip,
       take: limit,
       orderBy: {
-        IdLieu: "desc", // Ordonner par défaut
+        Id_Lieu: "desc",
       },
-    });
-
-    // Récupérer le total pour savoir s'il y a plus de données
-    const total = await prisma.t_lieu.count({
-      where: whereCondition,
     });
 
     // Récupérer les dernières mesures pour chaque location
-    // OPTIMISATION: Faire une seule requête par location plutôt que N requêtes
-    const locationsWithMeasurements = await Promise.all(
+    const sensorsWithMeasurements = await Promise.all(
       locations.map(async (location) => {
-        // Récupérer la dernière mesure
-        const lastMeasurement = await prismaMesure.tm_mesure.findFirst({
+        const lastMeasurement = await prismaMesure.tm_mesures.findFirst({
           where: {
-            IdLieu: location.IdLieu,
+            Id_Lieu: location.Id_Lieu,
           },
           orderBy: {
-            DateHeureMesure: "desc",
+            Date_Heure_Mesure: "desc",
           },
-          take: 1,
           select: {
             Valeur: true,
-            DateHeureMesure: true,
+            Date_Heure_Mesure: true,
+            Est_Etat_Alarme: true,
           },
         });
 
+        const status: "ok" | "warning" | "critical" =
+          lastMeasurement?.Est_Etat_Alarme === true ? "critical" : "ok";
+
         return {
-          id: location.IdLieu,
+          id: location.Id_Lieu.toString(),
           name: location.Nom_Lieu,
+          type: "temperature",
+          unit: "°C",
+          currentValue: lastMeasurement?.Valeur ?? null,
+          minThreshold: 0,
+          maxThreshold: 25,
+          lastMeasurement: lastMeasurement?.Date_Heure_Mesure ?? null,
+          isActive: location.Lieu_Etat === "A",
+          status,
           location: {
-            id: location.IdLieu,
+            id: location.Id_Lieu.toString(),
             name: location.Nom_Lieu,
-            siteId: location.IdSite,
-            groupId1: location.IdGroupe1,
-            groupId2: location.IdGroupe2,
+            description: null,
+            siteGroup: null,
+            isActive: location.Lieu_Etat === "A",
+            siteId: location.Id_Site,
+            groupId1: location.Id_Groupe1,
+            groupId2: location.Id_Groupe2,
+            site: location.t_site?.Libelle_Site ?? "",
           },
-          sonde: location.t_sonde ? {
-            numeroSerie: location.t_sonde.SondeNumeroSerie,
-            status: location.t_sonde.Etat_Sonde,
-          } : null,
-          latestMeasurement: lastMeasurement ? {
-            value: lastMeasurement.Valeur,
-            date: lastMeasurement.DateHeureMesure,
-          } : null,
         };
       })
     );
 
-    // Retourner avec les headers de pagination
-    return NextResponse.json(
-      {
-        data: locationsWithMeasurements,
-        pagination: {
-          offset,
-          limit,
-          total,
-          hasMore: offset + limit < total,
-          count: locationsWithMeasurements.length,
-        },
-      },
-      {
-        headers: {
-          "Cache-Control": "private, max-age=30", // Cache 30 secondes
-        },
-      }
-    );
+    return NextResponse.json({
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      sensors: sensorsWithMeasurements,
+    });
   } catch (error) {
-    console.error("Erreur lors de la récupération des sensors:", error);
+    console.error("Erreur lors de la récupération des sensors paginés:", error);
     return NextResponse.json(
-      { error: "Erreur lors de la récupération des données" },
+      { error: "Erreur lors du chargement des sondes" },
       { status: 500 }
     );
   }
-}
+});

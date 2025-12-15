@@ -31,11 +31,11 @@ model t_actionneur {
   t_plan           t_plan?            @relation(fields: [Id_Plan], references: [IdPlan], onDelete: NoAction, onUpdate: NoAction, map: "FK_PLAN_ACTIONNEUR")
   t_actionneurtype t_actionneur_type? @relation(fields: [Type], references: [Type], onDelete: NoAction, onUpdate: NoAction, map: "FK_TYPE_ACTIONNEUR")
 
-  @@index([Est_Etat], map: "Actionneur_Etat_IDX")
-  @@index([Id_Module], map: "Actionneur_IDModule_IDX")
-  @@index([Id_Plan], map: "Actionneur_IDPlan_IDX")
-  @@index([Num_Serie], map: "Actionneur_Num_Serie_IDX")
-  @@index([Type], map: "Actionneur_Type_IDX")
+  @@index([Est_Etat], map: "IDX_Est_Etat")
+  @@index([Id_Module], map: "IDX_Id_Module")
+  @@index([Id_Plan], map: "IDX_Id_Plan")
+  @@index([Num_Serie], map: "IDX_Num_Serie")
+  @@index([Type], map: "IDX_Type")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -49,7 +49,7 @@ model t_alarme {
   Id_Lieu                      Int?
   Sonde_Numero_Serie           String?   @db.VarChar(50)
   Unite                        String?   @db.VarChar(10)
-  Est_Acquitee                 Boolean?  @default(false)
+  Est_Acquittee                Boolean?  @default(false)
   Date_Heure_Derniere_Mesure   DateTime? @db.DateTime(0)
   Date_Heure_Debut_Alarme_Vrai DateTime? @db.DateTime(0)
   Est_Alarme_Pour_VigiTel      Boolean?  @default(false)
@@ -57,17 +57,17 @@ model t_alarme {
   Est_Tel_Acquitee             Boolean?
   t_lieu                       t_lieu?   @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ALARME")
 
-  @@index([Est_Acquitee], map: "Alarme_Acquite_IDX")
-  @@index([Est_Alarme_Vrai], map: "Alarme_Alarme_Vrai_IDX")
-  @@index([Date_Heure_Debut], map: "Alarme_Date_Heure_Alarme_IDX")
-  @@index([Date_Heure_Fin], map: "Alarme_Date_Heure_Fin_Alar_IDX")
-  @@index([Date_Heure_Debut_Alarme_Vrai], map: "Alarme_Date_heure_Debut_Al_IDX")
-  @@index([Date_Heure_Derniere_Mesure], map: "Alarme_Date_heure_Derniere_IDX")
-  @@index([Sonde_Numero_Serie], map: "Alarme_Num_Sonde_IDX")
-  @@index([Id_Lieu], map: "Alarme_Numero_lieu_IDX")
-  @@index([Type], map: "Alarme_Type_Alarme_IDX")
-  @@index([Unite], map: "Alarme_Unite_IDX")
-  @@index([Valeur], map: "Alarme_Valeur_IDX")
+  @@index([Est_Acquittee], map: "IDX_Est_Acquittee")
+  @@index([Est_Alarme_Vrai], map: "IDX_Est_Alarme_Vrai")
+  @@index([Date_Heure_Debut], map: "IDX_Date_Heure_Debut")
+  @@index([Date_Heure_Fin], map: "IDX_Date_Heure_Fin")
+  @@index([Date_Heure_Debut_Alarme_Vrai], map: "IDX_Date_Heure_Debut_Alarme_Vrai")
+  @@index([Date_Heure_Derniere_Mesure], map: "IDX_Date_Heure_Derniere_Mesure")
+  @@index([Sonde_Numero_Serie], map: "IDX_Sonde_Numero_Serie")
+  @@index([Id_Lieu], map: "IDX_Id_Lieu")
+  @@index([Type], map: "IDX_Type")
+  @@index([Unite], map: "IDX_Unite")
+  @@index([Valeur], map: "IDX_Valeur")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -89,7 +89,7 @@ model t_autorisation {
   A_Acces_VigiLog               Boolean?                        @default(false)
   t_liaison_profil_autorisation t_liaison_profil_autorisation[]
 
-  @@index([Code_Autorisation], map: "autorisation_CodeAutorisation_IDX")
+  @@index([Code_Autorisation], map: "IDX_Code_Autorisation")
 }
 
 model t_bain {
@@ -102,8 +102,8 @@ model t_bain {
   Est_Reserve_MC2 Boolean? @default(false)
   Est_Archive     Boolean? @default(false)
 
-  @@index([Model], map: "Bain_Model_IDX")
-  @@index([Reference], map: "Bain_Reference_IDX")
+  @@index([Model], map: "IDX_Model")
+  @@index([Reference], map: "IDX_Reference")
 }
 
 model t_calibrage {
@@ -130,10 +130,10 @@ model t_calibrage {
   Nouvelle_Mesure2     Float?    @db.Float
   Id_Bain              Int?
 
-  @@index([Date_Heure_Calibrage], map: "Calibrage_Date_calibrage_IDX")
-  @@index([Id_Bain], map: "Calibrage_IdBain_IDX")
-  @@index([Sonde_Numero_Serie], map: "Calibrage_Numero_serie_IDX")
-  @@index([SE_Numero], map: "Calibrage_SE_Num_IDX")
+  @@index([Date_Heure_Calibrage], map: "IDX_Date_Heure_Calibrage")
+  @@index([Id_Bain], map: "IDX_Id_Bain")
+  @@index([Sonde_Numero_Serie], map: "IDX_Sonde_Numero_Serie")
+  @@index([SE_Numero], map: "IDX_SE_Numero")
 }
 
 model t_certif {
@@ -145,12 +145,12 @@ model t_certif {
   Unite               String?   @db.VarChar(10)
   Id_PDF              Int?
 
-  @@index([Date], map: "Certif_Date_IDX")
-  @@index([Id_PDF], map: "Certif_IdPDF_IDX")
-  @@index([Etalon_Numero_Serie], map: "Certif_Num_Serie_IDX")
-  @@index([Numero], map: "Certif_Numero_IDX")
-  @@index([Organisme], map: "Certif_Organisme_IDX")
-  @@index([Unite], map: "Certif_Unite_IDX")
+  @@index([Date], map: "IDX_Date")
+  @@index([Id_PDF], map: "IDX_Id_PDF")
+  @@index([Etalon_Numero_Serie], map: "IDX_Etalon_Numero_Serie")
+  @@index([Numero], map: "IDX_Numero")
+  @@index([Organisme], map: "IDX_Organisme")
+  @@index([Unite], map: "IDX_Unite")
 }
 
 model t_certif_mesure {
@@ -161,7 +161,7 @@ model t_certif_mesure {
   Temperature_Reference String? @db.VarChar(50)
   Incertitude           Float?  @db.Float
 
-  @@index([Id_Certif], map: "CertifMesure_IdCertif_IDX")
+  @@index([Id_Certif], map: "IDX_Id_Certif")
 }
 
 model t_etalon {
@@ -198,18 +198,18 @@ model t_etalonnage {
   Id_Bain               Int?
   Err_Justesse          String?   @db.VarChar(50)
 
-  @@index([Date_Certif], map: "Etalonnage_Date_Certif_IDX")
-  @@index([Date_Heure_Etalonnage], map: "Etalonnage_Date_etalonnage_IDX")
-  @@index([Id_Bain], map: "Etalonnage_IdBain_IDX")
-  @@index([Incertitude], map: "Etalonnage_Incertitude_IDX")
-  @@index([Moyenne_Etalon], map: "Etalonnage_Moyenne_Etalon_IDX")
-  @@index([Moyenne_Sonde], map: "Etalonnage_Moyenne_Sonde_IDX")
-  @@index([Num_Certif], map: "Etalonnage_Num_Certif_IDX")
-  @@index([Etalon_Numero_Serie], map: "Etalonnage_Num_Sonde_Etalo_IDX")
-  @@index([Sonde_Numero_Serie], map: "Etalonnage_Numero_serie_IDX")
-  @@index([Organisme], map: "Etalonnage_Organisme_IDX")
-  @@index([Repetabilite], map: "Etalonnage_Repetabilite_IDX")
-  @@index([Unite], map: "Etalonnage_Unite_IDX")
+  @@index([Date_Certif], map: "IDX_Date_Certif")
+  @@index([Date_Heure_Etalonnage], map: "IDX_Date_Heure_Etalonnage")
+  @@index([Id_Bain], map: "IDX_Id_Bain")
+  @@index([Incertitude], map: "IDX_Incertitude")
+  @@index([Moyenne_Etalon], map: "IDX_Moyenne_Etalon")
+  @@index([Moyenne_Sonde], map: "IDX_Moyenne_Sonde")
+  @@index([Num_Certif], map: "IDX_Num_Certif")
+  @@index([Etalon_Numero_Serie], map: "IDX_Etalon_Numero_Serie")
+  @@index([Sonde_Numero_Serie], map: "IDX_Sonde_Numero_Serie")
+  @@index([Organisme], map: "IDX_Organisme")
+  @@index([Repetabilite], map: "IDX_Repetabilite")
+  @@index([Unite], map: "IDX_Unite")
 }
 
 model t_etalonnage_mesure {
@@ -219,7 +219,7 @@ model t_etalonnage_mesure {
   Mesure_Sonde               Float? @db.Float
   Mesure_Etalon              Float? @db.Float
 
-  @@index([Id_Etalonnage], map: "MesureSonde_IdEtalonnage_IDX")
+  @@index([Id_Etalonnage], map: "IDX_Id_Etalonnage")
 }
 
 model t_groupe {
@@ -228,7 +228,7 @@ model t_groupe {
   Numero_Regroupement String?  @db.VarChar(1)
   Est_Archive         Boolean? @default(false)
 
-  @@index([Numero_Regroupement], map: "Groupe_NumeroRegroupement_IDX")
+  @@index([Numero_Regroupement], map: "IDX_Numero_Regroupement")
 }
 
 model t_liaison_profil_autorisation {
@@ -238,8 +238,8 @@ model t_liaison_profil_autorisation {
   t_profil       t_profil       @relation(fields: [IdProfil], references: [Id_Profil], onDelete: NoAction, onUpdate: NoAction, map: "FK_PROFIL_LIAISON")
 
   @@id([IdProfil, IdAutorisation])
-  @@index([IdAutorisation], map: "IdAutorisation_IDX")
-  @@index([IdProfil], map: "IdProfil_IDX")
+  @@index([IdAutorisation], map: "IDX_IdAutorisation")
+  @@index([IdProfil], map: "IDX_IdProfil")
 }
 
 model t_liaison_sonde_type_mesure {
@@ -254,8 +254,8 @@ model t_liaison_utilisateur_groupe {
   IdGroupe      Int?
   t_utilisateur t_utilisateur @relation(fields: [IdUtilisateur], references: [Id_Utilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_UTILISATEUR_LIAISON")
 
-  @@index([IdGroupe], map: "IdGroupe_IDX")
-  @@index([IdUtilisateur], map: "IdUtilisateur_IDX")
+  @@index([IdGroupe], map: "IDX_IdGroupe")
+  @@index([IdUtilisateur], map: "IDX_IdUtilisateur")
 }
 
 model t_liaison_utilisateur_site {
@@ -342,20 +342,20 @@ model t_lieu {
   t_planning_consigne                  t_planning_consigne[]
   t_planning_heure_bascule             t_planning_heure_bascule[]
 
-  @@index([Id_Groupe1], map: "IdGroupe1")
-  @@index([Id_Groupe2], map: "IdGroupe2")
-  @@index([Id_PDF], map: "IdPDF")
-  @@index([Id_Site], map: "IdSite")
-  @@index([Est_Archive], map: "Lieu_Archive_IDX")
-  @@index([Date_Creation], map: "Lieu_Date_Creation_IDX")
-  @@index([Id_Actionneur], map: "Lieu_IDActionneur_IDX")
-  @@index([Id_Plan], map: "Lieu_IDPlan_IDX")
-  @@index([Lieu_Etat], map: "Lieu_Lieu_Etat_IDX")
-  @@index([Nom_Lieu], map: "Lieu_Nom_Lieu_IDX")
-  @@index([Sonde_Numero_Serie], map: "Lieu_Numero_serie_IDX")
-  @@index([Est_Tel_Actif], map: "Lieu_Tel_Actif_IDX")
-  @@index([Tel_Code], map: "Lieu_Tel_Code_IDX")
-  @@index([Tel_Son_Lieu], map: "Lieu_Tel_Son_Lieu_IDX")
+  @@index([Id_Groupe1], map: "IDX_Id_Groupe1")
+  @@index([Id_Groupe2], map: "IDX_Id_Groupe2")
+  @@index([Id_PDF], map: "IDX_Id_PDF")
+  @@index([Id_Site], map: "IDX_Id_Site")
+  @@index([Est_Archive], map: "IDX_Est_Archive")
+  @@index([Date_Creation], map: "IDX_Date_Creation")
+  @@index([Id_Actionneur], map: "IDX_Id_Actionneur")
+  @@index([Id_Plan], map: "IDX_Id_Plan")
+  @@index([Lieu_Etat], map: "IDX_Lieu_Etat")
+  @@index([Nom_Lieu], map: "IDX_Nom_Lieu")
+  @@index([Sonde_Numero_Serie], map: "IDX_Sonde_Numero_Serie")
+  @@index([Est_Tel_Actif], map: "IDX_Est_Tel_Actif")
+  @@index([Tel_Code], map: "IDX_Tel_Code")
+  @@index([Tel_Son_Lieu], map: "IDX_Tel_Son_Lieu")
 }
 
 model t_lieu_planning {
@@ -370,7 +370,7 @@ model t_lieu_planning {
   t_lieu               t_lieu?  @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_PLANNING")
 
   @@unique([Id_Lieu, Est_Id_Jour], map: "IdLieuJour")
-  @@index([Id_Lieu], map: "IdLieu")
+  @@index([Id_Lieu], map: "IDX_Id_Lieu")
 }
 
 model t_lieu_tel_num {
@@ -382,8 +382,8 @@ model t_lieu_tel_num {
   Est_Via_Email     Boolean?
   t_lieu            t_lieu?  @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_TEL_NUM")
 
-  @@index([Id_Utilisateur], map: "IdIntervenant_NDX")
-  @@index([Id_Lieu], map: "IdLieu")
+  @@index([Id_Utilisateur], map: "IDX_Id_Utilisateur")
+  @@index([Id_Lieu], map: "IDX_Id_Lieu")
 }
 
 model t_module {
@@ -401,10 +401,10 @@ model t_module {
   Id_Serveur          Int?
 
   @@unique([Type_Module, Module_Numero_Serie], map: "Identifiant_Module")
-  @@index([Id_Plan], map: "Module_IDPlan_IDX")
-  @@index([Module_Numero_Serie], map: "Module_Numero_Serie_IDX")
-  @@index([Port_Serie], map: "Module_Port_serie_IDX")
-  @@index([Type_Module], map: "Module_Type_module_IDX")
+  @@index([Id_Plan], map: "IDX_Id_Plan")
+  @@index([Module_Numero_Serie], map: "IDX_Module_Numero_Serie")
+  @@index([Port_Serie], map: "IDX_Port_Serie")
+  @@index([Type_Module], map: "IDX_Type_Module")
 }
 
 model t_module_type {
@@ -416,14 +416,14 @@ model t_module_type {
 }
 
 model t_parametre {
-  Section     String  @default("") @db.VarChar(100)
-  MotCle      String  @default("") @db.VarChar(100)
+  Section     String  @db.VarChar(100)
+  Mot_Cle     String  @db.VarChar(100)
   Valeur      String? @db.LongText
   Commentaire String? @db.LongText
 
-  @@id([Section, MotCle])
-  @@index([MotCle], map: "Parametre_MotCle_IDX")
-  @@index([Section], map: "Parametre_Section_IDX")
+  @@id([Section, Mot_Cle])
+  @@index([Mot_Cle], map: "IDX_Mot_Cle")
+  @@index([Section], map: "IDX_Section")
 }
 
 model t_pdf {
@@ -488,10 +488,10 @@ model t_sonde {
   Id_Serveur         Int?
   t_lieu             t_lieu[]
 
-  @@index([Adresse_Sonde], map: "Sonde_Adresse_sonde_IDX")
-  @@index([Etat_Sonde], map: "Sonde_Etat_Sonde_IDX")
-  @@index([Port_Serie], map: "Sonde_Port_serie_IDX")
-  @@index([Id_Module], map: "WDIDX125257405080")
+  @@index([Adresse_Sonde], map: "IDX_Adresse_Sonde")
+  @@index([Etat_Sonde], map: "IDX_Etat_Sonde")
+  @@index([Port_Serie], map: "IDX_Port_Serie")
+  @@index([Id_Module], map: "IDX_Id_Module")
 }
 
 model t_sonde_etat {
@@ -532,8 +532,8 @@ model t_utilisateur {
   t_liaison_utilisateur_groupe   t_liaison_utilisateur_groupe[]
   t_liaison_utilisateur_site     t_liaison_utilisateur_site[]
 
-  @@index([Est_Archive], map: "Utilisateur_Archive_IDX")
-  @@index([Profil_Utilisateur], map: "Utilisateur_ProfilUtilisateur_IDX")
+  @@index([Est_Archive], map: "IDX_Est_Archive")
+  @@index([Profil_Utilisateur], map: "IDX_Profil_Utilisateur")
 }
 
 model liste_clients {
@@ -558,7 +558,7 @@ model t_ancien_mot_de_passe {
   Mot_De_Passe           String?        @db.VarChar(100)
   t_utilisateur          t_utilisateur? @relation(fields: [Id_Utilisateur], references: [Id_Utilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_UTILISATEUR_ANCIENMDP_new")
 
-  @@index([Id_Utilisateur], map: "IdUtilisateur")
+  @@index([Id_Utilisateur], map: "IDX_Id_Utilisateur")
 }
 
 model t_commentaire_acquittement_alarme {
@@ -566,8 +566,8 @@ model t_commentaire_acquittement_alarme {
   Type_Commentaire String? @db.VarChar(50)
   Texte            String? @db.VarChar(255)
 
-  @@index([Texte], map: "Commentaire_Texte_IDX")
-  @@index([Type_Commentaire], map: "Commentaire_Type_Commentai_IDX")
+  @@index([Texte], map: "IDX_Texte")
+  @@index([Type_Commentaire], map: "IDX_Type_Commentaire")
 }
 
 model t_datalogger_alarme {
@@ -578,7 +578,7 @@ model t_datalogger_alarme {
   Est_Acquitte  Int?     @db.TinyInt
   Commentaire   String?  @db.VarChar(200)
 
-  @@index([Id_Reception], map: "WDIDX_T_logalarme_IdReception")
+  @@index([Id_Reception], map: "IDX_Id_Reception")
 }
 
 model t_datalogger_coursier {
@@ -600,8 +600,8 @@ model t_datalogger_envoi {
   Heure_Maj               DateTime? @db.Time(0)
   Login_Maj               String?   @db.VarChar(64)
 
-  @@index([Id_Datalogger_Reception], map: "WDIDX_T_LogEnvoi_IdLogReception")
-  @@index([Id_Site], map: "WDIDX_T_LogEnvoi_IdSite")
+  @@index([Id_Datalogger_Reception], map: "IDX_Id_Datalogger_Reception")
+  @@index([Id_Site], map: "IDX_Id_Site")
 }
 
 model t_datalogger_etape {
@@ -611,7 +611,7 @@ model t_datalogger_etape {
   Id_Site               Int?
   t_datalogger_tournee  t_datalogger_tournee? @relation(fields: [Id_Datalogger_Tournee], references: [Id_Datalogger_Tournee], onDelete: NoAction, onUpdate: NoAction, map: "t_datalogger_etape_ibfk_1")
 
-  @@index([Id_Datalogger_Tournee], map: "WDIDX_LogEtape_IdLogTournee")
+  @@index([Id_Datalogger_Tournee], map: "IDX_Id_Datalogger_Tournee")
 }
 
 model t_datalogger_reception {
@@ -648,11 +648,11 @@ model t_datalogger_reception {
   Heure_Enregistrement         DateTime? @db.Time(0)
   Login_Enregistrement         String?   @db.VarChar(64)
 
-  @@index([Id_Coursier], map: "WDIDX_T_LogReception_IdCoursier")
-  @@index([Id_Site_Arrivee], map: "WDIDX_T_LogReception_IdSiteArrivee")
-  @@index([Id_Site_Depart], map: "WDIDX_T_LogReception_IdSiteDepart")
-  @@index([Id_Tournee], map: "WDIDX_T_LogReception_IdTournee")
-  @@index([Numserie_VigiLog], map: "WDIDX_T_LogReception_NumserieVigiLog")
+  @@index([Id_Coursier], map: "IDX_Id_Coursier")
+  @@index([Id_Site_Arrivee], map: "IDX_Id_Site_Arrivee")
+  @@index([Id_Site_Depart], map: "IDX_Id_Site_Depart")
+  @@index([Id_Tournee], map: "IDX_Id_Tournee")
+  @@index([Numserie_VigiLog], map: "IDX_Numserie_VigiLog")
 }
 
 model t_datalogger_sonde {
@@ -679,7 +679,7 @@ model t_datalogger_sonde {
   Archive                           Int?      @db.TinyInt
 
   @@id([Id_Datalogger_Sonde, Num_Serie])
-  @@index([Archive], map: "WDIDX_T_LogSonde_Archive")
+  @@index([Archive], map: "IDX_Archive")
 }
 
 model t_datalogger_tournee {
@@ -694,8 +694,8 @@ model t_datalogger_tournee {
   Login_Maj             String?              @db.VarChar(64)
   t_datalogger_etape    t_datalogger_etape[]
 
-  @@index([Id_Site_Arrivee], map: "WDIDX_LogTournee_IdSiteArrivee")
-  @@index([Id_Site_Depart], map: "WDIDX_LogTournee_IdSiteDepart")
+  @@index([Id_Site_Arrivee], map: "IDX_Id_Site_Arrivee")
+  @@index([Id_Site_Depart], map: "IDX_Id_Site_Depart")
 }
 
 model t_etalon_type {
@@ -715,7 +715,7 @@ model t_planning_alarme {
   Code_Activation    String? @default("11111111") @db.VarChar(8)
   t_lieu             t_lieu? @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_PLANNING_ALARME")
 
-  @@index([Id_Lieu], map: "PlanningAlarme_IdLieu_IDX")
+  @@index([Id_Lieu], map: "IDX_Id_Lieu")
 }
 
 model t_planning_consigne {

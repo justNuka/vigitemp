@@ -48,7 +48,7 @@ const createUserSchema = z.object({
   prenom: z.string().min(1, "Le prénom est requis"),
   email: z.string().email("Email invalide"),
   profileId: z.string().min(1, "Le profil est requis"),
-  hasExpiryDate: z.boolean().default(false),
+  hasExpiryDate: z.boolean(),
   expiryDate: z.date().optional(),
 }).refine((data) => data.password === data.passwordConfirm, {
   message: "Les mots de passe ne correspondent pas",
@@ -63,7 +63,7 @@ const editUserSchema = z.object({
   prenom: z.string().min(1, "Le prénom est requis"),
   email: z.string().email("Email invalide"),
   profileId: z.string().min(1, "Le profil est requis"),
-  hasExpiryDate: z.boolean().default(false),
+  hasExpiryDate: z.boolean(),
   expiryDate: z.date().optional(),
   password: z.string().optional(),
   passwordConfirm: z.string().optional(),
@@ -88,6 +88,11 @@ export function UsersClient({ users }: Props) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  
+  // État pour les filtres et la recherche
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterProfile, setFilterProfile] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
 
   const form = useForm<CreateUserFormValues>({
     resolver: zodResolver(createUserSchema),
@@ -101,7 +106,7 @@ export function UsersClient({ users }: Props) {
       profileId: "",
       hasExpiryDate: false,
       expiryDate: undefined,
-    },
+    } as CreateUserFormValues,
   });
 
   const hasExpiryDate = form.watch("hasExpiryDate");
@@ -117,14 +122,14 @@ export function UsersClient({ users }: Props) {
       expiryDate: undefined,
       password: "",
       passwordConfirm: "",
-    },
+    } as EditUserFormValues,
   });
 
   const hasEditExpiryDate = editForm.watch("hasExpiryDate");
 
   // Validation en temps réel du mot de passe
   const currentPassword = form.watch("password");
-  const validation = rules ? validatePassword(currentPassword, rules) : null;
+  const validation = rules ? validatePassword(currentPassword, rules as any) : null;
 
   const generatePassword = () => {
     if (!rules) return;
@@ -235,6 +240,35 @@ export function UsersClient({ users }: Props) {
     });
     setIsEditDialogOpen(true);
   };
+
+  // Filtrer les utilisateurs selon les critères
+  const filteredUsers = users.filter((user) => {
+    // Filtre de recherche (login, nom, prénom, email)
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = 
+      user.username.toLowerCase().includes(searchLower) ||
+      user.displayName.toLowerCase().includes(searchLower) ||
+      user.email?.toLowerCase().includes(searchLower) ||
+      user.nom?.toLowerCase().includes(searchLower) ||
+      user.prenom?.toLowerCase().includes(searchLower);
+
+    if (!matchesSearch) return false;
+
+    // Filtre par profil
+    if (filterProfile && user.role !== filterProfile) {
+      return false;
+    }
+
+    // Filtre par statut
+    if (filterStatus === "active" && !user.isActive) {
+      return false;
+    }
+    if (filterStatus === "inactive" && user.isActive) {
+      return false;
+    }
+
+    return true;
+  });
 
   const onSubmit = (data: CreateUserFormValues) => {
     // Vérifier les règles de mot de passe
@@ -821,50 +855,123 @@ export function UsersClient({ users }: Props) {
         <CardHeader>
           <CardTitle>Utilisateurs</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Login</TableHead>
-                <TableHead>Nom complet</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Profil</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.username}</TableCell>
-                  <TableCell>{user.displayName}</TableCell>
-                  <TableCell className="text-muted-foreground">{user.email || "-"}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="gap-1">
-                      <Shield className="h-3 w-3" />
-                      {user.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={user.isActive ? "default" : "secondary"}>
-                      {user.isActive ? "Actif" : "Inactif"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditUser(user)}
-                      className="gap-2"
-                    >
-                      <Pencil className="h-4 w-4" />
-                      Modifier
-                    </Button>
-                  </TableCell>
+        <CardContent className="space-y-4">
+          {/* Filtres et recherche */}
+          <div className="space-y-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+              {/* Champ de recherche */}
+              <div className="flex-1">
+                <label htmlFor="search" className="text-sm font-medium block mb-2">
+                  Rechercher
+                </label>
+                <Input
+                  id="search"
+                  placeholder="Login, nom, email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Filtre par profil */}
+              <div className="sm:w-48">
+                <label htmlFor="profile-filter" className="text-sm font-medium block mb-2">
+                  Profil
+                </label>
+                <Select value={filterProfile || ""} onValueChange={(value) => setFilterProfile(value || null)}>
+                  <SelectTrigger id="profile-filter">
+                    <SelectValue placeholder="Tous les profils" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Tous les profils</SelectItem>
+                    {profiles?.map((profile) => (
+                      <SelectItem key={profile.id} value={profile.name}>
+                        {profile.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Filtre par statut */}
+              <div className="sm:w-48">
+                <label htmlFor="status-filter" className="text-sm font-medium block mb-2">
+                  Statut
+                </label>
+                <Select value={filterStatus || ""} onValueChange={(value) => setFilterStatus(value || null)}>
+                  <SelectTrigger id="status-filter">
+                    <SelectValue placeholder="Tous les statuts" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Tous les statuts</SelectItem>
+                    <SelectItem value="active">Actif</SelectItem>
+                    <SelectItem value="inactive">Inactif</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Afficher le nombre de résultats */}
+            <div className="text-sm text-muted-foreground">
+              {filteredUsers.length} utilisateur{filteredUsers.length !== 1 ? "s" : ""} 
+              {(searchQuery || filterProfile || filterStatus) ? " (filtré)" : ""}
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Login</TableHead>
+                  <TableHead>Nom complet</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Profil</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.length > 0 ? (
+                  filteredUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.username}</TableCell>
+                      <TableCell>{user.displayName}</TableCell>
+                      <TableCell className="text-muted-foreground">{user.email || "-"}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="gap-1">
+                          <Shield className="h-3 w-3" />
+                          {user.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={user.isActive ? "default" : "secondary"}>
+                          {user.isActive ? "Actif" : "Inactif"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditUser(user)}
+                          className="gap-2"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Modifier
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      Aucun utilisateur ne correspond aux critères de recherche
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </main>

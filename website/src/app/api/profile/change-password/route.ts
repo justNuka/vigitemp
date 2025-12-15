@@ -70,27 +70,38 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 6. Récupérer les règles de mot de passe
+    // 6. Récupérer les règles de mot de passe depuis SECURITE_MOT_DE_PASSE
     const rulesParams = await prisma.t_parametre.findMany({
       where: {
-        Section: "security",
-        MotCle: {
-          startsWith: "password_",
-        },
+        Section: "SECURITE_MOT_DE_PASSE",
       },
       select: {
-        MotCle: true,
+        Mot_Cle: true,
+        Valeur: true,
+      },
+    });
+
+    // Récupérer les paramètres CFR21
+    const cfr21Params = await prisma.t_parametre.findMany({
+      where: {
+        Section: "CFR21",
+      },
+      select: {
+        Mot_Cle: true,
         Valeur: true,
       },
     });
 
     const rules: PasswordRules = {
-      min_length: parseInt(rulesParams.find(p => p.MotCle === "password_min_length")?.Valeur || "8", 10),
-      min_uppercase: parseInt(rulesParams.find(p => p.MotCle === "password_min_uppercase")?.Valeur || "1", 10),
-      min_lowercase: parseInt(rulesParams.find(p => p.MotCle === "password_min_lowercase")?.Valeur || "1", 10),
-      min_numbers: parseInt(rulesParams.find(p => p.MotCle === "password_min_numbers")?.Valeur || "1", 10),
-      min_special: parseInt(rulesParams.find(p => p.MotCle === "password_min_special")?.Valeur || "1", 10),
-      history_count: 0, // Not used anymore, but kept for type compatibility
+      min_length: parseInt(rulesParams.find(p => p.Mot_Cle === "LONGUEUR_MINIMALE")?.Valeur || "8", 10),
+      min_uppercase: parseInt(rulesParams.find(p => p.Mot_Cle === "MIN_LETTRES_MAJUSCULES")?.Valeur || "1", 10),
+      min_lowercase: parseInt(rulesParams.find(p => p.Mot_Cle === "MIN_LETTRES_MINUSCULES")?.Valeur || "1", 10),
+      min_numbers: parseInt(rulesParams.find(p => p.Mot_Cle === "MIN_CHIFFRES")?.Valeur || "1", 10),
+      min_special: parseInt(rulesParams.find(p => p.Mot_Cle === "MIN_CARACTERES_SPECIAUX")?.Valeur || "1", 10),
+      cfr21_enabled: cfr21Params.find(p => p.Mot_Cle === "ACTIVATION_NORME_CFR21")?.Valeur === "1" || cfr21Params.find(p => p.Mot_Cle === "ACTIVATION_NORME_CFR21")?.Valeur?.toLowerCase() === "true" || false,
+      history_count: parseInt(cfr21Params.find(p => p.Mot_Cle === "NOMBRE_ANCIENS_MOT_DE_PASSE")?.Valeur || "5", 10),
+      expiry_days: parseInt(cfr21Params.find(p => p.Mot_Cle === "JOURS_VALIDITE_MOT_DE_PASSE")?.Valeur || "90", 10),
+      expiry_enabled: cfr21Params.find(p => p.Mot_Cle === "ACTIVATION_EXPIRATION_MOT_DE_PASSE")?.Valeur === "1" || cfr21Params.find(p => p.Mot_Cle === "ACTIVATION_EXPIRATION_MOT_DE_PASSE")?.Valeur?.toLowerCase() === "true" || false,
     };
 
     // 7. Valider le nouveau mot de passe

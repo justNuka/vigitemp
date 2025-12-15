@@ -5,19 +5,19 @@ export async function GET() {
   try {
     // Get total locations
     const totalLocations = await prisma.t_lieu.count({
-      where: { Archive: false },
+      where: { Est_Archive: false },
     });
 
-    // Get active alarms (not acknowledged = Acquite false, regardless of DateHeureFin)
+    // Get active alarms (not acknowledged = Est_Acquitee false, regardless of DateHeureFin)
     const activeAlarms = await prisma.t_alarme.count({
       where: {
-        Acquite: false,
+        Est_Acquitee: false,
       },
     });
 
     // Get location status counts from t_lieu (Lieu_Etat: O=ok, A=alarme, P=prealarm)
     const locations = await prisma.t_lieu.findMany({
-      where: { Archive: false },
+      where: { Est_Archive: false },
       select: { Lieu_Etat: true },
     });
 

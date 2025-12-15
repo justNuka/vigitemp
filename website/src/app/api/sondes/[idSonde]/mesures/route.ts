@@ -33,9 +33,9 @@ export async function GET(
 
     // Récupérer les 125 dernières mesures depuis ts_graphique
     const mesures = await prismaMesure.tm_graphique.findMany({
-      where: { IdSonde: sondeId },
+      where: { Id_Sonde: sondeId },
       select: {
-        DateHeureMesure: true,
+        Date_Heure_Mesure: true,
         Valeur: true,
         Unite: true,
         Resistance: true,
@@ -43,11 +43,11 @@ export async function GET(
         Consigne_Sup: true,
         Consigne_Inf: true,
         Frequence: true,
-        IdLieu: true,
+        Id_Lieu: true,
         Etat_Alarme: true,
       },
       orderBy: {
-        DateHeureMesure: "desc",
+        Date_Heure_Mesure: "desc",
       },
       take: 125,
     });
@@ -55,7 +55,7 @@ export async function GET(
     // Récupérer le timestamp de la dernière mesure
     const derniereMaj =
       mesures.length > 0
-        ? mesures[0].DateHeureMesure.toISOString()
+        ? mesures[0].Date_Heure_Mesure.toISOString()
         : new Date().toISOString();
 
     // Inverser l'ordre pour que le plus ancien soit en premier (pour les graphs)

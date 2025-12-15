@@ -23,7 +23,7 @@ export async function GET(
       where: { Id_Lieu: locationId },
       include: {
         t_sonde: {
-          where: { Sonde_Reformee: false },
+          where: { Est_Sonde_Reformee: false },
           select: {
             Id_Sonde: true,
             Sonde_Numero_Serie: true,
@@ -77,7 +77,7 @@ export async function PATCH(
 
     const updateData: any = {};
     if (data.name) updateData.Nom_Lieu = data.name;
-    if (data.site !== undefined) updateData.IdSite = data.site;
+    if (data.site !== undefined) updateData.Id_Site = data.site;
 
     const location = await prisma.t_lieu.update({
       where: { Id_Lieu: locationId },

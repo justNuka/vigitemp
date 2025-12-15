@@ -22,23 +22,23 @@ export async function ServerSensors(): Promise<SensorWithLocation[]> {
     const sensorsWithMeasurements = await Promise.all(
       locations.map(async (location) => {
         // Récupérer la dernière mesure
-        const lastMeasurement = await prismaMesure.tm_mesure.findFirst({
+        const lastMeasurement = await prismaMesure.tm_mesures.findFirst({
           where: {
-            IdLieu: location.Id_Lieu,
+            Id_Lieu: location.Id_Lieu,
           },
           orderBy: {
-            DateHeureMesure: "desc",
+            Date_Heure_Mesure: "desc",
           },
           select: {
             Valeur: true,
-            DateHeureMesure: true,
-            Etat_Alarme: true,
+            Date_Heure_Mesure: true,
+            Est_Etat_Alarme: true,
           },
         });
 
         // Déterminer le statut basé sur les alarmes
         const status: "ok" | "warning" | "critical" = 
-          lastMeasurement?.Etat_Alarme === true ? "critical" :
+          lastMeasurement?.Est_Etat_Alarme === true ? "critical" :
           "ok";
 
         return {
@@ -49,7 +49,7 @@ export async function ServerSensors(): Promise<SensorWithLocation[]> {
           currentValue: lastMeasurement?.Valeur ?? null,
           minThreshold: 0, // À récupérer de la base
           maxThreshold: 25, // À récupérer de la base
-          lastMeasurement: lastMeasurement?.DateHeureMesure ?? null,
+          lastMeasurement: lastMeasurement?.Date_Heure_Mesure ?? null,
           isActive: location.Lieu_Etat === "A",
           status,
           location: {

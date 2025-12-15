@@ -16,17 +16,17 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const site = searchParams.get("site");
 
-    const where: any = { Archive: false };
+    const where: any = { Est_Archive: false };
 
     if (site) {
-      where.IdSite = parseInt(site);
+      where.Id_Site = parseInt(site);
     }
 
     const locations = await prisma.t_lieu.findMany({
       where,
       include: {
         t_sonde: {
-          where: { Sonde_Reformee: false },
+          where: { Est_Sonde_Reformee: false },
           select: {
             Id_Sonde: true,
             Etat_Sonde: true,
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       data: {
         Nom_Lieu: data.name,
         Id_Site: data.site ? parseInt(data.site) : null,
-        Archive: false,
+        Est_Archive: false,
         Lieu_Etat: "O",
       },
     });

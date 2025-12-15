@@ -28,12 +28,12 @@ export async function GET(req: NextRequest) {
     });
 
     const formatted = logs.map((log: any) => ({
-      id: log.IdJournal,
-      timestamp: log.DateHeureJournal?.toISOString() || new Date().toISOString(),
+      id: log.Id_Journal,
+      timestamp: log.Date_Heure_Journal?.toISOString() || new Date().toISOString(),
       userId: null,
-      action: log.CodeJournal || "unknown",
+      action: log.Code_Journal || "unknown",
       details: log.Commentaire || "",
-      sensorId: log.IdLieu || null,
+      sensorId: log.Id_Lieu || null,
     }));
 
     return NextResponse.json(formatted);

@@ -25,8 +25,8 @@ export async function POST(
     const alarm = await prisma.t_alarme.update({
       where: { Id_Alarme: alarmId },
       data: {
-        Acquitee: true,
-        Tel_Acquitee: true,
+        Est_Acquitee: true,
+        Est_Tel_Acquitee: true,
       },
       include: {
         t_lieu: {
