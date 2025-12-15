@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
       select: {
         Id_Utilisateur: true,
         Mot_De_Passe: true,
+        Est_Mot_De_Passe_Temporaire: true,
       },
     });
 
@@ -134,30 +135,40 @@ export async function POST(req: NextRequest) {
     // 9. Hasher le nouveau mot de passe
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // 10. Sauvegarder l'ancien mot de passe dans l'historique
+    // 10. Vérifier si c'est une première connexion (mdp temporaire)
+    const isFirstPasswordChange = dbUser.Est_Mot_De_Passe_Temporaire === true;
+
+    // 11. Sauvegarder l'ancien mot de passe dans l'historique
+    // Si c'est la première connexion, marquer le flag Est_Premiere_Connexion
     await prisma.t_ancien_mot_de_passe.create({
       data: {
         Id_Utilisateur: user.userId,
         Mot_De_Passe: dbUser.Mot_De_Passe as string,
+        Est_Premiere_Connexion: isFirstPasswordChange,
       },
     });
 
-    // 11. Mettre à jour le mot de passe et la date de dernière modification
+    // 12. Mettre à jour le mot de passe, la date de modification et le flag temporaire
     await prisma.t_utilisateur.update({
       where: { Id_Utilisateur: user.userId },
       data: {
         Mot_De_Passe: hashedPassword,
         Date_Derniere_Modification_MDP: new Date(),
+        Est_Mot_De_Passe_Temporaire: false, // Plus temporaire après première modif
       },
     });
 
-    // 12. Logger le changement de mot de passe
+    // 13. Logger le changement de mot de passe
     const { ip } = getRequestContext(req);
+    const logMessage = isFirstPasswordChange 
+      ? "Première modification du mot de passe (temporaire)" 
+      : "Changement de mot de passe";
     log.auth.passwordChange(user.username, user.userId, ip, false);
 
-    // 13. Succès !
+    // 14. Succès !
     return NextResponse.json({
       message: "Mot de passe changé avec succès",
+      isFirstPasswordChange,
     });
 
   } catch (error) {

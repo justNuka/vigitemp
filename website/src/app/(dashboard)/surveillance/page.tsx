@@ -1,3 +1,5 @@
+"use cache";
+
 import { Suspense } from "react";
 import { Metadata } from "next";
 import { ServerSensors } from "./server-sensors";

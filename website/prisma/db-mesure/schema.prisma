@@ -12,7 +12,7 @@ model tm_graphique {
   Id_Graphique            Int
   Date_Heure_Mesure       DateTime @default(now()) @db.DateTime(0)
   Valeur                  Float?   @db.Float
-  Resistance              Float?   @db.Float
+  Valeur_Brute            Float?   @db.Float
   Nb_Decimal              Int?
   Consigne                Float?   @db.Float
   Consigne_Sup            Float?   @db.Float
@@ -131,8 +131,8 @@ model tm_journal_histo {
 model tm_mesure_calibrage {
   Id_Mesure_Calibrage Int      @default(autoincrement())
   Id_Serveur_BDD      Int      @default(0)
-  Valeur              String   @default("") @db.VarChar(50)
-  Resistance          String   @default("") @db.VarChar(50)
+  Valeur              Float    @default(0) @db.Float
+  Valeur_Brute        Float    @default(0) @db.Float
   Sonde_Numero_Serie  String   @default("") @db.VarChar(50)
   Est_Valeur_Null     Int      @db.TinyInt
   Date_Heure          DateTime @default(now()) @db.Timestamp(0)
@@ -140,16 +140,16 @@ model tm_mesure_calibrage {
   @@id([Id_Mesure_Calibrage, Id_Serveur_BDD])
   @@index([Sonde_Numero_Serie], map: "IDX_Sonde_Numero_Serie")
   @@index([Date_Heure], map: "IDX_Date_Heure")
-  @@index([Resistance], map: "IDX_Resistance")
   @@index([Valeur], map: "IDX_Valeur")
   @@index([Est_Valeur_Null], map: "IDX_Est_Valeur_Null")
+  @@index([Valeur_Brute], map: "IDX_Valeur_Brute")
 }
 
 model tm_mesure_calibrage_etalon {
   Id_Mesure_Calibrage_Etalon Int      @default(autoincrement())
   Id_Serveur_BDD             Int      @default(0)
-  Valeur                     String   @default("") @db.VarChar(50)
-  Resistance                 String   @default("") @db.VarChar(50)
+  Valeur                     Float    @default(0) @db.Float
+  Valeur_Brute               Float    @default(0) @db.Float
   Etalon_Numero_Serie        String   @default("") @db.VarChar(50)
   Est_Valeur_Null            Int      @db.TinyInt
   Date_Heure                 DateTime @default(now()) @db.Timestamp(0)
@@ -157,15 +157,15 @@ model tm_mesure_calibrage_etalon {
   @@id([Id_Mesure_Calibrage_Etalon, Id_Serveur_BDD])
   @@index([Etalon_Numero_Serie], map: "IDX_Etalon_Numero_Serie")
   @@index([Date_Heure], map: "IDX_Date_Heure")
-  @@index([Resistance], map: "IDX_Resistance")
   @@index([Valeur], map: "IDX_Valeur")
   @@index([Est_Valeur_Null], map: "IDX_Est_Valeur_Null")
+  @@index([Valeur_Brute], map: "IDX_Valeur_Brute")
 }
 
 model tm_mesure_etalon {
   Id_Mesure_Etalon    Int      @default(autoincrement())
   Id_Serveur_BDD      Int      @default(0)
-  Resistance          Float
+  Valeur_Brute        Float    @db.Float
   Etalon_Numero_Serie String   @default("") @db.VarChar(50)
   Est_Valeur_Null     Int      @db.TinyInt
   Date_Heure          DateTime @db.DateTime(0)
@@ -174,9 +174,9 @@ model tm_mesure_etalon {
   @@id([Id_Mesure_Etalon, Id_Serveur_BDD])
   @@index([Date_Heure], map: "IDX_Date_Heure")
   @@index([Message_Erreur], map: "IDX_Message_Erreur")
-  @@index([Resistance], map: "IDX_Resistance")
   @@index([Etalon_Numero_Serie], map: "IDX_Etalon_Numero_Serie")
   @@index([Est_Valeur_Null], map: "IDX_Est_Valeur_Null")
+  @@index([Valeur_Brute], map: "IDX_Valeur_Brute")
 }
 
 model tm_mesure_etalonnage {
@@ -184,8 +184,8 @@ model tm_mesure_etalonnage {
   Id_Serveur_BDD       Int       @default(0)
   Sonde_Numero_serie   String?   @db.VarChar(50)
   Numero_Ordre         Int?
-  Mesure_Sonde         String?   @db.VarChar(50)
-  Mesure_Etalon        String?   @db.VarChar(50)
+  Mesure_Sonde         Float?    @db.Float
+  Mesure_Etalon        Float?    @db.Float
   Date_Heure           DateTime? @db.DateTime(0)
 
   @@id([Id_Mesure_Etalonnage, Id_Serveur_BDD])
@@ -196,8 +196,8 @@ model tm_mesures_histo {
   Id_Mesure               Int      @default(autoincrement())
   Id_Serveur_BDD          Int      @default(0)
   Date_Heure_Mesure       DateTime @default(now()) @db.DateTime(0)
-  Valeur                  Float?
-  Resistance              Float?
+  Valeur                  Float?   @db.Float
+  Valeur_Brute            Float?   @db.Float
   Nb_decimal              Int?     @db.TinyInt
   Consigne                Float?   @db.Float
   Consigne_Sup            Float?   @db.Float
@@ -224,7 +224,7 @@ model tm_mesures_histo {
 model tm_mesures_test {
   Id_Mesure_Test     Int      @default(autoincrement())
   Id_Serveur_BDD     Int      @default(0)
-  Resistance         Float
+  Valeur_Brute       Float    @db.Float
   Sonde_Numero_Serie String   @unique(map: "Sonde") @default("") @db.VarChar(50)
   Est_Valeur_Null    Int      @db.TinyInt
   Date_Heure         DateTime @default(now()) @db.Timestamp(0)
@@ -241,7 +241,7 @@ model tm_mesures_test {
 model tm_mesures_test_etalon {
   Id_Mesure_Test_Etalon Int      @default(autoincrement())
   Id_Serveur_BDD        Int      @default(0)
-  Resistance            Float
+  Valeur_Brute          Float    @db.Float
   Etalon_Numero_Serie   String   @unique(map: "Etalon") @default("") @db.VarChar(50)
   Est_Valeur_Null       Int      @db.TinyInt
   Date_Heure            DateTime @default(now()) @db.Timestamp(0)

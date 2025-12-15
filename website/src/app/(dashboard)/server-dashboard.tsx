@@ -20,7 +20,7 @@ export async function ServerDashboardStats() {
       prisma.t_lieu.count({ where: { Est_Archive: false } }),
       prisma.t_alarme.count({
         where: {
-          Est_Acquitee: false,
+          Est_Acquittee: false,
         },
       }),
       prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "O" } }),
@@ -98,7 +98,7 @@ export async function ServerActiveAlarms() {
 
   const alarms = await prisma.t_alarme.findMany({
     where: {
-      Est_Acquitee: false,
+      Est_Acquittee: false,
     },
     include: {
       t_lieu: {
@@ -124,12 +124,12 @@ export async function ServerActiveAlarms() {
     sensorId: alarm.Id_Lieu?.toString() || "0",
     locationId: alarm.t_lieu?.Id_Site?.toString() || "0",
     type: alarm.Type === "H" ? ("high" as const) : ("low" as const),
-    status: alarm.Est_Acquitee ? ("acknowledged" as const) : ("active" as const),
+    status: alarm.Est_Acquittee ? ("acknowledged" as const) : ("active" as const),
     value: alarm.Valeur !== null ? parseFloat(alarm.Valeur.toString()) : 0,
     threshold: 0, // Pas de champ threshold direct dans t_alarme
     triggeredAt: alarm.Date_Heure_Debut || new Date(),
-    acknowledgedAt: alarm.Est_Acquitee ? alarm.Date_Heure_Fin : null,
-    acknowledgedBy: alarm.Est_Acquitee ? "user" : null,
+    acknowledgedAt: alarm.Est_Acquittee ? alarm.Date_Heure_Fin : null,
+    acknowledgedBy: alarm.Est_Acquittee ? "user" : null,
     resolvedAt: alarm.Date_Heure_Fin,
     comment: null,
     sensor: {

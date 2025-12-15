@@ -54,7 +54,7 @@ model t_alarme {
   Date_Heure_Debut_Alarme_Vrai DateTime? @db.DateTime(0)
   Est_Alarme_Pour_VigiTel      Boolean?  @default(false)
   Est_Mail_Envoye              Boolean?
-  Est_Tel_Acquitee             Boolean?
+  Est_Tel_Acquittee            Boolean?
   t_lieu                       t_lieu?   @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ALARME")
 
   @@index([Est_Acquittee], map: "IDX_Est_Acquittee")
@@ -556,6 +556,7 @@ model t_ancien_mot_de_passe {
   Id_Ancien_Mot_De_Passe Int            @id @default(autoincrement())
   Id_Utilisateur         Int?
   Mot_De_Passe           String?        @db.VarChar(100)
+  Est_Premiere_Connexion Boolean?       @default(false)
   t_utilisateur          t_utilisateur? @relation(fields: [Id_Utilisateur], references: [Id_Utilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_UTILISATEUR_ANCIENMDP_new")
 
   @@index([Id_Utilisateur], map: "IDX_Id_Utilisateur")

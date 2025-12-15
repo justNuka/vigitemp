@@ -40,10 +40,10 @@ export async function GET(req: NextRequest) {
       locationName: alarm.t_lieu?.Nom_Lieu || "Unknown",
       type: alarm.Type === "H" ? "high" : alarm.Type === "B" ? "low" : "temperature",
       severity: alarm.Type === "H" || alarm.Type === "B" ? "critical" : "warning",
-      status: alarm.Date_Heure_Fin ? "resolved" : alarm.Est_Acquitee ? "acknowledged" : "active",
+      status: alarm.Date_Heure_Fin ? "resolved" : alarm.Est_Acquittee ? "acknowledged" : "active",
       message: `Alarme ${alarm.Type === "H" ? "haute" : "basse"} - ${alarm.Valeur}°C`,
       timestamp: alarm.Date_Heure_Debut?.toISOString() || new Date().toISOString(),
-      acknowledgedAt: alarm.Est_Acquitee ? alarm.Date_Heure_Debut?.toISOString() : null,
+      acknowledgedAt: alarm.Est_Acquittee ? alarm.Date_Heure_Debut?.toISOString() : null,
       acknowledgedBy: null,
       resolvedAt: alarm.Date_Heure_Fin?.toISOString() || null,
     }));

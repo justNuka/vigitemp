@@ -8,10 +8,10 @@ export async function GET() {
       where: { Est_Archive: false },
     });
 
-    // Get active alarms (not acknowledged = Est_Acquitee false, regardless of DateHeureFin)
+    // Get active alarms (not acknowledged = Est_Acquittee false, regardless of DateHeureFin)
     const activeAlarms = await prisma.t_alarme.count({
       where: {
-        Est_Acquitee: false,
+        Est_Acquittee: false,
       },
     });
 
