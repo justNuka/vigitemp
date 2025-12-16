@@ -21,7 +21,7 @@ export function withLogging(
     // Extraire les infos utilisateur du token JWT si présent
     let user: { username?: string; userId?: number } = {};
     try {
-      const token = req.cookies.get("token")?.value;
+      const token = req.cookies.get("auth-token")?.value;
       if (token) {
         const payload = verifyToken(token);
 
@@ -96,7 +96,7 @@ export function getRequestContext(req: NextRequest): {
   let user: { username: string; userId: number; profile: string } | undefined;
   
   try {
-    const token = req.cookies.get("token")?.value;
+    const token = req.cookies.get("auth-token")?.value;
     if (token) {
       const payload = verifyToken(token);
       if(payload) {
