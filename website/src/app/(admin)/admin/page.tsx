@@ -1,181 +1,148 @@
-'use client'
+"use client";
 
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { Spinner } from '@heroui/react'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { 
+  BookOpen, 
+  Users, 
+  AlertTriangle, 
+  CheckCircle2,
+  Database,
+  Clock
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/data-table/data-table";
+import { connectedUsersColumns, type ConnectedUser } from "@/components/data-table/connected-users-columns";
+import { activeAlarmsColumns, type ActiveAlarm } from "@/components/data-table/active-alarms-columns";
+import { acknowledgmentColumns, type AcknowledgmentRecord } from "@/components/data-table/acknowledgment-columns";
+import { systemLogsColumns, type SystemLog } from "@/components/data-table/system-logs-columns";
+import { backupColumns, type BackupRecord } from "@/components/data-table/backup-columns";
 
-export default function AdminPage() {
-  const router = useRouter()
-  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
+// Mock data
+const mockConnectedUsers: ConnectedUser[] = [
+  { id: "1", login: "jdupont", nom: "Dupont", prenom: "Jean", poste: "Superviseur", ip: "192.168.1.10" },
+  { id: "2", login: "mmartinez", nom: "Martinez", prenom: "Marie", poste: "Technicien", ip: "192.168.1.20" },
+];
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await fetch('/api/me')
-        if (!res.ok) {
-          router.push('/login')
-          return
-        }
+const mockActiveAlarms: ActiveAlarm[] = [
+  { id: "1", sonde: "SONDE-001", lieu: "Chambre froide A", valeur: "2.5°C", seuil: "< 0°C", duree: "2h 15min", statut: "Active" },
+  { id: "2", sonde: "SONDE-005", lieu: "Zone 2", valeur: "-15°C", seuil: "> -20°C", duree: "45min", statut: "Active" },
+];
 
-        const user = await res.json()
+const mockAcknowledgments: AcknowledgmentRecord[] = [
+  { id: "1", dateHeure: "2025-12-16 14:30", utilisateur: "jdupont", action: "Acquittement", sonde: "SONDE-001", alarme: "Température basse" },
+  { id: "2", dateHeure: "2025-12-16 13:15", utilisateur: "mmartinez", action: "Escalade", sonde: "SONDE-005", alarme: "Alerte critique" },
+];
 
-        // Vérifier si l'utilisateur est administrateur
-        if (user.profil !== 'Administrateurs') {
-          router.push('/dashboard')
-          return
-        }
+const mockSystemLogs: SystemLog[] = [
+  { id: "1", dateHeure: "2025-12-16 15:00", utilisateur: "admin", action: "Modification paramètres", details: "CFR21 activé" },
+  { id: "2", dateHeure: "2025-12-16 14:45", utilisateur: "jdupont", action: "Connexion", details: "Login successful" },
+];
 
-        setIsAuthorized(true)
-      } catch (error) {
-        console.error('Auth check failed:', error)
-        router.push('/login')
-      }
-    }
+const mockBackups: BackupRecord[] = [
+  { id: "1", etat: "Réussi", dateHeure: "2025-12-16 03:00", details: "Sauvegarde complète - 2.5 GB" },
+  { id: "2", etat: "Réussi", dateHeure: "2025-12-15 03:00", details: "Sauvegarde complète - 2.4 GB" },
+];
 
-    checkAuth()
-  }, [router])
-
-  if (isAuthorized === null) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Spinner />
-      </div>
-    )
-  }
-
-  if (!isAuthorized) {
-    return null
-  }
-
+export default function AdminDashboardPage() {
   return (
-    <div className="p-6 space-y-6">
-      {/* Dashboard Summary Cards */}
+    <div className="flex-1 space-y-6 p-6">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold mb-6">Tableau de Bord Administrateur</h1>
-        <p className="text-gray-500 mb-8">Gestion centralisée du système</p>
+        <h1 className="text-3xl font-bold tracking-tight">Tableau de Bord Administrateur</h1>
+        <p className="text-muted-foreground mt-2">Gestion centralisée du système</p>
       </div>
 
-      {/* Magic Bento - System Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-max">
-        {/* Journal Système */}
-        <div className="md:col-span-2 lg:row-span-2 bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
-          <h2 className="text-lg font-semibold mb-4">Journal Système</h2>
-          <div className="overflow-auto max-h-96">
-            <p className="text-gray-500 text-sm">Datatable - Colonnes à définir</p>
-          </div>
-        </div>
-
+      {/* Section 1: Important items (2 columns) */}
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* Utilisateurs Connectés */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
-          <h2 className="text-lg font-semibold mb-4">Utilisateurs Connectés</h2>
-          <div className="h-64 overflow-auto">
-            <p className="text-gray-500 text-sm">Datatable - Colonnes à définir</p>
-          </div>
-        </div>
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Utilisateurs Connectés
+            </CardTitle>
+            <CardDescription>Sessions actives</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DataTable columns={connectedUsersColumns} data={mockConnectedUsers} />
+          </CardContent>
+        </Card>
 
         {/* Alarmes en Cours */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
-          <h2 className="text-lg font-semibold mb-4">Alarmes en Cours</h2>
-          <div className="h-64 overflow-auto">
-            <p className="text-gray-500 text-sm">Datatable - Colonnes à définir</p>
-          </div>
-        </div>
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" />
+              Alarmes en Cours
+            </CardTitle>
+            <CardDescription>État actuel</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DataTable columns={activeAlarmsColumns} data={mockActiveAlarms} />
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Acquittements d'Alarmes */}
-        <div className="md:col-span-2 bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
-          <h2 className="text-lg font-semibold mb-4">Journal Acquittements Alarmes</h2>
-          <div className="overflow-auto max-h-64">
-            <p className="text-gray-500 text-sm">Datatable - Colonnes à définir</p>
-          </div>
-        </div>
+      {/* Section 2: Journal acquittements (full width, important) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5" />
+            Journal Acquittements Alarmes
+          </CardTitle>
+          <CardDescription>Historique des actions</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DataTable columns={acknowledgmentColumns} data={mockAcknowledgments} />
+        </CardContent>
+      </Card>
+
+      {/* Section 3: Less important items (smaller, at bottom) */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Journal Système */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="w-5 h-5" />
+              Journal Système
+            </CardTitle>
+            <CardDescription>Événements récents</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DataTable columns={systemLogsColumns} data={mockSystemLogs} />
+          </CardContent>
+        </Card>
 
         {/* Sauvegarde Système */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
-          <h2 className="text-lg font-semibold mb-4">Sauvegarde Système</h2>
-          <div className="space-y-3">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Dernière sauvegarde: N/A
-            </p>
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition">
-              Lancer Sauvegarde
-            </button>
-          </div>
-        </div>
-
-        {/* Lieux Non Affectés */}
-        <div className="md:col-span-2 bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
-          <h2 className="text-lg font-semibold mb-4">Lieux Non Affectés à des Utilisateurs</h2>
-          <div className="overflow-auto max-h-64">
-            <p className="text-gray-500 text-sm">Datatable - Colonnes à définir</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Magic Bento - Admin Pages */}
-      <div>
-        <h2 className="text-2xl font-bold mb-6 mt-12">Gestion</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <AdminPageCard
-            title="Gestion des Sites"
-            description="Créer, modifier et gérer les sites"
-            emoji="🏢"
-            href="/admin/sites"
-          />
-          <AdminPageCard
-            title="Gestion des Groupes"
-            description="Organiser les groupes de capteurs"
-            emoji="👥"
-            href="/admin/groupes"
-          />
-          <AdminPageCard
-            title="Gestion des Lieux"
-            description="Gérer les emplacements et zones de surveillance"
-            emoji="📍"
-            href="/admin/lieux"
-          />
-          <AdminPageCard
-            title="Gestion des Sondes"
-            description="Ajouter et configurer les capteurs"
-            emoji="📊"
-            href="/admin/sondes"
-          />
-          <AdminPageCard
-            title="Gestion des Utilisateurs"
-            description="Gérer les comptes et permissions"
-            emoji="👤"
-            href="/admin/utilisateurs"
-          />
-          <AdminPageCard
-            title="Paramètres Système"
-            description="Configuration générale et avancée"
-            emoji="⚙️"
-            href="/admin/parametres"
-          />
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Database className="w-5 h-5" />
+              Sauvegarde Système
+            </CardTitle>
+            <CardDescription>État et historique</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Dernière sauvegarde</p>
+              <p className="text-sm font-medium flex items-center gap-2 mt-1">
+                <Clock className="w-4 h-4" />
+                N/A
+              </p>
+            </div>
+            <Button className="w-full">Lancer Sauvegarde</Button>
+            <div className="mt-4">
+              <DataTable columns={backupColumns} data={mockBackups} />
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
-  )
-}
-
-function AdminPageCard({
-  title,
-  description,
-  emoji,
-  href,
-}: {
-  title: string
-  description: string
-  emoji: string
-  href: string
-}) {
-  return (
-    <a
-      href={href}
-      className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-700 p-6 hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-lg transition-all"
-    >
-      <div className="text-4xl mb-3">{emoji}</div>
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
-      <p className="text-sm text-gray-600 dark:text-gray-400">{description}</p>
-    </a>
-  )
+  );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePasswordRules } from "@/hooks/usePasswordRules";
 import { validatePassword, calculatePasswordStrength } from "@/lib/password-validation";
 import { Button } from "@/components/ui/button";
@@ -14,12 +14,13 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, XCircle, Loader2, Eye, EyeOff } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Eye, EyeOff, Mail, User, Shield, AlertTriangle, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { PageHeader } from "@/components/page-header";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import type { CurrentUser } from "@/lib/types";
 import {
   Form,
   FormControl,
@@ -47,9 +48,30 @@ export default function ProfilePage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [userInfo, setUserInfo] = useState<CurrentUser | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
 
   const { data: rules, isLoading: rulesLoading } = usePasswordRules();
   const { toast } = useToast();
+
+  // Charger les infos utilisateur
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch("/api/me");
+        if (response.ok) {
+          const data = await response.json();
+          setUserInfo(data);
+        }
+      } catch (err) {
+        console.error("Erreur lors du chargement des infos utilisateur:", err);
+      } finally {
+        setIsLoadingUser(false);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
 
   const form = useForm<ChangePasswordFormValues>({
     resolver: zodResolver(changePasswordSchema),
@@ -79,6 +101,29 @@ export default function ProfilePage() {
     if (strength < 75) return "Bon";
     return "Fort";
   };
+
+  // Calculer les jours restants avant changement de mdp requis
+  const getDaysUntilPasswordExpiry = () => {
+    if (!userInfo?.Date_Derniere_Modification_MDP || !userInfo?.cfr21?.enabled) {
+      return null;
+    }
+
+    const lastChangeDate = new Date(userInfo.Date_Derniere_Modification_MDP);
+    const expiryDate = new Date(lastChangeDate);
+    expiryDate.setDate(expiryDate.getDate() + userInfo.cfr21.passwordMaxAgeDays);
+
+    const today = new Date();
+    const daysRemaining = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    return {
+      daysRemaining,
+      expiryDate,
+      isExpired: daysRemaining <= 0,
+      isWarning: daysRemaining > 0 && daysRemaining <= 30,
+    };
+  };
+
+  const passwordExpiry = getDaysUntilPasswordExpiry();
 
   const onSubmit = async (data: ChangePasswordFormValues) => {
     setError(null);
@@ -114,7 +159,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (rulesLoading) {
+  if (rulesLoading || isLoadingUser) {
     return (
       <div className="flex h-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -131,17 +176,169 @@ export default function ProfilePage() {
       />
       
       <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
+        {/* Informations du compte */}
         <Card>
           <CardHeader>
-            <CardTitle>Changer le mot de passe</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Informations du compte
+            </CardTitle>
+            <CardDescription>
+              Vos données personnelles (en lecture seule)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Login */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Login</label>
+                <Input
+                  type="text"
+                  value={userInfo?.Login || ""}
+                  readOnly
+                  className="cursor-not-allowed opacity-75"
+                />
+              </div>
+
+              {/* Email */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Email</label>
+                <Input
+                  type="email"
+                  value={userInfo?.Adresse_Email || ""}
+                  readOnly
+                  className="cursor-not-allowed opacity-75"
+                />
+              </div>
+
+              {/* Nom */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Nom</label>
+                <Input
+                  type="text"
+                  value={userInfo?.Nom || ""}
+                  readOnly
+                  className="cursor-not-allowed opacity-75"
+                />
+              </div>
+
+              {/* Prénom */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Prénom</label>
+                <Input
+                  type="text"
+                  value={userInfo?.Prenom || ""}
+                  readOnly
+                  className="cursor-not-allowed opacity-75"
+                />
+              </div>
+
+              {/* Profil */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Profil</label>
+                <Input
+                  type="text"
+                  value={userInfo?.profil || ""}
+                  readOnly
+                  className="cursor-not-allowed opacity-75"
+                />
+              </div>
+
+              {/* Date de création */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Compte créé le</label>
+                <Input
+                  type="text"
+                  value={userInfo?.Date_Creation ? new Date(userInfo.Date_Creation).toLocaleDateString('fr-FR') : ""}
+                  readOnly
+                  className="cursor-not-allowed opacity-75"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Changement de mot de passe */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5" />
+              Sécurité
+            </CardTitle>
             <CardDescription>
               Modifiez votre mot de passe en respectant les règles de sécurité
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
+            {/* CFR21 Alert */}
+            {userInfo?.cfr21?.enabled && (
+              <div className="rounded-lg border-2 border-[#EABC00] bg-[#EABC00]/10 p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-[#EABC00] flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold text-sm text-[#EABC00] mb-1">Conformité CFR21 activée</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Votre compte est soumis à la norme CFR21. Vous devez changer votre mot de passe régulièrement.
+                    </p>
+                    {userInfo.cfr21.nonReuseable && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Les anciens mots de passe ne peuvent pas être réutilisés.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Dernière modification et date d'expiration */}
+                <div className="border-t border-[#EABC00]/20 pt-3 space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Dernière modification du mot de passe :</span>
+                    <span className="font-medium">
+                      {userInfo?.Date_Derniere_Modification_MDP
+                        ? new Date(userInfo.Date_Derniere_Modification_MDP).toLocaleDateString('fr-FR')
+                        : "Jamais"}
+                    </span>
+                  </div>
+
+                  {/* Password expiry info */}
+                  {userInfo?.Date_Derniere_Modification_MDP && passwordExpiry && (
+                    <div className={`flex items-center gap-3 p-2 rounded ${
+                      passwordExpiry.isExpired
+                        ? 'bg-red-500/10 border border-red-200'
+                        : passwordExpiry.isWarning
+                        ? 'bg-yellow-500/10 border border-yellow-200'
+                        : 'bg-green-500/10 border border-green-200'
+                    }`}>
+                      <Clock className={`w-4 h-4 flex-shrink-0 ${
+                        passwordExpiry.isExpired
+                          ? 'text-red-600'
+                          : passwordExpiry.isWarning
+                          ? 'text-yellow-600'
+                          : 'text-green-600'
+                      }`} />
+                      <span className={`text-sm font-medium ${
+                        passwordExpiry.isExpired
+                          ? 'text-red-700'
+                          : passwordExpiry.isWarning
+                          ? 'text-yellow-700'
+                          : 'text-green-700'
+                      }`}>
+                        {passwordExpiry.isExpired ? (
+                          <>🔴 Votre mot de passe a expiré - changement obligatoire</>
+                        ) : passwordExpiry.isWarning ? (
+                          <>⚠️ Vous devez changer votre mot de passe dans {passwordExpiry.daysRemaining} jour{passwordExpiry.daysRemaining > 1 ? 's' : ''}</>
+                        ) : (
+                          <>✓ Mot de passe valide pour {passwordExpiry.daysRemaining} jour{passwordExpiry.daysRemaining > 1 ? 's' : ''} ({new Date(passwordExpiry.expiryDate).toLocaleDateString('fr-FR')})</>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Formulaire changement MDP */}
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {/* Ancien mot de passe */}
                 <FormField
                   control={form.control}
                   name="oldPassword"

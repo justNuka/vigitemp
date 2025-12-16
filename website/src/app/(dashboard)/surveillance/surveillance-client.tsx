@@ -14,7 +14,7 @@ import type { SensorWithLocation, Location } from "@/lib/api";
 import type { Site, Group } from "./server-filters";
 
 type StatusFilter = "all" | "ok" | "warning" | "critical";
-type ViewMode = "status" | "tree";
+type ViewMode = "status" | "tree" | "graphs";
 
 interface FilterState {
   siteId: number | null;
@@ -53,7 +53,7 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Charger les sensors paginés via API
-  const { data: paginatedData, isFetching, hasNextPage, fetchNextPage, error, isError } = useQuery({
+  const { data: paginatedData, isFetching, error, isError } = useQuery({
     queryKey: ["sensors", page, filters.siteId, filters.groupIds],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -134,26 +134,27 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
     }
   }, []);
 
+  // TODO: Implement pagination with hasNextPage and fetchNextPage
   // Charger la page suivante
-  const handleLoadMore = () => {
-    if (hasNextPage) {
-      setPage(p => p + 1);
-    }
-  };
+  // const handleLoadMore = () => {
+  //   if (hasNextPage) {
+  //     setPage(p => p + 1);
+  //   }
+  // };
 
   // Intersection Observer pour infinite scroll optionnel
-  useEffect(() => {
-    if (!loadMoreRef.current) return;
+  // useEffect(() => {
+  //   if (!loadMoreRef.current) return;
 
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && hasNextPage && !isFetching) {
-        handleLoadMore();
-      }
-    });
+  //   const observer = new IntersectionObserver(([entry]) => {
+  //     if (entry.isIntersecting && hasNextPage && !isFetching) {
+  //       handleLoadMore();
+  //     }
+  //   });
 
-    observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetching]);
+  //   observer.observe(loadMoreRef.current);
+  //   return () => observer.disconnect();
+  // }, [hasNextPage, isFetching]);
 
   return (
     <>
@@ -223,8 +224,8 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
           />
-          {/* Load More Button */}
-          {hasNextPage && (
+          {/* Load More Button - TODO: Uncomment when pagination is enabled */}
+          {/* {hasNextPage && (
             <div ref={loadMoreRef} className="flex justify-center py-6">
               <Button
                 onClick={handleLoadMore}
@@ -239,7 +240,7 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
             <div className="text-center py-6 text-muted-foreground">
               Toutes les sondes sont chargées
             </div>
-          )}
+          )} */}
         </>
       ) : viewMode === "graphs" ? (
         <>
@@ -247,8 +248,8 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
             sensors={sensors}
             onSurveillanceToggle={handleSurveillanceToggle}
           />
-          {/* Load More Button */}
-          {hasNextPage && (
+          {/* Load More Button - TODO: Uncomment when pagination is enabled */}
+          {/* {hasNextPage && (
             <div ref={loadMoreRef} className="flex justify-center py-6">
               <Button
                 onClick={handleLoadMore}
@@ -258,7 +259,7 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
                 {isFetching ? "Chargement..." : "Charger plus"}
               </Button>
             </div>
-          )}
+          )} */}
         </>
       ) : (
         <>

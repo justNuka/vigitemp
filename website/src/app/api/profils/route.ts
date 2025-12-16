@@ -64,17 +64,16 @@ export async function GET(req: NextRequest) {
         id: profile.Id_Profil,
         name: profile.Profil_Utilisateur,
         description: profile.Commentaire,
-        mc2: profile.MC2,
         userCount,
         authorizations: profile.t_liaison_profil_autorisation.map((liaison) => ({
           id: liaison.t_autorisation.Id_Autorisation,
           code: liaison.t_autorisation.Code_Autorisation,
           label: liaison.t_autorisation.Libelle_Autorisation,
           description: liaison.t_autorisation.Commentaire,
-          fenAdmin: liaison.t_autorisation.Acces_Admin,
-          fenMetrologie: liaison.t_autorisation.Acces_Metrologie,
-          fenSurveillance: liaison.t_autorisation.Acces_Surveillance,
-          fenVigiLog: liaison.t_autorisation.Acces_VigiLog,
+          fenAdmin: liaison.t_autorisation.A_Acces_Admin,
+          fenMetrologie: liaison.t_autorisation.A_Acces_Metrologie,
+          fenSurveillance: liaison.t_autorisation.A_Acces_Surveillance,
+          fenVigiLog: liaison.t_autorisation.A_Acces_VigiLog,
         })),
       };
     }));
@@ -154,7 +153,6 @@ export async function POST(req: NextRequest) {
       data: {
         Profil_Utilisateur: data.name,
         Commentaire: data.description || null,
-        MC2: data.mc2,
       },
     });
 

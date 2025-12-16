@@ -152,10 +152,12 @@ export const authApi = {
     fetcher<void>("/auth/logout", {
       method: "POST",
     }),
-  getCurrentUser: () => fetcher<User>("/auth/me"),
+  getCurrentUser: () => fetcher<CurrentUser>("/me"),
 };
 
 // Types (will be imported from Prisma later)
+import { CurrentUser } from "@/lib/types";
+
 export type DashboardStats = {
   totalLocations: number;
   activeAlarms: number;
