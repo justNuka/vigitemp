@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json(userData);
 
     // Set JWT cookie
-    response.cookies.set("token", token, {
+    response.cookies.set("auth-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
