@@ -210,6 +210,8 @@ export type Location = {
   siteId?: number;
   groupId1?: number | null;
   groupId2?: number | null;
+  groupName1?: string | null;
+  groupName2?: string | null;
   site?: string;
 };
 

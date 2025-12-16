@@ -6,6 +6,7 @@ import { useCurrentTime } from "@/hooks/use-current-time";
 import { PageHeader } from "@/components/page-header";
 import { SensorsGrid } from "./sensors-grid-client";
 import { MonitoringCardsGrid } from "./monitoring-cards-grid";
+import { SurveillanceTree } from "./surveillance-tree";
 import { SurveillanceFilters } from "./surveillance-filters";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import type { SensorWithLocation, Location } from "@/lib/api";
 import type { Site, Group } from "./server-filters";
 
 type StatusFilter = "all" | "ok" | "warning" | "critical";
-type ViewMode = "status" | "graphs";
+type ViewMode = "status" | "tree";
 
 interface FilterState {
   siteId: number | null;
@@ -179,8 +180,8 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
               <TabsTrigger value="graphs">
                 Graphiques
               </TabsTrigger>
-              <TabsTrigger value="status">
-                Statuts
+              <TabsTrigger value="tree">
+                Arborescence
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -240,7 +241,7 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
             </div>
           )}
         </>
-      ) : (
+      ) : viewMode === "graphs" ? (
         <>
           <MonitoringCardsGrid 
             sensors={sensors}
@@ -258,6 +259,10 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
               </Button>
             </div>
           )}
+        </>
+      ) : (
+        <>
+          <SurveillanceTree sensors={sensors} />
         </>
       )}
     </>

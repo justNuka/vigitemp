@@ -227,6 +227,8 @@ model t_groupe {
   Nom_Groupe          String?  @unique(map: "Groupe_NomGroupe_IDX") @db.VarChar(64)
   Numero_Regroupement String?  @db.VarChar(1)
   Est_Archive         Boolean? @default(false)
+  t_lieux_groupe1     t_lieu[] @relation("groupe1")
+  t_lieux_groupe2     t_lieu[] @relation("groupe2")
 
   @@index([Numero_Regroupement], map: "IDX_Numero_Regroupement")
 }
@@ -335,6 +337,8 @@ model t_lieu {
   t_pdf                                t_pdf?                     @relation(fields: [Id_PDF], references: [Id_PDF], onDelete: NoAction, onUpdate: NoAction, map: "FK_PDF_LIEU")
   t_plan                               t_plan?                    @relation(fields: [Id_Plan], references: [IdPlan], onDelete: NoAction, onUpdate: NoAction, map: "FK_PLAN_LIEU")
   t_site                               t_site?                    @relation(fields: [Id_Site], references: [Id_Site], onDelete: NoAction, onUpdate: NoAction, map: "FK_SITE_LIEU")
+  t_groupe1                            t_groupe?                  @relation("groupe1", fields: [Id_Groupe1], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE1_LIEU")
+  t_groupe2                            t_groupe?                  @relation("groupe2", fields: [Id_Groupe2], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE2_LIEU")
   t_sonde                              t_sonde?                   @relation(fields: [Sonde_Numero_Serie], references: [Sonde_Numero_Serie], onDelete: NoAction, onUpdate: NoAction, map: "FK_SONDE_LIEU")
   t_lieu_planning                      t_lieu_planning[]
   t_lieu_tel_num                       t_lieu_tel_num[]
@@ -557,7 +561,7 @@ model t_ancien_mot_de_passe {
   Id_Utilisateur         Int?
   Mot_De_Passe           String?        @db.VarChar(100)
   Est_Premiere_Connexion Boolean?       @default(false)
-  t_utilisateur          t_utilisateur? @relation(fields: [Id_Utilisateur], references: [Id_Utilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_UTILISATEUR_ANCIENMDP_new")
+  t_utilisateur          t_utilisateur? @relation(fields: [Id_Utilisateur], references: [Id_Utilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_UTILISATEUR_ANCIENMDP")
 
   @@index([Id_Utilisateur], map: "IDX_Id_Utilisateur")
 }

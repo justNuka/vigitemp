@@ -48,6 +48,8 @@ export const GET = withLogging(async (request: NextRequest) => {
       include: {
         t_sonde: true,
         t_site: true,
+        t_groupe1: true,
+        t_groupe2: true,
       },
       skip,
       take: limit,
@@ -97,6 +99,8 @@ export const GET = withLogging(async (request: NextRequest) => {
             groupId1: location.Id_Groupe1,
             groupId2: location.Id_Groupe2,
             site: location.t_site?.Libelle_Site ?? "",
+            groupName1: location.t_groupe1?.Nom_Groupe ?? null,
+            groupName2: location.t_groupe2?.Nom_Groupe ?? null,
           },
         };
       })
