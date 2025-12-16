@@ -26,11 +26,13 @@ export function SensorsGrid({ sensors, locations, statusFilter, onStatusFilterCh
   const [searchQuery, setSearchQuery] = useState("");
 
   const siteGroups = useMemo(() => {
+    if (!locations || !Array.isArray(locations)) return [];
     const groups = new Set(locations.map((l) => l.siteGroup).filter(Boolean));
     return Array.from(groups) as string[];
   }, [locations]);
 
   const filteredSensors = useMemo(() => {
+    if (!sensors || !Array.isArray(sensors)) return [];
     return sensors.filter((sensor) => {
       if (statusFilter !== "all" && sensor.status !== statusFilter) {
         return false;

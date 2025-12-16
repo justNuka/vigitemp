@@ -47,11 +47,12 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>("graphs");
   const [filters, setFilters] = useState<FilterState>({ siteId: null, groupIds: [] });
   const [page, setPage] = useState(1);
+  const [cachedSensors, setCachedSensors] = useState<SensorWithLocation[]>([]); // ✅ Cache local
   const currentTime = useCurrentTime();
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Charger les sensors paginés via API
-  const { data: paginatedData, isFetching, hasNextPage, fetchNextPage } = useQuery({
+  const { data: paginatedData, isFetching, hasNextPage, fetchNextPage, error, isError } = useQuery({
     queryKey: ["sensors", page, filters.siteId, filters.groupIds],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -69,12 +70,22 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
       return res.json() as Promise<PaginatedResponse>;
     },
     staleTime: 30000, // 30 secondes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    placeholderData: (previousData) => previousData, // Garde les données précédentes pendant le refetch
   });
 
-  // Récupérer les sensors actuels et les locations
-  const sensors = useMemo(() => {
-    return paginatedData?.sensors ?? [];
+  // ✅ Maintenir le cache local synchronisé avec paginatedData
+  useEffect(() => {
+    if (paginatedData?.sensors && Array.isArray(paginatedData.sensors) && paginatedData.sensors.length > 0) {
+      setCachedSensors(paginatedData.sensors);
+    }
   }, [paginatedData?.sensors]);
+
+  // Récupérer les sensors actuels et les locations
+  // ✅ Utiliser le cache local au lieu de paginatedData
+  const sensors = useMemo(() => {
+    return cachedSensors.length > 0 ? cachedSensors : (paginatedData?.sensors ?? []);
+  }, [cachedSensors, paginatedData?.sensors]);
 
   const locations = useMemo(() => {
     if (!Array.isArray(sensors)) return [];

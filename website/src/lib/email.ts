@@ -27,7 +27,7 @@ async function getEmailConfig(): Promise<EmailConfig> {
     port: 587,
     user: "",
     password: "",
-    from: "noreply@vigitemp.com",
+    from: "noreply@alwaysdata.net",
     enabled: false,
   };
 
@@ -46,7 +46,7 @@ async function getEmailConfig(): Promise<EmailConfig> {
         config.password = param.Valeur || "b2056d25397007";
         break;
       case "SMTP_EXPEDITEUR":
-        config.from = param.Valeur || "noreply@vigitemp.com";
+        config.from = param.Valeur || "noreply@alwaysdata.net";
         break;
       case "SMTP_ACTIVATION":
         config.enabled = param.Valeur === "1" || param.Valeur?.toLowerCase() === "true";
