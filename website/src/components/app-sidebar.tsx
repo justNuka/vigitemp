@@ -46,20 +46,22 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
   { title: "Tableau de bord", href: "/", icon: LayoutDashboard },
   { title: "Surveillance", href: "/surveillance", icon: Activity },
-  { title: "Alarmes", href: "/alarms", icon: Bell },
+  { title: "Alarmes", href: "/alarmes", icon: Bell },
 ];
 
-const settingsNavItems: NavItem[] = [
-  { title: "Mon profil", href: "/profile", icon: User },
-  { title: "Paramétrage", href: "/settings", icon: Settings },
-  { title: "Utilisateurs", href: "/users", icon: Users },
-  { title: "Profils", href: "/profils", icon: Shield },
+const auditNavItems: NavItem[] = [
   { title: "Journal d'audit", href: "/audit", icon: FileText },
+];
+
+import { CurrentUser } from "@/lib/types";
+
+const moncompteNavItems: NavItem[] = [
+  { title: "Mon profil", href: "/profil", icon: User },
 ];
 
 interface AppSidebarProps {
   activeAlarms?: number;
-  currentUser?: { displayName: string; role: string } | null;
+  currentUser?: CurrentUser | null;
   onLogout?: () => void;
 }
 
@@ -67,8 +69,11 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
   const pathname = usePathname();
   const [isMuted, setIsMuted] = useState(false);
 
+  // Check if user is admin
+  const isAdmin = currentUser?.authorizations?.some((auth) => auth.admin) ?? false;
+
   const navItemsWithBadges = mainNavItems.map((item) => {
-    if (item.href === "/alarms" && activeAlarms > 0) {
+    if (item.href === "/alarmes" && activeAlarms > 0) {
       return { ...item, badge: activeAlarms, badgeVariant: "destructive" as const };
     }
     return item;
@@ -125,10 +130,58 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Administration</SidebarGroupLabel>
+          <SidebarGroupLabel>Suivi</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {settingsNavItems.map((item) => (
+              {auditNavItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.href}
+                    tooltip={item.title}
+                  >
+                    <Link
+                      href={item.href}
+                      data-testid={`nav-${item.href.replace("/", "")}`}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Admin Section - Only visible to admins */}
+        {isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Administration</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === "/admin"}
+                    tooltip="Tableau de bord administrateur"
+                  >
+                    <Link href="/admin" data-testid="nav-admin">
+                      <Shield className="h-4 w-4" />
+                      <span>Dashboard Admin</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Mon compte</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {moncompteNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
@@ -183,7 +236,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
           <div className="flex items-center gap-3 p-2 rounded-lg bg-sidebar-accent/50">
             <Avatar className="h-9 w-9">
               <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                {currentUser.displayName
+                {`${currentUser.Prenom || ""} ${currentUser.Nom || ""}`
                   .split(" ")
                   .map((n) => n[0])
                   .join("")
@@ -193,10 +246,10 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">
-                {currentUser.displayName}
+                {`${currentUser.Prenom || ""} ${currentUser.Nom || ""}`}
               </p>
               <p className="text-xs text-muted-foreground capitalize">
-                {currentUser.profile}
+                {currentUser.Profil_Utilisateur || "User"}
               </p>
             </div>
             <Button

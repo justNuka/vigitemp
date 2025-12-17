@@ -27,16 +27,16 @@ export async function POST(req: NextRequest) {
     // Find user with valid token
     const user = await prisma.t_utilisateur.findFirst({
       where: {
-        ResetPasswordToken: hashedToken,
-        ResetPasswordExpires: {
+        Reset_Password_Token: hashedToken,
+        Reset_Password_Expires: {
           gte: new Date(), // Token not expired
         },
-        Archive: false,
+        Est_Archive: false,
       },
       include: {
-        t_ancienmotpasse: {
+        t_ancien_mot_de_passe: {
           orderBy: {
-            IdAncienMotPasse: "desc",
+            Id_Ancien_Mot_De_Passe: "desc",
           },
         },
       },
@@ -50,8 +50,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if new password matches current password
-    if (user.Mot_de_passe) {
-      const isSameAsCurrent = await bcrypt.compare(newPassword, user.Mot_de_passe);
+    if (user.Mot_De_Passe) {
+      const isSameAsCurrent = await bcrypt.compare(newPassword, user.Mot_De_Passe as string);
       if (isSameAsCurrent) {
         return NextResponse.json(
           { error: "Le nouveau mot de passe ne peut pas être identique au mot de passe actuel." },
@@ -61,9 +61,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if new password matches any old password
-    for (const oldPassword of user.t_ancienmotpasse) {
-      if (oldPassword.MotDePasse) {
-        const isSameAsOld = await bcrypt.compare(newPassword, oldPassword.MotDePasse);
+    for (const oldPassword of user.t_ancien_mot_de_passe) {
+      if (oldPassword.Mot_De_Passe) {
+        const isSameAsOld = await bcrypt.compare(newPassword, oldPassword.Mot_De_Passe as string);
         if (isSameAsOld) {
           return NextResponse.json(
             { error: "Ce mot de passe a déjà été utilisé. Veuillez en choisir un nouveau." },
@@ -77,23 +77,24 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     // Save current password to history before updating
-    if (user.Mot_de_passe) {
-      await prisma.t_ancienmotpasse.create({
+    if (user.Mot_De_Passe) {
+      await prisma.t_ancien_mot_de_passe.create({
         data: {
-          IdUtilisateur: user.IdUtilisateur,
-          MotDePasse: user.Mot_de_passe,
+          Id_Utilisateur: user.Id_Utilisateur,
+          Mot_De_Passe: user.Mot_De_Passe as string,
         },
       });
     }
 
     // Update password and clear reset token
     await prisma.t_utilisateur.update({
-      where: { IdUtilisateur: user.IdUtilisateur },
+      where: { Id_Utilisateur: user.Id_Utilisateur },
       data: {
-        Mot_de_passe: hashedPassword,
-        DateDerniereModificationMDP: new Date(),
-        ResetPasswordToken: null,
-        ResetPasswordExpires: null,
+        Mot_De_Passe: hashedPassword,
+        Date_Derniere_Modification_MDP: new Date(),
+        Reset_Password_Token: null,
+        Reset_Password_Expires: null,
+        Est_Mot_De_Passe_Temporaire: false,
       },
     });
 

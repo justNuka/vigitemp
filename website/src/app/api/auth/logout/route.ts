@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   const response = NextResponse.json({ success: true });
 
   // Clear JWT cookie
-  response.cookies.set("token", "", {
+  response.cookies.set("auth-token", "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

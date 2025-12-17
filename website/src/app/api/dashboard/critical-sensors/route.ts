@@ -5,17 +5,17 @@ export async function GET() {
   try {
     const criticalLocations = await prisma.t_lieu.findMany({
       where: {
-        Archive: false,
+        Est_Archive: false,
         Lieu_Etat: "A", // A = Alarme (critical)
       },
-      orderBy: { DernierDateHeure: "desc" },
+      orderBy: { Derniere_Date_Heure: "desc" },
       take: 10,
       include: {
         t_site: {
           select: {
-            IdSite: true,
-            CodeSite: true,
-            LibelleSite: true,
+            Id_Site: true,
+            Code_Site: true,
+            Libelle_Site: true,
           },
         },
       },
@@ -23,17 +23,17 @@ export async function GET() {
 
     // Transform to API format
     const formatted = criticalLocations.map((location: any) => ({
-      id: location.IdLieu,
+      id: location.Id_Lieu,
       name: location.Nom_Lieu || "Lieu sans nom",
       status: "critical" as const,
-      value: location.DernierValeur !== null ? parseFloat(location.DernierValeur.toString()) : null,
-      unit: location.DernierUnite || "°C",
-      lastUpdate: location.DernierDateHeure?.toISOString() || new Date().toISOString(),
+      value: location.Derniere_Valeur !== null ? parseFloat(location.Derniere_Valeur?.toString() ?? "") : null,
+      unit: location.Derniere_Unite || "°C",
+      lastUpdate: location.Derniere_Date_Heure?.toISOString() || new Date().toISOString(),
       location: {
-        id: location.IdLieu,
-        name: location.t_site?.CodeSite && location.t_site?.LibelleSite
-          ? `${location.t_site.CodeSite} - ${location.t_site.LibelleSite}`
-          : location.t_site?.CodeSite || location.t_site?.LibelleSite || "Unknown",
+        id: location.Id_Lieu,
+        name: location.t_site?.Code_Site && location.t_site?.Libelle_Site
+          ? `${location.t_site.Code_Site} - ${location.t_site.Libelle_Site}`
+          : location.t_site?.Code_Site || location.t_site?.Libelle_Site || "Unknown",
       },
       minThreshold: location.Consigne_Inf,
       maxThreshold: location.Consigne_Sup,

@@ -7,6 +7,9 @@ export interface PasswordRules {
   min_numbers: number;
   min_special: number;
   history_count: number;
+  cfr21_enabled: boolean;
+  expiry_days: number;
+  expiry_enabled: boolean;
 }
 
 /**

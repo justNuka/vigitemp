@@ -31,7 +31,7 @@ const customFormat = winston.format.printf(({ timestamp, level, label, message, 
 
 // Configuration du logger
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || "info",
+  level: "debug", // Logger TOUT dans les fichiers (debug est le plus bas)
   format: winston.format.combine(
     winston.format.timestamp({
       format: "YYYY-MM-DD HH:mm:ss.SSS",
@@ -45,15 +45,18 @@ const logger = winston.createLogger({
       filename: path.join(monthDir, "vigitemp-%DATE%.log"),
       datePattern: "YYYY-MM-DD", // Format du %DATE%: 2025-12-10
       maxSize: "10m", // Rotation à 10MB
-      maxFiles: "365d", // Garder 1 an
+      maxFiles: "10d", // Garder 10 jours max
       zippedArchive: true, // Compresser les anciens logs
       createSymlink: false,
+      level: "debug", // Fichier loggue TOUT (debug+)
     }),
   ],
 });
 
-// Ajouter console en développement
-if (process.env.NODE_ENV !== "production") {
+// Ajouter console avec filtre selon l'environnement
+const isDev = process.env.NODE_ENV !== "production";
+const consoleLevel = isDev ? "debug" : (process.env.LOG_LEVEL || "warn"); // Prod: warn seulement
+if (isDev || process.env.LOG_LEVEL) {
   logger.add(
     new winston.transports.Console({
       format: winston.format.combine(
@@ -63,6 +66,7 @@ if (process.env.NODE_ENV !== "production") {
         }),
         customFormat
       ),
+      level: consoleLevel,
     })
   );
 }

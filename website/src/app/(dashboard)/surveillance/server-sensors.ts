@@ -14,7 +14,7 @@ export async function ServerSensors(): Promise<SensorWithLocation[]> {
         t_site: true,
       },
       orderBy: {
-        IdLieu: "desc",
+        Id_Lieu: "desc",
       },
     });
 
@@ -22,46 +22,46 @@ export async function ServerSensors(): Promise<SensorWithLocation[]> {
     const sensorsWithMeasurements = await Promise.all(
       locations.map(async (location) => {
         // Récupérer la dernière mesure
-        const lastMeasurement = await prismaMesure.ts_mesure.findFirst({
+        const lastMeasurement = await prismaMesure.tm_mesures.findFirst({
           where: {
-            IdLieu: location.IdLieu,
+            Id_Lieu: location.Id_Lieu,
           },
           orderBy: {
-            DateHeureMesure: "desc",
+            Date_Heure_Mesure: "desc",
           },
           select: {
             Valeur: true,
-            DateHeureMesure: true,
-            Etat_Alarme: true,
+            Date_Heure_Mesure: true,
+            Est_Etat_Alarme: true,
           },
         });
 
         // Déterminer le statut basé sur les alarmes
         const status: "ok" | "warning" | "critical" = 
-          lastMeasurement?.Etat_Alarme === true ? "critical" :
+          lastMeasurement?.Est_Etat_Alarme === true ? "critical" :
           "ok";
 
         return {
-          id: location.IdLieu.toString(),
+          id: location.Id_Lieu.toString(),
           name: location.Nom_Lieu,
           type: "temperature", // À adapter selon le type réel
           unit: "°C",
           currentValue: lastMeasurement?.Valeur ?? null,
           minThreshold: 0, // À récupérer de la base
           maxThreshold: 25, // À récupérer de la base
-          lastMeasurement: lastMeasurement?.DateHeureMesure ?? null,
+          lastMeasurement: lastMeasurement?.Date_Heure_Mesure ?? null,
           isActive: location.Lieu_Etat === "A",
           status,
           location: {
-            id: location.IdLieu.toString(),
+            id: location.Id_Lieu.toString(),
             name: location.Nom_Lieu,
             description: null,
             siteGroup: null,
             isActive: location.Lieu_Etat === "A",
-            siteId: location.IdSite,
-            groupId1: location.IdGroupe1,
-            groupId2: location.IdGroupe2,
-            site: location.t_site?.LibelleSite ?? "",
+            siteId: location.Id_Site,
+            groupId1: location.Id_Groupe1,
+            groupId2: location.Id_Groupe2,
+            site: location.t_site?.Libelle_Site ?? "",
           },
         } as SensorWithLocation;
       })

@@ -16,19 +16,19 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const site = searchParams.get("site");
 
-    const where: any = { Archive: false };
+    const where: any = { Est_Archive: false };
 
     if (site) {
-      where.IdSite = parseInt(site);
+      where.Id_Site = parseInt(site);
     }
 
     const locations = await prisma.t_lieu.findMany({
       where,
       include: {
         t_sonde: {
-          where: { SondeReformee: false },
+          where: { Est_Sonde_Reformee: false },
           select: {
-            IdSonde: true,
+            Id_Sonde: true,
             Etat_Sonde: true,
           },
         },
@@ -42,9 +42,9 @@ export async function GET(req: NextRequest) {
       const sensors = Array.isArray(loc.t_sonde) ? loc.t_sonde : [];
       
       return {
-        id: loc.IdLieu,
+        id: loc.Id_Lieu,
         name: loc.Nom_Lieu,
-        site: loc.IdSite || null,
+        site: loc.Id_Site || null,
         status: loc.Lieu_Etat,
         sensorCount: sensors.length,
         okSensors: sensors.filter((s: any) => s.Etat_Sonde === "O").length,
@@ -74,8 +74,8 @@ export async function POST(req: NextRequest) {
     const location = await prisma.t_lieu.create({
       data: {
         Nom_Lieu: data.name,
-        IdSite: data.site ? parseInt(data.site) : null,
-        Archive: false,
+        Id_Site: data.site ? parseInt(data.site) : null,
+        Est_Archive: false,
         Lieu_Etat: "O",
       },
     });
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
     // Log location creation
     log.data.create(
       "Lieu",
-      location.IdLieu,
+      location.Id_Lieu,
       currentUser?.username || "System",
       currentUser?.userId || 0,
       ip,
@@ -95,9 +95,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
-        id: location.IdLieu,
+        id: location.Id_Lieu,
         name: location.Nom_Lieu,
-        site: location.IdSite,
+        site: location.Id_Site,
         status: location.Lieu_Etat,
       },
       { status: 201 }

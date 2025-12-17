@@ -17,26 +17,23 @@ export async function GET(req: NextRequest) {
     }
 
     // Check if user has admin permissions (GERER_PROFIL authorization)
-    const userProfile = await prisma.t_utilisateur.findUnique({
-      where: { IdUtilisateur: user.userId },
-      include: {
-        t_profil: {
-          include: {
-            t_liaison_profil_autorisation: {
-              include: {
-                t_autorisation: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    const currentUserProfileStr = (await prisma.t_utilisateur.findUnique({
+      where: { Id_Utilisateur: user.userId },
+      select: { Profil_Utilisateur: true },
+    }))?.Profil_Utilisateur;
+
+    const userProfile = currentUserProfileStr
+      ? await prisma.t_profil.findUnique({
+          where: { Profil_Utilisateur: currentUserProfileStr },
+          include: { t_liaison_profil_autorisation: { include: { t_autorisation: true } } },
+        })
+      : null;
 
     // Check if user has GERER_PROFIL authorization or is Administrateurs profile
-    const hasAdminAccess = 
-      userProfile?.t_profil?.ProfilUtilisateur === "Administrateurs" ||
-      userProfile?.t_profil?.t_liaison_profil_autorisation.some(
-        (liaison) => liaison.t_autorisation.CodeAutorisation === "GERER_PROFIL"
+    const hasAdminAccess =
+      userProfile?.Profil_Utilisateur === "Administrateurs" ||
+      userProfile?.t_liaison_profil_autorisation.some(
+        (liaison) => liaison.t_autorisation.Code_Autorisation === "GERER_PROFIL"
       );
 
     if (!hasAdminAccess) {
@@ -54,33 +51,31 @@ export async function GET(req: NextRequest) {
             t_autorisation: true,
           },
         },
-        t_utilisateur: {
-          select: {
-            IdUtilisateur: true,
-          },
-        },
       },
       orderBy: {
-        ProfilUtilisateur: "asc",
+        Profil_Utilisateur: "asc",
       },
     });
 
-    const formatted = profiles.map((profile) => ({
-      id: profile.IdProfil,
-      name: profile.ProfilUtilisateur,
-      description: profile.Commentaire,
-      mc2: profile.MC2,
-      userCount: profile.t_utilisateur.length,
-      authorizations: profile.t_liaison_profil_autorisation.map((liaison) => ({
-        id: liaison.t_autorisation.IdAutorisation,
-        code: liaison.t_autorisation.CodeAutorisation,
-        label: liaison.t_autorisation.LibelleAutorisation,
-        description: liaison.t_autorisation.Commentaire,
-        fenAdmin: liaison.t_autorisation.fenAdmin,
-        fenMetrologie: liaison.t_autorisation.fenMetrologie,
-        fenSurveillance: liaison.t_autorisation.fenSurveillance,
-        fenVigiLog: liaison.t_autorisation.fenVigiLog,
-      })),
+    // For each profile, count users with matching Profil_Utilisateur
+    const formatted = await Promise.all(profiles.map(async (profile) => {
+      const userCount = await prisma.t_utilisateur.count({ where: { Profil_Utilisateur: profile.Profil_Utilisateur } });
+      return {
+        id: profile.Id_Profil,
+        name: profile.Profil_Utilisateur,
+        description: profile.Commentaire,
+        userCount,
+        authorizations: profile.t_liaison_profil_autorisation.map((liaison) => ({
+          id: liaison.t_autorisation.Id_Autorisation,
+          code: liaison.t_autorisation.Code_Autorisation,
+          label: liaison.t_autorisation.Libelle_Autorisation,
+          description: liaison.t_autorisation.Commentaire,
+          fenAdmin: liaison.t_autorisation.A_Acces_Admin,
+          fenMetrologie: liaison.t_autorisation.A_Acces_Metrologie,
+          fenSurveillance: liaison.t_autorisation.A_Acces_Surveillance,
+          fenVigiLog: liaison.t_autorisation.A_Acces_VigiLog,
+        })),
+      };
     }));
 
     return NextResponse.json(formatted);
@@ -111,27 +106,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
     }
 
-    // Check admin access
-    const userProfile = await prisma.t_utilisateur.findUnique({
-      where: { IdUtilisateur: user.userId },
-      include: {
-        t_profil: {
-          include: {
-            t_liaison_profil_autorisation: {
-              include: {
-                t_autorisation: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    // Check admin access via the user's profile string
+    const currentUserProfileStr = (await prisma.t_utilisateur.findUnique({
+      where: { Id_Utilisateur: user.userId },
+      select: { Profil_Utilisateur: true },
+    }))?.Profil_Utilisateur;
+
+    const userProfile = currentUserProfileStr
+      ? await prisma.t_profil.findUnique({
+          where: { Profil_Utilisateur: currentUserProfileStr },
+          include: { t_liaison_profil_autorisation: { include: { t_autorisation: true } } },
+        })
+      : null;
 
     // Check if user has GERER_PROFIL authorization or is Administrateurs profile
-    const hasAdminAccess = 
-      userProfile?.t_profil?.ProfilUtilisateur === "Administrateurs" ||
-      userProfile?.t_profil?.t_liaison_profil_autorisation.some(
-        (liaison) => liaison.t_autorisation.CodeAutorisation === "GERER_PROFIL"
+    const hasAdminAccess =
+      userProfile?.Profil_Utilisateur === "Administrateurs" ||
+      userProfile?.t_liaison_profil_autorisation.some(
+        (liaison) => liaison.t_autorisation.Code_Autorisation === "GERER_PROFIL"
       );
 
     if (!hasAdminAccess) {
@@ -146,7 +138,7 @@ export async function POST(req: NextRequest) {
 
     // Check if profile name already exists
     const existing = await prisma.t_profil.findUnique({
-      where: { ProfilUtilisateur: data.name },
+      where: { Profil_Utilisateur: data.name },
     });
 
     if (existing) {
@@ -159,9 +151,8 @@ export async function POST(req: NextRequest) {
     // Create profile
     const profile = await prisma.t_profil.create({
       data: {
-        ProfilUtilisateur: data.name,
+        Profil_Utilisateur: data.name,
         Commentaire: data.description || null,
-        MC2: data.mc2,
       },
     });
 
@@ -169,7 +160,7 @@ export async function POST(req: NextRequest) {
     if (data.authorizations && data.authorizations.length > 0) {
       await prisma.t_liaison_profil_autorisation.createMany({
         data: data.authorizations.map((authId) => ({
-          IdProfil: profile.IdProfil,
+          IdProfil: profile.Id_Profil,
           IdAutorisation: authId,
         })),
       });
@@ -177,7 +168,7 @@ export async function POST(req: NextRequest) {
 
     // Fetch the complete profile with authorizations
     const completeProfile = await prisma.t_profil.findUnique({
-      where: { IdProfil: profile.IdProfil },
+      where: { Id_Profil: profile.Id_Profil },
       include: {
         t_liaison_profil_autorisation: {
           include: {
@@ -191,7 +182,7 @@ export async function POST(req: NextRequest) {
     const { ip } = getRequestContext(req);
     log.data.create(
       "Profil",
-      profile.IdProfil,
+      profile.Id_Profil,
       user.username,
       user.userId,
       ip,
@@ -204,14 +195,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
-        id: completeProfile!.IdProfil,
-        name: completeProfile!.ProfilUtilisateur,
+        id: completeProfile!.Id_Profil,
+        name: completeProfile!.Profil_Utilisateur,
         description: completeProfile!.Commentaire,
-        mc2: completeProfile!.MC2,
         authorizations: completeProfile!.t_liaison_profil_autorisation.map((liaison) => ({
-          id: liaison.t_autorisation.IdAutorisation,
-          code: liaison.t_autorisation.CodeAutorisation,
-          label: liaison.t_autorisation.LibelleAutorisation,
+          id: liaison.t_autorisation.Id_Autorisation,
+          code: liaison.t_autorisation.Code_Autorisation,
+          label: liaison.t_autorisation.Libelle_Autorisation,
         })),
       },
       { status: 201 }

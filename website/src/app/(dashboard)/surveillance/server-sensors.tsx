@@ -1,7 +1,7 @@
 "use cache";
 
 import { cacheTag } from "next/cache";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../../../lib/prisma";
 
 /**
  * Composant serveur pour charger les capteurs depuis la base de données
@@ -14,14 +14,14 @@ export async function ServerSensors() {
 
   const locations = await prisma.t_lieu.findMany({
     where: {
-      Archive: false,
+      Est_Archive: false,
     },
     include: {
       t_site: {
         select: {
-          IdSite: true,
-          CodeSite: true,
-          LibelleSite: true,
+          Id_Site: true,
+          Code_Site: true,
+          Libelle_Site: true,
         },
       },
     },
@@ -32,35 +32,35 @@ export async function ServerSensors() {
 
   // Transformation pour l'API client (t_lieu = sensor)
   const formattedSensors = locations.map((lieu) => ({
-    id: lieu.IdLieu.toString(),
+    id: lieu.Id_Lieu.toString(),
     name: lieu.Nom_Lieu || "Capteur sans nom",
     type: "temperature", // Type par défaut
     status: mapSensorStatus(lieu.Lieu_Etat),
-    currentValue: lieu.DernierValeur !== null ? parseFloat(lieu.DernierValeur.toString()) : null,
-    unit: lieu.DernierUnite || "°C",
+    currentValue: lieu.Derniere_Valeur !== null ? parseFloat(lieu.Derniere_Valeur.toString()) : null,
+    unit: lieu.Derniere_Unite || "°C",
     minThreshold: lieu.Consigne_Inf ?? 0,
     maxThreshold: lieu.Consigne_Sup ?? 30,
-    lastMeasurement: lieu.DernierDateHeure || null,
-    isActive: !lieu.Archive,
+    lastMeasurement: lieu.Derniere_Date_Heure || null,
+    isActive: !lieu.Est_Archive,
     // Ajout des champs pour MonitoringCard
-    SondeNumeroSerie: lieu.SondeNumeroSerie,
+    SondeNumeroSerie: lieu.Sonde_Numero_Serie,
     Lieu_Etat: lieu.Lieu_Etat,
-    IdLieu: lieu.IdLieu,
+    IdLieu: lieu.Id_Lieu,
     Frequence: lieu.Frequence,
     location: {
-      id: lieu.IdLieu.toString(),
-      name: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
-        ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
-        : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || "Non assigné",
+      id: lieu.Id_Lieu.toString(),
+      name: lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
+        ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
+        : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || "Non assigné",
       description: null,
-      siteGroup: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
-        ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
-        : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || null,
+      siteGroup: lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
+        ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
+        : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || null,
       isActive: true,
       // Ajouter les champs nécessaires pour le filtrage
-      IdSite: lieu.IdSite,
-      IdGroupe1: lieu.IdGroupe1,
-      IdGroupe2: lieu.IdGroupe2,
+      Id_Site: lieu.Id_Site,
+      Id_Groupe1: lieu.Id_Groupe1,
+      Id_Groupe2: lieu.Id_Groupe2,
     } as any,
   }));
 

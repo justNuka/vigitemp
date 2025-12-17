@@ -19,10 +19,10 @@ export async function GET(req: NextRequest) {
     const locationId = searchParams.get("locationId");
     const status = searchParams.get("status");
 
-    const where: any = { Archive: false };
+    const where: any = { Est_Archive: false };
 
     if (locationId) {
-      where.IdSite = parseInt(locationId);
+      where.Id_Site = parseInt(locationId);
     }
 
     if (status && status !== "all") {
@@ -37,9 +37,9 @@ export async function GET(req: NextRequest) {
       include: {
         t_site: {
           select: {
-            IdSite: true,
-            CodeSite: true,
-            LibelleSite: true,
+            Id_Site: true,
+            Code_Site: true,
+            Libelle_Site: true,
           },
         },
       },
@@ -48,20 +48,20 @@ export async function GET(req: NextRequest) {
 
     // Transform to API format (locations = sensors in Light UI)
     const formatted = locations.map((lieu: any) => ({
-      id: lieu.IdLieu,
+      id: lieu.Id_Lieu,
       name: lieu.Nom_Lieu || "Lieu sans nom",
       status: lieu.Lieu_Etat === "O" ? "ok" : lieu.Lieu_Etat === "P" ? "warning" : lieu.Lieu_Etat === "A" ? "critical" : "offline",
-      value: lieu.DernierValeur !== null ? parseFloat(lieu.DernierValeur.toString()) : null,
-      unit: lieu.DernierUnite || "°C",
-      lastUpdate: lieu.DernierDateHeure?.toISOString() || new Date().toISOString(),
+      value: lieu.Derniere_Valeur !== null ? parseFloat(lieu.Derniere_Valeur.toString()) : null,
+      unit: lieu.Derniere_Unite || "°C",
+      lastUpdate: lieu.Derniere_Date_Heure?.toISOString() || new Date().toISOString(),
       location: {
-        id: lieu.IdSite || 0,
-        name: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
-          ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
-          : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || "Unknown",
-        siteGroup: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
-          ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
-          : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || null,
+        id: lieu.Id_Site || 0,
+        name: lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
+          ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
+          : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || "Unknown",
+        siteGroup: lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
+          ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
+          : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || null,
       },
       minThreshold: lieu.Consigne_Inf,
       maxThreshold: lieu.Consigne_Sup,
@@ -88,19 +88,19 @@ export async function POST(req: NextRequest) {
     const lieu = await prisma.t_lieu.create({
       data: {
         Nom_Lieu: data.name,
-        IdSite: data.locationId,
+        Id_Site: data.locationId,
         Consigne_Inf: data.minThreshold,
         Consigne_Sup: data.maxThreshold,
-        DernierUnite: data.unit || "°C",
-        Archive: false,
+        Derniere_Unite: data.unit || "°C",
+        Est_Archive: false,
         Lieu_Etat: "O", // O = OK by default
       },
       include: {
         t_site: {
           select: {
-            IdSite: true,
-            CodeSite: true,
-            LibelleSite: true,
+            Id_Site: true,
+            Code_Site: true,
+            Libelle_Site: true,
           },
         },
       },
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
     // Log sensor creation
     log.data.create(
       "Capteur",
-      lieu.IdLieu,
+      lieu.Id_Lieu,
       currentUser?.username || "System",
       currentUser?.userId || 0,
       ip,
@@ -123,14 +123,14 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
-        id: lieu.IdLieu,
+        id: lieu.Id_Lieu,
         name: lieu.Nom_Lieu,
         status: "ok",
         location: {
-          id: lieu.t_site?.IdSite || 0,
-          name: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
-            ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
-            : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || "Unknown",
+          id: lieu.t_site?.Id_Site || 0,
+          name: lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
+            ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
+            : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || "Unknown",
         },
       },
       { status: 201 }

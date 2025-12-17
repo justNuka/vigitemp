@@ -23,10 +23,10 @@ export async function DELETE(
 
     // Find and delete the liaison
     const liaison = await prisma.t_liaison_utilisateur_groupe.findUnique({
-      where: { IdLiaison: idLiaison },
+      where: { Id_Liaison: idLiaison },
     });
 
-    if (!liaison || liaison.IdUtilisateur !== userId) {
+    if (!liaison || liaison.Id_Utilisateur !== userId) {
       return NextResponse.json(
         { error: "Liaison not found or does not belong to this user" },
         { status: 404 }
@@ -34,7 +34,7 @@ export async function DELETE(
     }
 
     await prisma.t_liaison_utilisateur_groupe.delete({
-      where: { IdLiaison: idLiaison },
+      where: { Id_Liaison: idLiaison },
     });
 
     return NextResponse.json({

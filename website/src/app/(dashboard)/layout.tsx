@@ -1,11 +1,13 @@
 "use client";
 
 import { AppSidebar } from "@/components/app-sidebar";
+import { MainNavbar } from "@/components/main-navbar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useQuery } from "@tanstack/react-query";
 import { alarmsApi, authApi } from "@/lib/api";
 import { useAutoLock } from "@/hooks/useAutoLock";
 import { useRefreshInterval } from "@/hooks/useRefreshInterval";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function DashboardLayout({
   children,
@@ -31,7 +33,7 @@ export default function DashboardLayout({
     queryFn: () => authApi.getCurrentUser(),
   });
 
-  const activeAlarmsCount = alarms?.filter((a) => a.status === "active").length ?? 0;
+  const activeAlarmsCount = alarms?.length ?? 0;
 
   const handleLogout = async () => {
     try {
@@ -44,7 +46,17 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-        <div className="flex min-h-screen w-full">
+      <div className="flex flex-col min-h-screen w-full">
+        {/* Top Bar avec Theme Toggle */}
+        <div className="sticky top-0 z-50 flex items-center justify-end border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-2">
+          <ThemeToggle />
+        </div>
+
+        {/* Main Navbar */}
+        <MainNavbar />
+
+        {/* Content Area */}
+        <div className="flex flex-1 overflow-hidden">
           <AppSidebar
             activeAlarms={activeAlarmsCount}
             currentUser={currentUser}
@@ -54,6 +66,7 @@ export default function DashboardLayout({
             {children}
           </main>
         </div>
-      </SidebarProvider>
+      </div>
+    </SidebarProvider>
   );
 }

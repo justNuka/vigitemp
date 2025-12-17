@@ -16,19 +16,19 @@ export async function GET(req: NextRequest) {
     // Get all authorizations
     const authorizations = await prisma.t_autorisation.findMany({
       orderBy: {
-        CodeAutorisation: "asc",
+        Code_Autorisation: "asc",
       },
     });
 
     const formatted = authorizations.map((auth) => ({
-      id: auth.IdAutorisation,
-      code: auth.CodeAutorisation,
-      label: auth.LibelleAutorisation,
+      id: auth.Id_Autorisation,
+      code: auth.Code_Autorisation,
+      label: auth.Libelle_Autorisation,
       description: auth.Commentaire,
-      fenAdmin: auth.fenAdmin,
-      fenMetrologie: auth.fenMetrologie,
-      fenSurveillance: auth.fenSurveillance,
-      fenVigiLog: auth.fenVigiLog,
+      fenAdmin: auth.A_Acces_Admin,
+      fenMetrologie: auth.A_Acces_Metrologie,
+      fenSurveillance: auth.A_Acces_Surveillance,
+      fenVigiLog: auth.A_Acces_VigiLog,
     }));
 
     return NextResponse.json(formatted);

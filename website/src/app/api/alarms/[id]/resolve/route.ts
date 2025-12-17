@@ -16,14 +16,14 @@ export async function POST(
     const alarmId = parseInt(id);
 
     const alarm = await prisma.t_alarme.update({
-      where: { IdAlarme: alarmId },
+      where: { Id_Alarme: alarmId },
       data: {
-        DateHeureFin: new Date(),
+        Date_Heure_Fin: new Date(),
       },
       include: {
         t_lieu: {
           select: {
-            IdLieu: true,
+            Id_Lieu: true,
             Nom_Lieu: true,
           },
         },
@@ -37,13 +37,13 @@ export async function POST(
       ip,
       resource: `Alarme: ${alarm.t_lieu?.Nom_Lieu || "Unknown"}`,
       resourceId: alarmId,
-      changes: { resolvedAt: alarm.DateHeureFin },
+      changes: { resolvedAt: alarm.Date_Heure_Fin },
     });
 
     return NextResponse.json({
-      id: alarm.IdAlarme,
+      id: alarm.Id_Alarme,
       status: "resolved",
-      resolvedAt: alarm.DateHeureFin?.toISOString() || null,
+      resolvedAt: alarm.Date_Heure_Fin?.toISOString() || null,
     });
   } catch (error) {
     console.error("Resolve alarm error:", error);

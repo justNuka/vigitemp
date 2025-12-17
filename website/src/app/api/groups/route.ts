@@ -9,21 +9,21 @@ export async function GET() {
   try {
     const groups = await prisma.t_groupe.findMany({
       where: {
-        Archive: false,
+        Est_Archive: false,
       },
       select: {
-        IdGroupe: true,
-        NomGroupe: true,
+        Id_Groupe: true,
+        Nom_Groupe: true,
       },
       orderBy: {
-        NomGroupe: "asc",
+        Nom_Groupe: "asc",
       },
     });
 
     // Mapper vers le format attendu par le front
     const formattedGroups = groups.map((group) => ({
-      id: group.IdGroupe,
-      name: group.NomGroupe || "Sans nom",
+      id: group.Id_Groupe,
+      name: group.Nom_Groupe || "Sans nom",
     }));
 
     return NextResponse.json(formattedGroups);

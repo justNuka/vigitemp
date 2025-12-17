@@ -43,14 +43,15 @@ export async function POST(req: NextRequest) {
 
     // 4. Récupérer l'utilisateur depuis la base de données
     const dbUser = await prisma.t_utilisateur.findUnique({
-      where: { IdUtilisateur: user.userId },
+      where: { Id_Utilisateur: user.userId },
       select: {
-        IdUtilisateur: true,
-        Mot_de_passe: true,
+        Id_Utilisateur: true,
+        Mot_De_Passe: true,
+        Est_Mot_De_Passe_Temporaire: true,
       },
     });
 
-    if (!dbUser || !dbUser.Mot_de_passe) {
+    if (!dbUser || !dbUser.Mot_De_Passe) {
       return NextResponse.json(
         { error: "Utilisateur non trouvé" },
         { status: 404 }
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
     // 5. Vérifier que l'ancien mot de passe est correct
     const isOldPasswordValid = await bcrypt.compare(
       oldPassword,
-      dbUser.Mot_de_passe
+      dbUser.Mot_De_Passe as string
     );
 
     if (!isOldPasswordValid) {
@@ -70,27 +71,38 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 6. Récupérer les règles de mot de passe
+    // 6. Récupérer les règles de mot de passe depuis SECURITE_MOT_DE_PASSE
     const rulesParams = await prisma.t_parametre.findMany({
       where: {
-        Section: "security",
-        MotCle: {
-          startsWith: "password_",
-        },
+        Section: "SECURITE_MOT_DE_PASSE",
       },
       select: {
-        MotCle: true,
+        Mot_Cle: true,
+        Valeur: true,
+      },
+    });
+
+    // Récupérer les paramètres CFR21
+    const cfr21Params = await prisma.t_parametre.findMany({
+      where: {
+        Section: "CFR21",
+      },
+      select: {
+        Mot_Cle: true,
         Valeur: true,
       },
     });
 
     const rules: PasswordRules = {
-      min_length: parseInt(rulesParams.find(p => p.MotCle === "password_min_length")?.Valeur || "8", 10),
-      min_uppercase: parseInt(rulesParams.find(p => p.MotCle === "password_min_uppercase")?.Valeur || "1", 10),
-      min_lowercase: parseInt(rulesParams.find(p => p.MotCle === "password_min_lowercase")?.Valeur || "1", 10),
-      min_numbers: parseInt(rulesParams.find(p => p.MotCle === "password_min_numbers")?.Valeur || "1", 10),
-      min_special: parseInt(rulesParams.find(p => p.MotCle === "password_min_special")?.Valeur || "1", 10),
-      history_count: 0, // Not used anymore, but kept for type compatibility
+      min_length: parseInt(rulesParams.find(p => p.Mot_Cle === "LONGUEUR_MINIMALE")?.Valeur || "8", 10),
+      min_uppercase: parseInt(rulesParams.find(p => p.Mot_Cle === "MIN_LETTRES_MAJUSCULES")?.Valeur || "1", 10),
+      min_lowercase: parseInt(rulesParams.find(p => p.Mot_Cle === "MIN_LETTRES_MINUSCULES")?.Valeur || "1", 10),
+      min_numbers: parseInt(rulesParams.find(p => p.Mot_Cle === "MIN_CHIFFRES")?.Valeur || "1", 10),
+      min_special: parseInt(rulesParams.find(p => p.Mot_Cle === "MIN_CARACTERES_SPECIAUX")?.Valeur || "1", 10),
+      cfr21_enabled: cfr21Params.find(p => p.Mot_Cle === "ACTIVATION_NORME_CFR21")?.Valeur === "1" || cfr21Params.find(p => p.Mot_Cle === "ACTIVATION_NORME_CFR21")?.Valeur?.toLowerCase() === "true" || false,
+      history_count: parseInt(cfr21Params.find(p => p.Mot_Cle === "NOMBRE_ANCIENS_MOT_DE_PASSE")?.Valeur || "5", 10),
+      expiry_days: parseInt(cfr21Params.find(p => p.Mot_Cle === "JOURS_VALIDITE_MOT_DE_PASSE")?.Valeur || "90", 10),
+      expiry_enabled: cfr21Params.find(p => p.Mot_Cle === "ACTIVATION_EXPIRATION_MOT_DE_PASSE")?.Valeur === "1" || cfr21Params.find(p => p.Mot_Cle === "ACTIVATION_EXPIRATION_MOT_DE_PASSE")?.Valeur?.toLowerCase() === "true" || false,
     };
 
     // 7. Valider le nouveau mot de passe
@@ -123,30 +135,40 @@ export async function POST(req: NextRequest) {
     // 9. Hasher le nouveau mot de passe
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // 10. Sauvegarder l'ancien mot de passe dans l'historique
-    await prisma.t_ancienmotpasse.create({
+    // 10. Vérifier si c'est une première connexion (mdp temporaire)
+    const isFirstPasswordChange = dbUser.Est_Mot_De_Passe_Temporaire === true;
+
+    // 11. Sauvegarder l'ancien mot de passe dans l'historique
+    // Si c'est la première connexion, marquer le flag Est_Premiere_Connexion
+    await prisma.t_ancien_mot_de_passe.create({
       data: {
-        IdUtilisateur: user.userId,
-        MotDePasse: dbUser.Mot_de_passe, // Ancien hash
+        Id_Utilisateur: user.userId,
+        Mot_De_Passe: dbUser.Mot_De_Passe as string,
+        Est_Premiere_Connexion: isFirstPasswordChange,
       },
     });
 
-    // 11. Mettre à jour le mot de passe et la date de dernière modification
+    // 12. Mettre à jour le mot de passe, la date de modification et le flag temporaire
     await prisma.t_utilisateur.update({
-      where: { IdUtilisateur: user.userId },
+      where: { Id_Utilisateur: user.userId },
       data: {
-        Mot_de_passe: hashedPassword,
-        DateDerniereModificationMDP: new Date(),
+        Mot_De_Passe: hashedPassword,
+        Date_Derniere_Modification_MDP: new Date(),
+        Est_Mot_De_Passe_Temporaire: false, // Plus temporaire après première modif
       },
     });
 
-    // 12. Logger le changement de mot de passe
+    // 13. Logger le changement de mot de passe
     const { ip } = getRequestContext(req);
+    const logMessage = isFirstPasswordChange 
+      ? "Première modification du mot de passe (temporaire)" 
+      : "Changement de mot de passe";
     log.auth.passwordChange(user.username, user.userId, ip, false);
 
-    // 13. Succès !
+    // 14. Succès !
     return NextResponse.json({
       message: "Mot de passe changé avec succès",
+      isFirstPasswordChange,
     });
 
   } catch (error) {

@@ -9,9 +9,9 @@ async function diagnosePerformance() {
   console.log("📊 Diagnosing ts_mesure query performance...\n");
 
   // Test 1: Count total records
-  console.log("1️⃣ Total records in ts_mesure:");
+  console.log("1️⃣ Total records in tm_mesures:");
   const startCount = Date.now();
-  const totalCount = await prismaMesure.ts_mesure.count();
+  const totalCount = await prismaMesure.tm_mesures.count();
   console.log(`   ${totalCount} records (took ${Date.now() - startCount}ms)\n`);
 
   // Test 2: Query a single location with 125 measurements
@@ -19,21 +19,21 @@ async function diagnosePerformance() {
   console.log(`2️⃣ Query 125 latest measurements for idLieu=${testIdLieu}:`);
   
   const startQuery = Date.now();
-  const measurements = await prismaMesure.ts_mesure.findMany({
-    where: { IdLieu: testIdLieu, Valeur: { not: null } },
+  const measurements = await prismaMesure.tm_mesures.findMany({
+    where: { Id_Lieu: testIdLieu, Valeur: { not: null } },
     take: 125,
-    orderBy: { DateHeureMesure: "desc" },
+    orderBy: { Date_Heure_Mesure: "desc" },
     select: {
-      IdMesure: true,
-      DateHeureMesure: true,
+      Id_Mesure: true,
+      Date_Heure_Mesure: true,
       Valeur: true,
       Unite: true,
       Consigne: true,
       Consigne_Sup: true,
       Consigne_Inf: true,
-      SondeNumeroSerie: true,
+      Sonde_Numero_Serie: true,
       Frequence: true,
-      Etat_Alarme: true,
+      Est_Etat_Alarme: true,
     },
   });
   const queryTime = Date.now() - startQuery;
@@ -44,11 +44,11 @@ async function diagnosePerformance() {
   const parallelStart = Date.now();
   
   const promises = [1, 2, 3, 4].map(idLieu =>
-    prismaMesure.ts_mesure.findMany({
-      where: { IdLieu: idLieu, Valeur: { not: null } },
+    prismaMesure.tm_mesures.findMany({
+      where: { Id_Lieu: idLieu, Valeur: { not: null } },
       take: 125,
-      orderBy: { DateHeureMesure: "desc" },
-      select: { IdMesure: true, DateHeureMesure: true, Valeur: true },
+      orderBy: { Date_Heure_Mesure: "desc" },
+      select: { Id_Mesure: true, Date_Heure_Mesure: true, Valeur: true },
     })
   );
 

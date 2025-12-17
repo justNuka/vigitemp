@@ -13,14 +13,14 @@ export async function ServerDashboardStats() {
 
   const [totalSensors, okSensors, warningSensors, criticalSensors, activeAlarms] =
     await Promise.all([
-      prisma.t_lieu.count({ where: { Archive: false } }),
-      prisma.t_lieu.count({ where: { Archive: false, Lieu_Etat: "O" } }),
-      prisma.t_lieu.count({ where: { Archive: false, Lieu_Etat: "P" } }),
-      prisma.t_lieu.count({ where: { Archive: false, Lieu_Etat: "A" } }),
+      prisma.t_lieu.count({ where: { Est_Archive: false } }),
+      prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "O" } }),
+      prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "P" } }),
+      prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "A" } }),
       prisma.t_alarme.count({
         where: {
-          Acquite: false,
-          Alarme_Vrai: true,
+          Est_Acquittee: false,
+          Est_Alarme_Vrai: true,
         },
       }),
     ]);

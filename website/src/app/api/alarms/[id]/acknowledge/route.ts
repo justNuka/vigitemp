@@ -23,15 +23,15 @@ export async function POST(
     const { comment } = acknowledgeSchema.parse(body);
 
     const alarm = await prisma.t_alarme.update({
-      where: { IdAlarme: alarmId },
+      where: { Id_Alarme: alarmId },
       data: {
-        Acquite: true,
-        TelAcquite: true,
+        Est_Acquittee: true,
+        Est_Tel_Acquittee: true,
       },
       include: {
         t_lieu: {
           select: {
-            IdLieu: true,
+            Id_Lieu: true,
             Nom_Lieu: true,
           },
         },
@@ -41,7 +41,7 @@ export async function POST(
     // Log alarm acknowledgement (code ACQ from audit table)
     log.alarm.acknowledge(
       alarm.t_lieu?.Nom_Lieu || "Unknown",
-      alarm.t_lieu?.IdLieu || 0,
+      alarm.t_lieu?.Id_Lieu || 0,
       currentUser?.username || "System",
       currentUser?.userId || 0,
       ip,
@@ -49,7 +49,7 @@ export async function POST(
     );
 
     return NextResponse.json({
-      id: alarm.IdAlarme,
+      id: alarm.Id_Alarme,
       status: "acknowledged",
       acknowledgedAt: new Date().toISOString(),
       acknowledgedBy: currentUser?.username || "System",
