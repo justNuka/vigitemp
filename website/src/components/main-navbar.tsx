@@ -21,17 +21,17 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 const menuItems = [
-  { label: "Sondes", href: "/sondes", icon: Antenna },
-  { label: "Modules", href: "/modules", icon: Cpu },
-  { label: "Étalons", href: "/etalons", icon: Wrench },
-  { label: "Actionneurs", href: "/actionneurs", icon: Zap },
-  { label: "Groupes", href: "/groupes", icon: Users },
-  { label: "Lieux", href: "/lieux", icon: MapPin },
-  { label: "Sites", href: "/sites", icon: Building2 },
-  { label: "Datalogger", href: "/datalogger", icon: HardDrive },
-  { label: "Outils", href: "/outils", icon: Wrench },
-  { label: "Plans", href: "/plans", icon: Layout },
-  { label: "Statistiques", href: "/statistiques", icon: BarChart3 },
+  { label: "Sondes", href: "/admin/sondes", icon: Antenna },
+  { label: "Modules", href: "/admin/modules", icon: Cpu },
+  { label: "Étalons", href: "/admin/etalons", icon: Wrench },
+  { label: "Actionneurs", href: "/admin/actionneurs", icon: Zap },
+  { label: "Groupes", href: "/admin/groupes", icon: Users },
+  { label: "Lieux", href: "/admin/lieux", icon: MapPin },
+  { label: "Sites", href: "/admin/sites", icon: Building2 },
+  { label: "Datalogger", href: "/admin/datalogger", icon: HardDrive },
+  { label: "Outils", href: "/admin/outils", icon: Wrench },
+  { label: "Plans", href: "/admin/plans", icon: Layout },
+  { label: "Statistiques", href: "/admin/statistiques", icon: BarChart3 },
 ];
 
 export function MainNavbar() {

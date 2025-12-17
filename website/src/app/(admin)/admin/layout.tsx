@@ -1,7 +1,55 @@
+"use client";
+
+import { AdminNavDock } from "@/components/admin-nav-dock";
+import { useQuery } from "@tanstack/react-query";
+import { alarmsApi, authApi } from "@/lib/api";
+import { useAutoLock } from "@/hooks/useAutoLock";
+import { useRefreshInterval } from "@/hooks/useRefreshInterval";
+
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return <>{children}</>
+  // Activer le verrouillage automatique pour toutes les pages protégées
+  useAutoLock();
+
+  // Obtenir l'intervalle de rafraîchissement depuis les paramètres
+  const { refreshInterval } = useRefreshInterval();
+
+  // Fetch active alarms count for sidebar badge
+  const { data: alarms } = useQuery({
+    queryKey: ["alarms", "active"],
+    queryFn: () => alarmsApi.getActive(),
+    refetchInterval: refreshInterval,
+  });
+
+  // Fetch current user
+  const { data: currentUser } = useQuery({
+    queryKey: ["auth", "me"],
+    queryFn: () => authApi.getCurrentUser(),
+  });
+
+  const activeAlarmsCount = alarms?.length ?? 0;
+
+  const handleLogout = async () => {
+    try {
+      await authApi.logout();
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen w-full">
+      {/* Content Area */}
+      <main className="flex-1 overflow-y-auto bg-background pb-20">
+        {children}
+      </main>
+      
+      {/* Admin Navigation Dock (bottom) */}
+      <AdminNavDock />
+    </div>
+  );
 }

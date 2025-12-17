@@ -141,7 +141,7 @@ export default function MonitoringCard({
 
   return (
     <>
-      <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow p-4">
+      <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 min-h-[300px]">
         {/* Top icons */}
         <div className="absolute top-2 left-2 right-2 flex justify-between">
           <button
