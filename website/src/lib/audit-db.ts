@@ -14,25 +14,24 @@ export async function writeAuditToDatabase(params: {
 }) {
   try {
     // Récupérer le dernier IdJournal pour l'incrémenter
-    const lastJournal = await prismaMesure.ts_journal.findFirst({
-      where: { IdServeurBDD: 1 },
-      orderBy: { IdJournal: "desc" },
+    const lastJournal = await prismaMesure.tm_journal.findFirst({
+      where: { Id_Serveur_BDD: 1 },
+      orderBy: { Id_Journal: "desc" },
     });
 
-    const nextId = (lastJournal?.IdJournal || 0) + 1;
-
+    const nextId = (lastJournal?.Id_Journal || 0) + 1;
     // Écrire dans ts_journal
-    await prismaMesure.ts_journal.create({
+    await prismaMesure.tm_journal.create({
       data: {
-        IdServeurBDD: 1,
-        IdJournal: nextId,
-        CodeJournal: params.codeJournal,
-        NomUtilisateur: params.username || "",
-        ProfilUtilisateur: params.userProfile || "",
-        DateHeureJournal: new Date(),
-        IdLieu: params.lieuId || null,
+        Id_Serveur_BDD: 1,
+        Id_Journal: nextId,
+        Code_Journal: params.codeJournal,
+        Nom_Utilisateur: params.username || "",
+        Profil_Utilisateur: params.userProfile || "",
+        Date_Heure_Journal: new Date(),
+        Id_Lieu: params.lieuId || null,
         Commentaire: params.commentaire || null,
-        CommentaireUtilisateur: params.commentaireUtilisateur || null,
+        Commentaire_Utilisateur: params.commentaireUtilisateur || null,
       },
     });
   } catch (error) {

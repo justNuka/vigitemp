@@ -32,9 +32,9 @@ export async function CachedLocationsList() {
     else if (warningCount > 0) status = "warning";
 
     return {
-      id: loc.IdLieu,
+      id: loc.Id_Lieu,
       name: loc.Nom_Lieu || "Sans nom",
-      site: loc.IdSite || null,
+      site: loc.Id_Site || null,
       status,
       sensorCount: sensors.length,
       okSensors: okCount,

@@ -23,16 +23,16 @@ export async function GET(
     }
 
     const groups = await prisma.t_liaison_utilisateur_groupe.findMany({
-      where: { IdUtilisateur: userId },
+      where: { Id_Utilisateur: userId },
       select: {
-        IdLiaison: true,
-        IdGroupe: true,
+        Id_Liaison: true,
+        Id_Groupe: true,
         t_groupe: {
           select: {
-            IdGroupe: true,
-            NomGroupe: true,
-            NumeroRegroupement: true,
-            Archive: true,
+            Id_Groupe: true,
+            Nom_Groupe: true,
+            Numero_Regroupement: true,
+            Est_Archive: true,
           },
         },
       },
@@ -41,11 +41,11 @@ export async function GET(
     const formattedGroups = groups
       .filter(g => g.t_groupe) // Filter out null groups
       .map(liaison => ({
-        idLiaison: liaison.IdLiaison,
-        idGroupe: liaison.t_groupe!.IdGroupe,
-        nomGroupe: liaison.t_groupe!.NomGroupe,
-        numeroRegroupement: liaison.t_groupe!.NumeroRegroupement,
-        archive: liaison.t_groupe!.Archive,
+        idLiaison: liaison.Id_Liaison,
+        idGroupe: liaison.t_groupe!.Id_Groupe,
+        nomGroupe: liaison.t_groupe!.Nom_Groupe,
+        numeroRegroupement: liaison.t_groupe!.Numero_Regroupement,
+        archive: liaison.t_groupe!.Est_Archive,
       }));
 
     return NextResponse.json(formattedGroups);
@@ -77,7 +77,7 @@ export async function POST(
 
     // Check if group exists
     const group = await prisma.t_groupe.findUnique({
-      where: { IdGroupe: idGroupe },
+      where: { Id_Groupe: idGroupe },
     });
 
     if (!group) {
@@ -89,7 +89,7 @@ export async function POST(
 
     // Check if user exists
     const user = await prisma.t_utilisateur.findUnique({
-      where: { IdUtilisateur: userId },
+      where: { Id_Utilisateur: userId },
     });
 
     if (!user) {
@@ -102,8 +102,8 @@ export async function POST(
     // Check if liaison already exists
     const existingLiaison = await prisma.t_liaison_utilisateur_groupe.findFirst({
       where: {
-        IdUtilisateur: userId,
-        IdGroupe: idGroupe,
+        Id_Utilisateur: userId,
+        Id_Groupe: idGroupe,
       },
     });
 
@@ -117,16 +117,16 @@ export async function POST(
     // Create new liaison
     const liaison = await prisma.t_liaison_utilisateur_groupe.create({
       data: {
-        IdUtilisateur: userId,
-        IdGroupe: idGroupe,
+        Id_Utilisateur: userId,
+        Id_Groupe: idGroupe,
       },
       select: {
-        IdLiaison: true,
+        Id_Liaison: true,
         t_groupe: {
           select: {
-            IdGroupe: true,
-            NomGroupe: true,
-            NumeroRegroupement: true,
+            Id_Groupe: true,
+            Nom_Groupe: true,
+            Numero_Regroupement: true,
           },
         },
       },
@@ -135,10 +135,10 @@ export async function POST(
     return NextResponse.json({
       message: "Group assigned to user successfully",
       group: {
-        idLiaison: liaison.IdLiaison,
-        idGroupe: liaison.t_groupe?.IdGroupe,
-        nomGroupe: liaison.t_groupe?.NomGroupe,
-        numeroRegroupement: liaison.t_groupe?.NumeroRegroupement,
+        idLiaison: liaison.Id_Liaison,
+        idGroupe: liaison.t_groupe?.Id_Groupe,
+        nomGroupe: liaison.t_groupe?.Nom_Groupe,
+        numeroRegroupement: liaison.t_groupe?.Numero_Regroupement,
       },
     });
   } catch (error) {

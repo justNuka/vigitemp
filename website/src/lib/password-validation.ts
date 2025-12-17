@@ -96,41 +96,41 @@ export async function checkPasswordHistory(
 ): Promise<{ isReused: boolean; matchingHash?: string }> {
   try {
     // Récupérer TOUS les anciens mots de passe (historique complet)
-    const oldPasswords = await prisma.t_ancienmotpasse.findMany({
+    const oldPasswords = await prisma.t_ancien_mot_de_passe.findMany({
       where: {
-        IdUtilisateur: userId,
+        Id_Utilisateur: userId,
       },
       select: {
-        MotDePasse: true,
+        Mot_De_Passe: true,
       },
       orderBy: {
-        IdAncienMotPasse: "desc",
+        Id_Ancien_Mot_De_Passe: "desc",
       },
     });
 
     // Récupérer aussi le mot de passe actuel
     const currentUser = await prisma.t_utilisateur.findUnique({
-      where: { IdUtilisateur: userId },
-      select: { Mot_de_passe: true },
+      where: { Id_Utilisateur: userId },
+      select: { Mot_De_Passe: true },
     });
 
     // Vérifier le mot de passe actuel
-    if (currentUser?.Mot_de_passe) {
+    if (currentUser?.Mot_De_Passe) {
       const matchesCurrent = await bcrypt.compare(
         newPassword,
-        currentUser.Mot_de_passe
+        currentUser.Mot_De_Passe
       );
       if (matchesCurrent) {
-        return { isReused: true, matchingHash: currentUser.Mot_de_passe };
+        return { isReused: true, matchingHash: currentUser.Mot_De_Passe };
       }
     }
 
     // Vérifier les anciens mots de passe
     for (const oldPassword of oldPasswords) {
-      if (oldPassword.MotDePasse) {
-        const matches = await bcrypt.compare(newPassword, oldPassword.MotDePasse);
+      if (oldPassword.Mot_De_Passe) {
+        const matches = await bcrypt.compare(newPassword, oldPassword.Mot_De_Passe);
         if (matches) {
-          return { isReused: true, matchingHash: oldPassword.MotDePasse };
+          return { isReused: true, matchingHash: oldPassword.Mot_De_Passe };
         }
       }
     }

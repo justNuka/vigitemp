@@ -4,7 +4,7 @@ import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import { DevModeBadge } from "@/components/dev-mode-badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ServerAlarms, ServerAlarmStats } from "../../alarms/server-alarms";
+import { ServerAlarms, ServerAlarmStats } from "../../alarmes/server-alarms";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AlarmsPerfTestPage() {

@@ -18,25 +18,25 @@ import { AlertCircle, CheckCircle2, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface User {
-  IdUtilisateur: number;
+  Id_Utilisateur: number;
   Login: string;
   Nom: string;
   Prenom: string;
 }
 
 interface Site {
-  IdSite: number;
-  CodeSite?: string;
-  LibelleSite?: string;
-  Archive?: boolean;
+  Id_Site: number;
+  Code_Site?: string;
+  Libelle_Site?: string;
+  Est_Archive?: boolean;
 }
 
 interface Group {
-  IdGroupe: number;
-  NomGroupe?: string;
-  NumeroRegroupement?: string;
-  Archive?: boolean;
-  idLiaison?: number;
+  Id_Groupe: number;
+  Nom_Groupe?: string;
+  Numero_Regroupement?: string;
+  Est_Archive?: boolean;
+  Id_Liaison?: number;
 }
 
 interface UserAccessDialogProps {
@@ -77,10 +77,10 @@ export function UserAccessDialog({
 
   // Fetch user's sites
   const { data: userSites = [] } = useQuery({
-    queryKey: ["userSites", user?.IdUtilisateur],
+    queryKey: ["userSites", user?.Id_Utilisateur],
     queryFn: async () => {
       if (!user) return [];
-      const res = await axios.get(`/api/users/${user.IdUtilisateur}/sites`);
+      const res = await axios.get(`/api/users/${user.Id_Utilisateur}/sites`);
       return res.data;
     },
     enabled: isOpen && !!user,
@@ -88,10 +88,10 @@ export function UserAccessDialog({
 
   // Fetch user's groups
   const { data: userGroups = [] } = useQuery({
-    queryKey: ["userGroups", user?.IdUtilisateur],
+    queryKey: ["userGroups", user?.Id_Utilisateur],
     queryFn: async () => {
       if (!user) return [];
-      const res = await axios.get(`/api/users/${user.IdUtilisateur}/groups`);
+      const res = await axios.get(`/api/users/${user.Id_Utilisateur}/groups`);
       return res.data;
     },
     enabled: isOpen && !!user,
@@ -100,20 +100,20 @@ export function UserAccessDialog({
   // Initialize selected items when data loads
   useEffect(() => {
     if (userSites.length > 0) {
-      setSelectedSites(userSites.map((s: Site) => s.IdSite));
+      setSelectedSites(userSites.map((s: Site) => s.Id_Site));
     }
   }, [userSites]);
 
   useEffect(() => {
     if (userGroups.length > 0) {
-      setSelectedGroups(userGroups.map((g: Group) => g.IdGroupe));
+      setSelectedGroups(userGroups.map((g: Group) => g.Id_Groupe));
     }
   }, [userGroups]);
 
   // Mutations
   const addSiteMutation = useMutation({
-    mutationFn: async (idSite: number) => {
-      await axios.post(`/api/users/${user?.IdUtilisateur}/sites`, { idSite });
+    mutationFn: async (Id_Site: number) => {
+      await axios.post(`/api/users/${user?.Id_Utilisateur}/sites`, { Id_Site });
     },
     onSuccess: () => {
       toast.success("Site ajouté avec succès");
@@ -124,8 +124,8 @@ export function UserAccessDialog({
   });
 
   const removeSiteMutation = useMutation({
-    mutationFn: async (siteId: number) => {
-      await axios.delete(`/api/users/${user?.IdUtilisateur}/sites/${siteId}`);
+    mutationFn: async (Id_Site: number) => {
+      await axios.delete(`/api/users/${user?.Id_Utilisateur}/sites/${Id_Site}`);
     },
     onSuccess: () => {
       toast.success("Site supprimé avec succès");
@@ -136,8 +136,8 @@ export function UserAccessDialog({
   });
 
   const addGroupMutation = useMutation({
-    mutationFn: async (idGroupe: number) => {
-      await axios.post(`/api/users/${user?.IdUtilisateur}/groups`, { idGroupe });
+    mutationFn: async (Id_Groupe: number) => {
+      await axios.post(`/api/users/${user?.Id_Utilisateur}/groups`, { Id_Groupe });
     },
     onSuccess: () => {
       toast.success("Groupe ajouté avec succès");
@@ -148,8 +148,8 @@ export function UserAccessDialog({
   });
 
   const removeGroupMutation = useMutation({
-    mutationFn: async (idLiaison: number) => {
-      await axios.delete(`/api/users/${user?.IdUtilisateur}/groups/${idLiaison}`);
+    mutationFn: async (Id_Liaison: number) => {
+      await axios.delete(`/api/users/${user?.Id_Utilisateur}/groups/${Id_Liaison}`);
     },
     onSuccess: () => {
       toast.success("Groupe supprimé avec succès");
@@ -159,26 +159,26 @@ export function UserAccessDialog({
     },
   });
 
-  const handleSiteToggle = async (siteId: number) => {
-    if (selectedSites.includes(siteId)) {
-      setSelectedSites(selectedSites.filter((id) => id !== siteId));
-      await removeSiteMutation.mutateAsync(siteId);
+  const handleSiteToggle = async (Id_Site: number) => {
+    if (selectedSites.includes(Id_Site)) {
+      setSelectedSites(selectedSites.filter((id) => id !== Id_Site));
+      await removeSiteMutation.mutateAsync(Id_Site);
     } else {
-      setSelectedSites([...selectedSites, siteId]);
-      await addSiteMutation.mutateAsync(siteId);
+      setSelectedSites([...selectedSites, Id_Site]);
+      await addSiteMutation.mutateAsync(Id_Site);
     }
   };
 
-  const handleGroupToggle = async (groupId: number) => {
-    if (selectedGroups.includes(groupId)) {
-      const group = userGroups.find((g: Group) => g.IdGroupe === groupId);
+  const handleGroupToggle = async (Id_Groupe: number) => {
+    if (selectedGroups.includes(Id_Groupe)) {
+      const group = userGroups.find((g: Group) => g.Id_Groupe === Id_Groupe);
       if (group) {
-        setSelectedGroups(selectedGroups.filter((id) => id !== groupId));
-        await removeGroupMutation.mutateAsync(group.IdLiaison);
+        setSelectedGroups(selectedGroups.filter((id) => id !== Id_Groupe));
+        await removeGroupMutation.mutateAsync(group.Id_Liaison);
       }
     } else {
-      setSelectedGroups([...selectedGroups, groupId]);
-      await addGroupMutation.mutateAsync(groupId);
+      setSelectedGroups([...selectedGroups, Id_Groupe]);
+      await addGroupMutation.mutateAsync(Id_Groupe);
     }
   };
 
@@ -213,27 +213,27 @@ export function UserAccessDialog({
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {allSites.map((site: Site) => (
                   <div
-                    key={site.IdSite}
+                    key={site.Id_Site}
                     className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent"
                   >
                     <Checkbox
-                      id={`site-${site.IdSite}`}
-                      checked={selectedSites.includes(site.IdSite)}
-                      onCheckedChange={() => handleSiteToggle(site.IdSite)}
+                      id={`site-${site.Id_Site}`}
+                      checked={selectedSites.includes(site.Id_Site)}
+                      onCheckedChange={() => handleSiteToggle(site.Id_Site)}
                       disabled={addSiteMutation.isPending || removeSiteMutation.isPending}
                     />
                     <Label
-                      htmlFor={`site-${site.IdSite}`}
+                      htmlFor={`site-${site.Id_Site}`}
                       className="flex-1 cursor-pointer flex items-center gap-2"
                     >
-                      <span>{site.LibelleSite}</span>
-                      {site.Archive && (
+                      <span>{site.Libelle_Site}</span>
+                      {site.Est_Archive && (
                         <Badge variant="secondary" className="text-xs">
                           Archivé
                         </Badge>
                       )}
                     </Label>
-                    {selectedSites.includes(site.IdSite) && (
+                    {selectedSites.includes(site.Id_Site) && (
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                     )}
                   </div>
@@ -255,27 +255,27 @@ export function UserAccessDialog({
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {allGroups.map((group: Group) => (
                   <div
-                    key={group.IdGroupe}
+                    key={group.Id_Groupe}
                     className="flex items-center gap-3 p-3 border rounded-lg hover:bg-accent"
                   >
                     <Checkbox
-                      id={`group-${group.IdGroupe}`}
-                      checked={selectedGroups.includes(group.IdGroupe)}
-                      onCheckedChange={() => handleGroupToggle(group.IdGroupe)}
+                      id={`group-${group.Id_Groupe}`}
+                      checked={selectedGroups.includes(group.Id_Groupe)}
+                      onCheckedChange={() => handleGroupToggle(group.Id_Groupe)}
                       disabled={addGroupMutation.isPending || removeGroupMutation.isPending}
                     />
                     <Label
-                      htmlFor={`group-${group.IdGroupe}`}
+                      htmlFor={`group-${group.Id_Groupe}`}
                       className="flex-1 cursor-pointer flex items-center gap-2"
                     >
-                      <span>{group.NomGroupe}</span>
-                      {group.Archive && (
+                      <span>{group.Nom_Groupe}</span>
+                      {group.Est_Archive && (
                         <Badge variant="secondary" className="text-xs">
                           Archivé
                         </Badge>
                       )}
                     </Label>
-                    {selectedGroups.includes(group.IdGroupe) && (
+                    {selectedGroups.includes(group.Id_Groupe) && (
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                     )}
                   </div>

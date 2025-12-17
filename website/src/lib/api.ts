@@ -152,10 +152,12 @@ export const authApi = {
     fetcher<void>("/auth/logout", {
       method: "POST",
     }),
-  getCurrentUser: () => fetcher<User>("/auth/me"),
+  getCurrentUser: () => fetcher<CurrentUser>("/me"),
 };
 
 // Types (will be imported from Prisma later)
+import { CurrentUser } from "@/lib/types";
+
 export type DashboardStats = {
   totalLocations: number;
   activeAlarms: number;
@@ -210,6 +212,8 @@ export type Location = {
   siteId?: number;
   groupId1?: number | null;
   groupId2?: number | null;
+  groupName1?: string | null;
+  groupName2?: string | null;
   site?: string;
 };
 
@@ -250,7 +254,7 @@ export type User = {
   nom: string;
   prenom: string;
   email: string;
-  role: "admin" | "user";
+  role: string;
   isActive: boolean;
   createdAt: Date;
 };
@@ -288,7 +292,11 @@ export type PasswordRules = {
   min_lowercase: number;
   min_numbers: number;
   min_special: number;
+  // CFR21 parameters
+  cfr21_enabled: boolean;
   history_count: number;
+  expiry_days: number;
+  expiry_enabled: boolean;
 };
 
 export type CreateSensorInput = Omit<

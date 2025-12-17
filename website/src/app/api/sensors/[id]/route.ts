@@ -21,13 +21,13 @@ export async function GET(
     const sensorId = parseInt(id);
 
     const lieu = await prisma.t_lieu.findUnique({
-      where: { IdLieu: sensorId },
+      where: { Id_Lieu: sensorId },
       include: {
         t_site: {
           select: {
-            IdSite: true,
-            CodeSite: true,
-            LibelleSite: true,
+            Id_Site: true,
+            Code_Site: true,
+            Libelle_Site: true,
           },
         },
       },
@@ -38,17 +38,17 @@ export async function GET(
     }
 
     return NextResponse.json({
-      id: lieu.IdLieu,
+      id: lieu.Id_Lieu,
       name: lieu.Nom_Lieu,
       status: lieu.Lieu_Etat === "O" ? "ok" : lieu.Lieu_Etat === "P" ? "warning" : lieu.Lieu_Etat === "A" ? "critical" : "offline",
-      value: lieu.DernierValeur !== null ? parseFloat(lieu.DernierValeur.toString()) : null,
-      unit: lieu.DernierUnite || "°C",
-      lastUpdate: lieu.DernierDateHeure?.toISOString() || new Date().toISOString(),
+      value: lieu.Derniere_Valeur !== null ? parseFloat(lieu.Derniere_Valeur.toString()) : null,
+      unit: lieu.Derniere_Unite || "°C",
+      lastUpdate: lieu.Derniere_Date_Heure?.toISOString() || new Date().toISOString(),
       location: {
-        id: lieu.IdSite || 0,
-        name: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
-          ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
-          : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || "Unknown",
+        id: lieu.Id_Site || 0,
+        name: lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
+          ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
+          : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || "Unknown",
       },
       minThreshold: lieu.Consigne_Inf,
       maxThreshold: lieu.Consigne_Sup,
@@ -82,14 +82,14 @@ export async function PATCH(
     if (data.unit) updateData.DernierUnite = data.unit;
 
     const lieu = await prisma.t_lieu.update({
-      where: { IdLieu: sensorId },
+      where: { Id_Lieu: sensorId },
       data: updateData,
       include: {
         t_site: {
           select: {
-            IdSite: true,
-            CodeSite: true,
-            LibelleSite: true,
+            Id_Site: true,
+            Code_Site: true,
+            Libelle_Site: true,
           },
         },
       },
@@ -112,14 +112,14 @@ export async function PATCH(
     );
 
     return NextResponse.json({
-      id: lieu.IdLieu,
+      id: lieu.Id_Lieu,
       name: lieu.Nom_Lieu,
       status: lieu.Lieu_Etat === "O" ? "ok" : lieu.Lieu_Etat === "P" ? "warning" : "critical",
       location: {
-        id: lieu.IdSite || 0,
-        name: lieu.t_site?.CodeSite && lieu.t_site?.LibelleSite
-          ? `${lieu.t_site.CodeSite} - ${lieu.t_site.LibelleSite}`
-          : lieu.t_site?.CodeSite || lieu.t_site?.LibelleSite || "Unknown",
+        id: lieu.Id_Site || 0,
+        name: lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
+          ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
+          : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || "Unknown",
       },
     });
   } catch (error) {
@@ -151,14 +151,14 @@ export async function DELETE(
 
     // Get sensor info before deletion
     const sensorToDelete = await prisma.t_lieu.findUnique({
-      where: { IdLieu: sensorId },
+      where: { Id_Lieu: sensorId },
       select: { Nom_Lieu: true },
     });
 
-    // Soft delete by setting Archive to true
+    // Soft delete by setting Est_Archive to true
     await prisma.t_lieu.update({
-      where: { IdLieu: sensorId },
-      data: { Archive: true },
+      where: { Id_Lieu: sensorId },
+      data: { Est_Archive: true },
     });
 
     // Log sensor deletion

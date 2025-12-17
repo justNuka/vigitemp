@@ -12,32 +12,32 @@ export async function ServerAuditLogs(limit = 100, codeFilter?: string) {
   cacheTag("audit-logs");
 
   const whereClause = codeFilter 
-    ? { CodeJournal: codeFilter }
+    ? { Code_Journal: codeFilter }
     : {};
 
-  const logs = await prismaMesure.ts_journal.findMany({
+  const logs = await prismaMesure.tm_journal.findMany({
     where: whereClause,
     take: limit,
-    orderBy: { DateHeureJournal: "desc" },
+    orderBy: { Date_Heure_Journal: "desc" },
     select: {
-      IdJournal: true,
-      DateHeureJournal: true,
-      CodeJournal: true,
+      Id_Journal: true,
+      Date_Heure_Journal: true,
+      Code_Journal: true,
       Commentaire: true,
-      NomUtilisateur: true,
-      IdLieu: true,
+      Nom_Utilisateur: true,
+      Id_Lieu: true,
     },
   });
 
   // Transform to AuditLog format
   const formatted = logs.map((log) => ({
-    id: log.IdJournal.toString(),
-    userId: log.NomUtilisateur || null,
-    action: log.CodeJournal || "unknown",
+    id: log.Id_Journal.toString(),
+    userId: log.Nom_Utilisateur || null,
+    action: log.Code_Journal || "unknown",
     details: log.Commentaire || null,
-    targetType: log.IdLieu ? "sensor" : null,
-    targetId: log.IdLieu?.toString() || null,
-    timestamp: log.DateHeureJournal || new Date(),
+    targetType: log.Id_Lieu ? "sensor" : null,
+    targetId: log.Id_Lieu?.toString() || null,
+    timestamp: log.Date_Heure_Journal || new Date(),
     ipAddress: null,
   }));
 
@@ -51,15 +51,15 @@ export async function ServerAuditStats() {
   "use cache";
   cacheTag("audit-stats");
 
-  const totalLogs = await prismaMesure.ts_journal.count();
+  const totalLogs = await prismaMesure.tm_journal.count();
 
   // Get logs from last 24h
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
 
-  const recentLogs = await prismaMesure.ts_journal.count({
+  const recentLogs = await prismaMesure.tm_journal.count({
     where: {
-      DateHeureJournal: {
+      Date_Heure_Journal: {
         gte: yesterday,
       },
     },

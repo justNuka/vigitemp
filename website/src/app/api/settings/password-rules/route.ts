@@ -4,64 +4,85 @@ import { prisma } from "@/lib/prisma";
 /**
  * GET /api/settings/password-rules
  * Récupère toutes les règles de validation des mots de passe depuis t_parametre
+ * Utilise la nouvelle structure avec les sections:
+ * - SECURITE_MOT_DE_PASSE: Règles de complexity (longueur, majuscules, minuscules, chiffres, caractères spéciaux)
+ * - CFR21: Paramètres réglementaires (expiration, historique, activation CFR21)
  */
 export async function GET() {
   try {
-    // Récupérer tous les paramètres de sécurité des mots de passe
-    const params = await prisma.t_parametre.findMany({
+    // Récupérer les paramètres de sécurité des mots de passe (SECURITE_MOT_DE_PASSE)
+    const securityParams = await prisma.t_parametre.findMany({
       where: {
-        Section: "security",
-        MotCle: {
-          startsWith: "password_",
-        },
+        Section: "SECURITE_MOT_DE_PASSE",
       },
       select: {
-        MotCle: true,
+        Mot_Cle: true,
         Valeur: true,
       },
     });
 
-    // Transformer en objet avec des valeurs numériques
-    const rules = params.reduce(
+    // Récupérer les paramètres CFR21
+    const cfr21Params = await prisma.t_parametre.findMany({
+      where: {
+        Section: "CFR21",
+      },
+      select: {
+        Mot_Cle: true,
+        Valeur: true,
+      },
+    });
+
+    // Transformer en objets avec des valeurs numériques
+    const securityRules = securityParams.reduce(
       (acc, param) => {
-        const key = param.MotCle;
-        const value = parseInt(param.Valeur || "0", 10);
-        acc[key] = value;
+        acc[param.Mot_Cle] = parseInt(param.Valeur || "0", 10);
         return acc;
       },
       {} as Record<string, number>
     );
 
+    const cfr21Rules = cfr21Params.reduce(
+      (acc, param) => {
+        if (param.Mot_Cle === "ACTIVATION_NORME_CFR21") {
+          acc[param.Mot_Cle] = param.Valeur === "1" || param.Valeur?.toLowerCase() === "true";
+        } else {
+          acc[param.Mot_Cle] = parseInt(param.Valeur || "0", 10);
+        }
+        return acc;
+      },
+      {} as Record<string, number | boolean>
+    );
+
     // Vérifier que tous les paramètres nécessaires existent
-    const requiredKeys = [
-      "password_min_length",
-      "password_min_uppercase",
-      "password_min_lowercase",
-      "password_min_numbers",
-      "password_min_special",
-      "password_history_count",
+    const requiredSecurityKeys = [
+      "LONGUEUR_MINIMALE",
+      "MIN_LETTRES_MAJUSCULES",
+      "MIN_LETTRES_MINUSCULES",
+      "MIN_CHIFFRES",
+      "MIN_CARACTERES_SPECIAUX",
     ];
 
-    const missingKeys = requiredKeys.filter((key) => !(key in rules));
+    const missingSecurityKeys = requiredSecurityKeys.filter((key) => !(key in securityRules));
 
-    if (missingKeys.length > 0) {
-      console.error(
+    if (missingSecurityKeys.length > 0) {
+      console.warn(
         "⚠️ Paramètres de sécurité manquants:",
-        missingKeys.join(", ")
-      );
-      console.error(
-        "💡 Lancez: npx tsx scripts/seed-password-params.ts pour les créer"
+        missingSecurityKeys.join(", ")
       );
     }
 
     // Retourner avec des valeurs par défaut si manquantes
     return NextResponse.json({
-      min_length: rules.password_min_length ?? 8,
-      min_uppercase: rules.password_min_uppercase ?? 1,
-      min_lowercase: rules.password_min_lowercase ?? 1,
-      min_numbers: rules.password_min_numbers ?? 1,
-      min_special: rules.password_min_special ?? 1,
-      history_count: rules.password_history_count ?? 5,
+      min_length: securityRules.LONGUEUR_MINIMALE ?? 8,
+      min_uppercase: securityRules.MIN_LETTRES_MAJUSCULES ?? 1,
+      min_lowercase: securityRules.MIN_LETTRES_MINUSCULES ?? 1,
+      min_numbers: securityRules.MIN_CHIFFRES ?? 1,
+      min_special: securityRules.MIN_CARACTERES_SPECIAUX ?? 1,
+      // Paramètres CFR21
+      cfr21_enabled: (cfr21Rules.ACTIVATION_NORME_CFR21 as boolean) ?? false,
+      history_count: (cfr21Rules.NOMBRE_ANCIENS_MOT_DE_PASSE as number) ?? 5,
+      expiry_days: (cfr21Rules.JOURS_VALIDITE_MOT_DE_PASSE as number) ?? 90,
+      expiry_enabled: (cfr21Rules.ACTIVATION_EXPIRATION_MOT_DE_PASSE as boolean) ?? false,
     });
   } catch (error) {
     console.error("Error fetching password rules:", error);

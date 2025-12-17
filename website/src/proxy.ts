@@ -12,7 +12,7 @@ const TEST_ROUTES = ["/surveillance-cached", "/test", "/debug"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get("token");
+  const token = request.cookies.get("auth-token");
 
   // Debug logs
   console.log(`[Proxy] ${pathname} - Token: ${token ? 'YES' : 'NO'}`);

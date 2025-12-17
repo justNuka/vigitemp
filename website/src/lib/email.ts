@@ -13,11 +13,12 @@ interface EmailConfig {
 
 /**
  * Get email configuration from database parameters
+ * Uses the new parameter structure with section: SECURITE_EMAIL
  */
 async function getEmailConfig(): Promise<EmailConfig> {
   const params = await prisma.t_parametre.findMany({
     where: {
-      Section: "security:email",
+      Section: "SECURITE_EMAIL",
     },
   });
 
@@ -26,29 +27,29 @@ async function getEmailConfig(): Promise<EmailConfig> {
     port: 587,
     user: "",
     password: "",
-    from: "noreply@vigitemp.com",
+    from: "noreply@alwaysdata.net",
     enabled: false,
   };
 
   params.forEach((param) => {
-    switch (param.MotCle) {
-      case "smtp_host":
+    switch (param.Mot_Cle) {
+      case "SMTP_SERVEUR":
         config.host = param.Valeur || "sandbox.smtp.mailtrap.io";
         break;
-      case "smtp_port":
+      case "SMTP_PORT":
         config.port = parseInt(param.Valeur || "587");
         break;
-      case "smtp_user":
+      case "SMTP_UTILISATEUR":
         config.user = param.Valeur || "eb3e24c69a3763";
         break;
-      case "smtp_password":
+      case "SMTP_MOT_DE_PASSE":
         config.password = param.Valeur || "b2056d25397007";
         break;
-      case "smtp_from":
-        config.from = param.Valeur || "noreply@vigitemp.com";
+      case "SMTP_EXPEDITEUR":
+        config.from = param.Valeur || "noreply@alwaysdata.net";
         break;
-      case "smtp_enabled":
-        config.enabled = param.Valeur === "true";
+      case "SMTP_ACTIVATION":
+        config.enabled = param.Valeur === "1" || param.Valeur?.toLowerCase() === "true";
         break;
     }
   });
