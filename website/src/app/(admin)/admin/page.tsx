@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PageHeader } from "@/components/page-header";
 import {
   Card,
   CardContent,
@@ -61,13 +62,10 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="flex-1 space-y-6 p-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Tableau de Bord Administrateur</h1>
-        <p className="text-muted-foreground mt-2">Gestion centralisée du système</p>
-      </div>
-
+    <div className="flex flex-col min-h-full">
+      <PageHeader title="Tableau de Bord Admin" />
+      
+      <div className="space-y-6 p-6">
       {/* Journal acquittements (full width, prioritaire) */}
       <Card className="lg:min-h-96">
         <CardHeader>
@@ -223,6 +221,7 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   );

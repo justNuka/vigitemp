@@ -18,6 +18,8 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { usePasswordRules } from "@/hooks/usePasswordRules";
 import { useProfiles } from "@/hooks/useProfiles";
+import { useSites } from "@/hooks/useSites";
+import { useGroups } from "@/hooks/useGroups";
 import { validatePassword } from "@/lib/password-validation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,6 +50,9 @@ const createUserSchema = z.object({
   prenom: z.string().min(1, "Le prénom est requis"),
   email: z.string().email("Email invalide"),
   profileId: z.string().min(1, "Le profil est requis"),
+  telephone: z.string().optional(),
+  siteIds: z.array(z.coerce.number()).optional(),
+  groupeIds: z.array(z.coerce.number()).optional(),
   hasExpiryDate: z.boolean(),
   expiryDate: z.date().optional(),
 }).refine((data) => data.password === data.passwordConfirm, {
@@ -63,6 +68,9 @@ const editUserSchema = z.object({
   prenom: z.string().min(1, "Le prénom est requis"),
   email: z.string().email("Email invalide"),
   profileId: z.string().min(1, "Le profil est requis"),
+  telephone: z.string().optional(),
+  siteIds: z.array(z.coerce.number()).optional(),
+  groupeIds: z.array(z.coerce.number()).optional(),
   hasExpiryDate: z.boolean(),
   expiryDate: z.date().optional(),
   password: z.string().optional(),
@@ -83,6 +91,8 @@ export function UsersClient({ users }: Props) {
   const queryClient = useQueryClient();
   const { data: rules, isLoading: rulesLoading } = usePasswordRules();
   const { data: profiles, isLoading: profilesLoading } = useProfiles();
+  const { data: sites, isLoading: sitesLoading } = useSites();
+  const { data: groups, isLoading: groupsLoading } = useGroups();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -104,6 +114,9 @@ export function UsersClient({ users }: Props) {
       prenom: "",
       email: "",
       profileId: "",
+      telephone: "",
+      siteIds: [],
+      groupeIds: [],
       hasExpiryDate: false,
       expiryDate: undefined,
     } as CreateUserFormValues,
@@ -270,29 +283,126 @@ export function UsersClient({ users }: Props) {
     return true;
   });
 
-  const onSubmit = (data: CreateUserFormValues) => {
+  const onSubmit = async (data: CreateUserFormValues) => {
     // Vérifier les règles de mot de passe
     if (validation && !validation.isValid) {
       toast.error("Le mot de passe ne respecte pas les règles de sécurité");
       return;
     }
 
-    // Créer l'utilisateur (sans passwordConfirm et hasExpiryDate)
-    const { passwordConfirm, hasExpiryDate, ...userData } = data;
-    createMutation.mutate(userData);
+    // Créer l'utilisateur (sans passwordConfirm, hasExpiryDate, siteIds, groupeIds)
+    const { passwordConfirm, hasExpiryDate, siteIds, groupeIds, ...userData } = data;
+    
+    // Créer l'utilisateur
+    createMutation.mutate(userData as CreateUserInput, {
+      onSuccess: async (createdUser) => {
+        // Ajouter les sites
+        if (siteIds && siteIds.length > 0) {
+          try {
+            for (const siteId of siteIds) {
+              await fetch(`/api/users/${createdUser.id}/sites`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ siteId }),
+              });
+            }
+          } catch (error) {
+            console.error("Erreur lors de l'ajout des sites:", error);
+          }
+        }
+
+        // Ajouter les groupes
+        if (groupeIds && groupeIds.length > 0) {
+          try {
+            for (const groupId of groupeIds) {
+              await fetch(`/api/users/${createdUser.id}/groups`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ groupId }),
+              });
+            }
+          } catch (error) {
+            console.error("Erreur lors de l'ajout des groupes:", error);
+          }
+        }
+      },
+    });
   };
 
-  const onEditSubmit = (data: EditUserFormValues) => {
+  const onEditSubmit = async (data: EditUserFormValues) => {
     if (!selectedUser) return;
 
-    // Préparer les données (enlever passwordConfirm, hasExpiryDate, et password vide)
-    const { passwordConfirm, hasExpiryDate, password, ...userData } = data;
+    // Préparer les données (enlever passwordConfirm, hasExpiryDate, siteIds, groupeIds, et password vide)
+    const { passwordConfirm, hasExpiryDate, siteIds, groupeIds, password, ...userData } = data;
     const updateData = {
       ...userData,
       ...(password ? { password } : {}),
     };
 
-    updateMutation.mutate({ id: selectedUser.id, data: updateData });
+    updateMutation.mutate({ id: selectedUser.id, data: updateData as any }, {
+      onSuccess: async () => {
+        // Mettre à jour les sites
+        if (siteIds) {
+          try {
+            // Récupérer les sites actuels
+            const response = await fetch(`/api/users/${selectedUser.id}/sites`);
+            const currentSites = await response.json();
+            const currentSiteIds = currentSites.map((s: any) => s.id_Site);
+
+            // Supprimer les sites qui ne sont plus sélectionnés
+            for (const siteId of currentSiteIds) {
+              if (!siteIds.includes(siteId)) {
+                await fetch(`/api/users/${selectedUser.id}/sites/${siteId}`, {
+                  method: "DELETE",
+                });
+              }
+            }
+
+            // Ajouter les nouveaux sites
+            for (const siteId of siteIds) {
+              if (!currentSiteIds.includes(siteId)) {
+                await fetch(`/api/users/${selectedUser.id}/sites`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ siteId }),
+                });
+              }
+            }
+          } catch (error) {
+            console.error("Erreur lors de la mise à jour des sites:", error);
+          }
+        }
+
+        // Mettre à jour les groupes (logique similaire)
+        if (groupeIds) {
+          try {
+            const response = await fetch(`/api/users/${selectedUser.id}/groups`);
+            const currentGroups = await response.json();
+            const currentGroupIds = currentGroups.map((g: any) => g.id);
+
+            for (const groupId of currentGroupIds) {
+              if (!groupeIds.includes(groupId)) {
+                await fetch(`/api/users/${selectedUser.id}/groups/${groupId}`, {
+                  method: "DELETE",
+                });
+              }
+            }
+
+            for (const groupId of groupeIds) {
+              if (!currentGroupIds.includes(groupId)) {
+                await fetch(`/api/users/${selectedUser.id}/groups`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ groupId }),
+                });
+              }
+            }
+          } catch (error) {
+            console.error("Erreur lors de la mise à jour des groupes:", error);
+          }
+        }
+      },
+    });
   };
 
   return (
@@ -371,7 +481,7 @@ export function UsersClient({ users }: Props) {
                     <FormItem>
                       <FormLabel>Login *</FormLabel>
                       <FormControl>
-                        <Input placeholder="jdupont" {...field} />
+                        <Input placeholder="jdupont" autoComplete="off" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -402,6 +512,7 @@ export function UsersClient({ users }: Props) {
                           <Input
                             type={showPassword ? "text" : "password"}
                             placeholder="Entrez un mot de passe"
+                            autoComplete="new-password"
                             {...field}
                           />
                           <Button
@@ -508,6 +619,7 @@ export function UsersClient({ users }: Props) {
                           <Input
                             type={showPasswordConfirm ? "text" : "password"}
                             placeholder="Retapez le mot de passe"
+                            autoComplete="new-password"
                             {...field}
                           />
                           <Button
@@ -558,6 +670,84 @@ export function UsersClient({ users }: Props) {
                       <FormDescription>
                         Le profil détermine les autorisations de l'utilisateur
                       </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="telephone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Téléphone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+33612345678" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="siteIds"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sites</FormLabel>
+                      <div className="space-y-2">
+                        {sites?.map((site) => (
+                          <div key={site.Id_Site} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`site-${site.Id_Site}`}
+                              checked={field.value?.includes(site.Id_Site) || false}
+                              onChange={(e) => {
+                                const newValues = e.target.checked
+                                  ? [...(field.value || []), site.Id_Site]
+                                  : (field.value || []).filter(id => id !== site.Id_Site);
+                                field.onChange(newValues);
+                              }}
+                              className="rounded border-gray-300"
+                            />
+                            <label htmlFor={`site-${site.Id_Site}`} className="text-sm">
+                              {site.Libelle_Site}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="groupeIds"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Groupes</FormLabel>
+                      <div className="space-y-2">
+                        {groups?.map((group) => (
+                          <div key={group.Id_Groupe} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={`groupe-${group.Id_Groupe}`}
+                              checked={field.value?.includes(group.Id_Groupe) || false}
+                              onChange={(e) => {
+                                const newValues = e.target.checked
+                                  ? [...(field.value || []), group.Id_Groupe]
+                                  : (field.value || []).filter(id => id !== group.Id_Groupe);
+                                field.onChange(newValues);
+                              }}
+                              className="rounded border-gray-300"
+                            />
+                            <label htmlFor={`groupe-${group.Id_Groupe}`} className="text-sm">
+                              {group.Nom_Groupe}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -878,12 +1068,12 @@ export function UsersClient({ users }: Props) {
                 <label htmlFor="profile-filter" className="text-sm font-medium block mb-2">
                   Profil
                 </label>
-                <Select value={filterProfile || ""} onValueChange={(value) => setFilterProfile(value || null)}>
+                <Select value={filterProfile || "all"} onValueChange={(value) => setFilterProfile(value === "all" ? null : value)}>
                   <SelectTrigger id="profile-filter">
                     <SelectValue placeholder="Tous les profils" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tous les profils</SelectItem>
+                    <SelectItem value="all">Tous les profils</SelectItem>
                     {profiles?.map((profile) => (
                       <SelectItem key={profile.id} value={profile.name}>
                         {profile.name}
@@ -898,12 +1088,12 @@ export function UsersClient({ users }: Props) {
                 <label htmlFor="status-filter" className="text-sm font-medium block mb-2">
                   Statut
                 </label>
-                <Select value={filterStatus || ""} onValueChange={(value) => setFilterStatus(value || null)}>
+                <Select value={filterStatus || "all"} onValueChange={(value) => setFilterStatus(value === "all" ? null : value)}>
                   <SelectTrigger id="status-filter">
                     <SelectValue placeholder="Tous les statuts" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tous les statuts</SelectItem>
+                    <SelectItem value="all">Tous les statuts</SelectItem>
                     <SelectItem value="active">Actif</SelectItem>
                     <SelectItem value="inactive">Inactif</SelectItem>
                   </SelectContent>

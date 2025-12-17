@@ -4,7 +4,7 @@ import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import { DevModeBadge } from "@/components/dev-mode-badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ServerUsers } from "../../utilisateurs/server-users";
+import { ServerUsers } from "../../../(admin)/admin/utilisateurs/server-users";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Shield, User as UserIcon } from "lucide-react";
 

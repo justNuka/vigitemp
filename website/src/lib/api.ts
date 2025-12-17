@@ -315,6 +315,7 @@ export type CreateUserInput = {
   prenom: string;
   email: string;
   profileId: string;
+  telephone?: string;
   expiryDate?: Date;
 };
 export type UpdateUserInput = Partial<Omit<CreateUserInput, "password">> & {
