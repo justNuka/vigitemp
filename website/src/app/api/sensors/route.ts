@@ -51,9 +51,9 @@ export async function GET(req: NextRequest) {
       id: lieu.Id_Lieu,
       name: lieu.Nom_Lieu || "Lieu sans nom",
       status: lieu.Lieu_Etat === "O" ? "ok" : lieu.Lieu_Etat === "P" ? "warning" : lieu.Lieu_Etat === "A" ? "critical" : "offline",
-      value: lieu.DernierValeur !== null ? parseFloat(lieu.DernierValeur.toString()) : null,
-      unit: lieu.DernierUnite || "°C",
-      lastUpdate: lieu.DernierDateHeure?.toISOString() || new Date().toISOString(),
+      value: lieu.Derniere_Valeur !== null ? parseFloat(lieu.Derniere_Valeur.toString()) : null,
+      unit: lieu.Derniere_Unite || "°C",
+      lastUpdate: lieu.Derniere_Date_Heure?.toISOString() || new Date().toISOString(),
       location: {
         id: lieu.Id_Site || 0,
         name: lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
         Id_Site: data.locationId,
         Consigne_Inf: data.minThreshold,
         Consigne_Sup: data.maxThreshold,
-        DernierUnite: data.unit || "°C",
+        Derniere_Unite: data.unit || "°C",
         Est_Archive: false,
         Lieu_Etat: "O", // O = OK by default
       },

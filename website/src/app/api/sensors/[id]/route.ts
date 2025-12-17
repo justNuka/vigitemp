@@ -41,9 +41,9 @@ export async function GET(
       id: lieu.Id_Lieu,
       name: lieu.Nom_Lieu,
       status: lieu.Lieu_Etat === "O" ? "ok" : lieu.Lieu_Etat === "P" ? "warning" : lieu.Lieu_Etat === "A" ? "critical" : "offline",
-      value: lieu.DernierValeur !== null ? parseFloat(lieu.DernierValeur.toString()) : null,
-      unit: lieu.DernierUnite || "°C",
-      lastUpdate: lieu.DernierDateHeure?.toISOString() || new Date().toISOString(),
+      value: lieu.Derniere_Valeur !== null ? parseFloat(lieu.Derniere_Valeur.toString()) : null,
+      unit: lieu.Derniere_Unite || "°C",
+      lastUpdate: lieu.Derniere_Date_Heure?.toISOString() || new Date().toISOString(),
       location: {
         id: lieu.Id_Site || 0,
         name: lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site

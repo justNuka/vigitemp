@@ -34,8 +34,8 @@ import { Button } from "@/components/ui/button";
 
 import { CurrentUser } from "@/lib/types";
 
-interface SectionItem {
-  label: string;
+interface NavItem {
+  title: string;
   href: string;
   icon: typeof LayoutDashboard;
 }

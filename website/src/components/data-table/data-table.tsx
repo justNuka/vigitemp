@@ -22,11 +22,13 @@ interface DataTableProps<TData> {
     enableColumnFilter?: boolean;
   }>;
   data: TData[];
+  emptyMessage?: string;
 }
 
 export function DataTable<TData extends Record<string, any>>({
   columns,
   data,
+  emptyMessage = "Aucun résultat.",
 }: DataTableProps<TData>) {
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sorting, setSorting] = useState<{
@@ -135,7 +137,7 @@ export function DataTable<TData extends Record<string, any>>({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Aucun résultat.
+                  {emptyMessage}
                 </TableCell>
               </TableRow>
             )}

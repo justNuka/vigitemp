@@ -160,8 +160,8 @@ export async function POST(req: NextRequest) {
     if (data.authorizations && data.authorizations.length > 0) {
       await prisma.t_liaison_profil_autorisation.createMany({
         data: data.authorizations.map((authId) => ({
-          Id_Profil: profile.Id_Profil,
-          Id_Autorisation: authId,
+          IdProfil: profile.Id_Profil,
+          IdAutorisation: authId,
         })),
       });
     }
@@ -198,7 +198,6 @@ export async function POST(req: NextRequest) {
         id: completeProfile!.Id_Profil,
         name: completeProfile!.Profil_Utilisateur,
         description: completeProfile!.Commentaire,
-        mc2: completeProfile!.MC2,
         authorizations: completeProfile!.t_liaison_profil_autorisation.map((liaison) => ({
           id: liaison.t_autorisation.Id_Autorisation,
           code: liaison.t_autorisation.Code_Autorisation,
