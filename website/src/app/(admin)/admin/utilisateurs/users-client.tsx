@@ -51,8 +51,8 @@ const createUserSchema = z.object({
   email: z.string().email("Email invalide"),
   profileId: z.string().min(1, "Le profil est requis"),
   telephone: z.string().optional(),
-  siteIds: z.array(z.coerce.number()).optional(),
-  groupeIds: z.array(z.coerce.number()).optional(),
+  siteIds: z.array(z.number()).optional(),
+  groupeIds: z.array(z.number()).optional(),
   hasExpiryDate: z.boolean(),
   expiryDate: z.date().optional(),
 }).refine((data) => data.password === data.passwordConfirm, {
@@ -69,8 +69,8 @@ const editUserSchema = z.object({
   email: z.string().email("Email invalide"),
   profileId: z.string().min(1, "Le profil est requis"),
   telephone: z.string().optional(),
-  siteIds: z.array(z.coerce.number()).optional(),
-  groupeIds: z.array(z.coerce.number()).optional(),
+  siteIds: z.array(z.number()).optional(),
+  groupeIds: z.array(z.number()).optional(),
   hasExpiryDate: z.boolean(),
   expiryDate: z.date().optional(),
   password: z.string().optional(),
@@ -697,21 +697,21 @@ export function UsersClient({ users }: Props) {
                       <FormLabel>Sites</FormLabel>
                       <div className="space-y-2">
                         {sites?.map((site) => (
-                          <div key={site.Id_Site} className="flex items-center space-x-2">
+                          <div key={site.id} className="flex items-center space-x-2">
                             <input
                               type="checkbox"
-                              id={`site-${site.Id_Site}`}
-                              checked={field.value?.includes(site.Id_Site) || false}
+                              id={`site-${site.id}`}
+                              checked={field.value?.includes(site.id) || false}
                               onChange={(e) => {
                                 const newValues = e.target.checked
-                                  ? [...(field.value || []), site.Id_Site]
-                                  : (field.value || []).filter(id => id !== site.Id_Site);
+                                  ? [...(field.value || []), site.id]
+                                  : (field.value || []).filter(id => id !== site.id);
                                 field.onChange(newValues);
                               }}
                               className="rounded border-gray-300"
                             />
-                            <label htmlFor={`site-${site.Id_Site}`} className="text-sm">
-                              {site.Libelle_Site}
+                            <label htmlFor={`site-${site.id}`} className="text-sm">
+                              {site.name}
                             </label>
                           </div>
                         ))}

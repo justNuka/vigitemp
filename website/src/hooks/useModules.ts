@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 export interface Module {
   Id_Module: number;
   Module_Numero_Serie: string | null;
+  Port_Serie: string | null;
 }
 
 async function fetchModules(): Promise<Module[]> {

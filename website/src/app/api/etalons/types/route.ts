@@ -13,22 +13,23 @@ export const GET = withLogging(async (req: NextRequest) => {
       );
     }
 
-    const modules = await prisma.t_module.findMany({
+    const types = await prisma.t_etalon_type.findMany({
       select: {
-        Id_Module: true,
-        Module_Numero_Serie: true,
-        Port_Serie: true,
+        Type_Etalon: true,
+        Nom: true,
+        Descriptif: true,
+        Resolution: true,
       },
       orderBy: {
-        Id_Module: "asc",
+        Type_Etalon: "asc",
       },
     });
 
-    return NextResponse.json(modules);
+    return NextResponse.json(types);
   } catch (error) {
-    console.error("Modules fetch error:", error);
+    console.error("Etalon types fetch error:", error);
     return NextResponse.json(
-      { error: "Erreur lors de la récupération des modules" },
+      { error: "Erreur lors de la récupération des types d'étalons" },
       { status: 500 }
     );
   }

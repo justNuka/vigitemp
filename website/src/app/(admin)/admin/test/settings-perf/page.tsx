@@ -4,7 +4,7 @@ import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import { DevModeBadge } from "@/components/dev-mode-badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ServerSettings } from "../../../(admin)/admin/parametres/server-settings";
+// import { ServerSettings } from "../../../(admin)/admin/parametres/server-settings";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SettingsPerfTestPage() {
@@ -90,7 +90,8 @@ export default function SettingsPerfTestPage() {
 
 async function SettingsDisplay() {
   const start = Date.now();
-  const settings = await ServerSettings();
+  // const settings = await ServerSettings();
+  const settings: any[] = [];
   const duration = Date.now() - start;
 
   return (

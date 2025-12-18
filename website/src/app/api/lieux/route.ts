@@ -13,22 +13,25 @@ export const GET = withLogging(async (req: NextRequest) => {
       );
     }
 
-    const modules = await prisma.t_module.findMany({
+    const lieux = await prisma.t_lieu.findMany({
       select: {
-        Id_Module: true,
-        Module_Numero_Serie: true,
-        Port_Serie: true,
+        Id_Lieu: true,
+        Nom_Lieu: true,
+        Est_Archive: true,
+      },
+      where: {
+        Est_Archive: false,
       },
       orderBy: {
-        Id_Module: "asc",
+        Nom_Lieu: "asc",
       },
     });
 
-    return NextResponse.json(modules);
+    return NextResponse.json(lieux);
   } catch (error) {
-    console.error("Modules fetch error:", error);
+    console.error("Lieux fetch error:", error);
     return NextResponse.json(
-      { error: "Erreur lors de la récupération des modules" },
+      { error: "Erreur lors de la récupération des lieux" },
       { status: 500 }
     );
   }
