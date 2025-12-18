@@ -174,7 +174,7 @@ export function MonitoringCardsGrid({
 
                       {/* Grille des sondes du groupe - conditionnel */}
                       {isGroupExpanded && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-fade-in">
+                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2 animate-fade-in">
                           {groupSensors.map((sensor) => (
                             <MonitoringCard
                               key={sensor.id}
@@ -182,6 +182,8 @@ export function MonitoringCardsGrid({
                               nomLieu={sensor.name}
                               sondeNumeroSerie={(sensor as any).SondeNumeroSerie}
                               lieuEtat={(sensor as any).Lieu_Etat}
+                              siteName={siteName}
+                              groupName={groupName}
                               onSurveillanceToggle={onSurveillanceToggle}
                             />
                           ))}

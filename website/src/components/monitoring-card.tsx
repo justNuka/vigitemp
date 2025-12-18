@@ -56,6 +56,8 @@ interface MonitoringCardProps {
   nomLieu: string;
   sondeNumeroSerie?: string;
   lieuEtat?: string;
+  siteName?: string;
+  groupName?: string;
   onSurveillanceToggle?: (idLieu: number, newState: boolean) => void;
 }
 
@@ -64,6 +66,8 @@ export default function MonitoringCard({
   nomLieu,
   sondeNumeroSerie,
   lieuEtat,
+  siteName,
+  groupName,
   onSurveillanceToggle,
 }: MonitoringCardProps) {
   const [data, setData] = useState<MeasureData[]>([]);
@@ -141,35 +145,19 @@ export default function MonitoringCard({
 
   return (
     <>
-      <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 min-h-[300px]">
-        {/* Top icons */}
-        <div className="absolute top-2 left-2 right-2 flex justify-between">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsModalOpen(true);
-            }}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title="Détails des mesures"
-          >
-            <FileText className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleSurveillanceToggle();
-            }}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-red-600"
-            title={isSurveillanceActive ? "Désactiver la surveillance" : "Activer la surveillance"}
-          >
-            <Power className="w-4 h-4" />
-          </button>
+      <div className="relative w-full max-w-[300px] max-h-[300px] mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+        {/* Header avec site, groupe et lieu */}
+        <div className="px-3 py-2 bg-slate-600 dark:bg-slate-700">
+          <div className="text-white text-xs font-medium space-y-1">
+            {siteName && <div>{siteName}</div>}
+            {groupName && <div>{groupName}</div>}
+            <div className="font-semibold">{nomLieu}</div>
+          </div>
         </div>
 
-        {/* Lieu name */}
-        <h3 className="text-center font-semibold text-gray-900 dark:text-white mb-3 mt-6">
-          {nomLieu}
-        </h3>
+        {/* Card content */}
+        <div className="p-4 max-h-[280px] flex flex-col">
+        {/* Top icons - removed from here */}
 
         {/* Mini graph - clickable */}
         <div 
@@ -177,12 +165,12 @@ export default function MonitoringCard({
           onClick={() => setIsModalOpen(true)}
         >
           {loading ? (
-            <div className="h-[150px] flex items-center justify-center">
+            <div className="h-[130px] flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : (
             <>
-              <div className="h-[150px]">
+              <div className="h-[130px]">
                 <Line
                   data={{
                     labels: data.map(d => d.DateHeureMesureXaxis),
@@ -306,49 +294,65 @@ export default function MonitoringCard({
           )}
         </div>
 
-        {/* Last measure info */}
-        <div className="mt-3 mb-10 space-y-2 text-sm">
+        {/* Last measure info and icons */}
+        <div className="mt-auto space-y-3 text-sm border-t border-gray-200 dark:border-gray-700 pt-3">
           {lastDateTime ? (
             <>
-              <div className="text-center font-medium text-gray-900 dark:text-white">
-                {lastDateTime}
-              </div>
-              <div className="flex justify-between items-center text-xs text-gray-600 dark:text-gray-400">
+              <div className="flex items-center justify-center gap-4 text-xs text-gray-600 dark:text-gray-400">
                 <span>Fréq: {frequence} min</span>
-                {sondeNumeroSerie && (
-                  <span>N° {sondeNumeroSerie}</span>
-                )}
+                <span>{lastDateTime}</span>
+              </div>
+              
+              {/* Icons at bottom center */}
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsModalOpen(true);
+                  }}
+                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  title="Détails des mesures"
+                >
+                  <FileText className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSurveillanceToggle();
+                  }}
+                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-red-600"
+                  title={isSurveillanceActive ? "Désactiver la surveillance" : "Activer la surveillance"}
+                >
+                  <Power className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // TODO: Localisation
+                  }}
+                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  title="Localisation"
+                >
+                  <MapPin className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // TODO: Paramétrage
+                  }}
+                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  title="Paramétrage du lieu"
+                >
+                  <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                </button>
               </div>
             </>
           ) : (
-            <div className="text-center text-gray-500 dark:text-gray-400 italic">
+            <div className="text-center text-gray-500 dark:text-gray-400 italic py-3">
               Aucune mesure disponible
             </div>
           )}
         </div>
-
-        {/* Bottom icons */}
-        <div className="absolute bottom-2 left-2 right-2 flex justify-between">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              // TODO: Localisation
-            }}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title="Localisation"
-          >
-            <MapPin className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              // TODO: Paramétrage
-            }}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title="Paramétrage du lieu"
-          >
-            <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          </button>
         </div>
       </div>
 
