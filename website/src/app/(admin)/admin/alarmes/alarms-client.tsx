@@ -12,17 +12,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function AlarmsClient() {
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterAcknowledged, setFilterAcknowledged] = useState<string>("all");
 
   const { data: alarms, isLoading, isFetching } = useAlarms();
 
   const filteredAlarms = (alarms || []).filter((alarm) => {
+    // Filtre de recherche par lieu
+    const searchLower = searchQuery.toLowerCase();
+    if (!alarm.Libelle_Lieu?.toLowerCase().includes(searchLower)) {
+      return false;
+    }
+
     if (filterStatus !== "all") {
       const isActive = filterStatus === "active";
       if (alarm.Est_Alarme_Vrai !== isActive) return false;
@@ -34,7 +42,7 @@ export function AlarmsClient() {
     return true;
   });
 
-  const formatDateTime = (date: Date | null) => {
+  const formatDateTime = (date: Date | string | null) => {
     if (!date) return "-";
     return format(new Date(date), "dd/MM/yyyy HH:mm:ss", { locale: fr });
   };
@@ -69,10 +77,25 @@ export function AlarmsClient() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+        <div className="flex-1">
+          <label htmlFor="search" className="text-sm font-medium block mb-2">
+            Rechercher
+          </label>
+          <Input
+            id="search"
+            placeholder="Nom du lieu..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full"
+          />
+        </div>
         <div className="w-48">
+          <label htmlFor="status-filter" className="text-sm font-medium block mb-2">
+            État
+          </label>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger>
+            <SelectTrigger id="status-filter">
               <SelectValue placeholder="Filtrer par état" />
             </SelectTrigger>
             <SelectContent>
@@ -83,8 +106,11 @@ export function AlarmsClient() {
           </Select>
         </div>
         <div className="w-48">
+          <label htmlFor="ack-filter" className="text-sm font-medium block mb-2">
+            Acquittement
+          </label>
           <Select value={filterAcknowledged} onValueChange={setFilterAcknowledged}>
-            <SelectTrigger>
+            <SelectTrigger id="ack-filter">
               <SelectValue placeholder="Filtrer par acquittement" />
             </SelectTrigger>
             <SelectContent>

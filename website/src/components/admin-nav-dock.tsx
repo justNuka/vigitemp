@@ -76,6 +76,11 @@ export function AdminNavDock() {
       label: "Statistiques",
       onClick: () => router.push("/admin/statistiques"),
     },
+    {
+      icon: <AlertTriangle size={20} />,
+      label: "Alarmes",
+      onClick: () => router.push("/admin/alarmes"),
+    },
   ];
 
   return (

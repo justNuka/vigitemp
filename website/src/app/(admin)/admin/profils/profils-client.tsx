@@ -30,6 +30,7 @@ export function ProfilesClient() {
   const { data: profiles, isLoading: profilesLoading } = useProfiles();
   const { data: authorizations, isLoading: authorizationsLoading } = useAuthorizations();
   
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -185,6 +186,15 @@ export function ProfilesClient() {
     return <div className="p-6">Chargement...</div>;
   }
 
+  // Filtrer les profils selon la recherche
+  const filteredProfiles = (profiles || []).filter((profile) => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      profile.name.toLowerCase().includes(searchLower) ||
+      (profile.description?.toLowerCase() || "").includes(searchLower)
+    );
+  });
+
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -282,6 +292,21 @@ export function ProfilesClient() {
         </Dialog>
       </div>
 
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <label htmlFor="search" className="text-sm font-medium block mb-2">
+            Rechercher
+          </label>
+          <Input
+            id="search"
+            placeholder="Nom du profil..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full"
+          />
+        </div>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Profils</CardTitle>
@@ -301,7 +326,7 @@ export function ProfilesClient() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {profiles?.map((profile) => (
+              {filteredProfiles?.map((profile) => (
                 <TableRow key={profile.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">

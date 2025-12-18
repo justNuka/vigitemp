@@ -14,8 +14,8 @@ export async function DashboardStats() {
     prisma.t_lieu.count({ where: { Lieu_Etat: "1" } }),
     prisma.t_alarme.count({ 
       where: { 
-        Acquite: false, // Alarmes non acquittées
-        Alarme_Vrai: true // Alarmes réelles
+        Est_Acquittee: false, // Alarmes non acquittées
+        Est_Alarme_Vrai: true // Alarmes réelles
       } 
     }),
   ]);

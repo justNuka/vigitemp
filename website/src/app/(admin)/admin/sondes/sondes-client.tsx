@@ -127,8 +127,8 @@ export function SondesClient() {
                           setSelectedEtalonnage(null);
                         }}
                         className={cn(
-                          "cursor-pointer hover:bg-muted transition-colors",
-                          selectedSonde === sonde.Id_Sonde && "bg-blue-600 text-white"
+                          "cursor-pointer hover:bg-muted/50 transition-colors",
+                          selectedSonde === sonde.Id_Sonde && "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-medium border-l-4 border-l-blue-600 dark:border-l-blue-400"
                         )}
                       >
                         <TableCell className="font-medium">
@@ -186,8 +186,8 @@ export function SondesClient() {
                             key={calib.Id_Calibrage}
                             onClick={() => setSelectedCalibrage(calib.Id_Calibrage)}
                             className={cn(
-                              "cursor-pointer hover:bg-muted transition-colors",
-                              selectedCalibrage === calib.Id_Calibrage && "bg-blue-600 text-white"
+                              "cursor-pointer hover:bg-muted/50 transition-colors",
+                              selectedCalibrage === calib.Id_Calibrage && "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-medium border-l-4 border-l-blue-600 dark:border-l-blue-400"
                             )}
                           >
                             <TableCell className="text-sm">
@@ -266,8 +266,8 @@ export function SondesClient() {
                             key={etal.Id_Etalonnage}
                             onClick={() => setSelectedEtalonnage(etal.Id_Etalonnage)}
                             className={cn(
-                              "cursor-pointer hover:bg-muted transition-colors",
-                              selectedEtalonnage === etal.Id_Etalonnage && "bg-blue-600 text-white"
+                              "cursor-pointer hover:bg-muted/50 transition-colors",
+                              selectedEtalonnage === etal.Id_Etalonnage && "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-medium border-l-4 border-l-blue-600 dark:border-l-blue-400"
                             )}
                           >
                             <TableCell className="text-sm">

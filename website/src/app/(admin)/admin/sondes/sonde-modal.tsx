@@ -116,7 +116,7 @@ export function SondeModal({ open, onOpenChange, probe, isEditing }: SondeModalP
               <SelectContent>
                 {modules?.map((mod) => (
                   <SelectItem key={mod.Id_Module} value={mod.Id_Module.toString()}>
-                    Module {mod.Module_Numero_Serie || mod.Id_Module}
+                    Module sur port {mod.Port_Serie || "N/A"}
                   </SelectItem>
                 ))}
               </SelectContent>

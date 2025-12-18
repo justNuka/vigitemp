@@ -4,7 +4,7 @@ import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import { DevModeBadge } from "@/components/dev-mode-badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ServerAuditLogs, ServerAuditStats } from "../../audit/server-audit-logs";
+// import { ServerAuditLogs, ServerAuditStats } from "../../audit/server-audit-logs";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AuditPerfTestPage() {
@@ -112,7 +112,8 @@ export default function AuditPerfTestPage() {
 
 async function AuditStatsDisplay() {
   const start = Date.now();
-  const stats = await ServerAuditStats();
+  // const stats = await ServerAuditStats();
+  const stats = { total: 0, last24h: 0 };
   const duration = Date.now() - start;
 
   return (
@@ -136,7 +137,8 @@ async function AuditStatsDisplay() {
 
 async function AuditLogsDisplay() {
   const start = Date.now();
-  const logs = await ServerAuditLogs(10);
+  // const logs = await ServerAuditLogs(10);
+  const logs: any[] = [];
   const duration = Date.now() - start;
 
   return (
