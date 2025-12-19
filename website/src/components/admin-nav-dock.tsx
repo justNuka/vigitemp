@@ -56,11 +56,11 @@ export function AdminNavDock() {
       label: "Sites",
       onClick: () => router.push("/admin/sites"),
     },
-    {
-      icon: <Cable size={20} />,
-      label: "Dataloggeur",
-      onClick: () => router.push("/admin/dataloggeur"),
-    },
+    // {
+    //   icon: <Cable size={20} />,
+    //   label: "Dataloggeur",
+    //   onClick: () => router.push("/admin/dataloggeur"),
+    // },
     {
       icon: <Wrench size={20} />,
       label: "Outils",
@@ -75,11 +75,6 @@ export function AdminNavDock() {
       icon: <BarChart3 size={20} />,
       label: "Statistiques",
       onClick: () => router.push("/admin/statistiques"),
-    },
-    {
-      icon: <AlertTriangle size={20} />,
-      label: "Alarmes",
-      onClick: () => router.push("/admin/alarmes"),
     },
   ];
 

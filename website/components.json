@@ -19,9 +19,9 @@
     "hooks": "@/hooks"
   },
   "registries": {
-    "@shadcn": "https://registry.shadcn.com/r/{name}.json",
+    "@shadcn": "https://ui.shadcn.com/r/{name}.json",
     "@react-bits": "https://reactbits.dev/r/{name}.json",
-    "@magicui": "https://magicui.design/r/{name}",
+    "@magicui": "https://magicui.design/r/{name}.json",
     "@scrollxui": "https://www.scrollxui.dev/registry/{name}.json",
     "@heroui": "https://heroui.dev/r/{name}.json"
   }

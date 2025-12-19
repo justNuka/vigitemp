@@ -1,12 +1,6 @@
+'use client';
+
 import { cn } from "@/lib/utils";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { 
   LogIn, 
@@ -20,10 +14,22 @@ import {
 import type { AuditLog } from "@/lib/api";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { TanStackTable } from "@/components/data-table/tanstack-table";
+import { ColumnDef } from "@tanstack/react-table";
 
 interface AuditLogTableProps {
   logs: AuditLog[];
   isLoading?: boolean;
+}
+
+interface AuditLogRow {
+  id: string;
+  timestamp: string | Date;
+  action: string;
+  userId: string | null;
+  details: string | null;
+  targetType: string | null;
+  targetId: string | null;
 }
 
 const actionConfig: Record<string, { 
@@ -44,134 +50,98 @@ const actionConfig: Record<string, {
 };
 
 export function AuditLogTable({ logs, isLoading }: AuditLogTableProps) {
-  if (isLoading) {
-    return <AuditLogTableSkeleton />;
-  }
-
-  if (logs.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="p-4 rounded-full bg-muted mb-4">
-          <FileText className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <p className="text-muted-foreground">Aucune entrée dans le journal</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-lg border overflow-hidden">
-      <div className="overflow-x-auto custom-scrollbar">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="w-[180px]">Date / Heure</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead>Utilisateur</TableHead>
-              <TableHead>Détails</TableHead>
-              <TableHead>Cible</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {logs.map((log) => (
-              <AuditLogRow key={log.id} log={log} />
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
-}
-
-interface AuditLogRowProps {
-  log: AuditLog;
-}
-
-function AuditLogRow({ log }: AuditLogRowProps) {
-  const config = actionConfig[log.action] || {
-    icon: FileText,
-    label: log.action,
-    color: "text-muted-foreground",
-    badgeVariant: "outline" as const,
-  };
-  const Icon = config.icon;
-  const timestamp = new Date(log.timestamp);
-
-  return (
-    <TableRow data-testid={`row-audit-${log.id}`}>
-      <TableCell className="font-mono text-sm whitespace-nowrap">
-        {format(timestamp, "dd/MM/yyyy HH:mm:ss", { locale: fr })}
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2">
-          <Icon className={cn("h-4 w-4", config.color)} />
-          <Badge variant={config.badgeVariant} className="whitespace-nowrap">
-            {config.label}
-          </Badge>
-        </div>
-      </TableCell>
-      <TableCell>
-        <span className="font-medium">
-          {log.userId || "Système"}
-        </span>
-      </TableCell>
-      <TableCell className="max-w-[300px]">
-        <p className="truncate text-sm text-muted-foreground" title={log.details || undefined}>
-          {log.details || "-"}
-        </p>
-      </TableCell>
-      <TableCell>
-        {log.targetType && log.targetId ? (
-          <span className="text-sm">
-            <span className="text-muted-foreground capitalize">{log.targetType}:</span>{" "}
-            <span className="font-mono text-xs">{log.targetId.slice(0, 8)}...</span>
+  // Colonnes TanStack
+  const columns: ColumnDef<AuditLogRow>[] = [
+    {
+      accessorKey: "timestamp",
+      header: "Date / Heure",
+      cell: ({ row }) => {
+        const timestamp = new Date(row.getValue("timestamp") as string);
+        return (
+          <span className="font-mono text-sm whitespace-nowrap">
+            {format(timestamp, "dd/MM/yyyy HH:mm:ss", { locale: fr })}
           </span>
-        ) : (
-          <span className="text-muted-foreground">-</span>
-        )}
-      </TableCell>
-    </TableRow>
-  );
-}
+        );
+      },
+    },
+    {
+      accessorKey: "action",
+      header: "Action",
+      cell: ({ row }) => {
+        const action = row.getValue("action") as string;
+        const config = actionConfig[action] || {
+          icon: FileText,
+          label: action,
+          color: "text-muted-foreground",
+          badgeVariant: "outline" as const,
+        };
+        const Icon = config.icon;
+        return (
+          <div className="flex items-center gap-2">
+            <Icon className={cn("h-4 w-4", config.color)} />
+            <Badge variant={config.badgeVariant} className="whitespace-nowrap">
+              {config.label}
+            </Badge>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "userId",
+      header: "Utilisateur",
+      cell: ({ row }) => (
+        <span className="font-medium">{row.getValue("userId") || "Système"}</span>
+      ),
+    },
+    {
+      accessorKey: "details",
+      header: "Détails",
+      cell: ({ row }) => {
+        const details = row.getValue("details") as string | null;
+        return (
+          <p className="truncate text-sm text-muted-foreground max-w-[300px]" title={details || undefined}>
+            {details || "-"}
+          </p>
+        );
+      },
+    },
+    {
+      accessorKey: "targetId",
+      header: "Cible",
+      cell: ({ row }) => {
+        const targetType = row.original.targetType;
+        const targetId = row.getValue("targetId") as string | null;
+        if (targetType && targetId) {
+          return (
+            <span className="text-sm">
+              <span className="text-muted-foreground capitalize">{targetType}:</span>{" "}
+              <span className="font-mono text-xs">{targetId.slice(0, 8)}...</span>
+            </span>
+          );
+        }
+        return <span className="text-muted-foreground">-</span>;
+      },
+    },
+  ];
 
-function AuditLogTableSkeleton() {
+  const tableData: AuditLogRow[] = logs.map((log) => ({
+    id: log.id,
+    timestamp: log.timestamp,
+    action: log.action,
+    userId: log.userId,
+    details: log.details,
+    targetType: log.targetType,
+    targetId: log.targetId,
+  }));
+
   return (
-    <div className="rounded-lg border overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/50">
-            <TableHead className="w-[180px]">Date / Heure</TableHead>
-            <TableHead>Action</TableHead>
-            <TableHead>Utilisateur</TableHead>
-            <TableHead>Détails</TableHead>
-            <TableHead>Cible</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {[1, 2, 3, 4, 5].map((i) => (
-            <TableRow key={i}>
-              <TableCell>
-                <div className="h-4 w-32 bg-muted rounded animate-pulse" />
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 bg-muted rounded animate-pulse" />
-                  <div className="h-5 w-24 bg-muted rounded-full animate-pulse" />
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="h-4 w-20 bg-muted rounded animate-pulse" />
-              </TableCell>
-              <TableCell>
-                <div className="h-4 w-40 bg-muted rounded animate-pulse" />
-              </TableCell>
-              <TableCell>
-                <div className="h-4 w-24 bg-muted rounded animate-pulse" />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <TanStackTable<AuditLogRow>
+      columns={columns}
+      data={tableData}
+      searchPlaceholder="Rechercher dans les logs d'audit..."
+      pageSize={20}
+      isLoading={isLoading}
+      emptyMessage="Aucun log d'audit trouvé"
+    />
   );
 }

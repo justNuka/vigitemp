@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +13,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Shield, Users, Trash2, Edit, CheckCircle2 } from "lucide-react";
 import { useProfiles, useAuthorizations, type Profile, type Authorization } from "@/hooks/useProfiles";
 import { toast } from "sonner";
+import { TanStackTable } from "@/components/data-table/tanstack-table";
+import { ColumnDef } from "@tanstack/react-table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,12 +26,21 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+type ProfileRow = {
+  id: number;
+  name: string;
+  description: string | null;
+  mc2: boolean | null;
+  authCount: number;
+  userCount: number;
+  authorizations: Authorization[];
+};
+
 export function ProfilesClient() {
   const queryClient = useQueryClient();
   const { data: profiles, isLoading: profilesLoading } = useProfiles();
   const { data: authorizations, isLoading: authorizationsLoading } = useAuthorizations();
   
-  const [searchQuery, setSearchQuery] = useState<string>("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -182,18 +192,95 @@ export function ProfilesClient() {
     deleteMutation.mutate(selectedProfile.id);
   };
 
+  // Colonnes TanStack
+  const columns: ColumnDef<ProfileRow>[] = [
+    {
+      accessorKey: "name",
+      header: "Nom",
+      cell: ({ row }) => {
+        const profile = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-muted-foreground" />
+            <span className="font-medium">{profile.name}</span>
+            {profile.mc2 && (
+              <Badge variant="secondary" className="text-xs">
+                MC2
+              </Badge>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "description",
+      header: "Description",
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">{row.getValue("description") || "-"}</span>
+      ),
+    },
+    {
+      accessorKey: "authCount",
+      header: "Autorisations",
+      cell: ({ row }) => (
+        <Badge variant="outline" className="gap-1">
+          <CheckCircle2 className="h-3 w-3" />
+          {row.getValue("authCount")} autorisation{(row.getValue("authCount") as number) > 1 ? "s" : ""}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: "userCount",
+      header: "Utilisateurs",
+      cell: ({ row }) => (
+        <Badge variant="outline" className="gap-1">
+          <Users className="h-3 w-3" />
+          {row.getValue("userCount")} utilisateur{(row.getValue("userCount") as number) > 1 ? "s" : ""}
+        </Badge>
+      ),
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const profile = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => openEditDialog(profiles?.find(p => p.id === profile.id)!)}
+              title="Modifier"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => openDeleteDialog(profiles?.find(p => p.id === profile.id)!)}
+              title="Supprimer"
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const tableData: ProfileRow[] = (profiles || []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    description: p.description,
+    mc2: p.mc2,
+    authCount: p.authorizations.length,
+    userCount: p.userCount,
+    authorizations: p.authorizations,
+  }));
+
   if (profilesLoading || authorizationsLoading) {
     return <div className="p-6">Chargement...</div>;
   }
-
-  // Filtrer les profils selon la recherche
-  const filteredProfiles = (profiles || []).filter((profile) => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      profile.name.toLowerCase().includes(searchLower) ||
-      (profile.description?.toLowerCase() || "").includes(searchLower)
-    );
-  });
 
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6">
@@ -292,21 +379,6 @@ export function ProfilesClient() {
         </Dialog>
       </div>
 
-      <div className="flex gap-4">
-        <div className="flex-1">
-          <label htmlFor="search" className="text-sm font-medium block mb-2">
-            Rechercher
-          </label>
-          <Input
-            id="search"
-            placeholder="Nom du profil..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-          />
-        </div>
-      </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Profils</CardTitle>
@@ -315,69 +387,16 @@ export function ProfilesClient() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Autorisations</TableHead>
-                <TableHead>Utilisateurs</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredProfiles?.map((profile) => (
-                <TableRow key={profile.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-muted-foreground" />
-                      {profile.name}
-                      {profile.mc2 && (
-                        <Badge variant="secondary" className="text-xs">
-                          MC2
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {profile.description || "-"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="gap-1">
-                      <CheckCircle2 className="h-3 w-3" />
-                      {profile.authorizations.length} autorisation{profile.authorizations.length > 1 ? "s" : ""}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="gap-1">
-                      <Users className="h-3 w-3" />
-                      {profile.userCount} utilisateur{profile.userCount > 1 ? "s" : ""}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openEditDialog(profile)}
-                        title="Modifier"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openDeleteDialog(profile)}
-                        title="Supprimer"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <TanStackTable
+            columns={columns}
+            data={tableData}
+            searchField="name"
+            searchPlaceholder="Nom du profil..."
+            isLoading={profilesLoading}
+            emptyMessage="Aucun profil trouvé"
+            selectedRowId={selectedProfile?.id}
+            onRowClick={(row) => setSelectedProfile(row as Profile)}
+          />
         </CardContent>
       </Card>
 

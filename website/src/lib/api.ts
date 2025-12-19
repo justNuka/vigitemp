@@ -184,6 +184,7 @@ export type SensorWithLocation = {
   isActive: boolean;
   location: Location;
   status: "ok" | "warning" | "critical";
+  lieuType?: string | null;
 };
 
 export type AlarmWithDetails = {

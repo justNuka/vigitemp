@@ -31,6 +31,22 @@ const config: Config = {
   		screens: {
   			desktop: '1125px'
   		},
+  		animation: {
+  			shine: 'shine 3s linear infinite',
+  		},
+  		keyframes: {
+  			shine: {
+  				'0%': {
+  					backgroundPosition: '0% 0%',
+  				},
+  				'50%': {
+  					backgroundPosition: '100% 100%',
+  				},
+  				'100%': {
+  					backgroundPosition: '0% 0%',
+  				},
+  			},
+  		},
   		colors: {
   			white: '#FFFFFF',
   			// Palette Replit

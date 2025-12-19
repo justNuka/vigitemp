@@ -4,20 +4,22 @@ import { useState } from "react";
 import { useActionneurs } from "@/hooks/useActionneurs";
 import { Actionneur } from "@/hooks/useActionneurs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+  Badge } from "@/components/ui/badge";
 import { Actionneur_Modal } from "./actionneur-modal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
 import { Printer } from "lucide-react";
+import { TanStackTable } from "@/components/data-table/tanstack-table";
+import { ColumnDef } from "@tanstack/react-table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+interface ActionneursRow {
+  Id_Actionneur: number;
+  Num_Serie: string | null;
+  Type: number | null;
+  Commentaire: string | null;
+  Est_Etat: boolean | null;
+}
 
 export function ActionneursClient() {
   const { data: actionneurs, isLoading } = useActionneurs();
@@ -25,7 +27,6 @@ export function ActionneursClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const handleAddClick = () => {
     setSelectedActionneur(null);
@@ -55,35 +56,45 @@ export function ActionneursClient() {
     window.print();
   };
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-96">Chargement...</div>;
-  }
+  // Colonnes TanStack
+  const columns: ColumnDef<ActionneursRow>[] = [
+    {
+      accessorKey: "Num_Serie",
+      header: "Numéro de série",
+    },
+    {
+      accessorKey: "Type",
+      header: "Type",
+    },
+    {
+      accessorKey: "Commentaire",
+      header: "Commentaire",
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">{row.getValue("Commentaire") || "-"}</span>
+      ),
+    },
+    {
+      accessorKey: "Est_Etat",
+      header: "État",
+      cell: ({ row }) => (
+        <Badge variant={row.getValue("Est_Etat") ? "default" : "outline"}>
+          {row.getValue("Est_Etat") ? "Actif" : "Inactif"}
+        </Badge>
+      ),
+    },
+  ];
 
-  // Filtrer les actionneurs selon la recherche
-  const filteredActionneurs = (actionneurs || []).filter((actionneur) => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      String(actionneur.Num_Serie || "").toLowerCase().includes(searchLower) ||
-      String(actionneur.Type || "").toLowerCase().includes(searchLower) ||
-      String(actionneur.Commentaire || "").toLowerCase().includes(searchLower)
-    );
-  });
+  const tableData: ActionneursRow[] = (actionneurs || []).map((a) => ({
+    Id_Actionneur: a.Id_Actionneur,
+    Num_Serie: a.Num_Serie,
+    Type: a.Type,
+    Commentaire: a.Commentaire,
+    Est_Etat: a.Est_Etat,
+  }));
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-        <div className="flex-1">
-          <label htmlFor="search" className="text-sm font-medium block mb-2">
-            Rechercher
-          </label>
-          <Input
-            id="search"
-            placeholder="N° série, type..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-          />
-        </div>
         <div className="flex gap-2">
           <Button onClick={handleAddClick} className="bg-green-600 hover:bg-green-700">
             Nouveau
@@ -114,46 +125,25 @@ export function ActionneursClient() {
         </div>
       </div>
 
-      <div className="border rounded-lg max-h-96 overflow-y-auto">
-        <Table>
-          <TableHeader className="sticky top-0 bg-muted">
-            <TableRow>
-              <TableHead>Numéro de série</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Commentaire</TableHead>
-              <TableHead>État</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredActionneurs?.map((actionneur) => (
-              <TableRow
-                key={actionneur.Id_Actionneur}
-                onClick={() => setSelectedActionneur(actionneur)}
-                className={cn(
-                  "cursor-pointer hover:bg-muted/50 transition-colors",
-                  selectedActionneur?.Id_Actionneur === actionneur.Id_Actionneur &&
-                    "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-medium border-l-4 border-l-blue-600 dark:border-l-blue-400"
-                )}
-              >
-                <TableCell>{actionneur.Num_Serie}</TableCell>
-                <TableCell>{actionneur.Type}</TableCell>
-                <TableCell>{actionneur.Commentaire}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      actionneur.Est_Etat
-                        ? "default"
-                        : "outline"
-                    }
-                  >
-                    {actionneur.Est_Etat ? "Actif" : "Inactif"}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Actionneurs</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <TanStackTable
+            columns={columns}
+            data={tableData}
+            searchField="Num_Serie"
+            searchPlaceholder="N° série, type..."
+            isLoading={isLoading}
+            emptyMessage="Aucun actionneur trouvé"
+            selectedRowId={selectedActionneur?.Id_Actionneur}
+            onRowClick={(row: ActionneursRow) => {
+              setSelectedActionneur(actionneurs?.find(a => a.Id_Actionneur === row.Id_Actionneur) || null);
+            }}
+          />
+        </CardContent>
+      </Card>
 
       <Actionneur_Modal
         open={isModalOpen}

@@ -147,6 +147,79 @@ if (!authorizations.includes('REQUIRED_CODE')) {
 ### Email System
 [email.ts](website/src/lib/email.ts) - Sends password resets, account notifications. Requires `SMTP_*` env vars.
 
+## API Endpoints Overview
+
+### ✅ Implemented Endpoints
+
+**Authentication:**
+- `POST /api/auth/login` - User login with JWT token generation
+- `POST /api/auth/refresh` - Token refresh (7-day cookie expiry)
+
+**Users Management:**
+- `GET /api/users` - List all users with profiles
+- `POST /api/users` - Create new user
+- `PATCH /api/users/[id]` - Update user
+- `POST /api/users/[id]/sites` - Add/remove sites for user
+- `POST /api/users/[id]/groups` - Add/remove groups for user
+
+**Locations (Lieux):**
+- `GET /api/lieux` - List all locations with relations (site, groupe, sonde)
+- `POST /api/lieux` - Create location
+- `PATCH /api/lieux/[id]` - Update location (28+ fields including Metrologie)
+- `GET /api/sondes-available` - Get sondes not assigned to any location
+
+**Sites:**
+- `GET /api/sites` - List all sites
+- `POST /api/sites` - Create site
+- `PATCH /api/sites/[id]` - Update site
+- `GET /api/sites-simple` - Minimal site list for dropdowns
+
+**Groups (Groupes):**
+- `GET /api/groupes` - List all groups
+- `POST /api/groupes` - Create group
+- `PATCH /api/groupes/[id]` - Update group
+
+**Profiles (Profils):**
+- `GET /api/profils` - List all profiles
+- `POST /api/profils` - Create profile
+- `PATCH /api/profils/[id]` - Update profile
+- `DELETE /api/profils/[id]` - Delete profile (with validation)
+
+**Probes (Sondes):**
+- `GET /api/sondes` - List all sondes with details
+- `POST /api/sondes/calibrages` - Get calibrages for specific probe (by serie)
+- `POST /api/sondes/etalonnages` - Get etalonnages for specific probe (by serie)
+
+**Standards/Étalons:**
+- `GET /api/etalons` - List all standards
+- `POST /api/etalons` - Create standard
+- `PATCH /api/etalons/[id]` - Update standard
+- `DELETE /api/etalons/[id]` - Delete standard
+
+**Actuators (Actionneurs):**
+- `GET /api/actionneurs` - List all actuators
+- `POST /api/actionneurs` - Create actuator
+- `PATCH /api/actionneurs/[id]` - Update actuator
+- `DELETE /api/actionneurs/[id]` - Delete actuator
+
+**Alarms:**
+- `GET /api/alarms` - List alarms (with status filter)
+- `GET /api/alarms?status=active` - Active alarms only
+- `POST /api/alarms/[id]/acknowledge` - Acknowledge alarm
+
+**Sensors:**
+- `GET /api/sensors/paginated` - Paginated sensor list (1000 per page)
+- `GET /api/sensors/[id]` - Single sensor details
+- `GET /dashboard/critical-sensors` - Critical sensors only
+
+**Measurements (Mesures):**
+- `GET /api/mesures/[idLieu]` - Last 125 measurements for location
+
+**System:**
+- `GET /api/me` - Current logged-in user info
+- `GET /api/autorisations` - User authorizations with module flags
+- `POST /api/revalidate` - Cache invalidation (dev only)
+
 ## File Organization
 
 ```
@@ -160,50 +233,70 @@ website/
 │   │   │   ├── sites/              # Sites management
 │   │   │   ├── groupes/            # Groupes list endpoint
 │   │   │   ├── alarmes/            # Alarms list
-│   │   │   ├── sondes/             # Probes: GET all, calibrages?serie=X, etalonnages?serie=X
-│   │   │   │   ├── calibrages/     # Calibrations by probe
-│   │   │   │   └── etalonnages/    # Calibrations by probe
+│   │   │   ├── sondes/             # Probes: GET all, calibrages, etalonnages
+│   │   │   ├── lieux/              # Locations management
+│   │   │   ├── etalons/            # Standards management
+│   │   │   ├── actionneurs/        # Actuators management
 │   │   │   └── (other resources)
 │   │   ├── (admin)/                # Admin layout group
 │   │   │   └── admin/              # Admin prefix (pages start with /admin/...)
 │   │   │       ├── page.tsx        # Dashboard admin
-│   │   │       ├── utilisateurs/   # Users management (CRUD with sites/groupes multi-select)
-│   │   │       ├── alarmes/        # Alarms table (Lieu, Début, État, Fin, Acquittée)
-│   │   │       ├── sondes/         # Probes (3-table layout: Sondes > Calibrages + Etalonnages)
-│   │   │       ├── lieux/          # Locations
-│   │   │       ├── sites/          # Sites
-│   │   │       ├── groupes/        # Groups
-│   │   │       ├── profils/        # User profiles
+│   │   │       ├── utilisateurs/   # Users management (CRUD with sites/groupes)
+│   │   │       ├── alarmes/        # Alarms table with filters
+│   │   │       ├── sondes/         # Probes (3-table: Sondes, Calibrages, Etalonnages)
+│   │   │       ├── lieux/          # Locations (3-tab: Général, Métrologie, Téléphonie)
+│   │   │       ├── sites/          # Sites CRUD
+│   │   │       ├── groupes/        # Groups CRUD
+│   │   │       ├── profils/        # Profiles + permissions
+│   │   │       ├── etalons/        # Standards CRUD
+│   │   │       ├── actionneurs/    # Actuators CRUD
 │   │   │       ├── parametres/     # System parameters
 │   │   │       └── layout.tsx      # Admin sidebar + dock navigation
-│   │   └── (dashboard)/            # Dashboard layout group (future)
+│   │   ├── (dashboard)/            # Dashboard layout group
+│   │   │   └── surveillance/       # Surveillance page (graphiques + arborescence)
+│   │   └── login/                  # Auth page
 │   ├── lib/                        # Core utilities
-│   │   ├── prisma.ts               # Database clients (use for all DB)
+│   │   ├── prisma.ts               # Database clients (main + mesure)
 │   │   ├── jwt.ts                  # Token generation/verification
 │   │   ├── auth.ts                 # User extraction from request
 │   │   ├── api-logger.ts           # Audit logging wrapper
-│   │   ├── logger.ts               # File-based logging
-│   │   ├── api.ts                  # API type definitions (User, CreateUserInput, etc)
-│   │   └── utils.ts                # Utilities (cn, format, etc)
+│   │   ├── logger.ts               # File-based logging (Winston)
+│   │   ├── api.ts                  # API type definitions
+│   │   ├── utils.ts                # Utilities (cn, format, etc)
+│   │   ├── audit-db.ts             # Audit trail management
+│   │   └── feature-flags.ts        # Feature flag controls
 │   ├── hooks/                      # Custom React Query hooks
 │   │   ├── useProfiles.ts          # Fetch profiles
-│   │   ├── useSites.ts             # Fetch sites (non-archived)
-│   │   ├── useGroups.ts            # Fetch groupes (non-archived)
-│   │   ├── useAlarms.ts            # Fetch alarms with auto-refresh (30s)
-│   │   ├── useSondes.ts            # Fetch all probes (60s refresh)
-│   │   ├── useCalibrages.ts        # Fetch calibrages by serie (enabled when serie provided)
-│   │   ├── useEtalonnages.ts       # Fetch etalonnages by serie (enabled when serie provided)
+│   │   ├── useSites.ts             # Fetch sites
+│   │   ├── useGroups.ts            # Fetch groupes
+│   │   ├── useAlarms.ts            # Fetch alarms (30s auto-refresh)
+│   │   ├── useSondes.ts            # Fetch probes (60s auto-refresh)
+│   │   ├── useCalibrages.ts        # Fetch calibrages by serie
+│   │   ├── useEtalonnages.ts       # Fetch etalonnages by serie
+│   │   ├── useCurrentTime.ts       # Real-time clock for UI
 │   │   └── (other hooks)
 │   ├── components/
-│   │   ├── ui/                     # shadcn components (Button, Card, Table, Dialog, etc)
-│   │   ├── page-header.tsx         # Reusable page title + description component
-│   │   ├── admin-nav-dock.tsx      # Bottom dock navigation (AlertTriangle, Database, Settings, etc)
+│   │   ├── ui/                     # shadcn + HeroUI components
+│   │   │   ├── button.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── table.tsx
+│   │   │   ├── dialog.tsx
+│   │   │   ├── combobox-select.tsx # ✅ HeroUI ComboBox wrapper
+│   │   │   └── (other UI)
+│   │   ├── page-header.tsx         # Reusable page title
+│   │   ├── admin-nav-dock.tsx      # Bottom dock navigation
+│   │   ├── monitoring-card.tsx     # ✅ Sensor card with alarm indicators
+│   │   ├── alarm-table.tsx         # Alarms with acknowledge dialog
+│   │   ├── audit-log-table.tsx     # Audit trail display
+│   │   ├── data-table/
+│   │   │   └── tanstack-table.tsx  # ✅ Reusable TanStack table with selection
 │   │   └── (other components)
 │   └── middleware/                 # Next.js middleware (auth routing)
 ├── prisma/
-│   ├── db-main/                    # Config database schema
-│   │   └── schema.prisma           # t_sonde, t_calibrage, t_etalonnage, t_alarme, etc
-│   └── db-mesure/                  # Time-series database schema
+│   ├── db-main/
+│   │   └── schema.prisma           # Main database schema (users, locations, profiles, etc)
+│   └── db-mesure/
+│       └── schema.prisma           # Measurements database schema (time-series)
 └── public/
     └── service-worker.js           # Offline detection
 ```
@@ -211,51 +304,163 @@ website/
 ## Admin Pages Completed
 
 ### 1. Dashboard Admin (`/admin`)
+- **Status:** ✅ COMPLETE
 - **Purpose:** Overview of system status
 - **Content:** 5 cards (connected users, active alarms, acknowledgments, system logs, backups)
 - **Refresh:** Auto-refresh with independent intervals per card
 
 ### 2. Users Management (`/admin/utilisateurs`)
+- **Status:** ✅ COMPLETE
 - **Table Columns:** Login, Nom, Prenom, Email, Profil, Tel_Num_Mobile, Expiry Date, Status
 - **Features:**
-  - Add/Edit/Delete users
-  - Form fields: Login, Password, Nom, Prenom, Email, Profil (select), Telephone (optional), Sites (multi-checkbox), Groupes (multi-checkbox), Expiry Date (optional)
+  - Add/Edit/Delete users with row selection highlighting
+  - Form fields: Login, Password, Nom, Prenom, Email, Profil (ComboBox), Telephone (optional), Sites (multi-checkbox), Groupes (multi-checkbox), Expiry Date (optional)
   - Automatic liaison creation for sites/groupes via `/api/users/{id}/sites` and `/api/users/{id}/groups`
   - Password validation with rules (uppercase, lowercase, numbers, special chars)
 - **Form Validation:** React Hook Form + Zod
 - **API:** POST/PATCH to `/api/users`
 
 ### 3. Alarms Management (`/admin/alarmes`)
+- **Status:** ✅ COMPLETE
 - **Table Columns:** Lieu, Début alarme, État (badge), Fin alarme, Acquittée (badge)
 - **Filters:** État (Tous/Actives/Résolues), Acquittement (Tous/Acquittées/Non acquittées)
 - **Auto-refresh:** 30 seconds
+- **Row Selection:** Visual highlight with blue background + left border
 - **API:** GET `/api/alarmes`
 
-### 4. Probes Management (`/admin/sondes`) **NEW**
+### 4. Probes Management (`/admin/sondes`)
+- **Status:** ✅ COMPLETE
 - **3-Table Layout:**
-  1. **Main Table (Sondes)** - Selectable, max-height with scroll
+  1. **Main Table (Sondes)** - Selectable with blue highlight, max-height with scroll
      - Columns: Adresse, Numéro de série, Port série, Module, État, Lieu
-     - Buttons: Ajouter, Modifier (disabled), Imprimer (enabled - prints table)
-     - Selection: Click to highlight (blue) and populate calibrages/etalonnages below
+     - Buttons: Ajouter, Modifier (disabled when no selection), Imprimer (enabled)
+     - Selection: Blue highlight + left border indicator
   
   2. **Calibrages Sub-Table** (appears when probe selected)
      - Columns: Date, Opérateur, Unité, Décimales
      - Buttons: Générer fichier (disabled), Imprimer (disabled)
-     - Selection: Click to highlight
+     - Selection: Blue highlight
   
   3. **Étalonnages Sub-Table** (appears when probe selected)
      - Columns: Date, Validité, Opérateur, Incertitude
      - Buttons: Supprimer (disabled), Générer (disabled), Imprimer (disabled)
-     - Selection: Click to highlight
+     - Selection: Blue highlight
+- **Height Management:** max-h-96 (main), max-h-64 (sub-tables) with overflow scroll
 
-**Database References:**
-- `t_sonde`: Adresse_Sonde, Sonde_Numero_Serie, Port_Serie, Etat_Sonde, Id_Module
-- `t_calibrage`: Date_Heure_Calibrage, Operateur, Unite, Nb_Decimale, Sonde_Numero_Serie
-- `t_etalonnage`: Date_Heure_Etalonnage, Date_Validite, Operateur, Incertitude, Sonde_Numero_Serie
+### 5. Locations Management (`/admin/lieux`)
+- **Status:** ✅ COMPLETE
+- **3-Tab Structure:**
+  1. **Général Tab:** Nom, Observations, Site (ComboBox), Groupe 1/2 (ComboBox)
+  2. **Métrologie Tab:** 
+     - Sonde Selection (ComboBox)
+     - Consignes Settings
+     - EMT Configuration (4 radio options)
+     - Checkboxes for error correction + drift consideration
+  3. **Téléphonie/Planning Tab:** Placeholder (expandable)
+- **Form Validation:** Zod schema with 28+ fields
+- **API:** GET/POST/PATCH `/api/lieux` with BigInt serialization fix
+- **Row Selection:** Blue highlight + left border
 
-## Recent Implementations (Session Summary)
+### 6. Sites Management (`/admin/sites`)
+- **Status:** ✅ COMPLETE
+- **Simple CRUD:** 3-column table (Site, Description, Commentaires)
+- **Buttons:** Nouveau, Modifier, Archiver, Imprimer
+- **Modals:** Create/Edit with form validation
+- **Row Selection:** Blue highlight + left border
+- **API:** GET/POST/PATCH `/api/sites`
 
-### Fixed Issues
+### 7. Groups Management (`/admin/groupes`)
+- **Status:** ✅ COMPLETE
+- **Table Columns:** Numéro, Nom du groupe, Observations, État
+- **Row Selection:** Blue highlight + left border
+- **Associated Tables:** Lieux and Sondes associated with group (sub-tables)
+- **API:** GET/POST/PATCH `/api/groupes`
+
+### 8. Profiles Management (`/admin/profils`)
+- **Status:** ✅ COMPLETE
+- **Table:** Name, Description, User Count (read-only)
+- **Features:**
+  - View/Edit/Delete profiles
+  - Permission management (checkboxes for modules: Admin, Métrologie, Surveillance, VigiLog)
+  - Delete protection: Cannot delete profile if users assigned
+- **Row Selection:** Blue highlight + left border
+- **API:** GET/POST/PATCH/DELETE `/api/profils`
+
+### 9. Standards/Étalons Management (`/admin/etalons`)
+- **Status:** ✅ COMPLETE
+- **Table Columns:** N° Série, État, etc.
+- **Features:** Add/Edit/Archive with modal
+- **Row Selection:** Blue highlight + left border
+- **API:** GET/POST/PATCH `/api/etalons`
+
+### 10. Actuators/Actionneurs Management (`/admin/actionneurs`)
+- **Status:** ✅ COMPLETE
+- **Table Columns:** N° Série, Type, État, etc.
+- **Features:** Add/Edit/Delete with modal
+- **Row Selection:** Blue highlight + left border
+- **API:** GET/POST/PATCH/DELETE `/api/actionneurs`
+
+### 11. Surveillance Dashboard (`/dashboard/surveillance`)
+- **Status:** ✅ COMPLETE
+- **Two View Modes:**
+  1. **Graphiques Tab:** Grid of monitoring cards
+     - Sorted by alarm status (critical → warning → ok)
+     - Dynamic header colors based on sensor status
+     - Real-time charts with threshold lines
+     - Frequency + last measurement display
+  2. **Arborescence Tab:** Hierarchical tree view
+     - Sites → Groups → Sensors
+     - Alarm counts: "X sondes (Y alarmes)"
+     - Status badges (critical, warning, ok, inactive)
+- **Filters:** By site, by group (multi-select)
+- **Auto-refresh:** Paginated sensor loading (1000 per page)
+- **API:** GET `/api/sensors/paginated`
+
+### 12. System Parameters (`/admin/parametres`)
+- **Status:** ✅ COMPLETE (basic setup)
+- **Content:** Refresh intervals, system settings
+- **Editable via UI:** Toggle and input controls
+
+## Recent Implementations (Latest Session - Dec 19, 2025)
+
+### ✅ Surveillance Page Enhancements
+1. **Alarm Prioritization (sensors-cards-grid.tsx)**
+   - Cards sorted by status: Critical → Warning → OK
+   - Critical alarms appear first for better visibility
+
+2. **Monitoring Card Visual Indicators**
+   - Dynamic header colors based on sensor status:
+     - 🔴 Critical (red bg) + AlertTriangle icon
+     - 🟡 Warning (yellow bg) + AlertCircle icon
+     - 🔵 OK (slate bg - default)
+   - Alarm icon displayed in card header when status !== 'ok'
+
+3. **Alarm Count in Tree View (surveillance-tree.tsx)**
+   - Site level: "5 sondes (2 alarmes)" format
+   - Group level: "3 sondes (1 alarme)" format
+   - Shows alarm count only when alarms are present
+
+### ✅ Table Selection Visibility Improvements
+1. **Fixed TanStackTable Selection Logic** ([tanstack-table.tsx](website/src/components/data-table/tanstack-table.tsx))
+   - Corrected boolean logic for `isSelected` detection
+   - Added support for all ID types: Id_Sonde, Id_Site, Id_Lieu, Id_Utilisateur, Id_Groupe, Id_Profil, Id_Etalon, Id_Actionneur, Id_Alarme, id, Id
+   - Enhanced selection styling:
+     - Background: `bg-blue-100 dark:bg-blue-950`
+     - Text: `text-blue-900 dark:text-blue-100`
+     - Left border: `border-l-4 border-l-blue-600 dark:border-l-blue-400`
+     - Font weight: `font-medium`
+
+2. **Added `selectedRowId` Prop to All Admin Pages**
+   - ✅ [sondes-client.tsx](website/src/app/(admin)/admin/sondes/sondes-client.tsx) - `selectedRowId={selectedSonde}`
+   - ✅ [users-client.tsx](website/src/app/(admin)/admin/utilisateurs/users-client.tsx) - `selectedRowId={selectedUser?.id}`
+   - ✅ [profils-client.tsx](website/src/app/(admin)/admin/profils/profils-client.tsx) - `selectedRowId={selectedProfile?.id}`
+   - ✅ [groupes-client.tsx](website/src/app/(admin)/admin/groupes/groupes-client.tsx) - `selectedRowId={selectedGroupe?.Id_Groupe}`
+   - ✅ [etalons-client.tsx](website/src/app/(admin)/admin/etalons/etalons-client.tsx) - `selectedRowId={selectedEtalon?.Id_Etalon}`
+   - ✅ [actionneurs-client.tsx](website/src/app/(admin)/admin/actionneurs/actionneurs-client.tsx) - `selectedRowId={selectedActionneur?.Id_Actionneur}`
+   - ✅ [alarm-table.tsx](website/src/components/alarm-table.tsx) - `selectedRowId={selectedAlarm?.id}`
+   - Already present: [lieux-client.tsx](website/src/app/(admin)/admin/lieux/lieux-client.tsx), [sites-client.tsx](website/src/app/(admin)/admin/sites/sites-client.tsx)
+
+### Previous Sessions - Core Features
 1. ✅ Docker autofill on Login/Password fields (autoComplete attributes)
 2. ✅ Duplicate PageHeader banners (moved to per-page)
 3. ✅ SelectItem empty value error (changed "" to "all")
@@ -263,12 +468,11 @@ website/
 5. ✅ Added Sites multi-select to users (creates liaisons via `/api/users/{id}/sites`)
 6. ✅ Added Groupes multi-select to users (creates liaisons via `/api/users/{id}/groups`)
 7. ✅ Fixed PageHeader margins on dashboard (moved outside content wrapper)
-
-### New Features Added
-- **Alarms Page:** Table with filters, auto-refresh
-- **Sondes Page:** 3-table cascading layout with scroll-limited tables
-- **Navigation:** AlertTriangle icon added to dock for alarms page
-- **Table Heights:** max-h-96 for main sondes, max-h-64 for calibrages/etalonnages
+8. ✅ HeroUI ComboBox migration: Replaced shadcn Select with autocomplete (lieux-client.tsx: 5 Selects)
+9. ✅ Alarms Page: Table with filters, auto-refresh
+10. ✅ Sondes Page: 3-table cascading layout with scroll-limited tables
+11. ✅ Navigation: AlertTriangle icon added to dock for alarms page
+12. ✅ Table Heights: max-h-96 for main sondes, max-h-64 for calibrages/etalonnages
 
 ## Common Tasks
 

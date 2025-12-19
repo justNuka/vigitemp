@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useAlarms } from "@/hooks/useAlarms";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
@@ -73,7 +74,7 @@ const columns: ColumnDef<AlarmRow>[] = [
   },
 ];
 
-export function AlarmsClient() {
+export function AlarmsClientTanStack() {
   const { data: alarms, isLoading, isFetching } = useAlarms();
 
   const tableData: AlarmRow[] = (alarms || []).map((alarm) => ({

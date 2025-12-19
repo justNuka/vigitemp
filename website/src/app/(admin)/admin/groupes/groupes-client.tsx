@@ -11,27 +11,28 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { GroupeModal } from "./groupe-modal";
 import { Printer, Plus, PencilIcon, ArchiveIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TanStackTable } from "@/components/data-table/tanstack-table";
+import { ColumnDef } from "@tanstack/react-table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+interface GroupesRow {
+  Id_Groupe: number;
+  Nom_Groupe: string | null;
+  Numero_Regroupement: string | null;
+  nombre_lieux: number;
+}
 
 export function GroupesClient() {
   const [regroupement, setRegroupement] = useState("1");
   const [selectedGroupe, setSelectedGroupe] = useState<Groupe | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [searchGroupes, setSearchGroupes] = useState("");
   const [searchLieux, setSearchLieux] = useState("");
   const [searchUtilisateurs, setSearchUtilisateurs] = useState("");
 
   const { data: groupes, isLoading } = useGroupes(regroupement);
   const { data: lieux } = useLieuxGroupe(selectedGroupe?.Id_Groupe);
   const { data: utilisateurs } = useUtilisateursGroupe(selectedGroupe?.Id_Groupe);
-
-  // Filtrer les groupes
-  const groupesFiltres = useMemo(() => {
-    if (!groupes) return [];
-    return groupes.filter((g) =>
-      g.Nom_Groupe?.toLowerCase().includes(searchGroupes.toLowerCase())
-    );
-  }, [groupes, searchGroupes]);
 
   // Filtrer les lieux
   const lieuxFiltres = useMemo(() => {
@@ -73,6 +74,42 @@ export function GroupesClient() {
   const handleImprimer = () => {
     window.print();
   };
+
+  // Colonnes TanStack pour Groupes
+  const groupesColumns: ColumnDef<GroupesRow>[] = [
+    {
+      accessorKey: "Id_Groupe",
+      header: "Numéro",
+      cell: ({ row }) => row.getValue("Id_Groupe"),
+    },
+    {
+      accessorKey: "Nom_Groupe",
+      header: "Nom du groupe",
+      cell: ({ row }) => row.getValue("Nom_Groupe") || "-",
+    },
+    {
+      accessorKey: "Numero_Regroupement",
+      header: "Regroupement",
+      cell: ({ row }) => {
+        const value = row.getValue("Numero_Regroupement");
+        return value === "1" ? "Regroupement 1" : "Regroupement 2";
+      },
+    },
+    {
+      accessorKey: "nombre_lieux",
+      header: "Lieux associés",
+      cell: ({ row }) => (
+        <div className="text-right font-medium">{row.getValue("nombre_lieux")}</div>
+      ),
+    },
+  ];
+
+  const groupesTableData: GroupesRow[] = (groupes || []).map((g) => ({
+    Id_Groupe: g.Id_Groupe,
+    Nom_Groupe: g.Nom_Groupe,
+    Numero_Regroupement: g.Numero_Regroupement,
+    nombre_lieux: g.nombre_lieux,
+  }));;
 
   return (
     <>
@@ -118,62 +155,26 @@ export function GroupesClient() {
         </Button>
       </div>
 
-      {/* Recherche sur la table principale */}
-      <div className="mb-4">
-        <Input
-          placeholder="Rechercher un groupe..."
-          value={searchGroupes}
-          onChange={(e) => setSearchGroupes(e.target.value)}
-        />
-      </div>
-
       {/* Table des groupes */}
-      <div className="border rounded-lg max-h-96 overflow-y-auto mb-6">
-        <Table>
-          <TableHeader className="sticky top-0 bg-muted">
-            <TableRow>
-              <TableHead>Numéro</TableHead>
-              <TableHead>Nom du groupe</TableHead>
-              <TableHead>Regroupement</TableHead>
-              <TableHead className="text-right">Lieux associés</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  Chargement...
-                </TableCell>
-              </TableRow>
-            ) : groupesFiltres && groupesFiltres.length > 0 ? (
-              groupesFiltres.map((groupe) => (
-                <TableRow
-                  key={groupe.Id_Groupe}
-                  onClick={() => setSelectedGroupe(groupe)}
-                  className={cn(
-                    "cursor-pointer hover:bg-muted/50 transition-colors",
-                    selectedGroupe?.Id_Groupe === groupe.Id_Groupe &&
-                      "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-medium border-l-4 border-l-blue-600 dark:border-l-blue-400"
-                  )}
-                >
-                  <TableCell>{groupe.Id_Groupe}</TableCell>
-                  <TableCell>{groupe.Nom_Groupe}</TableCell>
-                  <TableCell>
-                    {groupe.Numero_Regroupement === "1" ? "Regroupement 1" : "Regroupement 2"}
-                  </TableCell>
-                  <TableCell className="text-right">{groupe.nombre_lieux}</TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  Aucun groupe trouvé
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Groupes</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <TanStackTable
+            columns={groupesColumns}
+            data={groupesTableData}
+            searchPlaceholder="Numéro, nom du groupe..."
+            isLoading={isLoading}
+            emptyMessage="Aucun groupe trouvé"
+            selectedRowId={selectedGroupe?.Id_Groupe}
+            onRowClick={(row: GroupesRow) => {
+              const groupe = groupes?.find(g => g.Id_Groupe === row.Id_Groupe);
+              if (groupe) setSelectedGroupe(groupe);
+            }}
+          />
+        </CardContent>
+      </Card>
 
       {/* Tables des détails (toujours visibles) */}
       <div className="grid grid-cols-2 gap-6">
