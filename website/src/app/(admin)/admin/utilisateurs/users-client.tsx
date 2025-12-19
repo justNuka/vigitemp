@@ -5,7 +5,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TanStackTable } from "@/components/data-table/tanstack-table";
+import { ColumnDef } from "@tanstack/react-table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,7 +19,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { usePasswordRules } from "@/hooks/usePasswordRules";
 import { useProfiles } from "@/hooks/useProfiles";
-import { useSites } from "@/hooks/useSites";
+import { useSitesSimple } from "@/hooks/useSites";
 import { useGroups } from "@/hooks/useGroups";
 import { validatePassword } from "@/lib/password-validation";
 import { useForm } from "react-hook-form";
@@ -91,18 +92,74 @@ export function UsersClient({ users }: Props) {
   const queryClient = useQueryClient();
   const { data: rules, isLoading: rulesLoading } = usePasswordRules();
   const { data: profiles, isLoading: profilesLoading } = useProfiles();
-  const { data: sites, isLoading: sitesLoading } = useSites();
+  const { data: sites, isLoading: sitesLoading } = useSitesSimple();
   const { data: groups, isLoading: groupsLoading } = useGroups();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
-  
-  // État pour les filtres et la recherche
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterProfile, setFilterProfile] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+
+  // Colonnes TanStack
+  const columns: ColumnDef<User>[] = [
+    {
+      accessorKey: "username",
+      header: "Login",
+      cell: ({ row }) => <span className="font-medium">{row.getValue("username")}</span>,
+    },
+    {
+      accessorKey: "displayName",
+      header: "Nom complet",
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+      cell: ({ row }) => <span className="text-muted-foreground">{row.getValue("email") || "-"}</span>,
+    },
+    {
+      accessorKey: "role",
+      header: "Profil",
+      cell: ({ row }) => (
+        <Badge variant="outline" className="gap-1">
+          <Shield className="h-3 w-3" />
+          {row.getValue("role")}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: "isActive",
+      header: "Statut",
+      cell: ({ row }) => (
+        <Badge variant={row.getValue("isActive") ? "default" : "secondary"}>
+          {row.getValue("isActive") ? "Actif" : "Inactif"}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: "expiry_date",
+      header: "Date d'expiration",
+      cell: ({ row }) => {
+        const date = row.getValue("expiry_date");
+        return date ? format(new Date(date as string), "dd/MM/yyyy", { locale: fr }) : "-";
+      },
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      enableSorting: false,
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleEditUser(row.original)}
+          className="gap-2"
+        >
+          <Pencil className="h-4 w-4" />
+          Modifier
+        </Button>
+      ),
+    },
+  ];
 
   const form = useForm<CreateUserFormValues>({
     resolver: zodResolver(createUserSchema),
@@ -253,35 +310,6 @@ export function UsersClient({ users }: Props) {
     });
     setIsEditDialogOpen(true);
   };
-
-  // Filtrer les utilisateurs selon les critères
-  const filteredUsers = users.filter((user) => {
-    // Filtre de recherche (login, nom, prénom, email)
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch = 
-      user.username.toLowerCase().includes(searchLower) ||
-      user.displayName.toLowerCase().includes(searchLower) ||
-      user.email?.toLowerCase().includes(searchLower) ||
-      user.nom?.toLowerCase().includes(searchLower) ||
-      user.prenom?.toLowerCase().includes(searchLower);
-
-    if (!matchesSearch) return false;
-
-    // Filtre par profil
-    if (filterProfile && user.role !== filterProfile) {
-      return false;
-    }
-
-    // Filtre par statut
-    if (filterStatus === "active" && !user.isActive) {
-      return false;
-    }
-    if (filterStatus === "inactive" && user.isActive) {
-      return false;
-    }
-
-    return true;
-  });
 
   const onSubmit = async (data: CreateUserFormValues) => {
     // Vérifier les règles de mot de passe
@@ -1042,126 +1070,33 @@ export function UsersClient({ users }: Props) {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Utilisateurs</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>Gestion des utilisateurs</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              {users.length} utilisateur{users.length > 1 ? "s" : ""}
+            </p>
+          </div>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <UserPlus className="h-4 w-4" />
+                Nouvel utilisateur
+              </Button>
+            </DialogTrigger>
+          </Dialog>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Filtres et recherche */}
-          <div className="space-y-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-              {/* Champ de recherche */}
-              <div className="flex-1">
-                <label htmlFor="search" className="text-sm font-medium block mb-2">
-                  Rechercher
-                </label>
-                <Input
-                  id="search"
-                  placeholder="Login, nom, email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-
-              {/* Filtre par profil */}
-              <div className="sm:w-48">
-                <label htmlFor="profile-filter" className="text-sm font-medium block mb-2">
-                  Profil
-                </label>
-                <Select value={filterProfile || "all"} onValueChange={(value) => setFilterProfile(value === "all" ? null : value)}>
-                  <SelectTrigger id="profile-filter">
-                    <SelectValue placeholder="Tous les profils" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous les profils</SelectItem>
-                    {profiles?.map((profile) => (
-                      <SelectItem key={profile.id} value={profile.name}>
-                        {profile.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Filtre par statut */}
-              <div className="sm:w-48">
-                <label htmlFor="status-filter" className="text-sm font-medium block mb-2">
-                  Statut
-                </label>
-                <Select value={filterStatus || "all"} onValueChange={(value) => setFilterStatus(value === "all" ? null : value)}>
-                  <SelectTrigger id="status-filter">
-                    <SelectValue placeholder="Tous les statuts" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous les statuts</SelectItem>
-                    <SelectItem value="active">Actif</SelectItem>
-                    <SelectItem value="inactive">Inactif</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Afficher le nombre de résultats */}
-            <div className="text-sm text-muted-foreground">
-              {filteredUsers.length} utilisateur{filteredUsers.length !== 1 ? "s" : ""} 
-              {(searchQuery || filterProfile || filterStatus) ? " (filtré)" : ""}
-            </div>
-          </div>
-
-          {/* Table */}
-          <div className="border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Login</TableHead>
-                  <TableHead>Nom complet</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Profil</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.username}</TableCell>
-                      <TableCell>{user.displayName}</TableCell>
-                      <TableCell className="text-muted-foreground">{user.email || "-"}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="gap-1">
-                          <Shield className="h-3 w-3" />
-                          {user.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={user.isActive ? "default" : "secondary"}>
-                          {user.isActive ? "Actif" : "Inactif"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditUser(user)}
-                          className="gap-2"
-                        >
-                          <Pencil className="h-4 w-4" />
-                          Modifier
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      Aucun utilisateur ne correspond aux critères de recherche
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+        <CardContent>
+          <TanStackTable
+            columns={columns}
+            data={users}
+            searchField="username"
+            searchPlaceholder="Rechercher par login..."
+            pageSize={20}
+            emptyMessage="Aucun utilisateur trouvé"
+            selectedRowId={selectedUser?.id}
+            onRowClick={(row) => setSelectedUser(row as User)}
+          />
         </CardContent>
       </Card>
     </main>

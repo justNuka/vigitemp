@@ -14,7 +14,9 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { Power, FileText, MapPin, Settings } from "lucide-react";
+import { Power, FileText, MapPin, Settings, AlertTriangle, AlertCircle } from "lucide-react";
+import { getTypeIcon } from "@/lib/lieu-types";
+import type { LieuTypeValue } from "@/lib/lieu-types";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +25,12 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Tooltip as UITooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 
 // Register Chart.js components
@@ -56,8 +64,10 @@ interface MonitoringCardProps {
   nomLieu: string;
   sondeNumeroSerie?: string;
   lieuEtat?: string;
+  lieuType?: LieuTypeValue;
   siteName?: string;
   groupName?: string;
+  status?: "ok" | "warning" | "critical";
   onSurveillanceToggle?: (idLieu: number, newState: boolean) => void;
 }
 
@@ -66,8 +76,10 @@ export default function MonitoringCard({
   nomLieu,
   sondeNumeroSerie,
   lieuEtat,
+  lieuType,
   siteName,
   groupName,
+  status = "ok",
   onSurveillanceToggle,
 }: MonitoringCardProps) {
   const [data, setData] = useState<MeasureData[]>([]);
@@ -141,17 +153,69 @@ export default function MonitoringCard({
     }
   };
 
+  // ✅ Déterminer la couleur du header selon le status
+  const getHeaderStyles = () => {
+    switch (status) {
+      case "critical":
+        return {
+          bg: "bg-red-600 dark:bg-red-700",
+          borderColor: "border-red-700 dark:border-red-800",
+          icon: <AlertTriangle className="w-4 h-4" />,
+        };
+      case "warning":
+        return {
+          bg: "bg-yellow-600 dark:bg-yellow-700",
+          borderColor: "border-yellow-700 dark:border-yellow-800",
+          icon: <AlertCircle className="w-4 h-4" />,
+        };
+      case "ok":
+      default:
+        return {
+          bg: "bg-slate-600 dark:bg-slate-700",
+          borderColor: "border-slate-700 dark:border-slate-800",
+          icon: null,
+        };
+    }
+  };
+
+  const headerStyles = getHeaderStyles();
+
   const [yMin, yMax] = calculateYDomain();
 
   return (
     <>
       <div className="relative w-full max-w-[300px] max-h-[300px] mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
         {/* Header avec site, groupe et lieu */}
-        <div className="px-3 py-2 bg-slate-600 dark:bg-slate-700">
-          <div className="text-white text-xs font-medium space-y-1">
-            {siteName && <div>{siteName}</div>}
-            {groupName && <div>{groupName}</div>}
-            <div className="font-semibold">{nomLieu}</div>
+        <div className={`px-3 py-2 ${headerStyles.bg} border-b-2 ${headerStyles.borderColor}`}>
+          <div className="flex items-start justify-between gap-2">
+            <div className="text-white text-xs font-medium space-y-1 flex-1">
+              {siteName && (
+                <TooltipProvider>
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <div className="cursor-help hover:opacity-80 transition-opacity truncate">
+                        {siteName}
+                      </div>
+                    </TooltipTrigger>
+                    {lieuEtat && (
+                      <TooltipContent>
+                        <p className="max-w-xs">{lieuEtat}</p>
+                      </TooltipContent>
+                    )}
+                  </UITooltip>
+                </TooltipProvider>
+              )}
+              {groupName && <div className="truncate">{groupName}</div>}
+              <div className="font-semibold truncate flex items-center gap-1.5">
+                {lieuType && getTypeIcon(lieuType, 'w-3.5 h-3.5').icon}
+                {nomLieu}
+              </div>
+            </div>
+            {headerStyles.icon && (
+              <div className="text-white flex-shrink-0 mt-0.5">
+                {headerStyles.icon}
+              </div>
+            )}
           </div>
         </div>
 

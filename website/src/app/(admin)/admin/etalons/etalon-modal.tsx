@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -20,6 +18,8 @@ import { useModules } from "@/hooks/useModules";
 import { Etalon } from "@/hooks/useEtalons";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface EtalonModalProps {
   open: boolean;
@@ -45,6 +45,9 @@ const UNITE_OPTIONS = [
 ];
 
 export function EtalonModal({ open, onOpenChange, etalon, isEditing }: EtalonModalProps) {
+  const queryClient = useQueryClient();
+  const [isLoading, setIsLoading] = useState(false);
+
   // Section 1 - Info étalon
   const [type, setType] = useState("");
   const [serie, setSerie] = useState("");
@@ -124,24 +127,67 @@ export function EtalonModal({ open, onOpenChange, etalon, isEditing }: EtalonMod
     }
   };
 
-  const handleSubmit = () => {
-    // TODO: Implémenter la création/modification
-    console.log({
-      type,
-      serie,
-      moduleId,
-      portSerie,
-      idServeur,
-      valeurBase,
-      resolution,
-      incertitude,
-      organisme,
-      dateCertif,
-      unite,
-      numeroCertif,
-      mesures,
-    });
-    onOpenChange(false);
+  const handleSubmit = async () => {
+    if (!serie.trim()) {
+      toast.error("Veuillez remplir le numéro de série");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const payload = {
+        Etalon_Numero_Serie: serie,
+        Resolution: resolution,
+        Incertitude: incertitude,
+        Numero: numeroCertif,
+        Organisme: organisme,
+        Date: dateCertif,
+        Unite: unite,
+        mesures: mesures.map((m, index) => ({
+          Numero_Ordre: index + 1,
+          Temperature_Reference: m.reference,
+          Temperature_Vraie: m.value,
+          Incertitude: m.incertitude,
+        })),
+      };
+
+      let response;
+      if (isEditing && etalon) {
+        response = await fetch(`/api/etalons/${etalon.Id_Etalon}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        response = await fetch("/api/etalons", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      if (!response.ok) {
+        const error = await response.json();
+        toast.error(error.error || "Erreur lors de la sauvegarde");
+        return;
+      }
+
+      toast.success(
+        isEditing
+          ? "Étalon mis à jour avec succès"
+          : "Étalon créé avec succès"
+      );
+
+      // Invalider le cache pour recharger la liste
+      queryClient.invalidateQueries({ queryKey: ["etalons"] });
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Submit error:", error);
+      toast.error("Erreur lors de la sauvegarde");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -415,11 +461,15 @@ export function EtalonModal({ open, onOpenChange, etalon, isEditing }: EtalonMod
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
               Annuler
             </Button>
-            <Button onClick={handleSubmit}>
-              {isEditing ? "Mettre à jour" : "Créer"}
+            <Button onClick={handleSubmit} disabled={isLoading}>
+              {isLoading
+                ? "Enregistrement..."
+                : isEditing
+                ? "Mettre à jour"
+                : "Créer"}
             </Button>
           </DialogFooter>
         </DialogContent>

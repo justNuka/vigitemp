@@ -13,6 +13,18 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { SondeModal } from "./sonde-modal";
+import { TanStackTable } from "@/components/data-table/tanstack-table";
+import { ColumnDef } from "@tanstack/react-table";
+
+interface SondesRow {
+  Id_Sonde: number;
+  Adresse_Sonde: string | null;
+  Sonde_Numero_Serie: string | null;
+  Port_Serie: string | null;
+  Id_Module: number | null;
+  Etat_Sonde: string | null;
+  Lieu: string | null;
+}
 
 export function SondesClient() {
   const [selectedSonde, setSelectedSonde] = useState<number | null>(null);
@@ -39,6 +51,57 @@ export function SondesClient() {
     if (!date) return "-";
     return format(new Date(date), "dd/MM/yyyy", { locale: fr });
   };
+
+  // Colonnes TanStack pour Sondes
+  const sondesColumns: ColumnDef<SondesRow>[] = [
+    {
+      accessorKey: "Adresse_Sonde",
+      header: "Adresse",
+      cell: ({ row }) => (
+        <span className="font-medium">{row.getValue("Adresse_Sonde") || "-"}</span>
+      ),
+    },
+    {
+      accessorKey: "Sonde_Numero_Serie",
+      header: "Numéro de série",
+      cell: ({ row }) => row.getValue("Sonde_Numero_Serie") || "-",
+    },
+    {
+      accessorKey: "Port_Serie",
+      header: "Port série",
+      cell: ({ row }) => row.getValue("Port_Serie") || "-",
+    },
+    {
+      header: "Module",
+      cell: ({ row }) => {
+        const item = row.original;
+        const moduleDisplay = item.Port_Serie 
+          ? `${item.Id_Module || '-'} (${item.Port_Serie})`
+          : item.Id_Module || '-';
+        return <span>{moduleDisplay}</span>;
+      },
+    },
+    {
+      accessorKey: "Etat_Sonde",
+      header: "État",
+      cell: ({ row }) => row.getValue("Etat_Sonde") || "-",
+    },
+    {
+      accessorKey: "Lieu",
+      header: "Lieu",
+      cell: ({ row }) => row.getValue("Lieu") || "-",
+    },
+  ];
+
+  const sondesTableData: SondesRow[] = (sondes || []).map((s) => ({
+    Id_Sonde: s.Id_Sonde,
+    Adresse_Sonde: s.Adresse_Sonde,
+    Sonde_Numero_Serie: s.Sonde_Numero_Serie,
+    Port_Serie: s.Port_Serie,
+    Id_Module: s.Id_Module,
+    Etat_Sonde: s.Etat_Sonde,
+    Lieu: s.Lieu,
+  }));
 
   if (sondesLoading) {
     return (
@@ -98,54 +161,20 @@ export function SondesClient() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          {!sondes || sondes.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Aucune sonde
-            </div>
-          ) : (
-            <div className="border rounded-lg overflow-hidden">
-              <div className="max-h-96 overflow-y-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Adresse</TableHead>
-                      <TableHead>Numéro de série</TableHead>
-                      <TableHead>Port série</TableHead>
-                      <TableHead>Module</TableHead>
-                      <TableHead>État</TableHead>
-                      <TableHead>Lieu</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sondes.map((sonde) => (
-                      <TableRow
-                        key={sonde.Id_Sonde}
-                        onClick={() => {
-                          setSelectedSonde(sonde.Id_Sonde);
-                          setSelectedCalibrage(null);
-                          setSelectedEtalonnage(null);
-                        }}
-                        className={cn(
-                          "cursor-pointer hover:bg-muted/50 transition-colors",
-                          selectedSonde === sonde.Id_Sonde && "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-medium border-l-4 border-l-blue-600 dark:border-l-blue-400"
-                        )}
-                      >
-                        <TableCell className="font-medium">
-                          {sonde.Adresse_Sonde || "-"}
-                        </TableCell>
-                        <TableCell>{sonde.Sonde_Numero_Serie || "-"}</TableCell>
-                        <TableCell>{sonde.Port_Serie || "-"}</TableCell>
-                        <TableCell>{sonde.Id_Module || "-"}</TableCell>
-                        <TableCell>{sonde.Etat_Sonde || "-"}</TableCell>
-                        <TableCell>{sonde.Lieu || "-"}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          )}
+        <CardContent className="p-0">
+          <TanStackTable
+            columns={sondesColumns}
+            data={sondesTableData}
+            searchPlaceholder="Adresse, numéro de série..."
+            isLoading={sondesLoading}
+            emptyMessage="Aucune sonde trouvée"
+            selectedRowId={selectedSonde}
+            onRowClick={(row: SondesRow) => {
+              setSelectedSonde(row.Id_Sonde);
+              setSelectedCalibrage(null);
+              setSelectedEtalonnage(null);
+            }}
+          />
         </CardContent>
       </Card>
 

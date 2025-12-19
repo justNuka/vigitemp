@@ -4,20 +4,18 @@ import { useState } from "react";
 import { useEtalons } from "@/hooks/useEtalons";
 import { Etalon } from "@/hooks/useEtalons";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { EtalonModal } from "./etalon-modal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { TanStackTable } from "@/components/data-table/tanstack-table";
+import { ColumnDef } from "@tanstack/react-table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+interface EtalonsRow {
+  Id_Etalon: number;
+  Etalon_Numero_Serie: string | null;
+  Etat_Etalon: string | null;
+}
 
 export function EtalonsClient() {
   const { data: etalons, isLoading } = useEtalons();
@@ -55,9 +53,39 @@ export function EtalonsClient() {
     console.log("Test:", selectedEtalon);
   };
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-96">Chargement...</div>;
-  }
+  // Colonnes TanStack
+  const columns: ColumnDef<EtalonsRow>[] = [
+    {
+      accessorKey: "Etalon_Numero_Serie",
+      header: "Numéro de série",
+    },
+    {
+      id: "date_certificat",
+      header: "Date certificat",
+      cell: () => "-",
+    },
+    {
+      accessorKey: "Etat_Etalon",
+      header: "État actuel",
+      cell: ({ row }) => (
+        <Badge
+          variant={
+            row.getValue("Etat_Etalon") === "1"
+              ? "default"
+              : "outline"
+          }
+        >
+          {row.getValue("Etat_Etalon") === "1" ? "Actif" : "Inactif"}
+        </Badge>
+      ),
+    },
+  ];
+
+  const tableData: EtalonsRow[] = (etalons || []).map((e) => ({
+    Id_Etalon: e.Id_Etalon,
+    Etalon_Numero_Serie: e.Etalon_Numero_Serie,
+    Etat_Etalon: e.Etat_Etalon,
+  }));
 
   return (
     <div className="space-y-4">
@@ -88,44 +116,24 @@ export function EtalonsClient() {
         </Button>
       </div>
 
-      <div className="border rounded-lg max-h-96 overflow-y-auto">
-        <Table>
-          <TableHeader className="sticky top-0 bg-muted">
-            <TableRow>
-              <TableHead>Numéro de série</TableHead>
-              <TableHead>Date certificat</TableHead>
-              <TableHead>État actuel</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {etalons?.map((etalon) => (
-              <TableRow
-                key={etalon.Id_Etalon}
-                onClick={() => setSelectedEtalon(etalon)}
-                className={cn(
-                  "cursor-pointer hover:bg-muted/50 transition-colors",
-                  selectedEtalon?.Id_Etalon === etalon.Id_Etalon &&
-                    "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-medium border-l-4 border-l-blue-600 dark:border-l-blue-400"
-                )}
-              >
-                <TableCell>{etalon.Etalon_Numero_Serie}</TableCell>
-                <TableCell>-</TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      etalon.Etat_Etalon === "1"
-                        ? "default"
-                        : "outline"
-                    }
-                  >
-                    {etalon.Etat_Etalon === "1" ? "Actif" : "Inactif"}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Étalons</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <TanStackTable
+            columns={columns}
+            data={tableData}
+            searchPlaceholder="N° série, état..."
+            isLoading={isLoading}
+            emptyMessage="Aucun étalon trouvé"
+            selectedRowId={selectedEtalon?.Id_Etalon}
+            onRowClick={(row: EtalonsRow) => {
+              setSelectedEtalon(etalons?.find(e => e.Id_Etalon === row.Id_Etalon) || null);
+            }}
+          />
+        </CardContent>
+      </Card>
 
       <EtalonModal
         open={isModalOpen}

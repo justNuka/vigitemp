@@ -281,6 +281,7 @@ model t_lieu {
   Id_Groupe2                           Int?
   Id_Site                              Int?
   Nom_Lieu                             String?                    @db.VarChar(20)
+  Type_Lieu                            String?                    @db.VarChar(20)
   Sonde_Numero_Serie                   String?                    @db.VarChar(50)
   Consigne                             Float?                     @db.Float
   Consigne_Sup                         Float?                     @db.Float
