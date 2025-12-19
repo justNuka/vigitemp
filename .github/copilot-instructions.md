@@ -30,9 +30,9 @@ Vigitemp is a comprehensive temperature/sensor monitoring system with:
 ```
 
 **Key Files:**
-- [prisma.ts](website/src/lib/prisma.ts) - Two Prisma clients (main + mesure databases)
-- [db-main schema](website/prisma/db-main/schema.prisma) - Users, profiles, sensors, alarms
-- [db-mesure schema](website/prisma/db-mesure/schema.prisma) - Time-series measurements
+- [prisma.ts](../website/src/lib/prisma.ts) - Two Prisma clients (main + mesure databases)
+- [db-main schema](../website/prisma/db-main/schema.prisma) - Users, profiles, sensors, alarms
+- [db-mesure schema](../website/prisma/db-mesure/schema.prisma) - Time-series measurements
 
 **Import Pattern:**
 ```typescript
@@ -44,8 +44,8 @@ const measurements = await prismaMesure.tm_mesure.findMany()
 ### Authentication Flow
 1. **Login** → `POST /api/auth/login` generates JWT token
 2. **Token Storage** → Stored in `auth-token` cookie (7-day expiry)
-3. **Verification** → [jwt.ts](website/src/lib/jwt.ts) validates all API requests
-4. **User Context** → [auth.ts](website/src/lib/auth.ts) extracts `getAuthenticatedUser()` from request
+3. **Verification** → [jwt.ts](../website/src/lib/jwt.ts) validates all API requests
+4. **User Context** → [auth.ts](../website/src/lib/auth.ts) extracts `getAuthenticatedUser()` from request
 
 **Cookie name mismatch alert:** Routes check both `token` and `auth-token` cookies inconsistently. Use `token` for new code.
 
@@ -65,7 +65,7 @@ export const GET = withLogging(async (req: NextRequest) => {
 })
 ```
 
-**Audit Trail:** All mutations logged to `t_journal` via [audit-db.ts](website/src/lib/audit-db.ts).
+**Audit Trail:** All mutations logged to `t_journal` via [audit-db.ts](../website/src/lib/audit-db.ts).
 
 ## Project-Specific Conventions
 
@@ -78,7 +78,7 @@ export const GET = withLogging(async (req: NextRequest) => {
 **When adding features:** Keep database columns in French, transform to English in API responses.
 
 ### Cache Components (Next.js 16)
-Enabled in [next.config.mjs](website/next.config.mjs):
+Enabled in [next.config.mjs](../website/next.config.mjs):
 ```javascript
 cacheComponents: true
 ```
@@ -92,10 +92,10 @@ export async function DashboardStats() {
 }
 ```
 
-Cache invalidation: Use [/api/revalidate](website/src/app/api/revalidate) endpoint (dev only).
+Cache invalidation: Use [/api/revalidate](../website/src/app/api/revalidate) endpoint (dev only).
 
 ### Measurement Caching Layer
-[measurement-cache.ts](website/src/lib/measurement-cache.ts) - In-memory cache for sensor measurements to reduce database load. Must flush after alarm state changes.
+[measurement-cache.ts](../website/src/lib/measurement-cache.ts) - In-memory cache for sensor measurements to reduce database load. Must flush after alarm state changes.
 
 ## Key Commands
 
@@ -134,18 +134,18 @@ if (!authorizations.includes('REQUIRED_CODE')) {
 ```
 
 ### Error Handling & Logging
-- **Logger:** [logger.ts](website/src/lib/logger.ts) - Winston with daily rotation
-- **API Logging:** [api-logger.ts](website/src/lib/api-logger.ts) - Auto-logs all requests with user/IP
+- **Logger:** [logger.ts](../website/src/lib/logger.ts) - Winston with daily rotation
+- **API Logging:** [api-logger.ts](../website/src/lib/api-logger.ts) - Auto-logs all requests with user/IP
 - **Audit Trail:** Every modification tracked in database journal
 
 ### Feature Flags
-[feature-flags.ts](website/src/lib/feature-flags.ts) controls test pages, cache debug UI, and APIs:
+[feature-flags.ts](../website/src/lib/feature-flags.ts) controls test pages, cache debug UI, and APIs:
 - **Dev mode:** All test features enabled
 - **Production:** Disabled (redirects return 404)
 - **Override:** Set `ENABLE_TEST_PAGES=true` for staging
 
 ### Email System
-[email.ts](website/src/lib/email.ts) - Sends password resets, account notifications. Requires `SMTP_*` env vars.
+[email.ts](../website/src/lib/email.ts) - Sends password resets, account notifications. Requires `SMTP_*` env vars.
 
 ## API Endpoints Overview
 
@@ -223,7 +223,7 @@ if (!authorizations.includes('REQUIRED_CODE')) {
 ## File Organization
 
 ```
-website/
+../website/
 ├── src/
 │   ├── app/
 │   │   ├── api/                    # API routes (organized by resource)
@@ -441,7 +441,7 @@ website/
    - Shows alarm count only when alarms are present
 
 ### ✅ Table Selection Visibility Improvements
-1. **Fixed TanStackTable Selection Logic** ([tanstack-table.tsx](website/src/components/data-table/tanstack-table.tsx))
+1. **Fixed TanStackTable Selection Logic** ([tanstack-table.tsx](../website/src/components/data-table/tanstack-table.tsx))
    - Corrected boolean logic for `isSelected` detection
    - Added support for all ID types: Id_Sonde, Id_Site, Id_Lieu, Id_Utilisateur, Id_Groupe, Id_Profil, Id_Etalon, Id_Actionneur, Id_Alarme, id, Id
    - Enhanced selection styling:
@@ -451,14 +451,14 @@ website/
      - Font weight: `font-medium`
 
 2. **Added `selectedRowId` Prop to All Admin Pages**
-   - ✅ [sondes-client.tsx](website/src/app/(admin)/admin/sondes/sondes-client.tsx) - `selectedRowId={selectedSonde}`
-   - ✅ [users-client.tsx](website/src/app/(admin)/admin/utilisateurs/users-client.tsx) - `selectedRowId={selectedUser?.id}`
-   - ✅ [profils-client.tsx](website/src/app/(admin)/admin/profils/profils-client.tsx) - `selectedRowId={selectedProfile?.id}`
-   - ✅ [groupes-client.tsx](website/src/app/(admin)/admin/groupes/groupes-client.tsx) - `selectedRowId={selectedGroupe?.Id_Groupe}`
-   - ✅ [etalons-client.tsx](website/src/app/(admin)/admin/etalons/etalons-client.tsx) - `selectedRowId={selectedEtalon?.Id_Etalon}`
-   - ✅ [actionneurs-client.tsx](website/src/app/(admin)/admin/actionneurs/actionneurs-client.tsx) - `selectedRowId={selectedActionneur?.Id_Actionneur}`
-   - ✅ [alarm-table.tsx](website/src/components/alarm-table.tsx) - `selectedRowId={selectedAlarm?.id}`
-   - Already present: [lieux-client.tsx](website/src/app/(admin)/admin/lieux/lieux-client.tsx), [sites-client.tsx](website/src/app/(admin)/admin/sites/sites-client.tsx)
+   - ✅ [sondes-client.tsx](../website/src/app/(admin)/admin/sondes/sondes-client.tsx) - `selectedRowId={selectedSonde}`
+   - ✅ [users-client.tsx](../website/src/app/(admin)/admin/utilisateurs/users-client.tsx) - `selectedRowId={selectedUser?.id}`
+   - ✅ [profils-client.tsx](../website/src/app/(admin)/admin/profils/profils-client.tsx) - `selectedRowId={selectedProfile?.id}`
+   - ✅ [groupes-client.tsx](../website/src/app/(admin)/admin/groupes/groupes-client.tsx) - `selectedRowId={selectedGroupe?.Id_Groupe}`
+   - ✅ [etalons-client.tsx](../website/src/app/(admin)/admin/etalons/etalons-client.tsx) - `selectedRowId={selectedEtalon?.Id_Etalon}`
+   - ✅ [actionneurs-client.tsx](../website/src/app/(admin)/admin/actionneurs/actionneurs-client.tsx) - `selectedRowId={selectedActionneur?.Id_Actionneur}`
+   - ✅ [alarm-table.tsx](../website/src/components/alarm-table.tsx) - `selectedRowId={selectedAlarm?.id}`
+   - Already present: [lieux-client.tsx](../website/src/app/(admin)/admin/lieux/lieux-client.tsx), [sites-client.tsx](../website/src/app/(admin)/admin/sites/sites-client.tsx)
 
 ### Previous Sessions - Core Features
 1. ✅ Docker autofill on Login/Password fields (autoComplete attributes)
