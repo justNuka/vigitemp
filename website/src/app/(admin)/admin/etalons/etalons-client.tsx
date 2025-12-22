@@ -88,39 +88,43 @@ export function EtalonsClient() {
   }));
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        <Button onClick={handleAddClick} className="bg-green-600 hover:bg-green-700">
-          Nouveau
-        </Button>
-        <Button
-          onClick={handleEditClick}
-          disabled={!selectedEtalon}
-          variant="outline"
-        >
-          Modifier
-        </Button>
-        <Button
-          onClick={handleArchiveClick}
-          disabled={!selectedEtalon}
-          variant="outline"
-        >
-          Archiver
-        </Button>
-        <Button
-          onClick={handleTestClick}
-          disabled={!selectedEtalon}
-          variant="outline"
-        >
-          Tester
-        </Button>
-      </div>
-
+    <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       <Card>
-        <CardHeader>
-          <CardTitle>Étalons</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>Gestion des étalons</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              {etalons?.length || 0} étalon{etalons && etalons.length > 1 ? 's' : ''}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={handleAddClick} variant="default">
+              Nouveau
+            </Button>
+            <Button
+              onClick={handleEditClick}
+              disabled={!selectedEtalon}
+              variant="outline"
+            >
+              Modifier
+            </Button>
+            <Button
+              onClick={handleArchiveClick}
+              disabled={!selectedEtalon}
+              variant="outline"
+            >
+              Archiver
+            </Button>
+            <Button
+              onClick={handleTestClick}
+              disabled={!selectedEtalon}
+              variant="outline"
+            >
+              Tester
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent>
           <TanStackTable
             columns={columns}
             data={tableData}
@@ -156,6 +160,6 @@ export function EtalonsClient() {
           </AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </main>
   );
 }

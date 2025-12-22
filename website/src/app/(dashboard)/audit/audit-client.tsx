@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { AuditLogTable } from "@/components/audit-log-table";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RefreshCw, Search } from "lucide-react";
@@ -73,69 +73,62 @@ export function AuditClient({ logs }: Props) {
 
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-semibold">Dernières activités</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {filteredLogs.length} événement{filteredLogs.length > 1 ? "s" : ""}
-            {filteredLogs.length !== logs.length && ` sur ${logs.length}`}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
-          <Select value={codeFilter} onValueChange={setCodeFilter}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Tous les codes" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous les codes</SelectItem>
-              {auditCodes.map((code) => (
-                <SelectItem key={code.CodeJournal} value={code.CodeJournal}>
-                  {code.CodeJournal}
-                  {code.Commentaire && ` - ${code.Commentaire}`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="relative flex-1 sm:flex-initial">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Rechercher..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 w-full sm:w-64"
-            />
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>Dernières activités</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              {filteredLogs.length} événement{filteredLogs.length > 1 ? "s" : ""}
+              {filteredLogs.length !== logs.length && ` sur ${logs.length}`}
+            </p>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            className="gap-2"
-            data-testid="button-refresh"
-          >
-            <RefreshCw className="h-4 w-4" />
-            <span className="hidden sm:inline">Actualiser</span>
-          </Button>
-        </div>
-      </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={codeFilter} onValueChange={setCodeFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Tous les codes" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les codes</SelectItem>
+                {auditCodes.map((code) => (
+                  <SelectItem key={code.CodeJournal} value={code.CodeJournal}>
+                    {code.CodeJournal}
+                    {code.Commentaire && ` - ${code.Commentaire}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-      <Card>
-        <CardContent className="p-0">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Rechercher..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 w-64"
+              />
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              className="gap-2"
+              data-testid="button-refresh"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Actualiser
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
           <AuditLogTable
             logs={filteredLogs}
             isLoading={false}
           />
         </CardContent>
       </Card>
-
-      <div className="flex items-center justify-between pt-4 border-t text-sm text-muted-foreground">
-        <p>
-          {filteredLogs.length} événement{filteredLogs.length > 1 ? "s" : ""}
-        </p>
-      </div>
     </main>
   );
 }

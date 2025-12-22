@@ -5,6 +5,7 @@ import { useSites, type SiteAdmin } from '@/hooks/useSites';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import {
   Dialog,
@@ -203,48 +204,58 @@ Description: ${selectedSite.Commentaire || 'N/A'}
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Boutons d'actions */}
-      <div className="flex gap-2">
-        <Button onClick={() => setIsCreateOpen(true)} variant="default">
-          Nouveau
-        </Button>
-        <Button
-          onClick={handleEdit}
-          variant="outline"
-          disabled={!selectedSite}
-        >
-          Modifier
-        </Button>
-        <Button
-          onClick={() => setIsArchiveAlertOpen(true)}
-          variant="outline"
-          disabled={!selectedSite}
-        >
-          Archiver
-        </Button>
-        <Button
-          onClick={handlePrint}
-          variant="ghost"
-          size="icon"
-          disabled={!selectedSite}
-          title="Imprimer le site sélectionné"
-        >
-          <Printer className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Table */}
-      <TanStackTable<SiteRow>
-        columns={columns}
-        data={sites}
-        searchPlaceholder="Rechercher les sites..."
-        pageSize={20}
-        isLoading={isLoading}
-        emptyMessage="Aucun site trouvé"
-        onRowClick={(row) => setSelectedSite(row)}
-        selectedRowId={selectedSite?.Id_Site}
-      />
+    <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>Gestion des sites</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              {sites.length} site{sites.length > 1 ? 's' : ''}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={() => setIsCreateOpen(true)} variant="default">
+              Nouveau
+            </Button>
+            <Button
+              onClick={handleEdit}
+              variant="outline"
+              disabled={!selectedSite}
+            >
+              Modifier
+            </Button>
+            <Button
+              onClick={() => setIsArchiveAlertOpen(true)}
+              variant="outline"
+              disabled={!selectedSite}
+            >
+              Archiver
+            </Button>
+            <Button
+              onClick={handlePrint}
+              variant="ghost"
+              size="icon"
+              disabled={!selectedSite}
+              title="Imprimer le site sélectionné"
+            >
+              <Printer className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {/* Table */}
+          <TanStackTable<SiteRow>
+            columns={columns}
+            data={sites}
+            searchPlaceholder="Rechercher les sites..."
+            pageSize={20}
+            isLoading={isLoading}
+            emptyMessage="Aucun site trouvé"
+            onRowClick={(row) => setSelectedSite(row)}
+            selectedRowId={selectedSite?.Id_Site}
+          />
+        </CardContent>
+      </Card>
 
       {/* Dialog Création */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
@@ -412,6 +423,6 @@ Description: ${selectedSite.Commentaire || 'N/A'}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </main>
   );
 }

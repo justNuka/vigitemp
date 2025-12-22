@@ -1,5 +1,5 @@
 /**
- * API Client for Vigitemp Light Version
+ * API Client for Vigitemp
  * 
  * Centralized API calls using fetch for Next.js API Routes
  */

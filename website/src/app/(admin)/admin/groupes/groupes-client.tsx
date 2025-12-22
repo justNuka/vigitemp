@@ -112,55 +112,48 @@ export function GroupesClient() {
   }));;
 
   return (
-    <>
-      {/* Sélecteur de regroupement */}
-      <div className="flex items-center gap-2 mb-6">
-        <span className="text-sm font-medium">Regroupement:</span>
-        <Select value={regroupement} onValueChange={setRegroupement}>
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1">Numéro 1</SelectItem>
-            <SelectItem value="2">Numéro 2</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Boutons */}
-      <div className="flex gap-2 mb-6">
-        <Button onClick={handleNouveau} className="bg-green-600 hover:bg-green-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Nouveau
-        </Button>
-        <Button
-          onClick={handleModifier}
-          disabled={!selectedGroupe}
-          variant="outline"
-        >
-          <PencilIcon className="w-4 h-4 mr-2" />
-          Modifier
-        </Button>
-        <Button
-          onClick={handleArchiver}
-          disabled={!selectedGroupe}
-          variant="outline"
-        >
-          <ArchiveIcon className="w-4 h-4 mr-2" />
-          Archiver
-        </Button>
-        <Button onClick={handleImprimer} variant="outline">
-          <Printer className="w-4 h-4 mr-2" />
-          Imprimer
-        </Button>
-      </div>
-
-      {/* Table des groupes */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Groupes</CardTitle>
+    <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>Gestion des groupes</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              {groupes?.length || 0} groupe{groupes && groupes.length > 1 ? 's' : ''}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Select value={regroupement} onValueChange={setRegroupement}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Regroupement 1</SelectItem>
+                <SelectItem value="2">Regroupement 2</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button onClick={handleNouveau} variant="default">
+              Nouveau
+            </Button>
+            <Button
+              onClick={handleModifier}
+              disabled={!selectedGroupe}
+              variant="outline"
+            >
+              Modifier
+            </Button>
+            <Button
+              onClick={handleArchiver}
+              disabled={!selectedGroupe}
+              variant="outline"
+            >
+              Archiver
+            </Button>
+            <Button onClick={handleImprimer} variant="outline" size="icon">
+              <Printer className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent>
           <TanStackTable
             columns={groupesColumns}
             data={groupesTableData}
@@ -257,6 +250,6 @@ export function GroupesClient() {
         groupe={selectedGroupe}
         isEditing={isEditing}
       />
-    </>
+    </main>
   );
 }

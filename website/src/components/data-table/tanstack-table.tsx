@@ -179,8 +179,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                     key={header.id}
                     className={cn(
                       header.column.getCanSort() && 'cursor-pointer select-none hover:bg-muted/50',
-                      'transition-colors sticky top-0 bg-background',
-                      headerIndex < headersArray.length - 1 ? 'border-r' : ''
+                      'transition-colors sticky top-0 bg-background border-b border-border border-r last:border-r-0'
                     )}
                     onClick={header.column.getToggleSortingHandler?.()}
                   >
@@ -207,7 +206,7 @@ export function TanStackTable<TData extends Record<string, any>>({
             ))}
           </TableHeader>
 
-          <TableBody>
+          <TableBody className="[&_tr:last-child]:border-b">
             {isLoading ? (
               <TableRow>
                 <TableCell
@@ -250,7 +249,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                     {row.getVisibleCells().map((cell, cellIndex, cellsArray) => (
                       <TableCell 
                         key={`cell-${rowIndex}-${cellIndex}-${cell.id}`}
-                        className={cellIndex < cellsArray.length - 1 ? 'border-r' : ''}
+                        className="border-r border-border last:border-r-0"
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>

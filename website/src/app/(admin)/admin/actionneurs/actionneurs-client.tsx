@@ -93,43 +93,43 @@ export function ActionneursClient() {
   }));
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-        <div className="flex gap-2">
-          <Button onClick={handleAddClick} className="bg-green-600 hover:bg-green-700">
-            Nouveau
-          </Button>
-          <Button
-            onClick={handleEditClick}
-            disabled={!selectedActionneur}
-            variant="outline"
-          >
-            Modifier
-          </Button>
-          <Button
-            onClick={handleDeleteClick}
-            disabled={!selectedActionneur}
-            variant="outline"
-          >
-            Supprimer
-          </Button>
-          <Button
-            onClick={handlePrintClick}
-            variant="outline"
-            className="ml-auto"
-            size="sm"
-          >
-            <Printer size={16} className="mr-2" />
-            Imprimer
-          </Button>
-        </div>
-      </div>
-
+    <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       <Card>
-        <CardHeader>
-          <CardTitle>Actionneurs</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>Gestion des actionneurs</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              {actionneurs?.length || 0} actionneur{actionneurs && actionneurs.length > 1 ? 's' : ''}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={handleAddClick} variant="default">
+              Nouveau
+            </Button>
+            <Button
+              onClick={handleEditClick}
+              disabled={!selectedActionneur}
+              variant="outline"
+            >
+              Modifier
+            </Button>
+            <Button
+              onClick={handleDeleteClick}
+              disabled={!selectedActionneur}
+              variant="outline"
+            >
+              Supprimer
+            </Button>
+            <Button
+              onClick={handlePrintClick}
+              variant="outline"
+              size="icon"
+            >
+              <Printer className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent>
           <TanStackTable
             columns={columns}
             data={tableData}
@@ -166,6 +166,6 @@ export function ActionneursClient() {
           </AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </main>
   );
 }

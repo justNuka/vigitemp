@@ -63,7 +63,7 @@ const kodemono = localFont({
 
 
 export const metadata: Metadata = {
-  title: "Vigitemp Light - Surveillance temps réel",
+  title: "Vigitemp - Surveillance temps réel",
   description: "Système de surveillance et gestion des alarmes",
 };
 

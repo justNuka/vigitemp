@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlarmTable } from "@/components/alarm-table";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { alarmsApi, type AlarmWithDetails } from "@/lib/api";
 import { toast } from "sonner";
@@ -87,7 +87,19 @@ export function AlarmsClient({ alarms, statusFilter }: Props) {
         />
       ) : (
         <Card>
-          <CardContent className="p-0">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle>
+                {statusFilter === "active" && "Alarmes actives"}
+                {statusFilter === "acknowledged" && "Alarmes acquittées"}
+                {statusFilter === "resolved" && "Alarmes résolues"}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                {alarms.length} alarme{alarms.length > 1 ? "s" : ""}
+              </p>
+            </div>
+          </CardHeader>
+          <CardContent>
             <AlarmTable
               alarms={alarms}
               isLoading={false}
