@@ -1,3 +1,5 @@
+"use client";
+
 export interface SystemLog {
   id: string;
   dateHeure: string;
@@ -12,6 +14,12 @@ export const systemLogsColumns = [
     header: "Date et Heure",
     enableSorting: true,
     enableColumnFilter: true,
+    cell: (info: any) => {
+      const value = info.getValue() as string;
+      if (!value) return "-";
+      // La valeur vient déjà formatée du serveur, on l'affiche directement
+      return <span className="font-mono text-sm">{value}</span>;
+    },
   },
   {
     accessorKey: "utilisateur",

@@ -2,14 +2,6 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -32,12 +24,29 @@ import {
 import type { AlarmWithDetails } from "@/lib/api";
 import { formatDistanceToNow, format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { TanStackTable } from "@/components/data-table/tanstack-table";
+import { ColumnDef } from "@tanstack/react-table";
 
 interface AlarmTableProps {
   alarms: AlarmWithDetails[];
   onAcknowledge?: (alarmId: string, comment: string) => void;
   isLoading?: boolean;
   emptyMessage?: string;
+  maxRows?: number;
+  showSearch?: boolean;
+  showPagination?: boolean;
+}
+
+interface AlarmRow {
+  id: string;
+  type: "high" | "low";
+  location: AlarmWithDetails["location"];
+  sensor: AlarmWithDetails["sensor"];
+  value: number;
+  threshold: number;
+  triggeredAt: string | Date;
+  status: string;
+  comment: string | null;
 }
 
 export function AlarmTable({
@@ -45,10 +54,16 @@ export function AlarmTable({
   onAcknowledge,
   isLoading,
   emptyMessage = "Aucune alarme",
+  maxRows,
+  showSearch = true,
+  showPagination = true,
 }: AlarmTableProps) {
   const [selectedAlarm, setSelectedAlarm] = useState<AlarmWithDetails | null>(null);
   const [comment, setComment] = useState("");
   const [isAcknowledging, setIsAcknowledging] = useState(false);
+
+  // Limiter le nombre de lignes si maxRows est spécifié
+  const displayedAlarms = maxRows ? alarms.slice(0, maxRows) : alarms;
 
   const handleAcknowledge = async () => {
     if (!selectedAlarm || !onAcknowledge) return;
@@ -62,49 +77,156 @@ export function AlarmTable({
     }
   };
 
-  if (isLoading) {
-    return <AlarmTableSkeleton />;
-  }
+  const columns: ColumnDef<AlarmRow>[] = [
+    {
+      accessorKey: "type",
+      header: "Type",
+      size: 60,
+      cell: ({ row }) => {
+        const isHigh = row.getValue("type") === "high";
+        return (
+          <div
+            className={cn(
+              "p-1.5 rounded-md w-fit",
+              isHigh ? "bg-destructive/10" : "bg-info/10"
+            )}
+          >
+            {isHigh ? (
+              <ArrowUp className="h-4 w-4 text-destructive" />
+            ) : (
+              <ArrowDown className="h-4 w-4 text-info" />
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "location",
+      header: "Lieu / Sonde",
+      cell: ({ row }) => {
+        const alarm = row.original;
+        return (
+          <div className="min-w-0">
+            <p className="font-medium truncate">{alarm.location.name}</p>
+            <p className="text-sm text-muted-foreground truncate">
+              {alarm.sensor.name}
+            </p>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "value",
+      header: () => <div className="text-right">Valeur</div>,
+      cell: ({ row }) => {
+        const alarm = row.original;
+        return (
+          <div className="text-right font-mono font-medium">
+            {alarm.value.toFixed(1)}{alarm.sensor.unit}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "threshold",
+      header: () => <div className="text-right">Seuil</div>,
+      cell: ({ row }) => {
+        const alarm = row.original;
+        const isHigh = alarm.type === "high";
+        return (
+          <div className="text-right font-mono text-muted-foreground">
+            {isHigh ? ">" : "<"} {alarm.threshold}{alarm.sensor.unit}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "triggeredAt",
+      header: "Déclenchée",
+      cell: ({ row }) => {
+        const triggeredDate = new Date(row.getValue("triggeredAt") as string);
+        return (
+          <div className="flex items-center gap-1.5 text-sm">
+            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <span title={format(triggeredDate, "dd/MM/yyyy HH:mm:ss", { locale: fr })}>
+              {formatDistanceToNow(triggeredDate, { addSuffix: true, locale: fr })}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "Statut",
+      cell: ({ row }) => (
+        <AlarmStatusBadge status={row.getValue("status") as string} />
+      ),
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right">Actions</div>,
+      cell: ({ row }) => {
+        const alarm = row.original;
+        return (
+          <div className="flex items-center justify-end gap-1">
+            {alarm.comment && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                title={alarm.comment}
+              >
+                <MessageSquare className="h-4 w-4" />
+              </Button>
+            )}
+            {alarm.status === "active" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const fullAlarm = alarms.find(a => a.id === alarm.id);
+                  if (fullAlarm) setSelectedAlarm(fullAlarm);
+                }}
+                data-testid={`button-acknowledge-${alarm.id}`}
+              >
+                Acquitter
+              </Button>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
 
-  if (alarms.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="p-4 rounded-full bg-success/10 mb-4">
-          <CheckCircle2 className="h-8 w-8 text-success" />
-        </div>
-        <p className="text-muted-foreground">{emptyMessage}</p>
-      </div>
-    );
-  }
+  const tableData: AlarmRow[] = displayedAlarms.map((alarm) => ({
+    id: alarm.id,
+    type: alarm.type,
+    location: alarm.location,
+    sensor: alarm.sensor,
+    value: alarm.value,
+    threshold: alarm.threshold,
+    triggeredAt: alarm.triggeredAt,
+    status: alarm.status,
+    comment: alarm.comment,
+  }));
 
   return (
     <>
-      <div className="rounded-lg border overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="w-12">Type</TableHead>
-                <TableHead>Lieu / Sonde</TableHead>
-                <TableHead className="text-right">Valeur</TableHead>
-                <TableHead className="text-right">Seuil</TableHead>
-                <TableHead>Déclenchée</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {alarms.map((alarm) => (
-                <AlarmRow
-                  key={alarm.id}
-                  alarm={alarm}
-                  onAcknowledge={() => setSelectedAlarm(alarm)}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+      <TanStackTable<AlarmRow>
+        columns={columns}
+        data={tableData}
+        searchPlaceholder={showSearch ? "Rechercher les alarmes..." : undefined}
+        pageSize={showPagination ? 20 : (maxRows || 20)}
+        isLoading={isLoading}
+        emptyMessage={emptyMessage}
+        selectedRowId={selectedAlarm?.id}
+        onRowClick={(row: AlarmRow) => {
+          const fullAlarm = displayedAlarms.find(a => a.id === row.id);
+          if (fullAlarm) setSelectedAlarm(fullAlarm);
+        }}
+        showSearch={showSearch}
+        showPagination={showPagination}
+      />
 
       <Dialog open={!!selectedAlarm} onOpenChange={() => setSelectedAlarm(null)}>
         <DialogContent className="sm:max-w-md">
@@ -177,90 +299,6 @@ export function AlarmTable({
   );
 }
 
-interface AlarmRowProps {
-  alarm: AlarmWithDetails;
-  onAcknowledge: () => void;
-}
-
-function AlarmRow({ alarm, onAcknowledge }: AlarmRowProps) {
-  const isHigh = alarm.type === "high";
-  const triggeredDate = new Date(alarm.triggeredAt);
-
-  return (
-    <TableRow
-      className={cn(
-        "transition-colors",
-        alarm.status === "active" && "bg-destructive/5"
-      )}
-      data-testid={`row-alarm-${alarm.id}`}
-    >
-      <TableCell>
-        <div
-          className={cn(
-            "p-1.5 rounded-md w-fit",
-            isHigh ? "bg-destructive/10" : "bg-info/10"
-          )}
-        >
-          {isHigh ? (
-            <ArrowUp className="h-4 w-4 text-destructive" />
-          ) : (
-            <ArrowDown className="h-4 w-4 text-info" />
-          )}
-        </div>
-      </TableCell>
-      <TableCell>
-        <div className="min-w-0">
-          <p className="font-medium truncate">{alarm.location.name}</p>
-          <p className="text-sm text-muted-foreground truncate">
-            {alarm.sensor.name}
-          </p>
-        </div>
-      </TableCell>
-      <TableCell className="text-right font-mono font-medium">
-        {alarm.value.toFixed(1)}{alarm.sensor.unit}
-      </TableCell>
-      <TableCell className="text-right font-mono text-muted-foreground">
-        {isHigh ? ">" : "<"} {alarm.threshold}{alarm.sensor.unit}
-      </TableCell>
-      <TableCell>
-        <div className="flex items-center gap-1.5 text-sm">
-          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-          <span title={format(triggeredDate, "dd/MM/yyyy HH:mm:ss", { locale: fr })}>
-            {formatDistanceToNow(triggeredDate, { addSuffix: true, locale: fr })}
-          </span>
-        </div>
-      </TableCell>
-      <TableCell>
-        <AlarmStatusBadge status={alarm.status} />
-      </TableCell>
-      <TableCell className="text-right">
-        <div className="flex items-center justify-end gap-1">
-          {alarm.comment && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              title={alarm.comment}
-            >
-              <MessageSquare className="h-4 w-4" />
-            </Button>
-          )}
-          {alarm.status === "active" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onAcknowledge}
-              data-testid={`button-acknowledge-${alarm.id}`}
-            >
-              Acquitter
-            </Button>
-          )}
-        </div>
-      </TableCell>
-    </TableRow>
-  );
-}
-
 function AlarmStatusBadge({ status }: { status: string }) {
   const configs: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
     active: { label: "Active", variant: "destructive" },
@@ -274,55 +312,5 @@ function AlarmStatusBadge({ status }: { status: string }) {
     <Badge variant={config.variant} className="whitespace-nowrap">
       {config.label}
     </Badge>
-  );
-}
-
-function AlarmTableSkeleton() {
-  return (
-    <div className="rounded-lg border overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/50">
-            <TableHead className="w-12">Type</TableHead>
-            <TableHead>Lieu / Sonde</TableHead>
-            <TableHead>Valeur</TableHead>
-            <TableHead>Seuil</TableHead>
-            <TableHead>Déclenchée</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {[1, 2, 3].map((i) => (
-            <TableRow key={i}>
-              <TableCell>
-                <div className="h-7 w-7 bg-muted rounded animate-pulse" />
-              </TableCell>
-              <TableCell>
-                <div className="space-y-1.5">
-                  <div className="h-4 w-24 bg-muted rounded animate-pulse" />
-                  <div className="h-3 w-16 bg-muted rounded animate-pulse" />
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="h-4 w-12 bg-muted rounded animate-pulse" />
-              </TableCell>
-              <TableCell>
-                <div className="h-4 w-12 bg-muted rounded animate-pulse" />
-              </TableCell>
-              <TableCell>
-                <div className="h-4 w-20 bg-muted rounded animate-pulse" />
-              </TableCell>
-              <TableCell>
-                <div className="h-5 w-16 bg-muted rounded-full animate-pulse" />
-              </TableCell>
-              <TableCell>
-                <div className="h-8 w-16 bg-muted rounded animate-pulse" />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
   );
 }

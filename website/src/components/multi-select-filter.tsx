@@ -9,6 +9,7 @@ import { ChevronDown, X } from 'lucide-react';
 interface Option {
   id: number | string;
   label: string;
+  disabled?: boolean;
 }
 
 interface MultiSelectFilterProps {
@@ -41,7 +42,10 @@ export function MultiSelectFilter({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleToggle = (id: number | string) => {
+  const handleToggle = (id: number | string, disabled?: boolean) => {
+    // Ne pas permettre la sélection d'options désactivées
+    if (disabled) return;
+    
     const newSelection = selectedIds.includes(id)
       ? selectedIds.filter((selected) => selected !== id)
       : [...selectedIds, id];
@@ -103,11 +107,21 @@ export function MultiSelectFilter({
               options.map((option) => (
                 <label
                   key={option.id}
-                  className="flex items-center gap-2 p-2 hover:bg-accent rounded cursor-pointer transition-colors"
+                  className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
+                    option.disabled
+                      ? 'opacity-50 cursor-not-allowed text-muted-foreground'
+                      : 'hover:bg-accent'
+                  }`}
+                  onClick={(e) => {
+                    if (option.disabled) {
+                      e.preventDefault();
+                    }
+                  }}
                 >
                   <Checkbox
                     checked={selectedIds.includes(option.id)}
-                    onCheckedChange={() => handleToggle(option.id)}
+                    onCheckedChange={() => handleToggle(option.id, option.disabled)}
+                    disabled={option.disabled}
                   />
                   <span className="text-sm">{option.label}</span>
                 </label>

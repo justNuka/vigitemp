@@ -172,15 +172,15 @@ export async function PATCH(
     if (data.authorizations !== undefined) {
       // Delete existing authorizations
       await prisma.t_liaison_profil_autorisation.deleteMany({
-        where: { IdProfil: profileId },
+        where: { Id_Profil: profileId },
       });
 
       // Create new authorizations
       if (data.authorizations.length > 0) {
         await prisma.t_liaison_profil_autorisation.createMany({
           data: data.authorizations.map((authId) => ({
-            IdProfil: profileId,
-            IdAutorisation: authId,
+            Id_Profil: profileId,
+            Id_Autorisation: authId,
           })),
         });
       }
@@ -320,7 +320,7 @@ export async function DELETE(
 
     // Delete authorizations first
     await prisma.t_liaison_profil_autorisation.deleteMany({
-      where: { IdProfil: profileId },
+      where: { Id_Profil: profileId },
     });
 
     // Delete profile

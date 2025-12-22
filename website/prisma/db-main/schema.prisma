@@ -28,7 +28,7 @@ model t_actionneur {
   Position_Plan_Y  BigInt?
   Est_Archive      Boolean?           @default(false)
   Id_Serveur       Int?               @default(1)
-  t_plan           t_plan?            @relation(fields: [Id_Plan], references: [IdPlan], onDelete: NoAction, onUpdate: NoAction, map: "FK_PLAN_ACTIONNEUR")
+  t_plan           t_plan?            @relation(fields: [Id_Plan], references: [Id_Plan], onDelete: NoAction, onUpdate: NoAction, map: "FK_PLAN_ACTIONNEUR")
   t_actionneurtype t_actionneur_type? @relation(fields: [Type], references: [Type], onDelete: NoAction, onUpdate: NoAction, map: "FK_TYPE_ACTIONNEUR")
 
   @@index([Est_Etat], map: "IDX_Est_Etat")
@@ -234,14 +234,14 @@ model t_groupe {
 }
 
 model t_liaison_profil_autorisation {
-  IdProfil       Int
-  IdAutorisation Int
-  t_autorisation t_autorisation @relation(fields: [IdAutorisation], references: [Id_Autorisation], onDelete: NoAction, onUpdate: NoAction, map: "FK_AUTORISATION_LIAISON")
-  t_profil       t_profil       @relation(fields: [IdProfil], references: [Id_Profil], onDelete: NoAction, onUpdate: NoAction, map: "FK_PROFIL_LIAISON")
+  Id_Profil       Int
+  Id_Autorisation Int
+  t_autorisation  t_autorisation @relation(fields: [Id_Autorisation], references: [Id_Autorisation], onDelete: NoAction, onUpdate: NoAction, map: "FK_AUTORISATION_LIAISON")
+  t_profil        t_profil       @relation(fields: [Id_Profil], references: [Id_Profil], onDelete: NoAction, onUpdate: NoAction, map: "FK_PROFIL_LIAISON")
 
-  @@id([IdProfil, IdAutorisation])
-  @@index([IdAutorisation], map: "IDX_IdAutorisation")
-  @@index([IdProfil], map: "IDX_IdProfil")
+  @@id([Id_Profil, Id_Autorisation])
+  @@index([Id_Autorisation], map: "IDX_IdAutorisation")
+  @@index([Id_Profil], map: "IDX_IdProfil")
 }
 
 model t_liaison_sonde_type_mesure {
@@ -251,13 +251,13 @@ model t_liaison_sonde_type_mesure {
 }
 
 model t_liaison_utilisateur_groupe {
-  IdLiaison     Int           @id @default(autoincrement())
-  IdUtilisateur Int
-  IdGroupe      Int?
-  t_utilisateur t_utilisateur @relation(fields: [IdUtilisateur], references: [Id_Utilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_UTILISATEUR_LIAISON")
+  Id_Liaison_u_g Int           @id @default(autoincrement())
+  Id_Utilisateur Int
+  Id_Groupe      Int?
+  t_utilisateur  t_utilisateur @relation(fields: [Id_Utilisateur], references: [Id_Utilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_UTILISATEUR_LIAISON")
 
-  @@index([IdGroupe], map: "IDX_IdGroupe")
-  @@index([IdUtilisateur], map: "IDX_IdUtilisateur")
+  @@index([Id_Groupe], map: "IDX_IdGroupe")
+  @@index([Id_Utilisateur], map: "IDX_IdUtilisateur")
 }
 
 model t_liaison_utilisateur_site {
@@ -333,12 +333,13 @@ model t_lieu {
   Derive                               Float?                     @default(0) @db.Float
   Est_Correction_derive                Boolean?                   @default(false)
   Derniere_Valeur_Null                 Int?                       @default(0)
+  Type_Lieu                            String?                    @db.VarChar(20)
   t_alarme                             t_alarme[]
-  t_pdf                                t_pdf?                     @relation(fields: [Id_PDF], references: [Id_PDF], onDelete: NoAction, onUpdate: NoAction, map: "FK_PDF_LIEU")
-  t_plan                               t_plan?                    @relation(fields: [Id_Plan], references: [IdPlan], onDelete: NoAction, onUpdate: NoAction, map: "FK_PLAN_LIEU")
-  t_site                               t_site?                    @relation(fields: [Id_Site], references: [Id_Site], onDelete: NoAction, onUpdate: NoAction, map: "FK_SITE_LIEU")
   t_groupe1                            t_groupe?                  @relation("groupe1", fields: [Id_Groupe1], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE1_LIEU")
   t_groupe2                            t_groupe?                  @relation("groupe2", fields: [Id_Groupe2], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE2_LIEU")
+  t_pdf                                t_pdf?                     @relation(fields: [Id_PDF], references: [Id_PDF], onDelete: NoAction, onUpdate: NoAction, map: "FK_PDF_LIEU")
+  t_plan                               t_plan?                    @relation(fields: [Id_Plan], references: [Id_Plan], onDelete: NoAction, onUpdate: NoAction, map: "FK_PLAN_LIEU")
+  t_site                               t_site?                    @relation(fields: [Id_Site], references: [Id_Site], onDelete: NoAction, onUpdate: NoAction, map: "FK_SITE_LIEU")
   t_sonde                              t_sonde?                   @relation(fields: [Sonde_Numero_Serie], references: [Sonde_Numero_Serie], onDelete: NoAction, onUpdate: NoAction, map: "FK_SONDE_LIEU")
   t_lieu_planning                      t_lieu_planning[]
   t_lieu_tel_num                       t_lieu_tel_num[]
@@ -413,7 +414,6 @@ model t_module {
 
 model t_module_type {
   Id_Module_Type        Int      @id @default(autoincrement())
-  Type_Module           Int?     @unique(map: "UK_Type_Module") @db.SmallInt
   Libelle_Type_Module   String?  @db.VarChar(50)
   Libelle_Module        String?  @db.VarChar(100)
   Est_Flag_Affiche_Plan Boolean? @default(false)
@@ -438,7 +438,7 @@ model t_pdf {
 }
 
 model t_plan {
-  IdPlan       Int            @id @default(autoincrement())
+  Id_Plan      Int            @id @default(autoincrement())
   Image        Bytes?
   Titre        String?        @unique(map: "Plan_Titre_IDX") @db.VarChar(50)
   Est_Archive  Boolean?       @default(false)
@@ -704,14 +704,12 @@ model t_datalogger_tournee {
 }
 
 model t_etalon_type {
-  Id_Etalon_Type    Int      @id @default(autoincrement())
-  Type_Etalon       String?  @unique(map: "UK_Type_Etalon") @db.VarChar(50)
+  Type_Etalon       String   @id @db.VarChar(3)
   Nom               String?  @db.VarChar(30)
   Descriptif        String?  @db.VarChar(100)
-  Id_Type           Int?     @db.TinyInt
-  Est_Saisie_Module Boolean?
-  Est_Sonde_Externe Boolean?
-  Resolution        String?  @db.VarChar(50)
+  Est_Saisie_Module Boolean? @default(false)
+  Est_Sonde_Externe Boolean? @default(false)
+  Resolution        Float?   @db.Float
 }
 
 model t_planning_alarme {

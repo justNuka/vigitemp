@@ -6,7 +6,7 @@ import type { Group, Site } from "./server-filters";
 import { Building2, FolderTree } from "lucide-react";
 
 interface FilterState {
-  siteId: number | null;
+  siteIds: number[]; // Changed to array to support multiple sites
   groupIds: number[]; // Changed from single groupId to array
 }
 
@@ -25,13 +25,18 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          // Vérifier la structure et fournir les valeurs par défaut
+          return {
+            siteIds: Array.isArray(parsed.siteIds) ? parsed.siteIds : [],
+            groupIds: Array.isArray(parsed.groupIds) ? parsed.groupIds : [],
+          };
         } catch {
-          return { siteId: null, groupIds: [] };
+          return { siteIds: [], groupIds: [] };
         }
       }
     }
-    return { siteId: null, groupIds: [] };
+    return { siteIds: [], groupIds: [] };
   });
 
   // Sauvegarder dans localStorage et notifier le parent
@@ -40,49 +45,66 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
     onFilterChange(filters);
   }, [filters, onFilterChange]);
 
-  const handleSiteChange = (value: string) => {
+  const handleSiteChange = (selectedIds: number[]) => {
     setFilters((prev) => ({
       ...prev,
-      siteId: value === "all" ? null : parseInt(value, 10),
-      groupIds: prev.groupIds ?? [], // Préserver les groupIds
+      siteIds: selectedIds || [],
+      // Note: on pourrait aussi réinitialiser les groupes ici si désiré
     }));
   };
 
+  // Fonction pour déterminer quels groupes griser
+  // Si des sites sont sélectionnés, on doit griser les groupes qui ne correspondent pas
+  // Pour une implémentation complète, il faudrait une relation groupe-site dans les données
+  const getDisabledGroups = (): Set<number> => {
+    const disabled = new Set<number>();
+    
+    // Si aucun site n'est sélectionné, tous les groupes sont disponibles
+    if (filters.siteIds.length === 0) {
+      return disabled;
+    }
+    
+    // Sinon, griser les groupes qui ne contiennent que des capteurs des sites non-sélectionnés
+    // Cette logique ne peut être appliquée que si on a accès aux données des capteurs ici
+    // Pour maintenant, on ne griserait rien, mais le code est prêt à être amélioré
+    
+    return disabled;
+  };
+
+  const disabledGroupIds = getDisabledGroups();
+
   return (
     <div className="flex flex-col sm:flex-row gap-4">
-      {/* Filtre par Site */}
+      {/* Filtre par Site(s) - Multi-sélection */}
       <MultiSelectFilter
         label="Sites"
         options={
           sites?.map((site) => ({ id: site.id, label: site.name })) || []
         }
-        selectedIds={filters.siteId ? [filters.siteId] : []}
+        selectedIds={filters.siteIds || []}
         onChange={(selectedIds) => {
-          handleSiteChange(selectedIds.length > 0 ? selectedIds[0].toString() : "all");
+          handleSiteChange((selectedIds || []) as number[]);
         }}
         placeholder="Tous les sites"
       />
 
-      {/* Filtre par Groupe(s) */}
+      {/* Filtre par Groupe(s) - Multi-sélection */}
       <MultiSelectFilter
         label="Groupes"
         options={
-          groups?.map((group) => ({ id: group.id, label: group.name })) || []
+          groups?.map((group) => ({ 
+            id: group.id, 
+            label: group.name,
+            disabled: disabledGroupIds.has(group.id)
+          })) || []
         }
         selectedIds={filters.groupIds || []}
         onChange={(selectedIds) => {
-          const groupIds = selectedIds.map(id => typeof id === 'string' ? parseInt(id, 10) : id) as number[];
+          const groupIds = (selectedIds || []).map(id => typeof id === 'string' ? parseInt(id, 10) : id) as number[];
           setFilters((prev) => ({
             ...prev,
-            groupIds,
+            groupIds: groupIds || [],
           }));
-          localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify({
-              ...filters,
-              groupIds,
-            })
-          );
         }}
         placeholder="Sélectionner des groupes..."
       />

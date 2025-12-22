@@ -184,6 +184,7 @@ export type SensorWithLocation = {
   isActive: boolean;
   location: Location;
   status: "ok" | "warning" | "critical";
+  lieuType?: string | null;
 };
 
 export type AlarmWithDetails = {
@@ -315,6 +316,7 @@ export type CreateUserInput = {
   prenom: string;
   email: string;
   profileId: string;
+  telephone?: string;
   expiryDate?: Date;
 };
 export type UpdateUserInput = Partial<Omit<CreateUserInput, "password">> & {

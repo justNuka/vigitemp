@@ -25,10 +25,9 @@ import {
   Archive,
   Settings,
   LogOut,
-  Home,
-  Database,
   Ticket,
   HardDrive,
+  Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -50,7 +49,8 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
 
   // Section 1: Retour au dashboard classique
   const dashboardNavItems: NavItem[] = [
-    { title: "Tableau de bord", href: "/", icon: Home },
+    { title: "Utilisateur", href: "/", icon: LayoutDashboard },
+    { title: "Admin", href: "/admin", icon: Shield },
   ];
 
   // Section 2: Gestion profils, utilisateurs, alarmes, mesures archivées
@@ -84,7 +84,7 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
       <SidebarContent className="custom-scrollbar">
         {/* Section 1: Dashboard classique */}
         <SidebarGroup>
-          <SidebarGroupLabel>Utilisateur</SidebarGroupLabel>
+          <SidebarGroupLabel>Tableaux de bord</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {dashboardNavItems.map((item) => (

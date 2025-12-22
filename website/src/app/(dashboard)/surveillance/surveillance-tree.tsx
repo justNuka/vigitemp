@@ -194,6 +194,10 @@ export function SurveillanceTree({ sensors }: SurveillanceTreeProps) {
                     <h3 className="font-semibold text-lg">{site.siteName}</h3>
                     <p className="text-xs text-muted-foreground mt-1">
                       {site.stats.total} sonde{site.stats.total > 1 ? 's' : ''}
+                      {/* ✅ Afficher le nombre d'alarmes si présent */}
+                      {(site.stats.critical > 0 || site.stats.warning > 0) && (
+                        <> ({site.stats.critical + site.stats.warning} alarme{site.stats.critical + site.stats.warning > 1 ? 's' : ''})</>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -238,6 +242,10 @@ export function SurveillanceTree({ sensors }: SurveillanceTreeProps) {
                             <span className="font-medium text-sm">{group.groupName}</span>
                             <span className="text-xs text-muted-foreground">
                               {group.stats.total} sonde{group.stats.total > 1 ? 's' : ''}
+                              {/* ✅ Afficher le nombre d'alarmes si présent */}
+                              {(group.stats.critical > 0 || group.stats.warning > 0) && (
+                                <> ({group.stats.critical + group.stats.warning} alarme{group.stats.critical + group.stats.warning > 1 ? 's' : ''})</>
+                              )}
                             </span>
                           </div>
 
