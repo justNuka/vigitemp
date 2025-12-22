@@ -32,6 +32,9 @@ interface AlarmTableProps {
   onAcknowledge?: (alarmId: string, comment: string) => void;
   isLoading?: boolean;
   emptyMessage?: string;
+  maxRows?: number;
+  showSearch?: boolean;
+  showPagination?: boolean;
 }
 
 interface AlarmRow {
@@ -51,10 +54,16 @@ export function AlarmTable({
   onAcknowledge,
   isLoading,
   emptyMessage = "Aucune alarme",
+  maxRows,
+  showSearch = true,
+  showPagination = true,
 }: AlarmTableProps) {
   const [selectedAlarm, setSelectedAlarm] = useState<AlarmWithDetails | null>(null);
   const [comment, setComment] = useState("");
   const [isAcknowledging, setIsAcknowledging] = useState(false);
+
+  // Limiter le nombre de lignes si maxRows est spécifié
+  const displayedAlarms = maxRows ? alarms.slice(0, maxRows) : alarms;
 
   const handleAcknowledge = async () => {
     if (!selectedAlarm || !onAcknowledge) return;
@@ -189,7 +198,7 @@ export function AlarmTable({
     },
   ];
 
-  const tableData: AlarmRow[] = alarms.map((alarm) => ({
+  const tableData: AlarmRow[] = displayedAlarms.map((alarm) => ({
     id: alarm.id,
     type: alarm.type,
     location: alarm.location,
@@ -206,15 +215,17 @@ export function AlarmTable({
       <TanStackTable<AlarmRow>
         columns={columns}
         data={tableData}
-        searchPlaceholder="Rechercher les alarmes..."
-        pageSize={20}
+        searchPlaceholder={showSearch ? "Rechercher les alarmes..." : undefined}
+        pageSize={showPagination ? 20 : (maxRows || 20)}
         isLoading={isLoading}
         emptyMessage={emptyMessage}
         selectedRowId={selectedAlarm?.id}
         onRowClick={(row: AlarmRow) => {
-          const fullAlarm = allAlarms.find(a => a.id === row.id);
+          const fullAlarm = displayedAlarms.find(a => a.id === row.id);
           if (fullAlarm) setSelectedAlarm(fullAlarm);
         }}
+        showSearch={showSearch}
+        showPagination={showPagination}
       />
 
       <Dialog open={!!selectedAlarm} onOpenChange={() => setSelectedAlarm(null)}>

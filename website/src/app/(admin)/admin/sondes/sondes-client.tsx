@@ -1,59 +1,109 @@
 "use client";
 
 import { useState } from "react";
-import { useSondes } from "@/hooks/useSondes";
-import { useCalibrages } from "@/hooks/useCalibrages";
-import { useEtalonnages } from "@/hooks/useEtalonnages";
+import { useModules, useModuleSondes } from "@/hooks/useModules";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Pencil, Printer } from "lucide-react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { Plus, Pencil, Archive } from "lucide-react";
+import { ModuleModal } from "./module-modal";
 import { cn } from "@/lib/utils";
-import { SondeModal } from "./sonde-modal";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { ColumnDef } from "@tanstack/react-table";
 
-interface SondesRow {
+interface ModuleRow {
+  Id_Module: number;
+  Libelle_Type_Module: string | null;
+  Module_Numero_Serie: string | null;
+  Emplacement: string | null;
+  Port_Serie: string | null;
+  sondes_count: number;
+  Id_Serveur: number | null;
+}
+
+interface SondeRow {
   Id_Sonde: number;
   Adresse_Sonde: string | null;
   Sonde_Numero_Serie: string | null;
   Port_Serie: string | null;
-  Id_Module: number | null;
   Etat_Sonde: string | null;
-  Lieu: string | null;
 }
 
 export function SondesClient() {
-  const [selectedSonde, setSelectedSonde] = useState<number | null>(null);
-  const [selectedCalibrage, setSelectedCalibrage] = useState<number | null>(null);
-  const [selectedEtalonnage, setSelectedEtalonnage] = useState<number | null>(null);
+  const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
+  const [selectedSondeId, setSelectedSondeId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
-  const { data: sondes, isLoading: sondesLoading } = useSondes();
-  const selectedSondeData = sondes?.find((s) => s.Id_Sonde === selectedSonde);
-  const { data: calibrages, isLoading: calibragesLoading } = useCalibrages(
-    selectedSondeData?.Sonde_Numero_Serie || null
-  );
-  const { data: etalonnages, isLoading: etalonnagesLoading } = useEtalonnages(
-    selectedSondeData?.Sonde_Numero_Serie || null
-  );
+  const { data: modules, isLoading: modulesLoading, refetch: refetchModules } = useModules();
+  const { data: sondes, isLoading: sondesLoading } = useModuleSondes(selectedModuleId);
 
-  const formatDateTime = (date: Date | null) => {
-    if (!date) return "-";
-    return format(new Date(date), "dd/MM/yyyy HH:mm:ss", { locale: fr });
-  };
+  // Trouver le module sélectionné pour l'édition
+  const selectedModule = selectedModuleId
+    ? modules?.find((m) => m.Id_Module === selectedModuleId)
+    : null;
 
-  const formatDate = (date: Date | null) => {
-    if (!date) return "-";
-    return format(new Date(date), "dd/MM/yyyy", { locale: fr });
-  };
+  // Colonnes TanStack pour Modules
+  const modulesColumns: ColumnDef<ModuleRow>[] = [
+    {
+      accessorKey: "Libelle_Type_Module",
+      header: "Type",
+      cell: ({ row }) => (
+        <span className="font-medium">{row.getValue("Libelle_Type_Module") || "-"}</span>
+      ),
+    },
+    {
+      accessorKey: "Module_Numero_Serie",
+      header: "Numéro de série",
+      cell: ({ row }) => row.getValue("Module_Numero_Serie") || "-",
+    },
+    {
+      accessorKey: "Emplacement",
+      header: "Emplacement",
+      cell: ({ row }) => row.getValue("Emplacement") || "-",
+    },
+    {
+      accessorKey: "Port_Serie",
+      header: "Port",
+      cell: ({ row }) => row.getValue("Port_Serie") || "-",
+    },
+    {
+      accessorKey: "sondes_count",
+      header: () => <div className="text-right">Nombre de sondes</div>,
+      cell: ({ row }) => (
+        <div className="text-right font-medium">
+          {row.getValue("sondes_count")} sonde(s)
+        </div>
+      ),
+    },
+    {
+      accessorKey: "Id_Serveur",
+      header: "Serveur",
+      cell: ({ row }) => row.getValue("Id_Serveur") || "-",
+    },
+  ];
 
-  // Colonnes TanStack pour Sondes
-  const sondesColumns: ColumnDef<SondesRow>[] = [
+  const modulesTableData: ModuleRow[] = (modules || []).map((m) => ({
+    Id_Module: m.Id_Module,
+    Libelle_Type_Module: m.Libelle_Type_Module,
+    Module_Numero_Serie: m.Module_Numero_Serie,
+    Emplacement: m.Emplacement,
+    Port_Serie: m.Port_Serie,
+    sondes_count: m.sondes_count,
+    Id_Serveur: m.Id_Serveur,
+  }));
+
+  const sondesTableData: SondeRow[] = (sondes || []).map((s) => ({
+    Id_Sonde: s.Id_Sonde,
+    Adresse_Sonde: s.Adresse_Sonde,
+    Sonde_Numero_Serie: s.Sonde_Numero_Serie,
+    Port_Serie: s.Port_Serie,
+    Etat_Sonde: s.Etat_Sonde,
+  }));
+
+  // Colonnes TanStack pour Sondes associées
+  const sondesColumns: ColumnDef<SondeRow>[] = [
     {
       accessorKey: "Adresse_Sonde",
       header: "Adresse",
@@ -72,38 +122,13 @@ export function SondesClient() {
       cell: ({ row }) => row.getValue("Port_Serie") || "-",
     },
     {
-      header: "Module",
-      cell: ({ row }) => {
-        const item = row.original;
-        const moduleDisplay = item.Port_Serie 
-          ? `${item.Id_Module || '-'} (${item.Port_Serie})`
-          : item.Id_Module || '-';
-        return <span>{moduleDisplay}</span>;
-      },
-    },
-    {
       accessorKey: "Etat_Sonde",
       header: "État",
       cell: ({ row }) => row.getValue("Etat_Sonde") || "-",
     },
-    {
-      accessorKey: "Lieu",
-      header: "Lieu",
-      cell: ({ row }) => row.getValue("Lieu") || "-",
-    },
   ];
 
-  const sondesTableData: SondesRow[] = (sondes || []).map((s) => ({
-    Id_Sonde: s.Id_Sonde,
-    Adresse_Sonde: s.Adresse_Sonde,
-    Sonde_Numero_Serie: s.Sonde_Numero_Serie,
-    Port_Serie: s.Port_Serie,
-    Id_Module: s.Id_Module,
-    Etat_Sonde: s.Etat_Sonde,
-    Lieu: s.Lieu,
-  }));
-
-  if (sondesLoading) {
+  if (modulesLoading) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -119,30 +144,30 @@ export function SondesClient() {
 
   return (
     <div className="space-y-6">
-      {/* Sondes Table */}
+      {/* Modules Table */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle>Sondes ({sondes?.length || 0})</CardTitle>
+            <CardTitle>Modules ({modules?.length || 0})</CardTitle>
             <div className="flex gap-2">
-              <Button 
-                size="sm" 
+              <Button
+                size="sm"
                 className="gap-2"
                 onClick={() => {
-                  setIsEditing(false);
+                  setIsEditMode(false);
                   setIsModalOpen(true);
                 }}
               >
                 <Plus className="w-4 h-4" />
-                Ajouter
+                Nouveau
               </Button>
               <Button
                 size="sm"
                 variant="outline"
-                disabled={!selectedSonde}
+                disabled={!selectedModuleId}
                 className="gap-2"
                 onClick={() => {
-                  setIsEditing(true);
+                  setIsEditMode(true);
                   setIsModalOpen(true);
                 }}
               >
@@ -152,209 +177,110 @@ export function SondesClient() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => window.print()}
+                disabled={!selectedModuleId}
                 className="gap-2"
               >
-                <Printer className="w-4 h-4" />
-                Imprimer
+                <Archive className="w-4 h-4" />
+                Archiver
               </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           <TanStackTable
-            columns={sondesColumns}
-            data={sondesTableData}
-            searchPlaceholder="Adresse, numéro de série..."
-            isLoading={sondesLoading}
-            emptyMessage="Aucune sonde trouvée"
-            selectedRowId={selectedSonde}
-            onRowClick={(row: SondesRow) => {
-              setSelectedSonde(row.Id_Sonde);
-              setSelectedCalibrage(null);
-              setSelectedEtalonnage(null);
+            columns={modulesColumns}
+            data={modulesTableData}
+            searchPlaceholder="Numéro de série, emplacement..."
+            isLoading={modulesLoading}
+            emptyMessage="Aucun module trouvé"
+            selectedRowId={selectedModuleId}
+            onRowClick={(row: ModuleRow) => {
+              setSelectedModuleId(row.Id_Module);
+              setSelectedSondeId(null);
             }}
+            maxHeight="max-h-96"
           />
         </CardContent>
       </Card>
 
-      {/* Calibrages and Etalonnages - always visible */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Calibrages Table */}
+      {/* Matériel associé Table */}
+      {selectedModuleId && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Calibrages</CardTitle>
+            <CardTitle className="text-base">
+              Matériel associé ({sondes?.length || 0})
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {calibragesLoading ? (
-              <div className="space-y-3">
-                {[...Array(3)].map((_, i) => (
+          <CardContent className="p-0">
+            {sondesLoading ? (
+              <div className="p-6 space-y-3">
+                {[...Array(4)].map((_, i) => (
                   <Skeleton key={i} className="h-12 w-full" />
                 ))}
               </div>
-            ) : !calibrages || calibrages.length === 0 ? (
-              <div className="text-center py-6 text-sm text-muted-foreground">
-                Aucun calibrage
+            ) : sondesTableData.length > 0 ? (
+              <div className="border rounded-lg overflow-hidden max-h-64 overflow-y-auto">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-muted">
+                    <TableRow>
+                      <TableHead>Adresse</TableHead>
+                      <TableHead>Numéro de série</TableHead>
+                      <TableHead>Port série</TableHead>
+                      <TableHead>État</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sondesTableData.map((sonde) => (
+                      <TableRow
+                        key={sonde.Id_Sonde}
+                        onClick={() => setSelectedSondeId(sonde.Id_Sonde)}
+                        className={cn(
+                          "cursor-pointer hover:bg-muted/50 transition-colors",
+                          selectedSondeId === sonde.Id_Sonde &&
+                            "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-medium border-l-4 border-l-blue-600 dark:border-l-blue-400"
+                        )}
+                      >
+                        <TableCell className="text-sm">
+                          {sonde.Adresse_Sonde || "-"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {sonde.Sonde_Numero_Serie || "-"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {sonde.Port_Serie || "-"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {sonde.Etat_Sonde || "-"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             ) : (
-              <>
-                <div className="border rounded-lg overflow-hidden">
-                  <div className="max-h-64 overflow-y-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Opérateur</TableHead>
-                          <TableHead>Unité</TableHead>
-                          <TableHead>Décimales</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {calibrages.map((calib) => (
-                          <TableRow
-                            key={calib.Id_Calibrage}
-                            onClick={() => setSelectedCalibrage(calib.Id_Calibrage)}
-                            className={cn(
-                              "cursor-pointer hover:bg-muted/50 transition-colors",
-                              selectedCalibrage === calib.Id_Calibrage && "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-medium border-l-4 border-l-blue-600 dark:border-l-blue-400"
-                            )}
-                          >
-                            <TableCell className="text-sm">
-                              {formatDateTime(calib.Date_Heure_Calibrage)}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              {calib.Operateur || "-"}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              {calib.Unite || "-"}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              {calib.Nb_Decimale || "-"}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={!selectedCalibrage}
-                    className="flex-1"
-                  >
-                    Générer fichier
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={!selectedCalibrage}
-                    className="flex-1"
-                  >
-                    Imprimer
-                  </Button>
-                </div>
-              </>
+              <div className="text-center py-8 text-sm text-muted-foreground">
+                Aucun matériel associé à ce module
+              </div>
             )}
           </CardContent>
         </Card>
+      )}
 
-        {/* Etalonnages Table */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Étalonnages</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {etalonnagesLoading ? (
-              <div className="space-y-3">
-                {[...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
-            ) : !etalonnages || etalonnages.length === 0 ? (
-              <div className="text-center py-6 text-sm text-muted-foreground">
-                Aucun étalonnage
-              </div>
-            ) : (
-              <>
-                <div className="border rounded-lg overflow-hidden">
-                  <div className="max-h-64 overflow-y-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Validité</TableHead>
-                          <TableHead>Opérateur</TableHead>
-                          <TableHead>Incertitude</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {etalonnages.map((etal) => (
-                          <TableRow
-                            key={etal.Id_Etalonnage}
-                            onClick={() => setSelectedEtalonnage(etal.Id_Etalonnage)}
-                            className={cn(
-                              "cursor-pointer hover:bg-muted/50 transition-colors",
-                              selectedEtalonnage === etal.Id_Etalonnage && "bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-medium border-l-4 border-l-blue-600 dark:border-l-blue-400"
-                            )}
-                          >
-                            <TableCell className="text-sm">
-                              {formatDateTime(etal.Date_Heure_Etalonnage)}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              {formatDate(etal.Date_Validite)}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              {etal.Operateur || "-"}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              {etal.Incertitude || "-"}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    disabled={!selectedEtalonnage}
-                    className="flex-1"
-                  >
-                    Supprimer
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={!selectedEtalonnage}
-                    className="flex-1"
-                  >
-                    Générer
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={!selectedEtalonnage}
-                    className="flex-1"
-                  >
-                    Imprimer
-                  </Button>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Sonde Modal */}
-      <SondeModal
+      {/* Module Modal */}
+      <ModuleModal
         open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        probe={selectedSonde ? sondes?.find(s => s.Id_Sonde === selectedSonde) : null}
-        isEditing={isEditing}
+        onOpenChange={(open) => {
+          setIsModalOpen(open);
+          if (!open) {
+            setIsEditMode(false);
+          }
+        }}
+        module={isEditMode ? selectedModule : null}
+        onSuccess={() => {
+          refetchModules();
+          setSelectedModuleId(null);
+          setIsEditMode(false);
+        }}
       />
     </div>
   );

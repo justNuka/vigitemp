@@ -33,9 +33,12 @@ export function SensorsCardsGrid({
   }
 
   // ✅ Trier les capteurs: critical → warning → ok
+  // Récupère les lieux en priorité dans l'affichage graphique
   const sortedSensors = [...sensors].sort((a, b) => {
     const statusPriority = { critical: 0, warning: 1, ok: 2 };
-    return statusPriority[a.status] - statusPriority[b.status];
+    const priorityA = statusPriority[a.status] || 2;
+    const priorityB = statusPriority[b.status] || 2;
+    return priorityA - priorityB;
   });
 
   return (

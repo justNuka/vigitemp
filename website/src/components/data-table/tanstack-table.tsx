@@ -35,13 +35,16 @@ import { cn } from '@/lib/utils';
 export interface TanStackTableProps<TData> {
   columns: ColumnDef<TData>[];
   data: TData[];
-  searchField?: keyof TData;
+  searchField?: keyof TData | (keyof TData)[];
   searchPlaceholder?: string;
   pageSize?: number;
   isLoading?: boolean;
   emptyMessage?: string;
   onRowClick?: (row: TData) => void;
   selectedRowId?: number | string | null;
+  maxHeight?: string;
+  showSearch?: boolean;
+  showPagination?: boolean;
 }
 
 /**
@@ -71,6 +74,9 @@ export function TanStackTable<TData extends Record<string, any>>({
   emptyMessage = 'Aucun résultat',
   onRowClick,
   selectedRowId,
+  maxHeight,
+  showSearch = true,
+  showPagination = true,
 }: TanStackTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -100,14 +106,39 @@ export function TanStackTable<TData extends Record<string, any>>({
     globalFilterFn: (row, columnId, filterValue) => {
       if (!filterValue) return true;
       
-      // Recherche globale: parcours tous les champs de la ligne
       const rowData = row.original;
       const searchTerm = String(filterValue).toLowerCase();
       
-      return Object.values(rowData).some(value => {
-        if (value === null || value === undefined) return false;
-        return String(value).toLowerCase().includes(searchTerm);
-      });
+      // Si searchField est fourni, chercher dans ce(s) champ(s)
+      if (searchField) {
+        const fieldsToSearch = Array.isArray(searchField) ? searchField : [searchField];
+        return fieldsToSearch.some(field => {
+          const fieldValue = (rowData as any)[field as string];
+          if (fieldValue !== null && fieldValue !== undefined && typeof fieldValue === 'string') {
+            return String(fieldValue).toLowerCase().includes(searchTerm);
+          }
+          return false;
+        });
+      }
+      
+      // Sinon, utiliser les champs par défaut (pour compatibilité)
+      // Champs à rechercher: location, sensor, status, etc.
+      // Ignorer les valeurs numériques, dates, et autres données non textuelles
+      const searchableFields = [
+        (rowData as any).location?.name,
+        (rowData as any).sensor?.name,
+        (rowData as any).status,
+        (rowData as any).Nom_Lieu,
+        (rowData as any).Nom_Groupe,
+        (rowData as any).Profil_Utilisateur,
+        (rowData as any).Login,
+      ].filter((field): field is string => 
+        field !== null && field !== undefined && typeof field === 'string'
+      );
+      
+      return searchableFields.some(value => 
+        String(value).toLowerCase().includes(searchTerm)
+      );
     },
   });
 
@@ -116,32 +147,40 @@ export function TanStackTable<TData extends Record<string, any>>({
 
   return (
     <div className="space-y-4 w-full">
-      {/* Barre de recherche */}
-      <div className="flex items-center gap-2">
-        <Input
-          placeholder={searchPlaceholder}
-          value={globalFilter ?? ''}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          className="max-w-sm"
-          disabled={isLoading}
-        />
-        <span className="text-sm text-muted-foreground">
-          {table.getFilteredRowModel().rows.length} résultat(s)
-        </span>
-      </div>
+      {/* Barre de recherche - conditionnelle */}
+      {showSearch && (
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder={searchPlaceholder}
+            value={globalFilter ?? ''}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            className="max-w-sm"
+            disabled={isLoading}
+          />
+          <span className="text-sm text-muted-foreground">
+            {table.getFilteredRowModel().rows.length} résultat(s)
+          </span>
+        </div>
+      )}
 
       {/* Tableau */}
-      <div className="border rounded-lg overflow-hidden">
+      <div 
+        className={cn(
+          "border rounded-lg overflow-y-auto",
+          maxHeight ? maxHeight : ""
+        )}
+      >
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-background">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
+                {headerGroup.headers.map((header, headerIndex, headersArray) => (
                   <TableHead
                     key={header.id}
                     className={cn(
                       header.column.getCanSort() && 'cursor-pointer select-none hover:bg-muted/50',
-                      'transition-colors sticky top-0 bg-background'
+                      'transition-colors sticky top-0 bg-background',
+                      headerIndex < headersArray.length - 1 ? 'border-r' : ''
                     )}
                     onClick={header.column.getToggleSortingHandler?.()}
                   >
@@ -208,8 +247,11 @@ export function TanStackTable<TData extends Record<string, any>>({
                       'transition-colors'
                     )}
                   >
-                    {row.getVisibleCells().map((cell, cellIndex) => (
-                      <TableCell key={`cell-${rowIndex}-${cellIndex}-${cell.id}`}>
+                    {row.getVisibleCells().map((cell, cellIndex, cellsArray) => (
+                      <TableCell 
+                        key={`cell-${rowIndex}-${cellIndex}-${cell.id}`}
+                        className={cellIndex < cellsArray.length - 1 ? 'border-r' : ''}
+                      >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
@@ -230,53 +272,55 @@ export function TanStackTable<TData extends Record<string, any>>({
         </Table>
       </div>
 
-      {/* Contrôles de pagination */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            Page {pageIndex + 1} sur {pageCount || 1} - Total: {table.getFilteredRowModel().rows.length}
-          </span>
+      {/* Contrôles de pagination - conditionnels */}
+      {showPagination && (
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              Page {pageIndex + 1} sur {pageCount || 1} - Total: {table.getFilteredRowModel().rows.length}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage() || isLoading}
+            >
+              Précédent
+            </Button>
+
+            <Select
+              value={String(table.getState().pagination.pageSize)}
+              onValueChange={(value) => {
+                table.setPageSize(Number(value));
+              }}
+              disabled={isLoading}
+            >
+              <SelectTrigger className="w-[80px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[10, 20, 30, 40, 50].map((pageSize) => (
+                  <SelectItem key={pageSize} value={String(pageSize)}>
+                    {pageSize} par page
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage() || isLoading}
+            >
+              Suivant
+            </Button>
+          </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage() || isLoading}
-          >
-            Précédent
-          </Button>
-
-          <Select
-            value={String(table.getState().pagination.pageSize)}
-            onValueChange={(value) => {
-              table.setPageSize(Number(value));
-            }}
-            disabled={isLoading}
-          >
-            <SelectTrigger className="w-[80px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[10, 20, 30, 40, 50].map((pageSize) => (
-                <SelectItem key={pageSize} value={String(pageSize)}>
-                  {pageSize} par page
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage() || isLoading}
-          >
-            Suivant
-          </Button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

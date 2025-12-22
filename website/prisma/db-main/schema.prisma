@@ -281,7 +281,6 @@ model t_lieu {
   Id_Groupe2                           Int?
   Id_Site                              Int?
   Nom_Lieu                             String?                    @db.VarChar(20)
-  Type_Lieu                            String?                    @db.VarChar(20)
   Sonde_Numero_Serie                   String?                    @db.VarChar(50)
   Consigne                             Float?                     @db.Float
   Consigne_Sup                         Float?                     @db.Float
@@ -334,6 +333,7 @@ model t_lieu {
   Derive                               Float?                     @default(0) @db.Float
   Est_Correction_derive                Boolean?                   @default(false)
   Derniere_Valeur_Null                 Int?                       @default(0)
+  Type_Lieu                            String?                    @db.VarChar(20)
   t_alarme                             t_alarme[]
   t_groupe1                            t_groupe?                  @relation("groupe1", fields: [Id_Groupe1], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE1_LIEU")
   t_groupe2                            t_groupe?                  @relation("groupe2", fields: [Id_Groupe2], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE2_LIEU")
@@ -414,7 +414,6 @@ model t_module {
 
 model t_module_type {
   Id_Module_Type        Int      @id @default(autoincrement())
-  Type_Module           Int?     @unique(map: "UK_Type_Module") @db.SmallInt
   Libelle_Type_Module   String?  @db.VarChar(50)
   Libelle_Module        String?  @db.VarChar(100)
   Est_Flag_Affiche_Plan Boolean? @default(false)

@@ -59,6 +59,9 @@ export function DashboardClient({
             <CardContent className="p-0">
               <AlarmTable
                 alarms={activeAlarms}
+                maxRows={5}
+                showSearch={false}
+                showPagination={false}
                 isLoading={false}
                 emptyMessage="Aucune alarme active - Tout est sous contrôle"
               />
