@@ -1,8 +1,10 @@
 import { prismaMesure } from "@/lib/prisma";
 
 /**
- * Écrit un événement d'audit dans la base de données mesure (table ts_journal)
+ * Écrit un événement d'audit dans la base de données mesure (table tm_journal)
  * Cette fonction est appelée en parallèle du logging fichier
+ * 
+ * Utilise la table tm_compteur_id_table pour gérer les IDs de manière thread-safe
  */
 export async function writeAuditToDatabase(params: {
   codeJournal: string;
@@ -13,17 +15,35 @@ export async function writeAuditToDatabase(params: {
   commentaireUtilisateur?: string;
 }) {
   try {
-    // Récupérer le dernier IdJournal pour l'incrémenter
-    const lastJournal = await prismaMesure.tm_journal.findFirst({
-      where: { Id_Serveur_BDD: 1 },
-      orderBy: { Id_Journal: "desc" },
+    const SERVEUR_ID = 1;
+    const TABLE_NAME = "tm_journal";
+
+    // Utiliser la table de compteur pour obtenir le prochain ID de manière thread-safe
+    const counter = await prismaMesure.tm_compteur_id_table.upsert({
+      where: {
+        Id_Serveur_BDD_Nom_Table: {
+          Id_Serveur_BDD: SERVEUR_ID,
+          Nom_Table: TABLE_NAME,
+        },
+      },
+      update: {
+        Compteur_Id: {
+          increment: 1,
+        },
+      },
+      create: {
+        Id_Serveur_BDD: SERVEUR_ID,
+        Nom_Table: TABLE_NAME,
+        Compteur_Id: 1,
+      },
     });
 
-    const nextId = (lastJournal?.Id_Journal || 0) + 1;
-    // Écrire dans ts_journal
+    const nextId = counter.Compteur_Id || 1;
+
+    // Écrire dans tm_journal avec l'ID géré par le compteur
     await prismaMesure.tm_journal.create({
       data: {
-        Id_Serveur_BDD: 1,
+        Id_Serveur_BDD: SERVEUR_ID,
         Id_Journal: nextId,
         Code_Journal: params.codeJournal,
         Nom_Utilisateur: params.username || "",

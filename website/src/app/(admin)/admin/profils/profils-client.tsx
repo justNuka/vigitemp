@@ -386,7 +386,7 @@ export function ProfilesClient() {
             Les profils définissent les autorisations des utilisateurs sur l'application
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent>
           <TanStackTable
             columns={columns}
             data={tableData}

@@ -436,20 +436,8 @@ export function UsersClient({ users }: Props) {
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">Gestion des utilisateurs</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {users.length} utilisateur{users.length > 1 ? "s" : ""}
-          </p>
-        </div>
 
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <UserPlus className="h-4 w-4" />
-              Nouvel utilisateur
-            </Button>
-          </DialogTrigger>
           <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Créer un utilisateur</DialogTitle>
@@ -1090,8 +1078,8 @@ export function UsersClient({ users }: Props) {
           <TanStackTable
             columns={columns}
             data={users}
-            searchField="username"
-            searchPlaceholder="Rechercher par login..."
+            searchField={["displayName", "username"]}
+            searchPlaceholder="Rechercher par nom ou login..."
             pageSize={20}
             emptyMessage="Aucun utilisateur trouvé"
             selectedRowId={selectedUser?.id}

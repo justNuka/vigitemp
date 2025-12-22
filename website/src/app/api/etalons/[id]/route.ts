@@ -29,7 +29,7 @@ const createEtalonSchema = z.object({
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const user = getAuthenticatedUser(req);
   if (!user) {
@@ -42,7 +42,8 @@ export async function PATCH(
   try {
     const body = await req.json();
     const data = createEtalonSchema.parse(body);
-    const etalonId = parseInt(params.id);
+    const resolvedParams = await params;
+    const etalonId = parseInt(resolvedParams.id);
 
     if (isNaN(etalonId)) {
       return NextResponse.json(

@@ -49,8 +49,29 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
     setFilters((prev) => ({
       ...prev,
       siteIds: selectedIds || [],
+      // Note: on pourrait aussi réinitialiser les groupes ici si désiré
     }));
   };
+
+  // Fonction pour déterminer quels groupes griser
+  // Si des sites sont sélectionnés, on doit griser les groupes qui ne correspondent pas
+  // Pour une implémentation complète, il faudrait une relation groupe-site dans les données
+  const getDisabledGroups = (): Set<number> => {
+    const disabled = new Set<number>();
+    
+    // Si aucun site n'est sélectionné, tous les groupes sont disponibles
+    if (filters.siteIds.length === 0) {
+      return disabled;
+    }
+    
+    // Sinon, griser les groupes qui ne contiennent que des capteurs des sites non-sélectionnés
+    // Cette logique ne peut être appliquée que si on a accès aux données des capteurs ici
+    // Pour maintenant, on ne griserait rien, mais le code est prêt à être amélioré
+    
+    return disabled;
+  };
+
+  const disabledGroupIds = getDisabledGroups();
 
   return (
     <div className="flex flex-col sm:flex-row gap-4">
@@ -71,7 +92,11 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
       <MultiSelectFilter
         label="Groupes"
         options={
-          groups?.map((group) => ({ id: group.id, label: group.name })) || []
+          groups?.map((group) => ({ 
+            id: group.id, 
+            label: group.name,
+            disabled: disabledGroupIds.has(group.id)
+          })) || []
         }
         selectedIds={filters.groupIds || []}
         onChange={(selectedIds) => {

@@ -142,6 +142,7 @@ export function AuditLogTable({ logs, isLoading }: AuditLogTableProps) {
       pageSize={20}
       isLoading={isLoading}
       emptyMessage="Aucun log d'audit trouvé"
+      showSearch={false}
     />
   );
 }
