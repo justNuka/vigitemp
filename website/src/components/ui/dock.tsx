@@ -16,6 +16,7 @@ export type DockItemData = {
   label: React.ReactNode;
   onClick: () => void;
   className?: string;
+  isActive?: boolean;
 };
 
 export type DockProps = {
@@ -38,6 +39,7 @@ type DockItemProps = {
   distance: number;
   baseItemSize: number;
   magnification: number;
+  isActive?: boolean;
 };
 
 function DockItem({
@@ -48,7 +50,8 @@ function DockItem({
   spring,
   distance,
   magnification,
-  baseItemSize
+  baseItemSize,
+  isActive = false
 }: DockItemProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isHovered = useMotionValue(0);
@@ -61,8 +64,10 @@ function DockItem({
     return val - rect.x - baseItemSize / 2;
   });
 
+  // Si l'élément est actif, rester à magnification. Sinon comportement normal hover
   const targetSize = useTransform(mouseDistance, [-distance, 0, distance], [baseItemSize, magnification, baseItemSize]);
-  const size = useSpring(targetSize, spring);
+  const finalSize = useTransform(() => isActive ? magnification : targetSize.get());
+  const size = useSpring(finalSize, spring);
 
   return (
     <motion.div
@@ -76,7 +81,11 @@ function DockItem({
       onFocus={() => isHovered.set(1)}
       onBlur={() => isHovered.set(0)}
       onClick={onClick}
-      className={`relative inline-flex items-center justify-center rounded-full bg-white dark:bg-[#060010] border-neutral-300 dark:border-neutral-700 border-2 shadow-md text-black dark:text-white ${className}`}
+      className={`relative inline-flex items-center justify-center rounded-full transition-colors ${
+        isActive 
+          ? 'bg-white dark:bg-white border-white dark:border-white text-black dark:text-black shadow-lg shadow-white/50' 
+          : 'bg-white dark:bg-[#060010] border-neutral-300 dark:border-neutral-700 text-black dark:text-white'
+      } border-2 shadow-md ${className}`}
       tabIndex={0}
       role="button"
       aria-haspopup="true"
@@ -179,6 +188,7 @@ export default function Dock({
             distance={distance}
             magnification={magnification}
             baseItemSize={baseItemSize}
+            isActive={item.isActive}
           >
             <DockIcon>{item.icon}</DockIcon>
             <DockLabel>{item.label}</DockLabel>

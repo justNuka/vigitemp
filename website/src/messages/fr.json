@@ -1,0 +1,80 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter",
+    "search": "Rechercher",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "warning": "Attention",
+    "export": "Exporter",
+    "import": "Importer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent"
+  },
+  "pageHeader": {
+    "title": "Vigitemp - Surveillance de Température"
+  },
+  "dock": {
+    "sondes": "Sondes",
+    "modules": "Modules",
+    "lieux": "Lieux",
+    "sites": "Sites",
+    "groupes": "Groupes",
+    "utilisateurs": "Utilisateurs",
+    "profils": "Profils",
+    "etalons": "Étalons",
+    "actionneurs": "Actionneurs",
+    "outils": "Outils"
+  },
+  "tables": {
+    "address": "Adresse",
+    "serialNumber": "Numéro de série",
+    "state": "État",
+    "location": "Lieu",
+    "site": "Site",
+    "group": "Groupe",
+    "frequency": "Fréquence",
+    "lastMeasure": "Dernière mesure",
+    "threshold": "Seuil",
+    "value": "Valeur",
+    "date": "Date",
+    "time": "Heure",
+    "user": "Utilisateur",
+    "profile": "Profil",
+    "email": "Email",
+    "phone": "Téléphone",
+    "actions": "Actions",
+    "status": "Statut"
+  },
+  "buttons": {
+    "acknowledge": "Acquitter",
+    "acknowledge_alarm": "Acquitter l'alarme",
+    "add_new": "Ajouter nouveau",
+    "edit_item": "Modifier",
+    "delete_item": "Supprimer",
+    "print": "Imprimer"
+  },
+  "sidebar": {
+    "dashboard": "Tableau de bord",
+    "monitoring": "Surveillance",
+    "alarms": "Alarmes",
+    "reports": "Rapports",
+    "settings": "Paramètres",
+    "admin": "Administration",
+    "users": "Utilisateurs",
+    "profile": "Profil"
+  },
+  "alerts": {
+    "temperature_high": "Température élevée",
+    "temperature_low": "Température basse",
+    "sensor_error": "Erreur de sonde",
+    "offline": "Hors ligne"
+  }
+}

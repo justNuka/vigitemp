@@ -1,3 +1,12 @@
+// next.config.mjs
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin(
+  // optionnel : si le fichier n'est pas à l'emplacement par défaut
+  // "./src/i18n/request.ts"
+);
+
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     // Masquer les warnings de source maps en dev (faux positifs Next.js 16)
@@ -30,4 +39,4 @@ const nextConfig = {
 };
 
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

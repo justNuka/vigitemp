@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+// Next-intl
+import createMiddleware from 'next-intl/middleware';
+import { routing } from './i18n/routing';
+
+export default createMiddleware(routing);
+
 // Routes that require authentication
-const protectedRoutes = ["/", "/surveillance", "/alarms", "/audit", "/settings", "/users"];
+// Les routes sont sans locale car le middleware ajoute automatiquement le locale au pathname
+const protectedRoutes = ["/", "/surveillance", "/alarmes", "/audit", "/parametres", "/profil", "/admin/*"];
 
 // Routes that should redirect to dashboard if authenticated
 const authRoutes = ["/login"];

@@ -1,0 +1,80 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "close": "Close",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "export": "Export",
+    "import": "Import",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous"
+  },
+  "pageHeader": {
+    "title": "Vigitemp - Temperature Monitoring"
+  },
+  "dock": {
+    "sondes": "Probes",
+    "modules": "Modules",
+    "lieux": "Locations",
+    "sites": "Sites",
+    "groupes": "Groups",
+    "utilisateurs": "Users",
+    "profils": "Profiles",
+    "etalons": "Standards",
+    "actionneurs": "Actuators",
+    "outils": "Tools"
+  },
+  "tables": {
+    "address": "Address",
+    "serialNumber": "Serial Number",
+    "state": "State",
+    "location": "Location",
+    "site": "Site",
+    "group": "Group",
+    "frequency": "Frequency",
+    "lastMeasure": "Last Measurement",
+    "threshold": "Threshold",
+    "value": "Value",
+    "date": "Date",
+    "time": "Time",
+    "user": "User",
+    "profile": "Profile",
+    "email": "Email",
+    "phone": "Phone",
+    "actions": "Actions",
+    "status": "Status"
+  },
+  "buttons": {
+    "acknowledge": "Acknowledge",
+    "acknowledge_alarm": "Acknowledge Alarm",
+    "add_new": "Add New",
+    "edit_item": "Edit",
+    "delete_item": "Delete",
+    "print": "Print"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "monitoring": "Monitoring",
+    "alarms": "Alarms",
+    "reports": "Reports",
+    "settings": "Settings",
+    "admin": "Administration",
+    "users": "Users",
+    "profile": "Profile"
+  },
+  "alerts": {
+    "temperature_high": "High Temperature",
+    "temperature_low": "Low Temperature",
+    "sensor_error": "Sensor Error",
+    "offline": "Offline"
+  }
+}

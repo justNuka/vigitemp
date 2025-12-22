@@ -8,6 +8,7 @@ import { useSondesAvailable } from '@/hooks/useSondesAvailable';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import {
   Dialog,
@@ -240,31 +241,41 @@ export function LieuxClient() {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Boutons */}
-      <div className="flex gap-2">
-        <Button onClick={() => { resetForm(); setIsCreateOpen(true); }} variant="default">
-          Nouveau
-        </Button>
-        <Button onClick={handleEdit} variant="outline" disabled={!selectedLieu}>
-          Modifier
-        </Button>
-        <Button onClick={handlePrint} variant="ghost" size="icon" disabled={!selectedLieu}>
-          <Printer className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Table */}
-      <TanStackTable<LieuRow>
-        columns={columns}
-        data={lieux}
-        searchPlaceholder="Rechercher les lieux..."
-        pageSize={15}
-        isLoading={isLoading}
-        emptyMessage="Aucun lieu trouvé"
-        onRowClick={(row) => setSelectedLieu(row)}
-        selectedRowId={selectedLieu?.Id_Lieu}
-      />
+    <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle>Gestion des lieux</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              {lieux.length} lieu{lieux.length > 1 ? 'x' : ''}
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={() => { resetForm(); setIsCreateOpen(true); }} variant="default">
+              Nouveau
+            </Button>
+            <Button onClick={handleEdit} variant="outline" disabled={!selectedLieu}>
+              Modifier
+            </Button>
+            <Button onClick={handlePrint} variant="ghost" size="icon" disabled={!selectedLieu}>
+              <Printer className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {/* Table */}
+          <TanStackTable<LieuRow>
+            columns={columns}
+            data={lieux}
+            searchPlaceholder="Rechercher les lieux..."
+            pageSize={15}
+            isLoading={isLoading}
+            emptyMessage="Aucun lieu trouvé"
+            onRowClick={(row) => setSelectedLieu(row)}
+            selectedRowId={selectedLieu?.Id_Lieu}
+          />
+        </CardContent>
+      </Card>
 
       {/* Dialog Création/Modification */}
       <Dialog open={isCreateOpen || isEditOpen} onOpenChange={(open) => {
@@ -781,6 +792,6 @@ export function LieuxClient() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </main>
   );
 }

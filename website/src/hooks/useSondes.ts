@@ -6,6 +6,7 @@ export interface Sonde {
   Sonde_Numero_Serie: string | null;
   Port_Serie: string | null;
   Etat_Sonde: string | null;
+  Etat_Libelle: string | null;
   Id_Module: number | null;
   Lieu: string | null;
 }

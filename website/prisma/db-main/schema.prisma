@@ -481,6 +481,7 @@ model t_sonde {
   Port_Serie         String?  @db.VarChar(10)
   Etat_Sonde         String?  @db.VarChar(1)
   Id_Module          Int?
+  Id_Sonde_Etat      Int?
   Relai_1            String?  @db.VarChar(50)
   Relai_2            String?  @db.VarChar(50)
   Relai_3            String?  @db.VarChar(50)
@@ -491,17 +492,20 @@ model t_sonde {
   Etat_Sonde_N1      String?  @db.VarChar(1)
   Id_Serveur         Int?
   t_lieu             t_lieu[]
+  t_sonde_etat       t_sonde_etat? @relation(fields: [Id_Sonde_Etat], references: [Id_Sonde_Etat], onDelete: NoAction, onUpdate: NoAction, map: "FK_SONDE_ETAT")
 
   @@index([Adresse_Sonde], map: "IDX_Adresse_Sonde")
   @@index([Etat_Sonde], map: "IDX_Etat_Sonde")
   @@index([Port_Serie], map: "IDX_Port_Serie")
   @@index([Id_Module], map: "IDX_Id_Module")
+  @@index([Id_Sonde_Etat], map: "IDX_Id_Sonde_Etat")
 }
 
 model t_sonde_etat {
   Id_Sonde_Etat Int     @id @default(autoincrement())
   Etat_Sonde    String? @unique(map: "Etat_Sonde") @db.VarChar(1)
   Etat_Libelle  String? @db.VarChar(50)
+  t_sonde       t_sonde[]
 }
 
 model t_sonde_type {
@@ -535,9 +539,28 @@ model t_utilisateur {
   t_ancien_mot_de_passe          t_ancien_mot_de_passe[]
   t_liaison_utilisateur_groupe   t_liaison_utilisateur_groupe[]
   t_liaison_utilisateur_site     t_liaison_utilisateur_site[]
+  t_push_subscription            t_push_subscription[]
 
   @@index([Est_Archive], map: "IDX_Est_Archive")
   @@index([Profil_Utilisateur], map: "IDX_Profil_Utilisateur")
+}
+
+model t_push_subscription {
+  Id_Push_Subscription Int            @id @default(autoincrement())
+  Id_Utilisateur       Int?
+  Endpoint             String         @db.VarChar(2048)
+  Endpoint_Hash        String         @unique(map: "Endpoint_Hash") @db.Char(64)
+  Key_P256dh           String         @db.VarChar(255)
+  Key_Auth             String         @db.VarChar(255)
+  Expiration_Time      BigInt?
+  User_Agent           String?        @db.VarChar(255)
+  Date_Creation        DateTime?      @db.DateTime(0)
+  Date_Modification    DateTime?      @db.DateTime(0)
+  Est_Archive          Boolean?       @default(false)
+  t_utilisateur        t_utilisateur? @relation(fields: [Id_Utilisateur], references: [Id_Utilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_UTILISATEUR_PUSH_SUBSCRIPTION")
+
+  @@index([Est_Archive], map: "IDX_Est_Archive_Push_Subscription")
+  @@index([Id_Utilisateur], map: "IDX_Id_Utilisateur_Push_Subscription")
 }
 
 model liste_clients {
