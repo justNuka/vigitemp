@@ -33,7 +33,8 @@ export function SensorsGrid({ sensors, locations, statusFilter, onStatusFilterCh
 
   const filteredSensors = useMemo(() => {
     if (!sensors || !Array.isArray(sensors)) return [];
-    return sensors.filter((sensor) => {
+    
+    let filtered = sensors.filter((sensor) => {
       if (statusFilter !== "all" && sensor.status !== statusFilter) {
         return false;
       }
@@ -57,6 +58,18 @@ export function SensorsGrid({ sensors, locations, statusFilter, onStatusFilterCh
 
       return true;
     });
+
+    // Tri: alarmes (critical/warning) d'abord, puis OK
+    filtered.sort((a, b) => {
+      const statusPriority: Record<string, number> = {
+        'critical': 0,
+        'warning': 1,
+        'ok': 2,
+      };
+      return (statusPriority[a.status] || 3) - (statusPriority[b.status] || 3);
+    });
+
+    return filtered;
   }, [sensors, statusFilter, selectedLocationId, selectedSiteGroup, searchQuery]);
 
   // Virtualisation: calculer le nombre d'items par row selon viewMode

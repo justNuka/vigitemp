@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,10 @@ import { toast } from "sonner";
 export default function ForcePasswordChangePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const username = searchParams.get("username");
-  const { data: rules, isLoading: rulesLoading } = usePasswordRules();
+  // Récupérer le username depuis les cookies (accessible en client, lisible seulement)
+  // Le token réel est en httpOnly et sera envoyé automatiquement avec les requêtes
+  const [username, setUsername] = useState<string | null>(null);
+  const [tokenValid, setTokenValid] = useState(false);
 
   const [formData, setFormData] = useState({
     currentPassword: "",
@@ -30,6 +32,32 @@ export default function ForcePasswordChangePage() {
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { data: rules, isLoading: rulesLoading } = usePasswordRules();
+
+  // Valider le token au chargement de la page
+  useEffect(() => {
+    const checkToken = async () => {
+      try {
+        const res = await fetch("/api/auth/validate-password-token", {
+          method: "POST",
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setUsername(data.username);
+          setTokenValid(true);
+        } else {
+          setError("Votre lien de changement de mot de passe a expiré. Veuillez vous reconnecter.");
+          setTimeout(() => router.push("/login"), 3000);
+        }
+      } catch (err) {
+        setError("Erreur de sécurité");
+        setTimeout(() => router.push("/login"), 3000);
+      }
+    };
+
+    checkToken();
+  }, [router]);
 
   const validation = rules ? validatePassword(formData.newPassword, rules) : null;
 

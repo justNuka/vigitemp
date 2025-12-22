@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
 
     // Vérifier le mot de passe avec bcrypt
     const passwordValid = await bcrypt.compare(password, user.Mot_De_Passe as string);
+    console.log(`[LOGIN-DEBUG] ${username} - Password valid: ${passwordValid}`);
     
     if (!passwordValid) {
       log.auth.login(username, ip, false, "Invalid password");
@@ -66,15 +67,26 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const expiryEnabled = cfr21Params.find(p => p.Mot_Cle === "ACTIVATION_EXPIRATION_MOT_DE_PASSE")?.Valeur === "1" || cfr21Params.find(p => p.Mot_Cle === "ACTIVATION_EXPIRATION_MOT_DE_PASSE")?.Valeur?.toLowerCase() === "true";
-    const expiryDays = parseInt(cfr21Params.find(p => p.Mot_Cle === "JOURS_VALIDITE_MOT_DE_PASSE")?.Valeur || "90");
+    console.log(`[LOGIN-DEBUG] ${username} - CFR21 Params:`, cfr21Params);
 
-    if (expiryEnabled && user.Date_Derniere_Modification_MDP) {
+    const expiryEnabled = cfr21Params.find(p => p.Mot_Cle === "ACTIVATION_EXPIRATION_MOT_DE_PASSE")?.Valeur === "1" || cfr21Params.find(p => p.Mot_Cle === "ACTIVATION_EXPIRATION_MOT_DE_PASSE")?.Valeur?.toLowerCase() === "true";
+    // Utiliser le bon paramètre: VALIDITE_MOT_DE_PASSE_JOURS (au lieu de JOURS_VALIDITE_MOT_DE_PASSE)
+    const expiryDays = parseInt(cfr21Params.find(p => p.Mot_Cle === "VALIDITE_MOT_DE_PASSE_JOURS")?.Valeur || "90");
+
+    console.log(`[LOGIN-DEBUG] ${username} - Expiry enabled: ${expiryEnabled}, Expiry days: ${expiryDays}`);
+    console.log(`[LOGIN-DEBUG] ${username} - Date_Derniere_Modification_MDP: ${user.Date_Derniere_Modification_MDP}`);
+    console.log(`[LOGIN-DEBUG] ${username} - Est_Mot_De_Passe_Temporaire: ${user.Est_Mot_De_Passe_Temporaire}`);
+
+    // Si expiryEnabled ET expiryDays > 0 (0 = pas d'expiration)
+    if (expiryEnabled && expiryDays > 0 && user.Date_Derniere_Modification_MDP) {
       const daysSinceLastChange = Math.floor(
         (Date.now() - new Date(user.Date_Derniere_Modification_MDP).getTime()) / (1000 * 60 * 60 * 24)
       );
 
+      console.log(`[LOGIN-DEBUG] ${username} - Days since last change: ${daysSinceLastChange} (threshold: ${expiryDays})`);
+
       if (daysSinceLastChange >= expiryDays) {
+        console.log(`[LOGIN-DEBUG] ${username} - PASSWORD EXPIRED: ${daysSinceLastChange} >= ${expiryDays}`);
         return NextResponse.json(
           {
             error: "password_expired",
@@ -88,6 +100,7 @@ export async function POST(req: NextRequest) {
 
     // Vérifier si le mot de passe est temporaire (première connexion)
     if (user.Est_Mot_De_Passe_Temporaire) {
+      console.log(`[LOGIN-DEBUG] ${username} - TEMPORARY PASSWORD DETECTED`);
       return NextResponse.json(
         {
           error: "temporary_password",

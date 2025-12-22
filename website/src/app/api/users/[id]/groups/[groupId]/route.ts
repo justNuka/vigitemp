@@ -23,7 +23,7 @@ export async function DELETE(
 
     // Find and delete the liaison
     const liaison = await prisma.t_liaison_utilisateur_groupe.findUnique({
-      where: { Id_Liaison: idLiaison },
+      where: { Id_Liaison_u_g: idLiaison },
     });
 
     if (!liaison || liaison.Id_Utilisateur !== userId) {
@@ -34,7 +34,7 @@ export async function DELETE(
     }
 
     await prisma.t_liaison_utilisateur_groupe.delete({
-      where: { Id_Liaison: idLiaison },
+      where: { Id_Liaison_u_g: idLiaison },
     });
 
     return NextResponse.json({

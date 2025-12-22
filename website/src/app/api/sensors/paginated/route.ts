@@ -19,8 +19,9 @@ export const GET = withLogging(async (request: NextRequest) => {
     const searchParams = request.nextUrl.searchParams;
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50")));
-    const siteId = searchParams.get("siteId");
+    const siteIdsStr = searchParams.get("siteIds");
     const groupIdsStr = searchParams.get("groupIds");
+    const siteIds = siteIdsStr?.split(",").map(Number).filter(Boolean) || [];
     const groupIds = groupIdsStr?.split(",").map(Number).filter(Boolean) || [];
 
     const skip = (page - 1) * limit;
@@ -28,10 +29,12 @@ export const GET = withLogging(async (request: NextRequest) => {
     // Construire la requête Prisma avec filtres
     const where: any = {};
 
-    if (siteId) {
-      where.Id_Site = parseInt(siteId);
+    // Si siteIds est fourni, filtrer par sites
+    if (siteIds.length > 0) {
+      where.Id_Site = { in: siteIds };
     }
 
+    // Si groupIds est fourni, filtrer par groupes
     if (groupIds.length > 0) {
       where.OR = [
         { Id_Groupe1: { in: groupIds } },

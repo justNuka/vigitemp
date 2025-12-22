@@ -5,7 +5,6 @@ import { AuditClient } from "./audit-client";
 import { PageHeader } from "@/components/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
-import { alarmsApi } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: "Audit - Vigitemp",
@@ -34,21 +33,11 @@ function AuditLoadingSkeleton() {
   );
 }
 
-async function getActiveAlarms() {
-  try {
-    const alarms = await alarmsApi.getActive();
-    return alarms.filter((a) => a.status === "active");
-  } catch {
-    return [];
-  }
-}
-
 export default async function AuditPage() {
-  // Chargement parallèle des données côté serveur avec cache
-  const [logsData, statsData, activeAlarms] = await Promise.all([
+  // Chargement des données côté serveur avec cache
+  const [logsData, statsData] = await Promise.all([
     ServerAuditLogs(100),
     ServerAuditStats(),
-    getActiveAlarms(),
   ]);
 
   return (
@@ -56,7 +45,7 @@ export default async function AuditPage() {
       <PageHeader
         title="Journal d'audit"
         description="Historique des actions et événements"
-        activeAlarms={activeAlarms.length}
+        activeAlarms={0}
       />
 
       <Suspense fallback={<AuditLoadingSkeleton />}>

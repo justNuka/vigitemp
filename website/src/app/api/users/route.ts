@@ -16,6 +16,7 @@ const createUserSchema = z.object({
   prenom: z.string().min(1, "Prénom requis"),
   email: z.email("Email invalide"),
   profileId: z.string().min(1, "Profil requis"),
+  telephone: z.string().optional(),
   expiryDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
 });
 
@@ -79,6 +80,7 @@ export async function POST(req: NextRequest) {
         Prenom: data.prenom,
         Nom: data.nom,
         Adresse_Email: data.email,
+        Tel_Num_Mobile: data.telephone || null,
         Profil_Utilisateur: data.profileId,
         Est_Archive: false,
         Date_Creation: new Date(),

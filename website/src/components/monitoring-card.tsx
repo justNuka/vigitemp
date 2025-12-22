@@ -14,7 +14,9 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { Power, FileText, MapPin, Settings } from "lucide-react";
+import { Power, FileText, MapPin, Settings, AlertTriangle, AlertCircle } from "lucide-react";
+import { getTypeIcon } from "@/lib/lieu-types";
+import type { LieuTypeValue } from "@/lib/lieu-types";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +25,12 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Tooltip as UITooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 
 // Register Chart.js components
@@ -56,6 +64,10 @@ interface MonitoringCardProps {
   nomLieu: string;
   sondeNumeroSerie?: string;
   lieuEtat?: string;
+  lieuType?: LieuTypeValue;
+  siteName?: string;
+  groupName?: string;
+  status?: "ok" | "warning" | "critical";
   onSurveillanceToggle?: (idLieu: number, newState: boolean) => void;
 }
 
@@ -64,6 +76,10 @@ export default function MonitoringCard({
   nomLieu,
   sondeNumeroSerie,
   lieuEtat,
+  lieuType,
+  siteName,
+  groupName,
+  status = "ok",
   onSurveillanceToggle,
 }: MonitoringCardProps) {
   const [data, setData] = useState<MeasureData[]>([]);
@@ -137,39 +153,75 @@ export default function MonitoringCard({
     }
   };
 
+  // ✅ Déterminer la couleur du header selon le status
+  const getHeaderStyles = () => {
+    switch (status) {
+      case "critical":
+        return {
+          bg: "bg-red-600 dark:bg-red-700",
+          borderColor: "border-red-700 dark:border-red-800",
+          icon: <AlertTriangle className="w-4 h-4" />,
+        };
+      case "warning":
+        return {
+          bg: "bg-yellow-600 dark:bg-yellow-700",
+          borderColor: "border-yellow-700 dark:border-yellow-800",
+          icon: <AlertCircle className="w-4 h-4" />,
+        };
+      case "ok":
+      default:
+        return {
+          bg: "bg-slate-600 dark:bg-slate-700",
+          borderColor: "border-slate-700 dark:border-slate-800",
+          icon: null,
+        };
+    }
+  };
+
+  const headerStyles = getHeaderStyles();
+
   const [yMin, yMax] = calculateYDomain();
 
   return (
     <>
-      <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow p-4">
-        {/* Top icons */}
-        <div className="absolute top-2 left-2 right-2 flex justify-between">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsModalOpen(true);
-            }}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title="Détails des mesures"
-          >
-            <FileText className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleSurveillanceToggle();
-            }}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-red-600"
-            title={isSurveillanceActive ? "Désactiver la surveillance" : "Activer la surveillance"}
-          >
-            <Power className="w-4 h-4" />
-          </button>
+      <div className="relative w-full max-w-[300px] max-h-[300px] mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+        {/* Header avec site, groupe et lieu */}
+        <div className={`px-3 py-2 ${headerStyles.bg} border-b-2 ${headerStyles.borderColor}`}>
+          <div className="flex items-start justify-between gap-2">
+            <div className="text-white text-xs font-medium space-y-1 flex-1">
+              {siteName && (
+                <TooltipProvider>
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <div className="cursor-help hover:opacity-80 transition-opacity truncate">
+                        {siteName}
+                      </div>
+                    </TooltipTrigger>
+                    {lieuEtat && (
+                      <TooltipContent>
+                        <p className="max-w-xs">{lieuEtat}</p>
+                      </TooltipContent>
+                    )}
+                  </UITooltip>
+                </TooltipProvider>
+              )}
+              {groupName && <div className="truncate">{groupName}</div>}
+              <div className="font-semibold truncate flex items-center gap-1.5">
+                {lieuType && getTypeIcon(lieuType, 'w-3.5 h-3.5').icon}
+                {nomLieu}
+              </div>
+            </div>
+            {headerStyles.icon && (
+              <div className="text-white flex-shrink-0 mt-0.5">
+                {headerStyles.icon}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Lieu name */}
-        <h3 className="text-center font-semibold text-gray-900 dark:text-white mb-3 mt-6">
-          {nomLieu}
-        </h3>
+        {/* Card content */}
+        <div className="p-4 max-h-[280px] flex flex-col">
+        {/* Top icons - removed from here */}
 
         {/* Mini graph - clickable */}
         <div 
@@ -177,12 +229,12 @@ export default function MonitoringCard({
           onClick={() => setIsModalOpen(true)}
         >
           {loading ? (
-            <div className="h-[150px] flex items-center justify-center">
+            <div className="h-[130px] flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : (
             <>
-              <div className="h-[150px]">
+              <div className="h-[130px]">
                 <Line
                   data={{
                     labels: data.map(d => d.DateHeureMesureXaxis),
@@ -306,49 +358,65 @@ export default function MonitoringCard({
           )}
         </div>
 
-        {/* Last measure info */}
-        <div className="mt-3 mb-10 space-y-2 text-sm">
+        {/* Last measure info and icons */}
+        <div className="mt-auto space-y-3 text-sm border-t border-gray-200 dark:border-gray-700 pt-3">
           {lastDateTime ? (
             <>
-              <div className="text-center font-medium text-gray-900 dark:text-white">
-                {lastDateTime}
-              </div>
-              <div className="flex justify-between items-center text-xs text-gray-600 dark:text-gray-400">
+              <div className="flex items-center justify-center gap-4 text-xs text-gray-600 dark:text-gray-400">
                 <span>Fréq: {frequence} min</span>
-                {sondeNumeroSerie && (
-                  <span>N° {sondeNumeroSerie}</span>
-                )}
+                <span>{lastDateTime}</span>
+              </div>
+              
+              {/* Icons at bottom center */}
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsModalOpen(true);
+                  }}
+                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  title="Détails des mesures"
+                >
+                  <FileText className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSurveillanceToggle();
+                  }}
+                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-red-600"
+                  title={isSurveillanceActive ? "Désactiver la surveillance" : "Activer la surveillance"}
+                >
+                  <Power className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // TODO: Localisation
+                  }}
+                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  title="Localisation"
+                >
+                  <MapPin className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // TODO: Paramétrage
+                  }}
+                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  title="Paramétrage du lieu"
+                >
+                  <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                </button>
               </div>
             </>
           ) : (
-            <div className="text-center text-gray-500 dark:text-gray-400 italic">
+            <div className="text-center text-gray-500 dark:text-gray-400 italic py-3">
               Aucune mesure disponible
             </div>
           )}
         </div>
-
-        {/* Bottom icons */}
-        <div className="absolute bottom-2 left-2 right-2 flex justify-between">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              // TODO: Localisation
-            }}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title="Localisation"
-          >
-            <MapPin className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              // TODO: Paramétrage
-            }}
-            className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            title="Paramétrage du lieu"
-          >
-            <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          </button>
         </div>
       </div>
 

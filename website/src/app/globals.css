@@ -59,7 +59,6 @@
   html {
     overflow-y:scroll;
   }
-  
 
   .embla {
     overflow: hidden;
@@ -185,61 +184,58 @@
     box-shadow: inset 0 0 0 0.2rem var(--text-body);
   }
 
-
   .bg-background-date [data-slot='base'] [data-slot='input-wrapper'] {
     @apply bg-background;
     border-width: 1px
     }
-    
+
     /* bonus for select and autocomplete */
-    
+
     .bg-background-autocomplete [data-slot='main-wrapper'] [data-slot='input-wrapper'] {
     @apply bg-background;
     }
-    
+
     .bg-background-select [data-slot='base'] [data-slot='mainWrapper'] [data-slot='trigger'] {
     @apply bg-background;
     }
-  
+
 }
-
-
 
 @layer base {
   :root {
     /* Palette Replit - Mode Light */
     --background: 0 0% 100%;
     --foreground: 217 20% 20%;
-    
+
     --card: 0 0% 100%;
     --card-foreground: 217 20% 20%;
-    
+
     --popover: 0 0% 100%;
     --popover-foreground: 217 20% 20%;
-    
+
     /* Blue MC2 comme couleur primaire */
     --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
-    
+
     /* Sage comme couleur secondaire */
     --secondary: 72 39% 81%;
     --secondary-foreground: 217 20% 20%;
-    
+
     --muted: 72 39% 91%;
     --muted-foreground: 217 15% 45%;
-    
+
     /* Teal comme couleur d'accent */
     --accent: 174 58% 71%;
     --accent-foreground: 217 20% 20%;
-    
+
     /* Mauve pour les actions destructives */
     --destructive: 340 62% 50%;
     --destructive-foreground: 0 0% 100%;
-    
+
     --border: 217 20% 90%;
     --input: 217 20% 90%;
     --ring: 217 91% 60%;
-    
+
     /* Sidebar colors - Light mode avec fond clair harmonieux */
     --sidebar: 217 20% 97%;           /* Gris très clair, presque blanc */
     --sidebar-foreground: 217 20% 20%;   /* Texte foncé pour contraste */
@@ -247,51 +243,51 @@
     --sidebar-accent-foreground: 217 20% 15%;
     --sidebar-border: 217 20% 88%;
     --sidebar-ring: 217 91% 60%;
-    
+
     /* Charts avec palette Replit */
     --chart-1: 217 91% 60%; /* Blue MC2 */
     --chart-2: 38 92% 50%;  /* Yellow */
     --chart-3: 174 58% 71%; /* Teal */
     --chart-4: 72 39% 71%;  /* Sage plus foncé */
     --chart-5: 340 26% 57%; /* Mauve */
-    
+
     --radius: 0.5rem;
   }
-  
+
   .dark {
     /* Palette Replit - Mode Dark */
     --background: 217 25% 8%;
     --foreground: 0 0% 95%;
-    
+
     --card: 217 20% 12%;
     --card-foreground: 0 0% 95%;
-    
+
     --popover: 217 20% 12%;
     --popover-foreground: 0 0% 95%;
-    
+
     /* Blue MC2 légèrement ajusté pour le dark mode */
     --primary: 217 91% 65%;
     --primary-foreground: 217 25% 10%;
-    
+
     /* Sage plus foncé pour le dark mode */
     --secondary: 72 25% 25%;
     --secondary-foreground: 0 0% 95%;
-    
+
     --muted: 217 20% 18%;
     --muted-foreground: 217 15% 65%;
-    
+
     /* Teal ajusté pour le dark mode */
     --accent: 174 48% 55%;
     --accent-foreground: 0 0% 95%;
-    
+
     /* Mauve pour destructive en dark mode */
     --destructive: 340 62% 55%;
     --destructive-foreground: 0 0% 95%;
-    
+
     --border: 217 20% 22%;
     --input: 217 20% 22%;
     --ring: 217 91% 65%;
-    
+
     /* Sidebar colors - Dark mode (même que light pour cohérence) */
     --sidebar: 217 27% 10%;           /* #14181F */
     --sidebar-foreground: 0 0% 95%;
@@ -299,7 +295,7 @@
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 217 27% 15%;
     --sidebar-ring: 217 91% 65%;
-    
+
     /* Charts avec palette Replit (dark mode) */
     --chart-1: 217 91% 65%; /* Blue MC2 */
     --chart-2: 38 92% 55%;  /* Yellow légèrement plus clair */
@@ -307,9 +303,10 @@
     --chart-4: 72 39% 65%;  /* Sage */
     --chart-5: 340 36% 62%; /* Mauve plus clair */
   }
+  .theme {
+    --animate-shine: shine var(--duration) infinite linear;
+  }
 }
-
-
 
 @layer base {
   * {
@@ -317,5 +314,19 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@theme inline {
+  @keyframes shine {
+  0% {
+    background-position: 0% 0%;
+    }
+  50% {
+    background-position: 100% 100%;
+    }
+  to {
+    background-position: 0% 0%;
+    }
   }
 }

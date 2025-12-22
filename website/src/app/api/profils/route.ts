@@ -160,8 +160,8 @@ export async function POST(req: NextRequest) {
     if (data.authorizations && data.authorizations.length > 0) {
       await prisma.t_liaison_profil_autorisation.createMany({
         data: data.authorizations.map((authId) => ({
-          IdProfil: profile.Id_Profil,
-          IdAutorisation: authId,
+          Id_Profil: profile.Id_Profil,
+          Id_Autorisation: authId,
         })),
       });
     }

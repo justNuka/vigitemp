@@ -11,6 +11,7 @@ const updateUserSchema = z.object({
   nom: z.string().optional(),
   prenom: z.string().optional(),
   email: z.string().email().optional(),
+  telephone: z.string().optional(),
   password: z.string().min(6).optional(),
   profileId: z.string().optional(),
   expiryDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
@@ -74,6 +75,7 @@ export async function PATCH(
     if (data.nom) updateData.Nom = data.nom;
     if (data.prenom) updateData.Prenom = data.prenom;
     if (data.email) updateData.Adresse_Email = data.email;
+    if (data.telephone !== undefined) updateData.Tel_Num_Mobile = data.telephone || null;
     if (data.expiryDate !== undefined) updateData.Date_Validite = data.expiryDate;
 
     const user = await prisma.t_utilisateur.update({

@@ -6,7 +6,7 @@ import { useCurrentTime } from "@/hooks/use-current-time";
 import { PageHeader } from "@/components/page-header";
 import { SensorsGrid } from "./sensors-grid-client";
 import { MonitoringCardsGrid } from "./monitoring-cards-grid";
-import { SurveillanceTree } from "./surveillance-tree";
+import { SensorsCardsGrid } from "./sensors-cards-grid";
 import { SurveillanceFilters } from "./surveillance-filters";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -14,10 +14,10 @@ import type { SensorWithLocation, Location } from "@/lib/api";
 import type { Site, Group } from "./server-filters";
 
 type StatusFilter = "all" | "ok" | "warning" | "critical";
-type ViewMode = "status" | "tree" | "graphs";
+type ViewMode = "tree" | "graphs";
 
 interface FilterState {
-  siteId: number | null;
+  siteIds: number[]; // Changed to array for multiple sites
   groupIds: number[];
 }
 
@@ -46,33 +46,25 @@ interface Props {
 export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("graphs");
-  const [filters, setFilters] = useState<FilterState>({ siteId: null, groupIds: [] });
-  const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<FilterState>({ siteIds: [], groupIds: [] });
   const [cachedSensors, setCachedSensors] = useState<SensorWithLocation[]>([]); // ✅ Cache local
   const currentTime = useCurrentTime();
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // Charger les sensors paginés via API
+  // Charger TOUS les sensors une seule fois (pas de refetch on filter)
   const { data: paginatedData, isFetching, error, isError } = useQuery({
-    queryKey: ["sensors", page, filters.siteId, filters.groupIds],
+    queryKey: ["sensors-all"],
     queryFn: async () => {
       const params = new URLSearchParams({
-        page: page.toString(),
-        limit: "50",
+        page: "1",
+        limit: "1000", // Charger beaucoup d'une seule fois
       });
-      if (filters.siteId) {
-        params.append("siteId", filters.siteId.toString());
-      }
-      if (filters.groupIds.length > 0) {
-        params.append("groupIds", filters.groupIds.join(","));
-      }
       const res = await fetch(`/api/sensors/paginated?${params}`);
       if (!res.ok) throw new Error("Failed to fetch sensors");
       return res.json() as Promise<PaginatedResponse>;
     },
-    staleTime: 30000, // 30 secondes
-    gcTime: 5 * 60 * 1000, // 5 minutes
-    placeholderData: (previousData) => previousData, // Garde les données précédentes pendant le refetch
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
   // ✅ Maintenir le cache local synchronisé avec paginatedData
@@ -82,11 +74,31 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
     }
   }, [paginatedData?.sensors]);
 
+  // ✅ Filtrer les sensors EN CLIENT au lieu de les charger filtrés du serveur
+  const filteredSensors = useMemo(() => {
+    let result = cachedSensors.length > 0 ? cachedSensors : (paginatedData?.sensors ?? []);
+    
+    // Appliquer les filtres de sites
+    if (filters.siteIds.length > 0) {
+      result = result.filter(s => 
+        s.location.siteId && filters.siteIds.includes(s.location.siteId)
+      );
+    }
+    
+    // Appliquer les filtres de groupes
+    if (filters.groupIds.length > 0) {
+      result = result.filter(s => 
+        (s.location.groupId1 && filters.groupIds.includes(s.location.groupId1)) ||
+        (s.location.groupId2 && filters.groupIds.includes(s.location.groupId2))
+      );
+    }
+    
+    return result;
+  }, [cachedSensors, paginatedData?.sensors, filters.siteIds, filters.groupIds]);
+
   // Récupérer les sensors actuels et les locations
-  // ✅ Utiliser le cache local au lieu de paginatedData
-  const sensors = useMemo(() => {
-    return cachedSensors.length > 0 ? cachedSensors : (paginatedData?.sensors ?? []);
-  }, [cachedSensors, paginatedData?.sensors]);
+  // ✅ Utiliser les filtered sensors au lieu des all sensors
+  const sensors = filteredSensors;
 
   const locations = useMemo(() => {
     if (!Array.isArray(sensors)) return [];
@@ -123,7 +135,7 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);
-    setPage(1); // Reset à la première page quand les filtres changent
+    // Pas besoin de reset page puisque c'est du filtrage client-side
   }, []);
 
   const handleSurveillanceToggle = useCallback(async (idLieu: number, newState: boolean) => {
@@ -171,7 +183,7 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
             groups={groups}
           />
 
-          {/* Onglet Vue: Graphiques ou Status */}
+          {/* Onglet Vue: Graphiques ou Arborescence */}
           <Tabs
             value={viewMode}
             onValueChange={(v: string) => setViewMode(v as ViewMode)}
@@ -186,84 +198,22 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-
-          {/* Filtres par statut (uniquement en mode status) */}
-          {viewMode === "status" && (
-            <Tabs
-              value={statusFilter}
-              onValueChange={(v: string) => setStatusFilter(v as StatusFilter)}
-              className="w-full sm:w-auto"
-            >
-              <TabsList className="grid grid-cols-4 w-full sm:w-auto">
-                <TabsTrigger value="all" data-testid="tab-all">
-                  Toutes ({filteredStats.total})
-                </TabsTrigger>
-                <TabsTrigger value="ok" data-testid="tab-ok" className="gap-1">
-                  <span className="hidden sm:inline">OK</span>
-                  <span className="text-success">({filteredStats.ok})</span>
-                </TabsTrigger>
-                <TabsTrigger value="warning" data-testid="tab-warning" className="gap-1">
-                  <span className="hidden sm:inline">Attention</span>
-                  <span className="text-warning">({filteredStats.warning})</span>
-                </TabsTrigger>
-                <TabsTrigger value="critical" data-testid="tab-critical" className="gap-1">
-                  <span className="hidden sm:inline">Critique</span>
-                  <span className="text-destructive">({filteredStats.critical})</span>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          )}
         </div>
       </PageHeader>
 
-      {viewMode === "status" ? (
-        <>
-          <SensorsGrid
-            sensors={sensors}
-            locations={locations}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-          />
-          {/* Load More Button - TODO: Uncomment when pagination is enabled */}
-          {/* {hasNextPage && (
-            <div ref={loadMoreRef} className="flex justify-center py-6">
-              <Button
-                onClick={handleLoadMore}
-                disabled={isFetching}
-                variant="outline"
-              >
-                {isFetching ? "Chargement..." : "Charger plus"}
-              </Button>
-            </div>
-          )}
-          {!hasNextPage && page > 1 && (
-            <div className="text-center py-6 text-muted-foreground">
-              Toutes les sondes sont chargées
-            </div>
-          )} */}
-        </>
-      ) : viewMode === "graphs" ? (
+      {viewMode === "tree" ? (
         <>
           <MonitoringCardsGrid 
             sensors={sensors}
             onSurveillanceToggle={handleSurveillanceToggle}
           />
-          {/* Load More Button - TODO: Uncomment when pagination is enabled */}
-          {/* {hasNextPage && (
-            <div ref={loadMoreRef} className="flex justify-center py-6">
-              <Button
-                onClick={handleLoadMore}
-                disabled={isFetching}
-                variant="outline"
-              >
-                {isFetching ? "Chargement..." : "Charger plus"}
-              </Button>
-            </div>
-          )} */}
         </>
       ) : (
         <>
-          <SurveillanceTree sensors={sensors} />
+          <SensorsCardsGrid 
+            sensors={sensors}
+            onSurveillanceToggle={handleSurveillanceToggle}
+          />
         </>
       )}
     </>

@@ -65,7 +65,21 @@ export function LoginForm() {
             throw new Error("temporary_password");
           }
           // Rediriger vers la page de changement forcé pour expiration
-          router.push(`/force-password-change?username=${encodeURIComponent(username)}`);
+          // Stocker le username en session/cookie sécurisé
+          try {
+            const tokenRes = await fetch('/api/auth/temp-password-token', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username }),
+            });
+            if (tokenRes.ok) {
+              router.push('/force-password-change');
+            } else {
+              toast.error('Erreur lors de la redirection');
+            }
+          } catch (err) {
+            toast.error('Erreur de sécurité');
+          }
           throw new Error("password_change_required");
         }
         throw new Error("Login failed");
