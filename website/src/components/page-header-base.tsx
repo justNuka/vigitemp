@@ -5,7 +5,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Bell, AlertTriangle } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 
 interface PageHeaderProps {
   title: string;
@@ -46,7 +46,7 @@ export function PageHeaderBase({
 
         <div className="flex items-center gap-2">
           {activeAlarms > 0 && (
-            <Link href="/alarms">
+            <Link href="alarmes">
               <Button
                 variant="destructive"
                 size="sm"
@@ -95,7 +95,7 @@ export function AlarmBanner({ count, onDismiss }: AlarmBannerProps) {
           {count} alarme{count > 1 ? "s" : ""} active{count > 1 ? "s" : ""}
         </span>
       </div>
-      <Link href="/alarms" passHref>
+      <Link href="alarmes" passHref>
         <Button
           variant="outline"
           size="sm"

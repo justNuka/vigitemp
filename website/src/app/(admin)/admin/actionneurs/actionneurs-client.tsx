@@ -6,7 +6,7 @@ import { Actionneur } from "@/hooks/useActionneurs";
 import { Button } from "@/components/ui/button";
 import {
   Badge } from "@/components/ui/badge";
-import { Actionneur_Modal } from "./actionneur-modal";
+import { Actionneur_Modal } from "@/app/[locale]/(admin)/admin/actionneurs/actionneur-modal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Printer } from "lucide-react";
 import { TanStackTable } from "@/components/data-table/tanstack-table";

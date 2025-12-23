@@ -3,7 +3,7 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin(
   // optionnel : si le fichier n'est pas à l'emplacement par défaut
-  // "./src/i18n/request.ts"
+  "./src/i18n/request.ts"
 );
 
 

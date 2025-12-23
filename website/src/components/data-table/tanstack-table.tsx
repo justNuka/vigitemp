@@ -42,6 +42,10 @@ export interface TanStackTableProps<TData> {
   emptyMessage?: string;
   onRowClick?: (row: TData) => void;
   selectedRowId?: number | string | null;
+  /**
+   * Max-height du conteneur scrollable (CSS length, ex: "16rem", "384px", "60vh").
+   * Rend l'en-tête sticky lorsqu'il y a un scroll vertical.
+   */
   maxHeight?: string;
   showSearch?: boolean;
   showPagination?: boolean;
@@ -164,14 +168,19 @@ export function TanStackTable<TData extends Record<string, any>>({
       )}
 
       {/* Tableau */}
-      <div 
+      <div
         className={cn(
-          "border rounded-lg overflow-y-auto",
-          maxHeight ? maxHeight : ""
+          "border rounded-lg overflow-hidden",
+          "[&>div]:max-h-[var(--vt-table-max-height)]",
+          "[&>div]:overflow-auto"
         )}
+        style={{
+          // `none` garde le comportement actuel (pas de limite de hauteur).
+          ['--vt-table-max-height' as any]: maxHeight ?? 'none',
+        }}
       >
         <Table>
-          <TableHeader className="sticky top-0 z-10 bg-background">
+          <TableHeader className="sticky top-0 z-10 bg-muted/40 backdrop-blur supports-[backdrop-filter]:bg-muted/20">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header, headerIndex, headersArray) => (
@@ -179,7 +188,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                     key={header.id}
                     className={cn(
                       header.column.getCanSort() && 'cursor-pointer select-none hover:bg-muted/50',
-                      'transition-colors sticky top-0 bg-background border-b border-border border-r last:border-r-0'
+                      'transition-colors sticky top-0 bg-muted/40 backdrop-blur supports-[backdrop-filter]:bg-muted/20 border-b border-border border-r'
                     )}
                     onClick={header.column.getToggleSortingHandler?.()}
                   >
@@ -221,9 +230,11 @@ export function TanStackTable<TData extends Record<string, any>>({
               </TableRow>
             ) : table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row, rowIndex) => {
-                // ✅ Vérifier si la ligne est sélectionnée
+                // Vérifier si la ligne est sélectionnée
                 const isSelected = selectedRowId !== null && selectedRowId !== undefined && (
                   (row.original as any).Id_Sonde === selectedRowId ||
+                  (row.original as any).Id_Calibrage === selectedRowId ||
+                  (row.original as any).Id_Etalonnage === selectedRowId ||
                   (row.original as any).Id_Site === selectedRowId ||
                   (row.original as any).Id_Lieu === selectedRowId ||
                   (row.original as any).Id_Utilisateur === selectedRowId ||
@@ -249,7 +260,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                     {row.getVisibleCells().map((cell, cellIndex, cellsArray) => (
                       <TableCell 
                         key={`cell-${rowIndex}-${cellIndex}-${cell.id}`}
-                        className="border-r border-border last:border-r-0"
+                        className="border-r border-border"
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>

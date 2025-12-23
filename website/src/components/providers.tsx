@@ -2,7 +2,6 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/theme-provider";
-import { LanguageProvider } from "@/providers/language-provider";
 import { useState } from "react";
 import { BeforeUnloadGuard } from "@/components/before-unload-guard";
 import { GlobalAppEffects } from "@/components/global-app-effects";
@@ -29,11 +28,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         enableSystem
         disableTransitionOnChange
       >
-        <LanguageProvider>
-          <BeforeUnloadGuard />
-          <GlobalAppEffects />
-          {children}
-        </LanguageProvider>
+        <BeforeUnloadGuard />
+        <GlobalAppEffects />
+        {children}
       </ThemeProvider>
     </QueryClientProvider>
   );

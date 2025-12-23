@@ -211,6 +211,8 @@ export type Location = {
   siteGroup?: string | null;
   isActive?: boolean;
   siteId?: number;
+  groupIds?: number[];
+  groupNames?: string[];
   groupId1?: number | null;
   groupId2?: number | null;
   groupName1?: string | null;
