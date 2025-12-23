@@ -1,0 +1,225 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "close": "Close",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "export": "Export",
+    "import": "Import",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "user": "User",
+    "logout": "Log out",
+    "license_light": "Light license"
+  },
+  "pageHeader": {
+    "title": "Vigitemp - Temperature Monitoring"
+  },
+  "dock": {
+    "sondes": "Probes",
+    "modules": "Modules",
+    "lieux": "Locations",
+    "sites": "Sites",
+    "groupes": "Groups",
+    "utilisateurs": "Users",
+    "profils": "Profiles",
+    "etalons": "Standards",
+    "actionneurs": "Actuators",
+    "outils": "Tools"
+  },
+  "tables": {
+    "address": "Address",
+    "serialNumber": "Serial Number",
+    "state": "State",
+    "location": "Location",
+    "site": "Site",
+    "group": "Group",
+    "frequency": "Frequency",
+    "lastMeasure": "Last Measurement",
+    "threshold": "Threshold",
+    "value": "Value",
+    "date": "Date",
+    "time": "Time",
+    "user": "User",
+    "profile": "Profile",
+    "email": "Email",
+    "phone": "Phone",
+    "actions": "Actions",
+    "status": "Status"
+  },
+  "buttons": {
+    "acknowledge": "Acknowledge",
+    "acknowledge_alarm": "Acknowledge Alarm",
+    "add_new": "Add New",
+    "edit_item": "Edit",
+    "delete_item": "Delete",
+    "print": "Print"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "monitoring": "Monitoring",
+    "alarms": "Alarms",
+    "audit": "Audit log",
+    "reports": "Reports",
+    "settings": "Settings",
+    "admin": "Administration",
+    "users": "Users",
+    "profile": "Profile",
+    "admin_dashboard": "Admin dashboard",
+    "admin_dashboard_tooltip": "Administrator dashboard"
+  },
+  "sidebarGroups": {
+    "navigation": "Navigation",
+    "tracking": "Tracking",
+    "administration": "Administration",
+    "my_account": "My account",
+    "sound_alarms": "Sound alarms"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "description": "Overview of monitoring",
+    "stats": {
+      "locations_monitored": "Monitored locations",
+      "active_alarms": "Active alarms",
+      "sensors_ok": "Sensors OK",
+      "sensors_alert": "Sensors in alert"
+    }
+  },
+  "surveillance": {
+    "title": "Monitoring",
+    "description": "Real-time monitoring of probes and sensors",
+    "tabs": {
+      "graphs": "Charts",
+      "tree": "Tree"
+    }
+  },
+  "alarmsPage": {
+    "title": "Alarm management",
+    "description": "Follow-up and handling of alarms",
+    "tabs": {
+      "active": "Active",
+      "acknowledged": "Acknowledged",
+      "resolved": "Resolved"
+    }
+  },
+  "audit": {
+    "latest_activity": "Latest activity",
+    "events_summary": "{count, plural, one {{count} event} other {{count} events}}",
+    "events_summary_filtered": "{count, plural, one {{count} event} other {{count} events}} out of {total}",
+    "all_codes": "All codes",
+    "search_placeholder": "Search...",
+    "refresh": "Refresh",
+    "toast": {
+      "refreshed": "Data refreshed"
+    }
+  },
+  "adminSidebar": {
+    "badge": "Admin",
+    "groups": {
+      "dashboards": "Dashboards",
+      "management": "Management",
+      "system": "System"
+    },
+    "dashboards": {
+      "user": "User",
+      "admin": "Admin"
+    },
+    "management": {
+      "profiles": "Profiles",
+      "users": "Users",
+      "alarms": "Alarms",
+      "archived_measures": "Archived measurements"
+    },
+    "system": {
+      "settings": "Settings",
+      "licenses": "Licenses",
+      "backups": "Backups"
+    }
+  },
+  "audio": {
+    "on": "Sound on",
+    "off": "Sound off"
+  },
+  "errors": {
+    "not_found_title": "Page not found",
+    "not_found_description": "The page you are looking for doesn't exist or has been moved.",
+    "back_home": "Back to home"
+  },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Access your environmental monitoring system",
+    "card": {
+      "title": "Authentication",
+      "description": "Enter your credentials to access the system",
+      "first_login": "First sign-in"
+    },
+    "inactivity_alert": "You have been automatically signed out after a period of inactivity. Sign in again to continue.",
+    "fields": {
+      "username_label": "Username",
+      "username_placeholder": "Your username",
+      "password_label": "Password",
+      "password_placeholder": "Your password",
+      "reset_email_label": "Email address",
+      "reset_email_placeholder": "your@email.com"
+    },
+    "buttons": {
+      "sign_in": "Sign in",
+      "signing_in": "Signing in...",
+      "forgot_password": "Forgot password?",
+      "send": "Send",
+      "sending": "Sending..."
+    },
+    "footer": {
+      "tagline": "Environmental monitoring for laboratories"
+    },
+    "reset_modal": {
+      "title": "Forgot password?",
+      "description": "Enter your email address to receive a reset link.",
+      "success_message": "If an account exists with this email, you will receive a reset link shortly."
+    },
+    "toasts": {
+      "session_expired": {
+        "title": "Session expired",
+        "description": "You have been signed out due to inactivity"
+      },
+      "password_changed": {
+        "title": "Password changed",
+        "description": "Your password has been changed successfully. You can now sign in."
+      },
+      "password_changed_after_first_login": {
+        "title": "Password changed",
+        "description": "You can now sign in with your new password"
+      },
+      "login_success": "Signed in successfully",
+      "first_login": {
+        "title": "First sign-in",
+        "description": "Please change your temporary password"
+      },
+      "bad_credentials": "Invalid credentials",
+      "fill_all_fields": "Please fill in all fields",
+      "reset_request_error": "Error while requesting reset",
+      "invalid_email": "Please enter a valid email address",
+      "reset_email_sent": {
+        "title": "Email sent",
+        "description": "If an account exists with this email, you will receive a reset link."
+      },
+      "redirect_error": "Redirection error",
+      "security_error": "Security error"
+    }
+  },
+  "alerts": {
+    "temperature_high": "High Temperature",
+    "temperature_low": "Low Temperature",
+    "sensor_error": "Sensor Error",
+    "offline": "Offline"
+  }
+}

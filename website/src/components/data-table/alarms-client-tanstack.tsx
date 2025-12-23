@@ -91,7 +91,7 @@ export function AlarmsClientTanStack() {
       <CardHeader>
         <CardTitle>Gestion des alarmes</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-2 md:p-4 xl:p-4">
         <TanStackTable
           columns={columns}
           data={tableData}

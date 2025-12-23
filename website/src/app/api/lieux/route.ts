@@ -8,6 +8,7 @@ const createLieuSchema = z.object({
   Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(20),
   Lieu_Etat: z.string().max(100).nullable().optional(),
   Id_Site: z.number().nullable().optional(),
+  GroupIds: z.array(z.number()).optional(),
   Id_Groupe1: z.number().nullable().optional(),
   Id_Groupe2: z.number().nullable().optional(),
   Sonde_Numero_Serie: z.string().nullable().optional(),
@@ -40,6 +41,11 @@ export const GET = withLogging(async (req: NextRequest) => {
     const lieux = await prisma.t_lieu.findMany({
       where: { Est_Archive: false },
       include: {
+        t_lieu_groupe: {
+          include: {
+            t_groupe: { select: { Id_Groupe: true, Nom_Groupe: true, Numero_Regroupement: true } },
+          },
+        },
         t_groupe1: { select: { Nom_Groupe: true } },
         t_groupe2: { select: { Nom_Groupe: true } },
         t_site: { select: { Libelle_Site: true } },
@@ -74,13 +80,24 @@ export const POST = withLogging(async (req: NextRequest) => {
     const body = await req.json();
     const validated = createLieuSchema.parse(body);
 
+    const groupIds = Array.from(
+      new Set(
+        [
+          ...(validated.GroupIds ?? []),
+          validated.Id_Groupe1 ?? undefined,
+          validated.Id_Groupe2 ?? undefined,
+        ].filter((v): v is number => typeof v === "number" && !Number.isNaN(v))
+      )
+    );
+
     const lieu = await prisma.t_lieu.create({
       data: {
         Nom_Lieu: validated.Nom_Lieu,
         Lieu_Etat: validated.Lieu_Etat,
         Id_Site: validated.Id_Site,
-        Id_Groupe1: validated.Id_Groupe1,
-        Id_Groupe2: validated.Id_Groupe2,
+        // Backward-compat: garder 2 groupes max dans les colonnes historiques.
+        Id_Groupe1: groupIds[0] ?? validated.Id_Groupe1 ?? null,
+        Id_Groupe2: groupIds[1] ?? validated.Id_Groupe2 ?? null,
         Sonde_Numero_Serie: validated.Sonde_Numero_Serie,
         Consigne: validated.Consigne,
         Frequence: validated.Frequence,
@@ -97,6 +114,16 @@ export const POST = withLogging(async (req: NextRequest) => {
           validated.Est_Consigne_Inf_Pre_Alarme_Active ?? false,
         Retard_Alarme_Bas: validated.Retard_Alarme_Bas,
         Est_Archive: false,
+        ...(groupIds.length > 0
+          ? {
+              t_lieu_groupe: {
+                createMany: {
+                  data: groupIds.map((Id_Groupe) => ({ Id_Groupe })),
+                  skipDuplicates: true,
+                },
+              },
+            }
+          : {}),
       },
     });
 

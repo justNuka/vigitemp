@@ -1,5 +1,5 @@
 /**
- * API Client for Vigitemp Light Version
+ * API Client for Vigitemp
  * 
  * Centralized API calls using fetch for Next.js API Routes
  */
@@ -211,6 +211,8 @@ export type Location = {
   siteGroup?: string | null;
   isActive?: boolean;
   siteId?: number;
+  groupIds?: number[];
+  groupNames?: string[];
   groupId1?: number | null;
   groupId2?: number | null;
   groupName1?: string | null;

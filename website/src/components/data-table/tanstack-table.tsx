@@ -42,6 +42,10 @@ export interface TanStackTableProps<TData> {
   emptyMessage?: string;
   onRowClick?: (row: TData) => void;
   selectedRowId?: number | string | null;
+  /**
+   * Max-height du conteneur scrollable (CSS length, ex: "16rem", "384px", "60vh").
+   * Rend l'en-tête sticky lorsqu'il y a un scroll vertical.
+   */
   maxHeight?: string;
   showSearch?: boolean;
   showPagination?: boolean;
@@ -164,50 +168,76 @@ export function TanStackTable<TData extends Record<string, any>>({
       )}
 
       {/* Tableau */}
-      <div 
+      <div
         className={cn(
-          "border rounded-lg overflow-y-auto",
-          maxHeight ? maxHeight : ""
+          "border rounded-lg overflow-hidden",
+          "[&>div]:max-h-[var(--vt-table-max-height)]",
+          "[&>div]:overflow-auto"
         )}
+        style={{
+          // `none` garde le comportement actuel (pas de limite de hauteur).
+          ['--vt-table-max-height' as any]: maxHeight ?? 'none',
+        }}
       >
         <Table>
-          <TableHeader className="sticky top-0 z-10 bg-background">
+          <TableHeader className="sticky top-0 z-10 bg-muted/40 backdrop-blur supports-[backdrop-filter]:bg-muted/20">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header, headerIndex, headersArray) => (
-                  <TableHead
-                    key={header.id}
-                    className={cn(
-                      header.column.getCanSort() && 'cursor-pointer select-none hover:bg-muted/50',
-                      'transition-colors sticky top-0 bg-background',
-                      headerIndex < headersArray.length - 1 ? 'border-r' : ''
-                    )}
-                    onClick={header.column.getToggleSortingHandler?.()}
-                  >
-                    <div className="flex items-center gap-2">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {header.column.getCanSort() && (
-                        <div className="flex items-center gap-1">
-                          {header.column.getIsSorted() === 'desc' ? (
-                            <ChevronDown className="h-4 w-4" />
-                          ) : header.column.getIsSorted() === 'asc' ? (
-                            <ChevronUp className="h-4 w-4" />
-                          ) : (
-                            <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                {headerGroup.headers.map((header) => (
+                  (() => {
+                    const canSort = header.column.getCanSort();
+                    const sortState = header.column.getIsSorted();
+                    const ariaSort =
+                      sortState === 'asc'
+                        ? 'ascending'
+                        : sortState === 'desc'
+                        ? 'descending'
+                        : 'none';
+
+                    return (
+                      <TableHead
+                        key={header.id}
+                        className={cn(
+                          canSort && 'cursor-pointer select-none hover:bg-muted/50',
+                          'transition-colors sticky top-0 bg-muted/40 backdrop-blur supports-[backdrop-filter]:bg-muted/20 border-b border-border border-r'
+                        )}
+                        onClick={canSort ? header.column.getToggleSortingHandler?.() : undefined}
+                        onKeyDown={(e) => {
+                          if (!canSort) return;
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            header.column.toggleSorting(sortState === 'asc');
+                          }
+                        }}
+                        tabIndex={canSort ? 0 : undefined}
+                        aria-sort={canSort ? (ariaSort as any) : undefined}
+                      >
+                        <div className="flex items-center gap-2">
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                          {canSort && (
+                            <div className="flex items-center gap-1">
+                              {sortState === 'desc' ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : sortState === 'asc' ? (
+                                <ChevronUp className="h-4 w-4" />
+                              ) : (
+                                <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                              )}
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                  </TableHead>
+                      </TableHead>
+                    );
+                  })()
                 ))}
               </TableRow>
             ))}
           </TableHeader>
 
-          <TableBody>
+          <TableBody className="[&_tr:last-child]:border-b">
             {isLoading ? (
               <TableRow>
                 <TableCell
@@ -222,9 +252,11 @@ export function TanStackTable<TData extends Record<string, any>>({
               </TableRow>
             ) : table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row, rowIndex) => {
-                // ✅ Vérifier si la ligne est sélectionnée
+                // Vérifier si la ligne est sélectionnée
                 const isSelected = selectedRowId !== null && selectedRowId !== undefined && (
                   (row.original as any).Id_Sonde === selectedRowId ||
+                  (row.original as any).Id_Calibrage === selectedRowId ||
+                  (row.original as any).Id_Etalonnage === selectedRowId ||
                   (row.original as any).Id_Site === selectedRowId ||
                   (row.original as any).Id_Lieu === selectedRowId ||
                   (row.original as any).Id_Utilisateur === selectedRowId ||
@@ -241,16 +273,26 @@ export function TanStackTable<TData extends Record<string, any>>({
                   <TableRow
                     key={`row-${rowIndex}-${row.id}`}
                     onClick={() => onRowClick?.(row.original)}
+                    onKeyDown={(e) => {
+                      if (!onRowClick) return;
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onRowClick(row.original);
+                      }
+                    }}
+                    tabIndex={onRowClick ? 0 : undefined}
+                    aria-selected={isSelected || undefined}
                     className={cn(
                       onRowClick && 'cursor-pointer hover:bg-muted/50',
                       isSelected && 'bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 border-l-4 border-l-blue-600 dark:border-l-blue-400 font-medium',
+                      onRowClick && 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                       'transition-colors'
                     )}
                   >
                     {row.getVisibleCells().map((cell, cellIndex, cellsArray) => (
                       <TableCell 
                         key={`cell-${rowIndex}-${cellIndex}-${cell.id}`}
-                        className={cellIndex < cellsArray.length - 1 ? 'border-r' : ''}
+                        className="border-r border-border"
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
