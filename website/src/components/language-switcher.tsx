@@ -60,7 +60,11 @@ export function LanguageSwitcher() {
             className="h-5 w-5 rounded-full"
           />
           <span className="flex-1 text-sm ml-2">{languageNames.fr}</span>
-          {language === "fr" && <span className="ml-auto">{"\u2713"}</span>}
+          {language === "fr" && (
+            <span className="ml-auto" aria-hidden="true">
+              {"\u2713"}
+            </span>
+          )}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => handleLanguageChange("en")}
@@ -72,7 +76,11 @@ export function LanguageSwitcher() {
             className="h-5 w-5 rounded-full"
           />
           <span className="flex-1 text-sm ml-2">{languageNames.en}</span>
-          {language === "en" && <span className="ml-auto">{"\u2713"}</span>}
+          {language === "en" && (
+            <span className="ml-auto" aria-hidden="true">
+              {"\u2713"}
+            </span>
+          )}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

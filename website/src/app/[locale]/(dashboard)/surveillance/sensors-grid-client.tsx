@@ -120,7 +120,8 @@ export function SensorsGrid({ sensors, locations, statusFilter, onStatusFilterCh
             variant={viewMode === "grid" ? "default" : "outline"}
             size="icon"
             onClick={() => setViewMode("grid")}
-            title="Vue grille"
+            aria-label="Vue grille"
+            aria-pressed={viewMode === "grid"}
           >
             <Grid3X3 className="h-4 w-4" />
           </Button>
@@ -128,11 +129,12 @@ export function SensorsGrid({ sensors, locations, statusFilter, onStatusFilterCh
             variant={viewMode === "list" ? "default" : "outline"}
             size="icon"
             onClick={() => setViewMode("list")}
-            title="Vue liste"
+            aria-label="Vue liste"
+            aria-pressed={viewMode === "list"}
           >
             <List className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" onClick={() => window.location.reload()}>
+          <Button variant="outline" size="icon" onClick={() => window.location.reload()} aria-label="Rafraîchir">
             <RefreshCw className="h-4 w-4" />
           </Button>
         </div>

@@ -271,9 +271,11 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
               onClick={onLogout}
               className="h-8 w-8 flex-shrink-0"
               title={tCommon("logout")}
+              aria-label={tCommon("logout")}
               data-testid="button-logout"
             >
               <LogOut className="h-4 w-4" />
+              <span className="sr-only">{tCommon("logout")}</span>
             </Button>
           </div>
         )}

@@ -182,7 +182,7 @@ export function GroupesClient() {
             >
               Archiver
             </Button>
-            <Button onClick={handleImprimer} variant="outline" size="icon">
+            <Button onClick={handleImprimer} variant="outline" size="icon" aria-label="Imprimer">
               <Printer className="h-4 w-4" />
             </Button>
           </div>

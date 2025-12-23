@@ -17,6 +17,7 @@ export type DockItemData = {
   onClick: () => void;
   className?: string;
   isActive?: boolean;
+  ariaLabel?: string;
 };
 
 export type DockProps = {
@@ -41,6 +42,7 @@ type DockItemProps = {
   magnification: number;
   isActive?: boolean;
   forceMagnify?: boolean;
+  ariaLabel?: string;
 };
 
 function DockItem({
@@ -54,6 +56,7 @@ function DockItem({
   baseItemSize,
   isActive = false,
   forceMagnify = false,
+  ariaLabel,
 }: DockItemProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isHovered = useMotionValue(0);
@@ -83,6 +86,13 @@ function DockItem({
       onFocus={() => isHovered.set(1)}
       onBlur={() => isHovered.set(0)}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (!onClick) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
       className={`relative inline-flex items-center justify-center rounded-full transition-colors ${
         isActive 
           ? 'bg-black text-white border-white shadow-lg shadow-black/20 dark:bg-white dark:text-black dark:border-black dark:shadow-white/20'
@@ -90,7 +100,8 @@ function DockItem({
       } border-2 shadow-md ${className}`}
       tabIndex={0}
       role="button"
-      aria-haspopup="true"
+      aria-label={ariaLabel}
+      aria-current={isActive ? 'page' : undefined}
     >
       {Children.map(children, child =>
         React.isValidElement(child)
@@ -232,6 +243,7 @@ export default function Dock({
             baseItemSize={baseItemSize}
             isActive={item.isActive}
             forceMagnify={isScrollBoosted}
+            ariaLabel={item.ariaLabel ?? (typeof item.label === 'string' ? item.label : undefined)}
           >
             <DockIcon>{item.icon}</DockIcon>
             <DockLabel>{item.label}</DockLabel>
