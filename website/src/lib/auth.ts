@@ -7,7 +7,9 @@ import { verifyToken, JWTPayload } from "./jwt";
  * @returns Payload JWT ou null si non authentifié
  */
 export function getAuthenticatedUser(req: NextRequest): JWTPayload | null {
-  const token = req.cookies.get("auth-token")?.value;
+  // Standard: "token" (nouveau code). Compat: "auth-token" (legacy).
+  const token =
+    req.cookies.get("token")?.value ?? req.cookies.get("auth-token")?.value;
   
   if (!token) {
     return null;

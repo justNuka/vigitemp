@@ -16,6 +16,8 @@ export type DockItemData = {
   label: React.ReactNode;
   onClick: () => void;
   className?: string;
+  isActive?: boolean;
+  ariaLabel?: string;
 };
 
 export type DockProps = {
@@ -38,6 +40,9 @@ type DockItemProps = {
   distance: number;
   baseItemSize: number;
   magnification: number;
+  isActive?: boolean;
+  forceMagnify?: boolean;
+  ariaLabel?: string;
 };
 
 function DockItem({
@@ -48,7 +53,10 @@ function DockItem({
   spring,
   distance,
   magnification,
-  baseItemSize
+  baseItemSize,
+  isActive = false,
+  forceMagnify = false,
+  ariaLabel,
 }: DockItemProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isHovered = useMotionValue(0);
@@ -61,8 +69,10 @@ function DockItem({
     return val - rect.x - baseItemSize / 2;
   });
 
+  // Si l'élément est actif, rester à magnification. Sinon comportement normal hover
   const targetSize = useTransform(mouseDistance, [-distance, 0, distance], [baseItemSize, magnification, baseItemSize]);
-  const size = useSpring(targetSize, spring);
+  const finalSize = useTransform(() => (isActive ? magnification : targetSize.get()));
+  const size = useSpring(finalSize, spring);
 
   return (
     <motion.div
@@ -76,14 +86,33 @@ function DockItem({
       onFocus={() => isHovered.set(1)}
       onBlur={() => isHovered.set(0)}
       onClick={onClick}
-      className={`relative inline-flex items-center justify-center rounded-full bg-white dark:bg-[#060010] border-neutral-300 dark:border-neutral-700 border-2 shadow-md text-black dark:text-white ${className}`}
+      onKeyDown={(e) => {
+        if (!onClick) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className={`relative inline-flex items-center justify-center rounded-full transition-colors ${
+        isActive 
+          ? 'bg-black text-white border-white shadow-lg shadow-black/20 dark:bg-white dark:text-black dark:border-black dark:shadow-white/20'
+          : 'bg-white dark:bg-[#060010] border-neutral-300 dark:border-neutral-700 text-black dark:text-white'
+      } border-2 shadow-md ${className}`}
       tabIndex={0}
       role="button"
-      aria-haspopup="true"
+      aria-label={ariaLabel}
+      aria-current={isActive ? 'page' : undefined}
     >
       {Children.map(children, child =>
         React.isValidElement(child)
-          ? cloneElement(child as React.ReactElement<{ isHovered?: MotionValue<number> }>, { isHovered })
+          ? cloneElement(
+              child as React.ReactElement<{
+                isHovered?: MotionValue<number>;
+                isActive?: boolean;
+                forceMagnify?: boolean;
+              }>,
+              { isHovered, isActive, forceMagnify }
+            )
           : child
       )}
     </motion.div>
@@ -130,10 +159,20 @@ type DockIconProps = {
   className?: string;
   children: React.ReactNode;
   isHovered?: MotionValue<number>;
+  isActive?: boolean;
+  forceMagnify?: boolean;
 };
 
-function DockIcon({ children, className = '' }: DockIconProps) {
-  return <div className={`flex items-center justify-center ${className}`}>{children}</div>;
+function DockIcon({ children, className = '', isHovered, isActive = false, forceMagnify = false }: DockIconProps) {
+  const scale = useTransform(isHovered ?? useMotionValue(0), [0, 1], [1, 1.15]);
+  const boostedScale = useTransform(() => (isActive || forceMagnify ? 1.15 : scale.get()));
+  const animatedScale = useSpring(boostedScale, { mass: 0.2, stiffness: 250, damping: 18 });
+
+  return (
+    <motion.div style={{ scale: animatedScale }} className={`flex items-center justify-center ${className}`}>
+      {children}
+    </motion.div>
+  );
 }
 
 export default function Dock({
@@ -148,9 +187,32 @@ export default function Dock({
 }: DockProps) {
   const mouseX = useMotionValue(Infinity);
   const isHovered = useMotionValue(0);
+  const [isScrollBoosted, setIsScrollBoosted] = useState(false);
 
-  const maxHeight = useMemo(() => Math.max(dockHeight, magnification + magnification / 2 + 4), [magnification]);
-  const heightRow = useTransform(isHovered, [0, 1], [panelHeight, maxHeight]);
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+
+    function onScroll() {
+      setIsScrollBoosted(true);
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => setIsScrollBoosted(false), 180);
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (timeout) clearTimeout(timeout);
+    };
+  }, []);
+
+  const hasActive = useMemo(() => items.some((item) => item.isActive), [items]);
+  const maxHeight = useMemo(
+    () => Math.max(dockHeight, magnification + magnification / 2 + 4),
+    [dockHeight, magnification]
+  );
+  const heightRow = useTransform(isHovered, (v) =>
+    hasActive ? maxHeight : v ? maxHeight : panelHeight
+  );
   const height = useSpring(heightRow, spring);
 
   return (
@@ -179,6 +241,9 @@ export default function Dock({
             distance={distance}
             magnification={magnification}
             baseItemSize={baseItemSize}
+            isActive={item.isActive}
+            forceMagnify={isScrollBoosted}
+            ariaLabel={item.ariaLabel ?? (typeof item.label === 'string' ? item.label : undefined)}
           >
             <DockIcon>{item.icon}</DockIcon>
             <DockLabel>{item.label}</DockLabel>

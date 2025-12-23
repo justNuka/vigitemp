@@ -28,12 +28,8 @@ export const GET = withLogging(async (req: NextRequest) => {
         Nom_Groupe: true,
         Numero_Regroupement: true,
         Est_Archive: true,
-        t_lieux_groupe1: {
-          where: { Est_Archive: false },
-          select: { Id_Lieu: true },
-        },
-        t_lieux_groupe2: {
-          where: { Est_Archive: false },
+        t_lieu_groupe: {
+          where: { t_lieu: { Est_Archive: false } },
           select: { Id_Lieu: true },
         },
       },
@@ -48,7 +44,7 @@ export const GET = withLogging(async (req: NextRequest) => {
       Nom_Groupe: groupe.Nom_Groupe,
       Numero_Regroupement: groupe.Numero_Regroupement,
       Est_Archive: groupe.Est_Archive,
-      nombre_lieux: groupe.t_lieux_groupe1.length + groupe.t_lieux_groupe2.length,
+      nombre_lieux: groupe.t_lieu_groupe.length,
     }));
 
     return NextResponse.json(groupesWithCounts);

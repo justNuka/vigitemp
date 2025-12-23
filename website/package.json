@@ -2,6 +2,7 @@
   "name": "vigitemp1.1",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -56,6 +57,7 @@
     "@tanstack/react-query": "^5.90.11",
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.13",
+    "@types/web-push": "^3.6.4",
     "axios": "^1.7.2",
     "bcryptjs": "^3.0.3",
     "chart.js": "^4.5.1",
@@ -73,6 +75,7 @@
     "motion": "^12.23.26",
     "mysql2": "^3.9.7",
     "next": "^16.0.10",
+    "next-intl": "^4.6.1",
     "next-themes": "^0.4.6",
     "nodemailer": "^7.0.11",
     "prisma": "^6.19.0",
@@ -92,6 +95,7 @@
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
+    "web-push": "^3.6.7",
     "winston": "^3.19.0",
     "winston-daily-rotate-file": "^5.0.0",
     "zod": "^4.1.13"

@@ -37,6 +37,8 @@ export const GET = withLogging(async (request: NextRequest) => {
     // Si groupIds est fourni, filtrer par groupes
     if (groupIds.length > 0) {
       where.OR = [
+        { t_lieu_groupe: { some: { Id_Groupe: { in: groupIds } } } },
+        // Backward-compat (anciennes colonnes)
         { Id_Groupe1: { in: groupIds } },
         { Id_Groupe2: { in: groupIds } },
       ];
@@ -53,6 +55,11 @@ export const GET = withLogging(async (request: NextRequest) => {
         t_site: true,
         t_groupe1: true,
         t_groupe2: true,
+        t_lieu_groupe: {
+          include: {
+            t_groupe: true,
+          },
+        },
       },
       skip,
       take: limit,
@@ -64,6 +71,13 @@ export const GET = withLogging(async (request: NextRequest) => {
     // Récupérer les dernières mesures pour chaque location
     const sensorsWithMeasurements = await Promise.all(
       locations.map(async (location) => {
+        const groups = (location.t_lieu_groupe || [])
+          .map((lg) => lg.t_groupe)
+          .filter((g): g is NonNullable<typeof g> => !!g);
+
+        const groupIds = groups.map((g) => g.Id_Groupe);
+        const groupNames = groups.map((g) => g.Nom_Groupe).filter((n): n is string => !!n);
+
         const lastMeasurement = await prismaMesure.tm_mesures.findFirst({
           where: {
             Id_Lieu: location.Id_Lieu,
@@ -99,8 +113,12 @@ export const GET = withLogging(async (request: NextRequest) => {
             siteGroup: null,
             isActive: location.Lieu_Etat === "A",
             siteId: location.Id_Site,
-            groupId1: location.Id_Groupe1,
-            groupId2: location.Id_Groupe2,
+            // Nouveau modèle many-to-many
+            groupIds,
+            groupNames,
+            // Backward-compat
+            groupId1: location.Id_Groupe1 ?? groupIds[0] ?? null,
+            groupId2: location.Id_Groupe2 ?? groupIds[1] ?? null,
             site: location.t_site?.Libelle_Site ?? "",
             groupName1: location.t_groupe1?.Nom_Groupe ?? null,
             groupName2: location.t_groupe2?.Nom_Groupe ?? null,

@@ -1,0 +1,225 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter",
+    "search": "Rechercher",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "warning": "Attention",
+    "export": "Exporter",
+    "import": "Importer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "user": "Utilisateur",
+    "logout": "Se déconnecter",
+    "license_light": "Licence Light"
+  },
+  "pageHeader": {
+    "title": "Vigitemp - Surveillance de Température"
+  },
+  "dock": {
+    "sondes": "Sondes",
+    "modules": "Modules",
+    "lieux": "Lieux",
+    "sites": "Sites",
+    "groupes": "Groupes",
+    "utilisateurs": "Utilisateurs",
+    "profils": "Profils",
+    "etalons": "Étalons",
+    "actionneurs": "Actionneurs",
+    "outils": "Outils"
+  },
+  "tables": {
+    "address": "Adresse",
+    "serialNumber": "Numéro de série",
+    "state": "État",
+    "location": "Lieu",
+    "site": "Site",
+    "group": "Groupe",
+    "frequency": "Fréquence",
+    "lastMeasure": "Dernière mesure",
+    "threshold": "Seuil",
+    "value": "Valeur",
+    "date": "Date",
+    "time": "Heure",
+    "user": "Utilisateur",
+    "profile": "Profil",
+    "email": "Email",
+    "phone": "Téléphone",
+    "actions": "Actions",
+    "status": "Statut"
+  },
+  "buttons": {
+    "acknowledge": "Acquitter",
+    "acknowledge_alarm": "Acquitter l'alarme",
+    "add_new": "Ajouter nouveau",
+    "edit_item": "Modifier",
+    "delete_item": "Supprimer",
+    "print": "Imprimer"
+  },
+  "sidebar": {
+    "dashboard": "Tableau de bord",
+    "monitoring": "Surveillance",
+    "alarms": "Alarmes",
+    "audit": "Journal d'audit",
+    "reports": "Rapports",
+    "settings": "Paramètres",
+    "admin": "Administration",
+    "users": "Utilisateurs",
+    "profile": "Profil",
+    "admin_dashboard": "Dashboard Admin",
+    "admin_dashboard_tooltip": "Tableau de bord administrateur"
+  },
+  "sidebarGroups": {
+    "navigation": "Navigation",
+    "tracking": "Suivi",
+    "administration": "Administration",
+    "my_account": "Mon compte",
+    "sound_alarms": "Alarmes sonores"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "description": "Vue d'ensemble de la surveillance",
+    "stats": {
+      "locations_monitored": "Lieux surveillés",
+      "active_alarms": "Alarmes actives",
+      "sensors_ok": "Sondes OK",
+      "sensors_alert": "Sondes en alerte"
+    }
+  },
+  "surveillance": {
+    "title": "Surveillance",
+    "description": "Suivi en temps réel des sondes et capteurs",
+    "tabs": {
+      "graphs": "Graphiques",
+      "tree": "Arborescence"
+    }
+  },
+  "alarmsPage": {
+    "title": "Gestion des alarmes",
+    "description": "Suivi et traitement des alarmes",
+    "tabs": {
+      "active": "Actives",
+      "acknowledged": "Acquittées",
+      "resolved": "Résolues"
+    }
+  },
+  "audit": {
+    "latest_activity": "Dernières activités",
+    "events_summary": "{count, plural, one {{count} événement} other {{count} événements}}",
+    "events_summary_filtered": "{count, plural, one {{count} événement} other {{count} événements}} sur {total}",
+    "all_codes": "Tous les codes",
+    "search_placeholder": "Rechercher...",
+    "refresh": "Actualiser",
+    "toast": {
+      "refreshed": "Données actualisées"
+    }
+  },
+  "adminSidebar": {
+    "badge": "Admin",
+    "groups": {
+      "dashboards": "Tableaux de bord",
+      "management": "Gestion",
+      "system": "Système"
+    },
+    "dashboards": {
+      "user": "Utilisateur",
+      "admin": "Admin"
+    },
+    "management": {
+      "profiles": "Profils",
+      "users": "Utilisateurs",
+      "alarms": "Alarmes",
+      "archived_measures": "Mesures archivées"
+    },
+    "system": {
+      "settings": "Paramètres",
+      "licenses": "Licences",
+      "backups": "Sauvegardes"
+    }
+  },
+  "audio": {
+    "on": "Son activé",
+    "off": "Son désactivé"
+  },
+  "errors": {
+    "not_found_title": "Page introuvable",
+    "not_found_description": "La page que vous recherchez n'existe pas ou a été déplacée.",
+    "back_home": "Retour à l'accueil"
+  },
+  "login": {
+    "title": "Connexion",
+    "subtitle": "Accédez à votre système de surveillance environnementale",
+    "card": {
+      "title": "Authentification",
+      "description": "Entrez vos identifiants pour accéder au système",
+      "first_login": "Première connexion"
+    },
+    "inactivity_alert": "Vous avez été déconnecté automatiquement après une période d'inactivité. Reconnectez-vous pour continuer.",
+    "fields": {
+      "username_label": "Nom d'utilisateur",
+      "username_placeholder": "Votre identifiant",
+      "password_label": "Mot de passe",
+      "password_placeholder": "Votre mot de passe",
+      "reset_email_label": "Adresse email",
+      "reset_email_placeholder": "votre@email.com"
+    },
+    "buttons": {
+      "sign_in": "Se connecter",
+      "signing_in": "Connexion...",
+      "forgot_password": "Mot de passe oublié ?",
+      "send": "Envoyer",
+      "sending": "Envoi..."
+    },
+    "footer": {
+      "tagline": "Surveillance environnementale pour laboratoires"
+    },
+    "reset_modal": {
+      "title": "Mot de passe oublié ?",
+      "description": "Entrez votre adresse email pour recevoir un lien de réinitialisation.",
+      "success_message": "Si un compte existe avec cet email, vous recevrez un lien de réinitialisation dans quelques instants."
+    },
+    "toasts": {
+      "session_expired": {
+        "title": "Session expirée",
+        "description": "Vous avez été déconnecté pour cause d'inactivité"
+      },
+      "password_changed": {
+        "title": "Mot de passe changé",
+        "description": "Votre mot de passe a été changé avec succès. Vous pouvez maintenant vous connecter."
+      },
+      "password_changed_after_first_login": {
+        "title": "Mot de passe changé",
+        "description": "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe"
+      },
+      "login_success": "Connexion réussie",
+      "first_login": {
+        "title": "Première connexion",
+        "description": "Veuillez changer votre mot de passe temporaire"
+      },
+      "bad_credentials": "Identifiants incorrects",
+      "fill_all_fields": "Veuillez remplir tous les champs",
+      "reset_request_error": "Erreur lors de la demande",
+      "invalid_email": "Veuillez entrer une adresse email valide",
+      "reset_email_sent": {
+        "title": "Email envoyé",
+        "description": "Si un compte existe avec cet email, vous recevrez un lien de réinitialisation."
+      },
+      "redirect_error": "Erreur lors de la redirection",
+      "security_error": "Erreur de sécurité"
+    }
+  },
+  "alerts": {
+    "temperature_high": "Température élevée",
+    "temperature_low": "Température basse",
+    "sensor_error": "Erreur de sonde",
+    "offline": "Hors ligne"
+  }
+}

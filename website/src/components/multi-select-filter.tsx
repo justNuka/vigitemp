@@ -29,6 +29,7 @@ export function MultiSelectFilter({
 }: MultiSelectFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownId = useRef(`msf-${Math.random().toString(36).slice(2)}`);
 
   // Fermer quand on clique en dehors
   useEffect(() => {
@@ -62,11 +63,20 @@ export function MultiSelectFilter({
     .map((opt) => opt.label);
 
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div
+      ref={containerRef}
+      className="relative w-full"
+      onKeyDownCapture={(e) => {
+        if (e.key === 'Escape') setIsOpen(false);
+      }}
+    >
       <Button
         variant="outline"
         className="w-full justify-between"
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-controls={dropdownId.current}
+        aria-haspopup="listbox"
       >
         <div className="flex items-center gap-2 flex-1 text-left">
           <span className="text-sm font-medium">{label}</span>
@@ -81,7 +91,12 @@ export function MultiSelectFilter({
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-2 border border-input bg-popover rounded-md shadow-md p-2">
+        <div
+          id={dropdownId.current}
+          role="listbox"
+          aria-multiselectable="true"
+          className="absolute top-full left-0 right-0 z-50 mt-2 border border-input bg-popover rounded-md shadow-md p-2"
+        >
           {/* Afficher les sélections actuelles */}
           {selectedLabels.length > 0 && (
             <div className="mb-3 pb-3 border-b flex flex-wrap gap-1">
@@ -107,6 +122,8 @@ export function MultiSelectFilter({
               options.map((option) => (
                 <label
                   key={option.id}
+                  role="option"
+                  aria-selected={selectedIds.includes(option.id)}
                   className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
                     option.disabled
                       ? 'opacity-50 cursor-not-allowed text-muted-foreground'

@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link as IntlLink } from "@/i18n/navigation";
+import { usePathname } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import {
   Sidebar,
   SidebarContent,
@@ -46,36 +48,48 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
   const pathname = usePathname();
+  const t = useTranslations("adminSidebar");
+  const tCommon = useTranslations("common");
+
+  // Helper pour déterminer quel Link utiliser
+  const getLinkComponent = (href: string) => {
+    // Routes définies dans routing.ts - utiliser IntlLink
+    if (href === "/" || href === "admin") {
+      return IntlLink;
+    }
+    // Routes nested sous /admin/* - utiliser next/link
+    return Link;
+  };
 
   // Section 1: Retour au dashboard classique
   const dashboardNavItems: NavItem[] = [
-    { title: "Utilisateur", href: "/", icon: LayoutDashboard },
-    { title: "Admin", href: "/admin", icon: Shield },
+    { title: t("dashboards.user"), href: "/", icon: LayoutDashboard },
+    { title: t("dashboards.admin"), href: "admin", icon: Shield },
   ];
 
   // Section 2: Gestion profils, utilisateurs, alarmes, mesures archivées
   const managementNavItems: NavItem[] = [
-    { title: "Profils", href: "/admin/profils", icon: Lock },
-    { title: "Utilisateurs", href: "/admin/utilisateurs", icon: Users },
-    { title: "Alarmes", href: "/admin/alarmes", icon: Bell },
-    { title: "Mesures archivées", href: "/admin/mesures-archivees", icon: Archive },
+    { title: t("management.profiles"), href: "/admin/profils", icon: Lock },
+    { title: t("management.users"), href: "/admin/utilisateurs", icon: Users },
+    { title: t("management.alarms"), href: "/admin/alarmes", icon: Bell },
+    { title: t("management.archived_measures"), href: "/admin/mesures-archivees", icon: Archive },
   ];
 
   // Section 3: Paramètres globaux, licences, sauvegardes
   const globalSettingsNavItems: NavItem[] = [
-    { title: "Paramètres", href: "/admin/parametres", icon: Settings },
-    { title: "Licences", href: "/admin/licences", icon: Ticket },
-    { title: "Sauvegardes", href: "/admin/sauvegardes", icon: HardDrive },
+    { title: t("system.settings"), href: "/admin/parametres", icon: Settings },
+    { title: t("system.licenses"), href: "/admin/licences", icon: Ticket },
+    { title: t("system.backups"), href: "/admin/sauvegardes", icon: HardDrive },
   ];
 
   return (
     <Sidebar>
       <SidebarHeader className="p-4 flex flex-col items-center">
-        <Link href="/" className="flex items-center justify-center">
+        <IntlLink href="/" className="flex items-center justify-center">
           <Logo size="md" />
-        </Link>
+        </IntlLink>
         <span className="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20 mt-2">
-          Admin Panel
+          {t("badge")}
         </span>
       </SidebarHeader>
 
@@ -84,7 +98,7 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
       <SidebarContent className="custom-scrollbar">
         {/* Section 1: Dashboard classique */}
         <SidebarGroup>
-          <SidebarGroupLabel>Tableaux de bord</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("groups.dashboards")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {dashboardNavItems.map((item) => (
@@ -94,10 +108,15 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
                     isActive={pathname === item.href}
                     tooltip={item.title}
                   >
-                    <Link href={item.href} data-testid={`nav-${item.href.replace("/", "")}`}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
+                    {(() => {
+                      const LinkComponent = getLinkComponent(item.href);
+                      return (
+                        <LinkComponent href={item.href as any} data-testid={`nav-${item.href.replace("/", "")}`}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </LinkComponent>
+                      );
+                    })()}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -107,7 +126,7 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
 
         {/* Section 2: Gestion */}
         <SidebarGroup>
-          <SidebarGroupLabel>Gestion</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("groups.management")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {managementNavItems.map((item) => (
@@ -117,10 +136,15 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
                     isActive={pathname === item.href}
                     tooltip={item.title}
                   >
-                    <Link href={item.href} data-testid={`nav-${item.href.replace("/", "")}`}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
+                    {(() => {
+                      const LinkComponent = getLinkComponent(item.href);
+                      return (
+                        <LinkComponent href={item.href as any} data-testid={`nav-${item.href.replace("/", "")}`}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </LinkComponent>
+                      );
+                    })()}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -130,7 +154,7 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
 
         {/* Section 3: Paramètres globaux */}
         <SidebarGroup>
-          <SidebarGroupLabel>Système</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("groups.system")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {globalSettingsNavItems.map((item) => (
@@ -140,10 +164,15 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
                     isActive={pathname === item.href}
                     tooltip={item.title}
                   >
-                    <Link href={item.href} data-testid={`nav-${item.href.replace("/", "")}`}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
+                    {(() => {
+                      const LinkComponent = getLinkComponent(item.href);
+                      return (
+                        <LinkComponent href={item.href as any} data-testid={`nav-${item.href.replace("/", "")}`}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </LinkComponent>
+                      );
+                    })()}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -180,10 +209,12 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
               size="icon"
               onClick={onLogout}
               className="h-8 w-8 flex-shrink-0"
-              title="Se déconnecter"
+              title={tCommon("logout")}
+              aria-label={tCommon("logout")}
               data-testid="button-logout"
             >
               <LogOut className="h-4 w-4" />
+              <span className="sr-only">{tCommon("logout")}</span>
             </Button>
           </div>
         )}

@@ -22,30 +22,22 @@ export async function GET(
       );
     }
 
-    const groups = await prisma.t_liaison_utilisateur_groupe.findMany({
+    const liaisons = await prisma.t_liaison_utilisateur_groupe.findMany({
       where: { Id_Utilisateur: userId },
+      include: {
+        t_groupe: true,
+      },
     });
 
-    // Fetch group details for each liaison
-    const groupIds = groups.map(g => g.Id_Groupe).filter(id => id !== null) as number[];
-    const groupDetails = await prisma.t_groupe.findMany({
-      where: { Id_Groupe: { in: groupIds } },
-    });
-
-    const groupMap = new Map(groupDetails.map(g => [g.Id_Groupe, g]));
-
-    const formattedGroups = groups
-      .map(liaison => {
-        const groupe = groupMap.get(liaison.Id_Groupe || 0);
-        return {
-          idLiaison: liaison.Id_Liaison_u_g,
-          idGroupe: groupe?.Id_Groupe,
-          nomGroupe: groupe?.Nom_Groupe,
-          numeroRegroupement: groupe?.Numero_Regroupement,
-          archive: groupe?.Est_Archive,
-        };
-      })
-      .filter(g => g.idGroupe !== null);
+    const formattedGroups = liaisons
+      .filter((liaison) => liaison.t_groupe)
+      .map((liaison) => ({
+        idLiaison: liaison.Id_Liaison_u_g,
+        idGroupe: liaison.t_groupe!.Id_Groupe,
+        nomGroupe: liaison.t_groupe!.Nom_Groupe,
+        numeroRegroupement: liaison.t_groupe!.Numero_Regroupement,
+        archive: liaison.t_groupe!.Est_Archive,
+      }));
 
     return NextResponse.json(formattedGroups);
   } catch (error) {

@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link } from "@/i18n/navigation";
+import { usePathname } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import {
   Sidebar,
   SidebarContent,
@@ -36,27 +37,27 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 interface NavItem {
-  title: string;
-  href: string;
+  href: "/" | "surveillance" | "alarmes" | "audit" | "profil" | "admin";
   icon: typeof LayoutDashboard;
   badge?: number;
   badgeVariant?: "default" | "destructive";
+  titleKey: string;
 }
 
 const mainNavItems: NavItem[] = [
-  { title: "Tableau de bord", href: "/", icon: LayoutDashboard },
-  { title: "Surveillance", href: "/surveillance", icon: Activity },
-  { title: "Alarmes", href: "/alarmes", icon: Bell },
+  { titleKey: "dashboard", href: "/", icon: LayoutDashboard },
+  { titleKey: "monitoring", href: "surveillance", icon: Activity },
+  { titleKey: "alarms", href: "alarmes", icon: Bell },
 ];
 
 const auditNavItems: NavItem[] = [
-  { title: "Journal d'audit", href: "/audit", icon: FileText },
+  { titleKey: "audit", href: "audit", icon: FileText },
 ];
 
 import { CurrentUser } from "@/lib/types";
 
 const moncompteNavItems: NavItem[] = [
-  { title: "Mon profil", href: "/profil", icon: User },
+  { titleKey: "profile", href: "profil", icon: User },
 ];
 
 interface AppSidebarProps {
@@ -68,12 +69,24 @@ interface AppSidebarProps {
 export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSidebarProps) {
   const pathname = usePathname();
   const [isMuted, setIsMuted] = useState(false);
+  const tSidebar = useTranslations("sidebar");
+  const tGroups = useTranslations("sidebarGroups");
+  const tCommon = useTranslations("common");
+  const tAudio = useTranslations("audio");
 
   // Check if user is admin
   const isAdmin = currentUser?.authorizations?.some((auth) => auth.admin) ?? false;
 
+  // Helper pour comparer pathname avec href (pathname = /fr/surveillance, href = surveillance)
+  const isActive = (href: string): boolean => {
+    if (href === "/") {
+      return pathname === "/" || /^\/[a-z]{2}\/?$/.test(pathname);
+    }
+    return pathname.includes(`/${href}`);
+  };
+
   const navItemsWithBadges = mainNavItems.map((item) => {
-    if (item.href === "/alarmes" && activeAlarms > 0) {
+    if (item.href === "alarmes" && activeAlarms > 0) {
       return { ...item, badge: activeAlarms, badgeVariant: "destructive" as const };
     }
     return item;
@@ -86,7 +99,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
           <Logo size="md" />
         </Link>
         <span className="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20 mt-2">
-          Licence Light
+          {tCommon("license_light")}
         </span>
       </SidebarHeader>
 
@@ -94,22 +107,22 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
 
       <SidebarContent className="custom-scrollbar">
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>{tGroups("navigation")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItemsWithBadges.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href}
-                    tooltip={item.title}
+                    isActive={isActive(item.href)}
+                    tooltip={tSidebar(item.titleKey)}
                   >
                     <Link
                       href={item.href}
                       data-testid={`nav-${item.href.replace("/", "") || "dashboard"}`}
                     >
                       <item.icon className="h-4 w-4" />
-                      <span className="flex-1">{item.title}</span>
+                      <span className="flex-1">{tSidebar(item.titleKey)}</span>
                       {item.badge !== undefined && item.badge > 0 && (
                         <Badge
                           variant={item.badgeVariant || "default"}
@@ -130,22 +143,22 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Suivi</SidebarGroupLabel>
+          <SidebarGroupLabel>{tGroups("tracking")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {auditNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href}
-                    tooltip={item.title}
+                    isActive={isActive(item.href)}
+                    tooltip={tSidebar(item.titleKey)}
                   >
                     <Link
                       href={item.href}
                       data-testid={`nav-${item.href.replace("/", "")}`}
                     >
                       <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span>{tSidebar(item.titleKey)}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -157,18 +170,18 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
         {/* Admin Section - Only visible to admins */}
         {isAdmin && (
           <SidebarGroup>
-            <SidebarGroupLabel>Administration</SidebarGroupLabel>
+            <SidebarGroupLabel>{tGroups("administration")}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === "/admin"}
-                    tooltip="Tableau de bord administrateur"
+                    isActive={isActive("admin")}
+                    tooltip={tSidebar("admin_dashboard_tooltip")}
                   >
-                    <Link href="/admin" data-testid="nav-admin">
+                    <Link href="admin" data-testid="nav-admin">
                       <Shield className="h-4 w-4" />
-                      <span>Dashboard Admin</span>
+                      <span>{tSidebar("admin_dashboard")}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -178,22 +191,22 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
         )}
 
         <SidebarGroup>
-          <SidebarGroupLabel>Mon compte</SidebarGroupLabel>
+          <SidebarGroupLabel>{tGroups("my_account")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {moncompteNavItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href}
-                    tooltip={item.title}
+                    isActive={isActive(item.href)}
+                    tooltip={tSidebar(item.titleKey)}
                   >
                     <Link
                       href={item.href}
                       data-testid={`nav-${item.href.replace("/", "")}`}
                     >
                       <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span>{tSidebar(item.titleKey)}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -203,7 +216,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Alarmes sonores</SidebarGroupLabel>
+          <SidebarGroupLabel>{tGroups("sound_alarms")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <div className="px-2">
               <Button
@@ -215,12 +228,12 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
                 {isMuted ? (
                   <>
                     <VolumeX className="h-4 w-4" />
-                    Son désactivé
+                    {tAudio("off")}
                   </>
                 ) : (
                   <>
                     <Volume2 className="h-4 w-4" />
-                    Son activé
+                    {tAudio("on")}
                   </>
                 )}
               </Button>
@@ -249,7 +262,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
                 {`${currentUser.Prenom || ""} ${currentUser.Nom || ""}`}
               </p>
               <p className="text-xs text-muted-foreground capitalize">
-                {currentUser.Profil_Utilisateur || "User"}
+                {currentUser.Profil_Utilisateur || tCommon("user")}
               </p>
             </div>
             <Button
@@ -257,10 +270,12 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
               size="icon"
               onClick={onLogout}
               className="h-8 w-8 flex-shrink-0"
-              title="Se déconnecter"
+              title={tCommon("logout")}
+              aria-label={tCommon("logout")}
               data-testid="button-logout"
             >
               <LogOut className="h-4 w-4" />
+              <span className="sr-only">{tCommon("logout")}</span>
             </Button>
           </div>
         )}

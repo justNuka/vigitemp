@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+  <defs>
+    <clipPath id="clip">
+      <circle cx="12" cy="12" r="12" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#clip)">
+    <rect width="24" height="24" fill="#012169" />
+
+    <!-- White diagonals -->
+    <polygon points="0,0 3,0 24,21 24,24 21,24 0,3" fill="#FFFFFF" />
+    <polygon points="21,0 24,0 24,3 3,24 0,24 0,21 21,0" fill="#FFFFFF" />
+
+    <!-- Red diagonals -->
+    <polygon points="0,0 1.75,0 24,22.25 24,24 22.25,24 0,1.75" fill="#C8102E" />
+    <polygon points="22.25,0 24,0 24,1.75 1.75,24 0,24 0,22.25 22.25,0" fill="#C8102E" />
+
+    <!-- White cross -->
+    <rect x="9" y="0" width="6" height="24" fill="#FFFFFF" />
+    <rect x="0" y="9" width="24" height="6" fill="#FFFFFF" />
+
+    <!-- Red cross -->
+    <rect x="10" y="0" width="4" height="24" fill="#C8102E" />
+    <rect x="0" y="10" width="24" height="4" fill="#C8102E" />
+  </g>
+</svg>
+
