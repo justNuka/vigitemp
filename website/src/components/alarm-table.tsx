@@ -175,8 +175,11 @@ export function AlarmTable({
                 size="icon"
                 className="h-8 w-8"
                 title={alarm.comment}
+                aria-label="Commentaire"
+                type="button"
               >
                 <MessageSquare className="h-4 w-4" />
+                <span className="sr-only">{alarm.comment}</span>
               </Button>
             )}
             {alarm.status === "active" && (

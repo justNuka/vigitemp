@@ -51,6 +51,7 @@ export function LocationFilter({
           placeholder="Rechercher une sonde..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
+          aria-label="Rechercher une sonde"
           className="pl-9 pr-9"
           data-testid="input-search-sensors"
         />

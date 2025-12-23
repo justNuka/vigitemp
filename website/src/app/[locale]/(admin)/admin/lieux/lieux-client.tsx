@@ -275,7 +275,7 @@ export function LieuxClient() {
             <Button onClick={handleEdit} variant="outline" disabled={!selectedLieu}>
               Modifier
             </Button>
-            <Button onClick={handlePrint} variant="ghost" size="icon" disabled={!selectedLieu}>
+            <Button onClick={handlePrint} variant="ghost" size="icon" disabled={!selectedLieu} aria-label="Imprimer">
               <Printer className="h-4 w-4" />
             </Button>
           </div>

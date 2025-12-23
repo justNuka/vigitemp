@@ -183,33 +183,55 @@ export function TanStackTable<TData extends Record<string, any>>({
           <TableHeader className="sticky top-0 z-10 bg-muted/40 backdrop-blur supports-[backdrop-filter]:bg-muted/20">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header, headerIndex, headersArray) => (
-                  <TableHead
-                    key={header.id}
-                    className={cn(
-                      header.column.getCanSort() && 'cursor-pointer select-none hover:bg-muted/50',
-                      'transition-colors sticky top-0 bg-muted/40 backdrop-blur supports-[backdrop-filter]:bg-muted/20 border-b border-border border-r'
-                    )}
-                    onClick={header.column.getToggleSortingHandler?.()}
-                  >
-                    <div className="flex items-center gap-2">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {header.column.getCanSort() && (
-                        <div className="flex items-center gap-1">
-                          {header.column.getIsSorted() === 'desc' ? (
-                            <ChevronDown className="h-4 w-4" />
-                          ) : header.column.getIsSorted() === 'asc' ? (
-                            <ChevronUp className="h-4 w-4" />
-                          ) : (
-                            <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                {headerGroup.headers.map((header) => (
+                  (() => {
+                    const canSort = header.column.getCanSort();
+                    const sortState = header.column.getIsSorted();
+                    const ariaSort =
+                      sortState === 'asc'
+                        ? 'ascending'
+                        : sortState === 'desc'
+                        ? 'descending'
+                        : 'none';
+
+                    return (
+                      <TableHead
+                        key={header.id}
+                        className={cn(
+                          canSort && 'cursor-pointer select-none hover:bg-muted/50',
+                          'transition-colors sticky top-0 bg-muted/40 backdrop-blur supports-[backdrop-filter]:bg-muted/20 border-b border-border border-r'
+                        )}
+                        onClick={canSort ? header.column.getToggleSortingHandler?.() : undefined}
+                        onKeyDown={(e) => {
+                          if (!canSort) return;
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            header.column.toggleSorting(sortState === 'asc');
+                          }
+                        }}
+                        tabIndex={canSort ? 0 : undefined}
+                        aria-sort={canSort ? (ariaSort as any) : undefined}
+                      >
+                        <div className="flex items-center gap-2">
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                          {canSort && (
+                            <div className="flex items-center gap-1">
+                              {sortState === 'desc' ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : sortState === 'asc' ? (
+                                <ChevronUp className="h-4 w-4" />
+                              ) : (
+                                <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                              )}
+                            </div>
                           )}
                         </div>
-                      )}
-                    </div>
-                  </TableHead>
+                      </TableHead>
+                    );
+                  })()
                 ))}
               </TableRow>
             ))}
@@ -251,9 +273,19 @@ export function TanStackTable<TData extends Record<string, any>>({
                   <TableRow
                     key={`row-${rowIndex}-${row.id}`}
                     onClick={() => onRowClick?.(row.original)}
+                    onKeyDown={(e) => {
+                      if (!onRowClick) return;
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onRowClick(row.original);
+                      }
+                    }}
+                    tabIndex={onRowClick ? 0 : undefined}
+                    aria-selected={isSelected || undefined}
                     className={cn(
                       onRowClick && 'cursor-pointer hover:bg-muted/50',
                       isSelected && 'bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 border-l-4 border-l-blue-600 dark:border-l-blue-400 font-medium',
+                      onRowClick && 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                       'transition-colors'
                     )}
                   >
