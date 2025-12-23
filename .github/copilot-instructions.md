@@ -2,7 +2,8 @@
 - Toujours répondre en français.
 - Dès qu'il y a un doute, poser des questions pour clarifier les besoins avant de générer du code.
 - Dès qu'une modif touche à du typage, des données, etc... se référer aux schémas Prisma des 2 bases de données.
-- Fair l'architecture Next.js 16 la plus clean possible, en utilisant les bonnes pratiques (server components, client components, data fetching, etc...)
+- Faire l'architecture Next.js 16 la plus clean possible, en utilisant les bonnes pratiques (server components, client components, data fetching, etc...)
+- Toujours utiliser next-intl pour la gestion des langues à chaque création de pages/features.
 
 # Vigitemp Codebase Guide for AI Agents
 

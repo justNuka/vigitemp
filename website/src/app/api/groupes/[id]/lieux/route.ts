@@ -23,11 +23,12 @@ export const GET = withLogging(async (req: NextRequest, { params }: { params: Pr
       );
     }
 
-    // Récupérer les lieux pour le regroupement 1
-    const lieux1 = await prisma.t_lieu.findMany({
+    const lieux = await prisma.t_lieu.findMany({
       where: {
-        Id_Groupe1: groupeId,
         Est_Archive: false,
+        t_lieu_groupe: {
+          some: { Id_Groupe: groupeId },
+        },
       },
       select: {
         Id_Lieu: true,
@@ -37,23 +38,6 @@ export const GET = withLogging(async (req: NextRequest, { params }: { params: Pr
         Nom_Lieu: "asc",
       },
     });
-
-    // Récupérer les lieux pour le regroupement 2
-    const lieux2 = await prisma.t_lieu.findMany({
-      where: {
-        Id_Groupe2: groupeId,
-        Est_Archive: false,
-      },
-      select: {
-        Id_Lieu: true,
-        Nom_Lieu: true,
-      },
-      orderBy: {
-        Nom_Lieu: "asc",
-      },
-    });
-
-    const lieux = [...lieux1, ...lieux2];
 
     return NextResponse.json(lieux);
   } catch (error) {

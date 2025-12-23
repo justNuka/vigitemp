@@ -7,24 +7,29 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useLanguage, type Language } from "@/providers/language-provider";
+import { useRouter, usePathname } from "@/i18n/navigation";
+import { useLocale } from "next-intl";
 
-const languageFlags: Record<Language, string> = {
-  fr: "🇫🇷",
-  en: "🇬🇧",
+type Language = "fr" | "en";
+
+const languageFlagSrc: Record<Language, string> = {
+  fr: "/flags/fr.svg",
+  en: "/flags/gb.svg",
 };
 
 const languageNames: Record<Language, string> = {
-  fr: "Français",
+  fr: "Fran\u00e7ais",
   en: "English",
 };
 
 export function LanguageSwitcher() {
-  const { language, setLanguage } = useLanguage();
+  const locale = useLocale();
+  const language = (locale === "en" ? "en" : "fr") as Language;
+  const router = useRouter();
+  const pathname = usePathname();
 
   const handleLanguageChange = (newLanguage: Language) => {
-    setLanguage(newLanguage);
-    localStorage.setItem("language", newLanguage);
+    router.push(pathname || "/", { locale: newLanguage });
   };
 
   return (
@@ -34,10 +39,14 @@ export function LanguageSwitcher() {
           variant="ghost"
           size="icon"
           title={`Langue actuelle: ${languageNames[language]}`}
-          className="h-9 w-9 text-lg"
+          className="h-9 w-9"
         >
-          {languageFlags[language]}
-          <span className="sr-only">Sélectionner la langue</span>
+          <img
+            src={languageFlagSrc[language]}
+            alt=""
+            className="h-6 w-6 rounded-full"
+          />
+          <span className="sr-only">S\u00e9lectionner la langue</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -45,17 +54,25 @@ export function LanguageSwitcher() {
           onClick={() => handleLanguageChange("fr")}
           className="gap-2 cursor-pointer"
         >
-          <span className="text-lg">{languageFlags.fr}</span>
-          <span>{languageNames.fr}</span>
-          {language === "fr" && <span className="ml-auto">✓</span>}
+          <img
+            src={languageFlagSrc.fr}
+            alt=""
+            className="h-5 w-5 rounded-full"
+          />
+          <span className="flex-1 text-sm ml-2">{languageNames.fr}</span>
+          {language === "fr" && <span className="ml-auto">{"\u2713"}</span>}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => handleLanguageChange("en")}
           className="gap-2 cursor-pointer"
         >
-          <span className="text-lg">{languageFlags.en}</span>
-          <span>{languageNames.en}</span>
-          {language === "en" && <span className="ml-auto">✓</span>}
+          <img
+            src={languageFlagSrc.en}
+            alt=""
+            className="h-5 w-5 rounded-full"
+          />
+          <span className="flex-1 text-sm ml-2">{languageNames.en}</span>
+          {language === "en" && <span className="ml-auto">{"\u2713"}</span>}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

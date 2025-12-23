@@ -45,12 +45,11 @@ export const PATCH = withLogging(async (req: NextRequest) => {
       },
     });
 
-    // Récupérer les lieux associés
-    const lieux1 = await prisma.t_lieu.findMany({
-      where: { Id_Groupe1: id, Est_Archive: false },
-    });
-    const lieux2 = await prisma.t_lieu.findMany({
-      where: { Id_Groupe2: id, Est_Archive: false },
+    const nombre_lieux = await prisma.t_lieu.count({
+      where: {
+        Est_Archive: false,
+        t_lieu_groupe: { some: { Id_Groupe: id } },
+      },
     });
 
     return NextResponse.json({
@@ -58,7 +57,7 @@ export const PATCH = withLogging(async (req: NextRequest) => {
       Nom_Groupe: updated.Nom_Groupe,
       Numero_Regroupement: updated.Numero_Regroupement,
       Est_Archive: updated.Est_Archive,
-      nombre_lieux: lieux1.length + lieux2.length,
+      nombre_lieux,
     });
   } catch (error) {
     console.error("Groupe update error:", error);

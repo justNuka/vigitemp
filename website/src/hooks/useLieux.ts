@@ -8,6 +8,7 @@ export interface LieuRow {
   Type_Lieu: string | null;
   Id_Groupe1: number | null;
   Id_Groupe2: number | null;
+  GroupIds?: number[];
   Id_Site: number | null;
   Sonde_Numero_Serie: string | null;
   Consigne: number | null;
@@ -35,6 +36,7 @@ export interface LieuRow {
   Prendre_En_Compte_Derive: boolean | null;
   t_groupe1?: { Nom_Groupe: string | null } | null;
   t_groupe2?: { Nom_Groupe: string | null } | null;
+  t_lieu_groupe?: { Id_Groupe: number; t_groupe?: { Id_Groupe: number; Nom_Groupe: string | null; Numero_Regroupement: string | null } | null }[];
   t_site?: { Libelle_Site: string | null } | null;
   t_sonde?: { Sonde_Numero_Serie: string | null } | null;
 }
