@@ -196,7 +196,7 @@ export function ModulesClient() {
               setSelectedModuleId(row.Id_Module);
               setSelectedSondeId(null);
             }}
-            maxHeight="24rem"
+            maxHeight="30rem"
           />
         </CardContent>
       </Card>

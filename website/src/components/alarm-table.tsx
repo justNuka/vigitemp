@@ -26,6 +26,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { ColumnDef } from "@tanstack/react-table";
+import type { ReactNode } from "react";
 
 interface AlarmTableProps {
   alarms: AlarmWithDetails[];
@@ -35,6 +36,7 @@ interface AlarmTableProps {
   maxRows?: number;
   showSearch?: boolean;
   showPagination?: boolean;
+  toolbarRight?: ReactNode;
 }
 
 interface AlarmRow {
@@ -57,6 +59,7 @@ export function AlarmTable({
   maxRows,
   showSearch = true,
   showPagination = true,
+  toolbarRight,
 }: AlarmTableProps) {
   const [selectedAlarm, setSelectedAlarm] = useState<AlarmWithDetails | null>(null);
   const [comment, setComment] = useState("");
@@ -229,6 +232,7 @@ export function AlarmTable({
         }}
         showSearch={showSearch}
         showPagination={showPagination}
+        toolbarRight={toolbarRight}
       />
 
       <Dialog open={!!selectedAlarm} onOpenChange={() => setSelectedAlarm(null)}>

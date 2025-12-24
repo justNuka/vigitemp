@@ -143,6 +143,7 @@ export function AuditLogTable({ logs, isLoading }: AuditLogTableProps) {
       isLoading={isLoading}
       emptyMessage="Aucun log d'audit trouvé"
       showSearch={false}
+      maxHeight="60vh"
     />
   );
 }

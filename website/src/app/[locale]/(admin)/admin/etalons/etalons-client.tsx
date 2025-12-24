@@ -124,7 +124,7 @@ export function EtalonsClient() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-2 md:p-4 xl:p-4">
           <TanStackTable
             columns={columns}
             data={tableData}
@@ -135,6 +135,7 @@ export function EtalonsClient() {
             onRowClick={(row: EtalonsRow) => {
               setSelectedEtalon(etalons?.find(e => e.Id_Etalon === row.Id_Etalon) || null);
             }}
+            maxHeight="24rem"
           />
         </CardContent>
       </Card>

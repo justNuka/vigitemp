@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -23,12 +23,14 @@ interface DataTableProps<TData> {
   }>;
   data: TData[];
   emptyMessage?: string;
+  maxHeight?: string;
 }
 
 export function DataTable<TData extends Record<string, any>>({
   columns,
   data,
   emptyMessage = "Aucun résultat.",
+  maxHeight,
 }: DataTableProps<TData>) {
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sorting, setSorting] = useState<{
@@ -36,7 +38,6 @@ export function DataTable<TData extends Record<string, any>>({
     direction: "asc" | "desc";
   } | null>(null);
 
-  // Filter data
   const filteredData = useMemo(() => {
     return data.filter((row) => {
       return Object.entries(filters).every(([key, value]) => {
@@ -47,7 +48,6 @@ export function DataTable<TData extends Record<string, any>>({
     });
   }, [data, filters]);
 
-  // Sort data
   const sortedData = useMemo(() => {
     if (!sorting) return filteredData;
 
@@ -82,14 +82,25 @@ export function DataTable<TData extends Record<string, any>>({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
+      <div
+        className={[
+          "rounded-md border overflow-hidden",
+          "[&>div]:max-h-[var(--vt-table-max-height)]",
+          "[&>div]:overflow-auto",
+        ].join(" ")}
+        style={{
+          ["--vt-table-max-height" as any]: maxHeight ?? "none",
+        }}
+      >
         <Table>
           <TableHeader>
             <TableRow>
               {columns.map((column) => (
-                <TableHead key={column.accessorKey} className="p-0">
+                <TableHead
+                  key={column.accessorKey}
+                  className="p-0 sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b"
+                >
                   <div className="space-y-2 p-2">
-                    {/* Sort button */}
                     {column.enableSorting ? (
                       <Button
                         variant="ghost"
@@ -104,15 +115,12 @@ export function DataTable<TData extends Record<string, any>>({
                       <div className="font-semibold px-2">{column.header}</div>
                     )}
 
-                    {/* Filter input */}
                     {column.enableColumnFilter && (
                       <Input
                         type="text"
-                        placeholder={`Rechercher...`}
+                        placeholder="Rechercher..."
                         value={filters[column.accessorKey] ?? ""}
-                        onChange={(e) =>
-                          handleFilter(column.accessorKey, e.target.value)
-                        }
+                        onChange={(e) => handleFilter(column.accessorKey, e.target.value)}
                         className="h-8 w-full text-sm"
                       />
                     )}
@@ -128,7 +136,10 @@ export function DataTable<TData extends Record<string, any>>({
                   {columns.map((column) => (
                     <TableCell key={column.accessorKey}>
                       {column.cell
-                        ? column.cell({ getValue: () => row[column.accessorKey], row: { original: row } })
+                        ? column.cell({
+                            getValue: () => row[column.accessorKey],
+                            row: { original: row },
+                          })
                         : row[column.accessorKey]}
                     </TableCell>
                   ))}

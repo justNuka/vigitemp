@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -15,6 +16,9 @@ namespace VigitempAgent
         //public string IP_CLIENT;
         public string SITEWEB_URL;
         private NotifyIcon trayIcon;
+        private Timer sessionTimer;
+        private DateTime lastNoSessionTipUtc = DateTime.MinValue;
+        private DateTime lastExpiryTipUtc = DateTime.MinValue;
         public static Thread UIThread;
         public Thread serverThread;
         public Form_Alert frm;
@@ -42,6 +46,8 @@ namespace VigitempAgent
             frm.Show();
             frm.Hide();
 
+            SessionStore.Load();
+
             // Fermeture de la connexion
             database.CloseConnexion();
 
@@ -51,10 +57,15 @@ namespace VigitempAgent
                 Icon = Resources.AppIcon,
                 ContextMenuStrip = new ContextMenuStrip()
                 {
-                    Items = { new ToolStripMenuItem("Exit", null, Exit) }
+                    Items =
+                    {
+                        new ToolStripMenuItem("Ouvrir le portail", null, OpenPortal),
+                        new ToolStripMenuItem("Exit", null, Exit),
+                    }
                 },
                 Visible = true
             };
+            trayIcon.BalloonTipClicked += OpenPortal;
             Console.WriteLine(File.Exists("./texte.txt") ? "File exists." : "File does not exist.");
 
             if (args.Length > 0)
@@ -75,7 +86,91 @@ namespace VigitempAgent
 
             UIThread = Thread.CurrentThread;
 
+            sessionTimer = new Timer();
+            sessionTimer.Interval = 60 * 1000;
+            sessionTimer.Tick += (_, __) => CheckSessionAndNotify();
+            sessionTimer.Start();
 
+            CheckSessionAndNotify();
+
+        }
+
+        private string GetLoginUrl()
+        {
+            var baseUrl = (SITEWEB_URL ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                return "http://127.0.0.1:3000/login";
+            }
+
+            return baseUrl.TrimEnd('/') + "/login";
+        }
+
+        private void OpenPortal(object sender, EventArgs e)
+        {
+            try
+            {
+                Process.Start(GetLoginUrl());
+            }
+            catch
+            {
+                // ignore
+            }
+        }
+
+        private void ShowTrayTip(string title, string message, ToolTipIcon icon)
+        {
+            try
+            {
+                trayIcon.ShowBalloonTip(6000, title, message, icon);
+            }
+            catch
+            {
+                // ignore
+            }
+        }
+
+        private void CheckSessionAndNotify()
+        {
+            var connected = SessionStore.HasValidSession();
+            var session = SessionStore.Get();
+
+            if (!connected)
+            {
+                trayIcon.Text = "Vigitemp Agent (déconnecté)";
+
+                if (DateTime.UtcNow - lastNoSessionTipUtc > TimeSpan.FromHours(4))
+                {
+                    lastNoSessionTipUtc = DateTime.UtcNow;
+                    ShowTrayTip(
+                        "Connexion requise",
+                        "Connectez-vous sur le portail Vigitemp pour recevoir les alarmes sur ce poste.",
+                        ToolTipIcon.Info
+                    );
+                }
+
+                return;
+            }
+
+            trayIcon.Text = "Vigitemp Agent";
+
+            if (session != null && session.ExpiresAtUtc.HasValue)
+            {
+                var remaining = session.ExpiresAtUtc.Value - DateTime.UtcNow;
+                if (remaining > TimeSpan.Zero && remaining <= TimeSpan.FromDays(7))
+                {
+                    if (DateTime.UtcNow - lastExpiryTipUtc > TimeSpan.FromHours(24))
+                    {
+                        lastExpiryTipUtc = DateTime.UtcNow;
+                        var days = Math.Max(1, (int)Math.Ceiling(remaining.TotalDays));
+                        ShowTrayTip(
+                            "Connexion bientôt expirée",
+                            "Votre connexion Vigitemp va expirer dans " + days + " jour(s). Pensez à vous reconnecter.",
+                            ToolTipIcon.Warning
+                        );
+                    }
+                }
+            }
         }
 
         public static string GetLocalIPAddress()
@@ -100,7 +195,7 @@ namespace VigitempAgent
             // Create a Http server and start listening for incoming connections
             HttpServer.listener = new HttpListener();
             HttpServer.listener.Prefixes.Add(HttpServer.url);
-            //HttpServer.listener.Prefixes.Add(HttpServer.url_localhost);
+            HttpServer.listener.Prefixes.Add(HttpServer.url_localhost);
             HttpServer.listener.Start();
             Console.WriteLine("Listening for connections on {0}", HttpServer.url_localhost);
 
@@ -129,6 +224,12 @@ namespace VigitempAgent
         void Exit(object sender, EventArgs e)
         {
             trayIcon.Visible = false;
+            if (sessionTimer != null)
+            {
+                sessionTimer.Stop();
+                sessionTimer.Dispose();
+                sessionTimer = null;
+            }
             serverThread.Abort();
             serverThread.Join();
             Application.Exit();

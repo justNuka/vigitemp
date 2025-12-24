@@ -9,11 +9,25 @@ export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
     const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const rawLimit = parseInt(searchParams.get("limit") || "10", 10);
+    const limit = Math.min(Math.max(rawLimit, 1), 10);
     const skip = (page - 1) * limit;
 
     // Récupérer le nombre total
-    const total = await prismaMesure.tm_journal.count();
+    const totalCount = await prismaMesure.tm_journal.count();
+    const total = Math.min(totalCount, 50);
+
+    if (skip >= total) {
+      return NextResponse.json({
+        data: [],
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit) || 1,
+        },
+      });
+    }
 
     // Récupérer les logs avec pagination
     const logs = await prismaMesure.tm_journal.findMany({
@@ -21,7 +35,7 @@ export async function GET(req: NextRequest) {
         Date_Heure_Journal: "desc",
       },
       skip,
-      take: limit,
+      take: Math.min(limit, 50 - skip),
     });
 
     // Formater les données sans les codes journaux
@@ -39,7 +53,7 @@ export async function GET(req: NextRequest) {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit),
+        pages: Math.ceil(total / limit) || 1,
       },
     });
   } catch (error) {

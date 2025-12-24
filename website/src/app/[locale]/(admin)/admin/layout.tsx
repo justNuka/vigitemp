@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { alarmsApi, authApi } from "@/lib/api";
 import { useAutoLock } from "@/hooks/useAutoLock";
 import { useRefreshInterval } from "@/hooks/useRefreshInterval";
+import { clearAgentSession } from "@/lib/agent-session";
 
 export default function AdminLayout({
   children,
@@ -35,9 +36,15 @@ export default function AdminLayout({
   const handleLogout = async () => {
     try {
       await authApi.logout();
-      window.location.href = "/login";
     } catch (error) {
       console.error("Logout error:", error);
+    } finally {
+      try {
+        await clearAgentSession();
+      } catch {
+        // Agent not installed/running: ignore
+      }
+      window.location.href = "/login";
     }
   };
 

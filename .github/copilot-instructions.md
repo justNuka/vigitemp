@@ -4,6 +4,7 @@
 - Dès qu'une modif touche à du typage, des données, etc... se référer aux schémas Prisma des 2 bases de données.
 - Faire l'architecture Next.js 16 la plus clean possible, en utilisant les bonnes pratiques (server components, client components, data fetching, etc...)
 - Toujours utiliser next-intl pour la gestion des langues à chaque création de pages/features.
+- Toujours faire du mobile-first comme l'indique la doc TailwindCSS
 
 # Vigitemp Codebase Guide for AI Agents
 

@@ -9,6 +9,8 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 import { alarmsApi, type AlarmWithDetails } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+import { cn } from "@/lib/utils";
 
 type AlarmStatus = "active" | "acknowledged" | "resolved";
 
@@ -20,6 +22,7 @@ interface Props {
 export function AlarmsClient({ alarms, statusFilter }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [isRefreshing, startTransition] = useTransition();
 
   const acknowledgeMutation = useMutation({
     mutationFn: ({ id, comment }: { id: string; comment?: string }) =>
@@ -39,81 +42,77 @@ export function AlarmsClient({ alarms, statusFilter }: Props) {
   };
 
   const handleRefresh = () => {
-    router.refresh();
+    startTransition(() => {
+      router.refresh();
+    });
     toast.success("Données actualisées");
   };
 
+  const refreshButton = (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleRefresh}
+      className="gap-2"
+      disabled={isRefreshing}
+      data-testid="button-refresh"
+    >
+      <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+      <span className="hidden sm:inline">
+        {isRefreshing ? "Actualisation..." : "Actualiser"}
+      </span>
+    </Button>
+  );
+
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">
-            {statusFilter === "active" && "Alarmes actives"}
-            {statusFilter === "acknowledged" && "Alarmes acquittées"}
-            {statusFilter === "resolved" && "Alarmes résolues"}
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {alarms.length} alarme{alarms.length > 1 ? "s" : ""}
-          </p>
-        </div>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          className="gap-2"
-          data-testid="button-refresh"
-        >
-          <RefreshCw className="h-4 w-4" />
-          <span className="hidden sm:inline">Actualiser</span>
-        </Button>
-      </div>
-
       {alarms.length === 0 ? (
-        <EmptyState
-          icon={AlertTriangle}
-          title={
-            statusFilter === "active"
-              ? "Aucune alarme active"
-              : statusFilter === "acknowledged"
-              ? "Aucune alarme acquittée"
-              : "Aucune alarme résolue"
-          }
-          description={
-            statusFilter === "active"
-              ? "Tout est sous contrôle - Aucune alarme en cours"
-              : "Aucune alarme dans cette catégorie pour le moment"
-          }
-        />
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {statusFilter === "active" && "Alarmes actives"}
+              {statusFilter === "acknowledged" && "Alarmes acquittées"}
+              {statusFilter === "resolved" && "Alarmes résolues"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-4 flex justify-end">{refreshButton}</div>
+            <EmptyState
+              icon={AlertTriangle}
+              title={
+                statusFilter === "active"
+                  ? "Aucune alarme active"
+                  : statusFilter === "acknowledged"
+                  ? "Aucune alarme acquittée"
+                  : "Aucune alarme résolue"
+              }
+              description={
+                statusFilter === "active"
+                  ? "Tout est sous contrôle - Aucune alarme en cours"
+                  : "Aucune alarme dans cette catégorie pour le moment"
+              }
+            />
+          </CardContent>
+        </Card>
       ) : (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle>
-                {statusFilter === "active" && "Alarmes actives"}
-                {statusFilter === "acknowledged" && "Alarmes acquittées"}
-                {statusFilter === "resolved" && "Alarmes résolues"}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                {alarms.length} alarme{alarms.length > 1 ? "s" : ""}
-              </p>
-            </div>
+          <CardHeader>
+            <CardTitle>
+              {statusFilter === "active" && "Alarmes actives"}
+              {statusFilter === "acknowledged" && "Alarmes acquittées"}
+              {statusFilter === "resolved" && "Alarmes résolues"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <AlarmTable
               alarms={alarms}
-              isLoading={false}
+              isLoading={isRefreshing}
               onAcknowledge={statusFilter === "active" ? handleAcknowledge : undefined}
+              toolbarRight={refreshButton}
             />
           </CardContent>
         </Card>
       )}
-
-      <div className="flex items-center justify-between pt-4 border-t text-sm text-muted-foreground">
-        <p>
-          {alarms.length} alarme{alarms.length > 1 ? "s" : ""}
-        </p>
-      </div>
     </main>
   );
 }

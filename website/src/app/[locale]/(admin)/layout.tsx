@@ -7,6 +7,7 @@ import { authApi } from "@/lib/api";
 import { useAutoLock } from "@/hooks/useAutoLock";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { clearAgentSession } from "@/lib/agent-session";
 
 export default function AdminGroupLayout({
   children,
@@ -40,9 +41,15 @@ export default function AdminGroupLayout({
   const handleLogout = async () => {
     try {
       await authApi.logout();
-      window.location.href = "/login";
     } catch (error) {
       console.error("Logout error:", error);
+    } finally {
+      try {
+        await clearAgentSession();
+      } catch {
+        // Agent not installed/running: ignore
+      }
+      window.location.href = "/login";
     }
   };
 
