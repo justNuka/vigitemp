@@ -37,27 +37,27 @@
 @layer utilities{
 /* width */
   ::-webkit-scrollbar {
-    top: 20px;
-    width: 0px;
+    width: 10px;
+    height: 10px;
   }
 
   /* Track */
   ::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: transparent;
   }
 
   /* Handle */
   ::-webkit-scrollbar-thumb {
-    background: #888;
+    background: hsl(var(--muted-foreground) / 0.4);
     border-radius: 15px;
   }
 
   /* Handle on hover */
   ::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: hsl(var(--muted-foreground) / 0.6);
   }
   html {
-    overflow-y:scroll;
+    scrollbar-gutter: stable;
   }
 
   .embla {

@@ -301,7 +301,8 @@ export function TestConnectionTab() {
             <TanStackTable
               columns={columns}
               data={probes}
-              pageSize={20}
+              pageSize={10}
+              maxHeight="60vh"
               isLoading={isLoading}
               emptyMessage="Aucune sonde disponible"
               showSearch={true}

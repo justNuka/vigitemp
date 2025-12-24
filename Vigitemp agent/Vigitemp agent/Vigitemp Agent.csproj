@@ -172,6 +172,7 @@
     <Compile Include="MyCustomApplicationContext.cs" />
     <Compile Include="LogTagNet2.9.cs" />
     <Compile Include="HttpServer.cs" />
+    <Compile Include="SessionStore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form_Alert.resx">
       <DependentUpon>Form_Alert.cs</DependentUpon>

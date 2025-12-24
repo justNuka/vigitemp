@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.IO;
 using System.Threading.Tasks;
 using System.Web;
 using System.Windows.Forms;
@@ -45,6 +46,59 @@ namespace VigitempAgent
 
         public static List<int> idLieuxEnAlarmes = new List<int>();
 
+        private static bool IsLoopback(HttpListenerRequest req)
+        {
+            try
+            {
+                var ep = req.RemoteEndPoint;
+                if (ep == null) return false;
+                return IPAddress.IsLoopback(ep.Address);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static string JsonEscape(string value)
+        {
+            if (value == null) return "";
+            return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+        }
+
+        private static string ExtractJsonString(string json, string key)
+        {
+            try
+            {
+                var token = "\"" + key + "\"";
+                var idx = json.IndexOf(token, StringComparison.OrdinalIgnoreCase);
+                if (idx < 0) return null;
+                idx = json.IndexOf(':', idx);
+                if (idx < 0) return null;
+                idx++;
+                while (idx < json.Length && char.IsWhiteSpace(json[idx])) idx++;
+                if (idx >= json.Length) return null;
+                if (json[idx] != '"') return null;
+                idx++;
+                var end = json.IndexOf('"', idx);
+                if (end < 0) return null;
+                return json.Substring(idx, end - idx);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static DateTime? ParseJsonDate(string json, string key)
+        {
+            var val = ExtractJsonString(json, key);
+            if (string.IsNullOrWhiteSpace(val)) return null;
+            DateTime dt;
+            if (!DateTime.TryParse(val, out dt)) return null;
+            return DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+        }
+
         public static string GetLocalIPAddress()
         {
             var host = Dns.GetHostEntry(Dns.GetHostName());
@@ -77,7 +131,16 @@ namespace VigitempAgent
                 HttpListenerResponse resp = ctx.Response;
 
                 resp.Headers.Add("Access-Control-Allow-Origin", "*");
-                resp.Headers.Add("Access-Control-Allow-Methods", "POST, GET");
+                resp.Headers.Add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+                resp.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+                resp.Headers.Add("Access-Control-Max-Age", "600");
+
+                if (req.HttpMethod == "OPTIONS")
+                {
+                    resp.StatusCode = 204;
+                    resp.Close();
+                    continue;
+                }
 
                 //reponse de la fonction renvoyées par le HttpListener
                 string res = "false";
@@ -124,7 +187,14 @@ namespace VigitempAgent
                                     {
                                         idLieuxEnAlarmes.Add(Int32.Parse(postParams["idLieu"]));
                                     }
-                                    frm_alert.Invoke((Action)(() => frm_alert.DisplayAlarm()));
+                                    if (SessionStore.HasValidSession())
+                                    {
+                                        frm_alert.Invoke((Action)(() => frm_alert.DisplayAlarm()));
+                                    }
+                                    else
+                                    {
+                                        frm_alert.Invoke((Action)(() => frm_alert.HideAlarm()));
+                                    }
                                 }
                                 if (postParams["action"] == "hide")
                                 {
@@ -150,6 +220,47 @@ namespace VigitempAgent
 
                             //break;
 
+                            break;
+                        case "/session":
+                            if (!IsLoopback(req))
+                            {
+                                resp.StatusCode = 403;
+                                resp.Close();
+                                break;
+                            }
+
+                            string body;
+                            using (var reader = new StreamReader(req.InputStream, req.ContentEncoding))
+                            {
+                                body = await reader.ReadToEndAsync();
+                            }
+
+                            var session = new SessionInfo();
+                            if (!string.IsNullOrWhiteSpace(body))
+                            {
+                                // Very small JSON parsing for known keys
+                                session = new SessionInfo
+                                {
+                                    Token = ExtractJsonString(body, "token"),
+                                    UserId = ExtractJsonString(body, "userId"),
+                                    Username = ExtractJsonString(body, "username"),
+                                    ExpiresAtUtc = ParseJsonDate(body, "expiresAtUtc") ?? ParseJsonDate(body, "expiresAt"),
+                                };
+                            }
+
+                            SessionStore.Save(session);
+
+                            if (idLieuxEnAlarmes.Count > 0 && SessionStore.HasValidSession())
+                            {
+                                frm_alert.Invoke((Action)(() => frm_alert.DisplayAlarm()));
+                            }
+
+                            resp.ContentType = "application/json";
+                            resp.ContentEncoding = Encoding.UTF8;
+                            resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                            resp.ContentLength64 = 0;
+                            await resp.OutputStream.WriteAsync(new byte[0], 0, 0);
+                            resp.Close();
                             break;
 
                         case "/uploadLogTagConfiguration":
@@ -426,6 +537,41 @@ namespace VigitempAgent
                             break;
                     }
 
+                }
+                else if (req.HttpMethod == "DELETE" && req.Url.AbsolutePath == "/session")
+                {
+                    if (!IsLoopback(req))
+                    {
+                        resp.StatusCode = 403;
+                        resp.Close();
+                        continue;
+                    }
+
+                    SessionStore.Clear();
+                    frm_alert.Invoke((Action)(() => frm_alert.HideAlarm()));
+
+                    resp.StatusCode = 204;
+                    resp.Close();
+                    continue;
+                }
+                else if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/session")
+                {
+                    var s = SessionStore.Get();
+                    var connected = SessionStore.HasValidSession();
+                    var jsonSession = "{\"connected\":" + (connected ? "true" : "false") +
+                                      ",\"username\":\"" + JsonEscape(s != null ? s.Username : "") + "\"" +
+                                      ",\"userId\":\"" + JsonEscape(s != null ? s.UserId : "") + "\"" +
+                                      ",\"expiresAtUtc\":\"" + (s != null && s.ExpiresAtUtc.HasValue ? s.ExpiresAtUtc.Value.ToString("o") : "") + "\"" +
+                                      "}";
+
+                    var bytes = Encoding.UTF8.GetBytes(jsonSession);
+                    resp.ContentType = "application/json";
+                    resp.ContentEncoding = Encoding.UTF8;
+                    resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                    resp.ContentLength64 = bytes.LongLength;
+                    await resp.OutputStream.WriteAsync(bytes, 0, bytes.Length);
+                    resp.Close();
+                    continue;
                 }
                 if (req.HttpMethod == "GET")
                 {

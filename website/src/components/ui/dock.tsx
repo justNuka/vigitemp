@@ -103,7 +103,7 @@ function DockItem({
       aria-label={ariaLabel}
       aria-current={isActive ? 'page' : undefined}
     >
-      {Children.map(children, child =>
+      {Children.toArray(children).map((child) =>
         React.isValidElement(child)
           ? cloneElement(
               child as React.ReactElement<{
@@ -187,23 +187,6 @@ export default function Dock({
 }: DockProps) {
   const mouseX = useMotionValue(Infinity);
   const isHovered = useMotionValue(0);
-  const [isScrollBoosted, setIsScrollBoosted] = useState(false);
-
-  useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout> | undefined;
-
-    function onScroll() {
-      setIsScrollBoosted(true);
-      if (timeout) clearTimeout(timeout);
-      timeout = setTimeout(() => setIsScrollBoosted(false), 180);
-    }
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      if (timeout) clearTimeout(timeout);
-    };
-  }, []);
 
   const hasActive = useMemo(() => items.some((item) => item.isActive), [items]);
   const maxHeight = useMemo(
@@ -242,7 +225,7 @@ export default function Dock({
             magnification={magnification}
             baseItemSize={baseItemSize}
             isActive={item.isActive}
-            forceMagnify={isScrollBoosted}
+            forceMagnify={false}
             ariaLabel={item.ariaLabel ?? (typeof item.label === 'string' ? item.label : undefined)}
           >
             <DockIcon>{item.icon}</DockIcon>

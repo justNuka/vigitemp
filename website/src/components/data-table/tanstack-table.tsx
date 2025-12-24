@@ -11,7 +11,7 @@ import {
   ColumnFiltersState,
   useReactTable,
 } from '@tanstack/react-table';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -49,6 +49,7 @@ export interface TanStackTableProps<TData> {
   maxHeight?: string;
   showSearch?: boolean;
   showPagination?: boolean;
+  toolbarRight?: ReactNode;
 }
 
 /**
@@ -81,6 +82,7 @@ export function TanStackTable<TData extends Record<string, any>>({
   maxHeight,
   showSearch = true,
   showPagination = true,
+  toolbarRight,
 }: TanStackTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -146,24 +148,30 @@ export function TanStackTable<TData extends Record<string, any>>({
     },
   });
 
-  const pageCount = table.getPageCount();
-  const pageIndex = table.getState().pagination.pageIndex;
+  const pageSizeOptions = Array.from(
+    new Set([10, 20, 30, 40, 50, table.getState().pagination.pageSize])
+  ).sort((a, b) => a - b);
 
   return (
     <div className="space-y-4 w-full">
-      {/* Barre de recherche - conditionnelle */}
-      {showSearch && (
-        <div className="flex items-center gap-2">
-          <Input
-            placeholder={searchPlaceholder}
-            value={globalFilter ?? ''}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="max-w-sm"
-            disabled={isLoading}
-          />
-          <span className="text-sm text-muted-foreground">
-            {table.getFilteredRowModel().rows.length} résultat(s)
-          </span>
+      {/* Barre d'outils - conditionnelle */}
+      {(showSearch || toolbarRight) && (
+        <div className="flex items-center gap-2 flex-wrap">
+          {showSearch && (
+            <>
+              <Input
+                placeholder={searchPlaceholder}
+                value={globalFilter ?? ''}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                className="max-w-sm"
+                disabled={isLoading}
+              />
+              <span className="text-sm text-muted-foreground">
+                {table.getFilteredRowModel().rows.length} résultat(s)
+              </span>
+            </>
+          )}
+          {toolbarRight && <div className="ml-auto flex items-center gap-2">{toolbarRight}</div>}
         </div>
       )}
 
@@ -316,14 +324,14 @@ export function TanStackTable<TData extends Record<string, any>>({
 
       {/* Contrôles de pagination - conditionnels */}
       {showPagination && (
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">
-              Page {pageIndex + 1} sur {pageCount || 1} - Total: {table.getFilteredRowModel().rows.length}
+              Page {table.getState().pagination.pageIndex + 1} sur {table.getPageCount()} - Total: {table.getFilteredRowModel().rows.length}
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2 rounded-md border border-border bg-muted/10 px-2 py-1">
             <Button
               variant="outline"
               size="sm"
@@ -340,11 +348,11 @@ export function TanStackTable<TData extends Record<string, any>>({
               }}
               disabled={isLoading}
             >
-              <SelectTrigger className="w-[80px]">
-                <SelectValue />
+              <SelectTrigger className="w-[120px] sm:w-[140px]">
+                <SelectValue aria-label="Taille de page" />
               </SelectTrigger>
               <SelectContent>
-                {[10, 20, 30, 40, 50].map((pageSize) => (
+                {pageSizeOptions.map((pageSize) => (
                   <SelectItem key={pageSize} value={String(pageSize)}>
                     {pageSize} par page
                   </SelectItem>

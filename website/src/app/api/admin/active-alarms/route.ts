@@ -7,6 +7,40 @@ import { prisma } from "@/lib/prisma";
  */
 export async function GET(req: NextRequest) {
   try {
+    const searchParams = req.nextUrl.searchParams;
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const rawLimit = parseInt(searchParams.get("limit") || "10", 10);
+    const limit = Math.min(Math.max(rawLimit, 1), 10);
+    const skip = (page - 1) * limit;
+
+    const where = {
+      OR: [
+        {
+          Est_Acquittee: false,
+          Date_Heure_Fin: null as any,
+        },
+        {
+          Date_Heure_Debut: {
+            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Derni\u00e8res 7 jours
+          },
+        },
+      ],
+    };
+
+    const totalCount = await prisma.t_alarme.count({ where });
+    const total = Math.min(totalCount, 50);
+
+    if (skip >= total) {
+      return NextResponse.json({
+        data: [],
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit) || 1,
+        },
+      });
+    }
     const activeAlarms = await prisma.t_alarme.findMany({
       where: {
         OR: [
@@ -32,7 +66,8 @@ export async function GET(req: NextRequest) {
       orderBy: {
         Date_Heure_Debut: "desc",
       },
-      take: 50,
+      skip,
+      take: Math.min(limit, 50 - skip),
     });
 
     // Formater les données
@@ -46,7 +81,15 @@ export async function GET(req: NextRequest) {
       statut: alarm.Est_Acquittee ? "Acquittée" : "Active",
     }));
 
-    return NextResponse.json(formatted);
+    return NextResponse.json({
+      data: formatted,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit) || 1,
+      },
+    });
   } catch (error) {
     console.error("Error fetching active alarms:", error);
     return NextResponse.json(

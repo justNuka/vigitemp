@@ -246,6 +246,7 @@ export function SondesClient() {
             searchField={["Adresse_Sonde", "Sonde_Numero_Serie", "Lieu", "Etat_Libelle", "Etat_Sonde"]}
             searchPlaceholder="Adresse, numéro de série..."
             isLoading={sondesLoading}
+            maxHeight="60vh"
             emptyMessage="Aucune sonde trouvée"
             selectedRowId={selectedSonde}
             onRowClick={(row: SondesRow) => {

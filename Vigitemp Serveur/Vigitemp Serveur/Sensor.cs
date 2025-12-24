@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Net.Http;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
 namespace Vigitemp_Serveur
@@ -26,6 +27,7 @@ namespace Vigitemp_Serveur
         protected string tmp_numeroSerie = "";
         protected Stopwatch sw;
         private static readonly HttpClient client = new HttpClient();
+        private static readonly ConcurrentDictionary<int, bool> _lastWebAlarmStateByLieu = new ConcurrentDictionary<int, bool>();
 
 
         // Constructeur
@@ -83,6 +85,14 @@ namespace Vigitemp_Serveur
                 // si alarme active (et consigne dépassée)
                 if (notificationActive || dateHeure_reactivationAlarme != default(DateTime))
                 {
+                    // Signal site web (uniquement au changement d'état, pour éviter spam)
+                    var wasActive = _lastWebAlarmStateByLieu.GetOrAdd(m_idLieu, false);
+                    if (!wasActive)
+                    {
+                        _lastWebAlarmStateByLieu[m_idLieu] = true;
+                        _ = AlarmWebNotifier.NotifyAlarmAsync(m_idLieu, p_valeur);
+                    }
+
                     for (int i = 0; i < ips_clients.Count; i++)
                     {
                         //VigitempServeur.Log("envoi de la requete: " + ips_clients[i] + ":8000/alarm?action=show&idLieu=" + m_idLieu.ToString());
@@ -91,6 +101,7 @@ namespace Vigitemp_Serveur
                 }
                 else // si pas alarme (et consigne dépassée)
                 {
+                    _lastWebAlarmStateByLieu[m_idLieu] = false;
                     for (int i = 0; i < ips_clients.Count; i++)
                     {
                         //VigitempServeur.Log("envoi de la requete: " + ips_clients[i] + ":8000/alarm?action=hide&idLieu=" + m_idLieu.ToString());
@@ -100,6 +111,7 @@ namespace Vigitemp_Serveur
             }
             else // si pas consigne dépassée
             {
+                _lastWebAlarmStateByLieu[m_idLieu] = false;
                 //VigitempServeur.Log("Pas de consigne depassée");
                 for (int i = 0; i < ips_clients.Count; i++)
                 {
