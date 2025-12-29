@@ -194,6 +194,7 @@ export function GroupesClient() {
             searchPlaceholder="Numéro, nom du groupe..."
             isLoading={isLoading}
             emptyMessage="Aucun groupe trouvé"
+            maxHeight="60vh"
             selectedRowId={selectedGroupe?.Id_Groupe}
             onRowClick={(row: GroupesRow) => {
               const groupe = groupes?.find(g => g.Id_Groupe === row.Id_Groupe);

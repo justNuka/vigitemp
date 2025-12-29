@@ -286,7 +286,8 @@ export function LieuxClient() {
             columns={columns}
             data={lieux}
             searchPlaceholder="Rechercher les lieux..."
-            pageSize={15}
+            pageSize={10}
+            maxHeight="60vh"
             isLoading={isLoading}
             emptyMessage="Aucun lieu trouvé"
             onRowClick={(row) => setSelectedLieu(row)}

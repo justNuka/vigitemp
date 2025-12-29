@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { routing } from "@/i18n/routing";
 
 interface AutoLockConfig {
   enabled: boolean;
@@ -35,12 +36,17 @@ export function useAutoLock() {
 
   // Fonction de logout automatique
   const handleLogout = useCallback(async () => {
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
+    const maybeLocale = pathname.split("/")[1];
+    const localeInPath = routing.locales.includes(maybeLocale as any) ? maybeLocale : undefined;
+    const loginPath = `${localeInPath ? `/${localeInPath}` : ""}/login?reason=inactivity`;
+
     try {
       await fetch("/api/auth/logout-auto", { method: "POST" });
-      router.push("/login?reason=inactivity");
+      router.push(loginPath);
     } catch (error) {
       console.error("Erreur lors du logout automatique:", error);
-      router.push("/login");
+      router.push(localeInPath ? `/${localeInPath}/login` : "/login");
     }
   }, [router]);
 

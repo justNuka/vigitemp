@@ -248,8 +248,9 @@ Description: ${selectedSite.Commentaire || 'N/A'}
             columns={columns}
             data={sites}
             searchPlaceholder="Rechercher les sites..."
-            pageSize={20}
+            pageSize={10}
             isLoading={isLoading}
+            maxHeight="60vh"
             emptyMessage="Aucun site trouvé"
             onRowClick={(row) => setSelectedSite(row)}
             selectedRowId={selectedSite?.Id_Site}

@@ -79,7 +79,7 @@ export function AuditClient({ logs }: Props) {
       : t("events_summary_filtered", { count: filteredLogs.length, total: logs.length });
 
   return (
-    <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
+    <main className="flex-1 p-4 md:p-4 space-y-4 animate-fade-in">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>

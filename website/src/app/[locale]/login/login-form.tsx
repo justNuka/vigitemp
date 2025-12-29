@@ -29,6 +29,16 @@ import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { setAgentSession } from "@/lib/agent-session";
+
+type LoginResponse = {
+  id: number;
+  username: string;
+  displayName: string;
+  profile: string;
+  authorizations: string[];
+  token: string;
+};
 
 export function LoginForm() {
   const router = useRouter();
@@ -101,8 +111,18 @@ export function LoginForm() {
 
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: async (data: LoginResponse) => {
       toast.success(t("toasts.login_success"));
+
+      try {
+        await setAgentSession({
+          userId: String(data.id),
+          username: data.displayName || data.username,
+        });
+      } catch {
+        // Agent not installed/running: ignore
+      }
+
       router.push("/");
     },
     onError: (error: Error) => {

@@ -52,10 +52,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>265DB7FF130442DD0E27D170A6C9EA50EA9BC961</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>E6D86BA80F7FC4A38006322758AE2B1E323C4D33</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>Vigitemp Agent_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>Vigitemp Agent_1_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
@@ -131,6 +131,7 @@
       <HintPath>..\packages\System.IO.Pipelines.5.0.2\lib\net461\System.IO.Pipelines.dll</HintPath>
     </Reference>
     <Reference Include="System.Management" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
     </Reference>
@@ -161,6 +162,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AgentLog.cs" />
+    <Compile Include="LoopbackSessionServer.cs" />
+    <Compile Include="StatusForm.cs" />
     <Compile Include="Database.cs" />
     <Compile Include="Form_Alert.cs">
       <SubType>Form</SubType>
@@ -172,6 +176,7 @@
     <Compile Include="MyCustomApplicationContext.cs" />
     <Compile Include="LogTagNet2.9.cs" />
     <Compile Include="HttpServer.cs" />
+    <Compile Include="SessionStore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form_Alert.resx">
       <DependentUpon>Form_Alert.cs</DependentUpon>
@@ -197,6 +202,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <None Include="Resources\Poppins-SemiBold.ttf" />
+    <None Include="Vigitemp Agent_1_TemporaryKey.pfx" />
     <None Include="Vigitemp Agent_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
