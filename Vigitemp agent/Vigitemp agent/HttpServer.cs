@@ -954,9 +954,63 @@ namespace VigitempAgent
         {
             //ApplicationConfiguration.Initialize();
             //Application.Run(new MyCustomApplicationContext(args));
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MyCustomApplicationContext(args));
+            try
+            {
+                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+                Application.ThreadException += (_, e) =>
+                {
+                    AgentLog.Error("UI thread exception.", e.Exception);
+                    try
+                    {
+                        MessageBox.Show(
+                            "Vigitemp Agent a rencontré une erreur.\n\n" +
+                            "Un log a été écrit dans %LOCALAPPDATA%\\VigitempAgent\\logs\\agent.log\n\n" +
+                            e.Exception.Message,
+                            "Vigitemp Agent",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error
+                        );
+                    }
+                    catch
+                    {
+                        // ignore
+                    }
+                };
+
+                AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+                {
+                    AgentLog.Error("Unhandled exception.", e.ExceptionObject as Exception);
+                };
+
+                TaskScheduler.UnobservedTaskException += (_, e) =>
+                {
+                    AgentLog.Error("Unobserved task exception.", e.Exception);
+                    e.SetObserved();
+                };
+
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new MyCustomApplicationContext(args));
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("Fatal exception in Main.", ex);
+                try
+                {
+                    MessageBox.Show(
+                        "Vigitemp Agent a rencontré une erreur fatale.\n\n" +
+                        "Un log a été écrit dans %LOCALAPPDATA%\\VigitempAgent\\logs\\agent.log\n\n" +
+                        ex.Message,
+                        "Vigitemp Agent",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                }
+                catch
+                {
+                    // ignore
+                }
+            }
 
 
         }

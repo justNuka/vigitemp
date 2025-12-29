@@ -1,8 +1,8 @@
-﻿using System;
-using System.IO;
+using System;
+using System.Configuration;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -12,87 +12,172 @@ namespace VigitempAgent
 {
     public class MyCustomApplicationContext : ApplicationContext
     {
-        //public string IP_SERVEUR;
-        //public string IP_CLIENT;
         public string SITEWEB_URL;
         private NotifyIcon trayIcon;
-        private Timer sessionTimer;
+        private System.Windows.Forms.Timer sessionTimer;
         private DateTime lastNoSessionTipUtc = DateTime.MinValue;
         private DateTime lastExpiryTipUtc = DateTime.MinValue;
         public static Thread UIThread;
         public Thread serverThread;
         public Form_Alert frm;
 
+        private StatusForm statusForm;
+        private ToolStripMenuItem sessionStatusMenuItem;
+        private LoopbackSessionServer loopbackSessionServer;
+
+        private static (string url, bool explicitOverride) ResolveSiteWebUrl()
+        {
+            try
+            {
+                var env = Environment.GetEnvironmentVariable("VIGITEMP_SITEWEB_URL");
+                if (!string.IsNullOrWhiteSpace(env))
+                {
+                    return (env.Trim(), true);
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            try
+            {
+                var cfg =
+                    ConfigurationManager.AppSettings["VigitempSiteWebUrl"] ??
+                    ConfigurationManager.AppSettings["SITEWEB_URL"] ??
+                    ConfigurationManager.AppSettings["SITE_WEB_URL"];
+
+                if (!string.IsNullOrWhiteSpace(cfg))
+                {
+                    return (cfg.Trim(), true);
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            return ("http://192.168.63.144:3000", false);
+        }
+
         public MyCustomApplicationContext(string[] args)
         {
+            var resolved = ResolveSiteWebUrl();
+            SITEWEB_URL = resolved.url;
 
-            
+            sessionStatusMenuItem = new ToolStripMenuItem("Statut: ...")
+            {
+                Enabled = false
+            };
 
-
-            //enregistrement dans la bdd
-            Database database = new Database();
-            // Ouverture de la connexion SQL
-            //database.InitConnexion();
-
-            Console.WriteLine(Environment.MachineName);
-            database.addPCtoDBClientsList(GetLocalIPAddress(), Environment.MachineName);
-
-            database.InitConnexion();
-            SITEWEB_URL = database.getWebsiteURL();
-            //IP_SERVEUR = database.getServerIp();
-            //IP_CLIENT = GetLocalIPAddress();
-
-            frm = new Form_Alert(SITEWEB_URL);
-            frm.Show();
-            frm.Hide();
-
-            SessionStore.Load();
-
-            // Fermeture de la connexion
-            database.CloseConnexion();
-
-            trayIcon = new NotifyIcon()
+            trayIcon = new NotifyIcon
             {
                 Text = "Vigitemp Agent",
                 Icon = Resources.AppIcon,
-                ContextMenuStrip = new ContextMenuStrip()
+                ContextMenuStrip = new ContextMenuStrip
                 {
                     Items =
                     {
+                        sessionStatusMenuItem,
+                        new ToolStripSeparator(),
+                        new ToolStripMenuItem("Ouvrir la fenêtre", null, OpenStatusWindow),
                         new ToolStripMenuItem("Ouvrir le portail", null, OpenPortal),
-                        new ToolStripMenuItem("Exit", null, Exit),
+                        new ToolStripMenuItem("Relancer l'agent", null, RestartAgent),
+                        new ToolStripSeparator(),
+                        new ToolStripMenuItem("Quitter", null, Exit),
                     }
                 },
                 Visible = true
             };
             trayIcon.BalloonTipClicked += OpenPortal;
-            Console.WriteLine(File.Exists("./texte.txt") ? "File exists." : "File does not exist.");
+            AgentLog.Info("Agent started.");
 
-            if (args.Length > 0)
+            try
             {
-                Console.WriteLine(args[0].ToString());
+                // Enregistrement dans la BDD + récupération URL site web (optionnel)
+                Database database = new Database();
+                database.addPCtoDBClientsList(GetLocalIPAddress(), Environment.MachineName);
+                database.InitConnexion();
+                var url = database.getWebsiteURL();
+                if (!resolved.explicitOverride && !string.IsNullOrWhiteSpace(url))
+                {
+                    SITEWEB_URL = url;
+                }
+                database.CloseConnexion();
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("Database init failed; using configured SITEWEB_URL.", ex);
             }
 
+            try
+            {
+                frm = new Form_Alert(SITEWEB_URL);
+                frm.Show();
+                frm.Hide();
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("Form_Alert init failed.", ex);
+            }
 
+            try
+            {
+                SessionStore.Load();
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("SessionStore.Load failed.", ex);
+            }
 
-            // Instanciation du thread, on spécifie dans le 
-            // délégué ThreadStart le nom de la méthode qui
-            // sera exécutée lorsque l'on appelle la méthode
-            // Start() de notre thread.
-            serverThread = new Thread(new ThreadStart(Start));
-
-            // Lancement du thread
+            serverThread = new Thread(Start) { IsBackground = true };
             serverThread.Start();
 
             UIThread = Thread.CurrentThread;
 
-            sessionTimer = new Timer();
+            sessionTimer = new System.Windows.Forms.Timer();
             sessionTimer.Interval = 60 * 1000;
-            sessionTimer.Tick += (_, __) => CheckSessionAndNotify();
+            sessionTimer.Tick += (_, __) =>
+            {
+                try
+                {
+                    CheckSessionAndNotify();
+                }
+                catch (Exception ex)
+                {
+                    AgentLog.Error("CheckSessionAndNotify failed.", ex);
+                }
+            };
             sessionTimer.Start();
 
-            CheckSessionAndNotify();
+            try
+            {
+                CheckSessionAndNotify();
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("Initial CheckSessionAndNotify failed.", ex);
+            }
+        }
 
+        private void OpenStatusWindow(object sender, EventArgs e)
+        {
+            try
+            {
+                if (statusForm == null || statusForm.IsDisposed)
+                {
+                    statusForm = new StatusForm(() => SITEWEB_URL);
+                }
+
+                statusForm.RefreshStatus();
+                statusForm.Show();
+                statusForm.BringToFront();
+                statusForm.Activate();
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("OpenStatusWindow failed.", ex);
+            }
         }
 
         private string GetLoginUrl()
@@ -100,7 +185,7 @@ namespace VigitempAgent
             var baseUrl = (SITEWEB_URL ?? "").Trim();
             if (string.IsNullOrWhiteSpace(baseUrl))
             {
-                return "http://127.0.0.1:3000/login";
+                return "http://192.168.63.144:3000/login";
             }
 
             return baseUrl.TrimEnd('/') + "/login";
@@ -110,11 +195,11 @@ namespace VigitempAgent
         {
             try
             {
-                Process.Start(GetLoginUrl());
+                Process.Start(new ProcessStartInfo(GetLoginUrl()) { UseShellExecute = true });
             }
-            catch
+            catch (Exception ex)
             {
-                // ignore
+                AgentLog.Error("OpenPortal failed.", ex);
             }
         }
 
@@ -138,6 +223,10 @@ namespace VigitempAgent
             if (!connected)
             {
                 trayIcon.Text = "Vigitemp Agent (déconnecté)";
+                if (sessionStatusMenuItem != null)
+                {
+                    sessionStatusMenuItem.Text = "Statut: déconnecté";
+                }
 
                 if (DateTime.UtcNow - lastNoSessionTipUtc > TimeSpan.FromHours(4))
                 {
@@ -149,10 +238,27 @@ namespace VigitempAgent
                     );
                 }
 
+                try
+                {
+                    statusForm?.RefreshStatus();
+                }
+                catch
+                {
+                    // ignore
+                }
+
                 return;
             }
 
             trayIcon.Text = "Vigitemp Agent";
+            if (sessionStatusMenuItem != null)
+            {
+                var who = !string.IsNullOrWhiteSpace(session?.Username)
+                    ? session.Username
+                    : (!string.IsNullOrWhiteSpace(session?.UserId) ? session.UserId : null);
+
+                sessionStatusMenuItem.Text = who == null ? "Statut: connecté" : ("Statut: connecté (" + who + ")");
+            }
 
             if (session != null && session.ExpiresAtUtc.HasValue)
             {
@@ -171,6 +277,15 @@ namespace VigitempAgent
                     }
                 }
             }
+
+            try
+            {
+                statusForm?.RefreshStatus();
+            }
+            catch
+            {
+                // ignore
+            }
         }
 
         public static string GetLocalIPAddress()
@@ -180,59 +295,170 @@ namespace VigitempAgent
             {
                 if (ip.AddressFamily == AddressFamily.InterNetwork)
                 {
-                    Console.WriteLine(ip);
                     return ip.ToString();
                 }
             }
             throw new Exception("No network adapters with an IPv4 address in the system!");
         }
 
-
-        void Start()
+        private void Start()
         {
-            //try
-            //{
-            // Create a Http server and start listening for incoming connections
-            HttpServer.listener = new HttpListener();
-            HttpServer.listener.Prefixes.Add(HttpServer.url);
-            HttpServer.listener.Prefixes.Add(HttpServer.url_localhost);
-            HttpServer.listener.Start();
-            Console.WriteLine("Listening for connections on {0}", HttpServer.url_localhost);
+            try
+            {
+                try
+                {
+                    HttpServer.listener = new HttpListener();
+                    HttpServer.listener.Prefixes.Add(HttpServer.url_localhost);
+                    HttpServer.listener.Prefixes.Add(HttpServer.url);
+                    HttpServer.listener.Start();
 
-            // Handle requests
-            Task listenTask = HttpServer.HandleIncomingConnections(frm);
-            listenTask.GetAwaiter().GetResult();
+                    AgentLog.Info("HttpServer listening: " + HttpServer.url_localhost);
+                    var listenTask = HttpServer.HandleIncomingConnections(frm);
+                    listenTask.GetAwaiter().GetResult();
+                }
+                catch (HttpListenerException ex) when (ex.ErrorCode == 5)
+                {
+                    // Access denied on HTTP.SYS (missing URLACL). Keep only session API via TcpListener.
+                    AgentLog.Error("HttpServer access denied; starting LoopbackSessionServer only.", ex);
+                    loopbackSessionServer = new LoopbackSessionServer(8000);
+                    loopbackSessionServer.Start();
 
-            // Close the listener
-            Console.WriteLine("Close on {0}", HttpServer.url_localhost);
-            HttpServer.listener.Close();
-            //}
-            //catch (Exception e)
-            //{
-            //    MessageBox.Show(e.ToString(), null, MessageBoxButtons.OK);
-            //    throw;
-            //}
-
+                    while (true)
+                    {
+                        Thread.Sleep(1000);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("HttpServer thread crashed.", ex);
+            }
         }
-        //public static void showNotif()
-        //{
-        //    MessageBox.Show("ALARM", null, MessageBoxButtons.OK);
-        //    frm.showAlert("alarm");
 
-        //}
-
-        void Exit(object sender, EventArgs e)
+        private void Exit(object sender, EventArgs e)
         {
-            trayIcon.Visible = false;
+            Shutdown(relaunch: false);
+        }
+
+        private void RestartAgent(object sender, EventArgs e)
+        {
+            Shutdown(relaunch: true);
+        }
+
+        private void Shutdown(bool relaunch)
+        {
+            try
+            {
+                AgentLog.Info(relaunch ? "Shutdown requested (relaunch)." : "Shutdown requested.");
+            }
+            catch
+            {
+                // ignore
+            }
+
             if (sessionTimer != null)
             {
-                sessionTimer.Stop();
-                sessionTimer.Dispose();
+                try
+                {
+                    sessionTimer.Stop();
+                    sessionTimer.Dispose();
+                }
+                catch
+                {
+                    // ignore
+                }
                 sessionTimer = null;
             }
-            serverThread.Abort();
-            serverThread.Join();
-            Application.Exit();
+
+            try
+            {
+                if (HttpServer.listener != null)
+                {
+                    try { HttpServer.listener.Stop(); } catch { /* ignore */ }
+                    try { HttpServer.listener.Close(); } catch { /* ignore */ }
+                    HttpServer.listener = null;
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            try
+            {
+                loopbackSessionServer?.Stop();
+            }
+            catch
+            {
+                // ignore
+            }
+
+            try
+            {
+                if (serverThread != null && serverThread.IsAlive)
+                {
+                    if (!serverThread.Join(1500))
+                    {
+                        try { serverThread.Interrupt(); } catch { /* ignore */ }
+                    }
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            if (relaunch)
+            {
+                try
+                {
+                    var exePath = Application.ExecutablePath;
+                    Process.Start(new ProcessStartInfo(exePath) { UseShellExecute = true });
+                }
+                catch (Exception ex)
+                {
+                    AgentLog.Error("Failed to relaunch agent.", ex);
+                }
+            }
+
+            try
+            {
+                trayIcon.Visible = false;
+                trayIcon.Dispose();
+            }
+            catch
+            {
+                // ignore
+            }
+
+            try
+            {
+                statusForm?.Close();
+            }
+            catch
+            {
+                // ignore
+            }
+
+            try
+            {
+                ExitThread();
+            }
+            catch
+            {
+                // ignore
+            }
+
+            try
+            {
+                Application.ExitThread();
+            }
+            catch
+            {
+                // ignore
+            }
+
+            Environment.Exit(0);
         }
     }
 }
