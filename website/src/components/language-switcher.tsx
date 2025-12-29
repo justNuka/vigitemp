@@ -29,7 +29,9 @@ export function LanguageSwitcher() {
   const pathname = usePathname();
 
   const handleLanguageChange = (newLanguage: Language) => {
-    router.push(pathname || "/", { locale: newLanguage });
+    const search = typeof window !== "undefined" ? window.location.search : "";
+    const href = `${pathname || "/"}${search}`;
+    router.push(href, { locale: newLanguage });
   };
 
   return (

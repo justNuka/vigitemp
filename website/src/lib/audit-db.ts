@@ -18,23 +18,34 @@ export async function writeAuditToDatabase(params: {
     const SERVEUR_ID = 1;
     const TABLE_NAME = "tm_journal";
 
-    // Utiliser la table de compteur pour obtenir le prochain ID de manière thread-safe
-    const counter = await prismaMesure.tm_compteur_id_table.upsert({
+    // D'abord, s'assurer que la ligne de compteur existe
+    await prismaMesure.tm_compteur_id_table.upsert({
       where: {
         Id_Serveur_BDD_Nom_Table: {
           Id_Serveur_BDD: SERVEUR_ID,
           Nom_Table: TABLE_NAME,
         },
       },
-      update: {
-        Compteur_Id: {
-          increment: 1,
-        },
-      },
+      update: {},
       create: {
         Id_Serveur_BDD: SERVEUR_ID,
         Nom_Table: TABLE_NAME,
-        Compteur_Id: 1,
+        Compteur_Id: 0,
+      },
+    });
+
+    // Incrémenter et récupérer l'ID en une seule opération atomique
+    const counter = await prismaMesure.tm_compteur_id_table.update({
+      where: {
+        Id_Serveur_BDD_Nom_Table: {
+          Id_Serveur_BDD: SERVEUR_ID,
+          Nom_Table: TABLE_NAME,
+        },
+      },
+      data: {
+        Compteur_Id: {
+          increment: 1,
+        },
       },
     });
 
