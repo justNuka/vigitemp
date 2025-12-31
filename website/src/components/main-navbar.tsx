@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { usePathname } from "@/i18n/navigation";
 import {
@@ -11,9 +11,6 @@ import {
   Users,
   MapPin,
   Building2,
-  HardDrive,
-  BarChart3,
-  Layout,
   Menu,
   X,
 } from "lucide-react";
@@ -28,10 +25,7 @@ const menuItems = [
   { label: "Groupes", href: "/admin/groupes", icon: Users },
   { label: "Lieux", href: "/admin/lieux", icon: MapPin },
   { label: "Sites", href: "/admin/sites", icon: Building2 },
-  { label: "Datalogger", href: "/admin/datalogger", icon: HardDrive },
   { label: "Outils", href: "/admin/outils", icon: Wrench },
-  { label: "Plans", href: "/admin/plans", icon: Layout },
-  { label: "Statistiques", href: "/admin/statistiques", icon: BarChart3 },
 ];
 
 export function MainNavbar() {

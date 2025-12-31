@@ -1,16 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getAuthenticatedUser } from "@/lib/auth";
-import { withLogging } from "@/lib/api-logger";
+import { NextRequest } from "next/server"
+import { prisma } from "@/lib/prisma"
+import { getAuthenticatedUser } from "@/lib/auth"
+import { withLogging } from "@/lib/api-logger"
+import { apiError, apiOk } from "@/lib/api-response"
 
 export const GET = withLogging(async (req: NextRequest) => {
   try {
-    const user = getAuthenticatedUser(req);
+    const user = getAuthenticatedUser(req)
     if (!user) {
-      return NextResponse.json(
-        { error: "Non authentifié" },
-        { status: 401 }
-      );
+      return apiError(401, "unauthenticated", "Non authentifié")
     }
 
     const types = await prisma.t_etalon_type.findMany({
@@ -23,14 +21,11 @@ export const GET = withLogging(async (req: NextRequest) => {
       orderBy: {
         Type_Etalon: "asc",
       },
-    });
+    })
 
-    return NextResponse.json(types);
+    return apiOk(types)
   } catch (error) {
-    console.error("Etalon types fetch error:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la récupération des types d'étalons" },
-      { status: 500 }
-    );
+    console.error("Etalon types fetch error:", error)
+    return apiError(500, "etalon_types_fetch_failed", "Erreur lors de la récupération des types d'étalons")
   }
-});
+})

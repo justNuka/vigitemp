@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { postJson } from "@/lib/http";
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -15,11 +17,6 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
-async function isAuthenticated() {
-  const res = await fetch("/api/me", { credentials: "include" });
-  return res.ok;
-}
-
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return null;
   const registration = await navigator.serviceWorker.register("/service-worker.js");
@@ -29,14 +26,9 @@ async function registerServiceWorker() {
 
 async function postSubscription(subscription: PushSubscription) {
   const payload = subscription.toJSON();
-  await fetch("/api/push/subscribe", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({
-      ...payload,
-      userAgent: navigator.userAgent,
-    }),
+  await postJson<{ success: true }>("/api/push/subscribe", {
+    ...payload,
+    userAgent: navigator.userAgent,
   });
 }
 
@@ -61,7 +53,8 @@ async function ensurePushSubscription() {
 export function GlobalAppEffects() {
   const router = useRouter();
   const seenAlarmIdsRef = useRef<Set<number>>(new Set());
-  const alarmStreamUrl = useMemo(() => "/api/alarms/stream", []);
+  const alarmStreamUrl = useMemo(() => "/api/alarmes/stream", []);
+  const { data: currentUser } = useCurrentUser();
 
   useEffect(() => {
     const eventSource = new EventSource(alarmStreamUrl);
@@ -87,7 +80,7 @@ export function GlobalAppEffects() {
           description: `Valeur: ${value}`,
           action: {
             label: "Voir",
-            onClick: () => router.push("/dashboard/surveillance"),
+            onClick: () => router.push("/surveillance"),
           },
         });
       } catch {
@@ -97,8 +90,7 @@ export function GlobalAppEffects() {
 
     const onError = async () => {
       // Si l'utilisateur n'est pas authentifié, on coupe pour éviter de spammer.
-      const ok = await isAuthenticated().catch(() => false);
-      if (!ok) {
+      if (!currentUser) {
         eventSource.close();
       }
     };
@@ -111,14 +103,12 @@ export function GlobalAppEffects() {
       eventSource.removeEventListener("error", onError);
       eventSource.close();
     };
-  }, [alarmStreamUrl, router]);
+  }, [alarmStreamUrl, currentUser, router]);
 
   useEffect(() => {
     const run = async () => {
       if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
-
-      const ok = await isAuthenticated().catch(() => false);
-      if (!ok) return;
+      if (!currentUser) return;
 
       if (Notification.permission === "granted") {
         await ensurePushSubscription().catch(() => null);
@@ -149,7 +139,7 @@ export function GlobalAppEffects() {
     };
 
     void run();
-  }, []);
+  }, [currentUser]);
 
   return null;
 }

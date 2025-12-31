@@ -111,10 +111,9 @@ export default function AlarmsPerfTestPage() {
 }
 
 async function AlarmStatsDisplay() {
-  const start = Date.now();
   // const stats = await ServerAlarmStats();
   const stats = { active: 0, acknowledged: 0, resolved: 0, total: 0 };
-  const duration = Date.now() - start;
+  const duration = 0;
 
   return (
     <div className="space-y-2">
@@ -144,10 +143,9 @@ async function AlarmStatsDisplay() {
 }
 
 async function AlarmsListDisplay() {
-  const start = Date.now();
   // const alarms = await ServerAlarms();
   const alarms: any[] = [];
-  const duration = Date.now() - start;
+  const duration = 0;
 
   return (
     <div className="space-y-2">

@@ -1,172 +1,159 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { z } from "zod";
-import bcrypt from "bcryptjs";
-import { generateToken } from "@/lib/jwt";
-import { createAuditLog, AUDIT_CODES } from "@/lib/audit";
-import { log } from "@/lib/logger";
-import { getRequestContext } from "@/lib/api-logger";
+import { NextRequest, NextResponse } from "next/server"
+import bcrypt from "bcryptjs"
+import { z } from "zod"
+
+import { getRequestContext, withLogging } from "@/lib/api-logger"
+import { apiError, apiOk } from "@/lib/api-response"
+import { generateToken } from "@/lib/jwt"
+import { log } from "@/lib/logger"
+import { prisma } from "@/lib/prisma"
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username required"),
   password: z.string().min(1, "Password required"),
-});
+})
 
-export async function POST(req: NextRequest) {
-  const { ip } = getRequestContext(req);
-  
+export const POST = withLogging(async (req: NextRequest) => {
+  const { ip } = getRequestContext(req)
+
   try {
-    const body = await req.json();
-    const { username, password } = loginSchema.parse(body);
+    const body = await req.json()
+    const { username, password } = loginSchema.parse(body)
 
-    // Find user by username
     const user = await prisma.t_utilisateur.findFirst({
       where: {
         Login: username,
         Est_Archive: false,
       },
-    });
+    })
 
     if (!user) {
-      log.auth.login(username, ip, false, "User not found");
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      );
+      log.auth.login(username, ip, false, "User not found")
+      return apiError(401, "invalid_credentials", "Invalid credentials")
     }
 
-    // Vérifier que l'utilisateur a un mot de passe
     if (!user.Mot_De_Passe) {
-      log.auth.login(username, ip, false, "No password set");
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      );
+      log.auth.login(username, ip, false, "No password set")
+      return apiError(401, "invalid_credentials", "Invalid credentials")
     }
 
-    // Vérifier le mot de passe avec bcrypt
-    const passwordValid = await bcrypt.compare(password, user.Mot_De_Passe as string);
-    console.log(`[LOGIN-DEBUG] ${username} - Password valid: ${passwordValid}`);
-    
+    const passwordValid = await bcrypt.compare(password, user.Mot_De_Passe as string)
+    console.log(`[LOGIN-DEBUG] ${username} - Password valid: ${passwordValid}`)
+
     if (!passwordValid) {
-      log.auth.login(username, ip, false, "Invalid password");
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      );
+      log.auth.login(username, ip, false, "Invalid password")
+      return apiError(401, "invalid_credentials", "Invalid credentials")
     }
 
     // Vérifier l'expiration du mot de passe (paramètres CFR21)
     const cfr21Params = await prisma.t_parametre.findMany({
-      where: {
-        Section: "CFR21",
-      },
-      select: {
-        Mot_Cle: true,
-        Valeur: true,
-      },
-    });
+      where: { Section: "CFR21" },
+      select: { Mot_Cle: true, Valeur: true },
+    })
 
-    console.log(`[LOGIN-DEBUG] ${username} - CFR21 Params:`, cfr21Params);
+    console.log(`[LOGIN-DEBUG] ${username} - CFR21 Params:`, cfr21Params)
 
-    const expiryEnabled = cfr21Params.find(p => p.Mot_Cle === "ACTIVATION_EXPIRATION_MOT_DE_PASSE")?.Valeur === "1" || cfr21Params.find(p => p.Mot_Cle === "ACTIVATION_EXPIRATION_MOT_DE_PASSE")?.Valeur?.toLowerCase() === "true";
-    // Utiliser le bon paramètre: VALIDITE_MOT_DE_PASSE_JOURS (au lieu de JOURS_VALIDITE_MOT_DE_PASSE)
-    const expiryDays = parseInt(cfr21Params.find(p => p.Mot_Cle === "VALIDITE_MOT_DE_PASSE_JOURS")?.Valeur || "90");
+    const expiryEnabled =
+      cfr21Params.find((p) => p.Mot_Cle === "ACTIVATION_EXPIRATION_MOT_DE_PASSE")?.Valeur ===
+        "1" ||
+      cfr21Params
+        .find((p) => p.Mot_Cle === "ACTIVATION_EXPIRATION_MOT_DE_PASSE")
+        ?.Valeur?.toLowerCase() === "true"
 
-    console.log(`[LOGIN-DEBUG] ${username} - Expiry enabled: ${expiryEnabled}, Expiry days: ${expiryDays}`);
-    console.log(`[LOGIN-DEBUG] ${username} - Date_Derniere_Modification_MDP: ${user.Date_Derniere_Modification_MDP}`);
-    console.log(`[LOGIN-DEBUG] ${username} - Est_Mot_De_Passe_Temporaire: ${user.Est_Mot_De_Passe_Temporaire}`);
+    const expiryDays = parseInt(
+      cfr21Params.find((p) => p.Mot_Cle === "VALIDITE_MOT_DE_PASSE_JOURS")?.Valeur || "90",
+    )
 
-    // Si expiryEnabled ET expiryDays > 0 (0 = pas d'expiration)
+    console.log(
+      `[LOGIN-DEBUG] ${username} - Expiry enabled: ${expiryEnabled}, Expiry days: ${expiryDays}`,
+    )
+    console.log(
+      `[LOGIN-DEBUG] ${username} - Date_Derniere_Modification_MDP: ${user.Date_Derniere_Modification_MDP}`,
+    )
+    console.log(
+      `[LOGIN-DEBUG] ${username} - Est_Mot_De_Passe_Temporaire: ${user.Est_Mot_De_Passe_Temporaire}`,
+    )
+
     if (expiryEnabled && expiryDays > 0 && user.Date_Derniere_Modification_MDP) {
       const daysSinceLastChange = Math.floor(
-        (Date.now() - new Date(user.Date_Derniere_Modification_MDP).getTime()) / (1000 * 60 * 60 * 24)
-      );
+        (Date.now() - new Date(user.Date_Derniere_Modification_MDP).getTime()) /
+          (1000 * 60 * 60 * 24),
+      )
 
-      console.log(`[LOGIN-DEBUG] ${username} - Days since last change: ${daysSinceLastChange} (threshold: ${expiryDays})`);
+      console.log(
+        `[LOGIN-DEBUG] ${username} - Days since last change: ${daysSinceLastChange} (threshold: ${expiryDays})`,
+      )
 
       if (daysSinceLastChange >= expiryDays) {
-        console.log(`[LOGIN-DEBUG] ${username} - PASSWORD EXPIRED: ${daysSinceLastChange} >= ${expiryDays}`);
-        return NextResponse.json(
+        console.log(
+          `[LOGIN-DEBUG] ${username} - PASSWORD EXPIRED: ${daysSinceLastChange} >= ${expiryDays}`,
+        )
+        return apiError(
+          403,
+          "password_expired",
+          `Votre mot de passe a expiré (dernière modification il y a ${daysSinceLastChange} jours). Veuillez le changer.`,
           {
-            error: "password_expired",
-            message: `Votre mot de passe a expiré (dernière modification il y a ${daysSinceLastChange} jours). Veuillez le changer.`,
-            requirePasswordChange: true,
+          requirePasswordChange: true,
           },
-          { status: 403 }
-        );
+        )
       }
     }
 
-    // Vérifier si le mot de passe est temporaire (première connexion)
     if (user.Est_Mot_De_Passe_Temporaire) {
-      console.log(`[LOGIN-DEBUG] ${username} - TEMPORARY PASSWORD DETECTED`);
-      return NextResponse.json(
+      console.log(`[LOGIN-DEBUG] ${username} - TEMPORARY PASSWORD DETECTED`)
+      return apiError(
+        403,
+        "temporary_password",
+        "Vous devez changer votre mot de passe temporaire avant de continuer.",
         {
-          error: "temporary_password",
-          message: "Vous devez changer votre mot de passe temporaire avant de continuer.",
-          requirePasswordChange: true,
-          userId: user.Id_Utilisateur,
+        requirePasswordChange: true,
+        userId: user.Id_Utilisateur,
         },
-        { status: 403 }
-      );
+      )
     }
-    // Generate JWT token — profile is stored as a string in `Profil_Utilisateur`.
+
     // Authorizations relation is not available on `t_utilisateur` in the current schema,
     // so default to an empty array here.
-    const authorizations: string[] = [];
+    const authorizations: string[] = []
 
     const token = generateToken({
       userId: user.Id_Utilisateur,
       username: user.Login || "user",
       profile: user.Profil_Utilisateur || "user",
       authorizations,
-    });
+    })
 
-    // Return user data
     const userData = {
       id: user.Id_Utilisateur,
       username: user.Login || "user",
-      displayName: `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login || "user",
+      displayName:
+        `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login || "user",
       profile: user.Profil_Utilisateur || "user",
       authorizations,
       token,
-    };
+    }
 
-    const response = NextResponse.json(userData);
+    const response = apiOk(userData)
 
-    // Set JWT cookie
     response.cookies.set("auth-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
-    });
+    })
 
-    // Créer l'audit de connexion
-    await createAuditLog({
-      code: AUDIT_CODES.CONNEXION,
-      username: user.Login || "unknown",
+    log.auth.login(username, ip, true, undefined, {
+      userId: user.Id_Utilisateur,
       userProfile: user.Profil_Utilisateur || "user",
-      comment: `Connexion de l'utilisateur ${user.Login}`,
-    });
+    })
 
-    // Logger la connexion réussie
-    log.auth.login(username, ip, true);
-
-    return response;
+    return response
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid input" },
-        { status: 400 }
-      );
+      return apiError(400, "invalid_input", "Invalid input")
     }
 
-    console.error("Login error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error("Login error:", error)
+    return apiError(500, "internal_error", "Internal server error")
   }
-}
+})

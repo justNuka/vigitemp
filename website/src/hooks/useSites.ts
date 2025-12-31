@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { getJson } from "@/lib/http";
 
 export interface SiteAdmin {
   Id_Site: number;
@@ -14,15 +15,11 @@ export interface SiteSimple {
 }
 
 async function fetchSitesAdmin(): Promise<SiteAdmin[]> {
-  const response = await fetch("/api/sites?format=admin");
-  if (!response.ok) throw new Error("Failed to fetch sites");
-  return response.json();
+  return getJson<SiteAdmin[]>("/api/sites?format=admin");
 }
 
 async function fetchSitesSimple(): Promise<SiteSimple[]> {
-  const response = await fetch("/api/sites");
-  if (!response.ok) throw new Error("Failed to fetch sites");
-  return response.json();
+  return getJson<SiteSimple[]>("/api/sites");
 }
 
 export function useSites(enabled = true) {

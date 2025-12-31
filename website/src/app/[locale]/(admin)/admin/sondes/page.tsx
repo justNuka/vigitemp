@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { PageHeader } from "@/components/page-header";
-import { SondesClient } from "./sondes-client";
+import { ProbesClient } from "./probes-client";
 
 export const metadata: Metadata = {
   title: "Gestion des Sondes - Vigitemp",
@@ -16,7 +16,7 @@ export default function SondesPage() {
       />
 
       <div className="space-y-6 p-6">
-        <SondesClient />
+        <ProbesClient />
       </div>
     </div>
   );

@@ -1,68 +1,52 @@
-import { revalidateTag } from "next/cache";
-import { NextResponse } from "next/server";
-import { FEATURE_FLAGS } from "@/lib/feature-flags";
+import { revalidateTag } from "next/cache"
+import { NextRequest } from "next/server"
+import { FEATURE_FLAGS } from "@/lib/feature-flags"
+import { withAdminLogging } from "@/lib/api-wrappers"
+import { apiError, apiOk } from "@/lib/api-response"
 
-export async function POST(request: Request) {
-  // API de revalidation désactivée en production
+export const POST = withAdminLogging(async (request: NextRequest) => {
   if (!FEATURE_FLAGS.enableRevalidateAPI) {
-    return NextResponse.json(
-      { error: "This API is only available in development" },
-      { status: 403 }
-    );
+    return apiError(403, "forbidden", "This API is only available in development")
   }
+
   try {
-    const body = await request.json();
-    const { tag } = body;
+    const body = await request.json()
+    const { tag } = body
 
     if (!tag) {
-      return NextResponse.json(
-        { error: "Tag parameter is required" },
-        { status: 400 }
-      );
+      return apiError(400, "missing_fields", "Tag parameter is required")
     }
 
-    // Invalider le cache pour le tag spécifié
-    revalidateTag(tag, "default");
+    revalidateTag(tag, "default")
 
-    return NextResponse.json({
+    return apiOk({
       success: true,
       message: `Cache invalidated for tag: ${tag}`,
       timestamp: new Date().toISOString(),
-    });
+    })
   } catch (error) {
-    console.error("Error revalidating cache:", error);
-    return NextResponse.json(
-      { error: "Failed to revalidate cache" },
-      { status: 500 }
-    );
+    console.error("Error revalidating cache:", error)
+    return apiError(500, "revalidate_failed", "Failed to revalidate cache")
   }
-}
+})
 
-// GET pour invalider tous les tags dashboard
-export async function GET() {
-  // API de revalidation désactivée en production
+export const GET = withAdminLogging(async (_req: NextRequest) => {
   if (!FEATURE_FLAGS.enableRevalidateAPI) {
-    return NextResponse.json(
-      { error: "This API is only available in development" },
-      { status: 403 }
-    );
+    return apiError(403, "forbidden", "This API is only available in development")
   }
 
   try {
-    revalidateTag("dashboard-stats", "default");
-    revalidateTag("locations-list", "default");
+    revalidateTag("dashboard-stats", "default")
+    revalidateTag("locations-list", "default")
 
-    return NextResponse.json({
+    return apiOk({
       success: true,
       message: "All dashboard caches invalidated",
       tags: ["dashboard-stats", "locations-list"],
       timestamp: new Date().toISOString(),
-    });
+    })
   } catch (error) {
-    console.error("Error revalidating caches:", error);
-    return NextResponse.json(
-      { error: "Failed to revalidate caches" },
-      { status: 500 }
-    );
+    console.error("Error revalidating caches:", error)
+    return apiError(500, "revalidate_failed", "Failed to revalidate caches")
   }
-}
+})

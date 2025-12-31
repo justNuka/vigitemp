@@ -12,24 +12,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { FirstLoginForm } from "@/components/auth/first-login-form";
 import { toast } from "sonner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { setAgentSession } from "@/lib/agent-session";
+import { HttpError, postJson } from "@/lib/http";
+import { LoginCredentialsForm } from "./_components/login-credentials-form";
+import { ForgotPasswordDialog } from "./_components/forgot-password-dialog";
+import { LoginInactivityAlert } from "./_components/login-inactivity-alert";
 
 type LoginResponse = {
   id: number;
@@ -40,6 +31,14 @@ type LoginResponse = {
   token: string;
 };
 
+type AuthApiErrorPayload = {
+  ok: false;
+  error: string;
+  message: string;
+  requirePasswordChange?: boolean;
+  userId?: number;
+};
+
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -48,19 +47,16 @@ export function LoginForm() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [showInactivityMessage, setShowInactivityMessage] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [showFirstLogin, setShowFirstLogin] = useState(false);
-  const [firstLoginUserId, setFirstLoginUserId] = useState<string | null>(null);
   const [resetEmail, setResetEmail] = useState("");
   const [resetSuccess, setResetSuccess] = useState(false);
 
-  useEffect(() => {
-    const reason = searchParams.get("reason");
-    const passwordChanged = searchParams.get("passwordChanged");
+  const reason = searchParams.get("reason");
+  const passwordChanged = searchParams.get("passwordChanged");
+  const showInactivityMessage = reason === "inactivity";
 
-    if (reason === "inactivity") {
-      setShowInactivityMessage(true);
+  useEffect(() => {
+    if (showInactivityMessage) {
       toast.warning(t("toasts.session_expired.title"), {
         description: t("toasts.session_expired.description"),
       });
@@ -71,45 +67,27 @@ export function LoginForm() {
         description: t("toasts.password_changed.description"),
       });
     }
-  }, [searchParams, t]);
+  }, [passwordChanged, showInactivityMessage, t]);
 
   const loginMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        if (error.requirePasswordChange) {
-          if (error.error === "temporary_password") {
-            setFirstLoginUserId(error.userId);
-            setShowFirstLogin(true);
-            throw new Error("temporary_password");
-          }
-
-          try {
-            const tokenRes = await fetch("/api/auth/temp-password-token", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ username }),
-            });
-            if (tokenRes.ok) {
+      try {
+        return await postJson<LoginResponse>("/api/auth/login", { username, password });
+      } catch (err) {
+        if (err instanceof HttpError) {
+          const payload = err.payload as AuthApiErrorPayload | undefined;
+          if (payload?.requirePasswordChange) {
+            try {
+              await postJson<{ success: true }>("/api/auth/temp-password-token", { username });
               router.push("/force-password-change");
-            } else {
+            } catch {
               toast.error(t("toasts.redirect_error"));
             }
-          } catch {
-            toast.error(t("toasts.security_error"));
+            throw new Error("password_change_required");
           }
-          throw new Error("password_change_required");
         }
-        throw new Error("Login failed");
+        throw err;
       }
-
-      return res.json();
     },
     onSuccess: async (data: LoginResponse) => {
       toast.success(t("toasts.login_success"));
@@ -126,11 +104,7 @@ export function LoginForm() {
       router.push("/");
     },
     onError: (error: Error) => {
-      if (error.message === "temporary_password") {
-        toast.info(t("toasts.first_login.title"), {
-          description: t("toasts.first_login.description"),
-        });
-      } else if (error.message !== "password_change_required") {
+      if (error.message !== "password_change_required") {
         toast.error(t("toasts.bad_credentials"));
       }
     },
@@ -147,18 +121,7 @@ export function LoginForm() {
 
   const resetPasswordMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch("/api/auth/request-password-reset", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: resetEmail }),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || t("toasts.reset_request_error"));
-      }
-
-      return res.json();
+      return postJson<{ message: string }>("/api/auth/request-password-reset", { email: resetEmail });
     },
     onSuccess: () => {
       setResetSuccess(true);
@@ -210,80 +173,34 @@ export function LoginForm() {
           <CardHeader>
             <CardTitle>{t("card.title")}</CardTitle>
             <CardDescription>
-              {showFirstLogin ? t("card.first_login") : t("card.description")}
+              {t("card.description")}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {showFirstLogin && firstLoginUserId ? (
-              <FirstLoginForm
-                userId={firstLoginUserId}
-                onSuccess={() => {
-                  toast.success(t("toasts.password_changed_after_first_login.title"), {
-                    description: t("toasts.password_changed_after_first_login.description"),
-                  });
-                  setShowFirstLogin(false);
-                  setFirstLoginUserId(null);
-                  setUsername("");
-                  setPassword("");
+            <>
+              {showInactivityMessage && (
+                <LoginInactivityAlert message={t("inactivity_alert")} />
+              )}
+
+              <LoginCredentialsForm
+                username={username}
+                password={password}
+                onUsernameChange={setUsername}
+                onPasswordChange={setPassword}
+                onSubmit={handleSubmit}
+                onForgotPassword={() => setShowForgotPassword(true)}
+                isSubmitting={loginMutation.isPending}
+                translations={{
+                  usernameLabel: t("fields.username_label"),
+                  usernamePlaceholder: t("fields.username_placeholder"),
+                  passwordLabel: t("fields.password_label"),
+                  passwordPlaceholder: t("fields.password_placeholder"),
+                  signingIn: t("buttons.signing_in"),
+                  signIn: t("buttons.sign_in"),
+                  forgotPassword: t("buttons.forgot_password"),
                 }}
               />
-            ) : (
-              <>
-                {showInactivityMessage && (
-                  <Alert
-                    variant="default"
-                    className="mb-4 border-yellow-500/50 bg-yellow-500/10"
-                  >
-                    <AlertCircle className="h-4 w-4 text-yellow-600" />
-                    <AlertDescription className="text-yellow-600">
-                      {t("inactivity_alert")}
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="username">{t("fields.username_label")}</Label>
-                    <Input
-                      id="username"
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder={t("fields.username_placeholder")}
-                      required
-                      autoFocus
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="password">{t("fields.password_label")}</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder={t("fields.password_placeholder")}
-                      required
-                    />
-                  </div>
-
-                  <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-                    {loginMutation.isPending ? t("buttons.signing_in") : t("buttons.sign_in")}
-                  </Button>
-
-                  <div className="text-center">
-                    <button
-                      type="button"
-                      onClick={() => setShowForgotPassword(true)}
-                      className="text-sm text-blue-600 hover:underline"
-                      disabled={loginMutation.isPending}
-                    >
-                      {t("buttons.forgot_password")}
-                    </button>
-                  </div>
-                </form>
-              </>
-            )}
+            </>
           </CardContent>
         </Card>
 
@@ -294,61 +211,27 @@ export function LoginForm() {
         Vigitemp - MC2 Technologies
       </p>
 
-      <Dialog open={showForgotPassword} onOpenChange={handleCloseForgotPassword}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("reset_modal.title")}</DialogTitle>
-            <DialogDescription>{t("reset_modal.description")}</DialogDescription>
-          </DialogHeader>
-
-          {resetSuccess ? (
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                <div className="rounded-full bg-green-100 p-3">
-                  <CheckCircle2 className="h-8 w-8 text-green-600" />
-                </div>
-              </div>
-              <p className="text-center text-sm text-muted-foreground">
-                {t("reset_modal.success_message")}
-              </p>
-              <Button onClick={handleCloseForgotPassword} className="w-full">
-                {tCommon("close")}
-              </Button>
-            </div>
-          ) : (
-            <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="reset-email">{t("fields.reset_email_label")}</Label>
-                <Input
-                  id="reset-email"
-                  type="email"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  placeholder={t("fields.reset_email_placeholder")}
-                  required
-                  autoFocus
-                  disabled={resetPasswordMutation.isPending}
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCloseForgotPassword}
-                  disabled={resetPasswordMutation.isPending}
-                  className="flex-1"
-                >
-                  {tCommon("cancel")}
-                </Button>
-                <Button type="submit" disabled={resetPasswordMutation.isPending} className="flex-1">
-                  {resetPasswordMutation.isPending ? t("buttons.sending") : t("buttons.send")}
-                </Button>
-              </div>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
+      <ForgotPasswordDialog
+        open={showForgotPassword}
+        onOpenChange={handleCloseForgotPassword}
+        success={resetSuccess}
+        email={resetEmail}
+        onEmailChange={setResetEmail}
+        onSubmit={handleResetPasswordSubmit}
+        onClose={handleCloseForgotPassword}
+        isSubmitting={resetPasswordMutation.isPending}
+        translations={{
+          title: t("reset_modal.title"),
+          description: t("reset_modal.description"),
+          emailLabel: t("fields.reset_email_label"),
+          emailPlaceholder: t("fields.reset_email_placeholder"),
+          successMessage: t("reset_modal.success_message"),
+          cancel: tCommon("cancel"),
+          send: t("buttons.send"),
+          sending: t("buttons.sending"),
+          close: tCommon("close"),
+        }}
+      />
     </div>
   );
 }

@@ -1,32 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getAuthenticatedUser } from "@/lib/auth";
-import { withLogging } from "@/lib/api-logger";
+import { NextRequest } from "next/server"
 
-export const GET = withLogging(async (req: NextRequest) => {
+import { withAuthLogging } from "@/lib/api-wrappers"
+import { apiError, apiOk } from "@/lib/api-response"
+import { prisma } from "@/lib/prisma"
+
+export const GET = withAuthLogging(async (req: NextRequest) => {
   try {
-    const user = getAuthenticatedUser(req);
-    if (!user) {
-      return NextResponse.json(
-        { error: "Non authentifié" },
-        { status: 401 }
-      );
-    }
-
-    const { searchParams } = new URL(req.url);
-    const serieNum = searchParams.get("serie");
+    const { searchParams } = new URL(req.url)
+    const serieNum = searchParams.get("serie")
 
     if (!serieNum) {
-      return NextResponse.json(
-        { error: "Numéro de série requis" },
-        { status: 400 }
-      );
+      return apiError(400, "invalid_input", "Numéro de série requis")
     }
 
     const etalonnages = await prisma.t_etalonnage.findMany({
-      where: {
-        Sonde_Numero_Serie: serieNum,
-      },
+      where: { Sonde_Numero_Serie: serieNum },
       select: {
         Id_Etalonnage: true,
         Date_Heure_Etalonnage: true,
@@ -35,17 +23,13 @@ export const GET = withLogging(async (req: NextRequest) => {
         Operateur: true,
         Incertitude: true,
       },
-      orderBy: {
-        Date_Heure_Etalonnage: "desc",
-      },
-    });
+      orderBy: { Date_Heure_Etalonnage: "desc" },
+    })
 
-    return NextResponse.json(etalonnages);
+    return apiOk(etalonnages)
   } catch (error) {
-    console.error("Etalonnages fetch error:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la récupération des étalonnages" },
-      { status: 500 }
-    );
+    console.error("Etalonnages fetch error:", error)
+    return apiError(500, "internal_error", "Erreur lors de la récupération des étalonnages")
   }
-});
+})
+

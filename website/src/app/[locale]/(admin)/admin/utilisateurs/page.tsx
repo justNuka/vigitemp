@@ -5,12 +5,13 @@ import { UsersClient } from "./users-client";
 import { PageHeader } from "@/components/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
-import { alarmsApi } from "@/lib/api";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: "Utilisateurs - Vigitemp",
   description: "Gestion des utilisateurs",
 };
+
 
 // Skeleton pour la liste des utilisateurs
 function UsersLoadingSkeleton() {
@@ -34,21 +35,27 @@ function UsersLoadingSkeleton() {
   );
 }
 
-async function getActiveAlarms() {
+async function getActiveAlarmsCount() {
   "use cache";
+
   try {
-    const alarms = await alarmsApi.getActive();
-    return alarms.filter((a) => a.status === "active");
+    return await prisma.t_alarme.count({
+      where: {
+        Est_Acquittee: false,
+        Date_Heure_Fin: null,
+        Est_Alarme_Vrai: true,
+      },
+    });
   } catch {
-    return [];
+    return 0;
   }
 }
 
 export default async function UsersPage() {
   // Chargement parallèle des données côté serveur avec cache
-  const [usersData, activeAlarms] = await Promise.all([
+  const [usersData, activeAlarmsCount] = await Promise.all([
     ServerUsers(),
-    getActiveAlarms(),
+    getActiveAlarmsCount(),
   ]);
 
   return (
@@ -56,7 +63,7 @@ export default async function UsersPage() {
       <PageHeader
         title="Gestion des utilisateurs"
         description="Administration des comptes utilisateurs"
-        activeAlarms={activeAlarms.length}
+        activeAlarms={activeAlarmsCount}
       />
       
       <div className="space-y-6 p-6">

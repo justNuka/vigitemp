@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import type { AuditLog } from "@/lib/api";
+import { getJson } from "@/lib/http";
 import {
   Select,
   SelectContent,
@@ -23,7 +24,7 @@ interface Props {
 }
 
 interface AuditCode {
-  CodeJournal: string;
+  Code_Journal: string;
   Commentaire: string | null;
 }
 
@@ -38,11 +39,8 @@ export function AuditClient({ logs }: Props) {
   useEffect(() => {
     const fetchCodes = async () => {
       try {
-        const response = await fetch("/api/audit/codes");
-        if (response.ok) {
-          const data = await response.json();
-          setAuditCodes(data);
-        }
+        const data = await getJson<AuditCode[]>("/api/audit/codes");
+        setAuditCodes(data);
       } catch (error) {
         console.error("Failed to fetch audit codes:", error);
       }
@@ -97,8 +95,8 @@ export function AuditClient({ logs }: Props) {
               <SelectContent>
                 <SelectItem value="all">{t("all_codes")}</SelectItem>
                 {auditCodes.map((code) => (
-                  <SelectItem key={code.CodeJournal} value={code.CodeJournal}>
-                    {code.CodeJournal}
+                  <SelectItem key={code.Code_Journal} value={code.Code_Journal}>
+                    {code.Code_Journal}
                     {code.Commentaire && ` - ${code.Commentaire}`}
                   </SelectItem>
                 ))}

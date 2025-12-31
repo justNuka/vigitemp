@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { PageHeader } from "@/components/page-header";
-import { AlarmsClient } from "./alarms-client";
+import { AlarmsClientTanStack } from "@/components/data-table/alarms-client-tanstack";
 
 export const metadata: Metadata = {
   title: "Gestion des Alarmes - Vigitemp",
@@ -16,7 +16,7 @@ export default function AlarmsPage() {
       />
 
       <div className="space-y-6 p-6">
-        <AlarmsClient />
+        <AlarmsClientTanStack />
       </div>
     </div>
   );

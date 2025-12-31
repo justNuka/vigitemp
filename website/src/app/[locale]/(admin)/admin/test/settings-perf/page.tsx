@@ -60,7 +60,7 @@ export default function SettingsPerfTestPage() {
           <CardHeader>
             <CardTitle>Paramètres (Cached)</CardTitle>
             <CardDescription>
-              Cache tag: "settings-data"
+              Cache tag: "parametres-data"
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -76,7 +76,7 @@ export default function SettingsPerfTestPage() {
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex items-center gap-2">
-              <Badge>settings-data</Badge>
+              <Badge>parametres-data</Badge>
               <span className="text-sm text-muted-foreground">
                 Configuration complète de l'application
               </span>
@@ -89,10 +89,9 @@ export default function SettingsPerfTestPage() {
 }
 
 async function SettingsDisplay() {
-  const start = Date.now();
   // const settings = await ServerSettings();
   const settings: any[] = [];
-  const duration = Date.now() - start;
+  const duration = 0;
 
   return (
     <div className="space-y-2">

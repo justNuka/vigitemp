@@ -1,5 +1,5 @@
 import { PageHeader } from '@/components/page-header';
-import { LieuxClient } from './lieux-client';
+import { LocationsClient } from './locations-client';
 
 export default function LieuxPage() {
   return (
@@ -9,7 +9,7 @@ export default function LieuxPage() {
         description="Créez et gérez les lieux de surveillance avec leurs consignes"
       />
       <div className="p-6">
-        <LieuxClient />
+        <LocationsClient />
       </div>
     </>
   );

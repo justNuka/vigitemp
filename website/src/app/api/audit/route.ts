@@ -1,18 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prismaMesure } from "@/lib/prisma";
+import { NextRequest } from "next/server"
+import { prismaMesure } from "@/lib/prisma"
+import { withAuthLogging } from "@/lib/api-wrappers"
+import { apiError, apiOk } from "@/lib/api-response"
 
-export async function GET(req: NextRequest) {
+export const GET = withAuthLogging(async (req: NextRequest) => {
   try {
-    const searchParams = req.nextUrl.searchParams;
-    const limit = parseInt(searchParams.get("limit") || "100");
-    const codeFilter = searchParams.get("code");
+    const searchParams = req.nextUrl.searchParams
+    const limit = parseInt(searchParams.get("limit") || "100")
+    const codeFilter = searchParams.get("code")
 
-    // Build where clause
-    const whereClause = codeFilter 
-      ? { Code_Journal: codeFilter }
-      : {};
+    const whereClause = codeFilter ? { Code_Journal: codeFilter } : {}
 
-    // Get audit logs from time-series database
     const logs = await prismaMesure.tm_journal.findMany({
       where: whereClause,
       take: limit,
@@ -25,7 +23,7 @@ export async function GET(req: NextRequest) {
         Nom_Utilisateur: true,
         Id_Lieu: true,
       },
-    });
+    })
 
     const formatted = logs.map((log: any) => ({
       id: log.Id_Journal,
@@ -34,14 +32,11 @@ export async function GET(req: NextRequest) {
       action: log.Code_Journal || "unknown",
       details: log.Commentaire || "",
       sensorId: log.Id_Lieu || null,
-    }));
+    }))
 
-    return NextResponse.json(formatted);
+    return apiOk(formatted)
   } catch (error) {
-    console.error("Get audit logs error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch audit logs" },
-      { status: 500 }
-    );
+    console.error("Get audit logs error:", error)
+    return apiError(500, "audit_fetch_failed", "Failed to fetch audit logs")
   }
-}
+})

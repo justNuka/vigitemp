@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getAuthenticatedUser } from "@/lib/auth";
-import { withLogging } from "@/lib/api-logger";
-import { z } from "zod";
+import { NextRequest } from "next/server"
+import { prisma } from "@/lib/prisma"
+import { getAuthenticatedUser } from "@/lib/auth"
+import { withLogging } from "@/lib/api-logger"
+import { z } from "zod"
+import { apiError, apiOk } from "@/lib/api-response"
 
 const createEtalonSchema = z.object({
   Etalon_Numero_Serie: z.string().min(1, "Numéro de série requis"),
@@ -14,28 +15,27 @@ const createEtalonSchema = z.object({
   Reserve_MC2: z.string().optional(),
   Id_Serveur: z.number().optional(),
   Id_Module: z.number().optional(),
-  // Certificat
   Numero: z.string().optional(),
   Organisme: z.string().optional(),
   Date: z.string().optional(), // YYYY-MM-DD
   Unite: z.string().optional(),
-  // Mesures (tableau)
-  mesures: z.array(z.object({
-    Numero_Ordre: z.number(),
-    Temperature_Reference: z.string(),
-    Temperature_Vraie: z.string(),
-    Incertitude: z.string(),
-  })).optional(),
-});
+  mesures: z
+    .array(
+      z.object({
+        Numero_Ordre: z.number(),
+        Temperature_Reference: z.string(),
+        Temperature_Vraie: z.string(),
+        Incertitude: z.string(),
+      }),
+    )
+    .optional(),
+})
 
 export const GET = withLogging(async (req: NextRequest) => {
   try {
-    const user = getAuthenticatedUser(req);
+    const user = getAuthenticatedUser(req)
     if (!user) {
-      return NextResponse.json(
-        { error: "Non authentifié" },
-        { status: 401 }
-      );
+      return apiError(401, "unauthenticated", "Non authentifié")
     }
 
     const etalons = await prisma.t_etalon.findMany({
@@ -57,9 +57,8 @@ export const GET = withLogging(async (req: NextRequest) => {
       orderBy: {
         Etalon_Numero_Serie: "asc",
       },
-    });
+    })
 
-    // Récupérer les infos de certificat et mesures pour chaque étalon
     const etalonsWithDetails = await Promise.all(
       etalons.map(async (etalon) => {
         const etalonnage = await prisma.t_etalonnage.findFirst({
@@ -75,21 +74,7 @@ export const GET = withLogging(async (req: NextRequest) => {
           orderBy: {
             Date_Heure_Etalonnage: "desc",
           },
-        });
-
-        // Récupérer les mesures associées
-        const mesures = etalonnage
-          ? await prisma.t_etalonnage_mesure.findMany({
-              where: {
-                // Pas de relation directe, donc on doit faire une requête séparée
-              },
-              select: {
-                Numero_Ordre: true,
-                Mesure_Sonde: true,
-                Mesure_Etalon: true,
-              },
-            })
-          : [];
+        })
 
         return {
           ...etalon,
@@ -97,46 +82,35 @@ export const GET = withLogging(async (req: NextRequest) => {
           Organisme: etalonnage?.Organisme || null,
           Num_Certif: etalonnage?.Num_Certif || null,
           Unite: etalonnage?.Unite || null,
-        };
-      })
-    );
+        }
+      }),
+    )
 
-    return NextResponse.json(etalonsWithDetails);
+    return apiOk(etalonsWithDetails)
   } catch (error) {
-    console.error("Etalons fetch error:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la récupération des étalons" },
-      { status: 500 }
-    );
+    console.error("Etalons fetch error:", error)
+    return apiError(500, "etalons_fetch_failed", "Erreur lors de la récupération des étalons")
   }
-});
+})
 
-export async function POST(req: NextRequest) {
-  const user = getAuthenticatedUser(req);
+export const POST = withLogging(async (req: NextRequest) => {
+  const user = getAuthenticatedUser(req)
   if (!user) {
-    return NextResponse.json(
-      { error: "Non authentifié" },
-      { status: 401 }
-    );
+    return apiError(401, "unauthenticated", "Non authentifié")
   }
 
   try {
-    const body = await req.json();
-    const data = createEtalonSchema.parse(body);
+    const body = await req.json()
+    const data = createEtalonSchema.parse(body)
 
-    // Vérifier si l'étalon existe déjà
     const existingEtalon = await prisma.t_etalon.findUnique({
       where: { Etalon_Numero_Serie: data.Etalon_Numero_Serie },
-    });
+    })
 
     if (existingEtalon) {
-      return NextResponse.json(
-        { error: "Un étalon avec ce numéro de série existe déjà" },
-        { status: 409 }
-      );
+      return apiError(409, "conflict", "Un étalon avec ce numéro de série existe déjà")
     }
 
-    // Créer l'étalon
     const newEtalon = await prisma.t_etalon.create({
       data: {
         Etalon_Numero_Serie: data.Etalon_Numero_Serie,
@@ -149,12 +123,11 @@ export async function POST(req: NextRequest) {
         Id_Serveur: data.Id_Serveur,
         Id_Module: data.Id_Module,
       },
-    });
+    })
 
-    // Créer le certificat si les données sont fourni
     if (data.Numero || data.Organisme || data.Date || data.Unite) {
-      const certifDate = data.Date ? new Date(data.Date) : null;
-      
+      const certifDate = data.Date ? new Date(data.Date) : null
+
       const newCertif = await prisma.t_certif.create({
         data: {
           Numero: data.Numero,
@@ -163,9 +136,8 @@ export async function POST(req: NextRequest) {
           Etalon_Numero_Serie: data.Etalon_Numero_Serie,
           Unite: data.Unite,
         },
-      });
+      })
 
-      // Créer les mesures
       if (data.mesures && data.mesures.length > 0) {
         await prisma.t_certif_mesure.createMany({
           data: data.mesures.map((m) => ({
@@ -175,29 +147,23 @@ export async function POST(req: NextRequest) {
             Temperature_Vraie: m.Temperature_Vraie,
             Incertitude: parseFloat(m.Incertitude) || null,
           })),
-        });
+        })
       }
     }
 
-    return NextResponse.json(
+    return apiOk(
       {
         message: "Étalon créé avec succès",
         etalon: newEtalon,
       },
-      { status: 201 }
-    );
+      { status: 201 },
+    )
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Données invalides", details: error.issues },
-        { status: 400 }
-      );
+      return apiError(400, "validation_error", "Données invalides", { details: error.issues })
     }
 
-    console.error("Etalon creation error:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la création de l'étalon" },
-      { status: 500 }
-    );
+    console.error("Etalon creation error:", error)
+    return apiError(500, "etalon_create_failed", "Erreur lors de la création de l'étalon")
   }
-}
+})

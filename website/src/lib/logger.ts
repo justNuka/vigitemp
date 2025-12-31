@@ -163,20 +163,46 @@ export const log = {
   auth: {
     // CONNEXION/DECONNEXION sont définis dans connection
     // On garde login/logout pour compatibilité mais redirige vers les bons codes
-    login: (username: string, ip: string, success: boolean, reason?: string) => {
+    login: (
+      username: string,
+      ip: string,
+      success: boolean,
+      reason?: string,
+      context?: { userId?: number; userProfile?: string },
+    ) => {
       if (success) {
-        log.audit("CONNEXION", { user: username, ip, success: true });
+        log.audit("CONNEXION", {
+          user: username,
+          userId: context?.userId,
+          ip,
+          success: true,
+          userProfile: context?.userProfile,
+        });
       } else {
-        log.audit("CONNEXION", { user: username, ip, success: false, reason });
+        log.audit("CONNEXION", {
+          user: username,
+          userId: context?.userId,
+          ip,
+          success: false,
+          reason,
+          userProfile: context?.userProfile,
+        });
       }
     },
     
-    logout: (username: string, userId: number, ip: string, reason?: string) =>
+    logout: (
+      username: string,
+      userId: number,
+      ip: string,
+      reason?: string,
+      context?: { userProfile?: string },
+    ) =>
       log.audit("DECONNEXION", {
         user: username,
         userId,
         ip,
         reason,
+        userProfile: context?.userProfile,
       }),
     
     // MDP - Changement de mot de passe
