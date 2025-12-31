@@ -1,16 +1,15 @@
-import { FlatCompat } from '@eslint/eslintrc'
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 
-const compat = new FlatCompat({
-  baseDirectory: import.meta.dirname,
-})
-
-const eslintConfig = [
-  ...compat.config({
-    extends: ['next/core-web-vitals'],
+const config = [
+  ...nextCoreWebVitals,
+  {
+    ignores: ["src/generated/**"],
+  },
+  {
     rules: {
-      'react/no-unescaped-entities': 'off',
+      "react/no-unescaped-entities": "off",
     },
-  }),
-]
+  },
+];
 
-export default eslintConfig
+export default config;

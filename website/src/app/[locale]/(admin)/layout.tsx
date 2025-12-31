@@ -5,7 +5,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { useQuery } from "@tanstack/react-query";
 import { authApi } from "@/lib/api";
 import { useAutoLock } from "@/hooks/useAutoLock";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 import { clearAgentSession } from "@/lib/agent-session";
 
@@ -49,7 +49,7 @@ export default function AdminGroupLayout({
       } catch {
         // Agent not installed/running: ignore
       }
-      window.location.href = "/login";
+      router.push("/login");
     }
   };
 

@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { prisma } from "@/lib/prisma";
-import { getAuthenticatedUser } from "@/lib/auth";
-import { withLogging } from "@/lib/api-logger";
-import { createHash } from "node:crypto";
+import { NextRequest } from "next/server"
+import { z } from "zod"
+import { prisma } from "@/lib/prisma"
+import { getAuthenticatedUser } from "@/lib/auth"
+import { withLogging } from "@/lib/api-logger"
+import { createHash } from "node:crypto"
+import { apiError, apiOk } from "@/lib/api-response"
 
 const subscribeSchema = z.object({
   endpoint: z.string().min(1),
@@ -13,31 +14,28 @@ const subscribeSchema = z.object({
     auth: z.string().min(1),
   }),
   userAgent: z.string().optional(),
-});
+})
 
 export const POST = withLogging(async (req: NextRequest) => {
-  const user = getAuthenticatedUser(req);
+  const user = getAuthenticatedUser(req)
   if (!user) {
-    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    return apiError(401, "unauthenticated", "Non authentifié")
   }
 
-  const body = await req.json().catch(() => null);
-  const validated = subscribeSchema.safeParse(body);
+  const body = await req.json().catch(() => null)
+  const validated = subscribeSchema.safeParse(body)
   if (!validated.success) {
-    return NextResponse.json(
-      { error: "Payload invalide", details: validated.error.flatten() },
-      { status: 400 }
-    );
+    return apiError(400, "invalid_payload", "Payload invalide", {
+      details: validated.error.flatten(),
+    })
   }
 
-  const now = new Date();
-  const endpointHash = createHash("sha256")
-    .update(validated.data.endpoint, "utf8")
-    .digest("hex");
+  const now = new Date()
+  const endpointHash = createHash("sha256").update(validated.data.endpoint, "utf8").digest("hex")
   const expiration =
     validated.data.expirationTime === null || validated.data.expirationTime === undefined
       ? null
-      : BigInt(Math.trunc(validated.data.expirationTime));
+      : BigInt(Math.trunc(validated.data.expirationTime))
 
   await prisma.t_push_subscription.upsert({
     where: { Endpoint_Hash: endpointHash },
@@ -63,7 +61,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       Date_Modification: now,
       Est_Archive: false,
     },
-  });
+  })
 
-  return NextResponse.json({ ok: true });
-});
+  return apiOk({ success: true })
+})

@@ -1,28 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prismaMesure } from "@/lib/prisma";
-import { getAuthenticatedUser } from "@/lib/auth";
+import { NextRequest } from "next/server"
+import { prismaMesure } from "@/lib/prisma"
+import { withAuthLogging } from "@/lib/api-wrappers"
+import { apiError, apiOk } from "@/lib/api-response"
 
 /**
  * GET /api/audit/codes
- * Récupère la liste de tous les codes d'audit disponibles
+ * Récupère la liste de tous les codes d'audit disponibles.
  */
-export async function GET(req: NextRequest) {
+export const GET = withAuthLogging(async (_req: NextRequest) => {
   try {
-    const user = getAuthenticatedUser(req);
-    if (!user) {
-      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-    }
-
     const codes = await prismaMesure.tm_journal_code.findMany({
       orderBy: { Code_Journal: "asc" },
-    });
+    })
 
-    return NextResponse.json(codes);
+    return apiOk(codes)
   } catch (error) {
-    console.error("Get audit codes error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch audit codes" },
-      { status: 500 }
-    );
+    console.error("Get audit codes error:", error)
+    return apiError(500, "audit_codes_fetch_failed", "Failed to fetch audit codes")
   }
-}
+})

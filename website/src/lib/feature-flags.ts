@@ -31,6 +31,12 @@ export function isFeatureEnabled(feature: keyof typeof FEATURE_FLAGS): boolean {
 
 // Liste des routes à exclure en production
 export const TEST_ROUTES = [
+  '/admin/test',
+  '/admin/test/surveillance-perf',
+  '/admin/test/alarms-perf',
+  '/admin/test/audit-perf',
+  '/admin/test/settings-perf',
+  '/admin/test/users-perf',
   '/test',
   '/test/surveillance-perf',
   '/test/alarms-perf',

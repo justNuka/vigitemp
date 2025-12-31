@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Link as IntlLink } from "@/i18n/navigation";
 import { usePathname } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
@@ -24,16 +23,15 @@ import {
   Users,
   Lock,
   Bell,
-  Archive,
   Settings,
   LogOut,
-  Ticket,
-  HardDrive,
   Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { CurrentUser } from "@/lib/types";
+import { useLocale } from "next-intl";
+import { getLocalizedPathname, stripLocalePrefix } from "@/i18n/pathnames";
 
 interface NavItem {
   title: string;
@@ -48,23 +46,25 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
   const pathname = usePathname();
+  const locale = useLocale();
+  const normalizedPathname = stripLocalePrefix(pathname);
   const t = useTranslations("adminSidebar");
   const tCommon = useTranslations("common");
 
   // Helper pour déterminer quel Link utiliser
   const getLinkComponent = (href: string) => {
     // Routes définies dans routing.ts - utiliser IntlLink
-    if (href === "/" || href === "admin") {
+    if (href === "/" || href === "/admin") {
       return IntlLink;
     }
     // Routes nested sous /admin/* - utiliser next/link
-    return Link;
+    return IntlLink;
   };
 
   // Section 1: Retour au dashboard classique
   const dashboardNavItems: NavItem[] = [
     { title: t("dashboards.user"), href: "/", icon: LayoutDashboard },
-    { title: t("dashboards.admin"), href: "admin", icon: Shield },
+    { title: t("dashboards.admin"), href: "/admin", icon: Shield },
   ];
 
   // Section 2: Gestion profils, utilisateurs, alarmes, mesures archivées
@@ -72,14 +72,11 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
     { title: t("management.profiles"), href: "/admin/profils", icon: Lock },
     { title: t("management.users"), href: "/admin/utilisateurs", icon: Users },
     { title: t("management.alarms"), href: "/admin/alarmes", icon: Bell },
-    { title: t("management.archived_measures"), href: "/admin/mesures-archivees", icon: Archive },
   ];
 
   // Section 3: Paramètres globaux, licences, sauvegardes
   const globalSettingsNavItems: NavItem[] = [
     { title: t("system.settings"), href: "/admin/parametres", icon: Settings },
-    { title: t("system.licenses"), href: "/admin/licences", icon: Ticket },
-    { title: t("system.backups"), href: "/admin/sauvegardes", icon: HardDrive },
   ];
 
   return (
@@ -105,7 +102,7 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href}
+                    isActive={normalizedPathname === getLocalizedPathname(item.href, locale as any)}
                     tooltip={item.title}
                   >
                     {(() => {
@@ -133,7 +130,7 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href}
+                    isActive={normalizedPathname === getLocalizedPathname(item.href, locale as any)}
                     tooltip={item.title}
                   >
                     {(() => {
@@ -161,7 +158,7 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.href}
+                    isActive={normalizedPathname === getLocalizedPathname(item.href, locale as any)}
                     tooltip={item.title}
                   >
                     {(() => {

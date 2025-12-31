@@ -1,50 +1,44 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { withLogging } from "@/lib/api-logger";
+import { NextRequest } from "next/server"
+import { getAuthenticatedUser } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+import { withLogging } from "@/lib/api-logger"
+import { apiError, apiOk } from "@/lib/api-response"
 
-export const GET = withLogging(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
-  try {
-    const user = getAuthenticatedUser(req);
-    if (!user) {
-      return NextResponse.json(
-        { error: "Non authentifié" },
-        { status: 401 }
-      );
-    }
+export const GET = withLogging(
+  async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+    try {
+      const user = getAuthenticatedUser(req)
+      if (!user) {
+        return apiError(401, "unauthenticated", "Non authentifié")
+      }
 
-    const { id: idParam } = await params;
-    const groupeId = parseInt(idParam);
+      const { id: idParam } = await params
+      const groupeId = parseInt(idParam)
 
-    if (!groupeId) {
-      return NextResponse.json(
-        { error: "ID groupe invalide" },
-        { status: 400 }
-      );
-    }
+      if (!groupeId) {
+        return apiError(400, "invalid_id", "ID groupe invalide")
+      }
 
-    const lieux = await prisma.t_lieu.findMany({
-      where: {
-        Est_Archive: false,
-        t_lieu_groupe: {
-          some: { Id_Groupe: groupeId },
+      const lieux = await prisma.t_lieu.findMany({
+        where: {
+          Est_Archive: false,
+          t_lieu_groupe: {
+            some: { Id_Groupe: groupeId },
+          },
         },
-      },
-      select: {
-        Id_Lieu: true,
-        Nom_Lieu: true,
-      },
-      orderBy: {
-        Nom_Lieu: "asc",
-      },
-    });
+        select: {
+          Id_Lieu: true,
+          Nom_Lieu: true,
+        },
+        orderBy: {
+          Nom_Lieu: "asc",
+        },
+      })
 
-    return NextResponse.json(lieux);
-  } catch (error) {
-    console.error("Lieux fetch error:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la récupération des lieux" },
-      { status: 500 }
-    );
-  }
-});
+      return apiOk(lieux)
+    } catch (error) {
+      console.error("Lieux fetch error:", error)
+      return apiError(500, "lieux_fetch_failed", "Erreur lors de la récupération des lieux")
+    }
+  },
+)

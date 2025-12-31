@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
  */
 export async function ServerSettings() {
   "use cache";
-  cacheTag("settings-data");
+  cacheTag("parametres-data");
 
   try {
     // Charger TOUS les paramètres depuis la base de données

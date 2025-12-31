@@ -1,0 +1,39 @@
+import { NextRequest } from "next/server"
+
+import { withAuthLogging } from "@/lib/api-wrappers"
+import { apiError, apiOk } from "@/lib/api-response"
+import { prismaMesure } from "@/lib/prisma"
+
+export const GET = withAuthLogging(async (req: NextRequest) => {
+  try {
+    const searchParams = req.nextUrl.searchParams
+    const limitParam = parseInt(searchParams.get("limit") || "100", 10)
+    const limit = Math.min(limitParam, 125)
+
+    const measurements = await prismaMesure.tm_mesures.findMany({
+      take: limit,
+      orderBy: { Date_Heure_Mesure: "desc" },
+      select: {
+        Id_Mesure: true,
+        Id_Lieu: true,
+        Date_Heure_Mesure: true,
+        Valeur: true,
+      },
+    })
+
+    const formatted = measurements.map((m) => ({
+      id: String(m.Id_Mesure),
+      sensorId: String(m.Id_Lieu),
+      timestamp: m.Date_Heure_Mesure?.toISOString() || new Date().toISOString(),
+      value: m.Valeur !== null ? parseFloat(m.Valeur.toString()) : 0,
+    }))
+
+    const response = apiOk(formatted)
+    response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300")
+    return response
+  } catch (error) {
+    console.error("Get tableau de bord measurements error:", error)
+    return apiError(500, "internal_error", "Failed to fetch measurements")
+  }
+})
+

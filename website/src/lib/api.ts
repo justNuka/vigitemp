@@ -17,57 +17,70 @@ async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: response.statusText }));
-    throw new Error(error.message || "Une erreur est survenue");
+    const message =
+      error?.message ||
+      (error?.ok === false ? error?.message : undefined) ||
+      error?.error ||
+      response.statusText ||
+      "Une erreur est survenue";
+    throw new Error(message);
   }
 
-  return response.json();
+  const payload = await response.json().catch(() => null);
+
+  if (payload && typeof payload === "object" && payload.ok === true && "data" in payload) {
+    return (payload as any).data as T;
+  }
+
+  return payload as T;
 }
 
 // Dashboard
 export const dashboardApi = {
-  getStats: () => fetcher<DashboardStats>("/dashboard/stats"),
+  getStats: () => fetcher<DashboardStats>("/tableau-de-bord/stats"),
   getRecentMeasurements: (limit = 10) =>
-    fetcher<Measurement[]>(`/dashboard/measurements?limit=${limit}`),
-  getCriticalSensors: () => fetcher<SensorWithLocation[]>("/dashboard/critical-sensors"),
+    fetcher<Measurement[]>(`/tableau-de-bord/measurements?limit=${limit}`),
+  getCriticalSensors: () =>
+    fetcher<SensorWithLocation[]>("/tableau-de-bord/critical-sensors"),
 };
 
 // Sensors
 export const sensorsApi = {
   getAll: (params?: { locationId?: string; status?: string }) => {
     const query = new URLSearchParams(params as Record<string, string>).toString();
-    return fetcher<SensorWithLocation[]>(`/sensors${query ? `?${query}` : ""}`);
+    return fetcher<SensorWithLocation[]>(`/capteurs${query ? `?${query}` : ""}`);
   },
-  getById: (id: string) => fetcher<SensorWithLocation>(`/sensors/${id}`),
+  getById: (id: string) => fetcher<SensorWithLocation>(`/capteurs/${id}`),
   create: (data: CreateSensorInput) =>
-    fetcher<Sensor>("/sensors", {
+    fetcher<Sensor>("/capteurs", {
       method: "POST",
       body: JSON.stringify(data),
     }),
   update: (id: string, data: UpdateSensorInput) =>
-    fetcher<Sensor>(`/sensors/${id}`, {
+    fetcher<Sensor>(`/capteurs/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
   delete: (id: string) =>
-    fetcher<void>(`/sensors/${id}`, {
+    fetcher<void>(`/capteurs/${id}`, {
       method: "DELETE",
     }),
 };
 
 // Alarms
 export const alarmsApi = {
-  getActive: () => fetcher<AlarmWithDetails[]>("/alarms?status=active"),
+  getActive: () => fetcher<AlarmWithDetails[]>("/alarmes?status=active"),
   getAll: (params?: { status?: string; locationId?: string }) => {
     const query = new URLSearchParams(params as Record<string, string>).toString();
-    return fetcher<AlarmWithDetails[]>(`/alarms${query ? `?${query}` : ""}`);
+    return fetcher<AlarmWithDetails[]>(`/alarmes${query ? `?${query}` : ""}`);
   },
   acknowledge: (id: string, comment?: string) =>
-    fetcher<Alarm>(`/alarms/${id}/acknowledge`, {
+    fetcher<Alarm>(`/alarmes/${id}/acknowledge`, {
       method: "POST",
       body: JSON.stringify({ comment }),
     }),
   resolve: (id: string) =>
-    fetcher<Alarm>(`/alarms/${id}/resolve`, {
+    fetcher<Alarm>(`/alarmes/${id}/resolve`, {
       method: "POST",
     }),
 };
@@ -76,37 +89,31 @@ export const alarmsApi = {
 export const locationsApi = {
   getAll: (params?: { siteGroup?: string; isActive?: boolean }) => {
     const query = new URLSearchParams(params as Record<string, string>).toString();
-    return fetcher<Location[]>(`/locations${query ? `?${query}` : ""}`);
+    return fetcher<Location[]>(`/lieux/resume${query ? `?${query}` : ""}`);
   },
-  getById: (id: string) => fetcher<Location>(`/locations/${id}`),
   create: (data: CreateLocationInput) =>
-    fetcher<Location>("/locations", {
+    fetcher<Location>("/lieux/resume", {
       method: "POST",
-      body: JSON.stringify(data),
-    }),
-  update: (id: string, data: UpdateLocationInput) =>
-    fetcher<Location>(`/locations/${id}`, {
-      method: "PATCH",
       body: JSON.stringify(data),
     }),
 };
 
 // Users (admin only)
 export const usersApi = {
-  getAll: () => fetcher<User[]>("/users"),
-  getById: (id: string) => fetcher<User>(`/users/${id}`),
+  getAll: () => fetcher<User[]>("/utilisateurs"),
+  getById: (id: string) => fetcher<User>(`/utilisateurs/${id}`),
   create: (data: CreateUserInput) =>
-    fetcher<User>("/users", {
+    fetcher<User>("/utilisateurs", {
       method: "POST",
       body: JSON.stringify(data),
     }),
   update: (id: string, data: UpdateUserInput) =>
-    fetcher<User>(`/users/${id}`, {
+    fetcher<User>(`/utilisateurs/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
   delete: (id: string) =>
-    fetcher<void>(`/users/${id}`, {
+    fetcher<void>(`/utilisateurs/${id}`, {
       method: "DELETE",
     }),
 };
@@ -121,19 +128,27 @@ export const auditApi = {
 
 // Settings
 export const settingsApi = {
-  getAll: () => fetcher<Setting[]>("/settings"),
-  get: (key: string) => fetcher<Setting>(`/settings/${key}`),
+  getAll: () => fetcher<Setting[]>("/parametres"),
+  get: (key: string) => fetcher<Setting>(`/parametres/${key}`),
   update: (key: string, value: string) =>
-    fetcher<Setting>(`/settings/${key}`, {
+    fetcher<Setting>(`/parametres/${key}`, {
       method: "PATCH",
       body: JSON.stringify({ value }),
     }),
-  getPasswordRules: () => fetcher<PasswordRules>("/settings/password-rules"),
+  getPasswordRules: () => fetcher<PasswordRules>("/parametres/password-rules"),
 };
 
 // Groups
 export const groupsApi = {
-  getAll: () => fetcher<Group[]>("/groups"),
+  getAll: async () => {
+    const groups = await fetcher<any[]>("/groupes");
+    return (groups ?? [])
+      .filter((g) => g && typeof g.Id_Groupe === "number")
+      .map((g) => ({
+        id: g.Id_Groupe,
+        name: g.Nom_Groupe || "Sans nom",
+      }));
+  },
 };
 
 // Sites
@@ -144,7 +159,14 @@ export const sitesApi = {
 // Auth
 export const authApi = {
   login: (username: string, password: string) =>
-    fetcher<{ user: User; token: string }>("/auth/login", {
+    fetcher<{
+      id: number;
+      username: string;
+      displayName: string;
+      profile: string;
+      authorizations: string[];
+      token: string;
+    }>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ username, password }),
     }),
@@ -167,7 +189,7 @@ export type DashboardStats = {
 };
 
 export type Measurement = {
-  timestamp: Date;
+  timestamp: string;
   value: number;
   sensorId: string;
 };

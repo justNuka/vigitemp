@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { getJson } from "@/lib/http";
 
 export interface Profile {
   id: number;
@@ -24,9 +25,7 @@ export function useProfiles() {
   return useQuery({
     queryKey: ["profiles"],
     queryFn: async () => {
-      const res = await fetch("/api/profils");
-      if (!res.ok) throw new Error("Failed to fetch profiles");
-      return res.json() as Promise<Profile[]>;
+      return getJson<Profile[]>("/api/profils");
     },
   });
 }
@@ -35,9 +34,7 @@ export function useAuthorizations() {
   return useQuery({
     queryKey: ["authorizations"],
     queryFn: async () => {
-      const res = await fetch("/api/autorisations");
-      if (!res.ok) throw new Error("Failed to fetch authorizations");
-      return res.json() as Promise<Authorization[]>;
+      return getJson<Authorization[]>("/api/autorisations");
     },
   });
 }

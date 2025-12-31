@@ -10,6 +10,7 @@ import { SwitchWithLoading } from "@/components/ui/switch-with-loading";
 import { Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { patchJson } from "@/lib/http";
 
 export function PasswordRulesSettings() {
   const { data: rules, isLoading } = usePasswordRules();
@@ -52,11 +53,7 @@ export function PasswordRulesSettings() {
 
       // Mettre à jour chaque paramètre
       for (const update of updates) {
-        await fetch(`/api/settings/${update.key}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ value: update.value }),
-        });
+        await patchJson(`/api/parametres/${update.key}`, { value: update.value });
       }
 
       // Invalider le cache pour recharger les règles
@@ -77,19 +74,11 @@ export function PasswordRulesSettings() {
       const key = `CFR21:${field}`;
       const value = newValue ? "1" : "0";
       
-      await fetch(`/api/settings/${key}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ value }),
-      });
+      await patchJson(`/api/parametres/${key}`, { value });
 
       // Si CFR21 est désactivé, réinitialiser JOURS_VALIDITE_MOT_DE_PASSE à 0
       if (field === "ACTIVATION_NORME_CFR21" && !newValue) {
-        await fetch(`/api/settings/CFR21:JOURS_VALIDITE_MOT_DE_PASSE`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ value: "0" }),
-        });
+        await patchJson(`/api/parametres/CFR21:JOURS_VALIDITE_MOT_DE_PASSE`, { value: "0" });
       }
 
       // Invalider le cache pour recharger les règles

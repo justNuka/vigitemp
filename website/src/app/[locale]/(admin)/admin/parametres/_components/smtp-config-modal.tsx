@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { getJson, putJson } from "@/lib/http";
 
 interface SMTPConfig {
   host: string;
@@ -50,13 +51,8 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
   const fetchConfig = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/admin/smtp-config");
-      if (response.ok) {
-        const data = await response.json();
-        setConfig(data);
-      } else {
-        toast.error("Erreur lors du chargement de la configuration");
-      }
+      const payload = await getJson<SMTPConfig>("/api/admin/configuration-smtp");
+      setConfig(payload);
     } catch (error) {
       console.error("Erreur:", error);
       toast.error("Erreur lors du chargement de la configuration");
@@ -67,16 +63,7 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
 
   const updateMutation = useMutation({
     mutationFn: async (newConfig: SMTPConfig) => {
-      const response = await fetch("/api/admin/smtp-config", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newConfig),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Erreur lors de la mise à jour");
-      }
-      return response.json();
+      return putJson<{ message: string }>("/api/admin/configuration-smtp", newConfig);
     },
     onSuccess: () => {
       toast.success("Configuration SMTP mise à jour avec succès");

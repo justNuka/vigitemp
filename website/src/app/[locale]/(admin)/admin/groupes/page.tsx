@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/page-header";
-import { GroupesClient } from "./groupes-client";
+import { GroupsClient } from "./groups-client";
 
 export default function GroupesPage() {
   return (
@@ -9,7 +9,7 @@ export default function GroupesPage() {
         description="Gestion des groupes de lieux"
       />
       <div className="space-y-6 p-6">
-        <GroupesClient />
+        <GroupsClient />
       </div>
     </>
   );

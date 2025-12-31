@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { MultiSelectFilter } from "@/components/multi-select-filter";
 import type { Group, Site } from "./server-filters";
-import { Building2, FolderTree } from "lucide-react";
 
 interface FilterState {
   siteIds: number[]; // Changed to array to support multiple sites

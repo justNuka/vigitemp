@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { getJson } from "@/lib/http";
 
 export interface Module {
   Id_Module: number;
@@ -23,9 +24,7 @@ export function useModules() {
   return useQuery({
     queryKey: ["modules"],
     queryFn: async () => {
-      const res = await fetch("/api/modules");
-      if (!res.ok) throw new Error("Erreur lors du chargement des modules");
-      return res.json() as Promise<Module[]>;
+      return getJson<Module[]>("/api/modules");
     },
     staleTime: 60000, // 1 minute
   });
@@ -36,9 +35,7 @@ export function useModuleSondes(moduleId: number | null) {
     queryKey: ["modules", moduleId, "sondes"],
     queryFn: async () => {
       if (!moduleId) return [];
-      const res = await fetch(`/api/modules/${moduleId}/sondes`);
-      if (!res.ok) throw new Error("Erreur lors du chargement des sondes");
-      return res.json() as Promise<Sonde[]>;
+      return getJson<Sonde[]>(`/api/modules/${moduleId}/sondes`);
     },
     enabled: !!moduleId,
     staleTime: 60000, // 1 minute
@@ -55,9 +52,7 @@ export function useModuleTypes() {
   return useQuery({
     queryKey: ["module-types"],
     queryFn: async () => {
-      const res = await fetch("/api/modules/types");
-      if (!res.ok) throw new Error("Erreur lors du chargement des types");
-      return res.json() as Promise<ModuleType[]>;
+      return getJson<ModuleType[]>("/api/modules/types");
     },
     staleTime: 60000, // 1 minute
   });

@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +30,8 @@ import {
   Filler,
 } from 'chart.js';
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
+import { calculateYDomain, getMeasureSummary } from "@/lib/measurements";
 
 // Register Chart.js components
 ChartJS.register(
@@ -43,20 +44,6 @@ ChartJS.register(
   Legend,
   Filler
 );
-
-interface MeasureData {
-  id: string;
-  Valeur: number;
-  Unite: string;
-  DateHeureMesure: string;
-  DateHeureMesureXaxis: string;
-  Consigne: number | null;
-  Consigne_Sup: number | null;
-  Consigne_Inf: number | null;
-  SondeNumeroSerie: string;
-  Frequence: number;
-  Etat_Alarme: number;
-}
 
 interface MonitoringDetailsModalProps {
   isOpen: boolean;
@@ -81,58 +68,38 @@ export default function MonitoringDetailsModal({
   consigne: initialConsigne,
   unite: initialUnite,
 }: MonitoringDetailsModalProps) {
-  const [data, setData] = useState<MeasureData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [consigneSup, setConsigneSup] = useState<number | null>(initialConsigneSup);
-  const [consigneInf, setConsigneInf] = useState<number | null>(initialConsigneInf);
-  const [consigne, setConsigne] = useState<number | null>(initialConsigne);
-  const [unite, setUnite] = useState(initialUnite);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
+  const { data, isLoading } = useLieuMeasurements(idLieu, { enabled: isOpen });
+
+  const summary = useMemo(
+    () =>
+      getMeasureSummary(data, {
+        consigneSup: initialConsigneSup,
+        consigneInf: initialConsigneInf,
+        consigne: initialConsigne,
+        unite: initialUnite,
+      }),
+    [data, initialConsigneInf, initialConsigne, initialConsigneSup, initialUnite],
+  );
+
+  const { consigneSup, consigneInf, consigne, unite } = summary;
+
+  const [yMin, yMax] = useMemo(
+    () => calculateYDomain(data, { consigneSup, consigneInf, consigne }),
+    [consigne, consigneInf, consigneSup, data],
+  );
+
   useEffect(() => {
-    if (isOpen) {
-      loadData();
-    }
-  }, [isOpen, idLieu]);
+    if (!isOpen) return;
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`/api/mesures/${idLieu}`, {
-        params: { rowNumber: 125 }
-      });
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(1);
+    }, 0);
 
-      const measures = response.data as MeasureData[];
-      setData(measures);
-
-      if (measures.length > 0) {
-        const first = measures[0];
-        setConsigneSup(first.Consigne_Sup);
-        setConsigneInf(first.Consigne_Inf);
-        setConsigne(first.Consigne);
-        setUnite(first.Unite || "°C");
-      }
-    } catch (error) {
-      console.error("Error loading measurements:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Calculate Y-axis domain
-  const calculateYDomain = () => {
-    if (data.length === 0) return [0, 30];
-    
-    const values = data.map(d => d.Valeur);
-    const min = Math.min(...values, consigneInf || 0, consigne || 0);
-    const max = Math.max(...values, consigneSup || 30, consigne || 30);
-    const padding = (max - min) * 0.1;
-    
-    return [Math.floor(min - padding), Math.ceil(max + padding)];
-  };
-
-  const [yMin, yMax] = calculateYDomain();
+    return () => clearTimeout(timeoutId);
+  }, [idLieu, isOpen]);
 
   // Pagination for table
   const totalPages = Math.ceil(data.length / itemsPerPage);
@@ -151,7 +118,7 @@ export default function MonitoringDetailsModal({
           </p>
         </DialogHeader>
 
-        {loading ? (
+        {isLoading ? (
           <div className="h-[400px] flex items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>

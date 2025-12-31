@@ -111,10 +111,9 @@ export default function AuditPerfTestPage() {
 }
 
 async function AuditStatsDisplay() {
-  const start = Date.now();
   // const stats = await ServerAuditStats();
   const stats = { total: 0, last24h: 0 };
-  const duration = Date.now() - start;
+  const duration = 0;
 
   return (
     <div className="space-y-2">
@@ -136,10 +135,9 @@ async function AuditStatsDisplay() {
 }
 
 async function AuditLogsDisplay() {
-  const start = Date.now();
   // const logs = await ServerAuditLogs(10);
   const logs: any[] = [];
-  const duration = Date.now() - start;
+  const duration = 0;
 
   return (
     <div className="space-y-2">

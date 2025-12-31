@@ -1,90 +1,49 @@
-import { NextRequest, NextResponse } from "next/server";
-import { sendEmail, isEmailEnabled } from "@/lib/email";
-import { getAuthenticatedUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import PasswordResetEmail from "../../../../../emails/password-reset";
+import { NextRequest } from "next/server"
+import { isEmailEnabled, sendEmail } from "@/lib/email"
+import { withAuthorizationLogging } from "@/lib/api-wrappers"
+import PasswordResetEmail from "../../../../../emails/password-reset"
+import { apiError, apiOk } from "@/lib/api-response"
 
 /**
  * POST /api/email/test
- * Send a test email to verify SMTP configuration
+ * Envoie un email de test pour valider la configuration SMTP.
  */
-export async function POST(req: NextRequest) {
+export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest) => {
   try {
-    // Check authentication
-    const user = getAuthenticatedUser(req);
-    if (!user) {
-      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-    }
-
-    // Check admin access
-    const currentUserProfileStr = (await prisma.t_utilisateur.findUnique({
-      where: { Id_Utilisateur: user.userId },
-      select: { Profil_Utilisateur: true },
-    }))?.Profil_Utilisateur;
-
-    const userProfile = currentUserProfileStr
-      ? await prisma.t_profil.findUnique({
-          where: { Profil_Utilisateur: currentUserProfileStr },
-          include: { t_liaison_profil_autorisation: { include: { t_autorisation: true } } },
-        })
-      : null;
-
-    const hasAdminAccess =
-      userProfile?.Profil_Utilisateur === "Administrateurs" ||
-      userProfile?.t_liaison_profil_autorisation.some(
-        (liaison) => liaison.t_autorisation.Code_Autorisation === "GERER_PROFIL"
-      );
-
-    if (!hasAdminAccess) {
-      return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
-    }
-
-    const body = await req.json();
-    const { toEmail } = body;
+    const body = await req.json()
+    const toEmail = body?.toEmail as string | undefined
 
     if (!toEmail) {
-      return NextResponse.json(
-        { error: "Email destinataire requis" },
-        { status: 400 }
-      );
+      return apiError(400, "missing_fields", "Email destinataire requis")
     }
 
-    // Check if email is enabled
-    const emailEnabled = await isEmailEnabled();
+    const emailEnabled = await isEmailEnabled()
     if (!emailEnabled) {
-      return NextResponse.json(
-        { error: "Le système d'envoi d'emails n'est pas configuré" },
-        { status: 503 }
-      );
+      return apiError(503, "smtp_not_configured", "Le système d'envoi d'emails n'est pas configuré")
     }
 
-    // Send test email using password reset template
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+
     const result = await sendEmail({
       to: toEmail,
       subject: "Vigitemp - Test Email Configuration",
       react: PasswordResetEmail({
-        resetUrl: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/reset-password?token=test-token-12345`,
+        resetUrl: `${baseUrl}/reset-password?token=test-token-12345`,
         firstName: "Admin",
         expiresIn: "1 heure",
       }),
-    });
+    })
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || "Failed to send test email" },
-        { status: 500 }
-      );
+      return apiError(500, "email_send_failed", result.error || "Failed to send test email")
     }
 
-    return NextResponse.json({
+    return apiOk({
       message: "Test email sent successfully",
       email: toEmail,
-    });
+    })
   } catch (error) {
-    console.error("Test email error:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to send test email" },
-      { status: 500 }
-    );
+    console.error("Test email error:", error)
+    return apiError(500, "email_send_failed", error instanceof Error ? error.message : "Failed to send test email")
   }
-}
+})

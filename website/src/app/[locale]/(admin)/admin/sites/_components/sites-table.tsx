@@ -1,24 +1,56 @@
-export function SitesTable() {
+'use client';
+
+import { ColumnDef } from '@tanstack/react-table';
+import { TanStackTable } from '@/components/data-table/tanstack-table';
+import type { SiteAdmin } from '@/hooks/useSites';
+
+type SitesTableProps = {
+  sites: SiteAdmin[];
+  isLoading: boolean;
+  selectedSiteId?: number;
+  onSelectSite: (site: SiteAdmin) => void;
+};
+
+export function SitesTable({ sites, isLoading, selectedSiteId, onSelectSite }: SitesTableProps) {
+  const columns: ColumnDef<SiteAdmin>[] = [
+    {
+      accessorKey: 'Code_Site',
+      header: 'Site',
+      cell: ({ row }) => row.getValue('Code_Site') || '-',
+    },
+    {
+      accessorKey: 'Libelle_Site',
+      header: 'Description',
+      cell: ({ row }) => row.getValue('Libelle_Site') || '-',
+    },
+    {
+      accessorKey: 'Commentaire',
+      header: 'Commentaires',
+      cell: ({ row }) => {
+        const comment = row.getValue('Commentaire') as string | null;
+        return comment ? (
+          <p className="max-w-xs truncate" title={comment}>
+            {comment}
+          </p>
+        ) : (
+          '-'
+        );
+      },
+    },
+  ];
+
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="border-b border-gray-200 dark:border-slate-700">
-          <tr>
-            <th className="text-left py-3 px-4 font-semibold">Code Site</th>
-            <th className="text-left py-3 px-4 font-semibold">Libellé</th>
-            <th className="text-left py-3 px-4 font-semibold">Commentaire</th>
-            <th className="text-left py-3 px-4 font-semibold">Archive</th>
-            <th className="text-left py-3 px-4 font-semibold">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="border-b border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800">
-            <td colSpan={5} className="py-6 px-4 text-center text-gray-500">
-              Aucun site - À implémenter
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  )
+    <TanStackTable<SiteAdmin>
+      columns={columns}
+      data={sites}
+      searchPlaceholder="Rechercher les sites..."
+      pageSize={10}
+      isLoading={isLoading}
+      maxHeight="60vh"
+      emptyMessage="Aucun site trouvé"
+      onRowClick={(row) => onSelectSite(row)}
+      selectedRowId={selectedSiteId}
+    />
+  );
 }
+

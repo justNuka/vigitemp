@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/page-header";
-import { EtalonsClient } from "./etalons-client";
+import { StandardsClient } from "./standards-client";
 
 export default function EtalonsPage() {
   return (
@@ -9,7 +9,7 @@ export default function EtalonsPage() {
         description="Gérez les étalons de calibration"
       />
       <div className="space-y-6 p-6">
-        <EtalonsClient />
+        <StandardsClient />
       </div>
     </>
   );

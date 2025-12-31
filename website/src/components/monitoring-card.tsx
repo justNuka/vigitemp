@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useMemo, useState } from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -14,9 +13,11 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { Power, FileText, MapPin, Settings, AlertTriangle, AlertCircle } from "lucide-react";
+import { Power, FileText, MapPin, Settings } from "lucide-react";
 import { getTypeIcon } from "@/lib/lieu-types";
 import type { LieuTypeValue } from "@/lib/lieu-types";
+import MonitoringDetailsModal from "@/components/monitoring-details-modal";
+import { getStatusTheme, type SensorStatus } from "@/lib/surveillance-status";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
+import { calculateYDomain, getMeasureSummary } from "@/lib/measurements";
 
 // Register Chart.js components
 ChartJS.register(
@@ -45,20 +48,6 @@ ChartJS.register(
   Filler
 );
 
-interface MeasureData {
-  id: string;
-  Valeur: number;
-  Unite: string;
-  DateHeureMesure: string;
-  DateHeureMesureXaxis: string;
-  Consigne: number | null;
-  Consigne_Sup: number | null;
-  Consigne_Inf: number | null;
-  SondeNumeroSerie: string;
-  Frequence: number;
-  Etat_Alarme: number;
-}
-
 interface MonitoringCardProps {
   idLieu: number;
   nomLieu: string;
@@ -67,7 +56,7 @@ interface MonitoringCardProps {
   lieuType?: LieuTypeValue;
   siteName?: string;
   groupName?: string;
-  status?: "ok" | "warning" | "critical";
+  status?: SensorStatus;
   onSurveillanceToggle?: (idLieu: number, newState: boolean) => void;
 }
 
@@ -82,63 +71,18 @@ export default function MonitoringCard({
   status = "ok",
   onSurveillanceToggle,
 }: MonitoringCardProps) {
-  const [data, setData] = useState<MeasureData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [consigneSup, setConsigneSup] = useState<number | null>(null);
-  const [consigneInf, setConsigneInf] = useState<number | null>(null);
-  const [consigne, setConsigne] = useState<number | null>(null);
-  const [unite, setUnite] = useState("°C");
-  const [frequence, setFrequence] = useState<number>(15);
-  const [lastMeasure, setLastMeasure] = useState("");
-  const [lastDateTime, setLastDateTime] = useState("");
+  const { data, isLoading } = useLieuMeasurements(idLieu);
+
+  const summary = useMemo(() => getMeasureSummary(data), [data]);
+  const { consigneSup, consigneInf, consigne, unite, frequence, lastMeasureText, lastDateTime } = summary;
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isSurveillanceActive, setIsSurveillanceActive] = useState(lieuEtat !== "I");
-
-  useEffect(() => {
-    loadData();
-  }, [idLieu]);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`/api/mesures/${idLieu}`, {
-        params: { rowNumber: 125 }
-      });
-
-      const measures = response.data as MeasureData[];
-      setData(measures);
-
-      if (measures.length > 0) {
-        const first = measures[0];
-        const last = measures[measures.length - 1];
-        
-        setConsigneSup(first.Consigne_Sup);
-        setConsigneInf(first.Consigne_Inf);
-        setConsigne(first.Consigne);
-        setUnite(first.Unite || "°C");
-        setFrequence(first.Frequence || 15);
-        setLastMeasure(`${last.Valeur}${last.Unite}`);
-        setLastDateTime(last.DateHeureMesure);
-      }
-    } catch (error) {
-      console.error("Error loading measurements:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Calculate Y-axis domain
-  const calculateYDomain = () => {
-    if (data.length === 0) return [0, 30];
-    
-    const values = data.map(d => d.Valeur);
-    const min = Math.min(...values, consigneInf || 0, consigne || 0);
-    const max = Math.max(...values, consigneSup || 30, consigne || 30);
-    const padding = (max - min) * 0.1;
-    
-    return [Math.floor(min - padding), Math.ceil(max + padding)];
-  };
+  const headerTheme = useMemo(
+    () => getStatusTheme(status, isSurveillanceActive),
+    [isSurveillanceActive, status],
+  );
 
   const handleSurveillanceToggle = () => {
     setShowConfirmModal(true);
@@ -153,40 +97,20 @@ export default function MonitoringCard({
     }
   };
 
-  // ✅ Déterminer la couleur du header selon le status
-  const getHeaderStyles = () => {
-    switch (status) {
-      case "critical":
-        return {
-          bg: "bg-red-600 dark:bg-red-700",
-          borderColor: "border-red-700 dark:border-red-800",
-          icon: <AlertTriangle className="w-4 h-4" />,
-        };
-      case "warning":
-        return {
-          bg: "bg-yellow-600 dark:bg-yellow-700",
-          borderColor: "border-yellow-700 dark:border-yellow-800",
-          icon: <AlertCircle className="w-4 h-4" />,
-        };
-      case "ok":
-      default:
-        return {
-          bg: "bg-slate-600 dark:bg-slate-700",
-          borderColor: "border-slate-700 dark:border-slate-800",
-          icon: null,
-        };
-    }
-  };
+  const HeaderIcon = headerTheme.Icon;
 
-  const headerStyles = getHeaderStyles();
-
-  const [yMin, yMax] = calculateYDomain();
+  const [yMin, yMax] = useMemo(
+    () => calculateYDomain(data, { consigneSup, consigneInf, consigne }),
+    [consigne, consigneInf, consigneSup, data],
+  );
 
   return (
     <>
       <div className="relative w-full max-w-[300px] max-h-[300px] mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
         {/* Header avec site, groupe et lieu */}
-        <div className={`px-3 py-2 ${headerStyles.bg} border-b-2 ${headerStyles.borderColor}`}>
+        <div
+          className={`px-3 py-2 ${headerTheme.headerBgClassName} border-b-2 ${headerTheme.headerBorderClassName}`}
+        >
           <div className="flex items-start justify-between gap-2">
             <div className="text-white text-xs font-medium space-y-1 flex-1">
               {siteName && (
@@ -211,11 +135,9 @@ export default function MonitoringCard({
                 {nomLieu}
               </div>
             </div>
-            {headerStyles.icon && (
-              <div className="text-white flex-shrink-0 mt-0.5">
-                {headerStyles.icon}
-              </div>
-            )}
+            <div className="text-white flex-shrink-0 mt-0.5" title={headerTheme.label}>
+              <HeaderIcon className="w-4 h-4" />
+            </div>
           </div>
         </div>
 
@@ -228,7 +150,7 @@ export default function MonitoringCard({
           className="cursor-pointer relative"
           onClick={() => setIsModalOpen(true)}
         >
-          {loading ? (
+          {isLoading ? (
             <div className="h-[130px] flex items-center justify-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
@@ -362,6 +284,9 @@ export default function MonitoringCard({
         <div className="mt-auto space-y-3 text-sm border-t border-gray-200 dark:border-gray-700 pt-3">
           {lastDateTime ? (
             <>
+              <div className="text-center">
+                <div className="text-xl font-bold text-gray-900 dark:text-white">{lastMeasureText}</div>
+              </div>
               <div className="flex items-center justify-center gap-4 text-xs text-gray-600 dark:text-gray-400">
                 <span>Fréq: {frequence} min</span>
                 <span>{lastDateTime}</span>
@@ -465,4 +390,3 @@ export default function MonitoringCard({
 }
 
 // Import for details modal
-import MonitoringDetailsModal from '@/components/monitoring-details-modal';

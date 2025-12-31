@@ -1,23 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getAuthenticatedUser } from "@/lib/auth";
 import type { Authorization, CurrentUser } from "@/lib/types";
+import { withAuthLogging } from "@/lib/api-wrappers";
+import { apiError, apiOk } from "@/lib/api-response";
 
-export async function GET(req: NextRequest) {
+export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
   try {
-    const user = getAuthenticatedUser(req);
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     // Get full user data from database
     const fullUser = await prisma.t_utilisateur.findUnique({
-      where: { Id_Utilisateur: user.userId },
+      where: { Id_Utilisateur: ctx.user.userId },
     });
 
     if (!fullUser || fullUser.Est_Archive) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return apiError(404, "not_found", "User not found");
     }
 
     // Get user's profile and associated authorizations
@@ -84,12 +79,9 @@ export async function GET(req: NextRequest) {
       },
     };
 
-    return NextResponse.json(response);
+    return apiOk(response);
   } catch (error) {
     console.error("Get current user error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError(500, "internal_error", "Internal server error");
   }
-}
+});

@@ -164,7 +164,9 @@ type DockIconProps = {
 };
 
 function DockIcon({ children, className = '', isHovered, isActive = false, forceMagnify = false }: DockIconProps) {
-  const scale = useTransform(isHovered ?? useMotionValue(0), [0, 1], [1, 1.15]);
+  const fallbackHovered = useMotionValue(0);
+  const hovered = isHovered ?? fallbackHovered;
+  const scale = useTransform(hovered, [0, 1], [1, 1.15]);
   const boostedScale = useTransform(() => (isActive || forceMagnify ? 1.15 : scale.get()));
   const animatedScale = useSpring(boostedScale, { mass: 0.2, stiffness: 250, damping: 18 });
 

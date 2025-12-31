@@ -1,18 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getAuthenticatedUser } from "@/lib/auth";
-import { withLogging } from "@/lib/api-logger";
+import { NextRequest } from "next/server"
 
-export const GET = withLogging(async (req: NextRequest) => {
+import { withAuthLogging } from "@/lib/api-wrappers"
+import { apiError, apiOk } from "@/lib/api-response"
+import { prisma } from "@/lib/prisma"
+
+export const GET = withAuthLogging(async (_req: NextRequest) => {
   try {
-    const user = getAuthenticatedUser(req);
-    if (!user) {
-      return NextResponse.json(
-        { error: "Non authentifié" },
-        { status: 401 }
-      );
-    }
-
     const types = await prisma.t_sonde_type.findMany({
       select: {
         Sonde_Type: true,
@@ -21,14 +14,12 @@ export const GET = withLogging(async (req: NextRequest) => {
       orderBy: {
         Sonde_Type: "asc",
       },
-    });
+    })
 
-    return NextResponse.json(types);
+    return apiOk(types)
   } catch (error) {
-    console.error("Sonde types fetch error:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la récupération des types de sondes" },
-      { status: 500 }
-    );
+    console.error("Sonde types fetch error:", error)
+    return apiError(500, "internal_error", "Erreur lors de la récupération des types de sondes")
   }
-});
+})
+

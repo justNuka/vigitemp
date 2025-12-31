@@ -1,7 +1,9 @@
 "use client";
 
 import Dock from "@/components/ui/dock";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
+import { useLocale } from "next-intl";
+import { getLocalizedPathname, stripLocalePrefix } from "@/i18n/pathnames";
 import {
   Gauge,
   WifiCog,
@@ -11,60 +13,56 @@ import {
   MapPin,
   Globe,
   Wrench,
-  Map,
-  BarChart3,
 } from "lucide-react";
 
 export function AdminNavDock() {
   const router = useRouter();
   const pathname = usePathname();
-  const params = useParams<{ locale?: string }>();
-  const locale = params?.locale;
-
-  const href = (path: string) => (locale ? `/${locale}${path}` : path);
+  const locale = useLocale();
+  const normalizedPathname = stripLocalePrefix(pathname);
 
   const navItems = [
     {
       icon: <Gauge size={20} />,
       label: "Sondes",
-      onClick: () => router.push(href("/admin/sondes")),
-      isActive: pathname === href("/admin/sondes"),
+      onClick: () => router.push("/admin/sondes"),
+      isActive: normalizedPathname === getLocalizedPathname("/admin/sondes", locale as any),
     },
     {
       icon: <WifiCog size={20} />,
       label: "Modules",
-      onClick: () => router.push(href("/admin/modules")),
-      isActive: pathname === href("/admin/modules"),
+      onClick: () => router.push("/admin/modules"),
+      isActive: normalizedPathname === getLocalizedPathname("/admin/modules", locale as any),
     },
     {
       icon: <Ruler size={20} />,
       label: "Etalons",
-      onClick: () => router.push(href("/admin/etalons")),
-      isActive: pathname === href("/admin/etalons"),
+      onClick: () => router.push("/admin/etalons"),
+      isActive: normalizedPathname === getLocalizedPathname("/admin/etalons", locale as any),
     },
     {
       icon: <Radio size={20} />,
       label: "Actionneurs",
-      onClick: () => router.push(href("/admin/actionneurs")),
-      isActive: pathname === href("/admin/actionneurs"),
+      onClick: () => router.push("/admin/actionneurs"),
+      isActive: normalizedPathname === getLocalizedPathname("/admin/actionneurs", locale as any),
     },
     {
       icon: <Users size={20} />,
       label: "Groupes",
-      onClick: () => router.push(href("/admin/groupes")),
-      isActive: pathname === href("/admin/groupes"),
+      onClick: () => router.push("/admin/groupes"),
+      isActive: normalizedPathname === getLocalizedPathname("/admin/groupes", locale as any),
     },
     {
       icon: <MapPin size={20} />,
       label: "Lieux",
-      onClick: () => router.push(href("/admin/lieux")),
-      isActive: pathname === href("/admin/lieux"),
+      onClick: () => router.push("/admin/lieux"),
+      isActive: normalizedPathname === getLocalizedPathname("/admin/lieux", locale as any),
     },
     {
       icon: <Globe size={20} />,
       label: "Sites",
-      onClick: () => router.push(href("/admin/sites")),
-      isActive: pathname === href("/admin/sites"),
+      onClick: () => router.push("/admin/sites"),
+      isActive: normalizedPathname === getLocalizedPathname("/admin/sites", locale as any),
     },
     // {
     //   icon: <Cable size={20} />,
@@ -74,20 +72,8 @@ export function AdminNavDock() {
     {
       icon: <Wrench size={20} />,
       label: "Outils",
-      onClick: () => router.push(href("/admin/outils")),
-      isActive: pathname.startsWith(href("/admin/outils")),
-    },
-    {
-      icon: <Map size={20} />,
-      label: "Plans",
-      onClick: () => router.push(href("/admin/plans")),
-      isActive: pathname === href("/admin/plans"),
-    },
-    {
-      icon: <BarChart3 size={20} />,
-      label: "Statistiques",
-      onClick: () => router.push(href("/admin/statistiques")),
-      isActive: pathname === href("/admin/statistiques"),
+      onClick: () => router.push("/admin/outils"),
+      isActive: normalizedPathname.startsWith(getLocalizedPathname("/admin/outils", locale as any)),
     },
   ];
 

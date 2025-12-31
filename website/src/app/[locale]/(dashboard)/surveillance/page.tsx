@@ -2,10 +2,9 @@
 
 import { Suspense } from "react";
 import { Metadata } from "next";
-import { ServerSensors } from "./server-sensors";
 import { ServerDashboardStats } from "./server-stats";
 import { ServerFilterOptions } from "./server-filters";
-import { SurveillancePageClient } from "./surveillance-client";
+import { SurveillancePageClient } from "./monitoring-page-client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 
