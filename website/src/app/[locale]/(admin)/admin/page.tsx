@@ -1,42 +1,30 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { PageHeader } from "@/components/page-header";
+import { useState } from "react"
+import { AlertTriangle, BookOpen, CheckCircle2, Clock, Database, Users } from "lucide-react"
+
+import { PageHeader } from "@/components/page-header"
+import { DashboardTable } from "@/components/data-table/dashboard-table"
+import { acknowledgmentColumns } from "@/components/data-table/acknowledgment-columns"
+import { activeAlarmsColumns } from "@/components/data-table/active-alarms-columns"
+import { backupColumns } from "@/components/data-table/backup-columns"
+import { connectedUsersColumns } from "@/components/data-table/connected-users-columns"
+import { systemLogsColumns } from "@/components/data-table/system-logs-columns"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  BookOpen,
-  Users,
-  AlertTriangle,
-  CheckCircle2,
-  Database,
-  Clock,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/data-table/data-table";
-import { connectedUsersColumns } from "@/components/data-table/connected-users-columns";
-import { activeAlarmsColumns } from "@/components/data-table/active-alarms-columns";
-import { acknowledgmentColumns } from "@/components/data-table/acknowledgment-columns";
-import { systemLogsColumns } from "@/components/data-table/system-logs-columns";
-import { backupColumns } from "@/components/data-table/backup-columns";
-import {
-  useConnectedUsers,
-  useActiveAlarms,
   useAcknowledgments,
-  useSystemLogs,
+  useActiveAlarms,
   useBackups,
-} from "@/hooks/useAdminData";
+  useConnectedUsers,
+  useSystemLogs,
+} from "@/hooks/useAdminData"
 
 function PaginationControls(props: {
-  page: number;
-  pages: number;
-  onPrev: () => void;
-  onNext: () => void;
+  page: number
+  pages: number
+  onPrev: () => void
+  onNext: () => void
 }) {
   return (
     <div className="flex items-center justify-between pt-4">
@@ -47,53 +35,61 @@ function PaginationControls(props: {
         <Button variant="outline" size="sm" onClick={props.onPrev} disabled={props.page === 1}>
           Précédent
         </Button>
-        <Button variant="outline" size="sm" onClick={props.onNext} disabled={props.page === props.pages}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={props.onNext}
+          disabled={props.page === props.pages}
+        >
           Suivant
         </Button>
       </div>
     </div>
-  );
+  )
 }
 
 export default function AdminDashboard() {
-  const [ackPage, setAckPage] = useState(1);
-  const [connectedUsersPage, setConnectedUsersPage] = useState(1);
-  const [activeAlarmsPage, setActiveAlarmsPage] = useState(1);
-  const [systemLogsPage, setSystemLogsPage] = useState(1);
+  const [ackPage, setAckPage] = useState(1)
+  const [connectedUsersPage, setConnectedUsersPage] = useState(1)
+  const [activeAlarmsPage, setActiveAlarmsPage] = useState(1)
+  const [systemLogsPage, setSystemLogsPage] = useState(1)
 
-  const connectedUsersQuery = useConnectedUsers(connectedUsersPage);
-  const activeAlarmsQuery = useActiveAlarms(activeAlarmsPage);
-  const acknowledgmentsQuery = useAcknowledgments(ackPage);
-  const systemLogsQuery = useSystemLogs(systemLogsPage);
-  const backupsQuery = useBackups();
+  const connectedUsersQuery = useConnectedUsers(connectedUsersPage)
+  const activeAlarmsQuery = useActiveAlarms(activeAlarmsPage)
+  const acknowledgmentsQuery = useAcknowledgments(ackPage)
+  const systemLogsQuery = useSystemLogs(systemLogsPage)
+  const backupsQuery = useBackups()
+
+  const lastBackupDate = (backupsQuery.data as any)?.[0]?.dateHeure
+  const lastBackupLabel = lastBackupDate ? new Date(lastBackupDate).toLocaleString() : "N/A"
 
   const isInitialLoading =
     connectedUsersQuery.isLoading &&
     activeAlarmsQuery.isLoading &&
     acknowledgmentsQuery.isLoading &&
     systemLogsQuery.isLoading &&
-    backupsQuery.isLoading;
+    backupsQuery.isLoading
 
   if (isInitialLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center p-6">
+      <div className="flex flex-1 items-center justify-center p-6">
         <div className="text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
           <p className="mt-4 text-muted-foreground">Chargement des données...</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex min-h-full flex-col">
       <PageHeader title="Tableau de bord admin" />
 
       <div className="space-y-6 p-6">
         <Card className="lg:min-h-96">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5" />
+              <CheckCircle2 className="h-5 w-5" />
               Journal acquittements alarmes
             </CardTitle>
             <CardDescription className="flex items-center justify-between">
@@ -106,7 +102,7 @@ export default function AdminDashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DataTable
+            <DashboardTable
               columns={acknowledgmentColumns}
               data={acknowledgmentsQuery.data?.data || []}
               emptyMessage="Aucun acquittement d'alarme enregistré"
@@ -127,20 +123,18 @@ export default function AdminDashboard() {
           <Card className="lg:col-span-1">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
+                <Users className="h-5 w-5" />
                 Utilisateurs connectés
               </CardTitle>
               <CardDescription className="flex items-center justify-between">
-                <span>
-                  Sessions actives ({connectedUsersQuery.data?.pagination.total || 0}, max 50)
-                </span>
+                <span>Sessions actives ({connectedUsersQuery.data?.pagination.total || 0}, max 50)</span>
                 {connectedUsersQuery.isFetching && (
                   <span className="text-xs text-blue-600">Mise à jour...</span>
                 )}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <DataTable
+              <DashboardTable
                 columns={connectedUsersColumns}
                 data={connectedUsersQuery.data?.data || []}
                 emptyMessage="Aucun utilisateur connecté actuellement"
@@ -152,7 +146,7 @@ export default function AdminDashboard() {
                 onPrev={() => setConnectedUsersPage((p) => Math.max(1, p - 1))}
                 onNext={() =>
                   setConnectedUsersPage((p) =>
-                    Math.min(connectedUsersQuery.data?.pagination.pages || 1, p + 1)
+                    Math.min(connectedUsersQuery.data?.pagination.pages || 1, p + 1),
                   )
                 }
               />
@@ -162,7 +156,7 @@ export default function AdminDashboard() {
           <Card className="lg:col-span-1">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5" />
+                <AlertTriangle className="h-5 w-5" />
                 Alarmes en cours
               </CardTitle>
               <CardDescription className="flex items-center justify-between">
@@ -173,7 +167,7 @@ export default function AdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <DataTable
+              <DashboardTable
                 columns={activeAlarmsColumns}
                 data={activeAlarmsQuery.data?.data || []}
                 emptyMessage="Aucune alarme active en cours"
@@ -185,7 +179,7 @@ export default function AdminDashboard() {
                 onPrev={() => setActiveAlarmsPage((p) => Math.max(1, p - 1))}
                 onNext={() =>
                   setActiveAlarmsPage((p) =>
-                    Math.min(activeAlarmsQuery.data?.pagination.pages || 1, p + 1)
+                    Math.min(activeAlarmsQuery.data?.pagination.pages || 1, p + 1),
                   )
                 }
               />
@@ -197,21 +191,21 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5" />
+                <BookOpen className="h-5 w-5" />
                 Journal système
               </CardTitle>
               <CardDescription className="flex items-center justify-between">
-                <span>Évènements récents ({systemLogsQuery.data?.pagination.total || 0}, max 50)</span>
+                <span>Événements récents ({systemLogsQuery.data?.pagination.total || 0}, max 50)</span>
                 {systemLogsQuery.isFetching && (
                   <span className="text-xs text-blue-600">Mise à jour...</span>
                 )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <DataTable
+              <DashboardTable
                 columns={systemLogsColumns}
                 data={systemLogsQuery.data?.data || []}
-                emptyMessage="Aucun évènement système enregistré"
+                emptyMessage="Aucun événement système enregistré"
                 maxHeight="380px"
               />
               <PaginationControls
@@ -220,7 +214,7 @@ export default function AdminDashboard() {
                 onPrev={() => setSystemLogsPage((p) => Math.max(1, p - 1))}
                 onNext={() =>
                   setSystemLogsPage((p) =>
-                    Math.min(systemLogsQuery.data?.pagination.pages || 1, p + 1)
+                    Math.min(systemLogsQuery.data?.pagination.pages || 1, p + 1),
                   )
                 }
               />
@@ -230,7 +224,7 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Database className="w-5 h-5" />
+                <Database className="h-5 w-5" />
                 Sauvegarde système
               </CardTitle>
               <CardDescription className="flex items-center justify-between">
@@ -243,16 +237,14 @@ export default function AdminDashboard() {
             <CardContent className="space-y-4">
               <div>
                 <p className="text-sm text-muted-foreground">Dernière sauvegarde</p>
-                <p className="text-sm font-medium flex items-center gap-2 mt-1">
-                  <Clock className="w-4 h-4" />
-                  {backupsQuery.data && backupsQuery.data.length > 0
-                    ? new Date((backupsQuery.data as any)[0]?.dateHeure ?? Date.now()).toLocaleString()
-                    : "N/A"}
+                <p className="mt-1 flex items-center gap-2 text-sm font-medium">
+                  <Clock className="h-4 w-4" />
+                  {lastBackupLabel}
                 </p>
               </div>
               <Button className="w-full">Lancer sauvegarde</Button>
               <div className="mt-4">
-                <DataTable
+                <DashboardTable
                   columns={backupColumns}
                   data={backupsQuery.data || []}
                   emptyMessage="Aucun historique de sauvegarde disponible"
@@ -264,5 +256,6 @@ export default function AdminDashboard() {
         </div>
       </div>
     </div>
-  );
+  )
 }
+

@@ -1,29 +1,29 @@
+import type { ColumnDef } from "@tanstack/react-table"
+
 export interface ActiveAlarm {
-  id: string;
-  sonde: string;
-  lieu: string;
-  valeur: string;
-  seuil: string;
-  duree: string;
-  statut: string;
+  id: string
+  sonde: string
+  lieu: string
+  valeur: string
+  seuil: string
+  duree: string
+  statut: string
 }
 
-export const activeAlarmsColumns = [
+export const activeAlarmsColumns: ColumnDef<ActiveAlarm>[] = [
   {
     accessorKey: "sonde",
     header: "Sonde",
     enableSorting: true,
-    enableColumnFilter: true,
   },
   {
     accessorKey: "lieu",
     header: "Lieu / Temps",
     enableSorting: true,
-    enableColumnFilter: true,
-    cell: (info: any) => (
+    cell: ({ row }) => (
       <div className="text-sm">
-        <p className="font-medium">{info.row.original.lieu}</p>
-        <p className="text-muted-foreground text-xs">{info.row.original.duree}</p>
+        <p className="font-medium">{row.original.lieu}</p>
+        <p className="text-xs text-muted-foreground">{row.original.duree}</p>
       </div>
     ),
   },
@@ -31,23 +31,21 @@ export const activeAlarmsColumns = [
     accessorKey: "valeur",
     header: "Valeur",
     enableSorting: true,
-    enableColumnFilter: true,
   },
   {
     accessorKey: "seuil",
     header: "Seuil",
     enableSorting: true,
-    enableColumnFilter: true,
   },
   {
     accessorKey: "statut",
     header: "Statut",
     enableSorting: true,
-    enableColumnFilter: true,
-    cell: (info: any) => (
-      <span className="px-2 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-        {info.getValue()}
+    cell: ({ getValue }) => (
+      <span className="rounded-full bg-red-100 px-2 py-1 text-sm font-medium text-red-800">
+        {String(getValue() ?? "")}
       </span>
     ),
   },
-];
+]
+

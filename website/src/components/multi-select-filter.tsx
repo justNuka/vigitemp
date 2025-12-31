@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,12 +29,14 @@ export function MultiSelectFilter({
 }: MultiSelectFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const dropdownId = useRef(`msf-${Math.random().toString(36).slice(2)}`);
+  const dropdownId = useId();
 
-  // Fermer quand on clique en dehors
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
@@ -44,9 +46,8 @@ export function MultiSelectFilter({
   }, []);
 
   const handleToggle = (id: number | string, disabled?: boolean) => {
-    // Ne pas permettre la sélection d'options désactivées
     if (disabled) return;
-    
+
     const newSelection = selectedIds.includes(id)
       ? selectedIds.filter((selected) => selected !== id)
       : [...selectedIds, id];
@@ -75,7 +76,7 @@ export function MultiSelectFilter({
         className="w-full justify-between"
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
-        aria-controls={dropdownId.current}
+        aria-controls={dropdownId}
         aria-haspopup="listbox"
       >
         <div className="flex items-center gap-2 flex-1 text-left">
@@ -85,19 +86,22 @@ export function MultiSelectFilter({
               {selectedIds.length}
             </Badge>
           )}
+          {selectedIds.length === 0 && placeholder ? (
+            <span className="ml-2 text-sm text-muted-foreground">{placeholder}</span>
+          ) : null}
         </div>
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        />
       </Button>
 
-      {/* Dropdown */}
       {isOpen && (
         <div
-          id={dropdownId.current}
+          id={dropdownId}
           role="listbox"
           aria-multiselectable="true"
           className="absolute top-full left-0 right-0 z-50 mt-2 border border-input bg-popover rounded-md shadow-md p-2"
         >
-          {/* Afficher les sélections actuelles */}
           {selectedLabels.length > 0 && (
             <div className="mb-3 pb-3 border-b flex flex-wrap gap-1">
               {selectedLabels.map((label) => (
@@ -114,7 +118,6 @@ export function MultiSelectFilter({
             </div>
           )}
 
-          {/* Options */}
           <div className="space-y-2 max-h-48 overflow-y-auto">
             {options.length === 0 ? (
               <p className="text-sm text-muted-foreground py-2">Aucune option</p>
@@ -146,22 +149,12 @@ export function MultiSelectFilter({
             )}
           </div>
 
-          {/* Actions */}
           {selectedIds.length > 0 && (
             <div className="mt-3 pt-3 border-t flex gap-2">
-              <Button
-                size="sm"
-                variant="ghost"
-                className="flex-1"
-                onClick={handleClear}
-              >
+              <Button size="sm" variant="ghost" className="flex-1" onClick={handleClear}>
                 Effacer
               </Button>
-              <Button
-                size="sm"
-                className="flex-1"
-                onClick={() => setIsOpen(false)}
-              >
+              <Button size="sm" className="flex-1" onClick={() => setIsOpen(false)}>
                 Appliquer
               </Button>
             </div>
@@ -171,3 +164,4 @@ export function MultiSelectFilter({
     </div>
   );
 }
+

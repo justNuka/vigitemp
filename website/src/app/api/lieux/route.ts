@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { withLogging } from "@/lib/api-logger";
-import { z } from "zod";
+import { NextRequest } from "next/server"
+import { getAuthenticatedUser } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+import { withLogging } from "@/lib/api-logger"
+import { z } from "zod"
+import { apiError, apiOk } from "@/lib/api-response"
 
 const createLieuSchema = z.object({
   Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(20),
@@ -14,28 +15,21 @@ const createLieuSchema = z.object({
   Sonde_Numero_Serie: z.string().nullable().optional(),
   Consigne: z.number().nullable().optional(),
   Frequence: z.number().nullable().optional(),
-  // Consignes Sup
   Consigne_Sup: z.number().nullable().optional(),
   Est_Consigne_Sup_Active: z.boolean().optional(),
   Consigne_Sup_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Sup_Pre_Alarme_Active: z.boolean().optional(),
   Retard_Alarme_Haut: z.number().nullable().optional(),
-  // Consignes Inf
   Consigne_Inf: z.number().nullable().optional(),
   Est_Consigne_Inf_Active: z.boolean().optional(),
   Consigne_Inf_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Inf_Pre_Alarme_Active: z.boolean().optional(),
   Retard_Alarme_Bas: z.number().nullable().optional(),
-});
+})
 
 export const GET = withLogging(async (req: NextRequest) => {
-  const user = getAuthenticatedUser(req);
-  if (!user) {
-    return NextResponse.json(
-      { error: "Non authentifié" },
-      { status: 401 }
-    );
-  }
+  const user = getAuthenticatedUser(req)
+  if (!user) return apiError(401, "unauthenticated", "Non authentifié")
 
   try {
     const lieux = await prisma.t_lieu.findMany({
@@ -52,33 +46,26 @@ export const GET = withLogging(async (req: NextRequest) => {
         t_sonde: { select: { Sonde_Numero_Serie: true } },
       },
       orderBy: { Nom_Lieu: "asc" },
-    });
+    })
 
-    // Convert BigInt to string for JSON serialization
     const serialized = JSON.parse(
-      JSON.stringify(lieux, (_, value) =>
-        typeof value === "bigint" ? value.toString() : value
-      )
-    );
+      JSON.stringify(lieux, (_, value) => (typeof value === "bigint" ? value.toString() : value)),
+    )
 
-    return NextResponse.json(serialized);
+    return apiOk(serialized)
   } catch (error) {
-    console.error("[GET /api/lieux]", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la récupération des lieux" },
-      { status: 500 }
-    );
+    console.error("[GET /api/lieux]", error)
+    return apiError(500, "lieux_fetch_failed", "Erreur lors de la récupération des lieux")
   }
-});
+})
 
 export const POST = withLogging(async (req: NextRequest) => {
-  const user = getAuthenticatedUser(req);
-  if (!user)
-    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  const user = getAuthenticatedUser(req)
+  if (!user) return apiError(401, "unauthenticated", "Non authentifié")
 
   try {
-    const body = await req.json();
-    const validated = createLieuSchema.parse(body);
+    const body = await req.json()
+    const validated = createLieuSchema.parse(body)
 
     const groupIds = Array.from(
       new Set(
@@ -86,16 +73,15 @@ export const POST = withLogging(async (req: NextRequest) => {
           ...(validated.GroupIds ?? []),
           validated.Id_Groupe1 ?? undefined,
           validated.Id_Groupe2 ?? undefined,
-        ].filter((v): v is number => typeof v === "number" && !Number.isNaN(v))
-      )
-    );
+        ].filter((v): v is number => typeof v === "number" && !Number.isNaN(v)),
+      ),
+    )
 
     const lieu = await prisma.t_lieu.create({
       data: {
         Nom_Lieu: validated.Nom_Lieu,
         Lieu_Etat: validated.Lieu_Etat,
         Id_Site: validated.Id_Site,
-        // Backward-compat: garder 2 groupes max dans les colonnes historiques.
         Id_Groupe1: groupIds[0] ?? validated.Id_Groupe1 ?? null,
         Id_Groupe2: groupIds[1] ?? validated.Id_Groupe2 ?? null,
         Sonde_Numero_Serie: validated.Sonde_Numero_Serie,
@@ -104,14 +90,12 @@ export const POST = withLogging(async (req: NextRequest) => {
         Consigne_Sup: validated.Consigne_Sup,
         Est_Consigne_Sup_Active: validated.Est_Consigne_Sup_Active ?? false,
         Consigne_Sup_Pre_Alarme: validated.Consigne_Sup_Pre_Alarme,
-        Est_Consigne_Sup_Pre_Alarme_Active:
-          validated.Est_Consigne_Sup_Pre_Alarme_Active ?? false,
+        Est_Consigne_Sup_Pre_Alarme_Active: validated.Est_Consigne_Sup_Pre_Alarme_Active ?? false,
         Retard_Alarme_Haut: validated.Retard_Alarme_Haut,
         Consigne_Inf: validated.Consigne_Inf,
         Est_Consigne_Inf_Active: validated.Est_Consigne_Inf_Active ?? false,
         Consigne_Inf_Pre_Alarme: validated.Consigne_Inf_Pre_Alarme,
-        Est_Consigne_Inf_Pre_Alarme_Active:
-          validated.Est_Consigne_Inf_Pre_Alarme_Active ?? false,
+        Est_Consigne_Inf_Pre_Alarme_Active: validated.Est_Consigne_Inf_Pre_Alarme_Active ?? false,
         Retard_Alarme_Bas: validated.Retard_Alarme_Bas,
         Est_Archive: false,
         ...(groupIds.length > 0
@@ -125,17 +109,14 @@ export const POST = withLogging(async (req: NextRequest) => {
             }
           : {}),
       },
-    });
+    })
 
-    return NextResponse.json(lieu, { status: 201 });
+    return apiOk(lieu, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 });
+      return apiError(400, "validation_error", "Invalid input", { issues: error.issues })
     }
-    console.error("[POST /api/lieux]", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la création du lieu" },
-      { status: 500 }
-    );
+    console.error("[POST /api/lieux]", error)
+    return apiError(500, "lieu_create_failed", "Erreur lors de la création du lieu")
   }
-});
+})

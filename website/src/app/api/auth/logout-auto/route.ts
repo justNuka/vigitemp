@@ -1,30 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth";
-import { createAuditLog, AUDIT_CODES } from "@/lib/audit";
+import { NextRequest } from "next/server"
 
-export async function POST(req: NextRequest) {
-  // Récupérer l'utilisateur avant de supprimer le cookie
-  const user = getAuthenticatedUser(req);
-  
-  const response = NextResponse.json({ success: true });
+import { getRequestContext, withLogging } from "@/lib/api-logger"
+import { apiOk } from "@/lib/api-response"
+import { getAuthenticatedUser } from "@/lib/auth"
+import { log } from "@/lib/logger"
 
-  // Clear JWT cookie
+export const POST = withLogging(async (req: NextRequest) => {
+  const user = getAuthenticatedUser(req)
+  const { ip } = getRequestContext(req)
+
+  const response = apiOk({ success: true })
   response.cookies.set("auth-token", "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge: 0,
-  });
+  })
 
-  // Créer l'audit de déconnexion automatique (timeout)
   if (user) {
-    await createAuditLog({
-      code: AUDIT_CODES.DECONNEXION,
-      username: user.username,
+    log.auth.logout(user.username, user.userId, ip, "Auto logout (inactivity)", {
       userProfile: user.profile,
-      comment: `Déconnexion de l'utilisateur ${user.username} (inactivité)`,
-    });
+    })
   }
 
-  return response;
-}
+  return response
+})

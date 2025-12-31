@@ -6,9 +6,16 @@ const withNextIntl = createNextIntlPlugin(
   "./src/i18n/request.ts"
 );
 
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    // React strict mode
+    reactStrictMode: true,
+    // Autoriser le dev mode sur une IP
+    allowedDevOrigins: [
+      "http://192.168.63.144",
+      "http://192.168.63.144:3000",
+      "http://localhost:3000",
+    ],
     // Masquer les warnings de source maps en dev (faux positifs Next.js 16)
     onDemandEntries: {
         maxInactiveAge: 25 * 1000,

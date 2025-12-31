@@ -90,10 +90,9 @@ export default function UsersPerfTestPage() {
 }
 
 async function UsersDisplay() {
-  const start = Date.now();
   // const users = await ServerUsers();
   const users: any[] = [];
-  const duration = Date.now() - start;
+  const duration = 0;
 
   const adminCount = users.filter(u => u.role === "admin").length;
   const activeCount = users.filter(u => u.isActive).length;

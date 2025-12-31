@@ -1,10 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import MonitoringCard from "@/components/monitoring-card";
-import { EmptyState } from "@/components/empty-state";
 import type { SensorWithLocation } from "@/lib/api";
-import { Activity, Building2, Users, ChevronDown } from "lucide-react";
+import { Building2, Users, ChevronDown } from "lucide-react";
+
+import { groupSensorsBySiteAndGroup } from "./_helpers/group-sensors";
+import { usePersistentStringSet } from "./_hooks/use-persistent-string-set";
+import { sortSensorsByStatus } from "./_helpers/monitoring-derived";
+import { SurveillanceEmptyState } from "./_components/monitoring-empty-state";
+import { countStatus } from "@/lib/surveillance-status";
+import { SurveillanceTreeStatsBadges } from "./_components/monitoring-tree-stats-badges";
+import { formatAlarmes, formatGroupes, formatSondes } from "./_helpers/monitoring-labels";
 
 /**
  * MonitoringCardsGrid - Groupée par Site → Groupe avec dépliage/repliage
@@ -29,102 +35,23 @@ export function MonitoringCardsGrid({
   sensors,
   onSurveillanceToggle 
 }: MonitoringCardsGridProps) {
-  const [expandedSites, setExpandedSites] = useState<Set<string>>(new Set());
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-  const [isHydrated, setIsHydrated] = useState(false);
+  const { value: expandedSites, toggle: toggleSite } = usePersistentStringSet("surveillance-expanded-sites");
+  const { value: expandedGroups, toggle: toggleGroup } = usePersistentStringSet("surveillance-expanded-groups");
 
-  // Initialiser depuis localStorage au montage
-  useEffect(() => {
-    try {
-      const savedSites = localStorage.getItem('surveillance-expanded-sites');
-      const savedGroups = localStorage.getItem('surveillance-expanded-groups');
-      
-      if (savedSites) setExpandedSites(new Set(JSON.parse(savedSites)));
-      if (savedGroups) setExpandedGroups(new Set(JSON.parse(savedGroups)));
-    } catch (e) {
-      console.error('Erreur lors de la lecture du localStorage:', e);
-    }
-    setIsHydrated(true);
-  }, []);
-
-  // Persister les changements en localStorage
-  useEffect(() => {
-    if (isHydrated) {
-      localStorage.setItem('surveillance-expanded-sites', JSON.stringify(Array.from(expandedSites)));
-      localStorage.setItem('surveillance-expanded-groups', JSON.stringify(Array.from(expandedGroups)));
-    }
-  }, [expandedSites, expandedGroups, isHydrated]);
-
-  const toggleSite = (siteId: string) => {
-    setExpandedSites(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(siteId)) {
-        newSet.delete(siteId);
-      } else {
-        newSet.add(siteId);
-      }
-      return newSet;
-    });
-  };
-
-  const toggleGroup = (groupKey: string) => {
-    setExpandedGroups(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(groupKey)) {
-        newSet.delete(groupKey);
-      } else {
-        newSet.add(groupKey);
-      }
-      return newSet;
-    });
-  };
   if (sensors.length === 0) {
-    return (
-      <div className="p-4 md:p-6">
-        <EmptyState
-          title="Aucun lieu de surveillance"
-          description="Aucune donnée disponible pour le moment."
-          icon={Activity}
-        />
-      </div>
-    );
+    return <SurveillanceEmptyState title="Aucune sonde" />;
   }
 
-  // Grouper par Site → Groupe
-  type GroupStructure = {
-    [siteId: string]: {
-      siteName: string;
-      groups: {
-        [groupName: string]: SensorWithLocation[];
-      };
-    };
-  };
-
-  const grouped: GroupStructure = sensors.reduce((acc, sensor) => {
-    const siteId = String(sensor.location.siteId || 'no-site');
-    const siteName = sensor.location.site || `Site ${siteId}`;
-    const groupName = sensor.location.groupName1 || 'Sans groupe';
-
-    if (!acc[siteId]) {
-      acc[siteId] = {
-        siteName,
-        groups: {}
-      };
-    }
-
-    if (!acc[siteId].groups[groupName]) {
-      acc[siteId].groups[groupName] = [];
-    }
-
-    acc[siteId].groups[groupName].push(sensor);
-    return acc;
-  }, {} as GroupStructure);
+  const grouped = groupSensorsBySiteAndGroup(sensors);
 
   return (
     <div className="p-4 md:p-6 space-y-8 animate-fade-in">
       {/* Boucle sur les sites */}
-      {Object.entries(grouped).map(([siteId, { siteName, groups }]) => {
+      {grouped.map(({ siteId, siteName, sensorsCount, groups }) => {
         const isSiteExpanded = expandedSites.has(siteId);
+        const siteSensors = groups.flatMap((g) => g.sensors);
+        const siteStats = countStatus(siteSensors);
+        const siteAlarmsCount = siteStats.critical + siteStats.warning;
         
         return (
           <div key={siteId} className="space-y-6">
@@ -140,14 +67,12 @@ export function MonitoringCardsGrid({
               />
               <Building2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               <h2 className="text-xl font-bold">{siteName}</h2>
-              <span className="ml-auto text-sm text-gray-500">
-                {(() => {
-                  const allSensors = Object.values(groups).flat();
-                  const alarmCount = allSensors.filter(s => s.status !== 'ok').length;
-                  return alarmCount > 0 
-                    ? `${allSensors.length} sonde(s) (${alarmCount} alarme(s))`
-                    : `${allSensors.length} sonde(s)`;
-                })()}
+              <span className="ml-auto flex items-center gap-3 text-sm text-gray-500">
+                <span>
+                  {formatSondes(sensorsCount)} • {formatGroupes(groups.length)}
+                  {siteAlarmsCount > 0 ? ` • ${formatAlarmes(siteAlarmsCount)}` : ""}
+                </span>
+                <SurveillanceTreeStatsBadges stats={siteStats} compact />
               </span>
             </button>
 
@@ -155,9 +80,11 @@ export function MonitoringCardsGrid({
             {isSiteExpanded && (
               <div className="space-y-4 animate-fade-in">
                 {/* Boucle sur les groupes */}
-                {Object.entries(groups).map(([groupName, groupSensors]) => {
-                  const groupKey = `${siteId}-${groupName}`;
+                {groups.map(({ groupKey, groupName, sensors: groupSensors }) => {
                   const isGroupExpanded = expandedGroups.has(groupKey);
+                  const sortedGroupSensors = sortSensorsByStatus(groupSensors);
+                  const groupStats = countStatus(groupSensors);
+                  const alarmsCount = groupStats.critical + groupStats.warning;
 
                   return (
                     <div key={groupKey} className="space-y-3">
@@ -173,26 +100,24 @@ export function MonitoringCardsGrid({
                         />
                         <Users className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                         <h3 className="text-lg font-semibold">{groupName}</h3>
-                        <span className="ml-auto text-xs text-gray-500">
-                          {(() => {
-                            const alarmCount = groupSensors.filter(s => s.status !== 'ok').length;
-                            return alarmCount > 0
-                              ? `${groupSensors.length} sonde(s) (${alarmCount} alarme(s))`
-                              : `${groupSensors.length} sonde(s)`;
-                          })()}
+                        <span className="ml-auto flex items-center gap-3 text-xs text-gray-500">
+                          <span>
+                            {formatSondes(groupSensors.length)}
+                            {alarmsCount > 0 ? ` • ${formatAlarmes(alarmsCount)}` : ""}
+                          </span>
+                          <SurveillanceTreeStatsBadges stats={groupStats} compact />
                         </span>
                       </button>
 
                       {/* Grille des sondes du groupe - conditionnel */}
                       {isGroupExpanded && (
-                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-2 animate-fade-in">
-                          {groupSensors.map((sensor) => (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 animate-fade-in">
+                          {sortedGroupSensors.map((sensor) => (
                             <MonitoringCard
                               key={sensor.id}
-                              idLieu={parseInt(sensor.id)}
+                              idLieu={Number(sensor.id)}
                               nomLieu={sensor.name}
-                              sondeNumeroSerie={(sensor as any).SondeNumeroSerie}
-                              lieuEtat={(sensor as any).Lieu_Etat}
+                              lieuType={sensor.lieuType || null}
                               siteName={siteName}
                               groupName={groupName}
                               onSurveillanceToggle={onSurveillanceToggle}

@@ -1,44 +1,44 @@
-import { NextResponse, NextRequest } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { withLogging } from "@/lib/api-logger";
-import { z } from "zod";
+import { NextRequest } from "next/server"
+import { getAuthenticatedUser } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+import { withLogging } from "@/lib/api-logger"
+import { z } from "zod"
+import { apiError, apiOk } from "@/lib/api-response"
 
 const updateSiteSchema = z.object({
   Libelle_Site: z.string().min(1, "Libellé site requis").max(50).optional(),
   Commentaire: z.string().max(200).nullable().optional(),
   Est_Archive: z.boolean().optional(),
-});
+})
 
-export const PATCH = withLogging(async (req: NextRequest) => {
-  const user = getAuthenticatedUser(req);
-  if (!user) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+export const PATCH = withLogging(
+  async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+    const user = getAuthenticatedUser(req)
+    if (!user) return apiError(401, "unauthenticated", "Non authentifié")
 
-  try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
+    try {
+      const { id: idParam } = await params
+      const id = parseInt(idParam)
 
-    if (!id) {
-      return NextResponse.json({ error: "ID site requis" }, { status: 400 });
+      if (!id) {
+        return apiError(400, "invalid_id", "ID site requis")
+      }
+
+      const body = await req.json()
+      const validated = updateSiteSchema.parse(body)
+
+      const site = await prisma.t_site.update({
+        where: { Id_Site: id },
+        data: validated,
+      })
+
+      return apiOk(site)
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return apiError(400, "validation_error", "Invalid input", { issues: error.issues })
+      }
+      console.error("[PATCH /api/sites/[id]]", error)
+      return apiError(500, "site_update_failed", "Erreur lors de la modification du site")
     }
-
-    const body = await req.json();
-    const validated = updateSiteSchema.parse(body);
-
-    const site = await prisma.t_site.update({
-      where: { Id_Site: parseInt(id) },
-      data: validated,
-    });
-
-    return NextResponse.json(site);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 });
-    }
-    console.error("[PATCH /api/sites/[id]]", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la modification du site" },
-      { status: 500 }
-    );
-  }
-});
+  },
+)

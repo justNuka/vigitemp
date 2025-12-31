@@ -152,6 +152,8 @@ export function TanStackTable<TData extends Record<string, any>>({
     new Set([10, 20, 30, 40, 50, table.getState().pagination.pageSize])
   ).sort((a, b) => a - b);
 
+  const rows = showPagination ? table.getRowModel().rows : table.getFilteredRowModel().rows;
+
   return (
     <div className="space-y-4 w-full">
       {/* Barre d'outils - conditionnelle */}
@@ -258,8 +260,8 @@ export function TanStackTable<TData extends Record<string, any>>({
                   </div>
                 </TableCell>
               </TableRow>
-            ) : table.getRowModel().rows.length > 0 ? (
-              table.getRowModel().rows.map((row, rowIndex) => {
+            ) : rows.length > 0 ? (
+              rows.map((row, rowIndex) => {
                 // Vérifier si la ligne est sélectionnée
                 const isSelected = selectedRowId !== null && selectedRowId !== undefined && (
                   (row.original as any).Id_Sonde === selectedRowId ||

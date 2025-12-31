@@ -1,26 +1,18 @@
 "use client";
 
-import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useCurrentTime } from "@/hooks/use-current-time";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { PageHeader } from "@/components/page-header";
-import { SensorsGrid } from "./sensors-grid-client";
 import { MonitoringCardsGrid } from "./monitoring-cards-grid";
 import { SensorsCardsGrid } from "./sensors-cards-grid";
-import { SurveillanceFilters } from "./surveillance-filters";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import type { SensorWithLocation, Location } from "@/lib/api";
 import type { Site, Group } from "./server-filters";
 import { useTranslations } from "next-intl";
+import { usePaginatedSensors } from "./_hooks/use-paginated-sensors";
+import { useInfiniteScroll } from "./_hooks/use-infinite-scroll";
+import { SurveillanceHeaderControls } from "./_components/monitoring-header-controls";
+import { SurveillanceLoadMore } from "./_components/monitoring-load-more";
+import { applySurveillanceFilters, computeSurveillanceStats, type FilterState } from "./_helpers/monitoring-derived";
 
-type StatusFilter = "all" | "ok" | "warning" | "critical";
 type ViewMode = "tree" | "graphs";
-
-interface FilterState {
-  siteIds: number[]; // Changed to array for multiple sites
-  groupIds: number[];
-}
 
 interface Stats {
   total: number;
@@ -28,14 +20,6 @@ interface Stats {
   warning: number;
   critical: number;
   activeAlarms: number;
-}
-
-interface PaginatedResponse {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-  sensors: SensorWithLocation[];
 }
 
 interface Props {
@@ -46,100 +30,35 @@ interface Props {
 
 export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
   const t = useTranslations("surveillance");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("graphs");
   const [filters, setFilters] = useState<FilterState>({ siteIds: [], groupIds: [] });
-  const [cachedSensors, setCachedSensors] = useState<SensorWithLocation[]>([]); // ✅ Cache local
-  const currentTime = useCurrentTime();
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // Charger TOUS les sensors une seule fois (pas de refetch on filter)
-  const { data: paginatedData, isFetching, error, isError } = useQuery({
-    queryKey: ["sensors-all"],
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        page: "1",
-        limit: "1000", // Charger beaucoup d'une seule fois
-      });
-      const res = await fetch(`/api/sensors/paginated?${params}`);
-      if (!res.ok) throw new Error("Failed to fetch sensors");
-      return res.json() as Promise<PaginatedResponse>;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-  });
+  const { data, isFetching, fetchNextPage, hasNextPage } = usePaginatedSensors({ limit: 100 });
 
-  // ✅ Maintenir le cache local synchronisé avec paginatedData
-  useEffect(() => {
-    if (paginatedData?.sensors && Array.isArray(paginatedData.sensors) && paginatedData.sensors.length > 0) {
-      setCachedSensors(paginatedData.sensors);
-    }
-  }, [paginatedData?.sensors]);
-
-  // ✅ Filtrer les sensors EN CLIENT au lieu de les charger filtrés du serveur
-  const filteredSensors = useMemo(() => {
-    let result = cachedSensors.length > 0 ? cachedSensors : (paginatedData?.sensors ?? []);
-    
-    // Appliquer les filtres de sites
-    if (filters.siteIds.length > 0) {
-      result = result.filter(s => 
-        s.location.siteId && filters.siteIds.includes(s.location.siteId)
-      );
-    }
-    
-    // Appliquer les filtres de groupes
-    if (filters.groupIds.length > 0) {
-      result = result.filter((s) => {
-        const locationGroupIds =
-          s.location.groupIds && s.location.groupIds.length > 0
-            ? s.location.groupIds
-            : [s.location.groupId1, s.location.groupId2].filter(
-                (id): id is number => typeof id === "number" && !Number.isNaN(id)
-              );
-
-        return locationGroupIds.some((id) => filters.groupIds.includes(id));
-      });
-    }
-    
-    return result;
-  }, [cachedSensors, paginatedData?.sensors, filters.siteIds, filters.groupIds]);
-
-  // Récupérer les sensors actuels et les locations
-  // ✅ Utiliser les filtered sensors au lieu des all sensors
-  const sensors = filteredSensors;
-
-  const locations = useMemo(() => {
-    if (!Array.isArray(sensors)) return [];
-    return Array.from(
-      new Map(
-        sensors.map((s) => [s.location.id, s.location])
-      ).values()
-    );
-  }, [sensors]);
-
-  // Recalculer les stats basées sur les sensors filtrés (pour cette page)
-  const filteredStats = useMemo(() => {
-    if (!Array.isArray(sensors)) {
-      return {
-        total: paginatedData?.total ?? 0,
-        ok: 0,
-        warning: 0,
-        critical: 0,
-        activeAlarms: initialStats?.activeAlarms ?? 0,
-      };
-    }
-    const ok = sensors.filter((s) => s.status === "ok").length;
-    const warning = sensors.filter((s) => s.status === "warning").length;
-    const critical = sensors.filter((s) => s.status === "critical").length;
+  const paginatedData = useMemo(() => {
+    const pages = data?.pages ?? [];
+    const sensors = pages.flatMap((p) => p.sensors ?? []);
+    const last = pages[pages.length - 1];
 
     return {
-      total: paginatedData?.total ?? 0,
-      ok,
-      warning,
-      critical,
-      activeAlarms: initialStats?.activeAlarms ?? 0,
+      total: last?.total ?? 0,
+      page: last?.page ?? 1,
+      limit: last?.limit ?? 100,
+      totalPages: last?.totalPages ?? 1,
+      sensors,
     };
-  }, [sensors, paginatedData?.total, initialStats?.activeAlarms]);
+  }, [data?.pages]);
+
+  const allSensors = paginatedData.sensors;
+  const visibleSensors = applySurveillanceFilters(allSensors, filters);
+  const filtersActive = filters.siteIds.length > 0 || filters.groupIds.length > 0;
+
+  const visibleStats = computeSurveillanceStats({
+    sensors: visibleSensors,
+    total: paginatedData.total,
+    activeAlarms: initialStats?.activeAlarms ?? 0,
+  });
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);
@@ -154,76 +73,66 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
     }
   }, []);
 
-  // TODO: Implement pagination with hasNextPage and fetchNextPage
-  // Charger la page suivante
-  // const handleLoadMore = () => {
-  //   if (hasNextPage) {
-  //     setPage(p => p + 1);
-  //   }
-  // };
-
-  // Intersection Observer pour infinite scroll optionnel
-  // useEffect(() => {
-  //   if (!loadMoreRef.current) return;
-
-  //   const observer = new IntersectionObserver(([entry]) => {
-  //     if (entry.isIntersecting && hasNextPage && !isFetching) {
-  //       handleLoadMore();
-  //     }
-  //   });
-
-  //   observer.observe(loadMoreRef.current);
-  //   return () => observer.disconnect();
-  // }, [hasNextPage, isFetching]);
+  useInfiniteScroll({
+    target: loadMoreRef,
+    enabled: !!hasNextPage && !isFetching,
+    onLoadMore: fetchNextPage,
+  });
 
   return (
     <>
-      <PageHeader
-        title={t("title")}
-        description={t("description")}
-        activeAlarms={filteredStats.activeAlarms}
-      >
-        <div className="flex flex-col gap-4 w-full">
-          {/* Filtres par site/groupe */}
-          <SurveillanceFilters 
-            onFilterChange={handleFilterChange}
+        <PageHeader
+          title={t("title")}
+          description={t("description")}
+          activeAlarms={visibleStats.activeAlarms}
+        >
+          <SurveillanceHeaderControls
             sites={sites}
             groups={groups}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            onFilterChange={handleFilterChange}
+            graphsLabel={t("tabs.graphs")}
+            treeLabel={t("tabs.tree")}
           />
-
-          {/* Onglet Vue: Graphiques ou Arborescence */}
-          <Tabs
-            value={viewMode}
-            onValueChange={(v: string) => setViewMode(v as ViewMode)}
-            className="w-full sm:w-auto"
-          >
-            <TabsList className="grid grid-cols-2 w-full sm:w-auto">
-              <TabsTrigger value="graphs">
-                {t("tabs.graphs")}
-              </TabsTrigger>
-              <TabsTrigger value="tree">
-                {t("tabs.tree")}
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      </PageHeader>
+        </PageHeader>
 
       {viewMode === "tree" ? (
         <>
           <MonitoringCardsGrid 
-            sensors={sensors}
+            sensors={visibleSensors}
             onSurveillanceToggle={handleSurveillanceToggle}
+          />
+          <SurveillanceLoadMore
+            sentinelRef={loadMoreRef}
+            hasNextPage={!!hasNextPage}
+            isFetching={isFetching}
+            onLoadMore={fetchNextPage}
+            label="Charger plus"
           />
         </>
       ) : (
         <>
           <SensorsCardsGrid 
-            sensors={sensors}
+            sensors={visibleSensors}
             onSurveillanceToggle={handleSurveillanceToggle}
+          />
+          <SurveillanceLoadMore
+            sentinelRef={loadMoreRef}
+            hasNextPage={!!hasNextPage}
+            isFetching={isFetching}
+            onLoadMore={fetchNextPage}
+            label="Charger plus"
           />
         </>
       )}
+
+      <div className="flex items-center justify-between text-sm text-muted-foreground pt-4">
+        <p>
+          {visibleSensors.length} sonde{visibleSensors.length > 1 ? "s" : ""}
+          {filtersActive ? <> sur {allSensors.length} au total</> : null}
+        </p>
+      </div>
     </>
   );
 }

@@ -16,31 +16,31 @@ export default function TestIndexPage() {
     {
       title: "Surveillance",
       description: "Capteurs et statistiques",
-      href: "/test/surveillance-perf",
+      href: "/admin/test/surveillance-perf",
       tags: ["sensors-data", "surveillance-stats"],
     },
     {
       title: "Alarmes",
       description: "Liste et statistiques d'alarmes",
-      href: "/test/alarms-perf",
+      href: "/admin/test/alarms-perf",
       tags: ["alarms-data", "alarms-stats"],
     },
     {
       title: "Audit",
       description: "Journal et événements",
-      href: "/test/audit-perf",
+      href: "/admin/test/audit-perf",
       tags: ["audit-logs", "audit-stats"],
     },
     {
       title: "Paramètres",
       description: "Configuration système",
-      href: "/test/settings-perf",
-      tags: ["settings-data"],
+      href: "/admin/test/settings-perf",
+      tags: ["parametres-data"],
     },
     {
       title: "Utilisateurs",
       description: "Gestion des utilisateurs",
-      href: "/test/users-perf",
+      href: "/admin/test/users-perf",
       tags: ["users-data"],
     },
   ];

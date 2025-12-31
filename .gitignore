@@ -415,6 +415,7 @@ FodyWeavers.xsd
 /coverage
 
 # next.js
+website/.next/
 /.next/
 /out/
 
@@ -443,6 +444,7 @@ next-env.d.ts
 
 ### Node ###
 # Logs
+website/build.log
 logs
 lerna-debug.log*
 

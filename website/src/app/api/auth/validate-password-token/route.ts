@@ -1,68 +1,48 @@
-import { NextRequest, NextResponse } from "next/server";
-import { withLogging } from "@/lib/api-logger";
+import { NextRequest } from "next/server"
+import { withLogging } from "@/lib/api-logger"
+import { apiError, apiOk } from "@/lib/api-response"
 
 /**
- * Valide le token temporaire de changement de mot de passe forcé
- * Retourne le username si le token est valide
+ * Valide le token temporaire de changement de mot de passe forcé.
+ * Retourne le username si le token est valide.
  */
-export const POST = withLogging(async (req: NextRequest) => {
-  try {
-    // Récupérer le token depuis les cookies httpOnly
-    const token = req.cookies.get("force-password-token")?.value;
-    const username = req.cookies.get("force-password-username")?.value;
-
-    if (!token || !username) {
-      return NextResponse.json(
-        { error: "Token expiré ou invalide" },
-        { status: 401 }
-      );
-    }
-
-    // Le token a été créé avec format: base64(username:timestamp:random)
+export const POST = withLogging(
+  async (req: NextRequest) => {
     try {
-      const decodedToken = Buffer.from(token, "base64").toString("utf-8");
-      const [tokenUsername, timestamp] = decodedToken.split(":");
+      const token = req.cookies.get("force-password-token")?.value
+      const username = req.cookies.get("force-password-username")?.value
 
-      // Vérifier que le username correspond
-      if (tokenUsername !== username) {
-        return NextResponse.json(
-          { error: "Token invalide" },
-          { status: 401 }
-        );
+      if (!token || !username) {
+        return apiError(401, "invalid_or_expired_token", "Token expiré ou invalide")
       }
 
-      // Vérifier que le token n'a pas plus de 30 minutes
-      const tokenTime = parseInt(timestamp, 10);
-      const nowTime = Date.now();
-      const ageMinutes = (nowTime - tokenTime) / (1000 * 60);
+      try {
+        const decodedToken = Buffer.from(token, "base64").toString("utf-8")
+        const [tokenUsername, timestamp] = decodedToken.split(":")
 
-      if (ageMinutes > 30) {
-        // Effacer les cookies
-        const response = NextResponse.json(
-          { error: "Token expiré" },
-          { status: 401 }
-        );
-        response.cookies.delete("force-password-token");
-        response.cookies.delete("force-password-username");
-        return response;
+        if (tokenUsername !== username) {
+          return apiError(401, "invalid_token", "Token invalide")
+        }
+
+        const tokenTime = parseInt(timestamp, 10)
+        const nowTime = Date.now()
+        const ageMinutes = (nowTime - tokenTime) / (1000 * 60)
+
+        if (ageMinutes > 30) {
+          const response = apiError(401, "expired_token", "Token expiré")
+          response.cookies.delete({ name: "force-password-token", path: "/" })
+          response.cookies.delete({ name: "force-password-username", path: "/" })
+          return response
+        }
+
+        return apiOk({ success: true, username }, { status: 200 })
+      } catch {
+        return apiError(401, "invalid_token", "Token invalide")
       }
-
-      // Token valide
-      return NextResponse.json(
-        { success: true, username },
-        { status: 200 }
-      );
-    } catch (err) {
-      return NextResponse.json(
-        { error: "Token invalide" },
-        { status: 401 }
-      );
+    } catch (error) {
+      console.error("[AUTH] Token validation error:", error)
+      return apiError(500, "token_validation_failed", "Erreur serveur")
     }
-  } catch (error) {
-    console.error("[AUTH] Token validation error:", error);
-    return NextResponse.json(
-      { error: "Erreur serveur" },
-      { status: 500 }
-    );
-  }
-}, { skipLogging: true });
+  },
+  { skipLogging: true },
+)

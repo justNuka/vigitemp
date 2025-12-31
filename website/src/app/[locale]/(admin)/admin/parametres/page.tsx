@@ -12,7 +12,6 @@ export const metadata: Metadata = {
   description: "Configuration de l'application",
 };
 
-// Skeleton pour les paramètres
 function SettingsLoadingSkeleton() {
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -32,40 +31,38 @@ function SettingsLoadingSkeleton() {
 }
 
 async function ActiveAlarmsCount() {
+  let activeAlarmsCount = 0;
+
   try {
     const alarms = await alarmsApi.getActive();
-    const activeAlarms = alarms.filter((a) => a.status === "active");
-    return (
-      <PageHeader
-        title="Paramétrage"
-        description="Configuration de l'application"
-        activeAlarms={activeAlarms.length}
-      />
-    );
+    activeAlarmsCount = alarms.filter((a) => a.status === "active").length;
   } catch {
-    return (
-      <PageHeader
-        title="Paramétrage"
-        description="Configuration de l'application"
-        activeAlarms={0}
-      />
-    );
+    // ignore (fallback to 0)
   }
+
+  return (
+    <PageHeader
+      title="Paramétrage"
+      description="Configuration de l'application"
+      activeAlarms={activeAlarmsCount}
+    />
+  );
 }
 
 export default async function SettingsPage() {
-  // Chargement des settings côté serveur avec cache
   const settingsData = await ServerSettings();
 
   return (
     <div className="flex flex-col min-h-full">
-      <Suspense fallback={
-        <PageHeader
-          title="Paramétrage"
-          description="Configuration de l'application"
-          activeAlarms={0}
-        />
-      }>
+      <Suspense
+        fallback={
+          <PageHeader
+            title="Paramétrage"
+            description="Configuration de l'application"
+            activeAlarms={0}
+          />
+        }
+      >
         <ActiveAlarmsCount />
       </Suspense>
 
@@ -75,3 +72,4 @@ export default async function SettingsPage() {
     </div>
   );
 }
+

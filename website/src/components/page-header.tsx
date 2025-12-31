@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "@/hooks/useTranslations";
+import { useTranslations } from "next-intl";
 import { PageHeaderBase, AlarmBanner, type PageHeaderProps } from "@/components/page-header-base";
 import { useMemo } from "react";
 

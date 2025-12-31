@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import axios from "axios";
+import { deleteJson, getJson, postJson } from "@/lib/http";
 import {
   Dialog,
   DialogContent,
@@ -59,8 +59,7 @@ export function UserAccessDialog({
   const { data: allSites = [], isLoading: sitesLoading } = useQuery({
     queryKey: ["sites"],
     queryFn: async () => {
-      const res = await axios.get("/api/sites");
-      return res.data;
+      return getJson<Site[]>("/api/sites");
     },
     enabled: isOpen,
   });
@@ -69,8 +68,7 @@ export function UserAccessDialog({
   const { data: allGroups = [], isLoading: groupsLoading } = useQuery({
     queryKey: ["groups"],
     queryFn: async () => {
-      const res = await axios.get("/api/groups");
-      return res.data;
+      return getJson<Group[]>("/api/groupes");
     },
     enabled: isOpen,
   });
@@ -80,8 +78,7 @@ export function UserAccessDialog({
     queryKey: ["userSites", user?.Id_Utilisateur],
     queryFn: async () => {
       if (!user) return [];
-      const res = await axios.get(`/api/users/${user.Id_Utilisateur}/sites`);
-      return res.data;
+      return getJson<Site[]>(`/api/utilisateurs/${user.Id_Utilisateur}/sites`);
     },
     enabled: isOpen && !!user,
   });
@@ -91,71 +88,73 @@ export function UserAccessDialog({
     queryKey: ["userGroups", user?.Id_Utilisateur],
     queryFn: async () => {
       if (!user) return [];
-      const res = await axios.get(`/api/users/${user.Id_Utilisateur}/groups`);
-      return res.data;
+      return getJson<Group[]>(`/api/utilisateurs/${user.Id_Utilisateur}/groupes`);
     },
     enabled: isOpen && !!user,
   });
 
-  // Initialize selected items when data loads
   useEffect(() => {
-    if (userSites.length > 0) {
+    const timeoutId = setTimeout(() => {
       setSelectedSites(userSites.map((s: Site) => s.Id_Site));
-    }
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
   }, [userSites]);
 
   useEffect(() => {
-    if (userGroups.length > 0) {
+    const timeoutId = setTimeout(() => {
       setSelectedGroups(userGroups.map((g: Group) => g.Id_Groupe));
-    }
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
   }, [userGroups]);
 
   // Mutations
   const addSiteMutation = useMutation({
     mutationFn: async (Id_Site: number) => {
-      await axios.post(`/api/users/${user?.Id_Utilisateur}/sites`, { Id_Site });
+      await postJson(`/api/utilisateurs/${user?.Id_Utilisateur}/sites`, { Id_Site });
     },
     onSuccess: () => {
       toast.success("Site ajouté avec succès");
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || "Erreur lors de l'ajout");
+      toast.error(error?.message || "Erreur lors de l'ajout");
     },
   });
 
   const removeSiteMutation = useMutation({
     mutationFn: async (Id_Site: number) => {
-      await axios.delete(`/api/users/${user?.Id_Utilisateur}/sites/${Id_Site}`);
+      await deleteJson(`/api/utilisateurs/${user?.Id_Utilisateur}/sites/${Id_Site}`);
     },
     onSuccess: () => {
       toast.success("Site supprimé avec succès");
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || "Erreur lors de la suppression");
+      toast.error(error?.message || "Erreur lors de la suppression");
     },
   });
 
   const addGroupMutation = useMutation({
     mutationFn: async (Id_Groupe: number) => {
-      await axios.post(`/api/users/${user?.Id_Utilisateur}/groups`, { Id_Groupe });
+      await postJson(`/api/utilisateurs/${user?.Id_Utilisateur}/groupes`, { Id_Groupe });
     },
     onSuccess: () => {
       toast.success("Groupe ajouté avec succès");
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || "Erreur lors de l'ajout");
+      toast.error(error?.message || "Erreur lors de l'ajout");
     },
   });
 
   const removeGroupMutation = useMutation({
     mutationFn: async (Id_Liaison: number) => {
-      await axios.delete(`/api/users/${user?.Id_Utilisateur}/groups/${Id_Liaison}`);
+      await deleteJson(`/api/utilisateurs/${user?.Id_Utilisateur}/groupes/${Id_Liaison}`);
     },
     onSuccess: () => {
       toast.success("Groupe supprimé avec succès");
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || "Erreur lors de la suppression");
+      toast.error(error?.message || "Erreur lors de la suppression");
     },
   });
 
@@ -169,18 +168,18 @@ export function UserAccessDialog({
     }
   };
 
-  const handleGroupToggle = async (Id_Groupe: number) => {
-    if (selectedGroups.includes(Id_Groupe)) {
-      const group = userGroups.find((g: Group) => g.Id_Groupe === Id_Groupe);
-      if (group) {
-        setSelectedGroups(selectedGroups.filter((id) => id !== Id_Groupe));
-        await removeGroupMutation.mutateAsync(group.Id_Liaison);
-      }
-    } else {
-      setSelectedGroups([...selectedGroups, Id_Groupe]);
-      await addGroupMutation.mutateAsync(Id_Groupe);
-    }
-  };
+	  const handleGroupToggle = async (Id_Groupe: number) => {
+	    if (selectedGroups.includes(Id_Groupe)) {
+	      const group = userGroups.find((g: Group) => g.Id_Groupe === Id_Groupe);
+	      if (group?.Id_Liaison) {
+	        setSelectedGroups(selectedGroups.filter((id) => id !== Id_Groupe));
+	        await removeGroupMutation.mutateAsync(group.Id_Liaison);
+	      }
+	    } else {
+	      setSelectedGroups([...selectedGroups, Id_Groupe]);
+	      await addGroupMutation.mutateAsync(Id_Groupe);
+	    }
+	  };
 
   if (!user) return null;
 

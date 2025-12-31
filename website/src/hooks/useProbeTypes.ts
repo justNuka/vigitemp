@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { getJson } from "@/lib/http";
 
 export interface ProbeType {
   Sonde_Type: string;
@@ -6,11 +7,7 @@ export interface ProbeType {
 }
 
 async function fetchProbeTypes(): Promise<ProbeType[]> {
-  const response = await fetch("/api/sondes/types");
-  if (!response.ok) {
-    throw new Error("Failed to fetch probe types");
-  }
-  return response.json();
+  return getJson<ProbeType[]>("/api/sondes/types");
 }
 
 export function useProbeTypes() {

@@ -34,10 +34,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useLocale } from "next-intl";
+import { getLocalizedPathname, stripLocalePrefix } from "@/i18n/pathnames";
 
 interface NavItem {
-  href: "/" | "surveillance" | "alarmes" | "audit" | "profil" | "admin";
+  href: "/" | "/surveillance" | "/alarmes" | "/audit" | "/profil" | "/admin";
   icon: typeof LayoutDashboard;
   badge?: number;
   badgeVariant?: "default" | "destructive";
@@ -46,18 +48,18 @@ interface NavItem {
 
 const mainNavItems: NavItem[] = [
   { titleKey: "dashboard", href: "/", icon: LayoutDashboard },
-  { titleKey: "monitoring", href: "surveillance", icon: Activity },
-  { titleKey: "alarms", href: "alarmes", icon: Bell },
+  { titleKey: "monitoring", href: "/surveillance", icon: Activity },
+  { titleKey: "alarms", href: "/alarmes", icon: Bell },
 ];
 
 const auditNavItems: NavItem[] = [
-  { titleKey: "audit", href: "audit", icon: FileText },
+  { titleKey: "audit", href: "/audit", icon: FileText },
 ];
 
 import { CurrentUser } from "@/lib/types";
 
 const moncompteNavItems: NavItem[] = [
-  { titleKey: "profile", href: "profil", icon: User },
+  { titleKey: "profile", href: "/profil", icon: User },
 ];
 
 interface AppSidebarProps {
@@ -68,6 +70,8 @@ interface AppSidebarProps {
 
 export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSidebarProps) {
   const pathname = usePathname();
+  const locale = useLocale();
+  const normalizedPathname = useMemo(() => stripLocalePrefix(pathname), [pathname]);
   const [isMuted, setIsMuted] = useState(false);
   const tSidebar = useTranslations("sidebar");
   const tGroups = useTranslations("sidebarGroups");
@@ -80,13 +84,15 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
   // Helper pour comparer pathname avec href (pathname = /fr/surveillance, href = surveillance)
   const isActive = (href: string): boolean => {
     if (href === "/") {
-      return pathname === "/" || /^\/[a-z]{2}\/?$/.test(pathname);
+      return normalizedPathname === "/";
     }
-    return pathname.includes(`/${href}`);
+
+    const localized = getLocalizedPathname(href, locale as any);
+    return normalizedPathname === localized || normalizedPathname.startsWith(`${localized}/`);
   };
 
   const navItemsWithBadges = mainNavItems.map((item) => {
-    if (item.href === "alarmes" && activeAlarms > 0) {
+    if (item.href === "/alarmes" && activeAlarms > 0) {
       return { ...item, badge: activeAlarms, badgeVariant: "destructive" as const };
     }
     return item;
@@ -176,10 +182,10 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     asChild
-                    isActive={isActive("admin")}
+                    isActive={isActive("/admin")}
                     tooltip={tSidebar("admin_dashboard_tooltip")}
                   >
-                    <Link href="admin" data-testid="nav-admin">
+                    <Link href="/admin" data-testid="nav-admin">
                       <Shield className="h-4 w-4" />
                       <span>{tSidebar("admin_dashboard")}</span>
                     </Link>
