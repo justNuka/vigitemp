@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getJson } from "@/lib/http";
+import { getJson, isUnauthorizedError } from "@/lib/http";
 
 export interface Actuator {
   Id_Actionneur: number;
@@ -19,6 +19,6 @@ export function useActuators() {
   return useQuery({
     queryKey: ["actionneurs"],
     queryFn: fetchActuators,
-    refetchInterval: 60000,
+    refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000),
   });
 }

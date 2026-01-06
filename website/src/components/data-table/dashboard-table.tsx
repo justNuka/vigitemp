@@ -16,5 +16,13 @@ type DashboardTableProps<TData extends Record<string, any>> = Omit<
 export function DashboardTable<TData extends Record<string, any>>(
   props: DashboardTableProps<TData>,
 ) {
-  return <TanStackTable {...props} showPagination={false} showSearch={false} />
+  return (
+    <TanStackTable
+      {...props}
+      showPagination={false}
+      showSearch={false}
+      enableExport={false}
+      enablePrint={false}
+    />
+  )
 }

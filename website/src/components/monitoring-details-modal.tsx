@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -119,8 +120,9 @@ export default function MonitoringDetailsModal({
         </DialogHeader>
 
         {isLoading ? (
-          <div className="h-[400px] flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <div className="space-y-4 pt-4">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-[400px] w-full" />
           </div>
         ) : (
           <Tabs defaultValue="graph" className="w-full">

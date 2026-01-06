@@ -2,12 +2,13 @@
 
 import { AdminSidebar } from "@/components/admin-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { useQuery } from "@tanstack/react-query";
 import { authApi } from "@/lib/api";
 import { useAutoLock } from "@/hooks/useAutoLock";
 import { useRouter } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 import { clearAgentSession } from "@/lib/agent-session";
+import PageTransitionWrapper from "@/components/animations/transitions/page-transitions/PageTransitionWrapper";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export default function AdminGroupLayout({
   children,
@@ -21,10 +22,7 @@ export default function AdminGroupLayout({
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   // Fetch current user
-  const { data: currentUser } = useQuery({
-    queryKey: ["auth", "me"],
-    queryFn: () => authApi.getCurrentUser(),
-  });
+  const { data: currentUser } = useCurrentUser();
 
   // Check if user is admin
   useEffect(() => {
@@ -63,13 +61,15 @@ export default function AdminGroupLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
+      <div className="flex h-dvh w-full overflow-hidden">
         <AdminSidebar
           currentUser={currentUser}
           onLogout={handleLogout}
         />
-        <main className="flex-1 overflow-y-auto bg-background">
-          {children}
+        <main className="flex-1 min-h-0 overflow-hidden bg-background">
+          <PageTransitionWrapper className="h-full min-h-0">
+            {children}
+          </PageTransitionWrapper>
         </main>
       </div>
     </SidebarProvider>

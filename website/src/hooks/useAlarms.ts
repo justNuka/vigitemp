@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getJson } from "@/lib/http";
+import { getJson, isUnauthorizedError } from "@/lib/http";
 
 type AlarmListItem = {
   id: number;
@@ -35,6 +35,6 @@ export function useAlarms() {
   return useQuery({
     queryKey: ["alarms"],
     queryFn: fetchAlarms,
-    refetchInterval: 30000,
+    refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 30000),
   });
 }

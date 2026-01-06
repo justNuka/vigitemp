@@ -16,12 +16,15 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
 
     const locations = await prisma.t_lieu.findMany({
       where: { Est_Archive: false },
-      select: { Lieu_Etat: true },
+      select: {
+        Est_Lieu_En_Alarme: true,
+        Est_Lieu_En_Pre_Alarme: true,
+      },
     })
 
-    const okSensors = locations.filter((l) => l.Lieu_Etat === "O").length
-    const warningSensors = locations.filter((l) => l.Lieu_Etat === "P").length
-    const criticalSensors = locations.filter((l) => l.Lieu_Etat === "A").length
+    const criticalSensors = locations.filter((l) => l.Est_Lieu_En_Alarme === 1).length
+    const warningSensors = locations.filter((l) => l.Est_Lieu_En_Alarme !== 1 && l.Est_Lieu_En_Pre_Alarme === 1).length
+    const okSensors = totalLocations - warningSensors - criticalSensors
     const alertSensors = warningSensors + criticalSensors
 
     return apiOk({

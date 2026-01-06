@@ -1,9 +1,9 @@
-﻿using System;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Net.Http;
-using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
 namespace Vigitemp_Serveur
@@ -26,9 +26,8 @@ namespace Vigitemp_Serveur
         protected string tmp_valeur = "";
         protected string tmp_numeroSerie = "";
         protected Stopwatch sw;
-        private static readonly HttpClient client = new HttpClient();
-        private static readonly ConcurrentDictionary<int, bool> _lastWebAlarmStateByLieu = new ConcurrentDictionary<int, bool>();
 
+        private static readonly HttpClient client = new HttpClient();
 
         // Constructeur
         public Sensor(ThreadServeur p_ths, string p_comPort, string p_sondeSerialNumber, string p_sondeAdresse)
@@ -56,7 +55,6 @@ namespace Vigitemp_Serveur
             m_port.WriteTimeout = 5000;
 
             p_ths.list_addComPort(m_port);
-
         }
 
         public abstract Task<bool> read();
@@ -64,64 +62,117 @@ namespace Vigitemp_Serveur
 
         public bool compareMeasuresAndLimits(double p_valeur)
         {
-
-            List<string> ips_clients = ths.GetDatabase().getPCsClients();
-            (List<float> consignes, bool notificationActive, DateTime dateHeure_reactivationAlarme) = ths.GetDatabase().getConsignesLieux(m_idLieu);
-
-
-            //si consigne dépassée
-            if (p_valeur < consignes[0] || p_valeur > consignes[1])
+            try
             {
-                //consignes dépassées
-                //if (p_valeur < consignes[0])
-                //{
-                //    VigitempServeur.Log("Consigne BASSE dépassée!!");
-                //}
-                //else if (p_valeur > consignes[1])
-                //{
-                //    VigitempServeur.Log("Consigne HAUTE depassée!!");
-                //}
+                List<string> ips_clients = ths.GetDatabase().getPCsClients();
 
-                // si alarme active (et consigne dépassée)
-                if (notificationActive || dateHeure_reactivationAlarme != default(DateTime))
+                var settings = ths.GetDatabase().getLieuAlarmSettings(m_idLieu);
+                if (settings == null)
                 {
-                    // Signal site web (uniquement au changement d'état, pour éviter spam)
-                    var wasActive = _lastWebAlarmStateByLieu.GetOrAdd(m_idLieu, false);
-                    if (!wasActive)
-                    {
-                        _lastWebAlarmStateByLieu[m_idLieu] = true;
-                        _ = AlarmWebNotifier.NotifyAlarmAsync(m_idLieu, p_valeur);
-                    }
+                    VigitempServeur.Log("compareMeasuresAndLimits: settings null pour le lieu " + m_idLieu);
+                    return false;
+                }
+
+                var hasLow = settings.ConsigneInfActive && settings.ConsigneInf.HasValue;
+                var hasHigh = settings.ConsigneSupActive && settings.ConsigneSup.HasValue;
+
+                if (!hasLow && !hasHigh)
+                {
+                    // Pas de consigne active -> pas d'alarme.
+                    return true;
+                }
+
+                // Valeurs bornes: si une borne est inactive, on utilise une plage "très large"
+                // pour éviter d'activer l'alarme sur ce côté.
+                var low = hasLow ? settings.ConsigneInf.Value : -1_000_000_000d;
+                var high = hasHigh ? settings.ConsigneSup.Value : 1_000_000_000d;
+
+                var policy = AlarmPolicy.Current;
+                var eligible =
+                    (settings.NotificationActive ||
+                     (policy.ShowWhileSnoozed && settings.DateHeureReactivationAlarme != default(DateTime)));
+
+                var isBelow = hasLow && p_valeur < settings.ConsigneInf.Value;
+                var isAbove = hasHigh && p_valeur > settings.ConsigneSup.Value;
+
+                var delaySeconds = 0;
+                if (isBelow)
+                {
+                    delaySeconds = Math.Max(0, settings.RetardAlarmeBasMinutes) * 60;
+                }
+                else if (isAbove)
+                {
+                    delaySeconds = Math.Max(0, settings.RetardAlarmeHautMinutes) * 60;
+                }
+
+                var evaluation = AlarmStateEvaluator.Evaluate(
+                    channel: "alarm",
+                    idLieu: m_idLieu,
+                    value: p_valeur,
+                    low: low,
+                    high: high,
+                    eligible: eligible,
+                    debounceSeconds: delaySeconds,
+                    nowUtc: DateTime.UtcNow);
+
+                AlarmEvaluation preEvaluation;
+                var hasPreLow = settings.ConsigneInfPreAlarmeActive && settings.ConsigneInfPreAlarme.HasValue;
+                var hasPreHigh = settings.ConsigneSupPreAlarmeActive && settings.ConsigneSupPreAlarme.HasValue;
+                if (!hasPreLow && !hasPreHigh)
+                {
+                    preEvaluation = new AlarmEvaluation(false, false, false);
+                }
+                else
+                {
+                    var lowPre = hasPreLow ? settings.ConsigneInfPreAlarme.Value : -1_000_000_000d;
+                    var highPre = hasPreHigh ? settings.ConsigneSupPreAlarme.Value : 1_000_000_000d;
+                    preEvaluation = AlarmStateEvaluator.Evaluate(
+                        channel: "prealarm",
+                        idLieu: m_idLieu,
+                        value: p_valeur,
+                        low: lowPre,
+                        high: highPre,
+                        eligible: eligible,
+                        debounceSeconds: 0,
+                        nowUtc: DateTime.UtcNow);
+                }
+
+                var effectivePreAlarm = preEvaluation.IsActive && !evaluation.IsActive;
+
+                var shouldUpdateFlags =
+                    evaluation.TransitionToActive ||
+                    evaluation.TransitionToInactive ||
+                    (!evaluation.IsActive && (preEvaluation.TransitionToActive || preEvaluation.TransitionToInactive));
+
+                if (shouldUpdateFlags)
+                {
+                    ths.GetDatabase().setLieuAlarmFlags(m_idLieu, isPreAlarm: effectivePreAlarm, isAlarm: evaluation.IsActive);
+                }
+
+                if (evaluation.TransitionToActive)
+                {
+                    _ = AlarmWebNotifier.NotifyAlarmAsync(m_idLieu, p_valeur);
 
                     for (int i = 0; i < ips_clients.Count; i++)
                     {
-                        //VigitempServeur.Log("envoi de la requete: " + ips_clients[i] + ":8000/alarm?action=show&idLieu=" + m_idLieu.ToString());
-                        client.PostAsync("http://" + ips_clients[i] + ":8000/alarm?action=show&idLieu=" + m_idLieu, null);
+                        _ = client.PostAsync("http://" + ips_clients[i] + ":8000/alarm?action=show&idLieu=" + m_idLieu, null);
                     }
                 }
-                else // si pas alarme (et consigne dépassée)
+                else if (evaluation.TransitionToInactive)
                 {
-                    _lastWebAlarmStateByLieu[m_idLieu] = false;
                     for (int i = 0; i < ips_clients.Count; i++)
                     {
-                        //VigitempServeur.Log("envoi de la requete: " + ips_clients[i] + ":8000/alarm?action=hide&idLieu=" + m_idLieu.ToString());
-                        client.PostAsync("http://" + ips_clients[i] + ":8000/alarm?action=hide&idLieu=" + m_idLieu, null);
+                        _ = client.PostAsync("http://" + ips_clients[i] + ":8000/alarm?action=hide&idLieu=" + m_idLieu, null);
                     }
                 }
-            }
-            else // si pas consigne dépassée
-            {
-                _lastWebAlarmStateByLieu[m_idLieu] = false;
-                //VigitempServeur.Log("Pas de consigne depassée");
-                for (int i = 0; i < ips_clients.Count; i++)
-                {
-                    //VigitempServeur.Log("envoi de la requete: " + ips_clients[i] + ":8000/alarm?action=hide&idLieu=" + m_idLieu.ToString());
-                    client.PostAsync("http://" + ips_clients[i] + ":8000/alarm?action=hide&idLieu=" + m_idLieu, null);
-                }
-            }
 
-            return true;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("compareMeasuresAndLimits error: " + ex);
+                return false;
+            }
         }
-
     }
 }

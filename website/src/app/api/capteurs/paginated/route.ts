@@ -43,7 +43,13 @@ export const GET = withAuthLogging(async (request: NextRequest) => {
       },
       skip,
       take: limit,
-      orderBy: { Id_Lieu: "desc" },
+      // Priorité aux alarmes / pré-alarmes pour charger l’UI rapidement.
+      orderBy: [
+        { Est_Lieu_En_Alarme: "desc" },
+        { Est_Lieu_En_Pre_Alarme: "desc" },
+        { Derniere_Date_Heure: "desc" },
+        { Id_Lieu: "desc" },
+      ],
     })
 
     const sensorsWithMeasurements = await Promise.all(
@@ -58,11 +64,17 @@ export const GET = withAuthLogging(async (request: NextRequest) => {
         const lastMeasurement = await prismaMesure.tm_mesures.findFirst({
           where: { Id_Lieu: location.Id_Lieu },
           orderBy: { Date_Heure_Mesure: "desc" },
-          select: { Valeur: true, Date_Heure_Mesure: true, Est_Etat_Alarme: true },
+          select: { Valeur: true, Date_Heure_Mesure: true },
         })
 
-        const status: "ok" | "warning" | "critical" =
-          lastMeasurement?.Est_Etat_Alarme === true ? "critical" : "ok"
+        const isCritical = location.Est_Lieu_En_Alarme === 1
+        const isWarning = !isCritical && location.Est_Lieu_En_Pre_Alarme === 1
+
+        const status: "ok" | "warning" | "critical" = isCritical
+          ? "critical"
+          : isWarning
+            ? "warning"
+            : "ok"
 
         return {
           id: location.Id_Lieu.toString(),
@@ -70,8 +82,8 @@ export const GET = withAuthLogging(async (request: NextRequest) => {
           type: "temperature",
           unit: "°C",
           currentValue: lastMeasurement?.Valeur ?? null,
-          minThreshold: 0,
-          maxThreshold: 25,
+          minThreshold: location.Consigne_Inf ?? 0,
+          maxThreshold: location.Consigne_Sup ?? 25,
           lastMeasurement: lastMeasurement?.Date_Heure_Mesure ?? null,
           isActive: !location.Est_Archive,
           status,

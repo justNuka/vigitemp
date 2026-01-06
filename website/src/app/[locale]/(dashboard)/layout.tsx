@@ -1,69 +1,65 @@
-"use client";
+"use client"
 
-import { AppSidebar } from "@/components/app-sidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { useQuery } from "@tanstack/react-query";
-import { alarmsApi, authApi } from "@/lib/api";
-import { useAutoLock } from "@/hooks/useAutoLock";
-import { useRefreshInterval } from "@/hooks/useRefreshInterval";
-import { clearAgentSession } from "@/lib/agent-session";
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  // Activer le verrouillage automatique pour toutes les pages protégées
-  useAutoLock();
+import { AppSidebar } from "@/components/app-sidebar"
+import PageTransitionWrapper from "@/components/animations/transitions/page-transitions/PageTransitionWrapper"
+import { SidebarProvider } from "@/components/ui/sidebar"
+import { useAutoLock } from "@/hooks/useAutoLock"
+import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { clearAgentSession } from "@/lib/agent-session"
+import { alarmsApi, authApi } from "@/lib/api"
 
-  // Obtenir l'intervalle de rafraîchissement depuis les paramètres
-  const { refreshInterval } = useRefreshInterval();
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  useAutoLock()
 
-  // Fetch active alarms count for sidebar badge
+  const queryClient = useQueryClient()
+
+  // Sidebar badge only needs a best-effort value.
+  // Do not poll here: it can cascade into expensive remount/refetch patterns on heavy pages like /surveillance.
+  const alarmsQueryKey = ["alarms", "active"] as const
+  const hasCachedAlarms = queryClient.getQueryData(alarmsQueryKey) !== undefined
   const { data: alarms } = useQuery({
-    queryKey: ["alarms", "active"],
+    queryKey: alarmsQueryKey,
     queryFn: () => alarmsApi.getActive(),
-    refetchInterval: refreshInterval,
-  });
+    enabled: !hasCachedAlarms,
+    refetchInterval: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
+    staleTime: Infinity,
+    retry: false,
+  })
 
-  // Fetch current user
-  const { data: currentUser } = useQuery({
-    queryKey: ["auth", "me"],
-    queryFn: () => authApi.getCurrentUser(),
-  });
+  const { data: currentUser } = useCurrentUser()
 
-  const activeAlarmsCount = alarms?.length ?? 0;
+  const activeAlarmsCount = alarms?.length ?? 0
 
   const handleLogout = async () => {
     try {
-      await authApi.logout();
+      await authApi.logout()
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("Logout error:", error)
     } finally {
       try {
-        await clearAgentSession();
+        await clearAgentSession()
       } catch {
         // Agent not installed/running: ignore
       }
-      window.location.href = "/login";
+      window.location.href = "/login"
     }
-  };
+  }
 
   return (
     <SidebarProvider>
       <div className="flex flex-col min-h-screen w-full">
-        {/* Content Area */}
         <div className="flex flex-1 overflow-hidden">
-          <AppSidebar
-            activeAlarms={activeAlarmsCount}
-            currentUser={currentUser}
-            onLogout={handleLogout}
-          />
+          <AppSidebar activeAlarms={activeAlarmsCount} currentUser={currentUser} onLogout={handleLogout} />
           <main className="flex-1 overflow-y-auto bg-background">
-            {children}
+            <PageTransitionWrapper className="min-h-full">{children}</PageTransitionWrapper>
           </main>
         </div>
       </div>
     </SidebarProvider>
-  );
+  )
 }

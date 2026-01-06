@@ -1,79 +1,53 @@
-import { prisma, prismaMesure } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma"
 
 export interface DashboardStats {
-  total: number;
-  ok: number;
-  warning: number;
-  critical: number;
-  activeAlarms: number;
+  total: number
+  ok: number
+  warning: number
+  critical: number
+  activeAlarms: number
 }
 
 /**
  * Charge les statistiques du tableau de bord (côté serveur)
+ * - `warning` = pré-alarme
+ * - `critical` = alarme
  */
 export async function ServerDashboardStats(): Promise<DashboardStats> {
   try {
-    // Récupérer tous les lieux
-    const allLocations = await prisma.t_lieu.findMany({
+    const locations = await prisma.t_lieu.findMany({
+      where: { Est_Archive: false },
       select: {
-        Id_Lieu: true,
+        Est_Lieu_En_Alarme: true,
+        Est_Lieu_En_Pre_Alarme: true,
       },
-    });
+    })
 
-    const totalLocations = allLocations.length;
-
-    // Récupérer les dernières mesures pour calculer les statuts
-    const measurementsByLocation = await Promise.all(
-      allLocations.map(async (location) => {
-        const lastMeasurement = await prismaMesure.tm_mesures.findFirst({
-          where: {
-            Id_Lieu: location.Id_Lieu,
-          },
-          orderBy: {
-            Date_Heure_Mesure: "desc",
-          },
-          select: {
-            Est_Etat_Alarme: true,
-          },
-        });
-
-        return {
-          idLieu: location.Id_Lieu,
-          etatAlarme: lastMeasurement?.Est_Etat_Alarme ?? 0,
-        };
-      })
-    );
-
-    // Compter les statuts
-    const ok = measurementsByLocation.filter(
-      (m) => m.etatAlarme === false || m.etatAlarme === 0
-    ).length;
-    const warning = 0; // Pas de statut "warning" distinct
-    const critical = measurementsByLocation.filter(
-      (m) => m.etatAlarme === true || m.etatAlarme === 1
-    ).length;
+    const total = locations.length
+    const critical = locations.filter((l) => l.Est_Lieu_En_Alarme === 1).length
+    const warning = locations.filter((l) => l.Est_Lieu_En_Alarme !== 1 && l.Est_Lieu_En_Pre_Alarme === 1).length
+    const ok = total - warning - critical
 
     const activeAlarms = await prisma.t_alarme.count({
-      where: {
-        Est_Alarme_Vrai: true, // État actif (alarme vraie)
-      },
-    });
+      where: { Est_Alarme_Vrai: true },
+    })
 
     return {
-      total: totalLocations,
+      total,
       ok,
       warning,
       critical,
       activeAlarms,
-    };
+    }
   } catch (error) {
-    console.error("Error loading dashboard stats:", error);
+    console.error("Error loading dashboard stats:", error)
     return {
       total: 0,
       ok: 0,
       warning: 0,
       critical: 0,
       activeAlarms: 0,
-    };
+    }
   }
 }
+

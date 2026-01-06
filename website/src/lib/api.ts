@@ -1,38 +1,27 @@
 /**
  * API Client for Vigitemp
- * 
- * Centralized API calls using fetch for Next.js API Routes
+ *
+ * Centralized API calls using fetch for Next.js API Routes.
+ *
+ * Note: this uses `fetchJson` so errors are `HttpError` (status available),
+ * which allows us to stop periodic polling on 401 (logged out).
  */
 
-const API_BASE = "/api";
+import { fetchJson } from "@/lib/http"
+
+const API_BASE = "/api"
 
 async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${url}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    ...(options?.headers ?? {}),
+  }
+
+  return fetchJson<T>(`${API_BASE}${url}`, {
+    credentials: "include",
     ...options,
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: response.statusText }));
-    const message =
-      error?.message ||
-      (error?.ok === false ? error?.message : undefined) ||
-      error?.error ||
-      response.statusText ||
-      "Une erreur est survenue";
-    throw new Error(message);
-  }
-
-  const payload = await response.json().catch(() => null);
-
-  if (payload && typeof payload === "object" && payload.ok === true && "data" in payload) {
-    return (payload as any).data as T;
-  }
-
-  return payload as T;
+    headers,
+  })
 }
 
 // Dashboard

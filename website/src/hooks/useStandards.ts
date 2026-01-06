@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getJson } from "@/lib/http";
+import { getJson, isUnauthorizedError } from "@/lib/http";
 
 export interface Standard {
   Id_Etalon: number;
@@ -26,6 +26,6 @@ export function useStandards() {
   return useQuery({
     queryKey: ["etalons"],
     queryFn: fetchStandards,
-    refetchInterval: 60000,
+    refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000),
   });
 }

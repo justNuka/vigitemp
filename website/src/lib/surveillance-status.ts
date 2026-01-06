@@ -47,13 +47,13 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
       }
     case "warning":
       return {
-        label: "Attention",
+        label: "Pré-alarme",
         Icon: Zap,
-        textClassName: "text-yellow-700 dark:text-yellow-300",
-        softBgClassName: "bg-yellow-50 dark:bg-yellow-950",
-        headerBgClassName: "bg-yellow-600 dark:bg-yellow-700",
-        headerBorderClassName: "border-yellow-700 dark:border-yellow-800",
-        badgeClassName: "bg-yellow-500 hover:bg-yellow-600 text-white",
+        textClassName: "text-violet-700 dark:text-violet-300",
+        softBgClassName: "bg-violet-50 dark:bg-violet-950",
+        headerBgClassName: "bg-violet-600 dark:bg-violet-700",
+        headerBorderClassName: "border-violet-700 dark:border-violet-800",
+        badgeClassName: "bg-violet-600 hover:bg-violet-700 text-white",
       }
     case "ok":
     default:
@@ -80,4 +80,3 @@ export function countStatus(sensors: { status: SensorStatus; isActive: boolean }
   }
   return stats
 }
-

@@ -98,6 +98,7 @@ export function AlarmsClientTanStack() {
           searchField="Libelle_Lieu"
           searchPlaceholder="Rechercher par lieu..."
           pageSize={15}
+          maxHeight="60vh"
           isLoading={isLoading || isFetching}
           emptyMessage="Aucune alarme trouvée"
         />

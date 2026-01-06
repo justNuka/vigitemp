@@ -17,9 +17,11 @@ const nextConfig = {
       "http://localhost:3000",
     ],
     // Masquer les warnings de source maps en dev (faux positifs Next.js 16)
+    // Dev-only: keep entries longer to reduce unexpected churn/refresh while the tab is idle.
+    // (These settings do not affect production builds.)
     onDemandEntries: {
-        maxInactiveAge: 25 * 1000,
-        pagesBufferLength: 2,
+        maxInactiveAge: 15 * 60 * 1000, // 15 minutes
+        pagesBufferLength: 5,
     },
     images: {
         remotePatterns: [

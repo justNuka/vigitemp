@@ -4,6 +4,8 @@ export type GroupSection = {
   groupKey: string
   groupName: string
   sensors: SensorWithLocation[]
+  criticalCount: number
+  warningCount: number
   alarmCount: number
 }
 
@@ -11,12 +13,22 @@ export type SiteSection = {
   siteId: string
   siteName: string
   sensorsCount: number
+  criticalCount: number
+  warningCount: number
   alarmCount: number
   groups: GroupSection[]
 }
 
+function countCritical(sensors: SensorWithLocation[]) {
+  return sensors.filter((s) => s.isActive && s.status === "critical").length
+}
+
+function countWarning(sensors: SensorWithLocation[]) {
+  return sensors.filter((s) => s.isActive && s.status === "warning").length
+}
+
 function countAlarms(sensors: SensorWithLocation[]) {
-  return sensors.filter((s) => s.status !== "ok").length
+  return countCritical(sensors) + countWarning(sensors)
 }
 
 export function groupSensorsBySiteAndGroup(sensors: SensorWithLocation[]): SiteSection[] {
@@ -38,23 +50,47 @@ export function groupSensorsBySiteAndGroup(sensors: SensorWithLocation[]): SiteS
     siteEntry.groups.set(groupName, groupSensors)
   }
 
-  return Array.from(bySite.entries()).map(([siteId, site]) => {
-    const groupSections: GroupSection[] = Array.from(site.groups.entries()).map(([groupName, groupSensors]) => ({
-      groupKey: `${siteId}-${groupName}`,
-      groupName,
-      sensors: groupSensors,
-      alarmCount: countAlarms(groupSensors),
-    }))
+  const siteSections: SiteSection[] = Array.from(bySite.entries()).map(([siteId, site]) => {
+    const groupSections: GroupSection[] = Array.from(site.groups.entries()).map(([groupName, groupSensors]) => {
+      const criticalCount = countCritical(groupSensors)
+      const warningCount = countWarning(groupSensors)
+      return {
+        groupKey: `${siteId}-${groupName}`,
+        groupName,
+        sensors: groupSensors,
+        criticalCount,
+        warningCount,
+        alarmCount: criticalCount + warningCount,
+      }
+    })
+
+    groupSections.sort((a, b) => {
+      if (a.criticalCount !== b.criticalCount) return b.criticalCount - a.criticalCount
+      if (a.warningCount !== b.warningCount) return b.warningCount - a.warningCount
+      return a.groupName.localeCompare(b.groupName, "fr", { sensitivity: "base" })
+    })
 
     const allSensors = groupSections.flatMap((g) => g.sensors)
+
+    const criticalCount = countCritical(allSensors)
+    const warningCount = countWarning(allSensors)
 
     return {
       siteId,
       siteName: site.siteName,
       sensorsCount: allSensors.length,
-      alarmCount: countAlarms(allSensors),
+      criticalCount,
+      warningCount,
+      alarmCount: criticalCount + warningCount,
       groups: groupSections,
     }
   })
-}
 
+  siteSections.sort((a, b) => {
+    if (a.criticalCount !== b.criticalCount) return b.criticalCount - a.criticalCount
+    if (a.warningCount !== b.warningCount) return b.warningCount - a.warningCount
+    return a.siteName.localeCompare(b.siteName, "fr", { sensitivity: "base" })
+  })
+
+  return siteSections
+}
