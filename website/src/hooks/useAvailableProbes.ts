@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query"
 
-import { fetchJson } from "@/lib/http"
+import { fetchJson, isUnauthorizedError } from "@/lib/http"
 
 export interface AvailableProbe {
   Id_Sonde: number
@@ -18,7 +18,6 @@ export function useAvailableProbes() {
       const data = await fetchJson<any[]>("/api/sondes")
       return data.filter((probe: any) => !probe.Lieu) as AvailableProbe[]
     },
-    refetchInterval: 60_000,
+    refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60_000),
   })
 }
-

@@ -17,8 +17,89 @@ export class HttpError extends Error {
   }
 }
 
+export function isUnauthorizedError(error: unknown): error is HttpError {
+  return error instanceof HttpError && error.status === 401
+}
+
+function getClientTraceTag(): string | undefined {
+  if (typeof window === "undefined") return undefined
+  if (process.env.NODE_ENV === "production") return undefined
+
+  try {
+    const stack = new Error().stack
+    if (!stack) return undefined
+
+    const lines = stack
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+
+    const isIgnorable = (line: string) => {
+      const lower = line.toLowerCase()
+      return (
+        lower.includes("getclienttracetag") ||
+        lower.includes("fetchjson") ||
+        lower.includes("getjson") ||
+        lower.includes("/src/lib/http") ||
+        lower.includes("\\src\\lib\\http") ||
+        lower.includes("node_modules") ||
+        lower.includes("next/dist")
+      )
+    }
+
+    const stackFrames = lines.filter((line) => line.startsWith("at "))
+
+    const candidate =
+      stackFrames.find((line) => line.includes("webpack-internal") && !isIgnorable(line)) ||
+      stackFrames.find((line) => line.includes("/src/") && !isIgnorable(line)) ||
+      stackFrames.find((line) => !isIgnorable(line))
+
+    if (!candidate) return undefined
+    const cleaned = candidate.replace(/^at\s+/, "").slice(0, 180)
+    return cleaned || undefined
+  } catch {
+    return undefined
+  }
+}
+
+function getQueryClientId(): string | undefined {
+  if (typeof window === "undefined") return undefined
+  if (process.env.NODE_ENV === "production") return undefined
+  try {
+    return (window as any).__vigitempQueryClientId
+  } catch {
+    return undefined
+  }
+}
+
+function getBootId(): string | undefined {
+  if (typeof window === "undefined") return undefined
+  if (process.env.NODE_ENV === "production") return undefined
+  try {
+    return (window as any).__vigitempBootId
+  } catch {
+    return undefined
+  }
+}
+
 export async function fetchJson<TResponse>(input: RequestInfo | URL, init?: RequestInit): Promise<TResponse> {
-  const res = await fetch(input, init)
+  const headers = new Headers(init?.headers)
+  const clientTrace = getClientTraceTag()
+  if (clientTrace && !headers.has("x-vigitemp-client-trace")) {
+    headers.set("x-vigitemp-client-trace", clientTrace)
+  }
+
+  const queryClientId = getQueryClientId()
+  if (queryClientId && !headers.has("x-vigitemp-query-client-id")) {
+    headers.set("x-vigitemp-query-client-id", queryClientId)
+  }
+
+  const bootId = getBootId()
+  if (bootId && !headers.has("x-vigitemp-boot-id")) {
+    headers.set("x-vigitemp-boot-id", bootId)
+  }
+
+  const res = await fetch(input, { ...init, headers })
 
   const contentType = res.headers.get("content-type") || ""
   const isJson = contentType.includes("application/json")

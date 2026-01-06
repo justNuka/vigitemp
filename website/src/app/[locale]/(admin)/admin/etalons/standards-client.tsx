@@ -134,7 +134,7 @@ export function StandardsClient() {
             onRowClick={(row: StandardRow) => {
               setSelectedStandard(standards?.find((e) => e.Id_Etalon === row.Id_Etalon) || null)
             }}
-            maxHeight="24rem"
+            maxHeight="60vh"
           />
         </CardContent>
       </Card>
@@ -156,4 +156,3 @@ export function StandardsClient() {
     </main>
   )
 }
-

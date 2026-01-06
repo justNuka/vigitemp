@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchJson } from "@/lib/http";
+import { fetchJson, isUnauthorizedError } from "@/lib/http";
 
 export interface Adjustment {
   Id_Calibrage: number;
@@ -21,6 +21,6 @@ export function useAdjustments(serieNum: string | null) {
     queryKey: ["adjustments", serieNum],
     queryFn: () => fetchAdjustments(serieNum!),
     enabled: !!serieNum,
-    refetchInterval: 60000,
+    refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000),
   });
 }

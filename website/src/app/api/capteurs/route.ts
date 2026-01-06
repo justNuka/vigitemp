@@ -28,9 +28,15 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
     }
 
     if (status && status !== "all") {
-      if (status === "ok") where.Lieu_Etat = "O"
-      else if (status === "warning") where.Lieu_Etat = "P"
-      else if (status === "critical") where.Lieu_Etat = "A"
+      if (status === "ok") {
+        where.Est_Lieu_En_Alarme = 0
+        where.Est_Lieu_En_Pre_Alarme = 0
+      } else if (status === "warning") {
+        where.Est_Lieu_En_Alarme = 0
+        where.Est_Lieu_En_Pre_Alarme = 1
+      } else if (status === "critical") {
+        where.Est_Lieu_En_Alarme = 1
+      }
     }
 
     const locations = await prisma.t_lieu.findMany({
@@ -50,14 +56,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
     const formatted = locations.map((lieu: any) => ({
       id: lieu.Id_Lieu.toString(),
       name: lieu.Nom_Lieu || "Lieu sans nom",
-      status:
-        lieu.Lieu_Etat === "O"
-          ? "ok"
-          : lieu.Lieu_Etat === "P"
-            ? "warning"
-            : lieu.Lieu_Etat === "A"
-              ? "critical"
-              : "offline",
+      status: lieu.Est_Lieu_En_Alarme === 1 ? "critical" : lieu.Est_Lieu_En_Pre_Alarme === 1 ? "warning" : "ok",
       value: lieu.Derniere_Valeur !== null ? parseFloat(lieu.Derniere_Valeur.toString()) : null,
       unit: lieu.Derniere_Unite || "°C",
       lastUpdate: lieu.Derniere_Date_Heure?.toISOString() || new Date().toISOString(),
@@ -98,7 +97,8 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: any) => {
         Consigne_Sup: data.maxThreshold,
         Derniere_Unite: data.unit || "°C",
         Est_Archive: false,
-        Lieu_Etat: "O",
+        Est_Lieu_En_Pre_Alarme: 0,
+        Est_Lieu_En_Alarme: 0,
       },
       include: {
         t_site: {

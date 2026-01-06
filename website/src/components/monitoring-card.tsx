@@ -33,6 +33,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
 import { calculateYDomain, getMeasureSummary } from "@/lib/measurements";
 
@@ -151,8 +152,8 @@ export default function MonitoringCard({
           onClick={() => setIsModalOpen(true)}
         >
           {isLoading ? (
-            <div className="h-[130px] flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="h-[130px]">
+              <Skeleton className="h-full w-full rounded-md" />
             </div>
           ) : (
             <>

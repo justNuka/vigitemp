@@ -17,6 +17,9 @@ export function withLogging(
     const startTime = Date.now();
     const method = req.method;
     const path = req.nextUrl.pathname;
+    const clientTrace = req.headers.get("x-vigitemp-client-trace") || undefined;
+    const queryClientId = req.headers.get("x-vigitemp-query-client-id") || undefined;
+    const bootId = req.headers.get("x-vigitemp-boot-id") || undefined;
     
     // Extraire les infos utilisateur du token JWT si présent
     let user: { username?: string; userId?: number } = {};
@@ -55,6 +58,9 @@ export function withLogging(
           ip,
           duration,
           statusCode: response.status,
+          clientTrace,
+          queryClientId,
+          bootId,
         });
       }
 
@@ -70,6 +76,9 @@ export function withLogging(
         duration,
         statusCode: 500,
         error: error.message || "Unknown error",
+        clientTrace,
+        queryClientId,
+        bootId,
       });
 
       log.error(options?.label || "API", `Error in ${method} ${path}`, {

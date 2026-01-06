@@ -6,10 +6,10 @@ import { prisma } from "@/lib/prisma"
 
 export const GET = withAuthLogging(async (_req: NextRequest) => {
   try {
-    const criticalLocations = await prisma.t_lieu.findMany({
+    const locations = await prisma.t_lieu.findMany({
       where: {
         Est_Archive: false,
-        Lieu_Etat: "A",
+        OR: [{ Est_Lieu_En_Alarme: 1 }, { Est_Lieu_En_Pre_Alarme: 1 }],
       },
       orderBy: { Derniere_Date_Heure: "desc" },
       take: 10,
@@ -24,28 +24,29 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
       },
     })
 
-    const formatted = criticalLocations.map((location) => ({
-      id: String(location.Id_Lieu),
-      name: location.Nom_Lieu || "Lieu sans nom",
-      status: "critical" as const,
-      value:
-        location.Derniere_Valeur !== null
-          ? parseFloat(location.Derniere_Valeur?.toString() ?? "")
-          : null,
-      unit: location.Derniere_Unite || "°C",
-      lastUpdate: location.Derniere_Date_Heure?.toISOString() || new Date().toISOString(),
-      location: {
+    const formatted = locations.map((location) => {
+      const status = location.Est_Lieu_En_Alarme === 1 ? ("critical" as const) : ("warning" as const)
+      const siteLabel =
+        location.t_site?.Code_Site && location.t_site?.Libelle_Site
+          ? `${location.t_site.Code_Site} - ${location.t_site.Libelle_Site}`
+          : location.t_site?.Code_Site || location.t_site?.Libelle_Site || "Unknown"
+
+      return {
         id: String(location.Id_Lieu),
-        name:
-          location.t_site?.Code_Site && location.t_site?.Libelle_Site
-            ? `${location.t_site.Code_Site} - ${location.t_site.Libelle_Site}`
-            : location.t_site?.Code_Site ||
-              location.t_site?.Libelle_Site ||
-              "Unknown",
-      },
-      minThreshold: location.Consigne_Inf,
-      maxThreshold: location.Consigne_Sup,
-    }))
+        name: location.Nom_Lieu || "Lieu sans nom",
+        status,
+        value:
+          location.Derniere_Valeur !== null ? parseFloat(location.Derniere_Valeur?.toString() ?? "") : null,
+        unit: location.Derniere_Unite || "°C",
+        lastUpdate: location.Derniere_Date_Heure?.toISOString() || new Date().toISOString(),
+        location: {
+          id: String(location.Id_Lieu),
+          name: siteLabel,
+        },
+        minThreshold: location.Consigne_Inf,
+        maxThreshold: location.Consigne_Sup,
+      }
+    })
 
     return apiOk(formatted)
   } catch (error) {

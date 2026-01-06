@@ -139,6 +139,7 @@ export function ActuatorsClient() {
             searchField="Num_Serie"
             searchPlaceholder="N° série, type..."
             isLoading={isLoading}
+            maxHeight="60vh"
             emptyMessage="Aucun actionneur trouvé"
             selectedRowId={selectedActuator?.Id_Actionneur}
             onRowClick={(row: ActuatorRow) => {
@@ -167,4 +168,3 @@ export function ActuatorsClient() {
     </main>
   )
 }
-

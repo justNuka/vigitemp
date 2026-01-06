@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchJson } from "@/lib/http";
+import { fetchJson, isUnauthorizedError } from "@/lib/http";
 
 export interface Calibration {
   Id_Etalonnage: number;
@@ -21,6 +21,6 @@ export function useCalibrations(serieNum: string | null) {
     queryKey: ["calibrations", serieNum],
     queryFn: () => fetchCalibrations(serieNum!),
     enabled: !!serieNum,
-    refetchInterval: 60000,
+    refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000),
   });
 }

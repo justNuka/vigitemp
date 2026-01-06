@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getJson } from "@/lib/http";
+import { getJson, isUnauthorizedError } from "@/lib/http";
 
 export interface SiteAdmin {
   Id_Site: number;
@@ -27,7 +27,7 @@ export function useSites(enabled = true) {
     queryKey: ["sites"],
     queryFn: fetchSitesAdmin,
     enabled,
-    refetchInterval: 60000, // 1 minute
+    refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000), // 1 minute
   });
 }
 
@@ -36,6 +36,6 @@ export function useSitesSimple(enabled = true) {
     queryKey: ["sites-simple"],
     queryFn: fetchSitesSimple,
     enabled,
-    refetchInterval: 60000, // 1 minute
+    refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000), // 1 minute
   });
 }

@@ -68,8 +68,7 @@ export function ModulesTable({
       emptyMessage="Aucun module trouvé"
       selectedRowId={selectedModuleId ?? undefined}
       onRowClick={(row) => onSelectModule(row.Id_Module)}
-      maxHeight="30rem"
+      maxHeight="60vh"
     />
   );
 }
-

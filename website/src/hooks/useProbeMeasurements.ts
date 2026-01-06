@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchJson } from "@/lib/http";
+import { fetchJson, isUnauthorizedError } from "@/lib/http";
 
 export interface Measurement {
   ts: string;
@@ -22,7 +22,7 @@ export function useProbeMeasurements(probeId: number | null) {
       return fetchJson<ProbeMeasurementsResponse>(`/api/sondes/${probeId}/mesures`);
     },
     enabled: !!probeId,
-    refetchInterval: 30000,
+    refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 30000),
     staleTime: 25000,
     gcTime: 5 * 60 * 1000,
     retry: 2,

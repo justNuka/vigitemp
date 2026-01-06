@@ -97,10 +97,10 @@ export function UsersTable({
       searchField={["displayName", "username"]}
       searchPlaceholder="Rechercher par nom ou login..."
       pageSize={20}
+      maxHeight="60vh"
       emptyMessage="Aucun utilisateur trouvé"
       selectedRowId={selectedUserId}
       onRowClick={(row) => onSelectUser(row as User)}
     />
   );
 }
-
