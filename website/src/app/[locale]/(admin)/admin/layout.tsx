@@ -1,11 +1,8 @@
 "use client";
 
 import { AdminNavDock } from "@/components/admin-nav-dock";
-import { useQuery } from "@tanstack/react-query";
-import { alarmsApi, authApi } from "@/lib/api";
 import { useAutoLock } from "@/hooks/useAutoLock";
-import { useRefreshInterval } from "@/hooks/useRefreshInterval";
-import { clearAgentSession } from "@/lib/agent-session";
+import PageTransitionWrapper from "@/components/animations/transitions/page-transitions/PageTransitionWrapper";
 
 export default function AdminLayout({
   children,
@@ -16,43 +13,14 @@ export default function AdminLayout({
   useAutoLock();
 
   // Obtenir l'intervalle de rafraîchissement depuis les paramètres
-  const { refreshInterval } = useRefreshInterval();
-
-  // Fetch active alarms count for sidebar badge
-  const { data: alarms } = useQuery({
-    queryKey: ["alarms", "active"],
-    queryFn: () => alarmsApi.getActive(),
-    refetchInterval: refreshInterval,
-  });
-
-  // Fetch current user
-  const { data: currentUser } = useQuery({
-    queryKey: ["auth", "me"],
-    queryFn: () => authApi.getCurrentUser(),
-  });
-
-  const activeAlarmsCount = alarms?.length ?? 0;
-
-  const handleLogout = async () => {
-    try {
-      await authApi.logout();
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      try {
-        await clearAgentSession();
-      } catch {
-        // Agent not installed/running: ignore
-      }
-      window.location.href = "/login";
-    }
-  };
 
   return (
-    <div className="flex flex-col min-h-screen w-full">
+    <div className="flex flex-col h-full min-h-0 w-full">
       {/* Content Area */}
-      <main className="flex-1 overflow-y-auto bg-background pb-20">
-        {children}
+      <main className="flex-1 min-h-0 overflow-y-auto bg-background pb-20">
+        <PageTransitionWrapper className="min-h-full">
+          {children}
+        </PageTransitionWrapper>
       </main>
       
       {/* Admin Navigation Dock (bottom) */}

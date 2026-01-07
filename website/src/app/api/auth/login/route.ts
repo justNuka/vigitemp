@@ -7,6 +7,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { generateToken } from "@/lib/jwt"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
+import { shouldUseSecureCookies } from "@/lib/cookie-security"
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username required"),
@@ -137,9 +138,10 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     response.cookies.set("auth-token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: shouldUseSecureCookies(req),
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: "/",
     })
 
     log.auth.login(username, ip, true, undefined, {

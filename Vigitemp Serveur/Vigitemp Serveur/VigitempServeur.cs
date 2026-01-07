@@ -16,14 +16,14 @@ namespace Vigitemp_Serveur
         public static EventLog eventLog1;
         public static int nombres_interrogations;
         public static int nombres_reponses;
-        public static StreamWriter w = File.AppendText(@"C:\Users\User\Desktop\log.txt");
+        private static StreamWriter _fileLogWriter;
+        private static readonly object _fileLogLock = new object();
         private static readonly object _lock = new object();
         private System.Timers.Timer _timer;
-        List<Thread> m_threads = new List<Thread>();
-        List<CancellationTokenSource> m_cancellationsTokens = new List<CancellationTokenSource>();
-        List<int> m_idServeurs = new List<int>();
-        ThreadServeur m_threadServeur;
-        Thread m_thread;
+
+        private readonly object _workersLock = new object();
+        private readonly Dictionary<int, (ThreadServeur worker, CancellationTokenSource cts)> _workers =
+            new Dictionary<int, (ThreadServeur worker, CancellationTokenSource cts)>();
         public VigitempServeur()
         {
             InitializeComponent();
@@ -31,12 +31,20 @@ namespace Vigitemp_Serveur
 
             this.CanHandlePowerEvent = true;
 
-            if (!EventLog.SourceExists("Vigitemp"))
+            try
             {
-                EventLog.CreateEventSource("Vigitemp", "New Vigitemp Serveur");
+                if (!EventLog.SourceExists("Vigitemp"))
+                {
+                    EventLog.CreateEventSource("Vigitemp", "New Vigitemp Serveur");
+                }
+                eventLog1.Source = "Vigitemp";
+                eventLog1.Log = "New Vigitemp Serveur";
             }
-            eventLog1.Source = "Vigitemp";
-            eventLog1.Log = "New Vigitemp Serveur";
+            catch
+            {
+                eventLog1.Source = "Application";
+                eventLog1.Log = "Application";
+            }
 
             //trayIcon = new NotifyIcon()
             //{
@@ -53,15 +61,14 @@ namespace Vigitemp_Serveur
         void Exit(object sender, EventArgs e)
         {
             //trayIcon.Visible = false;
-            List<int> tmp_idServeurs = m_idServeurs.ToList();
-            foreach (int IdServeur in m_idServeurs)
+            try
             {
-                int indexOfIdServeur = tmp_idServeurs.IndexOf(IdServeur);
-                m_cancellationsTokens[indexOfIdServeur].Cancel();
-                m_threads.RemoveAt(indexOfIdServeur);
-                tmp_idServeurs.RemoveAt(indexOfIdServeur);
+                StopAllWorkers();
             }
-            Application.Exit();
+            catch
+            {
+                // ignore
+            }
         }
 
         public static void Log(string logMessage)
@@ -69,16 +76,102 @@ namespace Vigitemp_Serveur
             lock (_lock)
             {
                 //ecriture dans event viewer
-                eventLog1.WriteEntry(logMessage);
-                //ecriture dans un fichier log
-                w.Write("\r\nLog Entry : ");
-                w.WriteLine($"{DateTime.Now.ToLongTimeString()} {DateTime.Now.ToLongDateString()}");
-                w.WriteLine("  :");
-                w.WriteLine($"  :{logMessage}");
-                w.WriteLine("-------------------------------");
+                try
+                {
+                    eventLog1.WriteEntry(logMessage);
+                }
+                catch
+                {
+                    // ignore
+                }
+
+                // ecriture dans un fichier log (best-effort, chemin compatible service)
+                try
+                {
+                    var writer = GetFileLogWriter();
+                    writer.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} {logMessage}");
+                }
+                catch
+                {
+                    // ignore
+                }
                 //ecriture dans la console
                 Console.WriteLine(logMessage);
                 Trace.WriteLine(logMessage);
+            }
+        }
+
+        private static StreamWriter GetFileLogWriter()
+        {
+            lock (_fileLogLock)
+            {
+                if (_fileLogWriter != null) return _fileLogWriter;
+
+                var baseDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                    "Vigitemp",
+                    "logs");
+                Directory.CreateDirectory(baseDir);
+
+                var logPath = Path.Combine(baseDir, "vigitemp-serveur.log");
+                _fileLogWriter = new StreamWriter(new FileStream(logPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                {
+                    AutoFlush = true
+                };
+
+                return _fileLogWriter;
+            }
+        }
+
+        private static void CloseFileLogWriter()
+        {
+            lock (_fileLogLock)
+            {
+                try { _fileLogWriter?.Flush(); } catch { /* ignore */ }
+                try { _fileLogWriter?.Dispose(); } catch { /* ignore */ }
+                _fileLogWriter = null;
+            }
+        }
+
+        private void StartWorker(int idServeur)
+        {
+            lock (_workersLock)
+            {
+                if (_workers.ContainsKey(idServeur)) return;
+
+                var cts = new CancellationTokenSource();
+                var worker = new ThreadServeur(cts.Token, idServeur);
+                worker.Start();
+                _workers[idServeur] = (worker, cts);
+            }
+        }
+
+        private void StopWorker(int idServeur)
+        {
+            (ThreadServeur worker, CancellationTokenSource cts) entry;
+
+            lock (_workersLock)
+            {
+                if (!_workers.TryGetValue(idServeur, out entry)) return;
+                _workers.Remove(idServeur);
+            }
+
+            try { entry.cts.Cancel(); } catch { /* ignore */ }
+            try { entry.worker.Stop(); } catch { /* ignore */ }
+            try { entry.cts.Dispose(); } catch { /* ignore */ }
+        }
+
+        private void StopAllWorkers()
+        {
+            int[] ids;
+            lock (_workersLock)
+            {
+                ids = _workers.Keys.ToArray();
+            }
+
+            foreach (var id in ids)
+            {
+                StopWorker(id);
             }
         }
 
@@ -90,18 +183,10 @@ namespace Vigitemp_Serveur
 
             Thread.Sleep(2000);
 
-            CancellationTokenSource cts;
             List<int> arr_serveurs = db.getDistinctIdServeur();
             foreach (int IdServeur in arr_serveurs)
             {
-                cts = new CancellationTokenSource();
-                m_threadServeur = new ThreadServeur(cts.Token, IdServeur);
-                m_thread = new Thread(new ThreadStart(m_threadServeur.Start));
-                m_thread.IsBackground = true;
-                m_thread.Start();
-                m_threads.Add(m_thread);
-                m_cancellationsTokens.Add(cts);
-                m_idServeurs.Add(IdServeur);
+                StartWorker(IdServeur);
             }
 
             _timer = new System.Timers.Timer(60000);//timer de 1 minutes
@@ -114,76 +199,70 @@ namespace Vigitemp_Serveur
         protected override void OnStop()
         {
             VigitempServeur.Log("Arrêt du service Vigitemp");
-            List<int> tmp_idServeurs = m_idServeurs.ToList();
-            foreach (int IdServeur in m_idServeurs)
+            try
             {
-                int indexOfIdServeur = tmp_idServeurs.IndexOf(IdServeur);
-                m_cancellationsTokens[indexOfIdServeur].Cancel();
+                _timer?.Stop();
+                _timer?.Dispose();
+                _timer = null;
+            }
+            catch
+            {
+                // ignore
             }
 
-            foreach (Thread IdServeur in m_threads)
-            {
-                if (IdServeur.IsAlive)
-                {
-                    IdServeur.Abort();
-                }
-            }
-
-
+            StopAllWorkers();
+            CloseFileLogWriter();
 
         }
 
         protected void Process(object sender, ElapsedEventArgs eventArgs)
         {
+            try
+            {
             // Console.WriteLine("Guid: "+systemi());
-            CancellationTokenSource cts;
             Database db = new Database();
             List<int> arr_serveurs = db.getDistinctIdServeur();
-            List<int> tmp_idServeurs = m_idServeurs.ToList();
             //ajout de potentiel nouveau serveur créé depuis le lancement du service
-            foreach (int IdServeur in arr_serveurs)
+            foreach (int idServeur in arr_serveurs)
             {
-                if (!tmp_idServeurs.Contains(IdServeur))
-                {
-                    cts = new CancellationTokenSource();
-                    m_threadServeur = new ThreadServeur(cts.Token, IdServeur);
-                    m_thread = new Thread(new ThreadStart(m_threadServeur.Start));
-                    m_thread.IsBackground = true;
-                    m_thread.Start();
-                    m_threads.Add(m_thread);
-                    m_cancellationsTokens.Add(cts);
-                    tmp_idServeurs.Add(IdServeur);
-                }
+                StartWorker(idServeur);
             }
 
 
             //suppression des serveur qui ne sont plus utilisés par les sondes
-            foreach (int IdServeur in m_idServeurs)
+            int[] currentIds;
+            lock (_workersLock)
             {
-                if (!arr_serveurs.Contains(IdServeur))
+                currentIds = _workers.Keys.ToArray();
+            }
+
+            foreach (var idServeur in currentIds)
+            {
+                if (!arr_serveurs.Contains(idServeur))
                 {
-                    int indexOfIdServeur = tmp_idServeurs.IndexOf(IdServeur);
-                    m_cancellationsTokens[indexOfIdServeur].Cancel();
-                    m_threads.RemoveAt(indexOfIdServeur);
-                    tmp_idServeurs.RemoveAt(indexOfIdServeur);
+                    StopWorker(idServeur);
                 }
             }
-            m_idServeurs = tmp_idServeurs;
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("VigitempServeur.Process error: " + ex);
+            }
         }
 
         protected override void OnShutdown()
         {
             VigitempServeur.Log("OnShutdown");
-            base.OnShutdown();
-            List<int> tmp_idServeurs = m_idServeurs.ToList();
-            foreach (int IdServeur in m_idServeurs)
+            try
             {
-                int indexOfIdServeur = tmp_idServeurs.IndexOf(IdServeur);
-                m_cancellationsTokens[indexOfIdServeur].Cancel();
-                m_threads.RemoveAt(indexOfIdServeur);
-                tmp_idServeurs.RemoveAt(indexOfIdServeur);
+                OnStop();
             }
-            Application.Exit();
+            catch
+            {
+                // ignore
+            }
+
+            base.OnShutdown();
         }
 
         protected override bool OnPowerEvent(PowerBroadcastStatus powerStatus)
@@ -205,15 +284,22 @@ namespace Vigitemp_Serveur
                 VigitempServeur.Log("Service need to stop");
                 //this.RequestAdditionalTime(10000); // ne marche pas, dans les logs on dirait que ça stop la fonction, il ne se passe rien apres cette ligne
                 //OnStop();
-                Application.Exit();
+                try
+                {
+                    this.Stop();
+                }
+                catch
+                {
+                    // ignore
+                }
                 //this.RequestAdditionalTime(10000);
             }
 
-            //if (powerStatus.HasFlag(PowerBroadcastStatus.ResumeSuspend))
-            //{
-            //    VigitempServeur.Log("Service need to start");
-            //    OnStart(null);
-            //}
+            if (powerStatus.HasFlag(PowerBroadcastStatus.ResumeSuspend))
+            {
+               VigitempServeur.Log("Service need to start");
+               OnStart(null);
+            }
 
             return base.OnPowerEvent(powerStatus);
         }

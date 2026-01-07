@@ -59,6 +59,7 @@ export function CommentsTableCard({
           columns={columns}
           data={comments}
           pageSize={20}
+          maxHeight="60vh"
           emptyMessage="Aucun commentaire"
           showSearch={true}
           searchPlaceholder="Rechercher un commentaire..."
@@ -70,4 +71,3 @@ export function CommentsTableCard({
     </Card>
   )
 }
-

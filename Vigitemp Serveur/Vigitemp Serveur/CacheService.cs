@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using MySql.Data.MySqlClient;
+using System.Configuration;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace Vigitemp_Serveur
 {
@@ -13,10 +15,53 @@ namespace Vigitemp_Serveur
     class CacheService
     {
         private static readonly object _lock = new object();
-        private static readonly string IP_ADDRESS = "192.168.63.144";
-        private static readonly string PORT = "3306";
-        private static readonly string UID = "root";
-        private static readonly string PASSWORD = "pass";
+
+        private static string GetSetting(string key, string defaultValue)
+        {
+            try
+            {
+                var value = ConfigurationManager.AppSettings[key];
+                return string.IsNullOrWhiteSpace(value) ? defaultValue : value;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private static uint GetSettingUInt(string key, uint defaultValue)
+        {
+            var raw = GetSetting(key, defaultValue.ToString(CultureInfo.InvariantCulture));
+            if (uint.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
+            {
+                return value;
+            }
+            return defaultValue;
+        }
+
+        private static MySqlConnection CreateConnection(string databaseName)
+        {
+            var host = GetSetting("Vigitemp.Db.Host", "192.168.63.144");
+            var port = GetSettingUInt("Vigitemp.Db.Port", 3306);
+            var user = GetSetting("Vigitemp.Db.User", "root");
+            var password = GetSetting("Vigitemp.Db.Password", "pass");
+            var connectionTimeout = GetSettingUInt("Vigitemp.Db.ConnectionTimeoutSeconds", 5);
+            var commandTimeout = GetSettingUInt("Vigitemp.Db.CommandTimeoutSeconds", 30);
+
+            var builder = new MySqlConnectionStringBuilder
+            {
+                Server = host,
+                Port = port,
+                Database = databaseName,
+                UserID = user,
+                Password = password,
+                ConnectionTimeout = connectionTimeout,
+                DefaultCommandTimeout = commandTimeout,
+                Pooling = true,
+            };
+
+            return new MySqlConnection(builder.ConnectionString);
+        }
 
         /// <summary>
         /// Insère une mesure dans tm_graphique pour le cache
@@ -41,8 +86,8 @@ namespace Vigitemp_Serveur
 
                 try
                 {
-                    string connectionString = $"SERVER={IP_ADDRESS}; Port={PORT}; DATABASE=vigitemp_mesures_ifb; UID={UID}; PASSWORD={PASSWORD};";
-                    connection = new MySqlConnection(connectionString);
+                    var databaseName = GetSetting("Vigitemp.Db.MeasureCacheDatabase", GetSetting("Vigitemp.Db.MeasureDatabase", "vigitemp_mesure"));
+                    connection = CreateConnection(databaseName);
                     connection.Open();
 
                     MySqlCommand cmd = connection.CreateCommand();

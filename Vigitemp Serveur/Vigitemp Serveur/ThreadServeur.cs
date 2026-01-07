@@ -1,8 +1,9 @@
-﻿using System;
+﻿﻿using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Timers;
 using Vigitemp_Serveur.sensors;
 using System.IO.Ports;
@@ -29,7 +30,7 @@ namespace Vigitemp_Serveur
         }
 
 
-        private System.Timers.Timer _timer;
+        private System.Timers.Timer _maintenanceTimer;
         private int _idServer;
 
         public ThreadServeur(CancellationToken obj, int p_idServer)
@@ -56,32 +57,29 @@ namespace Vigitemp_Serveur
 
         public void Start()
         {
-            //Console.WriteLine("Starting Thread#" + _idServer + "...");
-            //Trace.WriteLine("Starting Thread#" + _idServer + "...");
             VigitempServeur.Log("Starting Thread#" + _idServer + "...");
             List<int> arr_frequencies = GetDatabase().getDistinctFrequenciesByIdServeur(this._idServer);
             foreach (int frequency in arr_frequencies)
             {
-                _timer = new System.Timers.Timer(frequency * 1000);
+                var timer = new System.Timers.Timer(frequency * 1000);
                 //Set action associated to each tick
-                _timer.Elapsed += (sender, e) => Process(sender, e, frequency);
+                timer.Elapsed += (sender, e) => Process(sender, e, frequency);
                 //Start the timer
-                _timer.Start();
-                this.timers.Add(_timer);
+                timer.Start();
+                this.timers.Add(timer);
                 this.frequencies.Add(frequency);
                 this.frequencies_status.Add(Status.EN_ATTENTE);
             }
 
-            _timer = new System.Timers.Timer(60000);//timer de 1 minutes
-                                                    //Set action associated to each tick
-            _timer.Elapsed += ProcessGetFrequenciesAndReactivateSnoozedAlarm;
+            _maintenanceTimer = new System.Timers.Timer(60000);//timer de 1 minutes
+                                                              //Set action associated to each tick
+            _maintenanceTimer.Elapsed += ProcessGetFrequenciesAndReactivateSnoozedAlarm;
             //Start the timer
-            _timer.Start();
+            _maintenanceTimer.Start();
             //Console.WriteLine("Thread#" + _idServer + " started!");
             //Trace.WriteLine("Thread#" + _idServer + " started!");
             VigitempServeur.Log("Thread#" + _idServer + " started!");
         }
-
 
         public void Stop()
         {
@@ -95,10 +93,22 @@ namespace Vigitemp_Serveur
             foreach (System.Timers.Timer timer in timers)
             {
                 timer.Stop();
-                //Dereference tick action
-                timer.Elapsed -= (sender, e) => Process(sender, e, 0);
                 //Dispose timer
                 timer.Dispose();
+            }
+            timers.Clear();
+            frequencies.Clear();
+            frequencies_status.Clear();
+
+            try
+            {
+                _maintenanceTimer?.Stop();
+                _maintenanceTimer?.Dispose();
+                _maintenanceTimer = null;
+            }
+            catch
+            {
+                // ignore
             }
 
             foreach (SerialPort sp in list_SerialPort_open)
@@ -126,7 +136,12 @@ namespace Vigitemp_Serveur
             this.list_SerialPort_open.RemoveAll((SerialPort element) => { return element.Equals(p_serialport); });
         }
 
-        private async void Process(object sender, ElapsedEventArgs eventArgs, int frequency)
+        private void Process(object sender, ElapsedEventArgs eventArgs, int frequency)
+        {
+            _ = ProcessAsync(frequency);
+        }
+
+        private async Task ProcessAsync(int frequency)
         {
             //await semaphore_queue.WaitAsync();
             //try
@@ -138,21 +153,35 @@ namespace Vigitemp_Serveur
             //    semaphore_queue.Release();
             //}
             int indxOf = frequencies.IndexOf(frequency);
+            if (indxOf < 0 || indxOf >= frequencies_status.Count)
+            {
+                return;
+            }
             if (this.frequencies_status[indxOf] == Status.EN_ATTENTE)
             {
                 this.frequencies_status[indxOf] = Status.EN_COURS;
-                await semaphore.WaitAsync();
+
+                var acquired = false;
                 //for (int i = 0; i < frequencies.Count(); i++)
                 //{
                 //    timers[i].Enabled = false;
                 //}
 
-
                 try
                 {
+                    try
+                    {
+                        await semaphore.WaitAsync(m_cts);
+                        acquired = true;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
+
                     if (m_cts.IsCancellationRequested)
                     {
-                        this.Stop();
+                        return;
                     }
                     //recupere les lieux avec cette frequence et ce id_serveur
                     (List<string> arr_portSerie, List<string> arr_sondeNumeroSerie, List<string> arr_sondeAdresse, List<string> arr_moduleNumeroSerie) = GetDatabase().getInfosByIdServeurAndFrequencies(this._idServer, frequency);
@@ -160,9 +189,7 @@ namespace Vigitemp_Serveur
                     {
                         for (int i = 0; i < arr_sondeNumeroSerie.Count; i++)
                         {
-                            //Console.WriteLine("--------------------ID SERVEUR : " + _idServer + "---CAPTEUR : " + arr_sondeNumeroSerie[i] + "--------------------");
                             VigitempServeur.Log("--------------------ID SERVEUR : " + _idServer + "---CAPTEUR : " + arr_sondeNumeroSerie[i] + "--------------------");
-                            //Trace.WriteLine("Ouverture du port " + arr_portSerie[i]);
                             VigitempServeur.Log("Ouverture du port " + arr_portSerie[i] + " pour la sonde " + arr_sondeNumeroSerie[i]);
                             sensorType = arr_sondeNumeroSerie[i].Substring(0, 2);
 
@@ -213,6 +240,10 @@ namespace Vigitemp_Serveur
 
                     }
                 }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("ThreadServeur.Process error: " + ex);
+                }
                 finally
                 {
                     //for (int i = 0; i < frequencies.Count(); i++)
@@ -221,33 +252,52 @@ namespace Vigitemp_Serveur
                     //}
                     //timers[indxOf].Enabled = true;
                     frequencies_status[indxOf] = Status.EN_ATTENTE;
-                    semaphore.Release();
+                    if (acquired)
+                    {
+                        semaphore.Release();
+                    }
                 }
             }
 
         }
 
-
-        private async void ProcessGetFrequenciesAndReactivateSnoozedAlarm(object sender, ElapsedEventArgs e)
+        private void ProcessGetFrequenciesAndReactivateSnoozedAlarm(object sender, ElapsedEventArgs e)
         {
-            await semaphore.WaitAsync();
+            _ = ProcessGetFrequenciesAndReactivateSnoozedAlarmAsync();
+        }
+
+        private async Task ProcessGetFrequenciesAndReactivateSnoozedAlarmAsync()
+        {
+            var acquired = false;
+
             try
             {
+                try
+                {
+                    await semaphore.WaitAsync(m_cts);
+                    acquired = true;
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+
                 List<int> arr_frequencies = GetDatabase().getDistinctFrequenciesByIdServeur(this._idServer);
 
                 List<int> tmp_frequencies = frequencies.ToList();
-                List<System.Timers.Timer> tmp_timers = timers.ToList();
+                List<Status> tmp_statuses = frequencies_status.ToList();
 
                 //ajout d'une potentiel nouvelle frequence dans frequencies[]
                 foreach (int frequency in arr_frequencies)
                 {
                     if (!tmp_frequencies.Contains(frequency))
                     {
-                        _timer = new System.Timers.Timer(frequency * 1000);
-                        _timer.Elapsed += (p_sender, p_e) => Process(p_sender, p_e, frequency);
-                        _timer.Start();
-                        timers.Add(_timer);
+                        var timer = new System.Timers.Timer(frequency * 1000);
+                        timer.Elapsed += (p_sender, p_e) => Process(p_sender, p_e, frequency);
+                        timer.Start();
+                        timers.Add(timer);
                         tmp_frequencies.Add(frequency);
+                        tmp_statuses.Add(Status.EN_ATTENTE);
                     }
                 }
 
@@ -258,13 +308,14 @@ namespace Vigitemp_Serveur
                     {
                         int indexOfFrequency = tmp_frequencies.IndexOf(frequency);
                         timers[indexOfFrequency].Stop();
-                        timers[indexOfFrequency].Elapsed -= (p_sender, p_e) => Process(p_sender, p_e, frequency);
                         timers[indexOfFrequency].Dispose();
                         timers.RemoveAt(indexOfFrequency);
                         tmp_frequencies.RemoveAt(indexOfFrequency);
+                        tmp_statuses.RemoveAt(indexOfFrequency);
                     }
                 }
                 frequencies = tmp_frequencies;
+                frequencies_status = tmp_statuses;
 
 
                 //cherche les lieux avec une dateReactivationAlarme passé pour réactiver les alarmes
@@ -287,10 +338,7 @@ namespace Vigitemp_Serveur
                         //{
                             //for (int i = 0; i < arr_sondeNumeroSerie.Count; i++)
                             //{
-                                //Console.WriteLine("--------------------ID SERVEUR : " + _idServer + "---CAPTEUR : " + arr_sondeNumeroSerie[i] + "--------------------");
-                                //VigitempServeur.Log("--------------------ID SERVEUR : " + _idServer + "---CAPTEUR : " + arr_sondeNumeroSerie + "--------------------");
-                                //Trace.WriteLine("Ouverture du port " + arr_portSerie[i]);
-                                //VigitempServeur.Log("Ouverture du port " + arr_portSerie + " pour la sonde " + arr_sondeNumeroSerie);
+                                VigitempServeur.Log("Ouverture du port " + arr_portSerie + " pour la sonde " + arr_sondeNumeroSerie);
                                 sensorType = arr_sondeNumeroSerie.Substring(0, 2);
 
                                 switch (sensorType)
@@ -344,9 +392,16 @@ namespace Vigitemp_Serveur
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("ThreadServeur.ProcessGetFrequenciesAndReactivateSnoozedAlarm error: " + ex);
+            }
             finally
             {
-                semaphore.Release();
+                if (acquired)
+                {
+                    semaphore.Release();
+                }
             }
         }
     }

@@ -15,6 +15,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +35,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "next-intl";
 import { getLocalizedPathname, stripLocalePrefix } from "@/i18n/pathnames";
 
@@ -70,6 +71,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSidebarProps) {
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
   const locale = useLocale();
   const normalizedPathname = useMemo(() => stripLocalePrefix(pathname), [pathname]);
   const [isMuted, setIsMuted] = useState(false);
@@ -77,6 +79,12 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
   const tGroups = useTranslations("sidebarGroups");
   const tCommon = useTranslations("common");
   const tAudio = useTranslations("audio");
+
+  // On mobile, close the sidebar after navigation (better UX).
+  useEffect(() => {
+    if (!isMobile) return;
+    setOpenMobile(false);
+  }, [isMobile, pathname, setOpenMobile]);
 
   // Check if user is admin
   const isAdmin = currentUser?.authorizations?.some((auth) => auth.admin) ?? false;
@@ -126,6 +134,9 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
                     <Link
                       href={item.href}
                       data-testid={`nav-${item.href.replace("/", "") || "dashboard"}`}
+                      onClick={() => {
+                        if (isMobile) setOpenMobile(false);
+                      }}
                     >
                       <item.icon className="h-4 w-4" />
                       <span className="flex-1">{tSidebar(item.titleKey)}</span>
@@ -162,6 +173,9 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
                     <Link
                       href={item.href}
                       data-testid={`nav-${item.href.replace("/", "")}`}
+                      onClick={() => {
+                        if (isMobile) setOpenMobile(false);
+                      }}
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{tSidebar(item.titleKey)}</span>
@@ -185,7 +199,13 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
                     isActive={isActive("/admin")}
                     tooltip={tSidebar("admin_dashboard_tooltip")}
                   >
-                    <Link href="/admin" data-testid="nav-admin">
+                    <Link
+                      href="/admin"
+                      data-testid="nav-admin"
+                      onClick={() => {
+                        if (isMobile) setOpenMobile(false);
+                      }}
+                    >
                       <Shield className="h-4 w-4" />
                       <span>{tSidebar("admin_dashboard")}</span>
                     </Link>
@@ -210,6 +230,9 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
                     <Link
                       href={item.href}
                       data-testid={`nav-${item.href.replace("/", "")}`}
+                      onClick={() => {
+                        if (isMobile) setOpenMobile(false);
+                      }}
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{tSidebar(item.titleKey)}</span>

@@ -12,14 +12,25 @@ const nextConfig = {
     reactStrictMode: true,
     // Autoriser le dev mode sur une IP
     allowedDevOrigins: [
+      // Next compare parfois sans scheme/port selon le contexte (HMR/_next/*),
+      // donc on liste les variantes.
+      "192.168.63.144",
+      "192.168.63.144:3000",
       "http://192.168.63.144",
       "http://192.168.63.144:3000",
+      "localhost",
       "http://localhost:3000",
+      "dev.vigitemp",
+      "test.vigitemp",
+      "https://dev.vigitemp",
+      "https://test.vigitemp",
     ],
     // Masquer les warnings de source maps en dev (faux positifs Next.js 16)
+    // Dev-only: keep entries longer to reduce unexpected churn/refresh while the tab is idle.
+    // (These settings do not affect production builds.)
     onDemandEntries: {
-        maxInactiveAge: 25 * 1000,
-        pagesBufferLength: 2,
+        maxInactiveAge: 15 * 60 * 1000, // 15 minutes
+        pagesBufferLength: 5,
     },
     images: {
         remotePatterns: [

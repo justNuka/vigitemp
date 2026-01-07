@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { getJson } from "@/lib/http";
+import { getJson, isUnauthorizedError } from "@/lib/http";
 
 export interface LocationRow {
   Id_Lieu: number;
@@ -58,6 +58,6 @@ export function useLocations(enabled = true) {
     queryKey: ['locations'],
     queryFn: fetchLocations,
     enabled,
-    refetchInterval: 60000,
+    refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000),
   });
 }

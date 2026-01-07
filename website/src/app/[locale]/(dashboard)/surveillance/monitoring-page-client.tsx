@@ -7,7 +7,7 @@ import { SensorsCardsGrid } from "./sensors-cards-grid";
 import type { Site, Group } from "./server-filters";
 import { useTranslations } from "next-intl";
 import { usePaginatedSensors } from "./_hooks/use-paginated-sensors";
-import { useInfiniteScroll } from "./_hooks/use-infinite-scroll";
+import { useSurveillanceLiveUpdates } from "./_hooks/use-surveillance-live-updates";
 import { SurveillanceHeaderControls } from "./_components/monitoring-header-controls";
 import { SurveillanceLoadMore } from "./_components/monitoring-load-more";
 import { applySurveillanceFilters, computeSurveillanceStats, type FilterState } from "./_helpers/monitoring-derived";
@@ -35,6 +35,7 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const { data, isFetching, fetchNextPage, hasNextPage } = usePaginatedSensors({ limit: 100 });
+  useSurveillanceLiveUpdates({ enabled: true, limit: 100 });
 
   const paginatedData = useMemo(() => {
     const pages = data?.pages ?? [];
@@ -73,11 +74,9 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
     }
   }, []);
 
-  useInfiniteScroll({
-    target: loadMoreRef,
-    enabled: !!hasNextPage && !isFetching,
-    onLoadMore: fetchNextPage,
-  });
+  // Important: do not auto-load all pages. The sentinel can be visible without any user scroll,
+  // which causes the app to fetch *every* page (and therefore "all sensors").
+  // We keep manual "Charger plus" only.
 
   return (
     <>

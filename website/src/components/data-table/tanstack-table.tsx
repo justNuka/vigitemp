@@ -11,9 +11,10 @@ import {
   ColumnFiltersState,
   useReactTable,
 } from '@tanstack/react-table';
-import { useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -29,8 +30,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronsUpDown, Download, Printer } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export interface TanStackTableProps<TData> {
   columns: ColumnDef<TData>[];
@@ -50,6 +57,10 @@ export interface TanStackTableProps<TData> {
   showSearch?: boolean;
   showPagination?: boolean;
   toolbarRight?: ReactNode;
+  exportFileName?: string;
+  exportExcludeColumnIds?: string[];
+  enableExport?: boolean;
+  enablePrint?: boolean;
 }
 
 /**
@@ -83,6 +94,10 @@ export function TanStackTable<TData extends Record<string, any>>({
   showSearch = true,
   showPagination = true,
   toolbarRight,
+  exportFileName = "export",
+  exportExcludeColumnIds = ["actions", "action", "select"],
+  enableExport = true,
+  enablePrint = true,
 }: TanStackTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -154,10 +169,160 @@ export function TanStackTable<TData extends Record<string, any>>({
 
   const rows = showPagination ? table.getRowModel().rows : table.getFilteredRowModel().rows;
 
+  const exportableColumns = useMemo(() => {
+    const exclude = new Set(exportExcludeColumnIds);
+    return table
+      .getAllLeafColumns()
+      .filter((col) => col.getIsVisible())
+      .filter((col) => !exclude.has(col.id));
+  }, [exportExcludeColumnIds, table]);
+
+  const exportRows = useMemo(() => {
+    // Export what is currently in the table (filtered + sorted), not only the current page.
+    return table.getPrePaginationRowModel().rows;
+  }, [table]);
+
+  const exportHeaders = useMemo(() => {
+    return exportableColumns.map((col) => {
+      const metaLabel = (col.columnDef as any)?.meta?.exportLabel as string | undefined;
+      if (metaLabel) return metaLabel;
+
+      const header = col.columnDef.header;
+      if (typeof header === "string") return header;
+      return col.id;
+    });
+  }, [exportableColumns]);
+
+  function formatExportValue(value: unknown): string {
+    if (value == null) return "";
+    if (value instanceof Date) return value.toISOString();
+    if (Array.isArray(value)) return value.map((v) => formatExportValue(v)).join(", ");
+    if (typeof value === "object") {
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return String(value);
+      }
+    }
+    return String(value);
+  }
+
+  function buildExportMatrix() {
+    const body = exportRows.map((row) => {
+      return exportableColumns.map((col) => formatExportValue(row.getValue(col.id)));
+    });
+    return { headers: exportHeaders, rows: body };
+  }
+
+  function downloadBlob(blob: Blob, filename: string) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportCsv() {
+    const { headers, rows } = buildExportMatrix();
+    const delimiter = ";";
+    const escape = (value: string) => {
+      const needsQuotes = value.includes("\"") || value.includes("\n") || value.includes("\r") || value.includes(delimiter);
+      const escaped = value.replace(/\"/g, "\"\"");
+      return needsQuotes ? `"${escaped}"` : escaped;
+    };
+
+    const lines = [
+      headers.map((h) => escape(String(h))).join(delimiter),
+      ...rows.map((r) => r.map((v) => escape(String(v))).join(delimiter)),
+    ];
+
+    const blob = new Blob([lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    downloadBlob(blob, `${exportFileName}.csv`);
+  }
+
+  async function exportExcel() {
+    const { headers, rows } = buildExportMatrix();
+    const xlsx = await import("xlsx");
+
+    const worksheet = xlsx.utils.aoa_to_sheet([headers, ...rows]);
+    const workbook = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(workbook, worksheet, "Export");
+
+    const arrayBuffer = xlsx.write(workbook, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([arrayBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    downloadBlob(blob, `${exportFileName}.xlsx`);
+  }
+
+  async function exportPdf() {
+    const { headers, rows } = buildExportMatrix();
+
+    const jsPDFModule = await import("jspdf");
+    const autoTable = (await import("jspdf-autotable")).default;
+
+    const doc = new jsPDFModule.jsPDF({ orientation: "landscape", unit: "pt" });
+    autoTable(doc as any, {
+      head: [headers],
+      body: rows,
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: [30, 64, 175] },
+      margin: { top: 36, left: 24, right: 24, bottom: 24 },
+    });
+
+    doc.save(`${exportFileName}.pdf`);
+  }
+
+  function printTableOnly() {
+    const { headers, rows } = buildExportMatrix();
+    const html = `
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>${exportFileName}</title>
+    <style>
+      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 16px; }
+      h1 { font-size: 16px; margin: 0 0 12px 0; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border: 1px solid #e5e7eb; padding: 6px 8px; font-size: 12px; text-align: left; vertical-align: top; }
+      thead th { background: #f3f4f6; }
+      @media print { body { padding: 0; } h1 { margin-bottom: 8px; } }
+    </style>
+  </head>
+  <body>
+    <h1>${exportFileName}</h1>
+    <table>
+      <thead>
+        <tr>${headers.map((h) => `<th>${String(h)}</th>`).join("")}</tr>
+      </thead>
+      <tbody>
+        ${rows
+          .map((r) => `<tr>${r.map((c) => `<td>${String(c).replace(/</g, "&lt;")}</td>`).join("")}</tr>`)
+          .join("")}
+      </tbody>
+    </table>
+  </body>
+</html>
+`.trim();
+
+    const w = window.open("", "_blank", "noopener,noreferrer");
+    if (!w) return;
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    w.print();
+    w.close();
+  }
+
   return (
     <div className="space-y-4 w-full">
       {/* Barre d'outils - conditionnelle */}
-      {(showSearch || toolbarRight) && (
+      {(showSearch || enableExport || enablePrint || toolbarRight) && (
         <div className="flex items-center gap-2 flex-wrap">
           {showSearch && (
             <>
@@ -173,7 +338,40 @@ export function TanStackTable<TData extends Record<string, any>>({
               </span>
             </>
           )}
-          {toolbarRight && <div className="ml-auto flex items-center gap-2">{toolbarRight}</div>}
+          {(enableExport || enablePrint || toolbarRight) && (
+            <div className="ml-auto flex items-center gap-2">
+              {enableExport && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2" disabled={isLoading}>
+                      <Download className="h-4 w-4" />
+                      Export
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={exportCsv}>CSV</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => void exportExcel()}>Excel</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => void exportPdf()}>PDF</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
+              {enablePrint && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  disabled={isLoading}
+                  onClick={printTableOnly}
+                >
+                  <Printer className="h-4 w-4" />
+                  Imprimer
+                </Button>
+              )}
+
+              {toolbarRight}
+            </div>
+          )}
         </div>
       )}
 
@@ -249,17 +447,17 @@ export function TanStackTable<TData extends Record<string, any>>({
 
           <TableBody className="[&_tr:last-child]:border-b">
             {isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="text-center py-8 text-muted-foreground"
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                    Chargement...
-                  </div>
-                </TableCell>
-              </TableRow>
+              Array.from({
+                length: Math.min(10, showPagination ? table.getState().pagination.pageSize : 10),
+              }).map((_, rowIndex) => (
+                <TableRow key={`loading-${rowIndex}`} className="hover:bg-transparent">
+                  {table.getVisibleLeafColumns().map((col, colIndex) => (
+                    <TableCell key={`loading-${rowIndex}-${col.id}-${colIndex}`} className="border-r border-border">
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
             ) : rows.length > 0 ? (
               rows.map((row, rowIndex) => {
                 // Vérifier si la ligne est sélectionnée
