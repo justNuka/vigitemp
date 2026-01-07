@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,8 +57,6 @@ namespace Vigitemp_Serveur
 
         public void Start()
         {
-            //Console.WriteLine("Starting Thread#" + _idServer + "...");
-            //Trace.WriteLine("Starting Thread#" + _idServer + "...");
             VigitempServeur.Log("Starting Thread#" + _idServer + "...");
             List<int> arr_frequencies = GetDatabase().getDistinctFrequenciesByIdServeur(this._idServer);
             foreach (int frequency in arr_frequencies)
@@ -82,7 +80,6 @@ namespace Vigitemp_Serveur
             //Trace.WriteLine("Thread#" + _idServer + " started!");
             VigitempServeur.Log("Thread#" + _idServer + " started!");
         }
-
 
         public void Stop()
         {
@@ -170,7 +167,6 @@ namespace Vigitemp_Serveur
                 //    timers[i].Enabled = false;
                 //}
 
-
                 try
                 {
                     try
@@ -193,9 +189,7 @@ namespace Vigitemp_Serveur
                     {
                         for (int i = 0; i < arr_sondeNumeroSerie.Count; i++)
                         {
-                            //Console.WriteLine("--------------------ID SERVEUR : " + _idServer + "---CAPTEUR : " + arr_sondeNumeroSerie[i] + "--------------------");
                             VigitempServeur.Log("--------------------ID SERVEUR : " + _idServer + "---CAPTEUR : " + arr_sondeNumeroSerie[i] + "--------------------");
-                            //Trace.WriteLine("Ouverture du port " + arr_portSerie[i]);
                             VigitempServeur.Log("Ouverture du port " + arr_portSerie[i] + " pour la sonde " + arr_sondeNumeroSerie[i]);
                             sensorType = arr_sondeNumeroSerie[i].Substring(0, 2);
 
@@ -266,7 +260,6 @@ namespace Vigitemp_Serveur
             }
 
         }
-
 
         private void ProcessGetFrequenciesAndReactivateSnoozedAlarm(object sender, ElapsedEventArgs e)
         {
@@ -345,10 +338,7 @@ namespace Vigitemp_Serveur
                         //{
                             //for (int i = 0; i < arr_sondeNumeroSerie.Count; i++)
                             //{
-                                //Console.WriteLine("--------------------ID SERVEUR : " + _idServer + "---CAPTEUR : " + arr_sondeNumeroSerie[i] + "--------------------");
-                                //VigitempServeur.Log("--------------------ID SERVEUR : " + _idServer + "---CAPTEUR : " + arr_sondeNumeroSerie + "--------------------");
-                                //Trace.WriteLine("Ouverture du port " + arr_portSerie[i]);
-                                //VigitempServeur.Log("Ouverture du port " + arr_portSerie + " pour la sonde " + arr_sondeNumeroSerie);
+                                VigitempServeur.Log("Ouverture du port " + arr_portSerie + " pour la sonde " + arr_sondeNumeroSerie);
                                 sensorType = arr_sondeNumeroSerie.Substring(0, 2);
 
                                 switch (sensorType)

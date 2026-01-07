@@ -144,7 +144,7 @@ export const PasswordResetEmail = ({
                 <strong>Vigitemp</strong> - Système de surveillance environnementale
                 <br />
                 <Link href="https://www.mc2lab.fr" className="text-[#007bff] no-underline">
-                  MC2 Technologies
+                  MC2 Lab
                 </Link>
               </Text>
             </Section>
@@ -156,7 +156,7 @@ export const PasswordResetEmail = ({
 };
 
 PasswordResetEmail.PreviewProps = {
-  resetUrl: "https://vigitemp.example.com/reset-password?token=abc123xyz789",
+  resetUrl: "http://192.168.63.144:3000/reset-password?token=abc123xyz789",
   firstName: "Jean",
   lastName: "Dupont",
   expiresIn: "1 heure",

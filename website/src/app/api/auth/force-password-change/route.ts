@@ -9,6 +9,7 @@ import { getPasswordRulesFromDb } from "@/lib/password-rules"
 import { checkPasswordHistory, validatePassword } from "@/lib/password-validation"
 import { generateToken } from "@/lib/jwt"
 import { log } from "@/lib/logger"
+import { shouldUseSecureCookies } from "@/lib/cookie-security"
 
 const forcePasswordChangeSchema = z.object({
   username: z.string().min(1, "Username requis"),
@@ -149,9 +150,10 @@ export const POST = withLogging(
 
       response.cookies.set("auth-token", authToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: shouldUseSecureCookies(req),
         sameSite: "lax",
         maxAge: 60 * 60 * 24 * 7,
+        path: "/",
       })
 
       response.cookies.delete({ name: "force-password-token", path: "/" })

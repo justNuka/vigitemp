@@ -1,0 +1,24 @@
+# Local reverse proxy for 2 Next.js instances:
+# - test.vigitemp -> Next "prod-like" instance (next start) on :3000
+# - dev.vigitemp  -> Next dev server (next dev) on :3001
+#
+# This uses an internal CA (self-signed) and serves HTTPS.
+# Client machines must trust Caddy's local root certificate.
+
+{
+	# Caddy's internal CA is perfect for LAN testing (no public DNS required).
+	# For real production later, remove this and use a real cert (Let's Encrypt) with public DNS.
+	local_certs
+}
+
+test.vigitemp {
+	tls internal
+	reverse_proxy 127.0.0.1:3000
+}
+
+dev.vigitemp {
+	tls internal
+	# WebSocket/HMR works through Caddy reverse_proxy.
+	reverse_proxy 127.0.0.1:3001
+}
+
