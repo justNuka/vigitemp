@@ -4,6 +4,7 @@ import { getRequestContext, withLogging } from "@/lib/api-logger"
 import { apiOk } from "@/lib/api-response"
 import { getAuthenticatedUser } from "@/lib/auth"
 import { log } from "@/lib/logger"
+import { shouldUseSecureCookies } from "@/lib/cookie-security"
 
 export const POST = withLogging(async (req: NextRequest) => {
   const user = getAuthenticatedUser(req)
@@ -12,9 +13,10 @@ export const POST = withLogging(async (req: NextRequest) => {
   const response = apiOk({ success: true })
   response.cookies.set("auth-token", "", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldUseSecureCookies(req),
     sameSite: "lax",
     maxAge: 0,
+    path: "/",
   })
 
   if (user) {

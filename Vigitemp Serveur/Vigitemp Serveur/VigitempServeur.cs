@@ -295,11 +295,11 @@ namespace Vigitemp_Serveur
                 //this.RequestAdditionalTime(10000);
             }
 
-            //if (powerStatus.HasFlag(PowerBroadcastStatus.ResumeSuspend))
-            //{
-            //    VigitempServeur.Log("Service need to start");
-            //    OnStart(null);
-            //}
+            if (powerStatus.HasFlag(PowerBroadcastStatus.ResumeSuspend))
+            {
+               VigitempServeur.Log("Service need to start");
+               OnStart(null);
+            }
 
             return base.OnPowerEvent(powerStatus);
         }

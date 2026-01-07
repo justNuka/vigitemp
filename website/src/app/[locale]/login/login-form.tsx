@@ -208,7 +208,7 @@ export function LoginForm() {
       </div>
 
       <p className="w-full text-center text-xs text-muted-foreground/70 pb-4">
-        Vigitemp - MC2 Technologies
+        Vigitemp - MC2 Lab
       </p>
 
       <ForgotPasswordDialog

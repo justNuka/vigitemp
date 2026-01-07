@@ -61,13 +61,13 @@ export default function AdminGroupLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex h-dvh w-full overflow-hidden">
+      <div className="flex h-dvh w-full">
         <AdminSidebar
           currentUser={currentUser}
           onLogout={handleLogout}
         />
-        <main className="flex-1 min-h-0 overflow-hidden bg-background">
-          <PageTransitionWrapper className="h-full min-h-0">
+        <main className="flex-1 min-h-0 bg-background">
+          <PageTransitionWrapper className="min-h-0">
             {children}
           </PageTransitionWrapper>
         </main>
