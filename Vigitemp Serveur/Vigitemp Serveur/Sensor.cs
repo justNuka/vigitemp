@@ -66,7 +66,7 @@ namespace Vigitemp_Serveur
             {
                 List<string> ips_clients = ths.GetDatabase().getPCsClients();
 
-                var settings = ths.GetDatabase().getLieuAlarmSettings(m_idLieu);
+                var settings = ths.GetLieuAlarmSettingsCached(m_idLieu);
                 if (settings == null)
                 {
                     VigitempServeur.Log("compareMeasuresAndLimits: settings null pour le lieu " + m_idLieu);

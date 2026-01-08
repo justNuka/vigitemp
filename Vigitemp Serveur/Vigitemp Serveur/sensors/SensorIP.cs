@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Text.RegularExpressions;
@@ -31,8 +31,8 @@ namespace Vigitemp_Serveur.sensors
                 // while (tmp_sw.Elapsed.TotalMilliseconds < 100) {}
                 // m_port.Write("SM"+m_serialNumber.Substring(m_serialNumber.Length - 4)+"0000000000000000");
 
-                Console.WriteLine("DonnÃ©es ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                Trace.WriteLine("DonnÃ©es ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                Console.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                Trace.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
 
                 while (pendingResults)
                 {
@@ -65,7 +65,11 @@ namespace Vigitemp_Serveur.sensors
 
             SerialPort sp = (SerialPort)sender;
             string regex_res;
-            m_sensor_response += sp.ReadExisting();     //ajout sp.readExisting Ã  m_sensor_response
+            var chunk = sp.ReadExisting();
+                if (!string.IsNullOrEmpty(chunk))
+                {
+                    m_sensor_response += chunk;
+                }
             var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
             if (m.Groups[1].Value != "")
             {
@@ -74,19 +78,19 @@ namespace Vigitemp_Serveur.sensors
             }
             else
             {
-                if (m_sensor_response.Length > sp.ReadExisting().Length)
-                {
-                    m_sensor_response.Substring(sp.ReadExisting().Length, m_sensor_response.Length - sp.ReadExisting().Length);
-                }
+                if (m_sensor_response.Length > 1024)
+                    {
+                        m_sensor_response = m_sensor_response.Substring(m_sensor_response.Length - 1024);
+                    }
                 return;
             }
 
-            // Console.WriteLine("DonnÃ©es recues dans le port COM: " + regex_res); 
+            // Console.WriteLine("Données recues dans le port COM: " + regex_res); 
 
             //recuperer les coeffs our corriger la valeur brute
             (double coeffX, double constante) = ths.GetDatabase().getCoeffCalibrageBySerialNumber(m_sondeSerialNumber);
 
-            double mesureNonCorrigÃ©e, mesureCalculÃ©e;
+            double mesureNonCorrigée, mesureCalculée;
 
             double coeffTemp;
             double coeffA = 0.0039083;
@@ -100,15 +104,15 @@ namespace Vigitemp_Serveur.sensors
 
             if (coeffTemp < 0)
             {
-                mesureCalculÃ©e = 0.0;
+                mesureCalculée = 0.0;
                 return;
             }
-            mesureNonCorrigÃ©e = -(coeffA / (2 * coeffB)) - Math.Sqrt(coeffTemp);
+            mesureNonCorrigée = -(coeffA / (2 * coeffB)) - Math.Sqrt(coeffTemp);
 
-            mesureCalculÃ©e = mesureNonCorrigÃ©e;
-            Console.WriteLine("DonnÃ©es corrigÃ©es: " + float.Parse(String.Format("{0:0.00}", mesureCalculÃ©e)));
-            Trace.WriteLine("DonnÃ©es corrigÃ©es: " + float.Parse(String.Format("{0:0.00}", mesureCalculÃ©e)));
-            ths.GetDatabase().AddMesure(m_sondeSerialNumber, mesureCalculÃ©e, "Â°C", tmp_resistance);
+            mesureCalculée = mesureNonCorrigée;
+            Console.WriteLine("Données corrigées: " + float.Parse(String.Format("{0:0.00}", mesureCalculée)));
+            Trace.WriteLine("Données corrigées: " + float.Parse(String.Format("{0:0.00}", mesureCalculée)));
+            ths.GetDatabase().AddMesure(m_sondeSerialNumber, mesureCalculée, "°C", tmp_resistance);
 
             m_port.Close();
             pendingResults = false;
@@ -116,3 +120,5 @@ namespace Vigitemp_Serveur.sensors
         }
     }
 }
+
+

@@ -1,0 +1,622 @@
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Text;
+using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
+using System.Windows.Forms;
+using Newtonsoft.Json;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Generators;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Crypto.Signers;
+using Org.BouncyCastle.OpenSsl;
+using Org.BouncyCastle.Security;
+
+namespace Vigitemp_License_Generator
+{
+    public sealed class MainForm : Form
+    {
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, string lParam);
+
+        private const int EM_SETCUEBANNER = 0x1501;
+
+        private readonly TextBox _txtCustomerId;
+        private readonly ComboBox _cmbEdition;
+        private readonly ComboBox _cmbConcurrent;
+        private readonly CheckedListBox _clbOptions;
+        private readonly TextBox _txtInstancePublicKey;
+        private readonly CheckBox _chkHasExpiry;
+        private readonly DateTimePicker _dtpExpiresAt;
+        private readonly TextBox _txtLicenseId;
+        private readonly TextBox _txtLicenseToken;
+        private readonly TextBox _txtPublicKey;
+        private readonly Label _lblKeyStatus;
+        private readonly ToolTip _toolTip;
+
+        private AsymmetricKeyParameter _privateKey;
+
+        private readonly string _keysFolder;
+        private readonly string _privateKeyPath;
+        private readonly string _publicKeyPath;
+
+        public MainForm()
+        {
+            Text = "Vigitemp License Generator";
+            StartPosition = FormStartPosition.CenterScreen;
+            MinimumSize = new Size(900, 700);
+
+            _keysFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "license_keys");
+            _privateKeyPath = Path.Combine(_keysFolder, "private_key.pem");
+            _publicKeyPath = Path.Combine(_keysFolder, "public_key.pem");
+
+            _toolTip = new ToolTip
+            {
+                AutoPopDelay = 12000,
+                InitialDelay = 400,
+                ReshowDelay = 200,
+                ShowAlways = true
+            };
+
+            var root = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                AutoScroll = true,
+                Padding = new Padding(12),
+            };
+
+            Controls.Add(root);
+
+            var inputGroup = CreateGroup("Inputs");
+            root.Controls.Add(inputGroup);
+
+            var inputTable = CreateTable(2);
+            inputGroup.Controls.Add(inputTable);
+
+            _txtCustomerId = new TextBox { Width = 240 };
+            SetCueBanner(_txtCustomerId, "X9999999");
+            AddRowWithInfo(
+                inputTable,
+                "Numéro client",
+                _txtCustomerId,
+                "Format requis : X9999999 (lettre X + 7 chiffres).\nExemple : X1234567.\nRemplacer l'exemple par le vrai numéro client."
+            );
+
+            _cmbEdition = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240 };
+            _cmbEdition.Items.AddRange(new object[] { "light", "standard", "expert" });
+            _cmbEdition.SelectedIndex = 0;
+            AddRowWithInfo(
+                inputTable,
+                "Type licence",
+                _cmbEdition,
+                "Light : fonctions essentielles de surveillance.\nStandard : Ajout des fonctions de métrologie.\nExpert : environnement complet MC2."
+            );
+
+            _cmbConcurrent = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240 };
+            _cmbConcurrent.Items.AddRange(new object[] { "5", "10", "25", "illimité" });
+            _cmbConcurrent.SelectedIndex = 0;
+            AddRowWithInfo(
+                inputTable,
+                "Accès simultanés",
+                _cmbConcurrent,
+                "Nombre d'utilisateurs connectés en même temps.\n\"illimité\" = pas de limite."
+            );
+
+            _clbOptions = new CheckedListBox
+            {
+                Height = 80,
+                Width = 300,
+                CheckOnClick = true
+            };
+            _clbOptions.Items.AddRange(new object[] { "telephonie", "mail", "options_futures" });
+            AddRowWithInfo(
+                inputTable,
+                "Options",
+                _clbOptions,
+                "Options additionnelles activées selon contrat (téléphonie, mail, etc.)."
+            );
+
+            _txtInstancePublicKey = new TextBox { Width = 520 };
+            AddRowWithInfo(
+                inputTable,
+                "Instance public key (optionnel)",
+                _txtInstancePublicKey,
+                "Clé publique de l'instance cible.\nSi renseigné, la licence est liée à cette instance.\nLaisser vide pour une licence portable."
+            );
+
+            var expiryPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true };
+            _chkHasExpiry = new CheckBox { Text = "Ajouter expiration", AutoSize = true };
+            _dtpExpiresAt = new DateTimePicker { Enabled = false, Width = 240, Format = DateTimePickerFormat.Custom, CustomFormat = "dd/MM/yyyy" };
+            _chkHasExpiry.CheckedChanged += (s, e) => _dtpExpiresAt.Enabled = _chkHasExpiry.Checked;
+            expiryPanel.Controls.Add(_chkHasExpiry);
+            expiryPanel.Controls.Add(_dtpExpiresAt);
+            AddRowWithInfo(
+                inputTable,
+                "Expiration",
+                expiryPanel,
+                "Optionnel : date de fin de validité.\nDécochez pour une licence sans expiration."
+            );
+
+            var keyGroup = CreateGroup("Clé privée");
+            root.Controls.Add(keyGroup);
+
+            var keyPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true };
+            _lblKeyStatus = new Label { AutoSize = true, Text = "Aucune clé chargée", Margin = new Padding(0, 8, 16, 8) };
+            _toolTip.SetToolTip(_lblKeyStatus, "Aucune clé privée chargée.");
+            var btnGenerateKeys = new Button { Text = "Générer paire de clés", AutoSize = true };
+            var btnLoadKey = new Button { Text = "Charger clé privée", AutoSize = true };
+
+            btnGenerateKeys.Click += (s, e) => GenerateKeyPair();
+            btnLoadKey.Click += (s, e) => LoadPrivateKeyFromDialog();
+
+            keyPanel.Controls.Add(_lblKeyStatus);
+            keyPanel.Controls.Add(btnGenerateKeys);
+            keyPanel.Controls.Add(btnLoadKey);
+            keyGroup.Controls.Add(keyPanel);
+            keyGroup.Controls.Add(CreateInfoLabel(
+                "La clé privée signe les licences (Ed25519).\nElle doit rester secrète et ne jamais être envoyée au client.\nLa clé publique sert à vérifier la signature côté serveur."
+            ));
+
+            var publicKeyTable = CreateTable(2);
+            keyGroup.Controls.Add(publicKeyTable);
+
+            _txtPublicKey = new TextBox
+            {
+                Width = 520,
+                Height = 120,
+                Multiline = true,
+                ScrollBars = ScrollBars.Vertical,
+                ReadOnly = true
+            };
+            AddRowWithInfo(
+                publicKeyTable,
+                "Clé publique (PEM)",
+                _txtPublicKey,
+                "Clé publique à communiquer au serveur C# pour vérifier les licences.\nFormat PEM."
+            );
+
+            var btnCopyPublicKey = new Button { Text = "Copier clé publique", AutoSize = true, Enabled = false };
+            btnCopyPublicKey.Click += (s, e) => CopyToClipboard(_txtPublicKey.Text, "Clé publique copiée.");
+            _txtPublicKey.TextChanged += (s, e) => btnCopyPublicKey.Enabled = !string.IsNullOrWhiteSpace(_txtPublicKey.Text);
+            AddRow(publicKeyTable, "", btnCopyPublicKey);
+
+            var outputGroup = CreateGroup("Licence");
+            root.Controls.Add(outputGroup);
+
+            var outputTable = CreateTable(2);
+            outputGroup.Controls.Add(outputTable);
+
+            _txtLicenseId = new TextBox { Width = 320, ReadOnly = true };
+            AddRowWithInfo(
+                outputTable,
+                "Numéro licence",
+                _txtLicenseId,
+                "Identifiant lisible pour le client et le support (généré automatiquement)."
+            );
+
+            var btnGenerate = new Button { Text = "Générer licence", AutoSize = true };
+            btnGenerate.Click += (s, e) => GenerateLicense();
+            AddRow(outputTable, "", btnGenerate);
+
+            _txtLicenseToken = new TextBox
+            {
+                Multiline = true,
+                ScrollBars = ScrollBars.Vertical,
+                Width = 760,
+                Height = 220,
+                ReadOnly = true
+            };
+            AddRowWithInfo(
+                outputTable,
+                "Token (license.vtlic)",
+                _txtLicenseToken,
+                "Token JWS signé (format compact).\nÀ fournir au client sous forme de fichier .vtlic.\nNe pas modifier manuellement."
+            );
+
+            var btnCopyToken = new Button { Text = "Copier token", AutoSize = true };
+            btnCopyToken.Click += (s, e) => CopyToClipboard(_txtLicenseToken.Text, "Token copié.");
+            AddRow(outputTable, "", btnCopyToken);
+
+            var btnSave = new Button { Text = "Enregistrer .vtlic", AutoSize = true };
+            btnSave.Click += (s, e) => SaveTokenToFile();
+            AddRow(outputTable, "", btnSave);
+
+            TryLoadDefaultKey();
+        }
+
+        private static GroupBox CreateGroup(string title)
+        {
+            return new GroupBox
+            {
+                Text = title,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Dock = DockStyle.Top,
+                Padding = new Padding(10)
+            };
+        }
+
+        private static TableLayoutPanel CreateTable(int columns)
+        {
+            var table = new TableLayoutPanel
+            {
+                ColumnCount = columns,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Dock = DockStyle.Top,
+                CellBorderStyle = TableLayoutPanelCellBorderStyle.None
+            };
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            return table;
+        }
+
+        private static void AddRow(TableLayoutPanel table, string label, Control control)
+        {
+            var rowIndex = table.RowCount++;
+            table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+            if (!string.IsNullOrWhiteSpace(label))
+            {
+                var lbl = new Label
+                {
+                    Text = label,
+                    AutoSize = true,
+                    TextAlign = ContentAlignment.MiddleLeft,
+                    Margin = new Padding(0, 6, 12, 6)
+                };
+                table.Controls.Add(lbl, 0, rowIndex);
+            }
+            else
+            {
+                table.Controls.Add(new Label { AutoSize = true }, 0, rowIndex);
+            }
+
+            control.Margin = new Padding(0, 3, 0, 6);
+            table.Controls.Add(control, 1, rowIndex);
+        }
+
+        private void TryLoadDefaultKey()
+        {
+            if (!File.Exists(_privateKeyPath))
+            {
+                UpdateKeyStatus(false);
+                return;
+            }
+
+            try
+            {
+                _privateKey = LoadPrivateKey(_privateKeyPath);
+                UpdateKeyStatus(true, _privateKeyPath);
+                TryLoadPublicKeyForPrivate(_privateKeyPath);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lecture clé privée : {ex.Message}", "Key load error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                UpdateKeyStatus(false);
+            }
+        }
+
+        private void UpdateKeyStatus(bool ok, string path = null)
+        {
+            var resolvedPath = path ?? _privateKeyPath;
+            _lblKeyStatus.Text = ok
+                ? $"Clé privée chargée\n{resolvedPath}"
+                : "Aucune clé chargée";
+            _toolTip.SetToolTip(
+                _lblKeyStatus,
+                ok
+                    ? $"Clé privée chargée depuis : {resolvedPath}"
+                    : "Aucune clé privée chargée."
+            );
+        }
+
+        private void GenerateKeyPair()
+        {
+            Directory.CreateDirectory(_keysFolder);
+
+            var generator = new Ed25519KeyPairGenerator();
+            generator.Init(new Ed25519KeyGenerationParameters(new SecureRandom()));
+            var keyPair = generator.GenerateKeyPair();
+
+            WritePrivateKey(_privateKeyPath, keyPair.Private);
+            WritePublicKey(_publicKeyPath, keyPair.Public);
+
+            _privateKey = keyPair.Private;
+            UpdateKeyStatus(true, _privateKeyPath);
+            if (!LoadPublicKeyFromFile(_publicKeyPath))
+            {
+                var derived = TryDerivePublicKeyPem(_privateKey);
+                _txtPublicKey.Text = derived ?? string.Empty;
+            }
+
+            MessageBox.Show($"Clés générées :\n{_privateKeyPath}\n{_publicKeyPath}", "OK", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void LoadPrivateKeyFromDialog()
+        {
+            using (var dialog = new OpenFileDialog())
+            {
+                dialog.Title = "Charger clé privée";
+                dialog.Filter = "PEM|*.pem|All files|*.*";
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+
+                try
+                {
+                    _privateKey = LoadPrivateKey(dialog.FileName);
+                    UpdateKeyStatus(true, dialog.FileName);
+                    TryLoadPublicKeyForPrivate(dialog.FileName);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lecture clé privée : {ex.Message}", "Key load error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private static AsymmetricKeyParameter LoadPrivateKey(string path)
+        {
+            using (var reader = File.OpenText(path))
+            {
+                var pemReader = new PemReader(reader);
+                var obj = pemReader.ReadObject();
+                if (obj is AsymmetricCipherKeyPair pair) return pair.Private;
+                if (obj is AsymmetricKeyParameter key && key.IsPrivate) return key;
+                throw new InvalidOperationException("Clé privée invalide.");
+            }
+        }
+
+        private static void WritePrivateKey(string path, AsymmetricKeyParameter privateKey)
+        {
+            using (var writer = new StreamWriter(path, false, Encoding.ASCII))
+            {
+                var pemWriter = new PemWriter(writer);
+                pemWriter.WriteObject(privateKey);
+            }
+        }
+
+        private static void WritePublicKey(string path, AsymmetricKeyParameter publicKey)
+        {
+            using (var writer = new StreamWriter(path, false, Encoding.ASCII))
+            {
+                var pemWriter = new PemWriter(writer);
+                pemWriter.WriteObject(publicKey);
+            }
+        }
+
+        private void GenerateLicense()
+        {
+            if (_privateKey == null)
+            {
+                MessageBox.Show("Aucune clé privée chargée.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var customerId = _txtCustomerId.Text.Trim();
+            if (!Regex.IsMatch(customerId, "^X\\d{7}$"))
+            {
+                MessageBox.Show("Format numéro client invalide (X9999999).", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var edition = _cmbEdition.SelectedItem?.ToString() ?? "light";
+            var concurrent = _cmbConcurrent.SelectedItem?.ToString() ?? "5";
+            var options = new List<string>();
+            foreach (var item in _clbOptions.CheckedItems)
+            {
+                options.Add(item.ToString());
+            }
+
+            var licenseId = $"VT-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpperInvariant()}";
+            _txtLicenseId.Text = licenseId;
+
+            var payload = new Dictionary<string, object>
+            {
+                { "licenseId", licenseId },
+                { "customerId", customerId },
+                { "edition", edition },
+                { "concurrentAccess", concurrent == "illimité" ? "unlimited" : concurrent },
+                { "options", options },
+                { "issuedAt", DateTime.UtcNow.ToString("o") },
+            };
+
+            if (_chkHasExpiry.Checked)
+            {
+                payload["expiresAt"] = _dtpExpiresAt.Value.Date.ToUniversalTime().ToString("o");
+            }
+
+            var instanceKey = _txtInstancePublicKey.Text.Trim();
+            if (!string.IsNullOrWhiteSpace(instanceKey))
+            {
+                payload["bind"] = new Dictionary<string, object>
+                {
+                    { "instancePublicKey", instanceKey }
+                };
+            }
+
+            var header = new Dictionary<string, object>
+            {
+                { "alg", "EdDSA" },
+                { "typ", "JWT" }
+            };
+
+            var headerJson = JsonConvert.SerializeObject(header, Formatting.None);
+            var payloadJson = JsonConvert.SerializeObject(payload, Formatting.None, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            });
+
+            var headerPart = Base64UrlEncode(Encoding.UTF8.GetBytes(headerJson));
+            var payloadPart = Base64UrlEncode(Encoding.UTF8.GetBytes(payloadJson));
+            var signingInput = $"{headerPart}.{payloadPart}";
+
+            var signature = SignEd25519(_privateKey, Encoding.UTF8.GetBytes(signingInput));
+            var signaturePart = Base64UrlEncode(signature);
+
+            _txtLicenseToken.Text = $"{signingInput}.{signaturePart}";
+        }
+
+        private static byte[] SignEd25519(AsymmetricKeyParameter privateKey, byte[] data)
+        {
+            var signer = new Ed25519Signer();
+            signer.Init(true, privateKey);
+            signer.BlockUpdate(data, 0, data.Length);
+            return signer.GenerateSignature();
+        }
+
+        private static string Base64UrlEncode(byte[] input)
+        {
+            return Convert.ToBase64String(input)
+                .TrimEnd('=')
+                .Replace('+', '-')
+                .Replace('/', '_');
+        }
+
+        private void SaveTokenToFile()
+        {
+            if (string.IsNullOrWhiteSpace(_txtLicenseToken.Text))
+            {
+                MessageBox.Show("Aucun token généré.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var defaultName = string.IsNullOrWhiteSpace(_txtLicenseId.Text)
+                ? "license.vtlic"
+                : $"{_txtLicenseId.Text}.vtlic";
+
+            using (var dialog = new SaveFileDialog())
+            {
+                dialog.Title = "Enregistrer licence";
+                dialog.Filter = "License|*.vtlic|All files|*.*";
+                dialog.FileName = defaultName;
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+
+                File.WriteAllText(dialog.FileName, _txtLicenseToken.Text, Encoding.UTF8);
+                MessageBox.Show($"Licence enregistrée :\n{dialog.FileName}", "OK", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void TryLoadPublicKeyForPrivate(string privateKeyPath)
+        {
+            var folder = Path.GetDirectoryName(privateKeyPath);
+            if (!string.IsNullOrWhiteSpace(folder))
+            {
+                var candidate = Path.Combine(folder, "public_key.pem");
+                if (File.Exists(candidate))
+                {
+                    if (LoadPublicKeyFromFile(candidate))
+                    {
+                        return;
+                    }
+                }
+            }
+
+            var derived = TryDerivePublicKeyPem(_privateKey);
+            if (!string.IsNullOrWhiteSpace(derived))
+            {
+                _txtPublicKey.Text = derived;
+                return;
+            }
+
+            _txtPublicKey.Text = string.Empty;
+        }
+
+        private bool LoadPublicKeyFromFile(string path)
+        {
+            try
+            {
+                _txtPublicKey.Text = File.ReadAllText(path, Encoding.ASCII);
+                return !string.IsNullOrWhiteSpace(_txtPublicKey.Text);
+            }
+            catch
+            {
+                _txtPublicKey.Text = string.Empty;
+                return false;
+            }
+        }
+
+        private static string TryDerivePublicKeyPem(AsymmetricKeyParameter privateKey)
+        {
+            if (privateKey is Ed25519PrivateKeyParameters edPrivate)
+            {
+                var publicKey = edPrivate.GeneratePublicKey();
+                using (var writer = new StringWriter())
+                {
+                    var pemWriter = new PemWriter(writer);
+                    pemWriter.WriteObject(publicKey);
+                    return writer.ToString();
+                }
+            }
+
+            return null;
+        }
+
+        private void CopyToClipboard(string text, string successMessage)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                MessageBox.Show("Aucune donnée à copier.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            try
+            {
+                Clipboard.SetText(text);
+                MessageBox.Show(successMessage, "OK", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur copie : {ex.Message}", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void SetCueBanner(TextBox textBox, string cue)
+        {
+            if (textBox == null) return;
+            SendMessage(textBox.Handle, EM_SETCUEBANNER, (IntPtr)1, cue);
+        }
+
+        private Control CreateInfoLabel(string message)
+        {
+            var icon = new PictureBox
+            {
+                Image = SystemIcons.Information.ToBitmap(),
+                SizeMode = PictureBoxSizeMode.StretchImage,
+                Size = new Size(16, 16),
+                Cursor = Cursors.Hand,
+                Margin = new Padding(6, 6, 0, 0)
+            };
+            _toolTip.SetToolTip(icon, message);
+            return icon;
+        }
+
+        private void AddRowWithInfo(TableLayoutPanel table, string label, Control control, string infoMessage)
+        {
+            var rowIndex = table.RowCount++;
+            table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+            var labelPanel = new FlowLayoutPanel
+            {
+                AutoSize = true,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false
+            };
+            labelPanel.Controls.Add(new Label
+            {
+                Text = label,
+                AutoSize = true,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Margin = new Padding(0, 6, 4, 6)
+            });
+            labelPanel.Controls.Add(CreateInfoLabel(infoMessage));
+
+            table.Controls.Add(labelPanel, 0, rowIndex);
+            control.Margin = new Padding(0, 3, 0, 6);
+            table.Controls.Add(control, 1, rowIndex);
+        }
+    }
+}

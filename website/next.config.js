@@ -10,6 +10,14 @@ const withNextIntl = createNextIntlPlugin(
 const nextConfig = {
     // React strict mode
     reactStrictMode: true,
+    output: "standalone",
+    outputFileTracingIncludes: {
+        "/": [
+            "node_modules/styled-jsx/**",
+            "node_modules/@swc/helpers/**",
+            "node_modules/@next/env/**",
+        ],
+    },
     // Autoriser le dev mode sur une IP
     allowedDevOrigins: [
       // Next compare parfois sans scheme/port selon le contexte (HMR/_next/*),
