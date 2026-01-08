@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Ports;
@@ -32,8 +32,8 @@ namespace Vigitemp_Serveur.sensors
                 // while (tmp_sw.Elapsed.TotalMilliseconds < 100) {}
                 // m_port.Write("SM"+m_serialNumber.Substring(m_serialNumber.Length - 4)+"0000000000000000");
 
-                Console.WriteLine("DonnÃ©es ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                Trace.WriteLine("DonnÃ©es ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                Console.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                Trace.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
 
                 while (pendingResults)
                 {
@@ -66,9 +66,13 @@ namespace Vigitemp_Serveur.sensors
 
             SerialPort sp = (SerialPort)sender;
             string regex_res;
-            m_sensor_response += sp.ReadExisting();     //ajout sp.readExisting Ã  m_sensor_response
-            Console.WriteLine("DonnÃ©es recues dans le port COM: " + m_sensor_response);
-            Trace.WriteLine("DonnÃ©es recues dans le port COM: " + m_sensor_response);
+            var chunk = sp.ReadExisting();
+                if (!string.IsNullOrEmpty(chunk))
+                {
+                    m_sensor_response += chunk;
+                }
+            Console.WriteLine("Données recues dans le port COM: " + m_sensor_response);
+            Trace.WriteLine("Données recues dans le port COM: " + m_sensor_response);
             var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
             if (m.Groups[1].Value != "")
             {
@@ -77,10 +81,10 @@ namespace Vigitemp_Serveur.sensors
             }
             else
             {
-                if (m_sensor_response.Length > sp.ReadExisting().Length)
-                {
-                    m_sensor_response.Substring(sp.ReadExisting().Length, m_sensor_response.Length - sp.ReadExisting().Length);
-                }
+                if (m_sensor_response.Length > 1024)
+                    {
+                        m_sensor_response = m_sensor_response.Substring(m_sensor_response.Length - 1024);
+                    }
                 return;
             }
 
@@ -94,8 +98,8 @@ namespace Vigitemp_Serveur.sensors
                 (double coeffX, double coeffConstant) = ths.GetDatabase().getCoeffCalibrageBySerialNumber(m_sondeSerialNumber);
                 // Console.WriteLine("Convert.ToDouble: " + (Convert.ToDouble(tmp_temperature, CultureInfo.InvariantCulture.NumberFormat)*coeffX+coeffConstant).ToString());
                 tmp_valeur = (Convert.ToDouble(float.Parse(tmp_resistance, CultureInfo.InvariantCulture.NumberFormat)) * coeffX + coeffConstant).ToString();
-                Console.WriteLine("DonnÃ©es corrigÃ©es: " + Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero));
-                Trace.WriteLine("DonnÃ©es corrigÃ©es: " + Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero));
+                Console.WriteLine("Données corrigées: " + Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero));
+                Trace.WriteLine("Données corrigées: " + Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero));
 
                 ths.GetDatabase().AddMesure(m_sondeSerialNumber, Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero), "%HR", tmp_resistance);
             }
@@ -103,8 +107,10 @@ namespace Vigitemp_Serveur.sensors
             m_port.Close();
             pendingResults = false;
             Trace.WriteLine("Fermeture du port " + m_comPort);
-            Trace.WriteLine("Taux de rÃ©ponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
+            Trace.WriteLine("Taux de réponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
             Trace.WriteLine("-----------------------------------");
         }
     }
 }
+
+

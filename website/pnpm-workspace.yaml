@@ -1,0 +1,12 @@
+ignoredBuiltDependencies:
+  - '@heroui/shared-utils'
+  - '@parcel/watcher'
+  - '@prisma/client'
+  - '@prisma/engines'
+  - '@swc/core'
+  - core-js
+  - esbuild
+  - msw
+  - prisma
+  - sharp
+  - unrs-resolver

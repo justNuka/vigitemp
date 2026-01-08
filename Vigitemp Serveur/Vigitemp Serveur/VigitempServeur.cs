@@ -6,6 +6,8 @@ using System.ServiceProcess;
 using System.Threading;
 using System.Timers;
 using System.IO;
+using System.Globalization;
+using System.Text;
 using System.Windows.Forms;
 
 namespace Vigitemp_Serveur
@@ -76,9 +78,11 @@ namespace Vigitemp_Serveur
             lock (_lock)
             {
                 //ecriture dans event viewer
+                var safeMessage = SanitizeLog(logMessage);
+
                 try
                 {
-                    eventLog1.WriteEntry(logMessage);
+                    eventLog1.WriteEntry(safeMessage);
                 }
                 catch
                 {
@@ -89,16 +93,56 @@ namespace Vigitemp_Serveur
                 try
                 {
                     var writer = GetFileLogWriter();
-                    writer.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} {logMessage}");
+                    writer.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} {safeMessage}");
                 }
                 catch
                 {
                     // ignore
                 }
                 //ecriture dans la console
-                Console.WriteLine(logMessage);
-                Trace.WriteLine(logMessage);
+                Console.WriteLine(safeMessage);
+                Trace.WriteLine(safeMessage);
             }
+        }
+
+        private static string SanitizeLog(string message)
+        {
+            if (string.IsNullOrEmpty(message)) return message;
+
+            var normalized = message.Normalize(NormalizationForm.FormKD);
+            var sb = new StringBuilder(normalized.Length);
+
+            foreach (var ch in normalized)
+            {
+                var category = CharUnicodeInfo.GetUnicodeCategory(ch);
+                if (category == UnicodeCategory.NonSpacingMark) continue;
+
+                if (ch <= 0x7F)
+                {
+                    sb.Append(ch);
+                    continue;
+                }
+
+                switch (ch)
+                {
+                    case '\u2018':
+                    case '\u2019':
+                        sb.Append('\'');
+                        break;
+                    case '\u2013':
+                    case '\u2014':
+                        sb.Append('-');
+                        break;
+                    case '\u2026':
+                        sb.Append("...");
+                        break;
+                    default:
+                        // Drop any other non-ASCII char to keep logs readable in ASCII.
+                        break;
+                }
+            }
+
+            return sb.ToString();
         }
 
         private static StreamWriter GetFileLogWriter()
@@ -114,7 +158,9 @@ namespace Vigitemp_Serveur
                 Directory.CreateDirectory(baseDir);
 
                 var logPath = Path.Combine(baseDir, "vigitemp-serveur.log");
-                _fileLogWriter = new StreamWriter(new FileStream(logPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                _fileLogWriter = new StreamWriter(
+                    new FileStream(logPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite),
+                    new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: true))
                 {
                     AutoFlush = true
                 };
@@ -179,6 +225,22 @@ namespace Vigitemp_Serveur
         {
             VigitempServeur.Log("Demarrage du service Vigitemp");
             AppContext.SetSwitch("Switch.System.Threading.UseNetCoreTimer", true);
+
+            var licenseResult = LicenseManager.ValidateFromConfig();
+            if (!licenseResult.IsValid)
+            {
+                VigitempServeur.Log("Licence invalide: " + licenseResult.Reason);
+                try { this.Stop(); } catch { /* ignore */ }
+                return;
+            }
+
+            VigitempServeur.Log(
+                "Licence OK: " +
+                $"{licenseResult.LicenseId} " +
+                $"edition={licenseResult.Edition} " +
+                $"concurrent={licenseResult.ConcurrentAccess} " +
+                $"expires={licenseResult.ExpiresAtUtc?.ToString("yyyy-MM-dd") ?? "none"}");
+
             Database db = new Database();
 
             Thread.Sleep(2000);
@@ -297,8 +359,7 @@ namespace Vigitemp_Serveur
 
             if (powerStatus.HasFlag(PowerBroadcastStatus.ResumeSuspend))
             {
-               VigitempServeur.Log("Service need to start");
-               OnStart(null);
+               VigitempServeur.Log("Resume detecte (service deja actif).");
             }
 
             return base.OnPowerEvent(powerStatus);
