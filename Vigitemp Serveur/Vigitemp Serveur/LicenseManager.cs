@@ -49,7 +49,8 @@ namespace Vigitemp_Serveur
 
             try
             {
-                return ValidateToken(token, publicKeyPath, instancePublicKey);
+                JObject payload;
+                return ValidateToken(token, publicKeyPath, instancePublicKey, out payload);
             }
             catch (Exception ex)
             {
@@ -57,8 +58,78 @@ namespace Vigitemp_Serveur
             }
         }
 
-        private static LicenseValidationResult ValidateToken(string token, string publicKeyPath, string instancePublicKey)
+        public static HotlineLicenseConfigResult GetHotlineConfigFromConfig()
         {
+            var licensePath = ExpandPath(GetSetting("Vigitemp.License.Path", DefaultLicensePath));
+            var publicKeyPath = ExpandPath(GetSetting("Vigitemp.License.PublicKeyPath", DefaultPublicKeyPath));
+            var instancePublicKey = GetSetting("Vigitemp.License.InstancePublicKey", string.Empty);
+
+            if (!File.Exists(licensePath))
+            {
+                return HotlineLicenseConfigResult.Fail($"Fichier licence introuvable: {licensePath}");
+            }
+
+            if (!File.Exists(publicKeyPath))
+            {
+                return HotlineLicenseConfigResult.Fail($"ClÇ¸ publique introuvable: {publicKeyPath}");
+            }
+
+            var token = File.ReadAllText(licensePath).Trim();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return HotlineLicenseConfigResult.Fail("Fichier licence vide.");
+            }
+
+            try
+            {
+                JObject payload;
+                var validation = ValidateToken(token, publicKeyPath, instancePublicKey, out payload);
+                if (!validation.IsValid)
+                {
+                    return HotlineLicenseConfigResult.Fail(validation.Reason);
+                }
+
+                var hotlinePayload = payload["hotline"] as JObject;
+                if (hotlinePayload == null)
+                {
+                    return HotlineLicenseConfigResult.Fail("Hotline absente de la licence.");
+                }
+
+                var enabled = hotlinePayload.Value<bool?>("enabled") ?? true;
+                if (!enabled)
+                {
+                    return HotlineLicenseConfigResult.Fail("Hotline dÇ¸sactivÇ¸e.");
+                }
+
+                var slug = hotlinePayload.Value<string>("slug") ?? string.Empty;
+                var username = hotlinePayload.Value<string>("username") ?? string.Empty;
+                var passwordHash = hotlinePayload.Value<string>("passwordHash") ?? string.Empty;
+
+                if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(passwordHash))
+                {
+                    return HotlineLicenseConfigResult.Fail("Hotline incomplÇùte dans la licence.");
+                }
+
+                return HotlineLicenseConfigResult.Success(new HotlineLicenseConfig
+                {
+                    Slug = slug,
+                    Username = username,
+                    PasswordHash = passwordHash
+                });
+            }
+            catch (Exception ex)
+            {
+                return HotlineLicenseConfigResult.Fail("Validation hotline impossible: " + ex.Message);
+            }
+        }
+
+        private static LicenseValidationResult ValidateToken(
+            string token,
+            string publicKeyPath,
+            string instancePublicKey,
+            out JObject payload)
+        {
+            payload = null;
             var parts = token.Split('.');
             if (parts.Length != 3)
             {
@@ -74,7 +145,7 @@ namespace Vigitemp_Serveur
                 return LicenseValidationResult.Fail("Signature licence invalide.");
             }
 
-            var payload = JObject.Parse(payloadJson);
+            payload = JObject.Parse(payloadJson);
             var licenseId = payload.Value<string>("licenseId") ?? string.Empty;
             var customerId = payload.Value<string>("customerId") ?? string.Empty;
             var edition = payload.Value<string>("edition") ?? string.Empty;
@@ -260,6 +331,40 @@ namespace Vigitemp_Serveur
                 Options = options ?? Array.Empty<string>(),
                 IssuedAtRaw = issuedAtRaw,
                 ExpiresAtUtc = expiresAtUtc
+            };
+        }
+    }
+
+    internal sealed class HotlineLicenseConfig
+    {
+        public string Slug { get; set; }
+        public string Username { get; set; }
+        public string PasswordHash { get; set; }
+    }
+
+    internal sealed class HotlineLicenseConfigResult
+    {
+        public bool IsValid { get; private set; }
+        public string Reason { get; private set; }
+        public HotlineLicenseConfig Config { get; private set; }
+
+        public static HotlineLicenseConfigResult Fail(string reason)
+        {
+            return new HotlineLicenseConfigResult
+            {
+                IsValid = false,
+                Reason = reason ?? "Hotline invalide.",
+                Config = null
+            };
+        }
+
+        public static HotlineLicenseConfigResult Success(HotlineLicenseConfig config)
+        {
+            return new HotlineLicenseConfigResult
+            {
+                IsValid = true,
+                Reason = "OK",
+                Config = config
             };
         }
     }

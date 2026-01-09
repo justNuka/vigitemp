@@ -37,7 +37,7 @@ Il y a **2 DB MySQL** utilisées par `website/` (Prisma) :
 Dans `website/.env` (valeurs locales de dev) :
 
 - `DATABASE_URL="mysql://<user>:<pass>@<host>:<port>/<db_main>"`
-- `DATABASE_MESURE_URL="mysql://<user>:<pass>@<host>:<port>/<db_mesure>"`
+- `DATABASE_MESURES_URL="mysql://<user>:<pass>@<host>:<port>/<db_mesure>"`
 
 Scripts utiles :
 
@@ -208,7 +208,7 @@ Scripts utiles (voir `website/package.json`) :
 Dans `website/.env` (exemple dev) :
 
 - `DATABASE_URL`
-- `DATABASE_MESURE_URL`
+- `DATABASE_MESURES_URL`
 - `NODE_ENV`
 
 Autres variables présentes dans le code :

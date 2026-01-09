@@ -22,6 +22,7 @@ namespace Vigitemp_Serveur
         private static readonly object _fileLogLock = new object();
         private static readonly object _lock = new object();
         private System.Timers.Timer _timer;
+        private HotlineApiServer _hotlineApi;
 
         private readonly object _workersLock = new object();
         private readonly Dictionary<int, (ThreadServeur worker, CancellationTokenSource cts)> _workers =
@@ -241,7 +242,7 @@ namespace Vigitemp_Serveur
                 $"concurrent={licenseResult.ConcurrentAccess} " +
                 $"expires={licenseResult.ExpiresAtUtc?.ToString("yyyy-MM-dd") ?? "none"}");
 
-            Database db = new Database();
+            IDatabaseProvider db = DatabaseFactory.Create();
 
             Thread.Sleep(2000);
 
@@ -256,6 +257,16 @@ namespace Vigitemp_Serveur
             _timer.Elapsed += Process;
             //Start the timer
             _timer.Start();
+
+            try
+            {
+                _hotlineApi = new HotlineApiServer();
+                _hotlineApi.Start();
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("Hotline API start failed: " + ex.Message);
+            }
         }
 
         protected override void OnStop()
@@ -273,6 +284,8 @@ namespace Vigitemp_Serveur
             }
 
             StopAllWorkers();
+            try { _hotlineApi?.Stop(); } catch { /* ignore */ }
+            _hotlineApi = null;
             CloseFileLogWriter();
 
         }
@@ -282,7 +295,7 @@ namespace Vigitemp_Serveur
             try
             {
             // Console.WriteLine("Guid: "+systemi());
-            Database db = new Database();
+            IDatabaseProvider db = DatabaseFactory.Create();
             List<int> arr_serveurs = db.getDistinctIdServeur();
             //ajout de potentiel nouveau serveur créé depuis le lancement du service
             foreach (int idServeur in arr_serveurs)

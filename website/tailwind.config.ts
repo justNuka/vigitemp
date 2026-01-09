@@ -32,30 +32,29 @@ const config: Config = {
   			desktop: '1125px'
   		},
   		animation: {
-  			shine: 'shine 3s linear infinite',
+  			shine: 'shine 3s linear infinite'
   		},
   		keyframes: {
   			shine: {
   				'0%': {
-  					backgroundPosition: '0% 0%',
+  					backgroundPosition: '0% 0%'
   				},
   				'50%': {
-  					backgroundPosition: '100% 100%',
+  					backgroundPosition: '100% 100%'
   				},
   				'100%': {
-  					backgroundPosition: '0% 0%',
-  				},
-  			},
+  					backgroundPosition: '0% 0%'
+  				}
+  			}
   		},
   		colors: {
   			white: '#FFFFFF',
-  			// Palette Replit
   			replit: {
-  				blue: '#3B82F6',    // Blue MC2
-  				yellow: '#F59E0B',  // Yellow
-  				teal: '#8BDED8',    // Teal
-  				sage: '#DCE0BF',    // Sage
-  				mauve: '#AD7385',   // Mauve
+  				blue: '#3B82F6',
+  				yellow: '#F59E0B',
+  				teal: '#8BDED8',
+  				sage: '#DCE0BF',
+  				mauve: '#AD7385'
   			},
   			primary: {
   				DEFAULT: 'hsl(var(--primary))',
@@ -105,7 +104,7 @@ const config: Config = {
   				accent: 'hsl(var(--sidebar-accent))',
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
-  				ring: 'hsl(var(--sidebar-ring))',
+  				ring: 'hsl(var(--sidebar-ring))'
   			}
   		},
   		borderRadius: {
@@ -115,7 +114,7 @@ const config: Config = {
   		}
   	}
   },
-  darkMode: "class",
+  darkMode: ["class", "class"],
   plugins: [heroui(), require("tailwindcss-animate")],
 };
 export default config;
