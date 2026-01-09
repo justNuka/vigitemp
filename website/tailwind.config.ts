@@ -114,7 +114,7 @@ const config: Config = {
   		}
   	}
   },
-  darkMode: ["class", "class"],
+  darkMode: "class",
   plugins: [heroui(), require("tailwindcss-animate")],
 };
 export default config;

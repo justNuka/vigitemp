@@ -99,6 +99,8 @@ model tm_mesures {
   Consigne_Inf_Pre_Alarme Float?   @db.Float
   Consigne_Sup_Pre_Alarme Float?   @db.Float
   Moyenne                 Float?   @db.Float
+  Rssi                    Int?
+  Tension                 Float?   @db.Float
 
   @@id([Id_Serveur_BDD, Id_Mesure, Date_Heure_Mesure, Id_Lieu, Est_Valeur_Null])
   @@index([Date_Heure_Mesure], map: "IDX_Date_Heure_Mesure")
@@ -107,6 +109,19 @@ model tm_mesures {
   @@index([Date_Heure_Mesure, Id_Lieu], map: "IDX_Date_Heure_Mesure_Id_Lieu")
   @@index([Id_Lieu], map: "Mesure_Numero_lieu_IDX")
   @@index([Id_Lieu], map: "Mesure_lieu")
+}
+
+model tm_mesures_gso {
+  Id_mesures_gso Int      @default(autoincrement())
+  id_capteur     String   @default("") @db.VarChar(50)
+  tep            Float?
+  unite          String?  @default("") @db.VarChar(10)
+  date_mesure    DateTime @db.DateTime(0)
+  rssi           String?  @db.VarChar(10)
+  tension        String?  @db.VarChar(10)
+
+  @@id([id_capteur, date_mesure])
+  @@index([Id_mesures_gso], map: "Id_mesures_gso")
 }
 
 model tm_journal_histo {

@@ -3,6 +3,8 @@
 import { cacheTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
+const shouldSkipDbOnBuild = process.env.VIGITEMP_SKIP_DB_ON_BUILD === "1";
+
 /**
  * Composant serveur pour charger les données du dashboard
  * Cache automatique avec Next.js 16 Cache Components
@@ -14,6 +16,16 @@ import { prisma } from "@/lib/prisma";
 export async function ServerDashboardStats() {
   "use cache";
   cacheTag("dashboard-stats");
+
+  if (shouldSkipDbOnBuild) {
+    return {
+      totalLocations: 0,
+      activeAlarms: 0,
+      okSensors: 0,
+      warningSensors: 0,
+      criticalSensors: 0,
+    };
+  }
 
   const [totalLocations, activeAlarms, okSensors, warningSensors, criticalSensors] =
     await Promise.all([
@@ -43,6 +55,10 @@ export async function ServerDashboardStats() {
 export async function ServerCriticalSensors() {
   "use cache";
   cacheTag("dashboard-critical-sensors");
+
+  if (shouldSkipDbOnBuild) {
+    return [];
+  }
 
   const criticalLocations = await prisma.t_lieu.findMany({
     where: {
@@ -95,6 +111,10 @@ export async function ServerCriticalSensors() {
 export async function ServerActiveAlarms() {
   "use cache";
   cacheTag("dashboard-active-alarms");
+
+  if (shouldSkipDbOnBuild) {
+    return [];
+  }
 
   const alarms = await prisma.t_alarme.findMany({
     where: {
@@ -167,6 +187,10 @@ export async function ServerActiveAlarms() {
 export async function ServerSensorOverview() {
   "use cache";
   cacheTag("dashboard-sensor-overview");
+
+  if (shouldSkipDbOnBuild) {
+    return [];
+  }
 
   const locations = await prisma.t_lieu.findMany({
     where: {

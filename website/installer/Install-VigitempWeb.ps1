@@ -126,6 +126,11 @@ New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 
 Write-Log (T "Copie des fichiers du site..." "Copying website files...")
 if ($Offline -and $Standalone) {
+    $standaloneSource = Join-Path $SourcePath ".next\\standalone"
+    $staticSource = Join-Path $SourcePath ".next\\static"
+    if (-not (Test-Path $standaloneSource) -or -not (Test-Path $staticSource)) {
+        Write-Error (T "SourcePath invalide : dossier .next\\standalone ou .next\\static manquant. Indiquez le dossier racine du build standalone." "Invalid SourcePath: missing .next\\standalone or .next\\static. Point to the standalone build root folder.")
+    }
     & robocopy (Join-Path $SourcePath ".next") (Join-Path $InstallDir ".next") /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
     if (Test-Path (Join-Path $SourcePath "public")) {
         & robocopy (Join-Path $SourcePath "public") (Join-Path $InstallDir "public") /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
@@ -214,8 +219,8 @@ $dbDefaultUser = if ($dbProvider -eq "mssql") { "sa" } else { "root" }
 $dbHost = Read-InstallValue (T "Hote BDD" "DB host") "127.0.0.1"
 $dbUser = Read-InstallValue (T "Utilisateur BDD" "DB user") $dbDefaultUser
 $dbPassword = Read-InstallValue (T "Mot de passe BDD" "DB password") ""
-$dbMain = Read-InstallValue (T "Nom BDD principale" "Main DB name") "vigitemp"
-$dbMeasure = Read-InstallValue (T "Nom BDD mesures" "Measure DB name") "vigitemp_mesure"
+$dbMain = Read-InstallValue (T "Nom BDD principale" "Main DB name") "vigi_main"
+$dbMeasure = Read-InstallValue (T "Nom BDD mesures" "Measure DB name") "vigi_mesures"
 $cacheTtl = Read-InstallValue (T "Cache TTL (secondes)" "Cache TTL (seconds)") "30"
 $dispatchSecret = Read-InstallValue (T "Secret dispatch surveillance (optionnel)" "Surveillance dispatch secret (optional)") ""
 $logsDir = Read-InstallValue (T "Dossier des logs" "Logs directory") (Join-Path $programData "Vigitemp\\web-logs")

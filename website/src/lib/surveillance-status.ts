@@ -18,6 +18,7 @@ export type StatusTheme = {
   softBgClassName: string
   headerBgClassName: string
   headerBorderClassName: string
+  headerTextClassName: string
   badgeClassName: string
 }
 
@@ -28,8 +29,9 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
       Icon: Power,
       textClassName: "text-gray-500 dark:text-gray-400",
       softBgClassName: "bg-gray-100 dark:bg-gray-900",
-      headerBgClassName: "bg-gray-600 dark:bg-gray-700",
+      headerBgClassName: "bg-gray-200 dark:bg-gray-700",
       headerBorderClassName: "border-gray-700 dark:border-gray-800",
+      headerTextClassName: "text-gray-900 dark:text-white",
       badgeClassName: "bg-gray-100 dark:bg-gray-800",
     }
   }
@@ -43,6 +45,7 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
         softBgClassName: "bg-red-50 dark:bg-red-950",
         headerBgClassName: "bg-red-600 dark:bg-red-700",
         headerBorderClassName: "border-red-700 dark:border-red-800",
+        headerTextClassName: "text-white",
         badgeClassName: "bg-red-600 hover:bg-red-700",
       }
     case "warning":
@@ -53,7 +56,8 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
         softBgClassName: "bg-violet-50 dark:bg-violet-950",
         headerBgClassName: "bg-violet-600 dark:bg-violet-700",
         headerBorderClassName: "border-violet-700 dark:border-violet-800",
-        badgeClassName: "bg-violet-600 hover:bg-violet-700 text-white",
+        headerTextClassName: "text-white",
+        badgeClassName: "!bg-violet-600 hover:!bg-violet-700 !text-white border-violet-700",
       }
     case "ok":
     default:
@@ -62,8 +66,9 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
         Icon: CheckCircle2,
         textClassName: "text-green-700 dark:text-green-300",
         softBgClassName: "bg-green-50 dark:bg-green-950",
-        headerBgClassName: "bg-slate-600 dark:bg-slate-700",
-        headerBorderClassName: "border-slate-700 dark:border-slate-800",
+        headerBgClassName: "bg-slate-200 dark:bg-slate-700",
+        headerBorderClassName: "border-slate-300 dark:border-slate-800",
+        headerTextClassName: "text-slate-900 dark:text-white",
         badgeClassName: "bg-green-600 hover:bg-green-700",
       }
   }

@@ -19,7 +19,7 @@ if ([string]::IsNullOrWhiteSpace($BuildOutput)) {
     $BuildOutput = Join-Path $serverRoot "Vigitemp Serveur\\bin\\Release"
 }
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
-    $OutputDir = Join-Path $repoRoot "build\\server-offline"
+    $OutputDir = Join-Path $repoRoot "..\\vigi\\build\\server-offline"
 }
 
 $exePath = Join-Path $BuildOutput "Vigitemp Serveur.exe"
@@ -36,7 +36,7 @@ Write-Log "Copying server build output..."
 $installerSrc = Join-Path $serverRoot "installer"
 if (Test-Path $installerSrc) {
     Write-Log "Copying installer scripts..."
-    & robocopy $installerSrc (Join-Path $OutputDir "installer") /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
+    & robocopy $installerSrc (Join-Path $OutputDir "installer") /MIR /NFL /NDL /NJH /NJS /NC /NS /XF "README.md" "Prepare-ServerBuild.ps1" | Out-Null
 }
 
 Write-Log "Done. Package ready at: $OutputDir"

@@ -14,6 +14,12 @@ try { chcp 65001 | Out-Null } catch { }
 
 $scriptRoot = $PSScriptRoot
 $defaultSource = Resolve-Path (Join-Path $scriptRoot "..")
+$packageRoot = $null
+try {
+    $packageRoot = Resolve-Path (Join-Path $scriptRoot "..\\..\\..")
+} catch {
+    $packageRoot = $null
+}
 
 $lang = "fr"
 $lang = Read-Host "Langue / Language (fr/en) [fr]"
@@ -49,6 +55,14 @@ function Read-InstallValue($label, $defaultValue = $null) {
 function Normalize-PathInput($value) {
     if ([string]::IsNullOrWhiteSpace($value)) { return $value }
     return $value.Trim().Trim('"')
+}
+
+function Find-FirstFile($directoryPath, $filter) {
+    if ([string]::IsNullOrWhiteSpace($directoryPath)) { return $null }
+    if (-not (Test-Path $directoryPath)) { return $null }
+    $file = Get-ChildItem -Path $directoryPath -Filter $filter -File -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($null -eq $file) { return $null }
+    return $file.FullName
 }
 
 function ConvertFrom-Base64Url([string]$rawInput) {
@@ -158,19 +172,34 @@ $dbDefaultUser = if ($dbProvider -eq "mssql") { "sa" } else { "root" }
 $dbPort = Read-InstallValue (T "Port BDD" "DB port") $dbDefaultPort
 $dbUser = Read-InstallValue (T "Utilisateur BDD" "DB user") $dbDefaultUser
 $dbPassword = Read-InstallValue (T "Mot de passe BDD" "DB password") ""
-$dbMain = Read-InstallValue (T "Nom BDD principale" "Main DB name") "vigitemp"
-$dbMeasure = Read-InstallValue (T "Nom BDD mesures" "Measure DB name") "vigitemp_mesure"
+$dbMain = Read-InstallValue (T "Nom BDD principale" "Main DB name") "vigi_main"
+$dbMeasure = Read-InstallValue (T "Nom BDD mesures" "Measure DB name") "vigi_mesures"
 $dbMeasureCache = Read-InstallValue (T "Nom BDD cache mesures (optionnel)" "Measure cache DB name (optional)") "vigitemp_mesures_ifb"
 $alarmSecret = Read-InstallValue (T "Secret dispatch alarmes (optionnel)" "Alarm dispatch secret (optional)") ""
 
-$licenseSourcePath = Read-InstallValue (T "Chemin du fichier licence (.vtlic)" "License file path (.vtlic)")
+$licenseDefault = $null
+$publicKeyDefault = $null
+if ($packageRoot) {
+    $licenseDir = Join-Path $packageRoot "licence"
+    $publicKeyDir = Join-Path $packageRoot "public_key"
+    $licenseDefault = Find-FirstFile $licenseDir "*.vtlic"
+    $publicKeyDefault = Find-FirstFile $publicKeyDir "*.pem"
+}
+
+$licenseSourcePath = Read-InstallValue (T "Chemin du fichier licence (.vtlic)" "License file path (.vtlic)") $licenseDefault
 $licenseSourcePath = Normalize-PathInput $licenseSourcePath
+if ([string]::IsNullOrWhiteSpace($licenseSourcePath) -and -not [string]::IsNullOrWhiteSpace($licenseDefault)) {
+    $licenseSourcePath = $licenseDefault
+}
 if (-not (Test-Path $licenseSourcePath)) {
     Write-Error (T "Fichier licence introuvable : $licenseSourcePath" "License file not found: $licenseSourcePath")
 }
 
-$publicKeySourcePath = Read-InstallValue (T "Chemin de la cl� publique licence (.pem)" "License public key path (.pem)")
+$publicKeySourcePath = Read-InstallValue (T "Chemin de la cl??? publique licence (.pem)" "License public key path (.pem)") $publicKeyDefault
 $publicKeySourcePath = Normalize-PathInput $publicKeySourcePath
+if ([string]::IsNullOrWhiteSpace($publicKeySourcePath) -and -not [string]::IsNullOrWhiteSpace($publicKeyDefault)) {
+    $publicKeySourcePath = $publicKeyDefault
+}
 if (-not (Test-Path $publicKeySourcePath)) {
     Write-Error (T "Cl� publique introuvable : $publicKeySourcePath" "Public key file not found: $publicKeySourcePath")
 }

@@ -23,7 +23,7 @@ if ([string]::IsNullOrWhiteSpace($SourcePath)) {
     $SourcePath = $websiteRoot.Path
 }
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
-    $OutputDir = Join-Path $repoRoot "build\\website-standalone"
+    $OutputDir = Join-Path $repoRoot "..\\vigi\\build\\website-standalone"
 }
 
 if (-not (Test-Path (Join-Path $SourcePath "package.json"))) {
@@ -54,7 +54,13 @@ if (-not $SkipGenerate) {
 
 if (-not $SkipBuild) {
     Write-Log "Running pnpm build..."
-    & $pnpmCmd.Source build | Out-Null
+    $previousSkipDb = $env:VIGITEMP_SKIP_DB_ON_BUILD
+    $env:VIGITEMP_SKIP_DB_ON_BUILD = "1"
+    try {
+        & $pnpmCmd.Source build | Out-Null
+    } finally {
+        $env:VIGITEMP_SKIP_DB_ON_BUILD = $previousSkipDb
+    }
 }
 
 Pop-Location
@@ -95,10 +101,7 @@ if (Test-Path $installerSrc) {
     Write-Log "Copying installer files..."
     $installerDest = Join-Path $OutputDir "installer"
     New-Item -ItemType Directory -Force -Path $installerDest | Out-Null
-    Copy-Item -Path (Join-Path $installerSrc "Install-VigitempWeb.ps1") -Destination (Join-Path $installerDest "Install-VigitempWeb.ps1") -Force
-    if (Test-Path (Join-Path $installerSrc "winsw.exe")) {
-        Copy-Item -Path (Join-Path $installerSrc "winsw.exe") -Destination (Join-Path $installerDest "winsw.exe") -Force
-    }
+    & robocopy $installerSrc $installerDest /MIR /NFL /NDL /NJH /NJS /NC /NS /XF "README.md" "Prepare-StandaloneBuild.ps1" | Out-Null
 }
 
 Write-Log "Done. Standalone package ready at: $OutputDir"

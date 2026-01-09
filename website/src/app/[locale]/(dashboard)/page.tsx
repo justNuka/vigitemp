@@ -14,6 +14,7 @@ export const metadata = {
   description: "Vue d'ensemble de la surveillance",
 };
 
+
 /**
  * Dashboard principal - Server Component avec Cache Components
  * Architecture optimisée: données cached côté serveur + interactivité côté client

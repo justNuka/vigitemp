@@ -55,7 +55,7 @@ model t_alarme {
   Est_Alarme_Pour_VigiTel      Boolean?  @default(false)
   Est_Mail_Envoye              Boolean?
   Est_Tel_Acquittee            Boolean?
-  t_lieu                       t_lieu?   @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ALARME")
+  t_lieu                       t_lieu?   @relation("lieu_alarme", fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ALARME")
 
   @@index([Est_Acquittee], map: "IDX_Est_Acquittee")
   @@index([Est_Alarme_Vrai], map: "IDX_Est_Alarme_Vrai")
@@ -68,6 +68,37 @@ model t_alarme {
   @@index([Type], map: "IDX_Type")
   @@index([Unite], map: "IDX_Unite")
   @@index([Valeur], map: "IDX_Valeur")
+}
+
+model t_alarme_histo {
+  Id_Alarme                    Int       @id @default(autoincrement())
+  Date_Heure_Debut             DateTime? @db.DateTime(0)
+  Valeur                       Float?    @db.Float
+  Type                         String?   @db.VarChar(1)
+  Date_Heure_Fin               DateTime? @db.DateTime(0)
+  Est_Alarme_Vrai              Boolean?  @default(false)
+  Id_Lieu                      Int?
+  Sonde_Numero_Serie           String?   @db.VarChar(50)
+  Unite                        String?   @db.VarChar(10)
+  Est_Acquittee                Boolean?  @default(false)
+  Date_Heure_Derniere_Mesure   DateTime? @db.DateTime(0)
+  Date_Heure_Debut_Alarme_Vrai DateTime? @db.DateTime(0)
+  Est_Alarme_Pour_VigiTel      Boolean?  @default(false)
+  Est_Mail_Envoye              Boolean?
+  Est_Tel_Acquittee            Boolean?
+  t_lieu                       t_lieu?   @relation("lieu_alarme_histo", fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ALARME_HISTO")
+
+  @@index([Est_Acquittee], map: "IDX_HISTO_Est_Acquittee")
+  @@index([Est_Alarme_Vrai], map: "IDX_HISTO_Est_Alarme_Vrai")
+  @@index([Date_Heure_Debut], map: "IDX_HISTO_Date_Heure_Debut")
+  @@index([Date_Heure_Fin], map: "IDX_HISTO_Date_Heure_Fin")
+  @@index([Date_Heure_Debut_Alarme_Vrai], map: "IDX_HISTO_Date_Heure_Debut_Alarme_Vrai")
+  @@index([Date_Heure_Derniere_Mesure], map: "IDX_HISTO_Date_Heure_Derniere_Mesure")
+  @@index([Sonde_Numero_Serie], map: "IDX_HISTO_Sonde_Numero_Serie")
+  @@index([Id_Lieu], map: "IDX_HISTO_Id_Lieu")
+  @@index([Type], map: "IDX_HISTO_Type")
+  @@index([Unite], map: "IDX_HISTO_Unite")
+  @@index([Valeur], map: "IDX_HISTO_Valeur")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -334,7 +365,10 @@ model t_lieu {
   Derniere_Nb_Decimal                  Int?
   Est_Lieu_En_Alarme                   Int?                       @db.TinyInt
   Est_Lieu_Alarme_Termee_Non_Acquittee Int?                       @db.TinyInt
+  Est_Lieu_Alarme_Termee_Non_Acquittee_T1 Int?                     @db.TinyInt
   Est_Lieu_En_Pre_Alarme               Int?                       @db.TinyInt
+  Date_Heure_Dernier_Acquittement_En_Cours DateTime?               @db.DateTime(0)
+  Date_Heure_Last_Update_EVT_GSO       DateTime?                  @db.DateTime(0)
   Id_Alarme                            Int?
   Lieu_Etat_N1                         String?                    @db.VarChar(50)
   Derniere_Date_Etalonnage             DateTime?                  @db.Date
@@ -348,7 +382,7 @@ model t_lieu {
   Est_Correction_derive                Boolean?                   @default(false)
   Derniere_Valeur_Null                 Int?                       @default(0)
   Type_Lieu                            String?                    @db.VarChar(20)
-  t_alarme                             t_alarme[]
+  t_alarme                             t_alarme[]                @relation("lieu_alarme")
   t_groupe1                            t_groupe?                  @relation("groupe1", fields: [Id_Groupe1], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE1_LIEU")
   t_groupe2                            t_groupe?                  @relation("groupe2", fields: [Id_Groupe2], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE2_LIEU")
   t_lieu_groupe                        t_lieu_groupe[]
@@ -361,6 +395,7 @@ model t_lieu {
   t_planning_alarme                    t_planning_alarme[]
   t_planning_consigne                  t_planning_consigne[]
   t_planning_heure_bascule             t_planning_heure_bascule[]
+  t_alarme_histo                       t_alarme_histo[]          @relation("lieu_alarme_histo")
 
   @@index([Id_Groupe1], map: "IDX_Id_Groupe1")
   @@index([Id_Groupe2], map: "IDX_Id_Groupe2")

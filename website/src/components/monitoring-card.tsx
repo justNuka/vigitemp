@@ -84,6 +84,12 @@ export default function MonitoringCard({
     () => getStatusTheme(status, isSurveillanceActive),
     [isSurveillanceActive, status],
   );
+  const headerBgClassName =
+    status === "warning" && isSurveillanceActive
+      ? "bg-violet-600 dark:bg-violet-700"
+      : headerTheme.headerBgClassName;
+  const headerTextClassName =
+    status === "warning" && isSurveillanceActive ? "text-white" : headerTheme.headerTextClassName;
 
   const handleSurveillanceToggle = () => {
     setShowConfirmModal(true);
@@ -110,10 +116,10 @@ export default function MonitoringCard({
       <div className="relative w-full max-w-[300px] max-h-[300px] mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
         {/* Header avec site, groupe et lieu */}
         <div
-          className={`px-3 py-2 ${headerTheme.headerBgClassName} border-b-2 ${headerTheme.headerBorderClassName}`}
+          className={`px-3 py-2 ${headerBgClassName} border-b-2 ${headerTheme.headerBorderClassName}`}
         >
           <div className="flex items-start justify-between gap-2">
-            <div className="text-white text-xs font-medium space-y-1 flex-1">
+            <div className={`${headerTextClassName} text-xs font-medium space-y-1 flex-1`}>
               {siteName && (
                 <TooltipProvider>
                   <UITooltip>
@@ -136,7 +142,7 @@ export default function MonitoringCard({
                 {nomLieu}
               </div>
             </div>
-            <div className="text-white flex-shrink-0 mt-0.5" title={headerTheme.label}>
+            <div className={`${headerTextClassName} flex-shrink-0 mt-0.5`} title={headerTheme.label}>
               <HeaderIcon className="w-4 h-4" />
             </div>
           </div>

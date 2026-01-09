@@ -6,6 +6,7 @@ Ce guide couvre la preparation offline, l'installation chez le client et les ver
 - PowerShell en administrateur.
 - Windows Server ou Windows 10/11.
 - Node.js LTS installe (pour le build web sur la machine de preparation).
+- Node.js LTS installe sur la machine client si vous lancez l'installateur web (offline ou online).
 - Acces au serveur BDD (MySQL ou MSSQL deja installe).
 - Fichier de licence `.vtlic` + cle publique `.pem`.
 
@@ -77,6 +78,9 @@ Le script demande :
 - choix du provider BDD (mysql ou mssql)
 - cache TTL + secret surveillance (optionnel)
 
+Note : en mode offline complet, le script a besoin de `node.exe`. Assurez-vous que Node.js est
+dans le PATH ou utilisez l'option `-NodePath` pour indiquer le chemin complet.
+
 Chemins utiles apres install :
 - `C:\ProgramData\Vigitemp\website`
 - `.env.production` dans le dossier d'installation
@@ -116,3 +120,22 @@ sc.exe delete VigitempWeb
 - Service C# ne demarre pas : verifier `vigitemp-serveur.log` (licence invalide, BDD inaccesible, config).
 - Service web ne demarre pas : verifier `VigitempWeb.err.log` dans `C:\ProgramData\Vigitemp\website`.
 - Mauvais encodage dans les logs : relancer les services, verifier que les fichiers de logs sont bien en UTF-8.
+
+## 7) Acces par URL (reseau)
+Le fichier `hosts` ne s'applique que sur la machine ou il est modifie.
+Si vous voulez un nom lisible pour toutes les machines du reseau :
+
+### Option recommandee : DNS interne
+- Creer un enregistrement DNS (ex: `vigitemp`) pointant vers l'IP du serveur web.
+- Tous les postes pourront acceder a `http://vigitemp`.
+
+### Option alternative : hosts sur chaque poste
+- Ajouter une entree `hosts` sur chaque PC :
+```
+<IP_DU_SERVEUR> vigitemp.local
+```
+- Acces via `http://vigitemp.local`.
+
+### Notes
+- Sans DNS, un reverse proxy ne suffit pas : les postes doivent resoudre le nom.
+- L'acces par IP reste la solution la plus simple si aucune infra DNS n'existe.
