@@ -150,8 +150,13 @@ if (-not (Test-Path $configPath)) {
 
 $websiteBaseUrl = Read-InstallValue (T "URL du site web (ex: http://127.0.0.1:3000)" "Website base URL (example: http://127.0.0.1:3000)") "http://127.0.0.1:3000"
 $dbHost = Read-InstallValue (T "H?te BDD" "DB host") "127.0.0.1"
-$dbPort = Read-InstallValue (T "Port BDD" "DB port") "3306"
-$dbUser = Read-InstallValue (T "Utilisateur BDD" "DB user") "root"
+$dbProvider = Read-InstallValue (T "Type de BDD (mysql/mssql)" "DB provider (mysql/mssql)") "mysql"
+$dbProvider = $dbProvider.ToLowerInvariant()
+if ($dbProvider -ne "mssql") { $dbProvider = "mysql" }
+$dbDefaultPort = if ($dbProvider -eq "mssql") { "1433" } else { "3306" }
+$dbDefaultUser = if ($dbProvider -eq "mssql") { "sa" } else { "root" }
+$dbPort = Read-InstallValue (T "Port BDD" "DB port") $dbDefaultPort
+$dbUser = Read-InstallValue (T "Utilisateur BDD" "DB user") $dbDefaultUser
 $dbPassword = Read-InstallValue (T "Mot de passe BDD" "DB password") ""
 $dbMain = Read-InstallValue (T "Nom BDD principale" "Main DB name") "vigitemp"
 $dbMeasure = Read-InstallValue (T "Nom BDD mesures" "Measure DB name") "vigitemp_mesure"
@@ -164,10 +169,10 @@ if (-not (Test-Path $licenseSourcePath)) {
     Write-Error (T "Fichier licence introuvable : $licenseSourcePath" "License file not found: $licenseSourcePath")
 }
 
-$publicKeySourcePath = Read-InstallValue (T "Chemin de la clé publique licence (.pem)" "License public key path (.pem)")
+$publicKeySourcePath = Read-InstallValue (T "Chemin de la clï¿½ publique licence (.pem)" "License public key path (.pem)")
 $publicKeySourcePath = Normalize-PathInput $publicKeySourcePath
 if (-not (Test-Path $publicKeySourcePath)) {
-    Write-Error (T "Clé publique introuvable : $publicKeySourcePath" "Public key file not found: $publicKeySourcePath")
+    Write-Error (T "Clï¿½ publique introuvable : $publicKeySourcePath" "Public key file not found: $publicKeySourcePath")
 }
 
 $licensePayload = Read-LicensePayload $licenseSourcePath
@@ -186,10 +191,10 @@ if ($null -ne $licensePayload) {
     }
 }
 
-$instancePublicKey = Read-InstallValue (T "Clé publique instance (optionnel)" "Instance public key (optional)") ""
+$instancePublicKey = Read-InstallValue (T "Clï¿½ publique instance (optionnel)" "Instance public key (optional)") ""
 if ($licensePayload -and $licensePayload.PSObject.Properties.Match("bind").Count -gt 0 -and $licensePayload.bind -and $licensePayload.bind.instancePublicKey) {
     if ([string]::IsNullOrWhiteSpace($instancePublicKey)) {
-        Write-Warning (T "La licence exige un binding d'instance. Renseignez la clé pour éviter un refus." "License requires instance binding. Provide instance public key to avoid mismatch.")
+        Write-Warning (T "La licence exige un binding d'instance. Renseignez la clï¿½ pour ï¿½viter un refus." "License requires instance binding. Provide instance public key to avoid mismatch.")
     }
 }
 
@@ -206,6 +211,7 @@ Copy-Item -Path $publicKeySourcePath -Destination $publicKeyDestPath -Force
 
 Set-AppSetting $configPath "Vigitemp.WebsiteBaseUrl" $websiteBaseUrl
 Set-AppSetting $configPath "Vigitemp.AlarmDispatchSecret" $alarmSecret
+Set-AppSetting $configPath "Vigitemp.Db.Provider" $dbProvider
 Set-AppSetting $configPath "Vigitemp.Db.Host" $dbHost
 Set-AppSetting $configPath "Vigitemp.Db.Port" $dbPort
 Set-AppSetting $configPath "Vigitemp.Db.User" $dbUser
@@ -227,9 +233,9 @@ try {
 
 $existingService = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
 if ($null -ne $existingService) {
-    $answer = Read-InstallValue (T "Le service $ServiceName existe. Arrêter et réinstaller ? (y/n)" "Service $ServiceName exists. Stop and reinstall? (y/n)") "y"
+    $answer = Read-InstallValue (T "Le service $ServiceName existe. Arrï¿½ter et rï¿½installer ? (y/n)" "Service $ServiceName exists. Stop and reinstall? (y/n)") "y"
     if ($answer -ne "y") {
-        Write-Error (T "Installation annulée par l'utilisateur." "Installation cancelled by user.")
+        Write-Error (T "Installation annulï¿½e par l'utilisateur." "Installation cancelled by user.")
     }
     try { Stop-Service -Name $ServiceName -Force -ErrorAction SilentlyContinue } catch { }
     & sc.exe delete $ServiceName | Out-Null
@@ -245,7 +251,7 @@ $binPath = '"' + $serviceExePath + '"'
 try {
     Start-Service -Name $ServiceName
 } catch {
-    Write-Log (T "Impossible de démarrer le service : $ServiceName" "Failed to start service: $ServiceName")
+    Write-Log (T "Impossible de dï¿½marrer le service : $ServiceName" "Failed to start service: $ServiceName")
     try {
         $events = Get-WinEvent -LogName System -MaxEvents 5 |
             Where-Object { $_.ProviderName -eq "Service Control Manager" } |
@@ -264,19 +270,34 @@ try {
 
 Write-InstallRegistryInfo -installPath $InstallDir -version $version
 
+try {
+    $licensePathValue = Get-AppSetting $configPath "Vigitemp.License.Path"
+    $publicKeyValue = Get-AppSetting $configPath "Vigitemp.License.PublicKeyPath"
+    $regServerRoot = "HKLM:\\SOFTWARE\\Vigitemp\\Server"
+    New-Item -Path $regServerRoot -Force | Out-Null
+    if ($licensePathValue) {
+        Set-ItemProperty -Path $regServerRoot -Name "LicensePath" -Value $licensePathValue -Type String
+    }
+    if ($publicKeyValue) {
+        Set-ItemProperty -Path $regServerRoot -Name "LicensePublicKeyPath" -Value $publicKeyValue -Type String
+    }
+} catch {
+    Write-Log (T "Echec ecriture registre licence." "Failed to write license registry.")
+}
+
 Write-Log (T "Registre: HKLM\\SOFTWARE\\Vigitemp\\Server" "Registry: HKLM\\SOFTWARE\\Vigitemp\\Server")
 Write-Log (T "  InstallPath: $InstallDir" "  InstallPath: $InstallDir")
 if (-not [string]::IsNullOrWhiteSpace($version)) {
     Write-Log (T "  Version: $version" "  Version: $version")
 }
-Write-Log (T "  LastInstalledUtc: $([DateTime]::UtcNow.ToString(\"o\"))" "  LastInstalledUtc: $([DateTime]::UtcNow.ToString(\"o\"))")
-Write-Log (T "Installation terminée. Service : $ServiceName" "Install complete. Service: $ServiceName")
+Write-Log (T "  LastInstalledUtc: $([DateTime]::UtcNow.ToString('o'))" "  LastInstalledUtc: $([DateTime]::UtcNow.ToString('o'))")
+Write-Log (T "Installation terminï¿½e. Service : $ServiceName" "Install complete. Service: $ServiceName")
 if (-not [string]::IsNullOrWhiteSpace($version)) {
     Write-Log (T "Version : $version" "Version: $version")
 }
 Write-Log (T "Config : $configPath" "Config: $configPath")
 Write-Log (T "Licence : $licenseDestPath" "License: $licenseDestPath")
-Write-Log (T "Clé publique : $publicKeyDestPath" "Public key: $publicKeyDestPath")
+Write-Log (T "Clï¿½ publique : $publicKeyDestPath" "Public key: $publicKeyDestPath")
 Write-Log (T "Log : $logPath" "Log: $logPath")
 
 Stop-Transcript | Out-Null

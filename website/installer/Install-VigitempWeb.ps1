@@ -69,7 +69,7 @@ function Write-InstallRegistryInfo($installPath, $version) {
         New-Item -Path $webKey -Force | Out-Null
         New-ItemProperty -Path $webKey -Name "InstallPath" -Value $installPath -PropertyType String -Force | Out-Null
         New-ItemProperty -Path $webKey -Name "Version" -Value $version -PropertyType String -Force | Out-Null
-        New-ItemProperty -Path $webKey -Name "LastInstalledUtc" -Value ([DateTime]::UtcNow.ToString("o")) -PropertyType String -Force | Out-Null
+        New-ItemProperty -Path $webKey -Name "LastInstalledUtc" -Value ([DateTime]::UtcNow.ToString('o')) -PropertyType String -Force | Out-Null
     } catch {
         Write-Log (T "Impossible d'ecrire dans le registre." "Failed to write registry keys.")
     }
@@ -205,9 +205,14 @@ if (-not $Offline) {
 }
 
 $websiteBaseUrl = Read-InstallValue (T "URL publique du site (ex: http://127.0.0.1:$Port/)" "Website public URL (example: http://127.0.0.1:$Port/)") "http://127.0.0.1:$Port/"
-$dbHost = Read-InstallValue (T "H?te BDD" "DB host") "127.0.0.1"
-$dbPort = Read-InstallValue (T "Port BDD" "DB port") "3306"
-$dbUser = Read-InstallValue (T "Utilisateur BDD" "DB user") "root"
+$dbProvider = Read-InstallValue (T "Type de BDD (mysql/mssql)" "DB provider (mysql/mssql)") "mysql"
+$dbProvider = $dbProvider.ToLowerInvariant()
+if ($dbProvider -ne "mssql") { $dbProvider = "mysql" }
+$dbDefaultPort = if ($dbProvider -eq "mssql") { "1433" } else { "3306" }
+$dbPort = Read-InstallValue (T "Port BDD" "DB port") $dbDefaultPort
+$dbDefaultUser = if ($dbProvider -eq "mssql") { "sa" } else { "root" }
+$dbHost = Read-InstallValue (T "Hote BDD" "DB host") "127.0.0.1"
+$dbUser = Read-InstallValue (T "Utilisateur BDD" "DB user") $dbDefaultUser
 $dbPassword = Read-InstallValue (T "Mot de passe BDD" "DB password") ""
 $dbMain = Read-InstallValue (T "Nom BDD principale" "Main DB name") "vigitemp"
 $dbMeasure = Read-InstallValue (T "Nom BDD mesures" "Measure DB name") "vigitemp_mesure"
@@ -217,13 +222,19 @@ $logsDir = Read-InstallValue (T "Dossier des logs" "Logs directory") (Join-Path 
 
 New-Item -ItemType Directory -Force -Path $logsDir | Out-Null
 
-$databaseUrl = "mysql://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbMain}"
-$databaseMesureUrl = "mysql://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbMeasure}"
+if ($dbProvider -eq "mssql") {
+    $databaseUrl = "sqlserver://${dbUser}:${dbPassword}@${dbHost}:${dbPort};database=${dbMain};encrypt=false;trustServerCertificate=true"
+    $databaseMesureUrl = "sqlserver://${dbUser}:${dbPassword}@${dbHost}:${dbPort};database=${dbMeasure};encrypt=false;trustServerCertificate=true"
+} else {
+    $databaseUrl = "mysql://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbMain}"
+    $databaseMesureUrl = "mysql://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbMeasure}"
+}
 
 $envPath = Join-Path $InstallDir $EnvFileName
 $envContent = @"
 DATABASE_URL="$databaseUrl"
-DATABASE_MESURE_URL="$databaseMesureUrl"
+DATABASE_MESURES_URL="$databaseMesureUrl"
+DATABASE_PROVIDER="$dbProvider"
 NEXT_PUBLIC_API_BASE_URL="$websiteBaseUrl"
 NEXT_PUBLIC_CACHE_TTL=$cacheTtl
 VIGITEMP_SURVEILLANCE_DISPATCH_SECRET="$dispatchSecret"
@@ -232,6 +243,10 @@ NODE_ENV=production
 "@
 
 $envContent | Set-Content -Path $envPath -Encoding UTF8
+
+if ($dbProvider -eq "mssql") {
+    Write-Log (T "Attention: Prisma doit etre configure pour SQL Server (schema/provider)." "Warning: Prisma must be configured for SQL Server (schema/provider).")
+}
 
 Push-Location $InstallDir
 if (-not $Offline) {
@@ -326,7 +341,7 @@ $xml = @"
 
 $xml | Set-Content -Path $winswConfig -Encoding UTF8
 
-Write-Log (T "Création du service Windows (WinSW)..." "Creating Windows service (WinSW)...")
+Write-Log (T "Crï¿½ation du service Windows (WinSW)..." "Creating Windows service (WinSW)...")
 & $winswExe install | Out-Null
 & $winswExe start | Out-Null
 
@@ -338,7 +353,7 @@ Write-Log (T "  InstallPath: $InstallDir" "  InstallPath: $InstallDir")
 if (-not [string]::IsNullOrWhiteSpace($version)) {
     Write-Log (T "  Version: $version" "  Version: $version")
 }
-Write-Log (T "  LastInstalledUtc: $([DateTime]::UtcNow.ToString(\"o\"))" "  LastInstalledUtc: $([DateTime]::UtcNow.ToString(\"o\"))")
+Write-Log (T "  LastInstalledUtc: $([DateTime]::UtcNow.ToString('o'))" "  LastInstalledUtc: $([DateTime]::UtcNow.ToString('o'))")
 Write-Log (T "Installation termin?e. Service : $ServiceName" "Install complete. Service: $ServiceName")
 if (-not [string]::IsNullOrWhiteSpace($version)) {
     Write-Log (T "Version : $version" "Version: $version")

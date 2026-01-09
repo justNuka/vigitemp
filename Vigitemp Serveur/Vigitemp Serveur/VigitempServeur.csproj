@@ -117,8 +117,12 @@
   <ItemGroup>
     <Compile Include="AlarmPolicy.cs" />
     <Compile Include="AlarmStateEvaluator.cs" />
+    <Compile Include="DatabaseFactory.cs" />
+    <Compile Include="IDatabaseProvider.cs" />
     <Compile Include="CacheService.cs" />
     <Compile Include="AlarmWebNotifier.cs" />
+    <Compile Include="HotlineApiServer.cs" />
+    <Compile Include="HotlinePasswordHasher.cs" />
     <Compile Include="LieuAlarmSettings.cs" />
     <Compile Include="LicenseManager.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -136,6 +140,7 @@
     <Compile Include="sensors\SensorEN.cs" />
     <Compile Include="ThreadServeur.cs" />
     <Compile Include="Database.cs" />
+    <Compile Include="SqlServerDatabaseProvider.cs" />
     <Compile Include="VigitempServeur.cs">
       <SubType>Component</SubType>
     </Compile>

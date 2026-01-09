@@ -5,6 +5,8 @@ using System.IO;
 using System.Text;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Drawing.Drawing2D;
+using System.Security.Cryptography;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Crypto;
@@ -28,6 +30,12 @@ namespace Vigitemp_License_Generator
         private readonly ComboBox _cmbConcurrent;
         private readonly CheckedListBox _clbOptions;
         private readonly TextBox _txtInstancePublicKey;
+        private readonly TextBox _txtHotlineLogin;
+        private readonly TextBox _txtHotlinePassword;
+        private readonly TextBox _txtHotlinePasswordConfirm;
+        private readonly Button _btnToggleHotlinePassword;
+        private readonly Button _btnToggleHotlinePasswordConfirm;
+        private bool _hotlinePasswordVisible;
         private readonly CheckBox _chkHasExpiry;
         private readonly DateTimePicker _dtpExpiresAt;
         private readonly TextBox _txtLicenseId;
@@ -120,6 +128,45 @@ namespace Vigitemp_License_Generator
                 "Options additionnelles activées selon contrat (téléphonie, mail, etc.)."
             );
 
+            var hotlineGroup = CreateGroup("Hotline");
+            root.Controls.Add(hotlineGroup);
+
+            var hotlineTable = CreateTable(2);
+            hotlineGroup.Controls.Add(hotlineTable);
+
+            _txtHotlineLogin = new TextBox { Width = 240 };
+            AddRowWithInfo(
+                hotlineTable,
+                "Hotline login",
+                _txtHotlineLogin,
+                "Identifiant pour le portail hotline."
+            );
+
+            var hotlinePasswordPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true };
+            _txtHotlinePassword = new TextBox { Width = 240, UseSystemPasswordChar = true };
+            _btnToggleHotlinePassword = CreateEyeButton();
+            _btnToggleHotlinePassword.Click += (s, e) => ToggleHotlinePasswordVisibility();
+            hotlinePasswordPanel.Controls.Add(_txtHotlinePassword);
+            hotlinePasswordPanel.Controls.Add(_btnToggleHotlinePassword);
+            AddRowWithInfo(
+                hotlineTable,
+                "Hotline mot de passe",
+                hotlinePasswordPanel,
+                "Mot de passe pour le portail hotline."
+            );
+
+            var hotlineConfirmPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true };
+            _txtHotlinePasswordConfirm = new TextBox { Width = 240, UseSystemPasswordChar = true };
+            _btnToggleHotlinePasswordConfirm = CreateEyeButton();
+            _btnToggleHotlinePasswordConfirm.Click += (s, e) => ToggleHotlinePasswordVisibility();
+            hotlineConfirmPanel.Controls.Add(_txtHotlinePasswordConfirm);
+            hotlineConfirmPanel.Controls.Add(_btnToggleHotlinePasswordConfirm);
+            AddRowWithInfo(
+                hotlineTable,
+                "Confirmation",
+                hotlineConfirmPanel,
+                "Confirmer le mot de passe hotline."
+            );
             _txtInstancePublicKey = new TextBox { Width = 520 };
             AddRowWithInfo(
                 inputTable,
@@ -411,6 +458,24 @@ namespace Vigitemp_License_Generator
                 options.Add(item.ToString());
             }
 
+            var hotlineLogin = _txtHotlineLogin.Text.Trim();
+            var hotlinePassword = _txtHotlinePassword.Text;
+            var hotlineConfirm = _txtHotlinePasswordConfirm.Text;
+            if (string.IsNullOrWhiteSpace(hotlineLogin) ||
+                string.IsNullOrWhiteSpace(hotlinePassword) ||
+                string.IsNullOrWhiteSpace(hotlineConfirm))
+            {
+                MessageBox.Show("Renseignez les identifiants hotline.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!string.Equals(hotlinePassword, hotlineConfirm, StringComparison.Ordinal))
+            {
+                MessageBox.Show("Les mots de passe hotline ne correspondent pas.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var hotlinePasswordHash = HashHotlinePassword(hotlinePassword);
             var licenseId = $"VT-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpperInvariant()}";
             _txtLicenseId.Text = licenseId;
 
@@ -424,6 +489,12 @@ namespace Vigitemp_License_Generator
                 { "issuedAt", DateTime.UtcNow.ToString("o") },
             };
 
+            payload["hotline"] = new Dictionary<string, object>
+            {
+                { "enabled", true },
+                { "username", hotlineLogin },
+                { "passwordHash", hotlinePasswordHash }
+            };
             if (_chkHasExpiry.Checked)
             {
                 payload["expiresAt"] = _dtpExpiresAt.Value.Date.ToUniversalTime().ToString("o");
@@ -594,6 +665,79 @@ namespace Vigitemp_License_Generator
             return icon;
         }
 
+        private Button CreateEyeButton()
+        {
+            var button = new Button
+            {
+                AutoSize = true,
+                Width = 30,
+                Height = 26,
+                Image = CreateEyeIcon(false),
+                FlatStyle = FlatStyle.Flat,
+                Text = ""
+            };
+            button.FlatAppearance.BorderSize = 0;
+            button.Margin = new Padding(4, 0, 0, 0);
+            return button;
+        }
+
+        private static Image CreateEyeIcon(bool open)
+        {
+            var bmp = new Bitmap(16, 16);
+            using (var g = Graphics.FromImage(bmp))
+            using (var pen = new Pen(Color.DimGray, 1.4f))
+            {
+                g.Clear(Color.Transparent);
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                var rect = new Rectangle(1, 4, 14, 8);
+                g.DrawEllipse(pen, rect);
+                if (open)
+                {
+                    using (var brush = new SolidBrush(Color.DimGray))
+                    {
+                        g.FillEllipse(brush, 7, 7, 2, 2);
+                    }
+                }
+                else
+                {
+                    g.DrawLine(pen, 3, 12, 13, 4);
+                }
+            }
+            return bmp;
+        }
+        private void ToggleHotlinePasswordVisibility()
+        {
+            _hotlinePasswordVisible = !_hotlinePasswordVisible;
+            var mask = !_hotlinePasswordVisible;
+            _txtHotlinePassword.UseSystemPasswordChar = mask;
+            _txtHotlinePasswordConfirm.UseSystemPasswordChar = mask;
+            _btnToggleHotlinePassword.Image = CreateEyeIcon(_hotlinePasswordVisible);
+            _btnToggleHotlinePasswordConfirm.Image = CreateEyeIcon(_hotlinePasswordVisible);
+        }
+
+        private static string HashHotlinePassword(string password)
+        {
+            const int saltSize = 16;
+            const int keySize = 32;
+            const int iterations = 100000;
+
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                var salt = new byte[saltSize];
+                rng.GetBytes(salt);
+                using (var pbkdf2 = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA256))
+                {
+                    var hash = pbkdf2.GetBytes(keySize);
+                    return string.Format(
+                        "PBKDF2{0}{1}{0}{2}{0}{3}",
+                        "$",
+                        iterations,
+                        Convert.ToBase64String(salt),
+                        Convert.ToBase64String(hash)
+                    );
+                }
+            }
+        }
         private void AddRowWithInfo(TableLayoutPanel table, string label, Control control, string infoMessage)
         {
             var rowIndex = table.RowCount++;

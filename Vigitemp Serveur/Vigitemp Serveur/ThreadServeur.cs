@@ -17,7 +17,7 @@ namespace Vigitemp_Serveur
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
         private static readonly object _lock = new object();
         private CancellationToken m_cts;
-        private Database m_database;
+        private IDatabaseProvider m_database;
         private Sensor sensor;
         private string sensorType;
         private List<System.Timers.Timer> timers = new List<System.Timers.Timer>();
@@ -57,7 +57,7 @@ namespace Vigitemp_Serveur
             this._idServer = p_idServer;
         }
 
-        public Database GetDatabase()
+        public IDatabaseProvider GetDatabase()
         { // singleton
             if (m_database == null)
             {
@@ -65,7 +65,7 @@ namespace Vigitemp_Serveur
                 {
                     if (m_database == null)
                     {
-                        m_database = new Database();
+                        m_database = DatabaseFactory.Create();
                     }
                 }
             }

@@ -7,7 +7,7 @@ using System.Globalization;
 
 namespace Vigitemp_Serveur
 {
-    class Database
+    class Database : IDatabaseProvider
     {
         private static readonly object _lock = new object();
         private MySqlConnection connection_vigitemp;
