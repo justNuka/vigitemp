@@ -10,7 +10,7 @@ export async function DashboardStats() {
 
   const [totalSensors, activeSensors, totalLocations, activeAlarms] = await Promise.all([
     prisma.t_sonde.count(),
-    prisma.t_sonde.count({ where: { Etat_Sonde: "O" } }),
+    prisma.t_sonde.count({ where: { Surveillance_Etat: "O" } }),
     prisma.t_lieu.count({ where: { Lieu_Etat: "1" } }),
     prisma.t_alarme.count({ 
       where: { 

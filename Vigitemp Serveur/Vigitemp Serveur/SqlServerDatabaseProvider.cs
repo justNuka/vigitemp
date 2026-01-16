@@ -423,7 +423,7 @@ namespace Vigitemp_Serveur
 
                     using (var cmdMain = CreateCommand(
                         _connectionMain,
-                        "SELECT Frequence, Consigne, Consigne_Sup, Consigne_Inf, t_module.IDserveur, Nom_Lieu, IdLieu, t_lieu.SondeNumeroSerie, t_sonde.IdSonde FROM t_lieu " +
+                        "SELECT Frequence, Consigne, Consigne_Sup, Consigne_Inf, t_module.Id_Serveur, Nom_Lieu, IdLieu, t_lieu.SondeNumeroSerie, t_sonde.IdSonde FROM t_lieu " +
                         "INNER JOIN t_sonde ON t_lieu.SondeNumeroSerie = t_sonde.SondeNumeroSerie " +
                         "INNER JOIN t_module ON t_sonde.idModule = t_module.idModule " +
                         "WHERE t_lieu.SondeNumeroSerie = @serial;"))
@@ -444,7 +444,7 @@ namespace Vigitemp_Serveur
                             consigneSup = float.Parse(reader["Consigne_Sup"].ToString());
                             consigneInf = float.Parse(reader["Consigne_Inf"].ToString());
                             frequence = (int)reader["Frequence"];
-                            idServeur = reader["IDserveur"];
+                            idServeur = reader["Id_Serveur"];
                         }
                     }
 
@@ -573,7 +573,7 @@ namespace Vigitemp_Serveur
                         "INNER JOIN t_sonde ON t_lieu.SondeNumeroSerie = t_sonde.SondeNumeroSerie " +
                         "INNER JOIN t_module ON t_sonde.idModule = t_module.idModule " +
                         "WHERE t_lieu.Frequence = @frequence " +
-                        "AND t_module.IDserveur = @idServeur " +
+                        "AND t_module.Id_Serveur = @idServeur " +
                         "AND t_lieu.Lieu_Etat = 'S';"))
                     {
                         cmd.Parameters.AddWithValue("@frequence", p_frequence);
@@ -662,12 +662,12 @@ namespace Vigitemp_Serveur
                     return arrayTmp;
                 }
 
-                using (var cmd = CreateCommand(_connectionMain, "SELECT distinct IDserveur FROM t_sonde where Etat_Sonde = 'S';"))
+                using (var cmd = CreateCommand(_connectionMain, "SELECT distinct Id_Serveur FROM t_sonde where Etat_Sonde = 'S';"))
                 using (var reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
                     {
-                        arrayTmp.Add(Convert.ToInt32(reader["IDserveur"]));
+                        arrayTmp.Add(Convert.ToInt32(reader["Id_Serveur"]));
                     }
                 }
 
@@ -692,7 +692,7 @@ namespace Vigitemp_Serveur
                     "SELECT distinct frequence FROM t_lieu " +
                     "INNER JOIN t_sonde ON t_lieu.SondeNumeroSerie = t_sonde.SondeNumeroSerie " +
                     "INNER JOIN t_module ON t_sonde.idModule = t_module.idModule " +
-                    "where t_module.IDserveur = @idServeur " +
+                    "where t_module.Id_Serveur = @idServeur " +
                     "AND t_lieu.Lieu_Etat = 'S';"))
                 {
                     cmd.Parameters.AddWithValue("@idServeur", p_idServeur);

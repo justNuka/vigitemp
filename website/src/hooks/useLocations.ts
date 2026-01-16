@@ -25,6 +25,8 @@ export interface LocationRow {
   Est_Consigne_Inf_Pre_Alarme_Active: boolean | null;
   Retard_Alarme_Bas: number | null;
   Lieu_Etat: string | null;
+  notification_active?: boolean | null;
+  DateHeure_reactivationAlarme?: string | null;
   Tolerance_Surveillance_Sup: number | null;
   Tolerance_Surveillance_Inf: number | null;
   Unite: string | null;

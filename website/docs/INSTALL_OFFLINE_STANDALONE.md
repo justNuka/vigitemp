@@ -1,53 +1,25 @@
-﻿# Installation web offline (standalone)
+﻿# Installation offline standalone (web)
 
-Ce mémo décrit le build standalone et l’installation offline.
-
-## 1) Préparations (machine connectée)
-Dans `website/installer/` :
-
-```
-.\Prepare-StandaloneBuild.ps1
-```
-
-Le script exécute déjà :
+## Preparation (machine connectee)
+Dans `website/` :
 - `pnpm install`
 - `pnpm prisma:generate`
 - `pnpm build`
 
-## 2) Package
-Le package est créé dans `build/website-standalone/` :
+Ou utiliser directement :
+- `website/installer/Prepare-StandaloneBuild.ps1`
+
+## Contenu a copier
+Le package `build/website-standalone` doit contenir :
 - `.next/standalone`
 - `.next/static`
 - `public/`
-- `installer/` (Install-VigitempWeb.ps1 + winsw.exe)
+- `installer/` (scripts + winsw + node msi)
 
-## 3) Copie USB
-Copier `build/website-standalone/` sur la clé.
+## Installation (machine cible)
+1. `installer/Install-Node.ps1`
+2. `installer/Install-VigitempWeb.ps1`
 
-## 4) Install offline (client)
-
-```
-cd "<chemin>\website-standalone\installer"
-.\Install-VigitempWeb.ps1
-```
-
-Le script :
-- copie dans `C:\ProgramData\Vigitemp\website`
-- écrit `.env.production`
-- installe et démarre `VigitempWeb` via WinSW
-
-## 5) Vérification
-```
-Get-Service VigitempWeb
-curl http://localhost:3000
-```
-
-## 6) Stop / suppression service
-PowerShell admin :
-
-```
-sc.exe stop VigitempWeb
-sc.exe delete VigitempWeb
-```
-
-Puis supprimer `C:\ProgramData\Vigitemp\website` si besoin.
+## Notes
+- Le fichier env est ecrit dans `.next/standalone/.env`.
+- Pas de dependances npm installees sur la machine cible.

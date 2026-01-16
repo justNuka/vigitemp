@@ -101,6 +101,11 @@ export const usersApi = {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
+  reactivate: (id: string) =>
+    fetcher<User>(`/utilisateurs/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ reactivate: true }),
+    }),
   delete: (id: string) =>
     fetcher<void>(`/utilisateurs/${id}`, {
       method: "DELETE",
@@ -194,7 +199,7 @@ export type SensorWithLocation = {
   lastMeasurement: Date | null;
   isActive: boolean;
   location: Location;
-  status: "ok" | "warning" | "critical";
+  status: "ok" | "warning" | "critical" | "technical" | "ended" | "minmax";
   lieuType?: string | null;
 };
 
@@ -221,6 +226,9 @@ export type Location = {
   description?: string | null;
   siteGroup?: string | null;
   isActive?: boolean;
+  alarmDisabled?: boolean;
+  alarmDisabledUntil?: Date | null;
+  alarmDelayMinutes?: number | null;
   siteId?: number;
   groupIds?: number[];
   groupNames?: string[];
@@ -334,4 +342,5 @@ export type CreateUserInput = {
 };
 export type UpdateUserInput = Partial<Omit<CreateUserInput, "password">> & {
   password?: string;
+  reactivate?: boolean;
 };

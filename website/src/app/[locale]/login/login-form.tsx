@@ -16,7 +16,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import { setAgentSession } from "@/lib/agent-session";
+import { getAgentInfo, setAgentSession } from "@/lib/agent-session";
 import { HttpError, postJson } from "@/lib/http";
 import { LoginCredentialsForm } from "./_components/login-credentials-form";
 import { ForgotPasswordDialog } from "./_components/forgot-password-dialog";
@@ -72,7 +72,12 @@ export function LoginForm() {
   const loginMutation = useMutation({
     mutationFn: async () => {
       try {
-        return await postJson<LoginResponse>("/api/auth/login", { username, password });
+        const agentInfo = await getAgentInfo().catch(() => null);
+        return await postJson<LoginResponse>("/api/auth/login", {
+          username,
+          password,
+          machineName: agentInfo?.machineName,
+        });
       } catch (err) {
         if (err instanceof HttpError) {
           const payload = err.payload as AuthApiErrorPayload | undefined;
@@ -235,4 +240,3 @@ export function LoginForm() {
     </div>
   );
 }
-

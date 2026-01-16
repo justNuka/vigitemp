@@ -1,33 +1,31 @@
 ﻿# Auth / permissions / licence (gating UX + archi)
 
-Ce document résume la stratégie pour une UX type logiciel (shell stable, pas de flash) sans perdre la revalidation.
-
-## TL;DR
-- Ne pas bloquer l’écran à chaque navigation.
-- Hard gate seulement au premier chargement (auth + licence + rôle global).
-- Soft gate par page (accès refusé inline, actions masquées).
+## Principes
+- Ne pas bloquer l'ecran a chaque navigation.
+- Hard gate uniquement au premier chargement (auth + licence + role global).
+- Soft gate par page (acces refuse inline, actions masquee).
 - Revalidation intelligente (focus, interval, 401, changement de contexte).
 
-## Définitions
-- Hard gate : bloque le rendu tant que l’accès n’est pas connu.
-- Soft gate : UI prête mais zone/page refusée.
-- Revalidation : refresh auth/licence/perms en arrière-plan.
+## Definitions
+- Hard gate : bloque le rendu tant que l'acces n'est pas connu.
+- Soft gate : UI prete mais zone/page refusee.
+- Revalidation : refresh auth/licence/perms en arriere-plan.
 
-## État actuel
-- `/api/me` est la source session.
-- TanStack Query est déjà utilisé.
-- SSE/polling stoppé sur 401.
-- Hotline utilise un cookie dédié + namespace `/api/hotline/*`.
+## Etat actuel
+- `/api/me` sert de source session.
+- TanStack Query est utilise.
+- SSE/polling stoppes sur 401.
+- Hotline isolee par cookie dedie et namespace `/api/hotline/*`.
 
-## Pattern recommandé
+## Pattern recommande
 1) Hard gate dans les layouts AppShell (dashboard/admin).
 2) Soft gate au niveau page/action.
 3) Revalidation sur focus + interval + 401.
 
-## À faire
+## A faire
 - Ajouter un endpoint `/api/session` (auth + licence + perms).
 - Standardiser les codes de permission (strings).
-- Ajouter la licence dans la session.
+- Injecter la licence dans la session.
 
-## Note sécurité
-Soft gate = UX. Les routes API doivent forcer auth + droits côté serveur.
+## Note securite
+Le soft gate est UX uniquement. Les routes API doivent forcer auth + droits cote serveur.

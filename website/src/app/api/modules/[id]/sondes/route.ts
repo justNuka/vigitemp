@@ -28,7 +28,7 @@ export const GET = withLogging(
           Sonde_Numero_Serie: true,
           Adresse_Sonde: true,
           Port_Serie: true,
-          Etat_Sonde: true,
+          Surveillance_Etat: true,
         },
         orderBy: {
           Sonde_Numero_Serie: "asc",

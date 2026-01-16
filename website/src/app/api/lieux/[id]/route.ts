@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { withLogging } from "@/lib/api-logger"
 import { z } from "zod"
 import { apiError, apiOk } from "@/lib/api-response"
+import { clearLocationCache } from "@/lib/measurement-cache"
 
 const updateLieuSchema = z.object({
   Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(20).optional(),
@@ -94,6 +95,7 @@ export const PATCH = withLogging(
         JSON.stringify(lieu, (_, value) => (typeof value === "bigint" ? value.toString() : value)),
       )
 
+      clearLocationCache(lieuId)
       return apiOk(serialized)
     } catch (error) {
       if (error instanceof z.ZodError) {

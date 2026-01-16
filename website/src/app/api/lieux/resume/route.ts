@@ -30,7 +30,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
           where: { Est_Sonde_Reformee: false },
           select: {
             Id_Sonde: true,
-            Etat_Sonde: true,
+            Surveillance_Etat: true,
           },
         },
       },
@@ -46,9 +46,9 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
         site: loc.Id_Site || null,
         status: loc.Lieu_Etat,
         sensorCount: sensors.length,
-        okSensors: sensors.filter((s: any) => s.Etat_Sonde === "O").length,
-        warningSensors: sensors.filter((s: any) => s.Etat_Sonde === "P").length,
-        criticalSensors: sensors.filter((s: any) => s.Etat_Sonde === "A").length,
+        okSensors: sensors.filter((s: any) => s.Surveillance_Etat === "O").length,
+        warningSensors: sensors.filter((s: any) => s.Surveillance_Etat === "P").length,
+        criticalSensors: sensors.filter((s: any) => s.Surveillance_Etat === "A").length,
       }
     })
 

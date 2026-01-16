@@ -7,7 +7,7 @@ import { fetchJson, isUnauthorizedError } from "@/lib/http"
 export interface AvailableProbe {
   Id_Sonde: number
   Sonde_Numero_Serie: string
-  Etat_Sonde: string
+  Surveillance_Etat: string
   Lieu: string | null
 }
 

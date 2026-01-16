@@ -9,6 +9,27 @@ const config: Config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}"
   ],
+  safelist: [
+    // Surveillance status colors - critical, technical, warning, etc.
+    "bg-red-700", "dark:bg-red-700", "text-black", "dark:text-black",
+    "bg-slate-950", "dark:bg-slate-950", "text-white", "dark:text-white",
+    "border-slate-950", "dark:border-slate-950",
+    "border-red-800", "dark:border-red-800",
+    "bg-white", "dark:bg-white", "border-gray-200", "dark:border-gray-200",
+    "hover:bg-slate-900", "dark:hover:bg-slate-900",
+    "hover:bg-red-800", "dark:hover:bg-red-800",
+    "hover:bg-gray-100", "dark:hover:bg-gray-100",
+    // Amber/warning
+    "bg-amber-500", "dark:bg-amber-600", "border-amber-600", "dark:border-amber-700",
+    // Violet/ended
+    "bg-violet-600", "dark:bg-violet-700", "border-violet-700", "dark:border-violet-800",
+    // Emerald/minmax
+    "bg-emerald-600", "dark:bg-emerald-700", "border-emerald-700", "dark:border-emerald-800",
+    // Blue/ok
+    "bg-blue-600", "dark:bg-blue-700", "border-blue-700", "dark:border-blue-800",
+    // Gray/disabled
+    "bg-gray-500", "dark:bg-gray-700", "border-gray-600", "dark:border-gray-800",
+  ],
   theme: {
   	extend: {
   		backgroundImage: {

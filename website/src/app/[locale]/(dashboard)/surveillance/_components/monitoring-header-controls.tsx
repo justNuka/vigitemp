@@ -4,6 +4,8 @@ import type { Group, Site } from "../server-filters"
 
 import { SurveillanceFilters } from "../monitoring-filters"
 import { SurveillanceViewTabs } from "./monitoring-view-tabs"
+import { Button } from "@/components/ui/button"
+import { ArrowUpDown, RefreshCw } from "lucide-react"
 
 type ViewMode = "tree" | "graphs"
 
@@ -18,8 +20,12 @@ type Props = {
   viewMode: ViewMode
   onViewModeChange: (value: ViewMode) => void
   onFilterChange: (filters: FilterState) => void
+  onRefresh?: () => void
+  isRefreshing?: boolean
   graphsLabel: string
   treeLabel: string
+  orderToggleLabel?: string
+  onToggleOrder?: () => void
 }
 
 export function SurveillanceHeaderControls({
@@ -28,13 +34,46 @@ export function SurveillanceHeaderControls({
   viewMode,
   onViewModeChange,
   onFilterChange,
+  onRefresh,
+  isRefreshing = false,
   graphsLabel,
   treeLabel,
+  orderToggleLabel,
+  onToggleOrder,
 }: Props) {
   return (
     <div className="flex flex-col gap-4 w-full">
       <SurveillanceFilters onFilterChange={onFilterChange} sites={sites} groups={groups} />
-      <SurveillanceViewTabs value={viewMode} onChange={onViewModeChange} graphsLabel={graphsLabel} treeLabel={treeLabel} />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <SurveillanceViewTabs value={viewMode} onChange={onViewModeChange} graphsLabel={graphsLabel} treeLabel={treeLabel} />
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {orderToggleLabel && onToggleOrder ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onToggleOrder}
+              className="gap-2"
+              data-testid="button-toggle-surveillance-order"
+            >
+              <ArrowUpDown className="h-4 w-4" />
+              {orderToggleLabel}
+            </Button>
+          ) : null}
+          {onRefresh ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRefresh}
+              className="gap-2"
+              disabled={isRefreshing}
+              data-testid="button-refresh-surveillance"
+            >
+              <RefreshCw className={isRefreshing ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+              {isRefreshing ? "Actualisation..." : "Actualiser"}
+            </Button>
+          ) : null}
+        </div>
+      </div>
     </div>
   )
 }

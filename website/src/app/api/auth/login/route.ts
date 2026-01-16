@@ -12,6 +12,7 @@ import { shouldUseSecureCookies } from "@/lib/cookie-security"
 const loginSchema = z.object({
   username: z.string().min(1, "Username required"),
   password: z.string().min(1, "Password required"),
+  machineName: z.string().trim().min(1).optional(),
 })
 
 export const POST = withLogging(async (req: NextRequest) => {
@@ -19,7 +20,7 @@ export const POST = withLogging(async (req: NextRequest) => {
 
   try {
     const body = await req.json()
-    const { username, password } = loginSchema.parse(body)
+    const { username, password, machineName } = loginSchema.parse(body)
 
     const user = await prisma.t_utilisateur.findFirst({
       where: {
@@ -148,6 +149,104 @@ export const POST = withLogging(async (req: NextRequest) => {
       userId: user.Id_Utilisateur,
       userProfile: user.Profil_Utilisateur || "user",
     })
+
+    const headerMachineName =
+      req.headers.get("x-vigitemp-machine-name") ||
+      req.headers.get("x-vigitemp-machine") ||
+      undefined
+    const resolvedMachineName = machineName || headerMachineName || undefined
+
+    try {
+      const now = new Date()
+      await prisma.t_utilisateur.update({
+        where: { Id_Utilisateur: user.Id_Utilisateur },
+        data: {
+          Adresse_IP_Connexion: ip,
+          Nom_Machine_Connexion: resolvedMachineName,
+          Date_Heure_Derniere_Connexion: now,
+        },
+      })
+
+      log.data.update("Utilisateur", user.Id_Utilisateur, username, user.Id_Utilisateur, ip, {
+        machineName: resolvedMachineName,
+        address: ip,
+        connectedAt: now.toISOString(),
+      })
+    } catch (err) {
+      log.warn("AUTH", "Failed to update user login metadata", {
+        username,
+        ip,
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
+
+    try {
+      const now = new Date()
+      let updatedClient = null as null | { Id_Poste: number; Nom_Machine_Connexion: string | null; Adresse_IP_Connexion: string | null }
+
+      if (resolvedMachineName) {
+        updatedClient = await prisma.t_postes_clients.upsert({
+          where: { Nom_Machine_Connexion: resolvedMachineName },
+          update: {
+            Adresse_IP_Connexion: ip,
+            Login: user.Login || undefined,
+            Nom: user.Nom || undefined,
+            Prenom: user.Prenom || undefined,
+            Date_Heure_Derniere_Connexion: now,
+          },
+          create: {
+            Nom_Machine_Connexion: resolvedMachineName,
+            Adresse_IP_Connexion: ip,
+            Login: user.Login || undefined,
+            Nom: user.Nom || undefined,
+            Prenom: user.Prenom || undefined,
+            Date_Heure_Derniere_Connexion: now,
+          },
+        })
+      } else {
+        const existingClient = await prisma.t_postes_clients.findFirst({
+          where: { Adresse_IP_Connexion: ip },
+          orderBy: { Date_Heure_Derniere_Connexion: "desc" },
+          select: { Id_Poste: true, Nom_Machine_Connexion: true, Adresse_IP_Connexion: true },
+        })
+
+        if (existingClient) {
+          updatedClient = await prisma.t_postes_clients.update({
+            where: { Id_Poste: existingClient.Id_Poste },
+            data: {
+              Login: user.Login || undefined,
+              Nom: user.Nom || undefined,
+              Prenom: user.Prenom || undefined,
+              Date_Heure_Derniere_Connexion: now,
+            },
+          })
+        } else {
+          updatedClient = await prisma.t_postes_clients.create({
+            data: {
+              Adresse_IP_Connexion: ip,
+              Login: user.Login || undefined,
+              Nom: user.Nom || undefined,
+              Prenom: user.Prenom || undefined,
+              Date_Heure_Derniere_Connexion: now,
+            },
+          })
+        }
+      }
+
+      if (updatedClient?.Id_Poste) {
+        log.data.update("Poste client", updatedClient.Id_Poste, username, user.Id_Utilisateur, ip, {
+          machineName: updatedClient.Nom_Machine_Connexion || resolvedMachineName,
+          address: updatedClient.Adresse_IP_Connexion || ip,
+          connectedAt: now.toISOString(),
+        })
+      }
+    } catch (err) {
+      log.warn("AUTH", "Failed to update client workstation info", {
+        username,
+        ip,
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
 
     return response
   } catch (error) {

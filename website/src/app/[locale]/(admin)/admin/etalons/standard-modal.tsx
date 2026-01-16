@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
+import { useRouter } from '@/i18n/navigation'
 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
@@ -37,6 +38,7 @@ type Measurement = MeasurementPoint
 
 export function StandardModal({ open, onOpenChange, standard, isEditing }: Props) {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
   const [type, setType] = useState("")
@@ -149,6 +151,7 @@ export function StandardModal({ open, onOpenChange, standard, isEditing }: Props
       toast.success(isEditing ? "Étalon mis à jour avec succès" : "Étalon créé avec succès")
 
       queryClient.invalidateQueries({ queryKey: ["etalons"] })
+      router.refresh()
       onOpenChange(false)
     } catch (error) {
       console.error("Submit error:", error)

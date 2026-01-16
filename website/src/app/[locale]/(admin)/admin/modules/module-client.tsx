@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Archive, Pencil, Plus } from "lucide-react";
+import { useRouter } from '@/i18n/navigation';
 
 import { useModules, useModuleSondes } from "@/hooks/useModules";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { ModulesTable, type ModuleRow } from "./_components/modules-table";
 import { ProbesTable, type ProbeRow } from "./_components/probes-table";
 
 export function ModulesClient() {
+  const router = useRouter();
   const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
   const [selectedSondeId, setSelectedSondeId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,7 +40,7 @@ export function ModulesClient() {
     Adresse_Sonde: s.Adresse_Sonde,
     Sonde_Numero_Serie: s.Sonde_Numero_Serie,
     Port_Serie: s.Port_Serie,
-    Etat_Sonde: s.Etat_Sonde,
+    Surveillance_Etat: s.Surveillance_Etat,
   }));
 
   if (modulesLoading) {
@@ -143,6 +145,7 @@ export function ModulesClient() {
         module={isEditMode ? selectedModule : null}
         onSuccess={() => {
           refetchModules();
+          router.refresh();
           setSelectedModuleId(null);
           setIsEditMode(false);
         }}

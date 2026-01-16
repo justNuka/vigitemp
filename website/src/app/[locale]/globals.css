@@ -8,7 +8,7 @@
   --background-end-rgb: 255, 255, 255;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: system) {
   :root {
     --foreground-rgb: 255, 255, 255;
     --background-start-rgb: 0, 0, 0;
@@ -203,8 +203,8 @@
 
 @layer base {
   :root {
-    /* Palette Replit - Mode Light */
-    --background: 0 0% 100%;
+    /* Palette - Mode Light */
+    --background: 217 20% 94%;
     --foreground: 0 0% 3.9%;
 
     --card: 0 0% 100%;
@@ -256,37 +256,37 @@
 
   .dark {
     /* Palette Replit - Mode Dark */
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 217 25% 8%;
+    --foreground: 0 0% 95%;
 
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 217 20% 12%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 217 20% 12%;
+    --popover-foreground: 0 0% 95%;
 
     /* Blue MC2 légèrement ajusté pour le dark mode */
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
+    --primary: 217 91% 65%;
+    --primary-foreground: 217 25% 10%;
 
     /* Sage plus foncé pour le dark mode */
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 72 25% 25%;
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
+    --muted: 217 20% 18%;
+    --muted-foreground: 217 15% 65%;
 
     /* Teal ajusté pour le dark mode */
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 174 48% 55%;
+    --accent-foreground: 0 0% 95%;
 
     /* Mauve pour destructive en dark mode */
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 340 62% 55%;
+    --destructive-foreground: 0 0% 95%;
 
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --border: 217 20% 22%;
+    --input: 217 20% 22%;
+    --ring: 217 91% 65%;
 
     /* Sidebar colors - Dark mode (même que light pour cohérence) */
     --sidebar: 217 27% 10%;           /* #14181F */
@@ -297,11 +297,11 @@
     --sidebar-ring: 217 91% 65%;
 
     /* Charts avec palette Replit (dark mode) */
-    --chart-1: 220 70% 50%; /* Blue MC2 */
-    --chart-2: 160 60% 45%;  /* Yellow légèrement plus clair */
-    --chart-3: 30 80% 55%; /* Teal */
-    --chart-4: 280 65% 60%;  /* Sage */
-    --chart-5: 340 75% 55%; /* Mauve plus clair */
+    --chart-1: 217 91% 65%; /* Blue MC2 */
+    --chart-2: 38 92% 55%;  /* Yellow légèrement plus clair */
+    --chart-3: 174 58% 65%; /* Teal */
+    --chart-4: 72 39% 65%;  /* Sage */
+    --chart-5: 340 36% 62%; /* Mauve plus clair */
   }
   .theme {
     --animate-shine: shine var(--duration) infinite linear;

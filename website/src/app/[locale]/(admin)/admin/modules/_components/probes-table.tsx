@@ -8,7 +8,7 @@ export type ProbeRow = {
   Adresse_Sonde: string | null;
   Sonde_Numero_Serie: string | null;
   Port_Serie: string | null;
-  Etat_Sonde: string | null;
+  Surveillance_Etat: string | null;
 };
 
 type ProbesTableProps = {
@@ -36,9 +36,9 @@ export function ProbesTable({ probes, isLoading, selectedProbeId, onSelectProbe 
       cell: ({ row }) => row.getValue('Port_Serie') || '-',
     },
     {
-      accessorKey: 'Etat_Sonde',
+      accessorKey: 'Surveillance_Etat',
       header: 'État',
-      cell: ({ row }) => row.getValue('Etat_Sonde') || '-',
+      cell: ({ row }) => row.getValue('Surveillance_Etat') || '-',
     },
   ];
 
@@ -56,4 +56,3 @@ export function ProbesTable({ probes, isLoading, selectedProbeId, onSelectProbe 
     />
   );
 }
-

@@ -94,6 +94,7 @@ model tm_mesures {
   Sonde_Numero_Serie      String?  @default("") @db.VarChar(50)
   Id_Lieu                 Int      @default(0)
   Est_Valeur_Null         Boolean  @default(false) @db.TinyInt
+  Est_Valeur_Memoire      Boolean  @default(false) @db.TinyInt
   Frequence               Int?
   Est_Etat_Alarme         Boolean  @default(false) @db.TinyInt
   Consigne_Inf_Pre_Alarme Float?   @db.Float

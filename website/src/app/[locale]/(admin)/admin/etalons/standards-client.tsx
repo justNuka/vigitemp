@@ -20,6 +20,7 @@ import {
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
+import { useRouter } from '@/i18n/navigation'
 import { StandardModal } from "./standard-modal"
 
 type StandardRow = {
@@ -31,6 +32,7 @@ type StandardRow = {
 export function StandardsClient() {
   const { data: standards, isLoading } = useStandards()
   const queryClient = useQueryClient()
+  const router = useRouter()
   const [selectedStandard, setSelectedStandard] = useState<Standard | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -62,6 +64,7 @@ export function StandardsClient() {
       setIsArchiveDialogOpen(false)
       setSelectedStandard(null)
       await queryClient.invalidateQueries({ queryKey: ["etalons"] })
+      router.refresh()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erreur lors de l'archivage")
     }

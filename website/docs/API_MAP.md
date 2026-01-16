@@ -1,11 +1,11 @@
-﻿# API map (canon FR + consumers principaux)
+﻿# Map API (canon FR + consumers principaux)
 
-Dernière mise à jour : 2026-01-08
+Derniere mise a jour : 2026-01-12
 
 Objectif : lister les endpoints canon FR et les zones du front qui les consomment.
 
-Pour lister les routes localement :
-- `Get-ChildItem -Recurse -Filter route.ts src\\app\\api | Select-Object FullName`
+Commandes utiles :
+- `Get-ChildItem -Recurse -Filter route.ts src\app\api | Select-Object FullName`
 - `rg -n '/api/' -S src | sort`
 
 ## Alarmes - `src/app/api/alarmes/*`

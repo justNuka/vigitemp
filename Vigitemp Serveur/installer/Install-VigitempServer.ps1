@@ -52,7 +52,30 @@ function Read-InstallValue($label, $defaultValue = $null) {
     return $value
 }
 
-function Normalize-PathInput($value) {
+function Convert-SecureStringToPlainText([Security.SecureString]$secureValue) {
+    if ($null -eq $secureValue) { return "" }
+    $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureValue)
+    try {
+        return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
+    } finally {
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+    }
+}
+
+function Read-InstallSecret($label, $defaultValue = $null) {
+    $prompt = $label
+    if (-not [string]::IsNullOrWhiteSpace($defaultValue)) {
+        $prompt = "$label [$defaultValue]"
+    }
+    $secure = Read-Host $prompt -AsSecureString
+    $value = Convert-SecureStringToPlainText $secure
+    if ([string]::IsNullOrWhiteSpace($value) -and -not [string]::IsNullOrWhiteSpace($defaultValue)) {
+        return $defaultValue
+    }
+    return $value
+}
+
+function Resolve-PathInput($value) {
     if ([string]::IsNullOrWhiteSpace($value)) { return $value }
     return $value.Trim().Trim('"')
 }
@@ -129,11 +152,11 @@ $defaultServiceName = "VigitempServeur"
 if ([string]::IsNullOrWhiteSpace($SourcePath)) {
     $SourcePath = Read-InstallValue (T "Chemin du build serveur (dossier contenant Vigitemp Serveur.exe)" "Path to server build output (folder with Vigitemp Serveur.exe)") $defaultSource.Path
 }
- $SourcePath = Normalize-PathInput $SourcePath
+ $SourcePath = Resolve-PathInput $SourcePath
 if ([string]::IsNullOrWhiteSpace($InstallDir)) {
     $InstallDir = Read-InstallValue (T "Dossier d'installation" "Install folder") $defaultInstallDir
 }
- $InstallDir = Normalize-PathInput $InstallDir
+ $InstallDir = Resolve-PathInput $InstallDir
 if ([string]::IsNullOrWhiteSpace($ServiceName)) {
     $ServiceName = Read-InstallValue (T "Nom du service Windows" "Windows service name") $defaultServiceName
 }
@@ -171,7 +194,7 @@ $dbDefaultPort = if ($dbProvider -eq "mssql") { "1433" } else { "3306" }
 $dbDefaultUser = if ($dbProvider -eq "mssql") { "sa" } else { "root" }
 $dbPort = Read-InstallValue (T "Port BDD" "DB port") $dbDefaultPort
 $dbUser = Read-InstallValue (T "Utilisateur BDD" "DB user") $dbDefaultUser
-$dbPassword = Read-InstallValue (T "Mot de passe BDD" "DB password") ""
+$dbPassword = Read-InstallSecret (T "Mot de passe BDD" "DB password") ""
 $dbMain = Read-InstallValue (T "Nom BDD principale" "Main DB name") "vigi_main"
 $dbMeasure = Read-InstallValue (T "Nom BDD mesures" "Measure DB name") "vigi_mesures"
 $dbMeasureCache = Read-InstallValue (T "Nom BDD cache mesures (optionnel)" "Measure cache DB name (optional)") "vigitemp_mesures_ifb"
@@ -187,7 +210,7 @@ if ($packageRoot) {
 }
 
 $licenseSourcePath = Read-InstallValue (T "Chemin du fichier licence (.vtlic)" "License file path (.vtlic)") $licenseDefault
-$licenseSourcePath = Normalize-PathInput $licenseSourcePath
+$licenseSourcePath = Resolve-PathInput $licenseSourcePath
 if ([string]::IsNullOrWhiteSpace($licenseSourcePath) -and -not [string]::IsNullOrWhiteSpace($licenseDefault)) {
     $licenseSourcePath = $licenseDefault
 }
@@ -196,7 +219,7 @@ if (-not (Test-Path $licenseSourcePath)) {
 }
 
 $publicKeySourcePath = Read-InstallValue (T "Chemin de la cl??? publique licence (.pem)" "License public key path (.pem)") $publicKeyDefault
-$publicKeySourcePath = Normalize-PathInput $publicKeySourcePath
+$publicKeySourcePath = Resolve-PathInput $publicKeySourcePath
 if ([string]::IsNullOrWhiteSpace($publicKeySourcePath) -and -not [string]::IsNullOrWhiteSpace($publicKeyDefault)) {
     $publicKeySourcePath = $publicKeyDefault
 }
@@ -328,5 +351,41 @@ Write-Log (T "Config : $configPath" "Config: $configPath")
 Write-Log (T "Licence : $licenseDestPath" "License: $licenseDestPath")
 Write-Log (T "Cl� publique : $publicKeyDestPath" "Public key: $publicKeyDestPath")
 Write-Log (T "Log : $logPath" "Log: $logPath")
+
+function Test-ServerInstall {
+    Write-Log (T "Verification post-installation..." "Post-install verification...")
+    $checks = @()
+    $checks += @{ Label = "InstallDir"; Path = $InstallDir }
+    $checks += @{ Label = "ServerExe"; Path = $serviceExePath }
+    $checks += @{ Label = "Config"; Path = $configPath }
+    $checks += @{ Label = "License"; Path = $licenseDestPath }
+    $checks += @{ Label = "LicensePublicKey"; Path = $publicKeyDestPath }
+    foreach ($check in $checks) {
+        if (Test-Path $check.Path) {
+            Write-Log (T "OK: $($check.Label) -> $($check.Path)" "OK: $($check.Label) -> $($check.Path)")
+        } else {
+            Write-Warning (T "Manquant: $($check.Label) -> $($check.Path)" "Missing: $($check.Label) -> $($check.Path)")
+        }
+    }
+    $svc = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
+    if ($svc) {
+        Write-Log (T "Service ${ServiceName}: $($svc.Status)" "Service ${ServiceName}: $($svc.Status)")
+    } else {
+        Write-Warning (T "Service $ServiceName introuvable." "Service $ServiceName not found.")
+    }
+    try {
+        $reg = Get-ItemProperty -Path "HKLM:\\SOFTWARE\\Vigitemp\\Server" -ErrorAction Stop
+        if ($reg.InstallPath) {
+            Write-Log (T "Registre InstallPath: $($reg.InstallPath)" "Registry InstallPath: $($reg.InstallPath)")
+        }
+        if ($reg.Version) {
+            Write-Log (T "Registre Version: $($reg.Version)" "Registry Version: $($reg.Version)")
+        }
+    } catch {
+        Write-Warning (T "Registre: lecture impossible." "Registry: unable to read.")
+    }
+}
+
+Test-ServerInstall
 
 Stop-Transcript | Out-Null

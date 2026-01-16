@@ -61,6 +61,35 @@ function Read-InstallValue($label, $defaultValue = $null) {
     return $value
 }
 
+function Convert-SecureStringToPlainText([Security.SecureString]$secureValue) {
+    if ($null -eq $secureValue) { return "" }
+    $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureValue)
+    try {
+        return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
+    } finally {
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+    }
+}
+
+function Read-InstallSecret($label, $defaultValue = $null) {
+    if ($Silent) {
+        if ([string]::IsNullOrWhiteSpace($defaultValue)) {
+            throw (T "Param?tre requis manquant en mode silencieux : $label" "Missing required parameter in silent mode: $label")
+        }
+        return $defaultValue
+    }
+    $prompt = $label
+    if (-not [string]::IsNullOrWhiteSpace($defaultValue)) {
+        $prompt = "$label [$defaultValue]"
+    }
+    $secure = Read-Host $prompt -AsSecureString
+    $value = Convert-SecureStringToPlainText $secure
+    if ([string]::IsNullOrWhiteSpace($value) -and -not [string]::IsNullOrWhiteSpace($defaultValue)) {
+        return $defaultValue
+    }
+    return $value
+}
+
 function Write-InstallRegistryInfo($installPath, $version) {
     try {
         $baseKey = "HKLM:\\SOFTWARE\\Vigitemp"
@@ -73,6 +102,16 @@ function Write-InstallRegistryInfo($installPath, $version) {
     } catch {
         Write-Log (T "Impossible d'ecrire dans le registre." "Failed to write registry keys.")
     }
+}
+
+function Compare-Version([string]$current, [string]$expected) {
+    if ([string]::IsNullOrWhiteSpace($current)) { return -1 }
+    try {
+        $cur = [Version]$current
+        $exp = [Version]$expected
+        return $cur.CompareTo($exp)
+    } catch { }
+    return -1
 }
 
 if (-not (Test-Admin)) {
@@ -96,10 +135,6 @@ if ([string]::IsNullOrWhiteSpace($ServiceName)) {
 if (-not $Port) {
     $Port = [int](Read-InstallValue (T "Port HTTP" "HTTP port") $defaultPort)
 }
-if ([string]::IsNullOrWhiteSpace($EnvFileName)) {
-    $EnvFileName = Read-InstallValue (T "Nom du fichier env (.env.local ou .env.production)" "Env filename (.env.local or .env.production)") ".env.production"
-}
-
 $standaloneHint = Test-Path (Join-Path $SourcePath ".next\\standalone")
 if ($standaloneHint) {
     $Standalone = $true
@@ -107,6 +142,11 @@ if ($standaloneHint) {
 }
 if (-not $Offline -and $Standalone) {
     $Offline = $true
+}
+if (-not $Standalone) {
+    if ([string]::IsNullOrWhiteSpace($EnvFileName)) {
+        $EnvFileName = Read-InstallValue (T "Nom du fichier env (.env.local ou .env.production)" "Env filename (.env.local or .env.production)") ".env.production"
+    }
 }
 
 if (-not (Test-Path $SourcePath)) {
@@ -135,6 +175,11 @@ if ($Offline -and $Standalone) {
     if (Test-Path (Join-Path $SourcePath "public")) {
         & robocopy (Join-Path $SourcePath "public") (Join-Path $InstallDir "public") /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
     }
+    $standaloneStatic = Join-Path $InstallDir ".next\\standalone\\.next\\static"
+    if (-not (Test-Path $standaloneStatic)) {
+        New-Item -ItemType Directory -Force -Path $standaloneStatic | Out-Null
+    }
+    & robocopy (Join-Path $InstallDir ".next\\static") $standaloneStatic /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
     Copy-Item -Path (Join-Path $SourcePath "package.json") -Destination (Join-Path $InstallDir "package.json") -Force
     Copy-Item -Path (Join-Path $SourcePath "next.config.js") -Destination (Join-Path $InstallDir "next.config.js") -Force
     if (Test-Path (Join-Path $SourcePath "installer")) {
@@ -185,6 +230,26 @@ if ($null -eq $nodeCmd) {
     Write-Error (T "Node.js introuvable dans le PATH. Installer Node.js LTS avant de lancer ce script." "Node.js not found in PATH. Install Node.js LTS before running this script.")
 }
 
+$expectedNodeVersion = "24.12.0"
+$installedNodeVersion = $null
+try {
+    $rawVersion = & $nodeCmd.Source --version
+    if ($rawVersion) {
+        $installedNodeVersion = $rawVersion.Trim().TrimStart("v")
+    }
+} catch { }
+
+if ($installedNodeVersion) {
+    $nodeCompare = Compare-Version $installedNodeVersion $expectedNodeVersion
+    if ($nodeCompare -ge 0) {
+        Write-Log (T "Node.js detecte (version $installedNodeVersion). OK." "Node.js detected (version $installedNodeVersion). OK.")
+    } else {
+        Write-Log (T "Node.js detecte (version $installedNodeVersion). Version requise: $expectedNodeVersion." "Node.js detected (version $installedNodeVersion). Required: $expectedNodeVersion.")
+    }
+} else {
+    Write-Log (T "Impossible de lire la version Node.js." "Unable to read Node.js version.")
+}
+
 $pnpmCmd = $null
 if (-not $Offline) {
     if (-not [string]::IsNullOrWhiteSpace($PnpmPath)) {
@@ -218,7 +283,7 @@ $dbPort = Read-InstallValue (T "Port BDD" "DB port") $dbDefaultPort
 $dbDefaultUser = if ($dbProvider -eq "mssql") { "sa" } else { "root" }
 $dbHost = Read-InstallValue (T "Hote BDD" "DB host") "127.0.0.1"
 $dbUser = Read-InstallValue (T "Utilisateur BDD" "DB user") $dbDefaultUser
-$dbPassword = Read-InstallValue (T "Mot de passe BDD" "DB password") ""
+$dbPassword = Read-InstallSecret (T "Mot de passe BDD" "DB password") ""
 $dbMain = Read-InstallValue (T "Nom BDD principale" "Main DB name") "vigi_main"
 $dbMeasure = Read-InstallValue (T "Nom BDD mesures" "Measure DB name") "vigi_mesures"
 $cacheTtl = Read-InstallValue (T "Cache TTL (secondes)" "Cache TTL (seconds)") "30"
@@ -236,6 +301,11 @@ if ($dbProvider -eq "mssql") {
 }
 
 $envPath = Join-Path $InstallDir $EnvFileName
+$standaloneEnvPath = $null
+if ($Standalone) {
+    $standaloneEnvPath = Join-Path $InstallDir ".next\\standalone\\.env"
+    $envPath = $standaloneEnvPath
+}
 $envContent = @"
 DATABASE_URL="$databaseUrl"
 DATABASE_MESURES_URL="$databaseMesureUrl"
@@ -367,5 +437,48 @@ Write-Log (T "Dossier d'installation : $InstallDir" "Install dir: $InstallDir")
 Write-Log (T "Fichier env : $envPath" "Env file: $envPath")
 Write-Log (T "Dossier logs : $logsDir" "Logs dir: $logsDir")
 Write-Log (T "Log : $logPath" "Log: $logPath")
+
+function Verify-WebInstall {
+    Write-Log (T "Verification post-installation..." "Post-install verification...")
+    $checks = @()
+    $checks += @{ Label = "InstallDir"; Path = $InstallDir }
+    $checks += @{ Label = "EnvFile"; Path = $envPath }
+    $checks += @{ Label = "WinSW"; Path = $winswExe }
+    $checks += @{ Label = "WinSWConfig"; Path = $winswConfig }
+    $checks += @{ Label = "NextStatic"; Path = (Join-Path $InstallDir ".next\\static") }
+    if ($Standalone) {
+        $checks += @{ Label = "StandaloneEntry"; Path = (Join-Path $InstallDir ".next\\standalone\\server.js") }
+        $checks += @{ Label = "StandaloneStatic"; Path = (Join-Path $InstallDir ".next\\standalone\\.next\\static") }
+    }
+    foreach ($check in $checks) {
+        if (Test-Path $check.Path) {
+            Write-Log (T "OK: $($check.Label) -> $($check.Path)" "OK: $($check.Label) -> $($check.Path)")
+        } else {
+            Write-Warning (T "Manquant: $($check.Label) -> $($check.Path)" "Missing: $($check.Label) -> $($check.Path)")
+        }
+    }
+    if ($nodeCmd) {
+        try {
+            $version = & $nodeCmd.Source --version
+            Write-Log (T "Node detecte: $version" "Node detected: $version")
+        } catch {
+            Write-Warning (T "Node non verifiable dans ce terminal." "Node not verifiable in this terminal.")
+        }
+    }
+    $svc = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
+    if ($svc) {
+        Write-Log (T "Service ${ServiceName}: $($svc.Status)" "Service ${ServiceName}: $($svc.Status)")
+    } else {
+        Write-Warning (T "Service $ServiceName introuvable." "Service $ServiceName not found.")
+    }
+    if (Test-Path $logsDir) {
+        $logFiles = @(Get-ChildItem -Path $InstallDir -Filter "$ServiceName*.log" -ErrorAction SilentlyContinue)
+        if ($logFiles.Count -gt 0) {
+            Write-Log (T "Logs WinSW: $($logFiles.Count) fichier(s) dans $InstallDir" "WinSW logs: $($logFiles.Count) file(s) in $InstallDir")
+        }
+    }
+}
+
+Verify-WebInstall
 
 Stop-Transcript | Out-Null

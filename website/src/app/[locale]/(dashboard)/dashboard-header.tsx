@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,13 +34,30 @@ function StatCardSkeleton() {
 
 export function DashboardHeader({ stats }: { stats: Stats }) {
   const t = useTranslations("dashboard");
+  const [activeAlarms, setActiveAlarms] = useState(stats.activeAlarms);
+
+  useEffect(() => {
+    setActiveAlarms(stats.activeAlarms);
+  }, [stats.activeAlarms]);
+
+  useEffect(() => {
+    const handleActiveAlarms = (event: Event) => {
+      const detail = (event as CustomEvent<{ count: number }>).detail;
+      if (detail && typeof detail.count === "number") {
+        setActiveAlarms(detail.count);
+      }
+    };
+
+    window.addEventListener("vigitemp:active-alarms", handleActiveAlarms);
+    return () => window.removeEventListener("vigitemp:active-alarms", handleActiveAlarms);
+  }, []);
 
   return (
     <>
       <PageHeader
         title={t("title")}
         description={t("description")}
-        activeAlarms={stats.activeAlarms}
+        activeAlarms={activeAlarms}
       />
 
       <section aria-label="Statistiques" className="p-4 md:p-6 pb-0">
@@ -56,9 +73,9 @@ export function DashboardHeader({ stats }: { stats: Stats }) {
           <Suspense fallback={<StatCardSkeleton />}>
             <StatCard
               title={t("stats.active_alarms")}
-              value={stats.activeAlarms}
+              value={activeAlarms}
               icon={AlertTriangle}
-              variant={stats.activeAlarms > 0 ? "danger" : "success"}
+              variant={activeAlarms > 0 ? "danger" : "success"}
             />
           </Suspense>
           <Suspense fallback={<StatCardSkeleton />}>

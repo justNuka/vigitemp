@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +14,8 @@ import {
   TrendingUp,
   Thermometer,
 } from "lucide-react";
-import type { SensorWithLocation, AlarmWithDetails } from "@/lib/api";
+import { alarmsApi, type AlarmWithDetails, type SensorWithLocation } from "@/lib/api";
+import { toast } from "sonner";
 
 interface DashboardClientProps {
   criticalSensors: SensorWithLocation[];
@@ -32,6 +34,36 @@ export function DashboardClient({
   sensorOverview,
   totalActiveAlarms,
 }: DashboardClientProps) {
+  const [localAlarms, setLocalAlarms] = useState(activeAlarms);
+  const [activeCount, setActiveCount] = useState(totalActiveAlarms);
+
+  useEffect(() => {
+    setLocalAlarms(activeAlarms);
+    setActiveCount(totalActiveAlarms);
+  }, [activeAlarms, totalActiveAlarms]);
+
+  const handleAcknowledge = async (alarmId: string, comment: string) => {
+    try {
+      await alarmsApi.acknowledge(alarmId, comment);
+      setLocalAlarms((prev) => prev.filter((alarm) => alarm.id !== alarmId));
+      setActiveCount((prev) => {
+        const next = Math.max(prev - 1, 0);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("vigitemp:active-alarms", {
+              detail: { count: next },
+            }),
+          );
+        }
+        return next;
+      });
+      toast.success("Alarme acquittée avec succès");
+    } catch (error) {
+      console.error("Acknowledge alarm error:", error);
+      toast.error("Erreur lors de l'acquittement de l'alarme");
+    }
+  };
+
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -41,9 +73,9 @@ export function DashboardClient({
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive" />
               Alarmes actives
-              {totalActiveAlarms > 0 && (
+              {activeCount > 0 && (
                 <Badge variant="destructive" className="ml-2">
-                  {totalActiveAlarms}
+                  {activeCount}
                 </Badge>
               )}
             </h2>
@@ -58,11 +90,12 @@ export function DashboardClient({
           <Card>
             <CardContent className="p-0">
               <AlarmTable
-                alarms={activeAlarms}
+                alarms={localAlarms}
                 maxRows={5}
                 showSearch={false}
                 showPagination={false}
                 isLoading={false}
+                onAcknowledge={handleAcknowledge}
                 emptyMessage="Aucune alarme active - Tout est sous contrôle"
               />
             </CardContent>

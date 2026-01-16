@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { prismaMesure } from "@/lib/prisma"
+import { prisma, prismaMesure } from "@/lib/prisma"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { getCachedMeasurements, setCachedMeasurements } from "@/lib/measurement-cache"
 import { apiError, apiOk } from "@/lib/api-response"
@@ -41,26 +41,42 @@ export const GET = withAuthLogging(
         }
       }
 
-      const measurements = await prismaMesure.tm_graphique.findMany({
-        where: {
-          ...whereClause,
-          Est_Valeur_Null: false,
-        },
-        take: rowNumber,
-        orderBy: { Date_Heure_Mesure: "desc" },
-        select: {
-          Id_Graphique: true,
-          Date_Heure_Mesure: true,
-          Valeur: true,
-          Unite: true,
-          Consigne: true,
-          Consigne_Sup: true,
-          Consigne_Inf: true,
-          Sonde_Numero_Serie: true,
-          Frequence: true,
-          Est_Etat_Alarme: true,
-        },
-      })
+      const [measurements, lieu] = await Promise.all([
+        prismaMesure.tm_graphique.findMany({
+          where: {
+            ...whereClause,
+            Est_Valeur_Null: false,
+          },
+          take: rowNumber,
+          orderBy: { Date_Heure_Mesure: "desc" },
+          select: {
+            Id_Graphique: true,
+            Date_Heure_Mesure: true,
+            Valeur: true,
+            Unite: true,
+            Consigne: true,
+            Consigne_Sup: true,
+            Consigne_Inf: true,
+            Sonde_Numero_Serie: true,
+            Frequence: true,
+            Est_Etat_Alarme: true,
+          },
+        }),
+        prisma.t_lieu.findUnique({
+          where: { Id_Lieu: idLieuInt },
+          select: {
+            Consigne: true,
+            Consigne_Sup: true,
+            Consigne_Inf: true,
+            Consigne_Sup_Corrigee: true,
+            Consigne_Inf_Corrigee: true,
+          },
+        }),
+      ])
+
+      const consigneSupLieu = lieu?.Consigne_Sup_Corrigee ?? lieu?.Consigne_Sup ?? null
+      const consigneInfLieu = lieu?.Consigne_Inf_Corrigee ?? lieu?.Consigne_Inf ?? null
+      const consigneLieu = lieu?.Consigne ?? null
 
       const chronologicalMeasurements = measurements.reverse()
 
@@ -73,22 +89,40 @@ export const GET = withAuthLogging(
           year: "numeric",
           hour: "2-digit",
           minute: "2-digit",
+          timeZone: "UTC",
         })
 
         const dateXaxis = dateHeure.toLocaleString("fr-FR", {
           hour: "2-digit",
           minute: "2-digit",
+          timeZone: "UTC",
         })
 
         return {
           id: m.Id_Graphique?.toString() || "",
           Valeur: m.Valeur !== null ? parseFloat(m.Valeur.toString()) : 0,
-          Unite: m.Unite || "°C",
+          Unite: m.Unite || "\u00B0C",
           DateHeureMesure: dateDisplay,
+          DateHeureMesureIso: dateHeure.toISOString(),
           DateHeureMesureXaxis: dateXaxis,
-          Consigne: m.Consigne !== null ? parseFloat(m.Consigne.toString()) : null,
-          Consigne_Sup: m.Consigne_Sup !== null ? parseFloat(m.Consigne_Sup.toString()) : null,
-          Consigne_Inf: m.Consigne_Inf !== null ? parseFloat(m.Consigne_Inf.toString()) : null,
+          Consigne:
+            consigneLieu !== null
+              ? parseFloat(consigneLieu.toString())
+              : m.Consigne !== null
+                ? parseFloat(m.Consigne.toString())
+                : null,
+          Consigne_Sup:
+            consigneSupLieu !== null
+              ? parseFloat(consigneSupLieu.toString())
+              : m.Consigne_Sup !== null
+                ? parseFloat(m.Consigne_Sup.toString())
+                : null,
+          Consigne_Inf:
+            consigneInfLieu !== null
+              ? parseFloat(consigneInfLieu.toString())
+              : m.Consigne_Inf !== null
+                ? parseFloat(m.Consigne_Inf.toString())
+                : null,
           SondeNumeroSerie: m.Sonde_Numero_Serie || "",
           Frequence: m.Frequence || 15,
           Etat_Alarme: m.Est_Etat_Alarme || 0,

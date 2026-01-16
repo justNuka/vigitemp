@@ -2,9 +2,16 @@
 - Toujours répondre en français.
 - Dès qu'il y a un doute, poser des questions pour clarifier les besoins avant de générer du code.
 - Dès qu'une modif touche à du typage, des données, etc... se référer aux schémas Prisma des 2 bases de données.
+- Toujours faire attention au typage (TypeScript) et aux types des données.
 - Faire l'architecture Next.js 16 la plus clean possible, en utilisant les bonnes pratiques (server components, client components, data fetching, etc...)
 - Toujours utiliser next-intl pour la gestion des langues à chaque création de pages/features.
-- Toujours faire du mobile-first comme l'indique la doc TailwindCSS
+- Toujours faire du mobile-first comme l'indique la doc TailwindCSS.
+- Toujours prendre en compte l'accessibilité : contraste des couleurs, navigation clavier, lecteurs d'écran, etc...
+- Toujours prendre en compte les conventions du projet : APIs, nommage, structure des fichiers, logging, audit trail, etc...
+- Toujours bien gérer la sécurité : validation des entrées, protection contre les injections, gestion des sessions, etc...
+- Toujours bien mettre en place le logging et l'audit trail pour chaque endpoint API créé ou modifié.
+- Toujours bien gérer les erreurs avec des messages clairs et précis (prendre en compte la traduction) à renvoyer à l'utilisateur.
+- Toujours bien gérer l'authentification et les droits (autorisations, licences) sur chaque endpoint API créé ou modifié.
 
 # Vigitemp Codebase Guide for AI Agents
 

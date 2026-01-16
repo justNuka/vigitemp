@@ -197,6 +197,7 @@ CREATE TABLE `tm_mesures` (
   `Sonde_Numero_Serie` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '',
   `Id_Lieu` int NOT NULL DEFAULT '0',
   `Est_Valeur_Null` tinyint(1) NOT NULL DEFAULT '0',
+  `Est_Valeur_Memoire` tinyint(1) NOT NULL DEFAULT '0',
   `Frequence` int DEFAULT NULL,
   `Est_Etat_Alarme` tinyint(1) NOT NULL DEFAULT '0',
   `Consigne_Inf_Pre_Alarme` float DEFAULT NULL,

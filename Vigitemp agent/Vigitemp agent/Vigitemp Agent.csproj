@@ -164,7 +164,9 @@
   <ItemGroup>
     <Compile Include="AgentLog.cs" />
     <Compile Include="LoopbackSessionServer.cs" />
-    <Compile Include="StatusForm.cs" />
+    <Compile Include="StatusForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Database.cs" />
     <Compile Include="Form_Alert.cs">
       <SubType>Form</SubType>

@@ -228,13 +228,23 @@ export const log = {
   // Logs d'alarmes et surveillance (basé sur les codes audit de la table)
   alarm: {
     // ACQ - Acquitter les alarmes
-    acknowledge: (lieuName: string, lieuId: number, user: string, userId: number, ip: string, comment?: string) =>
+    acknowledge: (
+      alarmId: number,
+      lieuName: string,
+      lieuId: number,
+      user: string,
+      userId: number,
+      ip: string,
+      acknowledgedAt: string,
+      comment?: string,
+    ) =>
       log.audit("ACQ", {
         user,
         userId,
         ip,
         resource: `Lieu: ${lieuName}`,
         resourceId: lieuId,
+        changes: { alarmId, acknowledgedAt },
         reason: comment,
       }),
     

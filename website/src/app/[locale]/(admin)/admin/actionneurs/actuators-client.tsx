@@ -21,6 +21,7 @@ import { Printer } from "lucide-react"
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
+import { useRouter } from '@/i18n/navigation'
 import { ActuatorModal } from "./actuator-modal"
 
 type ActuatorRow = {
@@ -34,6 +35,7 @@ type ActuatorRow = {
 export function ActuatorsClient() {
   const { data: actuators, isLoading } = useActuators()
   const queryClient = useQueryClient()
+  const router = useRouter()
   const [selectedActuator, setSelectedActuator] = useState<Actuator | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -65,6 +67,7 @@ export function ActuatorsClient() {
       setIsDeleteDialogOpen(false)
       setSelectedActuator(null)
       await queryClient.invalidateQueries({ queryKey: ["actionneurs"] })
+      router.refresh()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erreur lors de l'archivage")
     }

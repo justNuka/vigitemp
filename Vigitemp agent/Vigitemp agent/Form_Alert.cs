@@ -197,14 +197,14 @@ namespace VigitempAgent
 
         private void Form_Alert_Click(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start(SITEWEB_URL + "/metrologie/alarmes");
+            System.Diagnostics.Process.Start(SITEWEB_URL + "/alarmes");
             //timer1.Interval = 1;
             //action = enumAction.close;
         }
 
         private void button1_Click_1(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start(SITEWEB_URL + "/metrologie/alarmes");
+            System.Diagnostics.Process.Start(SITEWEB_URL + "/alarmes");
             //timer1.Interval = 1;
             action = enumAction.close;
         }

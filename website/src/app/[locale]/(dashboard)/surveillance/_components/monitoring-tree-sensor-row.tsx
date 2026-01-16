@@ -22,7 +22,14 @@ export function SurveillanceTreeSensorRow({ sensor }: { sensor: SensorWithLocati
           )}
         </div>
       </div>
-      <div className="flex-shrink-0">{getStatusBadge(sensor.status, sensor.isActive)}</div>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {sensor.location.alarmDisabled ? (
+          <span className="rounded-full bg-orange-500/20 text-orange-900 dark:text-orange-100 text-[10px] px-2 py-0.5">
+            Désactivée
+          </span>
+        ) : null}
+        {getStatusBadge(sensor.status, sensor.isActive)}
+      </div>
     </div>
   );
 }

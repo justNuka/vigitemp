@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Printer } from 'lucide-react'
 import { toast } from 'sonner'
+import { useRouter } from '@/i18n/navigation'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -25,6 +26,7 @@ import {
 
 export function SitesClient() {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const { data: sites = [], isLoading } = useSites()
 
   const [selectedSite, setSelectedSite] = useState<SiteAdmin | null>(null)
@@ -53,6 +55,7 @@ export function SitesClient() {
     mutationFn: async (data: CreateSiteInput) => postJson('/api/sites', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sites'] })
+      router.refresh()
       toast.success('Site créé avec succès')
       setIsCreateOpen(false)
       createForm.reset()
@@ -69,6 +72,7 @@ export function SitesClient() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sites'] })
+      router.refresh()
       toast.success('Site modifié avec succès')
       setIsEditOpen(false)
       setSelectedSite(null)
@@ -85,6 +89,7 @@ export function SitesClient() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sites'] })
+      router.refresh()
       toast.success('Site archivé avec succès')
       setSelectedSite(null)
       setIsArchiveAlertOpen(false)

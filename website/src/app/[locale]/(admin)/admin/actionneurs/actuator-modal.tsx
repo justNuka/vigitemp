@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { useQueryClient } from '@tanstack/react-query'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label"
 import { useActuatorTypes } from "@/hooks/useActuatorTypes"
 import { useLocations } from "@/hooks/useLocations"
+import { useRouter } from '@/i18n/navigation'
 import type { Actuator } from "@/hooks/useActuators"
 import { patchJson, postJson } from "@/lib/http"
 
@@ -19,6 +21,8 @@ type Props = {
 }
 
 export function ActuatorModal({ open, onOpenChange, actuator, isEditing }: Props) {
+  const queryClient = useQueryClient()
+  const router = useRouter()
   const isEdit = Boolean(isEditing && actuator)
   const contentKey = useMemo(() => {
     const id = actuator?.Id_Actionneur ?? "new"
@@ -58,6 +62,8 @@ export function ActuatorModal({ open, onOpenChange, actuator, isEditing }: Props
         await postJson("/api/actionneurs", payload)
       }
 
+      await queryClient.invalidateQueries({ queryKey: ["actionneurs"] })
+      router.refresh()
       onOpenChange(false)
     } catch (error) {
       console.error("Error:", error)

@@ -517,7 +517,7 @@ namespace Vigitemp_Serveur
                         MySqlCommand cmd_vigitemp = this.connection_vigitemp.CreateCommand();
 
                         // Requête SQL - Ajout de IdSonde à la sélection
-                        cmd_vigitemp.CommandText = "SELECT Frequence, Consigne, Consigne_Sup, Consigne_Inf, t_module.IDserveur, Nom_Lieu, IdLieu, t_lieu.SondeNumeroSerie, t_sonde.IdSonde FROM t_lieu " +
+                        cmd_vigitemp.CommandText = "SELECT Frequence, Consigne, Consigne_Sup, Consigne_Inf, t_module.Id_Serveur, Nom_Lieu, IdLieu, t_lieu.SondeNumeroSerie, t_sonde.IdSonde FROM t_lieu " +
                                                     "INNER JOIN t_sonde ON t_lieu.SondeNumeroSerie = t_sonde.SondeNumeroSerie " +
                                                     "INNER JOIN t_module ON t_sonde.idModule = t_module.idModule " +
                                                     "WHERE t_lieu.SondeNumeroSerie = @serial;";
@@ -540,7 +540,7 @@ namespace Vigitemp_Serveur
                         float consigneSup = float.Parse(dr_lieux["Consigne_Sup"].ToString());
                         float consigneInf = float.Parse(dr_lieux["Consigne_Inf"].ToString());
                         int frequence = (int)dr_lieux["Frequence"];
-                        object idServeur = dr_lieux["IDserveur"];
+                        object idServeur = dr_lieux["Id_Serveur"];
 
                         MySqlCommand cmd_vigitemp_mesure = this.connection_vigitemp_mesure.CreateCommand();
                         cmd_vigitemp_mesure.CommandText = "INSERT INTO tm_mesures " +
@@ -635,7 +635,7 @@ namespace Vigitemp_Serveur
                                                     "INNER JOIN t_sonde ON t_lieu.SondeNumeroSerie = t_sonde.SondeNumeroSerie " +
                                                     "INNER JOIN t_module ON t_sonde.idModule = t_module.idModule " +
                                                     "WHERE t_lieu.Frequence = @frequence " +
-                                                    "AND t_module.IDserveur = @idServeur " +
+                                                    "AND t_module.Id_Serveur = @idServeur " +
                                                     "AND t_lieu.Lieu_Etat = 'S';";
                         cmd_vigitemp.Parameters.AddWithValue("@frequence", p_frequence);
                         cmd_vigitemp.Parameters.AddWithValue("@idServeur", p_idServer);
@@ -734,7 +734,7 @@ namespace Vigitemp_Serveur
 
                 MySqlCommand cmd_vigitemp = connection_vigitemp.CreateCommand();
 
-                cmd_vigitemp.CommandText = "SELECT distinct IDserveur FROM t_sonde " +
+                cmd_vigitemp.CommandText = "SELECT distinct Id_Serveur FROM t_sonde " +
                                             "where Etat_Sonde = 'S';";
 
 
@@ -742,7 +742,7 @@ namespace Vigitemp_Serveur
                 MySqlDataReader dr_lieux = cmd_vigitemp.ExecuteReader();
                 while (dr_lieux.Read())
                 {
-                    array_tmp.Add((int)dr_lieux["IDserveur"]);
+                    array_tmp.Add((int)dr_lieux["Id_Serveur"]);
                 }
 
                 dr_lieux.Close();
@@ -768,7 +768,7 @@ namespace Vigitemp_Serveur
                 cmd_vigitemp.CommandText = "SELECT distinct frequence FROM t_lieu " +
                                             "INNER JOIN t_sonde ON t_lieu.SondeNumeroSerie = t_sonde.SondeNumeroSerie " +
                                             "INNER JOIN t_module ON t_sonde.idModule = t_module.idModule " +
-                                            "where t_module.IDserveur = @idServeur " +
+                                            "where t_module.Id_Serveur = @idServeur " +
                                             "AND t_lieu.Lieu_Etat = 'S';";
                 cmd_vigitemp.Parameters.AddWithValue("@idServeur", p_idServeur);
 

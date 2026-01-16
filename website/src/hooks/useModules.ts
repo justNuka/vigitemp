@@ -17,7 +17,7 @@ export interface Sonde {
   Sonde_Numero_Serie: string | null;
   Adresse_Sonde: string | null;
   Port_Serie: string | null;
-  Etat_Sonde: string | null;
+  Surveillance_Etat: string | null;
 }
 
 export function useModules() {

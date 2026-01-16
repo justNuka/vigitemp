@@ -46,8 +46,6 @@ export function UsersClient({ users }: Props) {
   const createMutation = useMutation({
     mutationFn: (data: CreateUserInput) => usersApi.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      router.refresh();
       toast.success("Utilisateur créé avec succès");
       setIsCreateDialogOpen(false);
     },
@@ -60,8 +58,6 @@ export function UsersClient({ users }: Props) {
     mutationFn: ({ id, data }: { id: string; data: any }) =>
       usersApi.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      router.refresh();
       toast.success("Utilisateur modifié avec succès");
       setIsEditDialogOpen(false);
       setSelectedUser(null);
@@ -85,6 +81,20 @@ export function UsersClient({ users }: Props) {
     },
   });
 
+  const reactivateMutation = useMutation({
+    mutationFn: (id: string) => usersApi.reactivate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      router.refresh();
+      toast.success("Compte rÇ¸activÇ¸ avec succÇùs");
+      setIsEditDialogOpen(false);
+      setSelectedUser(null);
+    },
+    onError: () => {
+      toast.error("Erreur lors de la rÇ¸activation");
+    },
+  });
+
   const handleCreateSubmit = (data: CreateUserFormValues) => {
     const payload = getCreateUserPayload(data);
 
@@ -95,6 +105,9 @@ export function UsersClient({ users }: Props) {
           if (payload.groupIds.length) await addUserGroups(createdUser.id, payload.groupIds);
         } catch (error) {
           console.error("Erreur lors de l'assignation sites/groupes:", error);
+        } finally {
+          queryClient.invalidateQueries({ queryKey: ["users"] });
+          router.refresh();
         }
       },
     });
@@ -122,6 +135,9 @@ export function UsersClient({ users }: Props) {
               "Erreur lors de la mise à jour des sites/groupes:",
               error
             );
+          } finally {
+            queryClient.invalidateQueries({ queryKey: ["users"] });
+            router.refresh();
           }
         },
       }
@@ -132,6 +148,10 @@ export function UsersClient({ users }: Props) {
     if (confirmArchiveUser(user)) {
       archiveMutation.mutate(user.id);
     }
+  };
+
+  const handleReactivateUser = (user: User) => {
+    reactivateMutation.mutate(user.id);
   };
 
   return (
@@ -157,10 +177,16 @@ export function UsersClient({ users }: Props) {
         user={selectedUser}
         profiles={profiles as any}
         profilesLoading={profilesLoading}
+        sites={sites as any}
+        sitesLoading={sitesLoading}
+        groups={groups as any}
+        groupsLoading={groupsLoading}
         isSubmitting={updateMutation.isPending}
         isArchiving={archiveMutation.isPending}
+        isReactivating={reactivateMutation.isPending}
         onSubmit={handleEditSubmit}
         onArchive={handleArchiveUser}
+        onReactivate={handleReactivateUser}
       />
 
       <Card>

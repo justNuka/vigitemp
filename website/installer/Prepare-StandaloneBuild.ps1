@@ -88,6 +88,16 @@ Write-Log "Copying standalone server..."
 Write-Log "Copying static assets..."
 & robocopy $staticDir (Join-Path $targetNext "static") /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
 
+Write-Log "Copying static assets into standalone package..."
+$standaloneStaticDest = Join-Path $targetNext "standalone\\.next\\static"
+New-Item -ItemType Directory -Force -Path $standaloneStaticDest | Out-Null
+& robocopy $staticDir $standaloneStaticDest /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
+
+$standaloneEnv = Join-Path $targetNext "standalone\\.env"
+if (Test-Path $standaloneEnv) {
+    Remove-Item -Path $standaloneEnv -Force
+}
+
 if (Test-Path $publicDir) {
     Write-Log "Copying public assets..."
     & robocopy $publicDir (Join-Path $OutputDir "public") /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
@@ -102,6 +112,13 @@ if (Test-Path $installerSrc) {
     $installerDest = Join-Path $OutputDir "installer"
     New-Item -ItemType Directory -Force -Path $installerDest | Out-Null
     & robocopy $installerSrc $installerDest /MIR /NFL /NDL /NJH /NJS /NC /NS /XF "README.md" "Prepare-StandaloneBuild.ps1" | Out-Null
+
+    $prereqsDest = Join-Path $installerDest "prereqs"
+    New-Item -ItemType Directory -Force -Path $prereqsDest | Out-Null
+    $nodeMsi = Join-Path $installerDest "node-v24.12.0-x64.msi"
+    if (Test-Path $nodeMsi) {
+        Move-Item -Path $nodeMsi -Destination (Join-Path $prereqsDest "node-v24.12.0-x64.msi") -Force
+    }
 }
 
 Write-Log "Done. Standalone package ready at: $OutputDir"

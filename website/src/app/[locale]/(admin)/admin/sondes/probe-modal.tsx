@@ -26,6 +26,7 @@ import type { Probe } from "@/hooks/useProbes";
 import { AlertCircle } from "lucide-react";
 import { patchJson, postJson } from "@/lib/http";
 import { toast } from "sonner";
+import { useRouter } from '@/i18n/navigation';
 
 interface ProbeModalProps {
   open: boolean;
@@ -36,6 +37,7 @@ interface ProbeModalProps {
 
 export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalProps) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const isEdit = Boolean(isEditing && probe);
   const probeKey = (probe as any)?.Id_Sonde ?? probe?.Sonde_Numero_Serie ?? "new";
   const contentKey = `${isEdit ? "edit" : "new"}-${probeKey}-${open ? "open" : "closed"}`;
@@ -59,8 +61,11 @@ export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalP
   }, [isEdit, moduleId, probe?.Id_Module]);
 
   const handleSerieChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const onlyNumbers = e.target.value.replace(/\D/g, "");
-    setSerieNum(onlyNumbers);
+    const normalized = e.target.value.toUpperCase();
+    const cleaned = normalized.replace(/[^0-9TH]/g, "");
+    const suffix = cleaned.endsWith("T") ? "T" : cleaned.endsWith("H") ? "H" : "";
+    const digits = suffix ? cleaned.slice(0, -1).replace(/[^0-9]/g, "") : cleaned.replace(/[^0-9]/g, "");
+    setSerieNum(suffix ? `${digits}-${suffix}` : digits);
   };
 
   const handleSubmit = async () => {
@@ -95,6 +100,7 @@ export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalP
       }
 
       await queryClient.invalidateQueries({ queryKey: ["probes"] });
+      router.refresh();
       setSerieNum("");
       setProbeType("");
       setModuleId("");
@@ -133,7 +139,7 @@ export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalP
             <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
               <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               <AlertDescription className="text-sm text-blue-800 dark:text-blue-300">
-                Uniquement les chiffres
+                Chiffres + suffixe optionnel -T ou -H
               </AlertDescription>
             </Alert>
             <Input

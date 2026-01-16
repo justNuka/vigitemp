@@ -8,6 +8,7 @@ import { useLocations, type LocationRow } from '@/hooks/useLocations'
 import { useSitesSimple } from '@/hooks/useSites'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
+import { useRouter } from '@/i18n/navigation'
 import { LocationFormDialog } from './_components/location-form-dialog'
 import { LocationsTable } from './_components/locations-table'
 import { patchJson, postJson } from '@/lib/http'
@@ -18,6 +19,7 @@ import { mapLocationToFormData } from './_components/location-form-mappers'
 
 export function LocationsClient() {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const { data: locations = [], isLoading } = useLocations()
   const { data: sites = [] } = useSitesSimple()
   const { data: groups = [] } = useGroups()
@@ -37,6 +39,7 @@ export function LocationsClient() {
     mutationFn: async (data: Partial<LocationRow>) => postJson('/api/lieux', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
+      router.refresh()
       toast.success('Lieu créé avec succès')
       setIsCreateOpen(false)
       resetForm()
@@ -53,7 +56,15 @@ export function LocationsClient() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
+      router.refresh()
       toast.success('Lieu modifié avec succès')
+      if (selectedLocation?.Id_Lieu) {
+        window.dispatchEvent(
+          new CustomEvent('vigitemp:lieu-updated', {
+            detail: { idLieu: selectedLocation.Id_Lieu },
+          }),
+        )
+      }
       setIsEditOpen(false)
       setSelectedLocation(null)
     },

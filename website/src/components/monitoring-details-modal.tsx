@@ -33,6 +33,7 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
 import { calculateYDomain, getMeasureSummary } from "@/lib/measurements";
+import type { MeasureData } from "@/lib/measurements";
 
 // Register Chart.js components
 ChartJS.register(
@@ -56,6 +57,7 @@ interface MonitoringDetailsModalProps {
   consigneInf: number | null;
   consigne: number | null;
   unite: string;
+  measurements?: MeasureData[];
 }
 
 export default function MonitoringDetailsModal({
@@ -68,28 +70,43 @@ export default function MonitoringDetailsModal({
   consigneInf: initialConsigneInf,
   consigne: initialConsigne,
   unite: initialUnite,
+  measurements: initialMeasurements,
 }: MonitoringDetailsModalProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const itemsPerPage = 20;
 
-  const { data, isLoading } = useLieuMeasurements(idLieu, { enabled: isOpen });
+  const hasLocalMeasurements = Boolean(initialMeasurements?.length);
+  const { data: fetchedData, isLoading } = useLieuMeasurements(idLieu, {
+    enabled: isOpen && !hasLocalMeasurements,
+  });
+  const data = hasLocalMeasurements ? initialMeasurements ?? [] : fetchedData;
+
+  const orderedData = useMemo(() => {
+    if (!data.length) return data;
+    return [...data].sort((a, b) => {
+      const dateA = a.DateHeureMesureIso ? Date.parse(a.DateHeureMesureIso) : Date.parse(a.DateHeureMesure);
+      const dateB = b.DateHeureMesureIso ? Date.parse(b.DateHeureMesureIso) : Date.parse(b.DateHeureMesure);
+      return dateA - dateB;
+    });
+  }, [data]);
 
   const summary = useMemo(
     () =>
-      getMeasureSummary(data, {
+      getMeasureSummary(orderedData, {
         consigneSup: initialConsigneSup,
         consigneInf: initialConsigneInf,
         consigne: initialConsigne,
         unite: initialUnite,
       }),
-    [data, initialConsigneInf, initialConsigne, initialConsigneSup, initialUnite],
+    [orderedData, initialConsigneInf, initialConsigne, initialConsigneSup, initialUnite],
   );
 
   const { consigneSup, consigneInf, consigne, unite } = summary;
 
   const [yMin, yMax] = useMemo(
-    () => calculateYDomain(data, { consigneSup, consigneInf, consigne }),
-    [consigne, consigneInf, consigneSup, data],
+    () => calculateYDomain(orderedData, { consigneSup, consigneInf, consigne }),
+    [consigne, consigneInf, consigneSup, orderedData],
   );
 
   useEffect(() => {
@@ -102,9 +119,19 @@ export default function MonitoringDetailsModal({
     return () => clearTimeout(timeoutId);
   }, [idLieu, isOpen]);
 
+  const sortedData = useMemo(() => {
+    const copy = [...orderedData];
+    copy.sort((a, b) => {
+      const dateA = a.DateHeureMesureIso ? Date.parse(a.DateHeureMesureIso) : Date.parse(a.DateHeureMesure);
+      const dateB = b.DateHeureMesureIso ? Date.parse(b.DateHeureMesureIso) : Date.parse(b.DateHeureMesure);
+      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+    });
+    return copy;
+  }, [data, sortOrder]);
+
   // Pagination for table
   const totalPages = Math.ceil(data.length / itemsPerPage);
-  const paginatedData = data.slice(
+  const paginatedData = sortedData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -136,11 +163,11 @@ export default function MonitoringDetailsModal({
               <div className="h-[500px]">
                 <Line
                   data={{
-                    labels: data.map(d => d.DateHeureMesureXaxis),
+                    labels: orderedData.map(d => d.DateHeureMesureXaxis),
                     datasets: [
                       {
                         label: `Mesures (${unite})`,
-                        data: data.map(d => d.Valeur),
+                        data: orderedData.map(d => d.Valeur),
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.2)',
                         borderWidth: 2,
@@ -185,15 +212,15 @@ export default function MonitoringDetailsModal({
                         callbacks: {
                           title: (context) => {
                             const index = context[0].dataIndex;
-                            return data[index]?.DateHeureMesure || '';
+                            return orderedData[index]?.DateHeureMesure || '';
                           },
                           label: (context) => {
                             const index = context.dataIndex;
-                            const measure = data[index];
+                            const measure = orderedData[index];
                             const lines = [`Valeur: ${measure.Valeur}${unite}`];
                             
                             if (measure.Etat_Alarme === 1) {
-                              lines.push('⚠️ En alarme');
+                              lines.push("En alarme");
                             }
                             
                             return lines;
@@ -316,7 +343,18 @@ export default function MonitoringDetailsModal({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>DATE/HEURE</TableHead>
+                      <TableHead className="w-[180px]">
+                        <button
+                          type="button"
+                          onClick={() => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
+                          className="inline-flex items-center gap-1 text-left font-medium hover:underline"
+                        >
+                          DATE/HEURE
+                          <span className="text-xs text-muted-foreground">
+                            {sortOrder === "asc" ? "ASC" : "DESC"}
+                          </span>
+                        </button>
+                      </TableHead>
                       <TableHead>VALEUR</TableHead>
                       <TableHead>CONSIGNE INF</TableHead>
                       <TableHead>CONSIGNE SUP</TableHead>
@@ -347,12 +385,10 @@ export default function MonitoringDetailsModal({
                           </TableCell>
                           <TableCell>
                             {isOutOfRange ? (
-                              <span className="text-red-600 dark:text-red-400 font-semibold">
-                                ⚠️ Hors limites
+                              <span className="text-red-600 dark:text-red-400 font-semibold">Hors limites
                               </span>
                             ) : (
-                              <span className="text-green-600 dark:text-green-400">
-                                ✓ OK
+                              <span className="text-green-600 dark:text-green-400">OK
                               </span>
                             )}
                           </TableCell>

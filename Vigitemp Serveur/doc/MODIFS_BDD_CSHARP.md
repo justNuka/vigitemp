@@ -1,20 +1,15 @@
-# Modifs BDD a porter cote serveur C#
+﻿# Modifs BDD (serveur C#)
 
-Ce document liste les logiques qui doivent etre gerees par le serveur C# au lieu de triggers SQL.
+## Bases cibles
+- `vigi_main`
+- `vigi_mesures`
 
-## Alarmes et etats (vigi_main)
-- Calculer la derniere valeur connue (equivalent EVT_GSO_DERNIERVALEUR_LIEU).
-- Gerer la suppression/archivage d'alarme (equivalent TRG_GSO_BEF_DEL_ALARME).
-- Gerer les changements d'etat d'alarme sur t_lieu (equivalent TRG_GSO_BEF_UPD_LIEU_ALARME).
-- v_tm_mesures_dernier : pas besoin, garder en memoire serveur.
-- v_config_lieu_sonde : charger et garder en memoire serveur.
+## Alarmes
+- `t_alarme_histo` doit avoir les memes colonnes que `t_alarme`.
 
-## Mesures GSO (vigi_mesures)
-- Gerer le flux d'insertion des mesures GSO :
-  - TRG_AFT_INS_MES_GSO (post insert)
-  - TRG_BEF_INS_MES_GSO_GRAPH (graph)
-  - TRG_BEF_INS_MES_GSO_MES (mesures classiques)
+## Mesures
+- Ajouter `Est_Valeur_Memoire` dans `tm_mesures` (tinyint not null default 0).
 
-## Historique alarmes
-- A l'acquittement d'une alarme : supprimer de `t_alarme`, inserer dans `t_alarme_histo`.
-- S'assurer que la date d'acquittement est bien renseignee dans `t_alarme_histo`.
+## Donnees seed
+- permissions, parametres, types
+- user admin par defaut (`admin`) avec mdp hashe + changement force

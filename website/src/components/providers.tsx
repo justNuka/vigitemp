@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/theme-provider";
 import { useEffect, useId, useRef, useState } from "react";
 import { GlobalAppEffects } from "@/components/global-app-effects";
+import { VersionChangelogModal } from "@/components/version-changelog-modal";
 
 declare global {
   interface Window {
@@ -145,6 +146,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         disableTransitionOnChange
       >
         <GlobalAppEffects />
+        <VersionChangelogModal />
         {children}
       </ThemeProvider>
     </QueryClientProvider>

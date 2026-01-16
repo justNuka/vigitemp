@@ -1,49 +1,132 @@
-"use client";
+"use client"
 
-import MonitoringCard from "@/components/monitoring-card";
-import type { SensorWithLocation } from "@/lib/api";
-import { sortSensorsByStatus } from "./_helpers/monitoring-derived";
-import { SurveillanceEmptyState } from "./_components/monitoring-empty-state";
+import { Power, PowerOff } from "lucide-react"
+import { useTranslations } from "next-intl"
+
+import MonitoringCard from "@/components/monitoring-card"
+import { MonitoringCardSkeleton } from "@/components/monitoring-card-skeleton"
+import type { SensorWithLocation } from "@/lib/api"
+
+import { SurveillanceEmptyState } from "./_components/monitoring-empty-state"
+import { sortSensorsByStatus } from "./_helpers/monitoring-derived"
 
 interface SensorsCardsGridProps {
-  sensors: SensorWithLocation[];
-  onSurveillanceToggle?: (idLieu: number, newState: boolean) => void;
+  sensors: SensorWithLocation[]
+  disabledFirst?: boolean
+  isLoading?: boolean
+  onSurveillanceToggle?: (idLieu: number, newState: boolean, durationMinutes?: number | null) => void
 }
 
 /**
- * SensorsCardsGrid - Grille plate de toutes les sondes
- * Affiche les mêmes cards que l'arborescence, mais sans distinction de sites/groupes
- * Les infos de site et groupe sont affichées DANS les cards
- * ✅ Trie les capteurs par status (alarmes en priorité)
+ * SensorsCardsGrid - Grille plate de toutes les sondes.
+ * Affiche les memes cards que l'arborescence, sans distinction de sites/groupes.
+ * Les infos de site et groupe sont affichees dans les cards.
+ * Trie les capteurs par statut (alarmes en priorite).
  */
-export function SensorsCardsGrid({ 
+export function SensorsCardsGrid({
   sensors,
-  onSurveillanceToggle 
+  disabledFirst = false,
+  isLoading = false,
+  onSurveillanceToggle,
 }: SensorsCardsGridProps) {
-  if (sensors.length === 0) {
-    return <SurveillanceEmptyState title="Aucune sonde" />;
+  const t = useTranslations("surveillance")
+
+  // Afficher des skeleton cards pendant le chargement
+  if (isLoading && sensors.length === 0) {
+    return (
+      <div className="p-4 md:p-6 space-y-8">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-200">
+            <Power className="h-5 w-5 text-sky-500" />
+            {t("grid.active_title")}
+          </div>
+          <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <MonitoringCardSkeleton key={`skeleton-${i}`} />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
   }
 
-  // ✅ Trier les capteurs: critical → warning → ok
-  // Récupère les lieux en priorité dans l'affichage graphique
-  const sortedSensors = sortSensorsByStatus(sensors);
+  if (sensors.length === 0) {
+    return <SurveillanceEmptyState title={t("grid.empty_title")} />
+  }
+
+  const sortedSensors = sortSensorsByStatus(sensors)
+  const disabledSensors = sortedSensors.filter((sensor) => sensor.location.alarmDisabled)
+  const activeSensors = sortedSensors.filter((sensor) => !sensor.location.alarmDisabled)
+
+  const renderSection = (title: string, icon: JSX.Element, items: SensorWithLocation[]) => (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-200">
+        {icon}
+        {title}
+      </div>
+      {items.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 px-4 py-3 text-sm text-slate-500">
+          {title === t("grid.disabled_title") ? t("grid.disabled_empty") : t("grid.empty_title")}
+        </div>
+      ) : (
+        <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
+          {items.map((sensor) => {
+            const groupName =
+              sensor.location.groupNames && sensor.location.groupNames.length > 0
+                ? sensor.location.groupNames.join(" / ")
+                : sensor.location.groupName1 || "Sans groupe"
+
+            return (
+              <MonitoringCard
+                key={sensor.id}
+                idLieu={Number(sensor.id)}
+                nomLieu={sensor.name}
+                lieuType={sensor.lieuType || null}
+                siteName={sensor.location.site || "Site inconnu"}
+                groupName={groupName}
+                status={sensor.status}
+                alarmDisabled={sensor.location.alarmDisabled}
+                alarmDisabledUntil={sensor.location.alarmDisabledUntil}
+                alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
+                onSurveillanceToggle={onSurveillanceToggle}
+              />
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
 
   return (
-    <div className="p-4 md:p-6 space-y-6 animate-fade-in">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-        {sortedSensors.map((sensor) => (
-          <MonitoringCard
-            key={sensor.id}
-            idLieu={Number(sensor.id)}
-            nomLieu={sensor.name}
-            lieuType={sensor.lieuType || null}
-            siteName={sensor.location.site || "Site inconnu"}
-            groupName={sensor.location.groupName1 || "Sans groupe"}
-            status={sensor.status}
-            onSurveillanceToggle={onSurveillanceToggle}
-          />
-        ))}
-      </div>
+    <div className="p-4 md:p-6 space-y-8 animate-fade-in">
+      {disabledFirst ? (
+        <>
+          {renderSection(
+            t("grid.disabled_title"),
+            <PowerOff className="h-5 w-5 text-slate-400" />,
+            disabledSensors,
+          )}
+          {renderSection(
+            t("grid.active_title"),
+            <Power className="h-5 w-5 text-sky-500" />,
+            activeSensors,
+          )}
+        </>
+      ) : (
+        <>
+          {renderSection(
+            t("grid.active_title"),
+            <Power className="h-5 w-5 text-sky-500" />,
+            activeSensors,
+          )}
+          {renderSection(
+            t("grid.disabled_title"),
+            <PowerOff className="h-5 w-5 text-slate-400" />,
+            disabledSensors,
+          )}
+        </>
+      )}
     </div>
-  );
+  )
 }
+

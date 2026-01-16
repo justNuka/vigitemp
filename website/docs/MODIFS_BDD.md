@@ -1,46 +1,34 @@
-# Modifications BDD a appliquer
+﻿# Modifs BDD (web)
 
-Objectif : appliquer les changements de schema dans Prisma, puis pousser en base.
-Les triggers/vues historiques doivent etre geres cote serveur C#.
+## Bases cibles
+- `vigi_main`
+- `vigi_mesures`
 
-## Base vigi_main
+## Alarmes
+- `t_alarme_histo` doit avoir les memes colonnes que `t_alarme`.
+- A l'acquittement : supprimer de `t_alarme`, inserer dans `t_alarme_histo`.
 
-### t_lieu (ajouts)
-- Est_Lieu_Alarme_Termee_Non_Acquittee_T1 (TinyInt)
-- Date_Heure_Dernier_Acquittement_En_Cours (DateTime)
-- Date_Heure_Last_Update_EVT_GSO (DateTime)
+## Table `tm_mesures_gso`
+Schema de reference :
 
-Statut : schema Prisma mis a jour dans `website/prisma/db-main/schema.prisma`.
+```
+CREATE TABLE IF NOT EXISTS `tm_mesures_gso` (
+  `Id_mesures_gso` int NOT NULL AUTO_INCREMENT,
+  `id_capteur` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `tep` float DEFAULT NULL,
+  `unite` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `date_mesure` datetime NOT NULL,
+  `rssi` varchar(10) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
+  `tension` varchar(10) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
+  PRIMARY KEY (`id_capteur`,`date_mesure`) USING BTREE,
+  KEY `Id_mesures_gso` (`Id_mesures_gso`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
 
-### t_alarme_histo (nouvelle table)
-Objectif : archiver une alarme acquittee (suppression de `t_alarme` et insertion dans l'historique).
+## Table `tm_mesures`
+Ajouter :
+- `Est_Valeur_Memoire` tinyint not null default 0
 
-Schema : colonnes identiques a `t_alarme`.
-
-Statut : schema Prisma ajoute dans `website/prisma/db-main/schema.prisma`.
-Remarque : le serveur C# doit gerer le transfert vers cette table.
-
-## Base vigi_mesures
-
-### tm_mesures (ajouts)
-- Rssi (Int)
-- Tension (Float)
-
-Statut : schema Prisma mis a jour dans `website/prisma/db-mesure/schema.prisma`.
-
-### tm_mesures_gso (nouvelle table)
-Table pour mesures GSO (sondes autonomes qui poussent vers le serveur).
-
-Schema : conforme au SQL fourni (id_capteur + date_mesure en cle primaire).
-
-Statut : schema Prisma ajoute dans `website/prisma/db-mesure/schema.prisma`.
-
-## Rappels serveur C#
-
-Ne pas creer de triggers SQL, la logique doit etre geree dans le serveur :
-- EVT_GSO_DERNIERVALEUR_LIEU : recuperation derniere valeur connue
-- TRG_GSO_BEF_DEL_ALARME : gestion suppression/archivage
-- TRG_GSO_BEF_UPD_LIEU_ALARME : gestion des alarmes
-- v_tm_mesures_dernier : inutile (memoire serveur)
-- v_config_lieu_sonde : memoire serveur
-- TRG_AFT_INS_MES_GSO / TRG_BEF_INS_MES_GSO_GRAPH / TRG_BEF_INS_MES_GSO_MES : a implementer cote serveur
+## Seeds
+- Garder permissions, parametres, types.
+- Inserer un user admin par defaut (`admin`), mdp hashe + changement force.

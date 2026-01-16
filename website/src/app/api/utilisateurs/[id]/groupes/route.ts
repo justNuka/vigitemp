@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server"
+import { revalidateTag } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
@@ -89,6 +90,8 @@ export const POST = withAdminLogging(
           Id_Groupe: idGroupe,
         },
       })
+
+      revalidateTag("users-data", "default")
 
       return apiOk({
         message: "Group assigned to user successfully",

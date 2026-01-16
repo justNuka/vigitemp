@@ -17,7 +17,7 @@ export default function AdminLayout({
   return (
     <div className="flex flex-col h-full min-h-0 w-full">
       {/* Content Area */}
-      <main className="flex-1 min-h-0 overflow-y-auto bg-background pb-20">
+      <main className="flex-1 min-h-0 overflow-y-auto bg-background"> // pb-20 retiré
         <PageTransitionWrapper className="min-h-full">
           {children}
         </PageTransitionWrapper>

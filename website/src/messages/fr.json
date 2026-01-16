@@ -100,6 +100,16 @@
     "tabs": {
       "graphs": "Graphiques",
       "tree": "Arborescence"
+    },
+    "grid": {
+      "active_title": "Lieux en surveillance",
+      "disabled_title": "Lieux avec surveillance désactivée",
+      "disabled_empty": "Aucun lieu en surveillance désactivée",
+      "toggle_disabled_first": "Afficher d'abord les lieux désactivés",
+      "toggle_active_first": "Afficher d'abord les lieux en surveillance",
+      "disabled_badge": "Surveillance desactivee",
+      "disabled_until": "Surveillance desactivee jusqu'au {date}",
+      "empty_title": "Aucune sonde"
     }
   },
   "alarmsPage": {

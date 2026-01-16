@@ -28,13 +28,7 @@ export function SurveillanceTreeStatsBadges({ stats, compact = false }: Props) {
       )}
       {stats.warning > 0 && (
         <Badge
-          className={[
-            warningTheme.badgeClassName,
-            "!bg-violet-600 hover:!bg-violet-700 !text-white border-violet-700",
-            className,
-          ]
-            .filter(Boolean)
-            .join(" ")}
+          className={[warningTheme.badgeClassName, className].filter(Boolean).join(" ")}
         >
           {stats.warning}
         </Badge>

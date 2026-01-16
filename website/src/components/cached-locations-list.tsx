@@ -12,9 +12,9 @@ export async function CachedLocationsList() {
     where: { Lieu_Etat: "1" },
     include: {
       t_sonde: {
-        where: { Etat_Sonde: { not: null } },
+        where: { Surveillance_Etat: { not: null } },
         select: {
-          Etat_Sonde: true,
+          Surveillance_Etat: true,
         },
       },
     },
@@ -23,9 +23,9 @@ export async function CachedLocationsList() {
 
   const formatted = locations.map((loc) => {
     const sensors = Array.isArray(loc.t_sonde) ? loc.t_sonde : [];
-    const okCount = sensors.filter((s: any) => s.Etat_Sonde === "O").length;
-    const warningCount = sensors.filter((s: any) => s.Etat_Sonde === "P").length;
-    const criticalCount = sensors.filter((s: any) => s.Etat_Sonde === "A").length;
+    const okCount = sensors.filter((s: any) => s.Surveillance_Etat === "O").length;
+    const warningCount = sensors.filter((s: any) => s.Surveillance_Etat === "P").length;
+    const criticalCount = sensors.filter((s: any) => s.Surveillance_Etat === "A").length;
 
     let status: "ok" | "warning" | "critical" = "ok";
     if (criticalCount > 0) status = "critical";

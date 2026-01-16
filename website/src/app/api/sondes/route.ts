@@ -9,7 +9,7 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
   try {
     const sondes = await prisma.t_sonde.findMany({
       include: {
-        t_sonde_etat: true,
+        t_etat_surveillance: true,
         t_lieu: {
           select: {
             Nom_Lieu: true,
@@ -27,8 +27,9 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
       Adresse_Sonde: sonde.Adresse_Sonde,
       Sonde_Numero_Serie: sonde.Sonde_Numero_Serie,
       Port_Serie: sonde.Port_Serie,
-      Etat_Sonde: sonde.Etat_Sonde,
-      Etat_Libelle: sonde.t_sonde_etat?.Etat_Libelle || sonde.Etat_Sonde,
+      Surveillance_Etat: sonde.Surveillance_Etat,
+      Surveillance_Etat_Libelle:
+        sonde.t_etat_surveillance?.Surveillance_Etat_Libelle || sonde.Surveillance_Etat,
       Id_Module: sonde.Id_Module,
       Lieu: sonde.t_lieu[0]?.Nom_Lieu || null,
     }))
@@ -42,7 +43,7 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
 
 const createProbeSchema = z.object({
   sondeType: z.string().min(1),
-  serieNum: z.string().min(1),
+  serieNum: z.string().regex(/^\d+(?:-?[TH])?$/i, "Numéro de série invalide"),
   moduleId: z.number().int().positive().nullable().optional(),
 })
 

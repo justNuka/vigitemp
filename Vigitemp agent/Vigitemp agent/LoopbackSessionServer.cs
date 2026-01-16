@@ -180,6 +180,16 @@ namespace VigitempAgent
                         return;
                     }
 
+                    if (path == "/info" && method == "GET")
+                    {
+                        var payload =
+                            "{\"machineName\":\"" + JsonEscape(Environment.MachineName) + "\"," +
+                            "\"ip\":\"" + JsonEscape(HttpServer.GetLocalIPAddress()) + "\"}";
+                        await WriteCorsResponseAsync(stream, 200, payload, token, "application/json")
+                            .ConfigureAwait(false);
+                        return;
+                    }
+
                     if (path == "/session")
                     {
                         if (method == "POST")
@@ -343,4 +353,3 @@ namespace VigitempAgent
         }
     }
 }
-

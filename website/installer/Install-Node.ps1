@@ -25,6 +25,9 @@ if (-not (Test-Admin)) {
 $scriptRoot = $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($InstallerPath)) {
     $InstallerPath = Join-Path $scriptRoot "prereqs\\node-v24.12.0-x64.msi"
+    if (-not (Test-Path $InstallerPath)) {
+        $InstallerPath = Join-Path $scriptRoot "node-v24.12.0-x64.msi"
+    }
 }
 
 if (-not (Test-Path $InstallerPath)) {
@@ -43,12 +46,27 @@ if ($nodeCmd -and -not $Force) {
 }
 
 Write-Log "Debut installation Node..."
-if ($Interactive) {
-    Write-Log "Installation interactive (fenetre MSI)."
-    Start-Process -FilePath "msiexec.exe" -ArgumentList @("/i", "`"$InstallerPath`"") -Wait -NoNewWindow
-} else {
-    Write-Log "Installation silencieuse (msiexec /quiet)."
-    Start-Process -FilePath "msiexec.exe" -ArgumentList @("/i", "`"$InstallerPath`"", "/quiet", "/norestart") -Wait -NoNewWindow
-}
+Write-Log "Installation interactive (fenetre MSI)."
+Start-Process -FilePath "msiexec.exe" -ArgumentList @("/i", "`"$InstallerPath`"") -Wait -NoNewWindow
 
 Write-Log "Installation Node terminee."
+
+# Rafraichit le PATH dans la session courante
+try {
+    $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+    $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+    $env:Path = @($machinePath, $userPath) -join ";"
+    Write-Log "PATH mis a jour dans la session courante."
+} catch {
+    Write-Log "Impossible de rafraichir le PATH automatiquement."
+}
+
+try {
+    $nodeCmd = Get-Command node -ErrorAction SilentlyContinue
+    if ($nodeCmd) {
+        $version = & $nodeCmd.Source --version
+        Write-Log "Node detecte apres installation : $version"
+    } else {
+        Write-Log "Node non detecte dans ce terminal. Fermez/rouvrez le terminal si besoin."
+    }
+} catch { }

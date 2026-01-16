@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Package
+    Name="Vigitemp Agent"
+    Manufacturer="Vigitemp"
+    Version="1.0.0"
+    UpgradeCode="c79acc5b-b54f-413b-b52a-7614910a0462"
+    InstallerVersion="500"
+    Compressed="yes"
+    Scope="perMachine">
+    <MajorUpgrade DowngradeErrorMessage="Une version plus recente de Vigitemp Agent est deja installee." />
+    <MediaTemplate />
+
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Property Id="VIGI_WEB_URL" Value="http://127.0.0.1:3000" />
+
+    <Feature Id="MainFeature" Title="Vigitemp Agent" Level="1">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="StartupRegistry" />
+      <ComponentRef Id="ConfigUpdate" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <StandardDirectory Id="ProgramFilesFolder">
+      <Directory Id="CompanyFolder" Name="Vigitemp">
+        <Directory Id="INSTALLFOLDER" Name="Agent" />
+      </Directory>
+    </StandardDirectory>
+  </Fragment>
+
+  <Fragment>
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="StartupRegistry" Guid="50a29026-fbbc-421c-82d1-c769ae528d9b">
+        <RegistryValue
+          Root="HKLM"
+          Key="Software\Microsoft\Windows\CurrentVersion\Run"
+          Name="VigitempAgent"
+          Value="&quot;[INSTALLFOLDER]VigitempAgent.exe&quot;"
+          Type="string"
+          KeyPath="yes" />
+      </Component>
+      <Component Id="ConfigUpdate" Guid="c7cccdc9-3896-4a10-934d-ff94bf27ba52">
+        <RegistryValue
+          Root="HKLM"
+          Key="Software\Vigitemp\Agent"
+          Name="ConfigUpdated"
+          Value="1"
+          Type="integer"
+          KeyPath="yes" />
+        <util:XmlFile
+          Id="SetWebUrl"
+          File="[INSTALLFOLDER]VigitempAgent.exe.config"
+          ElementPath="/configuration/appSettings/add[@key='VigitempSiteWebUrl']/@value"
+          Action="setValue"
+          Value="[VIGI_WEB_URL]" />
+      </Component>
+    </DirectoryRef>
+  </Fragment>
+
+  <Fragment>
+    <CustomAction
+      Id="LaunchAgent"
+      Directory="INSTALLFOLDER"
+      ExeCommand="VigitempAgent.exe"
+      Execute="immediate"
+      Return="asyncNoWait"
+      Impersonate="yes" />
+  </Fragment>
+
+  <Fragment>
+    <InstallExecuteSequence>
+      <Custom Action="LaunchAgent" After="InstallFinalize" Condition="NOT Installed" />
+    </InstallExecuteSequence>
+  </Fragment>
+
+  <Fragment>
+    <UI>
+      <Dialog Id="ServerUrlDlg" Width="370" Height="270" Title="Vigitemp Agent - Configuration">
+        <Control Id="Title" Type="Text" X="15" Y="10" Width="340" Height="20" Transparent="yes" NoPrefix="yes"
+                 Text="Configuration du serveur web" />
+        <Control Id="Description" Type="Text" X="15" Y="40" Width="340" Height="30" Transparent="yes" NoPrefix="yes"
+                 Text="Indiquez l'URL du serveur web Vigitemp (ex: http://127.0.0.1:3000)" />
+        <Control Id="ServerUrlLabel" Type="Text" X="15" Y="80" Width="80" Height="15" Text="URL:" />
+        <Control Id="ServerUrlEdit" Type="Edit" X="15" Y="98" Width="340" Height="18" Property="VIGI_WEB_URL" />
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&lt; Precedent">
+          <Publish Event="NewDialog" Value="InstallDirDlg" Condition="1" />
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Suivant &gt;">
+          <Publish Event="NewDialog" Value="VerifyReadyDlg" Condition="1" />
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Annuler">
+          <Publish Event="SpawnDialog" Value="CancelDlg" Condition="1" />
+        </Control>
+      </Dialog>
+
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="ServerUrlDlg" Condition="1" />
+    </UI>
+  </Fragment>
+
+  <Fragment>
+    <UIRef Id="WixUI_InstallDir" />
+    <UIRef Id="WixUI_ErrorProgressText" />
+  </Fragment>
+</Wix>

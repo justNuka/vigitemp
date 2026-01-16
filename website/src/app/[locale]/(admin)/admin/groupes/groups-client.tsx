@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useRouter } from '@/i18n/navigation';
 
 import { useGroups, type Group } from '@/hooks/useGroups';
 import { useGroupLocations } from '@/hooks/useGroupLocations';
@@ -19,6 +20,7 @@ import { GroupModal } from './group-modal';
 
 export function GroupsClient() {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [regroupement, setRegroupement] = useState('1');
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -48,6 +50,7 @@ export function GroupsClient() {
       toast.success("Groupe archivé");
       setSelectedGroup(null);
       await queryClient.invalidateQueries({ queryKey: ["groups"] });
+      router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erreur lors de l'archivage");
     }

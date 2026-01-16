@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { useRouter } from '@/i18n/navigation'
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,7 @@ interface GroupModalProps {
 
 export function GroupModal({ open, onOpenChange, group, isEditing }: GroupModalProps) {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const [name, setName] = useState('')
   const [regroupement, setRegroupement] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -65,6 +67,7 @@ export function GroupModal({ open, onOpenChange, group, isEditing }: GroupModalP
       }
 
       queryClient.invalidateQueries({ queryKey: ['groups'] })
+      router.refresh()
       onOpenChange(false)
     } catch (error) {
       console.error('Group save error:', error)
