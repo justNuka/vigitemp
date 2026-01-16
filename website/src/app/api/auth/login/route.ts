@@ -15,8 +15,18 @@ const loginSchema = z.object({
   machineName: z.string().trim().min(1).optional(),
 })
 
+function normalizeIpForDb(value: string): string {
+  if (!value) return value
+  let ip = value
+  if (ip.startsWith("::ffff:")) {
+    ip = ip.slice(7)
+  }
+  return ip.length > 15 ? ip.slice(0, 15) : ip
+}
+
 export const POST = withLogging(async (req: NextRequest) => {
   const { ip } = getRequestContext(req)
+  const ipForDb = normalizeIpForDb(ip)
 
   try {
     const body = await req.json()
@@ -161,13 +171,13 @@ export const POST = withLogging(async (req: NextRequest) => {
       await prisma.t_utilisateur.update({
         where: { Id_Utilisateur: user.Id_Utilisateur },
         data: {
-          Adresse_IP_Connexion: ip,
+          Adresse_IP_Connexion: ipForDb,
           Nom_Machine_Connexion: resolvedMachineName,
           Date_Heure_Derniere_Connexion: now,
         },
       })
 
-      log.data.update("Utilisateur", user.Id_Utilisateur, username, user.Id_Utilisateur, ip, {
+      log.data.update("Utilisateur", user.Id_Utilisateur, username, user.Id_Utilisateur, ipForDb, {
         machineName: resolvedMachineName,
         address: ip,
         connectedAt: now.toISOString(),
@@ -188,7 +198,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         updatedClient = await prisma.t_postes_clients.upsert({
           where: { Nom_Machine_Connexion: resolvedMachineName },
           update: {
-            Adresse_IP_Connexion: ip,
+            Adresse_IP_Connexion: ipForDb,
             Login: user.Login || undefined,
             Nom: user.Nom || undefined,
             Prenom: user.Prenom || undefined,
@@ -196,7 +206,7 @@ export const POST = withLogging(async (req: NextRequest) => {
           },
           create: {
             Nom_Machine_Connexion: resolvedMachineName,
-            Adresse_IP_Connexion: ip,
+            Adresse_IP_Connexion: ipForDb,
             Login: user.Login || undefined,
             Nom: user.Nom || undefined,
             Prenom: user.Prenom || undefined,
@@ -205,7 +215,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         })
       } else {
         const existingClient = await prisma.t_postes_clients.findFirst({
-          where: { Adresse_IP_Connexion: ip },
+          where: { Adresse_IP_Connexion: ipForDb },
           orderBy: { Date_Heure_Derniere_Connexion: "desc" },
           select: { Id_Poste: true, Nom_Machine_Connexion: true, Adresse_IP_Connexion: true },
         })
@@ -223,7 +233,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         } else {
           updatedClient = await prisma.t_postes_clients.create({
             data: {
-              Adresse_IP_Connexion: ip,
+              Adresse_IP_Connexion: ipForDb,
               Login: user.Login || undefined,
               Nom: user.Nom || undefined,
               Prenom: user.Prenom || undefined,

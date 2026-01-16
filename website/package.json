@@ -25,6 +25,7 @@
     "email-dev": "email dev"
   },
   "dependencies": {
+    "@heroui/theme": "^2.4.25",
     "@heroui/react": "^2.7.5",
     "@hookform/resolvers": "^5.2.2",
     "@internationalized/date": "^3.10.0",
@@ -58,6 +59,7 @@
     "@radix-ui/react-toolbar": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-email/components": "1.0.1",
+    "@swc/helpers": "^0.5.15",
     "@tanstack/react-query": "^5.90.11",
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.13",
@@ -95,6 +97,7 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "sonner": "^2.0.7",
+    "styled-jsx": "^5.1.1",
     "swiper": "^12.0.3",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
@@ -108,6 +111,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
     "@react-email/preview-server": "^5.0.6",
+    "@tailwindcss/postcss": "^4.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
@@ -119,7 +123,7 @@
     "postcss": "^8",
     "react-email": "5.0.6",
     "shadcn": "^3.6.3",
-    "tailwindcss": "^3.4.1",
+    "tailwindcss": "^4.0.0",
     "tsx": "^4.21.0",
     "typescript": "^5"
   },
