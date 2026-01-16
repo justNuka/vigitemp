@@ -158,10 +158,10 @@ export default function MonitoringCard({
 
   const alarmDisabledLabel = useMemo(() => {
     if (isSurveillanceActive) return null;
-    if (!alarmDisabledUntil) return "Surveillance d?sactiv?e";
+    if (!alarmDisabledUntil) return "Surveillance désactivée";
     const date = new Date(alarmDisabledUntil);
-    if (Number.isNaN(date.getTime())) return "Surveillance d?sactiv?e";
-    return `Surveillance d?sactiv?e jusqu'au ${date.toLocaleString("fr-FR", {
+    if (Number.isNaN(date.getTime())) return "Surveillance désactivée";
+    return `Surveillance désactivée jusqu'au ${date.toLocaleString("fr-FR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -407,7 +407,7 @@ export default function MonitoringCard({
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-xs">
-                      {isSurveillanceActive ? "D?sactiver la surveillance" : "Activer la surveillance"}
+                      {isSurveillanceActive ? "Désactiver la surveillance" : "Activer la surveillance"}
                     </p>
                   </TooltipContent>
                 </UITooltip>
@@ -454,22 +454,22 @@ export default function MonitoringCard({
           <DialogHeader>
             <DialogTitle>Confirmation</DialogTitle>
             <DialogDescription>
-              Voulez-vous {isSurveillanceActive ? "d?sactiver" : "activer"} la surveillance de ce lieu ?
+              Voulez-vous {isSurveillanceActive ? "désactiver" : "activer"} la surveillance de ce lieu ?
             </DialogDescription>
           </DialogHeader>
           {isSurveillanceActive ? (
             <div className="space-y-2">
-              <label className="text-sm font-medium">Dur?e de d?sactivation</label>
+              <label className="text-sm font-medium">Durée de désactivation</label>
               <Select value={disableDuration} onValueChange={setDisableDuration}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Choisir une dur?e" />
+                  <SelectValue placeholder="Choisir une durée" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="15">15 minutes</SelectItem>
                   <SelectItem value="60">1 heure</SelectItem>
                   <SelectItem value="240">4 heures</SelectItem>
                   <SelectItem value="720">12 heures</SelectItem>
-                  <SelectItem value="manual">Illimit? (manuel)</SelectItem>
+                  <SelectItem value="manual">Illimité (manuel)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
