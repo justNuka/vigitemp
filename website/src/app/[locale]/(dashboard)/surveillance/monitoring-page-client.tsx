@@ -101,7 +101,7 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
   }, []);
 
   const updateSensorsCache = useCallback(
-    (ids: number[], alarmDisabled: boolean, alarmDisabledUntil: string | null) => {
+    (ids: number[], alarmDisabled: boolean, alarmDisabledUntil: Date | null) => {
       const idSet = new Set(ids.map(String));
       queryClient.setQueryData<PaginatedSensorsData>(["capteurs", "paginated", 100], (data) => {
         if (!data) return data;
@@ -146,7 +146,9 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
           updateSensorsCache(
             [idLieu],
             payload.data.notification_active === false,
-            payload.data.DateHeure_reactivationAlarme ?? null,
+            payload.data.DateHeure_reactivationAlarme
+              ? new Date(payload.data.DateHeure_reactivationAlarme)
+              : null,
           )
         }
     } catch (error) {
@@ -175,7 +177,9 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
           updateSensorsCache(
             payload.data.lieuIds,
             payload.data.alarmDisabled === true,
-            payload.data.alarmDisabledUntil ?? null,
+            payload.data.alarmDisabledUntil
+              ? new Date(payload.data.alarmDisabledUntil)
+              : null,
           )
         }
       } catch (error) {

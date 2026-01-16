@@ -1,6 +1,7 @@
 "use client"
 
 import { Power, PowerOff } from "lucide-react"
+import type { ReactNode } from "react"
 import { useTranslations } from "next-intl"
 
 import MonitoringCard from "@/components/monitoring-card"
@@ -58,7 +59,7 @@ export function SensorsCardsGrid({
   const disabledSensors = sortedSensors.filter((sensor) => sensor.location.alarmDisabled)
   const activeSensors = sortedSensors.filter((sensor) => !sensor.location.alarmDisabled)
 
-  const renderSection = (title: string, icon: JSX.Element, items: SensorWithLocation[]) => (
+  const renderSection = (title: string, icon: ReactNode, items: SensorWithLocation[]) => (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-200">
         {icon}

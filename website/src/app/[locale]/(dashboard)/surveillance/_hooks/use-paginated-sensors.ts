@@ -44,7 +44,7 @@ export function usePaginatedSensors({
     // On privilégie le cache + des mises à jour ciblées (SSE / delta) plutôt qu'un refetch global.
     staleTime: 30 * 60 * 1000,
     gcTime: 2 * 60 * 60 * 1000,
-    refetchOnMount: "stale",
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchInterval: false,

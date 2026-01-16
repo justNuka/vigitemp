@@ -77,17 +77,33 @@ export function MonitoringCardsGrid({
   // Afficher des skeleton cards pendant le chargement
   if (isLoading && sensors.length === 0) {
     return (
-      <div className="space-y-6 p-4 md:p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-200">
-            <Power className="h-5 w-5 text-sky-500" />
-            {t("grid.active_title")}
+      <div className="p-4 md:p-6 space-y-8">
+        {/* Section Active */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-50">
+              <Power className="h-5 w-5 text-sky-500" />
+              {t("grid.active_title")}
+            </div>
+          </div>
+          <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <MonitoringCardSkeleton key={`skeleton-active-${i}`} />
+            ))}
           </div>
         </div>
-        <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <MonitoringCardSkeleton key={`skeleton-${i}`} />
-          ))}
+
+        {/* Section Disabled */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-50">
+            <PowerOff className="h-5 w-5 text-slate-400" />
+            {t("grid.disabled_title")}
+          </div>
+          <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))] max-w-4xl">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <MonitoringCardSkeleton key={`skeleton-disabled-${i}`} />
+            ))}
+          </div>
         </div>
       </div>
     )
@@ -153,8 +169,8 @@ export function MonitoringCardsGrid({
                   const groupDisabledUntil = groupDisabled
                     ? groupSensors
                         .map((sensor) => sensor.location.alarmDisabledUntil)
-                        .filter((value): value is Date | string => value !== null && value !== undefined)
-                        .map((value) => new Date(value))
+                        .filter((value) => value !== null && value !== undefined)
+                        .map((value) => new Date(value as string | number | Date))
                         .filter((date) => !Number.isNaN(date.getTime()))
                         .reduce<Date | null>((latest, current) => {
                           if (!latest) return current
@@ -249,12 +265,13 @@ export function MonitoringCardsGrid({
 
   const renderDisabledSection = () => (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-200">
+      <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-50">
         <PowerOff className="h-5 w-5 text-slate-400" />
         {t("grid.disabled_title")}
       </div>
       {hasDisabled ? (
-        groupedDisabled.map(({ siteId, siteName, sensorsCount, groups }) => {
+        <div className="max-w-4xl">
+          {groupedDisabled.map(({ siteId, siteName, sensorsCount, groups }) => {
           const isSiteExpanded = expandedSites.has(`disabled-${siteId}`)
           return (
             <div key={`disabled-${siteId}`} className="space-y-4">
@@ -305,7 +322,8 @@ export function MonitoringCardsGrid({
               ) : null}
             </div>
           )
-        })
+        })}
+        </div>
       ) : (
         <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 px-4 py-3 text-sm text-slate-500">
           {t("grid.disabled_empty")}

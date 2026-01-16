@@ -12,6 +12,7 @@
 - Toujours bien mettre en place le logging et l'audit trail pour chaque endpoint API créé ou modifié.
 - Toujours bien gérer les erreurs avec des messages clairs et précis (prendre en compte la traduction) à renvoyer à l'utilisateur.
 - Toujours bien gérer l'authentification et les droits (autorisations, licences) sur chaque endpoint API créé ou modifié.
+- Toujours mettre à jour la modal de nouveautés à chaque ajout/modification de features (+ la version).
 
 # Vigitemp Codebase Guide for AI Agents
 
