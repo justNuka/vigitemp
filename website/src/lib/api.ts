@@ -176,10 +176,10 @@ import { CurrentUser } from "@/lib/types";
 
 export type DashboardStats = {
   totalLocations: number;
+  activeLocations: number;
+  disabledLocations: number;
   activeAlarms: number;
-  okSensors: number;
-  warningSensors: number;
-  criticalSensors: number;
+  alertSensors: number;
 };
 
 export type Measurement = {
@@ -229,6 +229,8 @@ export type Location = {
   alarmDisabled?: boolean;
   alarmDisabledUntil?: Date | null;
   alarmDelayMinutes?: number | null;
+  lieuEtat?: string | null;
+  surveillanceDisabled?: boolean;
   siteId?: number;
   groupIds?: number[];
   groupNames?: string[];

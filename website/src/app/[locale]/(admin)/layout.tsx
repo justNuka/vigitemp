@@ -24,17 +24,12 @@ export default function AdminGroupLayout({
   // Fetch current user
   const { data: currentUser } = useCurrentUser();
 
-  // Check if user is admin
+  // NOTE: Admin check disabled for now (rights handling will be redesigned).
   useEffect(() => {
     if (currentUser) {
-      const isAdmin = currentUser.authorizations?.some((auth) => auth.admin) ?? false;
-      if (!isAdmin) {
-        router.push("/");
-      } else {
-        setIsAuthorized(true);
-      }
+      setIsAuthorized(true);
     }
-  }, [currentUser, router]);
+  }, [currentUser]);
 
   const handleLogout = async () => {
     try {

@@ -6,14 +6,13 @@ import { StatCard } from "@/components/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTranslations } from "next-intl";
-import { MapPin, AlertTriangle, CheckCircle2, Activity } from "lucide-react";
+import { MapPin, AlertTriangle, Activity, PowerOff } from "lucide-react";
 
 type Stats = {
-  totalLocations: number;
+  activeLocations: number;
+  disabledLocations: number;
   activeAlarms: number;
-  okSensors: number;
-  warningSensors: number;
-  criticalSensors: number;
+  alertSensors: number;
 };
 
 function StatCardSkeleton() {
@@ -65,9 +64,9 @@ export function DashboardHeader({ stats }: { stats: Stats }) {
           <Suspense fallback={<StatCardSkeleton />}>
             <StatCard
               title={t("stats.locations_monitored")}
-              value={stats.totalLocations}
+              value={stats.activeLocations}
               icon={MapPin}
-              variant="default"
+              variant="info"
             />
           </Suspense>
           <Suspense fallback={<StatCardSkeleton />}>
@@ -81,18 +80,18 @@ export function DashboardHeader({ stats }: { stats: Stats }) {
           <Suspense fallback={<StatCardSkeleton />}>
             <StatCard
               title={t("stats.sensors_ok")}
-              value={stats.okSensors}
-              icon={CheckCircle2}
-              variant="success"
+              value={stats.disabledLocations}
+              icon={PowerOff}
+              variant="muted"
             />
           </Suspense>
           <Suspense fallback={<StatCardSkeleton />}>
             <StatCard
               title={t("stats.sensors_alert")}
-              value={stats.warningSensors + stats.criticalSensors}
+              value={stats.alertSensors}
               icon={Activity}
               variant={
-                stats.warningSensors + stats.criticalSensors > 0
+                stats.alertSensors > 0
                   ? "warning"
                   : "default"
               }

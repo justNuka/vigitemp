@@ -1,8 +1,8 @@
 ï»¿ï»¿# Installateur serveur C# Vigitemp
 
-Ce script installe le service C#, met Ã  jour le App.config et place la licence / clÃ© publique dans ProgramData.
+Ce script installe le service C#, met Ã  jour le App.config et place la licence / clé publique dans ProgramData.
 
-## PrÃ©requis
+## Prérequis
 - Lancer PowerShell en tant quâadministrateur.
 - Le dossier de build doit contenir `Vigitemp Serveur.exe` et son `.config`.
 
@@ -25,13 +25,13 @@ cd "Vigitemp Serveur\\installer"
 - Copie le build dans le dossier dâinstallation
 - Demande les paramÃ¨tres DB + URL web
 - Charge la licence et affiche ses options
-- Copie la licence et la clÃ© publique dans ProgramData
-- Met Ã  jour les clÃ©s App.config
-- Installe et dÃ©marre le service Windows
+- Copie la licence et la clé publique dans ProgramData
+- Met Ã  jour les clés App.config
+- Installe et démarre le service Windows
 
 ## Fichiers
 - Licence : `C:\ProgramData\Vigitemp\licenses\<license>.vtlic`
-- ClÃ© publique : `C:\ProgramData\Vigitemp\license_keys\license_public.pem`
+- Clé publique : `C:\ProgramData\Vigitemp\license_keys\license_public.pem`
 - Logs install : `C:\ProgramData\Vigitemp\install-logs\install-server-*.log`
 
 ## Rollback

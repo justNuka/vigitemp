@@ -68,19 +68,20 @@ namespace Vigitemp_License_Generator
                 ShowAlways = true
             };
 
-            var root = new FlowLayoutPanel
+            var root = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.TopDown,
-                WrapContents = false,
                 AutoScroll = true,
+                ColumnCount = 1,
+                RowCount = 0,
                 Padding = new Padding(12),
             };
+            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
 
             Controls.Add(root);
 
             var inputGroup = CreateGroup("Inputs");
-            root.Controls.Add(inputGroup);
+            AddGroup(root, inputGroup);
 
             var inputTable = CreateTable(2);
             inputGroup.Controls.Add(inputTable);
@@ -129,7 +130,7 @@ namespace Vigitemp_License_Generator
             );
 
             var hotlineGroup = CreateGroup("Hotline");
-            root.Controls.Add(hotlineGroup);
+            AddGroup(root, hotlineGroup);
 
             var hotlineTable = CreateTable(2);
             hotlineGroup.Controls.Add(hotlineTable);
@@ -189,7 +190,7 @@ namespace Vigitemp_License_Generator
             );
 
             var keyGroup = CreateGroup("Clé privée");
-            root.Controls.Add(keyGroup);
+            AddGroup(root, keyGroup);
 
             var keyPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true };
             _lblKeyStatus = new Label { AutoSize = true, Text = "Aucune clé chargée", Margin = new Padding(0, 8, 16, 8) };
@@ -232,7 +233,7 @@ namespace Vigitemp_License_Generator
             AddRow(publicKeyTable, "", btnCopyPublicKey);
 
             var outputGroup = CreateGroup("Licence");
-            root.Controls.Add(outputGroup);
+            AddGroup(root, outputGroup);
 
             var outputTable = CreateTable(2);
             outputGroup.Controls.Add(outputTable);
@@ -275,7 +276,15 @@ namespace Vigitemp_License_Generator
             TryLoadDefaultKey();
         }
 
-        private static GroupBox CreateGroup(string title)
+                private static void AddGroup(TableLayoutPanel root, Control group)
+        {
+            var rowIndex = root.RowCount++;
+            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            group.Margin = new Padding(0, 0, 0, 12);
+            root.Controls.Add(group, 0, rowIndex);
+        }
+
+private static GroupBox CreateGroup(string title)
         {
             return new GroupBox
             {
@@ -283,7 +292,8 @@ namespace Vigitemp_License_Generator
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 Dock = DockStyle.Top,
-                Padding = new Padding(10)
+                Padding = new Padding(10),
+                Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top
             };
         }
 
@@ -295,10 +305,11 @@ namespace Vigitemp_License_Generator
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 Dock = DockStyle.Top,
+                Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
                 CellBorderStyle = TableLayoutPanelCellBorderStyle.None
             };
             table.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            table.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
             return table;
         }
 
@@ -321,6 +332,16 @@ namespace Vigitemp_License_Generator
             else
             {
                 table.Controls.Add(new Label { AutoSize = true }, 0, rowIndex);
+            }
+
+            if (control is TextBox || control is ComboBox || control is CheckedListBox || control is DateTimePicker)
+            {
+                control.Dock = DockStyle.Fill;
+                control.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+            }
+            else
+            {
+                control.Anchor = AnchorStyles.Left | AnchorStyles.Right;
             }
 
             control.Margin = new Padding(0, 3, 0, 6);
@@ -759,6 +780,16 @@ namespace Vigitemp_License_Generator
             labelPanel.Controls.Add(CreateInfoLabel(infoMessage));
 
             table.Controls.Add(labelPanel, 0, rowIndex);
+            if (control is TextBox || control is ComboBox || control is CheckedListBox || control is DateTimePicker)
+            {
+                control.Dock = DockStyle.Fill;
+                control.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+            }
+            else
+            {
+                control.Anchor = AnchorStyles.Left | AnchorStyles.Right;
+            }
+
             control.Margin = new Padding(0, 3, 0, 6);
             table.Controls.Add(control, 1, rowIndex);
         }

@@ -1,5 +1,10 @@
 // next.config.mjs
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 import createNextIntlPlugin from "next-intl/plugin";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const withNextIntl = createNextIntlPlugin(
   // optionnel : si le fichier n'est pas à l'emplacement par défaut
@@ -11,6 +16,15 @@ const nextConfig = {
     // React strict mode
     reactStrictMode: true,
     output: "standalone",
+    // Keep the tracing root scoped to the website folder to avoid pulling in repo-wide files.
+    outputFileTracingRoot: __dirname,
+    outputFileTracingExcludes: {
+        "/**": [
+            "**/docs/**",
+            "**/installer/**",
+            "**/scripts/**",
+        ],
+    },
     outputFileTracingIncludes: {
         "/": [
             "node_modules/styled-jsx/**",

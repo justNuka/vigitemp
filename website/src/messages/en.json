@@ -19,7 +19,10 @@
     "previous": "Previous",
     "user": "User",
     "logout": "Log out",
-    "license_light": "Light license"
+    "license_light": "Light license",
+    "license_prefix": "License",
+    "license_unknown": "Unknown license",
+    "license_invalid": "Invalid license"
   },
   "pageHeader": {
     "title": "Vigitemp - Temperature Monitoring"
@@ -88,9 +91,9 @@
     "title": "Dashboard",
     "description": "Overview of monitoring",
     "stats": {
-      "locations_monitored": "Monitored locations",
+      "locations_monitored": "Locations in monitoring",
       "active_alarms": "Active alarms",
-      "sensors_ok": "Sensors OK",
+      "sensors_ok": "Monitoring disabled",
       "sensors_alert": "Sensors in alert"
     }
   },

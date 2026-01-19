@@ -61,7 +61,7 @@ export const POST = withAuthLogging(
               where: { Id_Lieu: current.t_lieu.Id_Lieu },
               data: {
                 Est_Lieu_En_Alarme: 0,
-                Lieu_Etat: lieu?.Est_Lieu_En_Pre_Alarme === 1 ? "P" : "O",
+                Est_Lieu_En_Pre_Alarme: lieu?.Est_Lieu_En_Pre_Alarme ?? 0,
               },
             })
           }

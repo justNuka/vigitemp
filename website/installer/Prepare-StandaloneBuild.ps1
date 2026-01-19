@@ -93,6 +93,45 @@ $standaloneStaticDest = Join-Path $targetNext "standalone\\.next\\static"
 New-Item -ItemType Directory -Force -Path $standaloneStaticDest | Out-Null
 & robocopy $staticDir $standaloneStaticDest /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
 
+$standaloneNodeModules = Join-Path $targetNext "standalone\\node_modules"
+$nextEnvTarget = Join-Path $standaloneNodeModules "@next\\env"
+if (-not (Test-Path $nextEnvTarget)) {
+    $pnpmRoots = @()
+    try {
+        $pnpmRoot = & $pnpmCmd.Source root 2>$null
+        if (-not [string]::IsNullOrWhiteSpace($pnpmRoot)) {
+            $pnpmRoots += $pnpmRoot.Trim()
+        }
+    } catch { }
+    $pnpmRoots += (Join-Path $SourcePath "node_modules")
+    $pnpmRoots += (Join-Path $repoRoot "node_modules")
+    $pnpmRoots = $pnpmRoots | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique
+
+    foreach ($root in $pnpmRoots) {
+        $directEnv = Join-Path $root "@next\\env"
+        if (Test-Path $directEnv) {
+            Write-Log "Copying @next/env into standalone package..."
+            New-Item -ItemType Directory -Force -Path (Split-Path $nextEnvTarget -Parent) | Out-Null
+            & robocopy $directEnv $nextEnvTarget /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
+            break
+        }
+
+        $pnpmStore = Join-Path $root ".pnpm"
+        if (Test-Path $pnpmStore) {
+            $nextEnvStore = Get-ChildItem -Path $pnpmStore -Directory -Filter "@next+env@*" -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($nextEnvStore) {
+                $storeEnv = Join-Path $nextEnvStore.FullName "node_modules\\@next\\env"
+                if (Test-Path $storeEnv) {
+                    Write-Log "Copying @next/env into standalone package..."
+                    New-Item -ItemType Directory -Force -Path (Split-Path $nextEnvTarget -Parent) | Out-Null
+                    & robocopy $storeEnv $nextEnvTarget /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
+                    break
+                }
+            }
+        }
+    }
+}
+
 $standaloneEnv = Join-Path $targetNext "standalone\\.env"
 if (Test-Path $standaloneEnv) {
     Remove-Item -Path $standaloneEnv -Force

@@ -379,7 +379,7 @@ export function TanStackTable<TData extends Record<string, any>>({
       <div
         className={cn(
           "border rounded-lg overflow-hidden",
-          "[&>div]:max-h-[var(--vt-table-max-height)]",
+          "[&>div]:max-h-(--vt-table-max-height)",
           "[&>div]:overflow-auto"
         )}
         style={{
@@ -388,7 +388,7 @@ export function TanStackTable<TData extends Record<string, any>>({
         }}
       >
         <Table>
-          <TableHeader className="sticky top-0 z-10 bg-muted/40 backdrop-blur supports-[backdrop-filter]:bg-muted/20">
+          <TableHeader className="sticky top-0 z-10 bg-muted/40 backdrop-blur supports-backdrop-filter:bg-muted/20">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -407,7 +407,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                         key={header.id}
                         className={cn(
                           canSort && 'cursor-pointer select-none hover:bg-muted/50',
-                          'transition-colors sticky top-0 bg-muted/40 backdrop-blur supports-[backdrop-filter]:bg-muted/20 border-b border-border border-r'
+                          'transition-colors sticky top-0 bg-muted/40 backdrop-blur supports-backdrop-filter:bg-muted/20 border-b border-border border-r'
                         )}
                         onClick={canSort ? header.column.getToggleSortingHandler?.() : undefined}
                         onKeyDown={(e) => {
@@ -548,7 +548,7 @@ export function TanStackTable<TData extends Record<string, any>>({
               }}
               disabled={isLoading}
             >
-              <SelectTrigger className="w-[120px] sm:w-[140px]">
+              <SelectTrigger className="w-30 sm:w-35">
                 <SelectValue aria-label="Taille de page" />
               </SelectTrigger>
               <SelectContent>

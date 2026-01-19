@@ -56,8 +56,8 @@ export function SensorsCardsGrid({
   }
 
   const sortedSensors = sortSensorsByStatus(sensors)
-  const disabledSensors = sortedSensors.filter((sensor) => sensor.location.alarmDisabled)
-  const activeSensors = sortedSensors.filter((sensor) => !sensor.location.alarmDisabled)
+  const disabledSensors = sortedSensors.filter((sensor) => sensor.location.surveillanceDisabled)
+  const activeSensors = sortedSensors.filter((sensor) => !sensor.location.surveillanceDisabled)
 
   const renderSection = (title: string, icon: ReactNode, items: SensorWithLocation[]) => (
     <div className="space-y-4">
@@ -82,13 +82,15 @@ export function SensorsCardsGrid({
                 key={sensor.id}
                 idLieu={Number(sensor.id)}
                 nomLieu={sensor.name}
-                lieuType={sensor.lieuType || null}
+                lieuType={sensor.lieuType ?? undefined}
                 siteName={sensor.location.site || "Site inconnu"}
                 groupName={groupName}
                 status={sensor.status}
                 alarmDisabled={sensor.location.alarmDisabled}
                 alarmDisabledUntil={sensor.location.alarmDisabledUntil}
                 alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
+                lieuEtat={sensor.location.lieuEtat ?? undefined}
+                surveillanceDisabled={sensor.location.surveillanceDisabled}
                 onSurveillanceToggle={onSurveillanceToggle}
               />
             )

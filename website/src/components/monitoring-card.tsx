@@ -65,6 +65,7 @@ interface MonitoringCardProps {
   alarmDisabled?: boolean;
   alarmDisabledUntil?: Date | string | null;
   alarmDelayMinutes?: number | null;
+  surveillanceDisabled?: boolean;
   onSurveillanceToggle?: (idLieu: number, newState: boolean, durationMinutes?: number | null) => void;
 }
 
@@ -80,6 +81,7 @@ export default function MonitoringCard({
   alarmDisabled,
   alarmDisabledUntil,
   alarmDelayMinutes,
+  surveillanceDisabled,
   onSurveillanceToggle,
 }: MonitoringCardProps) {
   const { data, isLoading, reload } = useLieuMeasurements(idLieu);
@@ -103,13 +105,18 @@ export default function MonitoringCard({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [isSurveillanceActive, setIsSurveillanceActive] = useState(
-    alarmDisabled !== undefined ? !alarmDisabled : lieuEtat !== "I"
+    surveillanceDisabled !== undefined ? !surveillanceDisabled : lieuEtat !== "D"
   );
 
   useEffect(() => {
-    if (alarmDisabled === undefined) return;
-    setIsSurveillanceActive(!alarmDisabled);
-  }, [alarmDisabled]);
+    if (surveillanceDisabled !== undefined) {
+      setIsSurveillanceActive(!surveillanceDisabled);
+      return;
+    }
+    if (lieuEtat !== undefined) {
+      setIsSurveillanceActive(lieuEtat !== "D");
+    }
+  }, [lieuEtat, surveillanceDisabled]);
 
   useEffect(() => {
     if (!isModalOpen) return;
@@ -209,7 +216,7 @@ export default function MonitoringCard({
             <TooltipProvider>
               <UITooltip>
                 <TooltipTrigger asChild>
-                  <div className={`${headerTextClassName} flex-shrink-0 mt-0.5`}>
+                  <div className={`${headerTextClassName} shrink-0 mt-0.5`}>
                     <HeaderIcon className="w-4 h-4" />
                   </div>
                 </TooltipTrigger>
@@ -227,12 +234,12 @@ export default function MonitoringCard({
             onClick={() => setIsModalOpen(true)}
           >
             {isLoading ? (
-              <div className="h-[130px]">
+              <div className="h-32.5">
                 <Skeleton className="h-full w-full rounded-md" />
               </div>
             ) : (
               <>
-                <div className="h-[130px]">
+                <div className="h-32.5">
                   <Line
                     data={{
                       labels: orderedData.map((d) => d.DateHeureMesureXaxis),
@@ -389,7 +396,7 @@ export default function MonitoringCard({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs">D?tails des mesures</p>
+                    <p className="text-xs">Détails des mesures</p>
                   </TooltipContent>
                 </UITooltip>
 
@@ -440,7 +447,7 @@ export default function MonitoringCard({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs">Modifier les param?tres du lieu</p>
+                    <p className="text-xs">Modifier les paramètres du lieu</p>
                   </TooltipContent>
                 </UITooltip>
               </div>

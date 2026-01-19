@@ -6,40 +6,44 @@ import { prisma } from "@/lib/prisma";
 export async function DashboardStats() {
   "use cache";
   cacheTag("dashboard-stats");
-  // Pas besoin de cacheLife ici, le cache est invalidé manuellement
+  // Pas besoin de cacheLife ici, le cache est invalide manuellement
 
-  const [totalSensors, activeSensors, totalLocations, activeAlarms] = await Promise.all([
-    prisma.t_sonde.count(),
-    prisma.t_sonde.count({ where: { Surveillance_Etat: "O" } }),
-    prisma.t_lieu.count({ where: { Lieu_Etat: "1" } }),
-    prisma.t_alarme.count({ 
-      where: { 
-        Est_Acquittee: false, // Alarmes non acquittées
-        Est_Alarme_Vrai: true // Alarmes réelles
-      } 
+  const [activeLocations, disabledLocations, activeAlarms, alertSensors] = await Promise.all([
+    prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "S" } }),
+    prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "D" } }),
+    prisma.t_alarme.count({
+      where: {
+        Est_Acquittee: false, // Alarmes non acquittees
+        Est_Alarme_Vrai: true // Alarmes reelles
+      }
     }),
+    prisma.t_lieu.count({
+      where: {
+        Est_Archive: false,
+        OR: [{ Est_Lieu_En_Alarme: 1 }, { Est_Lieu_En_Pre_Alarme: 1 }]
+      }
+    })
   ]);
 
   const stats = {
-    totalSensors,
-    activeSensors,
-    okPercentage: totalSensors > 0 ? Math.round((activeSensors / totalSensors) * 100) : 0,
-    totalLocations,
+    activeLocations,
+    disabledLocations,
     activeAlarms,
+    alertSensors,
   };
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        title="Capteurs totaux"
-        value={stats.totalSensors}
-        description={`${stats.activeSensors} actifs (${stats.okPercentage}%)`}
-        trend="up"
+        title="Lieux en surveillance"
+        value={stats.activeLocations}
+        description="Lieux actifs"
+        variant="info"
       />
       <StatCard
-        title="Lieux surveillés"
-        value={stats.totalLocations}
-        description="Emplacements actifs"
+        title="Lieux en surveillance desactivee"
+        value={stats.disabledLocations}
+        description="Surveillance coupee"
       />
       <StatCard
         title="Alarmes actives"
@@ -48,10 +52,10 @@ export async function DashboardStats() {
         variant={stats.activeAlarms > 0 ? "warning" : "success"}
       />
       <StatCard
-        title="Disponibilité"
-        value={`${stats.okPercentage}%`}
-        description="Capteurs opérationnels"
-        variant={stats.okPercentage >= 95 ? "success" : "warning"}
+        title="Sondes en alerte"
+        value={stats.alertSensors}
+        description="Pre-alarmes + alarmes"
+        variant={stats.alertSensors > 0 ? "warning" : "success"}
       />
     </div>
   );
@@ -62,7 +66,7 @@ interface StatCardProps {
   value: string | number;
   description: string;
   trend?: "up" | "down";
-  variant?: "default" | "success" | "warning";
+  variant?: "default" | "success" | "warning" | "info";
 }
 
 function StatCard({ title, value, description, variant = "default" }: StatCardProps) {
@@ -70,6 +74,7 @@ function StatCard({ title, value, description, variant = "default" }: StatCardPr
     default: "border-border",
     success: "border-success/30 bg-success/5",
     warning: "border-warning/30 bg-warning/5",
+    info: "border-primary/30 bg-primary/5",
   };
 
   return (

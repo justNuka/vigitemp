@@ -342,7 +342,7 @@ model t_lieu {
   Consigne_Inf_Pre_Alarme                  Float?                     @db.Float
   Est_Consigne_Inf_Pre_Alarme_Active       Boolean?
   Frequence                                Int?
-  Lieu_Etat                                String?                    @db.VarChar(100)
+  Lieu_Etat                                String?                    @db.VarChar(1)
   Retard_Alarme_Haut                       Int?
   Retard_Alarme_Bas                        Int?
   Id_Plan                                  Int?
@@ -387,12 +387,11 @@ model t_lieu {
   Est_Lieu_Alarme_Termee_Non_Acquittee_T1  Int?                       @db.TinyInt
   DateHeure_reactivationAlarme             DateTime?                  @db.DateTime(0)
   notification_active                      Boolean?                   @default(true)
-  Surveillance_Etat                        String?                    @db.VarChar(1)
+  t_etat_surveillance_lieu                 t_etat_surveillance?       @relation(fields: [Lieu_Etat], references: [Surveillance_Etat], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ETAT_SURVEILLANCE")
   t_alarme                                 t_alarme[]                 @relation("lieu_alarme")
   t_alarme_histo                           t_alarme_histo[]           @relation("lieu_alarme_histo")
   t_groupe1                                t_groupe?                  @relation("groupe1", fields: [Id_Groupe1], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE1_LIEU")
   t_groupe2                                t_groupe?                  @relation("groupe2", fields: [Id_Groupe2], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE2_LIEU")
-  t_etat_surveillance                      t_etat_surveillance?       @relation(fields: [Surveillance_Etat], references: [Surveillance_Etat], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ETAT_SURVEILLANCE")
   t_pdf                                    t_pdf?                     @relation(fields: [Id_PDF], references: [Id_PDF], onDelete: NoAction, onUpdate: NoAction, map: "FK_PDF_LIEU")
   t_plan                                   t_plan?                    @relation(fields: [Id_Plan], references: [Id_Plan], onDelete: NoAction, onUpdate: NoAction, map: "FK_PLAN_LIEU")
   t_site                                   t_site?                    @relation(fields: [Id_Site], references: [Id_Site], onDelete: NoAction, onUpdate: NoAction, map: "FK_SITE_LIEU")
@@ -413,7 +412,6 @@ model t_lieu {
   @@index([Id_Actionneur], map: "IDX_Id_Actionneur")
   @@index([Id_Plan], map: "IDX_Id_Plan")
   @@index([Lieu_Etat], map: "IDX_Lieu_Etat")
-  @@index([Surveillance_Etat], map: "IDX_Surveillance_Etat_Lieu")
   @@index([Nom_Lieu], map: "IDX_Nom_Lieu")
   @@index([Sonde_Numero_Serie], map: "IDX_Sonde_Numero_Serie")
   @@index([Est_Tel_Actif], map: "IDX_Est_Tel_Actif")

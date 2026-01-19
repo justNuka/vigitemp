@@ -49,7 +49,7 @@ function Test-Admin {
 function Read-InstallValue($label, $defaultValue = $null) {
     if ($Silent) {
         if ([string]::IsNullOrWhiteSpace($defaultValue)) {
-            throw (T "Param?tre requis manquant en mode silencieux : $label" "Missing required parameter in silent mode: $label")
+            throw (T "Paramètre requis manquant en mode silencieux : $label" "Missing required parameter in silent mode: $label")
         }
         return $defaultValue
     }
@@ -74,7 +74,7 @@ function Convert-SecureStringToPlainText([Security.SecureString]$secureValue) {
 function Read-InstallSecret($label, $defaultValue = $null) {
     if ($Silent) {
         if ([string]::IsNullOrWhiteSpace($defaultValue)) {
-            throw (T "Param?tre requis manquant en mode silencieux : $label" "Missing required parameter in silent mode: $label")
+            throw (T "Paramètre requis manquant en mode silencieux : $label" "Missing required parameter in silent mode: $label")
         }
         return $defaultValue
     }
@@ -325,7 +325,7 @@ if ($dbProvider -eq "mssql") {
 
 Push-Location $InstallDir
 if (-not $Offline) {
-    Write-Log (T "Installation des d?pendances..." "Installing dependencies...")
+    Write-Log (T "Installation des dépendances..." "Installing dependencies...")
     & $pnpmCmd.Source install | Out-Null
 
     Write-Log (T "G?n?ration des clients Prisma..." "Generating Prisma clients...")
@@ -334,7 +334,7 @@ if (-not $Offline) {
     Write-Log (T "Build de l'app Next.js..." "Building Next.js app...")
     & $pnpmCmd.Source build | Out-Null
 } else {
-    Write-Log (T "Mode offline : aucune installation ni build, utilisation des fichiers copi?s." "Offline mode: skipping install/build, using copied files.")
+    Write-Log (T "Mode offline : aucune installation ni build, utilisation des fichiers copiés." "Offline mode: skipping install/build, using copied files.")
 }
 Pop-Location
 
@@ -353,11 +353,11 @@ if ($Standalone) {
 if ($Offline) {
     if ($Standalone) {
         if (-not (Test-Path (Join-Path $InstallDir ".next\\standalone"))) {
-            Write-Log (T "Attention : dossier .next\\standalone absent. Le site ne d?marrera pas." "Warning: .next\\standalone missing. The site will not start.")
+            Write-Log (T "Attention : dossier .next\\standalone absent. Le site ne démarrera pas." "Warning: .next\\standalone missing. The site will not start.")
         }
     } else {
         if (-not (Test-Path (Join-Path $InstallDir ".next"))) {
-            Write-Log (T "Attention : dossier .next absent. Le site ne d?marrera pas sans build." "Warning: .next folder missing. The site will not start without a build.")
+            Write-Log (T "Attention : dossier .next absent. Le site ne démarrera pas sans build." "Warning: .next folder missing. The site will not start without a build.")
         }
     }
 }
@@ -438,7 +438,7 @@ Write-Log (T "Fichier env : $envPath" "Env file: $envPath")
 Write-Log (T "Dossier logs : $logsDir" "Logs dir: $logsDir")
 Write-Log (T "Log : $logPath" "Log: $logPath")
 
-function Verify-WebInstall {
+function Confirm-WebInstall {
     Write-Log (T "Verification post-installation..." "Post-install verification...")
     $checks = @()
     $checks += @{ Label = "InstallDir"; Path = $InstallDir }
@@ -479,6 +479,6 @@ function Verify-WebInstall {
     }
 }
 
-Verify-WebInstall
+Confirm-WebInstall
 
 Stop-Transcript | Out-Null

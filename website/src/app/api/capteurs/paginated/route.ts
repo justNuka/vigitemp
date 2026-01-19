@@ -153,6 +153,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
                 : "ok"
 
         const alarmDisabled = location.notification_active === false
+        const surveillanceDisabled = location.Lieu_Etat === "D"
 
         return {
           id: location.Id_Lieu.toString(),
@@ -173,6 +174,8 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
             isActive: !location.Est_Archive,
             alarmDisabled,
             alarmDisabledUntil: location.DateHeure_reactivationAlarme ?? null,
+            lieuEtat: location.Lieu_Etat ?? null,
+            surveillanceDisabled,
             alarmDelayMinutes: location.Retard_Alarme_Changement_Consigne ?? null,
             siteId: location.Id_Site,
             groupIds: locationGroupIds,
@@ -199,4 +202,3 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
     return apiError(500, "internal_error", "Erreur lors du chargement des sondes")
   }
 })
-

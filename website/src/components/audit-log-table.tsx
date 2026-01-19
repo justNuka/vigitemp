@@ -1,15 +1,19 @@
-'use client';
+﻿"use client";
 
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { 
-  LogIn, 
-  LogOut, 
-  Bell, 
-  Settings, 
-  UserCog,
+import {
+  Archive,
+  Bell,
   AlertCircle,
-  FileText
+  FileText,
+  LogIn,
+  LogOut,
+  Settings,
+  UserCog,
+  Wrench,
+  Activity,
+  Plug,
 } from "lucide-react";
 import type { AuditLog } from "@/lib/api";
 import { format } from "date-fns";
@@ -32,25 +36,120 @@ interface AuditLogRow {
   targetId: string | null;
 }
 
-const actionConfig: Record<string, { 
-  icon: typeof LogIn; 
-  label: string; 
+type ActionConfig = {
+  icon: typeof LogIn;
+  label: string;
   color: string;
   badgeVariant: "default" | "secondary" | "destructive" | "outline";
-}> = {
-  login: { icon: LogIn, label: "Connexion", color: "text-success", badgeVariant: "outline" },
-  logout: { icon: LogOut, label: "Déconnexion", color: "text-muted-foreground", badgeVariant: "outline" },
-  alarm_acknowledged: { icon: Bell, label: "Alarme acquittée", color: "text-warning", badgeVariant: "secondary" },
-  alarm_disabled: { icon: AlertCircle, label: "Alarme désactivée", color: "text-destructive", badgeVariant: "destructive" },
-  alarm_enabled: { icon: AlertCircle, label: "Alarme activée", color: "text-success", badgeVariant: "outline" },
+};
+
+const actionConfig: Record<string, ActionConfig> = {
+  CONNEXION: { icon: LogIn, label: "Connexion", color: "text-success", badgeVariant: "outline" },
+  DECONNEXION: { icon: LogOut, label: "Déconnexion", color: "text-muted-foreground", badgeVariant: "outline" },
+  ACQ: { icon: Bell, label: "Acquittement alarme", color: "text-warning", badgeVariant: "secondary" },
+  DES: { icon: AlertCircle, label: "Surveillance désactivée", color: "text-destructive", badgeVariant: "destructive" },
+  ACT: { icon: AlertCircle, label: "Surveillance activée", color: "text-success", badgeVariant: "outline" },
+  AS: { icon: AlertCircle, label: "Arrêt surveillance", color: "text-destructive", badgeVariant: "destructive" },
+  DS: { icon: AlertCircle, label: "Démarrage surveillance", color: "text-success", badgeVariant: "outline" },
+  CC: { icon: FileText, label: "Modification", color: "text-muted-foreground", badgeVariant: "outline" },
+  CF: { icon: Settings, label: "Changement fréquence", color: "text-primary", badgeVariant: "secondary" },
+  CR: { icon: Settings, label: "Changement retard alarme", color: "text-primary", badgeVariant: "secondary" },
+  CS: { icon: Settings, label: "Changement sonde", color: "text-primary", badgeVariant: "secondary" },
+  AJE: { icon: Activity, label: "Événement manuel", color: "text-primary", badgeVariant: "secondary" },
+  CA: { icon: Wrench, label: "Calibrage", color: "text-primary", badgeVariant: "secondary" },
+  ET: { icon: Wrench, label: "Étalonnage", color: "text-primary", badgeVariant: "secondary" },
+  TC: { icon: Plug, label: "Test connexion sonde", color: "text-primary", badgeVariant: "secondary" },
+  MDP: { icon: UserCog, label: "Mot de passe", color: "text-warning", badgeVariant: "outline" },
+  ARC: { icon: Archive, label: "Archivage / export", color: "text-muted-foreground", badgeVariant: "outline" },
+  ALARM_RESOLVED: { icon: Bell, label: "Alarme terminée", color: "text-muted-foreground", badgeVariant: "outline" },
   settings_changed: { icon: Settings, label: "Paramètres modifiés", color: "text-primary", badgeVariant: "secondary" },
   user_created: { icon: UserCog, label: "Utilisateur créé", color: "text-primary", badgeVariant: "default" },
   user_updated: { icon: UserCog, label: "Utilisateur modifié", color: "text-primary", badgeVariant: "secondary" },
-  password_changed: { icon: UserCog, label: "Mot de passe changé", color: "text-warning", badgeVariant: "outline" },
 };
 
+type ParsedDetails = {
+  title: string;
+  subtitle?: string;
+  raw?: string;
+};
+
+function formatDateSafe(value: string): string | null {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return format(date, "dd/MM/yyyy HH:mm:ss", { locale: fr });
+}
+
+function parseAuditDetails(details: string | null): ParsedDetails {
+  if (!details) {
+    return { title: "-" };
+  }
+
+  const normalizedDetails = details.replace(/::ffff:/g, "");
+  const parts = normalizedDetails.split("|").map((part) => part.trim()).filter(Boolean);
+  const resource = parts[0] || "";
+  const idPart = parts.find((part) => part.startsWith("#")) || "";
+  const ipPart = parts.find((part) => part.toLowerCase().startsWith("ip:"));
+  let ip = ipPart ? ipPart.replace(/^IP:\s*/i, "").trim() : "";
+  if (ip.startsWith("::ffff:")) {
+    ip = ip.replace("::ffff:", "");
+  }
+
+  let changes: Record<string, any> | null = null;
+  const jsonPart = parts.find((part) => part.startsWith("{") && part.endsWith("}"));
+  if (jsonPart) {
+    try {
+      changes = JSON.parse(jsonPart);
+    } catch {
+      changes = null;
+    }
+  }
+
+  const rawTitle = [resource, idPart].filter(Boolean).join(" ").trim();
+  let title = rawTitle || normalizedDetails;
+  const subtitleParts: string[] = [];
+
+  if (changes) {
+    if (changes.machineName || changes.address) {
+      const machine = changes.machineName ? `Machine: ${changes.machineName}` : "";
+      const address = changes.address ? `Adresse: ${changes.address}` : "";
+      subtitleParts.push([machine, address].filter(Boolean).join(" • "));
+    }
+    if (changes.connectedAt) {
+      const connectedAt = formatDateSafe(changes.connectedAt);
+      if (connectedAt) {
+        subtitleParts.push(`Connexion: ${connectedAt}`);
+      }
+    }
+    if (changes.from !== undefined || changes.to !== undefined) {
+      const from = changes.from !== undefined ? `De: ${changes.from}` : "";
+      const to = changes.to !== undefined ? `Vers: ${changes.to}` : "";
+      subtitleParts.push([from, to].filter(Boolean).join(" → "));
+    }
+    if (changes.action && subtitleParts.length === 0) {
+      subtitleParts.push(`Action: ${changes.action}`);
+    }
+  }
+
+  if (ip && !subtitleParts.some((part) => part.startsWith("IP:")) && !title.startsWith("IP:")) {
+    subtitleParts.push(`IP: ${ip}`);
+  }
+
+  if (subtitleParts.length === 0 && normalizedDetails !== title) {
+    if (!(normalizedDetails.startsWith("IP:") && (ip || title.startsWith("IP:")))) {
+      subtitleParts.push(normalizedDetails);
+    }
+  }
+
+  return {
+    title,
+    subtitle: subtitleParts.join(" • "),
+    raw: normalizedDetails,
+  };
+}
+
 export function AuditLogTable({ logs, isLoading }: AuditLogTableProps) {
-  // Colonnes TanStack
   const columns: ColumnDef<AuditLogRow>[] = [
     {
       accessorKey: "timestamp",
@@ -68,8 +167,8 @@ export function AuditLogTable({ logs, isLoading }: AuditLogTableProps) {
       accessorKey: "action",
       header: "Action",
       cell: ({ row }) => {
-        const action = row.getValue("action") as string;
-        const config = actionConfig[action] || {
+        const action = (row.getValue("action") as string) || "unknown";
+        const config = actionConfig[action] || actionConfig[action.toUpperCase()] || {
           icon: FileText,
           label: action,
           color: "text-muted-foreground",
@@ -98,10 +197,20 @@ export function AuditLogTable({ logs, isLoading }: AuditLogTableProps) {
       header: "Détails",
       cell: ({ row }) => {
         const details = row.getValue("details") as string | null;
+        const parsed = parseAuditDetails(details);
         return (
-          <p className="truncate text-sm text-muted-foreground max-w-[300px]" title={details || undefined}>
-            {details || "-"}
-          </p>
+          <div className="flex flex-col gap-1 max-w-[360px]">
+            <p className="text-sm font-medium truncate" title={parsed.raw}>
+              {parsed.title}
+            </p>
+            {parsed.subtitle ? (
+              <p className="text-xs text-muted-foreground truncate" title={parsed.subtitle}>
+                {parsed.subtitle}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">-</p>
+            )}
+          </div>
         );
       },
     },
@@ -138,7 +247,7 @@ export function AuditLogTable({ logs, isLoading }: AuditLogTableProps) {
     <TanStackTable<AuditLogRow>
       columns={columns}
       data={tableData}
-      searchPlaceholder="Rechercher dans les logs d'audit..."
+      searchPlaceholder="Rechercher dans le journal d'audit..."
       pageSize={20}
       isLoading={isLoading}
       emptyMessage="Aucun log d'audit trouvé"

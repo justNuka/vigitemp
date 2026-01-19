@@ -31,7 +31,7 @@ export type StatusTheme = {
 export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusTheme {
   if (!isActive) {
     return {
-      label: "DÃ©sactivÃ©e",
+      label: "Désactivée",
       Icon: Power,
       textClassName: "text-gray-600 dark:text-gray-300",
       softBgClassName: "bg-gray-100 dark:bg-gray-900",
@@ -67,7 +67,7 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
       }
     case "warning":
       return {
-        label: "PrÃ©-alarme",
+        label: "Pré-alarme",
         Icon: Zap,
         textClassName: "text-amber-800 dark:text-amber-300",
         softBgClassName: "bg-amber-50 dark:bg-amber-950",
@@ -78,7 +78,7 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
       }
     case "ended":
       return {
-        label: "Alarme terminÃ©e",
+        label: "Alarme terminée",
         Icon: Zap,
         textClassName: "text-violet-700 dark:text-violet-300",
         softBgClassName: "bg-violet-50 dark:bg-violet-950",

@@ -129,15 +129,16 @@ export const log = {
     userProfile?: string;
     lieuId?: number;
   }) => {
+    const normalizedIp = details.ip?.replace(/^::ffff:/, "");
     const message = `${action} - ${details.success !== false ? "SUCCESS" : "FAILED"}`;
-    logger.log("audit", message, { label: "AUDIT", ...details });
+    logger.log("audit", message, { label: "AUDIT", ...details, ip: normalizedIp });
     
     // Écrire aussi dans la base de données mesure (ts_journal)
     const commentaire = [
       details.resource,
       details.resourceId ? `#${details.resourceId}` : null,
       details.changes ? JSON.stringify(details.changes) : null,
-      details.ip ? `IP: ${details.ip}` : null,
+      normalizedIp ? `IP: ${normalizedIp}` : null,
     ].filter(Boolean).join(" | ");
 
     writeAuditToDatabase({

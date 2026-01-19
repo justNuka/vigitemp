@@ -30,7 +30,6 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
           where: { Est_Sonde_Reformee: false },
           select: {
             Id_Sonde: true,
-            Surveillance_Etat: true,
           },
         },
       },
@@ -39,16 +38,19 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
 
     const formatted = locations.map((loc: any) => {
       const sensors = Array.isArray(loc.t_sonde) ? loc.t_sonde : []
+      const isCritical = loc.Est_Lieu_En_Alarme === 1
+      const isWarning = !isCritical && loc.Est_Lieu_En_Pre_Alarme === 1
+      const status = isCritical ? "A" : isWarning ? "P" : "O"
 
       return {
         id: loc.Id_Lieu,
         name: loc.Nom_Lieu,
         site: loc.Id_Site || null,
-        status: loc.Lieu_Etat,
+        status,
         sensorCount: sensors.length,
-        okSensors: sensors.filter((s: any) => s.Surveillance_Etat === "O").length,
-        warningSensors: sensors.filter((s: any) => s.Surveillance_Etat === "P").length,
-        criticalSensors: sensors.filter((s: any) => s.Surveillance_Etat === "A").length,
+        okSensors: status === "O" ? sensors.length : 0,
+        warningSensors: status === "P" ? sensors.length : 0,
+        criticalSensors: status === "A" ? sensors.length : 0,
       }
     })
 
@@ -71,7 +73,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: any) => {
         Nom_Lieu: data.name,
         Id_Site: data.site ? parseInt(data.site) : null,
         Est_Archive: false,
-        Lieu_Etat: "O",
+        Lieu_Etat: "S",
       },
     })
 
@@ -85,7 +87,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: any) => {
         id: location.Id_Lieu,
         name: location.Nom_Lieu,
         site: location.Id_Site,
-        status: location.Lieu_Etat,
+        status: "O",
       },
       { status: 201 },
     )

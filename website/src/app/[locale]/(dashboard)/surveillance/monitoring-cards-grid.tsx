@@ -113,8 +113,8 @@ export function MonitoringCardsGrid({
     return <SurveillanceEmptyState title={t("grid.empty_title")} />
   }
 
-  const disabledSensors = sensors.filter((sensor) => sensor.location.alarmDisabled)
-  const activeSensors = sensors.filter((sensor) => !sensor.location.alarmDisabled)
+  const disabledSensors = sensors.filter((sensor) => sensor.location.surveillanceDisabled)
+  const activeSensors = sensors.filter((sensor) => !sensor.location.surveillanceDisabled)
 
   const groupedActive = groupSensorsBySiteAndGroup(activeSensors)
   const groupedDisabled = groupSensorsBySiteAndGroup(disabledSensors)
@@ -165,7 +165,7 @@ export function MonitoringCardsGrid({
                   const groupDisabled =
                     groupId !== null &&
                     groupSensors.length > 0 &&
-                    groupSensors.every((sensor) => sensor.location.alarmDisabled)
+                    groupSensors.every((sensor) => sensor.location.surveillanceDisabled)
                   const groupDisabledUntil = groupDisabled
                     ? groupSensors
                         .map((sensor) => sensor.location.alarmDisabledUntil)
@@ -240,13 +240,15 @@ export function MonitoringCardsGrid({
                               key={sensor.id}
                               idLieu={Number(sensor.id)}
                               nomLieu={sensor.name}
-                              lieuType={sensor.lieuType || null}
+                              lieuType={sensor.lieuType ?? undefined}
                               siteName={siteName}
                               groupName={groupName}
                               status={sensor.status}
                               alarmDisabled={sensor.location.alarmDisabled}
                               alarmDisabledUntil={sensor.location.alarmDisabledUntil}
                               alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
+                              lieuEtat={sensor.location.lieuEtat ?? undefined}
+                              surveillanceDisabled={sensor.location.surveillanceDisabled}
                               onSurveillanceToggle={onSurveillanceToggle}
                             />
                           ))}
@@ -301,20 +303,22 @@ export function MonitoringCardsGrid({
                       </div>
                       <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))] animate-fade-in">
                         {sortSensorsByStatus(groupSensors).map((sensor) => (
-                          <MonitoringCard
-                            key={sensor.id}
-                            idLieu={Number(sensor.id)}
-                            nomLieu={sensor.name}
-                            lieuType={sensor.lieuType || null}
-                            siteName={siteName}
-                            groupName={groupName}
-                            status={sensor.status}
-                            alarmDisabled={sensor.location.alarmDisabled}
-                            alarmDisabledUntil={sensor.location.alarmDisabledUntil}
-                            alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
-                            onSurveillanceToggle={onSurveillanceToggle}
-                          />
-                        ))}
+                        <MonitoringCard
+                          key={sensor.id}
+                          idLieu={Number(sensor.id)}
+                          nomLieu={sensor.name}
+                          lieuType={sensor.lieuType ?? undefined}
+                          siteName={siteName}
+                          groupName={groupName}
+                          status={sensor.status}
+                          alarmDisabled={sensor.location.alarmDisabled}
+                          alarmDisabledUntil={sensor.location.alarmDisabledUntil}
+                          alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
+                          lieuEtat={sensor.location.lieuEtat ?? undefined}
+                          surveillanceDisabled={sensor.location.surveillanceDisabled}
+                          onSurveillanceToggle={onSurveillanceToggle}
+                        />
+                      ))}
                       </div>
                     </div>
                   ))}

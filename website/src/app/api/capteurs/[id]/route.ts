@@ -37,17 +37,34 @@ export const GET = withAuthLogging(
         return apiError(404, "not_found", "Sensor not found")
       }
 
+      const isCritical = lieu.Est_Lieu_En_Alarme === 1
+      const isWarning = !isCritical && lieu.Est_Lieu_En_Pre_Alarme === 1
+      const isEnded =
+        !isCritical &&
+        (lieu.Est_Lieu_Alarme_Termee_Non_Acquittee === 1 ||
+          lieu.Est_Lieu_Alarme_Termee_Non_Acquittee_T1 === 1)
+      const isTechnical = (() => {
+        if (!lieu.Retard_Non_Reponse || !lieu.Date_Heure_Derniere_Reponse) return false
+        const lastResponse = new Date(lieu.Date_Heure_Derniere_Reponse)
+        if (Number.isNaN(lastResponse.getTime())) return false
+        const diffMinutes = (Date.now() - lastResponse.getTime()) / 60000
+        return diffMinutes >= lieu.Retard_Non_Reponse
+      })()
+
+      const status = isCritical
+        ? "critical"
+        : isTechnical
+          ? "technical"
+          : isWarning
+            ? "warning"
+            : isEnded
+              ? "ended"
+              : "ok"
+
       return apiOk({
         id: lieu.Id_Lieu.toString(),
         name: lieu.Nom_Lieu,
-        status:
-          lieu.Lieu_Etat === "O"
-            ? "ok"
-            : lieu.Lieu_Etat === "P"
-              ? "warning"
-              : lieu.Lieu_Etat === "A"
-                ? "critical"
-                : "offline",
+        status,
         value: lieu.Derniere_Valeur !== null ? parseFloat(lieu.Derniere_Valeur.toString()) : null,
         unit: lieu.Derniere_Unite || "°C",
         lastUpdate: lieu.Derniere_Date_Heure?.toISOString() || new Date().toISOString(),
@@ -106,11 +123,34 @@ export const PATCH = withAuthLogging(
 
       log.data.update("Capteur", sensorId, ctx.user.username, ctx.user.userId, ip, changes)
 
+      const isCritical = lieu.Est_Lieu_En_Alarme === 1
+      const isWarning = !isCritical && lieu.Est_Lieu_En_Pre_Alarme === 1
+      const isEnded =
+        !isCritical &&
+        (lieu.Est_Lieu_Alarme_Termee_Non_Acquittee === 1 ||
+          lieu.Est_Lieu_Alarme_Termee_Non_Acquittee_T1 === 1)
+      const isTechnical = (() => {
+        if (!lieu.Retard_Non_Reponse || !lieu.Date_Heure_Derniere_Reponse) return false
+        const lastResponse = new Date(lieu.Date_Heure_Derniere_Reponse)
+        if (Number.isNaN(lastResponse.getTime())) return false
+        const diffMinutes = (Date.now() - lastResponse.getTime()) / 60000
+        return diffMinutes >= lieu.Retard_Non_Reponse
+      })()
+
+      const status = isCritical
+        ? "critical"
+        : isTechnical
+          ? "technical"
+          : isWarning
+            ? "warning"
+            : isEnded
+              ? "ended"
+              : "ok"
+
       return apiOk({
         id: lieu.Id_Lieu.toString(),
         name: lieu.Nom_Lieu,
-        status:
-          lieu.Lieu_Etat === "O" ? "ok" : lieu.Lieu_Etat === "P" ? "warning" : "critical",
+        status,
         location: {
           id: lieu.Id_Site || 0,
           name:
@@ -164,4 +204,3 @@ export const DELETE = withAuthLogging(
     }
   },
 )
-

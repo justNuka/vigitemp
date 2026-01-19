@@ -11,7 +11,7 @@ interface StatCardProps {
     value: number;
     isPositive: boolean;
   };
-  variant?: "default" | "success" | "warning" | "danger";
+  variant?: "default" | "success" | "warning" | "danger" | "info" | "muted";
   className?: string;
 }
 
@@ -19,6 +19,10 @@ const variantStyles = {
   default: {
     icon: "bg-primary/10 text-primary",
     card: "",
+  },
+  info: {
+    icon: "bg-primary/10 text-primary",
+    card: "border-l-4 border-l-primary",
   },
   success: {
     icon: "bg-success/10 text-success",
@@ -31,6 +35,10 @@ const variantStyles = {
   danger: {
     icon: "bg-destructive/10 text-destructive",
     card: "border-l-4 border-l-destructive",
+  },
+  muted: {
+    icon: "bg-muted text-muted-foreground",
+    card: "border-l-4 border-l-muted-foreground/40",
   },
 };
 

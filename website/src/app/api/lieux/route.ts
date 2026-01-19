@@ -7,7 +7,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 
 const createLieuSchema = z.object({
   Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(20),
-  Lieu_Etat: z.string().max(100).nullable().optional(),
+  Lieu_Etat: z.string().max(1).nullable().optional(),
   Id_Site: z.number().nullable().optional(),
   GroupIds: z.array(z.number()).optional(),
   Id_Groupe1: z.number().nullable().optional(),
@@ -80,7 +80,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     const lieu = await prisma.t_lieu.create({
       data: {
         Nom_Lieu: validated.Nom_Lieu,
-        Lieu_Etat: validated.Lieu_Etat,
+        Lieu_Etat: validated.Lieu_Etat ?? "S",
         Id_Site: validated.Id_Site,
         Id_Groupe1: groupIds[0] ?? validated.Id_Groupe1 ?? null,
         Id_Groupe2: groupIds[1] ?? validated.Id_Groupe2 ?? null,

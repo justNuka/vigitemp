@@ -19,33 +19,34 @@ export async function ServerDashboardStats() {
 
   if (shouldSkipDbOnBuild) {
     return {
-      totalLocations: 0,
+      activeLocations: 0,
+      disabledLocations: 0,
       activeAlarms: 0,
-      okSensors: 0,
-      warningSensors: 0,
-      criticalSensors: 0,
+      alertSensors: 0,
     };
   }
 
-  const [totalLocations, activeAlarms, okSensors, warningSensors, criticalSensors] =
-    await Promise.all([
-      prisma.t_lieu.count({ where: { Est_Archive: false } }),
-      prisma.t_alarme.count({
-        where: {
-          Est_Acquittee: false,
-        },
-      }),
-      prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "O" } }),
-      prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "P" } }),
-      prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "A" } }),
-    ]);
+  const [activeLocations, disabledLocations, activeAlarms, alertSensors] = await Promise.all([
+    prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "S" } }),
+    prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "D" } }),
+    prisma.t_alarme.count({
+      where: {
+        Est_Acquittee: false,
+      },
+    }),
+    prisma.t_lieu.count({
+      where: {
+        Est_Archive: false,
+        OR: [{ Est_Lieu_En_Alarme: 1 }, { Est_Lieu_En_Pre_Alarme: 1 }],
+      },
+    }),
+  ]);
 
   return {
-    totalLocations,
+    activeLocations,
+    disabledLocations,
     activeAlarms,
-    okSensors,
-    warningSensors,
-    criticalSensors,
+    alertSensors,
   };
 }
 
@@ -63,7 +64,7 @@ export async function ServerCriticalSensors() {
   const criticalLocations = await prisma.t_lieu.findMany({
     where: {
       Est_Archive: false,
-      Lieu_Etat: "A", // État critique
+      Est_Lieu_En_Alarme: 1,
     },
     include: {
       t_site: {
@@ -212,7 +213,21 @@ export async function ServerSensorOverview() {
   });
 
   return locations.map((lieu) => {
-    const status = mapSensorStatus(lieu.Lieu_Etat);
+    const status = mapSensorStatus({
+      isCritical: lieu.Est_Lieu_En_Alarme === 1,
+      isWarning: lieu.Est_Lieu_En_Alarme !== 1 && lieu.Est_Lieu_En_Pre_Alarme === 1,
+      isEnded:
+        lieu.Est_Lieu_En_Alarme !== 1 &&
+        (lieu.Est_Lieu_Alarme_Termee_Non_Acquittee === 1 ||
+          lieu.Est_Lieu_Alarme_Termee_Non_Acquittee_T1 === 1),
+      isTechnical: (() => {
+        if (!lieu.Retard_Non_Reponse || !lieu.Date_Heure_Derniere_Reponse) return false
+        const lastResponse = new Date(lieu.Date_Heure_Derniere_Reponse)
+        if (Number.isNaN(lastResponse.getTime())) return false
+        const diffMinutes = (Date.now() - lastResponse.getTime()) / 60000
+        return diffMinutes >= lieu.Retard_Non_Reponse
+      })(),
+    });
     return {
       id: lieu.Id_Lieu.toString(),
       name: lieu.Nom_Lieu || "Capteur sans nom",
@@ -239,15 +254,20 @@ export async function ServerSensorOverview() {
   });
 }
 
-function mapSensorStatus(etat: string | null): "ok" | "warning" | "critical" | "offline" {
-  switch (etat) {
-    case "O":
-      return "ok";
-    case "P":
-      return "warning";
-    case "A":
-      return "critical";
-    default:
-      return "offline";
-  }
+function mapSensorStatus({
+  isCritical,
+  isWarning,
+  isEnded,
+  isTechnical,
+}: {
+  isCritical: boolean
+  isWarning: boolean
+  isEnded: boolean
+  isTechnical: boolean
+}): "ok" | "warning" | "critical" | "offline" {
+  if (isCritical) return "critical";
+  if (isTechnical) return "critical";
+  if (isWarning) return "warning";
+  if (isEnded) return "warning";
+  return "ok";
 }

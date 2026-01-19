@@ -19,7 +19,10 @@
     "previous": "Précédent",
     "user": "Utilisateur",
     "logout": "Se déconnecter",
-    "license_light": "Licence Light"
+    "license_light": "Licence Light",
+    "license_prefix": "Licence",
+    "license_unknown": "Licence inconnue",
+    "license_invalid": "Licence invalide"
   },
   "pageHeader": {
     "title": "Vigitemp - Surveillance de Température"
@@ -88,9 +91,9 @@
     "title": "Tableau de bord",
     "description": "Vue d'ensemble de la surveillance",
     "stats": {
-      "locations_monitored": "Lieux surveillés",
+      "locations_monitored": "Lieux en surveillance",
       "active_alarms": "Alarmes actives",
-      "sensors_ok": "Sondes OK",
+      "sensors_ok": "Surveillance desactivee",
       "sensors_alert": "Sondes en alerte"
     }
   },

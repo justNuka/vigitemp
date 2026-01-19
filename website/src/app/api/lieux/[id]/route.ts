@@ -8,7 +8,7 @@ import { clearLocationCache } from "@/lib/measurement-cache"
 
 const updateLieuSchema = z.object({
   Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(20).optional(),
-  Lieu_Etat: z.string().max(100).nullable().optional(),
+  Lieu_Etat: z.string().max(1).nullable().optional(),
   Id_Site: z.number().nullable().optional(),
   GroupIds: z.array(z.number()).optional(),
   Id_Groupe1: z.number().nullable().optional(),
