@@ -93,7 +93,7 @@ function DockItem({
           onClick();
         }
       }}
-      className={`relative inline-flex items-center justify-center rounded-full transition-colors ${
+      className={`relative inline-flex items-center justify-center rounded-full transition-colors cursor-pointer ${
         isActive 
           ? 'bg-black text-white border-white shadow-lg shadow-black/20 dark:bg-white dark:text-black dark:border-black dark:shadow-white/20'
           : 'bg-white dark:bg-[#060010] border-neutral-300 dark:border-neutral-700 text-black dark:text-white'

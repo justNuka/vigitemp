@@ -543,6 +543,7 @@ model t_sonde {
   Frequence_Mesure   Int?
   Frequence_Recup    Int?
   Est_Sonde_Reformee Boolean?
+  Est_Sonde_GSO      Boolean? @db.TinyInt
   Etat_Sonde_N1      String?  @db.VarChar(1)
   Id_Serveur         Int?
   Surveillance_Etat  String?  @map("Etat_Sonde") @db.VarChar(1)

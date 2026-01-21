@@ -45,10 +45,25 @@ export function withLogging(
       req.headers.get("x-real-ip") ||
       "unknown";
 
+    const readErrorBody = async (response: NextResponse) => {
+      try {
+        const clone = response.clone();
+        const bodyText = await clone.text();
+        const trimmed = bodyText.trim();
+        if (!trimmed) {
+          return undefined;
+        }
+        return trimmed.length > 2000 ? `${trimmed.slice(0, 2000)}…` : trimmed;
+      } catch {
+        return undefined;
+      }
+    };
+
     try {
       // Exécuter le handler
       const response = await handler(req, ...args);
       const duration = Date.now() - startTime;
+      const errorBody = response.status >= 400 ? await readErrorBody(response) : undefined;
 
       // Logger la requête réussie
       if (!options?.skipLogging) {
@@ -58,6 +73,7 @@ export function withLogging(
           ip,
           duration,
           statusCode: response.status,
+          errorBody,
           clientTrace,
           queryClientId,
           bootId,

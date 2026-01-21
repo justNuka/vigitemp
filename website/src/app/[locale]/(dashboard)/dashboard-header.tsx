@@ -34,6 +34,28 @@ function StatCardSkeleton() {
 export function DashboardHeader({ stats }: { stats: Stats }) {
   const t = useTranslations("dashboard");
   const [activeAlarms, setActiveAlarms] = useState(stats.activeAlarms);
+  const cardBaseClass =
+    "relative overflow-hidden bg-slate-800 text-white border border-white/10 shadow-[0_12px_24px_-16px_rgba(15,23,42,0.7)] dark:bg-card dark:text-card-foreground dark:border-border";
+  const cardTitleClass = "text-white/70 dark:text-muted-foreground";
+  const cardValueClass = "text-white dark:text-foreground";
+  const cardVariants = {
+    info: {
+      border: "border-l-4 border-l-sky-400",
+      icon: "bg-sky-500/20 text-sky-200 ring-1 ring-sky-300/40 dark:bg-primary/10 dark:text-primary",
+    },
+    danger: {
+      border: "border-l-4 border-l-rose-400",
+      icon: "bg-rose-500/20 text-rose-200 ring-1 ring-rose-300/40 dark:bg-destructive/10 dark:text-destructive",
+    },
+    muted: {
+      border: "border-l-4 border-l-slate-400",
+      icon: "bg-slate-500/20 text-slate-200 ring-1 ring-slate-300/40 dark:bg-muted dark:text-muted-foreground",
+    },
+    warning: {
+      border: "border-l-4 border-l-amber-400",
+      icon: "bg-amber-500/20 text-amber-200 ring-1 ring-amber-300/40 dark:bg-warning/10 dark:text-warning",
+    },
+  };
 
   useEffect(() => {
     setActiveAlarms(stats.activeAlarms);
@@ -57,6 +79,7 @@ export function DashboardHeader({ stats }: { stats: Stats }) {
         title={t("title")}
         description={t("description")}
         activeAlarms={activeAlarms}
+        className="bg-white/80 border-slate-200 dark:bg-background/95 dark:border-border"
       />
 
       <section aria-label="Statistiques" className="p-4 md:p-6 pb-0">
@@ -67,6 +90,10 @@ export function DashboardHeader({ stats }: { stats: Stats }) {
               value={stats.activeLocations}
               icon={MapPin}
               variant="info"
+              className={`${cardBaseClass} ${cardVariants.info.border}`}
+              titleClassName={cardTitleClass}
+              valueClassName={cardValueClass}
+              iconClassName={cardVariants.info.icon}
             />
           </Suspense>
           <Suspense fallback={<StatCardSkeleton />}>
@@ -75,14 +102,22 @@ export function DashboardHeader({ stats }: { stats: Stats }) {
               value={activeAlarms}
               icon={AlertTriangle}
               variant={activeAlarms > 0 ? "danger" : "success"}
+              className={`${cardBaseClass} ${cardVariants.danger.border}`}
+              titleClassName={cardTitleClass}
+              valueClassName={cardValueClass}
+              iconClassName={cardVariants.danger.icon}
             />
           </Suspense>
           <Suspense fallback={<StatCardSkeleton />}>
             <StatCard
-              title={t("stats.sensors_ok")}
+              title={t("stats.locations_disabled")}
               value={stats.disabledLocations}
               icon={PowerOff}
               variant="muted"
+              className={`${cardBaseClass} ${cardVariants.muted.border}`}
+              titleClassName={cardTitleClass}
+              valueClassName={cardValueClass}
+              iconClassName={cardVariants.muted.icon}
             />
           </Suspense>
           <Suspense fallback={<StatCardSkeleton />}>
@@ -95,6 +130,10 @@ export function DashboardHeader({ stats }: { stats: Stats }) {
                   ? "warning"
                   : "default"
               }
+              className={`${cardBaseClass} ${cardVariants.warning.border}`}
+              titleClassName={cardTitleClass}
+              valueClassName={cardValueClass}
+              iconClassName={cardVariants.warning.icon}
             />
           </Suspense>
         </div>

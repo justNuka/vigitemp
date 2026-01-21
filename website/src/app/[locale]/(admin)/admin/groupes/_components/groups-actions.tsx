@@ -1,7 +1,5 @@
 "use client"
 
-import { Printer } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -12,7 +10,6 @@ interface Props {
   onNew: () => void
   onEdit: () => void
   onArchive: () => void
-  onPrint: () => void
 }
 
 export function GroupsActions({
@@ -22,7 +19,6 @@ export function GroupsActions({
   onNew,
   onEdit,
   onArchive,
-  onPrint,
 }: Props) {
   return (
     <div className="flex gap-2">
@@ -44,10 +40,6 @@ export function GroupsActions({
       <Button onClick={onArchive} disabled={!canEdit} variant="outline">
         Archiver
       </Button>
-      <Button onClick={onPrint} variant="outline" size="icon" aria-label="Imprimer">
-        <Printer className="h-4 w-4" />
-      </Button>
     </div>
   )
 }
-

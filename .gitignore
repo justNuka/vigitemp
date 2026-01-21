@@ -783,7 +783,4 @@ sketch
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
 
-#replit-import ignore folder
-.replit-import/
-
 # End of https://www.toptal.com/developers/gitignore/api/csharp,nextjs,visualstudiocode,visualstudio,node,react

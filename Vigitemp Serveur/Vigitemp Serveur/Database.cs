@@ -83,12 +83,12 @@ namespace Vigitemp_Serveur
 
                 connection_vigitemp_mesure = CreateConnection(mesureDb);
                 connection_vigitemp_mesure.Open();
-                VigitempServeur.Log("Tentative Réussi!");
+                VigitempServeur.Log("Tentative réussie!");
                 return true;
             }
             catch (Exception ex)
             {
-                VigitempServeur.Log("Tentative echoué! " + ex.Message);
+                VigitempServeur.Log("Tentative échouée! " + ex.Message);
                 CloseConnexion();
                 return false;
             }
@@ -520,7 +520,9 @@ namespace Vigitemp_Serveur
                         cmd_vigitemp.CommandText = "SELECT Frequence, Consigne, Consigne_Sup, Consigne_Inf, t_module.Id_Serveur, Nom_Lieu, IdLieu, t_lieu.SondeNumeroSerie, t_sonde.IdSonde FROM t_lieu " +
                                                     "INNER JOIN t_sonde ON t_lieu.SondeNumeroSerie = t_sonde.SondeNumeroSerie " +
                                                     "INNER JOIN t_module ON t_sonde.idModule = t_module.idModule " +
-                                                    "WHERE t_lieu.SondeNumeroSerie = @serial;";
+                                                    "WHERE t_lieu.SondeNumeroSerie = @serial " +
+                                                    "AND t_sonde.Etat_Sonde = 'S' " +
+                                                    "AND IFNULL(t_sonde.Est_Sonde_GSO, 0) = 0;";
                         cmd_vigitemp.Parameters.AddWithValue("@serial", p_numeroSerie);
 
                         // Exécution de la commande SQL
@@ -636,7 +638,9 @@ namespace Vigitemp_Serveur
                                                     "INNER JOIN t_module ON t_sonde.idModule = t_module.idModule " +
                                                     "WHERE t_lieu.Frequence = @frequence " +
                                                     "AND t_module.Id_Serveur = @idServeur " +
-                                                    "AND t_lieu.Lieu_Etat = 'S';";
+                                                    "AND t_lieu.Lieu_Etat = 'S' " +
+                                                    "AND t_sonde.Etat_Sonde = 'S' " +
+                                                    "AND IFNULL(t_sonde.Est_Sonde_GSO, 0) = 0;";
                         cmd_vigitemp.Parameters.AddWithValue("@frequence", p_frequence);
                         cmd_vigitemp.Parameters.AddWithValue("@idServeur", p_idServer);
 
@@ -735,7 +739,8 @@ namespace Vigitemp_Serveur
                 MySqlCommand cmd_vigitemp = connection_vigitemp.CreateCommand();
 
                 cmd_vigitemp.CommandText = "SELECT distinct Id_Serveur FROM t_sonde " +
-                                            "where Etat_Sonde = 'S';";
+                                            "where Etat_Sonde = 'S' " +
+                                            "AND IFNULL(Est_Sonde_GSO, 0) = 0;";
 
 
                 // Exécution de la commande SQL 
@@ -769,7 +774,9 @@ namespace Vigitemp_Serveur
                                             "INNER JOIN t_sonde ON t_lieu.SondeNumeroSerie = t_sonde.SondeNumeroSerie " +
                                             "INNER JOIN t_module ON t_sonde.idModule = t_module.idModule " +
                                             "where t_module.Id_Serveur = @idServeur " +
-                                            "AND t_lieu.Lieu_Etat = 'S';";
+                                            "AND t_lieu.Lieu_Etat = 'S' " +
+                                            "AND t_sonde.Etat_Sonde = 'S' " +
+                                            "AND IFNULL(t_sonde.Est_Sonde_GSO, 0) = 0;";
                 cmd_vigitemp.Parameters.AddWithValue("@idServeur", p_idServeur);
 
 

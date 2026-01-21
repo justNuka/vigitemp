@@ -68,17 +68,24 @@ namespace Vigitemp_License_Generator
                 ShowAlways = true
             };
 
-            var root = new TableLayoutPanel
+            var scrollPanel = new Panel
             {
                 Dock = DockStyle.Fill,
                 AutoScroll = true,
-                ColumnCount = 1,
-                RowCount = 0,
                 Padding = new Padding(12),
             };
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
 
-            Controls.Add(root);
+            var root = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+            };
+
+            scrollPanel.Controls.Add(root);
+            Controls.Add(scrollPanel);
 
             var inputGroup = CreateGroup("Inputs");
             AddGroup(root, inputGroup);
@@ -276,15 +283,14 @@ namespace Vigitemp_License_Generator
             TryLoadDefaultKey();
         }
 
-                private static void AddGroup(TableLayoutPanel root, Control group)
+        private static void AddGroup(FlowLayoutPanel root, Control group)
         {
-            var rowIndex = root.RowCount++;
-            root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             group.Margin = new Padding(0, 0, 0, 12);
-            root.Controls.Add(group, 0, rowIndex);
+            group.Width = Math.Max(0, root.ClientSize.Width - root.Padding.Horizontal);
+            root.Controls.Add(group);
         }
 
-private static GroupBox CreateGroup(string title)
+        private static GroupBox CreateGroup(string title)
         {
             return new GroupBox
             {
@@ -334,7 +340,7 @@ private static GroupBox CreateGroup(string title)
                 table.Controls.Add(new Label { AutoSize = true }, 0, rowIndex);
             }
 
-            if (control is TextBox || control is ComboBox || control is CheckedListBox || control is DateTimePicker)
+            if (control is TextBox || control is ComboBox || control is CheckedListBox || control is DateTimePicker || control is FlowLayoutPanel)
             {
                 control.Dock = DockStyle.Fill;
                 control.Anchor = AnchorStyles.Left | AnchorStyles.Right;

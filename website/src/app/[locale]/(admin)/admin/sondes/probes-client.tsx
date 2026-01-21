@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Printer } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 
 import { useProbes } from "@/hooks/useProbes";
 import { useAdjustments } from "@/hooks/useAdjustments";
@@ -96,10 +96,6 @@ export function ProbesClient() {
                 <Pencil className="w-4 h-4" />
                 Modifier
               </Button>
-              <Button size="sm" variant="outline" onClick={() => window.print()} className="gap-2">
-                <Printer className="w-4 h-4" />
-                Imprimer
-              </Button>
             </div>
           </div>
         </CardHeader>
@@ -136,4 +132,3 @@ export function ProbesClient() {
     </div>
   );
 }
-

@@ -57,6 +57,12 @@ export interface TanStackTableProps<TData> {
   showSearch?: boolean;
   showPagination?: boolean;
   toolbarRight?: ReactNode;
+  tableClassName?: string;
+  headerClassName?: string;
+  bodyClassName?: string;
+  containerClassName?: string;
+  toolbarClassName?: string;
+  headerCellClassName?: string;
   exportFileName?: string;
   exportExcludeColumnIds?: string[];
   enableExport?: boolean;
@@ -94,6 +100,12 @@ export function TanStackTable<TData extends Record<string, any>>({
   showSearch = true,
   showPagination = true,
   toolbarRight,
+  tableClassName,
+  headerClassName,
+  bodyClassName,
+  containerClassName,
+  toolbarClassName,
+  headerCellClassName,
   exportFileName = "export",
   exportExcludeColumnIds = ["actions", "action", "select"],
   enableExport = true,
@@ -323,7 +335,7 @@ export function TanStackTable<TData extends Record<string, any>>({
     <div className="space-y-4 w-full">
       {/* Barre d'outils - conditionnelle */}
       {(showSearch || enableExport || enablePrint || toolbarRight) && (
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className={cn("flex items-center gap-2 flex-wrap", toolbarClassName)}>
           {showSearch && (
             <>
               <Input
@@ -343,7 +355,11 @@ export function TanStackTable<TData extends Record<string, any>>({
               {enableExport && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2" disabled={isLoading}>
+                    <Button
+                      size="sm"
+                      className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                      disabled={isLoading}
+                    >
                       <Download className="h-4 w-4" />
                       Export
                     </Button>
@@ -358,9 +374,8 @@ export function TanStackTable<TData extends Record<string, any>>({
 
               {enablePrint && (
                 <Button
-                  variant="outline"
                   size="sm"
-                  className="gap-2"
+                  className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
                   disabled={isLoading}
                   onClick={printTableOnly}
                 >
@@ -380,15 +395,21 @@ export function TanStackTable<TData extends Record<string, any>>({
         className={cn(
           "border rounded-lg overflow-hidden",
           "[&>div]:max-h-(--vt-table-max-height)",
-          "[&>div]:overflow-auto"
+          "[&>div]:overflow-auto",
+          containerClassName
         )}
         style={{
           // `none` garde le comportement actuel (pas de limite de hauteur).
           ['--vt-table-max-height' as any]: maxHeight ?? 'none',
         }}
       >
-        <Table>
-          <TableHeader className="sticky top-0 z-10 bg-muted/40 backdrop-blur supports-backdrop-filter:bg-muted/20">
+        <Table className={tableClassName}>
+          <TableHeader
+            className={cn(
+              "sticky top-0 z-10 bg-muted/40 backdrop-blur supports-backdrop-filter:bg-muted/20",
+              headerClassName
+            )}
+          >
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -407,7 +428,8 @@ export function TanStackTable<TData extends Record<string, any>>({
                         key={header.id}
                         className={cn(
                           canSort && 'cursor-pointer select-none hover:bg-muted/50',
-                          'transition-colors sticky top-0 bg-muted/40 backdrop-blur supports-backdrop-filter:bg-muted/20 border-b border-border border-r'
+                          'transition-colors sticky top-0 bg-muted/40 backdrop-blur supports-backdrop-filter:bg-muted/20 border-b border-border border-r',
+                          headerCellClassName
                         )}
                         onClick={canSort ? header.column.getToggleSortingHandler?.() : undefined}
                         onKeyDown={(e) => {
@@ -420,7 +442,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                         tabIndex={canSort ? 0 : undefined}
                         aria-sort={canSort ? (ariaSort as any) : undefined}
                       >
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center gap-2 text-center">
                           {flexRender(
                             header.column.columnDef.header,
                             header.getContext()
@@ -445,7 +467,12 @@ export function TanStackTable<TData extends Record<string, any>>({
             ))}
           </TableHeader>
 
-          <TableBody className="[&_tr:last-child]:border-b">
+          <TableBody
+            className={cn(
+              "[&_tr:last-child]:border-b",
+              bodyClassName
+            )}
+          >
             {isLoading ? (
               Array.from({
                 length: Math.min(10, showPagination ? table.getState().pagination.pageSize : 10),

@@ -94,6 +94,7 @@
       "locations_monitored": "Lieux en surveillance",
       "active_alarms": "Alarmes actives",
       "sensors_ok": "Surveillance desactivee",
+      "locations_disabled": "Surveillance désactivée",
       "sensors_alert": "Sondes en alerte"
     }
   },

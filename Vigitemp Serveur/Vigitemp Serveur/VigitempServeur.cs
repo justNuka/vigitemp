@@ -269,6 +269,11 @@ namespace Vigitemp_Serveur
             }
         }
 
+        public void StartConsole(string[] args)
+        {
+            OnStart(args);
+        }
+
         protected override void OnStop()
         {
             VigitempServeur.Log("Arrêt du service Vigitemp");
@@ -288,6 +293,11 @@ namespace Vigitemp_Serveur
             _hotlineApi = null;
             CloseFileLogWriter();
 
+        }
+
+        public void StopConsole()
+        {
+            OnStop();
         }
 
         protected void Process(object sender, ElapsedEventArgs eventArgs)

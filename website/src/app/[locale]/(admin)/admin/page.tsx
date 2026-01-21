@@ -4,7 +4,7 @@ import { useState } from "react"
 import { AlertTriangle, BookOpen, CheckCircle2, Clock, Database, Users } from "lucide-react"
 
 import { PageHeader } from "@/components/page-header"
-import { DashboardTable } from "@/components/data-table/dashboard-table"
+import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { acknowledgmentColumns } from "@/components/data-table/acknowledgment-columns"
 import { activeAlarmsColumns } from "@/components/data-table/active-alarms-columns"
 import { backupColumns } from "@/components/data-table/backup-columns"
@@ -101,11 +101,15 @@ export default function AdminDashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DashboardTable
+            <TanStackTable
               columns={acknowledgmentColumns}
               data={acknowledgmentsQuery.data?.data || []}
               emptyMessage={"Aucun acquittement d'alarme enregistr\u00E9"}
               maxHeight="420px"
+              showPagination={false}
+              showSearch={false}
+              enableExport={false}
+              enablePrint={false}
             />
             <PaginationControls
               page={ackPage}
@@ -135,11 +139,15 @@ export default function AdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <DashboardTable
+              <TanStackTable
                 columns={connectedUsersColumns}
                 data={connectedUsersQuery.data?.data || []}
                 emptyMessage={"Aucun utilisateur connect\u00E9 actuellement"}
                 maxHeight="320px"
+                showPagination={false}
+                showSearch={false}
+                enableExport={false}
+                enablePrint={false}
               />
               <PaginationControls
                 page={connectedUsersPage}
@@ -170,11 +178,15 @@ export default function AdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <DashboardTable
+              <TanStackTable
                 columns={activeAlarmsColumns}
                 data={activeAlarmsQuery.data?.data || []}
                 emptyMessage="Aucune alarme active en cours"
                 maxHeight="320px"
+                showPagination={false}
+                showSearch={false}
+                enableExport={false}
+                enablePrint={false}
               />
               <PaginationControls
                 page={activeAlarmsPage}
@@ -208,11 +220,15 @@ export default function AdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <DashboardTable
+              <TanStackTable
                 columns={systemLogsColumns}
                 data={systemLogsQuery.data?.data || []}
                 emptyMessage={"Aucune entr\u00E9e de journal d'audit"}
                 maxHeight="380px"
+                showPagination={false}
+                showSearch={false}
+                enableExport={false}
+                enablePrint={false}
               />
             </CardContent>
           </Card>
@@ -240,11 +256,15 @@ export default function AdminDashboard() {
               </div>
               <Button className="w-full">Lancer sauvegarde</Button>
               <div className="mt-4">
-                <DashboardTable
+                <TanStackTable
                   columns={backupColumns}
                   data={backupsQuery.data || []}
                   emptyMessage="Aucun historique de sauvegarde disponible"
                   maxHeight="240px"
+                  showPagination={false}
+                  showSearch={false}
+                  enableExport={false}
+                  enablePrint={false}
                 />
               </div>
             </CardContent>

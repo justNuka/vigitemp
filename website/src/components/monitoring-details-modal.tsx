@@ -10,14 +10,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { TanStackTable } from "@/components/data-table/tanstack-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -30,7 +24,6 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
 import { calculateYDomain, getMeasureSummary } from "@/lib/measurements";
 import type { MeasureData } from "@/lib/measurements";
@@ -73,8 +66,6 @@ export default function MonitoringDetailsModal({
   measurements: initialMeasurements,
 }: MonitoringDetailsModalProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const itemsPerPage = 20;
 
   const hasLocalMeasurements = Boolean(initialMeasurements?.length);
   const { data: fetchedData, isLoading } = useLieuMeasurements(idLieu, {
@@ -119,22 +110,82 @@ export default function MonitoringDetailsModal({
     return () => clearTimeout(timeoutId);
   }, [idLieu, isOpen]);
 
-  const sortedData = useMemo(() => {
-    const copy = [...orderedData];
-    copy.sort((a, b) => {
-      const dateA = a.DateHeureMesureIso ? Date.parse(a.DateHeureMesureIso) : Date.parse(a.DateHeureMesure);
-      const dateB = b.DateHeureMesureIso ? Date.parse(b.DateHeureMesureIso) : Date.parse(b.DateHeureMesure);
-      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
-    });
-    return copy;
-  }, [data, sortOrder]);
+  const tableData = useMemo(() => {
+    return orderedData.map((measure) => ({
+      id: measure.id,
+      dateIso: measure.DateHeureMesureIso ?? measure.DateHeureMesure,
+      dateLabel: measure.DateHeureMesure,
+      value: measure.Valeur,
+      unit: unite,
+    }));
+  }, [orderedData, unite]);
 
-  // Pagination for table
-  const totalPages = Math.ceil(data.length / itemsPerPage);
-  const paginatedData = sortedData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const columns: ColumnDef<{
+    id: number | string;
+    dateIso: string;
+    dateLabel: string;
+    value: number;
+    unit: string;
+  }>[] = [
+    {
+      accessorKey: "dateIso",
+      header: "DATE/HEURE",
+      sortingFn: (rowA, rowB, columnId) => {
+        const a = Date.parse(rowA.getValue(columnId) as string);
+        const b = Date.parse(rowB.getValue(columnId) as string);
+        return a - b;
+      },
+      cell: ({ row }) => (
+        <span className="font-medium">{row.original.dateLabel}</span>
+      ),
+    },
+    {
+      accessorKey: "value",
+      header: "VALEUR",
+      cell: ({ row }) => {
+        const value = row.getValue("value") as number;
+        const isOutOfRange =
+          (consigneInf !== null && value < consigneInf) ||
+          (consigneSup !== null && value > consigneSup);
+
+        return (
+          <span className={isOutOfRange ? "text-red-600 dark:text-red-400 font-bold" : ""}>
+            {value}{row.original.unit}
+          </span>
+        );
+      },
+    },
+    {
+      id: "consigneInf",
+      header: "CONSIGNE INF",
+      cell: () => (
+        <span>{consigneInf !== null ? `${consigneInf}${unite}` : "-"}</span>
+      ),
+    },
+    {
+      id: "consigneSup",
+      header: "CONSIGNE SUP",
+      cell: () => (
+        <span>{consigneSup !== null ? `${consigneSup}${unite}` : "-"}</span>
+      ),
+    },
+    {
+      id: "statut",
+      header: "STATUT",
+      cell: ({ row }) => {
+        const value = row.getValue("value") as number;
+        const isOutOfRange =
+          (consigneInf !== null && value < consigneInf) ||
+          (consigneSup !== null && value > consigneSup);
+
+        return isOutOfRange ? (
+          <span className="text-red-600 dark:text-red-400 font-semibold">Hors limites</span>
+        ) : (
+          <span className="text-green-600 dark:text-green-400">OK</span>
+        );
+      },
+    },
+  ];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -339,90 +390,14 @@ export default function MonitoringDetailsModal({
 
             {/* Table Tab */}
             <TabsContent value="table" className="space-y-4 pt-4">
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[180px]">
-                        <button
-                          type="button"
-                          onClick={() => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
-                          className="inline-flex items-center gap-1 text-left font-medium hover:underline"
-                        >
-                          DATE/HEURE
-                          <span className="text-xs text-muted-foreground">
-                            {sortOrder === "asc" ? "ASC" : "DESC"}
-                          </span>
-                        </button>
-                      </TableHead>
-                      <TableHead>VALEUR</TableHead>
-                      <TableHead>CONSIGNE INF</TableHead>
-                      <TableHead>CONSIGNE SUP</TableHead>
-                      <TableHead>STATUT</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedData.map((measure) => {
-                      const isOutOfRange = 
-                        (consigneInf !== null && measure.Valeur < consigneInf) ||
-                        (consigneSup !== null && measure.Valeur > consigneSup);
-                      
-                      return (
-                        <TableRow key={measure.id}>
-                          <TableCell className="font-medium">
-                            {measure.DateHeureMesure}
-                          </TableCell>
-                          <TableCell 
-                            className={isOutOfRange ? "text-red-600 dark:text-red-400 font-bold" : ""}
-                          >
-                            {measure.Valeur}{unite}
-                          </TableCell>
-                          <TableCell>
-                            {consigneInf !== null ? `${consigneInf}${unite}` : "-"}
-                          </TableCell>
-                          <TableCell>
-                            {consigneSup !== null ? `${consigneSup}${unite}` : "-"}
-                          </TableCell>
-                          <TableCell>
-                            {isOutOfRange ? (
-                              <span className="text-red-600 dark:text-red-400 font-semibold">Hors limites
-                              </span>
-                            ) : (
-                              <span className="text-green-600 dark:text-green-400">OK
-                              </span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <div className="text-sm text-muted-foreground">
-                    Page {currentPage} sur {totalPages}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              <TanStackTable
+                columns={columns}
+                data={tableData}
+                showSearch={false}
+                pageSize={20}
+                emptyMessage="Aucune mesure"
+                maxHeight="50vh"
+              />
             </TabsContent>
           </Tabs>
         )}

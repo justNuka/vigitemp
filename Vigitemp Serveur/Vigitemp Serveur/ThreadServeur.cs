@@ -38,6 +38,7 @@ namespace Vigitemp_Serveur
             new ConcurrentDictionary<int, CachedLieuSettings>();
         private readonly object _lieuSettingsLock = new object();
         private readonly int _settingsCacheSeconds = GetSettingInt("Vigitemp.Alarms.SettingsCacheSeconds", 60);
+        private readonly bool _logSettingsCache = GetSettingBool("Vigitemp.Alarms.LogSettingsCache", false);
 
         private sealed class CachedLieuSettings
         {
@@ -83,6 +84,10 @@ namespace Vigitemp_Serveur
             {
                 if ((nowUtc - cached.FetchedAtUtc).TotalSeconds <= _settingsCacheSeconds)
                 {
+                    if (_logSettingsCache)
+                    {
+                        LogLieuSettings(idLieu, cached.Settings, "cache-hit");
+                    }
                     return cached.Settings;
                 }
             }
@@ -93,6 +98,10 @@ namespace Vigitemp_Serveur
                 {
                     if ((nowUtc - cached.FetchedAtUtc).TotalSeconds <= _settingsCacheSeconds)
                     {
+                        if (_logSettingsCache)
+                        {
+                            LogLieuSettings(idLieu, cached.Settings, "cache-hit");
+                        }
                         return cached.Settings;
                     }
                 }
@@ -104,6 +113,10 @@ namespace Vigitemp_Serveur
                 }
 
                 _lieuSettingsCache[idLieu] = new CachedLieuSettings(settings, nowUtc);
+                if (_logSettingsCache)
+                {
+                    LogLieuSettings(idLieu, settings, "db-refresh");
+                }
                 return settings;
             }
         }
@@ -121,6 +134,37 @@ namespace Vigitemp_Serveur
             {
                 return defaultValue;
             }
+        }
+
+        private static bool GetSettingBool(string key, bool defaultValue)
+        {
+            try
+            {
+                var raw = ConfigurationManager.AppSettings[key];
+                if (string.IsNullOrWhiteSpace(raw)) return defaultValue;
+                if (bool.TryParse(raw, out var value)) return value;
+                return defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private static void LogLieuSettings(int idLieu, LieuAlarmSettings settings, string source)
+        {
+            if (settings == null) return;
+            VigitempServeur.Log(
+                $"LieuAlarmSettings[{source}] idLieu={idLieu} " +
+                $"consigneInf={settings.ConsigneInf?.ToString() ?? "null"} " +
+                $"consigneSup={settings.ConsigneSup?.ToString() ?? "null"} " +
+                $"consigneInfActive={settings.ConsigneInfActive} " +
+                $"consigneSupActive={settings.ConsigneSupActive} " +
+                $"consigneInfPre={settings.ConsigneInfPreAlarme?.ToString() ?? "null"} " +
+                $"consigneInfPreActive={settings.ConsigneInfPreAlarmeActive} " +
+                $"consigneSupPre={settings.ConsigneSupPreAlarme?.ToString() ?? "null"} " +
+                $"consigneSupPreActive={settings.ConsigneSupPreAlarmeActive}"
+            );
         }
 
         public void Start()

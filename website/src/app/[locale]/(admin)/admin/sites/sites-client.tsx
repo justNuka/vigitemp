@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { Printer } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from '@/i18n/navigation'
 
@@ -108,18 +107,6 @@ export function SitesClient() {
     setIsEditOpen(true)
   }
 
-  const handlePrint = () => {
-    if (!selectedSite) return
-    const printContent = `
-Site: ${selectedSite.Code_Site} - ${selectedSite.Libelle_Site}
-Description: ${selectedSite.Commentaire || 'N/A'}
-    `.trim()
-    const printWindow = window.open('', '', 'height=400,width=600')
-    if (printWindow) {
-      printWindow.document.write('<pre>' + printContent + '</pre>')
-      printWindow.document.close()
-      printWindow.print()
-    }
   }
 
   return (
@@ -143,13 +130,11 @@ Description: ${selectedSite.Commentaire || 'N/A'}
               Archiver
             </Button>
             <Button
-              onClick={handlePrint}
               variant="ghost"
               size="icon"
               disabled={!selectedSite}
               title="Imprimer le site sélectionné"
             >
-              <Printer className="h-4 w-4" />
             </Button>
           </div>
         </CardHeader>

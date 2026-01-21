@@ -203,7 +203,7 @@
 @layer base {
   :root {
     /* Palette - Mode Light */
-    --background: 217 20% 94%;
+    --background: 220 22% 96%;
     --foreground: 0 0% 3.9%;
 
     --card: 0 0% 100%;
@@ -213,8 +213,8 @@
     --popover-foreground: 0 0% 3.9%;
 
     /* Blue MC2 comme couleur primaire */
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 202 86% 52%;
+    --primary-foreground: 210 40% 98%;
 
     /* Sage comme couleur secondaire */
     --secondary: 0 0% 96.1%;
@@ -236,14 +236,14 @@
     --ring: 0 0% 3.9%;
 
     /* Sidebar colors - Light mode avec fond clair harmonieux */
-    --sidebar: 217 20% 97%;           /* Gris très clair, presque blanc */
-    --sidebar-foreground: 217 20% 20%;   /* Texte foncé pour contraste */
-    --sidebar-accent: 217 20% 92%;    /* Gris clair pour hover/active */
-    --sidebar-accent-foreground: 217 20% 15%;
-    --sidebar-border: 217 20% 88%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar: 224 26% 18%;
+    --sidebar-foreground: 220 20% 96%;
+    --sidebar-accent: 224 22% 24%;
+    --sidebar-accent-foreground: 220 20% 98%;
+    --sidebar-border: 224 18% 22%;
+    --sidebar-ring: 217 91% 65%;
 
-    /* Charts avec palette Replit */
+    /* Charts avec palette */
     --chart-1: 12 76% 61%; /* Blue MC2 */
     --chart-2: 173 58% 39%;  /* Yellow */
     --chart-3: 197 37% 24%; /* Teal */
@@ -254,7 +254,7 @@
   }
 
   .dark {
-    /* Palette Replit - Mode Dark */
+    /* Palette - Mode Dark */
     --background: 217 25% 8%;
     --foreground: 0 0% 95%;
 
@@ -295,7 +295,7 @@
     --sidebar-border: 217 27% 15%;
     --sidebar-ring: 217 91% 65%;
 
-    /* Charts avec palette Replit (dark mode) */
+    /* Charts avec palette (dark mode) */
     --chart-1: 217 91% 65%; /* Blue MC2 */
     --chart-2: 38 92% 55%;  /* Yellow légèrement plus clair */
     --chart-3: 174 58% 65%; /* Teal */
@@ -308,12 +308,49 @@
 }
 
 @layer base {
-  * {
-    border-color: hsl(var(--border));
-  }
+* {
+  border-color: hsl(var(--border));
+}
+
+button,
+[role="button"],
+a {
+  cursor: pointer;
+}
+
+.hover-elevate {
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.hover-elevate:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -10px rgba(0, 0, 0, 0.6);
+}
+
+.active-elevate-2:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+  }
+}
+
+@layer utilities {
+  .dashboard-light {
+    background:
+      radial-gradient(1200px 700px at 18% 0%, rgba(59, 130, 246, 0.12), transparent 60%),
+      radial-gradient(900px 600px at 88% 6%, rgba(59, 130, 246, 0.08), transparent 55%),
+      hsl(var(--background));
+  }
+
+  .dark .dashboard-light {
+    background: hsl(var(--background));
   }
 }
 
@@ -330,3 +367,6 @@
     }
   }
 }
+
+
+

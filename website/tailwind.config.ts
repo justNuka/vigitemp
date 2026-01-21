@@ -69,7 +69,7 @@ const config = {
   		},
   		colors: {
   			white: '#FFFFFF',
-  			replit: {
+  			mc2: {
   				blue: '#3B82F6',
   				yellow: '#F59E0B',
   				teal: '#8BDED8',

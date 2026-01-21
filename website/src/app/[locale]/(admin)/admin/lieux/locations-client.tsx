@@ -80,10 +80,6 @@ export function LocationsClient() {
     setIsEditOpen(true)
   }
 
-  const handlePrint = () => {
-    window.print()
-  }
-
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       <Card>
@@ -101,7 +97,6 @@ export function LocationsClient() {
               setIsCreateOpen(true)
             }}
             onEdit={handleEdit}
-            onPrint={handlePrint}
           />
         </CardHeader>
         <CardContent>

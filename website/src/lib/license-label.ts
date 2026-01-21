@@ -15,5 +15,5 @@ export function formatLicenseLabel(
     return tCommon("license_unknown");
   }
   const formatted = edition.charAt(0).toUpperCase() + edition.slice(1);
-  return `${tCommon("license_prefix")} ${formatted}`;
+  return `${tCommon("license_prefix")} : ${formatted}`;
 }

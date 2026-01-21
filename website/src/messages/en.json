@@ -94,6 +94,7 @@
       "locations_monitored": "Locations in monitoring",
       "active_alarms": "Active alarms",
       "sensors_ok": "Monitoring disabled",
+      "locations_disabled": "Monitoring disabled",
       "sensors_alert": "Sensors in alert"
     }
   },

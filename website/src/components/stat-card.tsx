@@ -13,6 +13,10 @@ interface StatCardProps {
   };
   variant?: "default" | "success" | "warning" | "danger" | "info" | "muted";
   className?: string;
+  contentClassName?: string;
+  titleClassName?: string;
+  valueClassName?: string;
+  iconClassName?: string;
 }
 
 const variantStyles = {
@@ -33,7 +37,7 @@ const variantStyles = {
     card: "border-l-4 border-l-warning",
   },
   danger: {
-    icon: "bg-destructive/10 text-destructive",
+    icon: "bg-destructive/12 text-destructive",
     card: "border-l-4 border-l-destructive",
   },
   muted: {
@@ -50,18 +54,33 @@ export function StatCard({
   trend,
   variant = "default",
   className,
+  contentClassName,
+  titleClassName,
+  valueClassName,
+  iconClassName,
 }: StatCardProps) {
   const styles = variantStyles[variant];
+  const resolvedIconClassName = iconClassName ?? styles.icon;
 
   return (
     <Card className={cn("overflow-visible", styles.card, className)}>
-      <CardContent className="p-4 md:p-6">
+      <CardContent className={cn("p-4 md:p-6", contentClassName)}>
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-muted-foreground truncate">
+            <p
+              className={cn(
+                "text-sm font-medium text-muted-foreground truncate",
+                titleClassName
+              )}
+            >
               {title}
             </p>
-            <p className="text-2xl md:text-3xl font-bold mt-1 data-value">
+            <p
+              className={cn(
+                "text-2xl md:text-3xl font-bold mt-1 data-value",
+                valueClassName
+              )}
+            >
               {value}
             </p>
             {description && (
@@ -88,8 +107,8 @@ export function StatCard({
           </div>
           <div
             className={cn(
-              "flex-shrink-0 p-3 rounded-xl",
-              styles.icon
+              "shrink-0 p-3 rounded-xl",
+              resolvedIconClassName
             )}
             aria-hidden="true"
           >

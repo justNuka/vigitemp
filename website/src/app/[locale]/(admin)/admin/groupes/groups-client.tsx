@@ -56,9 +56,6 @@ export function GroupsClient() {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
 
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
@@ -77,7 +74,6 @@ export function GroupsClient() {
             onNew={handleNew}
             onEdit={handleEdit}
             onArchive={handleArchive}
-            onPrint={handlePrint}
           />
         </CardHeader>
         <CardContent>

@@ -113,10 +113,13 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
   return (
     <Sidebar>
       <SidebarHeader className="p-4 flex flex-col items-center">
-        <Link href="/" className="flex items-center justify-center">
-          <Logo size="md" />
+        <Link href="/" className="flex items-center justify-center gap-2">
+          <Logo size="xs" />
+          <span className="text-xl font-semibold text-sidebar-foreground">
+            VigiSensys
+          </span>
         </Link>
-        <span className="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20 mt-2">
+        <span className="inline-flex items-center rounded-md bg-amber-300/20 px-3 py-1 text-xs font-bold text-amber-200 ring-1 ring-inset ring-amber-300/40 mt-2">
           {licenseLabel}
         </span>
       </SidebarHeader>
@@ -302,7 +305,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
               variant="ghost"
               size="icon"
               onClick={onLogout}
-              className="h-8 w-8 flex-shrink-0"
+              className="h-8 w-8 shrink-0"
               title={tCommon("logout")}
               aria-label={tCommon("logout")}
               data-testid="button-logout"

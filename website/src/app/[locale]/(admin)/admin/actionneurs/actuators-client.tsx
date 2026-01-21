@@ -17,7 +17,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Printer } from "lucide-react"
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
@@ -73,9 +72,6 @@ export function ActuatorsClient() {
     }
   }
 
-  const handlePrintClick = () => {
-    window.print()
-  }
 
   const columns: ColumnDef<ActuatorRow>[] = [
     {
@@ -129,9 +125,6 @@ export function ActuatorsClient() {
             </Button>
             <Button onClick={handleDeleteClick} disabled={!selectedActuator} variant="outline">
               Archiver
-            </Button>
-            <Button onClick={handlePrintClick} variant="outline" size="icon">
-              <Printer className="h-4 w-4" />
             </Button>
           </div>
         </CardHeader>

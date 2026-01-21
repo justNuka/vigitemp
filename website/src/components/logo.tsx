@@ -9,6 +9,7 @@ interface LogoProps {
 
 export function Logo({ className, size = "md" }: LogoProps) {
   const heights = {
+    xs: 16,
     sm: 24,
     md: 32,
     lg: 40,
@@ -17,11 +18,11 @@ export function Logo({ className, size = "md" }: LogoProps) {
   return (
     <div className={cn("flex items-center", className)}>
       <Image
-        src="/Logo-Vigitemp-bleu-fonce-1024x292.webp"
-        alt="Vigitemp Logo"
+        src="/vigisensys-logo-without-bg2.png"
+        alt="VigiSensys Logo"
         height={heights[size]}
         width={heights[size] * 3.5}
-        className="object-contain dark:brightness-0 dark:invert"
+        className="object-contain"
         priority
         unoptimized
       />

@@ -30,7 +30,7 @@ export default async function DashboardPage() {
     ]);
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-full dashboard-light">
       <DashboardHeader stats={stats} />
 
       {/* Contenu principal - Client Component */}

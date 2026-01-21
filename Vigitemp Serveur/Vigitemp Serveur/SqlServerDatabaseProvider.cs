@@ -426,7 +426,9 @@ namespace Vigitemp_Serveur
                         "SELECT Frequence, Consigne, Consigne_Sup, Consigne_Inf, t_module.Id_Serveur, Nom_Lieu, IdLieu, t_lieu.SondeNumeroSerie, t_sonde.IdSonde FROM t_lieu " +
                         "INNER JOIN t_sonde ON t_lieu.SondeNumeroSerie = t_sonde.SondeNumeroSerie " +
                         "INNER JOIN t_module ON t_sonde.idModule = t_module.idModule " +
-                        "WHERE t_lieu.SondeNumeroSerie = @serial;"))
+                        "WHERE t_lieu.SondeNumeroSerie = @serial " +
+                        "AND t_sonde.Etat_Sonde = 'S' " +
+                        "AND ISNULL(t_sonde.Est_Sonde_GSO, 0) = 0;"))
                     {
                         cmdMain.Parameters.AddWithValue("@serial", p_numeroSerie);
                         using (var reader = cmdMain.ExecuteReader())
@@ -574,7 +576,9 @@ namespace Vigitemp_Serveur
                         "INNER JOIN t_module ON t_sonde.idModule = t_module.idModule " +
                         "WHERE t_lieu.Frequence = @frequence " +
                         "AND t_module.Id_Serveur = @idServeur " +
-                        "AND t_lieu.Lieu_Etat = 'S';"))
+                        "AND t_lieu.Lieu_Etat = 'S' " +
+                        "AND t_sonde.Etat_Sonde = 'S' " +
+                        "AND ISNULL(t_sonde.Est_Sonde_GSO, 0) = 0;"))
                     {
                         cmd.Parameters.AddWithValue("@frequence", p_frequence);
                         cmd.Parameters.AddWithValue("@idServeur", p_idServer);
@@ -662,7 +666,7 @@ namespace Vigitemp_Serveur
                     return arrayTmp;
                 }
 
-                using (var cmd = CreateCommand(_connectionMain, "SELECT distinct Id_Serveur FROM t_sonde where Etat_Sonde = 'S';"))
+                using (var cmd = CreateCommand(_connectionMain, "SELECT distinct Id_Serveur FROM t_sonde where Etat_Sonde = 'S' AND ISNULL(Est_Sonde_GSO, 0) = 0;"))
                 using (var reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
@@ -693,7 +697,9 @@ namespace Vigitemp_Serveur
                     "INNER JOIN t_sonde ON t_lieu.SondeNumeroSerie = t_sonde.SondeNumeroSerie " +
                     "INNER JOIN t_module ON t_sonde.idModule = t_module.idModule " +
                     "where t_module.Id_Serveur = @idServeur " +
-                    "AND t_lieu.Lieu_Etat = 'S';"))
+                    "AND t_lieu.Lieu_Etat = 'S' " +
+                    "AND t_sonde.Etat_Sonde = 'S' " +
+                    "AND ISNULL(t_sonde.Est_Sonde_GSO, 0) = 0;"))
                 {
                     cmd.Parameters.AddWithValue("@idServeur", p_idServeur);
                     using (var reader = cmd.ExecuteReader())

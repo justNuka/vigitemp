@@ -65,6 +65,11 @@ export const PATCH = withLogging(
       const { GroupIds, ...lieuPatch } = validated as any
 
       const lieu = await prisma.$transaction(async (tx) => {
+        const current = await tx.t_lieu.findUnique({
+          where: { Id_Lieu: lieuId },
+          select: { Sonde_Numero_Serie: true },
+        })
+
         const updated = await tx.t_lieu.update({
           where: { Id_Lieu: lieuId },
           data: {
@@ -77,6 +82,18 @@ export const PATCH = withLogging(
               : {}),
           },
         })
+
+        if (Object.prototype.hasOwnProperty.call(lieuPatch, "Lieu_Etat")) {
+          const sondeNumeroSerie =
+            validated.Sonde_Numero_Serie ?? current?.Sonde_Numero_Serie ?? null
+
+          if (sondeNumeroSerie) {
+            await tx.t_sonde.updateMany({
+              where: { Sonde_Numero_Serie: sondeNumeroSerie },
+              data: { Surveillance_Etat: updated.Lieu_Etat ?? null },
+            })
+          }
+        }
 
         if (groupIds !== undefined) {
           await tx.t_lieu_groupe.deleteMany({ where: { Id_Lieu: lieuId } })

@@ -1,6 +1,10 @@
 CREATE DATABASE IF NOT EXISTS `vigi_mesures` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `vigi_mesures`;
 
+-- Active l'event scheduler pour le nettoyage du cache tm_graphique.
+-- Requiert les droits SUPER/ADMIN sur MySQL.
+SET GLOBAL event_scheduler = ON;
+
 SET FOREIGN_KEY_CHECKS=0;
 DROP TABLE IF EXISTS `tm_compteur_id_table`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -326,6 +330,35 @@ CREATE TABLE `tm_parametre` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 SET FOREIGN_KEY_CHECKS=1;
+
+-- Cache tm_graphique: garder 150 mesures par sonde (nettoyage périodique)
+-- NOTE: nécessite l'event_scheduler activé côté MySQL.
+DROP EVENT IF EXISTS `evt_trim_tm_graphique`;
+CREATE EVENT `evt_trim_tm_graphique`
+ON SCHEDULE EVERY 5 MINUTE
+DO
+  WITH ranked AS (
+    SELECT
+      Id_Graphique,
+      Date_Heure_Mesure,
+      Id_Lieu,
+      Est_Valeur_Null,
+      Est_Etat_Alarme,
+      ROW_NUMBER() OVER (
+        PARTITION BY Id_Sonde
+        ORDER BY Date_Heure_Mesure DESC, Id_Graphique DESC
+      ) AS rn
+    FROM tm_graphique
+  )
+  DELETE g
+  FROM tm_graphique g
+  JOIN ranked r
+    ON g.Id_Graphique = r.Id_Graphique
+   AND g.Date_Heure_Mesure = r.Date_Heure_Mesure
+   AND g.Id_Lieu = r.Id_Lieu
+   AND g.Est_Valeur_Null = r.Est_Valeur_Null
+   AND g.Est_Etat_Alarme = r.Est_Etat_Alarme
+  WHERE r.rn > 150;
 
 SET FOREIGN_KEY_CHECKS=0;
 INSERT INTO `tm_journal_code` VALUES ('AACT','Association d\'un module d\'alarme %1'),('ACQ','Acquitter les alarmes'),('ACT','Activer la surveillance'),('ACTU','Réactivation de l\'utilisateur %1'),('AJE','Ajoute évènement manuel'),('ARC','Archivage des données %1 %2'),('AS','Arrêt de la surveillance'),('AT','Activation de la surveillance téléphonique %1'),('CA','Démarrage d\'un calibrage pour la sonde'),('CC','Changement sur un élement %1'),('CDA','Changement d\'état du datalogger %1'),('CF','Changement de fréquence %1'),('CONNEXION','Connexion de l\'utilisateur %1'),('CR','Changement de retard d\'alarme %1'),('CS','Changement de sonde %1'),('DECONNEXION','Déconnexion de l\'utilisateur %1'),('DES','Désactiver la surveillance'),('DS','Démarrage de la surveillance'),('DT','Désactivation de la surveillance téléphonique %1'),('ET','Démarrage d\'un étalonnage pour la sonde'),('FERMSURV','Fermeture de la fenêtre de surveillance'),('MDP','Changement fiche utilisateur %1'),('PS','Le gestionnaire de port série virtuel à été relancé'),('SACT','Suppression du module d\'alarme associé %1'),('TC','Test de connexion de la sonde'),('TEL','Système'),('UT','');
