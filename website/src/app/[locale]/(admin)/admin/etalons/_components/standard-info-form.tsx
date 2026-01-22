@@ -101,7 +101,7 @@ export function StandardInfoForm({
           emptyMessage="Aucun module"
           options={(modules ?? []).map((mod) => ({
             value: mod.Id_Module.toString(),
-            label: `Module ${mod.Module_Numero_Serie || mod.Libelle_Type_Module || mod.Id_Module} sur port ${
+            label: `${mod.Module_Numero_Serie || mod.Libelle_Type_Module || mod.Id_Module} sur port ${
               mod.Port_Serie || 'N/A'
             } (${mod.Emplacement || '-'})`,
             searchText: `${mod.Module_Numero_Serie || ''} ${mod.Libelle_Type_Module || ''} ${

@@ -246,7 +246,7 @@ export default function MonitoringDetailsModal({
         {isSurveillanceActive && baseLoading ? (
           <div className="space-y-4 pt-4">
             <Skeleton className="h-10 w-64" />
-            <Skeleton className="h-[400px] w-full" />
+            <Skeleton className="h-100 w-full" />
           </div>
         ) : isSurveillanceActive ? (
           <Tabs defaultValue="graph" className="w-full">
@@ -266,8 +266,8 @@ export default function MonitoringDetailsModal({
             </TabsList>
 
             {/* Graph Tab */}
-            <TabsContent value="graph" className="space-y-4 pt-4 h-[560px]">
-              <div className="h-[500px]">
+            <TabsContent value="graph" className="space-y-4 pt-4 h-140">
+              <div className="h-125">
                 <Line
                   data={{
                     labels: orderedData.map(d => d.DateHeureMesureXaxis),
@@ -383,7 +383,7 @@ export default function MonitoringDetailsModal({
               </div>
               
               {/* Lignes de consigne superposees avec annotations */}
-              <div className="absolute left-16 right-8 top-[120px] bottom-[80px] pointer-events-none">
+              <div className="absolute left-16 right-8 top-30 bottom-20 pointer-events-none">
                 {consigneSup !== null && (
                   <>
                     <div 
@@ -445,7 +445,7 @@ export default function MonitoringDetailsModal({
             </TabsContent>
 
             {/* Table Tab */}
-            <TabsContent value="table" className="space-y-4 pt-4 h-[560px]">
+            <TabsContent value="table" className="space-y-4 pt-4 h-140">
               <DateRangePicker
                 allowEmpty
                 onUpdate={({ range }) => setDateRange({ from: range.from, to: range.to ?? range.from })}
@@ -468,7 +468,7 @@ export default function MonitoringDetailsModal({
             </TabsContent>
           </Tabs>
         ) : (
-          <div className="space-y-4 pt-4 h-[560px]">
+          <div className="space-y-4 pt-4 h-140">
             <DateRangePicker
               allowEmpty
               onUpdate={({ range }) => setDateRange({ from: range.from, to: range.to ?? range.from })}

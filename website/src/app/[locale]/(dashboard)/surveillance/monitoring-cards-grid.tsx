@@ -73,6 +73,11 @@ export function MonitoringCardsGrid({
     isActive: boolean
   } | null>(null)
   const [groupDisableDuration, setGroupDisableDuration] = useState("60")
+  const handleSurveillanceToggle =
+    onSurveillanceToggle ??
+    ((_: number, __: boolean, ___: number | null) => {
+      // no-op
+    })
 
   // Afficher des skeleton cards pendant le chargement
   if (isLoading && sensors.length === 0) {
@@ -248,17 +253,20 @@ export function MonitoringCardsGrid({
                             <MonitoringCard
                               key={sensor.id}
                               idLieu={Number(sensor.id)}
-                              nomLieu={sensor.name}
-                              lieuType={sensor.lieuType ?? sensor.location.lieuType ?? undefined}
-                              siteName={siteName}
-                              groupName={groupName}
+                              nomLieu={sensor.name ?? ""}
+                              lieuType={sensor.lieuType ?? sensor.location.lieuType ?? null}
+                              siteName={siteName ?? ""}
+                              groupName={groupName ?? ""}
                               status={sensor.status}
-                              alarmDisabled={sensor.location.alarmDisabled}
-                              alarmDisabledUntil={sensor.location.alarmDisabledUntil}
+                              alarmDisabled={sensor.location.alarmDisabled ?? false}
+                              alarmDisabledUntil={sensor.location.alarmDisabledUntil ?? null}
                               alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
-                              lieuEtat={sensor.location.lieuEtat ?? undefined}
-                              surveillanceDisabled={sensor.location.surveillanceDisabled}
-                              onSurveillanceToggle={onSurveillanceToggle}
+                              lieuEtat={sensor.location.lieuEtat ?? ""}
+                              surveillanceDisabled={sensor.location.surveillanceDisabled ?? false}
+                              sondeNumeroSerie={sensor.location.sondeNumeroSerie ?? ""}
+                              onSurveillanceToggle={(id, newState, durationMinutes) =>
+                                handleSurveillanceToggle(id, newState, durationMinutes ?? null)
+                              }
                             />
                           ))}
                         </div>
@@ -318,17 +326,20 @@ export function MonitoringCardsGrid({
                             <MonitoringCard
                               key={sensor.id}
                               idLieu={Number(sensor.id)}
-                              nomLieu={sensor.name}
-                              lieuType={sensor.lieuType ?? sensor.location.lieuType ?? undefined}
-                              siteName={siteName}
-                              groupName={groupName}
+                              nomLieu={sensor.name ?? ""}
+                              lieuType={sensor.lieuType ?? sensor.location.lieuType ?? null}
+                              siteName={siteName ?? ""}
+                              groupName={groupName ?? ""}
                               status={sensor.status}
-                              alarmDisabled={sensor.location.alarmDisabled}
-                              alarmDisabledUntil={sensor.location.alarmDisabledUntil}
+                              alarmDisabled={sensor.location.alarmDisabled ?? false}
+                              alarmDisabledUntil={sensor.location.alarmDisabledUntil ?? null}
                               alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
-                              lieuEtat={sensor.location.lieuEtat ?? undefined}
-                              surveillanceDisabled={sensor.location.surveillanceDisabled}
-                              onSurveillanceToggle={onSurveillanceToggle}
+                              lieuEtat={sensor.location.lieuEtat ?? ""}
+                              surveillanceDisabled={sensor.location.surveillanceDisabled ?? false}
+                              sondeNumeroSerie={sensor.location.sondeNumeroSerie ?? ""}
+                              onSurveillanceToggle={(id, newState, durationMinutes) =>
+                                handleSurveillanceToggle(id, newState, durationMinutes ?? null)
+                              }
                             />
                           ))}
                         </div>

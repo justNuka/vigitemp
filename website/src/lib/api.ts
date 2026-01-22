@@ -240,6 +240,7 @@ export type Location = {
   groupName1?: string | null;
   groupName2?: string | null;
   site?: string;
+  sondeNumeroSerie?: string | null;
 };
 
 export type Sensor = {

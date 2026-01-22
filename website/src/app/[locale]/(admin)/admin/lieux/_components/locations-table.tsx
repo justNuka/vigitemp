@@ -2,6 +2,7 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
+import { Badge } from '@/components/ui/badge';
 import { getTypeIcon } from '@/lib/lieu-types';
 import type { LocationRow } from '@/hooks/useLocations';
 
@@ -61,6 +62,13 @@ export function LocationsTable({
     {
       accessorKey: 'Sonde_Numero_Serie',
       header: 'Sonde',
+      cell: ({ row }) => {
+        const serial = row.original.Sonde_Numero_Serie;
+        if (!serial) {
+          return <Badge variant="secondary">Sans sonde</Badge>;
+        }
+        return serial;
+      },
     },
     {
       accessorKey: 'Lieu_Etat',

@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { AlertTriangle, BookOpen, CheckCircle2, Clock, Database, Users } from "lucide-react"
+import { AlertTriangle, BookOpen, CheckCircle2, Clock, Database, Users, Cpu } from "lucide-react"
+import type { ColumnDef } from "@tanstack/react-table"
 
 import { PageHeader } from "@/components/page-header"
 import { TanStackTable } from "@/components/data-table/tanstack-table"
@@ -19,6 +20,7 @@ import {
   useConnectedUsers,
   useSystemLogs,
 } from "@/hooks/useAdminData"
+import { useProbes, type Probe } from "@/hooks/useProbes"
 
 function PaginationControls(props: {
   page: number
@@ -65,6 +67,7 @@ export default function AdminDashboard() {
   const acknowledgmentsQuery = useAcknowledgments(ackPage)
   const systemLogsQuery = useSystemLogs()
   const backupsQuery = useBackups()
+  const probesQuery = useProbes()
 
   const lastBackupDate = (backupsQuery.data as any)?.[0]?.dateHeure
   const lastBackupLabel = lastBackupDate ? new Date(lastBackupDate).toLocaleString() : "N/A"
@@ -75,6 +78,14 @@ export default function AdminDashboard() {
     acknowledgmentsQuery.isLoading &&
     systemLogsQuery.isLoading &&
     backupsQuery.isLoading
+
+  const unassignedProbes = (probesQuery.data ?? []).filter((probe) => !probe.Lieu)
+  const unassignedColumns: ColumnDef<Probe>[] = [
+    { accessorKey: "Sonde_Numero_Serie", header: "Sonde" },
+    { accessorKey: "Sonde_Type", header: "Type", cell: ({ row }) => row.original.Sonde_Type || "-" },
+    { accessorKey: "Adresse_Sonde", header: "Adresse", cell: ({ row }) => row.original.Adresse_Sonde || "-" },
+    { accessorKey: "Id_Module", header: "Module", cell: ({ row }) => row.original.Id_Module ?? "-" },
+  ]
 
   if (isInitialLoading) {
     return (
@@ -294,6 +305,33 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="lg:max-w-3xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Cpu className="h-5 w-5" />
+              Sondes sans lieu
+            </CardTitle>
+            <CardDescription>
+              {unassignedProbes.length} sonde{unassignedProbes.length > 1 ? "s" : ""} non affectée
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TanStackTable
+              columns={unassignedColumns}
+              data={unassignedProbes}
+              emptyMessage="Aucune sonde sans lieu"
+              maxHeight="240px"
+              showPagination={false}
+              showSearch={false}
+              enableExport={false}
+              enablePrint={false}
+              headerClassName="!bg-sidebar !text-sidebar-foreground"
+              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+              tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

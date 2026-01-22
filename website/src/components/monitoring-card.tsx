@@ -57,7 +57,7 @@ ChartJS.register(
 interface MonitoringCardProps {
   idLieu: number;
   nomLieu: string;
-  sondeNumeroSerie: string;
+  sondeNumeroSerie?: string;
   lieuEtat: string;
   lieuType: LieuTypeValue;
   siteName: string;
@@ -73,7 +73,7 @@ interface MonitoringCardProps {
 export default function MonitoringCard({
   idLieu,
   nomLieu,
-  sondeNumeroSerie,
+  sondeNumeroSerie = "",
   lieuEtat,
   lieuType,
   siteName,
@@ -211,22 +211,31 @@ export default function MonitoringCard({
         >
           <div className="flex items-start justify-between gap-2">
             <div className={`${headerTextClassName} text-xs font-medium space-y-1 flex-1`}>
-              {siteName ? (
-                <TooltipProvider>
-                  <UITooltip>
-                    <TooltipTrigger asChild>
-                      <div className="cursor-help hover:opacity-80 transition-opacity truncate">
-                        {siteName}
-                      </div>
-                    </TooltipTrigger>
-                    {lieuEtat ? (
-                      <TooltipContent>
-                        <p className="max-w-xs">{lieuEtat}</p>
-                      </TooltipContent>
-                    ) : null}
-                  </UITooltip>
-                </TooltipProvider>
-              ) : null}
+              {(() => {
+                const label =
+                  lieuEtat === "S"
+                    ? "En surveillance"
+                    : lieuEtat === "D"
+                      ? "Surveillance désactivée"
+                      : lieuEtat || null
+                const siteLabel = siteName || "Site inconnu"
+                return (
+                  <TooltipProvider>
+                    <UITooltip>
+                      <TooltipTrigger asChild>
+                        <div className="cursor-help hover:opacity-80 transition-opacity truncate">
+                          {siteLabel}
+                        </div>
+                      </TooltipTrigger>
+                      {label ? (
+                        <TooltipContent>
+                          <p className="max-w-xs">{label}</p>
+                        </TooltipContent>
+                      ) : null}
+                    </UITooltip>
+                  </TooltipProvider>
+                )
+              })()}
               {groupName ? <div className="truncate">{groupName}</div> : null}
               <div className="text-base font-semibold truncate">{nomLieu}</div>
               {alarmDisabledLabel ? (

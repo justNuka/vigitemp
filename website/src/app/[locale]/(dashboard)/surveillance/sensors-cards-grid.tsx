@@ -31,6 +31,11 @@ export function SensorsCardsGrid({
   onSurveillanceToggle,
 }: SensorsCardsGridProps) {
   const t = useTranslations("surveillance")
+  const handleSurveillanceToggle =
+    onSurveillanceToggle ??
+    ((_: number, __: boolean, ___: number | null) => {
+      // no-op
+    })
 
   // Afficher des skeleton cards pendant le chargement
   if (isLoading && sensors.length === 0) {
@@ -81,17 +86,18 @@ export function SensorsCardsGrid({
               <MonitoringCard
                 key={sensor.id}
                 idLieu={Number(sensor.id)}
-                nomLieu={sensor.name}
-                lieuType={sensor.lieuType ?? sensor.location.lieuType ?? undefined}
-                siteName={sensor.location.site || "Site inconnu"}
+                nomLieu={sensor.name ?? ""}
+                lieuType={sensor.lieuType ?? sensor.location.lieuType ?? null}
+                siteName={sensor.location.site ?? "Site inconnu"}
                 groupName={groupName}
                 status={sensor.status}
-                alarmDisabled={sensor.location.alarmDisabled}
-                alarmDisabledUntil={sensor.location.alarmDisabledUntil}
+                alarmDisabled={sensor.location.alarmDisabled ?? false}
+                alarmDisabledUntil={sensor.location.alarmDisabledUntil ?? null}
                 alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
-                lieuEtat={sensor.location.lieuEtat ?? undefined}
-                surveillanceDisabled={sensor.location.surveillanceDisabled}
-                onSurveillanceToggle={onSurveillanceToggle}
+                lieuEtat={sensor.location.lieuEtat ?? ""}
+                surveillanceDisabled={sensor.location.surveillanceDisabled ?? false}
+                sondeNumeroSerie={sensor.location.sondeNumeroSerie ?? ""}
+                onSurveillanceToggle={handleSurveillanceToggle}
               />
             )
           })}

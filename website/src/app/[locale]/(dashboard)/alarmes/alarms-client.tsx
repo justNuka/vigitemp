@@ -398,7 +398,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
                 </p>
               </div>
             </div>
-/}
+            
             <div className="space-y-2">
               <label htmlFor="comment" className="text-sm font-medium">
                 Commentaire (optionnel)

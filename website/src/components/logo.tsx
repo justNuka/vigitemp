@@ -18,7 +18,7 @@ export function Logo({ className, size = "xs" }: LogoProps) {
   return (
     <div className={cn("flex items-center", className)}>
       <Image
-        src="/vigisensys-logo-without-bg2.png"
+        src="/logos/vigisensys-logo-without-bg2.png"
         alt="VigiSensys Logo"
         height={heights[size]}
         width={heights[size] * 3.5}

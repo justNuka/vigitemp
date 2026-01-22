@@ -9,6 +9,7 @@ export interface AvailableProbe {
   Sonde_Numero_Serie: string
   Surveillance_Etat: string
   Lieu: string | null
+  Sonde_Type?: string | null
 }
 
 export function useAvailableProbes(selectedSondeNumeroSerie?: string | null) {

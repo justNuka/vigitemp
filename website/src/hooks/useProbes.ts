@@ -10,6 +10,7 @@ export interface Probe {
   Surveillance_Etat_Libelle: string | null;
   Id_Module: number | null;
   Lieu: string | null;
+  Sonde_Type?: string | null;
 }
 
 async function fetchProbes(): Promise<Probe[]> {

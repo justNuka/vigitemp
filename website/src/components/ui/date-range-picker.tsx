@@ -35,6 +35,8 @@ export interface DateRangePickerProps {
   locale?: string
   /** Option for showing compare feature */
   showCompare?: boolean
+  /** Allow empty selection */
+  allowEmpty?: boolean
 }
 
 const formatDate = (date: Date, locale: string = 'en-us'): string => {
@@ -93,8 +95,9 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
   onUpdate,
   align = 'end',
   locale = 'en-US',
-  showCompare = true
-}): JSX.Element => {
+  showCompare = true,
+  allowEmpty = false
+}) => {
   const [isOpen, setIsOpen] = useState(false)
 
   const [range, setRange] = useState<DateRange>({
@@ -115,8 +118,8 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
   )
 
   // Refs to store the values of range and rangeCompare when the date picker is opened
-  const openedRangeRef = useRef<DateRange | undefined>()
-  const openedRangeCompareRef = useRef<DateRange | undefined>()
+  const openedRangeRef = useRef<DateRange | undefined>(undefined)
+  const openedRangeCompareRef = useRef<DateRange | undefined>(undefined)
 
   const [selectedPreset, setSelectedPreset] = useState<string | undefined>(undefined)
 
@@ -293,7 +296,7 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
     preset: string
     label: string
     isSelected: boolean
-  }): JSX.Element => (
+  }) => (
     <Button
       className={cn(isSelected && 'pointer-events-none')}
       variant="ghost"
@@ -478,7 +481,7 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
               </div>
               { isSmallScreen && (
                 <Select defaultValue={selectedPreset} onValueChange={(value) => { setPreset(value) }}>
-                  <SelectTrigger className="w-[180px] mx-auto mb-2">
+                  <SelectTrigger className="w-45 mx-auto mb-2">
                     <SelectValue placeholder="Select..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -557,4 +560,4 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
 
 DateRangePicker.displayName = 'DateRangePicker'
 DateRangePicker.filePath =
-  'src/components/ui/date-range-picker.tsx'
+  'libs/shared/ui-kit/src/lib/date-range-picker/date-range-picker.tsx'

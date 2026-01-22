@@ -162,6 +162,7 @@ export const log = {
     duration?: number;
     statusCode?: number;
     error?: string;
+    errorBody?: string;
     clientTrace?: string;
     queryClientId?: string;
     bootId?: string;

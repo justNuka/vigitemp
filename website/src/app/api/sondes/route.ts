@@ -27,6 +27,7 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
       Adresse_Sonde: sonde.Adresse_Sonde,
       Sonde_Numero_Serie: sonde.Sonde_Numero_Serie,
       Port_Serie: sonde.Port_Serie,
+      Sonde_Type: (sonde as any).Sonde_Type ?? null,
       Surveillance_Etat: sonde.Surveillance_Etat,
       Surveillance_Etat_Libelle:
         sonde.t_etat_surveillance?.Surveillance_Etat_Libelle || sonde.Surveillance_Etat,
@@ -52,7 +53,11 @@ export const POST = withAuthLogging(async (req: NextRequest) => {
     const body = await req.json()
     const data = createProbeSchema.parse(body)
 
-    const serial = `${data.sondeType}${data.serieNum}`
+    const normalizedType = data.sondeType.toUpperCase()
+    const serial =
+      normalizedType === "GSO" || normalizedType === "GSP"
+        ? data.serieNum
+        : `${data.sondeType}${data.serieNum}`
 
     const existing = await prisma.t_sonde.findUnique({
       where: { Sonde_Numero_Serie: serial },
@@ -66,6 +71,7 @@ export const POST = withAuthLogging(async (req: NextRequest) => {
       data: {
         Sonde_Numero_Serie: serial,
         Id_Module: data.moduleId ?? null,
+        Surveillance_Etat: "D",
       },
     })
 

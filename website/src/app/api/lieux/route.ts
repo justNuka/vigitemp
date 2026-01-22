@@ -78,7 +78,8 @@ export const POST = withLogging(async (req: NextRequest) => {
       ),
     )
 
-    const lieuEtat = validated.Lieu_Etat ?? "S"
+    const lieuEtat = validated.Lieu_Etat ?? "D"
+    const sondeNumeroSerie = validated.Sonde_Numero_Serie?.trim() || null
 
     const group1Id = groupIds[0] ?? validated.Id_Groupe1 ?? null
     const group2Id = groupIds[1] ?? validated.Id_Groupe2 ?? null
@@ -110,10 +111,10 @@ export const POST = withLogging(async (req: NextRequest) => {
               },
             }
           : {}),
-        ...(validated.Sonde_Numero_Serie
+        ...(sondeNumeroSerie
           ? {
               t_sonde: {
-                connect: { Sonde_Numero_Serie: validated.Sonde_Numero_Serie },
+                connect: { Sonde_Numero_Serie: sondeNumeroSerie },
               },
             }
           : {}),
@@ -144,9 +145,9 @@ export const POST = withLogging(async (req: NextRequest) => {
       },
     })
 
-    if (validated.Sonde_Numero_Serie && Object.prototype.hasOwnProperty.call(validated, "Lieu_Etat")) {
+    if (sondeNumeroSerie && Object.prototype.hasOwnProperty.call(validated, "Lieu_Etat")) {
       await prisma.t_sonde.updateMany({
-        where: { Sonde_Numero_Serie: validated.Sonde_Numero_Serie },
+        where: { Sonde_Numero_Serie: sondeNumeroSerie },
         data: { Surveillance_Etat: lieuEtat },
       })
     }

@@ -1,6 +1,6 @@
 'use client'
 
-import type { Dispatch, SetStateAction } from 'react'
+import { useEffect, useMemo, type Dispatch, type SetStateAction } from 'react'
 
 import type { AvailableProbe } from '@/hooks/useAvailableProbes'
 import type { Group } from '@/hooks/useGroups'
@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { TabsContent } from '@/components/ui/tabs'
 import { Combobox } from '@/components/ui/combobox'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 import type { LocationFormData } from './location-form-types'
 
@@ -25,6 +26,17 @@ type Props = {
 }
 
 export function LocationFormTabGeneral({ formData, setFormData, sites, groups, availableProbes }: Props) {
+  const selectedProbe = useMemo(
+    () => (availableProbes ?? []).find((probe) => probe.Sonde_Numero_Serie === formData.Sonde_Numero_Serie),
+    [availableProbes, formData.Sonde_Numero_Serie],
+  )
+  const isGsoProbe = selectedProbe?.Sonde_Type?.toUpperCase() === 'GSO'
+
+  useEffect(() => {
+    if (!isGsoProbe) return
+    setFormData((prev) => (prev.Frequence == 15 ? prev : { ...prev, Frequence: 15 }))
+  }, [isGsoProbe, setFormData])
+
   return (
     <TabsContent value="general" className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
@@ -125,19 +137,22 @@ export function LocationFormTabGeneral({ formData, setFormData, sites, groups, a
         <h3 className="font-semibold">Sonde</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Sélection de sonde</Label>
+            <Label>S?lection de sonde</Label>
             <Combobox
               triggerId="sonde"
               value={formData.Sonde_Numero_Serie || ''}
-              onValueChange={(val) => setFormData({ ...formData, Sonde_Numero_Serie: val })}
+              onValueChange={(val) => setFormData({ ...formData, Sonde_Numero_Serie: val || null })}
               placeholder="Choisir une sonde"
               searchPlaceholder="Rechercher une sonde..."
               emptyMessage="Aucune sonde"
-              options={(availableProbes ?? []).map((probe) => ({
-                value: probe.Sonde_Numero_Serie || '',
-                label: probe.Sonde_Numero_Serie || '',
-                searchText: probe.Sonde_Numero_Serie || '',
-              }))}
+              options={[
+                { value: '', label: 'Aucune sonde', searchText: 'Aucune sonde' },
+                ...(availableProbes ?? []).map((probe) => ({
+                  value: probe.Sonde_Numero_Serie || '',
+                  label: probe.Sonde_Numero_Serie || '',
+                  searchText: probe.Sonde_Numero_Serie || '',
+                })),
+              ]}
             />
           </div>
           <div className="space-y-2">
@@ -162,13 +177,33 @@ export function LocationFormTabGeneral({ formData, setFormData, sites, groups, a
                 />
               </div>
               <div className="space-y-2">
-                <Label>Fréquence de mesure (min)</Label>
-                <Input
-                  type="number"
-                  value={formData.Frequence || ''}
-                  onChange={(e) => setFormData({ ...formData, Frequence: parseInt(e.target.value) || undefined })}
-                  placeholder="15"
-                />
+                <Label>Fr?quence de mesure (min)</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className={isGsoProbe ? 'cursor-not-allowed' : ''}>
+                        <Input
+                          type="number"
+                          value={formData.Frequence ?? ''}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              Frequence: parseInt(e.target.value) || undefined,
+                            })
+                          }
+                          placeholder="15"
+                          disabled={isGsoProbe}
+                          className={isGsoProbe ? 'bg-muted' : ''}
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    {isGsoProbe ? (
+                      <TooltipContent>
+                        <p>Fr?quence fix?e ? 15 min pour les sondes GSO.</p>
+                      </TooltipContent>
+                    ) : null}
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
           </div>

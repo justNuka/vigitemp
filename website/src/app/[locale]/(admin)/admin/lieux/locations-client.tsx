@@ -25,6 +25,7 @@ import { LocationsActions } from './_components/locations-actions'
 import type { LocationFormData } from './_components/location-form-types'
 import { getDefaultLocationFormData } from './_components/location-form-defaults'
 import { mapLocationToFormData } from './_components/location-form-mappers'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export function LocationsClient() {
   const queryClient = useQueryClient()
@@ -36,6 +37,9 @@ export function LocationsClient() {
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isArchiveOpen, setIsArchiveOpen] = useState(false)
+  const [isCreateNoSondeOpen, setIsCreateNoSondeOpen] = useState(false)
+  const [pendingCreate, setPendingCreate] = useState<LocationFormData | null>(null)
+  const [tabFilter, setTabFilter] = useState<'all' | 'unassigned'>('all')
 
   const defaultFormData: LocationFormData = getDefaultLocationFormData()
 
@@ -43,13 +47,21 @@ export function LocationsClient() {
   const { data: availableProbes = [] } = useAvailableProbes(formData.Sonde_Numero_Serie)
 
   const resetForm = () => setFormData(getDefaultLocationFormData())
+  const normalizePayload = (data: LocationFormData, forceInactive = false): Partial<LocationRow> => ({
+    ...data,
+    Sonde_Numero_Serie: data.Sonde_Numero_Serie ? data.Sonde_Numero_Serie : null,
+    ...(forceInactive ? { Lieu_Etat: 'D' } : {}),
+  })
 
   const createMutation = useMutation({
     mutationFn: async (data: Partial<LocationRow>) => postJson('/api/lieux', data),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
       router.refresh()
       toast.success('Lieu créé avec succès')
+      if (!variables?.Sonde_Numero_Serie) {
+        toast.message("Lieu créé sans sonde. Pensez à l'affecter plus tard.")
+      }
       setIsCreateOpen(false)
       resetForm()
     },
@@ -127,8 +139,28 @@ export function LocationsClient() {
           />
         </CardHeader>
         <CardContent>
+          <Tabs value={tabFilter} onValueChange={(val) => setTabFilter(val as 'all' | 'unassigned')}>
+            <TabsList className="grid w-full grid-cols-2 bg-primary/10 text-primary md:w-auto">
+              <TabsTrigger
+                value="all"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                Tous ({locations.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="unassigned"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                Sans sonde ({locations.filter((l) => !l.Sonde_Numero_Serie).length})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
           <LocationsTable
-            locations={locations}
+            locations={
+              tabFilter === 'unassigned'
+                ? locations.filter((location) => !location.Sonde_Numero_Serie)
+                : locations
+            }
             isLoading={isLoading}
             selectedLocationId={selectedLocation?.Id_Lieu}
             onSelectLocation={(location) => setSelectedLocation(location)}
@@ -146,7 +178,14 @@ export function LocationsClient() {
         availableProbes={availableProbes}
         isSubmitting={createMutation.isPending}
         onCancel={() => setIsCreateOpen(false)}
-        onSubmit={() => createMutation.mutate(formData)}
+        onSubmit={() => {
+          if (!formData.Sonde_Numero_Serie) {
+            setPendingCreate(formData)
+            setIsCreateNoSondeOpen(true)
+            return
+          }
+          createMutation.mutate(normalizePayload(formData, true))
+        }}
       />
 
       <LocationFormDialog
@@ -159,7 +198,7 @@ export function LocationsClient() {
         availableProbes={availableProbes}
         isSubmitting={updateMutation.isPending}
         onCancel={() => setIsEditOpen(false)}
-        onSubmit={() => updateMutation.mutate(formData)}
+        onSubmit={() => updateMutation.mutate(normalizePayload(formData))}
       />
 
       <AlertDialog open={isArchiveOpen} onOpenChange={setIsArchiveOpen}>
@@ -174,6 +213,32 @@ export function LocationsClient() {
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={() => archiveMutation.mutate()} disabled={archiveMutation.isPending}>
               {archiveMutation.isPending ? 'Archivage...' : 'Archiver'}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isCreateNoSondeOpen} onOpenChange={setIsCreateNoSondeOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Créer un lieu sans sonde ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ce lieu sera créé sans sonde associée. Vous pourrez l’affecter plus tard dans la gestion des lieux.
+              Voulez-vous continuer ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex justify-end gap-2">
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!pendingCreate) return
+                createMutation.mutate(normalizePayload(pendingCreate, true))
+                setPendingCreate(null)
+                setIsCreateNoSondeOpen(false)
+              }}
+              disabled={createMutation.isPending}
+            >
+              {createMutation.isPending ? 'Creation...' : 'Continuer'}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>

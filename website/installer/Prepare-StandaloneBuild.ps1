@@ -55,11 +55,23 @@ if (-not $SkipGenerate) {
 if (-not $SkipBuild) {
     Write-Log "Running pnpm build..."
     $previousSkipDb = $env:VIGITEMP_SKIP_DB_ON_BUILD
+    $previousLogsDir = $env:VIGITEMP_LOGS_DIR
+    $buildLogsDir = Join-Path $repoRoot "..\\vigi\\build\\tmp-logs"
+    $projectLogsDir = Join-Path $SourcePath "logs"
     $env:VIGITEMP_SKIP_DB_ON_BUILD = "1"
+    $env:VIGITEMP_LOGS_DIR = $buildLogsDir
     try {
+        if (Test-Path $projectLogsDir) {
+            Write-Log "Cleaning project logs folder before build..."
+            Remove-Item -Path $projectLogsDir -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        if (-not (Test-Path $buildLogsDir)) {
+            New-Item -ItemType Directory -Force -Path $buildLogsDir | Out-Null
+        }
         & $pnpmCmd.Source build | Out-Null
     } finally {
         $env:VIGITEMP_SKIP_DB_ON_BUILD = $previousSkipDb
+        $env:VIGITEMP_LOGS_DIR = $previousLogsDir
     }
 }
 

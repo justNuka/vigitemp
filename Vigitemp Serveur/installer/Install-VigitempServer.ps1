@@ -235,8 +235,11 @@ if ($null -ne $licensePayload) {
     Write-Log ("  edition: {0}" -f $licensePayload.edition)
     Write-Log ("  concurrentAccess: {0}" -f $licensePayload.concurrentAccess)
     Write-Log ("  options: {0}" -f ([string]::Join(',', $licensePayload.options)))
-    if ($licensePayload.expiresAt) {
-        Write-Log ("  expiresAt: {0}" -f $licensePayload.expiresAt)
+    $expiresProp = $licensePayload.PSObject.Properties["expiresAt"]
+    if ($expiresProp -and $expiresProp.Value) {
+        Write-Log ("  expiresAt: {0}" -f $expiresProp.Value)
+    } else {
+        Write-Log (T "  expiration: illimitée" "  expiration: unlimited")
     }
     if ($licensePayload.PSObject.Properties.Match("bind").Count -gt 0 -and $licensePayload.bind -and $licensePayload.bind.instancePublicKey) {
         Write-Log ("  bind.instancePublicKey: {0}" -f $licensePayload.bind.instancePublicKey)
@@ -323,15 +326,15 @@ try {
 Write-InstallRegistryInfo -installPath $InstallDir -version $version
 
 try {
-    $licensePathValue = Get-AppSetting $configPath "Vigitemp.License.Path"
-    $publicKeyValue = Get-AppSetting $configPath "Vigitemp.License.PublicKeyPath"
     $regServerRoot = "HKLM:\\SOFTWARE\\Vigitemp\\Server"
     New-Item -Path $regServerRoot -Force | Out-Null
-    if ($licensePathValue) {
-        Set-ItemProperty -Path $regServerRoot -Name "LicensePath" -Value $licensePathValue -Type String
+    if ($licenseDestPath) {
+        Set-ItemProperty -Path $regServerRoot -Name "LicensePath" -Value $licenseDestPath -Type String
+        Write-Log (T "Registre LicensePath: $licenseDestPath" "Registry LicensePath: $licenseDestPath")
     }
-    if ($publicKeyValue) {
-        Set-ItemProperty -Path $regServerRoot -Name "LicensePublicKeyPath" -Value $publicKeyValue -Type String
+    if ($publicKeyDestPath) {
+        Set-ItemProperty -Path $regServerRoot -Name "LicensePublicKeyPath" -Value $publicKeyDestPath -Type String
+        Write-Log (T "Registre LicensePublicKeyPath: $publicKeyDestPath" "Registry LicensePublicKeyPath: $publicKeyDestPath")
     }
 } catch {
     Write-Log (T "Echec ecriture registre licence." "Failed to write license registry.")
