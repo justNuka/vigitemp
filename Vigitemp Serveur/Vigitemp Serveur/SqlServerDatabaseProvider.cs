@@ -321,7 +321,7 @@ namespace Vigitemp_Serveur
                 _connectionMain,
                 "SELECT " +
                 "IdLieu, " +
-                "Consigne_Inf, Consigne_Sup, notification_active, DateHeure_reactivationAlarme, " +
+                "Consigne_Inf, Consigne_Sup, Notification_Active, Date_Heure_Reactivation_Alarme, " +
                 "Retard_Alarme_Bas, Retard_Alarme_Haut, " +
                 "Est_Consigne_Inf_Active, Est_Consigne_Sup_Active, " +
                 "Consigne_Inf_Pre_Alarme, Est_Consigne_Inf_Pre_Alarme_Active, " +
@@ -350,8 +350,8 @@ namespace Vigitemp_Serveur
                         dateHeureReactivationAlarme: default(DateTime));
                 }
 
-                var notificationActive = GetNullableBool(reader, "notification_active", false);
-                var reactivationAt = GetNullableDateTime(reader, "DateHeure_reactivationAlarme");
+                var notificationActive = GetNullableBool(reader, "Notification_Active", false);
+                var reactivationAt = GetNullableDateTime(reader, "Date_Heure_Reactivation_Alarme");
 
                 return new LieuAlarmSettings(
                     idLieu,
@@ -728,13 +728,13 @@ namespace Vigitemp_Serveur
                     return (ids, dates);
                 }
 
-                using (var cmd = CreateCommand(_connectionMain, "SELECT distinct IdLieu, DateHeure_reactivationAlarme FROM t_lieu where DateHeure_reactivationAlarme is not null;"))
+                using (var cmd = CreateCommand(_connectionMain, "SELECT distinct IdLieu, Date_Heure_Reactivation_Alarme FROM t_lieu where Date_Heure_Reactivation_Alarme is not null;"))
                 using (var reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
                     {
                         ids.Add(Int32.Parse(reader["IdLieu"].ToString()));
-                        dates.Add(DateTime.Parse(reader["DateHeure_reactivationAlarme"].ToString()));
+                        dates.Add(DateTime.Parse(reader["Date_Heure_Reactivation_Alarme"].ToString()));
                     }
                 }
 
@@ -785,7 +785,7 @@ namespace Vigitemp_Serveur
 
                     using (var cmd = CreateCommand(
                         _connectionMain,
-                        "UPDATE t_lieu SET notification_active = @valeur, DateHeure_reactivationAlarme = NULL WHERE IdLieu = @idLieu;"))
+                        "UPDATE t_lieu SET Notification_Active = @valeur, Date_Heure_Reactivation_Alarme = NULL WHERE IdLieu = @idLieu;"))
                     {
                         cmd.Parameters.AddWithValue("@valeur", p_valeur);
                         cmd.Parameters.AddWithValue("@idLieu", p_idLieu);

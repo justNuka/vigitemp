@@ -28,7 +28,7 @@ export function EditCommentDialog({
 }: EditCommentDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="bg-white dark:bg-card">
         <DialogHeader>
           <DialogTitle>Modifier le commentaire</DialogTitle>
           <DialogDescription>

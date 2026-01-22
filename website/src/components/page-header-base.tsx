@@ -26,14 +26,14 @@ export function PageHeaderBase({
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 flex flex-col gap-4 border-b border-slate-200 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-3 md:px-6 dark:border-border",
+        "sticky top-0 z-40 flex flex-col gap-4 border-b border-slate-200 bg-muted backdrop-blur supports-backdrop-filter:bg-muted/50 px-4 py-3 md:px-6 dark:border-border",
         className
       )}
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 md:gap-4">
           <SidebarTrigger data-testid="button-sidebar-toggle" className="-ml-1" />
-          <div className="hidden md:block h-7 w-[2px] bg-slate-300/70 dark:bg-border" />
+          <div className="hidden md:block h-7 w-0.5 bg-slate-300/70 dark:bg-border" />
           <div className="min-w-0">
             <h1 className="text-lg md:text-xl font-semibold truncate">{title}</h1>
             {description && (

@@ -423,13 +423,19 @@ export function TanStackTable<TData extends Record<string, any>>({
                         ? 'descending'
                         : 'none';
 
+                    const headerMeta = (header.column.columnDef as any)?.meta as
+                      | { headerClassName?: string }
+                      | undefined;
+                    const headerCellMetaClass = headerMeta?.headerClassName;
+
                     return (
                       <TableHead
                         key={header.id}
                         className={cn(
                           canSort && 'cursor-pointer select-none hover:bg-muted/50',
                           'transition-colors sticky top-0 bg-muted/40 backdrop-blur supports-backdrop-filter:bg-muted/20 border-b border-border border-r',
-                          headerCellClassName
+                          headerCellClassName,
+                          headerCellMetaClass
                         )}
                         onClick={canSort ? header.column.getToggleSortingHandler?.() : undefined}
                         onKeyDown={(e) => {
@@ -519,19 +525,27 @@ export function TanStackTable<TData extends Record<string, any>>({
                     aria-selected={isSelected || undefined}
                     className={cn(
                       onRowClick && 'cursor-pointer hover:bg-muted/50',
-                      isSelected && 'bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 border-l-4 border-l-blue-600 dark:border-l-blue-400 font-medium',
+                      isSelected &&
+                        'bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-medium [&_td:first-child]:border-l-4 [&_td:first-child]:border-l-primary',
                       onRowClick && 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                       'transition-colors'
                     )}
                   >
-                    {row.getVisibleCells().map((cell, cellIndex, cellsArray) => (
+                    {row.getVisibleCells().map((cell, cellIndex, cellsArray) => {
+                      const cellMeta = (cell.column.columnDef as any)?.meta as
+                        | { cellClassName?: string }
+                        | undefined;
+                      const cellMetaClass = cellMeta?.cellClassName;
+
+                      return (
                       <TableCell 
                         key={`cell-${rowIndex}-${cellIndex}-${cell.id}`}
-                        className="border-r border-border"
+                        className={cn("border-r border-border", cellMetaClass)}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
-                    ))}
+                      );
+                    })}
                   </TableRow>
                 );
               })
@@ -564,6 +578,7 @@ export function TanStackTable<TData extends Record<string, any>>({
               size="sm"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage() || isLoading}
+              className="border-primary/40 text-primary hover:bg-primary/10"
             >
               Précédent
             </Button>
@@ -592,6 +607,7 @@ export function TanStackTable<TData extends Record<string, any>>({
               size="sm"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage() || isLoading}
+              className="border-primary/40 text-primary hover:bg-primary/10"
             >
               Suivant
             </Button>

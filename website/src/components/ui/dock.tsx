@@ -95,7 +95,7 @@ function DockItem({
       }}
       className={`relative inline-flex items-center justify-center rounded-full transition-colors cursor-pointer ${
         isActive 
-          ? 'bg-black text-white border-white shadow-lg shadow-black/20 dark:bg-white dark:text-black dark:border-black dark:shadow-white/20'
+          ? 'bg-primary/60 text-black/70 border-black/60 shadow-lg shadow-black/30'
           : 'bg-white dark:bg-[#060010] border-neutral-300 dark:border-neutral-700 text-black dark:text-white'
       } border-2 shadow-md ${className}`}
       tabIndex={0}
@@ -201,7 +201,10 @@ export default function Dock({
   const height = useSpring(heightRow, spring);
 
   return (
-    <motion.div style={{ height, scrollbarWidth: 'none' }} className="mx-2 flex max-w-full items-center">
+    <motion.div
+      style={{ height: 0, scrollbarWidth: 'none' }}
+      className="mx-2 flex max-w-full items-center"
+    >
       <motion.div
         onMouseMove={({ pageX }) => {
           isHovered.set(1);

@@ -11,36 +11,38 @@ export interface TypeIconInfo {
 }
 
 export function getTypeIcon(type: LieuTypeValue, iconSize: string = 'w-4 h-4'): TypeIconInfo {
-  switch (type) {
+  const normalizedType = typeof type === 'string' ? type.trim().toLowerCase() : type;
+
+  switch (normalizedType) {
     case 'bain_marie':
-      return { 
-        icon: <Droplets className={iconSize} />, 
-        label: 'Bain Marie' 
+      return {
+        icon: <Droplets className={iconSize} />,
+        label: 'Bain Marie',
       };
     case 'etuve':
-      return { 
-        icon: <Flame className={iconSize} />, 
-        label: 'Étuve' 
+      return {
+        icon: <Flame className={iconSize} />,
+        label: 'Etuve',
       };
     case 'ambiance':
-      return { 
-        icon: <Thermometer className={iconSize} />, 
-        label: 'Ambiance' 
+      return {
+        icon: <Thermometer className={iconSize} />,
+        label: 'Ambiance',
       };
     case 'frigo_congel':
-      return { 
-        icon: <ThermometerSnowflake className={iconSize} />, 
-        label: 'Frigo/Congel' 
+      return {
+        icon: <ThermometerSnowflake className={iconSize} />,
+        label: 'Frigo/Congel',
       };
     case 'autre':
-      return { 
-        icon: <Layers className={iconSize} />, 
-        label: 'Autre' 
+      return {
+        icon: <Layers className={iconSize} />,
+        label: 'Autre',
       };
     default:
-      return { 
-        icon: null, 
-        label: '-' 
+      return {
+        icon: null,
+        label: '-',
       };
   }
 }

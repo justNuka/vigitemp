@@ -32,8 +32,8 @@ export const PATCH = withAuthLogging(
       const updated = await prisma.t_lieu.update({
         where: { Id_Lieu: lieuId },
         data: {
-          notification_active: payload.disabled ? false : true,
-          DateHeure_reactivationAlarme: payload.disabled ? reactivationAt : null,
+          Notification_Active: payload.disabled ? false : true,
+          Date_Heure_Reactivation_Alarme: payload.disabled ? reactivationAt : null,
         },
       })
 
@@ -53,8 +53,8 @@ export const PATCH = withAuthLogging(
 
       return apiOk({
         id: updated.Id_Lieu,
-        notification_active: updated.notification_active,
-        DateHeure_reactivationAlarme: updated.DateHeure_reactivationAlarme,
+        Notification_Active: updated.Notification_Active,
+        Date_Heure_Reactivation_Alarme: updated.Date_Heure_Reactivation_Alarme,
       })
     } catch (error) {
       if (error instanceof z.ZodError) {

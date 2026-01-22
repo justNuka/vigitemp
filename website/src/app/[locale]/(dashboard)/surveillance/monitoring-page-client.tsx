@@ -216,25 +216,27 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
 
   return (
     <>
-        <PageHeader
-          title={t("title")}
-          description={t("description")}
-          activeAlarms={visibleStats.activeAlarms}
-        >
-          <SurveillanceHeaderControls
-            sites={sites}
-            groups={groups}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            onFilterChange={handleFilterChange}
-            onRefresh={handleRefresh}
-            isRefreshing={isFetching}
-            graphsLabel={t("tabs.graphs")}
-            treeLabel={t("tabs.tree")}
-            orderToggleLabel={disabledFirst ? t("grid.toggle_active_first") : t("grid.toggle_disabled_first")}
-            onToggleOrder={handleToggleOrder}
-          />
-        </PageHeader>
+      <PageHeader
+        title={t("title")}
+        description={t("description")}
+        activeAlarms={visibleStats.activeAlarms}
+      />
+      <div className="h-px bg-slate-200 dark:bg-slate-800" />
+      <div className="px-4 md:px-6 py-4">
+        <SurveillanceHeaderControls
+          sites={sites}
+          groups={groups}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onFilterChange={handleFilterChange}
+          onRefresh={handleRefresh}
+          isRefreshing={isFetching}
+          graphsLabel={t("tabs.graphs")}
+          treeLabel={t("tabs.tree")}
+          orderToggleLabel={disabledFirst ? t("grid.toggle_active_first") : t("grid.toggle_disabled_first")}
+          onToggleOrder={handleToggleOrder}
+        />
+      </div>
 
       {viewMode === "tree" ? (
         <>

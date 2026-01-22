@@ -2,8 +2,6 @@
 
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from '@/i18n/navigation'
 import { useAuthorizations, useProfiles, type Profile } from '@/hooks/useProfiles'
@@ -120,20 +118,6 @@ export function ProfilesClient() {
 
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">Gestion des profils</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {profiles.length} profil{profiles.length > 1 ? 's' : ''}
-          </p>
-        </div>
-
-        <Button className="gap-2" onClick={openCreateDialog}>
-          <Plus className="h-4 w-4" />
-          Nouveau profil
-        </Button>
-      </div>
-
       <ProfilesTable
         profiles={profiles}
         isLoading={profilesLoading}
@@ -141,6 +125,7 @@ export function ProfilesClient() {
         onSelectProfile={setSelectedProfile}
         onEdit={openEditDialog}
         onDelete={openDeleteDialog}
+        onCreate={openCreateDialog}
       />
 
       <ProfileDialog

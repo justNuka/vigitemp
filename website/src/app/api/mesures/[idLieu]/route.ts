@@ -14,16 +14,34 @@ export const GET = withAuthLogging(
       const startDate = searchParams.get("startDate")
       const endDate = searchParams.get("endDate")
       const forceFresh = searchParams.get("fresh") === "true"
+      const includeMeta = searchParams.get("includeMeta") === "true"
 
       const idLieuInt = parseInt(idLieu)
       if (isNaN(idLieuInt)) {
         return apiError(400, "invalid_id", "Invalid idLieu parameter")
       }
 
-      if (!forceFresh && !startDate && !endDate) {
+      if (!forceFresh && !startDate && !endDate && !includeMeta) {
         const cached = getCachedMeasurements(idLieuInt)
         if (cached) {
           const response = apiOk(cached)
+          response.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=900")
+          response.headers.set("X-Cache", "HIT")
+          return response
+        }
+      }
+
+      if (!forceFresh && !startDate && !endDate && includeMeta) {
+        const cached = getCachedMeasurements(idLieuInt)
+        if (cached) {
+          const lieuMeta = await prisma.t_lieu.findUnique({
+            where: { Id_Lieu: idLieuInt },
+            select: { Type_Lieu: true },
+          })
+          const response = apiOk({
+            measurements: cached,
+            lieuType: lieuMeta?.Type_Lieu ?? null,
+          })
           response.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=900")
           response.headers.set("X-Cache", "HIT")
           return response
@@ -70,6 +88,7 @@ export const GET = withAuthLogging(
             Consigne_Inf: true,
             Consigne_Sup_Corrigee: true,
             Consigne_Inf_Corrigee: true,
+            Type_Lieu: true,
           },
         }),
       ])
@@ -133,7 +152,11 @@ export const GET = withAuthLogging(
         setCachedMeasurements(idLieuInt, formattedMeasurements)
       }
 
-      const response = apiOk(formattedMeasurements)
+      const response = apiOk(
+        includeMeta
+          ? { measurements: formattedMeasurements, lieuType: lieu?.Type_Lieu ?? null }
+          : formattedMeasurements,
+      )
       response.headers.set("Cache-Control", "public, s-maxage=900, stale-while-revalidate=900")
       response.headers.set("X-Cache", "MISS")
       return response

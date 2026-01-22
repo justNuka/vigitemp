@@ -8,34 +8,61 @@ import type { MeasureData } from "@/lib/measurements"
 type Options = {
   enabled?: boolean
   rowNumber?: number
+  startDate?: string | Date | null
+  endDate?: string | Date | null
   listenForUpdates?: boolean
+  includeMeta?: boolean
 }
 
 export function useLieuMeasurements(
   idLieu: number,
-  { enabled = true, rowNumber = 125, listenForUpdates = true }: Options = {},
+  {
+    enabled = true,
+    rowNumber = 125,
+    startDate,
+    endDate,
+    listenForUpdates = true,
+    includeMeta = false,
+  }: Options = {},
 ) {
   const [data, setData] = useState<MeasureData[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [meta, setMeta] = useState<{ lieuType?: string | null } | null>(null)
 
   const load = useCallback(
     async (forceFresh = false) => {
     setIsLoading(true)
     try {
         const params = new URLSearchParams({ rowNumber: String(rowNumber) })
+        if (startDate && endDate) {
+          params.set("startDate", startDate instanceof Date ? startDate.toISOString() : startDate)
+          params.set("endDate", endDate instanceof Date ? endDate.toISOString() : endDate)
+        }
         if (forceFresh) {
           params.set("fresh", "true")
         }
-        const measures = await fetchJson<MeasureData[]>(`/api/mesures/${idLieu}?${params}`)
-      setData(measures)
+        if (includeMeta) {
+          params.set("includeMeta", "true")
+        }
+        const payload = await fetchJson<
+          MeasureData[] | { measurements?: MeasureData[]; lieuType?: string | null }
+        >(`/api/mesures/${idLieu}?${params}`)
+        if (Array.isArray(payload)) {
+          setData(payload)
+          setMeta(null)
+        } else {
+          setData(payload.measurements ?? [])
+          setMeta({ lieuType: payload.lieuType ?? null })
+        }
     } catch (error) {
       console.error("Error loading measurements:", error)
       setData([])
+      setMeta(null)
     } finally {
       setIsLoading(false)
     }
     },
-    [idLieu, rowNumber],
+    [idLieu, rowNumber, includeMeta, startDate, endDate],
   )
 
   useEffect(() => {
@@ -56,5 +83,5 @@ export function useLieuMeasurements(
     return () => window.removeEventListener("vigitemp:lieu-updated", handleUpdate)
   }, [idLieu, listenForUpdates, load])
 
-  return { data, isLoading, reload: load }
+  return { data, isLoading, reload: load, meta }
 }

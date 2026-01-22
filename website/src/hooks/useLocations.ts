@@ -12,6 +12,7 @@ export interface LocationRow {
   GroupIds?: number[];
   Id_Site: number | null;
   Sonde_Numero_Serie: string | null;
+  Commentaire?: string | null;
   Consigne: number | null;
   Frequence: number | null;
   Consigne_Sup: number | null;
@@ -25,8 +26,8 @@ export interface LocationRow {
   Est_Consigne_Inf_Pre_Alarme_Active: boolean | null;
   Retard_Alarme_Bas: number | null;
   Lieu_Etat: string | null;
-  notification_active?: boolean | null;
-  DateHeure_reactivationAlarme?: string | null;
+  Notification_Active?: boolean | null;
+  Date_Heure_Reactivation_Alarme?: string | null;
   Tolerance_Surveillance_Sup: number | null;
   Tolerance_Surveillance_Inf: number | null;
   Unite: string | null;

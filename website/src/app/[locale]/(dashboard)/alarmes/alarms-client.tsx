@@ -22,6 +22,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import { format, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +39,12 @@ type AlarmStatus = "active" | "acknowledged" | "resolved";
 interface Props {
   alarms: AlarmWithDetails[];
   statusFilter: AlarmStatus;
+  stats: {
+    active: number;
+    acknowledged: number;
+    resolved: number;
+  };
+  onStatusChange: (status: AlarmStatus) => void;
 }
 
 interface AlarmRow {
@@ -51,7 +59,8 @@ interface AlarmRow {
   comment: string | null;
 }
 
-export function AlarmsClient({ alarms, statusFilter }: Props) {
+export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Props) {
+  const t = useTranslations("alarmsPage");
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isRefreshing, startTransition] = useTransition();
@@ -87,7 +96,7 @@ export function AlarmsClient({ alarms, statusFilter }: Props) {
       variant="outline"
       size="sm"
       onClick={handleRefresh}
-      className="gap-2"
+      className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 border-primary/40"
       disabled={isRefreshing}
       data-testid="button-refresh"
     >
@@ -96,6 +105,43 @@ export function AlarmsClient({ alarms, statusFilter }: Props) {
         {isRefreshing ? "Actualisation..." : "Actualiser"}
       </span>
     </Button>
+  );
+
+  const statusTabs = (
+    <Tabs
+      value={statusFilter}
+      onValueChange={(v: string) => onStatusChange(v as AlarmStatus)}
+      className="w-full sm:w-auto"
+    >
+      <TabsList className="grid grid-cols-3 w-full sm:w-auto bg-primary/10 text-primary">
+        <TabsTrigger
+          value="active"
+          data-testid="tab-active"
+          className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+        >
+          <span className="flex items-center gap-1">
+            {t("tabs.active")}
+            {stats.active > 0 && (
+              <span className="text-destructive">({stats.active})</span>
+            )}
+          </span>
+        </TabsTrigger>
+        <TabsTrigger
+          value="resolved"
+          data-testid="tab-resolved"
+          className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+        >
+          {t("tabs.resolved")} ({stats.resolved})
+        </TabsTrigger>
+        <TabsTrigger
+          value="acknowledged"
+          data-testid="tab-acknowledged"
+          className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+        >
+          {t("tabs.acknowledged")} ({stats.acknowledged})
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
   );
 
   const columns: ColumnDef<AlarmRow>[] = [
@@ -136,27 +182,30 @@ export function AlarmsClient({ alarms, statusFilter }: Props) {
         );
       },
     },
-    {
-      accessorKey: "value",
-      header: () => <div className="text-right">Valeur</div>,
+        {
+      id: "lastValue",
+      header: () => <div className="text-right">Derni?re valeur</div>,
       cell: ({ row }) => {
         const alarm = row.original;
+        const value = alarm.sensor.currentValue ?? alarm.value ?? null;
         return (
           <div className="text-right font-mono font-medium">
-            {alarm.value.toFixed(1)}{alarm.sensor.unit}
+            {value !== null ? `${value.toFixed(1)} ${alarm.sensor.unit}` : "-"}
           </div>
         );
       },
     },
     {
-      accessorKey: "threshold",
-      header: () => <div className="text-right">Seuil</div>,
+      id: "consignes",
+      header: () => <div className="text-right">Consignes sup/inf</div>,
       cell: ({ row }) => {
         const alarm = row.original;
-        const isHigh = alarm.type === "high";
+        const sup = alarm.sensor.maxThreshold;
+        const inf = alarm.sensor.minThreshold;
         return (
           <div className="text-right font-mono text-muted-foreground">
-            {isHigh ? ">" : "<"} {alarm.threshold}{alarm.sensor.unit}
+            <div>{sup !== null && sup !== undefined ? `Sup: ${sup} ${alarm.sensor.unit}` : "Sup: -"}</div>
+            <div>{inf !== null && inf !== undefined ? `Inf: ${inf} ${alarm.sensor.unit}` : "Inf: -"}</div>
           </div>
         );
       },
@@ -249,12 +298,16 @@ export function AlarmsClient({ alarms, statusFilter }: Props) {
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       {alarms.length === 0 ? (
         <Card>
-          <CardHeader>
+          <CardHeader className="space-y-4">
             <CardTitle>
               {statusFilter === "active" && "Alarmes actives"}
               {statusFilter === "acknowledged" && "Alarmes acquittées"}
-              {statusFilter === "resolved" && "Alarmes résolues"}
+              {statusFilter === "resolved" && "Alarmes à acquitter"}
             </CardTitle>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              {statusTabs}
+              <div className="flex justify-end">{refreshButton}</div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="mb-4 flex justify-end">{refreshButton}</div>
@@ -265,7 +318,7 @@ export function AlarmsClient({ alarms, statusFilter }: Props) {
                   ? "Aucune alarme active"
                   : statusFilter === "acknowledged"
                   ? "Aucune alarme acquittée"
-                  : "Aucune alarme résolue"
+                  : "Aucune alarme à acquitter"
               }
               description={
                 statusFilter === "active"
@@ -277,12 +330,16 @@ export function AlarmsClient({ alarms, statusFilter }: Props) {
         </Card>
       ) : (
         <Card>
-          <CardHeader>
+          <CardHeader className="space-y-4">
             <CardTitle>
               {statusFilter === "active" && "Alarmes actives"}
               {statusFilter === "acknowledged" && "Alarmes acquittées"}
-              {statusFilter === "resolved" && "Alarmes résolues"}
+              {statusFilter === "resolved" && "Alarmes à acquitter"}
             </CardTitle>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              {statusTabs}
+              <div className="flex justify-end">{refreshButton}</div>
+            </div>
           </CardHeader>
           <CardContent>
             <TanStackTable<AlarmRow>
@@ -298,6 +355,10 @@ export function AlarmsClient({ alarms, statusFilter }: Props) {
                 if (fullAlarm) setSelectedAlarm(fullAlarm);
               }}
               toolbarRight={refreshButton}
+              maxHeight="calc(100dvh - 25rem)"
+              headerClassName="!bg-sidebar !text-sidebar-foreground"
+              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+              tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
             />
           </CardContent>
         </Card>
@@ -322,18 +383,22 @@ export function AlarmsClient({ alarms, statusFilter }: Props) {
           <div className="space-y-4">
             <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Valeur mesurée</p>
+                <p className="text-sm text-muted-foreground">Derni?re valeur</p>
                 <p className="text-xl font-bold font-mono">
-                  {selectedAlarm?.value}{selectedAlarm?.sensor.unit}
+                  {selectedAlarm?.sensor.currentValue ?? selectedAlarm?.value ?? "-"} {selectedAlarm?.sensor.unit}
                 </p>
               </div>
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Seuil dépassé</p>
-                <p className="text-xl font-bold font-mono">
-                  {selectedAlarm?.threshold}{selectedAlarm?.sensor.unit}
+                <p className="text-sm text-muted-foreground">Consignes sup/inf</p>
+                <p className="text-sm font-mono text-muted-foreground">
+                  Sup: {selectedAlarm?.sensor.maxThreshold ?? "-"} {selectedAlarm?.sensor.unit}
+                </p>
+                <p className="text-sm font-mono text-muted-foreground">
+                  Inf: {selectedAlarm?.sensor.minThreshold ?? "-"} {selectedAlarm?.sensor.unit}
                 </p>
               </div>
             </div>
+/}
             <div className="space-y-2">
               <label htmlFor="comment" className="text-sm font-medium">
                 Commentaire (optionnel)
@@ -381,7 +446,7 @@ function AlarmStatusBadge({ status }: { status: string }) {
   > = {
     active: { label: "Active", variant: "destructive" },
     acknowledged: { label: "Acquittée", variant: "secondary" },
-    resolved: { label: "Résolue", variant: "outline" },
+    resolved: { label: "À acquitter", variant: "outline" },
   };
 
   const config = configs[status] || configs.active;

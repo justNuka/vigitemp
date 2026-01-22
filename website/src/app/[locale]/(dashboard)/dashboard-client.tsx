@@ -136,27 +136,30 @@ export function DashboardClient({
         );
       },
     },
-    {
-      accessorKey: "value",
-      header: () => <div className="text-right">Valeur</div>,
+        {
+      id: "lastValue",
+      header: () => <div className="text-right">Dernière valeur</div>,
       cell: ({ row }) => {
         const alarm = row.original;
+        const value = alarm.sensor.currentValue ?? alarm.value ?? null;
         return (
           <div className="text-right font-mono font-medium">
-            {alarm.value.toFixed(1)}{alarm.sensor.unit}
+            {value !== null ? `${value.toFixed(1)} ${alarm.sensor.unit}` : "-"}
           </div>
         );
       },
     },
     {
-      accessorKey: "threshold",
-      header: () => <div className="text-right">Seuil</div>,
+      id: "consignes",
+      header: () => <div className="text-right">Consignes sup/inf</div>,
       cell: ({ row }) => {
         const alarm = row.original;
-        const isHigh = alarm.type === "high";
+        const sup = alarm.sensor.maxThreshold;
+        const inf = alarm.sensor.minThreshold;
         return (
           <div className="text-right font-mono text-muted-foreground">
-            {isHigh ? ">" : "<"} {alarm.threshold}{alarm.sensor.unit}
+            <div>{sup !== null && sup !== undefined ? `Sup: ${sup} ${alarm.sensor.unit}` : "Sup: -"}</div>
+            <div>{inf !== null && inf !== undefined ? `Inf: ${inf} ${alarm.sensor.unit}` : "Inf: -"}</div>
           </div>
         );
       },
@@ -335,7 +338,8 @@ export function DashboardClient({
       </div>
 
       {/* Sondes critiques (si présentes) */}
-      {criticalSensors.length > 0 && (
+      {/*
+{criticalSensors.length > 0 && (
         <section aria-label="Sondes critiques" className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -357,10 +361,11 @@ export function DashboardClient({
             ))}
           </div>
         </section>
-      )}
+      */}
 
       {/* Aperçu des sondes */}
-      <section aria-label="Aperçu des sondes" className="space-y-4">
+      {/*
+<section aria-label="Aperçu des sondes" className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Aperçu des sondes</h2>
           <Link href="surveillance">
@@ -377,6 +382,7 @@ export function DashboardClient({
           ))}
         </div>
       </section>
+      */}
 
       <Dialog open={!!selectedAlarm} onOpenChange={() => setSelectedAlarm(null)}>
         <DialogContent className="sm:max-w-md">
@@ -395,20 +401,24 @@ export function DashboardClient({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Valeur mesurée</p>
+                <p className="text-sm text-muted-foreground">Derni?re valeur</p>
                 <p className="text-xl font-bold font-mono">
-                  {selectedAlarm?.value}{selectedAlarm?.sensor.unit}
+                  {selectedAlarm?.sensor.currentValue ?? selectedAlarm?.value ?? "-"} {selectedAlarm?.sensor.unit}
                 </p>
               </div>
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Seuil dépassé</p>
-                <p className="text-xl font-bold font-mono">
-                  {selectedAlarm?.threshold}{selectedAlarm?.sensor.unit}
+                <p className="text-sm text-muted-foreground">Consignes sup/inf</p>
+                <p className="text-sm font-mono text-muted-foreground">
+                  Sup: {selectedAlarm?.sensor.maxThreshold ?? "-"} {selectedAlarm?.sensor.unit}
+                </p>
+                <p className="text-sm font-mono text-muted-foreground">
+                  Inf: {selectedAlarm?.sensor.minThreshold ?? "-"} {selectedAlarm?.sensor.unit}
                 </p>
               </div>
             </div>
+
             <div className="space-y-2">
               <label htmlFor="comment" className="text-sm font-medium">
                 Commentaire (optionnel)

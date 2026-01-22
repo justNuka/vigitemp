@@ -75,6 +75,9 @@ export function AdjustmentsPanel({
               maxHeight="16rem"
               selectedRowId={selectedAdjustmentId ?? undefined}
               onRowClick={(row: AdjustmentRow) => onSelectAdjustment(row.Id_Calibrage)}
+              headerClassName="!bg-sidebar !text-sidebar-foreground"
+              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+              tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
             />
             <div className="flex gap-2">
               <Button size="sm" variant="outline" disabled={!selectedAdjustmentId} className="flex-1">

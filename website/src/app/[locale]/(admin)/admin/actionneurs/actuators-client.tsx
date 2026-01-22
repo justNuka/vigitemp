@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { useRouter } from '@/i18n/navigation'
 import { ActuatorModal } from "./actuator-modal"
+import { Archive, Pencil, Plus } from "lucide-react"
 
 type ActuatorRow = {
   Id_Actionneur: number
@@ -85,7 +86,7 @@ export function ActuatorsClient() {
     {
       accessorKey: "Commentaire",
       header: "Commentaire",
-      cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.getValue("Commentaire") || "-"}</span>,
+      cell: ({ row }) => <span className="text-sm">{row.getValue("Commentaire") || "-"}</span>,
     },
     {
       accessorKey: "Est_Etat",
@@ -117,13 +118,16 @@ export function ActuatorsClient() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleAddClick} variant="default">
+            <Button onClick={handleAddClick} variant="default" size="sm" className="gap-2">
+              <Plus className="h-4 w-4" />
               Nouveau
             </Button>
-            <Button onClick={handleEditClick} disabled={!selectedActuator} variant="outline">
+            <Button onClick={handleEditClick} disabled={!selectedActuator} variant="outline" size="sm" className="gap-2">
+              <Pencil className="h-4 w-4" />
               Modifier
             </Button>
-            <Button onClick={handleDeleteClick} disabled={!selectedActuator} variant="outline">
+            <Button onClick={handleDeleteClick} disabled={!selectedActuator} variant="outline" size="sm" className="gap-2">
+              <Archive className="h-4 w-4" />
               Archiver
             </Button>
           </div>
@@ -135,12 +139,15 @@ export function ActuatorsClient() {
             searchField="Num_Serie"
             searchPlaceholder="N° série, type..."
             isLoading={isLoading}
-            maxHeight="60vh"
+            maxHeight="calc(100dvh - 25rem)"
             emptyMessage="Aucun actionneur trouvé"
             selectedRowId={selectedActuator?.Id_Actionneur}
             onRowClick={(row: ActuatorRow) => {
               setSelectedActuator(actuators?.find((a) => a.Id_Actionneur === row.Id_Actionneur) || null)
             }}
+            headerClassName="!bg-sidebar !text-sidebar-foreground"
+            headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+            tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
           />
         </CardContent>
       </Card>

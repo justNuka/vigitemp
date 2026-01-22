@@ -231,6 +231,7 @@ export type Location = {
   alarmDelayMinutes?: number | null;
   lieuEtat?: string | null;
   surveillanceDisabled?: boolean;
+  lieuType?: string | null;
   siteId?: number;
   groupIds?: number[];
   groupNames?: string[];

@@ -42,7 +42,7 @@ export function SurveillanceHeaderControls({
   onToggleOrder,
 }: Props) {
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-4 w-full rounded-lg border border-slate-200 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-900/60">
       <SurveillanceFilters onFilterChange={onFilterChange} sites={sites} groups={groups} />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <SurveillanceViewTabs value={viewMode} onChange={onViewModeChange} graphsLabel={graphsLabel} treeLabel={treeLabel} />
@@ -52,7 +52,7 @@ export function SurveillanceHeaderControls({
               variant="secondary"
               size="sm"
               onClick={onToggleOrder}
-              className="gap-2"
+              className="gap-2 border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 dark:border-primary/50 dark:bg-primary/15 dark:text-primary-foreground/90"
               data-testid="button-toggle-surveillance-order"
             >
               <ArrowUpDown className="h-4 w-4" />
@@ -64,7 +64,7 @@ export function SurveillanceHeaderControls({
               variant="outline"
               size="sm"
               onClick={onRefresh}
-              className="gap-2"
+              className="gap-2 border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 dark:border-primary/50 dark:bg-primary/15 dark:text-primary-foreground/90"
               disabled={isRefreshing}
               data-testid="button-refresh-surveillance"
             >

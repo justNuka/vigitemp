@@ -80,11 +80,14 @@ export function MonitoringCardsGrid({
       <div className="p-4 md:p-6 space-y-8">
         {/* Section Active */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-50">
-              <Power className="h-5 w-5 text-sky-500" />
-              {t("grid.active_title")}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-50">
+                <Power className="h-5 w-5 text-sky-500" />
+                {t("grid.active_title")}
+              </div>
             </div>
+            <div className="h-px w-full bg-slate-200 dark:bg-slate-700" />
           </div>
           <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -95,9 +98,12 @@ export function MonitoringCardsGrid({
 
         {/* Section Disabled */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-50">
-            <PowerOff className="h-5 w-5 text-slate-400" />
-            {t("grid.disabled_title")}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-50">
+              <PowerOff className="h-5 w-5 text-slate-400" />
+              {t("grid.disabled_title")}
+            </div>
+            <div className="h-px w-full bg-slate-200 dark:bg-slate-700" />
           </div>
           <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))] max-w-4xl">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -122,11 +128,14 @@ export function MonitoringCardsGrid({
 
   const renderActiveSection = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-200">
-          <Power className="h-5 w-5 text-sky-500" />
-          {t("grid.active_title")}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-200">
+            <Power className="h-5 w-5 text-sky-500" />
+            {t("grid.active_title")}
+          </div>
         </div>
+        <div className="h-px w-full bg-slate-200 dark:bg-slate-700" />
       </div>
       {groupedActive.map(({ siteId, siteName, sensorsCount, groups }) => {
         const isSiteExpanded = expandedSites.has(siteId)
@@ -240,7 +249,7 @@ export function MonitoringCardsGrid({
                               key={sensor.id}
                               idLieu={Number(sensor.id)}
                               nomLieu={sensor.name}
-                              lieuType={sensor.lieuType ?? undefined}
+                              lieuType={sensor.lieuType ?? sensor.location.lieuType ?? undefined}
                               siteName={siteName}
                               groupName={groupName}
                               status={sensor.status}
@@ -267,66 +276,69 @@ export function MonitoringCardsGrid({
 
   const renderDisabledSection = () => (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-50">
-        <PowerOff className="h-5 w-5 text-slate-400" />
-        {t("grid.disabled_title")}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-50">
+          <PowerOff className="h-5 w-5 text-slate-400" />
+          {t("grid.disabled_title")}
+        </div>
+        <div className="h-px w-full bg-slate-200 dark:bg-slate-700" />
       </div>
       {hasDisabled ? (
         <div className="max-w-4xl">
           {groupedDisabled.map(({ siteId, siteName, sensorsCount, groups }) => {
-          const isSiteExpanded = expandedSites.has(`disabled-${siteId}`)
-          return (
-            <div key={`disabled-${siteId}`} className="space-y-4">
-              <button
-                onClick={() => toggleSite(`disabled-${siteId}`)}
-                className="w-full flex items-center gap-3 border-b border-gray-200 dark:border-slate-700 pb-3 hover:bg-gray-50 dark:hover:bg-slate-900/50 px-2 py-1 rounded transition-colors"
-              >
-                <ChevronDown
-                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                    isSiteExpanded ? "rotate-0" : "-rotate-90"
-                  }`}
-                />
-                <Building2 className="w-5 h-5 text-slate-500" />
-                <h2 className="text-xl font-semibold">{siteName}</h2>
-                <span className="ml-auto text-xs text-gray-500">
-                  {formatSondes(sensorsCount)} - {formatGroupes(groups.length)}
-                </span>
-              </button>
+            const isSiteExpanded = expandedSites.has(`disabled-${siteId}`)
+            return (
+              <div key={`disabled-${siteId}`} className="space-y-4">
+                <button
+                  onClick={() => toggleSite(`disabled-${siteId}`)}
+                  className="w-full flex items-center gap-3 border-b border-gray-200 dark:border-slate-700 pb-3 hover:bg-gray-50 dark:hover:bg-slate-900/50 px-2 py-1 rounded transition-colors"
+                >
+                  <ChevronDown
+                    className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                      isSiteExpanded ? "rotate-0" : "-rotate-90"
+                    }`}
+                  />
+                  <Building2 className="w-5 h-5 text-slate-500" />
+                  <h2 className="text-xl font-semibold">{siteName}</h2>
+                  <span className="ml-auto text-xs text-gray-500">
+                    {formatSondes(sensorsCount)} - {formatGroupes(groups.length)}
+                  </span>
+                </button>
 
-              {isSiteExpanded ? (
-                <div className="space-y-3 animate-fade-in">
-                  {groups.map(({ groupKey, groupName, sensors: groupSensors }) => (
-                    <div key={`disabled-${groupKey}`} className="space-y-3">
-                      <div className="flex items-center gap-2 px-2 py-1 text-base font-semibold text-gray-600 dark:text-slate-300">
-                        <Users className="w-4 h-4" />
-                        <span className="font-medium">{groupName}</span>
+                {isSiteExpanded ? (
+                  <div className="space-y-3 animate-fade-in">
+                    {groups.map(({ groupKey, groupName, sensors: groupSensors }) => (
+                      <div key={`disabled-${groupKey}`} className="space-y-3">
+                        <div className="flex items-center gap-2 px-2 py-1 text-base font-semibold text-gray-600 dark:text-slate-300">
+                          <Users className="w-4 h-4" />
+                          <span className="font-medium">{groupName}</span>
+                        </div>
+                        <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))] animate-fade-in">
+                          {sortSensorsByStatus(groupSensors).map((sensor) => (
+                            <MonitoringCard
+                              key={sensor.id}
+                              idLieu={Number(sensor.id)}
+                              nomLieu={sensor.name}
+                              lieuType={sensor.lieuType ?? sensor.location.lieuType ?? undefined}
+                              siteName={siteName}
+                              groupName={groupName}
+                              status={sensor.status}
+                              alarmDisabled={sensor.location.alarmDisabled}
+                              alarmDisabledUntil={sensor.location.alarmDisabledUntil}
+                              alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
+                              lieuEtat={sensor.location.lieuEtat ?? undefined}
+                              surveillanceDisabled={sensor.location.surveillanceDisabled}
+                              onSurveillanceToggle={onSurveillanceToggle}
+                            />
+                          ))}
+                        </div>
                       </div>
-                      <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))] animate-fade-in">
-                        {sortSensorsByStatus(groupSensors).map((sensor) => (
-                        <MonitoringCard
-                          key={sensor.id}
-                          idLieu={Number(sensor.id)}
-                          nomLieu={sensor.name}
-                          lieuType={sensor.lieuType ?? undefined}
-                          siteName={siteName}
-                          groupName={groupName}
-                          status={sensor.status}
-                          alarmDisabled={sensor.location.alarmDisabled}
-                          alarmDisabledUntil={sensor.location.alarmDisabledUntil}
-                          alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
-                          lieuEtat={sensor.location.lieuEtat ?? undefined}
-                          surveillanceDisabled={sensor.location.surveillanceDisabled}
-                          onSurveillanceToggle={onSurveillanceToggle}
-                        />
-                      ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          )
-        })}
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            )
+          })}
         </div>
       ) : (
         <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 px-4 py-3 text-sm text-slate-500">
@@ -357,8 +369,8 @@ export function MonitoringCardsGrid({
             <DialogDescription>
               {groupModal
                 ? `Voulez-vous ${groupModal.isActive ? "désactiver" : "activer"} la surveillance du groupe ${
-                  groupModal.groupName
-                } ?`
+                    groupModal.groupName
+                  } ?`
                 : null}
             </DialogDescription>
           </DialogHeader>
@@ -374,7 +386,7 @@ export function MonitoringCardsGrid({
                   <SelectItem value="60">1 heure</SelectItem>
                   <SelectItem value="240">4 heures</SelectItem>
                   <SelectItem value="720">12 heures</SelectItem>
-                  <SelectItem value="manual">Illimité (manuel)</SelectItem>
+                  <SelectItem value="manual">Illimitée (manuel)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -409,5 +421,3 @@ export function MonitoringCardsGrid({
     </div>
   )
 }
-
-

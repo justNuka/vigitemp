@@ -135,7 +135,7 @@ function parseAuditDetails(details: string | null): ParsedDetails {
     if (changes.machineName || changes.address) {
       const machine = changes.machineName ? `Machine: ${changes.machineName}` : "";
       const address = changes.address ? `Adresse: ${changes.address}` : "";
-      subtitleParts.push([machine, address].filter(Boolean).join(" · "));
+      subtitleParts.push([machine, address].filter(Boolean).join(" • "));
     }
     if (changes.connectedAt) {
       const connectedAt = formatDateSafe(changes.connectedAt);
@@ -165,7 +165,7 @@ function parseAuditDetails(details: string | null): ParsedDetails {
 
   return {
     title,
-    subtitle: subtitleParts.join(" · "),
+    subtitle: subtitleParts.join(" • "),
     raw: normalizedDetails,
   };
 }
@@ -208,6 +208,19 @@ export function AuditClient({ logs }: Props) {
     router.refresh();
     toast.success(t("toast.refreshed"));
   };
+
+  const refreshButton = (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleRefresh}
+      className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 border-primary/40"
+      data-testid="button-refresh"
+    >
+      <RefreshCw className="h-4 w-4" />
+      {t("refresh")}
+    </Button>
+  );
 
   const summary =
     filteredLogs.length === logs.length
@@ -342,17 +355,6 @@ export function AuditClient({ logs }: Props) {
                 className="pl-9 w-64"
               />
             </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              className="gap-2"
-              data-testid="button-refresh"
-            >
-              <RefreshCw className="h-4 w-4" />
-              {t("refresh")}
-            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -365,6 +367,14 @@ export function AuditClient({ logs }: Props) {
             emptyMessage="Aucun log d'audit trouvé"
             showSearch={false}
             maxHeight="60vh"
+            headerClassName="!bg-sidebar !text-sidebar-foreground"
+            headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+            toolbarRight={refreshButton}
+            showPagination
+            enableExport
+            enablePrint
+            containerClassName="border border-sidebar-border/40"
+            tableClassName="border-separate border-spacing-0 [&_thead_th]:text-sidebar-foreground [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
           />
         </CardContent>
       </Card>

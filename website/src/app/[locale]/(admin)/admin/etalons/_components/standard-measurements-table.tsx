@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import type { ColumnDef } from '@tanstack/react-table';
+import { Plus, Trash2 } from "lucide-react";
 
 export type MeasurementPoint = {
   point: number;
@@ -105,10 +106,12 @@ export function StandardMeasurementsTable({
       />
 
       <div className="flex gap-2">
-        <Button onClick={onAdd} className="bg-green-600 hover:bg-green-700" size="sm">
+        <Button onClick={onAdd} className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2" size="sm">
+          <Plus className="h-4 w-4" />
           Nouveau
         </Button>
-        <Button onClick={onRequestDelete} disabled={selectedMesureIndex === null} variant="outline" size="sm">
+        <Button onClick={onRequestDelete} disabled={selectedMesureIndex === null} variant="outline" size="sm" className="gap-2">
+          <Trash2 className="h-4 w-4" />
           Supprimer
         </Button>
       </div>

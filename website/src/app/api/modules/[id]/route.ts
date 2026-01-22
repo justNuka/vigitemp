@@ -146,8 +146,9 @@ export const DELETE = withLogging(
         return apiError(400, "has_dependencies", "Impossible de supprimer un module avec du matériel associé")
       }
 
-      await prisma.t_module.delete({
+      await prisma.t_module.update({
         where: { Id_Module: id },
+        data: { Archive: 1 },
       })
 
       log.data.delete(

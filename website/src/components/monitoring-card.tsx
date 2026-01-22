@@ -12,6 +12,7 @@ import {
   Filler,
 } from "chart.js";
 import { FileText, MapPin, Power, PowerOff, Settings } from "lucide-react";
+
 import { getTypeIcon } from "@/lib/lieu-types";
 import type { LieuTypeValue } from "@/lib/lieu-types";
 import MonitoringDetailsModal from "@/components/monitoring-details-modal";
@@ -56,17 +57,17 @@ ChartJS.register(
 interface MonitoringCardProps {
   idLieu: number;
   nomLieu: string;
-  sondeNumeroSerie?: string;
-  lieuEtat?: string;
-  lieuType?: LieuTypeValue;
-  siteName?: string;
-  groupName?: string;
-  status?: SensorStatus;
-  alarmDisabled?: boolean;
-  alarmDisabledUntil?: Date | string | null;
-  alarmDelayMinutes?: number | null;
-  surveillanceDisabled?: boolean;
-  onSurveillanceToggle?: (idLieu: number, newState: boolean, durationMinutes?: number | null) => void;
+  sondeNumeroSerie: string;
+  lieuEtat: string;
+  lieuType: LieuTypeValue;
+  siteName: string;
+  groupName: string;
+  status: SensorStatus;
+  alarmDisabled: boolean;
+  alarmDisabledUntil: Date | string | null;
+  alarmDelayMinutes: number | null;
+  surveillanceDisabled: boolean;
+  onSurveillanceToggle: (idLieu: number, newState: boolean, durationMinutes: number | null) => void;
 }
 
 export default function MonitoringCard({
@@ -84,7 +85,7 @@ export default function MonitoringCard({
   surveillanceDisabled,
   onSurveillanceToggle,
 }: MonitoringCardProps) {
-  const { data, isLoading, reload } = useLieuMeasurements(idLieu);
+  const { data, isLoading, reload, meta } = useLieuMeasurements(idLieu, { includeMeta: true });
 
   const orderedData = useMemo(() => {
     if (!data.length) return data;
@@ -104,6 +105,8 @@ export default function MonitoringCard({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [disableDuration, setDisableDuration] = useState<string>("60");
+
   const [isSurveillanceActive, setIsSurveillanceActive] = useState(
     surveillanceDisabled !== undefined ? !surveillanceDisabled : lieuEtat !== "D"
   );
@@ -123,18 +126,16 @@ export default function MonitoringCard({
     reload(true);
   }, [isModalOpen, reload]);
 
-  const [disableDuration, setDisableDuration] = useState<string>("60");
-
   const hasMinMax = consigneSup !== null && consigneInf !== null;
   const visualStatus: SensorStatus = status === "ok" && hasMinMax ? "minmax" : status;
 
   const headerTheme = useMemo(
     () => getStatusTheme(visualStatus, isSurveillanceActive),
-    [isSurveillanceActive, visualStatus],
+    [isSurveillanceActive, visualStatus]
   );
 
   const headerBgClassName = headerTheme.headerBgClassName;
-  const headerTextClassName = headerTheme.headerTextClassName;
+  const headerTextClassName = isSurveillanceActive ? headerTheme.headerTextClassName : "text-white";
   const headerStatusLabel = headerTheme.label;
 
   const handleSurveillanceToggle = () => {
@@ -157,6 +158,11 @@ export default function MonitoringCard({
   };
 
   const HeaderIcon = headerTheme.Icon;
+  const resolvedLieuType = lieuType ?? meta?.lieuType ?? null;
+  const typeIconInfo = useMemo(
+    () => (resolvedLieuType ? getTypeIcon(resolvedLieuType, "w-4 h-4") : null),
+    [resolvedLieuType]
+  );
 
   const [yMin, yMax] = useMemo(
     () => calculateYDomain(orderedData, { consigneSup, consigneInf, consigne }),
@@ -177,9 +183,29 @@ export default function MonitoringCard({
     })}`;
   }, [alarmDisabledUntil, isSurveillanceActive]);
 
+  const alarmBadgeClassName = isSurveillanceActive
+    ? "bg-gray-500/20 text-gray-900 dark:text-gray-100"
+    : "bg-white/20 text-white";
+
+  const contentTextClassName = isSurveillanceActive
+    ? "text-gray-600 dark:text-gray-400"
+    : "text-white";
+
+  const actionButtonClassName = isSurveillanceActive
+    ? "hover:bg-gray-100 dark:hover:bg-gray-700"
+    : "hover:bg-white/10";
+
+  const actionIconClassName = isSurveillanceActive
+    ? "text-gray-600 dark:text-gray-400"
+    : "text-white";
+
   return (
     <>
-      <div className="relative w-full bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+      <div
+        className={`relative w-full rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden ${
+          isSurveillanceActive ? "bg-white dark:bg-gray-800" : "bg-slate-600 dark:bg-gray-800"
+        }`}
+      >
         <div
           className={`px-3 py-2 ${headerBgClassName} border-b-2 ${headerTheme.headerBorderClassName}`}
         >
@@ -202,185 +228,214 @@ export default function MonitoringCard({
                 </TooltipProvider>
               ) : null}
               {groupName ? <div className="truncate">{groupName}</div> : null}
-              <div className="text-base font-semibold truncate flex items-center gap-1.5">
-                {lieuType ? getTypeIcon(lieuType, "w-3.5 h-3.5").icon : null}
-                {nomLieu}
-              </div>
+              <div className="text-base font-semibold truncate">{nomLieu}</div>
               {alarmDisabledLabel ? (
-                <div className="inline-flex items-center w-fit gap-1 rounded-full bg-gray-500/20 text-gray-900 dark:text-gray-100 text-[10px] px-2 py-0.5">
+                <div className={`inline-flex items-center w-fit gap-1 rounded-full text-[10px] px-2 py-0.5 ${alarmBadgeClassName}`}>
                   <PowerOff className="h-3 w-3" />
                   <span>{alarmDisabledLabel}</span>
                 </div>
               ) : null}
             </div>
+
             <TooltipProvider>
-              <UITooltip>
-                <TooltipTrigger asChild>
-                  <div className={`${headerTextClassName} shrink-0 mt-0.5`}>
-                    <HeaderIcon className="w-4 h-4" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">{headerStatusLabel}</p>
-                </TooltipContent>
-              </UITooltip>
+              <div className={`${headerTextClassName} shrink-0 mt-0.5 flex flex-col items-center gap-1.5`}>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <HeaderIcon className="w-4 h-4" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">{headerStatusLabel}</p>
+                  </TooltipContent>
+                </UITooltip>
+                {typeIconInfo?.icon ? (
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <span className={isSurveillanceActive ? "text-current" : "text-white"}>
+                        {typeIconInfo.icon}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">{typeIconInfo.label}</p>
+                    </TooltipContent>
+                  </UITooltip>
+                ) : null}
+              </div>
             </TooltipProvider>
           </div>
         </div>
 
         <div className="p-4 flex flex-col">
+          {isSurveillanceActive ? (
+            <>
+              <div
+                className="cursor-pointer relative"
+                onClick={() => setIsModalOpen(true)}
+              >
+                {isLoading ? (
+                  <div className="h-32.5">
+                    <Skeleton className="h-full w-full rounded-md" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="h-32.5">
+                      <Line
+                        data={{
+                          labels: orderedData.map((d) => d.DateHeureMesureXaxis),
+                          datasets: [
+                            {
+                              label: `Mesures (${unite})`,
+                              data: orderedData.map((d) => d.Valeur),
+                              borderColor: "#3b82f6",
+                              backgroundColor: "rgba(59, 130, 246, 0.1)",
+                              borderWidth: 2,
+                              fill: false,
+                              tension: 0.4,
+                              pointRadius: 0,
+                              pointHoverRadius: 4,
+                            },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              display: false,
+                            },
+                            tooltip: {
+                              enabled: true,
+                              mode: "index",
+                              intersect: false,
+                            },
+                          },
+                          scales: {
+                            x: {
+                              display: false,
+                            },
+                            y: {
+                              display: false,
+                              min: yMin,
+                              max: yMax,
+                            },
+                          },
+                          interaction: {
+                            mode: "nearest",
+                            axis: "x",
+                            intersect: false,
+                          },
+                        }}
+                      />
+                    </div>
+
+                    <div className="absolute inset-0 pointer-events-none">
+                      {consigneSup !== null ? (
+                        <div
+                          className="absolute w-full border-t-2 border-red-500 border-dashed"
+                          style={{
+                            top: `${((yMax - consigneSup) / (yMax - yMin)) * 100}%`,
+                          }}
+                        />
+                      ) : null}
+                      {consigne !== null ? (
+                        <div
+                          className="absolute w-full border-t border-gray-900 dark:border-white"
+                          style={{
+                            top: `${((yMax - consigne) / (yMax - yMin)) * 100}%`,
+                          }}
+                        />
+                      ) : null}
+                      {consigneInf !== null ? (
+                        <div
+                          className="absolute w-full border-t-2 border-red-500 border-dashed"
+                          style={{
+                            top: `${((yMax - consigneInf) / (yMax - yMin)) * 100}%`,
+                          }}
+                        />
+                      ) : null}
+                    </div>
+
+                    <div className="absolute right-0 top-0 bottom-0 flex flex-col justify-between py-2 pointer-events-none pr-1">
+                      {consigneSup !== null ? (
+                        <div
+                          className="text-[9px] font-medium text-red-600 dark:text-red-400 bg-white/90 dark:bg-gray-800/90 px-1 rounded shadow-sm whitespace-nowrap"
+                          style={{
+                            position: "absolute",
+                            top: `${((yMax - consigneSup) / (yMax - yMin)) * 100}%`,
+                            transform: "translateY(-50%)",
+                            right: "4px",
+                          }}
+                        >
+                          Max: {consigneSup}
+                          {unite}
+                        </div>
+                      ) : null}
+                      {consigne !== null ? (
+                        <div
+                          className="text-[9px] font-medium text-gray-900 dark:text-white bg-white/90 dark:bg-gray-800/90 px-1 rounded shadow-sm whitespace-nowrap"
+                          style={{
+                            position: "absolute",
+                            top: `${((yMax - consigne) / (yMax - yMin)) * 100}%`,
+                            transform: "translateY(-50%)",
+                            right: "4px",
+                          }}
+                        >
+                          {consigne}
+                          {unite}
+                        </div>
+                      ) : null}
+                      {consigneInf !== null ? (
+                        <div
+                          className="text-[9px] font-medium text-red-600 dark:text-red-400 bg-white/90 dark:bg-gray-800/90 px-1 rounded shadow-sm whitespace-nowrap"
+                          style={{
+                            position: "absolute",
+                            top: `${((yMax - consigneInf) / (yMax - yMin)) * 100}%`,
+                            transform: "translateY(-50%)",
+                            right: "4px",
+                          }}
+                        >
+                          Min: {consigneInf}
+                          {unite}
+                        </div>
+                      ) : null}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="mt-auto space-y-3 text-sm border-t border-gray-200 dark:border-gray-700 pt-3">
+                {lastDateTime ? (
+                  <>
+                    <div className={`flex items-center justify-between text-[11px] ${contentTextClassName}`}>
+                      <span>Dernière mesure : {lastMeasureText}</span>
+                      <span>{lastDateTime}</span>
+                    </div>
+                    <div className={`flex items-center justify-center gap-4 text-[11px] ${contentTextClassName}`}>
+                      <span>Fréq : {frequence} min</span>
+                      {alarmDelayMinutes !== null && alarmDelayMinutes !== undefined ? (
+                        <span>Retard alarme : {alarmDelayMinutes} min</span>
+                      ) : null}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center text-gray-500 dark:text-gray-400 italic py-3">
+                    Aucune mesure disponible
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className={`text-sm font-medium ${contentTextClassName}`}>
+              Surveillance désactivée
+            </div>
+          )}
+
           <div
-            className="cursor-pointer relative"
-            onClick={() => setIsModalOpen(true)}
+            className={`mt-4 border-t border-gray-200 dark:border-gray-700 pt-3 ${
+              isSurveillanceActive ? "" : "border-white/20"
+            }`}
           >
-            {isLoading ? (
-              <div className="h-32.5">
-                <Skeleton className="h-full w-full rounded-md" />
-              </div>
-            ) : (
-              <>
-                <div className="h-32.5">
-                  <Line
-                    data={{
-                      labels: orderedData.map((d) => d.DateHeureMesureXaxis),
-                      datasets: [
-                        {
-                          label: `Mesures (${unite})`,
-                          data: orderedData.map((d) => d.Valeur),
-                          borderColor: "#3b82f6",
-                          backgroundColor: "rgba(59, 130, 246, 0.1)",
-                          borderWidth: 2,
-                          fill: false,
-                          tension: 0.4,
-                          pointRadius: 0,
-                          pointHoverRadius: 4,
-                        },
-                      ],
-                    }}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: {
-                          display: false,
-                        },
-                        tooltip: {
-                          enabled: true,
-                          mode: "index",
-                          intersect: false,
-                        },
-                      },
-                      scales: {
-                        x: {
-                          display: false,
-                        },
-                        y: {
-                          display: false,
-                          min: yMin,
-                          max: yMax,
-                        },
-                      },
-                      interaction: {
-                        mode: "nearest",
-                        axis: "x",
-                        intersect: false,
-                      },
-                    }}
-                  />
-                </div>
-
-                <div className="absolute inset-0 pointer-events-none">
-                  {consigneSup !== null ? (
-                    <div
-                      className="absolute w-full border-t-2 border-red-500 border-dashed"
-                      style={{
-                        top: `${((yMax - consigneSup) / (yMax - yMin)) * 100}%`,
-                      }}
-                    />
-                  ) : null}
-                  {consigne !== null ? (
-                    <div
-                      className="absolute w-full border-t border-gray-900 dark:border-white"
-                      style={{
-                        top: `${((yMax - consigne) / (yMax - yMin)) * 100}%`,
-                      }}
-                    />
-                  ) : null}
-                  {consigneInf !== null ? (
-                    <div
-                      className="absolute w-full border-t-2 border-red-500 border-dashed"
-                      style={{
-                        top: `${((yMax - consigneInf) / (yMax - yMin)) * 100}%`,
-                      }}
-                    />
-                  ) : null}
-                </div>
-
-                <div className="absolute right-0 top-0 bottom-0 flex flex-col justify-between py-2 pointer-events-none pr-1">
-                  {consigneSup !== null ? (
-                    <div
-                      className="text-[9px] font-medium text-red-600 dark:text-red-400 bg-white/90 dark:bg-gray-800/90 px-1 rounded shadow-sm whitespace-nowrap"
-                      style={{
-                        position: "absolute",
-                        top: `${((yMax - consigneSup) / (yMax - yMin)) * 100}%`,
-                        transform: "translateY(-50%)",
-                        right: "4px",
-                      }}
-                    >
-                      Max: {consigneSup}{unite}
-                    </div>
-                  ) : null}
-                  {consigne !== null ? (
-                    <div
-                      className="text-[9px] font-medium text-gray-900 dark:text-white bg-white/90 dark:bg-gray-800/90 px-1 rounded shadow-sm whitespace-nowrap"
-                      style={{
-                        position: "absolute",
-                        top: `${((yMax - consigne) / (yMax - yMin)) * 100}%`,
-                        transform: "translateY(-50%)",
-                        right: "4px",
-                      }}
-                    >
-                      {consigne}{unite}
-                    </div>
-                  ) : null}
-                  {consigneInf !== null ? (
-                    <div
-                      className="text-[9px] font-medium text-red-600 dark:text-red-400 bg-white/90 dark:bg-gray-800/90 px-1 rounded shadow-sm whitespace-nowrap"
-                      style={{
-                        position: "absolute",
-                        top: `${((yMax - consigneInf) / (yMax - yMin)) * 100}%`,
-                        transform: "translateY(-50%)",
-                        right: "4px",
-                      }}
-                    >
-                      Min: {consigneInf}{unite}
-                    </div>
-                  ) : null}
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="mt-auto space-y-3 text-sm border-t border-gray-200 dark:border-gray-700 pt-3">
-            {lastDateTime ? (
-              <>
-                <div className="flex items-center justify-between text-[11px] text-gray-600 dark:text-gray-400">
-                  <span>Dernière mesure: {lastMeasureText}</span>
-                  <span>{lastDateTime}</span>
-                </div>
-                <div className="flex items-center justify-center gap-4 text-[11px] text-gray-600 dark:text-gray-400">
-                  <span>Fréq: {frequence} min</span>
-                  {alarmDelayMinutes !== null && alarmDelayMinutes !== undefined ? (
-                    <span>Retard alarme: {alarmDelayMinutes} min</span>
-                  ) : null}
-                </div>
-              </>
-            ) : (
-              <div className="text-center text-gray-500 dark:text-gray-400 italic py-3">
-                Aucune mesure disponible
-              </div>
-            )}
-
             <TooltipProvider>
               <div className="flex justify-center gap-4">
                 <UITooltip>
@@ -390,9 +445,9 @@ export default function MonitoringCard({
                         e.stopPropagation();
                         setIsModalOpen(true);
                       }}
-                      className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      className={`p-1.5 rounded-md transition-colors ${actionButtonClassName}`}
                     >
-                      <FileText className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <FileText className={`w-4 h-4 ${actionIconClassName}`} />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -407,7 +462,9 @@ export default function MonitoringCard({
                         e.stopPropagation();
                         handleSurveillanceToggle();
                       }}
-                      className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-red-600"
+                      className={`p-1.5 rounded-md transition-colors ${actionButtonClassName} ${
+                        isSurveillanceActive ? "text-red-600" : "text-white"
+                      }`}
                     >
                       {isSurveillanceActive ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
                     </button>
@@ -425,9 +482,9 @@ export default function MonitoringCard({
                       onClick={(e) => {
                         e.stopPropagation();
                       }}
-                      className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      className={`p-1.5 rounded-md transition-colors ${actionButtonClassName}`}
                     >
-                      <MapPin className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <MapPin className={`w-4 h-4 ${actionIconClassName}`} />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -441,9 +498,9 @@ export default function MonitoringCard({
                       onClick={(e) => {
                         e.stopPropagation();
                       }}
-                      className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      className={`p-1.5 rounded-md transition-colors ${actionButtonClassName}`}
                     >
-                      <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <Settings className={`w-4 h-4 ${actionIconClassName}`} />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -454,63 +511,64 @@ export default function MonitoringCard({
             </TooltipProvider>
           </div>
         </div>
+
+        <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Confirmation</DialogTitle>
+              <DialogDescription>
+                Voulez-vous {isSurveillanceActive ? "désactiver" : "activer"} la surveillance de ce lieu ?
+              </DialogDescription>
+            </DialogHeader>
+
+            {isSurveillanceActive ? (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Durée de désactivation</label>
+                <Select value={disableDuration} onValueChange={setDisableDuration}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir une durée" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15 minutes</SelectItem>
+                    <SelectItem value="60">1 heure</SelectItem>
+                    <SelectItem value="240">4 heures</SelectItem>
+                    <SelectItem value="720">12 heures</SelectItem>
+                    <SelectItem value="manual">Illimitée (manuel)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowConfirmModal(false)}>
+                Annuler
+              </Button>
+              <Button
+                variant={isSurveillanceActive ? "destructive" : "default"}
+                onClick={confirmSurveillanceToggle}
+              >
+                Confirmer
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {isModalOpen ? (
+          <MonitoringDetailsModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            idLieu={idLieu}
+            nomLieu={nomLieu}
+            sondeNumeroSerie={sondeNumeroSerie || ""}
+            consigneSup={consigneSup}
+            consigneInf={consigneInf}
+            consigne={consigne}
+            unite={unite}
+            isSurveillanceActive={isSurveillanceActive}
+            measurements={isSurveillanceActive ? orderedData : []}
+          />
+        ) : null}
       </div>
-
-      <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Confirmation</DialogTitle>
-            <DialogDescription>
-              Voulez-vous {isSurveillanceActive ? "désactiver" : "activer"} la surveillance de ce lieu ?
-            </DialogDescription>
-          </DialogHeader>
-          {isSurveillanceActive ? (
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Durée de désactivation</label>
-              <Select value={disableDuration} onValueChange={setDisableDuration}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choisir une durée" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="15">15 minutes</SelectItem>
-                  <SelectItem value="60">1 heure</SelectItem>
-                  <SelectItem value="240">4 heures</SelectItem>
-                  <SelectItem value="720">12 heures</SelectItem>
-                  <SelectItem value="manual">Illimité (manuel)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          ) : null}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConfirmModal(false)}>
-              Annuler
-            </Button>
-            <Button
-              variant={isSurveillanceActive ? "destructive" : "default"}
-              onClick={confirmSurveillanceToggle}
-            >
-              Confirmer
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {isModalOpen ? (
-        <MonitoringDetailsModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          idLieu={idLieu}
-          nomLieu={nomLieu}
-          sondeNumeroSerie={sondeNumeroSerie || ""}
-          consigneSup={consigneSup}
-          consigneInf={consigneInf}
-          consigne={consigne}
-          unite={unite}
-          measurements={orderedData}
-        />
-      ) : null}
     </>
   );
 }
-
-

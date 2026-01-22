@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ChevronDown, Search, X } from 'lucide-react';
 
 interface Option {
   id: number | string;
@@ -18,6 +19,9 @@ interface MultiSelectFilterProps {
   selectedIds: (number | string)[];
   onChange: (selectedIds: (number | string)[]) => void;
   placeholder?: string;
+  tone?: "primary" | "default";
+  enableSearch?: boolean;
+  searchPlaceholder?: string;
 }
 
 export function MultiSelectFilter({
@@ -26,8 +30,12 @@ export function MultiSelectFilter({
   selectedIds,
   onChange,
   placeholder = 'Sélectionner...',
+  tone = "primary",
+  enableSearch = false,
+  searchPlaceholder = "Rechercher...",
 }: MultiSelectFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownId = useId();
 
@@ -62,6 +70,16 @@ export function MultiSelectFilter({
   const selectedLabels = options
     .filter((opt) => selectedIds.includes(opt.id))
     .map((opt) => opt.label);
+  const filteredOptions = useMemo(() => {
+    if (!enableSearch || !search.trim()) return options;
+    const needle = search.toLowerCase();
+    return options.filter((opt) => opt.label.toLowerCase().includes(needle));
+  }, [enableSearch, options, search]);
+
+  const buttonClasses =
+    tone === "primary"
+      ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 dark:border-primary/50 dark:bg-primary/15 dark:text-primary-foreground/90"
+      : "border-border bg-background text-foreground hover:bg-muted/40";
 
   return (
     <div
@@ -73,7 +91,7 @@ export function MultiSelectFilter({
     >
       <Button
         variant="outline"
-        className="w-full justify-between"
+        className={`w-full justify-between ${buttonClasses}`}
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-controls={dropdownId}
@@ -82,7 +100,7 @@ export function MultiSelectFilter({
         <div className="flex items-center gap-2 flex-1 text-left">
           <span className="text-sm font-medium">{label}</span>
           {selectedIds.length > 0 && (
-            <Badge variant="secondary" className="ml-auto">
+            <Badge variant="secondary" className="ml-auto bg-primary/15 text-primary">
               {selectedIds.length}
             </Badge>
           )}
@@ -100,12 +118,29 @@ export function MultiSelectFilter({
           id={dropdownId}
           role="listbox"
           aria-multiselectable="true"
-          className="absolute top-full left-0 right-0 z-50 mt-2 border border-input bg-popover rounded-md shadow-md p-2"
+          className="absolute top-full left-0 right-0 z-50 mt-2 border border-slate-200 bg-white rounded-md shadow-md p-2 dark:border-slate-700 dark:bg-slate-900"
         >
+          {enableSearch && (
+            <div className="mb-3">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  className="h-9 pl-8"
+                />
+              </div>
+            </div>
+          )}
           {selectedLabels.length > 0 && (
             <div className="mb-3 pb-3 border-b flex flex-wrap gap-1">
               {selectedLabels.map((label) => (
-                <Badge key={label} variant="default" className="flex items-center gap-1">
+                <Badge
+                  key={label}
+                  variant="default"
+                  className="flex items-center gap-1 bg-primary text-primary-foreground"
+                >
                   {label}
                   <X
                     className="h-3 w-3 cursor-pointer hover:opacity-70"
@@ -119,10 +154,10 @@ export function MultiSelectFilter({
           )}
 
           <div className="space-y-2 max-h-48 overflow-y-auto">
-            {options.length === 0 ? (
+            {filteredOptions.length === 0 ? (
               <p className="text-sm text-muted-foreground py-2">Aucune option</p>
             ) : (
-              options.map((option) => (
+              filteredOptions.map((option) => (
                 <label
                   key={option.id}
                   role="option"

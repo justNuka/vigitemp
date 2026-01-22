@@ -137,22 +137,22 @@ namespace Vigitemp_Serveur
             }
         }
 
-        public (List<float>, bool notificationActive, DateTime dateHeure_reactivationAlarme) getConsignesLieux(int p_idLieu)
+        public (List<float>, bool notificationActive, DateTime Date_Heure_Reactivation_Alarme) getConsignesLieux(int p_idLieu)
         {
             lock (_lock)
             {
                 List<float> array_tmp = new List<float>();
                 bool notificationActive_tmp = false;
-                DateTime dateHeure_reactivationAlarme_tmp = default(DateTime);
+                DateTime Date_Heure_Reactivation_Alarme_tmp = default(DateTime);
 
                 if (!InitConnexion())
                 {
-                    return (array_tmp, notificationActive_tmp, dateHeure_reactivationAlarme_tmp);
+                    return (array_tmp, notificationActive_tmp, Date_Heure_Reactivation_Alarme_tmp);
                 }
 
                 MySqlCommand cmd_vigitemp = connection_vigitemp.CreateCommand();
 
-                cmd_vigitemp.CommandText = "select Consigne_Sup, Consigne_Inf, notification_active, DateHeure_reactivationAlarme from t_lieu " +
+                cmd_vigitemp.CommandText = "select Consigne_Sup, Consigne_Inf, Notification_Active, Date_Heure_Reactivation_Alarme from t_lieu " +
                                             "where IdLieu= @idLieu;";
                 cmd_vigitemp.Parameters.AddWithValue("@idLieu", p_idLieu);
 
@@ -165,33 +165,33 @@ namespace Vigitemp_Serveur
                     //array_tmp.Add(float.Parse(String.Format("{0:0.00}", dr_ConsignesLieux["Consigne_Sup"])));
                     array_tmp.Add(float.Parse(dr_ConsignesLieux["Consigne_Sup"].ToString()));
 
-                    notificationActive_tmp = dr_ConsignesLieux.GetBoolean("notification_active");
-                    //VigitempServeur.Log("DATEHEURE_REACTIVATIONALARME POUR LE LIEU " + p_idLieu + ": " + dr_ConsignesLieux["DateHeure_reactivationAlarme"].ToString());
-                    if (dr_ConsignesLieux["DateHeure_reactivationAlarme"].ToString() != "")
+                    notificationActive_tmp = dr_ConsignesLieux.GetBoolean("Notification_Active");
+                    //VigitempServeur.Log("Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu + ": " + dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString());
+                    if (dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString() != "")
                     {
-                        //VigitempServeur.Log("V2 IL Y A UNE DATEHEURE_REACTIVATIONALARME POUR LE LIEU " + p_idLieu);
-                        dateHeure_reactivationAlarme_tmp = DateTime.Parse(dr_ConsignesLieux["DateHeure_reactivationAlarme"].ToString());
+                        //VigitempServeur.Log("V2 IL Y A UNE Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu);
+                        Date_Heure_Reactivation_Alarme_tmp = DateTime.Parse(dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString());
                     }
                     else
                     {
-                        //VigitempServeur.Log("V2 PAS DE DATEHEURE_REACTIVATIONALARME POUR LE LIEU " + p_idLieu);
+                        //VigitempServeur.Log("V2 PAS DE Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu);
                     }
-                    //if (DateTime.TryParse(dr_ConsignesLieux["DateHeure_reactivationAlarme"].ToString(), out dateHeure_reactivationAlarme_tmp))
-                    //if (DateTime.TryParseExact(dr_ConsignesLieux["DateHeure_reactivationAlarme"].ToString(), "yyyy-M-d h:m:s" ,new CultureInfo("FR-fr"),DateTimeStyles.None,out dateHeure_reactivationAlarme_tmp))
+                    //if (DateTime.TryParse(dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString(), out Date_Heure_Reactivation_Alarme_tmp))
+                    //if (DateTime.TryParseExact(dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString(), "yyyy-M-d h:m:s" ,new CultureInfo("FR-fr"),DateTimeStyles.None,out Date_Heure_Reactivation_Alarme_tmp))
                     //{
-                    //    VigitempServeur.Log("V2 PAS DE DATEHEURE_REACTIVATIONALARME POUR LE LIEU " + p_idLieu);
+                    //    VigitempServeur.Log("V2 PAS DE Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu);
                     //}
                     //else
                     //{
-                    //    VigitempServeur.Log("V2 IL Y A UNE DATEHEURE_REACTIVATIONALARME POUR LE LIEU " + p_idLieu);
+                    //    VigitempServeur.Log("V2 IL Y A UNE Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu);
                     //}
-                    //dateHeure_reactivationAlarme_tmp = DateTime.Parse(dr_ConsignesLieux["DateHeure_reactivationAlarme"].ToString());
+                    //Date_Heure_Reactivation_Alarme_tmp = DateTime.Parse(dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString());
                 }
 
                 dr_ConsignesLieux.Close();
                 CloseConnexion();
 
-                return (array_tmp, notificationActive_tmp, dateHeure_reactivationAlarme_tmp);
+                return (array_tmp, notificationActive_tmp, Date_Heure_Reactivation_Alarme_tmp);
             }
         }
 
@@ -379,7 +379,7 @@ namespace Vigitemp_Serveur
             cmd.CommandText =
                 "SELECT " +
                 "IdLieu, " +
-                "Consigne_Inf, Consigne_Sup, notification_active, DateHeure_reactivationAlarme, " +
+                "Consigne_Inf, Consigne_Sup, Notification_Active, Date_Heure_Reactivation_Alarme, " +
                 "Retard_Alarme_Bas, Retard_Alarme_Haut, " +
                 "Est_Consigne_Inf_Active, Est_Consigne_Sup_Active, " +
                 "Consigne_Inf_Pre_Alarme, Est_Consigne_Inf_Pre_Alarme_Active, " +
@@ -407,8 +407,8 @@ namespace Vigitemp_Serveur
                         dateHeureReactivationAlarme: default(DateTime));
                 }
 
-                var notificationActive = GetNullableBool(reader, "notification_active", false);
-                var reactivationAt = GetNullableDateTime(reader, "DateHeure_reactivationAlarme");
+                var notificationActive = GetNullableBool(reader, "Notification_Active", false);
+                var reactivationAt = GetNullableDateTime(reader, "Date_Heure_Reactivation_Alarme");
 
                 return new LieuAlarmSettings(
                     idLieu,
@@ -448,15 +448,15 @@ namespace Vigitemp_Serveur
                     //cmd_vigitemp.CommandText = "select ip_client, t_lieu.idLieu from t_clients_notifications " +
                     //                            "inner join t_lieu on t_clients_notifications.id_Lieu = t_lieu.idLieu " +
                     //                            "where SondeNumeroSerie = '"+p_sondSerialNumber+"';";
-                    //cmd_vigitemp.CommandText = "select IdLieu, notification_active from t_lieu where SondeNumeroSerie='"+p_sondSerialNumber+"';";
+                    //cmd_vigitemp.CommandText = "select IdLieu, Notification_Active from t_lieu where SondeNumeroSerie='"+p_sondSerialNumber+"';";
                     //MySqlDataReader dr_idLieu = cmd_vigitemp.ExecuteReader();
                     //while (dr_idLieu.Read())
                     //{
                     //    //alarme_active = true;
                     //    idLieu_tmp = dr_idLieu.GetInt32("IdLieu");
-                    //    alarme_active = dr_idLieu.GetBoolean("notification_active");
+                    //    alarme_active = dr_idLieu.GetBoolean("Notification_Active");
                     //    VigitempServeur.Log("(string)dr_idLieu['IdLieu']: " + idLieu_tmp);
-                    //    VigitempServeur.Log("dr_idLieu.GetBoolean('notification_active'): " + alarme_active);
+                    //    VigitempServeur.Log("dr_idLieu.GetBoolean('Notification_Active'): " + alarme_active);
 
                     //}
                     //dr_idLieu.Close();
@@ -808,8 +808,8 @@ namespace Vigitemp_Serveur
 
                 MySqlCommand cmd_vigitemp = this.connection_vigitemp.CreateCommand();
 
-                cmd_vigitemp.CommandText = "SELECT distinct IdLieu, DateHeure_reactivationAlarme FROM t_lieu " +
-                                            "where DateHeure_reactivationAlarme is not null;";
+                cmd_vigitemp.CommandText = "SELECT distinct IdLieu, Date_Heure_Reactivation_Alarme FROM t_lieu " +
+                                            "where Date_Heure_Reactivation_Alarme is not null;";
 
 
                 // Exécution de la commande SQL 
@@ -817,8 +817,8 @@ namespace Vigitemp_Serveur
                 while (dr_lieux.Read())
                 {
                     array_tmpIdLieu.Add(Int32.Parse(dr_lieux["IdLieu"].ToString()));
-                    //VigitempServeur.Log("DateHeure_reactivationAlarme " + DateTime.Parse(dr_lieux["DateHeure_reactivationAlarme"].ToString()).ToString());
-                    array_tmpSnoozeDateTime.Add(DateTime.Parse(dr_lieux["DateHeure_reactivationAlarme"].ToString()));
+                    //VigitempServeur.Log("Date_Heure_Reactivation_Alarme " + DateTime.Parse(dr_lieux["Date_Heure_Reactivation_Alarme"].ToString()).ToString());
+                    array_tmpSnoozeDateTime.Add(DateTime.Parse(dr_lieux["Date_Heure_Reactivation_Alarme"].ToString()));
                 }
 
                 dr_lieux.Close();
@@ -854,7 +854,7 @@ namespace Vigitemp_Serveur
                 while (dr_mesure.Read())
                 {
                     array_tmpIdLieu = double.Parse(dr_mesure["Valeur"].ToString());
-                    //VigitempServeur.Log("DateHeure_reactivationAlarme " + DateTime.Parse(dr_lieux["DateHeure_reactivationAlarme"].ToString()).ToString());
+                    //VigitempServeur.Log("Date_Heure_Reactivation_Alarme " + DateTime.Parse(dr_lieux["Date_Heure_Reactivation_Alarme"].ToString()).ToString());
                 }
 
                 dr_mesure.Close();
@@ -888,15 +888,15 @@ namespace Vigitemp_Serveur
                     //if(valeur == true)
                     //{
                     cmd_vigitemp.CommandText = "UPDATE t_lieu " +
-                                                 "SET notification_active = @valeur, " +
-                                                 "DateHeure_reactivationAlarme = NULL " +
+                                                 "SET Notification_Active = @valeur, " +
+                                                 "Date_Heure_Reactivation_Alarme = NULL " +
                                                  "WHERE IdLieu = @idLieu;";
 
                     //}
 
                     //cmd_vigitemp.CommandText = "UPDATE t_lieu " +
-                    //                            "SET notification_active = @valeur, " +
-                    //                            "DateHeure_reactivationAlarme = NULL ;";
+                    //                            "SET Notification_Active = @valeur, " +
+                    //                            "Date_Heure_Reactivation_Alarme = NULL ;";
 
                     // utilisation de l'objet contact passé en paramètre 
                     cmd_vigitemp.Parameters.AddWithValue("@valeur", p_valeur);

@@ -9,8 +9,10 @@ import { MultiSelectFilter } from '@/components/multi-select-filter'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { TabsContent } from '@/components/ui/tabs'
+import { Combobox } from '@/components/ui/combobox'
 
 import type { LocationFormData } from './location-form-types'
 
@@ -55,31 +57,46 @@ export function LocationFormTabGeneral({ formData, setFormData, sites, groups, a
         <div className="space-y-2">
           <Label>Observations / Commentaires</Label>
           <Input
-            value={formData.Lieu_Etat || ''}
-            onChange={(e) => setFormData({ ...formData, Lieu_Etat: e.target.value })}
+            value={formData.Commentaire || ''}
+            onChange={(e) => setFormData({ ...formData, Commentaire: e.target.value })}
             placeholder="Notes..."
           />
+        </div>
+        <div className="space-y-2">
+          <Label>Surveillance</Label>
+          <RadioGroup
+            value={formData.Lieu_Etat || 'S'}
+            onValueChange={(val) => setFormData({ ...formData, Lieu_Etat: val })}
+            className="grid gap-2"
+          >
+            <label className="flex items-center gap-2">
+              <RadioGroupItem value="S" />
+              <span>Activer la surveillance</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <RadioGroupItem value="D" />
+              <span>Désactiver la surveillance</span>
+            </label>
+          </RadioGroup>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Site</Label>
-          <Select
+          <Combobox
+            triggerId="site"
             value={formData.Id_Site?.toString() || ''}
             onValueChange={(val) => setFormData({ ...formData, Id_Site: val ? parseInt(val) : null })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Choisir un site" />
-            </SelectTrigger>
-            <SelectContent>
-              {sites?.map((site) => (
-                <SelectItem key={site.id} value={site.id.toString()}>
-                  {site.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            placeholder="Choisir un site"
+            searchPlaceholder="Rechercher un site..."
+            emptyMessage="Aucun site"
+            options={(sites ?? []).map((site) => ({
+              value: site.id.toString(),
+              label: site.name,
+              searchText: site.name,
+            }))}
+          />
         </div>
         <div className="space-y-2">
           <Label>Groupe(s)</Label>
@@ -97,6 +114,9 @@ export function LocationFormTabGeneral({ formData, setFormData, sites, groups, a
               })
             }
             placeholder="Sélectionner..."
+            tone="default"
+            enableSearch
+            searchPlaceholder="Rechercher un groupe..."
           />
         </div>
       </div>
@@ -106,21 +126,19 @@ export function LocationFormTabGeneral({ formData, setFormData, sites, groups, a
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Sélection de sonde</Label>
-            <Select
+            <Combobox
+              triggerId="sonde"
               value={formData.Sonde_Numero_Serie || ''}
               onValueChange={(val) => setFormData({ ...formData, Sonde_Numero_Serie: val })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Choisir une sonde" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableProbes?.map((probe) => (
-                  <SelectItem key={probe.Sonde_Numero_Serie} value={probe.Sonde_Numero_Serie || ''}>
-                    {probe.Sonde_Numero_Serie}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="Choisir une sonde"
+              searchPlaceholder="Rechercher une sonde..."
+              emptyMessage="Aucune sonde"
+              options={(availableProbes ?? []).map((probe) => ({
+                value: probe.Sonde_Numero_Serie || '',
+                label: probe.Sonde_Numero_Serie || '',
+                searchText: probe.Sonde_Numero_Serie || '',
+              }))}
+            />
           </div>
           <div className="space-y-2">
             <Label>État de la sonde</Label>
@@ -281,4 +299,3 @@ export function LocationFormTabGeneral({ formData, setFormData, sites, groups, a
     </TabsContent>
   )
 }
-

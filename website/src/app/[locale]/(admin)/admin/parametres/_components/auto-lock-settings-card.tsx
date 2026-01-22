@@ -48,7 +48,7 @@ export function AutoLockSettingsCard() {
   };
 
   return (
-    <Card>
+    <Card className="bg-white/60 dark:bg-card">
       <CardHeader>
         <CardTitle>Sécurité</CardTitle>
         <CardDescription>Paramètres de sécurité et de session</CardDescription>
@@ -75,7 +75,7 @@ export function AutoLockSettingsCard() {
               <p className="text-sm text-muted-foreground mt-1">Temps avant déconnexion automatique</p>
             </div>
             <Select value={autoLockDuration.toString()} onValueChange={handleAutoLockDurationChange}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-45">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

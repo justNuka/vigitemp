@@ -27,6 +27,21 @@ export const PATCH = withLogging(
       const body = await req.json()
       const validated = updateSiteSchema.parse(body)
 
+      if (validated.Est_Archive) {
+        const linkedLieuxCount = await prisma.t_lieu.count({
+          where: {
+            Id_Site: id,
+            Est_Archive: false,
+          },
+        })
+
+        if (linkedLieuxCount > 0) {
+          return apiError(409, "has_dependencies", "Impossible d'archiver un site avec des lieux associés", {
+            linkedLieuxCount,
+          })
+        }
+      }
+
       const site = await prisma.t_site.update({
         where: { Id_Site: id },
         data: validated,

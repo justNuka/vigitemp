@@ -11,12 +11,15 @@ export interface AvailableProbe {
   Lieu: string | null
 }
 
-export function useAvailableProbes() {
+export function useAvailableProbes(selectedSondeNumeroSerie?: string | null) {
   return useQuery({
-    queryKey: ["available-probes"],
+    queryKey: ["available-probes", selectedSondeNumeroSerie ?? null],
     queryFn: async () => {
       const data = await fetchJson<any[]>("/api/sondes")
-      return data.filter((probe: any) => !probe.Lieu) as AvailableProbe[]
+      return data.filter((probe: any) => {
+        if (!probe?.Lieu) return true
+        return selectedSondeNumeroSerie && probe.Sonde_Numero_Serie === selectedSondeNumeroSerie
+      }) as AvailableProbe[]
     },
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60_000),
   })

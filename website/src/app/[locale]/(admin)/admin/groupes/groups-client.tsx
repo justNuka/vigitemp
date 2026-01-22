@@ -8,9 +8,18 @@ import { useRouter } from '@/i18n/navigation';
 import { useGroups, type Group } from '@/hooks/useGroups';
 import { useGroupLocations } from '@/hooks/useGroupLocations';
 import { useGroupUsers } from '@/hooks/useGroupUsers';
-import { deleteJson } from "@/lib/http";
+import { deleteJson, HttpError } from "@/lib/http";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 import { GroupsActions } from "./_components/groups-actions";
 import { GroupsTable } from './_components/groups-table';
@@ -25,6 +34,9 @@ export function GroupsClient() {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
+  const [archiveBlockedOpen, setArchiveBlockedOpen] = useState(false);
+  const [archiveBlockedMessage, setArchiveBlockedMessage] = useState<string | null>(null);
 
   const { data: groups = [], isLoading } = useGroups(regroupement);
   const { data: locations = [] } = useGroupLocations(selectedGroup?.Id_Groupe);
@@ -73,7 +85,7 @@ export function GroupsClient() {
             canEdit={!!selectedGroup}
             onNew={handleNew}
             onEdit={handleEdit}
-            onArchive={handleArchive}
+            onArchive={() => setArchiveConfirmOpen(true)}
           />
         </CardHeader>
         <CardContent>

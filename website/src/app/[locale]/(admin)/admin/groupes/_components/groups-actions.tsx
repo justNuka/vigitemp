@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Archive, Pencil, Plus } from "lucide-react"
 
 interface Props {
   regroupement: string
@@ -31,13 +32,16 @@ export function GroupsActions({
           <SelectItem value="2">Regroupement 2</SelectItem>
         </SelectContent>
       </Select>
-      <Button onClick={onNew} variant="default">
+      <Button onClick={onNew} variant="default" size="sm" className="gap-2">
+        <Plus className="h-4 w-4" />
         Nouveau
       </Button>
-      <Button onClick={onEdit} disabled={!canEdit} variant="outline">
+      <Button onClick={onEdit} disabled={!canEdit} variant="outline" size="sm" className="gap-2">
+        <Pencil className="h-4 w-4" />
         Modifier
       </Button>
-      <Button onClick={onArchive} disabled={!canEdit} variant="outline">
+      <Button onClick={onArchive} disabled={!canEdit} variant="outline" size="sm" className="gap-2">
+        <Archive className="h-4 w-4" />
         Archiver
       </Button>
     </div>

@@ -32,7 +32,13 @@ function PaginationControls(props: {
         Page {props.page} sur {props.pages}
       </p>
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={props.onPrev} disabled={props.page === 1}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={props.onPrev}
+          disabled={props.page === 1}
+          className="border-primary/40 text-primary hover:bg-primary/10"
+        >
           {"Pr\u00E9c\u00E9dent"}
         </Button>
         <Button
@@ -40,6 +46,7 @@ function PaginationControls(props: {
           size="sm"
           onClick={props.onNext}
           disabled={props.page === props.pages}
+          className="border-primary/40 text-primary hover:bg-primary/10"
         >
           Suivant
         </Button>
@@ -110,6 +117,9 @@ export default function AdminDashboard() {
               showSearch={false}
               enableExport={false}
               enablePrint={false}
+              headerClassName="!bg-sidebar !text-sidebar-foreground"
+              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+              tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
             />
             <PaginationControls
               page={ackPage}
@@ -148,6 +158,9 @@ export default function AdminDashboard() {
                 showSearch={false}
                 enableExport={false}
                 enablePrint={false}
+                headerClassName="!bg-sidebar !text-sidebar-foreground"
+                headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+                tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
               />
               <PaginationControls
                 page={connectedUsersPage}
@@ -187,6 +200,9 @@ export default function AdminDashboard() {
                 showSearch={false}
                 enableExport={false}
                 enablePrint={false}
+                headerClassName="!bg-sidebar !text-sidebar-foreground"
+                headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+                tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
               />
               <PaginationControls
                 page={activeAlarmsPage}
@@ -229,6 +245,9 @@ export default function AdminDashboard() {
                 showSearch={false}
                 enableExport={false}
                 enablePrint={false}
+                headerClassName="!bg-sidebar !text-sidebar-foreground"
+                headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+                tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
               />
             </CardContent>
           </Card>
@@ -254,7 +273,9 @@ export default function AdminDashboard() {
                   {lastBackupLabel}
                 </p>
               </div>
-              <Button className="w-full">Lancer sauvegarde</Button>
+              <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                Lancer sauvegarde
+              </Button>
               <div className="mt-4">
                 <TanStackTable
                   columns={backupColumns}
@@ -265,6 +286,9 @@ export default function AdminDashboard() {
                   showSearch={false}
                   enableExport={false}
                   enablePrint={false}
+                  headerClassName="!bg-sidebar !text-sidebar-foreground"
+                  headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+                  tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
                 />
               </div>
             </CardContent>

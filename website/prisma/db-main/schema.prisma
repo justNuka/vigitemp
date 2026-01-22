@@ -328,7 +328,7 @@ model t_lieu {
   Id_Groupe1                               Int?
   Id_Groupe2                               Int?
   Id_Site                                  Int?
-  Nom_Lieu                                 String?                    @db.VarChar(20)
+  Nom_Lieu                                 String?                    @db.VarChar(30)
   Sonde_Numero_Serie                       String?                    @db.VarChar(50)
   Consigne                                 Float?                     @db.Float
   Consigne_Sup                             Float?                     @db.Float
@@ -368,6 +368,7 @@ model t_lieu {
   Derniere_Nb_Decimal                      Int?
   Est_Lieu_En_Alarme                       Int?                       @db.TinyInt
   Est_Lieu_Alarme_Termee_Non_Acquittee     Int?                       @db.TinyInt
+  Est_Lieu_Alarme_Termee_Non_Acquittee_T1  Int?                       @db.TinyInt
   Est_Lieu_En_Pre_Alarme                   Int?                       @db.TinyInt
   Id_Alarme                                Int?
   Lieu_Etat_N1                             String?                    @db.VarChar(50)
@@ -384,14 +385,14 @@ model t_lieu {
   Type_Lieu                                String?                    @db.VarChar(20)
   Date_Heure_Dernier_Acquittement_En_Cours DateTime?                  @db.DateTime(0)
   Date_Heure_Last_Update_EVT_GSO           DateTime?                  @db.DateTime(0)
-  Est_Lieu_Alarme_Termee_Non_Acquittee_T1  Int?                       @db.TinyInt
-  DateHeure_reactivationAlarme             DateTime?                  @db.DateTime(0)
-  notification_active                      Boolean?                   @default(true)
-  t_etat_surveillance_lieu                 t_etat_surveillance?       @relation(fields: [Lieu_Etat], references: [Surveillance_Etat], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ETAT_SURVEILLANCE")
+  Date_Heure_Reactivation_Alarme           DateTime?                  @db.DateTime(0)
+  Notification_Active                      Boolean?                   @default(true)
+  Commentaire                              String?                    @db.VarChar(200)
   t_alarme                                 t_alarme[]                 @relation("lieu_alarme")
   t_alarme_histo                           t_alarme_histo[]           @relation("lieu_alarme_histo")
   t_groupe1                                t_groupe?                  @relation("groupe1", fields: [Id_Groupe1], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE1_LIEU")
   t_groupe2                                t_groupe?                  @relation("groupe2", fields: [Id_Groupe2], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE2_LIEU")
+  t_etat_surveillance_lieu                 t_etat_surveillance?       @relation(fields: [Lieu_Etat], references: [Surveillance_Etat], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ETAT_SURVEILLANCE")
   t_pdf                                    t_pdf?                     @relation(fields: [Id_PDF], references: [Id_PDF], onDelete: NoAction, onUpdate: NoAction, map: "FK_PDF_LIEU")
   t_plan                                   t_plan?                    @relation(fields: [Id_Plan], references: [Id_Plan], onDelete: NoAction, onUpdate: NoAction, map: "FK_PLAN_LIEU")
   t_site                                   t_site?                    @relation(fields: [Id_Site], references: [Id_Site], onDelete: NoAction, onUpdate: NoAction, map: "FK_SITE_LIEU")
@@ -531,23 +532,23 @@ model t_site {
 }
 
 model t_sonde {
-  Id_Sonde           Int      @id @default(autoincrement())
-  Adresse_Sonde      String?  @db.VarChar(50)
-  Sonde_Numero_Serie String?  @unique(map: "Numero_serie") @db.VarChar(50)
-  Port_Serie         String?  @db.VarChar(10)
-  Id_Module          Int?
-  Relai_1            String?  @db.VarChar(50)
-  Relai_2            String?  @db.VarChar(50)
-  Relai_3            String?  @db.VarChar(50)
-  Relai_4            String?  @db.VarChar(50)
-  Frequence_Mesure   Int?
-  Frequence_Recup    Int?
-  Est_Sonde_Reformee Boolean?
-  Est_Sonde_GSO      Boolean? @db.TinyInt
-  Etat_Sonde_N1      String?  @db.VarChar(1)
-  Id_Serveur         Int?
-  Surveillance_Etat  String?  @map("Etat_Sonde") @db.VarChar(1)
-  t_lieu             t_lieu[]
+  Id_Sonde            Int                  @id @default(autoincrement())
+  Adresse_Sonde       String?              @db.VarChar(50)
+  Sonde_Numero_Serie  String?              @unique(map: "Numero_serie") @db.VarChar(50)
+  Port_Serie          String?              @db.VarChar(10)
+  Id_Module           Int?
+  Relai_1             String?              @db.VarChar(50)
+  Relai_2             String?              @db.VarChar(50)
+  Relai_3             String?              @db.VarChar(50)
+  Relai_4             String?              @db.VarChar(50)
+  Frequence_Mesure    Int?
+  Frequence_Recup     Int?
+  Est_Sonde_Reformee  Boolean?
+  Etat_Sonde_N1       String?              @db.VarChar(1)
+  Id_Serveur          Int?
+  Surveillance_Etat   String?              @map("Etat_Sonde") @db.VarChar(1)
+  Est_Sonde_GSO       Boolean?
+  t_lieu              t_lieu[]
   t_etat_surveillance t_etat_surveillance? @relation(fields: [Surveillance_Etat], references: [Surveillance_Etat], onDelete: NoAction, onUpdate: NoAction, map: "FK_SONDE_ETAT_SURVEILLANCE")
 
   @@index([Adresse_Sonde], map: "IDX_Adresse_Sonde")
@@ -557,11 +558,11 @@ model t_sonde {
 }
 
 model t_etat_surveillance {
-  Id_Surveillance_Etat      Int      @id @default(autoincrement())
-  Surveillance_Etat         String?  @unique @db.VarChar(1)
-  Surveillance_Etat_Libelle String?  @db.VarChar(50)
-  t_sonde                   t_sonde[]
+  Id_Surveillance_Etat      Int       @id @default(autoincrement())
+  Surveillance_Etat         String?   @unique @db.VarChar(1)
+  Surveillance_Etat_Libelle String?   @db.VarChar(50)
   t_lieu                    t_lieu[]
+  t_sonde                   t_sonde[]
 }
 
 model t_sonde_type {

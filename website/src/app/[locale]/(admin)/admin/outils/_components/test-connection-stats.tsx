@@ -17,7 +17,7 @@ export function TestConnectionStats({
 }: TestConnectionStatsProps) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <Card className="border-black dark:border-black">
+      <Card className="border-0 shadow-md">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-muted-foreground">
             Taux de réponse global
@@ -34,7 +34,7 @@ export function TestConnectionStats({
         </CardContent>
       </Card>
 
-      <Card className="border-black dark:border-black">
+      <Card className="border-0 shadow-md">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-muted-foreground">
             Nombre de mesures
@@ -51,7 +51,7 @@ export function TestConnectionStats({
         </CardContent>
       </Card>
 
-      <Card className="border-black dark:border-black">
+      <Card className="border-0 shadow-md">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-muted-foreground">
             Sondes sélectionnées
@@ -70,4 +70,3 @@ export function TestConnectionStats({
     </div>
   )
 }
-

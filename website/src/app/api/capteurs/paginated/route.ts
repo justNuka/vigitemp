@@ -82,12 +82,12 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
     await prisma.t_lieu.updateMany({
       where: {
         Est_Archive: false,
-        notification_active: false,
-        DateHeure_reactivationAlarme: { lt: new Date() },
+        Notification_Active: false,
+        Date_Heure_Reactivation_Alarme: { lt: new Date() },
       },
       data: {
-        notification_active: true,
-        DateHeure_reactivationAlarme: null,
+        Notification_Active: true,
+        Date_Heure_Reactivation_Alarme: null,
       },
     })
 
@@ -152,12 +152,13 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
                 ? "ended"
                 : "ok"
 
-        const alarmDisabled = location.notification_active === false
+        const alarmDisabled = location.Notification_Active === false
         const surveillanceDisabled = location.Lieu_Etat === "D"
 
         return {
           id: location.Id_Lieu.toString(),
           name: location.Nom_Lieu,
+          lieuType: location.Type_Lieu ?? null,
           type: "temperature",
           unit: "ÃÂ°C",
           currentValue: lastMeasurement?.Valeur ?? null,
@@ -173,9 +174,10 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
             siteGroup: null,
             isActive: !location.Est_Archive,
             alarmDisabled,
-            alarmDisabledUntil: location.DateHeure_reactivationAlarme ?? null,
+            alarmDisabledUntil: location.Date_Heure_Reactivation_Alarme ?? null,
             lieuEtat: location.Lieu_Etat ?? null,
             surveillanceDisabled,
+            lieuType: location.Type_Lieu ?? null,
             alarmDelayMinutes: location.Retard_Alarme_Changement_Consigne ?? null,
             siteId: location.Id_Site,
             groupIds: locationGroupIds,

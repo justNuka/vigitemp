@@ -43,14 +43,17 @@ export function SitesTable({ sites, isLoading, selectedSiteId, onSelectSite }: S
     <TanStackTable<SiteAdmin>
       columns={columns}
       data={sites}
+      searchField={['Code_Site', 'Libelle_Site', 'Commentaire']}
       searchPlaceholder="Rechercher les sites..."
       pageSize={10}
       isLoading={isLoading}
-      maxHeight="60vh"
+      maxHeight="calc(100dvh - 25rem)"
       emptyMessage="Aucun site trouvé"
       onRowClick={(row) => onSelectSite(row)}
       selectedRowId={selectedSiteId}
+      headerClassName="!bg-sidebar !text-sidebar-foreground"
+      headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+      tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
     />
   );
 }
-

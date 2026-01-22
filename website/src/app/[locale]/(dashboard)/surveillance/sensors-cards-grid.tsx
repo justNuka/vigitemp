@@ -37,7 +37,7 @@ export function SensorsCardsGrid({
     return (
       <div className="p-4 md:p-6 space-y-8">
         <div className="space-y-4">
-          <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-200">
+          <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2">
             <Power className="h-5 w-5 text-sky-500" />
             {t("grid.active_title")}
           </div>
@@ -61,7 +61,7 @@ export function SensorsCardsGrid({
 
   const renderSection = (title: string, icon: ReactNode, items: SensorWithLocation[]) => (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-200">
+      <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2">
         {icon}
         {title}
       </div>
@@ -82,7 +82,7 @@ export function SensorsCardsGrid({
                 key={sensor.id}
                 idLieu={Number(sensor.id)}
                 nomLieu={sensor.name}
-                lieuType={sensor.lieuType ?? undefined}
+                lieuType={sensor.lieuType ?? sensor.location.lieuType ?? undefined}
                 siteName={sensor.location.site || "Site inconnu"}
                 groupName={groupName}
                 status={sensor.status}

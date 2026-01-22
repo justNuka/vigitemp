@@ -33,12 +33,12 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
     return {
       label: "Désactivée",
       Icon: Power,
-      textClassName: "text-gray-600 dark:text-gray-300",
-      softBgClassName: "bg-gray-100 dark:bg-gray-900",
-      headerBgClassName: "bg-gray-500 dark:bg-gray-700",
-      headerBorderClassName: "border-gray-600 dark:border-gray-800",
-      headerTextClassName: "text-gray-900 dark:text-white",
-      badgeClassName: "bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-100",
+      textClassName: "text-white dark:text-gray-200",
+      softBgClassName: "bg-gray-200 dark:bg-gray-900",
+      headerBgClassName: "bg-slate-500 dark:bg-gray-700",
+      headerBorderClassName: "border-slate-600 dark:border-gray-800",
+      headerTextClassName: "text-white dark:text-white",
+      badgeClassName: "bg-slate-600 dark:bg-gray-800 text-white dark:text-gray-100",
     }
   }
 

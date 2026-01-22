@@ -49,8 +49,8 @@ export const PATCH = withAuthLogging(
       const result = await prisma.t_lieu.updateMany({
         where: { Id_Lieu: { in: lieuIds } },
         data: {
-          notification_active: payload.disabled ? false : true,
-          DateHeure_reactivationAlarme: payload.disabled ? reactivationAt : null,
+          Notification_Active: payload.disabled ? false : true,
+          Date_Heure_Reactivation_Alarme: payload.disabled ? reactivationAt : null,
         },
       })
 

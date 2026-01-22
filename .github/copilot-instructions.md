@@ -195,10 +195,10 @@ if (!authorizations.includes('REQUIRED_CODE')) {
 - `PATCH /api/profils/[id]` - Update profile
 - `DELETE /api/profils/[id]` - Delete profile (with validation)
 
-**Probes (Sondes):**
+**Sondes (Sondes):**
 - `GET /api/sondes` - List all sondes with details
-- `POST /api/sondes/calibrages` - Get calibrages for specific probe (by serie)
-- `POST /api/sondes/etalonnages` - Get etalonnages for specific probe (by serie)
+- `POST /api/sondes/calibrages` - Get calibrages for specific sonde (by serie)
+- `POST /api/sondes/etalonnages` - Get etalonnages for specific sonde (by serie)
 
 **Standards/Étalons:**
 - `GET /api/etalons` - List all standards
@@ -243,7 +243,7 @@ if (!authorizations.includes('REQUIRED_CODE')) {
 │   │   │   ├── sites/              # Sites management
 │   │   │   ├── groupes/            # Groupes list endpoint
 │   │   │   ├── alarmes/            # Alarms list
-│   │   │   ├── sondes/             # Probes: GET all, calibrages, etalonnages
+│   │   │   ├── sondes/             # Sondes: GET all, calibrages, etalonnages
 │   │   │   ├── lieux/              # Locations management
 │   │   │   ├── etalons/            # Standards management
 │   │   │   ├── actionneurs/        # Actuators management
@@ -253,7 +253,7 @@ if (!authorizations.includes('REQUIRED_CODE')) {
 │   │   │       ├── page.tsx        # Dashboard admin
 │   │   │       ├── utilisateurs/   # Users management (CRUD with sites/groupes)
 │   │   │       ├── alarmes/        # Alarms table with filters
-│   │   │       ├── sondes/         # Probes (3-table: Sondes, Calibrages, Etalonnages)
+│   │   │       ├── sondes/         # Sondes (3-table: Sondes, Calibrages, Etalonnages)
 │   │   │       ├── lieux/          # Locations (3-tab: Général, Métrologie, Téléphonie)
 │   │   │       ├── sites/          # Sites CRUD
 │   │   │       ├── groupes/        # Groups CRUD
@@ -280,7 +280,7 @@ if (!authorizations.includes('REQUIRED_CODE')) {
 │   │   ├── useSites.ts             # Fetch sites
 │   │   ├── useGroups.ts            # Fetch groupes
 │   │   ├── useAlarms.ts            # Fetch alarms (30s auto-refresh)
-│   │   ├── useSondes.ts            # Fetch probes (60s auto-refresh)
+│   │   ├── useSondes.ts            # Fetch sondes (60s auto-refresh)
 │   │   ├── useCalibrages.ts        # Fetch calibrages by serie
 │   │   ├── useEtalonnages.ts       # Fetch etalonnages by serie
 │   │   ├── useCurrentTime.ts       # Real-time clock for UI
@@ -338,7 +338,7 @@ if (!authorizations.includes('REQUIRED_CODE')) {
 - **Row Selection:** Visual highlight with blue background + left border
 - **API:** GET `/api/alarmes`
 
-### 4. Probes Management (`/admin/sondes`)
+### 4. Sondes Management (`/admin/sondes`)
 - **Status:** ✅ COMPLETE
 - **3-Table Layout:**
   1. **Main Table (Sondes)** - Selectable with blue highlight, max-height with scroll
@@ -346,12 +346,12 @@ if (!authorizations.includes('REQUIRED_CODE')) {
      - Buttons: Ajouter, Modifier (disabled when no selection), Imprimer (enabled)
      - Selection: Blue highlight + left border indicator
   
-  2. **Calibrages Sub-Table** (appears when probe selected)
+  2. **Calibrages Sub-Table** (appears when sonde selected)
      - Columns: Date, Opérateur, Unité, Décimales
      - Buttons: Générer fichier (disabled), Imprimer (disabled)
      - Selection: Blue highlight
   
-  3. **Étalonnages Sub-Table** (appears when probe selected)
+  3. **Étalonnages Sub-Table** (appears when sonde selected)
      - Columns: Date, Validité, Opérateur, Incertitude
      - Buttons: Supprimer (disabled), Générer (disabled), Imprimer (disabled)
      - Selection: Blue highlight

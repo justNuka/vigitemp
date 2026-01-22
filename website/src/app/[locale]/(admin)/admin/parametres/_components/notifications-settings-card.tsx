@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export function NotificationsSettingsCard() {
   return (
-    <Card>
+    <Card className="bg-white/50 dark:bg-card">
       <CardHeader>
         <CardTitle>Notifications</CardTitle>
         <CardDescription>Gérer les préférences de notifications</CardDescription>
@@ -15,4 +15,3 @@ export function NotificationsSettingsCard() {
     </Card>
   );
 }
-

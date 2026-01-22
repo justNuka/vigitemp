@@ -75,6 +75,9 @@ export function CalibrationsPanel({
               maxHeight="16rem"
               selectedRowId={selectedCalibrationId ?? undefined}
               onRowClick={(row: CalibrationRow) => onSelectCalibration(row.Id_Etalonnage)}
+              headerClassName="!bg-sidebar !text-sidebar-foreground"
+              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+              tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
             />
             <div className="flex gap-2">
               <Button size="sm" variant="destructive" disabled={!selectedCalibrationId} className="flex-1">

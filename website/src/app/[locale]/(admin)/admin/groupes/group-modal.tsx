@@ -23,6 +23,7 @@ import {
 import { Label } from '@/components/ui/label'
 import type { Group } from '@/hooks/useGroups'
 import { patchJson, postJson } from '@/lib/http'
+import { Check, X } from "lucide-react"
 
 interface GroupModalProps {
   open: boolean
@@ -79,7 +80,7 @@ export function GroupModal({ open, onOpenChange, group, isEditing }: GroupModalP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-125 bg-white dark:bg-card">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Modifier le groupe' : 'Créer un groupe'}</DialogTitle>
         </DialogHeader>
@@ -110,10 +111,12 @@ export function GroupModal({ open, onOpenChange, group, isEditing }: GroupModalP
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting} className="gap-2">
+            <X className="h-4 w-4" />
             Annuler
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
+          <Button onClick={handleSubmit} disabled={isSubmitting} className="gap-2">
+            <Check className="h-4 w-4" />
             {isSubmitting ? 'Sauvegarde...' : 'Sauvegarder'}
           </Button>
         </DialogFooter>

@@ -79,6 +79,28 @@ export const DELETE = withLogging(
         return apiError(404, "not_found", "Groupe non trouvé")
       }
 
+      const linkedLieuxCount = await prisma.t_lieu.count({
+        where: {
+          Est_Archive: false,
+          OR: [
+            { Id_Groupe1: id },
+            { Id_Groupe2: id },
+            { t_lieu_groupe: { some: { Id_Groupe: id } } },
+          ],
+        },
+      })
+
+      const linkedUsersCount = await prisma.t_liaison_utilisateur_groupe.count({
+        where: { Id_Groupe: id },
+      })
+
+      if (linkedLieuxCount > 0 || linkedUsersCount > 0) {
+        return apiError(409, "has_dependencies", "Impossible d'archiver un groupe avec des éléments associés", {
+          linkedLieuxCount,
+          linkedUsersCount,
+        })
+      }
+
       const updated = await prisma.t_groupe.update({
         where: { Id_Groupe: id },
         data: { Est_Archive: true },

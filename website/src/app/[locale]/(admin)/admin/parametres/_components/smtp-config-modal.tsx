@@ -121,7 +121,7 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg bg-white/50 dark:bg-card">
         <DialogHeader>
           <DialogTitle>Configuration SMTP</DialogTitle>
           <DialogDescription>

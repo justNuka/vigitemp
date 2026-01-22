@@ -7,6 +7,15 @@ import { useGroups } from '@/hooks/useGroups'
 import { useLocations, type LocationRow } from '@/hooks/useLocations'
 import { useSitesSimple } from '@/hooks/useSites'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import { useRouter } from '@/i18n/navigation'
 import { LocationFormDialog } from './_components/location-form-dialog'
@@ -23,15 +32,15 @@ export function LocationsClient() {
   const { data: locations = [], isLoading } = useLocations()
   const { data: sites = [] } = useSitesSimple()
   const { data: groups = [] } = useGroups()
-  const { data: availableProbes = [] } = useAvailableProbes()
-
   const [selectedLocation, setSelectedLocation] = useState<LocationRow | null>(null)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isArchiveOpen, setIsArchiveOpen] = useState(false)
 
   const defaultFormData: LocationFormData = getDefaultLocationFormData()
 
   const [formData, setFormData] = useState<LocationFormData>(defaultFormData)
+  const { data: availableProbes = [] } = useAvailableProbes(formData.Sonde_Numero_Serie)
 
   const resetForm = () => setFormData(getDefaultLocationFormData())
 
@@ -73,6 +82,23 @@ export function LocationsClient() {
     },
   })
 
+  const archiveMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedLocation?.Id_Lieu) throw new Error('Aucun lieu selectionne')
+      return patchJson(`/api/lieux/${selectedLocation.Id_Lieu}`, { Est_Archive: true })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['locations'] })
+      router.refresh()
+      toast.success('Lieu archive avec succes')
+      setIsArchiveOpen(false)
+      setSelectedLocation(null)
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Erreur lors de l'archivage du lieu")
+    },
+  })
+
   const handleEdit = () => {
     if (!selectedLocation) return
 
@@ -97,6 +123,7 @@ export function LocationsClient() {
               setIsCreateOpen(true)
             }}
             onEdit={handleEdit}
+            onArchive={() => setIsArchiveOpen(true)}
           />
         </CardHeader>
         <CardContent>
@@ -134,6 +161,23 @@ export function LocationsClient() {
         onCancel={() => setIsEditOpen(false)}
         onSubmit={() => updateMutation.mutate(formData)}
       />
+
+      <AlertDialog open={isArchiveOpen} onOpenChange={setIsArchiveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archiver le lieu</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ce lieu passera en surveillance desactivee et la sonde sera desaffectee. Voulez-vous continuer ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex justify-end gap-2">
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={() => archiveMutation.mutate()} disabled={archiveMutation.isPending}>
+              {archiveMutation.isPending ? 'Archivage...' : 'Archiver'}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   )
 }

@@ -83,7 +83,7 @@ export function ProfileDialog({
         if (!nextOpen) onCancel();
       }}
     >
-      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl bg-white/50 dark:bg-card">
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Modifier le profil' : 'Créer un profil'}</DialogTitle>
           <DialogDescription>

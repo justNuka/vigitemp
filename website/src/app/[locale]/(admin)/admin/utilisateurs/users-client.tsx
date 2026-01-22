@@ -189,7 +189,7 @@ export function UsersClient({ users }: Props) {
         onReactivate={handleReactivateUser}
       />
 
-      <Card>
+      <Card className="bg-white">
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
             <CardTitle>Gestion des utilisateurs</CardTitle>
@@ -202,7 +202,7 @@ export function UsersClient({ users }: Props) {
             Nouvel utilisateur
           </Button>
         </CardHeader>
-        <CardContent className="p-2 md:p-4 xl:p-4">
+        <CardContent className="p-2 md:p-4 xl:p-4 bg-white">
           <UsersTable
             users={users}
             selectedUserId={selectedUser?.id ?? null}
