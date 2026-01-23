@@ -6,7 +6,7 @@ import { ServerDashboardStats } from "./server-stats";
 import { ServerFilterOptions } from "./server-filters";
 import { SurveillancePageClient } from "./monitoring-page-client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
+import { MonitoringCardSkeleton } from "@/components/monitoring-card-skeleton";
 
 export const metadata: Metadata = {
   title: "Surveillance - Vigitemp",
@@ -32,11 +32,9 @@ function SensorsLoadingSkeleton() {
         <Skeleton className="h-10 w-64" />
         <Skeleton className="h-10 w-32" />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {[...Array(12)].map((_, i) => (
-          <Card key={i} className="p-4">
-            <Skeleton className="h-32 w-full" />
-          </Card>
+      <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <MonitoringCardSkeleton key={i} />
         ))}
       </div>
     </div>

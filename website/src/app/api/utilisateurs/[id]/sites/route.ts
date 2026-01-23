@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server"
+import { revalidateTag } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
@@ -110,6 +111,8 @@ export const POST = withAdminLogging(
           },
         },
       })
+
+      revalidateTag("users-data", "default")
 
       return apiOk({
         message: "Site assigned to user successfully",

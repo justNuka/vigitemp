@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
+import { useRouter } from '@/i18n/navigation'
 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
@@ -37,6 +38,7 @@ type Measurement = MeasurementPoint
 
 export function StandardModal({ open, onOpenChange, standard, isEditing }: Props) {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
   const [type, setType] = useState("")
@@ -149,6 +151,7 @@ export function StandardModal({ open, onOpenChange, standard, isEditing }: Props
       toast.success(isEditing ? "Étalon mis à jour avec succès" : "Étalon créé avec succès")
 
       queryClient.invalidateQueries({ queryKey: ["etalons"] })
+      router.refresh()
       onOpenChange(false)
     } catch (error) {
       console.error("Submit error:", error)
@@ -161,7 +164,7 @@ export function StandardModal({ open, onOpenChange, standard, isEditing }: Props
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-150 max-h-[90vh] overflow-y-auto bg-white dark:bg-card">
           <DialogHeader>
             <DialogTitle>{isEditing ? "Modifier l'étalon" : "Créer un étalon"}</DialogTitle>
           </DialogHeader>

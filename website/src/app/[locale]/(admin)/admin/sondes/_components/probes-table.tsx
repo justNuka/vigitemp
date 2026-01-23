@@ -10,8 +10,8 @@ export type ProbeRow = {
   Sonde_Numero_Serie: string | null;
   Port_Serie: string | null;
   Id_Module: number | null;
-  Etat_Sonde: string | null;
-  Etat_Libelle: string | null;
+  Surveillance_Etat: string | null;
+  Surveillance_Etat_Libelle: string | null;
   Lieu: string | null;
 };
 
@@ -48,9 +48,10 @@ export function ProbesTable({ probes, isLoading, selectedProbeId, onSelectProbe 
       },
     },
     {
-      accessorKey: 'Etat_Sonde',
+      accessorKey: 'Surveillance_Etat',
       header: 'État',
-      cell: ({ row }) => row.original.Etat_Libelle || row.getValue('Etat_Sonde') || '-',
+      cell: ({ row }) =>
+        row.original.Surveillance_Etat_Libelle || row.getValue('Surveillance_Etat') || '-',
     },
     {
       accessorKey: 'Lieu',
@@ -63,13 +64,22 @@ export function ProbesTable({ probes, isLoading, selectedProbeId, onSelectProbe 
     <TanStackTable
       columns={columns}
       data={probes}
-      searchField={['Adresse_Sonde', 'Sonde_Numero_Serie', 'Lieu', 'Etat_Libelle', 'Etat_Sonde']}
+      searchField={[
+        'Adresse_Sonde',
+        'Sonde_Numero_Serie',
+        'Lieu',
+        'Surveillance_Etat_Libelle',
+        'Surveillance_Etat',
+      ]}
       searchPlaceholder="Adresse, numéro de série..."
       isLoading={isLoading}
       maxHeight="60vh"
       emptyMessage="Aucune sonde trouvée"
       selectedRowId={selectedProbeId ?? undefined}
       onRowClick={(row: ProbeRow) => onSelectProbe(row.Id_Sonde)}
+      headerClassName="!bg-sidebar !text-sidebar-foreground"
+      headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+      tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
     />
   );
 }
@@ -81,9 +91,8 @@ export function toProbeRows(probes: Probe[]): ProbeRow[] {
     Sonde_Numero_Serie: s.Sonde_Numero_Serie,
     Port_Serie: s.Port_Serie,
     Id_Module: s.Id_Module,
-    Etat_Sonde: s.Etat_Sonde,
-    Etat_Libelle: s.Etat_Libelle,
+    Surveillance_Etat: s.Surveillance_Etat,
+    Surveillance_Etat_Libelle: s.Surveillance_Etat_Libelle,
     Lieu: s.Lieu,
   }));
 }
-

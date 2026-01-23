@@ -11,7 +11,7 @@ type SmtpSettingsCardProps = {
 
 export function SmtpSettingsCard({ onOpenSmtpModal }: SmtpSettingsCardProps) {
   return (
-    <Card>
+    <Card className="bg-white/50 dark:bg-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Mail className="h-5 w-5" />
@@ -36,4 +36,3 @@ export function SmtpSettingsCard({ onOpenSmtpModal }: SmtpSettingsCardProps) {
     </Card>
   );
 }
-

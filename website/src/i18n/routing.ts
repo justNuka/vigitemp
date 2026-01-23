@@ -7,7 +7,7 @@ export const routing = defineRouting({
   // Used when no locale matches
   defaultLocale: 'fr',
 
-  // Force le prÃ©fixe de locale dans l'URL: /fr/... /en/...
+  // Force le préfixe de locale dans l'URL: /fr/... /en/...
   localePrefix: 'always',
 
   pathnames: {

@@ -57,7 +57,7 @@ export function UsersTable({
       accessorKey: "isActive",
       header: "Statut",
       cell: ({ row }) => (
-        <Badge variant={row.getValue("isActive") ? "default" : "secondary"}>
+        <Badge variant={row.getValue("isActive") ? "default" : "destructive"}>
           {row.getValue("isActive") ? "Actif" : "Inactif"}
         </Badge>
       ),
@@ -78,13 +78,13 @@ export function UsersTable({
       enableSorting: false,
       cell: ({ row }) => (
         <Button
-          variant="ghost"
-          size="sm"
+          variant="outline"
+          size="icon"
           onClick={() => onEditUser(row.original)}
-          className="gap-2"
+          className="bg-primary/10 hover:bg-primary/20 border-primary/40 text-primary"
+          title="Modifier"
         >
           <Pencil className="h-4 w-4" />
-          Modifier
         </Button>
       ),
     },
@@ -97,10 +97,12 @@ export function UsersTable({
       searchField={["displayName", "username"]}
       searchPlaceholder="Rechercher par nom ou login..."
       pageSize={20}
-      maxHeight="60vh"
+      maxHeight="calc(100dvh - 25rem)"
       emptyMessage="Aucun utilisateur trouvé"
       selectedRowId={selectedUserId}
       onRowClick={(row) => onSelectUser(row as User)}
+      containerClassName="bg-white"
+      tableClassName="bg-white"
     />
   );
 }

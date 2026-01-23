@@ -4,13 +4,22 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { Printer } from 'lucide-react'
 import { toast } from 'sonner'
+import { useRouter } from '@/i18n/navigation'
+import { Archive, Pencil, Plus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { useSites, type SiteAdmin } from '@/hooks/useSites'
-import { patchJson, postJson } from '@/lib/http'
+import { HttpError, patchJson, postJson } from '@/lib/http'
 
 import { SitesTable } from './_components/sites-table'
 import { CreateSiteDialog } from './_components/create-site-dialog'
@@ -25,12 +34,15 @@ import {
 
 export function SitesClient() {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const { data: sites = [], isLoading } = useSites()
 
   const [selectedSite, setSelectedSite] = useState<SiteAdmin | null>(null)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isArchiveAlertOpen, setIsArchiveAlertOpen] = useState(false)
+  const [archiveBlockedOpen, setArchiveBlockedOpen] = useState(false)
+  const [archiveBlockedMessage, setArchiveBlockedMessage] = useState<string | null>(null)
 
   const createForm = useForm<CreateSiteInput>({
     resolver: zodResolver(createSiteSchema),
@@ -53,6 +65,7 @@ export function SitesClient() {
     mutationFn: async (data: CreateSiteInput) => postJson('/api/sites', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sites'] })
+      router.refresh()
       toast.success('Site créé avec succès')
       setIsCreateOpen(false)
       createForm.reset()
@@ -69,6 +82,7 @@ export function SitesClient() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sites'] })
+      router.refresh()
       toast.success('Site modifié avec succès')
       setIsEditOpen(false)
       setSelectedSite(null)
@@ -85,11 +99,22 @@ export function SitesClient() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sites'] })
+      router.refresh()
       toast.success('Site archivé avec succès')
       setSelectedSite(null)
       setIsArchiveAlertOpen(false)
     },
     onError: (error) => {
+      if (error instanceof HttpError && error.status === 409) {
+        const linked = (error.payload as any)?.linkedLieuxCount
+        const detail =
+          typeof linked === 'number' && linked > 0
+            ? `Ce site est lié à ${linked} lieu${linked > 1 ? 'x' : ''}.`
+            : ''
+        setArchiveBlockedMessage(`${error.message}${detail ? ` ${detail}` : ''}`)
+        setArchiveBlockedOpen(true)
+        return
+      }
       toast.error(error instanceof Error ? error.message : "Erreur lors de l'archivage du site")
     },
   })
@@ -103,20 +128,6 @@ export function SitesClient() {
     setIsEditOpen(true)
   }
 
-  const handlePrint = () => {
-    if (!selectedSite) return
-    const printContent = `
-Site: ${selectedSite.Code_Site} - ${selectedSite.Libelle_Site}
-Description: ${selectedSite.Commentaire || 'N/A'}
-    `.trim()
-    const printWindow = window.open('', '', 'height=400,width=600')
-    if (printWindow) {
-      printWindow.document.write('<pre>' + printContent + '</pre>')
-      printWindow.document.close()
-      printWindow.print()
-    }
-  }
-
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       <Card>
@@ -128,23 +139,23 @@ Description: ${selectedSite.Commentaire || 'N/A'}
             </p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => setIsCreateOpen(true)} variant="default">
+            <Button onClick={() => setIsCreateOpen(true)} variant="default" size="sm" className="gap-2">
+              <Plus className="h-4 w-4" />
               Nouveau
             </Button>
-            <Button onClick={handleEdit} variant="outline" disabled={!selectedSite}>
+            <Button onClick={handleEdit} variant="outline" size="sm" disabled={!selectedSite} className="gap-2">
+              <Pencil className="h-4 w-4" />
               Modifier
             </Button>
-            <Button onClick={() => setIsArchiveAlertOpen(true)} variant="outline" disabled={!selectedSite}>
-              Archiver
-            </Button>
             <Button
-              onClick={handlePrint}
-              variant="ghost"
-              size="icon"
+              onClick={() => setIsArchiveAlertOpen(true)}
+              variant="outline"
+              size="sm"
               disabled={!selectedSite}
-              title="Imprimer le site sélectionné"
+              className="gap-2"
             >
-              <Printer className="h-4 w-4" />
+              <Archive className="h-4 w-4" />
+              Archiver
             </Button>
           </div>
         </CardHeader>
@@ -182,6 +193,19 @@ Description: ${selectedSite.Commentaire || 'N/A'}
         isArchiving={archiveMutation.isPending}
         onConfirm={() => archiveMutation.mutate()}
       />
+
+      <AlertDialog open={archiveBlockedOpen} onOpenChange={setArchiveBlockedOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archivage impossible</AlertDialogTitle>
+            <AlertDialogDescription>
+              {archiveBlockedMessage || "Ce site est encore lié à d'autres éléments."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogAction onClick={() => setArchiveBlockedOpen(false)}>
+            OK
+          </AlertDialogAction>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
-  )
-}
+  )}

@@ -25,7 +25,7 @@ export function CommentsTableCard({
   onDeleteSelected,
 }: CommentsTableCardProps) {
   return (
-    <Card className="border-black dark:border-black">
+    <Card className="border-0 shadow-md">
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <div>
           <CardTitle>Commentaires</CardTitle>
@@ -59,13 +59,16 @@ export function CommentsTableCard({
           columns={columns}
           data={comments}
           pageSize={20}
-          maxHeight="60vh"
+          maxHeight="calc(100dvh - 25rem)"
           emptyMessage="Aucun commentaire"
           showSearch={true}
           searchPlaceholder="Rechercher un commentaire..."
           searchField={["text"]}
           selectedRowId={selectedCommentId}
           onRowClick={(row: AuditComment) => onSelectCommentId(row.id)}
+          headerClassName="!bg-sidebar/90 !text-sidebar-foreground backdrop-blur supports-backdrop-filter:!bg-sidebar/80"
+          headerCellClassName="!bg-sidebar/90 !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar/80 backdrop-blur supports-backdrop-filter:!bg-sidebar/80"
+          tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
         />
       </CardContent>
     </Card>

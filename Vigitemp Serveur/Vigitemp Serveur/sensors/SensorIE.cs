@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Ports;
@@ -31,9 +31,9 @@ namespace Vigitemp_Serveur.sensors
                 while (tmp_sw.Elapsed.TotalMilliseconds < 100) { }
                 m_port.Write("SM" + m_sondeAdresse + "0000000000000000");
 
-                //Console.WriteLine("DonnÃ©es ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                //Trace.WriteLine("DonnÃ©es ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                VigitempServeur.Log("DonnÃ©es ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                //Console.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                //Trace.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                VigitempServeur.Log("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
 
                 while (pendingResults)
                 {
@@ -66,7 +66,11 @@ namespace Vigitemp_Serveur.sensors
 
             SerialPort sp = (SerialPort)sender;
             string regex_res;
-            m_sensor_response += sp.ReadExisting();     //ajout sp.readExisting Ã  m_sensor_response
+            var chunk = sp.ReadExisting();
+                if (!string.IsNullOrEmpty(chunk))
+                {
+                    m_sensor_response += chunk;
+                }
             var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
             if (m.Groups[1].Value != "")
             {
@@ -75,14 +79,14 @@ namespace Vigitemp_Serveur.sensors
             }
             else
             {
-                if (m_sensor_response.Length > sp.ReadExisting().Length)
-                {
-                    m_sensor_response.Substring(sp.ReadExisting().Length, m_sensor_response.Length - sp.ReadExisting().Length);
-                }
+                if (m_sensor_response.Length > 1024)
+                    {
+                        m_sensor_response = m_sensor_response.Substring(m_sensor_response.Length - 1024);
+                    }
                 return;
             }
 
-            // Console.WriteLine("DonnÃ©es recues dans le port COM: " + regex_res);
+            // Console.WriteLine("Données recues dans le port COM: " + regex_res);
             tmp_valeur = regex_res.Split(new string[] { "TEMP" }, StringSplitOptions.None)[1];
             tmp_numeroSerie = regex_res.Split(new string[] { "TEMP" }, StringSplitOptions.None)[0];
 
@@ -91,12 +95,12 @@ namespace Vigitemp_Serveur.sensors
             (double coeffX, double coeffConstant) = ths.GetDatabase().getCoeffCalibrageBySerialNumber(m_sondeSerialNumber);
             tmp_valeur = (Convert.ToDouble(float.Parse(tmp_valeur.Remove(tmp_valeur.Length - 2, 2), CultureInfo.InvariantCulture.NumberFormat)) * coeffX + coeffConstant).ToString();
             // tmp_temperature = (-19.5262).ToString();
-            Console.WriteLine("DonnÃ©es corrigÃ©es: " + float.Parse(String.Format("{0:0.00}", tmp_valeur)));
-            Trace.WriteLine("DonnÃ©es corrigÃ©es: " + float.Parse(String.Format("{0:0.00}", tmp_valeur)));
+            Console.WriteLine("Données corrigées: " + float.Parse(String.Format("{0:0.00}", tmp_valeur)));
+            Trace.WriteLine("Données corrigées: " + float.Parse(String.Format("{0:0.00}", tmp_valeur)));
 
 
-            // ThreadServeur.GetDatabase().AddMesure(m_serialNumber, float.Parse(String.Format("{0:0.00}", tmp_temperature)), "Â°C");
-            ths.GetDatabase().AddMesure(m_sondeSerialNumber, float.Parse(String.Format("{0:0.00}", tmp_valeur)), "Â°C", null);
+            // ThreadServeur.GetDatabase().AddMesure(m_serialNumber, float.Parse(String.Format("{0:0.00}", tmp_temperature)), "°C");
+            ths.GetDatabase().AddMesure(m_sondeSerialNumber, float.Parse(String.Format("{0:0.00}", tmp_valeur)), "°C", null);
             m_port.Close();
             pendingResults = false;
             System.Diagnostics.Trace.WriteLine("Fermeture du port " + m_comPort);
@@ -104,3 +108,5 @@ namespace Vigitemp_Serveur.sensors
 
     }
 }
+
+

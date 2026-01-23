@@ -14,8 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-import { getJson, putJson } from "@/lib/http";
+import { Loader2, Mail } from "lucide-react";
+import { getJson, postJson, putJson } from "@/lib/http";
 
 interface SMTPConfig {
   host: string;
@@ -39,9 +39,10 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
     sender: "noreply@vigitemp.fr",
   });
 
+  const [testEmail, setTestEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Charger la configuration au l'ouverture du modal
+  // Charger la configuration a l'ouverture du modal
   useEffect(() => {
     if (open) {
       fetchConfig();
@@ -53,6 +54,7 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
       setIsLoading(true);
       const payload = await getJson<SMTPConfig>("/api/admin/configuration-smtp");
       setConfig(payload);
+      setTestEmail((current) => (current ? current : payload.sender || payload.user || ""));
     } catch (error) {
       console.error("Erreur:", error);
       toast.error("Erreur lors du chargement de la configuration");
@@ -66,8 +68,20 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
       return putJson<{ message: string }>("/api/admin/configuration-smtp", newConfig);
     },
     onSuccess: () => {
-      toast.success("Configuration SMTP mise à jour avec succès");
+      toast.success("Configuration SMTP mise a jour avec succes");
       onOpenChange(false);
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Erreur serveur");
+    },
+  });
+
+  const testMutation = useMutation({
+    mutationFn: async (toEmail: string) => {
+      return postJson<{ message?: string }>("/api/email/test", { toEmail });
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || "Email de test envoye");
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Erreur serveur");
@@ -77,7 +91,6 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation simple
     if (!config.host.trim()) {
       toast.error("Le serveur SMTP est requis");
       return;
@@ -91,20 +104,28 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
       return;
     }
     if (config.port <= 0 || config.port > 65535) {
-      toast.error("Le port doit être entre 1 et 65535");
+      toast.error("Le port doit etre entre 1 et 65535");
       return;
     }
 
     updateMutation.mutate(config);
   };
 
+  const handleTest = () => {
+    if (!testEmail.trim()) {
+      toast.error("Email destinataire requis");
+      return;
+    }
+    testMutation.mutate(testEmail.trim());
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg bg-white/50 dark:bg-card">
         <DialogHeader>
           <DialogTitle>Configuration SMTP</DialogTitle>
           <DialogDescription>
-            Configurez les paramètres du serveur de messagerie pour les notifications par email
+            Configurez les parametres du serveur de messagerie pour les notifications par email
           </DialogDescription>
         </DialogHeader>
 
@@ -137,7 +158,7 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
               max="65535"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Ports courants: 587 (TLS), 465 (SSL), 25 (SMTP non sécurisé)
+              Ports courants: 587 (TLS), 465 (SSL), 25 (SMTP non securise)
             </p>
           </div>
 
@@ -158,18 +179,18 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
             <Input
               id="password"
               type="password"
-              placeholder="••••••••"
+              placeholder="********"
               value={config.password}
               onChange={(e) => setConfig({ ...config, password: e.target.value })}
               disabled={isLoading || updateMutation.isPending}
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Le mot de passe est chiffré et sécurisé
+              Le mot de passe est chiffre et securise
             </p>
           </div>
 
           <div>
-            <Label htmlFor="sender">Adresse d'expédition</Label>
+            <Label htmlFor="sender">Adresse d'expedition</Label>
             <Input
               id="sender"
               type="email"
@@ -179,8 +200,43 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
               disabled={isLoading || updateMutation.isPending}
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Adresse apparaissant dans le champ "De" des emails
+              Adresse affichant dans le champ "De" des emails
             </p>
+          </div>
+
+          <div className="rounded-lg border p-3 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Mail className="h-4 w-4" />
+              Test SMTP
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Sauvegardez avant de tester la configuration.
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <Input
+                id="test-email"
+                type="email"
+                placeholder="destinataire@example.com"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+                disabled={isLoading || updateMutation.isPending || testMutation.isPending}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleTest}
+                disabled={isLoading || updateMutation.isPending || testMutation.isPending}
+              >
+                {testMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Test...
+                  </>
+                ) : (
+                  "Tester"
+                )}
+              </Button>
+            </div>
           </div>
 
           <DialogFooter>
@@ -192,10 +248,7 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
             >
               Annuler
             </Button>
-            <Button
-              type="submit"
-              disabled={isLoading || updateMutation.isPending}
-            >
+            <Button type="submit" disabled={isLoading || updateMutation.isPending}>
               {updateMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

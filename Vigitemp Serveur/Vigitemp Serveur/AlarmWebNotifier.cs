@@ -1,5 +1,6 @@
 using System;
 using System.Configuration;
+using System.Globalization;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,11 +23,11 @@ namespace Vigitemp_Serveur
                     return Task.CompletedTask;
                 }
 
-                var url = Combine(BaseUrl, "/api/alarms/dispatch");
+                var url = Combine(BaseUrl, "/api/alarmes/dispatch");
                 var payload =
                     "{" +
                     "\"title\":\"Alarme Vigitemp\"," +
-                    "\"body\":\"Alarme déclenchée (Lieu " + idLieu + ", valeur " + valeur.ToString("0.##") + ")\"," +
+                    "\"body\":\"Alarme declenchee (Lieu " + idLieu + ", valeur " + valeur.ToString("0.##", CultureInfo.InvariantCulture) + ")\"," +
                     "\"url\":\"/surveillance\"" +
                     "}";
 

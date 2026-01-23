@@ -12,11 +12,13 @@ namespace VigitempAgent
 {
     public class MyCustomApplicationContext : ApplicationContext
     {
+        public static MyCustomApplicationContext Instance { get; private set; }
         public string SITEWEB_URL;
         private NotifyIcon trayIcon;
         private System.Windows.Forms.Timer sessionTimer;
         private DateTime lastNoSessionTipUtc = DateTime.MinValue;
         private DateTime lastExpiryTipUtc = DateTime.MinValue;
+        private string lastAlarmUrl;
         public static Thread UIThread;
         public Thread serverThread;
         public Form_Alert frm;
@@ -62,6 +64,7 @@ namespace VigitempAgent
 
         public MyCustomApplicationContext(string[] args)
         {
+            Instance = this;
             var resolved = ResolveSiteWebUrl();
             SITEWEB_URL = resolved.url;
 
@@ -195,7 +198,8 @@ namespace VigitempAgent
         {
             try
             {
-                Process.Start(new ProcessStartInfo(GetLoginUrl()) { UseShellExecute = true });
+                var targetUrl = !string.IsNullOrWhiteSpace(lastAlarmUrl) ? lastAlarmUrl : GetLoginUrl();
+                Process.Start(new ProcessStartInfo(targetUrl) { UseShellExecute = true });
             }
             catch (Exception ex)
             {
@@ -213,6 +217,20 @@ namespace VigitempAgent
             {
                 // ignore
             }
+        }
+
+        public void ShowAlarmNotification(string title, string message, string alarmUrl)
+        {
+            if (!string.IsNullOrWhiteSpace(alarmUrl))
+            {
+                lastAlarmUrl = alarmUrl;
+            }
+
+            var body = string.IsNullOrWhiteSpace(message)
+                ? "Cliquez sur la notification pour vous rendre sur la page des alarmes."
+                : message + Environment.NewLine + "Cliquez sur la notification pour vous rendre sur la page des alarmes.";
+
+            ShowTrayTip(title ?? "Alarme Vigitemp", body, ToolTipIcon.Warning);
         }
 
         private void CheckSessionAndNotify()

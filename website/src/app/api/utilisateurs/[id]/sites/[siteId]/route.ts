@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server"
+import { revalidateTag } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
@@ -37,6 +38,8 @@ export const DELETE = withAdminLogging(
         where: { Id_Liaison: liaison.Id_Liaison },
       })
 
+      revalidateTag("users-data", "default")
+
       return apiOk({
         message: "Site removed from user successfully",
       })
@@ -46,4 +49,3 @@ export const DELETE = withAdminLogging(
     }
   },
 )
-

@@ -18,6 +18,7 @@ export function getStatusColor(
 
 export function getStatusBadge(status: SensorStatus, isActive: boolean) {
   const theme = getStatusTheme(status, isActive)
+  const isCritical = status === "critical" || status === "technical"
 
   if (!isActive) {
     return (
@@ -27,7 +28,7 @@ export function getStatusBadge(status: SensorStatus, isActive: boolean) {
     )
   }
 
-  if (status === "critical") {
+  if (isCritical) {
     return (
       <Badge variant="destructive" className={theme.badgeClassName}>
         <theme.Icon className="w-3 h-3 mr-1" /> {theme.label}
@@ -41,4 +42,3 @@ export function getStatusBadge(status: SensorStatus, isActive: boolean) {
     </Badge>
   )
 }
-

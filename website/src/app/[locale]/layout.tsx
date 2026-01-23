@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import { NextIntlClientProvider } from "next-intl";
@@ -95,10 +96,12 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
     <html lang={locale} suppressHydrationWarning>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Providers>
-            <Toaster position="bottom-right" richColors closeButton />
-            {children}
-          </Providers>
+          <Suspense fallback={null}>
+            <Providers>
+              <Toaster position="bottom-right" richColors closeButton />
+              {children}
+            </Providers>
+          </Suspense>
         </NextIntlClientProvider>
       </body>
     </html>

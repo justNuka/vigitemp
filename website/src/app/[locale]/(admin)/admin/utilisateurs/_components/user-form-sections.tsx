@@ -202,6 +202,9 @@ export function UserSitesField<T extends { siteIds?: number[] }>({
               ))
             )}
           </div>
+          <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-900">
+            Si aucun groupe ou site n'est assigne, tous les lieux seront affiches sur la page de surveillance.
+          </div>
           <FormMessage />
         </FormItem>
       )}
@@ -250,6 +253,9 @@ export function UserGroupsField<T extends { groupeIds?: number[] }>({
                 </div>
               ))
             )}
+          </div>
+          <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-900">
+            Si aucun groupe ou site n'est assigne, tous les lieux seront affiches sur la page de surveillance.
           </div>
           <FormMessage />
         </FormItem>

@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/theme-provider";
 import { useEffect, useId, useRef, useState } from "react";
 import { GlobalAppEffects } from "@/components/global-app-effects";
+import { VersionChangelogModal } from "@/components/version-changelog-modal";
+import { LicenseProvider } from "@/components/license/license-provider";
 
 declare global {
   interface Window {
@@ -145,7 +147,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
         disableTransitionOnChange
       >
         <GlobalAppEffects />
-        {children}
+        <VersionChangelogModal />
+        <LicenseProvider>{children}</LicenseProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

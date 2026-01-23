@@ -4,10 +4,11 @@ export function getDefaultLocationFormData(): LocationFormData {
   return {
     Nom_Lieu: '',
     Type_Lieu: '',
-    Lieu_Etat: '',
+    Commentaire: '',
+    Lieu_Etat: 'D',
     Id_Site: null,
     GroupIds: [],
-    Sonde_Numero_Serie: '',
+    Sonde_Numero_Serie: null,
 
     Consigne: undefined,
     Frequence: undefined,
@@ -35,4 +36,3 @@ export function getDefaultLocationFormData(): LocationFormData {
     Prendre_En_Compte_Derive: true,
   }
 }
-

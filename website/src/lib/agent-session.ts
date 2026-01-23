@@ -26,6 +26,21 @@ async function tryAgentFetch(path: string, init: RequestInit): Promise<void> {
   throw new Error("Agent request failed");
 }
 
+async function tryAgentFetchJson<T>(path: string, init: RequestInit): Promise<T> {
+  for (const baseUrl of AGENT_URLS) {
+    try {
+      const res = await fetch(`${baseUrl}${path}`, init);
+      if (res.ok) {
+        return (await res.json()) as T;
+      }
+    } catch (err) {
+      // try next URL
+    }
+  }
+
+  throw new Error("Agent request failed");
+}
+
 export async function setAgentSession(input: {
   userId: string;
   username: string;
@@ -50,6 +65,13 @@ export async function setAgentSession(input: {
 export async function clearAgentSession(): Promise<void> {
   await tryAgentFetch("/session", {
     method: "DELETE",
+    signal: createTimeoutSignal(800),
+  });
+}
+
+export async function getAgentInfo(): Promise<{ machineName: string; ip?: string }> {
+  return tryAgentFetchJson<{ machineName: string; ip?: string }>("/info", {
+    method: "GET",
     signal: createTimeoutSignal(800),
   });
 }

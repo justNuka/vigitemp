@@ -52,6 +52,13 @@ export function SensorCard({ sensor, onClick, className }: SensorCardProps) {
     sensor.currentValue < sensor.minThreshold || sensor.currentValue > sensor.maxThreshold
   );
 
+  const badgeStatus: "ok" | "warning" | "critical" =
+    sensor.status === "warning"
+      ? "warning"
+      : sensor.status === "critical" || sensor.status === "technical" || sensor.status === "ended"
+        ? "critical"
+        : "ok";
+
   return (
     <Card
       className={cn(
@@ -79,7 +86,7 @@ export function SensorCard({ sensor, onClick, className }: SensorCardProps) {
             </p>
           </div>
         </div>
-        <StatusBadge status={sensor.status} size="sm" />
+        <StatusBadge status={badgeStatus} size="sm" />
       </CardHeader>
 
       <CardContent className="px-4 pb-4">
@@ -116,7 +123,7 @@ export function SensorCard({ sensor, onClick, className }: SensorCardProps) {
               value={sensor.currentValue}
               min={sensor.minThreshold}
               max={sensor.maxThreshold}
-              status={sensor.status}
+              status={badgeStatus}
             />
           </div>
         </div>

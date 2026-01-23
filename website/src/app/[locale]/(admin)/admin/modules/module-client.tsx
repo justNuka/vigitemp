@@ -2,10 +2,22 @@
 
 import { useState } from "react";
 import { Archive, Pencil, Plus } from "lucide-react";
+import { useRouter } from '@/i18n/navigation';
+import { toast } from "sonner";
 
 import { useModules, useModuleSondes } from "@/hooks/useModules";
+import { deleteJson, HttpError } from "@/lib/http";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { ModuleModal } from "./module-modal";
@@ -13,10 +25,14 @@ import { ModulesTable, type ModuleRow } from "./_components/modules-table";
 import { ProbesTable, type ProbeRow } from "./_components/probes-table";
 
 export function ModulesClient() {
+  const router = useRouter();
   const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
   const [selectedSondeId, setSelectedSondeId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
+  const [archiveBlockedOpen, setArchiveBlockedOpen] = useState(false);
+  const [archiveBlockedMessage, setArchiveBlockedMessage] = useState<string | null>(null);
 
   const { data: modules, isLoading: modulesLoading, refetch: refetchModules } = useModules();
   const { data: sondes, isLoading: sondesLoading } = useModuleSondes(selectedModuleId);
@@ -38,8 +54,33 @@ export function ModulesClient() {
     Adresse_Sonde: s.Adresse_Sonde,
     Sonde_Numero_Serie: s.Sonde_Numero_Serie,
     Port_Serie: s.Port_Serie,
-    Etat_Sonde: s.Etat_Sonde,
+    Surveillance_Etat: s.Surveillance_Etat,
   }));
+
+
+  const handleArchive = async () => {
+    if (!selectedModuleId) return;
+
+    try {
+      await deleteJson(`/api/modules/${selectedModuleId}`);
+      setSelectedModuleId(null);
+      refetchModules();
+      router.refresh();
+      setArchiveConfirmOpen(false);
+    } catch (error) {
+      if (error instanceof HttpError && error.status === 409) {
+        const linked = (error.payload as any)?.linkedSensorsCount;
+        const detail =
+          typeof linked === 'number' && linked > 0
+            ? `Ce module est lie a ${linked} sonde${linked > 1 ? 's' : ''}.`
+            : '';
+        setArchiveBlockedMessage(`${error.message}${detail ? ` ${detail}` : ''}`);
+        setArchiveBlockedOpen(true);
+        return;
+      }
+      toast.error(error instanceof Error ? error.message : "Erreur lors de l'archivage");
+    }
+  };
 
   if (modulesLoading) {
     return (
@@ -86,7 +127,7 @@ export function ModulesClient() {
                 <Pencil className="w-4 h-4" />
                 Modifier
               </Button>
-              <Button size="sm" variant="outline" disabled={!selectedModuleId} className="gap-2">
+              <Button size="sm" variant="outline" disabled={!selectedModuleId} className="gap-2" onClick={() => setArchiveConfirmOpen(true)}>
                 <Archive className="w-4 h-4" />
                 Archiver
               </Button>
@@ -143,10 +184,39 @@ export function ModulesClient() {
         module={isEditMode ? selectedModule : null}
         onSuccess={() => {
           refetchModules();
+          router.refresh();
           setSelectedModuleId(null);
           setIsEditMode(false);
         }}
       />
+
+      <AlertDialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archiver le module</AlertDialogTitle>
+            <AlertDialogDescription>
+              Etes-vous sur de vouloir archiver ce module ? Cette action ne peut pas etre annulee.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogAction onClick={handleArchive}>Archiver</AlertDialogAction>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={archiveBlockedOpen} onOpenChange={setArchiveBlockedOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archivage impossible</AlertDialogTitle>
+            <AlertDialogDescription>
+              {archiveBlockedMessage || "Ce module est encore lie a d'autres elements."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogAction onClick={() => setArchiveBlockedOpen(false)}>
+            OK
+          </AlertDialogAction>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }

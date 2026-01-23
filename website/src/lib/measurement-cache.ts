@@ -12,6 +12,7 @@ interface MeasureData {
   Valeur: number;
   Unite: string;
   DateHeureMesure: string;
+  DateHeureMesureIso?: string;
   DateHeureMesureXaxis: string;
   Consigne: number | null;
   Consigne_Sup: number | null;
@@ -74,16 +75,15 @@ export function setCachedMeasurements(idLieu: number, newMeasurements: MeasureDa
     // Keep only the latest 125, sorted by date (newest first after reversal)
     const merged = Array.from(uniqueMap.values())
       .sort((a, b) => {
-        // Parse dates like "10/12/2025 14:30" to compare them
-        const dateA = new Date(a.DateHeureMesure.split(' ')[0].split('/').reverse().join('-') + ' ' + a.DateHeureMesure.split(' ')[1]);
-        const dateB = new Date(b.DateHeureMesure.split(' ')[0].split('/').reverse().join('-') + ' ' + b.DateHeureMesure.split(' ')[1]);
-        return dateB.getTime() - dateA.getTime();
+        const dateA = a.DateHeureMesureIso ? Date.parse(a.DateHeureMesureIso) : Date.parse(a.DateHeureMesure);
+        const dateB = b.DateHeureMesureIso ? Date.parse(b.DateHeureMesureIso) : Date.parse(b.DateHeureMesure);
+        return dateA - dateB;
       })
-      .slice(0, MAX_MEASUREMENTS);
+      .slice(-MAX_MEASUREMENTS);
     
-    const lastMeasureTimestamp = newMeasurements.length > 0 
-      ? newMeasurements[0].DateHeureMesure 
-      : (merged.length > 0 ? merged[0].DateHeureMesure : '');
+    const lastMeasureTimestamp = newMeasurements.length > 0
+      ? (newMeasurements[newMeasurements.length - 1].DateHeureMesureIso || newMeasurements[newMeasurements.length - 1].DateHeureMesure)
+      : (merged.length > 0 ? (merged[merged.length - 1].DateHeureMesureIso || merged[merged.length - 1].DateHeureMesure) : '');
     
     measurementCache.set(cacheKey, {
       measurements: merged,
@@ -92,12 +92,12 @@ export function setCachedMeasurements(idLieu: number, newMeasurements: MeasureDa
     });
   } else {
     // No cache yet, just store the measurements
-    const lastMeasureTimestamp = newMeasurements.length > 0 
-      ? newMeasurements[0].DateHeureMesure 
+    const lastMeasureTimestamp = newMeasurements.length > 0
+      ? (newMeasurements[newMeasurements.length - 1].DateHeureMesureIso || newMeasurements[newMeasurements.length - 1].DateHeureMesure)
       : '';
     
     measurementCache.set(cacheKey, {
-      measurements: newMeasurements.slice(0, MAX_MEASUREMENTS),
+      measurements: newMeasurements.slice(-MAX_MEASUREMENTS),
       lastFetchTime: Date.now(),
       lastMeasureTimestamp,
     });

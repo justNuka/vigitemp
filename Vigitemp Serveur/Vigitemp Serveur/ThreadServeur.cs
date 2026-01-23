@@ -1,6 +1,8 @@
 ﻿﻿using System;
 using System.Diagnostics;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,7 +17,7 @@ namespace Vigitemp_Serveur
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
         private static readonly object _lock = new object();
         private CancellationToken m_cts;
-        private Database m_database;
+        private IDatabaseProvider m_database;
         private Sensor sensor;
         private string sensorType;
         private List<System.Timers.Timer> timers = new List<System.Timers.Timer>();
@@ -32,6 +34,23 @@ namespace Vigitemp_Serveur
 
         private System.Timers.Timer _maintenanceTimer;
         private int _idServer;
+        private readonly ConcurrentDictionary<int, CachedLieuSettings> _lieuSettingsCache =
+            new ConcurrentDictionary<int, CachedLieuSettings>();
+        private readonly object _lieuSettingsLock = new object();
+        private readonly int _settingsCacheSeconds = GetSettingInt("Vigitemp.Alarms.SettingsCacheSeconds", 60);
+        private readonly bool _logSettingsCache = GetSettingBool("Vigitemp.Alarms.LogSettingsCache", false);
+
+        private sealed class CachedLieuSettings
+        {
+            public CachedLieuSettings(LieuAlarmSettings settings, DateTime fetchedAtUtc)
+            {
+                Settings = settings;
+                FetchedAtUtc = fetchedAtUtc;
+            }
+
+            public LieuAlarmSettings Settings { get; }
+            public DateTime FetchedAtUtc { get; }
+        }
 
         public ThreadServeur(CancellationToken obj, int p_idServer)
         {
@@ -39,7 +58,7 @@ namespace Vigitemp_Serveur
             this._idServer = p_idServer;
         }
 
-        public Database GetDatabase()
+        public IDatabaseProvider GetDatabase()
         { // singleton
             if (m_database == null)
             {
@@ -47,12 +66,105 @@ namespace Vigitemp_Serveur
                 {
                     if (m_database == null)
                     {
-                        m_database = new Database();
+                        m_database = DatabaseFactory.Create();
                     }
                 }
             }
             return m_database;
             // return new Database();
+        }
+
+        public LieuAlarmSettings GetLieuAlarmSettingsCached(int idLieu)
+        {
+            if (idLieu <= 0) return null;
+
+            var nowUtc = DateTime.UtcNow;
+
+            if (_lieuSettingsCache.TryGetValue(idLieu, out var cached))
+            {
+                if ((nowUtc - cached.FetchedAtUtc).TotalSeconds <= _settingsCacheSeconds)
+                {
+                    if (_logSettingsCache)
+                    {
+                        LogLieuSettings(idLieu, cached.Settings, "cache-hit");
+                    }
+                    return cached.Settings;
+                }
+            }
+
+            lock (_lieuSettingsLock)
+            {
+                if (_lieuSettingsCache.TryGetValue(idLieu, out cached))
+                {
+                    if ((nowUtc - cached.FetchedAtUtc).TotalSeconds <= _settingsCacheSeconds)
+                    {
+                        if (_logSettingsCache)
+                        {
+                            LogLieuSettings(idLieu, cached.Settings, "cache-hit");
+                        }
+                        return cached.Settings;
+                    }
+                }
+
+                var settings = GetDatabase().getLieuAlarmSettings(idLieu);
+                if (settings == null)
+                {
+                    return null;
+                }
+
+                _lieuSettingsCache[idLieu] = new CachedLieuSettings(settings, nowUtc);
+                if (_logSettingsCache)
+                {
+                    LogLieuSettings(idLieu, settings, "db-refresh");
+                }
+                return settings;
+            }
+        }
+
+        private static int GetSettingInt(string key, int defaultValue)
+        {
+            try
+            {
+                var raw = ConfigurationManager.AppSettings[key];
+                if (string.IsNullOrWhiteSpace(raw)) return defaultValue;
+                if (int.TryParse(raw, out var value)) return value;
+                return defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private static bool GetSettingBool(string key, bool defaultValue)
+        {
+            try
+            {
+                var raw = ConfigurationManager.AppSettings[key];
+                if (string.IsNullOrWhiteSpace(raw)) return defaultValue;
+                if (bool.TryParse(raw, out var value)) return value;
+                return defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private static void LogLieuSettings(int idLieu, LieuAlarmSettings settings, string source)
+        {
+            if (settings == null) return;
+            VigitempServeur.Log(
+                $"LieuAlarmSettings[{source}] idLieu={idLieu} " +
+                $"consigneInf={settings.ConsigneInf?.ToString() ?? "null"} " +
+                $"consigneSup={settings.ConsigneSup?.ToString() ?? "null"} " +
+                $"consigneInfActive={settings.ConsigneInfActive} " +
+                $"consigneSupActive={settings.ConsigneSupActive} " +
+                $"consigneInfPre={settings.ConsigneInfPreAlarme?.ToString() ?? "null"} " +
+                $"consigneInfPreActive={settings.ConsigneInfPreAlarmeActive} " +
+                $"consigneSupPre={settings.ConsigneSupPreAlarme?.ToString() ?? "null"} " +
+                $"consigneSupPreActive={settings.ConsigneSupPreAlarmeActive}"
+            );
         }
 
         public void Start()
@@ -189,20 +301,26 @@ namespace Vigitemp_Serveur
                     {
                         for (int i = 0; i < arr_sondeNumeroSerie.Count; i++)
                         {
-                            VigitempServeur.Log("--------------------ID SERVEUR : " + _idServer + "---CAPTEUR : " + arr_sondeNumeroSerie[i] + "--------------------");
-                            VigitempServeur.Log("Ouverture du port " + arr_portSerie[i] + " pour la sonde " + arr_sondeNumeroSerie[i]);
-                            sensorType = arr_sondeNumeroSerie[i].Substring(0, 2);
+                            var serial = arr_sondeNumeroSerie[i];
+                            if (string.IsNullOrEmpty(serial) || serial.Length < 2)
+                            {
+                                VigitempServeur.Log("Numero de serie invalide pour l'index " + i + " (serveur " + _idServer + ").");
+                                continue;
+                            }
+                            VigitempServeur.Log("--------------------ID SERVEUR : " + _idServer + "---CAPTEUR : " + serial + "--------------------");
+                            VigitempServeur.Log("Ouverture du port " + arr_portSerie[i] + " pour la sonde " + serial);
+                            sensorType = serial.Substring(0, 2);
 
                             switch (sensorType)
                             {
                                 case "IN":
                                     VigitempServeur.nombres_interrogations++;
-                                    sensor = new SensorIN(this, arr_portSerie[i], arr_sondeNumeroSerie[i], arr_sondeAdresse[i]);
+                                    sensor = new SensorIN(this, arr_portSerie[i], serial, arr_sondeAdresse[i]);
                                     await sensor.read();
                                     break;
                                 case "IE":
                                     VigitempServeur.nombres_interrogations++;
-                                    sensor = new SensorIE(this, arr_portSerie[i], arr_sondeNumeroSerie[i], arr_sondeAdresse[i]);
+                                    sensor = new SensorIE(this, arr_portSerie[i], serial, arr_sondeAdresse[i]);
                                     await sensor.read();
                                     break;
                                 case "IQ":
@@ -210,28 +328,28 @@ namespace Vigitemp_Serveur
                                     break;
                                 case "IP":
                                     VigitempServeur.nombres_interrogations++;
-                                    sensor = new SensorIP(this, arr_portSerie[i], arr_sondeNumeroSerie[i], arr_sondeAdresse[i]);
+                                    sensor = new SensorIP(this, arr_portSerie[i], serial, arr_sondeAdresse[i]);
                                     await sensor.read();
                                     break;
                                 case "IC":
                                     VigitempServeur.nombres_interrogations++;
-                                    sensor = new SensorIC(this, arr_portSerie[i], arr_sondeNumeroSerie[i], arr_sondeAdresse[i]);
+                                    sensor = new SensorIC(this, arr_portSerie[i], serial, arr_sondeAdresse[i]);
                                     await sensor.read();
                                     break;
                                 case "IH":
                                     VigitempServeur.nombres_interrogations++;
-                                    sensor = new SensorIH(this, arr_portSerie[i], arr_sondeNumeroSerie[i], arr_sondeAdresse[i]);
+                                    sensor = new SensorIH(this, arr_portSerie[i], serial, arr_sondeAdresse[i]);
                                     await sensor.read();
                                     break;
                                 case "EN":
                                     VigitempServeur.nombres_interrogations++;
-                                    sensor = new SensorEN(this, arr_portSerie[i], arr_sondeNumeroSerie[i], arr_sondeAdresse[i]);
+                                    sensor = new SensorEN(this, arr_portSerie[i], serial, arr_sondeAdresse[i]);
                                     await sensor.read();
                                     break;
 
                                 case "HN":
                                     VigitempServeur.nombres_interrogations++;
-                                    sensor = new SensorHN(this, arr_portSerie[i], arr_sondeNumeroSerie[i], arr_sondeAdresse[i], arr_moduleNumeroSerie[i]);
+                                    sensor = new SensorHN(this, arr_portSerie[i], serial, arr_sondeAdresse[i], arr_moduleNumeroSerie[i]);
                                     await sensor.read();
                                     break;
                                 default: break;
@@ -338,7 +456,12 @@ namespace Vigitemp_Serveur
                         //{
                             //for (int i = 0; i < arr_sondeNumeroSerie.Count; i++)
                             //{
-                                VigitempServeur.Log("Ouverture du port " + arr_portSerie + " pour la sonde " + arr_sondeNumeroSerie);
+                        if (string.IsNullOrEmpty(arr_sondeNumeroSerie) || arr_sondeNumeroSerie.Length < 2)
+                        {
+                            VigitempServeur.Log("Numero de serie invalide pour le lieu " + arr_lieuxAvecAlarmeSnooze[i] + ".");
+                            continue;
+                        }
+                        VigitempServeur.Log("Ouverture du port " + arr_portSerie + " pour la sonde " + arr_sondeNumeroSerie);
                                 sensorType = arr_sondeNumeroSerie.Substring(0, 2);
 
                                 switch (sensorType)
@@ -388,6 +511,11 @@ namespace Vigitemp_Serveur
                         //}
 
                         
+                        if (sensor == null)
+                        {
+                            VigitempServeur.Log("Aucun capteur cree pour le lieu " + arr_lieuxAvecAlarmeSnooze[i] + ".");
+                            continue;
+                        }
                         sensor.compareMeasuresAndLimits(derniereMesure);
                     }
                 }

@@ -129,7 +129,7 @@ export function CreateUserDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto bg-white dark:bg-card">
         <DialogHeader>
           <DialogTitle>Créer un utilisateur</DialogTitle>
           <DialogDescription>Ajouter un nouvel utilisateur au système</DialogDescription>

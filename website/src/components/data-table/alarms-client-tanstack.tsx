@@ -18,11 +18,11 @@ interface AlarmRow {
   Est_Acquittee: boolean | null;
 }
 
-const getAlarmStatus = (estAlarmeVrai: boolean | null) => {
-  if (estAlarmeVrai === null) return { label: "-", variant: "secondary" as const };
-  return estAlarmeVrai
-    ? { label: "Active", variant: "destructive" as const }
-    : { label: "Résolvée", variant: "default" as const };
+const getAlarmStatus = (dateHeureFin: string | null) => {
+  if (dateHeureFin) {
+    return { label: "En attente d'acquittement", variant: "default" as const };
+  }
+  return { label: "Alarme en cours", variant: "destructive" as const };
 };
 
 const getAcknowledgmentStatus = (estAcquittee: boolean | null) => {
@@ -49,24 +49,40 @@ const columns: ColumnDef<AlarmRow>[] = [
   {
     accessorKey: "Date_Heure_Debut",
     header: "Début alarme",
+    meta: {
+      headerClassName: "!border-l border-white/25 !border-r border-white/25",
+      cellClassName: "!border-l border-border !border-r border-border",
+    },
     cell: ({ row }) => formatDateTime(row.getValue("Date_Heure_Debut")),
   },
   {
     accessorKey: "Est_Alarme_Vrai",
     header: "État",
+    meta: {
+      headerClassName: "!border-l border-white/25 !border-r border-white/25",
+      cellClassName: "!border-l border-border !border-r border-border",
+    },
     cell: ({ row }) => {
-      const status = getAlarmStatus(row.getValue("Est_Alarme_Vrai"));
+      const status = getAlarmStatus(row.getValue("Date_Heure_Fin"));
       return <Badge variant={status.variant}>{status.label}</Badge>;
     },
   },
   {
     accessorKey: "Date_Heure_Fin",
     header: "Fin alarme",
+    meta: {
+      headerClassName: "!border-l border-white/25",
+      cellClassName: "!border-l border-border",
+    },
     cell: ({ row }) => formatDateTime(row.getValue("Date_Heure_Fin")),
   },
   {
     accessorKey: "Est_Acquittee",
     header: "Acquittée",
+    meta: {
+      headerClassName: "!border-l border-white/25",
+      cellClassName: "!border-l border-border",
+    },
     cell: ({ row }) => {
       const status = getAcknowledgmentStatus(row.getValue("Est_Acquittee"));
       return <Badge variant={status.variant}>{status.label}</Badge>;
@@ -101,6 +117,9 @@ export function AlarmsClientTanStack() {
           maxHeight="60vh"
           isLoading={isLoading || isFetching}
           emptyMessage="Aucune alarme trouvée"
+          headerClassName="!bg-sidebar !text-sidebar-foreground"
+          headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+          tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"
         />
       </CardContent>
     </Card>

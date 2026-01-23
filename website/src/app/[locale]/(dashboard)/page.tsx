@@ -14,6 +14,7 @@ export const metadata = {
   description: "Vue d'ensemble de la surveillance",
 };
 
+
 /**
  * Dashboard principal - Server Component avec Cache Components
  * Architecture optimisée: données cached côté serveur + interactivité côté client
@@ -29,7 +30,7 @@ export default async function DashboardPage() {
     ]);
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-full dashboard-light">
       <DashboardHeader stats={stats} />
 
       {/* Contenu principal - Client Component */}

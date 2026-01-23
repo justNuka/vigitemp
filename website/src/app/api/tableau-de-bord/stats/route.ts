@@ -6,38 +6,27 @@ import { prisma } from "@/lib/prisma"
 
 export const GET = withAuthLogging(async (_req: NextRequest) => {
   try {
-    const totalLocations = await prisma.t_lieu.count({
-      where: { Est_Archive: false },
-    })
-
-    const activeAlarms = await prisma.t_alarme.count({
-      where: { Est_Acquittee: false },
-    })
-
-    const locations = await prisma.t_lieu.findMany({
-      where: { Est_Archive: false },
-      select: {
-        Est_Lieu_En_Alarme: true,
-        Est_Lieu_En_Pre_Alarme: true,
-      },
-    })
-
-    const criticalSensors = locations.filter((l) => l.Est_Lieu_En_Alarme === 1).length
-    const warningSensors = locations.filter((l) => l.Est_Lieu_En_Alarme !== 1 && l.Est_Lieu_En_Pre_Alarme === 1).length
-    const okSensors = totalLocations - warningSensors - criticalSensors
-    const alertSensors = warningSensors + criticalSensors
+    const [activeLocations, disabledLocations, activeAlarms, alertSensors] = await Promise.all([
+      prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "S" } }),
+      prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "D" } }),
+      prisma.t_alarme.count({ where: { Est_Acquittee: false } }),
+      prisma.t_lieu.count({
+        where: {
+          Est_Archive: false,
+          OR: [{ Est_Lieu_En_Alarme: 1 }, { Est_Lieu_En_Pre_Alarme: 1 }],
+        },
+      }),
+    ])
 
     return apiOk({
-      totalLocations,
+      activeLocations,
+      disabledLocations,
+      totalLocations: activeLocations + disabledLocations,
       activeAlarms,
-      okSensors,
       alertSensors,
-      warningSensors,
-      criticalSensors,
     })
   } catch (error) {
     console.error("Tableau de bord stats error:", error)
     return apiError(500, "internal_error", "Failed to fetch dashboard stats")
   }
 })
-

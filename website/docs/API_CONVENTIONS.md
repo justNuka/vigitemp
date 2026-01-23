@@ -1,25 +1,21 @@
-# API conventions (WIP)
+﻿# Conventions API
 
-Objectif : converger progressivement vers un format homogène, **sans casser l’app** (migration par endpoints).
+## Objectif
+Converger vers un format de reponse coherent, sans casser l'existant.
 
-## Format recommandé (nouveau)
+## Format standard
+- Succes : `{ ok: true, data: ... }`
+- Erreur : `{ ok: false, error: string, message: string, details?: ... }`
 
-- **Succès** : `{ ok: true, data: ... }`
-- **Erreur** : `{ ok: false, error: string, message: string, ... }`
-
-Helpers :
-
+## Helpers
 - `website/src/lib/api-response.ts`
-- `website/src/lib/http.ts` (fetch JSON helper, utilisé côté client)
+- `website/src/lib/http.ts`
 
-## Endpoints déjà migrés
+## Regles
+- Preferer `fetchJson/getJson/postJson/...` depuis `lib/http.ts`.
+- Utiliser `apiOk` / `apiError` pour les nouvelles routes.
+- Garder des codes HTTP corrects (401, 403, 404, 500).
+- Eviter les JSON bruts pour les nouveaux endpoints.
 
-- `website/src/app/api/auth/login/route.ts`
-- `website/src/app/api/auth/logout/route.ts`
-- `website/src/app/api/auth/logout-auto/route.ts`
-- `website/src/app/api/me/route.ts`
-
-## Client HTTP (dé-doublonnage Axios)
-
-Le projet utilisait `axios` à quelques endroits alors que la majorité du code utilise `fetch`.
-On converge vers `fetch` via `website/src/lib/http.ts`.
+## Notes
+Les endpoints legacy peuvent rester en brut temporairement. Migrer endpoint par endpoint.

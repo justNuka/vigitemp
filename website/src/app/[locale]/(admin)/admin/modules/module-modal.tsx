@@ -130,7 +130,7 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-white dark:bg-card">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Modifier le module" : "Créer un nouveau module"}</DialogTitle>
           <DialogDescription>

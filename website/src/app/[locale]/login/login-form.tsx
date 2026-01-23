@@ -16,11 +16,13 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import { setAgentSession } from "@/lib/agent-session";
+import { getAgentInfo, setAgentSession } from "@/lib/agent-session";
 import { HttpError, postJson } from "@/lib/http";
 import { LoginCredentialsForm } from "./_components/login-credentials-form";
 import { ForgotPasswordDialog } from "./_components/forgot-password-dialog";
 import { LoginInactivityAlert } from "./_components/login-inactivity-alert";
+import { useLicense } from "@/components/license/license-provider";
+import { formatLicenseLabel } from "@/lib/license-label";
 
 type LoginResponse = {
   id: number;
@@ -44,6 +46,8 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const t = useTranslations("login");
   const tCommon = useTranslations("common");
+  const { license } = useLicense();
+  const licenseLabel = formatLicenseLabel(license, tCommon);
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -72,7 +76,12 @@ export function LoginForm() {
   const loginMutation = useMutation({
     mutationFn: async () => {
       try {
-        return await postJson<LoginResponse>("/api/auth/login", { username, password });
+        const agentInfo = await getAgentInfo().catch(() => null);
+        return await postJson<LoginResponse>("/api/auth/login", {
+          username,
+          password,
+          machineName: agentInfo?.machineName,
+        });
       } catch (err) {
         if (err instanceof HttpError) {
           const payload = err.payload as AuthApiErrorPayload | undefined;
@@ -160,7 +169,7 @@ export function LoginForm() {
         <div className="flex flex-col items-center text-center space-y-3">
           <Logo size="lg" showText />
           <span className="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">
-            {tCommon("license_light")}
+            {licenseLabel}
           </span>
         </div>
 
@@ -235,4 +244,3 @@ export function LoginForm() {
     </div>
   );
 }
-

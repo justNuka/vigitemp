@@ -1,7 +1,12 @@
 import type { LucideIcon } from "lucide-react"
-import { AlertCircle, CheckCircle2, Power, Zap } from "lucide-react"
+import { AlertCircle, AlertOctagon, CheckCircle2, PowerOff, Zap } from "lucide-react"
 
-export type SensorStatus = "ok" | "warning" | "critical"
+export type SensorStatus =
+  | "ok"
+  | "warning"
+  | "critical"
+  | "technical"
+  | "ended"
 
 export type StatusCounts = {
   total: number
@@ -18,6 +23,7 @@ export type StatusTheme = {
   softBgClassName: string
   headerBgClassName: string
   headerBorderClassName: string
+  headerTextClassName: string
   badgeClassName: string
 }
 
@@ -25,12 +31,13 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
   if (!isActive) {
     return {
       label: "Désactivée",
-      Icon: Power,
-      textClassName: "text-gray-500 dark:text-gray-400",
-      softBgClassName: "bg-gray-100 dark:bg-gray-900",
-      headerBgClassName: "bg-gray-600 dark:bg-gray-700",
-      headerBorderClassName: "border-gray-700 dark:border-gray-800",
-      badgeClassName: "bg-gray-100 dark:bg-gray-800",
+      Icon: PowerOff,
+      textClassName: "text-white dark:text-gray-200",
+      softBgClassName: "bg-gray-200 dark:bg-gray-900",
+      headerBgClassName: "bg-slate-500 dark:bg-gray-700",
+      headerBorderClassName: "border-slate-600 dark:border-gray-800",
+      headerTextClassName: "text-white dark:text-white",
+      badgeClassName: "bg-slate-600 dark:bg-gray-800 text-white dark:text-gray-100",
     }
   }
 
@@ -38,21 +45,45 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
     case "critical":
       return {
         label: "Critique",
-        Icon: AlertCircle,
-        textClassName: "text-red-700 dark:text-red-300",
+        Icon: AlertOctagon,
+        textClassName: "text-red-100 dark:text-white",
         softBgClassName: "bg-red-50 dark:bg-red-950",
-        headerBgClassName: "bg-red-600 dark:bg-red-700",
-        headerBorderClassName: "border-red-700 dark:border-red-800",
-        badgeClassName: "bg-red-600 hover:bg-red-700",
+        headerBgClassName: "bg-red-700 dark:bg-red-700",
+        headerBorderClassName: "border-red-800 dark:border-red-800",
+        headerTextClassName: "text-white dark:text-white",
+        badgeClassName: "bg-red-700 dark:bg-red-700 text-white dark:text-white hover:bg-red-800 dark:hover:bg-red-800",
+      }
+    case "technical":
+      return {
+        label: "Alarme technique",
+        Icon: AlertCircle,
+        textClassName: "text-gray-900 dark:text-black",
+        softBgClassName: "bg-gray-100 dark:bg-white",
+        headerBgClassName: "bg-slate-950 dark:bg-white",
+        headerBorderClassName: "border-slate-950 dark:border-gray-200",
+        headerTextClassName: "text-white dark:text-black",
+        badgeClassName: "bg-slate-950 dark:bg-white text-white dark:text-black border border-slate-950 dark:border-gray-200 hover:bg-slate-900 dark:hover:bg-gray-100",
       }
     case "warning":
       return {
         label: "Pré-alarme",
         Icon: Zap,
+        textClassName: "text-amber-800 dark:text-amber-300",
+        softBgClassName: "bg-amber-50 dark:bg-amber-950",
+        headerBgClassName: "bg-amber-500 dark:bg-amber-600",
+        headerBorderClassName: "border-amber-600 dark:border-amber-700",
+        headerTextClassName: "text-gray-900",
+        badgeClassName: "!bg-amber-500 hover:!bg-amber-600 !text-white border-amber-600",
+      }
+    case "ended":
+      return {
+        label: "Alarme terminée",
+        Icon: Zap,
         textClassName: "text-violet-700 dark:text-violet-300",
         softBgClassName: "bg-violet-50 dark:bg-violet-950",
         headerBgClassName: "bg-violet-600 dark:bg-violet-700",
         headerBorderClassName: "border-violet-700 dark:border-violet-800",
+        headerTextClassName: "text-gray-900",
         badgeClassName: "bg-violet-600 hover:bg-violet-700 text-white",
       }
     case "ok":
@@ -60,11 +91,12 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
       return {
         label: "OK",
         Icon: CheckCircle2,
-        textClassName: "text-green-700 dark:text-green-300",
-        softBgClassName: "bg-green-50 dark:bg-green-950",
-        headerBgClassName: "bg-slate-600 dark:bg-slate-700",
-        headerBorderClassName: "border-slate-700 dark:border-slate-800",
-        badgeClassName: "bg-green-600 hover:bg-green-700",
+        textClassName: "text-blue-700 dark:text-blue-300",
+        softBgClassName: "bg-blue-50 dark:bg-blue-950",
+        headerBgClassName: "bg-blue-600 dark:bg-blue-700",
+        headerBorderClassName: "border-blue-700 dark:border-blue-800",
+        headerTextClassName: "text-white",
+        badgeClassName: "bg-blue-600 hover:bg-blue-700",
       }
   }
 }
@@ -74,9 +106,10 @@ export function countStatus(sensors: { status: SensorStatus; isActive: boolean }
   for (const sensor of sensors) {
     stats.total++
     if (!sensor.isActive) stats.inactive++
-    else if (sensor.status === "critical") stats.critical++
+    else if (sensor.status === "critical" || sensor.status === "technical") stats.critical++
     else if (sensor.status === "warning") stats.warning++
     else stats.ok++
   }
   return stats
 }
+

@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
 import type { StandardType } from '@/hooks/useStandardTypes';
 import type { Module } from '@/hooks/useModules';
 
@@ -90,18 +91,24 @@ export function StandardInfoForm({
 
       <div className="space-y-2">
         <Label htmlFor="module">Module</Label>
-        <Select value={moduleId} onValueChange={setModuleId}>
-          <SelectTrigger id="module" disabled={modulesLoading}>
-            <SelectValue placeholder="Sélectionner un module" />
-          </SelectTrigger>
-          <SelectContent>
-            {modules?.map((mod) => (
-              <SelectItem key={mod.Id_Module} value={mod.Id_Module.toString()}>
-                Module sur port {mod.Port_Serie || 'N/A'}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Combobox
+          triggerId="module"
+          value={moduleId}
+          onValueChange={setModuleId}
+          disabled={modulesLoading}
+          placeholder="Sélectionner un module"
+          searchPlaceholder="Rechercher un module..."
+          emptyMessage="Aucun module"
+          options={(modules ?? []).map((mod) => ({
+            value: mod.Id_Module.toString(),
+            label: `${mod.Module_Numero_Serie || mod.Libelle_Type_Module || mod.Id_Module} sur port ${
+              mod.Port_Serie || 'N/A'
+            } (${mod.Emplacement || '-'})`,
+            searchText: `${mod.Module_Numero_Serie || ''} ${mod.Libelle_Type_Module || ''} ${
+              mod.Port_Serie || ''
+            } ${mod.Emplacement || ''} ${mod.Id_Module}`,
+          }))}
+        />
       </div>
 
       <div className="space-y-2">

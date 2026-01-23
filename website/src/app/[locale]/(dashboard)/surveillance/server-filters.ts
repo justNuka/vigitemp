@@ -25,7 +25,13 @@ export async function ServerFilterOptions() {
         where: { Est_Archive: false },
       }),
       prisma.t_lieu.findMany({
-        select: { Id_Site: true, Id_Groupe1: true, Id_Groupe2: true, Est_Archive: true },
+        select: {
+          Id_Site: true,
+          Id_Groupe1: true,
+          Id_Groupe2: true,
+          Est_Archive: true,
+          t_lieu_groupe: { select: { Id_Groupe: true } },
+        },
         where: { Est_Archive: false },
       }),
     ])
@@ -40,8 +46,14 @@ export async function ServerFilterOptions() {
       if (!lieu.Id_Site) continue
 
       const siteId = lieu.Id_Site
-      const groupIds = [lieu.Id_Groupe1, lieu.Id_Groupe2].filter(
-        (id): id is number => typeof id === "number" && id > 0,
+      const groupIds = Array.from(
+        new Set(
+          [
+            lieu.Id_Groupe1,
+            lieu.Id_Groupe2,
+            ...(lieu.t_lieu_groupe ?? []).map((lg) => lg.Id_Groupe),
+          ].filter((id): id is number => typeof id === "number" && id > 0),
+        ),
       )
 
       for (const groupId of groupIds) {
@@ -67,4 +79,3 @@ export async function ServerFilterOptions() {
     return { sites: [], groups: [] }
   }
 }
-

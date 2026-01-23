@@ -2,9 +2,17 @@
 - Toujours répondre en français.
 - Dès qu'il y a un doute, poser des questions pour clarifier les besoins avant de générer du code.
 - Dès qu'une modif touche à du typage, des données, etc... se référer aux schémas Prisma des 2 bases de données.
+- Toujours faire attention au typage (TypeScript) et aux types des données.
 - Faire l'architecture Next.js 16 la plus clean possible, en utilisant les bonnes pratiques (server components, client components, data fetching, etc...)
 - Toujours utiliser next-intl pour la gestion des langues à chaque création de pages/features.
-- Toujours faire du mobile-first comme l'indique la doc TailwindCSS
+- Toujours faire du mobile-first comme l'indique la doc TailwindCSS.
+- Toujours prendre en compte l'accessibilité : contraste des couleurs, navigation clavier, lecteurs d'écran, etc...
+- Toujours prendre en compte les conventions du projet : APIs, nommage, structure des fichiers, logging, audit trail, etc...
+- Toujours bien gérer la sécurité : validation des entrées, protection contre les injections, gestion des sessions, etc...
+- Toujours bien mettre en place le logging et l'audit trail pour chaque endpoint API créé ou modifié.
+- Toujours bien gérer les erreurs avec des messages clairs et précis (prendre en compte la traduction) à renvoyer à l'utilisateur.
+- Toujours bien gérer l'authentification et les droits (autorisations, licences) sur chaque endpoint API créé ou modifié.
+- Toujours mettre à jour la modal de nouveautés à chaque ajout/modification de features (+ la version).
 
 # Vigitemp Codebase Guide for AI Agents
 
@@ -187,10 +195,10 @@ if (!authorizations.includes('REQUIRED_CODE')) {
 - `PATCH /api/profils/[id]` - Update profile
 - `DELETE /api/profils/[id]` - Delete profile (with validation)
 
-**Probes (Sondes):**
+**Sondes (Sondes):**
 - `GET /api/sondes` - List all sondes with details
-- `POST /api/sondes/calibrages` - Get calibrages for specific probe (by serie)
-- `POST /api/sondes/etalonnages` - Get etalonnages for specific probe (by serie)
+- `POST /api/sondes/calibrages` - Get calibrages for specific sonde (by serie)
+- `POST /api/sondes/etalonnages` - Get etalonnages for specific sonde (by serie)
 
 **Standards/Étalons:**
 - `GET /api/etalons` - List all standards
@@ -235,7 +243,7 @@ if (!authorizations.includes('REQUIRED_CODE')) {
 │   │   │   ├── sites/              # Sites management
 │   │   │   ├── groupes/            # Groupes list endpoint
 │   │   │   ├── alarmes/            # Alarms list
-│   │   │   ├── sondes/             # Probes: GET all, calibrages, etalonnages
+│   │   │   ├── sondes/             # Sondes: GET all, calibrages, etalonnages
 │   │   │   ├── lieux/              # Locations management
 │   │   │   ├── etalons/            # Standards management
 │   │   │   ├── actionneurs/        # Actuators management
@@ -245,7 +253,7 @@ if (!authorizations.includes('REQUIRED_CODE')) {
 │   │   │       ├── page.tsx        # Dashboard admin
 │   │   │       ├── utilisateurs/   # Users management (CRUD with sites/groupes)
 │   │   │       ├── alarmes/        # Alarms table with filters
-│   │   │       ├── sondes/         # Probes (3-table: Sondes, Calibrages, Etalonnages)
+│   │   │       ├── sondes/         # Sondes (3-table: Sondes, Calibrages, Etalonnages)
 │   │   │       ├── lieux/          # Locations (3-tab: Général, Métrologie, Téléphonie)
 │   │   │       ├── sites/          # Sites CRUD
 │   │   │       ├── groupes/        # Groups CRUD
@@ -272,7 +280,7 @@ if (!authorizations.includes('REQUIRED_CODE')) {
 │   │   ├── useSites.ts             # Fetch sites
 │   │   ├── useGroups.ts            # Fetch groupes
 │   │   ├── useAlarms.ts            # Fetch alarms (30s auto-refresh)
-│   │   ├── useSondes.ts            # Fetch probes (60s auto-refresh)
+│   │   ├── useSondes.ts            # Fetch sondes (60s auto-refresh)
 │   │   ├── useCalibrages.ts        # Fetch calibrages by serie
 │   │   ├── useEtalonnages.ts       # Fetch etalonnages by serie
 │   │   ├── useCurrentTime.ts       # Real-time clock for UI
@@ -330,7 +338,7 @@ if (!authorizations.includes('REQUIRED_CODE')) {
 - **Row Selection:** Visual highlight with blue background + left border
 - **API:** GET `/api/alarmes`
 
-### 4. Probes Management (`/admin/sondes`)
+### 4. Sondes Management (`/admin/sondes`)
 - **Status:** ✅ COMPLETE
 - **3-Table Layout:**
   1. **Main Table (Sondes)** - Selectable with blue highlight, max-height with scroll
@@ -338,12 +346,12 @@ if (!authorizations.includes('REQUIRED_CODE')) {
      - Buttons: Ajouter, Modifier (disabled when no selection), Imprimer (enabled)
      - Selection: Blue highlight + left border indicator
   
-  2. **Calibrages Sub-Table** (appears when probe selected)
+  2. **Calibrages Sub-Table** (appears when sonde selected)
      - Columns: Date, Opérateur, Unité, Décimales
      - Buttons: Générer fichier (disabled), Imprimer (disabled)
      - Selection: Blue highlight
   
-  3. **Étalonnages Sub-Table** (appears when probe selected)
+  3. **Étalonnages Sub-Table** (appears when sonde selected)
      - Columns: Date, Validité, Opérateur, Incertitude
      - Buttons: Supprimer (disabled), Générer (disabled), Imprimer (disabled)
      - Selection: Blue highlight

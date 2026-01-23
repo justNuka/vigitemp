@@ -9,12 +9,12 @@ export async function CachedLocationsList() {
   cacheTag("locations-list");
 
   const locations = await prisma.t_lieu.findMany({
-    where: { Lieu_Etat: "1" },
+    where: { Est_Archive: false },
     include: {
       t_sonde: {
-        where: { Etat_Sonde: { not: null } },
+        where: { Est_Sonde_Reformee: false },
         select: {
-          Etat_Sonde: true,
+          Id_Sonde: true,
         },
       },
     },
@@ -23,13 +23,17 @@ export async function CachedLocationsList() {
 
   const formatted = locations.map((loc) => {
     const sensors = Array.isArray(loc.t_sonde) ? loc.t_sonde : [];
-    const okCount = sensors.filter((s: any) => s.Etat_Sonde === "O").length;
-    const warningCount = sensors.filter((s: any) => s.Etat_Sonde === "P").length;
-    const criticalCount = sensors.filter((s: any) => s.Etat_Sonde === "A").length;
+    const isCritical = loc.Est_Lieu_En_Alarme === 1;
+    const isWarning = !isCritical && loc.Est_Lieu_En_Pre_Alarme === 1;
+    const status: "ok" | "warning" | "critical" = isCritical
+      ? "critical"
+      : isWarning
+        ? "warning"
+        : "ok";
 
-    let status: "ok" | "warning" | "critical" = "ok";
-    if (criticalCount > 0) status = "critical";
-    else if (warningCount > 0) status = "warning";
+    const okCount = status === "ok" ? sensors.length : 0;
+    const warningCount = status === "warning" ? sensors.length : 0;
+    const criticalCount = status === "critical" ? sensors.length : 0;
 
     return {
       id: loc.Id_Lieu,

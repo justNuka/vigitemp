@@ -19,7 +19,28 @@
     "previous": "Previous",
     "user": "User",
     "logout": "Log out",
-    "license_light": "Light license"
+    "license_light": "Light license",
+    "license_prefix": "License",
+    "license_unknown": "Unknown license",
+    "license_invalid": "Invalid license"
+  },
+  "dateRangePicker": {
+    "selectRange": "Select a range",
+    "cancel": "Cancel",
+    "update": "Update",
+    "compare": "Compare",
+    "select": "Select...",
+    "presets": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "last7": "Last 7 days",
+      "last14": "Last 14 days",
+      "last30": "Last 30 days",
+      "thisWeek": "This Week",
+      "lastWeek": "Last Week",
+      "thisMonth": "This Month",
+      "lastMonth": "Last Month"
+    }
   },
   "pageHeader": {
     "title": "Vigitemp - Temperature Monitoring"
@@ -88,9 +109,10 @@
     "title": "Dashboard",
     "description": "Overview of monitoring",
     "stats": {
-      "locations_monitored": "Monitored locations",
+      "locations_monitored": "Locations in monitoring",
       "active_alarms": "Active alarms",
-      "sensors_ok": "Sensors OK",
+      "sensors_ok": "Monitoring disabled",
+      "locations_disabled": "Monitoring disabled",
       "sensors_alert": "Sensors in alert"
     }
   },
@@ -100,6 +122,16 @@
     "tabs": {
       "graphs": "Charts",
       "tree": "Tree"
+    },
+    "grid": {
+      "active_title": "Locations in monitoring",
+      "disabled_title": "Locations with monitoring disabled",
+      "disabled_empty": "No locations with monitoring disabled",
+      "toggle_disabled_first": "Show disabled locations first",
+      "toggle_active_first": "Show monitoring locations first",
+      "disabled_badge": "Monitoring disabled",
+      "disabled_until": "Monitoring disabled until {date}",
+      "empty_title": "No sensors"
     }
   },
   "alarmsPage": {
@@ -108,7 +140,7 @@
     "tabs": {
       "active": "Active",
       "acknowledged": "Acknowledged",
-      "resolved": "Resolved"
+      "resolved": "To acknowledge"
     }
   },
   "audit": {

@@ -1,10 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { AlertTriangle, BookOpen, CheckCircle2, Clock, Database, Users } from "lucide-react"
+import { AlertTriangle, BookOpen, CheckCircle2, Clock, Database, Users, Cpu } from "lucide-react"
+import type { ColumnDef } from "@tanstack/react-table"
 
 import { PageHeader } from "@/components/page-header"
-import { DashboardTable } from "@/components/data-table/dashboard-table"
+import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { acknowledgmentColumns } from "@/components/data-table/acknowledgment-columns"
 import { activeAlarmsColumns } from "@/components/data-table/active-alarms-columns"
 import { backupColumns } from "@/components/data-table/backup-columns"
@@ -19,6 +20,7 @@ import {
   useConnectedUsers,
   useSystemLogs,
 } from "@/hooks/useAdminData"
+import { useProbes, type Probe } from "@/hooks/useProbes"
 
 function PaginationControls(props: {
   page: number
@@ -32,7 +34,13 @@ function PaginationControls(props: {
         Page {props.page} sur {props.pages}
       </p>
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={props.onPrev} disabled={props.page === 1}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={props.onPrev}
+          disabled={props.page === 1}
+          className="border-primary/40 text-primary hover:bg-primary/10"
+        >
           {"Pr\u00E9c\u00E9dent"}
         </Button>
         <Button
@@ -40,6 +48,7 @@ function PaginationControls(props: {
           size="sm"
           onClick={props.onNext}
           disabled={props.page === props.pages}
+          className="border-primary/40 text-primary hover:bg-primary/10"
         >
           Suivant
         </Button>
@@ -58,6 +67,7 @@ export default function AdminDashboard() {
   const acknowledgmentsQuery = useAcknowledgments(ackPage)
   const systemLogsQuery = useSystemLogs()
   const backupsQuery = useBackups()
+  const probesQuery = useProbes()
 
   const lastBackupDate = (backupsQuery.data as any)?.[0]?.dateHeure
   const lastBackupLabel = lastBackupDate ? new Date(lastBackupDate).toLocaleString() : "N/A"
@@ -68,6 +78,14 @@ export default function AdminDashboard() {
     acknowledgmentsQuery.isLoading &&
     systemLogsQuery.isLoading &&
     backupsQuery.isLoading
+
+  const unassignedProbes = (probesQuery.data ?? []).filter((probe) => !probe.Lieu)
+  const unassignedColumns: ColumnDef<Probe>[] = [
+    { accessorKey: "Sonde_Numero_Serie", header: "Sonde" },
+    { accessorKey: "Sonde_Type", header: "Type", cell: ({ row }) => row.original.Sonde_Type || "-" },
+    { accessorKey: "Adresse_Sonde", header: "Adresse", cell: ({ row }) => row.original.Adresse_Sonde || "-" },
+    { accessorKey: "Id_Module", header: "Module", cell: ({ row }) => row.original.Id_Module ?? "-" },
+  ]
 
   if (isInitialLoading) {
     return (
@@ -101,11 +119,18 @@ export default function AdminDashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DashboardTable
+            <TanStackTable
               columns={acknowledgmentColumns}
               data={acknowledgmentsQuery.data?.data || []}
               emptyMessage={"Aucun acquittement d'alarme enregistr\u00E9"}
               maxHeight="420px"
+              showPagination={false}
+              showSearch={false}
+              enableExport={false}
+              enablePrint={false}
+              headerClassName="!bg-sidebar !text-sidebar-foreground"
+              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+              tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
             />
             <PaginationControls
               page={ackPage}
@@ -135,11 +160,18 @@ export default function AdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <DashboardTable
+              <TanStackTable
                 columns={connectedUsersColumns}
                 data={connectedUsersQuery.data?.data || []}
                 emptyMessage={"Aucun utilisateur connect\u00E9 actuellement"}
                 maxHeight="320px"
+                showPagination={false}
+                showSearch={false}
+                enableExport={false}
+                enablePrint={false}
+                headerClassName="!bg-sidebar !text-sidebar-foreground"
+                headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+                tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
               />
               <PaginationControls
                 page={connectedUsersPage}
@@ -170,11 +202,18 @@ export default function AdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <DashboardTable
+              <TanStackTable
                 columns={activeAlarmsColumns}
                 data={activeAlarmsQuery.data?.data || []}
                 emptyMessage="Aucune alarme active en cours"
                 maxHeight="320px"
+                showPagination={false}
+                showSearch={false}
+                enableExport={false}
+                enablePrint={false}
+                headerClassName="!bg-sidebar !text-sidebar-foreground"
+                headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+                tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
               />
               <PaginationControls
                 page={activeAlarmsPage}
@@ -208,11 +247,18 @@ export default function AdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <DashboardTable
+              <TanStackTable
                 columns={systemLogsColumns}
                 data={systemLogsQuery.data?.data || []}
                 emptyMessage={"Aucune entr\u00E9e de journal d'audit"}
                 maxHeight="380px"
+                showPagination={false}
+                showSearch={false}
+                enableExport={false}
+                enablePrint={false}
+                headerClassName="!bg-sidebar !text-sidebar-foreground"
+                headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+                tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
               />
             </CardContent>
           </Card>
@@ -238,18 +284,54 @@ export default function AdminDashboard() {
                   {lastBackupLabel}
                 </p>
               </div>
-              <Button className="w-full">Lancer sauvegarde</Button>
+              <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                Lancer sauvegarde
+              </Button>
               <div className="mt-4">
-                <DashboardTable
+                <TanStackTable
                   columns={backupColumns}
                   data={backupsQuery.data || []}
                   emptyMessage="Aucun historique de sauvegarde disponible"
                   maxHeight="240px"
+                  showPagination={false}
+                  showSearch={false}
+                  enableExport={false}
+                  enablePrint={false}
+                  headerClassName="!bg-sidebar !text-sidebar-foreground"
+                  headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+                  tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
                 />
               </div>
             </CardContent>
           </Card>
         </div>
+
+        <Card className="lg:max-w-3xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Cpu className="h-5 w-5" />
+              Sondes sans lieu
+            </CardTitle>
+            <CardDescription>
+              {unassignedProbes.length} sonde{unassignedProbes.length > 1 ? "s" : ""} non affectée
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TanStackTable
+              columns={unassignedColumns}
+              data={unassignedProbes}
+              emptyMessage="Aucune sonde sans lieu"
+              maxHeight="240px"
+              showPagination={false}
+              showSearch={false}
+              enableExport={false}
+              enablePrint={false}
+              headerClassName="!bg-sidebar !text-sidebar-foreground"
+              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+              tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

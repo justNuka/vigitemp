@@ -25,7 +25,7 @@ export function GeneralSettingsCard({
   onRefreshIntervalChange,
 }: GeneralSettingsCardProps) {
   return (
-    <Card>
+    <Card className="bg-white/50 dark:bg-card">
       <CardHeader>
         <CardTitle>Général</CardTitle>
         <CardDescription>Paramètres généraux de l'application</CardDescription>
@@ -43,7 +43,7 @@ export function GeneralSettingsCard({
                 onValueChange={(value) => onRefreshIntervalChange(setting.key, value)}
                 disabled={loadingKeys.has(setting.key)}
               >
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-45">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -68,4 +68,3 @@ export function GeneralSettingsCard({
     </Card>
   );
 }
-

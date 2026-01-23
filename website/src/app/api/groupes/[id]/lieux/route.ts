@@ -22,9 +22,11 @@ export const GET = withLogging(
       const lieux = await prisma.t_lieu.findMany({
         where: {
           Est_Archive: false,
-          t_lieu_groupe: {
-            some: { Id_Groupe: groupeId },
-          },
+          OR: [
+            { t_lieu_groupe: { some: { Id_Groupe: groupeId } } },
+            { Id_Groupe1: groupeId },
+            { Id_Groupe2: groupeId },
+          ],
         },
         select: {
           Id_Lieu: true,

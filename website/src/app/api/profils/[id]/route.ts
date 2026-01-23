@@ -181,7 +181,9 @@ export const DELETE = withAuthorizationLogging(
         where: { Profil_Utilisateur: profile.Profil_Utilisateur },
       })
       if (usersCount > 0) {
-        return apiError(400, "has_dependencies", "Impossible de supprimer un profil utilisé par des utilisateurs")
+        return apiError(409, "has_dependencies", "Impossible d'archiver un profil utilis? par des utilisateurs", {
+          linkedUsersCount: usersCount,
+        })
       }
 
       await prisma.t_liaison_profil_autorisation.deleteMany({

@@ -7,7 +7,8 @@ import { apiError, apiOk } from "@/lib/api-response"
 
 const createLieuSchema = z.object({
   Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(20),
-  Lieu_Etat: z.string().max(100).nullable().optional(),
+  Lieu_Etat: z.string().max(1).nullable().optional(),
+  Commentaire: z.string().nullable().optional(),
   Id_Site: z.number().nullable().optional(),
   GroupIds: z.array(z.number()).optional(),
   Id_Groupe1: z.number().nullable().optional(),
@@ -77,14 +78,16 @@ export const POST = withLogging(async (req: NextRequest) => {
       ),
     )
 
+    const lieuEtat = validated.Lieu_Etat ?? "D"
+    const sondeNumeroSerie = validated.Sonde_Numero_Serie?.trim() || null
+
+    const group1Id = groupIds[0] ?? validated.Id_Groupe1 ?? null
+    const group2Id = groupIds[1] ?? validated.Id_Groupe2 ?? null
+
     const lieu = await prisma.t_lieu.create({
       data: {
         Nom_Lieu: validated.Nom_Lieu,
-        Lieu_Etat: validated.Lieu_Etat,
-        Id_Site: validated.Id_Site,
-        Id_Groupe1: groupIds[0] ?? validated.Id_Groupe1 ?? null,
-        Id_Groupe2: groupIds[1] ?? validated.Id_Groupe2 ?? null,
-        Sonde_Numero_Serie: validated.Sonde_Numero_Serie,
+        Commentaire: validated.Commentaire ?? null,
         Consigne: validated.Consigne,
         Frequence: validated.Frequence,
         Consigne_Sup: validated.Consigne_Sup,
@@ -98,6 +101,37 @@ export const POST = withLogging(async (req: NextRequest) => {
         Est_Consigne_Inf_Pre_Alarme_Active: validated.Est_Consigne_Inf_Pre_Alarme_Active ?? false,
         Retard_Alarme_Bas: validated.Retard_Alarme_Bas,
         Est_Archive: false,
+        t_etat_surveillance_lieu: {
+          connect: { Surveillance_Etat: lieuEtat },
+        },
+        ...(validated.Id_Site
+          ? {
+              t_site: {
+                connect: { Id_Site: validated.Id_Site },
+              },
+            }
+          : {}),
+        ...(sondeNumeroSerie
+          ? {
+              t_sonde: {
+                connect: { Sonde_Numero_Serie: sondeNumeroSerie },
+              },
+            }
+          : {}),
+        ...(group1Id
+          ? {
+              t_groupe1: {
+                connect: { Id_Groupe: group1Id },
+              },
+            }
+          : {}),
+        ...(group2Id
+          ? {
+              t_groupe2: {
+                connect: { Id_Groupe: group2Id },
+              },
+            }
+          : {}),
         ...(groupIds.length > 0
           ? {
               t_lieu_groupe: {
@@ -110,6 +144,13 @@ export const POST = withLogging(async (req: NextRequest) => {
           : {}),
       },
     })
+
+    if (sondeNumeroSerie && Object.prototype.hasOwnProperty.call(validated, "Lieu_Etat")) {
+      await prisma.t_sonde.updateMany({
+        where: { Sonde_Numero_Serie: sondeNumeroSerie },
+        data: { Surveillance_Etat: lieuEtat },
+      })
+    }
 
     return apiOk(lieu, { status: 201 })
   } catch (error) {

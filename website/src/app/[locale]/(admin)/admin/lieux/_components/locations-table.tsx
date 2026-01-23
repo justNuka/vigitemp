@@ -2,6 +2,7 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
+import { Badge } from '@/components/ui/badge';
 import { getTypeIcon } from '@/lib/lieu-types';
 import type { LocationRow } from '@/hooks/useLocations';
 
@@ -61,10 +62,23 @@ export function LocationsTable({
     {
       accessorKey: 'Sonde_Numero_Serie',
       header: 'Sonde',
+      cell: ({ row }) => {
+        const serial = row.original.Sonde_Numero_Serie;
+        if (!serial) {
+          return <Badge variant="secondary">Sans sonde</Badge>;
+        }
+        return serial;
+      },
     },
     {
       accessorKey: 'Lieu_Etat',
-      header: 'Observations',
+      header: 'Etat du lieu',
+      cell: ({ row }) => {
+        const status = row.original.Lieu_Etat;
+        if (status === 'S') return 'En surveillance';
+        if (status === 'D') return 'Surveillance desactivee';
+        return status || '-';
+      },
     },
     {
       accessorKey: 'Consigne',
@@ -105,11 +119,14 @@ export function LocationsTable({
       data={locations}
       searchPlaceholder="Rechercher les lieux..."
       pageSize={10}
-      maxHeight="60vh"
+      maxHeight="calc(100dvh - 25rem)"
       isLoading={isLoading}
       emptyMessage="Aucun lieu trouvé"
       onRowClick={(row) => onSelectLocation(row)}
       selectedRowId={selectedLocationId}
+      headerClassName="!bg-sidebar !text-sidebar-foreground"
+      headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+      tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
     />
   );
 }

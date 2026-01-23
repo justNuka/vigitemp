@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useProbeTypes } from "@/hooks/useProbeTypes";
@@ -26,6 +27,7 @@ import type { Probe } from "@/hooks/useProbes";
 import { AlertCircle } from "lucide-react";
 import { patchJson, postJson } from "@/lib/http";
 import { toast } from "sonner";
+import { useRouter } from '@/i18n/navigation';
 
 interface ProbeModalProps {
   open: boolean;
@@ -36,6 +38,7 @@ interface ProbeModalProps {
 
 export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalProps) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const isEdit = Boolean(isEditing && probe);
   const probeKey = (probe as any)?.Id_Sonde ?? probe?.Sonde_Numero_Serie ?? "new";
   const contentKey = `${isEdit ? "edit" : "new"}-${probeKey}-${open ? "open" : "closed"}`;
@@ -59,8 +62,11 @@ export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalP
   }, [isEdit, moduleId, probe?.Id_Module]);
 
   const handleSerieChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const onlyNumbers = e.target.value.replace(/\D/g, "");
-    setSerieNum(onlyNumbers);
+    const normalized = e.target.value.toUpperCase();
+    const cleaned = normalized.replace(/[^0-9TH]/g, "");
+    const suffix = cleaned.endsWith("T") ? "T" : cleaned.endsWith("H") ? "H" : "";
+    const digits = suffix ? cleaned.slice(0, -1).replace(/[^0-9]/g, "") : cleaned.replace(/[^0-9]/g, "");
+    setSerieNum(suffix ? `${digits}-${suffix}` : digits);
   };
 
   const handleSubmit = async () => {
@@ -95,6 +101,7 @@ export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalP
       }
 
       await queryClient.invalidateQueries({ queryKey: ["probes"] });
+      router.refresh();
       setSerieNum("");
       setProbeType("");
       setModuleId("");
@@ -106,7 +113,7 @@ export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent key={contentKey} className="sm:max-w-[500px]">
+      <DialogContent key={contentKey} className="sm:max-w-125 bg-white dark:bg-card">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Modifier la sonde" : "Ajouter une sonde"}</DialogTitle>
         </DialogHeader>
@@ -133,7 +140,7 @@ export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalP
             <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
               <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               <AlertDescription className="text-sm text-blue-800 dark:text-blue-300">
-                Uniquement les chiffres
+                Chiffres + suffixe optionnel -T ou -H
               </AlertDescription>
             </Alert>
             <Input
@@ -148,18 +155,24 @@ export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalP
 
           <div className="space-y-2">
             <Label htmlFor="module">Module</Label>
-            <Select value={displayedModuleId} onValueChange={setModuleId}>
-              <SelectTrigger id="module" disabled={modulesLoading}>
-                <SelectValue placeholder="Sélectionner un module" />
-              </SelectTrigger>
-              <SelectContent>
-                {modules?.map((mod) => (
-                  <SelectItem key={mod.Id_Module} value={mod.Id_Module.toString()}>
-                    Module sur port {mod.Port_Serie || "N/A"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Combobox
+              triggerId="module"
+              value={displayedModuleId}
+              onValueChange={setModuleId}
+              disabled={modulesLoading}
+              placeholder="Sélectionner un module"
+              searchPlaceholder="Rechercher un module..."
+              emptyMessage="Aucun module"
+              options={(modules ?? []).map((mod) => ({
+                value: mod.Id_Module.toString(),
+                label: `${mod.Module_Numero_Serie || mod.Libelle_Type_Module || mod.Id_Module} sur port ${
+                  mod.Port_Serie || "N/A"
+                } (${mod.Emplacement || "-"})`,
+                searchText: `${mod.Module_Numero_Serie || ""} ${mod.Libelle_Type_Module || ""} ${
+                  mod.Port_Serie || ""
+                } ${mod.Emplacement || ""} ${mod.Id_Module}`,
+              }))}
+            />
           </div>
         </div>
 

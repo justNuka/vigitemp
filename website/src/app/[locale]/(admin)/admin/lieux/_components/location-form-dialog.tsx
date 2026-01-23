@@ -14,6 +14,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLicense } from "@/components/license/license-provider";
+import { Check, X } from "lucide-react";
 
 import type { LocationFormData, LocationFormMode } from './location-form-types';
 import { LocationFormTabGeneral } from './location-form-tab-general';
@@ -46,6 +48,9 @@ export function LocationFormDialog({
   onSubmit,
 }: LocationFormDialogProps) {
   const isEdit = mode === 'edit';
+  const { license } = useLicense();
+  const edition = (license?.edition || "light").trim().toLowerCase();
+  const isLight = edition === "light";
 
   return (
     <Dialog
@@ -54,17 +59,17 @@ export function LocationFormDialog({
         if (!nextOpen) onCancel();
       }}
     >
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white dark:bg-card">
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Modifier le lieu' : 'Créer un nouveau lieu'}</DialogTitle>
           <DialogDescription>Remplissez les informations du lieu</DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className={`grid w-full ${isLight ? "grid-cols-1" : "grid-cols-3"}`}>
             <TabsTrigger value="general">Général</TabsTrigger>
-            <TabsTrigger value="metrologie">Métrologie</TabsTrigger>
-            <TabsTrigger value="telephonie">Téléphonie/Planning</TabsTrigger>
+            {!isLight && <TabsTrigger value="metrologie">Métrologie</TabsTrigger>}
+            {!isLight && <TabsTrigger value="telephonie">Téléphonie/Planning</TabsTrigger>}
           </TabsList>
 
           <LocationFormTabGeneral
@@ -74,15 +79,17 @@ export function LocationFormDialog({
             groups={groups}
             availableProbes={availableProbes}
           />
-          <LocationFormTabMetrology formData={formData} setFormData={setFormData} />
-          <LocationFormTabTelephony />
+          {!isLight && <LocationFormTabMetrology formData={formData} setFormData={setFormData} />}
+          {!isLight && <LocationFormTabTelephony />}
         </Tabs>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
+          <Button variant="outline" onClick={onCancel} className="gap-2">
+            <X className="h-4 w-4" />
             Annuler
           </Button>
-          <Button onClick={onSubmit} disabled={isSubmitting}>
+          <Button onClick={onSubmit} disabled={isSubmitting} className="gap-2">
+            <Check className="h-4 w-4" />
             {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
           </Button>
         </DialogFooter>

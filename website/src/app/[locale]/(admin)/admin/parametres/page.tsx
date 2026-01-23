@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 function SettingsLoadingSkeleton() {
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <Card className="p-6">
+      <Card className="p-6 bg-white/50 dark:bg-card">
         <Skeleton className="h-6 w-32 mb-4" />
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
@@ -72,4 +72,3 @@ export default async function SettingsPage() {
     </div>
   );
 }
-

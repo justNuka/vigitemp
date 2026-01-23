@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_MESURE_URL")
+  url      = env("DATABASE_MESURES_URL")
 }
 
 model tm_graphique {
@@ -94,11 +94,14 @@ model tm_mesures {
   Sonde_Numero_Serie      String?  @default("") @db.VarChar(50)
   Id_Lieu                 Int      @default(0)
   Est_Valeur_Null         Boolean  @default(false) @db.TinyInt
+  Est_Valeur_Memoire      Boolean  @default(false) @db.TinyInt
   Frequence               Int?
   Est_Etat_Alarme         Boolean  @default(false) @db.TinyInt
   Consigne_Inf_Pre_Alarme Float?   @db.Float
   Consigne_Sup_Pre_Alarme Float?   @db.Float
   Moyenne                 Float?   @db.Float
+  Rssi                    Int?
+  Tension                 Float?   @db.Float
 
   @@id([Id_Serveur_BDD, Id_Mesure, Date_Heure_Mesure, Id_Lieu, Est_Valeur_Null])
   @@index([Date_Heure_Mesure], map: "IDX_Date_Heure_Mesure")
@@ -107,6 +110,19 @@ model tm_mesures {
   @@index([Date_Heure_Mesure, Id_Lieu], map: "IDX_Date_Heure_Mesure_Id_Lieu")
   @@index([Id_Lieu], map: "Mesure_Numero_lieu_IDX")
   @@index([Id_Lieu], map: "Mesure_lieu")
+}
+
+model tm_mesures_gso {
+  Id_mesures_gso Int      @default(autoincrement())
+  id_capteur     String   @default("") @db.VarChar(50)
+  tep            Float?
+  unite          String?  @default("") @db.VarChar(10)
+  date_mesure    DateTime @db.DateTime(0)
+  rssi           String?  @db.VarChar(10)
+  tension        String?  @db.VarChar(10)
+
+  @@id([id_capteur, date_mesure])
+  @@index([Id_mesures_gso], map: "Id_mesures_gso")
 }
 
 model tm_journal_histo {
@@ -121,7 +137,7 @@ model tm_journal_histo {
   Id_Lieu                 Int?
   Commentaire_Utilisateur String?   @db.LongText
 
-  @@id([Id_Serveur_BDD, Id_Journal_Histo, Id_Journal])
+  @@id([Id_Journal_Histo, Id_Serveur_BDD, Id_Journal])
   @@index([Code_Journal], map: "IDX_Code_Journal")
   @@index([Date_Heure_Journal], map: "IDX_Date_Heure_Journal")
   @@index([Nom_Utilisateur], map: "IDX_Nom_Utilisateur")
@@ -137,7 +153,7 @@ model tm_mesure_calibrage {
   Est_Valeur_Null     Int      @db.TinyInt
   Date_Heure          DateTime @default(now()) @db.Timestamp(0)
 
-  @@id([Id_Serveur_BDD, Id_Mesure_Calibrage])
+  @@id([Id_Mesure_Calibrage, Id_Serveur_BDD])
   @@index([Sonde_Numero_Serie], map: "IDX_Sonde_Numero_Serie")
   @@index([Date_Heure], map: "IDX_Date_Heure")
   @@index([Valeur], map: "IDX_Valeur")
@@ -154,7 +170,7 @@ model tm_mesure_calibrage_etalon {
   Est_Valeur_Null            Int      @db.TinyInt
   Date_Heure                 DateTime @default(now()) @db.Timestamp(0)
 
-  @@id([Id_Serveur_BDD, Id_Mesure_Calibrage_Etalon])
+  @@id([Id_Mesure_Calibrage_Etalon, Id_Serveur_BDD])
   @@index([Etalon_Numero_Serie], map: "IDX_Etalon_Numero_Serie")
   @@index([Date_Heure], map: "IDX_Date_Heure")
   @@index([Valeur], map: "IDX_Valeur")
@@ -171,7 +187,7 @@ model tm_mesure_etalon {
   Date_Heure          DateTime @db.DateTime(0)
   Message_Erreur      String   @default("") @db.VarChar(50)
 
-  @@id([Id_Serveur_BDD, Id_Mesure_Etalon])
+  @@id([Id_Mesure_Etalon, Id_Serveur_BDD])
   @@index([Date_Heure], map: "IDX_Date_Heure")
   @@index([Message_Erreur], map: "IDX_Message_Erreur")
   @@index([Etalon_Numero_Serie], map: "IDX_Etalon_Numero_Serie")
@@ -188,7 +204,7 @@ model tm_mesure_etalonnage {
   Mesure_Etalon        Float?    @db.Float
   Date_Heure           DateTime? @db.DateTime(0)
 
-  @@id([Id_Serveur_BDD, Id_Mesure_Etalonnage])
+  @@id([Id_Mesure_Etalonnage, Id_Serveur_BDD])
   @@index([Sonde_Numero_serie], map: "IDX_Sonde_Numero_serie")
 }
 
@@ -212,7 +228,7 @@ model tm_mesures_histo {
   Consigne_Sup_Pre_Alarme Float?   @db.Float
   Moyenne                 Float?   @db.Float
 
-  @@id([Id_Serveur_BDD, Id_Mesure, Date_Heure_Mesure, Id_Lieu, Est_Valeur_Null])
+  @@id([Id_Mesure, Id_Serveur_BDD, Date_Heure_Mesure, Id_Lieu, Est_Valeur_Null])
   @@index([Date_Heure_Mesure], map: "IDX_Date_Heure_Mesure")
   @@index([Est_En_Alarme], map: "IDX_Est_En_Alarme")
   @@index([Est_Valeur_Null], map: "IDX_Est_Valeur_Null")
@@ -231,7 +247,7 @@ model tm_mesures_test {
   Nombre_Total       Int      @default(0)
   Nombre_Recu        Int      @default(0)
 
-  @@id([Id_Serveur_BDD, Id_Mesure_Test])
+  @@id([Id_Mesure_Test, Id_Serveur_BDD])
   @@index([Date_Heure], map: "IDX_Date_Heure")
   @@index([Est_Valeur_Null], map: "IDX_Est_Valeur_Null")
   @@index([Nombre_Recu], map: "IDX_Nombre_Recu")
@@ -248,7 +264,7 @@ model tm_mesures_test_etalon {
   Nombre_Total          Int      @default(0)
   Nombre_Recu           Int      @default(0)
 
-  @@id([Id_Serveur_BDD, Id_Mesure_Test_Etalon])
+  @@id([Id_Mesure_Test_Etalon, Id_Serveur_BDD])
   @@index([Date_Heure], map: "IDX_Date_Heure")
   @@index([Est_Valeur_Null], map: "IDX_Est_Valeur_Null")
   @@index([Nombre_Recu], map: "IDX_Nombre_Recu")
@@ -271,5 +287,5 @@ model tm_parametre {
   Groupe_Parametre      String? @db.VarChar(50)
   Commentaire_Parametre String? @db.VarChar(100)
 
-  @@id([Cle_Parametre, Id_Parametre])
+  @@id([Id_Parametre, Cle_Parametre])
 }

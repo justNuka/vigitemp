@@ -1,8 +1,9 @@
-export type MeasureData = {
+﻿export type MeasureData = {
   id: string
   Valeur: number
   Unite: string
   DateHeureMesure: string
+  DateHeureMesureIso?: string
   DateHeureMesureXaxis: string
   Consigne: number | null
   Consigne_Sup: number | null
@@ -29,16 +30,16 @@ export function getMeasureSummary(
   const first = measures[0]
   const last = measures[measures.length - 1]
 
-  const unite = first?.Unite || fallback?.unite || "°C"
-  const frequence = first?.Frequence || fallback?.frequence || 15
+  const unite = last?.Unite || first?.Unite || fallback?.unite || "\u00B0C"
+  const frequence = last?.Frequence || first?.Frequence || fallback?.frequence || 15
 
   const lastMeasureText = last ? `${last.Valeur}${last.Unite || unite}` : ""
   const lastDateTime = last?.DateHeureMesure || ""
 
   return {
-    consigneSup: first?.Consigne_Sup ?? fallback?.consigneSup ?? null,
-    consigneInf: first?.Consigne_Inf ?? fallback?.consigneInf ?? null,
-    consigne: first?.Consigne ?? fallback?.consigne ?? null,
+    consigneSup: last?.Consigne_Sup ?? first?.Consigne_Sup ?? fallback?.consigneSup ?? null,
+    consigneInf: last?.Consigne_Inf ?? first?.Consigne_Inf ?? fallback?.consigneInf ?? null,
+    consigne: last?.Consigne ?? first?.Consigne ?? fallback?.consigne ?? null,
     unite,
     frequence,
     lastMeasureText,
@@ -67,4 +68,5 @@ export function calculateYDomain(
 
   return [Math.floor(min - padding), Math.ceil(max + padding)]
 }
+
 

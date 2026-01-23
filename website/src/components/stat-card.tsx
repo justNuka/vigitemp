@@ -11,14 +11,22 @@ interface StatCardProps {
     value: number;
     isPositive: boolean;
   };
-  variant?: "default" | "success" | "warning" | "danger";
+  variant?: "default" | "success" | "warning" | "danger" | "info" | "muted";
   className?: string;
+  contentClassName?: string;
+  titleClassName?: string;
+  valueClassName?: string;
+  iconClassName?: string;
 }
 
 const variantStyles = {
   default: {
     icon: "bg-primary/10 text-primary",
     card: "",
+  },
+  info: {
+    icon: "bg-primary/10 text-primary",
+    card: "border-l-4 border-l-primary",
   },
   success: {
     icon: "bg-success/10 text-success",
@@ -29,8 +37,12 @@ const variantStyles = {
     card: "border-l-4 border-l-warning",
   },
   danger: {
-    icon: "bg-destructive/10 text-destructive",
+    icon: "bg-destructive/12 text-destructive",
     card: "border-l-4 border-l-destructive",
+  },
+  muted: {
+    icon: "bg-muted text-muted-foreground",
+    card: "border-l-4 border-l-muted-foreground/40",
   },
 };
 
@@ -42,18 +54,33 @@ export function StatCard({
   trend,
   variant = "default",
   className,
+  contentClassName,
+  titleClassName,
+  valueClassName,
+  iconClassName,
 }: StatCardProps) {
   const styles = variantStyles[variant];
+  const resolvedIconClassName = iconClassName ?? styles.icon;
 
   return (
     <Card className={cn("overflow-visible", styles.card, className)}>
-      <CardContent className="p-4 md:p-6">
+      <CardContent className={cn("p-4 md:p-6", contentClassName)}>
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-muted-foreground truncate">
+            <p
+              className={cn(
+                "text-sm font-medium text-muted-foreground truncate",
+                titleClassName
+              )}
+            >
               {title}
             </p>
-            <p className="text-2xl md:text-3xl font-bold mt-1 data-value">
+            <p
+              className={cn(
+                "text-2xl md:text-3xl font-bold mt-1 data-value",
+                valueClassName
+              )}
+            >
               {value}
             </p>
             {description && (
@@ -80,8 +107,8 @@ export function StatCard({
           </div>
           <div
             className={cn(
-              "flex-shrink-0 p-3 rounded-xl",
-              styles.icon
+              "shrink-0 p-3 rounded-xl",
+              resolvedIconClassName
             )}
             aria-hidden="true"
           >

@@ -12,11 +12,31 @@ export default function OutilsPage() {
       <PageHeader title="Outils" description="Outils de gestion et diagnostic du système" />
       <main className="flex-1 space-y-6 p-4 animate-fade-in md:p-6">
         <Tabs defaultValue="test-connexion" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="test-connexion">Test de connexion</TabsTrigger>
-            <TabsTrigger value="commentaires">Commentaires</TabsTrigger>
-            <TabsTrigger value="config">Config</TabsTrigger>
-            <TabsTrigger value="surveillance">Surveillance</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 bg-primary/10 text-primary">
+            <TabsTrigger
+              value="test-connexion"
+              className="hover:text-primary hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Test de connexion
+            </TabsTrigger>
+            <TabsTrigger
+              value="commentaires"
+              className="hover:text-primary hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Commentaires
+            </TabsTrigger>
+            <TabsTrigger
+              value="config"
+              className="hover:text-primary hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Config
+            </TabsTrigger>
+            <TabsTrigger
+              value="surveillance"
+              className="hover:text-primary hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Surveillance
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="test-connexion" className="mt-6">
@@ -41,4 +61,3 @@ export default function OutilsPage() {
     </>
   )
 }
-

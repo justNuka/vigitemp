@@ -1,9 +1,8 @@
 "use client"
 
-import { Printer } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Archive, Pencil, Plus } from "lucide-react"
 
 interface Props {
   regroupement: string
@@ -12,7 +11,6 @@ interface Props {
   onNew: () => void
   onEdit: () => void
   onArchive: () => void
-  onPrint: () => void
 }
 
 export function GroupsActions({
@@ -22,7 +20,6 @@ export function GroupsActions({
   onNew,
   onEdit,
   onArchive,
-  onPrint,
 }: Props) {
   return (
     <div className="flex gap-2">
@@ -35,19 +32,18 @@ export function GroupsActions({
           <SelectItem value="2">Regroupement 2</SelectItem>
         </SelectContent>
       </Select>
-      <Button onClick={onNew} variant="default">
+      <Button onClick={onNew} variant="default" size="sm" className="gap-2">
+        <Plus className="h-4 w-4" />
         Nouveau
       </Button>
-      <Button onClick={onEdit} disabled={!canEdit} variant="outline">
+      <Button onClick={onEdit} disabled={!canEdit} variant="outline" size="sm" className="gap-2">
+        <Pencil className="h-4 w-4" />
         Modifier
       </Button>
-      <Button onClick={onArchive} disabled={!canEdit} variant="outline">
+      <Button onClick={onArchive} disabled={!canEdit} variant="outline" size="sm" className="gap-2">
+        <Archive className="h-4 w-4" />
         Archiver
-      </Button>
-      <Button onClick={onPrint} variant="outline" size="icon" aria-label="Imprimer">
-        <Printer className="h-4 w-4" />
       </Button>
     </div>
   )
 }
-

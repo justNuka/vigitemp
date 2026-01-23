@@ -38,6 +38,8 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "next-intl";
 import { getLocalizedPathname, stripLocalePrefix } from "@/i18n/pathnames";
+import { useLicense } from "@/components/license/license-provider";
+import { formatLicenseLabel } from "@/lib/license-label";
 
 interface NavItem {
   href: "/" | "/surveillance" | "/alarmes" | "/audit" | "/profil" | "/admin";
@@ -79,6 +81,8 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
   const tGroups = useTranslations("sidebarGroups");
   const tCommon = useTranslations("common");
   const tAudio = useTranslations("audio");
+  const { license } = useLicense();
+  const licenseLabel = useMemo(() => formatLicenseLabel(license, tCommon), [license, tCommon]);
 
   // On mobile, close the sidebar after navigation (better UX).
   useEffect(() => {
@@ -86,8 +90,8 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
     setOpenMobile(false);
   }, [isMobile, pathname, setOpenMobile]);
 
-  // Check if user is admin
-  const isAdmin = currentUser?.authorizations?.some((auth) => auth.admin) ?? false;
+  // NOTE: Admin check disabled for now (rights handling will be redesigned).
+  const isAdmin = true;
 
   // Helper pour comparer pathname avec href (pathname = /fr/surveillance, href = surveillance)
   const isActive = (href: string): boolean => {
@@ -109,11 +113,14 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
   return (
     <Sidebar>
       <SidebarHeader className="p-4 flex flex-col items-center">
-        <Link href="/" className="flex items-center justify-center">
-          <Logo size="md" />
+        <Link href="/" className="flex items-center justify-center gap-2">
+          <Logo size="xs" />
+          <span className="text-xl font-semibold text-sidebar-foreground">
+            VigiSensys
+          </span>
         </Link>
-        <span className="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20 mt-2">
-          {tCommon("license_light")}
+        <span className="inline-flex items-center rounded-md bg-amber-300/20 px-3 py-1 text-xs font-bold text-amber-200 ring-1 ring-inset ring-amber-300/40 mt-2">
+          {licenseLabel}
         </span>
       </SidebarHeader>
 
@@ -298,7 +305,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
               variant="ghost"
               size="icon"
               onClick={onLogout}
-              className="h-8 w-8 flex-shrink-0"
+              className="h-8 w-8 shrink-0"
               title={tCommon("logout")}
               aria-label={tCommon("logout")}
               data-testid="button-logout"

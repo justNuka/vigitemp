@@ -4,10 +4,12 @@ import { prisma } from "@/lib/prisma"
 import { withLogging } from "@/lib/api-logger"
 import { z } from "zod"
 import { apiError, apiOk } from "@/lib/api-response"
+import { clearLocationCache } from "@/lib/measurement-cache"
 
 const updateLieuSchema = z.object({
   Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(20).optional(),
-  Lieu_Etat: z.string().max(100).nullable().optional(),
+  Lieu_Etat: z.string().max(1).nullable().optional(),
+  Commentaire: z.string().nullable().optional(),
   Id_Site: z.number().nullable().optional(),
   GroupIds: z.array(z.number()).optional(),
   Id_Groupe1: z.number().nullable().optional(),
@@ -49,6 +51,7 @@ export const PATCH = withLogging(
         Object.prototype.hasOwnProperty.call(body, "Id_Groupe1") ||
         Object.prototype.hasOwnProperty.call(body, "Id_Groupe2")
 
+      const shouldArchive = validated.Est_Archive === true
       const groupIds = shouldUpdateGroups
         ? Array.from(
             new Set(
@@ -61,21 +64,83 @@ export const PATCH = withLogging(
           )
         : undefined
 
-      const { GroupIds, ...lieuPatch } = validated as any
+      const { GroupIds, Lieu_Etat, Id_Site, Sonde_Numero_Serie, Id_Groupe1, Id_Groupe2, ...lieuPatch } =
+        validated as any
+      const hasLieuEtat = Object.prototype.hasOwnProperty.call(validated, "Lieu_Etat")
+      const applyLieuEtat = hasLieuEtat && !shouldArchive
+      const hasIdSite = Object.prototype.hasOwnProperty.call(validated, "Id_Site")
+      const hasSondeNumeroSerie = Object.prototype.hasOwnProperty.call(validated, "Sonde_Numero_Serie")
 
       const lieu = await prisma.$transaction(async (tx) => {
+        const current = await tx.t_lieu.findUnique({
+          where: { Id_Lieu: lieuId },
+          select: { Sonde_Numero_Serie: true },
+        })
+
+        const group1Id = groupIds?.[0] ?? null
+        const group2Id = groupIds?.[1] ?? null
+
         const updated = await tx.t_lieu.update({
           where: { Id_Lieu: lieuId },
           data: {
             ...lieuPatch,
+            ...(applyLieuEtat
+              ? {
+                  t_etat_surveillance_lieu: Lieu_Etat
+                    ? { connect: { Surveillance_Etat: Lieu_Etat } }
+                    : { disconnect: true },
+                }
+              : {}),
+            ...(shouldArchive
+              ? {
+                  t_etat_surveillance_lieu: { connect: { Surveillance_Etat: "D" } },
+                  t_sonde: { disconnect: true },
+                }
+              : {}),
+            ...(hasIdSite
+              ? Id_Site
+                ? { t_site: { connect: { Id_Site } } }
+                : { t_site: { disconnect: true } }
+              : {}),
+            ...(hasSondeNumeroSerie
+              ? Sonde_Numero_Serie
+                ? { t_sonde: { connect: { Sonde_Numero_Serie } } }
+                : { t_sonde: { disconnect: true } }
+              : {}),
             ...(groupIds !== undefined
               ? {
-                  Id_Groupe1: groupIds[0] ?? null,
-                  Id_Groupe2: groupIds[1] ?? null,
+                  t_groupe1: group1Id
+                    ? { connect: { Id_Groupe: group1Id } }
+                    : { disconnect: true },
+                  t_groupe2: group2Id
+                    ? { connect: { Id_Groupe: group2Id } }
+                    : { disconnect: true },
                 }
               : {}),
           },
         })
+
+        if (hasLieuEtat) {
+          const sondeNumeroSerie =
+            validated.Sonde_Numero_Serie ?? current?.Sonde_Numero_Serie ?? null
+
+          if (sondeNumeroSerie) {
+            await tx.t_sonde.updateMany({
+              where: { Sonde_Numero_Serie: sondeNumeroSerie },
+              data: { Surveillance_Etat: updated.Lieu_Etat ?? null },
+            })
+          }
+        }
+
+        if (shouldArchive) {
+          const sondeNumeroSerie = current?.Sonde_Numero_Serie ?? null
+          if (sondeNumeroSerie) {
+            await tx.t_sonde.updateMany({
+              where: { Sonde_Numero_Serie: sondeNumeroSerie },
+              data: { Surveillance_Etat: "D" },
+            })
+          }
+        }
 
         if (groupIds !== undefined) {
           await tx.t_lieu_groupe.deleteMany({ where: { Id_Lieu: lieuId } })
@@ -94,6 +159,7 @@ export const PATCH = withLogging(
         JSON.stringify(lieu, (_, value) => (typeof value === "bigint" ? value.toString() : value)),
       )
 
+      clearLocationCache(lieuId)
       return apiOk(serialized)
     } catch (error) {
       if (error instanceof z.ZodError) {

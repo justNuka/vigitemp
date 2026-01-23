@@ -101,6 +101,11 @@ export const usersApi = {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
+  reactivate: (id: string) =>
+    fetcher<User>(`/utilisateurs/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ reactivate: true }),
+    }),
   delete: (id: string) =>
     fetcher<void>(`/utilisateurs/${id}`, {
       method: "DELETE",
@@ -171,10 +176,10 @@ import { CurrentUser } from "@/lib/types";
 
 export type DashboardStats = {
   totalLocations: number;
+  activeLocations: number;
+  disabledLocations: number;
   activeAlarms: number;
-  okSensors: number;
-  warningSensors: number;
-  criticalSensors: number;
+  alertSensors: number;
 };
 
 export type Measurement = {
@@ -194,7 +199,7 @@ export type SensorWithLocation = {
   lastMeasurement: Date | null;
   isActive: boolean;
   location: Location;
-  status: "ok" | "warning" | "critical";
+  status: "ok" | "warning" | "critical" | "technical" | "ended";
   lieuType?: string | null;
 };
 
@@ -221,6 +226,12 @@ export type Location = {
   description?: string | null;
   siteGroup?: string | null;
   isActive?: boolean;
+  alarmDisabled?: boolean;
+  alarmDisabledUntil?: Date | null;
+  alarmDelayMinutes?: number | null;
+  lieuEtat?: string | null;
+  surveillanceDisabled?: boolean;
+  lieuType?: string | null;
   siteId?: number;
   groupIds?: number[];
   groupNames?: string[];
@@ -229,6 +240,7 @@ export type Location = {
   groupName1?: string | null;
   groupName2?: string | null;
   site?: string;
+  sondeNumeroSerie?: string | null;
 };
 
 export type Sensor = {
@@ -334,4 +346,5 @@ export type CreateUserInput = {
 };
 export type UpdateUserInput = Partial<Omit<CreateUserInput, "password">> & {
   password?: string;
+  reactivate?: boolean;
 };

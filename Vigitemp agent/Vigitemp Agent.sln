@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vigitemp Agent", "Vigitemp 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "getServerIP", "getServerIP\getServerIP.csproj", "{7C4A8E14-007F-4D2A-9592-C61292FB93D3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VigitempAgentInstaller", "VigitempAgentInstaller\VigitempAgentInstaller.csproj", "{5D7F6C8F-0F24-4D4A-9E8B-7C6A6A7E9D0A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,18 @@ Global
 		{7C4A8E14-007F-4D2A-9592-C61292FB93D3}.Release|x64.Build.0 = Release|x64
 		{7C4A8E14-007F-4D2A-9592-C61292FB93D3}.Release|x86.ActiveCfg = Release|Any CPU
 		{7C4A8E14-007F-4D2A-9592-C61292FB93D3}.Release|x86.Build.0 = Release|Any CPU
+		{5D7F6C8F-0F24-4D4A-9E8B-7C6A6A7E9D0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D7F6C8F-0F24-4D4A-9E8B-7C6A6A7E9D0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D7F6C8F-0F24-4D4A-9E8B-7C6A6A7E9D0A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5D7F6C8F-0F24-4D4A-9E8B-7C6A6A7E9D0A}.Debug|x64.Build.0 = Debug|Any CPU
+		{5D7F6C8F-0F24-4D4A-9E8B-7C6A6A7E9D0A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5D7F6C8F-0F24-4D4A-9E8B-7C6A6A7E9D0A}.Debug|x86.Build.0 = Debug|Any CPU
+		{5D7F6C8F-0F24-4D4A-9E8B-7C6A6A7E9D0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D7F6C8F-0F24-4D4A-9E8B-7C6A6A7E9D0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D7F6C8F-0F24-4D4A-9E8B-7C6A6A7E9D0A}.Release|x64.ActiveCfg = Release|Any CPU
+		{5D7F6C8F-0F24-4D4A-9E8B-7C6A6A7E9D0A}.Release|x64.Build.0 = Release|Any CPU
+		{5D7F6C8F-0F24-4D4A-9E8B-7C6A6A7E9D0A}.Release|x86.ActiveCfg = Release|Any CPU
+		{5D7F6C8F-0F24-4D4A-9E8B-7C6A6A7E9D0A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

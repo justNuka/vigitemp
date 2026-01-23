@@ -1,13 +1,33 @@
-import type { Config } from "tailwindcss";
-import {heroui} from "@heroui/react";
+import { heroui } from "@heroui/theme";
 
 
-const config: Config = {
+const config = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}"
+  ],
+  safelist: [
+    // Surveillance status colors - critical, technical, warning, etc.
+    "bg-red-700", "dark:bg-red-700", "text-black", "dark:text-black",
+    "bg-slate-950", "dark:bg-slate-950", "text-white", "dark:text-white",
+    "border-slate-950", "dark:border-slate-950",
+    "border-red-800", "dark:border-red-800",
+    "bg-white", "dark:bg-white", "border-gray-200", "dark:border-gray-200",
+    "hover:bg-slate-900", "dark:hover:bg-slate-900",
+    "hover:bg-red-800", "dark:hover:bg-red-800",
+    "hover:bg-gray-100", "dark:hover:bg-gray-100",
+    // Amber/warning
+    "bg-amber-500", "dark:bg-amber-600", "border-amber-600", "dark:border-amber-700",
+    // Violet/ended
+    "bg-violet-600", "dark:bg-violet-700", "border-violet-700", "dark:border-violet-800",
+    // Emerald/minmax
+    "bg-emerald-600", "dark:bg-emerald-700", "border-emerald-700", "dark:border-emerald-800",
+    // Blue/ok
+    "bg-blue-600", "dark:bg-blue-700", "border-blue-700", "dark:border-blue-800",
+    // Gray/disabled
+    "bg-gray-500", "dark:bg-gray-700", "border-gray-600", "dark:border-gray-800",
   ],
   theme: {
   	extend: {
@@ -32,30 +52,29 @@ const config: Config = {
   			desktop: '1125px'
   		},
   		animation: {
-  			shine: 'shine 3s linear infinite',
+  			shine: 'shine 3s linear infinite'
   		},
   		keyframes: {
   			shine: {
   				'0%': {
-  					backgroundPosition: '0% 0%',
+  					backgroundPosition: '0% 0%'
   				},
   				'50%': {
-  					backgroundPosition: '100% 100%',
+  					backgroundPosition: '100% 100%'
   				},
   				'100%': {
-  					backgroundPosition: '0% 0%',
-  				},
-  			},
+  					backgroundPosition: '0% 0%'
+  				}
+  			}
   		},
   		colors: {
   			white: '#FFFFFF',
-  			// Palette Replit
-  			replit: {
-  				blue: '#3B82F6',    // Blue MC2
-  				yellow: '#F59E0B',  // Yellow
-  				teal: '#8BDED8',    // Teal
-  				sage: '#DCE0BF',    // Sage
-  				mauve: '#AD7385',   // Mauve
+  			mc2: {
+  				blue: '#3B82F6',
+  				yellow: '#F59E0B',
+  				teal: '#8BDED8',
+  				sage: '#DCE0BF',
+  				mauve: '#AD7385'
   			},
   			primary: {
   				DEFAULT: 'hsl(var(--primary))',
@@ -105,7 +124,7 @@ const config: Config = {
   				accent: 'hsl(var(--sidebar-accent))',
   				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
   				border: 'hsl(var(--sidebar-border))',
-  				ring: 'hsl(var(--sidebar-ring))',
+  				ring: 'hsl(var(--sidebar-ring))'
   			}
   		},
   		borderRadius: {

@@ -23,6 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Check, X } from 'lucide-react';
 
 type EditSiteDialogProps = {
   open: boolean;
@@ -43,7 +44,7 @@ export function EditSiteDialog({
 }: EditSiteDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-white dark:bg-card">
         <DialogHeader>
           <DialogTitle>Modifier le site</DialogTitle>
           <DialogDescription>Modifiez les informations du site</DialogDescription>
@@ -86,10 +87,12 @@ export function EditSiteDialog({
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="gap-2">
+                <X className="h-4 w-4" />
                 Annuler
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting} className="gap-2">
+                <Check className="h-4 w-4" />
                 {isSubmitting ? 'Modification...' : 'Modifier'}
               </Button>
             </DialogFooter>

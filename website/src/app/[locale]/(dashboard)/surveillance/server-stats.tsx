@@ -11,12 +11,13 @@ export async function ServerDashboardStats() {
   "use cache";
   cacheTag("surveillance-stats");
 
-  const [totalSensors, okSensors, warningSensors, criticalSensors, activeAlarms] =
+  const [totalSensors, warningSensors, criticalSensors, activeAlarms] =
     await Promise.all([
       prisma.t_lieu.count({ where: { Est_Archive: false } }),
-      prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "O" } }),
-      prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "P" } }),
-      prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "A" } }),
+      prisma.t_lieu.count({
+        where: { Est_Archive: false, Est_Lieu_En_Alarme: 0, Est_Lieu_En_Pre_Alarme: 1 },
+      }),
+      prisma.t_lieu.count({ where: { Est_Archive: false, Est_Lieu_En_Alarme: 1 } }),
       prisma.t_alarme.count({
         where: {
           Est_Acquittee: false,
@@ -24,6 +25,8 @@ export async function ServerDashboardStats() {
         },
       }),
     ]);
+
+  const okSensors = Math.max(0, totalSensors - warningSensors - criticalSensors);
 
   return {
     total: totalSensors,

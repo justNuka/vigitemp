@@ -20,7 +20,9 @@ import {
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
+import { useRouter } from '@/i18n/navigation'
 import { StandardModal } from "./standard-modal"
+import { Archive, Pencil, Plus, TestTube2 } from "lucide-react"
 
 type StandardRow = {
   Id_Etalon: number
@@ -31,6 +33,7 @@ type StandardRow = {
 export function StandardsClient() {
   const { data: standards, isLoading } = useStandards()
   const queryClient = useQueryClient()
+  const router = useRouter()
   const [selectedStandard, setSelectedStandard] = useState<Standard | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -62,6 +65,7 @@ export function StandardsClient() {
       setIsArchiveDialogOpen(false)
       setSelectedStandard(null)
       await queryClient.invalidateQueries({ queryKey: ["etalons"] })
+      router.refresh()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erreur lors de l'archivage")
     }
@@ -109,16 +113,20 @@ export function StandardsClient() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleAddClick} variant="default">
+            <Button onClick={handleAddClick} variant="default" size="sm" className="gap-2">
+              <Plus className="h-4 w-4" />
               Nouveau
             </Button>
-            <Button onClick={handleEditClick} disabled={!selectedStandard} variant="outline">
+            <Button onClick={handleEditClick} disabled={!selectedStandard} variant="outline" size="sm" className="gap-2">
+              <Pencil className="h-4 w-4" />
               Modifier
             </Button>
-            <Button onClick={handleArchiveClick} disabled={!selectedStandard} variant="outline">
+            <Button onClick={handleArchiveClick} disabled={!selectedStandard} variant="outline" size="sm" className="gap-2">
+              <Archive className="h-4 w-4" />
               Archiver
             </Button>
-            <Button onClick={handleTestClick} disabled={!selectedStandard} variant="outline">
+            <Button onClick={handleTestClick} disabled={!selectedStandard} variant="outline" size="sm" className="gap-2">
+              <TestTube2 className="h-4 w-4" />
               Tester
             </Button>
           </div>
@@ -127,6 +135,7 @@ export function StandardsClient() {
           <TanStackTable
             columns={columns}
             data={tableData}
+            searchField="Etalon_Numero_Serie"
             searchPlaceholder="N° série, état..."
             isLoading={isLoading}
             emptyMessage="Aucun étalon trouvé"
@@ -135,6 +144,9 @@ export function StandardsClient() {
               setSelectedStandard(standards?.find((e) => e.Id_Etalon === row.Id_Etalon) || null)
             }}
             maxHeight="60vh"
+            headerClassName="!bg-sidebar !text-sidebar-foreground"
+            headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+            tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
           />
         </CardContent>
       </Card>

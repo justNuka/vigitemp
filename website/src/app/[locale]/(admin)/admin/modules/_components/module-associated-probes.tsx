@@ -43,6 +43,6 @@ export function ModuleAssociatedProbes({ sondes, isLoading }: ModuleAssociatedPr
     return <div className="text-sm text-muted-foreground text-center py-4">Aucun matériel associé</div>;
   }
 
-  return <TanStackTable columns={columns} data={data} showSearch={false} showPagination={false} maxHeight="16rem" />;
+  return <TanStackTable columns={columns} data={data} showSearch={false} showPagination={false} maxHeight="16rem" headerClassName="!bg-sidebar !text-sidebar-foreground" headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80" tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0" />;
 }
 

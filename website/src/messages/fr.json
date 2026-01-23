@@ -19,7 +19,28 @@
     "previous": "Précédent",
     "user": "Utilisateur",
     "logout": "Se déconnecter",
-    "license_light": "Licence Light"
+    "license_light": "Licence Light",
+    "license_prefix": "Licence",
+    "license_unknown": "Licence inconnue",
+    "license_invalid": "Licence invalide"
+  },
+  "dateRangePicker": {
+    "selectRange": "Sélectionner une plage",
+    "cancel": "Annuler",
+    "update": "Appliquer",
+    "compare": "Comparer",
+    "select": "Sélectionner...",
+    "presets": {
+      "today": "Aujourd'hui",
+      "yesterday": "Hier",
+      "last7": "7 derniers jours",
+      "last14": "14 derniers jours",
+      "last30": "30 derniers jours",
+      "thisWeek": "Cette semaine",
+      "lastWeek": "Semaine précédente",
+      "thisMonth": "Ce mois-ci",
+      "lastMonth": "Mois précédent"
+    }
   },
   "pageHeader": {
     "title": "Vigitemp - Surveillance de Température"
@@ -88,9 +109,10 @@
     "title": "Tableau de bord",
     "description": "Vue d'ensemble de la surveillance",
     "stats": {
-      "locations_monitored": "Lieux surveillés",
+      "locations_monitored": "Lieux en surveillance",
       "active_alarms": "Alarmes actives",
-      "sensors_ok": "Sondes OK",
+      "sensors_ok": "Surveillance desactivee",
+      "locations_disabled": "Surveillance désactivée",
       "sensors_alert": "Sondes en alerte"
     }
   },
@@ -100,6 +122,16 @@
     "tabs": {
       "graphs": "Graphiques",
       "tree": "Arborescence"
+    },
+    "grid": {
+      "active_title": "Lieux en surveillance",
+      "disabled_title": "Lieux avec surveillance désactivée",
+      "disabled_empty": "Aucun lieu en surveillance désactivée",
+      "toggle_disabled_first": "Afficher d'abord les lieux désactivés",
+      "toggle_active_first": "Afficher d'abord les lieux en surveillance",
+      "disabled_badge": "Surveillance desactivee",
+      "disabled_until": "Surveillance desactivee jusqu'au {date}",
+      "empty_title": "Aucune sonde"
     }
   },
   "alarmsPage": {
@@ -108,7 +140,7 @@
     "tabs": {
       "active": "Actives",
       "acknowledged": "Acquittées",
-      "resolved": "Résolues"
+      "resolved": "À acquitter"
     }
   },
   "audit": {

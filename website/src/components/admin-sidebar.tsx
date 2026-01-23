@@ -83,7 +83,10 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
     <Sidebar>
       <SidebarHeader className="p-4 flex flex-col items-center">
         <IntlLink href="/" className="flex items-center justify-center">
-          <Logo size="md" />
+          <Logo size="xs" />
+          <span className="text-xl font-semibold text-sidebar-foreground">
+            VigiSensys
+          </span>
         </IntlLink>
         <span className="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20 mt-2">
           {t("badge")}
@@ -205,7 +208,7 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
               variant="ghost"
               size="icon"
               onClick={onLogout}
-              className="h-8 w-8 flex-shrink-0"
+              className="h-8 w-8 shrink-0"
               title={tCommon("logout")}
               aria-label={tCommon("logout")}
               data-testid="button-logout"

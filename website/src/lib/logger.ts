@@ -129,15 +129,16 @@ export const log = {
     userProfile?: string;
     lieuId?: number;
   }) => {
+    const normalizedIp = details.ip?.replace(/^::ffff:/, "");
     const message = `${action} - ${details.success !== false ? "SUCCESS" : "FAILED"}`;
-    logger.log("audit", message, { label: "AUDIT", ...details });
+    logger.log("audit", message, { label: "AUDIT", ...details, ip: normalizedIp });
     
     // Écrire aussi dans la base de données mesure (ts_journal)
     const commentaire = [
       details.resource,
       details.resourceId ? `#${details.resourceId}` : null,
       details.changes ? JSON.stringify(details.changes) : null,
-      details.ip ? `IP: ${details.ip}` : null,
+      normalizedIp ? `IP: ${normalizedIp}` : null,
     ].filter(Boolean).join(" | ");
 
     writeAuditToDatabase({
@@ -161,6 +162,7 @@ export const log = {
     duration?: number;
     statusCode?: number;
     error?: string;
+    errorBody?: string;
     clientTrace?: string;
     queryClientId?: string;
     bootId?: string;
@@ -228,13 +230,23 @@ export const log = {
   // Logs d'alarmes et surveillance (basé sur les codes audit de la table)
   alarm: {
     // ACQ - Acquitter les alarmes
-    acknowledge: (lieuName: string, lieuId: number, user: string, userId: number, ip: string, comment?: string) =>
+    acknowledge: (
+      alarmId: number,
+      lieuName: string,
+      lieuId: number,
+      user: string,
+      userId: number,
+      ip: string,
+      acknowledgedAt: string,
+      comment?: string,
+    ) =>
       log.audit("ACQ", {
         user,
         userId,
         ip,
         resource: `Lieu: ${lieuName}`,
         resourceId: lieuId,
+        changes: { alarmId, acknowledgedAt },
         reason: comment,
       }),
     

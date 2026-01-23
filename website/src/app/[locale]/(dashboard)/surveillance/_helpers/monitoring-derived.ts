@@ -46,13 +46,19 @@ export function computeSurveillanceStats({
   activeAlarms: number
 }): Stats {
   const ok = sensors.filter((s) => s.status === "ok").length
-  const warning = sensors.filter((s) => s.status === "warning").length
-  const critical = sensors.filter((s) => s.status === "critical").length
+  const warning = sensors.filter((s) => s.status === "warning" || s.status === "ended").length
+  const critical = sensors.filter((s) => s.status === "critical" || s.status === "technical").length
 
   return { total, ok, warning, critical, activeAlarms }
 }
 
 export function sortSensorsByStatus(sensors: SensorWithLocation[]) {
-  const statusPriority: Record<SensorWithLocation["status"], number> = { critical: 0, warning: 1, ok: 2 }
+  const statusPriority: Record<SensorWithLocation["status"], number> = {
+    critical: 0,
+    technical: 1,
+    warning: 2,
+    ended: 3,
+    ok: 4,
+  }
   return [...sensors].sort((a, b) => statusPriority[a.status] - statusPriority[b.status])
 }

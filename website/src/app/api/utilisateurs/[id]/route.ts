@@ -19,6 +19,7 @@ const updateUserSchema = z.object({
     .string()
     .optional()
     .transform((val) => (val ? new Date(val) : undefined)),
+  reactivate: z.boolean().optional(),
 })
 
 export const GET = withAdminLogging(
@@ -73,6 +74,7 @@ export const PATCH = withAdminLogging(
       if (data.email) updateData.Adresse_Email = data.email
       if (data.telephone !== undefined) updateData.Tel_Num_Mobile = data.telephone || null
       if (data.expiryDate !== undefined) updateData.Date_Validite = data.expiryDate
+      if (data.reactivate) updateData.Est_Archive = false
 
       const user = await prisma.t_utilisateur.update({
         where: { Id_Utilisateur: userId },
@@ -85,6 +87,7 @@ export const PATCH = withAdminLogging(
       if (data.email) changes.email = data.email
       if (data.profileId) changes.profile = data.profileId
       if (data.password) changes.passwordChanged = true
+      if (data.reactivate) changes.reactivated = true
 
       log.data.update("Utilisateur", userId, ctx.user.username, ctx.user.userId, ip, changes)
 

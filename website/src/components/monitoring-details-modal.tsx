@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from "react";
+import { useLocale } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -8,16 +9,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { TanStackTable } from "@/components/data-table/tanstack-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -30,9 +25,9 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
 import { calculateYDomain, getMeasureSummary } from "@/lib/measurements";
+import type { MeasureData } from "@/lib/measurements";
 
 // Register Chart.js components
 ChartJS.register(
@@ -56,6 +51,8 @@ interface MonitoringDetailsModalProps {
   consigneInf: number | null;
   consigne: number | null;
   unite: string;
+  isSurveillanceActive: boolean;
+  measurements?: MeasureData[];
 }
 
 export default function MonitoringDetailsModal({
@@ -68,28 +65,74 @@ export default function MonitoringDetailsModal({
   consigneInf: initialConsigneInf,
   consigne: initialConsigne,
   unite: initialUnite,
+  isSurveillanceActive,
+  measurements: initialMeasurements,
 }: MonitoringDetailsModalProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const locale = useLocale();
+  const localeTag = locale === "fr" ? "fr-FR" : locale;
+  const [dateRange, setDateRange] = useState<{ from: Date; to?: Date } | null>(null);
 
-  const { data, isLoading } = useLieuMeasurements(idLieu, { enabled: isOpen });
+  const hasLocalMeasurements = Boolean(initialMeasurements?.length);
+  const shouldLoadBase = isOpen && isSurveillanceActive && !hasLocalMeasurements;
+  const { data: fetchedData, isLoading } = useLieuMeasurements(idLieu, {
+    enabled: shouldLoadBase,
+  });
+  const baseLoading = shouldLoadBase && isLoading;
+  const data = hasLocalMeasurements ? initialMeasurements ?? [] : fetchedData ?? [];
+
+  const effectiveRange = useMemo(() => {
+    if (!dateRange?.from) return null;
+    return {
+      from: dateRange.from,
+      to: dateRange.to ?? dateRange.from,
+    };
+  }, [dateRange]);
+  const rangeEnabled = Boolean(effectiveRange?.from && effectiveRange?.to);
+  const rangeStart = useMemo(() => {
+    if (!effectiveRange?.from) return null;
+    return new Date(effectiveRange.from);
+  }, [effectiveRange]);
+  const rangeEnd = useMemo(() => {
+    if (!effectiveRange?.to) return null;
+    const end = new Date(effectiveRange.to);
+    end.setHours(23, 59, 59, 999);
+    return end;
+  }, [effectiveRange]);
+
+  const { data: rangedData, isLoading: isRangeLoading } = useLieuMeasurements(idLieu, {
+    enabled: isOpen && rangeEnabled,
+    startDate: rangeStart,
+    endDate: rangeEnd,
+    listenForUpdates: false,
+  });
+  const rangeLoading = rangeEnabled ? isRangeLoading : false;
+
+  const orderedData = useMemo(() => {
+    if (!data.length) return data;
+    return [...data].sort((a, b) => {
+      const dateA = a.DateHeureMesureIso ? Date.parse(a.DateHeureMesureIso) : Date.parse(a.DateHeureMesure);
+      const dateB = b.DateHeureMesureIso ? Date.parse(b.DateHeureMesureIso) : Date.parse(b.DateHeureMesure);
+      return dateA - dateB;
+    });
+  }, [data]);
 
   const summary = useMemo(
     () =>
-      getMeasureSummary(data, {
+      getMeasureSummary(orderedData, {
         consigneSup: initialConsigneSup,
         consigneInf: initialConsigneInf,
         consigne: initialConsigne,
         unite: initialUnite,
       }),
-    [data, initialConsigneInf, initialConsigne, initialConsigneSup, initialUnite],
+    [orderedData, initialConsigneInf, initialConsigne, initialConsigneSup, initialUnite],
   );
 
   const { consigneSup, consigneInf, consigne, unite } = summary;
 
   const [yMin, yMax] = useMemo(
-    () => calculateYDomain(data, { consigneSup, consigneInf, consigne }),
-    [consigne, consigneInf, consigneSup, data],
+    () => calculateYDomain(orderedData, { consigneSup, consigneInf, consigne }),
+    [consigne, consigneInf, consigneSup, orderedData],
   );
 
   useEffect(() => {
@@ -102,12 +145,93 @@ export default function MonitoringDetailsModal({
     return () => clearTimeout(timeoutId);
   }, [idLieu, isOpen]);
 
-  // Pagination for table
-  const totalPages = Math.ceil(data.length / itemsPerPage);
-  const paginatedData = data.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const orderedRangeData = useMemo(() => {
+    if (!rangedData.length) return rangedData;
+    return [...rangedData].sort((a, b) => {
+      const dateA = a.DateHeureMesureIso ? Date.parse(a.DateHeureMesureIso) : Date.parse(a.DateHeureMesure);
+      const dateB = b.DateHeureMesureIso ? Date.parse(b.DateHeureMesureIso) : Date.parse(b.DateHeureMesure);
+      return dateA - dateB;
+    });
+  }, [rangedData]);
+
+  const tableMeasurements = rangeEnabled ? orderedRangeData : orderedData;
+
+  const tableData = useMemo(() => {
+    return tableMeasurements.map((measure) => ({
+      id: measure.id,
+      dateIso: measure.DateHeureMesureIso ?? measure.DateHeureMesure,
+      dateLabel: measure.DateHeureMesure,
+      value: measure.Valeur,
+      unit: unite,
+    }));
+  }, [tableMeasurements, unite]);
+
+  const columns: ColumnDef<{
+    id: number | string;
+    dateIso: string;
+    dateLabel: string;
+    value: number;
+    unit: string;
+  }>[] = [
+    {
+      accessorKey: "dateIso",
+      header: "DATE/HEURE",
+      sortingFn: (rowA, rowB, columnId) => {
+        const a = Date.parse(rowA.getValue(columnId) as string);
+        const b = Date.parse(rowB.getValue(columnId) as string);
+        return a - b;
+      },
+      cell: ({ row }) => (
+        <span className="font-medium">{row.original.dateLabel}</span>
+      ),
+    },
+    {
+      accessorKey: "value",
+      header: "VALEUR",
+      cell: ({ row }) => {
+        const value = row.getValue("value") as number;
+        const isOutOfRange =
+          (consigneInf !== null && value < consigneInf) ||
+          (consigneSup !== null && value > consigneSup);
+
+        return (
+          <span className={isOutOfRange ? "text-red-600 dark:text-red-400 font-bold" : ""}>
+            {value}{row.original.unit}
+          </span>
+        );
+      },
+    },
+    {
+      id: "consigneInf",
+      header: "CONSIGNE INF",
+      cell: () => (
+        <span>{consigneInf !== null ? `${consigneInf}${unite}` : "-"}</span>
+      ),
+    },
+    {
+      id: "consigneSup",
+      header: "CONSIGNE SUP",
+      cell: () => (
+        <span>{consigneSup !== null ? `${consigneSup}${unite}` : "-"}</span>
+      ),
+    },
+    {
+      id: "statut",
+      header: "STATUT",
+      cell: ({ row }) => {
+        const value = row.getValue("value") as number;
+        const isOutOfRange =
+          (consigneInf !== null && value < consigneInf) ||
+          (consigneSup !== null && value > consigneSup);
+
+        return isOutOfRange ? (
+          <span className="text-red-600 dark:text-red-400 font-semibold">Hors limites</span>
+        ) : (
+          <span className="text-green-600 dark:text-green-400">OK</span>
+        );
+      },
+    },
+  ];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -119,28 +243,38 @@ export default function MonitoringDetailsModal({
           </p>
         </DialogHeader>
 
-        {isLoading ? (
+        {isSurveillanceActive && baseLoading ? (
           <div className="space-y-4 pt-4">
             <Skeleton className="h-10 w-64" />
-            <Skeleton className="h-[400px] w-full" />
+            <Skeleton className="h-100 w-full" />
           </div>
-        ) : (
+        ) : isSurveillanceActive ? (
           <Tabs defaultValue="graph" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="graph">Graphique</TabsTrigger>
-              <TabsTrigger value="table">Tableau des mesures</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-primary/10 text-primary">
+              <TabsTrigger
+                value="graph"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                Graphique
+              </TabsTrigger>
+              <TabsTrigger
+                value="table"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                Tableau des mesures
+              </TabsTrigger>
             </TabsList>
 
             {/* Graph Tab */}
-            <TabsContent value="graph" className="space-y-4 pt-4">
-              <div className="h-[500px]">
+            <TabsContent value="graph" className="space-y-4 pt-4 h-140">
+              <div className="h-125">
                 <Line
                   data={{
-                    labels: data.map(d => d.DateHeureMesureXaxis),
+                    labels: orderedData.map(d => d.DateHeureMesureXaxis),
                     datasets: [
                       {
                         label: `Mesures (${unite})`,
-                        data: data.map(d => d.Valeur),
+                        data: orderedData.map(d => d.Valeur),
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.2)',
                         borderWidth: 2,
@@ -185,15 +319,15 @@ export default function MonitoringDetailsModal({
                         callbacks: {
                           title: (context) => {
                             const index = context[0].dataIndex;
-                            return data[index]?.DateHeureMesure || '';
+                            return orderedData[index]?.DateHeureMesure || '';
                           },
                           label: (context) => {
                             const index = context.dataIndex;
-                            const measure = data[index];
+                            const measure = orderedData[index];
                             const lines = [`Valeur: ${measure.Valeur}${unite}`];
                             
                             if (measure.Etat_Alarme === 1) {
-                              lines.push('⚠️ En alarme');
+                              lines.push("En alarme");
                             }
                             
                             return lines;
@@ -248,8 +382,8 @@ export default function MonitoringDetailsModal({
                 />
               </div>
               
-              {/* Lignes de consigne superposées avec annotations */}
-              <div className="absolute left-16 right-8 top-[120px] bottom-[80px] pointer-events-none">
+              {/* Lignes de consigne superposees avec annotations */}
+              <div className="absolute left-16 right-8 top-30 bottom-20 pointer-events-none">
                 {consigneSup !== null && (
                   <>
                     <div 
@@ -311,84 +445,70 @@ export default function MonitoringDetailsModal({
             </TabsContent>
 
             {/* Table Tab */}
-            <TabsContent value="table" className="space-y-4 pt-4">
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>DATE/HEURE</TableHead>
-                      <TableHead>VALEUR</TableHead>
-                      <TableHead>CONSIGNE INF</TableHead>
-                      <TableHead>CONSIGNE SUP</TableHead>
-                      <TableHead>STATUT</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedData.map((measure) => {
-                      const isOutOfRange = 
-                        (consigneInf !== null && measure.Valeur < consigneInf) ||
-                        (consigneSup !== null && measure.Valeur > consigneSup);
-                      
-                      return (
-                        <TableRow key={measure.id}>
-                          <TableCell className="font-medium">
-                            {measure.DateHeureMesure}
-                          </TableCell>
-                          <TableCell 
-                            className={isOutOfRange ? "text-red-600 dark:text-red-400 font-bold" : ""}
-                          >
-                            {measure.Valeur}{unite}
-                          </TableCell>
-                          <TableCell>
-                            {consigneInf !== null ? `${consigneInf}${unite}` : "-"}
-                          </TableCell>
-                          <TableCell>
-                            {consigneSup !== null ? `${consigneSup}${unite}` : "-"}
-                          </TableCell>
-                          <TableCell>
-                            {isOutOfRange ? (
-                              <span className="text-red-600 dark:text-red-400 font-semibold">
-                                ⚠️ Hors limites
-                              </span>
-                            ) : (
-                              <span className="text-green-600 dark:text-green-400">
-                                ✓ OK
-                              </span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+            <TabsContent value="table" className="space-y-4 pt-4 h-140">
+              <div className="w-full">
+                <DateRangePicker
+                  allowEmpty
+                  onUpdate={({ range }) => {
+                    if (!range.from) {
+                      setDateRange(null)
+                      return
+                    }
+                    setDateRange({ from: range.from, to: range.to ?? range.from })
+                  }}
+                  align="start"
+                  locale={localeTag}
+                  showCompare={false}
+                />
               </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <div className="text-sm text-muted-foreground">
-                    Page {currentPage} sur {totalPages}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              <TanStackTable
+                columns={columns}
+                data={tableData}
+                showSearch={false}
+                pageSize={20}
+                emptyMessage="Aucune mesure"
+                maxHeight="500px"
+                isLoading={rangeLoading}
+                headerClassName="!bg-sidebar !text-sidebar-foreground"
+                headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+                tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"
+              />
             </TabsContent>
           </Tabs>
+        ) : (
+          <div className="space-y-4 pt-4 h-140">
+            <div className="w-full">
+              <DateRangePicker
+                allowEmpty
+                onUpdate={({ range }) => {
+                  if (!range.from) {
+                    setDateRange(null)
+                    return
+                  }
+                  setDateRange({ from: range.from, to: range.to ?? range.from })
+                }}
+                align="start"
+                locale={localeTag}
+                showCompare={false}
+              />
+            </div>
+            <TanStackTable
+              columns={columns}
+              data={tableData}
+              showSearch={false}
+              pageSize={20}
+              emptyMessage={
+                rangeEnabled
+                  ? "Aucune mesure"
+                  : "Veuillez selectionner 2 dates pour voir les mesures"
+              }
+              maxHeight="500px"
+              isLoading={rangeLoading}
+              headerClassName="!bg-sidebar !text-sidebar-foreground"
+              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+              tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"
+            />
+          </div>
         )}
       </DialogContent>
     </Dialog>
