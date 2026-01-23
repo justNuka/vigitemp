@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react"
-import { AlertCircle, AlertOctagon, CheckCircle2, Power, Zap } from "lucide-react"
+import { AlertCircle, AlertOctagon, CheckCircle2, PowerOff, Zap } from "lucide-react"
 
 export type SensorStatus =
   | "ok"
@@ -31,7 +31,7 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
   if (!isActive) {
     return {
       label: "Désactivée",
-      Icon: Power,
+      Icon: PowerOff,
       textClassName: "text-white dark:text-gray-200",
       softBgClassName: "bg-gray-200 dark:bg-gray-900",
       headerBgClassName: "bg-slate-500 dark:bg-gray-700",
