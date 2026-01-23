@@ -126,12 +126,9 @@ export default function MonitoringCard({
     reload(true);
   }, [isModalOpen, reload]);
 
-  const hasMinMax = consigneSup !== null && consigneInf !== null;
-  const visualStatus: SensorStatus = status === "ok" && hasMinMax ? "minmax" : status;
-
   const headerTheme = useMemo(
-    () => getStatusTheme(visualStatus, isSurveillanceActive),
-    [isSurveillanceActive, visualStatus]
+    () => getStatusTheme(status, isSurveillanceActive),
+    [isSurveillanceActive, status]
   );
 
   const headerBgClassName = headerTheme.headerBgClassName;

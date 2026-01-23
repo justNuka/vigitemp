@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
-const RELEASE_VERSION = "0.1.2"
+const RELEASE_VERSION = "0.2.1"
 const COOKIE_NAME = "vigitemp_release_seen"
 
 type ChangelogItem = {
@@ -19,39 +19,34 @@ type ChangelogItem = {
 
 const CHANGELOG: ChangelogItem[] = [
   {
-    title: "Acquittement des alarmes",
-    details: [
-      "Acquittement depuis le dashboard d'accueil.",
-      "Compteur d'alarmes mis a jour instantanement.",
-    ],
-  },
-  {
-    title: "Surveillance - mesures",
-    details: [
-      "Graphiques mini et detail synchronises.",
-      "Rechargement des consignes apres modification.",
-      "Tri des mesures (ASC/DESC) avec ordre croissant par defaut.",
-    ],
-  },
-  {
-    title: "Portail hotline",
-    details: [
-      "Portail pour la hotline afin de détecter rapidement les problèmes.",
-      "Consultation des logs et diagnostics.",
-    ],
-  },
-  {
-    title: "Installateurs offline",
-    details: [
-      "Scripts de preparation des builds.",
-      "Verification post-installation.",
-    ],
-  },
-  {
     title: "Surveillance",
     details: [
-      "Mise en cache dev et reduction des rechargements.",
-      "Ameliorations des tables et export.",
+      "Cartes harmonisees (boutons, icones de type, tooltips, mode light).",
+      "Filtres et actions en couleur primary, tri et vues ajustes.",
+      "Derniere valeur et consignes sup/inf dans le tableau.",
+    ],
+  },
+  {
+    title: "Mesures et graphiques",
+    details: [
+      "Date range picker pour filtrer les mesures.",
+      "Onglet mesures adapte pour les lieux en surveillance desactivee.",
+    ],
+  },
+  {
+    title: "Tables admin",
+    details: [
+      "Headers fixes avec blur, hauteurs adaptees et bords plus visibles.",
+      "Actions harmonisees (icones, tailles, couleurs).",
+      "Selection de ligne plus lisible.",
+    ],
+  },
+  {
+    title: "Creation et edition",
+    details: [
+      "Creation de lieux sans sonde avec confirmation.",
+      "Type GSO : frequence verouillee a 15 min.",
+      "Liste des modules simplifiee.",
     ],
   },
 ]
@@ -99,9 +94,7 @@ export function VersionChangelogModal() {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-lg">
-            Nouvelle version {RELEASE_VERSION}
-          </DialogTitle>
+          <DialogTitle className="text-lg">Nouvelle version {RELEASE_VERSION}</DialogTitle>
           <DialogDescription>
             Nouveautes principales et changements a connaitre.
           </DialogDescription>

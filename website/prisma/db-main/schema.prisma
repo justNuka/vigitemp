@@ -367,8 +367,8 @@ model t_lieu {
   Derniere_Unite                           String?                    @db.VarChar(10)
   Derniere_Nb_Decimal                      Int?
   Est_Lieu_En_Alarme                       Int?                       @db.TinyInt
-  Est_Lieu_Alarme_Termee_Non_Acquittee     Int?                       @db.TinyInt
-  Est_Lieu_Alarme_Termee_Non_Acquittee_T1  Int?                       @db.TinyInt
+  Est_Lieu_Alarme_Terminee_Non_Acquittee     Int?                       @db.TinyInt
+  Est_Lieu_Alarme_Terminee_Non_Acquittee_T1  Int?                       @db.TinyInt
   Est_Lieu_En_Pre_Alarme                   Int?                       @db.TinyInt
   Id_Alarme                                Int?
   Lieu_Etat_N1                             String?                    @db.VarChar(50)

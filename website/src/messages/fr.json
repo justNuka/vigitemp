@@ -24,6 +24,24 @@
     "license_unknown": "Licence inconnue",
     "license_invalid": "Licence invalide"
   },
+  "dateRangePicker": {
+    "selectRange": "Sélectionner une plage",
+    "cancel": "Annuler",
+    "update": "Appliquer",
+    "compare": "Comparer",
+    "select": "Sélectionner...",
+    "presets": {
+      "today": "Aujourd'hui",
+      "yesterday": "Hier",
+      "last7": "7 derniers jours",
+      "last14": "14 derniers jours",
+      "last30": "30 derniers jours",
+      "thisWeek": "Cette semaine",
+      "lastWeek": "Semaine précédente",
+      "thisMonth": "Ce mois-ci",
+      "lastMonth": "Mois précédent"
+    }
+  },
   "pageHeader": {
     "title": "Vigitemp - Surveillance de Température"
   },

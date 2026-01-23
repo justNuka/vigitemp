@@ -41,8 +41,8 @@ export const GET = withAuthLogging(
       const isWarning = !isCritical && lieu.Est_Lieu_En_Pre_Alarme === 1
       const isEnded =
         !isCritical &&
-        (lieu.Est_Lieu_Alarme_Termee_Non_Acquittee === 1 ||
-          lieu.Est_Lieu_Alarme_Termee_Non_Acquittee_T1 === 1)
+        (lieu.Est_Lieu_Alarme_Terminee_Non_Acquittee === 1 ||
+          lieu.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 === 1)
       const isTechnical = (() => {
         if (!lieu.Retard_Non_Reponse || !lieu.Date_Heure_Derniere_Reponse) return false
         const lastResponse = new Date(lieu.Date_Heure_Derniere_Reponse)
@@ -127,8 +127,8 @@ export const PATCH = withAuthLogging(
       const isWarning = !isCritical && lieu.Est_Lieu_En_Pre_Alarme === 1
       const isEnded =
         !isCritical &&
-        (lieu.Est_Lieu_Alarme_Termee_Non_Acquittee === 1 ||
-          lieu.Est_Lieu_Alarme_Termee_Non_Acquittee_T1 === 1)
+        (lieu.Est_Lieu_Alarme_Terminee_Non_Acquittee === 1 ||
+          lieu.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 === 1)
       const isTechnical = (() => {
         if (!lieu.Retard_Non_Reponse || !lieu.Date_Heure_Derniere_Reponse) return false
         const lastResponse = new Date(lieu.Date_Heure_Derniere_Reponse)

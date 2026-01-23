@@ -199,7 +199,7 @@ export type SensorWithLocation = {
   lastMeasurement: Date | null;
   isActive: boolean;
   location: Location;
-  status: "ok" | "warning" | "critical" | "technical" | "ended" | "minmax";
+  status: "ok" | "warning" | "critical" | "technical" | "ended";
   lieuType?: string | null;
 };
 

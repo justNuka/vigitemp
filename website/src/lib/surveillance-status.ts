@@ -7,7 +7,6 @@ export type SensorStatus =
   | "critical"
   | "technical"
   | "ended"
-  | "minmax"
 
 export type StatusCounts = {
   total: number
@@ -87,17 +86,6 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
         headerTextClassName: "text-gray-900",
         badgeClassName: "bg-violet-600 hover:bg-violet-700 text-white",
       }
-    case "minmax":
-      return {
-        label: "Mini-maxi",
-        Icon: CheckCircle2,
-        textClassName: "text-emerald-700 dark:text-emerald-300",
-        softBgClassName: "bg-emerald-50 dark:bg-emerald-950",
-        headerBgClassName: "bg-emerald-600 dark:bg-emerald-700",
-        headerBorderClassName: "border-emerald-700 dark:border-emerald-800",
-        headerTextClassName: "text-gray-900",
-        badgeClassName: "bg-emerald-600 hover:bg-emerald-700",
-      }
     case "ok":
     default:
       return {
@@ -107,7 +95,7 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
         softBgClassName: "bg-blue-50 dark:bg-blue-950",
         headerBgClassName: "bg-blue-600 dark:bg-blue-700",
         headerBorderClassName: "border-blue-700 dark:border-blue-800",
-        headerTextClassName: "text-gray-900",
+        headerTextClassName: "text-white",
         badgeClassName: "bg-blue-600 hover:bg-blue-700",
       }
   }

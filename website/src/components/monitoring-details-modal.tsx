@@ -446,13 +446,21 @@ export default function MonitoringDetailsModal({
 
             {/* Table Tab */}
             <TabsContent value="table" className="space-y-4 pt-4 h-140">
-              <DateRangePicker
-                allowEmpty
-                onUpdate={({ range }) => setDateRange({ from: range.from, to: range.to ?? range.from })}
-                align="start"
-                locale={localeTag}
-                showCompare={false}
-              />
+              <div className="w-full">
+                <DateRangePicker
+                  allowEmpty
+                  onUpdate={({ range }) => {
+                    if (!range.from) {
+                      setDateRange(null)
+                      return
+                    }
+                    setDateRange({ from: range.from, to: range.to ?? range.from })
+                  }}
+                  align="start"
+                  locale={localeTag}
+                  showCompare={false}
+                />
+              </div>
               <TanStackTable
                 columns={columns}
                 data={tableData}
@@ -469,13 +477,21 @@ export default function MonitoringDetailsModal({
           </Tabs>
         ) : (
           <div className="space-y-4 pt-4 h-140">
-            <DateRangePicker
-              allowEmpty
-              onUpdate={({ range }) => setDateRange({ from: range.from, to: range.to ?? range.from })}
-              align="start"
-              locale={localeTag}
-              showCompare={false}
-            />
+            <div className="w-full">
+              <DateRangePicker
+                allowEmpty
+                onUpdate={({ range }) => {
+                  if (!range.from) {
+                    setDateRange(null)
+                    return
+                  }
+                  setDateRange({ from: range.from, to: range.to ?? range.from })
+                }}
+                align="start"
+                locale={localeTag}
+                showCompare={false}
+              />
+            </div>
             <TanStackTable
               columns={columns}
               data={tableData}

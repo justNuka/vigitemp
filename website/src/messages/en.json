@@ -24,6 +24,24 @@
     "license_unknown": "Unknown license",
     "license_invalid": "Invalid license"
   },
+  "dateRangePicker": {
+    "selectRange": "Select a range",
+    "cancel": "Cancel",
+    "update": "Update",
+    "compare": "Compare",
+    "select": "Select...",
+    "presets": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "last7": "Last 7 days",
+      "last14": "Last 14 days",
+      "last30": "Last 30 days",
+      "thisWeek": "This Week",
+      "lastWeek": "Last Week",
+      "thisMonth": "This Month",
+      "lastMonth": "Last Month"
+    }
+  },
   "pageHeader": {
     "title": "Vigitemp - Temperature Monitoring"
   },

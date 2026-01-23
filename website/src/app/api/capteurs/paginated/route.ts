@@ -132,8 +132,8 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
         const isWarning = !isCritical && location.Est_Lieu_En_Pre_Alarme === 1
         const isEnded =
           !isCritical &&
-          (location.Est_Lieu_Alarme_Termee_Non_Acquittee === 1 ||
-            location.Est_Lieu_Alarme_Termee_Non_Acquittee_T1 === 1)
+          (location.Est_Lieu_Alarme_Terminee_Non_Acquittee === 1 ||
+            location.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 === 1)
         const isTechnical = (() => {
           if (!location.Retard_Non_Reponse || !location.Date_Heure_Derniere_Reponse) return false
           const lastResponse = new Date(location.Date_Heure_Derniere_Reponse)
