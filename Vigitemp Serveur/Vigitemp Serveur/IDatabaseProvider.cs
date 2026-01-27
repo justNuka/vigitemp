@@ -9,7 +9,7 @@ namespace Vigitemp_Serveur
         LieuAlarmSettings getLieuAlarmSettings(int idLieu);
         List<string> getPCsClients();
         bool AddMesure(string p_numeroSerie, double p_valeur, string p_unite, string p_resistance);
-        (List<string>, List<string>, List<string>, List<string>) getInfosByIdServeurAndFrequencies(int p_idServer, int p_frequence);
+        (List<string>, List<string>, List<string>, List<string>, List<int>, List<DateTime?>) getInfosByIdServeurAndFrequencies(int p_idServer, int p_frequence);
         (string, string, string, string) getInfosByIdLieu(int p_idLieu);
         List<int> getDistinctIdServeur();
         List<int> getDistinctFrequenciesByIdServeur(int p_idServeur);

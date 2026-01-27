@@ -86,21 +86,21 @@ namespace Vigitemp_Serveur
 
                 try
                 {
-                    var databaseName = GetSetting("Vigitemp.Db.MeasureCacheDatabase", GetSetting("Vigitemp.Db.MeasureDatabase", "vigitemp_mesure"));
+                    var databaseName = GetSetting("Vigitemp.Db.MeasureDatabase", "vigitemp_mesure");
                     connection = CreateConnection(databaseName);
                     connection.Open();
 
                     MySqlCommand cmd = connection.CreateCommand();
                     cmd.CommandText = @"
                         INSERT INTO tm_graphique 
-                        (Date_Heure_Mesure, Valeur, Resistance, Consigne, Consigne_Sup, Consigne_Inf, 
-                         Unite, Sonde_Numero_Serie, Id_Sonde, Id_Lieu, Frequence, Etat_Alarme, Valeur_Null)
+                        (Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, 
+                         Unite, Sonde_Numero_Serie, Id_Sonde, Id_Lieu, Frequence, Est_Etat_Alarme, Est_Valeur_Null)
                         VALUES 
-                        (NOW(), @valeur, @resistance, @consigne, @consigneSup, @consigneInf, 
+                        (NOW(), @valeur, @valeurBrute, @consigne, @consigneSup, @consigneInf, 
                          @unite, @sondeNumeroSerie, @idSonde, @idLieu, @frequence, @etatAlarme, 0)";
 
                     cmd.Parameters.AddWithValue("@valeur", valeur);
-                    cmd.Parameters.AddWithValue("@resistance", resistance);
+                    cmd.Parameters.AddWithValue("@valeurBrute", resistance);
                     cmd.Parameters.AddWithValue("@consigne", consigne);
                     cmd.Parameters.AddWithValue("@consigneSup", consigneSup);
                     cmd.Parameters.AddWithValue("@consigneInf", consigneInf);

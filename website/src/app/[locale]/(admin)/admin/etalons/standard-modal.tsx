@@ -59,8 +59,8 @@ export function StandardModal({ open, onOpenChange, standard, isEditing }: Props
   const [selectedMesureIndex, setSelectedMesureIndex] = useState<number | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
-  const { data: types, isLoading: typesLoading } = useStandardTypes()
-  const { data: modules, isLoading: modulesLoading } = useModules()
+  const { data: types, isLoading: typesLoading } = useStandardTypes(open)
+  const { data: modules, isLoading: modulesLoading } = useModules(open)
 
   useEffect(() => {
     if (!open) return

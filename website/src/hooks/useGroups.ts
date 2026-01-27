@@ -17,10 +17,11 @@ async function fetchGroups(regroupement?: string): Promise<Group[]> {
   return getJson<Group[]>(url);
 }
 
-export function useGroups(regroupement?: string) {
+export function useGroups(regroupement?: string, enabled: boolean = true) {
   return useQuery({
     queryKey: ["groups", regroupement],
     queryFn: () => fetchGroups(regroupement),
+    enabled,
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000),
   });
 }

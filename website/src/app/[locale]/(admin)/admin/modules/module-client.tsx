@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Archive, Pencil, Plus } from "lucide-react";
 import { useRouter } from '@/i18n/navigation';
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { useModules, useModuleSondes } from "@/hooks/useModules";
-import { deleteJson, HttpError } from "@/lib/http";
+import { deleteJson, getJson, HttpError } from "@/lib/http";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -26,6 +27,8 @@ import { ProbesTable, type ProbeRow } from "./_components/probes-table";
 
 export function ModulesClient() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const didPrefetchRef = useRef(false);
   const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
   const [selectedSondeId, setSelectedSondeId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,6 +39,17 @@ export function ModulesClient() {
 
   const { data: modules, isLoading: modulesLoading, refetch: refetchModules } = useModules();
   const { data: sondes, isLoading: sondesLoading } = useModuleSondes(selectedModuleId);
+
+  useEffect(() => {
+    if (modulesLoading || didPrefetchRef.current) return;
+    didPrefetchRef.current = true;
+
+    queryClient.prefetchQuery({
+      queryKey: ["module-types"],
+      queryFn: () => getJson("/api/modules/types"),
+      staleTime: 60000,
+    });
+  }, [modulesLoading, queryClient]);
 
   const selectedModule = selectedModuleId ? modules?.find((m) => m.Id_Module === selectedModuleId) : null;
 

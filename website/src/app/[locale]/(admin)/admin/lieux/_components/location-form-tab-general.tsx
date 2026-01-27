@@ -137,7 +137,7 @@ export function LocationFormTabGeneral({ formData, setFormData, sites, groups, a
         <h3 className="font-semibold">Sonde</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>S?lection de sonde</Label>
+            <Label>Sélection de sonde</Label>
             <Combobox
               triggerId="sonde"
               value={formData.Sonde_Numero_Serie || ''}
@@ -177,7 +177,7 @@ export function LocationFormTabGeneral({ formData, setFormData, sites, groups, a
                 />
               </div>
               <div className="space-y-2">
-                <Label>Fr?quence de mesure (min)</Label>
+                <Label>Fréquence de mesure (min)</Label>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -199,7 +199,7 @@ export function LocationFormTabGeneral({ formData, setFormData, sites, groups, a
                     </TooltipTrigger>
                     {isGsoProbe ? (
                       <TooltipContent>
-                        <p>Fr?quence fix?e ? 15 min pour les sondes GSO.</p>
+                        <p>Fréquence fixée à 15 min pour les sondes GSO.</p>
                       </TooltipContent>
                     ) : null}
                   </Tooltip>

@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { Standard } from "@/hooks/useStandards"
 import { useStandards } from "@/hooks/useStandards"
-import { deleteJson } from "@/lib/http"
+import { deleteJson, getJson } from "@/lib/http"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -34,10 +34,26 @@ export function StandardsClient() {
   const { data: standards, isLoading } = useStandards()
   const queryClient = useQueryClient()
   const router = useRouter()
+  const didPrefetchRef = useRef(false)
   const [selectedStandard, setSelectedStandard] = useState<Standard | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false)
+
+  useEffect(() => {
+    if (isLoading || didPrefetchRef.current) return
+    didPrefetchRef.current = true
+
+    queryClient.prefetchQuery({
+      queryKey: ["etalon-types"],
+      queryFn: () => getJson("/api/etalons/types"),
+    })
+    queryClient.prefetchQuery({
+      queryKey: ["modules"],
+      queryFn: () => getJson("/api/modules"),
+      staleTime: 60000,
+    })
+  }, [isLoading, queryClient])
 
   const handleAddClick = () => {
     setSelectedStandard(null)

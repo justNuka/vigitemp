@@ -125,14 +125,14 @@ namespace Vigitemp_Serveur
                     return idLieu;
                 }
 
-                using (var cmd = CreateCommand(_connectionMain, "SELECT IdLieu FROM t_lieu WHERE SondeNumeroSerie = @serial;"))
+                using (var cmd = CreateCommand(_connectionMain, "SELECT Id_Lieu FROM t_lieu WHERE Sonde_Numero_Serie = @serial;"))
                 {
                     cmd.Parameters.AddWithValue("@serial", p_sondSerialNumber);
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            idLieu = reader.GetInt32(reader.GetOrdinal("IdLieu"));
+                            idLieu = reader.GetInt32(reader.GetOrdinal("Id_Lieu"));
                         }
                     }
                 }
@@ -382,12 +382,12 @@ namespace Vigitemp_Serveur
                         return arrayIp;
                     }
 
-                    using (var cmd = CreateCommand(_connectionMain, "select AdresseIPConnexion from t_postes_clients"))
+                    using (var cmd = CreateCommand(_connectionMain, "select Adresse_IP_Connexion from t_postes_clients"))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            arrayIp.Add(reader["AdresseIPConnexion"].ToString());
+                            arrayIp.Add(reader["Adresse_IP_Connexion"].ToString());
                         }
                     }
 
@@ -423,10 +423,10 @@ namespace Vigitemp_Serveur
 
                     using (var cmdMain = CreateCommand(
                         _connectionMain,
-                        "SELECT Frequence, Consigne, Consigne_Sup, Consigne_Inf, t_module.Id_Serveur, Nom_Lieu, IdLieu, t_lieu.SondeNumeroSerie, t_sonde.IdSonde FROM t_lieu " +
-                        "INNER JOIN t_sonde ON t_lieu.SondeNumeroSerie = t_sonde.SondeNumeroSerie " +
-                        "INNER JOIN t_module ON t_sonde.idModule = t_module.idModule " +
-                        "WHERE t_lieu.SondeNumeroSerie = @serial " +
+                        "SELECT Frequence, Consigne, Consigne_Sup, Consigne_Inf, t_module.Id_Serveur, Nom_Lieu, Id_Lieu, t_lieu.Sonde_Numero_Serie, t_sonde.Id_Sonde FROM t_lieu " +
+                            "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
+                            "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
+                            "WHERE t_lieu.Sonde_Numero_Serie = @serial " +
                         "AND t_sonde.Etat_Sonde = 'S' " +
                         "AND ISNULL(t_sonde.Est_Sonde_GSO, 0) = 0;"))
                     {
@@ -440,8 +440,8 @@ namespace Vigitemp_Serveur
                                 return false;
                             }
 
-                            idSonde = (int)reader["IdSonde"];
-                            idLieu = (int)reader["IdLieu"];
+                            idSonde = (int)reader["Id_Sonde"];
+                            idLieu = (int)reader["Id_Lieu"];
                             consigne = float.Parse(reader["Consigne"].ToString());
                             consigneSup = float.Parse(reader["Consigne_Sup"].ToString());
                             consigneInf = float.Parse(reader["Consigne_Inf"].ToString());
@@ -518,22 +518,22 @@ namespace Vigitemp_Serveur
         {
             try
             {
-                var cacheDb = GetSetting("Vigitemp.Db.MeasureCacheDatabase", GetSetting("Vigitemp.Db.MeasureDatabase", "vigitemp_mesure"));
+                var cacheDb = GetSetting("Vigitemp.Db.MeasureDatabase", "vigitemp_mesure");
                 using (var connection = CreateConnection(cacheDb))
                 {
                     connection.Open();
                     using (var cmd = CreateCommand(
                         connection,
                         "INSERT INTO tm_graphique " +
-                        "(Date_Heure_Mesure, Valeur, Resistance, Consigne, Consigne_Sup, Consigne_Inf, " +
-                        "Unite, Sonde_Numero_Serie, Id_Sonde, Id_Lieu, Frequence, Etat_Alarme, Valeur_Null) " +
+                        "(Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, " +
+                        "Unite, Sonde_Numero_Serie, Id_Sonde, Id_Lieu, Frequence, Est_Etat_Alarme, Est_Valeur_Null) " +
                         "VALUES " +
-                        "(@date, @valeur, @resistance, @consigne, @consigneSup, @consigneInf, " +
+                        "(@date, @valeur, @valeurBrute, @consigne, @consigneSup, @consigneInf, " +
                         "@unite, @sondeNumeroSerie, @idSonde, @idLieu, @frequence, @etatAlarme, 0)"))
                     {
                         cmd.Parameters.AddWithValue("@date", DateTime.Now);
                         cmd.Parameters.AddWithValue("@valeur", valeur);
-                        cmd.Parameters.AddWithValue("@resistance", resistance);
+                        cmd.Parameters.AddWithValue("@valeurBrute", resistance);
                         cmd.Parameters.AddWithValue("@consigne", consigne);
                         cmd.Parameters.AddWithValue("@consigneSup", consigneSup);
                         cmd.Parameters.AddWithValue("@consigneInf", consigneInf);
@@ -552,7 +552,7 @@ namespace Vigitemp_Serveur
                 VigitempServeur.Log("(InsertMeasureToGraphique MSSQL) Erreur: " + ex.Message);
             }
         }
-        public (List<string>, List<string>, List<string>, List<string>) getInfosByIdServeurAndFrequencies(int p_idServer, int p_frequence)
+        public (List<string>, List<string>, List<string>, List<string>, List<int>, List<DateTime?>) getInfosByIdServeurAndFrequencies(int p_idServer, int p_frequence)
         {
             lock (_lock)
             {
@@ -562,18 +562,20 @@ namespace Vigitemp_Serveur
                     var tmpSerial = new List<string>();
                     var tmpAdresse = new List<string>();
                     var tmpModule = new List<string>();
+                    var tmpIdLieu = new List<int>();
+                    var tmpLastMeasure = new List<DateTime?>();
 
                     if (!InitConnexion())
                     {
                         CloseConnexion();
-                        return (tmpPort, tmpSerial, tmpAdresse, tmpModule);
+                        return (tmpPort, tmpSerial, tmpAdresse, tmpModule, tmpIdLieu, tmpLastMeasure);
                     }
 
                     using (var cmd = CreateCommand(
                         _connectionMain,
-                        "SELECT t_module.Port_serie, t_module.ModuleNumeroSerie, t_sonde.SondeNumeroSerie, t_sonde.Adresse_sonde FROM t_lieu " +
-                        "INNER JOIN t_sonde ON t_lieu.SondeNumeroSerie = t_sonde.SondeNumeroSerie " +
-                        "INNER JOIN t_module ON t_sonde.idModule = t_module.idModule " +
+                        "SELECT t_lieu.Id_Lieu, t_lieu.Derniere_Date_Heure, t_module.Port_Serie, t_module.Module_Numero_Serie, t_sonde.Sonde_Numero_Serie, t_sonde.Adresse_Sonde FROM t_lieu " +
+                        "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
+                        "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
                         "WHERE t_lieu.Frequence = @frequence " +
                         "AND t_module.Id_Serveur = @idServeur " +
                         "AND t_lieu.Lieu_Etat = 'S' " +
@@ -586,22 +588,31 @@ namespace Vigitemp_Serveur
                         {
                             while (reader.Read())
                             {
-                                tmpPort.Add("COM" + reader["Port_serie"].ToString());
-                                tmpSerial.Add(reader["SondeNumeroSerie"].ToString());
-                                tmpAdresse.Add(reader["Adresse_sonde"].ToString());
-                                tmpModule.Add(reader["ModuleNumeroSerie"].ToString());
+                                tmpPort.Add("COM" + reader["Port_Serie"].ToString());
+                                tmpSerial.Add(reader["Sonde_Numero_Serie"].ToString());
+                                tmpAdresse.Add(reader["Adresse_Sonde"].ToString());
+                                tmpModule.Add(reader["Module_Numero_Serie"].ToString());
+                                tmpIdLieu.Add(Convert.ToInt32(reader["Id_Lieu"]));
+                                if (reader["Derniere_Date_Heure"] == DBNull.Value)
+                                {
+                                    tmpLastMeasure.Add(null);
+                                }
+                                else
+                                {
+                                    tmpLastMeasure.Add(Convert.ToDateTime(reader["Derniere_Date_Heure"]));
+                                }
                             }
                         }
                     }
 
                     CloseConnexion();
-                    return (tmpPort, tmpSerial, tmpAdresse, tmpModule);
+                    return (tmpPort, tmpSerial, tmpAdresse, tmpModule, tmpIdLieu, tmpLastMeasure);
                 }
                 catch (Exception ex)
                 {
                     CloseConnexion();
                     VigitempServeur.Log("(getInfosByIdServeurAndFrequencies MSSQL) SQL Erreur: " + ex);
-                    return (new List<string>(), new List<string>(), new List<string>(), new List<string>());
+                    return (new List<string>(), new List<string>(), new List<string>(), new List<string>(), new List<int>(), new List<DateTime?>());
                 }
             }
         }
@@ -625,20 +636,20 @@ namespace Vigitemp_Serveur
 
                     using (var cmd = CreateCommand(
                         _connectionMain,
-                        "SELECT t_module.Port_serie, t_module.ModuleNumeroSerie, t_sonde.SondeNumeroSerie, t_sonde.Adresse_sonde FROM t_lieu " +
-                        "INNER JOIN t_sonde ON t_lieu.SondeNumeroSerie = t_sonde.SondeNumeroSerie " +
-                        "INNER JOIN t_module ON t_sonde.idModule = t_module.idModule " +
-                        "WHERE t_lieu.IdLieu = @idLieu;"))
+                        "SELECT t_module.Port_Serie, t_module.Module_Numero_Serie, t_sonde.Sonde_Numero_Serie, t_sonde.Adresse_Sonde FROM t_lieu " +
+                        "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
+                        "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
+                        "WHERE t_lieu.Id_Lieu = @idLieu;"))
                     {
                         cmd.Parameters.AddWithValue("@idLieu", p_idLieu);
                         using (var reader = cmd.ExecuteReader())
                         {
                             while (reader.Read())
                             {
-                                portSerie = "COM" + reader["Port_serie"].ToString();
-                                sondeNumeroSerie = reader["SondeNumeroSerie"].ToString();
-                                sondeAdresse = reader["Adresse_sonde"].ToString();
-                                moduleNumeroSerie = reader["ModuleNumeroSerie"].ToString();
+                                portSerie = "COM" + reader["Port_Serie"].ToString();
+                                sondeNumeroSerie = reader["Sonde_Numero_Serie"].ToString();
+                                sondeAdresse = reader["Adresse_Sonde"].ToString();
+                                moduleNumeroSerie = reader["Module_Numero_Serie"].ToString();
                             }
                         }
                     }
@@ -694,8 +705,8 @@ namespace Vigitemp_Serveur
                 using (var cmd = CreateCommand(
                     _connectionMain,
                     "SELECT distinct frequence FROM t_lieu " +
-                    "INNER JOIN t_sonde ON t_lieu.SondeNumeroSerie = t_sonde.SondeNumeroSerie " +
-                    "INNER JOIN t_module ON t_sonde.idModule = t_module.idModule " +
+                    "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
+                    "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
                     "where t_module.Id_Serveur = @idServeur " +
                     "AND t_lieu.Lieu_Etat = 'S' " +
                     "AND t_sonde.Etat_Sonde = 'S' " +
@@ -728,12 +739,12 @@ namespace Vigitemp_Serveur
                     return (ids, dates);
                 }
 
-                using (var cmd = CreateCommand(_connectionMain, "SELECT distinct IdLieu, Date_Heure_Reactivation_Alarme FROM t_lieu where Date_Heure_Reactivation_Alarme is not null;"))
+                using (var cmd = CreateCommand(_connectionMain, "SELECT distinct Id_Lieu, Date_Heure_Reactivation_Alarme FROM t_lieu where Date_Heure_Reactivation_Alarme is not null;"))
                 using (var reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
                     {
-                        ids.Add(Int32.Parse(reader["IdLieu"].ToString()));
+                        ids.Add(Int32.Parse(reader["Id_Lieu"].ToString()));
                         dates.Add(DateTime.Parse(reader["Date_Heure_Reactivation_Alarme"].ToString()));
                     }
                 }
@@ -785,7 +796,7 @@ namespace Vigitemp_Serveur
 
                     using (var cmd = CreateCommand(
                         _connectionMain,
-                        "UPDATE t_lieu SET Notification_Active = @valeur, Date_Heure_Reactivation_Alarme = NULL WHERE IdLieu = @idLieu;"))
+                        "UPDATE t_lieu SET Notification_Active = @valeur, Date_Heure_Reactivation_Alarme = NULL WHERE Id_Lieu = @idLieu;"))
                     {
                         cmd.Parameters.AddWithValue("@valeur", p_valeur);
                         cmd.Parameters.AddWithValue("@idLieu", p_idLieu);
@@ -878,7 +889,7 @@ namespace Vigitemp_Serveur
 
                 using (var cmd = CreateCommand(
                     _connectionMain,
-                    "SELECT TOP 1 Coeff_X, Coeff_Constant FROM t_calibrage where SondeNumeroSerie = @serial ORDER BY DateHeureCalibrage DESC"))
+                    "SELECT TOP 1 Coeff_X, Coeff_Constant FROM t_calibrage where Sonde_Numero_Serie = @serial ORDER BY Date_Heure_Calibrage DESC"))
                 {
                     cmd.Parameters.AddWithValue("@serial", p_serial_number);
                     try

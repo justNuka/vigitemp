@@ -25,20 +25,23 @@ namespace Vigitemp_Serveur.sensors
                 m_port.Open();
                 m_port.DiscardInBuffer();
                 m_port.DiscardOutBuffer();
-                m_port.Write("SM" + m_sondeAdresse + "0000000000000000");
+                var command = "SM" + m_sondeAdresse + "0000000000000000";
+                VigitempServeur.Log($"[SONDE][TX] type=IP serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} cmd={command}");
+                m_port.Write(command);
                 Stopwatch tmp_sw = new Stopwatch();
                 tmp_sw.Start();
                 // while (tmp_sw.Elapsed.TotalMilliseconds < 100) {}
                 // m_port.Write("SM"+m_serialNumber.Substring(m_serialNumber.Length - 4)+"0000000000000000");
 
-                Console.WriteLine("DonnÈes ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                Trace.WriteLine("DonnÈes ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                Console.WriteLine("Donn√©es ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                Trace.WriteLine("Donn√©es ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
 
                 while (pendingResults)
                 {
                     await Task.Delay(25);
                     if (tmp_sw.Elapsed.TotalMilliseconds > 2000)
                     {
+                        VigitempServeur.Log($"[SONDE][DONE] type=IP serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
                         m_port.Close();
                         m_sensor_response = "";
                         pendingResults = false;
@@ -52,6 +55,7 @@ namespace Vigitemp_Serveur.sensors
             {
                 Console.WriteLine("erreur: " + e);
                 Trace.WriteLine("erreur: " + e);
+                VigitempServeur.Log($"[SONDE][ERR] type=IP serial={m_sondeSerialNumber} port={m_comPort} error={e}");
                 m_port.Close();
                 return false;
             }
@@ -62,61 +66,70 @@ namespace Vigitemp_Serveur.sensors
                             object sender,
                             SerialDataReceivedEventArgs e)
         {
-
-            SerialPort sp = (SerialPort)sender;
-            string regex_res;
-            var chunk = sp.ReadExisting();
+            try
+            {
+                SerialPort sp = (SerialPort)sender;
+                string regex_res;
+                var chunk = sp.ReadExisting();
                 if (!string.IsNullOrEmpty(chunk))
                 {
                     m_sensor_response += chunk;
                 }
-            var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
-            if (m.Groups[1].Value != "")
-            {
-                regex_res = m.Groups[1].Value;
-                m_sensor_response = "";
-            }
-            else
-            {
-                if (m_sensor_response.Length > 1024)
+                VigitempServeur.Log($"[SONDE][RX] type=IP serial={m_sondeSerialNumber} port={m_comPort} raw={m_sensor_response}");
+                var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
+                if (m.Groups[1].Value != "")
+                {
+                    regex_res = m.Groups[1].Value;
+                    m_sensor_response = "";
+                }
+                else
+                {
+                    if (m_sensor_response.Length > 1024)
                     {
                         m_sensor_response = m_sensor_response.Substring(m_sensor_response.Length - 1024);
                     }
-                return;
+                    return;
+                }
+
+                // Console.WriteLine("Donn√©es recues dans le port COM: " + regex_res); 
+
+                //recuperer les coeffs our corriger la valeur brute
+                (double coeffX, double constante) = ths.GetDatabase().getCoeffCalibrageBySerialNumber(m_sondeSerialNumber);
+
+                double mesureNonCorrig√©e, mesureCalcul√©e;
+
+                double coeffTemp;
+                double coeffA = 0.0039083;
+                double coeffB = -0.0000005775;
+
+                int poidsFort = regex_res[6];
+                int poidsFaible = regex_res[7];
+                tmp_resistance = (poidsFort * 256 + poidsFaible - 2048).ToString();
+                VigitempServeur.Log($"[SONDE][RX] type=IP serial={m_sondeSerialNumber} resistance={tmp_resistance}");
+
+                coeffTemp = Math.Pow(coeffA / (2 * coeffB), 2) + (coeffX * int.Parse(tmp_resistance.Replace(",", ".")) + (constante - 1)) / coeffB;
+
+                if (coeffTemp < 0)
+                {
+                    mesureCalcul√©e = 0.0;
+                    return;
+                }
+                mesureNonCorrig√©e = -(coeffA / (2 * coeffB)) - Math.Sqrt(coeffTemp);
+
+                mesureCalcul√©e = mesureNonCorrig√©e;
+                Console.WriteLine("Donn√©es corrig√©es: " + float.Parse(String.Format("{0:0.00}", mesureCalcul√©e)));
+                Trace.WriteLine("Donn√©es corrig√©es: " + float.Parse(String.Format("{0:0.00}", mesureCalcul√©e)));
+                ths.GetDatabase().AddMesure(m_sondeSerialNumber, mesureCalcul√©e, "¬∞C", tmp_resistance);
+                VigitempServeur.Log($"[SONDE][DONE] type=IP serial={m_sondeSerialNumber} port={m_comPort} status=success value={float.Parse(String.Format("{0:0.00}", mesureCalcul√©e))} unit=¬∞C raw={tmp_resistance}");
+
+                m_port.Close();
+                pendingResults = false;
+                Trace.WriteLine("Fermeture du port " + m_comPort);
             }
-
-            // Console.WriteLine("DonnÈes recues dans le port COM: " + regex_res); 
-
-            //recuperer les coeffs our corriger la valeur brute
-            (double coeffX, double constante) = ths.GetDatabase().getCoeffCalibrageBySerialNumber(m_sondeSerialNumber);
-
-            double mesureNonCorrigÈe, mesureCalculÈe;
-
-            double coeffTemp;
-            double coeffA = 0.0039083;
-            double coeffB = -0.0000005775;
-
-            int poidsFort = regex_res[6];
-            int poidsFaible = regex_res[7];
-            tmp_resistance = (poidsFort * 256 + poidsFaible - 2048).ToString();
-
-            coeffTemp = Math.Pow(coeffA / (2 * coeffB), 2) + (coeffX * int.Parse(tmp_resistance.Replace(",", ".")) + (constante - 1)) / coeffB;
-
-            if (coeffTemp < 0)
+            catch (Exception ex)
             {
-                mesureCalculÈe = 0.0;
-                return;
+                VigitempServeur.Log($"[SONDE][ERR] type=IP serial={m_sondeSerialNumber} port={m_comPort} error={ex}");
             }
-            mesureNonCorrigÈe = -(coeffA / (2 * coeffB)) - Math.Sqrt(coeffTemp);
-
-            mesureCalculÈe = mesureNonCorrigÈe;
-            Console.WriteLine("DonnÈes corrigÈes: " + float.Parse(String.Format("{0:0.00}", mesureCalculÈe)));
-            Trace.WriteLine("DonnÈes corrigÈes: " + float.Parse(String.Format("{0:0.00}", mesureCalculÈe)));
-            ths.GetDatabase().AddMesure(m_sondeSerialNumber, mesureCalculÈe, "∞C", tmp_resistance);
-
-            m_port.Close();
-            pendingResults = false;
-            Trace.WriteLine("Fermeture du port " + m_comPort);
         }
     }
 }

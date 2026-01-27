@@ -416,7 +416,7 @@ $xml = @"
 
 $xml | Set-Content -Path $winswConfig -Encoding UTF8
 
-Write-Log (T "Cr�ation du service Windows (WinSW)..." "Creating Windows service (WinSW)...")
+Write-Log (T "Création du service Windows (WinSW)..." "Creating Windows service (WinSW)...")
 & $winswExe install | Out-Null
 & $winswExe start | Out-Null
 

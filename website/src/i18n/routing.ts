@@ -12,6 +12,10 @@ export const routing = defineRouting({
 
   pathnames: {
     '/': '/',
+    '/login': {
+      fr: '/connexion',
+      en: '/login',
+    },
     '/surveillance': {
       fr: '/surveillance',
       en: '/monitoring',
@@ -78,7 +82,7 @@ export const routing = defineRouting({
     },
     '/admin/sondes': {
       fr: '/admin/sondes',
-      en: '/admin/probes',
+      en: '/admin/sensors',
     },
     '/admin/test': {
       fr: '/admin/test',
@@ -108,16 +112,12 @@ export const routing = defineRouting({
       fr: '/admin/utilisateurs',
       en: '/admin/users',
     },
-    '/login': {
-      fr: '/login',
-      en: '/login',
-    },
     '/force-password-change': {
-      fr: '/force-password-change',
+      fr: '/changement-mot-de-passe-obligatoire',
       en: '/force-password-change',
     },
     '/reset-password': {
-      fr: '/reset-password',
+      fr: '/reinitialisation-mot-de-passe',
       en: '/reset-password',
     },
   }

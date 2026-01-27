@@ -8,11 +8,12 @@ import { SensorsCardsGrid } from "./sensors-cards-grid";
 import type { Site, Group } from "./server-filters";
 import type { SensorWithLocation } from "@/lib/api";
 import { useTranslations } from "next-intl";
-import { usePaginatedSensors } from "./_hooks/use-paginated-sensors";
+import { paginatedSensorsPageKey, type PaginatedResponse, usePaginatedSensors } from "./_hooks/use-paginated-sensors";
 import { useSurveillanceLiveUpdates } from "./_hooks/use-surveillance-live-updates";
 import { SurveillanceHeaderControls } from "./_components/monitoring-header-controls";
 import { SurveillanceLoadMore } from "./_components/monitoring-load-more";
 import { applySurveillanceFilters, computeSurveillanceStats, type FilterState } from "./_helpers/monitoring-derived";
+import { getJson } from "@/lib/http";
 
 type ViewMode = "tree" | "graphs";
 
@@ -46,8 +47,8 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
-  const { data, isFetching, fetchNextPage, hasNextPage, refetch } = usePaginatedSensors({ limit: 100 });
-  useSurveillanceLiveUpdates({ enabled: true, limit: 100 });
+  const { data, isFetching, fetchNextPage, hasNextPage, refetch } = usePaginatedSensors({ limit: 50 });
+  useSurveillanceLiveUpdates({ enabled: true, limit: 50 });
 
   const paginatedData = useMemo(() => {
     const pages = data?.pages ?? [];
@@ -81,6 +82,27 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
   const handleRefresh = useCallback(() => {
     refetch();
   }, [refetch]);
+
+  useEffect(() => {
+    const pages = data?.pages ?? [];
+    if (pages.length === 0) return;
+    const last = pages[pages.length - 1];
+    if (!last?.page || !last?.totalPages) return;
+    if (last.page >= last.totalPages) return;
+
+    const nextPage = last.page + 1;
+    queryClient.prefetchQuery({
+      queryKey: paginatedSensorsPageKey(paginatedData.limit, nextPage),
+      queryFn: async () => {
+        const params = new URLSearchParams({
+          page: String(nextPage),
+          limit: String(paginatedData.limit),
+        });
+        return getJson<PaginatedResponse>(`/api/capteurs/paginated?${params}`);
+      },
+      staleTime: 30 * 60 * 1000,
+    });
+  }, [data?.pages, paginatedData.limit, queryClient]);
 
   useEffect(() => {
     const match = document.cookie.match(/(?:^|; )surveillance_disabled_first=([^;]*)/);

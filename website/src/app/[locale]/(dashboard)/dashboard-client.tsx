@@ -403,7 +403,7 @@ export function DashboardClient({
           <div className="space-y-4">
                         <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Derni?re valeur</p>
+                <p className="text-sm text-muted-foreground">Dernière valeur</p>
                 <p className="text-xl font-bold font-mono">
                   {selectedAlarm?.sensor.currentValue ?? selectedAlarm?.value ?? "-"} {selectedAlarm?.sensor.unit}
                 </p>

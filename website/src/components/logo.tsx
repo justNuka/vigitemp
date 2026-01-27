@@ -20,7 +20,7 @@ export function Logo({ className, size = "xs" }: LogoProps) {
       <Image
         src="/logos/vigisensys-logo-without-bg2.png"
         alt="VigiSensys Logo"
-        height={heights[size]}
+        height={heights[size] * 3.5}
         width={heights[size] * 3.5}
         className="object-contain"
         priority

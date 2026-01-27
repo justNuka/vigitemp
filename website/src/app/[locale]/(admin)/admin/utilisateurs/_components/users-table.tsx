@@ -56,10 +56,16 @@ export function UsersTable({
     {
       accessorKey: "isActive",
       header: "Statut",
+      meta: {
+        headerClassName: "text-center",
+        cellClassName: "text-center",
+      },
       cell: ({ row }) => (
-        <Badge variant={row.getValue("isActive") ? "default" : "destructive"}>
-          {row.getValue("isActive") ? "Actif" : "Inactif"}
-        </Badge>
+        <div className="flex justify-center">
+          <Badge variant={row.getValue("isActive") ? "default" : "destructive"}>
+            {row.getValue("isActive") ? "Actif" : "Inactif"}
+          </Badge>
+        </div>
       ),
     },
     {
@@ -76,16 +82,22 @@ export function UsersTable({
       id: "actions",
       header: "Actions",
       enableSorting: false,
+      meta: {
+        headerClassName: "text-center",
+        cellClassName: "text-center",
+      },
       cell: ({ row }) => (
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => onEditUser(row.original)}
-          className="bg-primary/10 hover:bg-primary/20 border-primary/40 text-primary"
-          title="Modifier"
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => onEditUser(row.original)}
+            className="bg-primary/10 hover:bg-primary/20 border-primary/40 text-primary"
+            title="Modifier"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+        </div>
       ),
     },
   ];
@@ -102,7 +114,9 @@ export function UsersTable({
       selectedRowId={selectedUserId}
       onRowClick={(row) => onSelectUser(row as User)}
       containerClassName="bg-white"
-      tableClassName="bg-white"
+      tableClassName="bg-white border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
+      headerClassName="!bg-sidebar !text-sidebar-foreground"
+      headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
     />
   );
 }

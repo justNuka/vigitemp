@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { UserPlus } from "lucide-react";
 import { usersApi, type CreateUserInput, type User } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "@/i18n/navigation";
+import { getJson } from "@/lib/http";
 
 import { usePasswordRules } from "@/hooks/usePasswordRules";
 import { useProfiles } from "@/hooks/useProfiles";
@@ -33,15 +34,40 @@ interface Props {
 export function UsersClient({ users }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
-
-  const { data: rules, isLoading: rulesLoading } = usePasswordRules();
-  const { data: profiles, isLoading: profilesLoading } = useProfiles();
-  const { data: sites, isLoading: sitesLoading } = useSitesSimple();
-  const { data: groups, isLoading: groupsLoading } = useGroups();
+  const didPrefetchRef = useRef(false);
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const shouldLoadFormData = isCreateDialogOpen || isEditDialogOpen;
+  const { data: rules, isLoading: rulesLoading } = usePasswordRules(shouldLoadFormData);
+  const { data: profiles, isLoading: profilesLoading } = useProfiles(shouldLoadFormData);
+  const { data: sites, isLoading: sitesLoading } = useSitesSimple(shouldLoadFormData);
+  const { data: groups, isLoading: groupsLoading } = useGroups(undefined, shouldLoadFormData);
+
+  useEffect(() => {
+    if (didPrefetchRef.current) return;
+    didPrefetchRef.current = true;
+
+    queryClient.prefetchQuery({
+      queryKey: ["password-rules"],
+      queryFn: () => getJson("/api/parametres/password-rules"),
+      staleTime: 5 * 60 * 1000,
+    });
+    queryClient.prefetchQuery({
+      queryKey: ["profiles"],
+      queryFn: () => getJson("/api/profils"),
+    });
+    queryClient.prefetchQuery({
+      queryKey: ["sites-simple"],
+      queryFn: () => getJson("/api/sites"),
+    });
+    queryClient.prefetchQuery({
+      queryKey: ["groups", undefined],
+      queryFn: () => getJson("/api/groupes"),
+    });
+  }, [queryClient]);
 
   const createMutation = useMutation({
     mutationFn: (data: CreateUserInput) => usersApi.create(data),

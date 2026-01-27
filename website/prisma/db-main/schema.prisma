@@ -386,6 +386,7 @@ model t_lieu {
   Date_Heure_Reactivation_Alarme            DateTime?                  @db.DateTime(0)
   Notification_Active                       Boolean?                   @default(true)
   Commentaire                               String?                    @db.VarChar(200)
+  Infos_Modifiees_Depuis_Derniere_Mesure    Boolean                    @default(true)
   Est_Lieu_Alarme_Terminee_Non_Acquittee    Int?                       @default(0) @db.TinyInt
   Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 Int?                       @default(0) @db.TinyInt
   t_alarme                                  t_alarme[]                 @relation("lieu_alarme")

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useAlarms } from "@/hooks/useAlarms";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { fetchAlarmsPage, useAlarms } from "@/hooks/useAlarms";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { ColumnDef } from "@tanstack/react-table";
@@ -91,9 +92,28 @@ const columns: ColumnDef<AlarmRow>[] = [
 ];
 
 export function AlarmsClientTanStack() {
-  const { data: alarms, isLoading, isFetching } = useAlarms();
+  const queryClient = useQueryClient();
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 });
+  const page = pagination.pageIndex + 1;
+  const limit = pagination.pageSize;
 
-  const tableData: AlarmRow[] = (alarms || []).map((alarm) => ({
+  const { data, isLoading, isFetching } = useAlarms({ page, limit });
+  const alarms = data?.data ?? [];
+  const total = data?.pagination.total ?? alarms.length;
+  const pageCount = data?.pagination.pages ?? 1;
+
+  useEffect(() => {
+    if (!data?.pagination) return;
+    if (data.pagination.page >= data.pagination.pages) return;
+    const nextPage = data.pagination.page + 1;
+    queryClient.prefetchQuery({
+      queryKey: ["alarms", nextPage, limit],
+      queryFn: () => fetchAlarmsPage(nextPage, limit),
+      staleTime: 30_000,
+    });
+  }, [data?.pagination, limit, queryClient]);
+
+  const tableData: AlarmRow[] = alarms.map((alarm) => ({
     Id_Alarme: alarm.Id_Alarme,
     Libelle_Lieu: alarm.Libelle_Lieu || "Inconnu",
     Date_Heure_Debut: String(alarm.Date_Heure_Debut) || "",
@@ -117,6 +137,19 @@ export function AlarmsClientTanStack() {
           maxHeight="60vh"
           isLoading={isLoading || isFetching}
           emptyMessage="Aucune alarme trouvée"
+          manualPagination
+          pageCount={pageCount}
+          totalRows={total}
+          paginationState={pagination}
+          onPaginationChange={(updater) => {
+            setPagination((prev) => {
+              const next = typeof updater === "function" ? updater(prev) : updater;
+              if (next.pageSize !== prev.pageSize) {
+                return { pageIndex: 0, pageSize: next.pageSize };
+              }
+              return next;
+            });
+          }}
           headerClassName="!bg-sidebar !text-sidebar-foreground"
           headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
           tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"

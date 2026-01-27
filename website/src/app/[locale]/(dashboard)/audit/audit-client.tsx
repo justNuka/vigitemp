@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -175,19 +176,14 @@ export function AuditClient({ logs }: Props) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [codeFilter, setCodeFilter] = useState<string>("all");
-  const [auditCodes, setAuditCodes] = useState<AuditCode[]>([]);
+  const [codesOpen, setCodesOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchCodes = async () => {
-      try {
-        const data = await getJson<AuditCode[]>("/api/audit/codes");
-        setAuditCodes(data);
-      } catch (error) {
-        console.error("Failed to fetch audit codes:", error);
-      }
-    };
-    fetchCodes();
-  }, []);
+  const { data: auditCodes = [] } = useQuery({
+    queryKey: ["audit-codes"],
+    queryFn: () => getJson<AuditCode[]>("/api/audit/codes"),
+    enabled: codesOpen,
+    staleTime: 10 * 60 * 1000,
+  });
 
   const filteredLogs = logs.filter((log) => {
     if (codeFilter !== "all" && log.action !== codeFilter) {
@@ -276,7 +272,7 @@ export function AuditClient({ logs }: Props) {
         const details = row.getValue("details") as string | null;
         const parsed = parseAuditDetails(details);
         return (
-          <div className="flex flex-col gap-1 max-w-[360px]">
+          <div className="flex flex-col gap-1 max-w-90">
             <p className="text-sm font-medium truncate" title={parsed.raw}>
               {parsed.title}
             </p>
@@ -330,7 +326,11 @@ export function AuditClient({ logs }: Props) {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <Select value={codeFilter} onValueChange={setCodeFilter}>
+            <Select
+              value={codeFilter}
+              onValueChange={setCodeFilter}
+              onOpenChange={setCodesOpen}
+            >
               <SelectTrigger className="w-48">
                 <SelectValue placeholder={t("all_codes")} />
               </SelectTrigger>

@@ -1,8 +1,59 @@
 'use client';
 
 import type { ColumnDef } from '@tanstack/react-table';
+import { Activity, FlaskConical, PowerOff, Ruler, Wrench } from "lucide-react";
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import type { Probe } from '@/hooks/useProbes';
+
+type StatusTheme = {
+  label: string;
+  className: string;
+  Icon: typeof Activity;
+};
+
+const statusThemes: Record<string, StatusTheme> = {
+  surveillance: {
+    label: "Surveillance",
+    className: "border-emerald-500/40 bg-emerald-500/15 text-emerald-700",
+    Icon: Activity,
+  },
+  calibrage: {
+    label: "Calibrage",
+    className: "border-amber-500/40 bg-amber-500/15 text-amber-700",
+    Icon: Wrench,
+  },
+  etalonnage: {
+    label: "Etalonnage",
+    className: "border-sky-500/40 bg-sky-500/15 text-sky-700",
+    Icon: Ruler,
+  },
+  test: {
+    label: "Test",
+    className: "border-violet-500/40 bg-violet-500/15 text-violet-700",
+    Icon: FlaskConical,
+  },
+  desactivee: {
+    label: "Desactivee",
+    className: "border-red-500/40 bg-red-500/15 text-red-700",
+    Icon: PowerOff,
+  },
+  unknown: {
+    label: "Inconnu",
+    className: "border-slate-400/40 bg-slate-400/10 text-slate-600",
+    Icon: PowerOff,
+  },
+};
+
+const getProbeStatusTheme = (status: string | null, label: string | null): StatusTheme => {
+  const raw = `${label ?? ""} ${status ?? ""}`.trim().toLowerCase();
+  if (!raw) return statusThemes.unknown;
+  if (raw === "s" || raw.includes("surveill")) return statusThemes.surveillance;
+  if (raw === "d" || raw.includes("desactiv")) return statusThemes.desactivee;
+  if (raw.includes("calibr")) return statusThemes.calibrage;
+  if (raw.includes("etalonn")) return statusThemes.etalonnage;
+  if (raw.includes("test")) return statusThemes.test;
+  return statusThemes.unknown;
+};
 
 export type ProbeRow = {
   Id_Sonde: number;
@@ -50,8 +101,21 @@ export function ProbesTable({ probes, isLoading, selectedProbeId, onSelectProbe 
     {
       accessorKey: 'Surveillance_Etat',
       header: 'État',
-      cell: ({ row }) =>
-        row.original.Surveillance_Etat_Libelle || row.getValue('Surveillance_Etat') || '-',
+      cell: ({ row }) => {
+        const theme = getProbeStatusTheme(
+          row.original.Surveillance_Etat,
+          row.original.Surveillance_Etat_Libelle,
+        );
+        const Icon = theme.Icon;
+        return (
+          <span
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium ${theme.className}`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {theme.label}
+          </span>
+        );
+      },
     },
     {
       accessorKey: 'Lieu',

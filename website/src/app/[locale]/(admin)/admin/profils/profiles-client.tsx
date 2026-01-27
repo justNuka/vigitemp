@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useRouter } from '@/i18n/navigation'
@@ -8,18 +8,20 @@ import { useAuthorizations, useProfiles, type Profile } from '@/hooks/useProfile
 import { DeleteProfileDialog } from './_components/delete-profile-dialog'
 import { ProfileDialog, type ProfileFormData } from './_components/profile-dialog'
 import { ProfilesTable } from './_components/profiles-table'
-import { deleteJson, patchJson, postJson } from '@/lib/http'
+import { deleteJson, getJson, patchJson, postJson } from '@/lib/http'
 
 export function ProfilesClient() {
   const queryClient = useQueryClient()
   const router = useRouter()
+  const didPrefetchRef = useRef(false)
   const { data: profiles = [], isLoading: profilesLoading } = useProfiles()
-  const { data: authorizations = [], isLoading: authorizationsLoading } = useAuthorizations()
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null)
+  const shouldLoadAuthorizations = isCreateOpen || isEditOpen
+  const { data: authorizations = [], isLoading: authorizationsLoading } = useAuthorizations(shouldLoadAuthorizations)
 
   const [formData, setFormData] = useState<ProfileFormData>({
     name: '',
@@ -36,6 +38,16 @@ export function ProfilesClient() {
       authorizations: [],
     })
   }
+
+  useEffect(() => {
+    if (profilesLoading || didPrefetchRef.current) return
+    didPrefetchRef.current = true
+
+    queryClient.prefetchQuery({
+      queryKey: ['authorizations'],
+      queryFn: () => getJson('/api/autorisations'),
+    })
+  }, [profilesLoading, queryClient])
 
   const createMutation = useMutation({
     mutationFn: async (data: ProfileFormData) => postJson('/api/profils', data),

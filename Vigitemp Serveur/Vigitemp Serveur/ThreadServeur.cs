@@ -38,7 +38,7 @@ namespace Vigitemp_Serveur
             new ConcurrentDictionary<int, CachedLieuSettings>();
         private readonly object _lieuSettingsLock = new object();
         private readonly int _settingsCacheSeconds = GetSettingInt("Vigitemp.Alarms.SettingsCacheSeconds", 60);
-        private readonly bool _logSettingsCache = GetSettingBool("Vigitemp.Alarms.LogSettingsCache", false);
+        private readonly bool _logSettingsCache = GetSettingBool("Vigitemp.Alarms.LogSettingsCache", true);
 
         private sealed class CachedLieuSettings
         {
@@ -90,6 +90,10 @@ namespace Vigitemp_Serveur
                     }
                     return cached.Settings;
                 }
+                if (_logSettingsCache)
+                {
+                    LogLieuSettings(idLieu, cached.Settings, "cache-expired");
+                }
             }
 
             lock (_lieuSettingsLock)
@@ -104,11 +108,19 @@ namespace Vigitemp_Serveur
                         }
                         return cached.Settings;
                     }
+                    if (_logSettingsCache)
+                    {
+                        LogLieuSettings(idLieu, cached.Settings, "cache-expired");
+                    }
                 }
 
                 var settings = GetDatabase().getLieuAlarmSettings(idLieu);
                 if (settings == null)
                 {
+                    if (_logSettingsCache)
+                    {
+                        VigitempServeur.Log($"LieuAlarmSettings[db-null] idLieu={idLieu}");
+                    }
                     return null;
                 }
 
@@ -163,7 +175,11 @@ namespace Vigitemp_Serveur
                 $"consigneInfPre={settings.ConsigneInfPreAlarme?.ToString() ?? "null"} " +
                 $"consigneInfPreActive={settings.ConsigneInfPreAlarmeActive} " +
                 $"consigneSupPre={settings.ConsigneSupPreAlarme?.ToString() ?? "null"} " +
-                $"consigneSupPreActive={settings.ConsigneSupPreAlarmeActive}"
+                $"consigneSupPreActive={settings.ConsigneSupPreAlarmeActive} " +
+                $"retardBasMin={settings.RetardAlarmeBasMinutes} " +
+                $"retardHautMin={settings.RetardAlarmeHautMinutes} " +
+                $"notificationActive={settings.NotificationActive} " +
+                $"reactivationUtc={settings.DateHeureReactivationAlarme:O}"
             );
         }
 
@@ -173,11 +189,12 @@ namespace Vigitemp_Serveur
             List<int> arr_frequencies = GetDatabase().getDistinctFrequenciesByIdServeur(this._idServer);
             foreach (int frequency in arr_frequencies)
             {
-                var timer = new System.Timers.Timer(frequency * 1000);
+                var timer = new System.Timers.Timer(frequency * 60000);
                 //Set action associated to each tick
                 timer.Elapsed += (sender, e) => Process(sender, e, frequency);
                 //Start the timer
                 timer.Start();
+                VigitempServeur.Log($"Thread#{_idServer} timer init: frequence={frequency}min intervalMs={frequency * 60000}");
                 this.timers.Add(timer);
                 this.frequencies.Add(frequency);
                 this.frequencies_status.Add(Status.EN_ATTENTE);
@@ -296,11 +313,21 @@ namespace Vigitemp_Serveur
                         return;
                     }
                     //recupere les lieux avec cette frequence et ce id_serveur
-                    (List<string> arr_portSerie, List<string> arr_sondeNumeroSerie, List<string> arr_sondeAdresse, List<string> arr_moduleNumeroSerie) = GetDatabase().getInfosByIdServeurAndFrequencies(this._idServer, frequency);
+                    (List<string> arr_portSerie, List<string> arr_sondeNumeroSerie, List<string> arr_sondeAdresse, List<string> arr_moduleNumeroSerie, List<int> arr_idLieu, List<DateTime?> arr_lastMeasure) = GetDatabase().getInfosByIdServeurAndFrequencies(this._idServer, frequency);
                     if(arr_sondeNumeroSerie.Count != 0)
                     {
                         for (int i = 0; i < arr_sondeNumeroSerie.Count; i++)
                         {
+                            if (i < arr_idLieu.Count && i < arr_lastMeasure.Count && arr_lastMeasure[i].HasValue)
+                            {
+                                var lastMeasure = arr_lastMeasure[i].Value;
+                                var elapsedMinutes = (DateTime.Now - lastMeasure).TotalMinutes;
+                                if (elapsedMinutes < frequency)
+                                {
+                                    VigitempServeur.Log($"Skip sonde idLieu={arr_idLieu[i]} serial={arr_sondeNumeroSerie[i]} freqMin={frequency} lastMeasure={lastMeasure:O} elapsedMin={elapsedMinutes:F2}");
+                                    continue;
+                                }
+                            }
                             var serial = arr_sondeNumeroSerie[i];
                             if (string.IsNullOrEmpty(serial) || serial.Length < 2)
                             {
@@ -316,11 +343,13 @@ namespace Vigitemp_Serveur
                                 case "IN":
                                     VigitempServeur.nombres_interrogations++;
                                     sensor = new SensorIN(this, arr_portSerie[i], serial, arr_sondeAdresse[i]);
+                                    VigitempServeur.Log($"Interrogation sonde IN serial={serial} port={arr_portSerie[i]} adresse={arr_sondeAdresse[i]}");
                                     await sensor.read();
                                     break;
                                 case "IE":
                                     VigitempServeur.nombres_interrogations++;
                                     sensor = new SensorIE(this, arr_portSerie[i], serial, arr_sondeAdresse[i]);
+                                    VigitempServeur.Log($"Interrogation sonde IE serial={serial} port={arr_portSerie[i]} adresse={arr_sondeAdresse[i]}");
                                     await sensor.read();
                                     break;
                                 case "IQ":
@@ -329,27 +358,32 @@ namespace Vigitemp_Serveur
                                 case "IP":
                                     VigitempServeur.nombres_interrogations++;
                                     sensor = new SensorIP(this, arr_portSerie[i], serial, arr_sondeAdresse[i]);
+                                    VigitempServeur.Log($"Interrogation sonde IP serial={serial} port={arr_portSerie[i]} adresse={arr_sondeAdresse[i]}");
                                     await sensor.read();
                                     break;
                                 case "IC":
                                     VigitempServeur.nombres_interrogations++;
                                     sensor = new SensorIC(this, arr_portSerie[i], serial, arr_sondeAdresse[i]);
+                                    VigitempServeur.Log($"Interrogation sonde IC serial={serial} port={arr_portSerie[i]} adresse={arr_sondeAdresse[i]}");
                                     await sensor.read();
                                     break;
                                 case "IH":
                                     VigitempServeur.nombres_interrogations++;
                                     sensor = new SensorIH(this, arr_portSerie[i], serial, arr_sondeAdresse[i]);
+                                    VigitempServeur.Log($"Interrogation sonde IH serial={serial} port={arr_portSerie[i]} adresse={arr_sondeAdresse[i]}");
                                     await sensor.read();
                                     break;
                                 case "EN":
                                     VigitempServeur.nombres_interrogations++;
                                     sensor = new SensorEN(this, arr_portSerie[i], serial, arr_sondeAdresse[i]);
+                                    VigitempServeur.Log($"Interrogation sonde EN serial={serial} port={arr_portSerie[i]} adresse={arr_sondeAdresse[i]}");
                                     await sensor.read();
                                     break;
 
                                 case "HN":
                                     VigitempServeur.nombres_interrogations++;
                                     sensor = new SensorHN(this, arr_portSerie[i], serial, arr_sondeAdresse[i], arr_moduleNumeroSerie[i]);
+                                    VigitempServeur.Log($"Interrogation sonde HN serial={serial} port={arr_portSerie[i]} adresse={arr_sondeAdresse[i]} module={arr_moduleNumeroSerie[i]}");
                                     await sensor.read();
                                     break;
                                 default: break;
@@ -410,8 +444,9 @@ namespace Vigitemp_Serveur
                 {
                     if (!tmp_frequencies.Contains(frequency))
                     {
-                        var timer = new System.Timers.Timer(frequency * 1000);
+                        var timer = new System.Timers.Timer(frequency * 60000);
                         timer.Elapsed += (p_sender, p_e) => Process(p_sender, p_e, frequency);
+                        VigitempServeur.Log($"Thread#{_idServer} timer added: frequence={frequency}min intervalMs={frequency * 60000}");
                         timer.Start();
                         timers.Add(timer);
                         tmp_frequencies.Add(frequency);

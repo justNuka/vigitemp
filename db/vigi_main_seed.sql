@@ -2,18 +2,7 @@
 USE `vigi_main`;
 
 SET FOREIGN_KEY_CHECKS=0;
-DROP TABLE IF EXISTS `liste_clients`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `liste_clients` (
-  `Id_Client` int NOT NULL AUTO_INCREMENT,
-  `Nom` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `Num_Compte` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `VigiServ_Derniere_Date_Heure` datetime DEFAULT NULL,
-  `Vigitel_Derniere_Date_Heure` datetime DEFAULT NULL,
-  PRIMARY KEY (`Id_Client`),
-  UNIQUE KEY `UK_Num_Compte` (`Num_Compte`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `t_actionneur`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

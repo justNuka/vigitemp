@@ -5,13 +5,16 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
 import type { SensorWithLocation } from "@/lib/api"
 import { getJson } from "@/lib/http"
 
-type PaginatedResponse = {
+export type PaginatedResponse = {
   total: number
   page: number
   limit: number
   totalPages: number
   sensors: SensorWithLocation[]
 }
+
+export const paginatedSensorsPageKey = (limit: number, page: number) =>
+  ["capteurs", "paginated", limit, "page", page] as const
 
 export function usePaginatedSensors({
   limit = 100,
@@ -29,11 +32,19 @@ export function usePaginatedSensors({
     queryKey,
     enabled: effectiveEnabled,
     queryFn: async ({ pageParam }) => {
+      const page = Number(pageParam ?? 1)
+      const cached = queryClient.getQueryData<PaginatedResponse>(
+        paginatedSensorsPageKey(limit, page),
+      )
+      if (cached) return cached
+
       const params = new URLSearchParams({
-        page: String(pageParam ?? 1),
+        page: String(page),
         limit: String(limit),
       })
-      return getJson<PaginatedResponse>(`/api/capteurs/paginated?${params}`)
+      const response = await getJson<PaginatedResponse>(`/api/capteurs/paginated?${params}`)
+      queryClient.setQueryData(paginatedSensorsPageKey(limit, page), response)
+      return response
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage: PaginatedResponse) => {

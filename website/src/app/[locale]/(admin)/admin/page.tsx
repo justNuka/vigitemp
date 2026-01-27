@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useState } from "react"
 import { AlertTriangle, BookOpen, CheckCircle2, Clock, Database, Users, Cpu } from "lucide-react"
 import type { ColumnDef } from "@tanstack/react-table"
 
@@ -12,6 +12,13 @@ import { backupColumns } from "@/components/data-table/backup-columns"
 import { connectedUsersColumns } from "@/components/data-table/connected-users-columns"
 import { systemLogsColumns } from "@/components/data-table/system-logs-columns"
 import { Button } from "@/components/ui/button"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   useAcknowledgments,
@@ -20,20 +27,42 @@ import {
   useConnectedUsers,
   useSystemLogs,
 } from "@/hooks/useAdminData"
-import { useProbes, type Probe } from "@/hooks/useProbes"
+import { useUnassignedProbes, type Probe } from "@/hooks/useProbes"
+import { usePrefetchNextPage } from "@/hooks/usePrefetchNextPage"
+import { getJson } from "@/lib/http"
 
 function PaginationControls(props: {
   page: number
   pages: number
   onPrev: () => void
   onNext: () => void
+  pageSize?: number
+  pageSizeOptions?: number[]
+  onPageSizeChange?: (next: number) => void
 }) {
   return (
-    <div className="flex items-center justify-between pt-4">
+    <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-muted-foreground">
         Page {props.page} sur {props.pages}
       </p>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        {props.pageSize && props.pageSizeOptions && props.onPageSizeChange && (
+          <Select
+            value={String(props.pageSize)}
+            onValueChange={(value) => props.onPageSizeChange?.(Number(value))}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue aria-label="Taille de page" />
+            </SelectTrigger>
+            <SelectContent>
+              {props.pageSizeOptions.map((size) => (
+                <SelectItem key={size} value={String(size)}>
+                  {size} par page
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         <Button
           variant="outline"
           size="sm"
@@ -61,13 +90,68 @@ export default function AdminDashboard() {
   const [ackPage, setAckPage] = useState(1)
   const [connectedUsersPage, setConnectedUsersPage] = useState(1)
   const [activeAlarmsPage, setActiveAlarmsPage] = useState(1)
+  const [unassignedPage, setUnassignedPage] = useState(1)
+  const [unassignedPageSize, setUnassignedPageSize] = useState(20)
 
   const connectedUsersQuery = useConnectedUsers(connectedUsersPage)
   const activeAlarmsQuery = useActiveAlarms(activeAlarmsPage)
   const acknowledgmentsQuery = useAcknowledgments(ackPage)
   const systemLogsQuery = useSystemLogs()
   const backupsQuery = useBackups()
-  const probesQuery = useProbes()
+  const unassignedProbesQuery = useUnassignedProbes({
+    page: unassignedPage,
+    limit: unassignedPageSize,
+  })
+
+  usePrefetchNextPage({
+    enabled: Boolean(acknowledgmentsQuery.data),
+    page: ackPage,
+    pages: acknowledgmentsQuery.data?.pagination.pages || 1,
+    queryKey: useCallback((page: number) => ["admin", "acquittements", page], []),
+    queryFn: useCallback((page: number) => {
+      return getJson(`/api/admin/acquittements?page=${page}&limit=10`)
+    }, []),
+    staleTime: 10 * 60_000,
+  })
+
+  usePrefetchNextPage({
+    enabled: Boolean(connectedUsersQuery.data),
+    page: connectedUsersPage,
+    pages: connectedUsersQuery.data?.pagination.pages || 1,
+    queryKey: useCallback((page: number) => ["admin", "utilisateurs-connectes", page], []),
+    queryFn: useCallback((page: number) => {
+      return getJson(`/api/admin/utilisateurs-connectes?page=${page}&limit=10`)
+    }, []),
+    staleTime: 5_000,
+  })
+
+  usePrefetchNextPage({
+    enabled: Boolean(activeAlarmsQuery.data),
+    page: activeAlarmsPage,
+    pages: activeAlarmsQuery.data?.pagination.pages || 1,
+    queryKey: useCallback((page: number) => ["admin", "alarmes-actives", page], []),
+    queryFn: useCallback((page: number) => {
+      return getJson(`/api/admin/alarmes-actives?page=${page}&limit=10`)
+    }, []),
+    staleTime: 10 * 60_000,
+  })
+
+  usePrefetchNextPage({
+    enabled: Boolean(unassignedProbesQuery.data),
+    page: unassignedPage,
+    pages: unassignedProbesQuery.data?.pagination.pages || 1,
+    queryKey: useCallback(
+      (page: number) => ["probes", "unassigned", page, unassignedPageSize],
+      [unassignedPageSize],
+    ),
+    queryFn: useCallback(
+      (page: number) => {
+        return getJson(`/api/sondes/unassigned?page=${page}&limit=${unassignedPageSize}`)
+      },
+      [unassignedPageSize],
+    ),
+    staleTime: 60_000,
+  })
 
   const lastBackupDate = (backupsQuery.data as any)?.[0]?.dateHeure
   const lastBackupLabel = lastBackupDate ? new Date(lastBackupDate).toLocaleString() : "N/A"
@@ -79,7 +163,6 @@ export default function AdminDashboard() {
     systemLogsQuery.isLoading &&
     backupsQuery.isLoading
 
-  const unassignedProbes = (probesQuery.data ?? []).filter((probe) => !probe.Lieu)
   const unassignedColumns: ColumnDef<Probe>[] = [
     { accessorKey: "Sonde_Numero_Serie", header: "Sonde" },
     { accessorKey: "Sonde_Type", header: "Type", cell: ({ row }) => row.original.Sonde_Type || "-" },
@@ -129,7 +212,8 @@ export default function AdminDashboard() {
               enableExport={false}
               enablePrint={false}
               headerClassName="!bg-sidebar !text-sidebar-foreground"
-              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80 !text-center"
+              bodyClassName="[&_td]:text-center"
               tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
             />
             <PaginationControls
@@ -170,7 +254,8 @@ export default function AdminDashboard() {
                 enableExport={false}
                 enablePrint={false}
                 headerClassName="!bg-sidebar !text-sidebar-foreground"
-                headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+                headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80 !text-center"
+                bodyClassName="[&_td]:text-center"
                 tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
               />
               <PaginationControls
@@ -212,7 +297,8 @@ export default function AdminDashboard() {
                 enableExport={false}
                 enablePrint={false}
                 headerClassName="!bg-sidebar !text-sidebar-foreground"
-                headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+                headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80 !text-center"
+                bodyClassName="[&_td]:text-center"
                 tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
               />
               <PaginationControls
@@ -257,7 +343,8 @@ export default function AdminDashboard() {
                 enableExport={false}
                 enablePrint={false}
                 headerClassName="!bg-sidebar !text-sidebar-foreground"
-                headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+                headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80 !text-center"
+                bodyClassName="[&_td]:text-center"
                 tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
               />
             </CardContent>
@@ -270,7 +357,7 @@ export default function AdminDashboard() {
                 {"Sauvegarde syst\u00E8me"}
               </CardTitle>
               <CardDescription className="flex items-center justify-between">
-                <span>{"\u00C9tat et historique"}</span>
+                <span>{"État et historique"}</span>
                 {backupsQuery.isFetching && (
                   <span className="text-xs text-blue-600">{"Mise \u00E0 jour..."}</span>
                 )}
@@ -306,29 +393,49 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        <Card className="lg:max-w-3xl">
+        <Card className="lg:max-w-3xl mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Cpu className="h-5 w-5" />
               Sondes sans lieu
             </CardTitle>
             <CardDescription>
-              {unassignedProbes.length} sonde{unassignedProbes.length > 1 ? "s" : ""} non affectée
+              {unassignedProbesQuery.data?.pagination.total || 0} sonde
+              {(unassignedProbesQuery.data?.pagination.total || 0) > 1 ? "s" : ""} non affectée
+              {(unassignedProbesQuery.data?.pagination.total || 0) > 1 ? "s" : ""}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <TanStackTable
               columns={unassignedColumns}
-              data={unassignedProbes}
+              data={unassignedProbesQuery.data?.data || []}
               emptyMessage="Aucune sonde sans lieu"
               maxHeight="240px"
+              isLoading={unassignedProbesQuery.isLoading}
               showPagination={false}
               showSearch={false}
               enableExport={false}
               enablePrint={false}
               headerClassName="!bg-sidebar !text-sidebar-foreground"
-              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80 !text-center"
+              bodyClassName="[&_td]:text-center"
               tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
+            />
+            <PaginationControls
+              page={unassignedPage}
+              pages={unassignedProbesQuery.data?.pagination.pages || 1}
+              pageSize={unassignedPageSize}
+              pageSizeOptions={[10, 20, 50]}
+              onPageSizeChange={(next) => {
+                setUnassignedPage(1)
+                setUnassignedPageSize(next)
+              }}
+              onPrev={() => setUnassignedPage((p) => Math.max(1, p - 1))}
+              onNext={() =>
+                setUnassignedPage((p) =>
+                  Math.min(unassignedProbesQuery.data?.pagination.pages || 1, p + 1),
+                )
+              }
             />
           </CardContent>
         </Card>

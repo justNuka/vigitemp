@@ -11,9 +11,10 @@ async function fetchActuatorTypes(): Promise<ActuatorType[]> {
   return getJson<ActuatorType[]>("/api/actionneurs/types");
 }
 
-export function useActuatorTypes() {
+export function useActuatorTypes(enabled: boolean = true) {
   return useQuery({
     queryKey: ["actionneur-types"],
     queryFn: fetchActuatorTypes,
+    enabled,
   });
 }

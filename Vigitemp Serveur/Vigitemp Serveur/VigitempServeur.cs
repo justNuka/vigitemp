@@ -9,6 +9,7 @@ using System.IO;
 using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
+using System.Configuration;
 
 namespace Vigitemp_Serveur
 {
@@ -21,6 +22,8 @@ namespace Vigitemp_Serveur
         private static StreamWriter _fileLogWriter;
         private static readonly object _fileLogLock = new object();
         private static readonly object _lock = new object();
+        private static readonly long _maxLogFileSizeBytes =
+            GetSettingInt("Vigitemp.Log.MaxFileSizeMB", 10) * 1024L * 1024L;
         private System.Timers.Timer _timer;
         private HotlineApiServer _hotlineApi;
 
@@ -93,6 +96,7 @@ namespace Vigitemp_Serveur
                 // ecriture dans un fichier log (best-effort, chemin compatible service)
                 try
                 {
+                    RotateLogFileIfNeeded();
                     var writer = GetFileLogWriter();
                     writer.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} {safeMessage}");
                 }
@@ -100,9 +104,6 @@ namespace Vigitemp_Serveur
                 {
                     // ignore
                 }
-                //ecriture dans la console
-                Console.WriteLine(safeMessage);
-                Trace.WriteLine(safeMessage);
             }
         }
 
@@ -152,13 +153,10 @@ namespace Vigitemp_Serveur
             {
                 if (_fileLogWriter != null) return _fileLogWriter;
 
-                var baseDir = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-                    "Vigitemp",
-                    "logs");
+                var baseDir = GetLogBaseDir();
                 Directory.CreateDirectory(baseDir);
 
-                var logPath = Path.Combine(baseDir, "vigitemp-serveur.log");
+                var logPath = GetLogPath();
                 _fileLogWriter = new StreamWriter(
                     new FileStream(logPath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite),
                     new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: true))
@@ -177,6 +175,80 @@ namespace Vigitemp_Serveur
                 try { _fileLogWriter?.Flush(); } catch { /* ignore */ }
                 try { _fileLogWriter?.Dispose(); } catch { /* ignore */ }
                 _fileLogWriter = null;
+            }
+        }
+
+        private static string GetLogBaseDir()
+        {
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                "Vigitemp",
+                "logs");
+        }
+
+        private static string GetLogPath()
+        {
+            return Path.Combine(GetLogBaseDir(), "vigitemp-serveur.log");
+        }
+
+        private static void RotateLogFileIfNeeded()
+        {
+            if (_maxLogFileSizeBytes <= 0) return;
+
+            lock (_fileLogLock)
+            {
+                var logPath = GetLogPath();
+                if (!File.Exists(logPath)) return;
+
+                var info = new FileInfo(logPath);
+                if (info.Length < _maxLogFileSizeBytes) return;
+
+                try { _fileLogWriter?.Flush(); } catch { /* ignore */ }
+                try { _fileLogWriter?.Dispose(); } catch { /* ignore */ }
+                _fileLogWriter = null;
+
+                var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmssfff");
+                var rotatedPath = Path.Combine(GetLogBaseDir(), $"vigitemp-serveur-{timestamp}.log");
+                try
+                {
+                    File.Move(logPath, rotatedPath);
+                }
+                catch
+                {
+                    // ignore
+                }
+            }
+        }
+
+        private static int GetSettingInt(string key, int defaultValue)
+        {
+            try
+            {
+                var raw = ConfigurationManager.AppSettings[key];
+                if (string.IsNullOrWhiteSpace(raw)) return defaultValue;
+                if (int.TryParse(raw, out var value)) return value;
+                return defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private sealed class LogTextWriter : TextWriter
+        {
+            public override Encoding Encoding => Encoding.UTF8;
+
+            public override void Write(string value)
+            {
+                if (string.IsNullOrWhiteSpace(value)) return;
+                VigitempServeur.Log(value);
+            }
+
+            public override void WriteLine(string value)
+            {
+                if (string.IsNullOrWhiteSpace(value)) return;
+                VigitempServeur.Log(value);
             }
         }
 
@@ -224,6 +296,21 @@ namespace Vigitemp_Serveur
 
         protected override void OnStart(string[] args)
         {
+            // Rediriger console/trace vers le logger fichier pour tout capturer.
+            try
+            {
+                var logWriter = new LogTextWriter();
+                Console.SetOut(logWriter);
+                Console.SetError(logWriter);
+                Trace.Listeners.Clear();
+                Trace.Listeners.Add(new TextWriterTraceListener(logWriter));
+                Trace.AutoFlush = true;
+            }
+            catch
+            {
+                // ignore
+            }
+
             VigitempServeur.Log("Demarrage du service Vigitemp");
             AppContext.SetSwitch("Switch.System.Threading.UseNetCoreTimer", true);
 

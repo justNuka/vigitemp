@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { Actuator } from "@/hooks/useActuators"
 import { useActuators } from "@/hooks/useActuators"
-import { deleteJson } from "@/lib/http"
+import { deleteJson, getJson } from "@/lib/http"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -36,10 +36,25 @@ export function ActuatorsClient() {
   const { data: actuators, isLoading } = useActuators()
   const queryClient = useQueryClient()
   const router = useRouter()
+  const didPrefetchRef = useRef(false)
   const [selectedActuator, setSelectedActuator] = useState<Actuator | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+
+  useEffect(() => {
+    if (isLoading || didPrefetchRef.current) return
+    didPrefetchRef.current = true
+
+    queryClient.prefetchQuery({
+      queryKey: ["actionneur-types"],
+      queryFn: () => getJson("/api/actionneurs/types"),
+    })
+    queryClient.prefetchQuery({
+      queryKey: ["locations"],
+      queryFn: () => getJson("/api/lieux"),
+    })
+  }, [isLoading, queryClient])
 
   const handleAddClick = () => {
     setSelectedActuator(null)

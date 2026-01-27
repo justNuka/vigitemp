@@ -1,17 +1,39 @@
 "use client"
 
+import { useEffect, useState } from "react"
+import dynamic from "next/dynamic"
 import { PageHeader } from "@/components/page-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { CommentsTab } from "./comments-tab"
-import { TestConnectionTab } from "./test-connection-tab"
+const CommentsTab = dynamic(() => import("./comments-tab").then((mod) => mod.CommentsTab))
+const TestConnectionTab = dynamic(() => import("./test-connection-tab").then((mod) => mod.TestConnectionTab))
 
 export default function OutilsPage() {
+  const [activeTab, setActiveTab] = useState("test-connexion")
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (activeTab !== "commentaires") {
+        void import("./comments-tab")
+      }
+      if (activeTab !== "test-connexion") {
+        void import("./test-connection-tab")
+      }
+    }, 0)
+
+    return () => clearTimeout(timeoutId)
+  }, [activeTab])
+
   return (
     <>
       <PageHeader title="Outils" description="Outils de gestion et diagnostic du système" />
       <main className="flex-1 space-y-6 p-4 animate-fade-in md:p-6">
-        <Tabs defaultValue="test-connexion" className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          defaultValue="test-connexion"
+          className="w-full"
+        >
           <TabsList className="grid w-full grid-cols-4 bg-primary/10 text-primary">
             <TabsTrigger
               value="test-connexion"
@@ -40,11 +62,11 @@ export default function OutilsPage() {
           </TabsList>
 
           <TabsContent value="test-connexion" className="mt-6">
-            <TestConnectionTab />
+            {activeTab === "test-connexion" ? <TestConnectionTab /> : null}
           </TabsContent>
 
           <TabsContent value="commentaires" className="mt-6">
-            <CommentsTab />
+            {activeTab === "commentaires" ? <CommentsTab /> : null}
           </TabsContent>
 
           <TabsContent value="config" className="mt-6">

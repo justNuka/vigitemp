@@ -67,6 +67,15 @@ export interface TanStackTableProps<TData> {
   exportExcludeColumnIds?: string[];
   enableExport?: boolean;
   enablePrint?: boolean;
+  manualPagination?: boolean;
+  pageCount?: number;
+  totalRows?: number;
+  paginationState?: { pageIndex: number; pageSize: number };
+  onPaginationChange?: (
+    updater:
+      | { pageIndex: number; pageSize: number }
+      | ((prev: { pageIndex: number; pageSize: number }) => { pageIndex: number; pageSize: number })
+  ) => void;
 }
 
 /**
@@ -110,6 +119,11 @@ export function TanStackTable<TData extends Record<string, any>>({
   exportExcludeColumnIds = ["actions", "action", "select"],
   enableExport = true,
   enablePrint = true,
+  manualPagination = false,
+  pageCount,
+  totalRows,
+  paginationState,
+  onPaginationChange,
 }: TanStackTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -119,6 +133,9 @@ export function TanStackTable<TData extends Record<string, any>>({
     pageSize: pageSize,
   });
 
+  const resolvedPagination = paginationState ?? pagination;
+  const handlePaginationChange = onPaginationChange ?? setPagination;
+
   const table = useReactTable({
     data,
     columns,
@@ -126,16 +143,18 @@ export function TanStackTable<TData extends Record<string, any>>({
       sorting,
       columnFilters,
       globalFilter,
-      pagination,
+      pagination: resolvedPagination,
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
-    onPaginationChange: setPagination,
+    onPaginationChange: handlePaginationChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    manualPagination,
+    pageCount: manualPagination ? pageCount : undefined,
     globalFilterFn: (row, columnId, filterValue) => {
       if (!filterValue) return true;
       
@@ -568,7 +587,10 @@ export function TanStackTable<TData extends Record<string, any>>({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">
-              Page {table.getState().pagination.pageIndex + 1} sur {table.getPageCount()} - Total: {table.getFilteredRowModel().rows.length}
+              Page {table.getState().pagination.pageIndex + 1} sur {table.getPageCount()} - Total:{" "}
+              {manualPagination && typeof totalRows === "number"
+                ? totalRows
+                : table.getFilteredRowModel().rows.length}
             </span>
           </div>
 

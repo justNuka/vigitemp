@@ -68,8 +68,11 @@ function getDefaultValues(module: ModuleModalProps["module"]): ModuleFormData {
 export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-  const { data: moduleTypes, isLoading: typesLoading } = useModuleTypes();
-  const { data: sondes, isLoading: sondesLoading } = useModuleSondes(module?.Id_Module || null);
+  const { data: moduleTypes, isLoading: typesLoading } = useModuleTypes(open);
+  const { data: sondes, isLoading: sondesLoading } = useModuleSondes(
+    module?.Id_Module || null,
+    open && Boolean(module),
+  );
 
   const isEditing = !!module;
   const defaultValues = useMemo(() => getDefaultValues(module), [module]);

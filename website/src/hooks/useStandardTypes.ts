@@ -12,9 +12,10 @@ async function fetchStandardTypes(): Promise<StandardType[]> {
   return getJson<StandardType[]>("/api/etalons/types");
 }
 
-export function useStandardTypes() {
+export function useStandardTypes(enabled: boolean = true) {
   return useQuery({
     queryKey: ["etalon-types"],
     queryFn: fetchStandardTypes,
+    enabled,
   });
 }

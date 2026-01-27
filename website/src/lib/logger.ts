@@ -180,7 +180,7 @@ export const log = {
       ip: string,
       success: boolean,
       reason?: string,
-      context?: { userId?: number; userProfile?: string },
+      context?: { userId?: number; userProfile?: string; changes?: Record<string, any> },
     ) => {
       if (success) {
         log.audit("CONNEXION", {
@@ -189,6 +189,7 @@ export const log = {
           ip,
           success: true,
           userProfile: context?.userProfile,
+          changes: context?.changes,
         });
       } else {
         log.audit("CONNEXION", {
@@ -198,6 +199,7 @@ export const log = {
           success: false,
           reason,
           userProfile: context?.userProfile,
+          changes: context?.changes,
         });
       }
     },

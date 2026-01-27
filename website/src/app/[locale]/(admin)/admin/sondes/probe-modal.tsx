@@ -47,8 +47,8 @@ export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalP
   const [probeType, setProbeType] = useState("");
   const [moduleId, setModuleId] = useState("");
 
-  const { data: probeTypes, isLoading: probeTypesLoading } = useProbeTypes();
-  const { data: modules, isLoading: modulesLoading } = useModules();
+  const { data: probeTypes, isLoading: probeTypesLoading } = useProbeTypes(open);
+  const { data: modules, isLoading: modulesLoading } = useModules(open);
 
   const displayedSerieNum = isEdit ? probe?.Sonde_Numero_Serie || "" : serieNum;
   const displayedProbeType = useMemo(() => {

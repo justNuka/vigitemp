@@ -83,7 +83,7 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
         softBgClassName: "bg-violet-50 dark:bg-violet-950",
         headerBgClassName: "bg-violet-600 dark:bg-violet-700",
         headerBorderClassName: "border-violet-700 dark:border-violet-800",
-        headerTextClassName: "text-gray-900",
+        headerTextClassName: "text-white",
         badgeClassName: "bg-violet-600 hover:bg-violet-700 text-white",
       }
     case "ok":

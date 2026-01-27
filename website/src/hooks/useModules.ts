@@ -20,24 +20,25 @@ export interface Sonde {
   Surveillance_Etat: string | null;
 }
 
-export function useModules() {
+export function useModules(enabled: boolean = true) {
   return useQuery({
     queryKey: ["modules"],
     queryFn: async () => {
       return getJson<Module[]>("/api/modules");
     },
     staleTime: 60000, // 1 minute
+    enabled,
   });
 }
 
-export function useModuleSondes(moduleId: number | null) {
+export function useModuleSondes(moduleId: number | null, enabled: boolean = true) {
   return useQuery({
     queryKey: ["modules", moduleId, "sondes"],
     queryFn: async () => {
       if (!moduleId) return [];
       return getJson<Sonde[]>(`/api/modules/${moduleId}/sondes`);
     },
-    enabled: !!moduleId,
+    enabled: !!moduleId && enabled,
     staleTime: 60000, // 1 minute
   });
 }
@@ -48,12 +49,13 @@ export interface ModuleType {
   Libelle_Module: string | null;
 }
 
-export function useModuleTypes() {
+export function useModuleTypes(enabled: boolean = true) {
   return useQuery({
     queryKey: ["module-types"],
     queryFn: async () => {
       return getJson<ModuleType[]>("/api/modules/types");
     },
     staleTime: 60000, // 1 minute
+    enabled,
   });
 }

@@ -12,7 +12,7 @@ export interface AvailableProbe {
   Sonde_Type?: string | null
 }
 
-export function useAvailableProbes(selectedSondeNumeroSerie?: string | null) {
+export function useAvailableProbes(selectedSondeNumeroSerie?: string | null, enabled: boolean = true) {
   return useQuery({
     queryKey: ["available-probes", selectedSondeNumeroSerie ?? null],
     queryFn: async () => {
@@ -22,6 +22,7 @@ export function useAvailableProbes(selectedSondeNumeroSerie?: string | null) {
         return selectedSondeNumeroSerie && probe.Sonde_Numero_Serie === selectedSondeNumeroSerie
       }) as AvailableProbe[]
     },
+    enabled,
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60_000),
   })
 }

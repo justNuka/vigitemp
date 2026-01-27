@@ -34,6 +34,7 @@ namespace Vigitemp_Serveur.sensors
                 string sRelais2 = m_moduleSerialNumber; //adresse module 
 
                 byte[] bytestosend = checksumRequete("54", sRelais1, sRelais2);
+                VigitempServeur.Log($"[SONDE][TX] type=HN serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} module={m_moduleSerialNumber} cmdHex={BitConverter.ToString(bytestosend)}");
                 m_port.Write(bytestosend, 0, bytestosend.Length);
 
                 Stopwatch tmp_sw = new Stopwatch();
@@ -45,6 +46,7 @@ namespace Vigitemp_Serveur.sensors
                     await Task.Delay(25);
                     if (tmp_sw.Elapsed.TotalMilliseconds > 1000)
                     {
+                        VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=retry elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
                         m_port.Close();
                         m_port.DataReceived += new SerialDataReceivedEventHandler(DataReceivedHandler);
                         m_port.Open();
@@ -52,6 +54,7 @@ namespace Vigitemp_Serveur.sensors
                         m_port.DiscardOutBuffer();
                         tmp_sw.Stop();
                         bytestosend = checksumRequete("54", sRelais1, sRelais2);
+                        VigitempServeur.Log($"[SONDE][TX] type=HN serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} module={m_moduleSerialNumber} cmdHex={BitConverter.ToString(bytestosend)} (retry)");
                         m_port.Write(bytestosend, 0, bytestosend.Length);
                         tmp_sw = new Stopwatch();
                         tmp_sw.Start();
@@ -63,6 +66,7 @@ namespace Vigitemp_Serveur.sensors
                             await Task.Delay(25);
                             if (tmp_sw.Elapsed.TotalMilliseconds > 2000)
                             {
+                                VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
                                 m_port.Close();
                                 m_sensor_response = "";
                                 pendingResults = false;
@@ -78,6 +82,7 @@ namespace Vigitemp_Serveur.sensors
             {
                 Console.WriteLine("erreur: " + e);
                 Trace.WriteLine("erreur: " + e);
+                VigitempServeur.Log($"[SONDE][ERR] type=HN serial={m_sondeSerialNumber} port={m_comPort} error={e}");
                 m_port.Close();
                 return false;
             }
@@ -88,37 +93,35 @@ namespace Vigitemp_Serveur.sensors
                             object sender,
                             SerialDataReceivedEventArgs e)
         {
-            Console.WriteLine("read");
-            Trace.WriteLine("read");
-            SerialPort sp = (SerialPort)sender;
-            Encoding iso = Encoding.GetEncoding("ISO-8859-1");
-            string regex_res;
-            string suplex;
-            int length = sp.BytesToRead;
-            Console.WriteLine("byte buf length: " + length);
-            Trace.WriteLine("byte buf length: " + length);
-            byte[] buf = new byte[length];
-            sp.Read(buf, 0, length);
-            m_sensor_response += iso.GetString(buf);
-            m_sensor_response = m_sensor_response.Replace(@"/(/\r?\n|\r/)/gm", "");
-            Console.WriteLine("reponse: " + m_sensor_response + "       | " + m_sensor_response.Length);
-            Trace.WriteLine("reponse: " + m_sensor_response + "       | " + m_sensor_response.Length);
-            var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
-            if (m_sensor_response.Length == 19)
+            try
             {
-                regex_res = m_sensor_response;
-                m_sensor_response = "";
-            }
-            else
-            {
-                return;
-            }
-            Console.WriteLine("resultat complet regex_res: " + regex_res);
-            Trace.WriteLine("resultat complet regex_res: " + regex_res);
+                VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} port={m_comPort} event=read");
+                SerialPort sp = (SerialPort)sender;
+                Encoding iso = Encoding.GetEncoding("ISO-8859-1");
+                string regex_res;
+                string suplex;
+                int length = sp.BytesToRead;
+                VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} bytes={length}");
+                byte[] buf = new byte[length];
+                sp.Read(buf, 0, length);
+                m_sensor_response += iso.GetString(buf);
+                m_sensor_response = m_sensor_response.Replace(@"/(/\r?\n|\r/)/gm", "");
+                VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} raw={m_sensor_response} len={m_sensor_response.Length}");
+                var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
+                if (m_sensor_response.Length == 19)
+                {
+                    regex_res = m_sensor_response;
+                    m_sensor_response = "";
+                }
+                else
+                {
+                    return;
+                }
+                VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} frame={regex_res}");
 
-            byte[] bytes = iso.GetBytes(regex_res);
-            string hexString = Hex.ToHexString(bytes);
-            Trace.WriteLine($"resultat complet hexString: \"{hexString}\"");
+                byte[] bytes = iso.GetBytes(regex_res);
+                string hexString = Hex.ToHexString(bytes);
+                VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} hex={hexString}");
 
             suplex = hexString.Substring(28, 2);
             Console.WriteLine("suplex: " + suplex);
@@ -154,12 +157,18 @@ namespace Vigitemp_Serveur.sensors
             Trace.WriteLine("Données corrigées: " + Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero));
             
 
-            ths.GetDatabase().AddMesure(m_sondeSerialNumber, Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero), "°C", null);
-            m_port.DiscardInBuffer(); 
-            m_port.DiscardOutBuffer();
-            m_port.Close();
-            pendingResults = false;
-            Trace.WriteLine("Fermeture du port " + m_comPort);
+                ths.GetDatabase().AddMesure(m_sondeSerialNumber, Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero), "°C", null);
+                VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=success value={Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero)} unit=°C");
+                m_port.DiscardInBuffer(); 
+                m_port.DiscardOutBuffer();
+                m_port.Close();
+                pendingResults = false;
+                Trace.WriteLine("Fermeture du port " + m_comPort);
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log($"[SONDE][ERR] type=HN serial={m_sondeSerialNumber} port={m_comPort} error={ex}");
+            }
         }
 
         private byte[] checksumRequete(string sCode, string sRelais1, string sRelais2)

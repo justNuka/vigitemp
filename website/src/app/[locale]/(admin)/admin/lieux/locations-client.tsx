@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAvailableProbes } from '@/hooks/useAvailableProbes'
 import { useGroups } from '@/hooks/useGroups'
@@ -20,7 +20,7 @@ import { toast } from 'sonner'
 import { useRouter } from '@/i18n/navigation'
 import { LocationFormDialog } from './_components/location-form-dialog'
 import { LocationsTable } from './_components/locations-table'
-import { patchJson, postJson } from '@/lib/http'
+import { getJson, patchJson, postJson } from '@/lib/http'
 import { LocationsActions } from './_components/locations-actions'
 import type { LocationFormData } from './_components/location-form-types'
 import { getDefaultLocationFormData } from './_components/location-form-defaults'
@@ -31,8 +31,7 @@ export function LocationsClient() {
   const queryClient = useQueryClient()
   const router = useRouter()
   const { data: locations = [], isLoading } = useLocations()
-  const { data: sites = [] } = useSitesSimple()
-  const { data: groups = [] } = useGroups()
+  const didPrefetchRef = useRef(false)
   const [selectedLocation, setSelectedLocation] = useState<LocationRow | null>(null)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
@@ -40,11 +39,35 @@ export function LocationsClient() {
   const [isCreateNoSondeOpen, setIsCreateNoSondeOpen] = useState(false)
   const [pendingCreate, setPendingCreate] = useState<LocationFormData | null>(null)
   const [tabFilter, setTabFilter] = useState<'all' | 'unassigned'>('all')
+  const shouldLoadFormData = isCreateOpen || isEditOpen
 
   const defaultFormData: LocationFormData = getDefaultLocationFormData()
 
   const [formData, setFormData] = useState<LocationFormData>(defaultFormData)
-  const { data: availableProbes = [] } = useAvailableProbes(formData.Sonde_Numero_Serie)
+  const { data: sites = [] } = useSitesSimple(shouldLoadFormData)
+  const { data: groups = [] } = useGroups(undefined, shouldLoadFormData)
+  const { data: availableProbes = [] } = useAvailableProbes(formData.Sonde_Numero_Serie, shouldLoadFormData)
+
+  useEffect(() => {
+    if (isLoading || didPrefetchRef.current) return
+    didPrefetchRef.current = true
+
+    queryClient.prefetchQuery({
+      queryKey: ['sites-simple'],
+      queryFn: () => getJson('/api/sites'),
+    })
+    queryClient.prefetchQuery({
+      queryKey: ['groups', undefined],
+      queryFn: () => getJson('/api/groupes'),
+    })
+    queryClient.prefetchQuery({
+      queryKey: ['available-probes', null],
+      queryFn: async () => {
+        const data = await getJson<any[]>('/api/sondes')
+        return data.filter((probe: any) => !probe?.Lieu)
+      },
+    })
+  }, [isLoading, queryClient])
 
   const resetForm = () => setFormData(getDefaultLocationFormData())
   const normalizePayload = (data: LocationFormData, forceInactive = false): Partial<LocationRow> => ({

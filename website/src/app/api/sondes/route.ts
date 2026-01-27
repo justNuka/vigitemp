@@ -58,6 +58,7 @@ export const POST = withAuthLogging(async (req: NextRequest) => {
       normalizedType === "GSO" || normalizedType === "GSP"
         ? data.serieNum
         : `${data.sondeType}${data.serieNum}`
+    const adresseSonde = data.serieNum
 
     const existing = await prisma.t_sonde.findUnique({
       where: { Sonde_Numero_Serie: serial },
@@ -69,6 +70,7 @@ export const POST = withAuthLogging(async (req: NextRequest) => {
 
     const created = await prisma.t_sonde.create({
       data: {
+        Adresse_Sonde: adresseSonde,
         Sonde_Numero_Serie: serial,
         Id_Module: data.moduleId ?? null,
         Surveillance_Etat: "D",

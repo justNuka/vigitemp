@@ -1,10 +1,36 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
+import { CheckCircle2, PowerOff } from "lucide-react";
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import { Badge } from '@/components/ui/badge';
 import { getTypeIcon } from '@/lib/lieu-types';
 import type { LocationRow } from '@/hooks/useLocations';
+
+type LieuStatusTheme = {
+  label: string;
+  className: string;
+  Icon: typeof CheckCircle2;
+};
+
+const lieuStatusThemes: Record<string, LieuStatusTheme> = {
+  active: {
+    label: "En surveillance",
+    className: "border-emerald-500/40 bg-emerald-500/15 text-emerald-700",
+    Icon: CheckCircle2,
+  },
+  disabled: {
+    label: "Surveillance desactivee",
+    className: "border-red-500/40 bg-red-500/15 text-red-700",
+    Icon: PowerOff,
+  },
+};
+
+const getLieuStatusTheme = (status: string | null): LieuStatusTheme | null => {
+  if (status === "S") return lieuStatusThemes.active;
+  if (status === "D") return lieuStatusThemes.disabled;
+  return null;
+};
 
 type LocationsTableProps = {
   locations: LocationRow[];
@@ -74,10 +100,17 @@ export function LocationsTable({
       accessorKey: 'Lieu_Etat',
       header: 'Etat du lieu',
       cell: ({ row }) => {
-        const status = row.original.Lieu_Etat;
-        if (status === 'S') return 'En surveillance';
-        if (status === 'D') return 'Surveillance desactivee';
-        return status || '-';
+        const theme = getLieuStatusTheme(row.original.Lieu_Etat);
+        if (!theme) return row.original.Lieu_Etat || '-';
+        const Icon = theme.Icon;
+        return (
+          <span
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium ${theme.className}`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {theme.label}
+          </span>
+        );
       },
     },
     {

@@ -155,19 +155,24 @@ export const POST = withLogging(async (req: NextRequest) => {
       path: "/",
     })
 
-    log.auth.login(username, ip, true, undefined, {
-      userId: user.Id_Utilisateur,
-      userProfile: user.Profil_Utilisateur || "user",
-    })
-
     const headerMachineName =
       req.headers.get("x-vigitemp-machine-name") ||
       req.headers.get("x-vigitemp-machine") ||
       undefined
     const resolvedMachineName = machineName || headerMachineName || undefined
+    const now = new Date()
+
+    log.auth.login(username, ip, true, undefined, {
+      userId: user.Id_Utilisateur,
+      userProfile: user.Profil_Utilisateur || "user",
+      changes: {
+        machineName: resolvedMachineName,
+        address: ip,
+        connectedAt: now.toISOString(),
+      },
+    })
 
     try {
-      const now = new Date()
       await prisma.t_utilisateur.update({
         where: { Id_Utilisateur: user.Id_Utilisateur },
         data: {
@@ -175,12 +180,6 @@ export const POST = withLogging(async (req: NextRequest) => {
           Nom_Machine_Connexion: resolvedMachineName,
           Date_Heure_Derniere_Connexion: now,
         },
-      })
-
-      log.data.update("Utilisateur", user.Id_Utilisateur, username, user.Id_Utilisateur, ipForDb, {
-        machineName: resolvedMachineName,
-        address: ip,
-        connectedAt: now.toISOString(),
       })
     } catch (err) {
       log.warn("AUTH", "Failed to update user login metadata", {
@@ -191,7 +190,6 @@ export const POST = withLogging(async (req: NextRequest) => {
     }
 
     try {
-      const now = new Date()
       let updatedClient = null as null | { Id_Poste: number; Nom_Machine_Connexion: string | null; Adresse_IP_Connexion: string | null }
 
       if (resolvedMachineName) {
@@ -243,13 +241,6 @@ export const POST = withLogging(async (req: NextRequest) => {
         }
       }
 
-      if (updatedClient?.Id_Poste) {
-        log.data.update("Poste client", updatedClient.Id_Poste, username, user.Id_Utilisateur, ip, {
-          machineName: updatedClient.Nom_Machine_Connexion || resolvedMachineName,
-          address: updatedClient.Adresse_IP_Connexion || ip,
-          connectedAt: now.toISOString(),
-        })
-      }
     } catch (err) {
       log.warn("AUTH", "Failed to update client workstation info", {
         username,

@@ -18,10 +18,17 @@ export interface Alarm {
   Est_Acquittee: boolean | null;
 }
 
-async function fetchAlarms(): Promise<Alarm[]> {
-  const items = await getJson<AlarmListItem[]>("/api/alarmes");
+type Paginated<T> = {
+  data: T[];
+  pagination: { page: number; limit: number; total: number; pages: number };
+};
 
-  return (items ?? []).map((item) => ({
+export async function fetchAlarmsPage(page: number, limit: number): Promise<Paginated<Alarm>> {
+  const response = await getJson<Paginated<AlarmListItem>>(
+    `/api/alarmes?page=${page}&limit=${limit}`,
+  );
+
+  const data = (response.data ?? []).map((item) => ({
     Id_Alarme: item.id,
     Libelle_Lieu: item.locationName ?? null,
     Date_Heure_Debut: item.timestamp ?? null,
@@ -29,12 +36,14 @@ async function fetchAlarms(): Promise<Alarm[]> {
     Date_Heure_Fin: item.resolvedAt ?? null,
     Est_Acquittee: item.status === "acknowledged",
   }));
+
+  return { data, pagination: response.pagination };
 }
 
-export function useAlarms() {
+export function useAlarms({ page = 1, limit = 15 }: { page?: number; limit?: number } = {}) {
   return useQuery({
-    queryKey: ["alarms"],
-    queryFn: fetchAlarms,
+    queryKey: ["alarms", page, limit],
+    queryFn: () => fetchAlarmsPage(page, limit),
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 30000),
   });
 }

@@ -31,8 +31,8 @@ export function ActuatorModal({ open, onOpenChange, actuator, isEditing }: Props
     return `${isEdit ? "edit" : "new"}-${id}-${open ? "open" : "closed"}`
   }, [actuator?.Id_Actionneur, isEdit, open])
 
-  const { data: types, isLoading: typesLoading } = useActuatorTypes()
-  const { data: locations, isLoading: locationsLoading } = useLocations()
+  const { data: types, isLoading: typesLoading } = useActuatorTypes(open)
+  const { data: locations, isLoading: locationsLoading } = useLocations(open)
 
   const locationOptions = useMemo(
     () =>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useRouter } from '@/i18n/navigation';
@@ -8,7 +8,7 @@ import { useRouter } from '@/i18n/navigation';
 import { useGroups, type Group } from '@/hooks/useGroups';
 import { useGroupLocations } from '@/hooks/useGroupLocations';
 import { useGroupUsers } from '@/hooks/useGroupUsers';
-import { deleteJson, HttpError } from "@/lib/http";
+import { deleteJson, getJson, HttpError } from "@/lib/http";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -41,6 +41,19 @@ export function GroupsClient() {
   const { data: groups = [], isLoading } = useGroups(regroupement);
   const { data: locations = [] } = useGroupLocations(selectedGroup?.Id_Groupe);
   const { data: users = [] } = useGroupUsers(selectedGroup?.Id_Groupe);
+
+  useEffect(() => {
+    if (!selectedGroup?.Id_Groupe) return;
+    const groupId = selectedGroup.Id_Groupe;
+    void queryClient.prefetchQuery({
+      queryKey: ["groupLocations", groupId],
+      queryFn: () => getJson(`/api/groupes/${groupId}/lieux`),
+    });
+    void queryClient.prefetchQuery({
+      queryKey: ["groupUsers", groupId],
+      queryFn: () => getJson(`/api/groupes/${groupId}/utilisateurs`),
+    });
+  }, [queryClient, selectedGroup?.Id_Groupe]);
 
   const handleNew = () => {
     setSelectedGroup(null);
@@ -98,7 +111,7 @@ export function GroupsClient() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 gap-6 mb-12">
         <GroupLocationsPanel groupSelected={!!selectedGroup} locations={locations} />
         <GroupUsersPanel groupSelected={!!selectedGroup} users={users} />
       </div>

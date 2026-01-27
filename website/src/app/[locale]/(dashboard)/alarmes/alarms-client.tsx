@@ -122,7 +122,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
           <span className="flex items-center gap-1">
             {t("tabs.active")}
             {stats.active > 0 && (
-              <span className="text-destructive">({stats.active})</span>
+              <span className="">({stats.active})</span>
             )}
           </span>
         </TabsTrigger>
@@ -184,7 +184,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     },
         {
       id: "lastValue",
-      header: () => <div className="text-right">Derni?re valeur</div>,
+      header: () => <div className="text-right">Dernière valeur</div>,
       cell: ({ row }) => {
         const alarm = row.original;
         const value = alarm.sensor.currentValue ?? alarm.value ?? null;
@@ -229,16 +229,18 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
       accessorKey: "status",
       header: "Statut",
       cell: ({ row }) => (
-        <AlarmStatusBadge status={row.getValue("status") as string} />
+        <div className="flex justify-center">
+          <AlarmStatusBadge status={row.getValue("status") as string} />
+        </div>
       ),
     },
     {
       id: "actions",
-      header: () => <div className="text-right">Actions</div>,
+      header: () => <div className="text-center">Actions</div>,
       cell: ({ row }) => {
         const alarm = row.original;
         return (
-          <div className="flex items-center justify-end gap-1">
+          <div className="flex items-center justify-center gap-1">
             {alarm.comment && (
               <Button
                 variant="ghost"
@@ -383,7 +385,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
           <div className="space-y-4">
             <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Derni?re valeur</p>
+                <p className="text-sm text-muted-foreground">Dernière valeur</p>
                 <p className="text-xl font-bold font-mono">
                   {selectedAlarm?.sensor.currentValue ?? selectedAlarm?.value ?? "-"} {selectedAlarm?.sensor.unit}
                 </p>

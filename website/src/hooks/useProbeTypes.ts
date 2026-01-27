@@ -10,9 +10,10 @@ async function fetchProbeTypes(): Promise<ProbeType[]> {
   return getJson<ProbeType[]>("/api/sondes/types");
 }
 
-export function useProbeTypes() {
+export function useProbeTypes(enabled: boolean = true) {
   return useQuery({
     queryKey: ["probeTypes"],
     queryFn: fetchProbeTypes,
+    enabled,
   });
 }

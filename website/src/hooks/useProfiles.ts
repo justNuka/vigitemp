@@ -21,20 +21,22 @@ export interface Authorization {
   fenVigiLog: boolean | null;
 }
 
-export function useProfiles() {
+export function useProfiles(enabled: boolean = true) {
   return useQuery({
     queryKey: ["profiles"],
     queryFn: async () => {
       return getJson<Profile[]>("/api/profils");
     },
+    enabled,
   });
 }
 
-export function useAuthorizations() {
+export function useAuthorizations(enabled: boolean = true) {
   return useQuery({
     queryKey: ["authorizations"],
     queryFn: async () => {
       return getJson<Authorization[]>("/api/autorisations");
     },
+    enabled,
   });
 }

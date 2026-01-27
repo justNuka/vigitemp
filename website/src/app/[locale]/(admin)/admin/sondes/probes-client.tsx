@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, Pencil } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { useProbes } from "@/hooks/useProbes";
 import { useAdjustments } from "@/hooks/useAdjustments";
 import { useCalibrations } from "@/hooks/useCalibrations";
+import { getJson } from "@/lib/http";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +19,8 @@ import { CalibrationsPanel, type CalibrationRow } from "./_components/calibratio
 import { ProbesTable, toProbeRows } from "./_components/probes-table";
 
 export function ProbesClient() {
+  const queryClient = useQueryClient();
+  const didPrefetchRef = useRef(false);
   const [selectedProbeId, setSelectedProbeId] = useState<number | null>(null);
   const [selectedAdjustmentId, setSelectedAdjustmentId] = useState<number | null>(null);
   const [selectedCalibrationId, setSelectedCalibrationId] = useState<number | null>(null);
@@ -25,6 +29,21 @@ export function ProbesClient() {
 
   const { data: probes, isLoading: probesLoading } = useProbes();
   const selectedProbe = probes?.find((s) => s.Id_Sonde === selectedProbeId);
+
+  useEffect(() => {
+    if (probesLoading || didPrefetchRef.current) return;
+    didPrefetchRef.current = true;
+
+    queryClient.prefetchQuery({
+      queryKey: ["probeTypes"],
+      queryFn: () => getJson("/api/sondes/types"),
+    });
+    queryClient.prefetchQuery({
+      queryKey: ["modules"],
+      queryFn: () => getJson("/api/modules"),
+      staleTime: 60000,
+    });
+  }, [probesLoading, queryClient]);
 
   const { data: adjustments, isLoading: adjustmentsLoading } = useAdjustments(
     selectedProbe?.Sonde_Numero_Serie || null
@@ -113,7 +132,7 @@ export function ProbesClient() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
         <AdjustmentsPanel
           adjustments={adjustmentsTableData}
           isLoading={adjustmentsLoading}
