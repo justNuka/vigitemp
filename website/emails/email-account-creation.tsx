@@ -36,9 +36,9 @@ export const AccountCreationEmail = ({
       <Tailwind>
         <Head />
         <Body className="bg-[#f6f9fc] font-sans">
-          <Container className="bg-white mx-auto my-16 p-0 max-w-[600px] rounded-lg shadow-lg">
+          <Container className="bg-white mx-auto my-16 p-0 max-w-150 rounded-lg shadow-lg">
             {/* Header with gradient */}
-            <Section className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-lg p-8">
+            <Section className="bg-linear-to-r from-blue-600 to-blue-700 rounded-t-lg p-8">
               <Heading className="text-black text-[28px] font-bold text-center m-0">
                 Bienvenue sur Vigitemp
               </Heading>
@@ -46,11 +46,11 @@ export const AccountCreationEmail = ({
 
             {/* Content */}
             <Section className="px-10 py-8">
-              <Text className="text-[#333] text-[16px] leading-[26px] mb-4">
+              <Text className="text-[#333] text-[16px] leading-6.5 mb-4">
                 Bonjour <strong>{fullName}</strong>,
               </Text>
               
-              <Text className="text-[#333] text-[16px] leading-[26px] mb-6">
+              <Text className="text-[#333] text-[16px] leading-6.5 mb-6">
                 Votre compte Vigitemp a été créé avec succès. Vous pouvez maintenant vous connecter à l'application de surveillance environnementale avec les identifiants suivants :
               </Text>
 
@@ -73,7 +73,7 @@ export const AccountCreationEmail = ({
 
               {/* Warning Box */}
               <Section className="bg-[#fff3cd] border-l-4 border-solid border-[#ffc107] rounded p-4 my-6">
-                <Text className="text-[#856404] text-[14px] leading-[22px] m-0">
+                <Text className="text-[#856404] text-[14px] leading-5.5 m-0">
                   <strong>⚠️ Important :</strong> Ce mot de passe est temporaire. Pour des raisons de sécurité, vous devrez le changer lors de votre première connexion.
                 </Text>
               </Section>
@@ -91,11 +91,11 @@ export const AccountCreationEmail = ({
               <Hr className="border-[#e9ecef] my-6" />
 
               {/* Footer */}
-              <Text className="text-[#6c757d] text-[13px] leading-[20px] mb-2">
+              <Text className="text-[#6c757d] text-[13px] leading-5 mb-2">
                 Si vous n'avez pas demandé la création de ce compte, veuillez contacter votre administrateur système.
               </Text>
               
-              <Text className="text-[#6c757d] text-[13px] leading-[20px] m-0">
+              <Text className="text-[#6c757d] text-[13px] leading-5 m-0">
                 Cet email a été envoyé automatiquement, merci de ne pas y répondre.
               </Text>
             </Section>

@@ -40,20 +40,20 @@ export function DashboardHeader({ stats }: { stats: Stats }) {
   const cardValueClass = "text-white dark:text-foreground";
   const cardVariants = {
     info: {
-      border: "border-l-4 border-l-sky-400",
-      icon: "bg-sky-500/20 text-sky-200 ring-1 ring-sky-300/40 dark:bg-primary/10 dark:text-primary",
+      border: "border-l-8 border-l-sky-400",
+      icon: "bg-sky-500 text-sidebar ring-1 ring-sky-300/40 dark:bg-primary/10 dark:text-sidebar-foreground",
     },
     danger: {
-      border: "border-l-4 border-l-rose-400",
-      icon: "bg-rose-500/20 text-rose-200 ring-1 ring-rose-300/40 dark:bg-destructive/10 dark:text-destructive",
+      border: "border-l-8 border-l-red-500",
+      icon: "bg-red-500 text-sidebar ring-1 ring-rose-300/40 dark:bg-destructive/10 dark:text-sidebar-foreground",
     },
     muted: {
-      border: "border-l-4 border-l-slate-400",
-      icon: "bg-slate-500/20 text-slate-200 ring-1 ring-slate-300/40 dark:bg-muted dark:text-muted-foreground",
+      border: "border-l-8 border-l-slate-400",
+      icon: "bg-slate-500 text-sidebar ring-1 ring-slate-300/40 dark:bg-muted dark:text-sidebar-foreground",
     },
     warning: {
-      border: "border-l-4 border-l-amber-400",
-      icon: "bg-amber-500/20 text-amber-200 ring-1 ring-amber-300/40 dark:bg-warning/10 dark:text-warning",
+      border: "border-l-8 border-l-amber-400",
+      icon: "bg-amber-500 text-sidebar ring-1 ring-amber-300/40 dark:bg-warning/10 dark:text-sidebar-foreground",
     },
   };
 

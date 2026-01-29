@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +31,7 @@ import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
 import { useLieuMeasurementsPaged } from "@/hooks/useLieuMeasurementsPaged";
 import { calculateYDomain, getMeasureSummary } from "@/lib/measurements";
 import type { MeasureData } from "@/lib/measurements";
+import { fetchJson } from "@/lib/http";
 
 // Register Chart.js components
 ChartJS.register(
@@ -56,6 +59,18 @@ interface MonitoringDetailsModalProps {
   measurements?: MeasureData[];
 }
 
+type AuditLog = {
+  id: number;
+  timestamp: string | null;
+  code: string;
+  label: string;
+  commentaire: string | null;
+  commentaireUtilisateur: string | null;
+  user: string | null;
+  profile: string | null;
+  lieuId: number;
+};
+
 export default function MonitoringDetailsModal({
   isOpen,
   onClose,
@@ -80,14 +95,13 @@ export default function MonitoringDetailsModal({
     inf: number | null;
     consigne: number | null;
   }>({ sup: null, inf: null, consigne: null });
-
-  const hasLocalMeasurements = Boolean(initialMeasurements?.length);
-  const shouldLoadBase = isOpen && isSurveillanceActive && !hasLocalMeasurements;
-  const { data: fetchedData, isLoading } = useLieuMeasurements(idLieu, {
-    enabled: shouldLoadBase,
-  });
-  const baseLoading = shouldLoadBase && isLoading;
-  const data = hasLocalMeasurements ? initialMeasurements ?? [] : fetchedData ?? [];
+  const [activeTab, setActiveTab] = useState<"graph" | "table" | "audit">("graph");
+  const [rangeGraphData, setRangeGraphData] = useState<MeasureData[]>([]);
+  const [rangeGraphLoading, setRangeGraphLoading] = useState(false);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError] = useState<string | null>(null);
+  const [auditLoaded, setAuditLoaded] = useState(false);
 
   const effectiveRange = useMemo(() => {
     if (!dateRange?.from) return null;
@@ -108,13 +122,99 @@ export default function MonitoringDetailsModal({
     return end;
   }, [effectiveRange]);
 
+  useEffect(() => {
+    if (!isOpen || isSurveillanceActive) return;
+    if (!rangeEnabled || !rangeStart || !rangeEnd) {
+      setRangeGraphData([]);
+      setRangeGraphLoading(false);
+      return;
+    }
+
+    let isActive = true;
+    const controller = new AbortController();
+
+    const loadAllMeasures = async () => {
+      setRangeGraphLoading(true);
+      try {
+        const all: MeasureData[] = [];
+        const pageSize = 500;
+        let page = 1;
+        let total = 0;
+
+        do {
+          const params = new URLSearchParams({
+            page: String(page),
+            pageSize: String(pageSize),
+            source: "mesures",
+            startDate: rangeStart.toISOString(),
+            endDate: rangeEnd.toISOString(),
+          });
+
+          const payload = await fetchJson<{
+            measurements: MeasureData[];
+            total: number;
+            page: number;
+            pageSize: number;
+          }>(`/api/mesures/${idLieu}?${params}`, { signal: controller.signal });
+
+          if (!isActive) return;
+
+          if (Array.isArray(payload?.measurements)) {
+            all.push(...payload.measurements);
+          }
+
+          total = payload?.total ?? all.length;
+          page += 1;
+        } while (all.length < total);
+
+        const ordered = all.sort((a, b) => {
+          const dateA = a.DateHeureMesureIso
+            ? Date.parse(a.DateHeureMesureIso)
+            : Date.parse(a.DateHeureMesure);
+          const dateB = b.DateHeureMesureIso
+            ? Date.parse(b.DateHeureMesureIso)
+            : Date.parse(b.DateHeureMesure);
+          return dateA - dateB;
+        });
+
+        if (!isActive) return;
+        setRangeGraphData(ordered);
+      } catch (error) {
+        if ((error as Error)?.name === "AbortError") return;
+        console.error("Erreur chargement mesures (range):", error);
+        if (!isActive) return;
+        setRangeGraphData([]);
+      } finally {
+        if (isActive) setRangeGraphLoading(false);
+      }
+    };
+
+    void loadAllMeasures();
+    return () => {
+      isActive = false;
+      controller.abort();
+    };
+  }, [idLieu, isOpen, isSurveillanceActive, rangeEnabled, rangeEnd, rangeStart]);
+
+  const hasLocalMeasurements = Boolean(initialMeasurements?.length);
+  const shouldLoadBase = isOpen && isSurveillanceActive && !hasLocalMeasurements;
+  const { data: fetchedData, isLoading } = useLieuMeasurements(idLieu, {
+    enabled: shouldLoadBase,
+  });
+  const baseLoading = isSurveillanceActive && shouldLoadBase && isLoading;
+  const data = isSurveillanceActive
+    ? hasLocalMeasurements
+      ? initialMeasurements ?? []
+      : fetchedData ?? []
+    : rangeGraphData;
+
   const {
     data: historyData,
     isLoading: isHistoryLoading,
     totalRows,
     pageCount,
   } = useLieuMeasurementsPaged(idLieu, {
-    enabled: isOpen && !baseLoading,
+    enabled: isOpen && !baseLoading && (isSurveillanceActive || rangeEnabled),
     pageIndex: pagination.pageIndex,
     pageSize: pagination.pageSize,
     startDate: rangeEnabled ? rangeStart : null,
@@ -153,9 +253,14 @@ export default function MonitoringDetailsModal({
     const chart = chartRef.current;
     const yScale = chart?.scales?.y;
     if (!yScale) return;
+    const chartArea = chart.chartArea;
+    const clamp = (value: number) => {
+      if (!chartArea) return value;
+      return Math.max(chartArea.top, Math.min(chartArea.bottom, value));
+    };
 
     const toPos = (value: number | null) =>
-      value === null ? null : yScale.getPixelForValue(value);
+      value === null ? null : clamp(yScale.getPixelForValue(value));
 
     setGuidePositions({
       sup: toPos(consigneSup),
@@ -181,6 +286,59 @@ export default function MonitoringDetailsModal({
     if (!isOpen) return;
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, [idLieu, isOpen, rangeEnabled]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setActiveTab("graph");
+    setAuditLogs([]);
+    setAuditError(null);
+    setAuditLoaded(false);
+  }, [idLieu, isOpen, isSurveillanceActive]);
+
+  useEffect(() => {
+    if (!isOpen || isSurveillanceActive) return;
+    setAuditLogs([]);
+    setAuditError(null);
+    setAuditLoaded(false);
+  }, [isOpen, isSurveillanceActive, rangeEnabled, rangeStart, rangeEnd]);
+
+  useEffect(() => {
+    if (!isOpen || activeTab !== "audit" || auditLoaded) return;
+    if (!isSurveillanceActive && !rangeEnabled) return;
+
+    const controller = new AbortController();
+    const loadAudit = async () => {
+      try {
+        setAuditLoading(true);
+        setAuditError(null);
+
+        const response = await fetch(`/api/lieux/${idLieu}/audit?limit=200`, {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(t("audit.error"));
+        }
+
+        const payload = await response.json();
+        if (!payload?.ok) {
+          throw new Error(payload?.message || t("audit.error"));
+        }
+
+        const nextLogs = Array.isArray(payload?.data?.logs) ? (payload.data.logs as AuditLog[]) : [];
+        setAuditLogs(nextLogs);
+        setAuditLoaded(true);
+      } catch (error) {
+        if ((error as Error)?.name === "AbortError") return;
+        setAuditError(t("audit.error"));
+      } finally {
+        setAuditLoading(false);
+      }
+    };
+
+    void loadAudit();
+    return () => controller.abort();
+  }, [activeTab, auditLoaded, idLieu, isOpen, t]);
 
   const orderedHistoryData = useMemo(() => {
     if (!historyData.length) return historyData;
@@ -269,6 +427,68 @@ export default function MonitoringDetailsModal({
     },
   ];
 
+  type AuditRow = {
+    id: number | string;
+    code: string;
+    label: string;
+    dateIso: string;
+    dateLabel: string;
+    user: string;
+    details: string;
+  };
+
+  const auditTableData = useMemo<AuditRow[]>(() => {
+    return auditLogs.map((log) => {
+      const dateIso = log.timestamp ?? "";
+      const dateLabel = log.timestamp
+        ? format(new Date(log.timestamp), "dd/MM/yyyy HH:mm:ss", { locale: fr })
+        : "-";
+
+      return {
+        id: log.id,
+        code: log.code || "-",
+        label: log.label || "-",
+        dateIso,
+        dateLabel,
+        user: log.user || "-",
+        details: log.commentaireUtilisateur || log.commentaire || "-",
+      };
+    });
+  }, [auditLogs]);
+
+  const auditColumns: ColumnDef<AuditRow>[] = [
+    {
+      accessorKey: "code",
+      header: t("audit.columns.code"),
+      cell: ({ row }) => <span className="font-medium">{row.original.code}</span>,
+    },
+    {
+      accessorKey: "label",
+      header: t("audit.columns.label"),
+      cell: ({ row }) => <span>{row.original.label}</span>,
+    },
+    {
+      accessorKey: "dateIso",
+      header: t("audit.columns.date_time"),
+      sortingFn: (rowA, rowB, columnId) => {
+        const a = Date.parse(rowA.getValue(columnId) as string);
+        const b = Date.parse(rowB.getValue(columnId) as string);
+        return a - b;
+      },
+      cell: ({ row }) => <span>{row.original.dateLabel}</span>,
+    },
+    {
+      accessorKey: "user",
+      header: t("audit.columns.user"),
+      cell: ({ row }) => <span>{row.original.user}</span>,
+    },
+    {
+      accessorKey: "details",
+      header: t("audit.columns.details"),
+      cell: ({ row }) => <span className="text-muted-foreground">{row.original.details}</span>,
+    },
+  ];
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
@@ -279,14 +499,30 @@ export default function MonitoringDetailsModal({
           </p>
         </DialogHeader>
 
-        {isSurveillanceActive && baseLoading ? (
+        {(isSurveillanceActive ? baseLoading : rangeEnabled && rangeGraphLoading) ? (
           <div className="space-y-4 pt-4">
             <Skeleton className="h-10 w-64" />
             <Skeleton className="h-100 w-full" />
           </div>
-        ) : isSurveillanceActive ? (
-          <Tabs defaultValue="graph" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-primary/10 text-primary">
+        ) : (
+          <div className="space-y-4">
+            <div className="w-full">
+              <DateRangePicker
+                allowEmpty
+                onUpdate={({ range }) => {
+                  if (!range.from) {
+                    setDateRange(null)
+                    return
+                  }
+                  setDateRange({ from: range.from, to: range.to ?? range.from })
+                }}
+                align="start"
+                locale={localeTag}
+                showCompare={false}
+              />
+            </div>
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "graph" | "table" | "audit")} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 bg-primary/10 text-primary">
               <TabsTrigger
                 value="graph"
                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
@@ -298,6 +534,12 @@ export default function MonitoringDetailsModal({
                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 {t("tabs.table")}
+              </TabsTrigger>
+              <TabsTrigger
+                value="audit"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                {t("tabs.audit")}
               </TabsTrigger>
             </TabsList>
 
@@ -451,7 +693,7 @@ export default function MonitoringDetailsModal({
                   }}
                 />
 
-                {/* Lignes de consigne superposees avec annotations (alignement via scale) */}
+                {/* Lignes de consigne superposées + labels */}
                 <div className="absolute inset-0 pointer-events-none">
                   {consigneSup !== null && guidePositions.sup !== null && (
                     <>
@@ -516,27 +758,18 @@ export default function MonitoringDetailsModal({
 
             {/* Table Tab */}
             <TabsContent value="table" className="space-y-4 pt-4 h-140">
-              <div className="w-full">
-                <DateRangePicker
-                  allowEmpty
-                  onUpdate={({ range }) => {
-                    if (!range.from) {
-                      setDateRange(null)
-                      return
-                    }
-                    setDateRange({ from: range.from, to: range.to ?? range.from })
-                  }}
-                  align="start"
-                  locale={localeTag}
-                  showCompare={false}
-                />
-              </div>
               <TanStackTable
                 columns={columns}
                 data={tableData}
                 showSearch={false}
                 pageSize={pagination.pageSize}
-                emptyMessage={t("table.empty")}
+                emptyMessage={
+                  isSurveillanceActive
+                    ? t("table.empty")
+                    : rangeEnabled
+                      ? t("table.empty")
+                      : t("table.empty_with_range")
+                }
                 isLoading={rangeLoading}
                 manualPagination
                 pageCount={pageCount}
@@ -548,44 +781,29 @@ export default function MonitoringDetailsModal({
                 tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"
               />
             </TabsContent>
+
+            {/* Audit Tab */}
+            <TabsContent value="audit" className="space-y-4 pt-4 h-140">
+              {auditError ? (
+                <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                  {auditError}
+                </div>
+              ) : (
+                <TanStackTable
+                  columns={auditColumns}
+                  data={auditTableData}
+                  searchField={['code', 'label', 'user', 'details']}
+                  searchPlaceholder={t("audit.search_placeholder")}
+                  pageSize={20}
+                  emptyMessage={t("audit.empty")}
+                  isLoading={auditLoading}
+                  headerClassName="!bg-sidebar !text-sidebar-foreground"
+                  headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+                  tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"
+                />
+              )}
+            </TabsContent>
           </Tabs>
-        ) : (
-          <div className="space-y-4 pt-4 h-140">
-            <div className="w-full">
-              <DateRangePicker
-                allowEmpty
-                onUpdate={({ range }) => {
-                  if (!range.from) {
-                    setDateRange(null)
-                    return
-                  }
-                  setDateRange({ from: range.from, to: range.to ?? range.from })
-                }}
-                align="start"
-                locale={localeTag}
-                showCompare={false}
-              />
-            </div>
-            <TanStackTable
-              columns={columns}
-              data={tableData}
-              showSearch={false}
-              pageSize={pagination.pageSize}
-              emptyMessage={
-                rangeEnabled
-                  ? t("table.empty")
-                  : t("table.empty_with_range")
-              }
-              isLoading={rangeLoading}
-              manualPagination
-              pageCount={pageCount}
-              totalRows={totalRows}
-              paginationState={pagination}
-              onPaginationChange={setPagination}
-              headerClassName="!bg-sidebar !text-sidebar-foreground"
-              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
-              tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"
-            />
           </div>
         )}
       </DialogContent>

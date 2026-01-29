@@ -249,11 +249,38 @@ export default function MonitoringCard({
     ? "text-gray-600 dark:text-gray-400"
     : "text-white";
 
+  const frequencyMinutes = useMemo(() => {
+    if (!frequence || frequence <= 0) return null
+    return frequence >= 60 ? Math.round(frequence / 60) : frequence
+  }, [frequence])
+
+
+  const chartDatasets = useMemo(() => {
+    const baseData = orderedData.map((d) => d.Valeur)
+    const labelsCount = orderedData.length
+    const datasets = [
+      {
+        label: t("chart.measures", { unit: unite }),
+        data: baseData,
+        borderColor: "#3b82f6",
+        backgroundColor: "rgba(59, 130, 246, 0.1)",
+        borderWidth: 2,
+        fill: false,
+        tension: 0.4,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        order: 1,
+      },
+    ]
+
+    return datasets
+  }, [consigne, consigneInf, consigneSup, orderedData, t, unite])
+
   return (
     <>
       <div
         className={`relative w-full rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden ${
-          isSurveillanceActive ? "bg-white dark:bg-gray-800" : "bg-slate-600 dark:bg-gray-800"
+          isSurveillanceActive ? "bg-white dark:bg-gray-800" : "bg-slate-700 dark:bg-gray-800"
         }`}
       >
         <div
@@ -362,19 +389,7 @@ export default function MonitoringCard({
                       <Line
                         data={{
                           labels: orderedData.map((d) => d.DateHeureMesureXaxis),
-                          datasets: [
-                            {
-                              label: t("chart.measures", { unit: unite }),
-                              data: orderedData.map((d) => d.Valeur),
-                              borderColor: "#3b82f6",
-                              backgroundColor: "rgba(59, 130, 246, 0.1)",
-                              borderWidth: 2,
-                              fill: false,
-                              tension: 0.4,
-                              pointRadius: 0,
-                              pointHoverRadius: 4,
-                            },
-                          ],
+                          datasets: chartDatasets,
                         }}
                         options={{
                           responsive: true,
@@ -491,7 +506,7 @@ export default function MonitoringCard({
                       <span>{lastDateTime}</span>
                     </div>
                     <div className={`flex items-center justify-center gap-4 text-[11px] ${contentTextClassName}`}>
-                      <span>{t("frequency", { minutes: frequence })}</span>
+                      <span>{t("frequency", { minutes: frequencyMinutes ?? "-" })}</span>
                       {alarmDelayMinutes !== null && alarmDelayMinutes !== undefined ? (
                         <span>{t("alarm_delay", { minutes: alarmDelayMinutes })}</span>
                       ) : null}

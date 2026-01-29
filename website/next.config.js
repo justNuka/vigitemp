@@ -40,6 +40,8 @@ const nextConfig = {
       "192.168.63.144:3000",
       "http://192.168.63.144",
       "http://192.168.63.144:3000",
+      "http://192.168.63.124",
+      "http://192.168.63.124:3000",
       "localhost",
       "http://localhost:3000",
       "dev.vigitemp",

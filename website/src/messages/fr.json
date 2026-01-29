@@ -1025,7 +1025,8 @@
       "profiles": "Profils",
       "users": "Utilisateurs",
       "alarms": "Alarmes",
-      "archived_measures": "Mesures archivées"
+      "archived_measures": "Mesures archivées",
+      "audit": "Journal d'audit"
     },
     "system": {
       "settings": "Paramètres",
@@ -1623,7 +1624,8 @@
     "probe": "Sonde: {serial}",
     "tabs": {
       "graph": "Graphique",
-      "table": "Tableau des mesures"
+      "table": "Tableau des mesures",
+      "audit": "Audit"
     },
     "table": {
       "columns": {
@@ -1648,6 +1650,18 @@
     "tooltip": {
       "value": "Valeur: {value}{unit}",
       "in_alarm": "En alarme"
+    },
+    "audit": {
+      "columns": {
+        "code": "CODE",
+        "label": "COMMENTAIRE",
+        "date_time": "DATE/HEURE",
+        "user": "UTILISATEUR",
+        "details": "DÉTAILS"
+      },
+      "empty": "Aucun audit pour ce lieu",
+      "error": "Erreur lors du chargement de l'audit",
+      "search_placeholder": "Rechercher dans l'audit..."
     },
     "guides": {
       "max": "Max: {value}{unit}",
@@ -1726,7 +1740,8 @@
         "items": {
           "0": "Cartes harmonisées (boutons, icônes de type, tooltips, mode light).",
           "1": "Filtres et actions en couleur primary, tri et vues ajustés.",
-          "2": "Dernière valeur et consignes sup/inf dans le tableau."
+          "2": "Dernière valeur et consignes sup/inf dans le tableau.",
+          "3": "Ajout de l'onglet Audit dans les détails d'un lieu."
         }
       },
       "measures": {
@@ -1824,7 +1839,8 @@
     },
     "guides": {
       "max": "Max: {value}",
-      "min": "Min: {value}"
+      "min": "Min: {value}",
+      "target": "Consigne: {value}"
     },
     "last_measure": {
       "label": "Dernière mesure : {value}"

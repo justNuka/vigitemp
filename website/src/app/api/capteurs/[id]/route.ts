@@ -43,13 +43,16 @@ export const GET = withAuthLogging(
         !isCritical &&
         (lieu.Est_Lieu_Alarme_Terminee_Non_Acquittee === 1 ||
           lieu.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 === 1)
-      const isTechnical = (() => {
-        if (!lieu.Retard_Non_Reponse || !lieu.Date_Heure_Derniere_Reponse) return false
-        const lastResponse = new Date(lieu.Date_Heure_Derniere_Reponse)
-        if (Number.isNaN(lastResponse.getTime())) return false
-        const diffMinutes = (Date.now() - lastResponse.getTime()) / 60000
-        return diffMinutes >= lieu.Retard_Non_Reponse
-      })()
+      const nonResponseAlarm = await prisma.t_alarme.findFirst({
+        where: {
+          Id_Lieu: lieu.Id_Lieu,
+          Type: "N",
+          Date_Heure_Fin: null,
+          Est_Acquittee: false,
+        },
+        select: { Id_Alarme: true },
+      })
+      const isTechnical = Boolean(nonResponseAlarm)
 
       const status = isCritical
         ? "critical"
@@ -129,13 +132,16 @@ export const PATCH = withAuthLogging(
         !isCritical &&
         (lieu.Est_Lieu_Alarme_Terminee_Non_Acquittee === 1 ||
           lieu.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 === 1)
-      const isTechnical = (() => {
-        if (!lieu.Retard_Non_Reponse || !lieu.Date_Heure_Derniere_Reponse) return false
-        const lastResponse = new Date(lieu.Date_Heure_Derniere_Reponse)
-        if (Number.isNaN(lastResponse.getTime())) return false
-        const diffMinutes = (Date.now() - lastResponse.getTime()) / 60000
-        return diffMinutes >= lieu.Retard_Non_Reponse
-      })()
+      const nonResponseAlarm = await prisma.t_alarme.findFirst({
+        where: {
+          Id_Lieu: lieu.Id_Lieu,
+          Type: "N",
+          Date_Heure_Fin: null,
+          Est_Acquittee: false,
+        },
+        select: { Id_Alarme: true },
+      })
+      const isTechnical = Boolean(nonResponseAlarm)
 
       const status = isCritical
         ? "critical"

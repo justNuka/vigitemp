@@ -34,7 +34,7 @@ export const PasswordResetEmail = ({
       <Tailwind>
         <Head />
         <Body className="bg-[#f6f9fc] font-sans">
-          <Container className="bg-white mx-auto my-16 p-0 max-w-[600px] rounded-lg shadow-lg">
+          <Container className="bg-white mx-auto my-16 p-0 max-w-150 rounded-lg shadow-lg">
             {/* Logos Section */}
             <Section className="bg-white px-10 py-8 text-center border-b border-solid border-[#e9ecef]">
               {/* Vigitemp Logo - Large */}
@@ -85,7 +85,7 @@ export const PasswordResetEmail = ({
             </Section>
 
             {/* Header */}
-            <Section className="bg-gradient-to-r from-orange-600 to-orange-700 rounded-t-lg p-8">
+            <Section className="bg-linear-to-r from-orange-600 to-orange-700 rounded-t-lg p-8">
               <Heading className="text-white text-[28px] font-bold text-center m-0">
                 Réinitialisation de mot de passe
               </Heading>
@@ -93,11 +93,11 @@ export const PasswordResetEmail = ({
 
             {/* Content */}
             <Section className="px-10 py-8">
-              <Text className="text-[#333] text-[16px] leading-[26px] mb-4">
+              <Text className="text-[#333] text-[16px] leading-6.5 mb-4">
                 Bonjour <strong>{fullName}</strong>,
               </Text>
               
-              <Text className="text-[#333] text-[16px] leading-[26px] mb-6">
+              <Text className="text-[#333] text-[16px] leading-6.5 mb-6">
                 Vous avez demandé la réinitialisation de votre mot de passe Vigitemp. Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe :
               </Text>
 
@@ -123,17 +123,17 @@ export const PasswordResetEmail = ({
 
               {/* Warning Box */}
               <Section className="bg-[#fff3cd] border-l-4 border-solid border-[#ffc107] rounded p-4 my-6">
-                <Text className="text-[#856404] text-[14px] leading-[22px] m-0">
+                <Text className="text-[#856404] text-[14px] leading-5.5 m-0">
                   <strong>⚠️ Important :</strong> Ce lien est valide pendant {expiresIn}. Si vous n'avez pas demandé cette réinitialisation, ignorez cet email - votre mot de passe reste inchangé.
                 </Text>
               </Section>
 
               {/* Security notice */}
-              <Text className="text-[#6c757d] text-[13px] leading-[20px] mb-2">
+              <Text className="text-[#6c757d] text-[13px] leading-5 mb-2">
                 Pour votre sécurité, ne partagez jamais ce lien avec quiconque.
               </Text>
               
-              <Text className="text-[#6c757d] text-[13px] leading-[20px] m-0">
+              <Text className="text-[#6c757d] text-[13px] leading-5 m-0">
                 Cet email a été envoyé automatiquement, merci de ne pas y répondre.
               </Text>
             </Section>

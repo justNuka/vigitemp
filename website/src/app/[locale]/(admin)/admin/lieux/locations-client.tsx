@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useForm } from 'react-hook-form'
 import { useAvailableProbes } from '@/hooks/useAvailableProbes'
 import { useGroups } from '@/hooks/useGroups'
 import { useLocations, type LocationRow } from '@/hooks/useLocations'
@@ -26,16 +27,10 @@ import type { LocationFormData } from './_components/location-form-types'
 import { getDefaultLocationFormData } from './_components/location-form-defaults'
 import { mapLocationToFormData } from './_components/location-form-mappers'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useForm, useWatch } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { locationFormSchema, type LocationFormValues } from './_components/location-form-schema'
-import { useTranslations } from 'next-intl'
 
 export function LocationsClient() {
   const queryClient = useQueryClient()
   const router = useRouter()
-  const t = useTranslations('locationsPage')
-  const tCommon = useTranslations('common')
   const { data: locations = [], isLoading } = useLocations()
   const didPrefetchRef = useRef(false)
   const [selectedLocation, setSelectedLocation] = useState<LocationRow | null>(null)
@@ -47,19 +42,13 @@ export function LocationsClient() {
   const [tabFilter, setTabFilter] = useState<'all' | 'unassigned'>('all')
   const shouldLoadFormData = isCreateOpen || isEditOpen
 
-  const defaultFormData: LocationFormData = getDefaultLocationFormData()
-
-  const form = useForm<LocationFormValues>({
-    resolver: zodResolver(locationFormSchema),
-    defaultValues: defaultFormData as LocationFormValues,
+  const form = useForm<LocationFormData>({
+    defaultValues: getDefaultLocationFormData(),
   })
-  const sondeNumeroSerie = useWatch({
-    control: form.control,
-    name: 'Sonde_Numero_Serie',
-  })
+  const watchedProbe = form.watch('Sonde_Numero_Serie')
   const { data: sites = [] } = useSitesSimple(shouldLoadFormData)
   const { data: groups = [] } = useGroups(undefined, shouldLoadFormData)
-  const { data: availableProbes = [] } = useAvailableProbes(sondeNumeroSerie ?? null, shouldLoadFormData)
+  const { data: availableProbes = [] } = useAvailableProbes(watchedProbe, shouldLoadFormData)
 
   useEffect(() => {
     if (isLoading || didPrefetchRef.current) return
@@ -82,7 +71,7 @@ export function LocationsClient() {
     })
   }, [isLoading, queryClient])
 
-  const resetForm = () => form.reset(defaultFormData as LocationFormValues)
+  const resetForm = () => form.reset(getDefaultLocationFormData())
   const normalizePayload = (data: LocationFormData, forceInactive = false): Partial<LocationRow> => ({
     ...data,
     Sonde_Numero_Serie: data.Sonde_Numero_Serie ? data.Sonde_Numero_Serie : null,
@@ -94,27 +83,27 @@ export function LocationsClient() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
       router.refresh()
-      toast.success(t('toast.create_success'))
+      toast.success('Lieu créé avec succès')
       if (!variables?.Sonde_Numero_Serie) {
-        toast.message(t('toast.create_no_probe'))
+        toast.message("Lieu créé sans sonde. Pensez à l'affecter plus tard.")
       }
       setIsCreateOpen(false)
       resetForm()
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : t('toast.create_error'))
+      toast.error(error instanceof Error ? error.message : 'Erreur lors de la création du lieu')
     },
   })
 
   const updateMutation = useMutation({
     mutationFn: async (data: Partial<LocationRow>) => {
-      if (!selectedLocation?.Id_Lieu) throw new Error(t('errors.no_location_selected'))
+      if (!selectedLocation?.Id_Lieu) throw new Error('Aucun lieu sélectionné')
       return patchJson(`/api/lieux/${selectedLocation.Id_Lieu}`, data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
       router.refresh()
-      toast.success(t('toast.update_success'))
+      toast.success('Lieu modifié avec succès')
       if (selectedLocation?.Id_Lieu) {
         window.dispatchEvent(
           new CustomEvent('vigitemp:lieu-updated', {
@@ -126,31 +115,31 @@ export function LocationsClient() {
       setSelectedLocation(null)
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : t('toast.update_error'))
+      toast.error(error instanceof Error ? error.message : 'Erreur lors de la modification du lieu')
     },
   })
 
   const archiveMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedLocation?.Id_Lieu) throw new Error(t('errors.no_location_selected'))
+      if (!selectedLocation?.Id_Lieu) throw new Error('Aucun lieu selectionne')
       return patchJson(`/api/lieux/${selectedLocation.Id_Lieu}`, { Est_Archive: true })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
       router.refresh()
-      toast.success(t('toast.archive_success'))
+      toast.success('Lieu archive avec succes')
       setIsArchiveOpen(false)
       setSelectedLocation(null)
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : t('toast.archive_error'))
+      toast.error(error instanceof Error ? error.message : "Erreur lors de l'archivage du lieu")
     },
   })
 
   const handleEdit = () => {
     if (!selectedLocation) return
 
-    form.reset(mapLocationToFormData(selectedLocation) as LocationFormValues)
+    form.reset(mapLocationToFormData(selectedLocation))
     setIsEditOpen(true)
   }
 
@@ -159,9 +148,9 @@ export function LocationsClient() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle>{t('title')}</CardTitle>
+            <CardTitle>Gestion des lieux</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {t('count', { count: locations.length })}
+              {locations.length} lieu{locations.length > 1 ? 'x' : ''}
             </p>
           </div>
           <LocationsActions
@@ -181,13 +170,13 @@ export function LocationsClient() {
                 value="all"
                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                {t('tabs.all', { count: locations.length })}
+                Tous ({locations.length})
               </TabsTrigger>
               <TabsTrigger
                 value="unassigned"
                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                {t('tabs.unassigned', { count: locations.filter((l) => !l.Sonde_Numero_Serie).length })}
+                Sans sonde ({locations.filter((l) => !l.Sonde_Numero_Serie).length})
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -238,15 +227,15 @@ export function LocationsClient() {
       <AlertDialog open={isArchiveOpen} onOpenChange={setIsArchiveOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('dialogs.archive.title')}</AlertDialogTitle>
+            <AlertDialogTitle>Archiver le lieu</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('dialogs.archive.description')}
+              Ce lieu passera en surveillance desactivee et la sonde sera desaffectee. Voulez-vous continuer ?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex justify-end gap-2">
-            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={() => archiveMutation.mutate()} disabled={archiveMutation.isPending}>
-              {archiveMutation.isPending ? t('dialogs.archive.submitting') : t('dialogs.archive.confirm')}
+              {archiveMutation.isPending ? 'Archivage...' : 'Archiver'}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>
@@ -255,13 +244,14 @@ export function LocationsClient() {
       <AlertDialog open={isCreateNoSondeOpen} onOpenChange={setIsCreateNoSondeOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('dialogs.create_no_probe.title')}</AlertDialogTitle>
+            <AlertDialogTitle>Créer un lieu sans sonde ?</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('dialogs.create_no_probe.description')}
+              Ce lieu sera créé sans sonde associée. Vous pourrez l’affecter plus tard dans la gestion des lieux.
+              Voulez-vous continuer ?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex justify-end gap-2">
-            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (!pendingCreate) return
@@ -271,9 +261,7 @@ export function LocationsClient() {
               }}
               disabled={createMutation.isPending}
             >
-              {createMutation.isPending
-                ? t('dialogs.create_no_probe.submitting')
-                : t('dialogs.create_no_probe.confirm')}
+              {createMutation.isPending ? 'Creation...' : 'Continuer'}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>

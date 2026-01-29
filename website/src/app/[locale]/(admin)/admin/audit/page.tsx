@@ -4,7 +4,7 @@ import { AuditClient } from "./audit-client";
 import { PageHeader } from "@/components/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 export async function generateMetadata({
   params,
@@ -41,8 +41,14 @@ function AuditLoadingSkeleton() {
   );
 }
 
-export default async function AuditPage() {
-  const t = await getTranslations('auditPage');
+export default async function AuditPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: 'auditPage' });
   // Chargement des données côté serveur avec cache
   const [logsData, statsData] = await Promise.all([
     ServerAuditLogs(100),

@@ -42,7 +42,7 @@ import { useLicense } from "@/components/license/license-provider";
 import { formatLicenseLabel } from "@/lib/license-label";
 
 interface NavItem {
-  href: "/" | "/surveillance" | "/alarmes" | "/audit" | "/profil" | "/admin";
+  href: "/" | "/surveillance" | "/alarmes" | "/profil" | "/admin";
   icon: typeof LayoutDashboard;
   badge?: number;
   badgeVariant?: "default" | "destructive";
@@ -53,10 +53,6 @@ const mainNavItems: NavItem[] = [
   { titleKey: "dashboard", href: "/", icon: LayoutDashboard },
   { titleKey: "monitoring", href: "/surveillance", icon: Activity },
   { titleKey: "alarms", href: "/alarmes", icon: Bell },
-];
-
-const auditNavItems: NavItem[] = [
-  { titleKey: "audit", href: "/audit", icon: FileText },
 ];
 
 import { CurrentUser } from "@/lib/types";
@@ -114,10 +110,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
     <Sidebar>
       <SidebarHeader className="p-4 flex flex-col items-center">
         <Link href="/" className="flex items-center justify-center gap-2">
-          <Logo size="xs" />
-          <span className="text-xl font-semibold text-sidebar-foreground">
-            VigiSensys
-          </span>
+          <Logo size="xs" showText textClassName="text-sidebar-foreground" />
         </Link>
         <span className="inline-flex items-center rounded-md bg-amber-300/20 px-3 py-1 text-xs font-bold text-amber-200 ring-1 ring-inset ring-amber-300/40 mt-2">
           {licenseLabel}
@@ -158,34 +151,6 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
                           {item.badge}
                         </Badge>
                       )}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>{tGroups("tracking")}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {auditNavItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.href)}
-                    tooltip={tSidebar(item.titleKey)}
-                  >
-                    <Link
-                      href={item.href}
-                      data-testid={`nav-${item.href.replace("/", "")}`}
-                      onClick={() => {
-                        if (isMobile) setOpenMobile(false);
-                      }}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{tSidebar(item.titleKey)}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

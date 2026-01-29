@@ -25,7 +25,8 @@ import {
   Bell,
   Settings,
   LogOut,
-  Shield
+  Shield,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -72,6 +73,7 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
     { title: t("management.profiles"), href: "/admin/profils", icon: Lock },
     { title: t("management.users"), href: "/admin/utilisateurs", icon: Users },
     { title: t("management.alarms"), href: "/admin/alarmes", icon: Bell },
+    { title: t("management.audit"), href: "/admin/audit", icon: FileText },
   ];
 
   // Section 3: Paramètres globaux, licences, sauvegardes
@@ -83,10 +85,7 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
     <Sidebar>
       <SidebarHeader className="p-4 flex flex-col items-center">
         <IntlLink href="/" className="flex items-center justify-center">
-          <Logo size="xs" />
-          <span className="text-xl font-semibold text-sidebar-foreground">
-            VigiSensys
-          </span>
+          <Logo size="xs" showText textClassName="text-sidebar-foreground" />
         </IntlLink>
         <span className="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20 mt-2">
           {t("badge")}

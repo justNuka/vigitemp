@@ -69,4 +69,15 @@ export function calculateYDomain(
   return [Math.floor(min - padding), Math.ceil(max + padding)]
 }
 
+export function calculateYDomainFromMeasures(measures: MeasureData[]): [number, number] {
+  if (measures.length === 0) return [0, 30]
+
+  const values = measures.map((d) => d.Valeur)
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const padding = (max - min) * 0.1
+
+  return [Math.floor(min - padding), Math.ceil(max + padding)]
+}
+
 

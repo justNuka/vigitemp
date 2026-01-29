@@ -17,9 +17,11 @@ namespace Vigitemp_Serveur
         (List<int>, List<DateTime>) getLieuxAvecAlarmesEnSnooze();
         double getLastMeasure(int p_IdLieu);
         bool setAlarmeByIdLieu(int p_idLieu, bool p_valeur);
+        bool setThresholdAlarm(int idLieu, string sondeNumeroSerie, string type, double value, string unite, bool isActive);
         bool setLieuAlarmFlags(int idLieu, bool isPreAlarm, bool isAlarm);
         bool setLieuInfosModifiees(int idLieu, bool value);
         bool setNonResponseAlarm(int idLieu, string sondeNumeroSerie, bool isActive);
+        string getLieuUnite(int idLieu);
         (double, double) getCoeffCalibrageBySerialNumber(string p_serial_number);
     }
 }

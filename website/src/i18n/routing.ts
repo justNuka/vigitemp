@@ -24,10 +24,6 @@ export const routing = defineRouting({
       fr: '/alarmes',
       en: '/alarms',
     },
-    '/audit': {
-      fr: '/audit',
-      en: '/audit',
-    },
     '/parametres': {
       fr: '/parametres',
       en: '/settings',
@@ -47,6 +43,10 @@ export const routing = defineRouting({
     '/admin/alarmes': {
       fr: '/admin/alarmes',
       en: '/admin/alarms',
+    },
+    '/admin/audit': {
+      fr: '/admin/audit',
+      en: '/admin/audit',
     },
     '/admin/etalons': {
       fr: '/admin/etalons',

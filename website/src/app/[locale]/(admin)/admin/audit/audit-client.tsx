@@ -280,12 +280,12 @@ export function AuditClient({ logs }: Props) {
         const parsed = parseAuditDetails(details, t, dateLocale);
         return (
           <div className="flex flex-col gap-1 max-w-90">
-            <p className="text-sm font-medium truncate" title={parsed.raw}>
-              {parsed.title}
+            <p className="text-sm font-medium truncate" title={parsed.subtitle}>
+              {parsed.subtitle}
             </p>
-            {parsed.subtitle ? (
-              <p className="text-xs text-muted-foreground truncate" title={parsed.subtitle}>
-                {parsed.subtitle}
+            {parsed.raw ? (
+              <p className="text-xs text-muted-foreground truncate" title={parsed.raw}>
+                {parsed.raw}
               </p>
             ) : (
               <p className="text-xs text-muted-foreground">{t("table.empty_value")}</p>

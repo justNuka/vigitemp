@@ -55,11 +55,11 @@ export function getStatusTheme(
       label: labels.inactive,
       Icon: PowerOff,
       textClassName: "text-white dark:text-gray-200",
-      softBgClassName: "bg-gray-200 dark:bg-gray-900",
-      headerBgClassName: "bg-slate-500 dark:bg-gray-700",
-      headerBorderClassName: "border-slate-600 dark:border-gray-800",
+      softBgClassName: "bg-slate-600 dark:bg-gray-900",
+      headerBgClassName: "bg-slate-600 dark:bg-gray-700",
+      headerBorderClassName: "border-slate-800 dark:border-gray-800",
       headerTextClassName: "text-white dark:text-white",
-      badgeClassName: "bg-slate-600 dark:bg-gray-800 text-white dark:text-gray-100",
+      badgeClassName: "bg-slate-800 dark:bg-gray-800 text-white dark:text-gray-100",
     }
   }
 
@@ -90,12 +90,12 @@ export function getStatusTheme(
       return {
         label: labels.warning,
         Icon: Zap,
-        textClassName: "text-amber-800 dark:text-amber-300",
-        softBgClassName: "bg-amber-50 dark:bg-amber-950",
-        headerBgClassName: "bg-amber-500 dark:bg-amber-600",
-        headerBorderClassName: "border-amber-600 dark:border-amber-700",
+        textClassName: "text-yellow-800 dark:text-amber-300",
+        softBgClassName: "bg-yellow-50 dark:bg-amber-950",
+        headerBgClassName: "bg-amber-300 dark:bg-amber-300",
+        headerBorderClassName: "border-amber-300 dark:border-amber-300",
         headerTextClassName: "text-gray-900",
-        badgeClassName: "!bg-amber-500 hover:!bg-amber-600 !text-white border-amber-600",
+        badgeClassName: "!bg-amber-500 hover:!bg-amber-600 !text-white border-amber-300",
       }
     case "ended":
       return {
@@ -113,12 +113,12 @@ export function getStatusTheme(
       return {
         label: labels.ok,
         Icon: CheckCircle2,
-        textClassName: "text-blue-700 dark:text-blue-300",
-        softBgClassName: "bg-blue-50 dark:bg-blue-950",
-        headerBgClassName: "bg-blue-600 dark:bg-blue-700",
-        headerBorderClassName: "border-blue-700 dark:border-blue-800",
-        headerTextClassName: "text-white",
-        badgeClassName: "bg-blue-600 hover:bg-blue-700",
+        textClassName: "text-black",
+        softBgClassName: "bg-primary/10 dark:bg-primary/20",
+        headerBgClassName: "bg-primary",
+        headerBorderClassName: "border-primary",
+        headerTextClassName: "text-black",
+        badgeClassName: "bg-primary text-black hover:bg-primary/90",
       }
   }
 }

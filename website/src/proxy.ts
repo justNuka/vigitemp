@@ -15,7 +15,6 @@ const protectedRoutes = [
   "/monitoring",
   "/alarmes",
   "/alarms",
-  "/audit",
   "/parametres",
   "/settings",
   "/profil",

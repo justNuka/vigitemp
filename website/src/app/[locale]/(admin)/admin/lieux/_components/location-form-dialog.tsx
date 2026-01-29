@@ -16,6 +16,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLicense } from "@/components/license/license-provider";
 import { Check, X } from "lucide-react";
 import { FormProvider, type UseFormReturn } from 'react-hook-form';
+import type { Dispatch, SetStateAction } from 'react';
 import { useTranslations } from 'next-intl';
 
 import type { LocationFormData, LocationFormMode } from './location-form-types';
@@ -27,12 +28,14 @@ type LocationFormDialogProps = {
   open: boolean;
   mode: LocationFormMode;
   form: UseFormReturn<LocationFormData>;
+  formData?: LocationFormData;
+  setFormData?: Dispatch<SetStateAction<LocationFormData>>;
   sites: SiteSimple[];
   groups: Group[];
   availableProbes: AvailableProbe[];
   isSubmitting: boolean;
   onCancel: () => void;
-  onSubmit: (values: LocationFormData) => void;
+  onSubmit: (values: LocationFormData) => void | Promise<void>;
 };
 
 export function LocationFormDialog({
@@ -52,6 +55,7 @@ export function LocationFormDialog({
   const isLight = edition === "light";
   const t = useTranslations('locationsForm.dialog');
   const tCommon = useTranslations('common');
+  const handleSubmit = form.handleSubmit(async (values) => onSubmit(values));
 
   return (
     <Dialog
@@ -67,7 +71,7 @@ export function LocationFormDialog({
         </DialogHeader>
 
         <FormProvider {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <Tabs defaultValue="general" className="w-full">
               <TabsList className={`grid w-full ${isLight ? "grid-cols-1" : "grid-cols-3"}`}>
                 <TabsTrigger value="general">{t('tabs.general')}</TabsTrigger>

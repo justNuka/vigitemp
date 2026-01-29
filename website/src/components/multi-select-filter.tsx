@@ -83,7 +83,17 @@ export function MultiSelectFilter({
   const buttonClasses =
     tone === "primary"
       ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 dark:border-primary/50 dark:bg-primary/15 dark:text-primary-foreground/90"
-      : "border-border bg-background text-foreground hover:bg-muted/40";
+      : "border-border bg-muted/30 text-foreground hover:bg-muted/50 dark:bg-muted/20 dark:hover:bg-muted/30";
+
+  const countBadgeClasses =
+    tone === "primary"
+      ? "bg-primary/15 text-primary"
+      : "bg-muted/60 text-foreground";
+
+  const selectedBadgeClasses =
+    tone === "primary"
+      ? "bg-primary text-primary-foreground"
+      : "bg-muted text-foreground";
 
   return (
     <div
@@ -104,7 +114,7 @@ export function MultiSelectFilter({
         <div className="flex items-center gap-2 flex-1 text-left">
           <span className="text-sm font-medium">{label}</span>
           {selectedIds.length > 0 && (
-            <Badge variant="secondary" className="ml-auto bg-primary/15 text-primary">
+            <Badge variant="secondary" className={`ml-auto ${countBadgeClasses}`}>
               {selectedIds.length}
             </Badge>
           )}
@@ -143,7 +153,7 @@ export function MultiSelectFilter({
                 <Badge
                   key={label}
                   variant="default"
-                  className="flex items-center gap-1 bg-primary text-primary-foreground"
+                  className={`flex items-center gap-1 ${selectedBadgeClasses}`}
                 >
                   {label}
                   <X

@@ -25,24 +25,24 @@ const variantStyles = {
     card: "",
   },
   info: {
-    icon: "bg-primary/10 text-primary",
-    card: "border-l-4 border-l-primary",
+    icon: "bg-primary text-primary",
+    card: "border-l-8 border-l-primary",
   },
   success: {
-    icon: "bg-success/10 text-success",
-    card: "border-l-4 border-l-success",
+    icon: "bg-success text-success",
+    card: "border-l-8 border-l-success",
   },
   warning: {
-    icon: "bg-warning/10 text-warning",
-    card: "border-l-4 border-l-warning",
+    icon: "bg-warning text-warning",
+    card: "border-l-8  border-l-warning",
   },
   danger: {
-    icon: "bg-destructive/12 text-destructive",
-    card: "border-l-4 border-l-destructive",
+    icon: "bg-destructive text-destructive",
+    card: "border-l-8 border-l-destructive",
   },
   muted: {
     icon: "bg-muted text-muted-foreground",
-    card: "border-l-4 border-l-muted-foreground/40",
+    card: "border-l-8 border-l-muted-foreground/40",
   },
 };
 

@@ -894,7 +894,8 @@
       "profiles": "Profiles",
       "users": "Users",
       "alarms": "Alarms",
-      "archived_measures": "Archived measurements"
+      "archived_measures": "Archived measurements",
+      "audit": "Audit log"
     },
     "system": {
       "settings": "Settings",
@@ -1623,7 +1624,8 @@
     "probe": "Probe: {serial}",
     "tabs": {
       "graph": "Chart",
-      "table": "Measurements table"
+      "table": "Measurements table",
+      "audit": "Audit"
     },
     "table": {
       "columns": {
@@ -1648,6 +1650,18 @@
     "tooltip": {
       "value": "Value: {value}{unit}",
       "in_alarm": "In alarm"
+    },
+    "audit": {
+      "columns": {
+        "code": "CODE",
+        "label": "COMMENT",
+        "date_time": "DATE/TIME",
+        "user": "USER",
+        "details": "DETAILS"
+      },
+      "empty": "No audit entries for this location",
+      "error": "Failed to load audit entries",
+      "search_placeholder": "Search in audit..."
     },
     "guides": {
       "max": "Max: {value}{unit}",
@@ -1726,7 +1740,8 @@
         "items": {
           "0": "Unified cards (buttons, type icons, tooltips, light mode).",
           "1": "Primary-colored filters/actions, improved sorting and views.",
-          "2": "Latest value and upper/lower limits in the table."
+          "2": "Latest value and upper/lower limits in the table.",
+          "3": "Added the Audit tab in location details."
         }
       },
       "measures": {
@@ -1824,7 +1839,8 @@
     },
     "guides": {
       "max": "Max: {value}",
-      "min": "Min: {value}"
+      "min": "Min: {value}",
+      "target": "Target: {value}"
     },
     "last_measure": {
       "label": "Last measurement: {value}"

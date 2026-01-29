@@ -97,6 +97,7 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
         selectedIds={filters.siteIds || []}
         onChange={(selectedIds) => handleSiteChange((selectedIds || []) as number[])}
         placeholder={t('sites.placeholder')}
+        tone="default"
       />
 
       <MultiSelectFilter
@@ -120,6 +121,7 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
           }))
         }}
         placeholder={t('groups.placeholder')}
+        tone="default"
       />
     </div>
   )
