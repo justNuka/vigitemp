@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getAuthenticatedUser } from "@/lib/auth"
-import { withLogging } from "@/lib/api-logger"
+import { getClientIp, withLogging } from "@/lib/api-logger"
 import { log } from "@/lib/logger"
 import { z } from "zod"
 import { apiError, apiOk } from "@/lib/api-response"
@@ -116,7 +116,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       newModule.Id_Module,
       user.username,
       user.userId,
-      req.headers.get("x-forwarded-for") || "unknown",
+      getClientIp(req),
       validData,
     )
 

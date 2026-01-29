@@ -1,6 +1,9 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { z } from "zod"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 
 import { buildAuditCommentColumns } from "./_components/build-audit-comment-columns"
 import { CommentsFormCard } from "./_components/comments-form-card"
@@ -8,17 +11,41 @@ import { CommentsTableCard } from "./_components/comments-table-card"
 import { EditCommentDialog } from "./_components/edit-comment-dialog"
 import type { AuditCode, AuditComment } from "./_components/audit-comments-types"
 import { getJson, patchJson, postJson } from "@/lib/http"
+import { useTranslations } from 'next-intl'
 
 export function CommentsTab() {
+  const t = useTranslations('toolsComments')
   const [auditCodes, setAuditCodes] = useState<AuditCode[]>([])
   const [comments, setComments] = useState<AuditComment[]>([])
-  const [selectedType, setSelectedType] = useState<string>("")
-  const [commentText, setCommentText] = useState("")
   const [selectedCommentId, setSelectedCommentId] = useState<number | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingComment, setEditingComment] = useState<AuditComment | null>(null)
-  const [editText, setEditText] = useState("")
   const [isLoading, setIsLoading] = useState(true)
+
+  const commentsSchema = z.object({
+    type: z.string().min(1, t('validation.type_required')),
+    text: z.string().min(1, t('validation.comment_required')).max(255, t('validation.max', { max: 255 })),
+  })
+
+  type CommentsFormValues = z.infer<typeof commentsSchema>
+
+  const {
+    handleSubmit,
+    control,
+    register,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<CommentsFormValues>({
+    resolver: zodResolver(commentsSchema),
+    defaultValues: {
+      type: "",
+      text: "",
+    },
+  })
+
+  const selectedType = watch("type")
+  const commentText = watch("text")
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,27 +71,31 @@ export function CommentsTab() {
   }, [comments, selectedType])
 
   const columns = useMemo(
-    () => buildAuditCommentColumns({ auditCodes }),
-    [auditCodes],
+    () => buildAuditCommentColumns({
+      auditCodes,
+      labels: {
+        type: t('table.columns.type'),
+        comment: t('table.columns.comment'),
+      },
+    }),
+    [auditCodes, t],
   )
 
-  const handleSave = async () => {
-    if (!selectedType || !commentText.trim()) return
-
+  const handleSave = async (values: CommentsFormValues) => {
     try {
-      await postJson("/api/audit/comments", { type: selectedType, text: commentText })
+      await postJson("/api/audit/comments", { type: values.type, text: values.text })
 
       setComments((prev) => {
-        const existing = prev.find((comment) => comment.type === selectedType)
+        const existing = prev.find((comment) => comment.type === values.type)
         if (existing) {
           return prev.map((comment) =>
-            comment.type === selectedType ? { ...comment, text: commentText } : comment,
+            comment.type === values.type ? { ...comment, text: values.text } : comment,
           )
         }
         const nextId = Math.max(0, ...prev.map((item) => item.id)) + 1
-        return [...prev, { id: nextId, type: selectedType, text: commentText }]
+        return [...prev, { id: nextId, type: values.type, text: values.text }]
       })
-      setCommentText("")
+      setValue("text", "")
     } catch (error) {
       console.error("Error saving comment:", error)
     }
@@ -84,20 +115,19 @@ export function CommentsTab() {
     }
   }
 
-  const handleEditComment = async () => {
-    if (!editingComment || !editText.trim()) return
+  const handleEditComment = async (text: string) => {
+    if (!editingComment || !text.trim()) return
 
     try {
-      await patchJson("/api/audit/comments", { type: editingComment.type, text: editText })
+      await patchJson("/api/audit/comments", { type: editingComment.type, text })
 
       setComments(
         comments.map((comment) =>
-          comment.type === editingComment.type ? { ...comment, text: editText } : comment,
+          comment.type === editingComment.type ? { ...comment, text } : comment,
         ),
       )
       setIsEditDialogOpen(false)
       setEditingComment(null)
-      setEditText("")
       setSelectedCommentId(null)
     } catch (error) {
       console.error("Error updating comment:", error)
@@ -110,7 +140,6 @@ export function CommentsTab() {
     if (!comment) return
 
     setEditingComment(comment)
-    setEditText(comment.text)
     setIsEditDialogOpen(true)
   }
 
@@ -118,12 +147,13 @@ export function CommentsTab() {
     <div className="space-y-6">
       <CommentsFormCard
         auditCodes={auditCodes}
-        selectedType={selectedType}
-        onTypeChange={setSelectedType}
-        commentText={commentText}
-        onCommentTextChange={setCommentText}
         isLoading={isLoading}
-        onSave={handleSave}
+        onSubmit={handleSubmit(handleSave)}
+        control={control}
+        register={register}
+        errors={errors}
+        isSubmitting={isSubmitting}
+        commentLength={commentText?.length ?? 0}
       />
 
       <CommentsTableCard
@@ -143,9 +173,10 @@ export function CommentsTab() {
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         commentType={editingComment?.type}
-        editText={editText}
-        onEditTextChange={setEditText}
-        onSave={handleEditComment}
+        initialText={editingComment?.text || ""}
+        onSave={(text) => {
+          void handleEditComment(text)
+        }}
       />
     </div>
   )

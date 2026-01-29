@@ -1,9 +1,12 @@
+'use client'
+
 import type { ColumnDef } from "@tanstack/react-table"
 
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckSquare, RotateCcw, Square } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 import type { ProbeWithSelection } from "./probe-types"
 
@@ -28,19 +31,20 @@ export function ProbesTableCard({
   onDeselectAll,
   onReset,
 }: ProbesTableCardProps) {
+  const t = useTranslations('toolsTestConnection.table')
   const allSelected = probes.length > 0 && selectedCount === probes.length
 
   return (
     <Card className="border-0 shadow-md">
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <div>
-          <CardTitle>Sondes</CardTitle>
+          <CardTitle>{t('title')}</CardTitle>
           <p className="mt-1 text-sm text-muted-foreground">
-            {probes.length} sonde{probes.length > 1 ? "s" : ""}
+            {t('count', { count: probes.length })}
           </p>
         </div>
         <Button onClick={onLaunchTests} disabled={selectedCount === 0 || isLoading} size="sm">
-          {isLoading ? "Test en cours..." : "Lancer les tests"}
+          {isLoading ? t('actions.testing') : t('actions.run_tests')}
         </Button>
       </CardHeader>
       <CardContent>
@@ -51,9 +55,9 @@ export function ProbesTableCard({
             pageSize={10}
             maxHeight="calc(100dvh - 25rem)"
             isLoading={isLoading}
-            emptyMessage="Aucune sonde disponible"
+            emptyMessage={t('empty')}
             showSearch={true}
-            searchPlaceholder="Rechercher une sonde..."
+            searchPlaceholder={t('search_placeholder')}
             searchField={["Sonde_Numero_Serie", "Adresse_Sonde", "Module"]}
             headerClassName="!bg-sidebar/90 !text-sidebar-foreground backdrop-blur supports-backdrop-filter:!bg-sidebar/80"
             headerCellClassName="!bg-sidebar/90 !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar/80 backdrop-blur supports-backdrop-filter:!bg-sidebar/80"
@@ -68,7 +72,7 @@ export function ProbesTableCard({
               className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {allSelected ? <Square className="h-4 w-4" /> : <CheckSquare className="h-4 w-4" />}
-              {allSelected ? "Tout décocher" : "Tout cocher"}
+              {allSelected ? t('actions.uncheck_all') : t('actions.check_all')}
             </Button>
             {selectedCount > 0 && (
               <Button
@@ -78,7 +82,7 @@ export function ProbesTableCard({
                 className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Square className="h-4 w-4" />
-                Décocher la sélection
+                {t('actions.uncheck_selection')}
               </Button>
             )}
             <Button
@@ -88,7 +92,7 @@ export function ProbesTableCard({
               className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <RotateCcw className="h-4 w-4" />
-              Réinitialiser états
+              {t('actions.reset')}
             </Button>
           </div>
         </div>

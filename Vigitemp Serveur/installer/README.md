@@ -23,7 +23,7 @@ cd "Vigitemp Serveur\\installer"
 
 ## Ce que fait le script
 - Copie le build dans le dossier dâinstallation
-- Demande les paramÃ¨tres DB + URL web
+- Demande les paramétres DB + URL web
 - Charge la licence et affiche ses options
 - Copie la licence et la clé publique dans ProgramData
 - Met Ã  jour les clés App.config

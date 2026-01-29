@@ -1,7 +1,8 @@
 'use client';
 
+import { useFormContext, useWatch } from 'react-hook-form';
+import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -12,6 +13,13 @@ import {
 import { Combobox } from '@/components/ui/combobox';
 import type { StandardType } from '@/hooks/useStandardTypes';
 import type { Module } from '@/hooks/useModules';
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 
 type StandardInfoFormProps = {
   isEditing: boolean;
@@ -19,21 +27,6 @@ type StandardInfoFormProps = {
   typesLoading: boolean;
   modules: Module[] | undefined;
   modulesLoading: boolean;
-
-  type: string;
-  setType: (value: string) => void;
-  serie: string;
-  setSerie: (value: string) => void;
-  moduleId: string;
-  setModuleId: (value: string) => void;
-  portSerie: string;
-  idServeur: string;
-  valeurBase: string;
-  setValeurBase: (value: string) => void;
-  resolution: string;
-  setResolution: (value: string) => void;
-  incertitude: string;
-  setIncertitude: (value: string) => void;
 };
 
 export function StandardInfoForm({
@@ -42,117 +35,148 @@ export function StandardInfoForm({
   typesLoading,
   modules,
   modulesLoading,
-  type,
-  setType,
-  serie,
-  setSerie,
-  moduleId,
-  setModuleId,
-  portSerie,
-  idServeur,
-  valeurBase,
-  setValeurBase,
-  resolution,
-  setResolution,
-  incertitude,
-  setIncertitude,
 }: StandardInfoFormProps) {
+  const { control, getValues } = useFormContext();
+  const portSerie = useWatch({ control, name: 'portSerie' }) ?? getValues('portSerie') ?? '';
+  const idServeur = useWatch({ control, name: 'idServeur' }) ?? getValues('idServeur') ?? '0';
+  const t = useTranslations('standardsDialog');
+
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-lg">Informations de l'étalon</h3>
+      <h3 className="font-semibold text-lg">{t('sections.info')}</h3>
 
-      <div className="space-y-2">
-        <Label htmlFor="type">Type d'étalon</Label>
-        <Select value={type} onValueChange={setType} disabled={isEditing}>
-          <SelectTrigger id="type" disabled={typesLoading || isEditing}>
-            <SelectValue placeholder="Sélectionner un type" />
-          </SelectTrigger>
-          <SelectContent>
-            {types?.map((t) => (
-              <SelectItem key={t.Type_Etalon} value={t.Type_Etalon || ''}>
-                {t.Type_Etalon} - {t.Nom || '-'}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <FormField
+        control={control}
+        name="type"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('fields.type_label')}</FormLabel>
+            <Select value={field.value || ''} onValueChange={field.onChange} disabled={isEditing}>
+              <FormControl>
+                <SelectTrigger id="type" disabled={typesLoading || isEditing}>
+                  <SelectValue placeholder={t('fields.type_placeholder')} />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {types?.map((t) => (
+                  <SelectItem key={t.Type_Etalon} value={t.Type_Etalon || ''}>
+                    {t.Type_Etalon} - {t.Nom || '-'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="serie">Numéro de série</Label>
-        <Input
-          id="serie"
-          placeholder="Ex: 00001"
-          value={serie}
-          onChange={(e) => setSerie(e.target.value.replace(/\D/g, ''))}
-          readOnly={isEditing}
-          className={isEditing ? 'bg-muted opacity-50' : ''}
-        />
-      </div>
+      <FormField
+        control={control}
+        name="serie"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('fields.serial_label')}</FormLabel>
+            <FormControl>
+              <Input
+                id="serie"
+                placeholder={t('fields.serial_placeholder')}
+                value={field.value}
+                onChange={(e) => field.onChange(e.target.value.replace(/\D/g, ''))}
+                readOnly={isEditing}
+                className={isEditing ? 'bg-muted opacity-50' : ''}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="module">Module</Label>
-        <Combobox
-          triggerId="module"
-          value={moduleId}
-          onValueChange={setModuleId}
-          disabled={modulesLoading}
-          placeholder="Sélectionner un module"
-          searchPlaceholder="Rechercher un module..."
-          emptyMessage="Aucun module"
-          options={(modules ?? []).map((mod) => ({
-            value: mod.Id_Module.toString(),
-            label: `${mod.Module_Numero_Serie || mod.Libelle_Type_Module || mod.Id_Module} sur port ${
-              mod.Port_Serie || 'N/A'
-            } (${mod.Emplacement || '-'})`,
-            searchText: `${mod.Module_Numero_Serie || ''} ${mod.Libelle_Type_Module || ''} ${
-              mod.Port_Serie || ''
-            } ${mod.Emplacement || ''} ${mod.Id_Module}`,
-          }))}
-        />
-      </div>
+      <FormField
+        control={control}
+        name="moduleId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('fields.module_label')}</FormLabel>
+            <FormControl>
+              <Combobox
+                triggerId="module"
+                value={field.value || ''}
+                onValueChange={field.onChange}
+                disabled={modulesLoading}
+                placeholder={t('fields.module_placeholder')}
+                searchPlaceholder={t('fields.module_search_placeholder')}
+                emptyMessage={t('fields.module_empty')}
+                options={(modules ?? []).map((mod) => ({
+                  value: mod.Id_Module.toString(),
+                  label: `${mod.Module_Numero_Serie || mod.Libelle_Type_Module || mod.Id_Module} sur port ${
+                    mod.Port_Serie || 'N/A'
+                  } (${mod.Emplacement || '-'})`,
+                  searchText: `${mod.Module_Numero_Serie || ''} ${mod.Libelle_Type_Module || ''} ${
+                    mod.Port_Serie || ''
+                  } ${mod.Emplacement || ''} ${mod.Id_Module}`,
+                }))}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="port">Port série</Label>
-        <Input id="port" placeholder="Port série" value={portSerie} readOnly className="bg-muted opacity-50" />
-      </div>
+      <FormItem>
+        <FormLabel>{t('fields.port_label')}</FormLabel>
+        <FormControl>
+          <Input id="port" placeholder={t('fields.port_placeholder')} value={portSerie} readOnly className="bg-muted opacity-50" />
+        </FormControl>
+      </FormItem>
 
-      <div className="space-y-2">
-        <Label htmlFor="server">ID Serveur</Label>
-        <Input id="server" placeholder="ID Serveur" value={idServeur} readOnly className="bg-muted opacity-50" />
-      </div>
+      <FormItem>
+        <FormLabel>{t('fields.server_id_label')}</FormLabel>
+        <FormControl>
+          <Input id="server" placeholder={t('fields.server_id_placeholder')} value={idServeur} readOnly className="bg-muted opacity-50" />
+        </FormControl>
+      </FormItem>
 
-      <div className="space-y-2">
-        <Label htmlFor="base-value">Valeur de base</Label>
-        <Input
-          id="base-value"
-          type="number"
-          placeholder="0"
-          value={valeurBase}
-          onChange={(e) => setValeurBase(e.target.value)}
-        />
-      </div>
+      <FormField
+        control={control}
+        name="valeurBase"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('fields.base_value_label')}</FormLabel>
+            <FormControl>
+              <Input id="base-value" type="number" placeholder={t('fields.number_placeholder')} {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="resolution">Résolution</Label>
-        <Input
-          id="resolution"
-          type="number"
-          placeholder="0"
-          value={resolution}
-          onChange={(e) => setResolution(e.target.value)}
-        />
-      </div>
+      <FormField
+        control={control}
+        name="resolution"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('fields.resolution_label')}</FormLabel>
+            <FormControl>
+              <Input id="resolution" type="number" placeholder={t('fields.number_placeholder')} {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="incertitude">Incertitude</Label>
-        <Input
-          id="incertitude"
-          type="number"
-          placeholder="0"
-          value={incertitude}
-          onChange={(e) => setIncertitude(e.target.value)}
-        />
-      </div>
+      <FormField
+        control={control}
+        name="incertitude"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('fields.incertitude_label')}</FormLabel>
+            <FormControl>
+              <Input id="incertitude" type="number" placeholder={t('fields.number_placeholder')} {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   );
 }

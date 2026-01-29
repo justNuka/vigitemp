@@ -10,15 +10,19 @@ export interface ActiveAlarm {
   statut: string
 }
 
-export const activeAlarmsColumns: ColumnDef<ActiveAlarm>[] = [
+type Translator = (key: string) => string
+
+export const getActiveAlarmsColumns = (
+  t: Translator,
+): ColumnDef<ActiveAlarm>[] => [
   {
     accessorKey: "sonde",
-    header: "Sonde",
+    header: t("active_alarms.columns.probe"),
     enableSorting: true,
   },
   {
     accessorKey: "lieu",
-    header: "Lieu / Temps",
+    header: t("active_alarms.columns.location_time"),
     enableSorting: true,
     cell: ({ row }) => (
       <div className="text-sm">
@@ -29,17 +33,17 @@ export const activeAlarmsColumns: ColumnDef<ActiveAlarm>[] = [
   },
   {
     accessorKey: "valeur",
-    header: "Valeur",
+    header: t("active_alarms.columns.value"),
     enableSorting: true,
   },
   {
     accessorKey: "seuil",
-    header: "Seuil",
+    header: t("active_alarms.columns.threshold"),
     enableSorting: true,
   },
   {
     accessorKey: "statut",
-    header: "Statut",
+    header: t("active_alarms.columns.status"),
     enableSorting: true,
     cell: ({ getValue }) => (
       <span className="rounded-full bg-red-100 px-2 py-1 text-sm font-medium text-red-800">

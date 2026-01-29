@@ -263,18 +263,18 @@ $publicKeyDestPath = Join-Path $publicKeyDir "license_public.pem"
 Copy-Item -Path $licenseSourcePath -Destination $licenseDestPath -Force
 Copy-Item -Path $publicKeySourcePath -Destination $publicKeyDestPath -Force
 
-Set-AppSetting $configPath "Vigitemp.WebsiteBaseUrl" $websiteBaseUrl
-Set-AppSetting $configPath "Vigitemp.AlarmDispatchSecret" $alarmSecret
-Set-AppSetting $configPath "Vigitemp.Db.Provider" $dbProvider
-Set-AppSetting $configPath "Vigitemp.Db.Host" $dbHost
-Set-AppSetting $configPath "Vigitemp.Db.Port" $dbPort
-Set-AppSetting $configPath "Vigitemp.Db.User" $dbUser
-Set-AppSetting $configPath "Vigitemp.Db.Password" $dbPassword
-Set-AppSetting $configPath "Vigitemp.Db.MainDatabase" $dbMain
-Set-AppSetting $configPath "Vigitemp.Db.MeasureDatabase" $dbMeasure
-Set-AppSetting $configPath "Vigitemp.License.Path" $licenseDestPath
-Set-AppSetting $configPath "Vigitemp.License.PublicKeyPath" $publicKeyDestPath
-Set-AppSetting $configPath "Vigitemp.License.InstancePublicKey" $instancePublicKey
+Set-AppSetting $configPath "Vigi.WebsiteBaseUrl" $websiteBaseUrl
+Set-AppSetting $configPath "Vigi.AlarmDispatchSecret" $alarmSecret
+Set-AppSetting $configPath "Vigi.Db.Provider" $dbProvider
+Set-AppSetting $configPath "Vigi.Db.Host" $dbHost
+Set-AppSetting $configPath "Vigi.Db.Port" $dbPort
+Set-AppSetting $configPath "Vigi.Db.User" $dbUser
+Set-AppSetting $configPath "Vigi.Db.Password" $dbPassword
+Set-AppSetting $configPath "Vigi.Db.MainDatabase" $dbMain
+Set-AppSetting $configPath "Vigi.Db.MeasureDatabase" $dbMeasure
+Set-AppSetting $configPath "Vigi.License.Path" $licenseDestPath
+Set-AppSetting $configPath "Vigi.License.PublicKeyPath" $publicKeyDestPath
+Set-AppSetting $configPath "Vigi.License.InstancePublicKey" $instancePublicKey
 
 $serviceExePath = Join-Path $InstallDir $exeName
 $version = ""

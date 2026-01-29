@@ -43,7 +43,11 @@ export async function ServerAlarms(status?: AlarmStatus) {
     id: alarm.Id_Alarme.toString(),
     sensorId: alarm.Id_Lieu?.toString() || "0",
     locationId: alarm.Id_Lieu?.toString() || "0",
-    type: (alarm.Type === "H" ? "high" : "low") as "high" | "low",
+    type: (alarm.Type === "H"
+      ? "high"
+      : alarm.Type === "B"
+        ? "low"
+        : "no-response") as "high" | "low" | "no-response",
     value: alarm.Valeur || 0,
     threshold: 0, // Threshold from t_lieu if needed
     status: alarm.Est_Acquittee ? ("acknowledged" as const) : ("active" as const),

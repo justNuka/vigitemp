@@ -12,6 +12,10 @@ import { Button } from "@/components/ui/button"
 import { postJson } from "@/lib/http"
 import { validatePassword } from "@/lib/password-validation"
 import type { PasswordRules } from "@/lib/api"
+import { z } from "zod"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useTranslations } from "next-intl"
 
 type Props = {
   username: string
@@ -20,52 +24,65 @@ type Props = {
 
 export function ForcePasswordChangeForm({ username, rules }: Props) {
   const router = useRouter()
-
-  const [formData, setFormData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  })
+  const t = useTranslations("forcePasswordChange")
   const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
 
-  const validation = rules ? validatePassword(formData.newPassword, rules) : null
+  const forcePasswordSchema = z
+    .object({
+      currentPassword: z.string().min(1, t("validation.current_required")),
+      newPassword: z.string().min(1, t("validation.new_required")),
+      confirmPassword: z.string().min(1, t("validation.confirm_required")),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t("validation.mismatch"),
+      path: ["confirmPassword"],
+    })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  type ForcePasswordFormValues = z.infer<typeof forcePasswordSchema>
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<ForcePasswordFormValues>({
+    resolver: zodResolver(forcePasswordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  })
+
+  const newPassword = watch("newPassword")
+  const confirmPassword = watch("confirmPassword")
+  const validation = rules ? validatePassword(newPassword, rules) : null
+
+  const onSubmit = async (data: ForcePasswordFormValues) => {
     setError("")
 
-    if (formData.newPassword !== formData.confirmPassword) {
-      setError("Les mots de passe ne correspondent pas")
-      return
-    }
-
     if (validation && !validation.isValid) {
-      setError("Le mot de passe ne respecte pas les règles de sécurité")
+      setError(t("errors.rules_not_met"))
       return
     }
-
-    setIsLoading(true)
 
     try {
       await postJson<{ message: string; isFirstPasswordChange?: boolean }>("/api/auth/force-password-change", {
         username,
-        currentPassword: formData.currentPassword,
-        newPassword: formData.newPassword,
-        confirmPassword: formData.confirmPassword,
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+        confirmPassword: data.confirmPassword,
       })
 
-      toast.success("Mot de passe changé avec succès")
+      toast.success(t("toast.success"))
       router.push("/")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Une erreur est survenue")
-    } finally {
-      setIsLoading(false)
+      setError(err instanceof Error ? err.message : t("errors.generic"))
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -75,50 +92,68 @@ export function ForcePasswordChangeForm({ username, rules }: Props) {
 
       <PasswordField
         id="currentPassword"
-        label="Mot de passe actuel"
+        label={t("fields.current_label")}
         required
-        disabled={isLoading}
+        disabled={isSubmitting}
         inputProps={{
-          value: formData.currentPassword,
-          onChange: (e) => setFormData({ ...formData, currentPassword: e.target.value }),
+          ...register("currentPassword"),
           autoComplete: "current-password",
+          "aria-invalid": !!errors.currentPassword,
+          "aria-describedby": errors.currentPassword ? "current-password-error" : undefined,
         }}
       />
+      {errors.currentPassword?.message && (
+        <p id="current-password-error" className="text-sm text-destructive">
+          {String(errors.currentPassword.message)}
+        </p>
+      )}
 
       <div className="space-y-2">
         <PasswordField
           id="newPassword"
-          label="Nouveau mot de passe"
+          label={t("fields.new_label")}
           required
-          disabled={isLoading}
+          disabled={isSubmitting}
           inputProps={{
-            value: formData.newPassword,
-            onChange: (e) => setFormData({ ...formData, newPassword: e.target.value }),
+            ...register("newPassword"),
             autoComplete: "new-password",
+            "aria-invalid": !!errors.newPassword,
+            "aria-describedby": errors.newPassword ? "new-password-error" : undefined,
           }}
         />
+        {errors.newPassword?.message && (
+          <p id="new-password-error" className="text-sm text-destructive">
+            {String(errors.newPassword.message)}
+          </p>
+        )}
 
         {rules && (
           <div className="mt-2 rounded-lg border bg-muted/50 p-3">
-            <PasswordRulesList password={formData.newPassword} rules={rules} title="Règles de sécurité :" />
+            <PasswordRulesList password={newPassword} rules={rules} title={t("rules.title")} />
           </div>
         )}
       </div>
 
       <PasswordField
         id="confirmPassword"
-        label="Confirmer le nouveau mot de passe"
+        label={t("fields.confirm_label")}
         required
-        disabled={isLoading}
+        disabled={isSubmitting}
         inputProps={{
-          value: formData.confirmPassword,
-          onChange: (e) => setFormData({ ...formData, confirmPassword: e.target.value }),
+          ...register("confirmPassword"),
           autoComplete: "new-password",
+          "aria-invalid": !!errors.confirmPassword,
+          "aria-describedby": errors.confirmPassword ? "confirm-password-error" : undefined,
         }}
       />
+      {errors.confirmPassword?.message && (
+        <p id="confirm-password-error" className="text-sm text-destructive">
+          {String(errors.confirmPassword.message)}
+        </p>
+      )}
 
-      <Button type="submit" className="w-full" disabled={isLoading || !!(validation && !validation.isValid)}>
-        {isLoading ? "Changement en cours..." : "Changer le mot de passe"}
+      <Button type="submit" className="w-full" disabled={isSubmitting || !!(validation && !validation.isValid)}>
+        {isSubmitting ? t("actions.submitting") : t("actions.submit")}
       </Button>
     </form>
   )

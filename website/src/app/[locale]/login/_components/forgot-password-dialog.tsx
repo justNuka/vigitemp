@@ -12,24 +12,27 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { FieldErrors, UseFormRegister } from "react-hook-form";
+
+type ResetFormValues = {
+  email: string;
+};
 
 export function ForgotPasswordDialog({
   open,
   onOpenChange,
   success,
-  email,
-  onEmailChange,
   onSubmit,
   onClose,
   isSubmitting,
   translations,
+  register,
+  errors,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   success: boolean;
-  email: string;
-  onEmailChange: (value: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e?: React.BaseSyntheticEvent) => void;
   onClose: () => void;
   isSubmitting: boolean;
   translations: {
@@ -43,7 +46,11 @@ export function ForgotPasswordDialog({
     sending: string;
     close: string;
   };
+  register: UseFormRegister<ResetFormValues>;
+  errors: FieldErrors<ResetFormValues>;
 }) {
+  const emailError = errors.email?.message;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -73,14 +80,19 @@ export function ForgotPasswordDialog({
               <Input
                 id="reset-email"
                 type="email"
-                value={email}
-                onChange={(e) => onEmailChange(e.target.value)}
+                {...register("email")}
                 placeholder={translations.emailPlaceholder}
-                required
                 autoFocus
                 disabled={isSubmitting}
                 autoComplete="email"
+                aria-invalid={!!emailError}
+                aria-describedby={emailError ? "reset-email-error" : undefined}
               />
+              {emailError && (
+                <p id="reset-email-error" className="text-sm text-destructive">
+                  {String(emailError)}
+                </p>
+              )}
             </div>
 
             <div className="flex gap-2">

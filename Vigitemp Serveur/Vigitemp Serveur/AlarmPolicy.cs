@@ -22,9 +22,9 @@ namespace Vigitemp_Serveur
 
         private static AlarmPolicy Load()
         {
-            var hysteresis = GetSettingDouble("Vigitemp.Alarms.HysteresisDelta", 0);
-            var debounceSeconds = GetSettingInt("Vigitemp.Alarms.DebounceSeconds", 0);
-            var showWhileSnoozed = GetSettingBool("Vigitemp.Alarms.ShowWhileSnoozed", true);
+            var hysteresis = GetSettingDouble("Vigi.License.HysteresisDelta", 0);
+            var debounceSeconds = GetSettingInt("Vigi.License.DebounceSeconds", 0);
+            var showWhileSnoozed = GetSettingBool("Vigi.License.ShowWhileSnoozed", true);
 
             if (hysteresis < 0) hysteresis = 0;
             if (debounceSeconds < 0) debounceSeconds = 0;

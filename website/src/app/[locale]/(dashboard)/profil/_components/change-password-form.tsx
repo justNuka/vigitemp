@@ -15,19 +15,22 @@ import { PasswordField } from '@/components/password/password-field'
 import { PasswordRulesList } from '@/components/password/password-rules-list'
 import { PasswordStrengthMeter } from '@/components/password/password-strength-meter'
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
-import { changePasswordSchema, type ChangePasswordFormValues } from './change-password-schema'
+import { createChangePasswordSchema, type ChangePasswordFormValues } from './change-password-schema'
 
 type Props = {
   rules: PasswordRules | null | undefined
+  rulesLoading: boolean
 }
 
-export function ChangePasswordForm({ rules }: Props) {
+export function ChangePasswordForm({ rules, rulesLoading }: Props) {
+  const t = useTranslations('profilePassword')
   const { toast } = useToast()
   const [error, setError] = useState<string | null>(null)
 
   const form = useForm<ChangePasswordFormValues>({
-    resolver: zodResolver(changePasswordSchema),
+    resolver: zodResolver(createChangePasswordSchema(t)),
     defaultValues: {
       oldPassword: '',
       newPassword: '',
@@ -44,7 +47,7 @@ export function ChangePasswordForm({ rules }: Props) {
     setError(null)
 
     if (!validation?.isValid) {
-      setError('Veuillez respecter toutes les règles de mot de passe')
+      setError(t('errors.invalid_rules'))
       return
     }
 
@@ -52,13 +55,13 @@ export function ChangePasswordForm({ rules }: Props) {
       await postJson<{ message: string; isFirstPasswordChange?: boolean }>('/api/profil/change-password', data)
 
       toast({
-        title: 'Mot de passe changé',
-        description: 'Votre mot de passe a été changé avec succès',
+        title: t('toast.title'),
+        description: t('toast.description'),
       })
 
       form.reset()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue')
+      setError(err instanceof Error ? err.message : t('errors.generic'))
     }
   }
 
@@ -70,17 +73,17 @@ export function ChangePasswordForm({ rules }: Props) {
           name="oldPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Ancien mot de passe</FormLabel>
+              <FormLabel>{t('fields.old.label')}</FormLabel>
               <FormControl>
                 <PasswordField
                   id="oldPassword"
-                  label="Ancien mot de passe"
+                  label={t('fields.old.label')}
                   hideLabel
                   required
                   disabled={form.formState.isSubmitting}
                   inputProps={{
                     ...field,
-                    placeholder: 'Entrez votre ancien mot de passe',
+                    placeholder: t('fields.old.placeholder'),
                     autoComplete: 'current-password',
                   }}
                 />
@@ -95,17 +98,17 @@ export function ChangePasswordForm({ rules }: Props) {
           name="newPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nouveau mot de passe</FormLabel>
+              <FormLabel>{t('fields.new.label')}</FormLabel>
               <FormControl>
                 <PasswordField
                   id="newPassword"
-                  label="Nouveau mot de passe"
+                  label={t('fields.new.label')}
                   hideLabel
                   required
                   disabled={form.formState.isSubmitting}
                   inputProps={{
                     ...field,
-                    placeholder: 'Entrez votre nouveau mot de passe',
+                    placeholder: t('fields.new.placeholder'),
                     autoComplete: 'new-password',
                   }}
                 />
@@ -113,12 +116,15 @@ export function ChangePasswordForm({ rules }: Props) {
               <FormMessage />
 
               <PasswordStrengthMeter password={newPassword} />
-
-              {rules && (
-                <div className="rounded-md border p-3 text-sm">
-                  <PasswordRulesList password={newPassword} rules={rules} title="Règles à respecter :" />
+              {rulesLoading ? (
+                <div className="rounded-md border p-3 text-sm text-muted-foreground">
+                  {t('rules.loading')}
                 </div>
-              )}
+              ) : rules ? (
+                <div className="rounded-md border p-3 text-sm">
+                  <PasswordRulesList password={newPassword} rules={rules} title={t('rules.title')} />
+                </div>
+              ) : null}
             </FormItem>
           )}
         />
@@ -128,17 +134,17 @@ export function ChangePasswordForm({ rules }: Props) {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirmer le mot de passe</FormLabel>
+              <FormLabel>{t('fields.confirm.label')}</FormLabel>
               <FormControl>
                 <PasswordField
                   id="confirmPassword"
-                  label="Confirmer le mot de passe"
+                  label={t('fields.confirm.label')}
                   hideLabel
                   required
                   disabled={form.formState.isSubmitting}
                   inputProps={{
                     ...field,
-                    placeholder: 'Confirmez votre nouveau mot de passe',
+                    placeholder: t('fields.confirm.placeholder'),
                     autoComplete: 'new-password',
                   }}
                 />
@@ -148,12 +154,12 @@ export function ChangePasswordForm({ rules }: Props) {
                   {passwordsMatch ? (
                     <>
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      <span className="text-green-600">Les mots de passe correspondent</span>
+                      <span className="text-green-600">{t('match.ok')}</span>
                     </>
                   ) : (
                     <>
                       <XCircle className="h-4 w-4 text-red-600" />
-                      <span className="text-red-600">Les mots de passe ne correspondent pas</span>
+                      <span className="text-red-600">{t('match.ko')}</span>
                     </>
                   )}
                 </div>
@@ -173,10 +179,10 @@ export function ChangePasswordForm({ rules }: Props) {
           {form.formState.isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Changement en cours...
+              {t('submit.loading')}
             </>
           ) : (
-            'Changer le mot de passe'
+            t('submit.label')
           )}
         </Button>
       </form>

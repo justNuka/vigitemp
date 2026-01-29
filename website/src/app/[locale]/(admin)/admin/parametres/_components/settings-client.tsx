@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useRouter } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 import { settingsApi } from "@/lib/api";
 import { SMTPConfigModal } from "./smtp-config-modal";
@@ -25,6 +26,7 @@ interface Props {
 
 export function SettingsClient({ settings: initialSettings }: Props) {
   const router = useRouter();
+  const t = useTranslations("adminSettings");
   const [smtpModalOpen, setSmtpModalOpen] = useState(false);
 
   const [settings, setSettings] = useState(initialSettings);
@@ -52,11 +54,11 @@ export function SettingsClient({ settings: initialSettings }: Props) {
           setTimeout(() => {
             router.refresh();
           }, 100);
-          toast.success("Paramètre mis à jour");
+          toast.success(t("toast.update_success"));
         },
         onError: () => {
           setSettings((prev) => prev.map((setting) => (setting.key === key ? { ...setting, value: currentValue } : setting)));
-          toast.error("Erreur lors de la mise à jour");
+          toast.error(t("toast.update_error"));
         },
         onSettled: () => {
           setLoadingKeys((prev) => {
@@ -83,18 +85,18 @@ export function SettingsClient({ settings: initialSettings }: Props) {
 
           const intervalLabel =
             newValue === "0"
-              ? "Manuel (désactivé)"
+              ? t("general.refresh_options.manual")
               : newValue === "5"
-              ? "5 secondes"
+              ? t("general.refresh_options.5")
               : newValue === "10"
-              ? "10 secondes"
+              ? t("general.refresh_options.10")
               : newValue === "30"
-              ? "30 secondes"
+              ? t("general.refresh_options.30")
               : newValue === "60"
-              ? "1 minute"
-              : `${newValue} secondes`;
+              ? t("general.refresh_options.60")
+              : t("general.refresh_options.custom", { seconds: newValue });
 
-          toast.success(`Intervalle de rafraîchissement: ${intervalLabel}`);
+          toast.success(t("toast.refresh_interval", { label: intervalLabel }));
           window.dispatchEvent(new Event("storage"));
         },
         onError: () => {
@@ -102,7 +104,7 @@ export function SettingsClient({ settings: initialSettings }: Props) {
           const currentValue = currentSetting?.value || "30";
 
           setSettings((prev) => prev.map((setting) => (setting.key === key ? { ...setting, value: currentValue } : setting)));
-          toast.error("Erreur lors de la mise à jour");
+          toast.error(t("toast.update_error"));
         },
         onSettled: () => {
           setLoadingKeys((prev) => {

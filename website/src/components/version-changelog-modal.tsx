@@ -8,48 +8,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { useTranslations } from "next-intl"
 
-const RELEASE_VERSION = "0.2.1"
+const RELEASE_VERSION = "0.2.2"
 const COOKIE_NAME = "vigitemp_release_seen"
 
 type ChangelogItem = {
   title: string
   details: string[]
 }
-
-const CHANGELOG: ChangelogItem[] = [
-  {
-    title: "Surveillance",
-    details: [
-      "Cartes harmonisees (boutons, icones de type, tooltips, mode light).",
-      "Filtres et actions en couleur primary, tri et vues ajustes.",
-      "Derniere valeur et consignes sup/inf dans le tableau.",
-    ],
-  },
-  {
-    title: "Mesures et graphiques",
-    details: [
-      "Date range picker pour filtrer les mesures.",
-      "Onglet mesures adapte pour les lieux en surveillance desactivee.",
-    ],
-  },
-  {
-    title: "Tables admin",
-    details: [
-      "Headers fixes avec blur, hauteurs adaptees et bords plus visibles.",
-      "Actions harmonisees (icones, tailles, couleurs).",
-      "Selection de ligne plus lisible.",
-    ],
-  },
-  {
-    title: "Creation et edition",
-    details: [
-      "Creation de lieux sans sonde avec confirmation.",
-      "Type GSO : frequence verouillee a 15 min.",
-      "Liste des modules simplifiee.",
-    ],
-  },
-]
 
 function readCookieValue(name: string) {
   if (typeof document === "undefined") return null
@@ -70,8 +37,53 @@ function setSessionCookie(name: string, value: string) {
 }
 
 export function VersionChangelogModal() {
+  const t = useTranslations("versionChangelog")
   const [open, setOpen] = useState(false)
   const isDev = useMemo(() => process.env.NODE_ENV !== "production", [])
+
+  const changelog = useMemo<ChangelogItem[]>(
+    () => [
+      {
+        title: t("sections.forms.title"),
+        details: [
+          t("sections.forms.items.0"),
+          t("sections.forms.items.1"),
+        ],
+      },
+      {
+        title: t("sections.monitoring.title"),
+        details: [
+          t("sections.monitoring.items.0"),
+          t("sections.monitoring.items.1"),
+          t("sections.monitoring.items.2"),
+        ],
+      },
+      {
+        title: t("sections.measures.title"),
+        details: [
+          t("sections.measures.items.0"),
+          t("sections.measures.items.1"),
+        ],
+      },
+      {
+        title: t("sections.admin_tables.title"),
+        details: [
+          t("sections.admin_tables.items.0"),
+          t("sections.admin_tables.items.1"),
+          t("sections.admin_tables.items.2"),
+        ],
+      },
+      {
+        title: t("sections.creation.title"),
+        details: [
+          t("sections.creation.items.0"),
+          t("sections.creation.items.1"),
+          t("sections.creation.items.2"),
+        ],
+      },
+    ],
+    [t]
+  )
 
   useEffect(() => {
     if (!isDev) return
@@ -94,14 +106,14 @@ export function VersionChangelogModal() {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-lg">Nouvelle version {RELEASE_VERSION}</DialogTitle>
+          <DialogTitle className="text-lg">{t("title", { version: RELEASE_VERSION })}</DialogTitle>
           <DialogDescription>
-            Nouveautes principales et changements a connaitre.
+            {t("description")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="mt-2 space-y-6">
-          {CHANGELOG.map((item, index) => (
+          {changelog.map((item, index) => (
             <div key={`${item.title}-${index}`} className="relative pl-6">
               <div className="absolute left-1 top-1 h-full w-px bg-border" />
               <div className="absolute left-0 top-1 h-3 w-3 rounded-full border border-primary bg-background" />

@@ -1,5 +1,6 @@
 import { Suspense } from "react";
-import { Metadata } from "next";
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { ServerSettings } from "./server-settings";
 import { SettingsClient } from "./_components/settings-client";
 import { PageHeader } from "@/components/page-header";
@@ -7,10 +8,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { alarmsApi } from "@/lib/api";
 
-export const metadata: Metadata = {
-  title: "Paramétrage - Vigitemp",
-  description: "Configuration de l'application",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "adminSettingsPage" });
+
+  return {
+    title: t("meta.title"),
+    description: t("meta.description"),
+  };
+}
 
 function SettingsLoadingSkeleton() {
   return (
@@ -30,7 +40,13 @@ function SettingsLoadingSkeleton() {
   );
 }
 
-async function ActiveAlarmsCount() {
+async function ActiveAlarmsCount({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
   let activeAlarmsCount = 0;
 
   try {
@@ -42,28 +58,31 @@ async function ActiveAlarmsCount() {
 
   return (
     <PageHeader
-      title="Paramétrage"
-      description="Configuration de l'application"
+      title={title}
+      description={description}
       activeAlarms={activeAlarmsCount}
     />
   );
 }
 
-export default async function SettingsPage() {
+export default async function SettingsPage({ params }: { params: { locale: string } }) {
   const settingsData = await ServerSettings();
+  const t = await getTranslations({ locale: params.locale, namespace: "adminSettingsPage" });
+  const title = t("title");
+  const description = t("description");
 
   return (
     <div className="flex flex-col min-h-full">
       <Suspense
         fallback={
           <PageHeader
-            title="Paramétrage"
-            description="Configuration de l'application"
+            title={title}
+            description={description}
             activeAlarms={0}
           />
         }
       >
-        <ActiveAlarmsCount />
+        <ActiveAlarmsCount title={title} description={description} />
       </Suspense>
 
       <Suspense fallback={<SettingsLoadingSkeleton />}>

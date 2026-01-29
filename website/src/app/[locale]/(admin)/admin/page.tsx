@@ -1,16 +1,17 @@
 "use client"
 
 import { useCallback, useState } from "react"
+import { useLocale, useTranslations } from "next-intl"
 import { AlertTriangle, BookOpen, CheckCircle2, Clock, Database, Users, Cpu } from "lucide-react"
 import type { ColumnDef } from "@tanstack/react-table"
 
 import { PageHeader } from "@/components/page-header"
 import { TanStackTable } from "@/components/data-table/tanstack-table"
-import { acknowledgmentColumns } from "@/components/data-table/acknowledgment-columns"
-import { activeAlarmsColumns } from "@/components/data-table/active-alarms-columns"
-import { backupColumns } from "@/components/data-table/backup-columns"
-import { connectedUsersColumns } from "@/components/data-table/connected-users-columns"
-import { systemLogsColumns } from "@/components/data-table/system-logs-columns"
+import { getAcknowledgmentColumns } from "@/components/data-table/acknowledgment-columns"
+import { getActiveAlarmsColumns } from "@/components/data-table/active-alarms-columns"
+import { getBackupColumns } from "@/components/data-table/backup-columns"
+import { getConnectedUsersColumns } from "@/components/data-table/connected-users-columns"
+import { getSystemLogsColumns } from "@/components/data-table/system-logs-columns"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -40,10 +41,11 @@ function PaginationControls(props: {
   pageSizeOptions?: number[]
   onPageSizeChange?: (next: number) => void
 }) {
+  const t = useTranslations("adminDashboard")
   return (
     <div className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-muted-foreground">
-        Page {props.page} sur {props.pages}
+        {t("pagination.page", { page: props.page, pages: props.pages })}
       </p>
       <div className="flex flex-wrap items-center gap-2">
         {props.pageSize && props.pageSizeOptions && props.onPageSizeChange && (
@@ -52,12 +54,12 @@ function PaginationControls(props: {
             onValueChange={(value) => props.onPageSizeChange?.(Number(value))}
           >
             <SelectTrigger className="w-32">
-              <SelectValue aria-label="Taille de page" />
+              <SelectValue aria-label={t("pagination.page_size_label")} />
             </SelectTrigger>
             <SelectContent>
               {props.pageSizeOptions.map((size) => (
                 <SelectItem key={size} value={String(size)}>
-                  {size} par page
+                  {t("pagination.page_size_option", { size })}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -70,7 +72,7 @@ function PaginationControls(props: {
           disabled={props.page === 1}
           className="border-primary/40 text-primary hover:bg-primary/10"
         >
-          {"Pr\u00E9c\u00E9dent"}
+          {t("pagination.previous")}
         </Button>
         <Button
           variant="outline"
@@ -79,7 +81,7 @@ function PaginationControls(props: {
           disabled={props.page === props.pages}
           className="border-primary/40 text-primary hover:bg-primary/10"
         >
-          Suivant
+          {t("pagination.next")}
         </Button>
       </div>
     </div>
@@ -87,6 +89,8 @@ function PaginationControls(props: {
 }
 
 export default function AdminDashboard() {
+  const t = useTranslations("adminDashboard")
+  const locale = useLocale()
   const [ackPage, setAckPage] = useState(1)
   const [connectedUsersPage, setConnectedUsersPage] = useState(1)
   const [activeAlarmsPage, setActiveAlarmsPage] = useState(1)
@@ -154,7 +158,9 @@ export default function AdminDashboard() {
   })
 
   const lastBackupDate = (backupsQuery.data as any)?.[0]?.dateHeure
-  const lastBackupLabel = lastBackupDate ? new Date(lastBackupDate).toLocaleString() : "N/A"
+  const lastBackupLabel = lastBackupDate
+    ? new Date(lastBackupDate).toLocaleString(locale)
+    : t("backup.last.none")
 
   const isInitialLoading =
     connectedUsersQuery.isLoading &&
@@ -164,10 +170,10 @@ export default function AdminDashboard() {
     backupsQuery.isLoading
 
   const unassignedColumns: ColumnDef<Probe>[] = [
-    { accessorKey: "Sonde_Numero_Serie", header: "Sonde" },
-    { accessorKey: "Sonde_Type", header: "Type", cell: ({ row }) => row.original.Sonde_Type || "-" },
-    { accessorKey: "Adresse_Sonde", header: "Adresse", cell: ({ row }) => row.original.Adresse_Sonde || "-" },
-    { accessorKey: "Id_Module", header: "Module", cell: ({ row }) => row.original.Id_Module ?? "-" },
+    { accessorKey: "Sonde_Numero_Serie", header: t("unassigned.columns.probe") },
+    { accessorKey: "Sonde_Type", header: t("unassigned.columns.type"), cell: ({ row }) => row.original.Sonde_Type || "-" },
+    { accessorKey: "Adresse_Sonde", header: t("unassigned.columns.address"), cell: ({ row }) => row.original.Adresse_Sonde || "-" },
+    { accessorKey: "Id_Module", header: t("unassigned.columns.module"), cell: ({ row }) => row.original.Id_Module ?? "-" },
   ]
 
   if (isInitialLoading) {
@@ -175,7 +181,7 @@ export default function AdminDashboard() {
       <div className="flex flex-1 items-center justify-center p-6">
         <div className="text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
-          <p className="mt-4 text-muted-foreground">{"Chargement des donn\u00E9es..."}</p>
+          <p className="mt-4 text-muted-foreground">{t("loading")}</p>
         </div>
       </div>
     )
@@ -183,29 +189,32 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex min-h-full flex-col">
-      <PageHeader title="Tableau de bord admin" />
+      <PageHeader title={t("title")} />
 
       <div className="space-y-6 p-6">
         <Card className="lg:min-h-96">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5" />
-              Journal acquittements alarmes
+              {t("acknowledgments.title")}
             </CardTitle>
             <CardDescription className="flex items-center justify-between">
               <span>
-                Historique des actions ({acknowledgmentsQuery.data?.pagination.total || 0}, max 50)
+                {t("acknowledgments.description", {
+                  total: acknowledgmentsQuery.data?.pagination.total || 0,
+                  max: 50,
+                })}
               </span>
               {acknowledgmentsQuery.isFetching && (
-                <span className="text-xs text-blue-600">{"Mise \u00E0 jour..."}</span>
+                <span className="text-xs text-blue-600">{t("updating")}</span>
               )}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <TanStackTable
-              columns={acknowledgmentColumns}
+              columns={getAcknowledgmentColumns(t)}
               data={acknowledgmentsQuery.data?.data || []}
-              emptyMessage={"Aucun acquittement d'alarme enregistr\u00E9"}
+              emptyMessage={t("acknowledgments.empty")}
               maxHeight="420px"
               showPagination={false}
               showSearch={false}
@@ -232,22 +241,25 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                {"Utilisateurs connect\u00E9s"}
+                {t("connected_users.title")}
               </CardTitle>
               <CardDescription className="flex items-center justify-between">
                 <span>
-                  Sessions actives ({connectedUsersQuery.data?.pagination.total || 0}, max 50)
+                  {t("connected_users.description", {
+                    total: connectedUsersQuery.data?.pagination.total || 0,
+                    max: 50,
+                  })}
                 </span>
                 {connectedUsersQuery.isFetching && (
-                  <span className="text-xs text-blue-600">{"Mise \u00E0 jour..."}</span>
+                  <span className="text-xs text-blue-600">{t("updating")}</span>
                 )}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <TanStackTable
-                columns={connectedUsersColumns}
+                columns={getConnectedUsersColumns(t)}
                 data={connectedUsersQuery.data?.data || []}
-                emptyMessage={"Aucun utilisateur connect\u00E9 actuellement"}
+                emptyMessage={t("connected_users.empty")}
                 maxHeight="320px"
                 showPagination={false}
                 showSearch={false}
@@ -275,22 +287,25 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5" />
-                Alarmes en cours
+                {t("active_alarms.title")}
               </CardTitle>
               <CardDescription className="flex items-center justify-between">
                 <span>
-                  {"\u00C9tat actuel"} ({activeAlarmsQuery.data?.pagination.total || 0}, max 50)
+                  {t("active_alarms.description", {
+                    total: activeAlarmsQuery.data?.pagination.total || 0,
+                    max: 50,
+                  })}
                 </span>
                 {activeAlarmsQuery.isFetching && (
-                  <span className="text-xs text-blue-600">{"Mise \u00E0 jour..."}</span>
+                  <span className="text-xs text-blue-600">{t("updating")}</span>
                 )}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <TanStackTable
-                columns={activeAlarmsColumns}
+                columns={getActiveAlarmsColumns(t)}
                 data={activeAlarmsQuery.data?.data || []}
-                emptyMessage="Aucune alarme active en cours"
+                emptyMessage={t("active_alarms.empty")}
                 maxHeight="320px"
                 showPagination={false}
                 showSearch={false}
@@ -320,23 +335,25 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BookOpen className="h-5 w-5" />
-                Journal d'audit
+                {t("system_logs.title")}
               </CardTitle>
               <CardDescription className="flex items-center justify-between">
                 <span>
-                  {"50 derni\u00E8res entr\u00E9es"} ({systemLogsQuery.data?.pagination.total || 0} au
-                  total)
+                  {t("system_logs.description", {
+                    total: systemLogsQuery.data?.pagination.total || 0,
+                    count: 50,
+                  })}
                 </span>
                 {systemLogsQuery.isFetching && (
-                  <span className="text-xs text-blue-600">{"Mise \u00E0 jour..."}</span>
+                  <span className="text-xs text-blue-600">{t("updating")}</span>
                 )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <TanStackTable
-                columns={systemLogsColumns}
+                columns={getSystemLogsColumns(t)}
                 data={systemLogsQuery.data?.data || []}
-                emptyMessage={"Aucune entr\u00E9e de journal d'audit"}
+                emptyMessage={t("system_logs.empty")}
                 maxHeight="380px"
                 showPagination={false}
                 showSearch={false}
@@ -354,31 +371,31 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Database className="h-5 w-5" />
-                {"Sauvegarde syst\u00E8me"}
+                {t("backup.title")}
               </CardTitle>
               <CardDescription className="flex items-center justify-between">
-                <span>{"État et historique"}</span>
+                <span>{t("backup.description")}</span>
                 {backupsQuery.isFetching && (
-                  <span className="text-xs text-blue-600">{"Mise \u00E0 jour..."}</span>
+                  <span className="text-xs text-blue-600">{t("updating")}</span>
                 )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <p className="text-sm text-muted-foreground">{"Derni\u00E8re sauvegarde"}</p>
+                <p className="text-sm text-muted-foreground">{t("backup.last.label")}</p>
                 <p className="mt-1 flex items-center gap-2 text-sm font-medium">
                   <Clock className="h-4 w-4" />
                   {lastBackupLabel}
                 </p>
               </div>
               <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                Lancer sauvegarde
+                {t("backup.actions.run")}
               </Button>
               <div className="mt-4">
                 <TanStackTable
-                  columns={backupColumns}
+                  columns={getBackupColumns(t)}
                   data={backupsQuery.data || []}
-                  emptyMessage="Aucun historique de sauvegarde disponible"
+                  emptyMessage={t("backup.empty")}
                   maxHeight="240px"
                   showPagination={false}
                   showSearch={false}
@@ -397,19 +414,19 @@ export default function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Cpu className="h-5 w-5" />
-              Sondes sans lieu
+              {t("unassigned.title")}
             </CardTitle>
             <CardDescription>
-              {unassignedProbesQuery.data?.pagination.total || 0} sonde
-              {(unassignedProbesQuery.data?.pagination.total || 0) > 1 ? "s" : ""} non affectée
-              {(unassignedProbesQuery.data?.pagination.total || 0) > 1 ? "s" : ""}
+              {t("unassigned.description", {
+                count: unassignedProbesQuery.data?.pagination.total || 0,
+              })}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <TanStackTable
               columns={unassignedColumns}
               data={unassignedProbesQuery.data?.data || []}
-              emptyMessage="Aucune sonde sans lieu"
+              emptyMessage={t("unassigned.empty")}
               maxHeight="240px"
               isLoading={unassignedProbesQuery.isLoading}
               showPagination={false}

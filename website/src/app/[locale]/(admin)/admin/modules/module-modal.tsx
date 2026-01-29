@@ -36,6 +36,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useModuleSondes, useModuleTypes } from "@/hooks/useModules";
 import { ModuleAssociatedProbes } from "./_components/module-associated-probes";
 import { moduleSchema, type ModuleFormData } from "./_components/module-schemas";
+import { useTranslations } from 'next-intl';
 
 interface ModuleModalProps {
   open: boolean;
@@ -66,6 +67,8 @@ function getDefaultValues(module: ModuleModalProps["module"]): ModuleFormData {
 }
 
 export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleModalProps) {
+  const t = useTranslations('modulesForm');
+  const tCommon = useTranslations('common');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const { data: moduleTypes, isLoading: typesLoading } = useModuleTypes(open);
@@ -110,14 +113,14 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
         }),
       });
 
-      if (!res.ok) throw new Error("Erreur lors de la sauvegarde");
+      if (!res.ok) throw new Error(t('errors.save')); 
 
       form.reset(getDefaultValues(null));
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
       console.error("Erreur sauvegarde module:", error);
-      form.setError("root", { message: "Erreur lors de la sauvegarde du module" });
+      form.setError("root", { message: t('errors.save_form') });
     } finally {
       setIsSubmitting(false);
     }
@@ -135,9 +138,9 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-white dark:bg-card">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Modifier le module" : "Créer un nouveau module"}</DialogTitle>
+          <DialogTitle>{isEditing ? t('title_edit') : t('title_create')}</DialogTitle>
           <DialogDescription>
-            {isEditing ? "Mettez à jour les informations du module" : "Remplissez les informations du module"}
+            {isEditing ? t('description_edit') : t('description_create')}
           </DialogDescription>
         </DialogHeader>
 
@@ -148,9 +151,9 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
               name="Module_Numero_Serie"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Numéro de série</FormLabel>
+                  <FormLabel>{t('fields.serial_label')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="ex: MOD-001" {...field} />
+                    <Input placeholder={t('fields.serial_placeholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -162,11 +165,11 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
               name="Type_Module"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Type</FormLabel>
+                  <FormLabel>{t('fields.type_label')}</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger disabled={typesLoading}>
-                        <SelectValue placeholder="Sélectionner un type" />
+                        <SelectValue placeholder={t('fields.type_placeholder')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -187,13 +190,13 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
               name="Port_Serie"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Port série (1-255)</FormLabel>
+                  <FormLabel>{t('fields.port_label')}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       min="1"
                       max="255"
-                      placeholder="ex: 1"
+                      placeholder={t('fields.port_placeholder')}
                       {...field}
                       onChange={(e) => field.onChange(parseInt(e.target.value))}
                     />
@@ -208,9 +211,9 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
               name="Emplacement"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Emplacement</FormLabel>
+                  <FormLabel>{t('fields.location_label')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="ex: Salle serveur 1" {...field} />
+                    <Input placeholder={t('fields.location_placeholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -220,7 +223,7 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
             <Card className="border-dashed">
               <CardHeader className="pb-3 cursor-pointer" onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm">Options avancées</CardTitle>
+                  <CardTitle className="text-sm">{t('advanced.title')}</CardTitle>
                   <ChevronDown className={`h-4 w-4 transition-transform ${isAdvancedOpen ? "rotate-180" : ""}`} />
                 </div>
               </CardHeader>
@@ -232,9 +235,9 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
                     name="Adresse_IP"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Adresse IP</FormLabel>
+                        <FormLabel>{t('advanced.address_ip_label')}</FormLabel>
                         <FormControl>
-                          <Input placeholder="ex: 192.168.1.100" {...field} />
+                          <Input placeholder={t('advanced.address_ip_placeholder')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -246,9 +249,9 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
                     name="Id_Serveur"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>ID Serveur</FormLabel>
+                        <FormLabel>{t('advanced.server_id_label')}</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="ex: 1" {...field} />
+                          <Input type="number" placeholder={t('advanced.server_id_placeholder')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -260,16 +263,16 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
                     name="Delai_Reseau"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Délai réseau (ms)</FormLabel>
+                        <FormLabel>{t('advanced.network_delay_label')}</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
-                            placeholder="ex: 50"
+                            placeholder={t('advanced.network_delay_placeholder')}
                             {...field}
                             onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
                           />
                         </FormControl>
-                        <FormDescription>Délai de réponse réseau en millisecondes</FormDescription>
+                        <FormDescription>{t('advanced.network_delay_help')}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -285,17 +288,21 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
             )}
 
             <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => handleOpenChange(false)}>
-                Annuler
-              </Button>
+              <Button variant="outline" onClick={() => handleOpenChange(false)}>{tCommon('cancel')}</Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (isEditing ? "Modification..." : "Création...") : isEditing ? "Modifier" : "Créer"}
+                {isSubmitting
+                  ? isEditing
+                    ? t('submit.saving_edit')
+                    : t('submit.saving_create')
+                  : isEditing
+                    ? t('submit.edit')
+                    : t('submit.create')}
               </Button>
             </DialogFooter>
 
             {isEditing && (
               <div className="mt-6 pt-6 border-t space-y-3">
-                <h3 className="font-semibold text-sm">Matériel associé</h3>
+                <h3 className="font-semibold text-sm">{t('associated.title')}</h3>
                 <ModuleAssociatedProbes sondes={sondes} isLoading={sondesLoading} />
               </div>
             )}

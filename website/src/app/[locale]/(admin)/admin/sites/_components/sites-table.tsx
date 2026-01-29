@@ -3,6 +3,7 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import type { SiteAdmin } from '@/hooks/useSites';
+import { useTranslations } from 'next-intl';
 
 type SitesTableProps = {
   sites: SiteAdmin[];
@@ -12,20 +13,22 @@ type SitesTableProps = {
 };
 
 export function SitesTable({ sites, isLoading, selectedSiteId, onSelectSite }: SitesTableProps) {
+  const t = useTranslations('sitesTable');
+
   const columns: ColumnDef<SiteAdmin>[] = [
     {
       accessorKey: 'Code_Site',
-      header: 'Site',
-      cell: ({ row }) => row.getValue('Code_Site') || '-',
+      header: t('columns.site'),
+      cell: ({ row }) => row.getValue('Code_Site') || t('placeholders.na'),
     },
     {
       accessorKey: 'Libelle_Site',
-      header: 'Description',
-      cell: ({ row }) => row.getValue('Libelle_Site') || '-',
+      header: t('columns.description'),
+      cell: ({ row }) => row.getValue('Libelle_Site') || t('placeholders.na'),
     },
     {
       accessorKey: 'Commentaire',
-      header: 'Commentaires',
+      header: t('columns.comments'),
       cell: ({ row }) => {
         const comment = row.getValue('Commentaire') as string | null;
         return comment ? (
@@ -33,7 +36,7 @@ export function SitesTable({ sites, isLoading, selectedSiteId, onSelectSite }: S
             {comment}
           </p>
         ) : (
-          '-'
+          t('placeholders.na')
         );
       },
     },
@@ -44,11 +47,11 @@ export function SitesTable({ sites, isLoading, selectedSiteId, onSelectSite }: S
       columns={columns}
       data={sites}
       searchField={['Code_Site', 'Libelle_Site', 'Commentaire']}
-      searchPlaceholder="Rechercher les sites..."
+      searchPlaceholder={t('search_placeholder')}
       pageSize={10}
       isLoading={isLoading}
       maxHeight="calc(100dvh - 25rem)"
-      emptyMessage="Aucun site trouvé"
+      emptyMessage={t('empty')}
       onRowClick={(row) => onSelectSite(row)}
       selectedRowId={selectedSiteId}
       headerClassName="!bg-sidebar !text-sidebar-foreground"

@@ -67,6 +67,7 @@ namespace Vigitemp_Serveur.sensors
                             if (tmp_sw.Elapsed.TotalMilliseconds > 2000)
                             {
                                 VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
+                                HandleNoResponseAlarm(false, "timeout");
                                 m_port.Close();
                                 m_sensor_response = "";
                                 pendingResults = false;
@@ -83,6 +84,7 @@ namespace Vigitemp_Serveur.sensors
                 Console.WriteLine("erreur: " + e);
                 Trace.WriteLine("erreur: " + e);
                 VigitempServeur.Log($"[SONDE][ERR] type=HN serial={m_sondeSerialNumber} port={m_comPort} error={e}");
+                HandleNoResponseAlarm(false, "exception");
                 m_port.Close();
                 return false;
             }
@@ -159,6 +161,8 @@ namespace Vigitemp_Serveur.sensors
 
                 ths.GetDatabase().AddMesure(m_sondeSerialNumber, Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero), "°C", null);
                 VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=success value={Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero)} unit=°C");
+                HandleNoResponseAlarm(true);
+                compareMeasuresAndLimits(Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero));
                 m_port.DiscardInBuffer(); 
                 m_port.DiscardOutBuffer();
                 m_port.Close();

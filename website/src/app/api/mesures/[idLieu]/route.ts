@@ -11,17 +11,23 @@ export const GET = withAuthLogging(
       const searchParams = req.nextUrl.searchParams
       const rowNumberParam = parseInt(searchParams.get("rowNumber") || "125")
       const rowNumber = Math.min(rowNumberParam, 125)
+      const pageParam = parseInt(searchParams.get("page") || "1")
+      const pageSizeParam = parseInt(searchParams.get("pageSize") || "20")
+      const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1
+      const pageSize = Number.isFinite(pageSizeParam) && pageSizeParam > 0 ? Math.min(pageSizeParam, 200) : 20
       const startDate = searchParams.get("startDate")
       const endDate = searchParams.get("endDate")
       const forceFresh = searchParams.get("fresh") === "true"
       const includeMeta = searchParams.get("includeMeta") === "true"
+      const source = searchParams.get("source") === "mesures" ? "mesures" : "graphique"
+      const usePagination = source === "mesures" && (searchParams.has("page") || searchParams.has("pageSize"))
 
       const idLieuInt = parseInt(idLieu)
       if (isNaN(idLieuInt)) {
         return apiError(400, "invalid_id", "Invalid idLieu parameter")
       }
 
-      if (!forceFresh && !startDate && !endDate && !includeMeta) {
+      if (source === "graphique" && !forceFresh && !startDate && !endDate && !includeMeta) {
         const cached = getCachedMeasurements(idLieuInt)
         if (cached) {
           const response = apiOk(cached)
@@ -31,7 +37,7 @@ export const GET = withAuthLogging(
         }
       }
 
-      if (!forceFresh && !startDate && !endDate && includeMeta) {
+      if (source === "graphique" && !forceFresh && !startDate && !endDate && includeMeta) {
         const cached = getCachedMeasurements(idLieuInt)
         if (cached) {
           const lieuMeta = await prisma.t_lieu.findUnique({
@@ -59,27 +65,49 @@ export const GET = withAuthLogging(
         }
       }
 
-      const [measurements, lieu] = await Promise.all([
-        prismaMesure.tm_graphique.findMany({
-          where: {
-            ...whereClause,
-            Est_Valeur_Null: false,
-          },
-          take: rowNumber,
-          orderBy: { Date_Heure_Mesure: "desc" },
-          select: {
-            Id_Graphique: true,
-            Date_Heure_Mesure: true,
-            Valeur: true,
-            Unite: true,
-            Consigne: true,
-            Consigne_Sup: true,
-            Consigne_Inf: true,
-            Sonde_Numero_Serie: true,
-            Frequence: true,
-            Est_Etat_Alarme: true,
-          },
-        }),
+      const [measurements, lieu, total] = await Promise.all([
+        source === "mesures"
+          ? prismaMesure.tm_mesures.findMany({
+              where: {
+                ...whereClause,
+                Est_Valeur_Null: false,
+              },
+              take: usePagination ? pageSize : rowNumber,
+              skip: usePagination ? (page - 1) * pageSize : 0,
+              orderBy: { Date_Heure_Mesure: "desc" },
+              select: {
+                Id_Mesure: true,
+                Date_Heure_Mesure: true,
+                Valeur: true,
+                Unite: true,
+                Consigne: true,
+                Consigne_Sup: true,
+                Consigne_Inf: true,
+                Sonde_Numero_Serie: true,
+                Frequence: true,
+                Est_Etat_Alarme: true,
+              },
+            })
+          : prismaMesure.tm_graphique.findMany({
+              where: {
+                ...whereClause,
+                Est_Valeur_Null: false,
+              },
+              take: rowNumber,
+              orderBy: { Date_Heure_Mesure: "desc" },
+              select: {
+                Id_Graphique: true,
+                Date_Heure_Mesure: true,
+                Valeur: true,
+                Unite: true,
+                Consigne: true,
+                Consigne_Sup: true,
+                Consigne_Inf: true,
+                Sonde_Numero_Serie: true,
+                Frequence: true,
+                Est_Etat_Alarme: true,
+              },
+            }),
         prisma.t_lieu.findUnique({
           where: { Id_Lieu: idLieuInt },
           select: {
@@ -91,6 +119,14 @@ export const GET = withAuthLogging(
             Type_Lieu: true,
           },
         }),
+        usePagination
+          ? prismaMesure.tm_mesures.count({
+              where: {
+                ...whereClause,
+                Est_Valeur_Null: false,
+              },
+            })
+          : Promise.resolve(0),
       ])
 
       const consigneSupLieu = lieu?.Consigne_Sup_Corrigee ?? lieu?.Consigne_Sup ?? null
@@ -118,7 +154,7 @@ export const GET = withAuthLogging(
         })
 
         return {
-          id: m.Id_Graphique?.toString() || "",
+          id: (source === "mesures" ? m.Id_Mesure : m.Id_Graphique)?.toString() || "",
           Valeur: m.Valeur !== null ? parseFloat(m.Valeur.toString()) : 0,
           Unite: m.Unite || "\u00B0C",
           DateHeureMesure: dateDisplay,
@@ -144,18 +180,25 @@ export const GET = withAuthLogging(
                 : null,
           SondeNumeroSerie: m.Sonde_Numero_Serie || "",
           Frequence: m.Frequence || 15,
-          Etat_Alarme: m.Est_Etat_Alarme || 0,
+          Etat_Alarme:
+            typeof m.Est_Etat_Alarme === "number"
+              ? m.Est_Etat_Alarme
+              : m.Est_Etat_Alarme
+                ? 1
+                : 0,
         }
       })
 
-      if (!startDate && !endDate) {
+      if (source === "graphique" && !startDate && !endDate) {
         setCachedMeasurements(idLieuInt, formattedMeasurements)
       }
 
       const response = apiOk(
-        includeMeta
-          ? { measurements: formattedMeasurements, lieuType: lieu?.Type_Lieu ?? null }
-          : formattedMeasurements,
+        usePagination
+          ? { measurements: formattedMeasurements, total, page, pageSize }
+          : includeMeta
+            ? { measurements: formattedMeasurements, lieuType: lieu?.Type_Lieu ?? null }
+            : formattedMeasurements,
       )
       response.headers.set("Cache-Control", "public, s-maxage=900, stale-while-revalidate=900")
       response.headers.set("X-Cache", "MISS")

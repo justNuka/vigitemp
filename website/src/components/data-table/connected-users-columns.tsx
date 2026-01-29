@@ -9,26 +9,30 @@ export interface ConnectedUser {
   ip: string
 }
 
-export const connectedUsersColumns: ColumnDef<ConnectedUser>[] = [
+type Translator = (key: string) => string
+
+export const getConnectedUsersColumns = (
+  t: Translator,
+): ColumnDef<ConnectedUser>[] => [
   {
     accessorKey: "login",
-    header: "Login",
+    header: t("connected_users.columns.login"),
     enableSorting: true,
   },
   {
     id: "nomComplet",
-    header: "Nom et Prénom",
+    header: t("connected_users.columns.full_name"),
     enableSorting: true,
     cell: ({ row }) => `${row.original.prenom} ${row.original.nom}`,
   },
   {
     accessorKey: "poste",
-    header: "Poste",
+    header: t("connected_users.columns.station"),
     enableSorting: true,
   },
   {
     accessorKey: "ip",
-    header: "Adresse IP",
+    header: t("connected_users.columns.ip"),
     enableSorting: true,
   },
 ]

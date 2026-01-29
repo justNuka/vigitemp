@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import { useLocale } from "next-intl";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,7 @@ import {
   Filler,
 } from 'chart.js';
 import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
+import { useLieuMeasurementsPaged } from "@/hooks/useLieuMeasurementsPaged";
 import { calculateYDomain, getMeasureSummary } from "@/lib/measurements";
 import type { MeasureData } from "@/lib/measurements";
 
@@ -68,10 +69,17 @@ export default function MonitoringDetailsModal({
   isSurveillanceActive,
   measurements: initialMeasurements,
 }: MonitoringDetailsModalProps) {
-  const [currentPage, setCurrentPage] = useState(1);
   const locale = useLocale();
   const localeTag = locale === "fr" ? "fr-FR" : locale;
+  const t = useTranslations("monitoringDetailsModal");
   const [dateRange, setDateRange] = useState<{ from: Date; to?: Date } | null>(null);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
+  const chartRef = useRef<ChartJS<"line"> | null>(null);
+  const [guidePositions, setGuidePositions] = useState<{
+    sup: number | null;
+    inf: number | null;
+    consigne: number | null;
+  }>({ sup: null, inf: null, consigne: null });
 
   const hasLocalMeasurements = Boolean(initialMeasurements?.length);
   const shouldLoadBase = isOpen && isSurveillanceActive && !hasLocalMeasurements;
@@ -100,13 +108,19 @@ export default function MonitoringDetailsModal({
     return end;
   }, [effectiveRange]);
 
-  const { data: rangedData, isLoading: isRangeLoading } = useLieuMeasurements(idLieu, {
-    enabled: isOpen && rangeEnabled,
-    startDate: rangeStart,
-    endDate: rangeEnd,
-    listenForUpdates: false,
+  const {
+    data: historyData,
+    isLoading: isHistoryLoading,
+    totalRows,
+    pageCount,
+  } = useLieuMeasurementsPaged(idLieu, {
+    enabled: isOpen && !baseLoading,
+    pageIndex: pagination.pageIndex,
+    pageSize: pagination.pageSize,
+    startDate: rangeEnabled ? rangeStart : null,
+    endDate: rangeEnabled ? rangeEnd : null,
   });
-  const rangeLoading = rangeEnabled ? isRangeLoading : false;
+  const rangeLoading = isHistoryLoading;
 
   const orderedData = useMemo(() => {
     if (!data.length) return data;
@@ -135,26 +149,48 @@ export default function MonitoringDetailsModal({
     [consigne, consigneInf, consigneSup, orderedData],
   );
 
+  const updateGuidePositions = useCallback(() => {
+    const chart = chartRef.current;
+    const yScale = chart?.scales?.y;
+    if (!yScale) return;
+
+    const toPos = (value: number | null) =>
+      value === null ? null : yScale.getPixelForValue(value);
+
+    setGuidePositions({
+      sup: toPos(consigneSup),
+      inf: toPos(consigneInf),
+      consigne: toPos(consigne),
+    });
+  }, [consigne, consigneInf, consigneSup]);
+
   useEffect(() => {
     if (!isOpen) return;
+    const frame = requestAnimationFrame(updateGuidePositions);
+    return () => cancelAnimationFrame(frame);
+  }, [isOpen, orderedData, updateGuidePositions, yMin, yMax]);
 
-    const timeoutId = setTimeout(() => {
-      setCurrentPage(1);
-    }, 0);
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleResize = () => updateGuidePositions();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isOpen, updateGuidePositions]);
 
-    return () => clearTimeout(timeoutId);
-  }, [idLieu, isOpen]);
+  useEffect(() => {
+    if (!isOpen) return;
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [idLieu, isOpen, rangeEnabled]);
 
-  const orderedRangeData = useMemo(() => {
-    if (!rangedData.length) return rangedData;
-    return [...rangedData].sort((a, b) => {
+  const orderedHistoryData = useMemo(() => {
+    if (!historyData.length) return historyData;
+    return [...historyData].sort((a, b) => {
       const dateA = a.DateHeureMesureIso ? Date.parse(a.DateHeureMesureIso) : Date.parse(a.DateHeureMesure);
       const dateB = b.DateHeureMesureIso ? Date.parse(b.DateHeureMesureIso) : Date.parse(b.DateHeureMesure);
       return dateA - dateB;
     });
-  }, [rangedData]);
-
-  const tableMeasurements = rangeEnabled ? orderedRangeData : orderedData;
+  }, [historyData]);
+  const tableMeasurements = orderedHistoryData;
 
   const tableData = useMemo(() => {
     return tableMeasurements.map((measure) => ({
@@ -175,7 +211,7 @@ export default function MonitoringDetailsModal({
   }>[] = [
     {
       accessorKey: "dateIso",
-      header: "DATE/HEURE",
+      header: t("table.columns.date_time"),
       sortingFn: (rowA, rowB, columnId) => {
         const a = Date.parse(rowA.getValue(columnId) as string);
         const b = Date.parse(rowB.getValue(columnId) as string);
@@ -187,7 +223,7 @@ export default function MonitoringDetailsModal({
     },
     {
       accessorKey: "value",
-      header: "VALEUR",
+      header: t("table.columns.value"),
       cell: ({ row }) => {
         const value = row.getValue("value") as number;
         const isOutOfRange =
@@ -203,21 +239,21 @@ export default function MonitoringDetailsModal({
     },
     {
       id: "consigneInf",
-      header: "CONSIGNE INF",
+      header: t("table.columns.lower_threshold"),
       cell: () => (
         <span>{consigneInf !== null ? `${consigneInf}${unite}` : "-"}</span>
       ),
     },
     {
       id: "consigneSup",
-      header: "CONSIGNE SUP",
+      header: t("table.columns.upper_threshold"),
       cell: () => (
         <span>{consigneSup !== null ? `${consigneSup}${unite}` : "-"}</span>
       ),
     },
     {
       id: "statut",
-      header: "STATUT",
+      header: t("table.columns.status"),
       cell: ({ row }) => {
         const value = row.getValue("value") as number;
         const isOutOfRange =
@@ -225,9 +261,9 @@ export default function MonitoringDetailsModal({
           (consigneSup !== null && value > consigneSup);
 
         return isOutOfRange ? (
-          <span className="text-red-600 dark:text-red-400 font-semibold">Hors limites</span>
+          <span className="text-red-600 dark:text-red-400 font-semibold">{t("table.status.out_of_range")}</span>
         ) : (
-          <span className="text-green-600 dark:text-green-400">OK</span>
+          <span className="text-green-600 dark:text-green-400">{t("table.status.ok")}</span>
         );
       },
     },
@@ -239,7 +275,7 @@ export default function MonitoringDetailsModal({
         <DialogHeader>
           <DialogTitle>{nomLieu}</DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Sonde: {sondeNumeroSerie}
+            {t("probe", { serial: sondeNumeroSerie })}
           </p>
         </DialogHeader>
 
@@ -255,25 +291,54 @@ export default function MonitoringDetailsModal({
                 value="graph"
                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                Graphique
+                {t("tabs.graph")}
               </TabsTrigger>
               <TabsTrigger
                 value="table"
                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                Tableau des mesures
+                {t("tabs.table")}
               </TabsTrigger>
             </TabsList>
 
             {/* Graph Tab */}
             <TabsContent value="graph" className="space-y-4 pt-4 h-140">
-              <div className="h-125">
+              <div className="relative h-125">
                 <Line
+                  ref={chartRef}
                   data={{
                     labels: orderedData.map(d => d.DateHeureMesureXaxis),
                     datasets: [
+                      ...(consigneSup !== null
+                        ? [
+                            {
+                              label: t("chart.over_high"),
+                              data: orderedData.map(() => consigneSup),
+                              borderColor: "transparent",
+                              borderWidth: 0,
+                              pointRadius: 0,
+                              fill: "end",
+                              backgroundColor: "rgba(220, 38, 38, 0.2)",
+                              order: 0,
+                            },
+                          ]
+                        : []),
+                      ...(consigneInf !== null
+                        ? [
+                            {
+                              label: t("chart.over_low"),
+                              data: orderedData.map(() => consigneInf),
+                              borderColor: "transparent",
+                              borderWidth: 0,
+                              pointRadius: 0,
+                              fill: "start",
+                              backgroundColor: "rgba(30, 64, 175, 0.2)",
+                              order: 0,
+                            },
+                          ]
+                        : []),
                       {
-                        label: `Mesures (${unite})`,
+                        label: t("chart.measures", { unit: unite }),
                         data: orderedData.map(d => d.Valeur),
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.2)',
@@ -285,6 +350,7 @@ export default function MonitoringDetailsModal({
                         pointBackgroundColor: '#3b82f6',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2,
+                        order: 1,
                       },
                     ],
                   }}
@@ -301,6 +367,10 @@ export default function MonitoringDetailsModal({
                           font: {
                             size: 12,
                           },
+                          filter: (legendItem) =>
+                            ![t("chart.over_high"), t("chart.over_low")].includes(
+                              legendItem.text ?? "",
+                            ),
                         },
                       },
                       tooltip: {
@@ -324,10 +394,10 @@ export default function MonitoringDetailsModal({
                           label: (context) => {
                             const index = context.dataIndex;
                             const measure = orderedData[index];
-                            const lines = [`Valeur: ${measure.Valeur}${unite}`];
+                            const lines = [t("tooltip.value", { value: measure.Valeur, unit: unite })];
                             
                             if (measure.Etat_Alarme === 1) {
-                              lines.push("En alarme");
+                              lines.push(t("tooltip.in_alarm"));
                             }
                             
                             return lines;
@@ -380,67 +450,67 @@ export default function MonitoringDetailsModal({
                     },
                   }}
                 />
-              </div>
-              
-              {/* Lignes de consigne superposees avec annotations */}
-              <div className="absolute left-16 right-8 top-30 bottom-20 pointer-events-none">
-                {consigneSup !== null && (
-                  <>
-                    <div 
-                      className="absolute w-full border-t-2 border-red-500 border-dashed"
-                      style={{ 
-                        top: `${((yMax - consigneSup) / (yMax - yMin)) * 100}%`,
-                      }}
-                    />
-                    <div 
-                      className="absolute right-4 text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-md"
-                      style={{ 
-                        top: `${((yMax - consigneSup) / (yMax - yMin)) * 100}%`,
-                        transform: 'translateY(-50%)',
-                      }}
-                    >
-                      Max: {consigneSup}{unite}
-                    </div>
-                  </>
-                )}
-                {consigne !== null && (
-                  <>
-                    <div 
-                      className="absolute w-full border-t-2 border-gray-900 dark:border-white"
-                      style={{ 
-                        top: `${((yMax - consigne) / (yMax - yMin)) * 100}%`,
-                      }}
-                    />
-                    <div 
-                      className="absolute right-4 text-xs font-medium text-gray-900 dark:text-white bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-md"
-                      style={{ 
-                        top: `${((yMax - consigne) / (yMax - yMin)) * 100}%`,
-                        transform: 'translateY(-50%)',
-                      }}
-                    >
-                      Consigne: {consigne}{unite}
-                    </div>
-                  </>
-                )}
-                {consigneInf !== null && (
-                  <>
-                    <div 
-                      className="absolute w-full border-t-2 border-red-500 border-dashed"
-                      style={{ 
-                        top: `${((yMax - consigneInf) / (yMax - yMin)) * 100}%`,
-                      }}
-                    />
-                    <div 
-                      className="absolute right-4 text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-md"
-                      style={{ 
-                        top: `${((yMax - consigneInf) / (yMax - yMin)) * 100}%`,
-                        transform: 'translateY(-50%)',
-                      }}
-                    >
-                      Min: {consigneInf}{unite}
-                    </div>
-                  </>
-                )}
+
+                {/* Lignes de consigne superposees avec annotations (alignement via scale) */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {consigneSup !== null && guidePositions.sup !== null && (
+                    <>
+                      <div
+                        className="absolute w-full border-t-2 border-red-500 border-dashed"
+                        style={{
+                          top: `${guidePositions.sup}px`,
+                        }}
+                      />
+                      <div
+                        className="absolute right-4 text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-md"
+                        style={{
+                          top: `${guidePositions.sup}px`,
+                          transform: 'translateY(-50%)',
+                        }}
+                      >
+                        {t("guides.max", { value: consigneSup, unit: unite })}
+                      </div>
+                    </>
+                  )}
+                  {consigne !== null && guidePositions.consigne !== null && (
+                    <>
+                      <div
+                        className="absolute w-full border-t-2 border-gray-900 dark:border-white"
+                        style={{
+                          top: `${guidePositions.consigne}px`,
+                        }}
+                      />
+                      <div
+                        className="absolute right-4 text-xs font-medium text-gray-900 dark:text-white bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-md"
+                        style={{
+                          top: `${guidePositions.consigne}px`,
+                          transform: 'translateY(-50%)',
+                        }}
+                      >
+                        {t("guides.target", { value: consigne, unit: unite })}
+                      </div>
+                    </>
+                  )}
+                  {consigneInf !== null && guidePositions.inf !== null && (
+                    <>
+                      <div
+                        className="absolute w-full border-t-2 border-red-500 border-dashed"
+                        style={{
+                          top: `${guidePositions.inf}px`,
+                        }}
+                      />
+                      <div
+                        className="absolute right-4 text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-md"
+                        style={{
+                          top: `${guidePositions.inf}px`,
+                          transform: 'translateY(-50%)',
+                        }}
+                      >
+                        {t("guides.min", { value: consigneInf, unit: unite })}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </TabsContent>
 
@@ -465,10 +535,14 @@ export default function MonitoringDetailsModal({
                 columns={columns}
                 data={tableData}
                 showSearch={false}
-                pageSize={20}
-                emptyMessage="Aucune mesure"
-                maxHeight="500px"
+                pageSize={pagination.pageSize}
+                emptyMessage={t("table.empty")}
                 isLoading={rangeLoading}
+                manualPagination
+                pageCount={pageCount}
+                totalRows={totalRows}
+                paginationState={pagination}
+                onPaginationChange={setPagination}
                 headerClassName="!bg-sidebar !text-sidebar-foreground"
                 headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
                 tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"
@@ -496,14 +570,18 @@ export default function MonitoringDetailsModal({
               columns={columns}
               data={tableData}
               showSearch={false}
-              pageSize={20}
+              pageSize={pagination.pageSize}
               emptyMessage={
                 rangeEnabled
-                  ? "Aucune mesure"
-                  : "Veuillez selectionner 2 dates pour voir les mesures"
+                  ? t("table.empty")
+                  : t("table.empty_with_range")
               }
-              maxHeight="500px"
               isLoading={rangeLoading}
+              manualPagination
+              pageCount={pageCount}
+              totalRows={totalRows}
+              paginationState={pagination}
+              onPaginationChange={setPagination}
               headerClassName="!bg-sidebar !text-sidebar-foreground"
               headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
               tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"

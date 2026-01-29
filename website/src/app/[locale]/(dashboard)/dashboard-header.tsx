@@ -82,7 +82,7 @@ export function DashboardHeader({ stats }: { stats: Stats }) {
         className="bg-white/80 border-slate-200 dark:bg-background/95 dark:border-border"
       />
 
-      <section aria-label="Statistiques" className="p-4 md:p-6 pb-0">
+      <section aria-label={t("stats_section_label")} className="p-4 md:p-6 pb-0">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Suspense fallback={<StatCardSkeleton />}>
             <StatCard

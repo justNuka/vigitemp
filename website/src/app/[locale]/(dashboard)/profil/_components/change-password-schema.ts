@@ -1,15 +1,19 @@
 import * as z from 'zod'
 
-export const changePasswordSchema = z
-  .object({
-    oldPassword: z.string().min(1, "L'ancien mot de passe est requis"),
-    newPassword: z.string().min(1, 'Le nouveau mot de passe est requis'),
-    confirmPassword: z.string().min(1, 'La confirmation est requise'),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: 'Les mots de passe ne correspondent pas',
-    path: ['confirmPassword'],
-  })
+export function createChangePasswordSchema(t: {
+  (key: string, values?: Record<string, any>): string
+}) {
+  return z
+    .object({
+      oldPassword: z.string().min(1, t('validation.old_required')),
+      newPassword: z.string().min(1, t('validation.new_required')),
+      confirmPassword: z.string().min(1, t('validation.confirm_required')),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t('validation.mismatch'),
+      path: ['confirmPassword'],
+    })
+}
 
-export type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>
+export type ChangePasswordFormValues = z.infer<ReturnType<typeof createChangePasswordSchema>>
 

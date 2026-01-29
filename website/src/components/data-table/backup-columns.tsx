@@ -7,10 +7,12 @@ export interface BackupRecord {
   details?: string
 }
 
-export const backupColumns: ColumnDef<BackupRecord>[] = [
+type Translator = (key: string) => string
+
+export const getBackupColumns = (t: Translator): ColumnDef<BackupRecord>[] => [
   {
     accessorKey: "etat",
-    header: "État",
+    header: t("backups.columns.status"),
     enableSorting: true,
     cell: ({ getValue }) => {
       const etat = String(getValue() ?? "")
@@ -19,24 +21,29 @@ export const backupColumns: ColumnDef<BackupRecord>[] = [
         "En cours": "bg-blue-100 text-blue-800",
         Échoué: "bg-red-100 text-red-800",
       }
+      const labelMap: Record<string, string> = {
+        Réussi: t("backups.status.success"),
+        "En cours": t("backups.status.in_progress"),
+        Échoué: t("backups.status.failed"),
+      }
 
       return (
         <span
           className={`rounded-full px-2 py-1 text-sm font-medium ${colorMap[etat] || ""}`}
         >
-          {etat}
+          {labelMap[etat] || etat}
         </span>
       )
     },
   },
   {
     accessorKey: "dateHeure",
-    header: "Date et Heure",
+    header: t("backups.columns.date_time"),
     enableSorting: true,
   },
   {
     accessorKey: "details",
-    header: "Détails",
+    header: t("backups.columns.details"),
     enableSorting: false,
     cell: ({ getValue }) => (getValue() ? String(getValue()) : "-"),
   },

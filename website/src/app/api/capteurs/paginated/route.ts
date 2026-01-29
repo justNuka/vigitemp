@@ -113,6 +113,33 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       ],
     })
 
+    const locationIds = locations.map((location) => location.Id_Lieu).filter(Boolean)
+    const activeAlarms = locationIds.length
+      ? await prisma.t_alarme.findMany({
+          where: {
+            Id_Lieu: { in: locationIds },
+            Date_Heure_Fin: null,
+            Est_Acquittee: false,
+          },
+          select: {
+            Id_Lieu: true,
+            Type: true,
+            Date_Heure_Debut: true,
+          },
+          orderBy: { Date_Heure_Debut: "desc" },
+        })
+      : []
+
+    const alarmTypeByLieu = new Map<number, "H" | "B" | "N">()
+    for (const alarm of activeAlarms) {
+      if (!alarm.Id_Lieu) continue
+      const type = alarm.Type as "H" | "B" | "N" | null
+      if (!type) continue
+      if (!alarmTypeByLieu.has(alarm.Id_Lieu)) {
+        alarmTypeByLieu.set(alarm.Id_Lieu, type)
+      }
+    }
+
     const sensorsWithMeasurements = await Promise.all(
       locations.map(async (location) => {
         const groups = (location.t_lieu_groupe || [])
@@ -128,24 +155,20 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
           select: { Valeur: true, Date_Heure_Mesure: true },
         })
 
-        const isCritical = location.Est_Lieu_En_Alarme === 1
-        const isWarning = !isCritical && location.Est_Lieu_En_Pre_Alarme === 1
+        const alarmType = alarmTypeByLieu.get(location.Id_Lieu) ?? null
+        const isCriticalByType = alarmType === "H" || alarmType === "B"
+        const isTechnical = alarmType === "N"
+        const isCritical = isCriticalByType || location.Est_Lieu_En_Alarme === 1
+        const isWarning = !isCritical && !isTechnical && location.Est_Lieu_En_Pre_Alarme === 1
         const isEnded =
           !isCritical &&
           (location.Est_Lieu_Alarme_Terminee_Non_Acquittee === 1 ||
             location.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 === 1)
-        const isTechnical = (() => {
-          if (!location.Retard_Non_Reponse || !location.Date_Heure_Derniere_Reponse) return false
-          const lastResponse = new Date(location.Date_Heure_Derniere_Reponse)
-          if (Number.isNaN(lastResponse.getTime())) return false
-          const diffMinutes = (Date.now() - lastResponse.getTime()) / 60000
-          return diffMinutes >= location.Retard_Non_Reponse
-        })()
 
-        const status: "ok" | "warning" | "critical" | "technical" | "ended" = isCritical
-          ? "critical"
-          : isTechnical
-            ? "technical"
+        const status: "ok" | "warning" | "critical" | "technical" | "ended" = isTechnical
+          ? "technical"
+          : isCritical
+            ? "critical"
             : isWarning
               ? "warning"
               : isEnded
@@ -159,6 +182,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
           id: location.Id_Lieu.toString(),
           name: location.Nom_Lieu,
           lieuType: location.Type_Lieu ?? null,
+          alarmType,
           type: "temperature",
           unit: "ÃÂ°C",
           currentValue: lastMeasurement?.Valeur ?? null,

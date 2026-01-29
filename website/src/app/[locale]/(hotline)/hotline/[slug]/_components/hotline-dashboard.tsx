@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Terminal } from "@/components/magicui/terminal"
 import { cn } from "@/lib/utils"
+import { useTranslations } from "next-intl"
 
 type HealthStatus = "ok" | "error" | "unknown"
 
@@ -30,14 +31,14 @@ type HotlineDashboardProps = {
   slug: string
 }
 
-function formatStatus(status: HealthStatus) {
+function formatStatus(t: ReturnType<typeof useTranslations>, status: HealthStatus) {
   switch (status) {
     case "ok":
-      return "OK"
+      return t("status.ok")
     case "error":
-      return "Erreur"
+      return t("status.error")
     default:
-      return "Inconnu"
+      return t("status.unknown")
   }
 }
 
@@ -70,6 +71,7 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
   const router = useRouter()
   const params = useParams()
   const locale = typeof params?.locale === "string" ? params.locale : "fr"
+  const t = useTranslations("hotlineDashboard")
 
   const [health, setHealth] = useState<HotlineHealth | null>(null)
   const [loadingHealth, setLoadingHealth] = useState(true)
@@ -120,7 +122,7 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
         router.replace(`/${locale}/hotline/${slug}/login`)
         return
       }
-      setLogsError("Impossible de charger les logs")
+      setLogsError(t("logs.error"))
     } finally {
       setLoadingLogs(false)
     }
@@ -136,27 +138,27 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
     <div className="flex w-full flex-1 flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Portail hotline</h1>
+          <h1 className="text-2xl font-semibold">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">
-            Acces reserve aux operations de support.
+            {t("subtitle")}
           </p>
         </div>
         <Button variant="outline" onClick={handleLogout}>
-          Deconnexion
+          {t("actions.logout")}
         </Button>
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
         <TabsList>
-          <TabsTrigger value="overview">Vue globale</TabsTrigger>
-          <TabsTrigger value="logs">Logs</TabsTrigger>
+          <TabsTrigger value="overview">{t("tabs.overview")}</TabsTrigger>
+          <TabsTrigger value="logs">{t("tabs.logs")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Serveur C#</CardTitle>
+                <CardTitle className="text-base">{t("health.server")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div
@@ -165,13 +167,15 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
                     statusClass(health?.server || "unknown")
                   )}
                 >
-                  {loadingHealth ? "Chargement..." : formatStatus(health?.server || "unknown")}
+                  {loadingHealth
+                    ? t("actions.loading")
+                    : formatStatus(t, health?.server || "unknown")}
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Base principale</CardTitle>
+                <CardTitle className="text-base">{t("health.db_main")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div
@@ -180,13 +184,15 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
                     statusClass(health?.dbMain || "unknown")
                   )}
                 >
-                  {loadingHealth ? "Chargement..." : formatStatus(health?.dbMain || "unknown")}
+                  {loadingHealth
+                    ? t("actions.loading")
+                    : formatStatus(t, health?.dbMain || "unknown")}
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Base mesures</CardTitle>
+                <CardTitle className="text-base">{t("health.db_mesure")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div
@@ -195,14 +201,16 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
                     statusClass(health?.dbMesure || "unknown")
                   )}
                 >
-                  {loadingHealth ? "Chargement..." : formatStatus(health?.dbMesure || "unknown")}
+                  {loadingHealth
+                    ? t("actions.loading")
+                    : formatStatus(t, health?.dbMesure || "unknown")}
                 </div>
               </CardContent>
             </Card>
           </div>
           <div className="mt-4">
             <Button variant="secondary" onClick={loadHealth} disabled={loadingHealth}>
-              {loadingHealth ? "Verification..." : "Verifier maintenant"}
+              {loadingHealth ? t("actions.check_loading") : t("actions.check_now")}
             </Button>
           </div>
         </TabsContent>
@@ -210,11 +218,11 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
         <TabsContent value="logs" className="mt-4 space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Filtrer les logs</CardTitle>
+              <CardTitle className="text-base">{t("logs.filter_title")}</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-4">
               <div className="space-y-2">
-                <Label htmlFor="log-source">Source</Label>
+                <Label htmlFor="log-source">{t("logs.fields.source")}</Label>
                 <select
                   id="log-source"
                   className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
@@ -230,15 +238,15 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
                     )
                   }
                 >
-                  <option value="web">Web</option>
-                  <option value="server">Serveur</option>
-                  <option value="web-service-error">Service web (err)</option>
-                  <option value="web-service-wrapper">Service web (wrapper)</option>
-                  <option value="web-service-output">Service web (out)</option>
+                  <option value="web">{t("logs.source.web")}</option>
+                  <option value="server">{t("logs.source.server")}</option>
+                  <option value="web-service-error">{t("logs.source.web_service_error")}</option>
+                  <option value="web-service-wrapper">{t("logs.source.web_service_wrapper")}</option>
+                  <option value="web-service-output">{t("logs.source.web_service_output")}</option>
                 </select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="log-date">Date</Label>
+                <Label htmlFor="log-date">{t("logs.fields.date")}</Label>
                 <Input
                   id="log-date"
                   type="date"
@@ -247,7 +255,7 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="log-limit">Lignes</Label>
+                <Label htmlFor="log-limit">{t("logs.fields.lines")}</Label>
                 <Input
                   id="log-limit"
                   value={logLimit}
@@ -256,7 +264,7 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
               </div>
               <div className="flex items-end">
                 <Button className="w-full" onClick={loadLogs} disabled={loadingLogs}>
-                  {loadingLogs ? "Chargement..." : "Actualiser"}
+                  {loadingLogs ? t("actions.loading") : t("actions.refresh")}
                 </Button>
               </div>
             </CardContent>
@@ -264,23 +272,25 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Sortie</CardTitle>
+              <CardTitle className="text-base">{t("logs.output_title")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {logs?.filePath ? (
-                <p className="text-xs text-muted-foreground">Fichier: {logs.filePath}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t("logs.file", { path: logs.filePath })}
+                </p>
               ) : null}
               {logsError ? (
                 <p className="text-sm text-destructive">{logsError}</p>
               ) : null}
-              <Terminal className="max-h-[480px] max-w-full" sequence={false}>
+              <Terminal className="max-h-120 max-w-full" sequence={false}>
                 {(logs?.lines || []).map((line, index) => (
                   <span key={`${line}-${index}`} className={getLogLineClass(line)}>
                     {line}
                   </span>
                 ))}
                 {!loadingLogs && (!logs || logs.lines.length === 0) ? (
-                  <span className="text-muted-foreground">Aucune ligne disponible</span>
+                  <span className="text-muted-foreground">{t("logs.empty")}</span>
                 ) : null}
               </Terminal>
             </CardContent>

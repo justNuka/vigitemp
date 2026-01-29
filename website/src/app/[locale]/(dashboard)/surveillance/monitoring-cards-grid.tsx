@@ -229,8 +229,8 @@ export function MonitoringCardsGrid({
                             className="ml-2 h-8 w-8"
                             title={
                               groupDisabled
-                                ? "Réactiver la surveillance du groupe"
-                                : "Désactiver la surveillance du groupe"
+                                ? t("group_modal.toggle_enable")
+                                : t("group_modal.toggle_disable")
                             }
                             onClick={(event) => {
                               event.stopPropagation()
@@ -258,6 +258,7 @@ export function MonitoringCardsGrid({
                               siteName={siteName ?? ""}
                               groupName={groupName ?? ""}
                               status={sensor.status}
+                                alarmType={sensor.alarmType ?? null}
                               alarmDisabled={sensor.location.alarmDisabled ?? false}
                               alarmDisabledUntil={sensor.location.alarmDisabledUntil ?? null}
                               alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
@@ -376,35 +377,38 @@ export function MonitoringCardsGrid({
       <Dialog open={groupModal !== null} onOpenChange={() => setGroupModal(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirmation</DialogTitle>
+            <DialogTitle>{t("group_modal.title")}</DialogTitle>
             <DialogDescription>
               {groupModal
-                ? `Voulez-vous ${groupModal.isActive ? "désactiver" : "activer"} la surveillance du groupe ${
-                    groupModal.groupName
-                  } ?`
+                ? t("group_modal.description", {
+                    action: groupModal.isActive
+                      ? t("group_modal.action_disable")
+                      : t("group_modal.action_enable"),
+                    group: groupModal.groupName,
+                  })
                 : null}
             </DialogDescription>
           </DialogHeader>
           {groupModal?.isActive ? (
             <div className="space-y-2">
-              <label className="text-sm font-medium">Durée de désactivation</label>
+              <label className="text-sm font-medium">{t("group_modal.duration_label")}</label>
               <Select value={groupDisableDuration} onValueChange={setGroupDisableDuration}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Choisir une durée" />
+                  <SelectValue placeholder={t("group_modal.duration_placeholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="15">15 minutes</SelectItem>
-                  <SelectItem value="60">1 heure</SelectItem>
-                  <SelectItem value="240">4 heures</SelectItem>
-                  <SelectItem value="720">12 heures</SelectItem>
-                  <SelectItem value="manual">Illimitée (manuel)</SelectItem>
+                  <SelectItem value="15">{t("group_modal.duration_options.15")}</SelectItem>
+                  <SelectItem value="60">{t("group_modal.duration_options.60")}</SelectItem>
+                  <SelectItem value="240">{t("group_modal.duration_options.240")}</SelectItem>
+                  <SelectItem value="720">{t("group_modal.duration_options.720")}</SelectItem>
+                  <SelectItem value="manual">{t("group_modal.duration_options.manual")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           ) : null}
           <DialogFooter>
             <Button variant="outline" onClick={() => setGroupModal(null)}>
-              Annuler
+              {t("group_modal.cancel")}
             </Button>
             <Button
               variant={groupModal?.isActive ? "destructive" : "default"}
@@ -424,7 +428,7 @@ export function MonitoringCardsGrid({
                 setGroupModal(null)
               }}
             >
-              Confirmer
+              {t("group_modal.confirm")}
             </Button>
           </DialogFooter>
         </DialogContent>

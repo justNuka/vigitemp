@@ -45,6 +45,10 @@
   "pageHeader": {
     "title": "Vigitemp - Temperature Monitoring"
   },
+  "appMeta": {
+    "title": "Vigitemp - Real-time monitoring",
+    "description": "Monitoring system and alarm management"
+  },
   "dock": {
     "sondes": "Probes",
     "modules": "Modules",
@@ -57,10 +61,28 @@
     "actionneurs": "Actuators",
     "outils": "Tools"
   },
+  "mainNavbar": {
+    "menu": "Menu"
+  },
+  "themeToggle": {
+    "aria": "Change theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
   "tables": {
     "address": "Address",
     "serialNumber": "Serial Number",
     "state": "State",
+    "refresh": {
+      "label": "Refresh",
+      "loading": "Refreshing..."
+    },
+    "load_more": "Load more",
+    "footer": {
+      "count": "{count, plural, one {# sensor} other {# sensors}}",
+      "total": " of {total} total"
+    },
     "location": "Location",
     "site": "Site",
     "group": "Group",
@@ -108,6 +130,11 @@
   "dashboard": {
     "title": "Dashboard",
     "description": "Overview of monitoring",
+    "meta": {
+      "title": "Dashboard - Vigitemp",
+      "description": "Overview of monitoring"
+    },
+    "stats_section_label": "Statistics",
     "stats": {
       "locations_monitored": "Locations in monitoring",
       "active_alarms": "Active alarms",
@@ -119,28 +146,609 @@
   "surveillance": {
     "title": "Monitoring",
     "description": "Real-time monitoring of probes and sensors",
+    "meta": {
+      "title": "Monitoring - Vigitemp",
+      "description": "Real-time monitoring of probes and sensors"
+    },
+    "filters": {
+      "sites": {
+        "label": "Sites",
+        "placeholder": "All sites"
+      },
+      "groups": {
+        "label": "Groups",
+        "placeholder": "All groups"
+      }
+    },
     "tabs": {
       "graphs": "Charts",
       "tree": "Tree"
     },
     "grid": {
-      "active_title": "Locations in monitoring",
+      "active_title": "Locations in monitoring"
+    },
+    "stats_descriptions": {
+      "active_locations": "Active locations",
+      "disabled_locations": "Monitoring off",
+      "active_alarms_warning": "Action required",
+      "active_alarms_ok": "All good",
+      "alert_sensors": "Pre-alarms + alarms",
       "disabled_title": "Locations with monitoring disabled",
       "disabled_empty": "No locations with monitoring disabled",
       "toggle_disabled_first": "Show disabled locations first",
       "toggle_active_first": "Show monitoring locations first",
       "disabled_badge": "Monitoring disabled",
       "disabled_until": "Monitoring disabled until {date}",
-      "empty_title": "No sensors"
+      "empty_title": "No sensors",
+      "unknown_site": "Unknown site",
+      "no_group": "No group"
+    },
+    "empty_state": {
+      "title": "No probes",
+      "description": "No data available at the moment."
+    },
+    "group_modal": {
+      "title": "Confirmation",
+      "description": "Do you want to {action} monitoring for group {group}?",
+      "action_disable": "disable",
+      "action_enable": "enable",
+      "toggle_disable": "Disable group monitoring",
+      "toggle_enable": "Re-enable group monitoring",
+      "duration_label": "Disable duration",
+      "duration_placeholder": "Choose a duration",
+      "duration_options": {
+        "15": "15 minutes",
+        "60": "1 hour",
+        "240": "4 hours",
+        "720": "12 hours",
+        "manual": "Unlimited (manual)"
+      },
+      "cancel": "Cancel",
+      "confirm": "Confirm"
     }
+  },
+  "surveillanceStatus": {
+    "inactive": "Disabled",
+    "critical": "Critical",
+    "technical": "No response",
+    "warning": "Warning",
+    "ended": "Alarm ended",
+    "ok": "OK"
   },
   "alarmsPage": {
     "title": "Alarm management",
     "description": "Follow-up and handling of alarms",
+    "meta": {
+      "title": "Alarms - Vigitemp",
+      "description": "Alarm management and follow-up"
+    },
     "tabs": {
       "active": "Active",
       "acknowledged": "Acknowledged",
       "resolved": "To acknowledge"
+    },
+    "titles": {
+      "active": "Active alarms",
+      "acknowledged": "Acknowledged alarms",
+      "resolved": "Alarms to acknowledge"
+    },
+    "refresh": {
+      "label": "Refresh",
+      "loading": "Refreshing..."
+    },
+    "toast": {
+      "acknowledge_success": "Alarm acknowledged successfully",
+      "acknowledge_error": "Error while acknowledging the alarm",
+      "refreshed": "Data refreshed"
+    },
+    "validation": {
+      "comment_max": "{max} characters maximum"
+    },
+    "table": {
+      "search_placeholder": "Search alarms...",
+      "empty": "No alarms",
+      "columns": {
+        "type": "Type",
+        "location": "Location / Probe",
+        "last_value": "Last value",
+        "thresholds": "Upper/Lower thresholds",
+        "triggered_at": "Triggered",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "actions": {
+        "acknowledge": "Acknowledge",
+        "comment_aria": "Comment"
+      }
+    },
+    "thresholds": {
+      "sup": "High: {value} {unit}",
+      "inf": "Low: {value} {unit}",
+      "sup_empty": "High: -",
+      "inf_empty": "Low: -"
+    },
+    "empty_state": {
+      "active_title": "No active alarms",
+      "acknowledged_title": "No acknowledged alarms",
+      "resolved_title": "No alarms to acknowledge",
+      "active_description": "All clear - No ongoing alarms",
+      "other_description": "No alarms in this category for now"
+    },
+    "dialog": {
+      "title": "Acknowledge alarm",
+      "description": "Alarm on {sensor} in {location}",
+      "last_value_label": "Last value",
+      "thresholds_label": "Upper/Lower thresholds",
+      "sup_value": "High: {value} {unit}",
+      "inf_value": "Low: {value} {unit}",
+      "comment_label": "Comment (optional)",
+      "comment_placeholder": "Add a comment for this alarm...",
+      "comment_count": "{count}/200 characters",
+      "cancel": "Cancel",
+      "confirm": "Acknowledge",
+      "confirming": "Acknowledging..."
+    },
+    "status": {
+      "active": "Active",
+      "acknowledged": "Acknowledged",
+      "resolved": "To acknowledge"
+    }
+  },
+  "auditPage": {
+    "title": "Audit log",
+    "description": "History of actions and events",
+    "meta": {
+      "title": "Audit - Vigitemp",
+      "description": "Audit log and event history"
+    }
+  },
+  "locationsPage": {
+    "title": "Location management",
+    "count": "{count, plural, one {{count} location} other {{count} locations}}",
+    "tabs": {
+      "all": "All ({count})",
+      "unassigned": "Unassigned ({count})"
+    },
+    "actions": {
+      "new": "New",
+      "edit": "Edit",
+      "archive": "Archive"
+    },
+    "toast": {
+      "create_success": "Location created successfully",
+      "create_no_probe": "Location created without a probe. Remember to assign one later.",
+      "create_error": "Error while creating the location",
+      "update_success": "Location updated successfully",
+      "update_error": "Error while updating the location",
+      "archive_success": "Location archived successfully",
+      "archive_error": "Error while archiving the location"
+    },
+    "errors": {
+      "no_location_selected": "No location selected"
+    },
+    "dialogs": {
+      "archive": {
+        "title": "Archive the location",
+        "description": "This location will switch to monitoring disabled and the probe will be unassigned. Do you want to continue?",
+        "submitting": "Archiving...",
+        "confirm": "Archive"
+      },
+      "create_no_probe": {
+        "title": "Create a location without a probe?",
+        "description": "This location will be created without an associated probe. You can assign one later in location management. Do you want to continue?",
+        "submitting": "Creating...",
+        "confirm": "Continue"
+      }
+    }
+  },
+  "locationsTable": {
+    "columns": {
+      "location": "Location",
+      "type": "Type",
+      "site": "Site",
+      "groups": "Groups",
+      "probe": "Probe",
+      "status": "Status",
+      "setpoint": "Setpoint",
+      "unit": "Unit",
+      "frequency": "Frequency",
+      "max": "Max",
+      "min": "Min",
+      "alarm_delay_high": "High alarm delay",
+      "alarm_delay_low": "Low alarm delay"
+    },
+    "status": {
+      "active": "Monitoring active",
+      "disabled": "Monitoring disabled"
+    },
+    "placeholders": {
+      "na": "N/A",
+      "no_probe": "No probe"
+    },
+    "types": {
+      "bain_marie": "Water bath",
+      "etuve": "Incubator",
+      "ambiance": "Ambient",
+      "frigo_congel": "Fridge / Freezer",
+      "autre": "Other"
+    },
+    "frequency_value": "Every {count} min",
+    "search_placeholder": "Search locations...",
+    "empty": "No locations found"
+  },
+  "locationsForm": {
+    "dialog": {
+      "title_create": "Create a new location",
+      "title_edit": "Edit location",
+      "description": "Fill in the location details",
+      "tabs": {
+        "general": "General",
+        "metrology": "Metrology",
+        "telephony": "Telephony/Planning"
+      },
+      "submit": {
+        "saving": "Saving..."
+      }
+    },
+    "general": {
+      "sections": {
+        "probe": "Probe",
+        "setpoints": "Setpoints"
+      },
+      "labels": {
+        "name": "Location name",
+        "type": "Location type",
+        "comment": "Notes / Comments",
+        "monitoring": "Monitoring",
+        "monitoring_enable": "Enable monitoring",
+        "monitoring_disable": "Disable monitoring",
+        "site": "Site",
+        "groups": "Group(s)",
+        "probe_select": "Probe selection",
+        "probe_state": "Probe status",
+        "setpoint": "Setpoint",
+        "frequency": "Measurement frequency (min)",
+        "upper_enable": "Enable upper setpoint",
+        "upper_max": "Maximum",
+        "alarm_delay_minutes": "Alarm delay (min)",
+        "upper_pre_enable": "Enable upper pre-alarm",
+        "upper_pre_label": "Upper pre-alarm",
+        "lower_enable": "Enable lower setpoint",
+        "lower_min": "Minimum",
+        "lower_pre_enable": "Enable lower pre-alarm",
+        "lower_pre_label": "Lower pre-alarm"
+      },
+      "placeholders": {
+        "name": "e.g. Storage A",
+        "type": "Select a type",
+        "comment": "Notes...",
+        "site": "Choose a site",
+        "site_search": "Search a site...",
+        "site_empty": "No site",
+        "groups": "Select...",
+        "groups_search": "Search a group...",
+        "probe": "Choose a probe",
+        "probe_search": "Search a probe...",
+        "probe_empty": "No probe",
+        "auto": "Automatic",
+        "numeric": "0.0",
+        "frequency": "15",
+        "delay": "5"
+      },
+      "type_options": {
+        "etuve": "Incubator",
+        "bain_marie": "Water bath",
+        "ambiance": "Ambient",
+        "frigo_congel": "Fridge/Freezer",
+        "autre": "Other"
+      },
+      "options": {
+        "no_probe": "No probe"
+      },
+      "tooltips": {
+        "frequency_gso": "Frequency is fixed to 15 minutes for GSO probes."
+      },
+      "group_fallback": "Group {id}"
+    },
+    "metrology": {
+      "sections": {
+        "probe": "Probe",
+        "setpoints": "Setpoints"
+      },
+      "labels": {
+        "serial": "Serial number",
+        "state": "Status",
+        "calibration_date": "Calibration date",
+        "calibration_check_date": "Verification date",
+        "unit": "Unit",
+        "accuracy_error": "Accuracy error",
+        "uncertainty": "Uncertainty",
+        "drift": "Drift"
+      },
+      "placeholders": {
+        "auto": "Automatic"
+      },
+      "setpoints": {
+        "upper": "Upper setpoint ({value})",
+        "lower": "Lower setpoint ({value})",
+        "upper_tolerance": "Upper monitoring tolerance",
+        "lower_tolerance": "Lower monitoring tolerance",
+        "empty": "No setpoints configured"
+      },
+      "emt": {
+        "title": "MPE (Maximum Permissible Error)",
+        "decimals_placeholder": "Number with 2 decimals",
+        "option": {
+          "quart": {
+            "title": "MPE follows the quarter rule",
+            "description": "The probe MPE is set by default to one quarter of the equipment MPE"
+          },
+          "manuel": {
+            "title": "MPE entered manually",
+            "description": "In manual entry, the probe MPE must be less than or equal to one quarter of the equipment MPE"
+          },
+          "uncertainties": {
+            "title": "Including usage uncertainties",
+            "description": "Usage uncertainties are calculated during probe calibration and differ for each probe"
+          },
+          "na": "Not applicable"
+        }
+      },
+      "checkboxes": {
+        "correct_accuracy": "Correct accuracy error",
+        "include_drift": "Include drift in uncertainty"
+      }
+    },
+    "telephony": {
+      "unavailable_light": "This section is not available for light licenses. Please contact MC2 sales to upgrade your current license to standard or expert."
+    }
+  },
+  "modulesPage": {
+    "title": "Modules ({count})",
+    "actions": {
+      "new": "New",
+      "edit": "Edit",
+      "archive": "Archive"
+    },
+    "associated": {
+      "title": "Associated equipment ({count})",
+      "empty": "No equipment associated with this module"
+    },
+    "archive": {
+      "title": "Archive module",
+      "description": "Are you sure you want to archive this module? This action cannot be undone.",
+      "confirm": "Archive"
+    },
+    "archive_blocked": {
+      "title": "Archive not possible",
+      "default": "This module is still linked to other items.",
+      "detail": "{count, plural, one {This module is linked to {count} probe.} other {This module is linked to {count} probes.}}"
+    },
+    "toast": {
+      "archive_error": "Error while archiving"
+    }
+  },
+  "modulesForm": {
+    "title_create": "Create a new module",
+    "title_edit": "Edit module",
+    "description_create": "Fill in the module details",
+    "description_edit": "Update the module details",
+    "fields": {
+      "serial_label": "Serial number",
+      "serial_placeholder": "e.g. MOD-001",
+      "type_label": "Type",
+      "type_placeholder": "Select a type",
+      "port_label": "Serial port (1-255)",
+      "port_placeholder": "e.g. 1",
+      "location_label": "Location",
+      "location_placeholder": "e.g. Server room 1"
+    },
+    "advanced": {
+      "title": "Advanced options",
+      "address_ip_label": "IP address",
+      "address_ip_placeholder": "e.g. 192.168.1.100",
+      "server_id_label": "Server ID",
+      "server_id_placeholder": "e.g. 1",
+      "network_delay_label": "Network delay (ms)",
+      "network_delay_placeholder": "e.g. 50",
+      "network_delay_help": "Network response delay in milliseconds"
+    },
+    "errors": {
+      "save": "Error while saving",
+      "save_form": "Error while saving the module"
+    },
+    "submit": {
+      "saving_edit": "Updating...",
+      "saving_create": "Creating...",
+      "edit": "Edit",
+      "create": "Create"
+    },
+    "associated": {
+      "title": "Associated equipment"
+    }
+  },
+  "modulesTable": {
+    "columns": {
+      "type": "Type",
+      "serial": "Serial number",
+      "location": "Location",
+      "port": "Port",
+      "probes_count": "Probe count",
+      "server": "Server"
+    },
+    "probes_count_value": "{count, plural, one {{count} probe} other {{count} probes}}",
+    "search_placeholder": "Serial number, location...",
+    "empty": "No modules found"
+  },
+  "moduleProbesTable": {
+    "columns": {
+      "address": "Address",
+      "serial": "Serial number",
+      "port": "Serial port",
+      "status": "Status"
+    },
+    "empty": "No equipment associated with this module"
+  },
+  "moduleAssociatedProbes": {
+    "columns": {
+      "type": "Type",
+      "serial": "Serial number"
+    },
+    "loading": "Loading...",
+    "empty": "No associated equipment"
+  },
+  "actuatorsPage": {
+    "title": "Actuator management",
+    "count": "{count, plural, one {{count} actuator} other {{count} actuators}}",
+    "actions": {
+      "new": "New",
+      "edit": "Edit",
+      "archive": "Archive"
+    },
+    "table": {
+      "columns": {
+        "serial": "Serial number",
+        "type": "Type",
+        "comment": "Comment",
+        "status": "Status"
+      },
+      "search_placeholder": "Serial no., type...",
+      "empty": "No actuators found"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "archive": {
+      "title": "Confirm archive",
+      "description": "Are you sure you want to archive this actuator? This action cannot be undone.",
+      "confirm": "Archive"
+    },
+    "toast": {
+      "archive_success": "Actuator archived",
+      "archive_error": "Error while archiving"
+    }
+  },
+  "actuatorsForm": {
+    "title_create": "Create actuator",
+    "title_edit": "Edit actuator",
+    "fields": {
+      "type_label": "Actuator type",
+      "type_placeholder": "Select a type",
+      "type_fallback": "Type {id}",
+      "serial_label": "Serial number",
+      "serial_placeholder": "e.g. 00001",
+      "comment_label": "Comment",
+      "comment_placeholder": "Comment...",
+      "location_label": "Location",
+      "location_placeholder": "Select a location",
+      "location_search": "Search a location...",
+      "location_empty": "No location",
+      "location_fallback": "Location {id}"
+    },
+    "submit": {
+      "create": "Create",
+      "update": "Update"
+    }
+  },
+  "toolsPage": {
+    "title": "Tools",
+    "description": "System management and diagnostic tools",
+    "tabs": {
+      "test_connection": "Connection test",
+      "comments": "Comments",
+      "config": "Config",
+      "monitoring": "Monitoring"
+    },
+    "placeholders": {
+      "config": "Config tab coming soon...",
+      "monitoring": "Monitoring tab coming soon..."
+    }
+  },
+  "toolsComments": {
+    "validation": {
+      "type_required": "Type is required",
+      "comment_required": "Comment is required",
+      "max": "{max} characters maximum"
+    },
+    "table": {
+      "title": "Comments",
+      "count": "{count, plural, one {{count} comment} other {{count} comments}}",
+      "search_placeholder": "Search comments...",
+      "empty": "No comments",
+      "columns": {
+        "type": "Type",
+        "comment": "Comment"
+      }
+    },
+    "form": {
+      "title": "Add a comment",
+      "labels": {
+        "type": "Audit log type",
+        "comment": "Comment"
+      },
+      "placeholders": {
+        "type": "Select a type...",
+        "type_search": "Search a type...",
+        "type_empty": "No type",
+        "comment": "Enter the comment..."
+      },
+      "char_count": "{count}/255 characters"
+    },
+    "edit": {
+      "title": "Edit comment",
+      "type_label": "Type: {type}",
+      "labels": {
+        "comment": "Comment"
+      },
+      "char_count": "{count}/255 characters",
+      "validation": {
+        "required": "Comment is required",
+        "max": "{max} characters maximum"
+      }
+    }
+  },
+  "toolsTestConnection": {
+    "table": {
+      "title": "Probes",
+      "count": "{count, plural, one {{count} probe} other {{count} probes}}",
+      "search_placeholder": "Search a probe...",
+      "empty": "No probes available",
+      "actions": {
+        "run_tests": "Run tests",
+        "testing": "Testing...",
+        "check_all": "Check all",
+        "uncheck_all": "Uncheck all",
+        "uncheck_selection": "Uncheck selection",
+        "reset": "Reset states"
+      },
+      "columns": {
+        "probe": "Probe",
+        "module": "Module",
+        "relay1": "Relay 1",
+        "relay2": "Relay 2",
+        "relay3": "Relay 3",
+        "relay4": "Relay 4",
+        "signal": "Read signal",
+        "response_rate": "Response rate"
+      },
+      "status": {
+        "ok": "OK",
+        "warning": "Warning",
+        "error": "Error"
+      },
+      "aria": {
+        "select_all": "Select all probes",
+        "select_one": "Select {serial}"
+      }
+    },
+    "stats": {
+      "global_response_rate": "Global response rate",
+      "probe_count": "{count, plural, one {{count} probe} other {{count} probes}}",
+      "measurement_count": "Measurement count",
+      "last_24h": "last 24h",
+      "selected_probes": "Selected probes",
+      "selected_over_total": "out of {total}"
     }
   },
   "audit": {
@@ -149,10 +757,127 @@
     "events_summary_filtered": "{count, plural, one {{count} event} other {{count} events}} out of {total}",
     "all_codes": "All codes",
     "search_placeholder": "Search...",
+    "empty": "No audit logs found",
     "refresh": "Refresh",
     "toast": {
       "refreshed": "Data refreshed"
+    },
+    "actions": {
+      "CONNEXION": "Login",
+      "DECONNEXION": "Logout",
+      "ACQ": "Alarm acknowledgment",
+      "DES": "Monitoring disabled",
+      "ACT": "Monitoring enabled",
+      "AS": "Monitoring stopped",
+      "DS": "Monitoring started",
+      "CC": "Update",
+      "CF": "Frequency change",
+      "CR": "Alarm delay change",
+      "CS": "Sensor change",
+      "AJE": "Manual event",
+      "CA": "Calibration",
+      "ET": "Verification",
+      "TC": "Sensor connection test",
+      "MDP": "Password",
+      "ARC": "Archive / export",
+      "ALARM_RESOLVED": "Alarm resolved",
+      "settings_changed": "Settings updated",
+      "user_created": "User created",
+      "user_updated": "User updated",
+      "unknown": "Unknown action ({code})"
+    },
+    "table": {
+      "columns": {
+        "timestamp": "Date / Time",
+        "action": "Action",
+        "user": "User",
+        "details": "Details",
+        "target": "Target"
+      },
+      "system": "System",
+      "empty_value": "-"
+    },
+    "details": {
+      "machine": "Machine: {name}",
+      "address": "Address: {address}",
+      "connection": "Login: {date}",
+      "from": "From: {value}",
+      "to": "To: {value}",
+      "action": "Action: {action}",
+      "ip": "IP: {ip}"
     }
+  },
+  "profilePage": {
+    "title": "My profile",
+    "description": "Manage your personal information and security settings"
+  },
+  "profileAccount": {
+    "title": "Account information",
+    "description": "Your personal data (read-only)",
+    "labels": {
+      "login": "Login",
+      "email": "Email",
+      "last_name": "Last name",
+      "first_name": "First name",
+      "profile": "Profile",
+      "created_at": "Account created on"
+    }
+  },
+  "profileSecurity": {
+    "title": "Security",
+    "description": "Change your password following the security rules"
+  },
+  "profilePassword": {
+    "fields": {
+      "old": {
+        "label": "Current password",
+        "placeholder": "Enter your current password"
+      },
+      "new": {
+        "label": "New password",
+        "placeholder": "Enter your new password"
+      },
+      "confirm": {
+        "label": "Confirm password",
+        "placeholder": "Confirm your new password"
+      }
+    },
+    "rules": {
+      "loading": "Loading password rules...",
+      "title": "Rules to follow:"
+    },
+    "match": {
+      "ok": "Passwords match",
+      "ko": "Passwords do not match"
+    },
+    "submit": {
+      "label": "Change password",
+      "loading": "Changing..."
+    },
+    "toast": {
+      "title": "Password changed",
+      "description": "Your password has been changed successfully"
+    },
+    "errors": {
+      "invalid_rules": "Please follow all password rules",
+      "generic": "An error occurred"
+    },
+    "validation": {
+      "old_required": "Current password is required",
+      "new_required": "New password is required",
+      "confirm_required": "Confirmation is required",
+      "mismatch": "Passwords do not match"
+    }
+  },
+  "profileCfr21": {
+    "title": "CFR21 compliance enabled",
+    "description": "Your account is subject to CFR21. You must change your password regularly.",
+    "non_reuseable": "Previous passwords cannot be reused.",
+    "last_change_label": "Last password change:",
+    "never": "Never",
+    "expired": "Your password has expired - change required",
+    "warning": "You must change your password in {count, plural, one {{count} day} other {{count} days}}",
+    "valid_until": "Password valid for {count, plural, one {{count} day} other {{count} days}} ({date})"
   },
   "adminSidebar": {
     "badge": "Admin",
@@ -177,6 +902,457 @@
       "backups": "Backups"
     }
   },
+  "profilesPage": {
+    "toast": {
+      "create_success": "Profile created successfully",
+      "create_error": "Error while creating profile",
+      "update_success": "Profile updated successfully",
+      "update_error": "Error while updating profile",
+      "delete_success": "Profile deleted successfully",
+      "delete_error": "Error while deleting profile"
+    }
+  },
+  "profilesDialog": {
+    "title_create": "Create profile",
+    "title_edit": "Edit profile",
+    "description_create": "Define a new user profile and its permissions",
+    "description_edit": "Edit profile information and permissions",
+    "fields": {
+      "name_label": "Profile name *",
+      "name_placeholder": "Quality manager",
+      "description_label": "Description",
+      "description_placeholder": "Optional profile description",
+      "mc2_label": "MC2 reserved"
+    },
+    "authorizations_title": "Authorizations",
+    "submit_create": "Create",
+    "submit_update": "Update",
+    "submit_creating": "Creating...",
+    "submit_updating": "Updating...",
+    "validation": {
+      "name_required": "Profile name is required"
+    }
+  },
+  "groupsDialog": {
+    "title_create": "Create group",
+    "title_edit": "Edit group",
+    "fields": {
+      "regroupement_label": "Grouping",
+      "regroupement_placeholder": "Select a grouping",
+      "regroupement_1": "Grouping 1",
+      "regroupement_2": "Grouping 2",
+      "name_label": "Group name",
+      "name_placeholder": "e.g., Group A"
+    },
+    "submit_save": "Save",
+    "submit_saving": "Saving...",
+    "validation": {
+      "regroupement_required": "Grouping is required",
+      "name_required": "Group name is required"
+    },
+    "toast": {
+      "create_success": "Group created successfully",
+      "update_success": "Group updated successfully",
+      "save_error": "Error while saving group"
+    }
+  },
+  "probesDialog": {
+    "title_create": "Add probe",
+    "title_edit": "Edit probe",
+    "fields": {
+      "type_label": "Probe type",
+      "type_placeholder": "Select a type",
+      "serial_label": "Serial number",
+      "serial_placeholder": "e.g., 00002",
+      "serial_hint": "Digits + optional -T or -H suffix",
+      "module_label": "Module",
+      "module_placeholder": "Select a module",
+      "module_search_placeholder": "Search a module...",
+      "module_empty": "No module"
+    },
+    "submit_create": "Add",
+    "submit_update": "Update",
+    "validation": {
+      "type_required": "Probe type is required",
+      "serial_invalid": "Invalid serial number"
+    },
+    "toast": {
+      "invalid_probe": "Invalid probe",
+      "update_success": "Probe updated",
+      "create_success": "Probe created",
+      "save_error": "Server error"
+    }
+  },
+  "standardsDialog": {
+    "title_create": "Create standard",
+    "title_edit": "Edit standard",
+    "submit_create": "Create",
+    "submit_update": "Update",
+    "submit_saving": "Saving...",
+    "sections": {
+      "info": "Standard information",
+      "certificate": "Certificate"
+    },
+    "fields": {
+      "type_label": "Standard type",
+      "type_placeholder": "Select a type",
+      "serial_label": "Serial number",
+      "serial_placeholder": "e.g., 00001",
+      "module_label": "Module",
+      "module_placeholder": "Select a module",
+      "module_search_placeholder": "Search a module...",
+      "module_empty": "No module",
+      "port_label": "Serial port",
+      "port_placeholder": "Serial port",
+      "server_id_label": "Server ID",
+      "server_id_placeholder": "Server ID",
+      "base_value_label": "Base value",
+      "resolution_label": "Resolution",
+      "incertitude_label": "Uncertainty",
+      "number_placeholder": "0",
+      "organism_label": "Organization",
+      "organism_placeholder": "Organization name",
+      "certificate_date_label": "Certificate date",
+      "unit_label": "Unit",
+      "unit_placeholder": "Select a unit",
+      "certificate_number_label": "Certificate number",
+      "certificate_number_placeholder": "Certificate number"
+    },
+    "measurements": {
+      "title": "Measurements table",
+      "empty": "No measurements",
+      "add": "New",
+      "delete": "Delete",
+      "delete_title": "Delete measurement",
+      "delete_description": "Are you sure you want to delete this measurement point?",
+      "columns": {
+        "point": "Point",
+        "reference": "Reference T°",
+        "value": "Measured T°",
+        "incertitude": "Uncertainty"
+      }
+    },
+    "toast": {
+      "create_success": "Standard created successfully",
+      "update_success": "Standard updated successfully",
+      "save_error": "Error while saving"
+    }
+  },
+  "groupsPage": {
+    "title": "Group management",
+    "count": "{count, plural, one {# group} other {# groups}}",
+    "regroupement": {
+      "one": "Grouping 1",
+      "two": "Grouping 2"
+    },
+    "actions": {
+      "new": "New",
+      "edit": "Edit",
+      "archive": "Archive"
+    },
+    "table": {
+      "columns": {
+        "number": "Number",
+        "name": "Group name",
+        "regroupement": "Grouping",
+        "locations": "Locations"
+      },
+      "search_placeholder": "Number, name, grouping...",
+      "empty": "No groups"
+    },
+    "panels": {
+  "adminSettingsPage": {
+    "title": "Settings",
+    "description": "Application configuration",
+    "meta": {
+      "title": "Settings - Vigitemp",
+      "description": "Application configuration"
+    }
+  },
+  "adminSettings": {
+    "toast": {
+      "update_success": "Setting updated",
+      "update_error": "Failed to update",
+      "refresh_interval": "Refresh interval: {label}"
+    },
+    "general": {
+      "title": "General",
+      "description": "General application settings",
+      "labels": {
+        "notifications_email": "Email notifications",
+        "notifications_sms": "SMS notifications",
+        "alarms_sound": "Alarm sound",
+        "dashboard_refresh": "Refresh interval (s)"
+      },
+      "refresh_options": {
+        "5": "5 seconds",
+        "10": "10 seconds",
+        "30": "30 seconds",
+        "60": "1 minute",
+        "manual": "Manual (disabled)",
+        "custom": "{seconds} seconds"
+      }
+    },
+    "security": {
+      "title": "Security",
+      "description": "Security and session settings",
+      "auto_lock": {
+        "label": "Auto lock",
+        "helper": "Automatic sign-out after a period of inactivity"
+      },
+      "inactivity": {
+        "label": "Inactivity duration",
+        "helper": "Time before automatic sign-out"
+      },
+      "duration_options": {
+        "5": "5 minutes",
+        "10": "10 minutes",
+        "15": "15 minutes",
+        "30": "30 minutes",
+        "60": "1 hour"
+      },
+      "toast": {
+        "enabled": "Auto lock enabled ({minutes} min)",
+        "disabled": "Auto lock disabled",
+        "duration": "Inactivity duration set to {minutes} minutes"
+      }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Manage notification preferences",
+      "coming_soon": "Advanced notification configuration coming soon"
+    },
+    "password_policy": {
+      "title": "Password rules",
+      "description": "Configure security requirements for passwords"
+    },
+    "smtp": {
+      "title": "Email configuration",
+      "description": "Configure the SMTP server for email notifications",
+      "warning_label": "Warning:",
+      "warning_body": "Incorrect SMTP configuration may prevent alarm email notifications from being sent. Verify settings carefully and test after any change.",
+      "configure_button": "Configure SMTP"
+    },
+    "smtp_modal": {
+      "title": "SMTP configuration",
+      "description": "Configure the mail server settings for email notifications",
+      "fields": {
+        "host": {
+          "label": "SMTP server",
+          "placeholder": "smtp.gmail.com",
+          "helper": "Mail server address (e.g., smtp.gmail.com, smtp.office365.com)"
+        },
+        "port": {
+          "label": "Port",
+          "placeholder": "587",
+          "helper": "Common ports: 587 (TLS), 465 (SSL), 25 (unencrypted SMTP)"
+        },
+        "user": {
+          "label": "User / Email",
+          "placeholder": "your-email@example.com"
+        },
+        "password": {
+          "label": "Password",
+          "placeholder": "********",
+          "helper": "The password is encrypted and secured"
+        },
+        "sender": {
+          "label": "Sender address",
+          "placeholder": "noreply@vigitemp.fr",
+          "helper": "Address shown in the \"From\" field of emails"
+        }
+      },
+      "test": {
+        "title": "SMTP test",
+        "description": "Save before testing the configuration.",
+        "placeholder": "recipient@example.com",
+        "button": "Test",
+        "loading": "Testing..."
+      },
+      "buttons": {
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving..."
+      },
+      "toasts": {
+        "fetch_error": "Failed to load configuration",
+        "update_success": "SMTP configuration updated successfully",
+        "update_error": "Server error",
+        "test_success": "Test email sent",
+        "test_error": "Server error"
+      },
+      "validation": {
+        "host_required": "SMTP server is required",
+        "port_range": "Port must be between 1 and 65535",
+        "user_required": "SMTP user is required",
+        "password_required": "SMTP password is required",
+        "sender_required": "Sender address is required",
+        "email_invalid": "Invalid email address",
+        "test_email_required": "Recipient email is required"
+      }
+    }
+  },
+      "locations": {
+        "title": "Linked locations",
+        "search_placeholder": "Search a location...",
+        "empty": "No locations",
+        "empty_unselected": "Select a group",
+        "columns": {
+          "name": "Location"
+        }
+      },
+      "users": {
+        "title": "Linked users",
+        "search_placeholder": "Search a user...",
+        "empty": "No users",
+        "empty_unselected": "Select a group",
+        "columns": {
+          "name": "User"
+        }
+      }
+    },
+    "toast": {
+      "archive_success": "Group archived successfully",
+      "archive_error": "Error while archiving"
+    }
+  },
+  "probesPage": {
+    "title": "Probe management ({count, plural, one {# probe} other {# probes}})",
+    "actions": {
+      "add": "Add",
+      "edit": "Edit"
+    },
+    "table": {
+      "columns": {
+        "address": "Address",
+        "serial": "Serial number",
+        "port": "Serial port",
+        "module": "Module",
+        "state": "State",
+        "location": "Location"
+      },
+      "search_placeholder": "Address, serial, location...",
+      "empty": "No probes"
+    },
+    "status": {
+      "surveillance": "Monitoring",
+      "calibrage": "Calibration",
+      "etalonnage": "Verification",
+      "test": "Test",
+      "disabled": "Disabled",
+      "unknown": "Unknown"
+    },
+    "panels": {
+      "adjustments": {
+        "title": "Calibrations",
+        "empty": "No calibrations",
+        "columns": {
+          "date": "Date",
+          "operator": "Operator",
+          "unit": "Unit",
+          "decimals": "Decimals"
+        },
+        "actions": {
+          "generate_file": "Generate file",
+          "print": "Print"
+        }
+      },
+      "calibrations": {
+        "title": "Verifications",
+        "empty": "No verifications",
+        "columns": {
+          "date": "Date",
+          "validity": "Validity",
+          "operator": "Operator",
+          "incertitude": "Uncertainty"
+        },
+        "actions": {
+          "delete": "Delete",
+          "generate": "Generate",
+          "print": "Print"
+        }
+      }
+    }
+  },
+  "standardsPage": {
+    "title": "Standard management",
+    "count": "{count, plural, one {# standard} other {# standards}}",
+    "actions": {
+      "add": "New",
+      "edit": "Edit",
+      "archive": "Archive",
+      "test": "Test"
+    },
+    "table": {
+      "columns": {
+        "serial": "Serial number",
+        "certificate_date": "Certificate date",
+        "state": "Current state"
+      },
+      "search_placeholder": "Serial, state...",
+      "empty": "No standards found"
+    },
+    "state": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "toast": {
+      "archive_success": "Standard archived",
+      "archive_error": "Error while archiving"
+    },
+    "archive": {
+      "title": "Confirm archive",
+      "description": "Are you sure you want to archive this standard? This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Archive"
+    }
+  },
+  "sitesPage": {
+    "title": "Site management",
+    "count": "{count, plural, one {# site} other {# sites}}",
+    "actions": {
+      "archive": "Archive"
+    },
+    "archive_blocked_title": "Archive not possible",
+    "archive_blocked_fallback": "This site is still linked to other items.",
+    "archive_blocked_detail": "{count, plural, one {This site is linked to # location.} other {This site is linked to # locations.}}",
+    "errors": {
+      "no_site_selected": "No site selected"
+    },
+    "toast": {
+      "create_success": "Site created successfully",
+      "create_error": "Error while creating site",
+      "update_success": "Site updated successfully",
+      "update_error": "Error while updating site",
+      "archive_success": "Site archived successfully",
+      "archive_error": "Error while archiving site"
+    }
+  },
+  "sitesDialog": {
+    "create_title": "Create a new site",
+    "create_description": "Fill in the site information",
+    "edit_title": "Edit site",
+    "edit_description": "Update the site information",
+    "archive_title": "Archive site",
+    "archive_description": "Are you sure you want to archive site {code}? This action cannot be undone.",
+    "submit_create": "Create",
+    "submit_creating": "Creating...",
+    "submit_updating": "Updating...",
+    "submit_archive": "Archive",
+    "submit_archiving": "Archiving...",
+    "fields": {
+      "code_label": "Site code",
+      "code_placeholder": "e.g., SITE01",
+      "label_label": "Site label",
+      "label_placeholder": "e.g., Main site",
+      "comment_label": "Comments",
+      "comment_placeholder": "Add comments..."
+    },
+    "validation": {
+      "code_required": "Site code is required",
+      "label_required": "Site label is required"
+    }
+  },
   "audio": {
     "on": "Sound on",
     "off": "Sound off"
@@ -198,7 +1374,7 @@
     "fields": {
       "username_label": "Username",
       "username_placeholder": "Your username",
-      "password_label": "Password",
+      "password_label": "Passoword",
       "password_placeholder": "Your password",
       "reset_email_label": "Email address",
       "reset_email_placeholder": "your@email.com"
@@ -209,6 +1385,10 @@
       "forgot_password": "Forgot password?",
       "send": "Send",
       "sending": "Sending..."
+    },
+    "validation": {
+      "username_required": "Username is required",
+      "password_required": "Password is required"
     },
     "footer": {
       "tagline": "Environmental monitoring for laboratories"
@@ -246,6 +1426,824 @@
       },
       "redirect_error": "Redirection error",
       "security_error": "Security error"
+    }
+  },
+  "resetPassword": {
+    "invalid_link": {
+      "title": "Invalid link",
+      "description": "The reset link is invalid or incomplete. Please use the full link received by email.",
+      "back": "Back to sign in"
+    },
+    "success": {
+      "title": "Password reset!",
+      "description": "Your password has been reset successfully. You will be redirected to the sign-in page...",
+      "cta": "Sign in now"
+    },
+    "form": {
+      "title": "New password",
+      "description": "Choose a secure new password",
+      "fields": {
+        "new_password_label": "New password",
+        "new_password_placeholder": "Enter your new password",
+        "confirm_password_label": "Confirm password",
+        "confirm_password_placeholder": "Confirm your new password"
+      },
+      "submit": "Reset password",
+      "submit_loading": "Resetting..."
+    },
+    "validation": {
+      "new_password_required": "New password is required",
+      "confirm_required": "Confirmation is required",
+      "password_mismatch": "Passwords do not match"
+    },
+    "errors": {
+      "missing_token": "Missing token. Please use the full link received by email.",
+      "rules_not_met": "Please comply with all password rules.",
+      "generic": "An error occurred. Please try again."
+    }
+  },
+  "forcePasswordChange": {
+    "title": "Password change required",
+    "description": "Your password has expired or is temporary. You must change it to continue.",
+    "loading": {
+      "title": "Loading",
+      "rules": "Loading rules...",
+      "link": "Validating link..."
+    },
+    "actions": {
+      "back_to_login": "Back to sign in",
+      "submit": "Change password",
+      "submitting": "Changing..."
+    },
+    "fields": {
+      "current_label": "Current password",
+      "new_label": "New password",
+      "confirm_label": "Confirm new password"
+    },
+    "rules": {
+      "title": "Security rules:"
+    },
+    "validation": {
+      "current_required": "Current password is required",
+      "new_required": "New password is required",
+      "confirm_required": "Confirmation is required",
+      "mismatch": "Passwords do not match"
+    },
+    "errors": {
+      "rules_not_met": "The password does not meet security rules",
+      "link_expired": "Your password change link has expired. Please sign in again.",
+      "generic": "An error occurred"
+    },
+    "toast": {
+      "success": "Password changed successfully"
+    }
+  },
+  "dashboardClient": {
+    "toast": {
+      "ack_success": "Alarm acknowledged successfully",
+      "ack_error": "Error while acknowledging the alarm"
+    },
+    "comment": {
+      "max": "Maximum 200 characters"
+    },
+    "table": {
+      "columns": {
+        "type": "Type",
+        "location_sensor": "Location / Probe",
+        "last_value": "Last value",
+        "thresholds": "Upper/lower limits",
+        "triggered": "Triggered",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "thresholds": {
+        "upper": "Upper: {value} {unit}",
+        "lower": "Lower: {value} {unit}",
+        "upper_na": "Upper: -",
+        "lower_na": "Lower: -"
+      },
+      "actions": {
+        "comment": "Comment",
+        "acknowledge": "Acknowledge"
+      }
+    },
+    "active_alarms": {
+      "title": "Active alarms",
+      "view_all": "All alarms",
+      "empty": "No active alarms - All clear"
+    },
+    "trend": {
+      "title": "Recent trend",
+      "subtitle": "Last 24h",
+      "count": "{count} measurements",
+      "details": "Details"
+    },
+    "ack_dialog": {
+      "title": "Acknowledge alarm",
+      "description": "Alarm on {sensor} in {location}",
+      "last_value": "Last value",
+      "thresholds": "Upper/lower limits",
+      "comment_label": "Comment (optional)",
+      "comment_placeholder": "Add a comment for this alarm...",
+      "comment_count": "{count}/{max} characters",
+      "cancel": "Cancel",
+      "submit": "Acknowledge",
+      "submitting": "Acknowledging..."
+    },
+    "status": {
+      "active": "Active",
+      "acknowledged": "Acknowledged",
+      "resolved": "Resolved"
+    }
+  },
+  "profilesTable": {
+    "title": "Profiles",
+    "description": "Profiles define user permissions in the application",
+    "columns": {
+      "name": "Name",
+      "description": "Description",
+      "authorizations": "Authorizations",
+      "users": "Users",
+      "actions": "Actions"
+    },
+    "counts": {
+      "authorizations": "{count, plural, one {# authorization} other {# authorizations}}",
+      "users": "{count, plural, one {# user} other {# users}}"
+    },
+    "actions": {
+      "new": "New profile",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "placeholders": {
+      "na": "-"
+    },
+    "search_placeholder": "Profile name...",
+    "empty": "No profiles found"
+  },
+  "deleteProfileDialog": {
+    "title": "Delete profile",
+    "description": "Are you sure you want to delete the profile \"{name}\"?",
+    "blocked": "Warning: {count, plural, one {# user uses} other {# users use}} this profile. Deletion is not possible.",
+    "actions": {
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "deleting": "Deleting..."
+    }
+  },
+  "userAccessDialog": {
+    "title": "Resource access",
+    "description": "Manage sites and groups for {firstName} {lastName}",
+    "tabs": {
+      "sites": "Sites ({count})",
+      "groups": "Groups ({count})"
+    },
+    "sites": {
+      "empty": "No sites available"
+    },
+    "groups": {
+      "empty": "No groups available"
+    },
+    "status": {
+      "archived": "Archived"
+    },
+    "actions": {
+      "close": "Close"
+    },
+    "toast": {
+      "site_add_success": "Site added successfully",
+      "site_remove_success": "Site removed successfully",
+      "group_add_success": "Group added successfully",
+      "group_remove_success": "Group removed successfully",
+      "add_error": "Error while adding",
+      "remove_error": "Error while removing"
+    }
+  },
+  "monitoringDetailsModal": {
+    "probe": "Probe: {serial}",
+    "tabs": {
+      "graph": "Chart",
+      "table": "Measurements table"
+    },
+    "table": {
+      "columns": {
+        "date_time": "DATE/TIME",
+        "value": "VALUE",
+        "lower_threshold": "LOWER LIMIT",
+        "upper_threshold": "UPPER LIMIT",
+        "status": "STATUS"
+      },
+      "status": {
+        "out_of_range": "Out of range",
+        "ok": "OK"
+      },
+      "empty": "No measurements",
+      "empty_with_range": "Please select two dates to view measurements"
+    },
+    "chart": {
+      "over_high": "Upper exceedance zone",
+      "over_low": "Lower exceedance zone",
+      "measures": "Measurements ({unit})"
+    },
+    "tooltip": {
+      "value": "Value: {value}{unit}",
+      "in_alarm": "In alarm"
+    },
+    "guides": {
+      "max": "Max: {value}{unit}",
+      "min": "Min: {value}{unit}",
+      "target": "Target: {value}{unit}"
+    }
+  },
+  "combobox": {
+    "placeholder": "Select...",
+    "search_placeholder": "Search...",
+    "empty_message": "No results"
+  },
+  "tableSearch": {
+    "placeholder": "Search..."
+  },
+  "passwordRulesSettings": {
+    "complexity": {
+      "title": "Password complexity rules",
+      "min_length": {
+        "label": "Minimum length",
+        "helper": "Minimum number of characters (4-128)"
+      },
+      "uppercase": {
+        "label": "Uppercase letters",
+        "helper": "Minimum number of uppercase letters required"
+      },
+      "lowercase": {
+        "label": "Lowercase letters",
+        "helper": "Minimum number of lowercase letters required"
+      },
+      "numbers": {
+        "label": "Numbers",
+        "helper": "Minimum number of digits required"
+      },
+      "special": {
+        "label": "Special characters",
+        "helper": "Minimum number of special characters (!@#$%^&*)"
+      }
+    },
+    "actions": {
+      "save": "Save changes",
+      "saving": "Saving..."
+    },
+    "cfr21": {
+      "title": "CFR21 settings (regulatory compliance)",
+      "enabled": {
+        "label": "CFR21 compliance enabled",
+        "helper": "Enable regulatory compliance checks (password expiration and history)"
+      },
+      "expiry": {
+        "label": "Password validity period",
+        "helper": "Passwords expire after {days} days according to CFR21",
+        "value": "{days} days"
+      }
+    },
+    "toast": {
+      "save_success": "Password rules updated successfully",
+      "save_error": "Error while saving rules",
+      "cfr21_success": "CFR21 setting updated",
+      "cfr21_error": "Error while updating CFR21"
+    }
+  },
+  "versionChangelog": {
+    "title": "New version {version}",
+    "description": "Key updates and changes to know.",
+    "sections": {
+      "forms": {
+        "title": "Forms",
+        "items": {
+          "0": "Harmonized validation (react-hook-form + Zod) for Profiles, Groups, Probes and Standards.",
+          "1": "Consistent error messages on required fields."
+        }
+      },
+      "monitoring": {
+        "title": "Monitoring",
+        "items": {
+          "0": "Unified cards (buttons, type icons, tooltips, light mode).",
+          "1": "Primary-colored filters/actions, improved sorting and views.",
+          "2": "Latest value and upper/lower limits in the table."
+        }
+      },
+      "measures": {
+        "title": "Measurements and charts",
+        "items": {
+          "0": "Date range picker to filter measurements.",
+          "1": "Measurements tab adapted for locations with monitoring disabled."
+        }
+      },
+      "admin_tables": {
+        "title": "Admin tables",
+        "items": {
+          "0": "Sticky headers with blur, adjusted heights and clearer borders.",
+          "1": "Harmonized actions (icons, sizes, colors).",
+          "2": "More readable row selection."
+        }
+      },
+      "creation": {
+        "title": "Creation and editing",
+        "items": {
+          "0": "Create locations without a probe with confirmation.",
+          "1": "GSO type: frequency locked to 15 min.",
+          "2": "Simplified module list."
+        }
+      }
+    }
+  },
+  "passwordStrength": {
+    "label": "Password strength",
+    "levels": {
+      "weak": "Weak",
+      "medium": "Medium",
+      "good": "Good",
+      "strong": "Strong"
+    }
+  },
+  "passwordRules": {
+    "title": "Your password must include:",
+    "rules": {
+      "min_length": "At least {count} characters",
+      "min_uppercase": "At least {count} uppercase letter(s)",
+      "min_lowercase": "At least {count} lowercase letter(s)",
+      "min_numbers": "At least {count} digit(s)",
+      "min_special": "At least {count} special character(s) (!@#$%^&* etc.)",
+      "confirm_match": "Passwords match"
+    }
+  },
+  "multiSelectFilter": {
+    "placeholder": "Select...",
+    "search_placeholder": "Search...",
+    "empty": "No options",
+    "actions": {
+      "clear": "Clear",
+      "apply": "Apply"
+    }
+  },
+  "locationFilter": {
+    "search": {
+      "placeholder": "Search a probe...",
+      "aria": "Search a probe",
+      "clear": "Clear search"
+    },
+    "site_group": {
+      "placeholder": "Site group",
+      "all": "All groups"
+    },
+    "location": {
+      "placeholder": "All locations",
+      "all": "All locations"
+    },
+    "actions": {
+      "clear": "Clear"
+    }
+  },
+  "miniChart": {
+    "empty": "Not enough data",
+    "aria_label": "Recent measurements chart"
+  },
+  "monitoringCard": {
+    "alarmTypes": {
+      "high": "High alarm",
+      "low": "Low alarm",
+      "no_response": "No response"
+    },
+    "surveillance": {
+      "active": "Monitoring",
+      "disabled": "Monitoring disabled",
+      "disabled_until": "Monitoring disabled until {date}"
+    },
+    "site": {
+      "unknown": "Unknown site"
+    },
+    "chart": {
+      "measures": "Measurements ({unit})"
+    },
+    "guides": {
+      "max": "Max: {value}",
+      "min": "Min: {value}"
+    },
+    "last_measure": {
+      "label": "Last measurement: {value}"
+    },
+    "frequency": "Freq: {minutes} min",
+    "alarm_delay": "Alarm delay: {minutes} min",
+    "no_measurements": "No measurements available",
+    "actions": {
+      "details": "Measurement details",
+      "disable": "Disable monitoring",
+      "enable": "Enable monitoring",
+      "location": "Location",
+      "settings": "Edit location settings"
+    },
+    "confirm": {
+      "title": "Confirmation",
+      "description": "Do you want to {action} monitoring for this location?",
+      "action_disable": "disable",
+      "action_enable": "enable",
+      "disable_duration": {
+        "label": "Disable duration",
+        "placeholder": "Choose a duration",
+        "options": {
+          "15": "15 minutes",
+          "60": "1 hour",
+          "240": "4 hours",
+          "720": "12 hours",
+          "manual": "Unlimited (manual)"
+        }
+      },
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    }
+  },
+  "adminDashboard": {
+    "title": "Admin dashboard",
+    "loading": "Loading data...",
+    "updating": "Updating...",
+    "pagination": {
+      "page": "Page {page} of {pages}",
+      "page_size_label": "Page size",
+      "page_size_option": "{size} per page",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "acknowledgments": {
+      "title": "Alarm acknowledgments log",
+      "description": "Action history ({total}, max {max})",
+      "empty": "No alarm acknowledgments recorded",
+      "columns": {
+        "date_time": "Date & Time",
+        "user": "User",
+        "action": "Action",
+        "probe": "Probe",
+        "alarm": "Alarm"
+      }
+    },
+    "connected_users": {
+      "title": "Connected users",
+      "description": "Active sessions ({total}, max {max})",
+      "empty": "No connected users at the moment",
+      "columns": {
+        "login": "Login",
+        "full_name": "Full name",
+        "station": "Station",
+        "ip": "IP address"
+      }
+    },
+    "active_alarms": {
+      "title": "Active alarms",
+      "description": "Current status ({total}, max {max})",
+      "empty": "No active alarms",
+      "columns": {
+        "probe": "Probe",
+        "location_time": "Location / Time",
+        "value": "Value",
+        "threshold": "Threshold",
+        "status": "Status"
+      }
+    },
+    "system_logs": {
+      "title": "Audit log",
+      "description": "Last {count} entries ({total} total)",
+      "empty": "No audit log entries",
+      "columns": {
+        "date_time": "Date & Time",
+        "user": "User",
+        "action": "Action",
+        "details": "Details"
+      }
+    },
+    "backup": {
+      "title": "System backup",
+      "description": "Status and history",
+      "last": {
+        "label": "Last backup",
+        "none": "N/A"
+      },
+      "actions": {
+        "run": "Run backup"
+      },
+      "empty": "No backup history available"
+    },
+    "backups": {
+      "columns": {
+        "status": "Status",
+        "date_time": "Date & Time",
+        "details": "Details"
+      },
+      "status": {
+        "success": "Success",
+        "in_progress": "In progress",
+        "failed": "Failed"
+      }
+    },
+    "unassigned": {
+      "title": "Unassigned probes",
+      "description": "{count, plural, one {# unassigned probe} other {# unassigned probes}}",
+      "empty": "No unassigned probes",
+      "columns": {
+        "probe": "Probe",
+        "type": "Type",
+        "address": "Address",
+        "module": "Module"
+      }
+    }
+  },
+  "cacheControls": {
+    "title": "Cache controls",
+    "last_revalidated": "Last invalidation: {time}",
+    "status_active": "Cache active - ultra fast data",
+    "actions": {
+      "refresh": "Refresh",
+      "refresh_title": "Refresh data from cache",
+      "invalidate": "Invalidate cache",
+      "invalidate_title": "Invalidate cache and reload from database"
+    }
+  },
+  "pageHeaderBase": {
+    "active_alarms": {
+      "badge": "{count, plural, one {# alarm} other {# alarms}}",
+      "banner": "{count, plural, one {# active alarm} other {# active alarms}}",
+      "view": "View alarms"
+    }
+  },
+  "alarmsTanstack": {
+    "title": "Alarm management",
+    "search_placeholder": "Search by location...",
+    "empty": "No alarms found",
+    "unknown_location": "Unknown",
+    "date": {
+      "na": "-"
+    },
+    "columns": {
+      "location": "Location",
+      "start": "Alarm start",
+      "status": "Status",
+      "end": "Alarm end",
+      "acknowledged": "Acknowledged"
+    },
+    "status": {
+      "awaiting_ack": "Awaiting acknowledgment",
+      "active": "Alarm active"
+    },
+    "ack_status": {
+      "na": "-",
+      "acknowledged": "Acknowledged",
+      "not_acknowledged": "Not acknowledged"
+    }
+  },
+  "globalAppEffects": {
+    "alarm": {
+      "type": {
+        "high": "High alarm",
+        "low": "Low alarm",
+        "default": "Alarm"
+      },
+      "value": {
+        "na": "N/A"
+      },
+      "toast": {
+        "title": "{type} - {lieu}",
+        "description": "Value: {value}",
+        "action": "View"
+      }
+    },
+    "push_prompt": {
+      "title": "Enable Windows notifications?",
+      "description": "Receive alarms even when the site is closed.",
+      "action": "Enable",
+      "denied": "Notifications denied",
+      "enabled": "Notifications enabled"
+    }
+  },
+  "tanstackTable": {
+    "search_placeholder": "Search...",
+    "empty": "No results",
+    "results": "{count} result(s)",
+    "export": "Export",
+    "print": "Print",
+    "pagination": {
+      "summary": "Page {current} of {total} - Total: {count}",
+      "previous": "Previous",
+      "next": "Next",
+      "page_size_label": "Page size",
+      "page_size_option": "{count} per page"
+    }
+  },
+  "hotlineLogin": {
+    "title": "Hotline portal",
+    "fields": {
+      "username_label": "Username",
+      "username_placeholder": "hotline",
+      "password_label": "Password"
+    },
+    "validation": {
+      "username_required": "Username required",
+      "password_required": "Password required"
+    },
+    "errors": {
+      "login_failed": "Login failed"
+    },
+    "actions": {
+      "submit": "Sign in",
+      "submit_loading": "Signing in..."
+    }
+  },
+  "hotlineDashboard": {
+    "title": "Hotline portal",
+    "subtitle": "Access reserved for support operations.",
+    "tabs": {
+      "overview": "Overview",
+      "logs": "Logs"
+    },
+    "actions": {
+      "logout": "Sign out",
+      "loading": "Loading...",
+      "check_loading": "Checking...",
+      "check_now": "Check now",
+      "refresh": "Refresh"
+    },
+    "status": {
+      "ok": "OK",
+      "error": "Error",
+      "unknown": "Unknown"
+    },
+    "health": {
+      "server": "C# server",
+      "db_main": "Main database",
+      "db_mesure": "Measurements database"
+    },
+    "logs": {
+      "filter_title": "Filter logs",
+      "output_title": "Output",
+      "file": "File: {path}",
+      "empty": "No lines available",
+      "error": "Unable to load logs",
+      "fields": {
+        "source": "Source",
+        "date": "Date",
+        "lines": "Lines"
+      },
+      "source": {
+        "web": "Web",
+        "server": "Server",
+        "web_service_error": "Web service (err)",
+        "web_service_wrapper": "Web service (wrapper)",
+        "web_service_output": "Web service (out)"
+      }
+    }
+  },
+  "usersTable": {
+    "columns": {
+      "login": "Login",
+      "full_name": "Full name",
+      "email": "Email",
+      "profile": "Profile",
+      "status": "Status",
+      "expiry": "Expiry date",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "actions": {
+      "edit": "Edit"
+    },
+    "placeholders": {
+      "na": "-"
+    },
+    "search_placeholder": "Search by name or login...",
+    "empty": "No users found"
+  },
+  "sitesTable": {
+    "columns": {
+      "site": "Site",
+      "description": "Description",
+      "comments": "Comments"
+    },
+    "placeholders": {
+      "na": "-"
+    },
+    "search_placeholder": "Search sites...",
+    "empty": "No sites found"
+  },
+  "userForm": {
+    "fields": {
+      "first_name_label": "First name *",
+      "last_name_label": "Last name *",
+      "email_label": "Email *",
+      "username_label": "Login *",
+      "phone_label": "Phone",
+      "profile_label": "Profile *",
+      "sites_label": "Sites",
+      "groups_label": "Groups"
+    },
+    "placeholders": {
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@example.com",
+      "username": "jdoe",
+      "phone": "+15551234567",
+      "profile": "Select a profile"
+    },
+    "actions": {
+      "loading": "Loading..."
+    },
+    "infos": {
+      "default_visibility": "If no group or site is assigned, all locations will be shown on the monitoring page."
+    },
+    "groups": {
+      "fallback": "Group {id}"
+    },
+    "expiry": {
+      "title": "Validity date",
+      "description": "Set an expiration date",
+      "date_label": "Expiry date *",
+      "select_date": "Select a date"
+    }
+  },
+  "editUserDialog": {
+    "title": "Edit user",
+    "description": "Edit information for {username}",
+    "archived_notice": "This account is archived and cannot sign in.",
+    "password": {
+      "section_title": "Change password (optional)",
+      "new_label": "New password",
+      "new_placeholder": "Leave blank to keep unchanged",
+      "confirm_label": "Confirm password",
+      "confirm_placeholder": "Confirm password"
+    },
+    "reactivate": {
+      "title": "Reactivate account",
+      "description": "The account will be reactivated and can sign in again.",
+      "action": "Reactivate",
+      "loading": "Reactivating..."
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "submit": "Update",
+      "submit_loading": "Updating..."
+    }
+  },
+  "usersPage": {
+    "title": "User management",
+    "count": "{count, plural, one {# user} other {# users}}",
+    "actions": {
+      "new": "New user"
+    },
+    "toast": {
+      "create_success": "User created successfully",
+      "create_error": "Error while creating user",
+      "update_success": "User updated successfully",
+      "update_error": "Error while updating user",
+      "archive_success": "Account archived successfully",
+      "archive_error": "Error while archiving account",
+      "reactivate_success": "Account reactivated successfully",
+      "reactivate_error": "Error while reactivating account"
+    }
+  },
+  "createUserDialog": {
+    "title": "Create user",
+    "description": "Add a new user to the system",
+    "password": {
+      "label": "Password *",
+      "placeholder": "Enter a password",
+      "generate": "Generate",
+      "confirm_label": "Confirm password *",
+      "confirm_placeholder": "Re-enter the password"
+    },
+    "rules": {
+      "title": "Security rules:",
+      "min_length": "At least {count} character(s)",
+      "min_uppercase": "At least {count} uppercase letter(s)",
+      "min_lowercase": "At least {count} lowercase letter(s)",
+      "min_numbers": "At least {count} digit(s)",
+      "min_special": "At least {count} special character(s)"
+    },
+    "profile": {
+      "description": "The profile defines the user's permissions"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "submit": "Create",
+      "submit_loading": "Creating..."
+    },
+    "toast": {
+      "password_generated": "Password generated and copied to the clipboard",
+      "password_invalid": "The password does not meet security rules"
+    }
+  },
+  "userDangerZone": {
+    "title": "Danger zone",
+    "archive": {
+      "title": "Archive this account",
+      "description": "The account will be disabled and the user will no longer be able to sign in. This action can be undone by reactivating the account.",
+      "action": "Archive",
+      "loading": "Archiving..."
     }
   },
   "alerts": {

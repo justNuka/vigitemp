@@ -41,12 +41,12 @@ namespace Vigitemp_Serveur
 
         private static MySqlConnection CreateConnection(string databaseName)
         {
-            var host = GetSetting("Vigitemp.Db.Host", "192.168.63.144");
-            var port = GetSettingUInt("Vigitemp.Db.Port", 3306);
-            var user = GetSetting("Vigitemp.Db.User", "root");
-            var password = GetSetting("Vigitemp.Db.Password", "pass");
-            var connectionTimeout = GetSettingUInt("Vigitemp.Db.ConnectionTimeoutSeconds", 5);
-            var commandTimeout = GetSettingUInt("Vigitemp.Db.CommandTimeoutSeconds", 30);
+            var host = GetSetting("Vigi.Db.Host", "192.168.63.144");
+            var port = GetSettingUInt("Vigi.Db.Port", 3306);
+            var user = GetSetting("Vigi.Db.User", "root");
+            var password = GetSetting("Vigi.Db.Password", "pass");
+            var connectionTimeout = GetSettingUInt("Vigi.Db.ConnectionTimeoutSeconds", 5);
+            var commandTimeout = GetSettingUInt("Vigi.Db.CommandTimeoutSeconds", 30);
 
             var builder = new MySqlConnectionStringBuilder
             {
@@ -86,7 +86,7 @@ namespace Vigitemp_Serveur
 
                 try
                 {
-                    var databaseName = GetSetting("Vigitemp.Db.MeasureDatabase", "vigitemp_mesure");
+                    var databaseName = GetSetting("Vigi.Db.MeasureDatabase", "vigitemp_mesure");
                     connection = CreateConnection(databaseName);
                     connection.Open();
 

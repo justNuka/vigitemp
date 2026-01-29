@@ -1,9 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useFieldArray, useForm, useWatch } from "react-hook-form"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { useRouter } from '@/i18n/navigation'
+import { useTranslations } from 'next-intl'
 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
@@ -17,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { Form } from "@/components/ui/form"
 
 import { useModules } from "@/hooks/useModules"
 import { useStandardTypes } from "@/hooks/useStandardTypes"
@@ -36,26 +41,68 @@ type Props = {
 
 type Measurement = MeasurementPoint
 
+const measurementSchema = z.object({
+  reference: z.string().optional(),
+  value: z.string().optional(),
+  incertitude: z.string().optional(),
+})
+
+const standardSchema = z.object({
+  type: z.string().optional(),
+  serie: z.string().min(1, "Numéro de série requis"),
+  moduleId: z.string().optional(),
+  portSerie: z.string().optional(),
+  idServeur: z.string().optional(),
+  valeurBase: z.string().optional(),
+  resolution: z.string().optional(),
+  incertitude: z.string().optional(),
+  organisme: z.string().optional(),
+  dateCertif: z.string().optional(),
+  unite: z.string().optional(),
+  numeroCertif: z.string().optional(),
+  mesures: z.array(measurementSchema).optional(),
+})
+
+type StandardFormValues = z.infer<typeof standardSchema>
+
 export function StandardModal({ open, onOpenChange, standard, isEditing }: Props) {
   const queryClient = useQueryClient()
   const router = useRouter()
+  const t = useTranslations('standardsDialog')
+  const tCommon = useTranslations('common')
   const [isLoading, setIsLoading] = useState(false)
 
-  const [type, setType] = useState("")
-  const [serie, setSerie] = useState("")
-  const [moduleId, setModuleId] = useState("")
-  const [portSerie, setPortSerie] = useState("")
-  const [idServeur, setIdServeur] = useState("0")
-  const [valeurBase, setValeurBase] = useState("0")
-  const [resolution, setResolution] = useState("0")
-  const [incertitude, setIncertitude] = useState("0")
+  const defaultValues = useMemo<StandardFormValues>(
+    () => ({
+      type: isEditing && standard?.Etalon_Numero_Serie ? standard.Etalon_Numero_Serie.substring(0, 2) : "",
+      serie: isEditing && standard?.Etalon_Numero_Serie ? standard.Etalon_Numero_Serie : "",
+      moduleId: standard?.Id_Module?.toString() || "",
+      portSerie: standard?.Port_Serie || "",
+      idServeur: standard?.Id_Serveur?.toString() || "0",
+      valeurBase: "0",
+      resolution: standard?.Resolution || "0",
+      incertitude: standard?.Incertitude || "0",
+      organisme: standard?.Organisme || "",
+      dateCertif: standard?.Date_Certif ? standard.Date_Certif.substring(0, 10) : "",
+      unite: standard?.Unite || "",
+      numeroCertif: standard?.Num_Certif || "",
+      mesures: [],
+    }),
+    [isEditing, standard],
+  )
 
-  const [organisme, setOrganisme] = useState("")
-  const [dateCertif, setDateCertif] = useState("")
-  const [unite, setUnite] = useState("")
-  const [numeroCertif, setNumeroCertif] = useState("")
+  const form = useForm<StandardFormValues>({
+    resolver: zodResolver(standardSchema),
+    defaultValues,
+    mode: "onChange",
+  })
 
-  const [mesures, setMesures] = useState<Measurement[]>([])
+  const { append, update, remove } = useFieldArray({
+    control: form.control,
+    name: "mesures",
+  })
+
+  const mesures = useWatch({ control: form.control, name: "mesures" }) ?? []
   const [selectedMesureIndex, setSelectedMesureIndex] = useState<number | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
@@ -64,81 +111,46 @@ export function StandardModal({ open, onOpenChange, standard, isEditing }: Props
 
   useEffect(() => {
     if (!open) return
-
-    if (isEditing && standard) {
-      setType(standard.Etalon_Numero_Serie?.substring(0, 2) || "")
-      setSerie(standard.Etalon_Numero_Serie || "")
-      setModuleId(standard.Id_Module?.toString() || "")
-      setPortSerie(standard.Port_Serie || "")
-      setIdServeur(standard.Id_Serveur?.toString() || "0")
-      setResolution(standard.Resolution || "0")
-      setIncertitude(standard.Incertitude || "0")
-      setOrganisme(standard.Organisme || "")
-      setDateCertif(standard.Date_Certif ? standard.Date_Certif.substring(0, 10) : "")
-      setUnite(standard.Unite || "")
-      setNumeroCertif(standard.Num_Certif || "")
-      setMesures([])
-      return
-    }
-
-    setType("")
-    setSerie("")
-    setModuleId("")
-    setPortSerie("")
-    setIdServeur("0")
-    setValeurBase("0")
-    setResolution("0")
-    setIncertitude("0")
-    setOrganisme("")
-    setDateCertif("")
-    setUnite("")
-    setNumeroCertif("")
-    setMesures([])
+    form.reset(defaultValues)
     setSelectedMesureIndex(null)
-  }, [open, standard, isEditing])
+    setIsDeleteDialogOpen(false)
+  }, [defaultValues, form, open])
 
   const handleAddMesure = () => {
-    const nextPoint = mesures.length > 0 ? Math.max(...mesures.map((m) => m.point)) + 1 : 1
-    setMesures([...mesures, { point: nextPoint, reference: "", value: "", incertitude: "" }])
+    append({ reference: "", value: "", incertitude: "" })
     setSelectedMesureIndex(mesures.length)
   }
 
   const handleUpdateMesure = (index: number, field: keyof Measurement, value: string) => {
-    const updated = [...mesures]
-    updated[index] = { ...updated[index], [field]: value }
-    setMesures(updated)
+    const current = mesures[index] || { reference: "", value: "", incertitude: "" }
+    update(index, { ...current, [field]: value })
   }
 
   const handleDeleteMesure = () => {
     if (selectedMesureIndex !== null) {
-      setMesures(mesures.filter((_, i) => i !== selectedMesureIndex))
+      remove(selectedMesureIndex)
       setSelectedMesureIndex(null)
       setIsDeleteDialogOpen(false)
     }
   }
 
-  const handleSubmit = async () => {
-    if (!serie.trim()) {
-      toast.error("Veuillez remplir le numéro de série")
-      return
-    }
-
+  const handleSubmit = async (values: StandardFormValues) => {
     setIsLoading(true)
 
     try {
       const payload = {
-        Etalon_Numero_Serie: serie,
-        Resolution: resolution,
-        Incertitude: incertitude,
-        Numero: numeroCertif,
-        Organisme: organisme,
-        Date: dateCertif,
-        Unite: unite,
-        mesures: mesures.map((m, index) => ({
+        Etalon_Numero_Serie: values.serie,
+        Resolution: values.resolution,
+        Incertitude: values.incertitude,
+        Numero: values.numeroCertif,
+        Organisme: values.organisme,
+        Date: values.dateCertif,
+        Unite: values.unite,
+        mesures: values.mesures?.map((m, index) => ({
           Numero_Ordre: index + 1,
-          Temperature_Reference: m.reference,
-          Temperature_Vraie: m.value,
-          Incertitude: m.incertitude,
+          Temperature_Reference: m.reference || "",
+          Temperature_Vraie: m.value || "",
+          Incertitude: m.incertitude || "",
         })),
       }
 
@@ -148,14 +160,14 @@ export function StandardModal({ open, onOpenChange, standard, isEditing }: Props
         await postJson("/api/etalons", payload)
       }
 
-      toast.success(isEditing ? "Étalon mis à jour avec succès" : "Étalon créé avec succès")
+      toast.success(isEditing ? t('toast.update_success') : t('toast.create_success'))
 
       queryClient.invalidateQueries({ queryKey: ["etalons"] })
       router.refresh()
       onOpenChange(false)
     } catch (error) {
       console.error("Submit error:", error)
-      toast.error(error instanceof Error ? error.message : "Erreur lors de la sauvegarde")
+      toast.error(error instanceof Error ? error.message : t('toast.save_error'))
     } finally {
       setIsLoading(false)
     }
@@ -166,79 +178,58 @@ export function StandardModal({ open, onOpenChange, standard, isEditing }: Props
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-150 max-h-[90vh] overflow-y-auto bg-white dark:bg-card">
           <DialogHeader>
-            <DialogTitle>{isEditing ? "Modifier l'étalon" : "Créer un étalon"}</DialogTitle>
+            <DialogTitle>{isEditing ? t('title_edit') : t('title_create')}</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-6">
-            <StandardInfoForm
-              isEditing={!!isEditing}
-              types={types}
-              typesLoading={typesLoading}
-              modules={modules}
-              modulesLoading={modulesLoading}
-              type={type}
-              setType={setType}
-              serie={serie}
-              setSerie={setSerie}
-              moduleId={moduleId}
-              setModuleId={setModuleId}
-              portSerie={portSerie}
-              idServeur={idServeur}
-              valeurBase={valeurBase}
-              setValeurBase={setValeurBase}
-              resolution={resolution}
-              setResolution={setResolution}
-              incertitude={incertitude}
-              setIncertitude={setIncertitude}
-            />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+              <StandardInfoForm
+                isEditing={!!isEditing}
+                types={types}
+                typesLoading={typesLoading}
+                modules={modules}
+                modulesLoading={modulesLoading}
+              />
 
-            <Separator />
+              <Separator />
 
-            <StandardCertificateForm
-              organisme={organisme}
-              setOrganisme={setOrganisme}
-              dateCertif={dateCertif}
-              setDateCertif={setDateCertif}
-              unite={unite}
-              setUnite={setUnite}
-              numeroCertif={numeroCertif}
-              setNumeroCertif={setNumeroCertif}
-            />
+              <StandardCertificateForm />
 
-            <Separator />
+              <Separator />
 
-            <StandardMeasurementsTable
-              mesures={mesures}
-              selectedMesureIndex={selectedMesureIndex}
-              onSelectMesure={setSelectedMesureIndex}
-              onAdd={handleAddMesure}
-              onUpdate={handleUpdateMesure}
-              onRequestDelete={() => {
-                if (selectedMesureIndex !== null) setIsDeleteDialogOpen(true)
-              }}
-            />
-          </div>
+              <StandardMeasurementsTable
+                mesures={mesures}
+                selectedMesureIndex={selectedMesureIndex}
+                onSelectMesure={setSelectedMesureIndex}
+                onAdd={handleAddMesure}
+                onUpdate={handleUpdateMesure}
+                onRequestDelete={() => {
+                  if (selectedMesureIndex !== null) setIsDeleteDialogOpen(true)
+                }}
+              />
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-              Annuler
-            </Button>
-            <Button onClick={handleSubmit} disabled={isLoading}>
-              {isLoading ? "Enregistrement..." : isEditing ? "Mettre à jour" : "Créer"}
-            </Button>
-          </DialogFooter>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+                  {tCommon('cancel')}
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? t('submit_saving') : isEditing ? t('submit_update') : t('submit_create')}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer la mesure</AlertDialogTitle>
-            <AlertDialogDescription>Êtes-vous sûr de vouloir supprimer ce point de mesure ?</AlertDialogDescription>
+            <AlertDialogTitle>{t('measurements.delete_title')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('measurements.delete_description')}</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
           <AlertDialogAction onClick={handleDeleteMesure} className="bg-red-600">
-            Supprimer
+            {tCommon('delete')}
           </AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>

@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useRouter } from '@/i18n/navigation'
@@ -13,6 +14,8 @@ import { deleteJson, getJson, patchJson, postJson } from '@/lib/http'
 export function ProfilesClient() {
   const queryClient = useQueryClient()
   const router = useRouter()
+  const t = useTranslations('profilesPage')
+  const tCommon = useTranslations('common')
   const didPrefetchRef = useRef(false)
   const { data: profiles = [], isLoading: profilesLoading } = useProfiles()
 
@@ -23,21 +26,15 @@ export function ProfilesClient() {
   const shouldLoadAuthorizations = isCreateOpen || isEditOpen
   const { data: authorizations = [], isLoading: authorizationsLoading } = useAuthorizations(shouldLoadAuthorizations)
 
-  const [formData, setFormData] = useState<ProfileFormData>({
-    name: '',
-    description: '',
-    mc2: false,
-    authorizations: [],
-  })
-
-  const resetForm = () => {
-    setFormData({
+  const defaultProfileValues: ProfileFormData = useMemo(
+    () => ({
       name: '',
       description: '',
       mc2: false,
       authorizations: [],
-    })
-  }
+    }),
+    [],
+  )
 
   useEffect(() => {
     if (profilesLoading || didPrefetchRef.current) return
@@ -54,12 +51,11 @@ export function ProfilesClient() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profiles'] })
       router.refresh()
-      toast.success('Profil créé avec succès')
+      toast.success(t('toast.create_success'))
       setIsCreateOpen(false)
-      resetForm()
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Erreur lors de la création')
+      toast.error(error instanceof Error ? error.message : t('toast.create_error'))
     },
   })
 
@@ -68,13 +64,12 @@ export function ProfilesClient() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profiles'] })
       router.refresh()
-      toast.success('Profil mis à jour avec succès')
+      toast.success(t('toast.update_success'))
       setIsEditOpen(false)
-      resetForm()
       setSelectedProfile(null)
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Erreur lors de la mise à jour')
+      toast.error(error instanceof Error ? error.message : t('toast.update_error'))
     },
   })
 
@@ -83,29 +78,22 @@ export function ProfilesClient() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profiles'] })
       router.refresh()
-      toast.success('Profil supprimé avec succès')
+      toast.success(t('toast.delete_success'))
       setIsDeleteOpen(false)
       setSelectedProfile(null)
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Erreur lors de la suppression')
+      toast.error(error instanceof Error ? error.message : t('toast.delete_error'))
     },
   })
 
   const openCreateDialog = () => {
-    resetForm()
     setSelectedProfile(null)
     setIsCreateOpen(true)
   }
 
   const openEditDialog = (profile: Profile) => {
     setSelectedProfile(profile)
-    setFormData({
-      name: profile.name,
-      description: profile.description || '',
-      mc2: profile.mc2 || false,
-      authorizations: profile.authorizations.map((a) => a.id),
-    })
     setIsEditOpen(true)
   }
 
@@ -114,10 +102,10 @@ export function ProfilesClient() {
     setIsDeleteOpen(true)
   }
 
-  const handleCreate = () => createMutation.mutate(formData)
-  const handleUpdate = () => {
+  const handleCreate = (data: ProfileFormData) => createMutation.mutate(data)
+  const handleUpdate = (data: ProfileFormData) => {
     if (!selectedProfile) return
-    updateMutation.mutate({ id: selectedProfile.id, data: formData })
+    updateMutation.mutate({ id: selectedProfile.id, data })
   }
   const handleDelete = () => {
     if (!selectedProfile) return
@@ -125,7 +113,7 @@ export function ProfilesClient() {
   }
 
   if (profilesLoading || authorizationsLoading) {
-    return <div className="p-6">Chargement...</div>
+    return <div className="p-6">{tCommon('loading')}</div>
   }
 
   return (
@@ -143,8 +131,7 @@ export function ProfilesClient() {
       <ProfileDialog
         open={isCreateOpen}
         mode="create"
-        formData={formData}
-        setFormData={setFormData}
+        initialValues={defaultProfileValues}
         authorizations={authorizations}
         isSubmitting={createMutation.isPending}
         onCancel={() => setIsCreateOpen(false)}
@@ -154,8 +141,12 @@ export function ProfilesClient() {
       <ProfileDialog
         open={isEditOpen}
         mode="edit"
-        formData={formData}
-        setFormData={setFormData}
+        initialValues={{
+          name: selectedProfile?.name || '',
+          description: selectedProfile?.description || '',
+          mc2: selectedProfile?.mc2 || false,
+          authorizations: selectedProfile?.authorizations.map((a) => a.id) || [],
+        }}
         authorizations={authorizations}
         isSubmitting={updateMutation.isPending}
         onCancel={() => setIsEditOpen(false)}

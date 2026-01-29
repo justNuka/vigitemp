@@ -1,9 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useRouter } from '@/i18n/navigation'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import { useTranslations } from 'next-intl'
 import {
   Dialog,
   DialogContent,
@@ -14,13 +18,21 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
 import type { Group } from '@/hooks/useGroups'
 import { patchJson, postJson } from '@/lib/http'
 import { Check, X } from "lucide-react"
@@ -35,36 +47,47 @@ interface GroupModalProps {
 export function GroupModal({ open, onOpenChange, group, isEditing }: GroupModalProps) {
   const queryClient = useQueryClient()
   const router = useRouter()
-  const [name, setName] = useState('')
-  const [regroupement, setRegroupement] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const t = useTranslations('groupsDialog')
+  const tCommon = useTranslations('common')
+
+  const groupSchema = z.object({
+    regroupement: z.string().min(1, t('validation.regroupement_required')),
+    name: z.string().min(1, t('validation.name_required')),
+  })
+
+  type GroupFormValues = z.infer<typeof groupSchema>
+
+  const form = useForm<GroupFormValues>({
+    resolver: zodResolver(groupSchema),
+    defaultValues: {
+      name: '',
+      regroupement: '',
+    },
+    mode: 'onChange',
+  })
 
   useEffect(() => {
     if (!open) return
 
     if (isEditing && group) {
-      setName(group.Nom_Groupe || '')
-      setRegroupement(group.Numero_Regroupement || '')
-    } else {
-      setName('')
-      setRegroupement('')
-    }
-  }, [open, group, isEditing])
-
-  const handleSubmit = async () => {
-    if (!name || !regroupement) {
-      toast.error('Veuillez remplir tous les champs')
+      form.reset({
+        name: group.Nom_Groupe || '',
+        regroupement: group.Numero_Regroupement || '',
+      })
       return
     }
 
-    setIsSubmitting(true)
+    form.reset({ name: '', regroupement: '' })
+  }, [form, group, isEditing, open])
+
+  const handleSubmit = async (values: GroupFormValues) => {
     try {
       if (isEditing && group) {
-        await patchJson(`/api/groupes/${group.Id_Groupe}`, { nom: name, regroupement })
-        toast.success('Groupe modifié avec succès')
+        await patchJson(`/api/groupes/${group.Id_Groupe}`, { nom: values.name, regroupement: values.regroupement })
+        toast.success(t('toast.update_success'))
       } else {
-        await postJson('/api/groupes', { nom: name, regroupement })
-        toast.success('Groupe créé avec succès')
+        await postJson('/api/groupes', { nom: values.name, regroupement: values.regroupement })
+        toast.success(t('toast.create_success'))
       }
 
       queryClient.invalidateQueries({ queryKey: ['groups'] })
@@ -72,54 +95,69 @@ export function GroupModal({ open, onOpenChange, group, isEditing }: GroupModalP
       onOpenChange(false)
     } catch (error) {
       console.error('Group save error:', error)
-      toast.error(error instanceof Error ? error.message : 'Erreur lors de la sauvegarde du groupe')
-    } finally {
-      setIsSubmitting(false)
+      toast.error(error instanceof Error ? error.message : t('toast.save_error'))
     }
   }
+
+  const isSubmitting = form.formState.isSubmitting
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-125 bg-white dark:bg-card">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Modifier le groupe' : 'Créer un groupe'}</DialogTitle>
+          <DialogTitle>{isEditing ? t('title_edit') : t('title_create')}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="regroupement">Regroupement</Label>
-            <Select value={regroupement} onValueChange={setRegroupement}>
-              <SelectTrigger id="regroupement">
-                <SelectValue placeholder="Sélectionner un regroupement" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">Regroupement 1</SelectItem>
-                <SelectItem value="2">Regroupement 2</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="name">Nom du groupe</Label>
-            <Input
-              id="name"
-              placeholder="Ex: Groupe A"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="regroupement"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('fields.regroupement_label')}</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger id="regroupement">
+                        <SelectValue placeholder={t('fields.regroupement_placeholder')} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="1">{t('fields.regroupement_1')}</SelectItem>
+                      <SelectItem value="2">{t('fields.regroupement_2')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-        </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting} className="gap-2">
-            <X className="h-4 w-4" />
-            Annuler
-          </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting} className="gap-2">
-            <Check className="h-4 w-4" />
-            {isSubmitting ? 'Sauvegarde...' : 'Sauvegarder'}
-          </Button>
-        </DialogFooter>
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('fields.name_label')}</FormLabel>
+                  <FormControl>
+                    <Input placeholder={t('fields.name_placeholder')} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting} className="gap-2">
+                <X className="h-4 w-4" />
+                {tCommon('cancel')}
+              </Button>
+              <Button type="submit" disabled={isSubmitting} className="gap-2">
+                <Check className="h-4 w-4" />
+                {isSubmitting ? t('submit_saving') : t('submit_save')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   )

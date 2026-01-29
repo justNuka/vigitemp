@@ -6,7 +6,7 @@ import { z } from "zod"
 import { apiError, apiOk } from "@/lib/api-response"
 
 const createLieuSchema = z.object({
-  Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(20),
+  Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(50),
   Lieu_Etat: z.string().max(1).nullable().optional(),
   Commentaire: z.string().nullable().optional(),
   Id_Site: z.number().nullable().optional(),
@@ -53,7 +53,15 @@ export const GET = withLogging(async (req: NextRequest) => {
       JSON.stringify(lieux, (_, value) => (typeof value === "bigint" ? value.toString() : value)),
     )
 
-    return apiOk(serialized)
+    const normalized = serialized.map((lieu: any) => ({
+      ...lieu,
+      Frequence:
+        lieu?.Frequence === null || lieu?.Frequence === undefined
+          ? lieu?.Frequence
+          : Number(lieu.Frequence) / 60,
+    }))
+
+    return apiOk(normalized)
   } catch (error) {
     console.error("[GET /api/lieux]", error)
     return apiError(500, "lieux_fetch_failed", "Erreur lors de la récupération des lieux")
@@ -67,6 +75,12 @@ export const POST = withLogging(async (req: NextRequest) => {
   try {
     const body = await req.json()
     const validated = createLieuSchema.parse(body)
+    const frequencySeconds =
+      validated.Frequence === undefined
+        ? undefined
+        : validated.Frequence === null
+        ? null
+        : Math.round(validated.Frequence * 60)
 
     const groupIds = Array.from(
       new Set(
@@ -83,13 +97,16 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     const group1Id = groupIds[0] ?? validated.Id_Groupe1 ?? null
     const group2Id = groupIds[1] ?? validated.Id_Groupe2 ?? null
+    const dateCreation = new Date()
+    dateCreation.setHours(0, 0, 0, 0)
 
     const lieu = await prisma.t_lieu.create({
       data: {
         Nom_Lieu: validated.Nom_Lieu,
+        Date_Creation: dateCreation,
         Commentaire: validated.Commentaire ?? null,
         Consigne: validated.Consigne,
-        Frequence: validated.Frequence,
+        Frequence: frequencySeconds,
         Consigne_Sup: validated.Consigne_Sup,
         Est_Consigne_Sup_Active: validated.Est_Consigne_Sup_Active ?? false,
         Consigne_Sup_Pre_Alarme: validated.Consigne_Sup_Pre_Alarme,
@@ -152,7 +169,19 @@ export const POST = withLogging(async (req: NextRequest) => {
       })
     }
 
-    return apiOk(lieu, { status: 201 })
+    const serialized = JSON.parse(
+      JSON.stringify(lieu, (_, value) => (typeof value === "bigint" ? value.toString() : value)),
+    )
+
+    const normalized = {
+      ...serialized,
+      Frequence:
+        serialized?.Frequence === null || serialized?.Frequence === undefined
+          ? serialized?.Frequence
+          : Number(serialized.Frequence) / 60,
+    }
+
+    return apiOk(normalized, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return apiError(400, "validation_error", "Invalid input", { issues: error.issues })

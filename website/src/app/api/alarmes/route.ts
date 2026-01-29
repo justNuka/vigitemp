@@ -35,21 +35,33 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
     }),
     ])
 
-    const formatted = alarms.map((alarm: any) => ({
+    const formatted = alarms.map((alarm: any) => {
+      const alarmType = alarm.Type === "H" ? "high" : alarm.Type === "B" ? "low" : alarm.Type === "N" ? "no-response" : "temperature"
+      const message =
+        alarm.Type === "N"
+          ? "Alarme non réponse"
+          : alarm.Type === "H"
+            ? `Alarme haute - ${alarm.Valeur}°C`
+            : alarm.Type === "B"
+              ? `Alarme basse - ${alarm.Valeur}°C`
+              : `Alarme température - ${alarm.Valeur}°C`
+
+      return {
       id: alarm.Id_Alarme,
       sensorId: alarm.Id_Lieu || 0,
       sensorName: alarm.t_lieu?.Nom_Lieu || "Unknown",
       locationId: alarm.Id_Lieu || 0,
       locationName: alarm.t_lieu?.Nom_Lieu || "Unknown",
-      type: alarm.Type === "H" ? "high" : alarm.Type === "B" ? "low" : "temperature",
-      severity: alarm.Type === "H" || alarm.Type === "B" ? "critical" : "warning",
+      type: alarmType,
+      severity: alarm.Type === "N" ? "technical" : alarm.Type === "H" || alarm.Type === "B" ? "critical" : "warning",
       status: alarm.Date_Heure_Fin ? "resolved" : alarm.Est_Acquittee ? "acknowledged" : "active",
-      message: `Alarme ${alarm.Type === "H" ? "haute" : "basse"} - ${alarm.Valeur}°C`,
+      message,
       timestamp: alarm.Date_Heure_Debut?.toISOString() || new Date().toISOString(),
       acknowledgedAt: alarm.Est_Acquittee ? alarm.Date_Heure_Debut?.toISOString() : null,
       acknowledgedBy: null,
       resolvedAt: alarm.Date_Heure_Fin?.toISOString() || null,
-    }))
+    }
+    })
 
     return apiOk({
       data: formatted,

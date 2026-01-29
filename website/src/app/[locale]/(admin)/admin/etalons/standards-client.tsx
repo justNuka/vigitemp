@@ -23,6 +23,7 @@ import { toast } from "sonner"
 import { useRouter } from '@/i18n/navigation'
 import { StandardModal } from "./standard-modal"
 import { Archive, Pencil, Plus, TestTube2 } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 type StandardRow = {
   Id_Etalon: number
@@ -34,6 +35,7 @@ export function StandardsClient() {
   const { data: standards, isLoading } = useStandards()
   const queryClient = useQueryClient()
   const router = useRouter()
+  const t = useTranslations('standardsPage')
   const didPrefetchRef = useRef(false)
   const [selectedStandard, setSelectedStandard] = useState<Standard | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -77,13 +79,13 @@ export function StandardsClient() {
 
     try {
       await deleteJson(`/api/etalons/${selectedStandard.Id_Etalon}`)
-      toast.success("Étalon archivé")
+      toast.success(t('toast.archive_success'))
       setIsArchiveDialogOpen(false)
       setSelectedStandard(null)
       await queryClient.invalidateQueries({ queryKey: ["etalons"] })
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erreur lors de l'archivage")
+      toast.error(error instanceof Error ? error.message : t('toast.archive_error'))
     }
   }
 
@@ -94,19 +96,19 @@ export function StandardsClient() {
   const columns: ColumnDef<StandardRow>[] = [
     {
       accessorKey: "Etalon_Numero_Serie",
-      header: "Numéro de série",
+      header: t('table.columns.serial'),
     },
     {
       id: "date_certificat",
-      header: "Date certificat",
+      header: t('table.columns.certificate_date'),
       cell: () => "-",
     },
     {
       accessorKey: "Etat_Etalon",
-      header: "État actuel",
+      header: t('table.columns.state'),
       cell: ({ row }) => (
         <Badge variant={row.getValue("Etat_Etalon") === "1" ? "default" : "outline"}>
-          {row.getValue("Etat_Etalon") === "1" ? "Actif" : "Inactif"}
+          {row.getValue("Etat_Etalon") === "1" ? t('state.active') : t('state.inactive')}
         </Badge>
       ),
     },
@@ -123,27 +125,27 @@ export function StandardsClient() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle>Gestion des étalons</CardTitle>
+            <CardTitle>{t('title')}</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {standards?.length || 0} étalon{standards && standards.length > 1 ? "s" : ""}
+              {t('count', { count: standards?.length || 0 })}
             </p>
           </div>
           <div className="flex gap-2">
             <Button onClick={handleAddClick} variant="default" size="sm" className="gap-2">
               <Plus className="h-4 w-4" />
-              Nouveau
+              {t('actions.add')}
             </Button>
             <Button onClick={handleEditClick} disabled={!selectedStandard} variant="outline" size="sm" className="gap-2">
               <Pencil className="h-4 w-4" />
-              Modifier
+              {t('actions.edit')}
             </Button>
             <Button onClick={handleArchiveClick} disabled={!selectedStandard} variant="outline" size="sm" className="gap-2">
               <Archive className="h-4 w-4" />
-              Archiver
+              {t('actions.archive')}
             </Button>
             <Button onClick={handleTestClick} disabled={!selectedStandard} variant="outline" size="sm" className="gap-2">
               <TestTube2 className="h-4 w-4" />
-              Tester
+              {t('actions.test')}
             </Button>
           </div>
         </CardHeader>
@@ -152,9 +154,9 @@ export function StandardsClient() {
             columns={columns}
             data={tableData}
             searchField="Etalon_Numero_Serie"
-            searchPlaceholder="N° série, état..."
+            searchPlaceholder={t('table.search_placeholder')}
             isLoading={isLoading}
-            emptyMessage="Aucun étalon trouvé"
+            emptyMessage={t('table.empty')}
             selectedRowId={selectedStandard?.Id_Etalon}
             onRowClick={(row: StandardRow) => {
               setSelectedStandard(standards?.find((e) => e.Id_Etalon === row.Id_Etalon) || null)
@@ -172,13 +174,13 @@ export function StandardsClient() {
       <AlertDialog open={isArchiveDialogOpen} onOpenChange={setIsArchiveDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer l'archivage</AlertDialogTitle>
+            <AlertDialogTitle>{t('archive.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Êtes-vous sûr de vouloir archiver cet étalon ? Cette action ne pourra pas être annulée.
+              {t('archive.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirmArchive}>Archiver</AlertDialogAction>
+          <AlertDialogCancel>{t('archive.cancel')}</AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirmArchive}>{t('archive.confirm')}</AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>
     </main>

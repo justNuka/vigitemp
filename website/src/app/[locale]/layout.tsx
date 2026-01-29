@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "sonner";
 import { Providers } from "@/components/providers";
 import "./globals.css";
@@ -69,10 +69,19 @@ const kodemono = localFont({
 })
 
 
-export const metadata: Metadata = {
-  title: "Vigitemp - Surveillance temps réel",
-  description: "Système de surveillance et gestion des alarmes",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "appMeta" });
+
+  return {
+    title: t("title"),
+    description: t("description"),
+  };
+}
 
 type RootLayoutProps = Readonly<{
   children: React.ReactNode;

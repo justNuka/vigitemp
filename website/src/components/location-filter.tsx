@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Search, X, Filter } from "lucide-react";
 import type { Location } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
 interface LocationFilterProps {
   locations: Location[];
@@ -34,6 +35,7 @@ export function LocationFilter({
   onSiteGroupChange,
   className,
 }: LocationFilterProps) {
+  const t = useTranslations("locationFilter");
   const hasFilters = selectedLocationId || searchQuery || selectedSiteGroup;
 
   const clearFilters = () => {
@@ -48,10 +50,10 @@ export function LocationFilter({
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Rechercher une sonde..."
+          placeholder={t("search.placeholder")}
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          aria-label="Rechercher une sonde"
+          aria-label={t("search.aria")}
           className="pl-9 pr-9"
           data-testid="input-search-sensors"
         />
@@ -63,7 +65,7 @@ export function LocationFilter({
             onClick={() => onSearchChange("")}
           >
             <X className="h-3 w-3" />
-            <span className="sr-only">Effacer la recherche</span>
+            <span className="sr-only">{t("search.clear")}</span>
           </Button>
         )}
       </div>
@@ -74,12 +76,12 @@ export function LocationFilter({
             value={selectedSiteGroup || "all"}
             onValueChange={(v) => onSiteGroupChange(v === "all" ? null : v)}
           >
-            <SelectTrigger className="w-[180px]" data-testid="select-site-group">
+            <SelectTrigger className="w-45" data-testid="select-site-group">
               <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Groupe de sites" />
+              <SelectValue placeholder={t("site_group.placeholder")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tous les groupes</SelectItem>
+              <SelectItem value="all">{t("site_group.all")}</SelectItem>
               {siteGroups.map((group) => (
                 <SelectItem key={group} value={group}>
                   {group}
@@ -93,11 +95,11 @@ export function LocationFilter({
           value={selectedLocationId || "all"}
           onValueChange={(v) => onLocationChange(v === "all" ? null : v)}
         >
-          <SelectTrigger className="w-[200px]" data-testid="select-location">
-            <SelectValue placeholder="Tous les lieux" />
+          <SelectTrigger className="w-50" data-testid="select-location">
+            <SelectValue placeholder={t("location.placeholder")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tous les lieux</SelectItem>
+            <SelectItem value="all">{t("location.all")}</SelectItem>
             {locations.map((location) => (
               <SelectItem key={location.id} value={location.id}>
                 {location.name}
@@ -114,7 +116,7 @@ export function LocationFilter({
             data-testid="button-clear-filters"
           >
             <X className="h-4 w-4" />
-            <span className="hidden sm:inline">Effacer</span>
+            <span className="hidden sm:inline">{t("actions.clear")}</span>
           </Button>
         )}
       </div>

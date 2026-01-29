@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -63,6 +64,7 @@ interface MonitoringCardProps {
   siteName: string;
   groupName: string;
   status: SensorStatus;
+  alarmType?: "H" | "B" | "N" | null;
   alarmDisabled: boolean;
   alarmDisabledUntil: Date | string | null;
   alarmDelayMinutes: number | null;
@@ -79,12 +81,17 @@ export default function MonitoringCard({
   siteName,
   groupName,
   status = "ok",
+  alarmType = null,
   alarmDisabled,
   alarmDisabledUntil,
   alarmDelayMinutes,
   surveillanceDisabled,
   onSurveillanceToggle,
 }: MonitoringCardProps) {
+  const t = useTranslations("monitoringCard");
+  const tStatus = useTranslations("surveillanceStatus");
+  const locale = useLocale();
+  const localeTag = locale === "fr" ? "fr-FR" : locale;
   const { data, isLoading, reload, meta } = useLieuMeasurements(idLieu, { includeMeta: true });
 
   const orderedData = useMemo(() => {
@@ -126,14 +133,58 @@ export default function MonitoringCard({
     reload(true);
   }, [isModalOpen, reload]);
 
-  const headerTheme = useMemo(
-    () => getStatusTheme(status, isSurveillanceActive),
-    [isSurveillanceActive, status]
+  const statusLabels = useMemo(
+    () => ({
+      inactive: tStatus("inactive"),
+      critical: tStatus("critical"),
+      technical: tStatus("technical"),
+      warning: tStatus("warning"),
+      ended: tStatus("ended"),
+      ok: tStatus("ok"),
+    }),
+    [tStatus]
   );
 
-  const headerBgClassName = headerTheme.headerBgClassName;
-  const headerTextClassName = isSurveillanceActive ? headerTheme.headerTextClassName : "text-white";
-  const headerStatusLabel = headerTheme.label;
+  const headerTheme = useMemo(
+    () => getStatusTheme(status, isSurveillanceActive, statusLabels),
+    [isSurveillanceActive, status, statusLabels]
+  );
+
+  const alarmTypeTheme = useMemo(() => {
+    if (!alarmType || !isSurveillanceActive) return null;
+    switch (alarmType) {
+      case "H":
+        return {
+          label: t("alarmTypes.high"),
+          headerBgClassName: "bg-red-700",
+          headerBorderClassName: "border-red-800",
+          headerTextClassName: "text-white",
+        };
+      case "B":
+        return {
+          label: t("alarmTypes.low"),
+          headerBgClassName: "bg-blue-700",
+          headerBorderClassName: "border-blue-800",
+          headerTextClassName: "text-white",
+        };
+      case "N":
+        return {
+          label: t("alarmTypes.no_response"),
+          headerBgClassName: "bg-black",
+          headerBorderClassName: "border-black",
+          headerTextClassName: "text-white",
+        };
+      default:
+        return null;
+    }
+  }, [alarmType, isSurveillanceActive]);
+
+  const headerBgClassName = alarmTypeTheme?.headerBgClassName ?? headerTheme.headerBgClassName;
+  const headerTextClassName =
+    alarmTypeTheme?.headerTextClassName ??
+    (isSurveillanceActive ? headerTheme.headerTextClassName : "text-white");
+  const headerStatusLabel = alarmTypeTheme?.label ?? headerTheme.label;
+  const headerBorderClassName = alarmTypeTheme?.headerBorderClassName ?? headerTheme.headerBorderClassName;
 
   const handleSurveillanceToggle = () => {
     setShowConfirmModal(true);
@@ -168,17 +219,19 @@ export default function MonitoringCard({
 
   const alarmDisabledLabel = useMemo(() => {
     if (isSurveillanceActive) return null;
-    if (!alarmDisabledUntil) return "Surveillance désactivée";
+    if (!alarmDisabledUntil) return t("surveillance.disabled");
     const date = new Date(alarmDisabledUntil);
-    if (Number.isNaN(date.getTime())) return "Surveillance désactivée";
-    return `Surveillance désactivée jusqu'au ${date.toLocaleString("fr-FR", {
+    if (Number.isNaN(date.getTime())) return t("surveillance.disabled");
+    return t("surveillance.disabled_until", {
+      date: date.toLocaleString(localeTag, {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    })}`;
-  }, [alarmDisabledUntil, isSurveillanceActive]);
+    }),
+    });
+  }, [alarmDisabledUntil, isSurveillanceActive, localeTag, t]);
 
   const alarmBadgeClassName = isSurveillanceActive
     ? "bg-gray-500/20 text-gray-900 dark:text-gray-100"
@@ -204,18 +257,18 @@ export default function MonitoringCard({
         }`}
       >
         <div
-          className={`px-3 py-2 ${headerBgClassName} border-b-2 ${headerTheme.headerBorderClassName}`}
+          className={`px-3 py-2 ${headerBgClassName} border-b-2 ${headerBorderClassName}`}
         >
           <div className="flex items-start justify-between gap-2">
             <div className={`${headerTextClassName} text-xs font-medium space-y-1 flex-1`}>
               {(() => {
                 const label =
                   lieuEtat === "S"
-                    ? "En surveillance"
+                    ? t("surveillance.active")
                     : lieuEtat === "D"
-                      ? "Surveillance désactivée"
+                      ? t("surveillance.disabled")
                       : lieuEtat || null
-                const siteLabel = siteName || "Site inconnu"
+                const siteLabel = siteName || t("site.unknown")
                 return (
                   <TooltipProvider>
                     <UITooltip>
@@ -255,6 +308,26 @@ export default function MonitoringCard({
                     <p className="text-xs">{headerStatusLabel}</p>
                   </TooltipContent>
                 </UITooltip>
+                {alarmType ? (
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ${
+                      alarmType === "H"
+                        ? "bg-red-700 text-white"
+                        : alarmType === "B"
+                          ? "bg-blue-700 text-white"
+                          : "bg-black text-white"
+                    }`}
+                    title={
+                      alarmType === "H"
+                        ? t("alarmTypes.high")
+                        : alarmType === "B"
+                          ? t("alarmTypes.low")
+                          : t("alarmTypes.no_response")
+                    }
+                  >
+                    {alarmType}
+                  </span>
+                ) : null}
                 {typeIconInfo?.icon ? (
                   <UITooltip>
                     <TooltipTrigger asChild>
@@ -291,7 +364,7 @@ export default function MonitoringCard({
                           labels: orderedData.map((d) => d.DateHeureMesureXaxis),
                           datasets: [
                             {
-                              label: `Mesures (${unite})`,
+                              label: t("chart.measures", { unit: unite }),
                               data: orderedData.map((d) => d.Valeur),
                               borderColor: "#3b82f6",
                               backgroundColor: "rgba(59, 130, 246, 0.1)",
@@ -373,7 +446,7 @@ export default function MonitoringCard({
                             right: "4px",
                           }}
                         >
-                          Max: {consigneSup}
+                          {t("guides.max", { value: consigneSup })}
                           {unite}
                         </div>
                       ) : null}
@@ -401,7 +474,7 @@ export default function MonitoringCard({
                             right: "4px",
                           }}
                         >
-                          Min: {consigneInf}
+                          {t("guides.min", { value: consigneInf })}
                           {unite}
                         </div>
                       ) : null}
@@ -414,26 +487,26 @@ export default function MonitoringCard({
                 {lastDateTime ? (
                   <>
                     <div className={`flex items-center justify-between text-[11px] ${contentTextClassName}`}>
-                      <span>Dernière mesure : {lastMeasureText}</span>
+                      <span>{t("last_measure.label", { value: lastMeasureText })}</span>
                       <span>{lastDateTime}</span>
                     </div>
                     <div className={`flex items-center justify-center gap-4 text-[11px] ${contentTextClassName}`}>
-                      <span>Fréq : {frequence} min</span>
+                      <span>{t("frequency", { minutes: frequence })}</span>
                       {alarmDelayMinutes !== null && alarmDelayMinutes !== undefined ? (
-                        <span>Retard alarme : {alarmDelayMinutes} min</span>
+                        <span>{t("alarm_delay", { minutes: alarmDelayMinutes })}</span>
                       ) : null}
                     </div>
                   </>
                 ) : (
                   <div className="text-center text-gray-500 dark:text-gray-400 italic py-3">
-                    Aucune mesure disponible
+                    {t("no_measurements")}
                   </div>
                 )}
               </div>
             </>
           ) : (
             <div className={`text-sm font-medium ${contentTextClassName}`}>
-              Surveillance désactivée
+              {t("surveillance.disabled")}
             </div>
           )}
 
@@ -457,7 +530,7 @@ export default function MonitoringCard({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs">Détails des mesures</p>
+                      <p className="text-xs">{t("actions.details")}</p>
                   </TooltipContent>
                 </UITooltip>
 
@@ -477,7 +550,7 @@ export default function MonitoringCard({
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-xs">
-                      {isSurveillanceActive ? "Désactiver la surveillance" : "Activer la surveillance"}
+                      {isSurveillanceActive ? t("actions.disable") : t("actions.enable")}
                     </p>
                   </TooltipContent>
                 </UITooltip>
@@ -494,7 +567,7 @@ export default function MonitoringCard({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs">Localisation</p>
+                      <p className="text-xs">{t("actions.location")}</p>
                   </TooltipContent>
                 </UITooltip>
 
@@ -510,7 +583,7 @@ export default function MonitoringCard({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs">Modifier les paramètres du lieu</p>
+                      <p className="text-xs">{t("actions.settings")}</p>
                   </TooltipContent>
                 </UITooltip>
               </div>
@@ -521,25 +594,27 @@ export default function MonitoringCard({
         <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Confirmation</DialogTitle>
+              <DialogTitle>{t("confirm.title")}</DialogTitle>
               <DialogDescription>
-                Voulez-vous {isSurveillanceActive ? "désactiver" : "activer"} la surveillance de ce lieu ?
+                {t("confirm.description", {
+                  action: isSurveillanceActive ? t("confirm.action_disable") : t("confirm.action_enable"),
+                })}
               </DialogDescription>
             </DialogHeader>
 
             {isSurveillanceActive ? (
               <div className="space-y-2">
-                <label className="text-sm font-medium">Durée de désactivation</label>
+                <label className="text-sm font-medium">{t("confirm.disable_duration.label")}</label>
                 <Select value={disableDuration} onValueChange={setDisableDuration}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Choisir une durée" />
+                    <SelectValue placeholder={t("confirm.disable_duration.placeholder")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="15">15 minutes</SelectItem>
-                    <SelectItem value="60">1 heure</SelectItem>
-                    <SelectItem value="240">4 heures</SelectItem>
-                    <SelectItem value="720">12 heures</SelectItem>
-                    <SelectItem value="manual">Illimitée (manuel)</SelectItem>
+                    <SelectItem value="15">{t("confirm.disable_duration.options.15")}</SelectItem>
+                    <SelectItem value="60">{t("confirm.disable_duration.options.60")}</SelectItem>
+                    <SelectItem value="240">{t("confirm.disable_duration.options.240")}</SelectItem>
+                    <SelectItem value="720">{t("confirm.disable_duration.options.720")}</SelectItem>
+                    <SelectItem value="manual">{t("confirm.disable_duration.options.manual")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -547,13 +622,13 @@ export default function MonitoringCard({
 
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowConfirmModal(false)}>
-                Annuler
+                {t("confirm.cancel")}
               </Button>
               <Button
                 variant={isSurveillanceActive ? "destructive" : "default"}
                 onClick={confirmSurveillanceToggle}
               >
-                Confirmer
+                {t("confirm.confirm")}
               </Button>
             </DialogFooter>
           </DialogContent>

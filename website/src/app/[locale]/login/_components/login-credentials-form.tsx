@@ -3,22 +3,22 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { FieldErrors, UseFormRegister } from "react-hook-form";
+
+type LoginFormValues = {
+  username: string;
+  password: string;
+};
 
 export function LoginCredentialsForm({
-  username,
-  password,
-  onUsernameChange,
-  onPasswordChange,
   onSubmit,
   onForgotPassword,
   isSubmitting,
   translations,
+  register,
+  errors,
 }: {
-  username: string;
-  password: string;
-  onUsernameChange: (value: string) => void;
-  onPasswordChange: (value: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e?: React.BaseSyntheticEvent) => void;
   onForgotPassword: () => void;
   isSubmitting: boolean;
   translations: {
@@ -30,7 +30,12 @@ export function LoginCredentialsForm({
     signIn: string;
     forgotPassword: string;
   };
+  register: UseFormRegister<LoginFormValues>;
+  errors: FieldErrors<LoginFormValues>;
 }) {
+  const usernameError = errors.username?.message;
+  const passwordError = errors.password?.message;
+
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div className="space-y-2">
@@ -38,13 +43,18 @@ export function LoginCredentialsForm({
         <Input
           id="username"
           type="text"
-          value={username}
-          onChange={(e) => onUsernameChange(e.target.value)}
+          {...register("username")}
           placeholder={translations.usernamePlaceholder}
-          required
           autoFocus
           autoComplete="username"
+          aria-invalid={!!usernameError}
+          aria-describedby={usernameError ? "username-error" : undefined}
         />
+        {usernameError && (
+          <p id="username-error" className="text-sm text-destructive">
+            {String(usernameError)}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -52,12 +62,17 @@ export function LoginCredentialsForm({
         <Input
           id="password"
           type="password"
-          value={password}
-          onChange={(e) => onPasswordChange(e.target.value)}
+          {...register("password")}
           placeholder={translations.passwordPlaceholder}
-          required
           autoComplete="current-password"
+          aria-invalid={!!passwordError}
+          aria-describedby={passwordError ? "password-error" : undefined}
         />
+        {passwordError && (
+          <p id="password-error" className="text-sm text-destructive">
+            {String(passwordError)}
+          </p>
+        )}
       </div>
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>

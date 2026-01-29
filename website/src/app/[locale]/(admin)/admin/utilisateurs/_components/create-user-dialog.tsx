@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { CheckCircle2, Eye, EyeOff, RefreshCw, XCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import type { PasswordRules } from "@/lib/api";
 import { validatePassword } from "@/lib/password-validation";
@@ -71,6 +72,7 @@ export function CreateUserDialog({
   isSubmitting,
   onSubmit,
 }: Props) {
+  const t = useTranslations("createUserDialog");
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
@@ -116,12 +118,12 @@ export function CreateUserDialog({
     form.setValue("passwordConfirm", generated);
 
     navigator.clipboard.writeText(generated);
-    toast.success("Mot de passe généré et copié dans le presse-papiers");
+    toast.success(t("toast.password_generated"));
   };
 
   const handleSubmit = (data: CreateUserFormValues) => {
     if (validation && !validation.isValid) {
-      toast.error("Le mot de passe ne respecte pas les règles de sécurité");
+      toast.error(t("toast.password_invalid"));
       return;
     }
     onSubmit(data);
@@ -131,8 +133,8 @@ export function CreateUserDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto bg-white dark:bg-card">
         <DialogHeader>
-          <DialogTitle>Créer un utilisateur</DialogTitle>
-          <DialogDescription>Ajouter un nouvel utilisateur au système</DialogDescription>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -147,7 +149,7 @@ export function CreateUserDialog({
               render={({ field }) => (
                 <FormItem>
                   <div className="flex items-center justify-between">
-                    <FormLabel>Mot de passe *</FormLabel>
+                    <FormLabel>{t("password.label")}</FormLabel>
                     <Button
                       type="button"
                       variant="outline"
@@ -157,14 +159,14 @@ export function CreateUserDialog({
                       disabled={rulesLoading}
                     >
                       <RefreshCw className="h-3 w-3" />
-                      Générer
+                      {t("password.generate")}
                     </Button>
                   </div>
                   <FormControl>
                     <div className="relative">
                       <Input
                         type={showPassword ? "text" : "password"}
-                        placeholder="Entrez un mot de passe"
+                        placeholder={t("password.placeholder")}
                         autoComplete="new-password"
                         {...field}
                       />
@@ -188,7 +190,7 @@ export function CreateUserDialog({
                   {rules && currentPassword && (
                     <div className="mt-2 p-3 rounded-lg border bg-muted/50 space-y-2">
                       <p className="text-xs font-medium text-muted-foreground">
-                        Règles de sécurité :
+                        {t("rules.title")}
                       </p>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 text-xs">
@@ -204,7 +206,7 @@ export function CreateUserDialog({
                                 : "text-red-600"
                             }
                           >
-                            Au moins {rules.min_length} caractères
+                            {t("rules.min_length", { count: rules.min_length })}
                           </span>
                         </div>
 
@@ -224,8 +226,7 @@ export function CreateUserDialog({
                                   : "text-red-600"
                               }
                             >
-                              Au moins {rules.min_uppercase} majuscule
-                              {rules.min_uppercase > 1 ? "s" : ""}
+                              {t("rules.min_uppercase", { count: rules.min_uppercase })}
                             </span>
                           </div>
                         )}
@@ -246,8 +247,7 @@ export function CreateUserDialog({
                                   : "text-red-600"
                               }
                             >
-                              Au moins {rules.min_lowercase} minuscule
-                              {rules.min_lowercase > 1 ? "s" : ""}
+                              {t("rules.min_lowercase", { count: rules.min_lowercase })}
                             </span>
                           </div>
                         )}
@@ -268,8 +268,7 @@ export function CreateUserDialog({
                                   : "text-red-600"
                               }
                             >
-                              Au moins {rules.min_numbers} chiffre
-                              {rules.min_numbers > 1 ? "s" : ""}
+                              {t("rules.min_numbers", { count: rules.min_numbers })}
                             </span>
                           </div>
                         )}
@@ -292,9 +291,7 @@ export function CreateUserDialog({
                                   : "text-red-600"
                               }
                             >
-                              Au moins {rules.min_special} caractère
-                              {rules.min_special > 1 ? "s" : ""} spécial
-                              {rules.min_special > 1 ? "aux" : ""}
+                              {t("rules.min_special", { count: rules.min_special })}
                             </span>
                           </div>
                         )}
@@ -310,12 +307,12 @@ export function CreateUserDialog({
               name="passwordConfirm"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirmer le mot de passe *</FormLabel>
+                  <FormLabel>{t("password.confirm_label")}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
                         type={showPasswordConfirm ? "text" : "password"}
-                        placeholder="Retapez le mot de passe"
+                        placeholder={t("password.confirm_placeholder")}
                         autoComplete="new-password"
                         {...field}
                       />
@@ -343,7 +340,7 @@ export function CreateUserDialog({
               control={form.control}
               profiles={profiles}
               isLoading={profilesLoading}
-              description="Le profil détermine les autorisations de l'utilisateur"
+              description={t("profile.description")}
             />
 
             <UserPhoneField control={form.control} />
@@ -356,10 +353,10 @@ export function CreateUserDialog({
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Annuler
+                {t("actions.cancel")}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Création..." : "Créer"}
+                {isSubmitting ? t("actions.submit_loading") : t("actions.submit")}
               </Button>
             </DialogFooter>
           </form>

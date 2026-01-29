@@ -12,6 +12,27 @@ type BuildProbeColumnsParams = {
   selectedIds: number[]
   onToggleAll: () => void
   onToggleOne: (id: number, selected: boolean) => void
+  labels: {
+    status: {
+      ok: string
+      warning: string
+      error: string
+    }
+    headers: {
+      probe: string
+      module: string
+      relay1: string
+      relay2: string
+      relay3: string
+      relay4: string
+      signal: string
+      responseRate: string
+    }
+    aria: {
+      selectAll: string
+      selectOne: (serial?: string | null) => string
+    }
+  }
 }
 
 export function buildProbeColumns({
@@ -19,14 +40,15 @@ export function buildProbeColumns({
   selectedIds,
   onToggleAll,
   onToggleOne,
+  labels,
 }: BuildProbeColumnsParams): ColumnDef<ProbeWithSelection>[] {
   const statusConfig: Record<
     string,
     { Icon: typeof CheckCircle2; variant: BadgeProps["variant"]; label: string }
   > = {
-    ok: { Icon: CheckCircle2, variant: "outline", label: "OK" },
-    warning: { Icon: AlertTriangle, variant: "secondary", label: "Attention" },
-    error: { Icon: Zap, variant: "destructive", label: "Erreur" },
+    ok: { Icon: CheckCircle2, variant: "outline", label: labels.status.ok },
+    warning: { Icon: AlertTriangle, variant: "secondary", label: labels.status.warning },
+    error: { Icon: Zap, variant: "destructive", label: labels.status.error },
   }
 
   return [
@@ -36,58 +58,58 @@ export function buildProbeColumns({
         <Checkbox
           checked={selectedIds.length === probes.length && probes.length > 0}
           onCheckedChange={() => onToggleAll()}
-          aria-label="Sélectionner toutes les sondes"
+          aria-label={labels.aria.selectAll}
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={selectedIds.includes(row.original.Id_Sonde)}
           onCheckedChange={(checked) => onToggleOne(row.original.Id_Sonde, checked === true)}
-          aria-label={`Sélectionner ${row.original.Sonde_Numero_Serie}`}
+          aria-label={labels.aria.selectOne(row.original.Sonde_Numero_Serie)}
         />
       ),
       size: 40,
     },
     {
       accessorKey: "Sonde_Numero_Serie",
-      header: "Sonde",
+      header: labels.headers.probe,
       cell: ({ row }) => <div className="font-medium">{row.original.Sonde_Numero_Serie}</div>,
     },
     {
       accessorKey: "Module",
-      header: "Module",
+      header: labels.headers.module,
     },
     {
       accessorKey: "Relai_1",
-      header: "Relai 1",
+      header: labels.headers.relay1,
       cell: ({ row }) => (
         <span className="text-xs text-muted-foreground">{row.original.Relai_1}</span>
       ),
     },
     {
       accessorKey: "Relai_2",
-      header: "Relai 2",
+      header: labels.headers.relay2,
       cell: ({ row }) => (
         <span className="text-xs text-muted-foreground">{row.original.Relai_2}</span>
       ),
     },
     {
       accessorKey: "Relai_3",
-      header: "Relai 3",
+      header: labels.headers.relay3,
       cell: ({ row }) => (
         <span className="text-xs text-muted-foreground">{row.original.Relai_3}</span>
       ),
     },
     {
       accessorKey: "Relai_4",
-      header: "Relai 4",
+      header: labels.headers.relay4,
       cell: ({ row }) => (
         <span className="text-xs text-muted-foreground">{row.original.Relai_4}</span>
       ),
     },
     {
       accessorKey: "Signal_Lu",
-      header: "Signal lu",
+      header: labels.headers.signal,
       cell: ({ row }) => {
         const status = row.original.Signal_Lu
         const config = statusConfig[status] ?? statusConfig.ok
@@ -103,7 +125,7 @@ export function buildProbeColumns({
     },
     {
       accessorKey: "Taux_Reponse",
-      header: () => <div className="text-right">Taux réponse</div>,
+      header: () => <div className="text-right">{labels.headers.responseRate}</div>,
       cell: ({ row }) => {
         const rate = row.original.Taux_Reponse
         const color =

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDateFr, formatDateTimeFr } from './date-format';
+import { useTranslations } from 'next-intl';
 
 export type CalibrationRow = {
   Id_Etalonnage: number;
@@ -28,25 +29,26 @@ export function CalibrationsPanel({
   selectedCalibrationId,
   onSelectCalibration,
 }: CalibrationsPanelProps) {
+  const t = useTranslations('probesPage');
   const columns: ColumnDef<CalibrationRow>[] = [
     {
       accessorKey: 'Date_Heure_Etalonnage',
-      header: 'Date',
+      header: t('panels.calibrations.columns.date'),
       cell: ({ row }) => formatDateTimeFr(row.original.Date_Heure_Etalonnage),
     },
     {
       accessorKey: 'Date_Validite',
-      header: 'Validité',
+      header: t('panels.calibrations.columns.validity'),
       cell: ({ row }) => formatDateFr(row.original.Date_Validite),
     },
     {
       accessorKey: 'Operateur',
-      header: 'Opérateur',
+      header: t('panels.calibrations.columns.operator'),
       cell: ({ row }) => row.getValue('Operateur') || '-',
     },
     {
       accessorKey: 'Incertitude',
-      header: 'Incertitude',
+      header: t('panels.calibrations.columns.incertitude'),
       cell: ({ row }) => row.getValue('Incertitude') || '-',
     },
   ];
@@ -54,7 +56,7 @@ export function CalibrationsPanel({
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Étalonnages</CardTitle>
+        <CardTitle className="text-base">{t('panels.calibrations.title')}</CardTitle>
       </CardHeader>
       <CardContent className="p-2 md:p-4 xl:p-4">
         {isLoading ? (
@@ -64,7 +66,7 @@ export function CalibrationsPanel({
             ))}
           </div>
         ) : calibrations.length === 0 ? (
-          <div className="text-center py-6 text-sm text-muted-foreground">Aucun étalonnage</div>
+          <div className="text-center py-6 text-sm text-muted-foreground">{t('panels.calibrations.empty')}</div>
         ) : (
           <>
             <TanStackTable
@@ -81,13 +83,13 @@ export function CalibrationsPanel({
             />
             <div className="flex gap-2">
               <Button size="sm" variant="destructive" disabled={!selectedCalibrationId} className="flex-1">
-                Supprimer
+                {t('panels.calibrations.actions.delete')}
               </Button>
               <Button size="sm" variant="outline" disabled={!selectedCalibrationId} className="flex-1">
-                Générer
+                {t('panels.calibrations.actions.generate')}
               </Button>
               <Button size="sm" variant="outline" disabled={!selectedCalibrationId} className="flex-1">
-                Imprimer
+                {t('panels.calibrations.actions.print')}
               </Button>
             </div>
           </>

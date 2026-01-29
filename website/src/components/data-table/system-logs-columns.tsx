@@ -10,10 +10,14 @@ export interface SystemLog {
   details?: string
 }
 
-export const systemLogsColumns: ColumnDef<SystemLog>[] = [
+type Translator = (key: string) => string
+
+export const getSystemLogsColumns = (
+  t: Translator,
+): ColumnDef<SystemLog>[] => [
   {
     accessorKey: "dateHeure",
-    header: "Date et Heure",
+    header: t("system_logs.columns.date_time"),
     enableSorting: true,
     cell: ({ getValue }) => {
       const value = getValue() as string
@@ -23,17 +27,17 @@ export const systemLogsColumns: ColumnDef<SystemLog>[] = [
   },
   {
     accessorKey: "utilisateur",
-    header: "Utilisateur",
+    header: t("system_logs.columns.user"),
     enableSorting: true,
   },
   {
     accessorKey: "action",
-    header: "Action",
+    header: t("system_logs.columns.action"),
     enableSorting: true,
   },
   {
     accessorKey: "details",
-    header: "Détails",
+    header: t("system_logs.columns.details"),
     enableSorting: false,
     cell: ({ getValue }) => (getValue() ? String(getValue()) : "-"),
   },

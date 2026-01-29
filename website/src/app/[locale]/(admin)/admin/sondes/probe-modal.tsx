@@ -1,7 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +16,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -19,7 +31,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
-import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useProbeTypes } from "@/hooks/useProbeTypes";
 import { useModules } from "@/hooks/useModules";
@@ -39,75 +50,76 @@ interface ProbeModalProps {
 export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const t = useTranslations('probesDialog');
+  const tCommon = useTranslations('common');
   const isEdit = Boolean(isEditing && probe);
   const probeKey = (probe as any)?.Id_Sonde ?? probe?.Sonde_Numero_Serie ?? "new";
   const contentKey = `${isEdit ? "edit" : "new"}-${probeKey}-${open ? "open" : "closed"}`;
 
-  const [serieNum, setSerieNum] = useState("");
-  const [probeType, setProbeType] = useState("");
-  const [moduleId, setModuleId] = useState("");
+  const probeSchema = z.object({
+    sondeType: z.string().min(1, t('validation.type_required')),
+    serieNum: z.string().regex(/^\d+(?:-?[TH])?$/i, t('validation.serial_invalid')),
+    moduleId: z.string().optional(),
+  });
+
+  type ProbeFormValues = z.infer<typeof probeSchema>;
+
+  const form = useForm<ProbeFormValues>({
+    resolver: zodResolver(probeSchema),
+    defaultValues: {
+      sondeType: "",
+      serieNum: "",
+      moduleId: "",
+    },
+    mode: "onChange",
+  });
 
   const { data: probeTypes, isLoading: probeTypesLoading } = useProbeTypes(open);
   const { data: modules, isLoading: modulesLoading } = useModules(open);
 
-  const displayedSerieNum = isEdit ? probe?.Sonde_Numero_Serie || "" : serieNum;
-  const displayedProbeType = useMemo(() => {
-    if (!isEdit) return probeType;
-    return probe?.Sonde_Numero_Serie?.substring(0, 2) || "";
-  }, [isEdit, probe?.Sonde_Numero_Serie, probeType]);
+  useEffect(() => {
+    if (!open) return;
 
-  const displayedModuleId = useMemo(() => {
-    if (!isEdit) return moduleId;
-    return moduleId || probe?.Id_Module?.toString() || "";
-  }, [isEdit, moduleId, probe?.Id_Module]);
+    if (isEdit && probe) {
+      form.reset({
+        sondeType: probe.Sonde_Numero_Serie?.substring(0, 2) || "",
+        serieNum: probe.Sonde_Numero_Serie || "",
+        moduleId: probe.Id_Module?.toString() || "",
+      });
+      return;
+    }
 
-  const handleSerieChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const normalized = e.target.value.toUpperCase();
-    const cleaned = normalized.replace(/[^0-9TH]/g, "");
-    const suffix = cleaned.endsWith("T") ? "T" : cleaned.endsWith("H") ? "H" : "";
-    const digits = suffix ? cleaned.slice(0, -1).replace(/[^0-9]/g, "") : cleaned.replace(/[^0-9]/g, "");
-    setSerieNum(suffix ? `${digits}-${suffix}` : digits);
-  };
+    form.reset({ sondeType: "", serieNum: "", moduleId: "" });
+  }, [form, isEdit, open, probe]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (values: ProbeFormValues) => {
     try {
-      const moduleIdNumber = displayedModuleId ? parseInt(displayedModuleId, 10) : null;
+      const moduleIdNumber = values.moduleId ? parseInt(values.moduleId, 10) : null;
       const moduleIdValue = Number.isNaN(moduleIdNumber) ? null : moduleIdNumber;
 
       if (isEdit) {
         if (!probe?.Id_Sonde) {
-          toast.error("Sonde invalide");
+          toast.error(t('toast.invalid_probe'));
           return;
         }
 
         await patchJson(`/api/sondes/${probe.Id_Sonde}`, { moduleId: moduleIdValue });
-        toast.success("Sonde mise à jour");
+        toast.success(t('toast.update_success'));
       } else {
-        if (!displayedProbeType) {
-          toast.error("Type de sonde requis");
-          return;
-        }
-        if (!displayedSerieNum) {
-          toast.error("Numéro de série requis");
-          return;
-        }
-
         await postJson(`/api/sondes`, {
-          sondeType: displayedProbeType,
-          serieNum: displayedSerieNum,
+          sondeType: values.sondeType,
+          serieNum: values.serieNum,
           moduleId: moduleIdValue,
         });
-        toast.success("Sonde créée");
+        toast.success(t('toast.create_success'));
       }
 
       await queryClient.invalidateQueries({ queryKey: ["probes"] });
       router.refresh();
-      setSerieNum("");
-      setProbeType("");
-      setModuleId("");
+      form.reset({ sondeType: "", serieNum: "", moduleId: "" });
       onOpenChange(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erreur serveur");
+      toast.error(error instanceof Error ? error.message : t('toast.save_error'));
     }
   };
 
@@ -115,73 +127,110 @@ export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent key={contentKey} className="sm:max-w-125 bg-white dark:bg-card">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Modifier la sonde" : "Ajouter une sonde"}</DialogTitle>
+          <DialogTitle>{isEdit ? t('title_edit') : t('title_create')}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="probe-type">Type de sonde</Label>
-            <Select value={displayedProbeType} onValueChange={setProbeType} disabled={isEdit}>
-              <SelectTrigger id="probe-type" disabled={probeTypesLoading || isEdit}>
-                <SelectValue placeholder="Sélectionner un type" />
-              </SelectTrigger>
-              <SelectContent>
-                {probeTypes?.map((type) => (
-                  <SelectItem key={type.Sonde_Type} value={type.Sonde_Type}>
-                    {type.Sonde_Type} ({type.Libelle_Sonde_Type || "-"})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="serie-num">Numéro de série</Label>
-            <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-              <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              <AlertDescription className="text-sm text-blue-800 dark:text-blue-300">
-                Chiffres + suffixe optionnel -T ou -H
-              </AlertDescription>
-            </Alert>
-            <Input
-              id="serie-num"
-              placeholder="Ex: 00002"
-              value={displayedSerieNum}
-              onChange={handleSerieChange}
-              readOnly={isEdit}
-              className={isEdit ? "bg-muted opacity-50" : ""}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="sondeType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('fields.type_label')}</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange} disabled={isEdit}>
+                    <FormControl>
+                      <SelectTrigger id="probe-type" disabled={probeTypesLoading || isEdit}>
+                        <SelectValue placeholder={t('fields.type_placeholder')} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {probeTypes?.map((type) => (
+                        <SelectItem key={type.Sonde_Type} value={type.Sonde_Type}>
+                          {type.Sonde_Type} ({type.Libelle_Sonde_Type || "-"})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="module">Module</Label>
-            <Combobox
-              triggerId="module"
-              value={displayedModuleId}
-              onValueChange={setModuleId}
-              disabled={modulesLoading}
-              placeholder="Sélectionner un module"
-              searchPlaceholder="Rechercher un module..."
-              emptyMessage="Aucun module"
-              options={(modules ?? []).map((mod) => ({
-                value: mod.Id_Module.toString(),
-                label: `${mod.Module_Numero_Serie || mod.Libelle_Type_Module || mod.Id_Module} sur port ${
-                  mod.Port_Serie || "N/A"
-                } (${mod.Emplacement || "-"})`,
-                searchText: `${mod.Module_Numero_Serie || ""} ${mod.Libelle_Type_Module || ""} ${
-                  mod.Port_Serie || ""
-                } ${mod.Emplacement || ""} ${mod.Id_Module}`,
-              }))}
+            <FormField
+              control={form.control}
+              name="serieNum"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('fields.serial_label')}</FormLabel>
+                  <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+                    <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <AlertDescription className="text-sm text-blue-800 dark:text-blue-300">
+                      {t('fields.serial_hint')}
+                    </AlertDescription>
+                  </Alert>
+                  <FormControl>
+                    <Input
+                      id="serie-num"
+                      placeholder={t('fields.serial_placeholder')}
+                      value={field.value}
+                      onChange={(e) => {
+                        const normalized = e.target.value.toUpperCase();
+                        const cleaned = normalized.replace(/[^0-9TH]/g, "");
+                        const suffix = cleaned.endsWith("T") ? "T" : cleaned.endsWith("H") ? "H" : "";
+                        const digits = suffix
+                          ? cleaned.slice(0, -1).replace(/[^0-9]/g, "")
+                          : cleaned.replace(/[^0-9]/g, "");
+                        field.onChange(suffix ? `${digits}-${suffix}` : digits);
+                      }}
+                      readOnly={isEdit}
+                      className={isEdit ? "bg-muted opacity-50" : ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-        </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
-          </Button>
-          <Button onClick={handleSubmit}>{isEdit ? "Mettre à jour" : "Ajouter"}</Button>
-        </DialogFooter>
+            <FormField
+              control={form.control}
+              name="moduleId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('fields.module_label')}</FormLabel>
+                  <FormControl>
+                    <Combobox
+                      triggerId="module"
+                      value={field.value || ""}
+                      onValueChange={field.onChange}
+                      disabled={modulesLoading}
+                      placeholder={t('fields.module_placeholder')}
+                      searchPlaceholder={t('fields.module_search_placeholder')}
+                      emptyMessage={t('fields.module_empty')}
+                      options={(modules ?? []).map((mod) => ({
+                        value: mod.Id_Module.toString(),
+                        label: `${mod.Module_Numero_Serie || mod.Libelle_Type_Module || mod.Id_Module} sur port ${
+                          mod.Port_Serie || "N/A"
+                        } (${mod.Emplacement || "-"})`,
+                        searchText: `${mod.Module_Numero_Serie || ""} ${mod.Libelle_Type_Module || ""} ${
+                          mod.Port_Serie || ""
+                        } ${mod.Emplacement || ""} ${mod.Id_Module}`,
+                      }))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                {tCommon('cancel')}
+              </Button>
+              <Button type="submit">{isEdit ? t('submit_update') : t('submit_create')}</Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

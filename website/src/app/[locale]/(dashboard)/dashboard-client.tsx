@@ -21,7 +21,7 @@ import { alarmsApi, type AlarmWithDetails, type SensorWithLocation } from "@/lib
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format, formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
+import { enUS, fr } from "date-fns/locale";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { ColumnDef } from "@tanstack/react-table";
 import {
@@ -33,6 +33,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useLocale, useTranslations } from "next-intl";
 
 interface DashboardClientProps {
   criticalSensors: SensorWithLocation[];
@@ -43,7 +47,7 @@ interface DashboardClientProps {
 
 interface AlarmRow {
   id: string;
-  type: "high" | "low";
+  type: "high" | "low" | "no-response";
   location: AlarmWithDetails["location"];
   sensor: AlarmWithDetails["sensor"];
   value: number;
@@ -63,11 +67,33 @@ export function DashboardClient({
   sensorOverview,
   totalActiveAlarms,
 }: DashboardClientProps) {
+  const t = useTranslations("dashboardClient");
+  const locale = useLocale();
+  const dateLocale = locale.toLowerCase().startsWith("fr") ? fr : enUS;
+
   const [localAlarms, setLocalAlarms] = useState(activeAlarms);
   const [activeCount, setActiveCount] = useState(totalActiveAlarms);
   const [selectedAlarm, setSelectedAlarm] = useState<AlarmWithDetails | null>(null);
-  const [comment, setComment] = useState("");
   const [isAcknowledging, setIsAcknowledging] = useState(false);
+
+  const commentSchema = z.object({
+    comment: z.string().max(200, t("comment.max")).optional(),
+  });
+
+  type CommentFormValues = z.infer<typeof commentSchema>;
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<CommentFormValues>({
+    resolver: zodResolver(commentSchema),
+    defaultValues: { comment: "" },
+  });
+
+  const comment = watch("comment") ?? "";
 
   useEffect(() => {
     setLocalAlarms(activeAlarms);
@@ -89,10 +115,10 @@ export function DashboardClient({
         }
         return next;
       });
-      toast.success("Alarme acquittée avec succès");
+      toast.success(t("toast.ack_success"));
     } catch (error) {
       console.error("Acknowledge alarm error:", error);
-      toast.error("Erreur lors de l'acquittement de l'alarme");
+      toast.error(t("toast.ack_error"));
     }
   };
 
@@ -101,7 +127,7 @@ export function DashboardClient({
   const columns: ColumnDef<AlarmRow>[] = [
     {
       accessorKey: "type",
-      header: "Type",
+      header: t("table.columns.type"),
       size: 60,
       cell: ({ row }) => {
         const isHigh = row.getValue("type") === "high";
@@ -123,7 +149,7 @@ export function DashboardClient({
     },
     {
       accessorKey: "location",
-      header: "Lieu / Sonde",
+      header: t("table.columns.location_sensor"),
       cell: ({ row }) => {
         const alarm = row.original;
         return (
@@ -138,7 +164,7 @@ export function DashboardClient({
     },
         {
       id: "lastValue",
-      header: () => <div className="text-right">Dernière valeur</div>,
+          header: () => <div className="text-right">{t("table.columns.last_value")}</div>,
       cell: ({ row }) => {
         const alarm = row.original;
         const value = alarm.sensor.currentValue ?? alarm.value ?? null;
@@ -151,29 +177,37 @@ export function DashboardClient({
     },
     {
       id: "consignes",
-      header: () => <div className="text-right">Consignes sup/inf</div>,
+      header: () => <div className="text-right">{t("table.columns.thresholds")}</div>,
       cell: ({ row }) => {
         const alarm = row.original;
         const sup = alarm.sensor.maxThreshold;
         const inf = alarm.sensor.minThreshold;
         return (
           <div className="text-right font-mono text-muted-foreground">
-            <div>{sup !== null && sup !== undefined ? `Sup: ${sup} ${alarm.sensor.unit}` : "Sup: -"}</div>
-            <div>{inf !== null && inf !== undefined ? `Inf: ${inf} ${alarm.sensor.unit}` : "Inf: -"}</div>
+            <div>
+              {sup !== null && sup !== undefined
+                ? t("table.thresholds.upper", { value: sup, unit: alarm.sensor.unit })
+                : t("table.thresholds.upper_na")}
+            </div>
+            <div>
+              {inf !== null && inf !== undefined
+                ? t("table.thresholds.lower", { value: inf, unit: alarm.sensor.unit })
+                : t("table.thresholds.lower_na")}
+            </div>
           </div>
         );
       },
     },
     {
       accessorKey: "triggeredAt",
-      header: "Déclenchée",
+      header: t("table.columns.triggered"),
       cell: ({ row }) => {
         const triggeredDate = new Date(row.getValue("triggeredAt") as string);
         return (
           <div className="flex items-center gap-1.5 text-sm">
             <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-            <span title={format(triggeredDate, "dd/MM/yyyy HH:mm:ss", { locale: fr })}>
-              {formatDistanceToNow(triggeredDate, { addSuffix: true, locale: fr })}
+            <span title={format(triggeredDate, "dd/MM/yyyy HH:mm:ss", { locale: dateLocale })}>
+              {formatDistanceToNow(triggeredDate, { addSuffix: true, locale: dateLocale })}
             </span>
           </div>
         );
@@ -181,16 +215,16 @@ export function DashboardClient({
     },
     {
       accessorKey: "status",
-      header: "Statut",
+      header: t("table.columns.status"),
       cell: ({ row }) => (
         <div className="flex justify-center">
-          <AlarmStatusBadge status={row.getValue("status") as string} />
+          <AlarmStatusBadge status={row.getValue("status") as string} t={t} />
         </div>
       ),
     },
     {
       id: "actions",
-      header: () => <div className="text-right">Actions</div>,
+      header: () => <div className="text-right">{t("table.columns.actions")}</div>,
       cell: ({ row }) => {
         const alarm = row.original;
         return (
@@ -201,7 +235,7 @@ export function DashboardClient({
                 size="icon"
                 className="h-8 w-8"
                 title={alarm.comment}
-                aria-label="Commentaire"
+                aria-label={t("table.actions.comment")}
                 type="button"
               >
                 <MessageSquare className="h-4 w-4" />
@@ -219,7 +253,7 @@ export function DashboardClient({
                 }}
                 data-testid={`button-acknowledge-${alarm.id}`}
               >
-                Acquitter
+                {t("table.actions.acknowledge")}
               </Button>
             )}
           </div>
@@ -240,13 +274,13 @@ export function DashboardClient({
     comment: alarm.comment,
   }));
 
-  const handleDialogAcknowledge = async () => {
+  const handleDialogAcknowledge = async (values: CommentFormValues) => {
     if (!selectedAlarm) return;
     setIsAcknowledging(true);
     try {
-      await handleAcknowledge(selectedAlarm.id, comment);
+      await handleAcknowledge(selectedAlarm.id, values.comment || "");
       setSelectedAlarm(null);
-      setComment("");
+      reset({ comment: "" });
     } finally {
       setIsAcknowledging(false);
     }
@@ -260,7 +294,7 @@ export function DashboardClient({
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive" />
-              Alarmes actives
+              {t("active_alarms.title")}
               {activeCount > 0 && (
                 <Badge variant="destructive" className="ml-2">
                   {activeCount}
@@ -269,7 +303,7 @@ export function DashboardClient({
             </h2>
             <Link href="alarmes">
               <Button variant="ghost" size="sm" className="gap-1">
-                Toutes les alarmes
+                {t("active_alarms.view_all")}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -283,7 +317,7 @@ export function DashboardClient({
                 searchPlaceholder={undefined}
                 pageSize={5}
                 isLoading={false}
-                emptyMessage="Aucune alarme active - Tout est sous contrôle"
+                emptyMessage={t("active_alarms.empty")}
                 selectedRowId={selectedAlarm?.id}
                 onRowClick={(row: AlarmRow) => {
                   const fullAlarm = displayedAlarms.find((item) => item.id === row.id);
@@ -307,14 +341,14 @@ export function DashboardClient({
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
-              Tendance récente
+              {t("trend.title")}
             </h2>
           </div>
 
           <Card className="bg-white/90 border-slate-200 shadow-md dark:bg-card dark:border-border">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Dernières 24h
+                {t("trend.subtitle")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -324,10 +358,10 @@ export function DashboardClient({
                 className="rounded-lg overflow-hidden"
               />
               <div className="mt-4 flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">0 mesures</span>
+                <span className="text-muted-foreground">{t("trend.count", { count: 0 })}</span>
                 <Link href="surveillance">
                   <Button variant="ghost" size="sm" className="gap-1 -mr-2">
-                    Détails
+                    {t("trend.details")}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -389,51 +423,65 @@ export function DashboardClient({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-warning" />
-              Acquitter l'alarme
+              {t("ack_dialog.title")}
             </DialogTitle>
             <DialogDescription>
               {selectedAlarm && (
                 <>
-                  Alarme sur <strong>{selectedAlarm.sensor.name}</strong> dans{" "}
-                  <strong>{selectedAlarm.location.name}</strong>
+                  {t("ack_dialog.description", {
+                    sensor: selectedAlarm.sensor.name,
+                    location: selectedAlarm.location.name,
+                  })}
                 </>
               )}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-                        <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Dernière valeur</p>
+                <p className="text-sm text-muted-foreground">{t("ack_dialog.last_value")}</p>
                 <p className="text-xl font-bold font-mono">
                   {selectedAlarm?.sensor.currentValue ?? selectedAlarm?.value ?? "-"} {selectedAlarm?.sensor.unit}
                 </p>
               </div>
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Consignes sup/inf</p>
+                <p className="text-sm text-muted-foreground">{t("ack_dialog.thresholds")}</p>
                 <p className="text-sm font-mono text-muted-foreground">
-                  Sup: {selectedAlarm?.sensor.maxThreshold ?? "-"} {selectedAlarm?.sensor.unit}
+                  {t("table.thresholds.upper", {
+                    value: selectedAlarm?.sensor.maxThreshold ?? "-",
+                    unit: selectedAlarm?.sensor.unit ?? "",
+                  })}
                 </p>
                 <p className="text-sm font-mono text-muted-foreground">
-                  Inf: {selectedAlarm?.sensor.minThreshold ?? "-"} {selectedAlarm?.sensor.unit}
+                  {t("table.thresholds.lower", {
+                    value: selectedAlarm?.sensor.minThreshold ?? "-",
+                    unit: selectedAlarm?.sensor.unit ?? "",
+                  })}
                 </p>
               </div>
             </div>
 
             <div className="space-y-2">
               <label htmlFor="comment" className="text-sm font-medium">
-                Commentaire (optionnel)
+                {t("ack_dialog.comment_label")}
               </label>
               <Textarea
                 id="comment"
-                placeholder="Ajouter un commentaire sur cette alarme..."
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
+                placeholder={t("ack_dialog.comment_placeholder")}
+                {...register("comment")}
                 maxLength={200}
                 rows={3}
+                aria-invalid={!!errors.comment}
+                aria-describedby={errors.comment ? "comment-error" : undefined}
                 data-testid="input-alarm-comment"
               />
+              {errors.comment?.message && (
+                <p id="comment-error" className="text-sm text-destructive">
+                  {String(errors.comment.message)}
+                </p>
+              )}
               <p className="text-xs text-muted-foreground text-right">
-                {comment.length}/200 caractères
+                {t("ack_dialog.comment_count", { count: comment.length, max: 200 })}
               </p>
             </div>
           </div>
@@ -443,14 +491,14 @@ export function DashboardClient({
               onClick={() => setSelectedAlarm(null)}
               data-testid="button-cancel-acknowledge"
             >
-              Annuler
+              {t("ack_dialog.cancel")}
             </Button>
             <Button
-              onClick={handleDialogAcknowledge}
-              disabled={isAcknowledging}
+              onClick={handleSubmit(handleDialogAcknowledge)}
+              disabled={isAcknowledging || isSubmitting}
               data-testid="button-confirm-acknowledge"
             >
-              {isAcknowledging ? "Acquittement..." : "Acquitter"}
+              {isAcknowledging ? t("ack_dialog.submitting") : t("ack_dialog.submit")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -459,23 +507,23 @@ export function DashboardClient({
   );
 }
 
-function AlarmStatusBadge({ status }: { status: string }) {
+function AlarmStatusBadge({ status, t }: { status: string; t: ReturnType<typeof useTranslations> }) {
   const configs: Record<
     string,
     { label: string; className: string }
   > = {
     active: {
-      label: "Active",
+      label: t("status.active"),
       className:
         "bg-red-500/90 text-white border-transparent dark:bg-destructive/12 dark:text-destructive-foreground dark:border-destructive/30",
     },
     acknowledged: {
-      label: "Acquittée",
+      label: t("status.acknowledged"),
       className:
         "bg-slate-200 text-slate-700 border-transparent dark:bg-muted dark:text-muted-foreground",
     },
     resolved: {
-      label: "Résolue",
+      label: t("status.resolved"),
       className:
         "bg-slate-100 text-slate-600 border-slate-200 dark:bg-transparent dark:text-muted-foreground",
     },

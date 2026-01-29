@@ -23,6 +23,7 @@ import { toast } from "sonner"
 import { useRouter } from '@/i18n/navigation'
 import { ActuatorModal } from "./actuator-modal"
 import { Archive, Pencil, Plus } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 type ActuatorRow = {
   Id_Actionneur: number
@@ -33,6 +34,8 @@ type ActuatorRow = {
 }
 
 export function ActuatorsClient() {
+  const t = useTranslations('actuatorsPage')
+  const tCommon = useTranslations('common')
   const { data: actuators, isLoading } = useActuators()
   const queryClient = useQueryClient()
   const router = useRouter()
@@ -78,13 +81,13 @@ export function ActuatorsClient() {
 
     try {
       await deleteJson(`/api/actionneurs/${selectedActuator.Id_Actionneur}`)
-      toast.success("Actionneur archivé")
+      toast.success(t('toast.archive_success'))
       setIsDeleteDialogOpen(false)
       setSelectedActuator(null)
       await queryClient.invalidateQueries({ queryKey: ["actionneurs"] })
       router.refresh()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erreur lors de l'archivage")
+      toast.error(error instanceof Error ? error.message : t('toast.archive_error'))
     }
   }
 
@@ -92,23 +95,23 @@ export function ActuatorsClient() {
   const columns: ColumnDef<ActuatorRow>[] = [
     {
       accessorKey: "Num_Serie",
-      header: "Numéro de série",
+      header: t('table.columns.serial'),
     },
     {
       accessorKey: "Type",
-      header: "Type",
+      header: t('table.columns.type'),
     },
     {
       accessorKey: "Commentaire",
-      header: "Commentaire",
+      header: t('table.columns.comment'),
       cell: ({ row }) => <span className="text-sm">{row.getValue("Commentaire") || "-"}</span>,
     },
     {
       accessorKey: "Est_Etat",
-      header: "État",
+      header: t('table.columns.status'),
       cell: ({ row }) => (
         <Badge variant={row.getValue("Est_Etat") ? "default" : "outline"}>
-          {row.getValue("Est_Etat") ? "Actif" : "Inactif"}
+          {row.getValue("Est_Etat") ? t('status.active') : t('status.inactive')}
         </Badge>
       ),
     },
@@ -127,23 +130,23 @@ export function ActuatorsClient() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle>Gestion des actionneurs</CardTitle>
+            <CardTitle>{t('title')}</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {actuators?.length || 0} actionneur{actuators && actuators.length > 1 ? "s" : ""}
+              {t('count', { count: actuators?.length || 0 })}
             </p>
           </div>
           <div className="flex gap-2">
             <Button onClick={handleAddClick} variant="default" size="sm" className="gap-2">
               <Plus className="h-4 w-4" />
-              Nouveau
+              {t('actions.new')}
             </Button>
             <Button onClick={handleEditClick} disabled={!selectedActuator} variant="outline" size="sm" className="gap-2">
               <Pencil className="h-4 w-4" />
-              Modifier
+              {t('actions.edit')}
             </Button>
             <Button onClick={handleDeleteClick} disabled={!selectedActuator} variant="outline" size="sm" className="gap-2">
               <Archive className="h-4 w-4" />
-              Archiver
+              {t('actions.archive')}
             </Button>
           </div>
         </CardHeader>
@@ -152,10 +155,10 @@ export function ActuatorsClient() {
             columns={columns}
             data={tableData}
             searchField="Num_Serie"
-            searchPlaceholder="N° série, type..."
+            searchPlaceholder={t('table.search_placeholder')}
             isLoading={isLoading}
             maxHeight="calc(100dvh - 25rem)"
-            emptyMessage="Aucun actionneur trouvé"
+            emptyMessage={t('table.empty')}
             selectedRowId={selectedActuator?.Id_Actionneur}
             onRowClick={(row: ActuatorRow) => {
               setSelectedActuator(actuators?.find((a) => a.Id_Actionneur === row.Id_Actionneur) || null)
@@ -172,14 +175,14 @@ export function ActuatorsClient() {
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer l'archivage</AlertDialogTitle>
+            <AlertDialogTitle>{t('archive.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Êtes-vous sûr de vouloir archiver cet actionneur ? Cette action ne pourra pas être annulée.
+              {t('archive.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
           <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600">
-            Archiver
+            {t('archive.confirm')}
           </AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>

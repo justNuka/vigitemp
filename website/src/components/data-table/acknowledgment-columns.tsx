@@ -9,31 +9,35 @@ export interface AcknowledgmentRecord {
   alarme?: string
 }
 
-export const acknowledgmentColumns: ColumnDef<AcknowledgmentRecord>[] = [
+type Translator = (key: string) => string
+
+export const getAcknowledgmentColumns = (
+  t: Translator,
+): ColumnDef<AcknowledgmentRecord>[] => [
   {
     accessorKey: "dateHeure",
-    header: "Date et Heure",
+    header: t("acknowledgments.columns.date_time"),
     enableSorting: true,
   },
   {
     accessorKey: "utilisateur",
-    header: "Utilisateur",
+    header: t("acknowledgments.columns.user"),
     enableSorting: true,
   },
   {
     accessorKey: "action",
-    header: "Action",
+    header: t("acknowledgments.columns.action"),
     enableSorting: true,
   },
   {
     accessorKey: "sonde",
-    header: "Sonde",
+    header: t("acknowledgments.columns.probe"),
     enableSorting: true,
     cell: ({ getValue }) => (getValue() ? String(getValue()) : "-"),
   },
   {
     accessorKey: "alarme",
-    header: "Alarme",
+    header: t("acknowledgments.columns.alarm"),
     enableSorting: true,
     cell: ({ getValue }) => (getValue() ? String(getValue()) : "-"),
   },

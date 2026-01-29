@@ -2,13 +2,14 @@
 
 import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
-import { getStatusTheme, type SensorStatus } from "@/lib/surveillance-status"
+import { getStatusTheme, type SensorStatus, type StatusLabels } from "@/lib/surveillance-status"
 
 export function getStatusColor(
   status: SensorStatus,
   isActive: boolean,
+  labels?: StatusLabels,
 ): { bg: string; text: string; icon: ReactNode } {
-  const theme = getStatusTheme(status, isActive)
+  const theme = getStatusTheme(status, isActive, labels)
   return {
     bg: theme.softBgClassName,
     text: theme.textClassName,
@@ -16,8 +17,8 @@ export function getStatusColor(
   }
 }
 
-export function getStatusBadge(status: SensorStatus, isActive: boolean) {
-  const theme = getStatusTheme(status, isActive)
+export function getStatusBadge(status: SensorStatus, isActive: boolean, labels?: StatusLabels) {
+  const theme = getStatusTheme(status, isActive, labels)
   const isCritical = status === "critical" || status === "technical"
 
   if (!isActive) {

@@ -26,10 +26,16 @@ import type { LocationFormData } from './_components/location-form-types'
 import { getDefaultLocationFormData } from './_components/location-form-defaults'
 import { mapLocationToFormData } from './_components/location-form-mappers'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useForm, useWatch } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { locationFormSchema, type LocationFormValues } from './_components/location-form-schema'
+import { useTranslations } from 'next-intl'
 
 export function LocationsClient() {
   const queryClient = useQueryClient()
   const router = useRouter()
+  const t = useTranslations('locationsPage')
+  const tCommon = useTranslations('common')
   const { data: locations = [], isLoading } = useLocations()
   const didPrefetchRef = useRef(false)
   const [selectedLocation, setSelectedLocation] = useState<LocationRow | null>(null)
@@ -43,10 +49,17 @@ export function LocationsClient() {
 
   const defaultFormData: LocationFormData = getDefaultLocationFormData()
 
-  const [formData, setFormData] = useState<LocationFormData>(defaultFormData)
+  const form = useForm<LocationFormValues>({
+    resolver: zodResolver(locationFormSchema),
+    defaultValues: defaultFormData as LocationFormValues,
+  })
+  const sondeNumeroSerie = useWatch({
+    control: form.control,
+    name: 'Sonde_Numero_Serie',
+  })
   const { data: sites = [] } = useSitesSimple(shouldLoadFormData)
   const { data: groups = [] } = useGroups(undefined, shouldLoadFormData)
-  const { data: availableProbes = [] } = useAvailableProbes(formData.Sonde_Numero_Serie, shouldLoadFormData)
+  const { data: availableProbes = [] } = useAvailableProbes(sondeNumeroSerie ?? null, shouldLoadFormData)
 
   useEffect(() => {
     if (isLoading || didPrefetchRef.current) return
@@ -69,7 +82,7 @@ export function LocationsClient() {
     })
   }, [isLoading, queryClient])
 
-  const resetForm = () => setFormData(getDefaultLocationFormData())
+  const resetForm = () => form.reset(defaultFormData as LocationFormValues)
   const normalizePayload = (data: LocationFormData, forceInactive = false): Partial<LocationRow> => ({
     ...data,
     Sonde_Numero_Serie: data.Sonde_Numero_Serie ? data.Sonde_Numero_Serie : null,
@@ -81,27 +94,27 @@ export function LocationsClient() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
       router.refresh()
-      toast.success('Lieu créé avec succès')
+      toast.success(t('toast.create_success'))
       if (!variables?.Sonde_Numero_Serie) {
-        toast.message("Lieu créé sans sonde. Pensez à l'affecter plus tard.")
+        toast.message(t('toast.create_no_probe'))
       }
       setIsCreateOpen(false)
       resetForm()
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Erreur lors de la création du lieu')
+      toast.error(error instanceof Error ? error.message : t('toast.create_error'))
     },
   })
 
   const updateMutation = useMutation({
     mutationFn: async (data: Partial<LocationRow>) => {
-      if (!selectedLocation?.Id_Lieu) throw new Error('Aucun lieu sélectionné')
+      if (!selectedLocation?.Id_Lieu) throw new Error(t('errors.no_location_selected'))
       return patchJson(`/api/lieux/${selectedLocation.Id_Lieu}`, data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
       router.refresh()
-      toast.success('Lieu modifié avec succès')
+      toast.success(t('toast.update_success'))
       if (selectedLocation?.Id_Lieu) {
         window.dispatchEvent(
           new CustomEvent('vigitemp:lieu-updated', {
@@ -113,31 +126,31 @@ export function LocationsClient() {
       setSelectedLocation(null)
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Erreur lors de la modification du lieu')
+      toast.error(error instanceof Error ? error.message : t('toast.update_error'))
     },
   })
 
   const archiveMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedLocation?.Id_Lieu) throw new Error('Aucun lieu selectionne')
+      if (!selectedLocation?.Id_Lieu) throw new Error(t('errors.no_location_selected'))
       return patchJson(`/api/lieux/${selectedLocation.Id_Lieu}`, { Est_Archive: true })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
       router.refresh()
-      toast.success('Lieu archive avec succes')
+      toast.success(t('toast.archive_success'))
       setIsArchiveOpen(false)
       setSelectedLocation(null)
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Erreur lors de l'archivage du lieu")
+      toast.error(error instanceof Error ? error.message : t('toast.archive_error'))
     },
   })
 
   const handleEdit = () => {
     if (!selectedLocation) return
 
-    setFormData(mapLocationToFormData(selectedLocation))
+    form.reset(mapLocationToFormData(selectedLocation) as LocationFormValues)
     setIsEditOpen(true)
   }
 
@@ -146,9 +159,9 @@ export function LocationsClient() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle>Gestion des lieux</CardTitle>
+            <CardTitle>{t('title')}</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {locations.length} lieu{locations.length > 1 ? 'x' : ''}
+              {t('count', { count: locations.length })}
             </p>
           </div>
           <LocationsActions
@@ -168,13 +181,13 @@ export function LocationsClient() {
                 value="all"
                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                Tous ({locations.length})
+                {t('tabs.all', { count: locations.length })}
               </TabsTrigger>
               <TabsTrigger
                 value="unassigned"
                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                Sans sonde ({locations.filter((l) => !l.Sonde_Numero_Serie).length})
+                {t('tabs.unassigned', { count: locations.filter((l) => !l.Sonde_Numero_Serie).length })}
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -194,48 +207,46 @@ export function LocationsClient() {
       <LocationFormDialog
         open={isCreateOpen}
         mode="create"
-        formData={formData}
-        setFormData={setFormData}
+        form={form}
         sites={sites}
         groups={groups}
         availableProbes={availableProbes}
         isSubmitting={createMutation.isPending}
         onCancel={() => setIsCreateOpen(false)}
-        onSubmit={() => {
-          if (!formData.Sonde_Numero_Serie) {
-            setPendingCreate(formData)
+        onSubmit={(values) => {
+          if (!values.Sonde_Numero_Serie) {
+            setPendingCreate(values)
             setIsCreateNoSondeOpen(true)
             return
           }
-          createMutation.mutate(normalizePayload(formData, true))
+          createMutation.mutate(normalizePayload(values, true))
         }}
       />
 
       <LocationFormDialog
         open={isEditOpen}
         mode="edit"
-        formData={formData}
-        setFormData={setFormData}
+        form={form}
         sites={sites}
         groups={groups}
         availableProbes={availableProbes}
         isSubmitting={updateMutation.isPending}
         onCancel={() => setIsEditOpen(false)}
-        onSubmit={() => updateMutation.mutate(normalizePayload(formData))}
+        onSubmit={(values) => updateMutation.mutate(normalizePayload(values))}
       />
 
       <AlertDialog open={isArchiveOpen} onOpenChange={setIsArchiveOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Archiver le lieu</AlertDialogTitle>
+            <AlertDialogTitle>{t('dialogs.archive.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Ce lieu passera en surveillance desactivee et la sonde sera desaffectee. Voulez-vous continuer ?
+              {t('dialogs.archive.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex justify-end gap-2">
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={() => archiveMutation.mutate()} disabled={archiveMutation.isPending}>
-              {archiveMutation.isPending ? 'Archivage...' : 'Archiver'}
+              {archiveMutation.isPending ? t('dialogs.archive.submitting') : t('dialogs.archive.confirm')}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>
@@ -244,14 +255,13 @@ export function LocationsClient() {
       <AlertDialog open={isCreateNoSondeOpen} onOpenChange={setIsCreateNoSondeOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Créer un lieu sans sonde ?</AlertDialogTitle>
+            <AlertDialogTitle>{t('dialogs.create_no_probe.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Ce lieu sera créé sans sonde associée. Vous pourrez l’affecter plus tard dans la gestion des lieux.
-              Voulez-vous continuer ?
+              {t('dialogs.create_no_probe.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex justify-end gap-2">
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (!pendingCreate) return
@@ -261,7 +271,9 @@ export function LocationsClient() {
               }}
               disabled={createMutation.isPending}
             >
-              {createMutation.isPending ? 'Creation...' : 'Continuer'}
+              {createMutation.isPending
+                ? t('dialogs.create_no_probe.submitting')
+                : t('dialogs.create_no_probe.confirm')}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>

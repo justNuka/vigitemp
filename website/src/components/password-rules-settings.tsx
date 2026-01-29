@@ -11,8 +11,10 @@ import { Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { patchJson } from "@/lib/http";
+import { useTranslations } from "next-intl";
 
 export function PasswordRulesSettings() {
+  const t = useTranslations("passwordRulesSettings");
   const { data: rules, isLoading } = usePasswordRules();
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
@@ -59,10 +61,10 @@ export function PasswordRulesSettings() {
       // Invalider le cache pour recharger les règles
       queryClient.invalidateQueries({ queryKey: ["password-rules"] });
 
-      toast.success("Règles de mot de passe mises à jour avec succès");
+      toast.success(t("toast.save_success"));
     } catch (error) {
       console.error("Erreur lors de la sauvegarde:", error);
-      toast.error("Erreur lors de la sauvegarde des règles");
+      toast.error(t("toast.save_error"));
     } finally {
       setIsSaving(false);
     }
@@ -84,10 +86,10 @@ export function PasswordRulesSettings() {
       // Invalider le cache pour recharger les règles
       queryClient.invalidateQueries({ queryKey: ["password-rules"] });
 
-      toast.success(`Paramètre CFR21 mis à jour`);
+      toast.success(t("toast.cfr21_success"));
     } catch (error) {
       console.error("Erreur lors de la sauvegarde CFR21:", error);
-      toast.error("Erreur lors de la mise à jour CFR21");
+      toast.error(t("toast.cfr21_error"));
     } finally {
       setCfr21Saving(false);
     }
@@ -113,12 +115,12 @@ export function PasswordRulesSettings() {
     <div className="space-y-6">
       {/* Règles de complexity */}
       <div>
-        <h3 className="text-sm font-medium mb-4">Règles de complexité du mot de passe</h3>
+        <h3 className="text-sm font-medium mb-4">{t("complexity.title")}</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           {/* Longueur minimale */}
           <div className="space-y-2">
             <Label htmlFor="min_length">
-              Longueur minimale
+              {t("complexity.min_length.label")}
             </Label>
             <Input
               id="min_length"
@@ -130,14 +132,14 @@ export function PasswordRulesSettings() {
               disabled={isSaving}
             />
             <p className="text-xs text-muted-foreground">
-              Nombre minimum de caractères (4-128)
+              {t("complexity.min_length.helper")}
             </p>
           </div>
 
           {/* Majuscules */}
           <div className="space-y-2">
             <Label htmlFor="min_uppercase">
-              Lettres majuscules
+              {t("complexity.uppercase.label")}
             </Label>
             <Input
               id="min_uppercase"
@@ -149,14 +151,14 @@ export function PasswordRulesSettings() {
               disabled={isSaving}
             />
             <p className="text-xs text-muted-foreground">
-              Nombre minimum de majuscules requises
+              {t("complexity.uppercase.helper")}
             </p>
           </div>
 
           {/* Minuscules */}
           <div className="space-y-2">
             <Label htmlFor="min_lowercase">
-              Lettres minuscules
+              {t("complexity.lowercase.label")}
             </Label>
             <Input
               id="min_lowercase"
@@ -168,14 +170,14 @@ export function PasswordRulesSettings() {
               disabled={isSaving}
             />
             <p className="text-xs text-muted-foreground">
-              Nombre minimum de minuscules requises
+              {t("complexity.lowercase.helper")}
             </p>
           </div>
 
           {/* Chiffres */}
           <div className="space-y-2">
             <Label htmlFor="min_numbers">
-              Chiffres
+              {t("complexity.numbers.label")}
             </Label>
             <Input
               id="min_numbers"
@@ -187,14 +189,14 @@ export function PasswordRulesSettings() {
               disabled={isSaving}
             />
             <p className="text-xs text-muted-foreground">
-              Nombre minimum de chiffres requis
+              {t("complexity.numbers.helper")}
             </p>
           </div>
 
           {/* Caractères spéciaux */}
           <div className="space-y-2">
             <Label htmlFor="min_special">
-              Caractères spéciaux
+              {t("complexity.special.label")}
             </Label>
             <Input
               id="min_special"
@@ -206,7 +208,7 @@ export function PasswordRulesSettings() {
               disabled={isSaving}
             />
             <p className="text-xs text-muted-foreground">
-              Nombre minimum de caractères spéciaux (!@#$%^&*)
+              {t("complexity.special.helper")}
             </p>
           </div>
         </div>
@@ -220,12 +222,12 @@ export function PasswordRulesSettings() {
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Sauvegarde...
+                {t("actions.saving")}
               </>
             ) : (
               <>
                 <Check className="mr-2 h-4 w-4" />
-                Enregistrer les modifications
+                {t("actions.save")}
               </>
             )}
           </Button>
@@ -234,15 +236,15 @@ export function PasswordRulesSettings() {
 
       {/* Paramètres CFR21 */}
       <div className="border-t pt-6">
-        <h3 className="text-sm font-medium mb-4">Paramètres CFR21 (conformité réglementaire)</h3>
+        <h3 className="text-sm font-medium mb-4">{t("cfr21.title")}</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div className="flex-1">
               <Label htmlFor="cfr21_enabled" className="font-medium">
-                Norme CFR21 activée
+                {t("cfr21.enabled.label")}
               </Label>
               <p className="text-sm text-muted-foreground mt-1">
-                Active les contrôles de conformité réglementaire (expiration et historique des mots de passe)
+                {t("cfr21.enabled.helper")}
               </p>
             </div>
             <SwitchWithLoading
@@ -257,14 +259,14 @@ export function PasswordRulesSettings() {
             <div className="flex items-center justify-between p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/20">
               <div className="flex-1">
                 <Label className="font-medium">
-                  Durée de validité des mots de passe
+                  {t("cfr21.expiry.label")}
                 </Label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Les mots de passe expirent après {rules?.expiry_days || 90} jours conformément à la norme CFR21
+                  {t("cfr21.expiry.helper", { days: rules?.expiry_days || 90 })}
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-semibold">{rules?.expiry_days || 90} jours</p>
+                <p className="font-semibold">{t("cfr21.expiry.value", { days: rules?.expiry_days || 90 })}</p>
               </div>
             </div>
           )}

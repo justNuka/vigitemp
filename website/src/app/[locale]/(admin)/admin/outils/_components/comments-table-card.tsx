@@ -1,9 +1,12 @@
+'use client'
+
 import type { ColumnDef } from "@tanstack/react-table"
 import { Edit2, Trash2 } from "lucide-react"
 
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useTranslations } from 'next-intl'
 
 import type { AuditComment } from "./audit-comments-types"
 
@@ -24,13 +27,15 @@ export function CommentsTableCard({
   onOpenEdit,
   onDeleteSelected,
 }: CommentsTableCardProps) {
+  const t = useTranslations('toolsComments.table')
+  const tCommon = useTranslations('common')
   return (
     <Card className="border-0 shadow-md">
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <div>
-          <CardTitle>Commentaires</CardTitle>
+          <CardTitle>{t('title')}</CardTitle>
           <p className="mt-1 text-sm text-muted-foreground">
-            {comments.length} commentaire{comments.length > 1 ? "s" : ""}
+            {t('count', { count: comments.length })}
           </p>
         </div>
         <div className="flex gap-2">
@@ -41,7 +46,7 @@ export function CommentsTableCard({
             size="sm"
           >
             <Edit2 className="mr-1 h-4 w-4" />
-            Modifier
+            {tCommon('edit')}
           </Button>
           <Button
             onClick={onDeleteSelected}
@@ -50,7 +55,7 @@ export function CommentsTableCard({
             size="sm"
           >
             <Trash2 className="mr-1 h-4 w-4" />
-            Supprimer
+            {tCommon('delete')}
           </Button>
         </div>
       </CardHeader>
@@ -60,9 +65,9 @@ export function CommentsTableCard({
           data={comments}
           pageSize={20}
           maxHeight="calc(100dvh - 25rem)"
-          emptyMessage="Aucun commentaire"
+          emptyMessage={t('empty')}
           showSearch={true}
-          searchPlaceholder="Rechercher un commentaire..."
+          searchPlaceholder={t('search_placeholder')}
           searchField={["text"]}
           selectedRowId={selectedCommentId}
           onRowClick={(row: AuditComment) => onSelectCommentId(row.id)}

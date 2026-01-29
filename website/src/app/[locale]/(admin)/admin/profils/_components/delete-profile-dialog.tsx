@@ -11,6 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useTranslations } from 'next-intl';
 
 type DeleteProfileDialogProps = {
   open: boolean;
@@ -27,31 +28,31 @@ export function DeleteProfileDialog({
   isDeleting,
   onDelete,
 }: DeleteProfileDialogProps) {
+  const t = useTranslations('deleteProfileDialog');
   const isDeleteBlocked = !profile || profile.userCount > 0;
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Supprimer le profil</AlertDialogTitle>
+          <AlertDialogTitle>{t('title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Êtes-vous sûr de vouloir supprimer le profil &quot;{profile?.name}&quot; ?
+            {t('description', { name: profile?.name ?? '' })}
             {profile && profile.userCount > 0 && (
               <span className="block mt-2 text-destructive font-medium">
-                Attention : {profile.userCount} utilisateur{profile.userCount > 1 ? 's' : ''} utilise
-                {profile.userCount > 1 ? 'nt' : ''} ce profil. La suppression est impossible.
+                {t('blocked', { count: profile.userCount })}
               </span>
             )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogCancel>{t('actions.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onDelete}
             disabled={isDeleteBlocked || isDeleting}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isDeleting ? 'Suppression...' : 'Supprimer'}
+            {isDeleting ? t('actions.deleting') : t('actions.delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

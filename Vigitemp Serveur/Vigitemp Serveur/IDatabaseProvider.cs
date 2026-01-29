@@ -10,6 +10,7 @@ namespace Vigitemp_Serveur
         List<string> getPCsClients();
         bool AddMesure(string p_numeroSerie, double p_valeur, string p_unite, string p_resistance);
         (List<string>, List<string>, List<string>, List<string>, List<int>, List<DateTime?>) getInfosByIdServeurAndFrequencies(int p_idServer, int p_frequence);
+        List<SondeScheduleInfo> getSondesActivesByServeur(int idServeur);
         (string, string, string, string) getInfosByIdLieu(int p_idLieu);
         List<int> getDistinctIdServeur();
         List<int> getDistinctFrequenciesByIdServeur(int p_idServeur);
@@ -17,6 +18,8 @@ namespace Vigitemp_Serveur
         double getLastMeasure(int p_IdLieu);
         bool setAlarmeByIdLieu(int p_idLieu, bool p_valeur);
         bool setLieuAlarmFlags(int idLieu, bool isPreAlarm, bool isAlarm);
+        bool setLieuInfosModifiees(int idLieu, bool value);
+        bool setNonResponseAlarm(int idLieu, string sondeNumeroSerie, bool isActive);
         (double, double) getCoeffCalibrageBySerialNumber(string p_serial_number);
     }
 }

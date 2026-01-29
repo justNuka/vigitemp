@@ -23,6 +23,9 @@ import { ForgotPasswordDialog } from "./_components/forgot-password-dialog";
 import { LoginInactivityAlert } from "./_components/login-inactivity-alert";
 import { useLicense } from "@/components/license/license-provider";
 import { formatLicenseLabel } from "@/lib/license-label";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 type LoginResponse = {
   id: number;
@@ -48,11 +51,7 @@ export function LoginForm() {
   const tCommon = useTranslations("common");
   const { license } = useLicense();
   const licenseLabel = formatLicenseLabel(license, tCommon);
-
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
   const [resetSuccess, setResetSuccess] = useState(false);
 
   const reason = searchParams.get("reason");
@@ -73,13 +72,57 @@ export function LoginForm() {
     }
   }, [passwordChanged, showInactivityMessage, t]);
 
+  const loginSchema = z.object({
+    username: z
+      .string()
+      .min(1, t("validation.username_required")),
+    password: z
+      .string()
+      .min(1, t("validation.password_required")),
+  });
+
+  type LoginFormValues = z.infer<typeof loginSchema>;
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
+  const resetSchema = z.object({
+    email: z
+      .string()
+      .min(1, t("toasts.invalid_email"))
+      .email(t("toasts.invalid_email")),
+  });
+
+  type ResetFormValues = z.infer<typeof resetSchema>;
+
+  const {
+    register: registerReset,
+    handleSubmit: handleResetSubmit,
+    reset: resetResetForm,
+    formState: { errors: resetErrors },
+  } = useForm<ResetFormValues>({
+    resolver: zodResolver(resetSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
   const loginMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (values: LoginFormValues) => {
       try {
         const agentInfo = await getAgentInfo().catch(() => null);
         return await postJson<LoginResponse>("/api/auth/login", {
-          username,
-          password,
+          username: values.username,
+          password: values.password,
           machineName: agentInfo?.machineName,
         });
       } catch (err) {
@@ -87,7 +130,9 @@ export function LoginForm() {
           const payload = err.payload as AuthApiErrorPayload | undefined;
           if (payload?.requirePasswordChange) {
             try {
-              await postJson<{ success: true }>("/api/auth/temp-password-token", { username });
+              await postJson<{ success: true }>("/api/auth/temp-password-token", {
+                username: values.username,
+              });
               router.push("/force-password-change");
             } catch {
               toast.error(t("toasts.redirect_error"));
@@ -119,18 +164,13 @@ export function LoginForm() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username || !password) {
-      toast.error(t("toasts.fill_all_fields"));
-      return;
-    }
-    loginMutation.mutate();
+  const handleFormSubmit = (values: LoginFormValues) => {
+    loginMutation.mutate(values);
   };
 
   const resetPasswordMutation = useMutation({
-    mutationFn: async () => {
-      return postJson<{ message: string }>("/api/auth/request-password-reset", { email: resetEmail });
+    mutationFn: async (email: string) => {
+      return postJson<{ message: string }>("/api/auth/request-password-reset", { email });
     },
     onSuccess: () => {
       setResetSuccess(true);
@@ -143,23 +183,18 @@ export function LoginForm() {
     },
   });
 
-  const handleResetPasswordSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!resetEmail || !resetEmail.includes("@")) {
-      toast.error(t("toasts.invalid_email"));
-      return;
-    }
-    resetPasswordMutation.mutate();
+  const handleResetPasswordSubmit = (values: ResetFormValues) => {
+    resetPasswordMutation.mutate(values.email);
   };
 
   const handleCloseForgotPassword = () => {
     setShowForgotPassword(false);
-    setResetEmail("");
     setResetSuccess(false);
+    resetResetForm();
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-between p-4 bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="min-h-screen flex flex-col items-center justify-between p-4 bg-linear-to-br from-background via-background to-muted/20">
       <div className="absolute top-4 right-4 flex items-center gap-2">
         <LanguageSwitcher />
         <ThemeToggle />
@@ -192,11 +227,9 @@ export function LoginForm() {
               )}
 
               <LoginCredentialsForm
-                username={username}
-                password={password}
-                onUsernameChange={setUsername}
-                onPasswordChange={setPassword}
-                onSubmit={handleSubmit}
+                register={register}
+                errors={errors}
+                onSubmit={handleSubmit(handleFormSubmit)}
                 onForgotPassword={() => setShowForgotPassword(true)}
                 isSubmitting={loginMutation.isPending}
                 translations={{
@@ -224,9 +257,9 @@ export function LoginForm() {
         open={showForgotPassword}
         onOpenChange={handleCloseForgotPassword}
         success={resetSuccess}
-        email={resetEmail}
-        onEmailChange={setResetEmail}
-        onSubmit={handleResetPasswordSubmit}
+        register={registerReset}
+        errors={resetErrors}
+        onSubmit={handleResetSubmit(handleResetPasswordSubmit)}
         onClose={handleCloseForgotPassword}
         isSubmitting={resetPasswordMutation.isPending}
         translations={{

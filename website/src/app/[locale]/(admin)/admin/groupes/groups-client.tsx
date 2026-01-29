@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useRouter } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 
 import { useGroups, type Group } from '@/hooks/useGroups';
 import { useGroupLocations } from '@/hooks/useGroupLocations';
@@ -30,6 +31,7 @@ import { GroupModal } from './group-modal';
 export function GroupsClient() {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const t = useTranslations('groupsPage');
   const [regroupement, setRegroupement] = useState('1');
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -72,12 +74,12 @@ export function GroupsClient() {
 
     try {
       await deleteJson(`/api/groupes/${selectedGroup.Id_Groupe}`);
-      toast.success("Groupe archivé");
+      toast.success(t('toast.archive_success'));
       setSelectedGroup(null);
       await queryClient.invalidateQueries({ queryKey: ["groups"] });
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erreur lors de l'archivage");
+      toast.error(error instanceof Error ? error.message : t('toast.archive_error'));
     }
   };
 
@@ -87,9 +89,9 @@ export function GroupsClient() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle>Gestion des groupes</CardTitle>
+            <CardTitle>{t('title')}</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {groups.length} groupe{groups.length > 1 ? 's' : ''}
+              {t('count', { count: groups.length })}
             </p>
           </div>
           <GroupsActions

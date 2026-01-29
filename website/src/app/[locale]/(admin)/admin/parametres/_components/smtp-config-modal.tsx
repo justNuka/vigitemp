@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
   Dialog,
@@ -16,6 +16,10 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Mail } from "lucide-react";
 import { getJson, postJson, putJson } from "@/lib/http";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 
 interface SMTPConfig {
   host: string;
@@ -31,16 +35,66 @@ interface SMTPConfigModalProps {
 }
 
 export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
-  const [config, setConfig] = useState<SMTPConfig>({
-    host: "",
-    port: 587,
-    user: "",
-    password: "",
-    sender: "noreply@vigitemp.fr",
+  const [isLoading, setIsLoading] = useState(false);
+  const t = useTranslations("adminSettings.smtp_modal");
+
+  const smtpSchema = useMemo(
+    () =>
+      z.object({
+        host: z.string().min(1, t("validation.host_required")),
+        port: z
+          .number()
+          .int()
+          .min(1, t("validation.port_range"))
+          .max(65535, t("validation.port_range")),
+        user: z.string().min(1, t("validation.user_required")),
+        password: z.string().min(1, t("validation.password_required")),
+        sender: z
+          .string()
+          .min(1, t("validation.sender_required"))
+          .email(t("validation.email_invalid")),
+      }),
+    [t]
+  );
+
+  const testSchema = useMemo(
+    () =>
+      z.object({
+        testEmail: z
+          .string()
+          .min(1, t("validation.test_email_required"))
+          .email(t("validation.email_invalid")),
+      }),
+    [t]
+  );
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<SMTPConfig>({
+    resolver: zodResolver(smtpSchema),
+    defaultValues: {
+      host: "",
+      port: 587,
+      user: "",
+      password: "",
+      sender: "noreply@vigitemp.fr",
+    },
   });
 
-  const [testEmail, setTestEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    register: registerTest,
+    handleSubmit: handleTestSubmit,
+    setValue: setTestValue,
+    formState: { errors: testErrors },
+  } = useForm<{ testEmail: string }>({
+    resolver: zodResolver(testSchema),
+    defaultValues: {
+      testEmail: "",
+    },
+  });
 
   // Charger la configuration a l'ouverture du modal
   useEffect(() => {
@@ -53,11 +107,11 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
     try {
       setIsLoading(true);
       const payload = await getJson<SMTPConfig>("/api/admin/configuration-smtp");
-      setConfig(payload);
-      setTestEmail((current) => (current ? current : payload.sender || payload.user || ""));
+      reset(payload);
+      setTestValue("testEmail", payload.sender || payload.user || "");
     } catch (error) {
       console.error("Erreur:", error);
-      toast.error("Erreur lors du chargement de la configuration");
+      toast.error(t("toasts.fetch_error"));
     } finally {
       setIsLoading(false);
     }
@@ -68,11 +122,11 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
       return putJson<{ message: string }>("/api/admin/configuration-smtp", newConfig);
     },
     onSuccess: () => {
-      toast.success("Configuration SMTP mise a jour avec succes");
+      toast.success(t("toasts.update_success"));
       onOpenChange(false);
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Erreur serveur");
+      toast.error(error instanceof Error ? error.message : t("toasts.update_error"));
     },
   });
 
@@ -81,41 +135,18 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
       return postJson<{ message?: string }>("/api/email/test", { toEmail });
     },
     onSuccess: (data) => {
-      toast.success(data?.message || "Email de test envoye");
+      toast.success(data?.message || t("toasts.test_success"));
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Erreur serveur");
+      toast.error(error instanceof Error ? error.message : t("toasts.test_error"));
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!config.host.trim()) {
-      toast.error("Le serveur SMTP est requis");
-      return;
-    }
-    if (!config.user.trim()) {
-      toast.error("L'utilisateur SMTP est requis");
-      return;
-    }
-    if (!config.password.trim()) {
-      toast.error("Le mot de passe SMTP est requis");
-      return;
-    }
-    if (config.port <= 0 || config.port > 65535) {
-      toast.error("Le port doit etre entre 1 et 65535");
-      return;
-    }
-
-    updateMutation.mutate(config);
+  const onSubmit = (data: SMTPConfig) => {
+    updateMutation.mutate(data);
   };
 
-  const handleTest = () => {
-    if (!testEmail.trim()) {
-      toast.error("Email destinataire requis");
-      return;
-    }
+  const onTest = ({ testEmail }: { testEmail: string }) => {
     testMutation.mutate(testEmail.trim());
   };
 
@@ -123,117 +154,153 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg bg-white/50 dark:bg-card">
         <DialogHeader>
-          <DialogTitle>Configuration SMTP</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>
-            Configurez les parametres du serveur de messagerie pour les notifications par email
+            {t("description")}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <Label htmlFor="host">Serveur SMTP</Label>
+            <Label htmlFor="host">{t("fields.host.label")}</Label>
             <Input
               id="host"
               type="text"
-              placeholder="smtp.gmail.com"
-              value={config.host}
-              onChange={(e) => setConfig({ ...config, host: e.target.value })}
-              disabled={isLoading || updateMutation.isPending}
+              placeholder={t("fields.host.placeholder")}
+              {...register("host")}
+              disabled={isLoading || updateMutation.isPending || isSubmitting}
+              aria-invalid={!!errors.host}
+              aria-describedby={errors.host ? "smtp-host-error" : undefined}
             />
+            {errors.host?.message && (
+              <p id="smtp-host-error" className="text-sm text-destructive">
+                {String(errors.host.message)}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground mt-1">
-              Adresse du serveur de messagerie (ex: smtp.gmail.com, smtp.office365.com)
+              {t("fields.host.helper")}
             </p>
           </div>
 
           <div>
-            <Label htmlFor="port">Port</Label>
+            <Label htmlFor="port">{t("fields.port.label")}</Label>
             <Input
               id="port"
               type="number"
-              placeholder="587"
-              value={config.port}
-              onChange={(e) => setConfig({ ...config, port: parseInt(e.target.value) || 587 })}
-              disabled={isLoading || updateMutation.isPending}
+              placeholder={t("fields.port.placeholder")}
+              {...register("port", { valueAsNumber: true })}
+              disabled={isLoading || updateMutation.isPending || isSubmitting}
               min="1"
               max="65535"
+              aria-invalid={!!errors.port}
+              aria-describedby={errors.port ? "smtp-port-error" : undefined}
             />
+            {errors.port?.message && (
+              <p id="smtp-port-error" className="text-sm text-destructive">
+                {String(errors.port.message)}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground mt-1">
-              Ports courants: 587 (TLS), 465 (SSL), 25 (SMTP non securise)
+              {t("fields.port.helper")}
             </p>
           </div>
 
           <div>
-            <Label htmlFor="user">Utilisateur / Email</Label>
+            <Label htmlFor="user">{t("fields.user.label")}</Label>
             <Input
               id="user"
               type="email"
-              placeholder="votre-email@example.com"
-              value={config.user}
-              onChange={(e) => setConfig({ ...config, user: e.target.value })}
-              disabled={isLoading || updateMutation.isPending}
+              placeholder={t("fields.user.placeholder")}
+              {...register("user")}
+              disabled={isLoading || updateMutation.isPending || isSubmitting}
+              aria-invalid={!!errors.user}
+              aria-describedby={errors.user ? "smtp-user-error" : undefined}
             />
+            {errors.user?.message && (
+              <p id="smtp-user-error" className="text-sm text-destructive">
+                {String(errors.user.message)}
+              </p>
+            )}
           </div>
 
           <div>
-            <Label htmlFor="password">Mot de passe</Label>
+            <Label htmlFor="password">{t("fields.password.label")}</Label>
             <Input
               id="password"
               type="password"
-              placeholder="********"
-              value={config.password}
-              onChange={(e) => setConfig({ ...config, password: e.target.value })}
-              disabled={isLoading || updateMutation.isPending}
+              placeholder={t("fields.password.placeholder")}
+              {...register("password")}
+              disabled={isLoading || updateMutation.isPending || isSubmitting}
+              aria-invalid={!!errors.password}
+              aria-describedby={errors.password ? "smtp-password-error" : undefined}
             />
+            {errors.password?.message && (
+              <p id="smtp-password-error" className="text-sm text-destructive">
+                {String(errors.password.message)}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground mt-1">
-              Le mot de passe est chiffre et securise
+              {t("fields.password.helper")}
             </p>
           </div>
 
           <div>
-            <Label htmlFor="sender">Adresse d'expedition</Label>
+            <Label htmlFor="sender">{t("fields.sender.label")}</Label>
             <Input
               id="sender"
               type="email"
-              placeholder="noreply@vigitemp.fr"
-              value={config.sender}
-              onChange={(e) => setConfig({ ...config, sender: e.target.value })}
-              disabled={isLoading || updateMutation.isPending}
+              placeholder={t("fields.sender.placeholder")}
+              {...register("sender")}
+              disabled={isLoading || updateMutation.isPending || isSubmitting}
+              aria-invalid={!!errors.sender}
+              aria-describedby={errors.sender ? "smtp-sender-error" : undefined}
             />
+            {errors.sender?.message && (
+              <p id="smtp-sender-error" className="text-sm text-destructive">
+                {String(errors.sender.message)}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground mt-1">
-              Adresse affichant dans le champ "De" des emails
+              {t("fields.sender.helper")}
             </p>
           </div>
 
           <div className="rounded-lg border p-3 space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium">
               <Mail className="h-4 w-4" />
-              Test SMTP
+              {t("test.title")}
             </div>
             <p className="text-xs text-muted-foreground">
-              Sauvegardez avant de tester la configuration.
+              {t("test.description")}
             </p>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <Input
                 id="test-email"
                 type="email"
-                placeholder="destinataire@example.com"
-                value={testEmail}
-                onChange={(e) => setTestEmail(e.target.value)}
+                placeholder={t("test.placeholder")}
+                {...registerTest("testEmail")}
                 disabled={isLoading || updateMutation.isPending || testMutation.isPending}
+                aria-invalid={!!testErrors.testEmail}
+                aria-describedby={testErrors.testEmail ? "smtp-test-email-error" : undefined}
               />
+              {testErrors.testEmail?.message && (
+                <p id="smtp-test-email-error" className="text-sm text-destructive">
+                  {String(testErrors.testEmail.message)}
+                </p>
+              )}
               <Button
                 type="button"
                 variant="secondary"
-                onClick={handleTest}
+                onClick={handleTestSubmit(onTest)}
                 disabled={isLoading || updateMutation.isPending || testMutation.isPending}
               >
                 {testMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Test...
+                    {t("test.loading")}
                   </>
                 ) : (
-                  "Tester"
+                  t("test.button")
                 )}
               </Button>
             </div>
@@ -246,16 +313,16 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
               onClick={() => onOpenChange(false)}
               disabled={isLoading || updateMutation.isPending}
             >
-              Annuler
+              {t("buttons.cancel")}
             </Button>
             <Button type="submit" disabled={isLoading || updateMutation.isPending}>
               {updateMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sauvegarde...
+                  {t("buttons.saving")}
                 </>
               ) : (
-                "Sauvegarder"
+                t("buttons.save")
               )}
             </Button>
           </DialogFooter>

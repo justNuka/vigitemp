@@ -42,6 +42,7 @@ namespace Vigitemp_Serveur.sensors
                     if (tmp_sw.Elapsed.TotalMilliseconds > 2000)
                     {
                         VigitempServeur.Log($"[SONDE][DONE] type=IP serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
+                        HandleNoResponseAlarm(false, "timeout");
                         m_port.Close();
                         m_sensor_response = "";
                         pendingResults = false;
@@ -56,6 +57,7 @@ namespace Vigitemp_Serveur.sensors
                 Console.WriteLine("erreur: " + e);
                 Trace.WriteLine("erreur: " + e);
                 VigitempServeur.Log($"[SONDE][ERR] type=IP serial={m_sondeSerialNumber} port={m_comPort} error={e}");
+                HandleNoResponseAlarm(false, "exception");
                 m_port.Close();
                 return false;
             }
@@ -120,6 +122,8 @@ namespace Vigitemp_Serveur.sensors
                 Console.WriteLine("Données corrigées: " + float.Parse(String.Format("{0:0.00}", mesureCalculée)));
                 Trace.WriteLine("Données corrigées: " + float.Parse(String.Format("{0:0.00}", mesureCalculée)));
                 ths.GetDatabase().AddMesure(m_sondeSerialNumber, mesureCalculée, "°C", tmp_resistance);
+                HandleNoResponseAlarm(true);
+                compareMeasuresAndLimits(mesureCalculée);
                 VigitempServeur.Log($"[SONDE][DONE] type=IP serial={m_sondeSerialNumber} port={m_comPort} status=success value={float.Parse(String.Format("{0:0.00}", mesureCalculée))} unit=°C raw={tmp_resistance}");
 
                 m_port.Close();

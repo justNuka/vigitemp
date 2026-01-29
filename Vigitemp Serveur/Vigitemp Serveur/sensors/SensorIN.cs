@@ -53,6 +53,7 @@ namespace Vigitemp_Serveur.sensors
                         m_port.Close();
                         m_sensor_response = "";
                         pendingResults = false;
+                        HandleNoResponseAlarm(false, "timeout");
                         break;
                     }
                 }
@@ -64,6 +65,7 @@ namespace Vigitemp_Serveur.sensors
                 //Console.WriteLine("erreur: " + e);
                 //Trace.WriteLine("erreur: " + e);
                 VigitempServeur.Log("erreur read(): " + e);
+                HandleNoResponseAlarm(false, "exception");
                 m_port.Close();
                 m_port.Dispose();
                 return false;
@@ -117,6 +119,7 @@ namespace Vigitemp_Serveur.sensors
                 // ThreadServeur.GetDatabase().AddMesure(m_serialNumber, float.Parse(String.Format("{0:0.00}", tmp_temperature)), "éC");
                 ths.GetDatabase().AddMesure(m_sondeSerialNumber, float.Parse(String.Format("{0:0.00}", tmp_valeur)), "°C", null);
                 VigitempServeur.Log($"[SONDE][DONE] type=IN serial={m_sondeSerialNumber} port={m_comPort} status=success value={float.Parse(String.Format("{0:0.00}", tmp_valeur))} unit=°C");
+                HandleNoResponseAlarm(true);
                 compareMeasuresAndLimits(float.Parse(String.Format("{0:0.00}", tmp_valeur)));
                 //checkAlarmespourConsignes(float.Parse(String.Format("{0:0.00}", tmp_valeur)));
 

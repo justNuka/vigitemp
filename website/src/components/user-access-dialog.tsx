@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, CheckCircle2, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface User {
   Id_Utilisateur: number;
@@ -52,6 +53,7 @@ export function UserAccessDialog({
   onOpenChange,
   onSaved,
 }: UserAccessDialogProps) {
+  const t = useTranslations("userAccessDialog");
   const [selectedSites, setSelectedSites] = useState<number[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<number[]>([]);
 
@@ -115,10 +117,10 @@ export function UserAccessDialog({
       await postJson(`/api/utilisateurs/${user?.Id_Utilisateur}/sites`, { Id_Site });
     },
     onSuccess: () => {
-      toast.success("Site ajouté avec succès");
+      toast.success(t("toast.site_add_success"));
     },
     onError: (error: any) => {
-      toast.error(error?.message || "Erreur lors de l'ajout");
+      toast.error(error?.message || t("toast.add_error"));
     },
   });
 
@@ -127,10 +129,10 @@ export function UserAccessDialog({
       await deleteJson(`/api/utilisateurs/${user?.Id_Utilisateur}/sites/${Id_Site}`);
     },
     onSuccess: () => {
-      toast.success("Site supprimé avec succès");
+      toast.success(t("toast.site_remove_success"));
     },
     onError: (error: any) => {
-      toast.error(error?.message || "Erreur lors de la suppression");
+      toast.error(error?.message || t("toast.remove_error"));
     },
   });
 
@@ -139,10 +141,10 @@ export function UserAccessDialog({
       await postJson(`/api/utilisateurs/${user?.Id_Utilisateur}/groupes`, { Id_Groupe });
     },
     onSuccess: () => {
-      toast.success("Groupe ajouté avec succès");
+      toast.success(t("toast.group_add_success"));
     },
     onError: (error: any) => {
-      toast.error(error?.message || "Erreur lors de l'ajout");
+      toast.error(error?.message || t("toast.add_error"));
     },
   });
 
@@ -151,10 +153,10 @@ export function UserAccessDialog({
       await deleteJson(`/api/utilisateurs/${user?.Id_Utilisateur}/groupes/${Id_Liaison}`);
     },
     onSuccess: () => {
-      toast.success("Groupe supprimé avec succès");
+      toast.success(t("toast.group_remove_success"));
     },
     onError: (error: any) => {
-      toast.error(error?.message || "Erreur lors de la suppression");
+      toast.error(error?.message || t("toast.remove_error"));
     },
   });
 
@@ -187,16 +189,16 @@ export function UserAccessDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Accès aux ressources</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>
-            Gérer les sites et groupes pour {user.Prenom} {user.Nom}
+            {t("description", { firstName: user.Prenom, lastName: user.Nom })}
           </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="sites" className="w-full">
           <TabsList>
-            <TabsTrigger value="sites">Sites ({selectedSites.length})</TabsTrigger>
-            <TabsTrigger value="groups">Groupes ({selectedGroups.length})</TabsTrigger>
+            <TabsTrigger value="sites">{t("tabs.sites", { count: selectedSites.length })}</TabsTrigger>
+            <TabsTrigger value="groups">{t("tabs.groups", { count: selectedGroups.length })}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="sites" className="space-y-4">
@@ -206,7 +208,7 @@ export function UserAccessDialog({
               </div>
             ) : allSites.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                Aucun site disponible
+                {t("sites.empty")}
               </div>
             ) : (
               <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -228,7 +230,7 @@ export function UserAccessDialog({
                       <span>{site.Libelle_Site}</span>
                       {site.Est_Archive && (
                         <Badge variant="secondary" className="text-xs">
-                          Archivé
+                          {t("status.archived")}
                         </Badge>
                       )}
                     </Label>
@@ -248,7 +250,7 @@ export function UserAccessDialog({
               </div>
             ) : allGroups.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                Aucun groupe disponible
+                {t("groups.empty")}
               </div>
             ) : (
               <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -270,7 +272,7 @@ export function UserAccessDialog({
                       <span>{group.Nom_Groupe}</span>
                       {group.Est_Archive && (
                         <Badge variant="secondary" className="text-xs">
-                          Archivé
+                          {t("status.archived")}
                         </Badge>
                       )}
                     </Label>
@@ -286,7 +288,7 @@ export function UserAccessDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Fermer
+            {t("actions.close")}
           </Button>
         </DialogFooter>
       </DialogContent>

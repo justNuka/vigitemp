@@ -27,10 +27,32 @@ export type StatusTheme = {
   badgeClassName: string
 }
 
-export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusTheme {
+export type StatusLabels = {
+  inactive: string
+  critical: string
+  technical: string
+  warning: string
+  ended: string
+  ok: string
+}
+
+const DEFAULT_LABELS: StatusLabels = {
+  inactive: "Désactivée",
+  critical: "Critique",
+  technical: "Non réponse",
+  warning: "Pré-alarme",
+  ended: "Alarme terminée",
+  ok: "OK",
+}
+
+export function getStatusTheme(
+  status: SensorStatus,
+  isActive: boolean,
+  labels: StatusLabels = DEFAULT_LABELS,
+): StatusTheme {
   if (!isActive) {
     return {
-      label: "Désactivée",
+      label: labels.inactive,
       Icon: PowerOff,
       textClassName: "text-white dark:text-gray-200",
       softBgClassName: "bg-gray-200 dark:bg-gray-900",
@@ -44,7 +66,7 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
   switch (status) {
     case "critical":
       return {
-        label: "Critique",
+        label: labels.critical,
         Icon: AlertOctagon,
         textClassName: "text-red-100 dark:text-white",
         softBgClassName: "bg-red-50 dark:bg-red-950",
@@ -55,18 +77,18 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
       }
     case "technical":
       return {
-        label: "Alarme technique",
+        label: labels.technical,
         Icon: AlertCircle,
-        textClassName: "text-gray-900 dark:text-black",
-        softBgClassName: "bg-gray-100 dark:bg-white",
-        headerBgClassName: "bg-slate-950 dark:bg-white",
-        headerBorderClassName: "border-slate-950 dark:border-gray-200",
-        headerTextClassName: "text-white dark:text-black",
-        badgeClassName: "bg-slate-950 dark:bg-white text-white dark:text-black border border-slate-950 dark:border-gray-200 hover:bg-slate-900 dark:hover:bg-gray-100",
+        textClassName: "text-gray-900 dark:text-gray-100",
+        softBgClassName: "bg-gray-100 dark:bg-gray-900",
+        headerBgClassName: "bg-black",
+        headerBorderClassName: "border-black",
+        headerTextClassName: "text-white",
+        badgeClassName: "bg-black text-white border border-black hover:bg-gray-900",
       }
     case "warning":
       return {
-        label: "Pré-alarme",
+        label: labels.warning,
         Icon: Zap,
         textClassName: "text-amber-800 dark:text-amber-300",
         softBgClassName: "bg-amber-50 dark:bg-amber-950",
@@ -77,7 +99,7 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
       }
     case "ended":
       return {
-        label: "Alarme terminée",
+        label: labels.ended,
         Icon: Zap,
         textClassName: "text-violet-700 dark:text-violet-300",
         softBgClassName: "bg-violet-50 dark:bg-violet-950",
@@ -89,7 +111,7 @@ export function getStatusTheme(status: SensorStatus, isActive: boolean): StatusT
     case "ok":
     default:
       return {
-        label: "OK",
+        label: labels.ok,
         Icon: CheckCircle2,
         textClassName: "text-blue-700 dark:text-blue-300",
         softBgClassName: "bg-blue-50 dark:bg-blue-950",

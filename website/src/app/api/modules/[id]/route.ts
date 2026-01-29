@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getAuthenticatedUser } from "@/lib/auth"
-import { withLogging } from "@/lib/api-logger"
+import { getClientIp, withLogging } from "@/lib/api-logger"
 import { z } from "zod"
 import { log } from "@/lib/logger"
 import { apiError, apiOk } from "@/lib/api-response"
@@ -83,7 +83,7 @@ export const PATCH = withLogging(
         id.toString(),
         user.username,
         user.userId,
-        req.headers.get("x-forwarded-for") || "unknown",
+        getClientIp(req),
         {
           Module_Numero_Serie: validatedData.Module_Numero_Serie,
           Type_Module: validatedData.Type_Module,
@@ -156,7 +156,7 @@ export const DELETE = withLogging(
         id.toString(),
         user.username,
         user.userId,
-        req.headers.get("x-forwarded-for") || "unknown",
+        getClientIp(req),
         `Module supprimé: ${existingModule.Module_Numero_Serie}`,
       )
 

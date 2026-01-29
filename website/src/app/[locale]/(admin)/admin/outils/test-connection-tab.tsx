@@ -7,8 +7,10 @@ import { MOCK_PROBES } from "./_components/mock-probes"
 import { ProbesTableCard } from "./_components/probes-table-card"
 import { TestConnectionStats } from "./_components/test-connection-stats"
 import type { ProbeWithSelection } from "./_components/probe-types"
+import { useTranslations } from 'next-intl'
 
 export function TestConnectionTab() {
+  const t = useTranslations('toolsTestConnection')
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [probes, setProbes] = useState<ProbeWithSelection[]>(MOCK_PROBES)
   const [isLoading, setIsLoading] = useState(false)
@@ -61,8 +63,35 @@ export function TestConnectionTab() {
   }
 
   const columns = useMemo(
-    () => buildProbeColumns({ probes, selectedIds, onToggleAll: handleToggleAll, onToggleOne: handleToggleOne }),
-    [handleToggleAll, handleToggleOne, probes, selectedIds],
+    () =>
+      buildProbeColumns({
+        probes,
+        selectedIds,
+        onToggleAll: handleToggleAll,
+        onToggleOne: handleToggleOne,
+        labels: {
+          status: {
+            ok: t('table.status.ok'),
+            warning: t('table.status.warning'),
+            error: t('table.status.error'),
+          },
+          headers: {
+            probe: t('table.columns.probe'),
+            module: t('table.columns.module'),
+            relay1: t('table.columns.relay1'),
+            relay2: t('table.columns.relay2'),
+            relay3: t('table.columns.relay3'),
+            relay4: t('table.columns.relay4'),
+            signal: t('table.columns.signal'),
+            responseRate: t('table.columns.response_rate'),
+          },
+          aria: {
+            selectAll: t('table.aria.select_all'),
+            selectOne: (serial) => t('table.aria.select_one', { serial: serial || '-' }),
+          },
+        },
+      }),
+    [handleToggleAll, handleToggleOne, probes, selectedIds, t],
   )
 
   return (

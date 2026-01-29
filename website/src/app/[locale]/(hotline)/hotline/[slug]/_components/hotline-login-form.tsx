@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { z } from "zod"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useTranslations } from "next-intl"
 
 type HotlineLoginFormProps = {
   slug: string
@@ -17,65 +21,88 @@ export function HotlineLoginForm({ slug, username }: HotlineLoginFormProps) {
   const router = useRouter()
   const params = useParams()
   const locale = typeof params?.locale === "string" ? params.locale : "fr"
-  const [login, setLogin] = useState(username || "")
-  const [password, setPassword] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const t = useTranslations("hotlineLogin")
   const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const hotlineLoginSchema = z.object({
+    username: z.string().min(1, t("validation.username_required")),
+    password: z.string().min(1, t("validation.password_required")),
+  })
+
+  type HotlineLoginFormValues = z.infer<typeof hotlineLoginSchema>
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<HotlineLoginFormValues>({
+    resolver: zodResolver(hotlineLoginSchema),
+    defaultValues: {
+      username: username || "",
+      password: "",
+    },
+  })
+
+  const onSubmit = async (values: HotlineLoginFormValues) => {
     setError(null)
-    setIsSubmitting(true)
     try {
       await postJson("/api/hotline/login", {
         slug,
-        username: login,
-        password,
+        username: values.username,
+        password: values.password,
       })
       router.replace(`/${locale}/hotline/${slug}`)
     } catch (err) {
       const message =
         err instanceof HttpError
-          ? err.payload?.message || "Connexion refusee"
-          : "Connexion refusee"
+          ? err.payload?.message || t("errors.login_failed")
+          : t("errors.login_failed")
       setError(message)
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Portail hotline</CardTitle>
+        <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-2">
-            <Label htmlFor="hotline-user">Identifiant</Label>
+            <Label htmlFor="hotline-user">{t("fields.username_label")}</Label>
             <Input
               id="hotline-user"
-              value={login}
-              onChange={(event) => setLogin(event.target.value)}
+              {...register("username")}
               autoComplete="username"
-              placeholder="hotline"
-              required
+              placeholder={t("fields.username_placeholder")}
+              aria-invalid={!!errors.username}
+              aria-describedby={errors.username ? "hotline-user-error" : undefined}
             />
+            {errors.username?.message && (
+              <p id="hotline-user-error" className="text-sm text-destructive">
+                {String(errors.username.message)}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="hotline-password">Mot de passe</Label>
+            <Label htmlFor="hotline-password">{t("fields.password_label")}</Label>
             <Input
               id="hotline-password"
               type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              {...register("password")}
               autoComplete="current-password"
-              required
+              aria-invalid={!!errors.password}
+              aria-describedby={errors.password ? "hotline-password-error" : undefined}
             />
+            {errors.password?.message && (
+              <p id="hotline-password-error" className="text-sm text-destructive">
+                {String(errors.password.message)}
+              </p>
+            )}
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <Button className="w-full" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Connexion..." : "Se connecter"}
+            {isSubmitting ? t("actions.submit_loading") : t("actions.submit")}
           </Button>
         </form>
       </CardContent>

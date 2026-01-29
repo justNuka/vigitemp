@@ -16,9 +16,10 @@ namespace Vigitemp_Serveur
         public double? ConsigneSupPreAlarme { get; }
         public bool ConsigneSupPreAlarmeActive { get; }
 
-        // In database/UI this is in minutes ("mn").
+        // En base/UI, les retards d'alarme sont en minutes.
         public int RetardAlarmeBasMinutes { get; }
         public int RetardAlarmeHautMinutes { get; }
+        public int RetardNonReponseSeconds { get; }
 
         // Legacy fields (if present in schema)
         public bool NotificationActive { get; }
@@ -36,6 +37,7 @@ namespace Vigitemp_Serveur
             bool consigneSupPreAlarmeActive,
             int retardAlarmeBasMinutes,
             int retardAlarmeHautMinutes,
+            int retardNonReponseSeconds,
             bool notificationActive,
             DateTime dateHeureReactivationAlarme)
         {
@@ -50,6 +52,7 @@ namespace Vigitemp_Serveur
             ConsigneSupPreAlarmeActive = consigneSupPreAlarmeActive;
             RetardAlarmeBasMinutes = retardAlarmeBasMinutes;
             RetardAlarmeHautMinutes = retardAlarmeHautMinutes;
+            RetardNonReponseSeconds = retardNonReponseSeconds;
             NotificationActive = notificationActive;
             DateHeureReactivationAlarme = dateHeureReactivationAlarme;
         }

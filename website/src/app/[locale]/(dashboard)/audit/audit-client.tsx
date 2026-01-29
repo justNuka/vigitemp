@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { AuditLog } from "@/lib/api";
 import { getJson } from "@/lib/http";
 import {
@@ -37,7 +37,8 @@ import { ColumnDef } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import type { Locale } from "date-fns";
+import { enUS, fr } from "date-fns/locale";
 
 interface Props {
   logs: AuditLog[];
@@ -65,47 +66,27 @@ type ActionConfig = {
   badgeVariant: "default" | "secondary" | "destructive" | "outline";
 };
 
-const actionConfig: Record<string, ActionConfig> = {
-  CONNEXION: { icon: LogIn, label: "Connexion", color: "text-success", badgeVariant: "outline" },
-  DECONNEXION: { icon: LogOut, label: "Déconnexion", color: "text-muted-foreground", badgeVariant: "outline" },
-  ACQ: { icon: Bell, label: "Acquittement alarme", color: "text-warning", badgeVariant: "secondary" },
-  DES: { icon: AlertCircle, label: "Surveillance désactivée", color: "text-destructive", badgeVariant: "destructive" },
-  ACT: { icon: AlertCircle, label: "Surveillance activée", color: "text-success", badgeVariant: "outline" },
-  AS: { icon: AlertCircle, label: "Arrêt surveillance", color: "text-destructive", badgeVariant: "destructive" },
-  DS: { icon: AlertCircle, label: "Démarrage surveillance", color: "text-success", badgeVariant: "outline" },
-  CC: { icon: FileText, label: "Modification", color: "text-muted-foreground", badgeVariant: "outline" },
-  CF: { icon: Settings, label: "Changement fréquence", color: "text-primary", badgeVariant: "secondary" },
-  CR: { icon: Settings, label: "Changement retard alarme", color: "text-primary", badgeVariant: "secondary" },
-  CS: { icon: Settings, label: "Changement sonde", color: "text-primary", badgeVariant: "secondary" },
-  AJE: { icon: Activity, label: "Événement manuel", color: "text-primary", badgeVariant: "secondary" },
-  CA: { icon: Wrench, label: "Calibrage", color: "text-primary", badgeVariant: "secondary" },
-  ET: { icon: Wrench, label: "Étalonnage", color: "text-primary", badgeVariant: "secondary" },
-  TC: { icon: Plug, label: "Test connexion sonde", color: "text-primary", badgeVariant: "secondary" },
-  MDP: { icon: UserCog, label: "Mot de passe", color: "text-warning", badgeVariant: "outline" },
-  ARC: { icon: Archive, label: "Archivage / export", color: "text-muted-foreground", badgeVariant: "outline" },
-  ALARM_RESOLVED: { icon: Bell, label: "Alarme terminée", color: "text-muted-foreground", badgeVariant: "outline" },
-  settings_changed: { icon: Settings, label: "Paramètres modifiés", color: "text-primary", badgeVariant: "secondary" },
-  user_created: { icon: UserCog, label: "Utilisateur créé", color: "text-primary", badgeVariant: "default" },
-  user_updated: { icon: UserCog, label: "Utilisateur modifié", color: "text-primary", badgeVariant: "secondary" },
-};
-
 type ParsedDetails = {
   title: string;
   subtitle?: string;
   raw?: string;
 };
 
-function formatDateSafe(value: string): string | null {
+function formatDateSafe(value: string, locale: Locale): string | null {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
     return null;
   }
-  return format(date, "dd/MM/yyyy HH:mm:ss", { locale: fr });
+  return format(date, "dd/MM/yyyy HH:mm:ss", { locale });
 }
 
-function parseAuditDetails(details: string | null): ParsedDetails {
+function parseAuditDetails(
+  details: string | null,
+  t: (key: string, values?: Record<string, string | number>) => string,
+  locale: Locale,
+): ParsedDetails {
   if (!details) {
-    return { title: "-" };
+    return { title: t("table.empty_value") };
   }
 
   const normalizedDetails = details.replace(/::ffff:/g, "");
@@ -134,28 +115,28 @@ function parseAuditDetails(details: string | null): ParsedDetails {
 
   if (changes) {
     if (changes.machineName || changes.address) {
-      const machine = changes.machineName ? `Machine: ${changes.machineName}` : "";
-      const address = changes.address ? `Adresse: ${changes.address}` : "";
+      const machine = changes.machineName ? t("details.machine", { name: changes.machineName }) : "";
+      const address = changes.address ? t("details.address", { address: changes.address }) : "";
       subtitleParts.push([machine, address].filter(Boolean).join(" • "));
     }
     if (changes.connectedAt) {
-      const connectedAt = formatDateSafe(changes.connectedAt);
+      const connectedAt = formatDateSafe(changes.connectedAt, locale);
       if (connectedAt) {
-        subtitleParts.push(`Connexion: ${connectedAt}`);
+        subtitleParts.push(t("details.connection", { date: connectedAt }));
       }
     }
     if (changes.from !== undefined || changes.to !== undefined) {
-      const from = changes.from !== undefined ? `De: ${changes.from}` : "";
-      const to = changes.to !== undefined ? `Vers: ${changes.to}` : "";
+      const from = changes.from !== undefined ? t("details.from", { value: String(changes.from) }) : "";
+      const to = changes.to !== undefined ? t("details.to", { value: String(changes.to) }) : "";
       subtitleParts.push([from, to].filter(Boolean).join(" → "));
     }
     if (changes.action && subtitleParts.length === 0) {
-      subtitleParts.push(`Action: ${changes.action}`);
+      subtitleParts.push(t("details.action", { action: String(changes.action) }));
     }
   }
 
   if (ip && !subtitleParts.some((part) => part.startsWith("IP:")) && !title.startsWith("IP:")) {
-    subtitleParts.push(`IP: ${ip}`);
+    subtitleParts.push(t("details.ip", { ip }));
   }
 
   if (subtitleParts.length === 0 && normalizedDetails !== title) {
@@ -173,10 +154,36 @@ function parseAuditDetails(details: string | null): ParsedDetails {
 
 export function AuditClient({ logs }: Props) {
   const t = useTranslations("audit");
+  const locale = useLocale();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [codeFilter, setCodeFilter] = useState<string>("all");
   const [codesOpen, setCodesOpen] = useState(false);
+  const dateLocale = locale === "fr" ? fr : enUS;
+
+  const actionConfig: Record<string, ActionConfig> = {
+    CONNEXION: { icon: LogIn, label: t("actions.CONNEXION"), color: "text-success", badgeVariant: "outline" },
+    DECONNEXION: { icon: LogOut, label: t("actions.DECONNEXION"), color: "text-muted-foreground", badgeVariant: "outline" },
+    ACQ: { icon: Bell, label: t("actions.ACQ"), color: "text-warning", badgeVariant: "secondary" },
+    DES: { icon: AlertCircle, label: t("actions.DES"), color: "text-destructive", badgeVariant: "destructive" },
+    ACT: { icon: AlertCircle, label: t("actions.ACT"), color: "text-success", badgeVariant: "outline" },
+    AS: { icon: AlertCircle, label: t("actions.AS"), color: "text-destructive", badgeVariant: "destructive" },
+    DS: { icon: AlertCircle, label: t("actions.DS"), color: "text-success", badgeVariant: "outline" },
+    CC: { icon: FileText, label: t("actions.CC"), color: "text-muted-foreground", badgeVariant: "outline" },
+    CF: { icon: Settings, label: t("actions.CF"), color: "text-primary", badgeVariant: "secondary" },
+    CR: { icon: Settings, label: t("actions.CR"), color: "text-primary", badgeVariant: "secondary" },
+    CS: { icon: Settings, label: t("actions.CS"), color: "text-primary", badgeVariant: "secondary" },
+    AJE: { icon: Activity, label: t("actions.AJE"), color: "text-primary", badgeVariant: "secondary" },
+    CA: { icon: Wrench, label: t("actions.CA"), color: "text-primary", badgeVariant: "secondary" },
+    ET: { icon: Wrench, label: t("actions.ET"), color: "text-primary", badgeVariant: "secondary" },
+    TC: { icon: Plug, label: t("actions.TC"), color: "text-primary", badgeVariant: "secondary" },
+    MDP: { icon: UserCog, label: t("actions.MDP"), color: "text-warning", badgeVariant: "outline" },
+    ARC: { icon: Archive, label: t("actions.ARC"), color: "text-muted-foreground", badgeVariant: "outline" },
+    ALARM_RESOLVED: { icon: Bell, label: t("actions.ALARM_RESOLVED"), color: "text-muted-foreground", badgeVariant: "outline" },
+    settings_changed: { icon: Settings, label: t("actions.settings_changed"), color: "text-primary", badgeVariant: "secondary" },
+    user_created: { icon: UserCog, label: t("actions.user_created"), color: "text-primary", badgeVariant: "default" },
+    user_updated: { icon: UserCog, label: t("actions.user_updated"), color: "text-primary", badgeVariant: "secondary" },
+  };
 
   const { data: auditCodes = [] } = useQuery({
     queryKey: ["audit-codes"],
@@ -226,24 +233,24 @@ export function AuditClient({ logs }: Props) {
   const columns: ColumnDef<AuditLogRow>[] = [
     {
       accessorKey: "timestamp",
-      header: "Date / Heure",
+      header: t("table.columns.timestamp"),
       cell: ({ row }) => {
         const timestamp = new Date(row.getValue("timestamp") as string);
         return (
           <span className="font-mono text-sm whitespace-nowrap">
-            {format(timestamp, "dd/MM/yyyy HH:mm:ss", { locale: fr })}
+            {format(timestamp, "dd/MM/yyyy HH:mm:ss", { locale: dateLocale })}
           </span>
         );
       },
     },
     {
       accessorKey: "action",
-      header: "Action",
+      header: t("table.columns.action"),
       cell: ({ row }) => {
         const action = (row.getValue("action") as string) || "unknown";
         const config = actionConfig[action] || actionConfig[action.toUpperCase()] || {
           icon: FileText,
-          label: action,
+          label: t("actions.unknown", { code: action }),
           color: "text-muted-foreground",
           badgeVariant: "outline" as const,
         };
@@ -260,17 +267,17 @@ export function AuditClient({ logs }: Props) {
     },
     {
       accessorKey: "userId",
-      header: "Utilisateur",
+      header: t("table.columns.user"),
       cell: ({ row }) => (
-        <span className="font-medium">{row.getValue("userId") || "Système"}</span>
+        <span className="font-medium">{row.getValue("userId") || t("table.system")}</span>
       ),
     },
     {
       accessorKey: "details",
-      header: "Détails",
+      header: t("table.columns.details"),
       cell: ({ row }) => {
         const details = row.getValue("details") as string | null;
-        const parsed = parseAuditDetails(details);
+        const parsed = parseAuditDetails(details, t, dateLocale);
         return (
           <div className="flex flex-col gap-1 max-w-90">
             <p className="text-sm font-medium truncate" title={parsed.raw}>
@@ -281,7 +288,7 @@ export function AuditClient({ logs }: Props) {
                 {parsed.subtitle}
               </p>
             ) : (
-              <p className="text-xs text-muted-foreground">-</p>
+              <p className="text-xs text-muted-foreground">{t("table.empty_value")}</p>
             )}
           </div>
         );
@@ -289,7 +296,7 @@ export function AuditClient({ logs }: Props) {
     },
     {
       accessorKey: "targetId",
-      header: "Cible",
+      header: t("table.columns.target"),
       cell: ({ row }) => {
         const targetType = row.original.targetType;
         const targetId = row.getValue("targetId") as string | null;
@@ -301,7 +308,7 @@ export function AuditClient({ logs }: Props) {
             </span>
           );
         }
-        return <span className="text-muted-foreground">-</span>;
+        return <span className="text-muted-foreground">{t("table.empty_value")}</span>;
       },
     },
   ];
@@ -361,10 +368,10 @@ export function AuditClient({ logs }: Props) {
           <TanStackTable<AuditLogRow>
             columns={columns}
             data={tableData}
-            searchPlaceholder="Rechercher dans le journal d'audit..."
+            searchPlaceholder={t("search_placeholder")}
             pageSize={20}
             isLoading={false}
-            emptyMessage="Aucun log d'audit trouvé"
+            emptyMessage={t("empty")}
             showSearch={false}
             maxHeight="60vh"
             headerClassName="!bg-sidebar !text-sidebar-foreground"

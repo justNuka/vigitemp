@@ -1,3 +1,5 @@
+'use client'
+
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -8,56 +10,103 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import { z } from "zod"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useEffect } from "react"
+import { useTranslations } from 'next-intl'
 
 type EditCommentDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   commentType?: string
-  editText: string
-  onEditTextChange: (value: string) => void
-  onSave: () => void
+  initialText: string
+  onSave: (text: string) => void
 }
 
 export function EditCommentDialog({
   open,
   onOpenChange,
   commentType,
-  editText,
-  onEditTextChange,
+  initialText,
   onSave,
 }: EditCommentDialogProps) {
+  const t = useTranslations('toolsComments.edit')
+  const tCommon = useTranslations('common')
+  const editSchema = z.object({
+    text: z
+      .string()
+      .min(1, t('validation.required'))
+      .max(255, t('validation.max', { max: 255 })),
+  })
+
+  type EditFormValues = z.infer<typeof editSchema>
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<EditFormValues>({
+    resolver: zodResolver(editSchema),
+    defaultValues: {
+      text: initialText,
+    },
+  })
+
+  useEffect(() => {
+    if (!open) return
+    reset({ text: initialText })
+  }, [initialText, open, reset])
+
+  const currentText = watch("text")
+  const textError = errors.text?.message
+
+  const onSubmit = (values: EditFormValues) => {
+    onSave(values.text)
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-white dark:bg-card">
         <DialogHeader>
-          <DialogTitle>Modifier le commentaire</DialogTitle>
+          <DialogTitle>{t('title')}</DialogTitle>
           <DialogDescription>
-            Type: <strong>{commentType}</strong>
+            {t('type_label', { type: commentType || "-" })}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="edit-textarea" className="text-sm font-medium">
-              Commentaire
+              {t('labels.comment')}
             </label>
             <Textarea
               id="edit-textarea"
-              value={editText}
-              onChange={(event) => onEditTextChange(event.target.value)}
               maxLength={255}
               rows={4}
+              {...register("text")}
+              aria-invalid={!!textError}
+              aria-describedby={textError ? "edit-textarea-error" : undefined}
             />
-            <p className="text-right text-xs text-muted-foreground">{editText.length}/255 caractères</p>
+            {textError && (
+              <p id="edit-textarea-error" className="text-sm text-destructive">
+                {String(textError)}
+              </p>
+            )}
+            <p className="text-right text-xs text-muted-foreground">
+              {t('char_count', { count: currentText.length })}
+            </p>
           </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Annuler
-          </Button>
-          <Button onClick={onSave} disabled={!editText.trim()}>
-            Sauvegarder
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)} type="button">
+              {tCommon('cancel')}
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {tCommon('save')}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )

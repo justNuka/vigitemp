@@ -11,8 +11,8 @@ namespace Vigitemp_Serveur
     {
         private static readonly HttpClient _http = new HttpClient();
 
-        private static string BaseUrl => ConfigurationManager.AppSettings["Vigitemp.WebsiteBaseUrl"];
-        private static string Secret => ConfigurationManager.AppSettings["Vigitemp.AlarmDispatchSecret"];
+        private static string BaseUrl => ConfigurationManager.AppSettings["Vigi.WebsiteBaseUrl"];
+        private static string Secret => ConfigurationManager.AppSettings["Vigi.AlarmDispatchSecret"];
 
         public static Task NotifyAlarmAsync(int idLieu, double valeur)
         {

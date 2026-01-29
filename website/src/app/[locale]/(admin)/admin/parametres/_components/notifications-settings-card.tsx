@@ -1,16 +1,19 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslations } from 'next-intl';
 
 export function NotificationsSettingsCard() {
+  const t = useTranslations('adminSettings');
+
   return (
     <Card className="bg-white/50 dark:bg-card">
       <CardHeader>
-        <CardTitle>Notifications</CardTitle>
-        <CardDescription>Gérer les préférences de notifications</CardDescription>
+        <CardTitle>{t('notifications.title')}</CardTitle>
+        <CardDescription>{t('notifications.description')}</CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground">Configuration avancée des notifications à venir</p>
+        <p className="text-sm text-muted-foreground">{t('notifications.coming_soon')}</p>
       </CardContent>
     </Card>
   );

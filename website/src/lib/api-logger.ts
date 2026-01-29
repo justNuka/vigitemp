@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { log } from "@/lib/logger";
 import { verifyToken } from "@/lib/jwt";
 
+function normalizeIp(rawIp?: string | null): string | undefined {
+  if (!rawIp) return undefined;
+  const trimmed = rawIp.trim();
+  if (!trimmed) return undefined;
+  const withoutMapped = trimmed.startsWith("::ffff:")
+    ? trimmed.slice("::ffff:".length)
+    : trimmed;
+  return withoutMapped.trim() || undefined;
+}
+
+export function getClientIp(req: NextRequest): string {
+  const forwarded = req.headers.get("x-forwarded-for")?.split(",")[0];
+  return normalizeIp(forwarded) || normalizeIp(req.headers.get("x-real-ip")) || "unknown";
+}
+
 /**
  * Middleware pour logger toutes les requêtes API
  * À utiliser dans chaque route API
@@ -17,9 +32,6 @@ export function withLogging(
     const startTime = Date.now();
     const method = req.method;
     const path = req.nextUrl.pathname;
-    const clientTrace = req.headers.get("x-vigitemp-client-trace") || undefined;
-    const queryClientId = req.headers.get("x-vigitemp-query-client-id") || undefined;
-    const bootId = req.headers.get("x-vigitemp-boot-id") || undefined;
     
     // Extraire les infos utilisateur du token JWT si présent
     let user: { username?: string; userId?: number } = {};
@@ -40,10 +52,7 @@ export function withLogging(
     }
 
     // Extraire l'IP
-    const ip = 
-      req.headers.get("x-forwarded-for")?.split(",")[0] ||
-      req.headers.get("x-real-ip") ||
-      "unknown";
+    const ip = getClientIp(req);
 
     const readErrorBody = async (response: NextResponse) => {
       try {
@@ -52,6 +61,15 @@ export function withLogging(
         const trimmed = bodyText.trim();
         if (!trimmed) {
           return undefined;
+        }
+        try {
+          const parsed = JSON.parse(trimmed) as { message?: string; error?: string; detail?: string };
+          const message = parsed?.message || parsed?.error || parsed?.detail;
+          if (message) {
+            return String(message);
+          }
+        } catch {
+          // ignore JSON parse errors
         }
         return trimmed.length > 2000 ? `${trimmed.slice(0, 2000)}…` : trimmed;
       } catch {
@@ -74,9 +92,6 @@ export function withLogging(
           duration,
           statusCode: response.status,
           errorBody,
-          clientTrace,
-          queryClientId,
-          bootId,
         });
       }
 
@@ -92,9 +107,6 @@ export function withLogging(
         duration,
         statusCode: 500,
         error: error.message || "Unknown error",
-        clientTrace,
-        queryClientId,
-        bootId,
       });
 
       log.error(options?.label || "API", `Error in ${method} ${path}`, {
@@ -136,10 +148,7 @@ export function getRequestContext(req: NextRequest): {
     // Pas de token valide
   }
 
-  const ip = 
-    req.headers.get("x-forwarded-for")?.split(",")[0] ||
-    req.headers.get("x-real-ip") ||
-    "unknown";
+  const ip = getClientIp(req);
 
   return { user, ip };
 }

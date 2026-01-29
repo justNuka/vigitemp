@@ -2,6 +2,7 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
+import { useTranslations } from 'next-intl';
 
 export type ModuleRow = {
   Id_Module: number;
@@ -26,35 +27,40 @@ export function ModulesTable({
   selectedModuleId,
   onSelectModule,
 }: ModulesTableProps) {
+  const t = useTranslations('modulesTable');
   const columns: ColumnDef<ModuleRow>[] = [
     {
       accessorKey: 'Libelle_Type_Module',
-      header: 'Type',
+      header: t('columns.type'),
       cell: ({ row }) => <span className="font-medium">{row.getValue('Libelle_Type_Module') || '-'}</span>,
     },
     {
       accessorKey: 'Module_Numero_Serie',
-      header: 'Numéro de série',
+      header: t('columns.serial'),
       cell: ({ row }) => row.getValue('Module_Numero_Serie') || '-',
     },
     {
       accessorKey: 'Emplacement',
-      header: 'Emplacement',
+      header: t('columns.location'),
       cell: ({ row }) => row.getValue('Emplacement') || '-',
     },
     {
       accessorKey: 'Port_Serie',
-      header: 'Port',
+      header: t('columns.port'),
       cell: ({ row }) => row.getValue('Port_Serie') || '-',
     },
     {
       accessorKey: 'sondes_count',
-      header: () => <div className="text-right">Nombre de sondes</div>,
-      cell: ({ row }) => <div className="text-right font-medium">{row.getValue('sondes_count')} sonde(s)</div>,
+      header: () => <div className="text-right">{t('columns.probes_count')}</div>,
+      cell: ({ row }) => (
+        <div className="text-right font-medium">
+          {t('probes_count_value', { count: row.getValue('sondes_count') })}
+        </div>
+      ),
     },
     {
       accessorKey: 'Id_Serveur',
-      header: 'Serveur',
+      header: t('columns.server'),
       cell: ({ row }) => row.getValue('Id_Serveur') || '-',
     },
   ];
@@ -63,9 +69,9 @@ export function ModulesTable({
     <TanStackTable<ModuleRow>
       columns={columns}
       data={modules}
-      searchPlaceholder="Numéro de série, emplacement..."
+      searchPlaceholder={t('search_placeholder')}
       isLoading={isLoading}
-      emptyMessage="Aucun module trouvé"
+      emptyMessage={t('empty')}
       selectedRowId={selectedModuleId ?? undefined}
       onRowClick={(row) => onSelectModule(row.Id_Module)}
       headerClassName="!bg-sidebar !text-sidebar-foreground"

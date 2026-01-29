@@ -24,8 +24,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ModuleModal } from "./module-modal";
 import { ModulesTable, type ModuleRow } from "./_components/modules-table";
 import { ProbesTable, type ProbeRow } from "./_components/probes-table";
+import { useTranslations } from 'next-intl';
 
 export function ModulesClient() {
+  const t = useTranslations('modulesPage');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const queryClient = useQueryClient();
   const didPrefetchRef = useRef(false);
@@ -86,13 +89,13 @@ export function ModulesClient() {
         const linked = (error.payload as any)?.linkedSensorsCount;
         const detail =
           typeof linked === 'number' && linked > 0
-            ? `Ce module est lie a ${linked} sonde${linked > 1 ? 's' : ''}.`
+            ? t('archive_blocked.detail', { count: linked })
             : '';
         setArchiveBlockedMessage(`${error.message}${detail ? ` ${detail}` : ''}`);
         setArchiveBlockedOpen(true);
         return;
       }
-      toast.error(error instanceof Error ? error.message : "Erreur lors de l'archivage");
+      toast.error(error instanceof Error ? error.message : t('toast.archive_error'));
     }
   };
 
@@ -115,7 +118,7 @@ export function ModulesClient() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle>Modules ({modules?.length || 0})</CardTitle>
+            <CardTitle>{t('title', { count: modules?.length || 0 })}</CardTitle>
             <div className="flex gap-2">
               <Button
                 size="sm"
@@ -126,7 +129,7 @@ export function ModulesClient() {
                 }}
               >
                 <Plus className="w-4 h-4" />
-                Nouveau
+                {t('actions.new')}
               </Button>
               <Button
                 size="sm"
@@ -139,11 +142,11 @@ export function ModulesClient() {
                 }}
               >
                 <Pencil className="w-4 h-4" />
-                Modifier
+                {t('actions.edit')}
               </Button>
               <Button size="sm" variant="outline" disabled={!selectedModuleId} className="gap-2" onClick={() => setArchiveConfirmOpen(true)}>
                 <Archive className="w-4 h-4" />
-                Archiver
+                {t('actions.archive')}
               </Button>
             </div>
           </div>
@@ -164,7 +167,7 @@ export function ModulesClient() {
       {selectedModuleId && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Matériel associé ({sondes?.length || 0})</CardTitle>
+            <CardTitle className="text-base">{t('associated.title', { count: sondes?.length || 0 })}</CardTitle>
           </CardHeader>
           <CardContent className="p-2 md:p-4 xl:p-4">
             {sondesLoading ? (
@@ -181,7 +184,7 @@ export function ModulesClient() {
                 onSelectProbe={setSelectedSondeId}
               />
             ) : (
-              <div className="text-center py-8 text-sm text-muted-foreground">Aucun matériel associé à ce module</div>
+              <div className="text-center py-8 text-sm text-muted-foreground">{t('associated.empty')}</div>
             )}
           </CardContent>
         </Card>
@@ -207,27 +210,25 @@ export function ModulesClient() {
       <AlertDialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Archiver le module</AlertDialogTitle>
+            <AlertDialogTitle>{t('archive.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Etes-vous sur de vouloir archiver ce module ? Cette action ne peut pas etre annulee.
+              {t('archive.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction onClick={handleArchive}>Archiver</AlertDialogAction>
+          <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
+          <AlertDialogAction onClick={handleArchive}>{t('archive.confirm')}</AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>
 
       <AlertDialog open={archiveBlockedOpen} onOpenChange={setArchiveBlockedOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Archivage impossible</AlertDialogTitle>
+            <AlertDialogTitle>{t('archive_blocked.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {archiveBlockedMessage || "Ce module est encore lie a d'autres elements."}
+              {archiveBlockedMessage || t('archive_blocked.default')}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogAction onClick={() => setArchiveBlockedOpen(false)}>
-            OK
-          </AlertDialogAction>
+          <AlertDialogAction onClick={() => setArchiveBlockedOpen(false)}>{tCommon('confirm')}</AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>
 

@@ -168,7 +168,26 @@ export const log = {
     bootId?: string;
   }) => {
     const message = `${method} ${path} - ${details.statusCode || "pending"}`;
-    logger.log("http", message, { label: "HTTP", ...details });
+    const normalizeErrorBody = (value?: string) => {
+      if (!value) return undefined;
+      const trimmed = value.trim();
+      if (!trimmed) return undefined;
+      try {
+        const parsed = JSON.parse(trimmed) as { message?: string; error?: string; detail?: string };
+        const msg = parsed?.message || parsed?.error || parsed?.detail;
+        if (msg) return String(msg);
+      } catch {
+        // ignore JSON parse errors
+      }
+      return trimmed.length > 2000 ? `${trimmed.slice(0, 2000)}…` : trimmed;
+    };
+
+    const { clientTrace, queryClientId, bootId, errorBody, ...rest } = details;
+    logger.log("http", message, {
+      label: "HTTP",
+      ...rest,
+      errorBody: normalizeErrorBody(errorBody),
+    });
   },
 
   // Logs d'authentification

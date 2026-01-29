@@ -1,6 +1,7 @@
 'use client';
 
 import type { SiteAdmin } from '@/hooks/useSites';
+import { useTranslations } from 'next-intl';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,24 +28,26 @@ export function ArchiveSiteDialog({
   isArchiving,
   onConfirm,
 }: ArchiveSiteDialogProps) {
+  const t = useTranslations('sitesDialog');
+  const tCommon = useTranslations('common');
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Archiver le site</AlertDialogTitle>
+          <AlertDialogTitle>{t('archive_title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Êtes-vous sûr de vouloir archiver le site <strong>{site?.Code_Site}</strong> ? Cette action ne peut être
-            annulée.
+            {t('archive_description', { code: site?.Code_Site || '' })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             disabled={!site || isArchiving}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isArchiving ? 'Archivage...' : 'Archiver'}
+            {isArchiving ? t('submit_archiving') : t('submit_archive')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo } from "react"
 import { useQueryClient } from '@tanstack/react-query'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,10 @@ import { useRouter } from '@/i18n/navigation'
 import type { Actuator } from "@/hooks/useActuators"
 import { patchJson, postJson } from "@/lib/http"
 import { Check, X } from "lucide-react"
+import { useForm, Controller } from "react-hook-form"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useTranslations } from 'next-intl'
 
 type Props = {
   open: boolean
@@ -23,6 +27,8 @@ type Props = {
 }
 
 export function ActuatorModal({ open, onOpenChange, actuator, isEditing }: Props) {
+  const t = useTranslations('actuatorsForm')
+  const tCommon = useTranslations('common')
   const queryClient = useQueryClient()
   const router = useRouter()
   const isEdit = Boolean(isEditing && actuator)
@@ -38,10 +44,10 @@ export function ActuatorModal({ open, onOpenChange, actuator, isEditing }: Props
     () =>
       (locations ?? []).map((location) => ({
         value: location.Id_Lieu.toString(),
-        label: location.Nom_Lieu || `Lieu ${location.Id_Lieu}`,
+        label: location.Nom_Lieu || t('fields.location_fallback', { id: location.Id_Lieu }),
         searchText: `${location.Nom_Lieu || ""} ${location.Id_Lieu}`,
       })),
-    [locations]
+    [locations, t]
   )
 
   const initial = useMemo(
@@ -54,18 +60,38 @@ export function ActuatorModal({ open, onOpenChange, actuator, isEditing }: Props
     [actuator, isEdit],
   )
 
-  const [type, setType] = useState(() => initial.type)
-  const [serie, setSerie] = useState(() => initial.serie)
-  const [commentaire, setCommentaire] = useState(() => initial.commentaire)
-  const [locationId, setLocationId] = useState(() => initial.locationId)
+  const actuatorSchema = z.object({
+    type: z.string().optional(),
+    serie: z.string().optional(),
+    commentaire: z.string().optional(),
+    locationId: z.string().optional(),
+  })
 
-  const handleSubmit = async () => {
+  type ActuatorFormValues = z.infer<typeof actuatorSchema>
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ActuatorFormValues>({
+    resolver: zodResolver(actuatorSchema),
+    defaultValues: initial,
+  })
+
+  useEffect(() => {
+    if (!open) return
+    reset(initial)
+  }, [initial, open, reset])
+
+  const onSubmit = async (values: ActuatorFormValues) => {
     try {
       const payload = {
-        type,
-        serie,
-        commentaire,
-        lieuId: locationId,
+        type: values.type,
+        serie: values.serie,
+        commentaire: values.commentaire,
+        lieuId: values.locationId,
       }
 
       if (isEdit && actuator) {
@@ -86,66 +112,76 @@ export function ActuatorModal({ open, onOpenChange, actuator, isEditing }: Props
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent key={contentKey} className="sm:max-w-125 bg-white dark:bg-card">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Modifier l'actionneur" : "Créer un actionneur"}</DialogTitle>
+          <DialogTitle>{isEdit ? t('title_edit') : t('title_create')}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="type">Type d'actionneur</Label>
-            <Select value={type} onValueChange={setType} disabled={isEdit}>
-              <SelectTrigger id="type" disabled={typesLoading || isEdit}>
-                <SelectValue placeholder="Sélectionner un type" />
-              </SelectTrigger>
-              <SelectContent>
-                {types?.map((t) => (
-                  <SelectItem key={t.Type} value={t.Type?.toString() || ""}>
-                    {t.Description || `Type ${t.Type}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="type">{t('fields.type_label')}</Label>
+            <Controller
+              control={control}
+              name="type"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange} disabled={isEdit}>
+                  <SelectTrigger id="type" disabled={typesLoading || isEdit}>
+                    <SelectValue placeholder={t('fields.type_placeholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {types?.map((type) => (
+                      <SelectItem key={type.Type} value={type.Type?.toString() || ""}>
+                        {type.Description || t('fields.type_fallback', { id: type.Type })}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.type?.message && (
+              <p className="text-sm text-destructive">{String(errors.type.message)}</p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="serie">Numéro de série</Label>
-            <Input id="serie" placeholder="Ex: 00001" value={serie} onChange={(e) => setSerie(e.target.value)} />
+            <Label htmlFor="serie">{t('fields.serial_label')}</Label>
+            <Input id="serie" placeholder={t('fields.serial_placeholder')} {...register("serie")} />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="commentaire">Commentaire</Label>
-            <Input
-              id="commentaire"
-              placeholder="Commentaire..."
-              value={commentaire}
-              onChange={(e) => setCommentaire(e.target.value)}
+            <Label htmlFor="commentaire">{t('fields.comment_label')}</Label>
+            <Input id="commentaire" placeholder={t('fields.comment_placeholder')} {...register("commentaire")} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="lieu">{t('fields.location_label')}</Label>
+            <Controller
+              control={control}
+              name="locationId"
+              render={({ field }) => (
+                <Combobox
+                  triggerId="lieu"
+                  value={field.value || ""}
+                  onValueChange={field.onChange}
+                  options={locationOptions}
+                  placeholder={t('fields.location_placeholder')}
+                  searchPlaceholder={t('fields.location_search')}
+                  emptyMessage={t('fields.location_empty')}
+                  disabled={locationsLoading}
+                />
+              )}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="lieu">Lieu</Label>
-            <Combobox
-              triggerId="lieu"
-              value={locationId}
-              onValueChange={setLocationId}
-              options={locationOptions}
-              placeholder="Sélectionner un lieu"
-              searchPlaceholder="Rechercher un lieu..."
-              emptyMessage="Aucun lieu"
-              disabled={locationsLoading}
-            />
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="gap-2">
-            <X className="h-4 w-4" />
-            Annuler
-          </Button>
-          <Button onClick={handleSubmit} className="gap-2">
-            <Check className="h-4 w-4" />
-            {isEdit ? "Mettre à jour" : "Créer"}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)} className="gap-2" type="button">
+              <X className="h-4 w-4" />
+              {tCommon('cancel')}
+            </Button>
+            <Button className="gap-2" type="submit" disabled={isSubmitting}>
+              <Check className="h-4 w-4" />
+              {isEdit ? t('submit.update') : t('submit.create')}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )

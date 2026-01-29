@@ -7,7 +7,8 @@ import type { User } from "@/lib/api";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Shield } from "lucide-react";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { enUS, fr } from "date-fns/locale";
+import { useLocale, useTranslations } from "next-intl";
 
 interface Props {
   users: User[];
@@ -22,30 +23,34 @@ export function UsersTable({
   onEditUser,
   onSelectUser,
 }: Props) {
+  const t = useTranslations("usersTable");
+  const locale = useLocale();
+  const dateLocale = locale.toLowerCase().startsWith("fr") ? fr : enUS;
+
   const columns: ColumnDef<User>[] = [
     {
       accessorKey: "username",
-      header: "Login",
+      header: t("columns.login"),
       cell: ({ row }) => (
         <span className="font-medium">{row.getValue("username")}</span>
       ),
     },
     {
       accessorKey: "displayName",
-      header: "Nom complet",
+      header: t("columns.full_name"),
     },
     {
       accessorKey: "email",
-      header: "Email",
+      header: t("columns.email"),
       cell: ({ row }) => (
         <span className="text-muted-foreground">
-          {row.getValue("email") || "-"}
+          {row.getValue("email") || t("placeholders.na")}
         </span>
       ),
     },
     {
       accessorKey: "role",
-      header: "Profil",
+      header: t("columns.profile"),
       cell: ({ row }) => (
         <Badge variant="outline" className="gap-1">
           <Shield className="h-3 w-3" />
@@ -55,7 +60,7 @@ export function UsersTable({
     },
     {
       accessorKey: "isActive",
-      header: "Statut",
+      header: t("columns.status"),
       meta: {
         headerClassName: "text-center",
         cellClassName: "text-center",
@@ -63,24 +68,24 @@ export function UsersTable({
       cell: ({ row }) => (
         <div className="flex justify-center">
           <Badge variant={row.getValue("isActive") ? "default" : "destructive"}>
-            {row.getValue("isActive") ? "Actif" : "Inactif"}
+            {row.getValue("isActive") ? t("status.active") : t("status.inactive")}
           </Badge>
         </div>
       ),
     },
     {
       accessorKey: "expiry_date",
-      header: "Date d'expiration",
+      header: t("columns.expiry"),
       cell: ({ row }) => {
         const date = row.getValue("expiry_date");
         return date
-          ? format(new Date(date as string), "dd/MM/yyyy", { locale: fr })
-          : "-";
+          ? format(new Date(date as string), "dd/MM/yyyy", { locale: dateLocale })
+          : t("placeholders.na");
       },
     },
     {
       id: "actions",
-      header: "Actions",
+      header: t("columns.actions"),
       enableSorting: false,
       meta: {
         headerClassName: "text-center",
@@ -93,7 +98,7 @@ export function UsersTable({
             size="icon"
             onClick={() => onEditUser(row.original)}
             className="bg-primary/10 hover:bg-primary/20 border-primary/40 text-primary"
-            title="Modifier"
+            title={t("actions.edit")}
           >
             <Pencil className="h-4 w-4" />
           </Button>
@@ -107,10 +112,10 @@ export function UsersTable({
       columns={columns}
       data={users}
       searchField={["displayName", "username"]}
-      searchPlaceholder="Rechercher par nom ou login..."
+      searchPlaceholder={t("search_placeholder")}
       pageSize={20}
       maxHeight="calc(100dvh - 25rem)"
-      emptyMessage="Aucun utilisateur trouvé"
+      emptyMessage={t("empty")}
       selectedRowId={selectedUserId}
       onRowClick={(row) => onSelectUser(row as User)}
       containerClassName="bg-white"

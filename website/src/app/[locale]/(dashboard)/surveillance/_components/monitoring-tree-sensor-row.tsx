@@ -2,9 +2,19 @@
 
 import type { SensorWithLocation } from "@/lib/api";
 import { getStatusBadge, getStatusColor } from "./monitoring-tree-status";
+import { useTranslations } from "next-intl";
 
 export function SurveillanceTreeSensorRow({ sensor }: { sensor: SensorWithLocation }) {
-  const colors = getStatusColor(sensor.status, sensor.isActive);
+  const tStatus = useTranslations("surveillanceStatus");
+  const statusLabels = {
+    inactive: tStatus("inactive"),
+    critical: tStatus("critical"),
+    technical: tStatus("technical"),
+    warning: tStatus("warning"),
+    ended: tStatus("ended"),
+    ok: tStatus("ok"),
+  };
+  const colors = getStatusColor(sensor.status, sensor.isActive, statusLabels);
 
   return (
     <div
@@ -25,10 +35,10 @@ export function SurveillanceTreeSensorRow({ sensor }: { sensor: SensorWithLocati
       <div className="flex items-center gap-2 shrink-0">
         {sensor.location.alarmDisabled ? (
           <span className="rounded-full bg-orange-500/20 text-orange-900 dark:text-orange-100 text-[10px] px-2 py-0.5">
-            Désactivée
+            {tStatus("inactive")}
           </span>
         ) : null}
-        {getStatusBadge(sensor.status, sensor.isActive)}
+        {getStatusBadge(sensor.status, sensor.isActive, statusLabels)}
       </div>
     </div>
   );

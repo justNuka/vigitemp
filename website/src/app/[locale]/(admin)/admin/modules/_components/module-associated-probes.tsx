@@ -3,6 +3,7 @@
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { Sonde } from '@/hooks/useModules';
+import { useTranslations } from 'next-intl';
 
 type AssociatedProbeRow = {
   Id_Sonde: number;
@@ -16,15 +17,16 @@ type ModuleAssociatedProbesProps = {
 };
 
 export function ModuleAssociatedProbes({ sondes, isLoading }: ModuleAssociatedProbesProps) {
+  const t = useTranslations('moduleAssociatedProbes');
   const columns: ColumnDef<AssociatedProbeRow>[] = [
     {
       accessorKey: 'Type',
-      header: 'Type',
+      header: t('columns.type'),
       cell: ({ row }) => row.getValue('Type') || '-',
     },
     {
       accessorKey: 'Sonde_Numero_Serie',
-      header: 'Numéro de série',
+      header: t('columns.serial'),
       cell: ({ row }) => row.getValue('Sonde_Numero_Serie') || '-',
     },
   ];
@@ -36,11 +38,11 @@ export function ModuleAssociatedProbes({ sondes, isLoading }: ModuleAssociatedPr
   }));
 
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground text-center py-4">Chargement...</div>;
+    return <div className="text-sm text-muted-foreground text-center py-4">{t('loading')}</div>;
   }
 
   if (!sondes || sondes.length === 0) {
-    return <div className="text-sm text-muted-foreground text-center py-4">Aucun matériel associé</div>;
+    return <div className="text-sm text-muted-foreground text-center py-4">{t('empty')}</div>;
   }
 
   return <TanStackTable columns={columns} data={data} showSearch={false} showPagination={false} maxHeight="16rem" headerClassName="!bg-sidebar !text-sidebar-foreground" headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80" tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0" />;

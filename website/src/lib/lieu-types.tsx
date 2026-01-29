@@ -10,34 +10,45 @@ export interface TypeIconInfo {
   label: string;
 }
 
-export function getTypeIcon(type: LieuTypeValue, iconSize: string = 'w-4 h-4'): TypeIconInfo {
+export function getTypeIcon(
+  type: LieuTypeValue,
+  iconSize: string = 'w-4 h-4',
+  labels?: Partial<Record<Exclude<LieuTypeValue, null>, string>>
+): TypeIconInfo {
   const normalizedType = typeof type === 'string' ? type.trim().toLowerCase() : type;
+  const resolvedLabels = {
+    bain_marie: labels?.bain_marie ?? 'Bain Marie',
+    etuve: labels?.etuve ?? 'Etuve',
+    ambiance: labels?.ambiance ?? 'Ambiance',
+    frigo_congel: labels?.frigo_congel ?? 'Frigo/Congel',
+    autre: labels?.autre ?? 'Autre',
+  } as const;
 
   switch (normalizedType) {
     case 'bain_marie':
       return {
         icon: <Droplets className={iconSize} />,
-        label: 'Bain Marie',
+        label: resolvedLabels.bain_marie,
       };
     case 'etuve':
       return {
         icon: <Flame className={iconSize} />,
-        label: 'Etuve',
+        label: resolvedLabels.etuve,
       };
     case 'ambiance':
       return {
         icon: <Thermometer className={iconSize} />,
-        label: 'Ambiance',
+        label: resolvedLabels.ambiance,
       };
     case 'frigo_congel':
       return {
         icon: <ThermometerSnowflake className={iconSize} />,
-        label: 'Frigo/Congel',
+        label: resolvedLabels.frigo_congel,
       };
     case 'autre':
       return {
         icon: <Layers className={iconSize} />,
-        label: 'Autre',
+        label: resolvedLabels.autre,
       };
     default:
       return {

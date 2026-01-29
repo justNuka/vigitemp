@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 
 import { MultiSelectFilter } from "@/components/multi-select-filter"
+import { useTranslations } from 'next-intl'
 
 import type { Group, Site } from "./server-filters"
 
@@ -32,6 +33,7 @@ function buildAllowedGroupIdSet(groups: Group[], selectedSiteIds: number[]) {
 }
 
 export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
+  const t = useTranslations('surveillance.filters')
   const [filters, setFilters] = useState<FilterState>(() => {
     if (typeof window === "undefined") return { siteIds: [], groupIds: [] }
     const saved = localStorage.getItem(STORAGE_KEY)
@@ -90,15 +92,15 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
   return (
     <div className="flex flex-col sm:flex-row gap-4">
       <MultiSelectFilter
-        label="Sites"
+        label={t('sites.label')}
         options={sites?.map((site) => ({ id: site.id, label: site.name })) || []}
         selectedIds={filters.siteIds || []}
         onChange={(selectedIds) => handleSiteChange((selectedIds || []) as number[])}
-        placeholder="Tous les sites"
+        placeholder={t('sites.placeholder')}
       />
 
       <MultiSelectFilter
-        label="Groupes"
+        label={t('groups.label')}
         options={
           groups?.map((group) => ({
             id: group.id,
@@ -117,7 +119,7 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
             groupIds: allowedGroupIds ? groupIds.filter((id) => allowedGroupIds.has(id)) : groupIds,
           }))
         }}
-        placeholder="Tous les groupes"
+        placeholder={t('groups.placeholder')}
       />
     </div>
   )

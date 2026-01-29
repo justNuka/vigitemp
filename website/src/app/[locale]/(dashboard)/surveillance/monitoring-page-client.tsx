@@ -274,7 +274,7 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
             hasNextPage={!!hasNextPage}
             isFetching={isFetching}
             onLoadMore={fetchNextPage}
-            label="Charger plus"
+            label={t("load_more")}
           />
         </>
       ) : (
@@ -290,15 +290,15 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
             hasNextPage={!!hasNextPage}
             isFetching={isFetching}
             onLoadMore={fetchNextPage}
-            label="Charger plus"
+            label={t("load_more")}
           />
         </>
       )}
 
       <div className="flex items-center justify-between text-sm text-muted-foreground pt-4">
         <p>
-          {visibleSensors.length} sonde{visibleSensors.length > 1 ? "s" : ""}
-          {filtersActive ? <> sur {allSensors.length} au total</> : null}
+          {t("footer.count", { count: visibleSensors.length })}
+          {filtersActive ? t("footer.total", { total: allSensors.length }) : null}
         </p>
       </div>
     </>

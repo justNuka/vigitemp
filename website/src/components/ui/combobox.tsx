@@ -13,6 +13,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { useTranslations } from "next-intl";
 
 export type ComboboxOption = {
   value: string;
@@ -38,14 +39,18 @@ export function Combobox({
   options,
   value,
   onValueChange,
-  placeholder = "Selectionner...",
-  searchPlaceholder = "Rechercher...",
-  emptyMessage = "Aucun resultat",
+  placeholder,
+  searchPlaceholder,
+  emptyMessage,
   disabled = false,
   className,
   buttonClassName,
   triggerId,
 }: ComboboxProps) {
+  const t = useTranslations("combobox");
+  const resolvedPlaceholder = placeholder ?? t("placeholder");
+  const resolvedSearchPlaceholder = searchPlaceholder ?? t("search_placeholder");
+  const resolvedEmptyMessage = emptyMessage ?? t("empty_message");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const selected = useMemo(
@@ -76,7 +81,7 @@ export function Combobox({
           disabled={disabled}
         >
           <span className={cn("truncate", !selected && "text-muted-foreground")}>
-            {selected?.label ?? placeholder}
+            {selected?.label ?? resolvedPlaceholder}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
         </Button>
@@ -88,13 +93,13 @@ export function Combobox({
       >
         <Command shouldFilter={false}>
           <CommandInput
-            placeholder={searchPlaceholder}
+            placeholder={resolvedSearchPlaceholder}
             value={query}
             onValueChange={setQuery}
           />
           <CommandList className="max-h-60 overscroll-contain" onWheel={(event) => event.stopPropagation()}>
             {filteredOptions.length === 0 ? (
-              <CommandEmpty>{emptyMessage}</CommandEmpty>
+              <CommandEmpty>{resolvedEmptyMessage}</CommandEmpty>
             ) : (
               <CommandGroup>
                 {filteredOptions.map((option) => (

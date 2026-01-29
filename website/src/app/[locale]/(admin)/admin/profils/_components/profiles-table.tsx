@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import type { ColumnDef } from '@tanstack/react-table';
 import { CheckCircle2, Edit, Plus, Shield, Trash2, Users } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 type ProfileRow = {
   id: number;
@@ -36,10 +37,12 @@ export function ProfilesTable({
   onDelete,
   onCreate,
 }: ProfilesTableProps) {
+  const t = useTranslations('profilesTable');
+
   const columns: ColumnDef<ProfileRow>[] = [
     {
       accessorKey: 'name',
-      header: 'Nom',
+      header: t('columns.name'),
       cell: ({ row }) => {
         const profile = row.original;
         return (
@@ -57,34 +60,38 @@ export function ProfilesTable({
     },
     {
       accessorKey: 'description',
-      header: 'Description',
-      cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.getValue('description') || '-'}</span>,
+      header: t('columns.description'),
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">
+          {row.getValue('description') || t('placeholders.na')}
+        </span>
+      ),
     },
     {
       accessorKey: 'authCount',
-      header: 'Autorisations',
+      header: t('columns.authorizations'),
       meta: { headerClassName: 'w-36 text-center', cellClassName: 'text-center' },
       cell: ({ row }) => (
         <Badge variant="outline" className="gap-1 text-xs px-2 py-0.5 whitespace-nowrap">
           <CheckCircle2 className="h-3 w-3" />
-          {row.getValue('authCount')} autorisation{(row.getValue('authCount') as number) > 1 ? 's' : ''}
+          {t('counts.authorizations', { count: row.getValue('authCount') })}
         </Badge>
       ),
     },
     {
       accessorKey: 'userCount',
-      header: 'Utilisateurs',
+      header: t('columns.users'),
       meta: { headerClassName: 'w-32 text-center', cellClassName: 'text-center' },
       cell: ({ row }) => (
         <Badge variant="outline" className="gap-1 text-xs px-2 py-0.5 whitespace-nowrap">
           <Users className="h-3 w-3" />
-          {row.getValue('userCount')} utilisateur{(row.getValue('userCount') as number) > 1 ? 's' : ''}
+          {t('counts.users', { count: row.getValue('userCount') })}
         </Badge>
       ),
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: t('columns.actions'),
       meta: { headerClassName: 'w-24 text-center', cellClassName: 'text-center' },
       cell: ({ row }) => {
         const profile = profiles.find((p) => p.id === row.original.id);
@@ -96,7 +103,7 @@ export function ProfilesTable({
               variant="outline"
               size="icon"
               onClick={() => onEdit(profile)}
-              title="Modifier"
+              title={t('actions.edit')}
               className="bg-primary/10 hover:bg-primary/20 border-primary/40 text-primary"
             >
               <Edit className="h-4 w-4" />
@@ -105,7 +112,7 @@ export function ProfilesTable({
               variant="outline"
               size="icon"
               onClick={() => onDelete(profile)}
-              title="Supprimer"
+              title={t('actions.delete')}
               className="bg-destructive/10 hover:bg-destructive/20 border-destructive/30"
             >
               <Trash2 className="h-4 w-4 text-destructive" />
@@ -129,12 +136,12 @@ export function ProfilesTable({
     <Card>
       <CardHeader className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
-          <CardTitle>Profils</CardTitle>
-          <CardDescription>Les profils définissent les autorisations des utilisateurs sur l'application</CardDescription>
+          <CardTitle>{t('title')}</CardTitle>
+          <CardDescription>{t('description')}</CardDescription>
         </div>
         <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90" onClick={onCreate}>
           <Plus className="h-4 w-4" />
-          Nouveau profil
+          {t('actions.new')}
         </Button>
       </CardHeader>
       <CardContent className="p-2 md:p-4 xl:p-4">
@@ -142,9 +149,9 @@ export function ProfilesTable({
           columns={columns}
           data={tableData}
           searchField="name"
-          searchPlaceholder="Nom du profil..."
+          searchPlaceholder={t('search_placeholder')}
           isLoading={isLoading}
-          emptyMessage="Aucun profil trouvé"
+          emptyMessage={t('empty')}
           selectedRowId={selectedProfileId}
           onRowClick={(row) => {
             const profile = profiles.find((p) => p.id === (row as ProfileRow).id);

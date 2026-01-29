@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { usePasswordRules } from "@/hooks/usePasswordRules"
 import { fetchJson } from "@/lib/http"
+import { useTranslations } from "next-intl"
 
 import { ForcePasswordChangeForm } from "./_components/force-password-change-form"
 
 export default function ForcePasswordChangePage() {
   const router = useRouter()
+  const t = useTranslations("forcePasswordChange")
 
   const [username, setUsername] = useState<string | null>(null)
   const [error, setError] = useState("")
@@ -33,7 +35,7 @@ export default function ForcePasswordChangePage() {
         setError(
           err instanceof Error
             ? err.message
-            : "Votre lien de changement de mot de passe a expiré. Veuillez vous reconnecter.",
+            : t("errors.link_expired"),
         )
         setTimeout(() => router.push("/login"), 3000)
       }
@@ -47,8 +49,10 @@ export default function ForcePasswordChangePage() {
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Chargement</CardTitle>
-            <CardDescription>{rulesLoading ? "Chargement des règles..." : "Validation du lien..."}</CardDescription>
+            <CardTitle>{t("loading.title")}</CardTitle>
+            <CardDescription>
+              {rulesLoading ? t("loading.rules") : t("loading.link")}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {error ? (
@@ -58,7 +62,7 @@ export default function ForcePasswordChangePage() {
               </Alert>
             ) : (
               <Button onClick={() => router.push("/login")} className="w-full">
-                Retour à la connexion
+                {t("actions.back_to_login")}
               </Button>
             )}
           </CardContent>
@@ -71,10 +75,8 @@ export default function ForcePasswordChangePage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Changement de mot de passe obligatoire</CardTitle>
-          <CardDescription>
-            Votre mot de passe a expiré ou est temporaire. Vous devez le changer pour continuer.
-          </CardDescription>
+          <CardTitle>{t("title")}</CardTitle>
+          <CardDescription>{t("description")}</CardDescription>
         </CardHeader>
         <CardContent>
           <ForcePasswordChangeForm username={username} rules={rules} />

@@ -4,11 +4,13 @@ import { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
 import { PageHeader } from "@/components/page-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useTranslations } from 'next-intl'
 
 const CommentsTab = dynamic(() => import("./comments-tab").then((mod) => mod.CommentsTab))
 const TestConnectionTab = dynamic(() => import("./test-connection-tab").then((mod) => mod.TestConnectionTab))
 
 export default function OutilsPage() {
+  const t = useTranslations('toolsPage')
   const [activeTab, setActiveTab] = useState("test-connexion")
 
   useEffect(() => {
@@ -26,7 +28,7 @@ export default function OutilsPage() {
 
   return (
     <>
-      <PageHeader title="Outils" description="Outils de gestion et diagnostic du système" />
+      <PageHeader title={t('title')} description={t('description')} />
       <main className="flex-1 space-y-6 p-4 animate-fade-in md:p-6">
         <Tabs
           value={activeTab}
@@ -39,25 +41,25 @@ export default function OutilsPage() {
               value="test-connexion"
               className="hover:text-primary hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
-              Test de connexion
+              {t('tabs.test_connection')}
             </TabsTrigger>
             <TabsTrigger
               value="commentaires"
               className="hover:text-primary hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
-              Commentaires
+              {t('tabs.comments')}
             </TabsTrigger>
             <TabsTrigger
               value="config"
               className="hover:text-primary hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
-              Config
+              {t('tabs.config')}
             </TabsTrigger>
             <TabsTrigger
               value="surveillance"
               className="hover:text-primary hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
-              Surveillance
+              {t('tabs.monitoring')}
             </TabsTrigger>
           </TabsList>
 
@@ -70,12 +72,12 @@ export default function OutilsPage() {
           </TabsContent>
 
           <TabsContent value="config" className="mt-6">
-            <div className="py-12 text-center text-muted-foreground">Onglet Config à venir...</div>
+            <div className="py-12 text-center text-muted-foreground">{t('placeholders.config')}</div>
           </TabsContent>
 
           <TabsContent value="surveillance" className="mt-6">
             <div className="py-12 text-center text-muted-foreground">
-              Onglet Surveillance à venir...
+              {t('placeholders.monitoring')}
             </div>
           </TabsContent>
         </Tabs>

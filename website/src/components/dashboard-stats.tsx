@@ -2,11 +2,14 @@
 
 import { cacheTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { getTranslations } from "next-intl/server";
 
 export async function DashboardStats() {
   "use cache";
   cacheTag("dashboard-stats");
   // Pas besoin de cacheLife ici, le cache est invalide manuellement
+
+  const t = await getTranslations("dashboard");
 
   const [activeLocations, disabledLocations, activeAlarms, alertSensors] = await Promise.all([
     prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "S" } }),
@@ -35,26 +38,30 @@ export async function DashboardStats() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <StatCard
-        title="Lieux en surveillance"
+        title={t("stats.locations_monitored")}
         value={stats.activeLocations}
-        description="Lieux actifs"
+        description={t("stats_descriptions.active_locations")}
         variant="info"
       />
       <StatCard
-        title="Lieux en surveillance desactivee"
+        title={t("stats.locations_disabled")}
         value={stats.disabledLocations}
-        description="Surveillance coupee"
+        description={t("stats_descriptions.disabled_locations")}
       />
       <StatCard
-        title="Alarmes actives"
+        title={t("stats.active_alarms")}
         value={stats.activeAlarms}
-        description={stats.activeAlarms > 0 ? "Attention requise" : "Tout est normal"}
+        description={
+          stats.activeAlarms > 0
+            ? t("stats_descriptions.active_alarms_warning")
+            : t("stats_descriptions.active_alarms_ok")
+        }
         variant={stats.activeAlarms > 0 ? "warning" : "success"}
       />
       <StatCard
-        title="Sondes en alerte"
+        title={t("stats.sensors_alert")}
         value={stats.alertSensors}
-        description="Pre-alarmes + alarmes"
+        description={t("stats_descriptions.alert_sensors")}
         variant={stats.alertSensors > 0 ? "warning" : "success"}
       />
     </div>

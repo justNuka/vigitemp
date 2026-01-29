@@ -7,7 +7,7 @@ namespace Vigitemp_Serveur
     {
         public static IDatabaseProvider Create()
         {
-            var provider = GetSetting("Vigitemp.Db.Provider", "mysql").Trim().ToLowerInvariant();
+            var provider = GetSetting("Vigi.Db.Provider", "mysql").Trim().ToLowerInvariant();
             switch (provider)
             {
                 case "mysql":

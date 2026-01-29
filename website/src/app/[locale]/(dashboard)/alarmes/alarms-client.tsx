@@ -33,6 +33,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 type AlarmStatus = "active" | "acknowledged" | "resolved";
 
@@ -49,7 +52,7 @@ interface Props {
 
 interface AlarmRow {
   id: string;
-  type: "high" | "low";
+  type: "high" | "low" | "no-response";
   location: AlarmWithDetails["location"];
   sensor: AlarmWithDetails["sensor"];
   value: number;
@@ -65,18 +68,36 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
   const queryClient = useQueryClient();
   const [isRefreshing, startTransition] = useTransition();
   const [selectedAlarm, setSelectedAlarm] = useState<AlarmWithDetails | null>(null);
-  const [comment, setComment] = useState("");
+
+  const commentSchema = z.object({
+    comment: z.string().max(200, t("validation.comment_max", { max: 200 })).optional(),
+  });
+
+  type CommentFormValues = z.infer<typeof commentSchema>;
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<CommentFormValues>({
+    resolver: zodResolver(commentSchema),
+    defaultValues: { comment: "" },
+  });
+
+  const comment = watch("comment") ?? "";
 
   const acknowledgeMutation = useMutation({
     mutationFn: ({ id, commentValue }: { id: string; commentValue?: string }) =>
       alarmsApi.acknowledge(id, commentValue),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["alarms"] });
-      toast.success("Alarme acquittée avec succès");
+      toast.success(t("toast.acknowledge_success"));
       router.refresh();
     },
     onError: () => {
-      toast.error("Erreur lors de l'acquittement de l'alarme");
+      toast.error(t("toast.acknowledge_error"));
     },
   });
 
@@ -88,7 +109,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     startTransition(() => {
       router.refresh();
     });
-    toast.success("Données actualisées");
+    toast.success(t("toast.refreshed"));
   };
 
   const refreshButton = (
@@ -102,7 +123,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     >
       <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
       <span className="hidden sm:inline">
-        {isRefreshing ? "Actualisation..." : "Actualiser"}
+        {isRefreshing ? t("refresh.loading") : t("refresh.label")}
       </span>
     </Button>
   );
@@ -147,7 +168,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
   const columns: ColumnDef<AlarmRow>[] = [
     {
       accessorKey: "type",
-      header: "Type",
+      header: t("table.columns.type"),
       size: 60,
       cell: ({ row }) => {
         const isHigh = row.getValue("type") === "high";
@@ -169,7 +190,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     },
     {
       accessorKey: "location",
-      header: "Lieu / Sonde",
+      header: t("table.columns.location"),
       cell: ({ row }) => {
         const alarm = row.original;
         return (
@@ -184,7 +205,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     },
         {
       id: "lastValue",
-      header: () => <div className="text-right">Dernière valeur</div>,
+          header: () => <div className="text-right">{t("table.columns.last_value")}</div>,
       cell: ({ row }) => {
         const alarm = row.original;
         const value = alarm.sensor.currentValue ?? alarm.value ?? null;
@@ -197,22 +218,30 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     },
     {
       id: "consignes",
-      header: () => <div className="text-right">Consignes sup/inf</div>,
+      header: () => <div className="text-right">{t("table.columns.thresholds")}</div>,
       cell: ({ row }) => {
         const alarm = row.original;
         const sup = alarm.sensor.maxThreshold;
         const inf = alarm.sensor.minThreshold;
         return (
           <div className="text-right font-mono text-muted-foreground">
-            <div>{sup !== null && sup !== undefined ? `Sup: ${sup} ${alarm.sensor.unit}` : "Sup: -"}</div>
-            <div>{inf !== null && inf !== undefined ? `Inf: ${inf} ${alarm.sensor.unit}` : "Inf: -"}</div>
+            <div>
+              {sup !== null && sup !== undefined
+                ? t("thresholds.sup", { value: sup, unit: alarm.sensor.unit })
+                : t("thresholds.sup_empty")}
+            </div>
+            <div>
+              {inf !== null && inf !== undefined
+                ? t("thresholds.inf", { value: inf, unit: alarm.sensor.unit })
+                : t("thresholds.inf_empty")}
+            </div>
           </div>
         );
       },
     },
     {
       accessorKey: "triggeredAt",
-      header: "Déclenchée",
+      header: t("table.columns.triggered_at"),
       cell: ({ row }) => {
         const triggeredDate = new Date(row.getValue("triggeredAt") as string);
         return (
@@ -227,7 +256,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     },
     {
       accessorKey: "status",
-      header: "Statut",
+      header: t("table.columns.status"),
       cell: ({ row }) => (
         <div className="flex justify-center">
           <AlarmStatusBadge status={row.getValue("status") as string} />
@@ -236,7 +265,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     },
     {
       id: "actions",
-      header: () => <div className="text-center">Actions</div>,
+      header: () => <div className="text-center">{t("table.columns.actions")}</div>,
       cell: ({ row }) => {
         const alarm = row.original;
         return (
@@ -247,7 +276,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
                 size="icon"
                 className="h-8 w-8"
                 title={alarm.comment}
-                aria-label="Commentaire"
+                aria-label={t("table.actions.comment_aria")}
                 type="button"
               >
                 <MessageSquare className="h-4 w-4" />
@@ -264,7 +293,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
                 }}
                 data-testid={`button-acknowledge-${alarm.id}`}
               >
-                Acquitter
+                {t("table.actions.acknowledge")}
               </Button>
             )}
           </div>
@@ -285,12 +314,12 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     comment: alarm.comment,
   }));
 
-  const handleDialogAcknowledge = async () => {
+  const handleDialogAcknowledge = async (values: CommentFormValues) => {
     if (!selectedAlarm) return;
     try {
-      await handleAcknowledge(selectedAlarm.id, comment);
+      await handleAcknowledge(selectedAlarm.id, values.comment || "");
       setSelectedAlarm(null);
-      setComment("");
+      reset({ comment: "" });
     } catch {
       // toast already handled
     }
@@ -302,9 +331,9 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
         <Card>
           <CardHeader className="space-y-4">
             <CardTitle>
-              {statusFilter === "active" && "Alarmes actives"}
-              {statusFilter === "acknowledged" && "Alarmes acquittées"}
-              {statusFilter === "resolved" && "Alarmes à acquitter"}
+              {statusFilter === "active" && t("titles.active")}
+              {statusFilter === "acknowledged" && t("titles.acknowledged")}
+              {statusFilter === "resolved" && t("titles.resolved")}
             </CardTitle>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               {statusTabs}
@@ -317,15 +346,15 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
               icon={AlertTriangle}
               title={
                 statusFilter === "active"
-                  ? "Aucune alarme active"
+                  ? t("empty_state.active_title")
                   : statusFilter === "acknowledged"
-                  ? "Aucune alarme acquittée"
-                  : "Aucune alarme à acquitter"
+                  ? t("empty_state.acknowledged_title")
+                  : t("empty_state.resolved_title")
               }
               description={
                 statusFilter === "active"
-                  ? "Tout est sous contrôle - Aucune alarme en cours"
-                  : "Aucune alarme dans cette catégorie pour le moment"
+                  ? t("empty_state.active_description")
+                  : t("empty_state.other_description")
               }
             />
           </CardContent>
@@ -334,9 +363,9 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
         <Card>
           <CardHeader className="space-y-4">
             <CardTitle>
-              {statusFilter === "active" && "Alarmes actives"}
-              {statusFilter === "acknowledged" && "Alarmes acquittées"}
-              {statusFilter === "resolved" && "Alarmes à acquitter"}
+              {statusFilter === "active" && t("titles.active")}
+              {statusFilter === "acknowledged" && t("titles.acknowledged")}
+              {statusFilter === "resolved" && t("titles.resolved")}
             </CardTitle>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               {statusTabs}
@@ -347,10 +376,10 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
             <TanStackTable<AlarmRow>
               columns={columns}
               data={tableData}
-              searchPlaceholder="Rechercher les alarmes..."
+              searchPlaceholder={t("table.search_placeholder")}
               pageSize={20}
               isLoading={isRefreshing}
-              emptyMessage="Aucune alarme"
+              emptyMessage={t("table.empty")}
               selectedRowId={selectedAlarm?.id}
               onRowClick={(row: AlarmRow) => {
                 const fullAlarm = alarms.find((item) => item.id === row.id);
@@ -371,13 +400,15 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-warning" />
-              Acquitter l'alarme
+              {t("dialog.title")}
             </DialogTitle>
             <DialogDescription>
               {selectedAlarm && (
                 <>
-                  Alarme sur <strong>{selectedAlarm.sensor.name}</strong> dans{" "}
-                  <strong>{selectedAlarm.location.name}</strong>
+                  {t("dialog.description", {
+                    sensor: selectedAlarm.sensor.name,
+                    location: selectedAlarm.location.name,
+                  })}
                 </>
               )}
             </DialogDescription>
@@ -385,37 +416,49 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
           <div className="space-y-4">
             <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Dernière valeur</p>
+                <p className="text-sm text-muted-foreground">{t("dialog.last_value_label")}</p>
                 <p className="text-xl font-bold font-mono">
                   {selectedAlarm?.sensor.currentValue ?? selectedAlarm?.value ?? "-"} {selectedAlarm?.sensor.unit}
                 </p>
               </div>
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Consignes sup/inf</p>
+                <p className="text-sm text-muted-foreground">{t("dialog.thresholds_label")}</p>
                 <p className="text-sm font-mono text-muted-foreground">
-                  Sup: {selectedAlarm?.sensor.maxThreshold ?? "-"} {selectedAlarm?.sensor.unit}
+                  {t("dialog.sup_value", {
+                    value: selectedAlarm?.sensor.maxThreshold ?? "-",
+                    unit: selectedAlarm?.sensor.unit ?? "",
+                  })}
                 </p>
                 <p className="text-sm font-mono text-muted-foreground">
-                  Inf: {selectedAlarm?.sensor.minThreshold ?? "-"} {selectedAlarm?.sensor.unit}
+                  {t("dialog.inf_value", {
+                    value: selectedAlarm?.sensor.minThreshold ?? "-",
+                    unit: selectedAlarm?.sensor.unit ?? "",
+                  })}
                 </p>
               </div>
             </div>
             
             <div className="space-y-2">
               <label htmlFor="comment" className="text-sm font-medium">
-                Commentaire (optionnel)
+                {t("dialog.comment_label")}
               </label>
               <Textarea
                 id="comment"
-                placeholder="Ajouter un commentaire sur cette alarme..."
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
+                placeholder={t("dialog.comment_placeholder")}
+                {...register("comment")}
                 maxLength={200}
                 rows={3}
+                aria-invalid={!!errors.comment}
+                aria-describedby={errors.comment ? "comment-error" : undefined}
                 data-testid="input-alarm-comment"
               />
+              {errors.comment?.message && (
+                <p id="comment-error" className="text-sm text-destructive">
+                  {String(errors.comment.message)}
+                </p>
+              )}
               <p className="text-xs text-muted-foreground text-right">
-                {comment.length}/200 caractères
+                {t("dialog.comment_count", { count: comment.length })}
               </p>
             </div>
           </div>
@@ -425,14 +468,14 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
               onClick={() => setSelectedAlarm(null)}
               data-testid="button-cancel-acknowledge"
             >
-              Annuler
+              {t("dialog.cancel")}
             </Button>
             <Button
-              onClick={handleDialogAcknowledge}
-              disabled={acknowledgeMutation.isPending}
+              onClick={handleSubmit(handleDialogAcknowledge)}
+              disabled={acknowledgeMutation.isPending || isSubmitting}
               data-testid="button-confirm-acknowledge"
             >
-              {acknowledgeMutation.isPending ? "Acquittement..." : "Acquitter"}
+              {acknowledgeMutation.isPending ? t("dialog.confirming") : t("dialog.confirm")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -442,13 +485,14 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
 }
 
 function AlarmStatusBadge({ status }: { status: string }) {
+  const t = useTranslations("alarmsPage");
   const configs: Record<
     string,
     { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
   > = {
-    active: { label: "Active", variant: "destructive" },
-    acknowledged: { label: "Acquittée", variant: "secondary" },
-    resolved: { label: "À acquitter", variant: "outline" },
+    active: { label: t("status.active"), variant: "destructive" },
+    acknowledged: { label: t("status.acknowledged"), variant: "secondary" },
+    resolved: { label: t("status.resolved"), variant: "outline" },
   };
 
   const config = configs[status] || configs.active;

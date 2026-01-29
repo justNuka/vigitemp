@@ -1,6 +1,9 @@
+'use client'
+
 import { Activity, CheckCircle2, Zap } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useTranslations } from 'next-intl'
 
 type TestConnectionStatsProps = {
   globalResponseRate: number
@@ -15,12 +18,13 @@ export function TestConnectionStats({
   lastMeasurementCount,
   selectedCount,
 }: TestConnectionStatsProps) {
+  const t = useTranslations('toolsTestConnection.stats')
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       <Card className="border-0 shadow-md">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Taux de réponse global
+            {t('global_response_rate')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -28,7 +32,7 @@ export function TestConnectionStats({
             <Activity className="h-6 w-6 text-green-600" />
             <div>
               <p className="text-2xl font-bold">{globalResponseRate}%</p>
-              <p className="mt-1 text-xs text-muted-foreground">{probeCount} sondes</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t('probe_count', { count: probeCount })}</p>
             </div>
           </div>
         </CardContent>
@@ -37,7 +41,7 @@ export function TestConnectionStats({
       <Card className="border-0 shadow-md">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Nombre de mesures
+            {t('measurement_count')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -45,7 +49,7 @@ export function TestConnectionStats({
             <Zap className="h-6 w-6 text-blue-600" />
             <div>
               <p className="text-2xl font-bold">{lastMeasurementCount.toLocaleString()}</p>
-              <p className="mt-1 text-xs text-muted-foreground">dernières 24h</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t('last_24h')}</p>
             </div>
           </div>
         </CardContent>
@@ -54,7 +58,7 @@ export function TestConnectionStats({
       <Card className="border-0 shadow-md">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Sondes sélectionnées
+            {t('selected_probes')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -62,7 +66,7 @@ export function TestConnectionStats({
             <CheckCircle2 className="h-6 w-6 text-purple-600" />
             <div>
               <p className="text-2xl font-bold">{selectedCount}</p>
-              <p className="mt-1 text-xs text-muted-foreground">sur {probeCount}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t('selected_over_total', { total: probeCount })}</p>
             </div>
           </div>
         </CardContent>

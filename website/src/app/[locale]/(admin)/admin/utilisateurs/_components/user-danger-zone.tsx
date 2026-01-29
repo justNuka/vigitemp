@@ -5,6 +5,7 @@ import { AlertTriangle } from "lucide-react"
 import type { User } from "@/lib/api"
 
 import { Button } from "@/components/ui/button"
+import { useTranslations } from "next-intl"
 
 interface Props {
   user: User | null
@@ -13,19 +14,19 @@ interface Props {
 }
 
 export function UserDangerZone({ user, isArchiving, onArchive }: Props) {
+  const t = useTranslations("userDangerZone")
   return (
     <div className="space-y-3 pt-4 border-t border-destructive/20">
       <div className="flex items-center gap-2 text-destructive">
         <AlertTriangle className="h-4 w-4" />
-        <p className="text-sm font-medium">Zone de danger</p>
+        <p className="text-sm font-medium">{t("title")}</p>
       </div>
       <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <p className="text-sm font-medium">Archiver ce compte</p>
+            <p className="text-sm font-medium">{t("archive.title")}</p>
             <p className="text-xs text-muted-foreground">
-              Le compte sera désactivé et l'utilisateur ne pourra plus se connecter. Cette action peut être annulée en
-              réactivant le compte.
+              {t("archive.description")}
             </p>
           </div>
           <Button
@@ -36,7 +37,7 @@ export function UserDangerZone({ user, isArchiving, onArchive }: Props) {
             disabled={isArchiving || !user?.isActive}
             className="shrink-0"
           >
-            {isArchiving ? "Archivage..." : "Archiver"}
+            {isArchiving ? t("archive.loading") : t("archive.action")}
           </Button>
         </div>
       </div>

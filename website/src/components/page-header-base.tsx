@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Bell, AlertTriangle } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 interface PageHeaderProps {
   title: string;
@@ -23,6 +24,7 @@ export function PageHeaderBase({
   children,
   className,
 }: PageHeaderProps) {
+  const t = useTranslations("pageHeaderBase");
   return (
     <header
       className={cn(
@@ -55,7 +57,7 @@ export function PageHeaderBase({
               >
                 <AlertTriangle className="h-4 w-4" />
                 <span className="hidden sm:inline">
-                  {activeAlarms} alarme{activeAlarms > 1 ? "s" : ""}
+                  {t("active_alarms.badge", { count: activeAlarms })}
                 </span>
                 <span className="sm:hidden">{activeAlarms}</span>
               </Button>
@@ -81,6 +83,7 @@ interface AlarmBannerProps {
 }
 
 export function AlarmBanner({ count, onDismiss }: AlarmBannerProps) {
+  const t = useTranslations("pageHeaderBase");
   if (count === 0) return null;
 
   return (
@@ -92,7 +95,7 @@ export function AlarmBanner({ count, onDismiss }: AlarmBannerProps) {
       <div className="flex items-center gap-2">
         <Bell className="h-4 w-4 animate-pulse" />
         <span className="font-medium text-sm">
-          {count} alarme{count > 1 ? "s" : ""} active{count > 1 ? "s" : ""}
+          {t("active_alarms.banner", { count })}
         </span>
       </div>
       <Link href="alarmes" passHref>
@@ -102,7 +105,7 @@ export function AlarmBanner({ count, onDismiss }: AlarmBannerProps) {
           className="bg-destructive-foreground/10 border-destructive-foreground/20 text-destructive-foreground hover:bg-destructive-foreground/20"
           data-testid="button-view-alarms"
         >
-          Voir les alarmes
+          {t("active_alarms.view")}
         </Button>
       </Link>
     </div>

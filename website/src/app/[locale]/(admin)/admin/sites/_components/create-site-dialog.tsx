@@ -1,6 +1,7 @@
 'use client';
 
 import type { UseFormReturn } from 'react-hook-form';
+import { useTranslations } from 'next-intl';
 import type { CreateSiteInput } from './site-schemas';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,12 +39,15 @@ export function CreateSiteDialog({
   isSubmitting,
   onSubmit,
 }: CreateSiteDialogProps) {
+  const t = useTranslations('sitesDialog');
+  const tCommon = useTranslations('common');
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md bg-white dark:bg-card">
         <DialogHeader>
-          <DialogTitle>Créer un nouveau site</DialogTitle>
-          <DialogDescription>Remplissez les informations du site</DialogDescription>
+          <DialogTitle>{t('create_title')}</DialogTitle>
+          <DialogDescription>{t('create_description')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -52,9 +56,9 @@ export function CreateSiteDialog({
               name="Code_Site"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Code site</FormLabel>
+                  <FormLabel>{t('fields.code_label')}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Ex: SITE01" />
+                    <Input {...field} placeholder={t('fields.code_placeholder')} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -65,9 +69,9 @@ export function CreateSiteDialog({
               name="Libelle_Site"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Libellé site</FormLabel>
+                  <FormLabel>{t('fields.label_label')}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Ex: Site principal" />
+                    <Input {...field} placeholder={t('fields.label_placeholder')} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -78,12 +82,12 @@ export function CreateSiteDialog({
               name="Commentaire"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Commentaires</FormLabel>
+                  <FormLabel>{t('fields.comment_label')}</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
                       value={field.value || ''}
-                      placeholder="Ajouter des commentaires..."
+                      placeholder={t('fields.comment_placeholder')}
                       rows={3}
                     />
                   </FormControl>
@@ -94,11 +98,11 @@ export function CreateSiteDialog({
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="gap-2">
                 <X className="h-4 w-4" />
-                Annuler
+                {tCommon('cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting} className="gap-2">
                 <Check className="h-4 w-4" />
-                {isSubmitting ? 'Création...' : 'Créer'}
+                {isSubmitting ? t('submit_creating') : t('submit_create')}
               </Button>
             </DialogFooter>
           </form>

@@ -3,6 +3,7 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import type { Group } from '@/hooks/useGroups';
+import { useTranslations } from 'next-intl';
 
 type GroupsTableProps = {
   groups: Group[];
@@ -12,28 +13,29 @@ type GroupsTableProps = {
 };
 
 export function GroupsTable({ groups, isLoading, selectedGroupId, onSelectGroup }: GroupsTableProps) {
+  const t = useTranslations('groupsPage');
   const columns: ColumnDef<Group>[] = [
     {
       accessorKey: 'Id_Groupe',
-      header: 'Numéro',
+      header: t('table.columns.number'),
       cell: ({ row }) => row.getValue('Id_Groupe'),
     },
     {
       accessorKey: 'Nom_Groupe',
-      header: 'Nom du groupe',
+      header: t('table.columns.name'),
       cell: ({ row }) => row.getValue('Nom_Groupe') || '-',
     },
     {
       accessorKey: 'Numero_Regroupement',
-      header: 'Regroupement',
+      header: t('table.columns.regroupement'),
       cell: ({ row }) => {
         const value = row.getValue('Numero_Regroupement');
-        return value === '1' ? 'Regroupement 1' : 'Regroupement 2';
+        return value === '1' ? t('regroupement.one') : t('regroupement.two');
       },
     },
     {
       accessorKey: 'nombre_lieux',
-      header: 'Lieux associés',
+      header: t('table.columns.locations'),
       cell: ({ row }) => <div className="text-right font-medium">{row.getValue('nombre_lieux')}</div>,
     },
   ];
@@ -43,9 +45,9 @@ export function GroupsTable({ groups, isLoading, selectedGroupId, onSelectGroup 
       columns={columns}
       data={groups}
       searchField={['Id_Groupe', 'Nom_Groupe', 'Numero_Regroupement']}
-      searchPlaceholder="Numéro, nom du groupe..."
+      searchPlaceholder={t('table.search_placeholder')}
       isLoading={isLoading}
-      emptyMessage="Aucun groupe trouvé"
+      emptyMessage={t('table.empty')}
       maxHeight="calc(100dvh - 25rem)"
       selectedRowId={selectedGroupId ?? undefined}
       onRowClick={(row: Group) => onSelectGroup(row)}

@@ -8,11 +8,20 @@ import {
   ServerActiveAlarms,
   ServerSensorOverview,
 } from "./server-dashboard";
+import { getTranslations } from 'next-intl/server';
 
-export const metadata = {
-  title: "Tableau de bord - Vigitemp",
-  description: "Vue d'ensemble de la surveillance",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'dashboard' });
+  return {
+    title: t('meta.title'),
+    description: t('meta.description'),
+  };
+}
 
 
 /**

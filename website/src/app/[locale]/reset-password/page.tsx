@@ -17,57 +17,82 @@ import {
   getPasswordRuleChecks,
 } from "@/components/password/password-rules"
 import { postJson } from "@/lib/http"
+import { z } from "zod"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useTranslations } from "next-intl"
 
 function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
-
-  const [formData, setFormData] = useState({
-    newPassword: "",
-    confirmPassword: "",
-  })
-  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
+  const t = useTranslations("resetPassword")
+
+  const resetPasswordSchema = z
+    .object({
+      newPassword: z.string().min(1, t("validation.new_password_required")),
+      confirmPassword: z.string().min(1, t("validation.confirm_required")),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t("validation.password_mismatch"),
+      path: ["confirmPassword"],
+    })
+
+  type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      newPassword: "",
+      confirmPassword: "",
+    },
+  })
 
   const { data: passwordRules } = usePasswordRules()
 
   const effectiveRules = useMemo(() => getEffectivePasswordRules(passwordRules), [passwordRules])
 
+  const newPassword = watch("newPassword")
+  const confirmPassword = watch("confirmPassword")
+
   const ruleChecks = useMemo(
     () =>
       getPasswordRuleChecks({
-        password: formData.newPassword,
-        confirmPassword: formData.confirmPassword,
+        password: newPassword,
+        confirmPassword,
         rules: effectiveRules,
         includeConfirmMatch: true,
+        t,
       }),
-    [effectiveRules, formData.confirmPassword, formData.newPassword],
+    [confirmPassword, effectiveRules, newPassword],
   )
 
   const allRulesValid = useMemo(() => areAllPasswordRuleChecksValid(ruleChecks), [ruleChecks])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (data: ResetPasswordFormValues) => {
     setError("")
 
     if (!token) {
-      setError("Token manquant. Veuillez utiliser le lien complet reçu par email.")
+      setError(t("errors.missing_token"))
       return
     }
 
     if (!allRulesValid) {
-      setError("Veuillez respecter toutes les règles de mot de passe.")
+      setError(t("errors.rules_not_met"))
       return
     }
-
-    setIsLoading(true)
 
     try {
       await postJson<{ message: string }>("/api/auth/reset-password", {
         token,
-        newPassword: formData.newPassword,
+        newPassword: data.newPassword,
       })
 
       setSuccess(true)
@@ -76,31 +101,29 @@ function ResetPasswordForm() {
         router.push("/login")
       }, 3000)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Une erreur est survenue. Veuillez réessayer.")
-    } finally {
-      setIsLoading(false)
+      setError(err instanceof Error ? err.message : t("errors.generic"))
     }
   }
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <div className="flex justify-center mb-4">
               <Logo size="lg" />
             </div>
-            <CardTitle className="text-2xl text-center">Lien invalide</CardTitle>
+            <CardTitle className="text-2xl text-center">{t("invalid_link.title")}</CardTitle>
           </CardHeader>
           <CardContent>
             <Alert variant="destructive">
               <XCircle className="h-4 w-4" />
               <AlertDescription>
-                Le lien de réinitialisation est invalide ou incomplet. Veuillez utiliser le lien complet reçu par email.
+                {t("invalid_link.description")}
               </AlertDescription>
             </Alert>
             <Button className="w-full mt-4" onClick={() => router.push("/login")}>
-              Retour à la connexion
+              {t("invalid_link.back")}
             </Button>
           </CardContent>
         </Card>
@@ -110,13 +133,13 @@ function ResetPasswordForm() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <div className="flex justify-center mb-4">
               <Logo size="lg" />
             </div>
-            <CardTitle className="text-2xl text-center">Mot de passe réinitialisé !</CardTitle>
+            <CardTitle className="text-2xl text-center">{t("success.title")}</CardTitle>
           </CardHeader>
           <CardContent className="text-center">
             <div className="flex justify-center mb-4">
@@ -125,10 +148,10 @@ function ResetPasswordForm() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              Votre mot de passe a été réinitialisé avec succès. Vous allez être redirigé vers la page de connexion...
+              {t("success.description")}
             </p>
             <Button className="w-full" onClick={() => router.push("/login")}>
-              Se connecter maintenant
+              {t("success.cta")}
             </Button>
           </CardContent>
         </Card>
@@ -137,17 +160,17 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
             <Logo size="lg" />
           </div>
-          <CardTitle className="text-2xl text-center">Nouveau mot de passe</CardTitle>
-          <CardDescription className="text-center">Choisissez un nouveau mot de passe sécurisé</CardDescription>
+          <CardTitle className="text-2xl text-center">{t("form.title")}</CardTitle>
+          <CardDescription className="text-center">{t("form.description")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {error && (
               <Alert variant="destructive">
                 <XCircle className="h-4 w-4" />
@@ -157,39 +180,51 @@ function ResetPasswordForm() {
 
             <PasswordField
               id="newPassword"
-              label="Nouveau mot de passe"
+              label={t("form.fields.new_password_label")}
               required
-              disabled={isLoading}
+              disabled={isSubmitting}
               inputProps={{
-                value: formData.newPassword,
-                onChange: (e) => setFormData({ ...formData, newPassword: e.target.value }),
-                placeholder: "Entrez votre nouveau mot de passe",
+                ...register("newPassword"),
+                placeholder: t("form.fields.new_password_placeholder"),
                 autoComplete: "new-password",
+                "aria-invalid": !!errors.newPassword,
+                "aria-describedby": errors.newPassword ? "new-password-error" : undefined,
               }}
             />
+            {errors.newPassword?.message && (
+              <p id="new-password-error" className="text-sm text-destructive">
+                {String(errors.newPassword.message)}
+              </p>
+            )}
 
             <PasswordField
               id="confirmPassword"
-              label="Confirmer le mot de passe"
+              label={t("form.fields.confirm_password_label")}
               required
-              disabled={isLoading}
+              disabled={isSubmitting}
               inputProps={{
-                value: formData.confirmPassword,
-                onChange: (e) => setFormData({ ...formData, confirmPassword: e.target.value }),
-                placeholder: "Confirmez votre nouveau mot de passe",
+                ...register("confirmPassword"),
+                placeholder: t("form.fields.confirm_password_placeholder"),
                 autoComplete: "new-password",
+                "aria-invalid": !!errors.confirmPassword,
+                "aria-describedby": errors.confirmPassword ? "confirm-password-error" : undefined,
               }}
             />
+            {errors.confirmPassword?.message && (
+              <p id="confirm-password-error" className="text-sm text-destructive">
+                {String(errors.confirmPassword.message)}
+              </p>
+            )}
 
             <PasswordRulesList
-              password={formData.newPassword}
-              confirmPassword={formData.confirmPassword}
+              password={newPassword}
+              confirmPassword={confirmPassword}
               rules={effectiveRules}
               includeConfirmMatch
             />
 
-            <Button type="submit" className="w-full" disabled={isLoading || !allRulesValid}>
-              {isLoading ? "Réinitialisation..." : "Réinitialiser le mot de passe"}
+            <Button type="submit" className="w-full" disabled={isSubmitting || !allRulesValid}>
+              {isSubmitting ? t("form.submit_loading") : t("form.submit")}
             </Button>
           </form>
         </CardContent>

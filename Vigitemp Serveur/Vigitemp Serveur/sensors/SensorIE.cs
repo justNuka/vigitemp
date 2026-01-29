@@ -44,6 +44,7 @@ namespace Vigitemp_Serveur.sensors
                     if (tmp_sw.Elapsed.TotalMilliseconds > 2000)
                     {
                         VigitempServeur.Log($"[SONDE][DONE] type=IE serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
+                        HandleNoResponseAlarm(false, "timeout");
                         m_port.Close();
                         m_sensor_response = "";
                         pendingResults = false;
@@ -58,6 +59,7 @@ namespace Vigitemp_Serveur.sensors
                 Console.WriteLine("erreur: " + e);
                 Trace.WriteLine("erreur: " + e);
                 VigitempServeur.Log("SensorIE.read error: " + e);
+                HandleNoResponseAlarm(false, "exception");
                 m_port.Close();
                 return false;
             }
@@ -110,6 +112,8 @@ namespace Vigitemp_Serveur.sensors
                 // ThreadServeur.GetDatabase().AddMesure(m_serialNumber, float.Parse(String.Format("{0:0.00}", tmp_temperature)), "éC");
                 ths.GetDatabase().AddMesure(m_sondeSerialNumber, float.Parse(String.Format("{0:0.00}", tmp_valeur)), "°C", null);
                 VigitempServeur.Log($"[SONDE][DONE] type=IE serial={m_sondeSerialNumber} port={m_comPort} status=success value={float.Parse(String.Format("{0:0.00}", tmp_valeur))} unit=°C");
+                HandleNoResponseAlarm(true);
+                compareMeasuresAndLimits(float.Parse(String.Format("{0:0.00}", tmp_valeur)));
                 m_port.Close();
                 pendingResults = false;
                 System.Diagnostics.Trace.WriteLine("Fermeture du port " + m_comPort);

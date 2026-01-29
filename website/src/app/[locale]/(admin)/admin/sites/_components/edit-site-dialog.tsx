@@ -3,6 +3,7 @@
 import type { SiteAdmin } from '@/hooks/useSites';
 import type { UseFormReturn } from 'react-hook-form';
 import type { EditSiteInput } from './site-schemas';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -42,17 +43,20 @@ export function EditSiteDialog({
   isSubmitting,
   onSubmit,
 }: EditSiteDialogProps) {
+  const t = useTranslations('sitesDialog');
+  const tCommon = useTranslations('common');
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md bg-white dark:bg-card">
         <DialogHeader>
-          <DialogTitle>Modifier le site</DialogTitle>
-          <DialogDescription>Modifiez les informations du site</DialogDescription>
+          <DialogTitle>{t('edit_title')}</DialogTitle>
+          <DialogDescription>{t('edit_description')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label>Code site</Label>
+              <Label>{t('fields.code_label')}</Label>
               <Input value={site?.Code_Site || ''} disabled className="bg-muted" />
             </div>
             <FormField
@@ -60,9 +64,9 @@ export function EditSiteDialog({
               name="Libelle_Site"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Libellé site</FormLabel>
+                  <FormLabel>{t('fields.label_label')}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Ex: Site principal" />
+                    <Input {...field} placeholder={t('fields.label_placeholder')} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -73,12 +77,12 @@ export function EditSiteDialog({
               name="Commentaire"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Commentaires</FormLabel>
+                  <FormLabel>{t('fields.comment_label')}</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
                       value={field.value || ''}
-                      placeholder="Ajouter des commentaires..."
+                      placeholder={t('fields.comment_placeholder')}
                       rows={3}
                     />
                   </FormControl>
@@ -89,11 +93,11 @@ export function EditSiteDialog({
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="gap-2">
                 <X className="h-4 w-4" />
-                Annuler
+                {tCommon('cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting} className="gap-2">
                 <Check className="h-4 w-4" />
-                {isSubmitting ? 'Modification...' : 'Modifier'}
+                {isSubmitting ? t('submit_updating') : tCommon('edit')}
               </Button>
             </DialogFooter>
           </form>

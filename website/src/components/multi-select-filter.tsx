@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ChevronDown, Search, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface Option {
   id: number | string;
@@ -29,11 +30,14 @@ export function MultiSelectFilter({
   options,
   selectedIds,
   onChange,
-  placeholder = 'Sélectionner...',
+  placeholder,
   tone = "primary",
   enableSearch = false,
-  searchPlaceholder = "Rechercher...",
+  searchPlaceholder,
 }: MultiSelectFilterProps) {
+  const t = useTranslations('multiSelectFilter');
+  const resolvedPlaceholder = placeholder ?? t('placeholder');
+  const resolvedSearchPlaceholder = searchPlaceholder ?? t('search_placeholder');
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -105,7 +109,7 @@ export function MultiSelectFilter({
             </Badge>
           )}
           {selectedIds.length === 0 && placeholder ? (
-            <span className="ml-2 text-sm text-muted-foreground">{placeholder}</span>
+            <span className="ml-2 text-sm text-muted-foreground">{resolvedPlaceholder}</span>
           ) : null}
         </div>
         <ChevronDown
@@ -127,7 +131,7 @@ export function MultiSelectFilter({
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder={searchPlaceholder}
+                  placeholder={resolvedSearchPlaceholder}
                   className="h-9 pl-8"
                 />
               </div>
@@ -155,7 +159,7 @@ export function MultiSelectFilter({
 
           <div className="space-y-2 max-h-48 overflow-y-auto">
             {filteredOptions.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-2">Aucune option</p>
+              <p className="text-sm text-muted-foreground py-2">{t('empty')}</p>
             ) : (
               filteredOptions.map((option) => (
                 <label
@@ -187,10 +191,10 @@ export function MultiSelectFilter({
           {selectedIds.length > 0 && (
             <div className="mt-3 pt-3 border-t flex gap-2">
               <Button size="sm" variant="ghost" className="flex-1" onClick={handleClear}>
-                Effacer
+                {t('actions.clear')}
               </Button>
               <Button size="sm" className="flex-1" onClick={() => setIsOpen(false)}>
-                Appliquer
+                {t('actions.apply')}
               </Button>
             </div>
           )}

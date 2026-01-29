@@ -26,6 +26,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useTranslations } from "next-intl";
 
 import { editUserSchema, type EditUserFormValues } from "./user-schemas";
 import type { GroupOption, ProfileOption, SiteOption } from "./user-option-types";
@@ -75,6 +76,7 @@ export function EditUserDialog({
   onArchive,
   onReactivate,
 }: Props) {
+  const t = useTranslations("editUserDialog");
   const userId = user?.id;
   const isArchived = Boolean(user && !user.isActive);
   const editForm = useForm<EditUserFormValues>({
@@ -152,9 +154,9 @@ export function EditUserDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-card">
         <DialogHeader>
-          <DialogTitle>Modifier l'utilisateur</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>
-            Modifier les informations de {user?.username}
+            {t("description", { username: user?.username ?? "" })}
           </DialogDescription>
         </DialogHeader>
 
@@ -162,7 +164,7 @@ export function EditUserDialog({
           <form onSubmit={editForm.handleSubmit(onSubmit)} className="space-y-4">
             {isArchived ? (
               <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-                Ce compte est archivé et ne peut pas se connecter.
+                {t("archived_notice")}
               </div>
             ) : null}
 
@@ -179,19 +181,17 @@ export function EditUserDialog({
             <UserExpiryFields control={editForm.control} enabled={hasEditExpiryDate} />
 
             <div className="space-y-2 pt-4 border-t">
-              <p className="text-sm font-medium">
-                Changer le mot de passe (optionnel)
-              </p>
+              <p className="text-sm font-medium">{t("password.section_title")}</p>
               <FormField
                 control={editForm.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nouveau mot de passe</FormLabel>
+                    <FormLabel>{t("password.new_label")}</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="Laisser vide pour ne pas modifier"
+                        placeholder={t("password.new_placeholder")}
                         {...field}
                       />
                     </FormControl>
@@ -205,11 +205,11 @@ export function EditUserDialog({
                 name="passwordConfirm"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirmer le mot de passe</FormLabel>
+                    <FormLabel>{t("password.confirm_label")}</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="Confirmer le mot de passe"
+                        placeholder={t("password.confirm_placeholder")}
                         {...field}
                       />
                     </FormControl>
@@ -221,9 +221,9 @@ export function EditUserDialog({
 
             {isArchived && user ? (
               <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-100">
-                <p className="font-medium">Réactiver le compte</p>
+                <p className="font-medium">{t("reactivate.title")}</p>
                 <p className="mt-1 text-xs text-emerald-100/80">
-                  Le compte sera réactivé et pourra se reconnecter.
+                  {t("reactivate.description")}
                 </p>
                 <Button
                   type="button"
@@ -232,7 +232,7 @@ export function EditUserDialog({
                   disabled={isReactivating}
                   onClick={() => onReactivate(user)}
                 >
-                  {isReactivating ? "Réactivation..." : "Réactiver"}
+                  {isReactivating ? t("reactivate.loading") : t("reactivate.action")}
                 </Button>
               </div>
             ) : null}
@@ -241,10 +241,10 @@ export function EditUserDialog({
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Annuler
+                {t("actions.cancel")}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Modification..." : "Modifier"}
+                {isSubmitting ? t("actions.submit_loading") : t("actions.submit")}
               </Button>
             </DialogFooter>
           </form>

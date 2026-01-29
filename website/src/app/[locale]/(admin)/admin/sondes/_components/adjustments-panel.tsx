@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDateTimeFr } from './date-format';
+import { useTranslations } from 'next-intl';
 
 export type AdjustmentRow = {
   Id_Calibrage: number;
@@ -28,25 +29,26 @@ export function AdjustmentsPanel({
   selectedAdjustmentId,
   onSelectAdjustment,
 }: AdjustmentsPanelProps) {
+  const t = useTranslations('probesPage');
   const columns: ColumnDef<AdjustmentRow>[] = [
     {
       accessorKey: 'Date_Heure_Calibrage',
-      header: 'Date',
+      header: t('panels.adjustments.columns.date'),
       cell: ({ row }) => formatDateTimeFr(row.original.Date_Heure_Calibrage),
     },
     {
       accessorKey: 'Operateur',
-      header: 'Opérateur',
+      header: t('panels.adjustments.columns.operator'),
       cell: ({ row }) => row.getValue('Operateur') || '-',
     },
     {
       accessorKey: 'Unite',
-      header: 'Unité',
+      header: t('panels.adjustments.columns.unit'),
       cell: ({ row }) => row.getValue('Unite') || '-',
     },
     {
       accessorKey: 'Nb_Decimale',
-      header: 'Décimales',
+      header: t('panels.adjustments.columns.decimals'),
       cell: ({ row }) => row.getValue('Nb_Decimale') || '-',
     },
   ];
@@ -54,7 +56,7 @@ export function AdjustmentsPanel({
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Calibrages</CardTitle>
+        <CardTitle className="text-base">{t('panels.adjustments.title')}</CardTitle>
       </CardHeader>
       <CardContent className="p-2 md:p-4 xl:p-4">
         {isLoading ? (
@@ -64,7 +66,7 @@ export function AdjustmentsPanel({
             ))}
           </div>
         ) : adjustments.length === 0 ? (
-          <div className="text-center py-6 text-sm text-muted-foreground">Aucun calibrage</div>
+          <div className="text-center py-6 text-sm text-muted-foreground">{t('panels.adjustments.empty')}</div>
         ) : (
           <>
             <TanStackTable
@@ -81,10 +83,10 @@ export function AdjustmentsPanel({
             />
             <div className="flex gap-2">
               <Button size="sm" variant="outline" disabled={!selectedAdjustmentId} className="flex-1">
-                Générer fichier
+                {t('panels.adjustments.actions.generate_file')}
               </Button>
               <Button size="sm" variant="outline" disabled={!selectedAdjustmentId} className="flex-1">
-                Imprimer
+                {t('panels.adjustments.actions.print')}
               </Button>
             </div>
           </>

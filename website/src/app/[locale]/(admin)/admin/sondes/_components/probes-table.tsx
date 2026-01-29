@@ -4,55 +4,12 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { Activity, FlaskConical, PowerOff, Ruler, Wrench } from "lucide-react";
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import type { Probe } from '@/hooks/useProbes';
+import { useTranslations } from 'next-intl';
 
 type StatusTheme = {
   label: string;
   className: string;
   Icon: typeof Activity;
-};
-
-const statusThemes: Record<string, StatusTheme> = {
-  surveillance: {
-    label: "Surveillance",
-    className: "border-emerald-500/40 bg-emerald-500/15 text-emerald-700",
-    Icon: Activity,
-  },
-  calibrage: {
-    label: "Calibrage",
-    className: "border-amber-500/40 bg-amber-500/15 text-amber-700",
-    Icon: Wrench,
-  },
-  etalonnage: {
-    label: "Etalonnage",
-    className: "border-sky-500/40 bg-sky-500/15 text-sky-700",
-    Icon: Ruler,
-  },
-  test: {
-    label: "Test",
-    className: "border-violet-500/40 bg-violet-500/15 text-violet-700",
-    Icon: FlaskConical,
-  },
-  desactivee: {
-    label: "Desactivee",
-    className: "border-red-500/40 bg-red-500/15 text-red-700",
-    Icon: PowerOff,
-  },
-  unknown: {
-    label: "Inconnu",
-    className: "border-slate-400/40 bg-slate-400/10 text-slate-600",
-    Icon: PowerOff,
-  },
-};
-
-const getProbeStatusTheme = (status: string | null, label: string | null): StatusTheme => {
-  const raw = `${label ?? ""} ${status ?? ""}`.trim().toLowerCase();
-  if (!raw) return statusThemes.unknown;
-  if (raw === "s" || raw.includes("surveill")) return statusThemes.surveillance;
-  if (raw === "d" || raw.includes("desactiv")) return statusThemes.desactivee;
-  if (raw.includes("calibr")) return statusThemes.calibrage;
-  if (raw.includes("etalonn")) return statusThemes.etalonnage;
-  if (raw.includes("test")) return statusThemes.test;
-  return statusThemes.unknown;
 };
 
 export type ProbeRow = {
@@ -74,24 +31,70 @@ type ProbesTableProps = {
 };
 
 export function ProbesTable({ probes, isLoading, selectedProbeId, onSelectProbe }: ProbesTableProps) {
+  const t = useTranslations('probesPage');
+
+  const statusThemes: Record<string, StatusTheme> = {
+    surveillance: {
+      label: t('status.surveillance'),
+      className: "border-emerald-500/40 bg-emerald-500/15 text-emerald-700",
+      Icon: Activity,
+    },
+    calibrage: {
+      label: t('status.calibrage'),
+      className: "border-amber-500/40 bg-amber-500/15 text-amber-700",
+      Icon: Wrench,
+    },
+    etalonnage: {
+      label: t('status.etalonnage'),
+      className: "border-sky-500/40 bg-sky-500/15 text-sky-700",
+      Icon: Ruler,
+    },
+    test: {
+      label: t('status.test'),
+      className: "border-violet-500/40 bg-violet-500/15 text-violet-700",
+      Icon: FlaskConical,
+    },
+    desactivee: {
+      label: t('status.disabled'),
+      className: "border-red-500/40 bg-red-500/15 text-red-700",
+      Icon: PowerOff,
+    },
+    unknown: {
+      label: t('status.unknown'),
+      className: "border-slate-400/40 bg-slate-400/10 text-slate-600",
+      Icon: PowerOff,
+    },
+  };
+
+  const getProbeStatusTheme = (status: string | null, label: string | null): StatusTheme => {
+    const raw = `${label ?? ""} ${status ?? ""}`.trim().toLowerCase();
+    if (!raw) return statusThemes.unknown;
+    if (raw === "s" || raw.includes("surveill")) return statusThemes.surveillance;
+    if (raw === "d" || raw.includes("desactiv")) return statusThemes.desactivee;
+    if (raw.includes("calibr")) return statusThemes.calibrage;
+    if (raw.includes("etalonn")) return statusThemes.etalonnage;
+    if (raw.includes("test")) return statusThemes.test;
+    return statusThemes.unknown;
+  };
+
   const columns: ColumnDef<ProbeRow>[] = [
     {
       accessorKey: 'Adresse_Sonde',
-      header: 'Adresse',
+      header: t('table.columns.address'),
       cell: ({ row }) => <span className="font-medium">{row.getValue('Adresse_Sonde') || '-'}</span>,
     },
     {
       accessorKey: 'Sonde_Numero_Serie',
-      header: 'Numéro de série',
+      header: t('table.columns.serial'),
       cell: ({ row }) => row.getValue('Sonde_Numero_Serie') || '-',
     },
     {
       accessorKey: 'Port_Serie',
-      header: 'Port série',
+      header: t('table.columns.port'),
       cell: ({ row }) => row.getValue('Port_Serie') || '-',
     },
     {
-      header: 'Module',
+      header: t('table.columns.module'),
       cell: ({ row }) => {
         const item = row.original;
         const moduleDisplay = item.Port_Serie ? `${item.Id_Module || '-'} (${item.Port_Serie})` : item.Id_Module || '-';
@@ -100,7 +103,7 @@ export function ProbesTable({ probes, isLoading, selectedProbeId, onSelectProbe 
     },
     {
       accessorKey: 'Surveillance_Etat',
-      header: 'État',
+      header: t('table.columns.state'),
       cell: ({ row }) => {
         const theme = getProbeStatusTheme(
           row.original.Surveillance_Etat,
@@ -119,7 +122,7 @@ export function ProbesTable({ probes, isLoading, selectedProbeId, onSelectProbe 
     },
     {
       accessorKey: 'Lieu',
-      header: 'Lieu',
+      header: t('table.columns.location'),
       cell: ({ row }) => row.getValue('Lieu') || '-',
     },
   ];
@@ -135,10 +138,10 @@ export function ProbesTable({ probes, isLoading, selectedProbeId, onSelectProbe 
         'Surveillance_Etat_Libelle',
         'Surveillance_Etat',
       ]}
-      searchPlaceholder="Adresse, numéro de série..."
+      searchPlaceholder={t('table.search_placeholder')}
       isLoading={isLoading}
       maxHeight="60vh"
-      emptyMessage="Aucune sonde trouvée"
+      emptyMessage={t('table.empty')}
       selectedRowId={selectedProbeId ?? undefined}
       onRowClick={(row: ProbeRow) => onSelectProbe(row.Id_Sonde)}
       headerClassName="!bg-sidebar !text-sidebar-foreground"

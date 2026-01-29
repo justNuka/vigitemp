@@ -15,6 +15,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslations } from 'next-intl';
 import {
   Select,
   SelectContent,
@@ -99,10 +100,10 @@ export function TanStackTable<TData extends Record<string, any>>({
   columns,
   data,
   searchField,
-  searchPlaceholder = 'Rechercher...',
   pageSize = 10,
   isLoading = false,
-  emptyMessage = 'Aucun résultat',
+  searchPlaceholder,
+  emptyMessage,
   onRowClick,
   selectedRowId,
   maxHeight,
@@ -125,6 +126,7 @@ export function TanStackTable<TData extends Record<string, any>>({
   paginationState,
   onPaginationChange,
 }: TanStackTableProps<TData>) {
+  const t = useTranslations('tanstackTable');
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -132,6 +134,9 @@ export function TanStackTable<TData extends Record<string, any>>({
     pageIndex: 0,
     pageSize: pageSize,
   });
+
+  const resolvedSearchPlaceholder = searchPlaceholder ?? t('search_placeholder');
+  const resolvedEmptyMessage = emptyMessage ?? t('empty');
 
   const resolvedPagination = paginationState ?? pagination;
   const handlePaginationChange = onPaginationChange ?? setPagination;
@@ -195,7 +200,7 @@ export function TanStackTable<TData extends Record<string, any>>({
   });
 
   const pageSizeOptions = Array.from(
-    new Set([10, 20, 30, 40, 50, table.getState().pagination.pageSize])
+    new Set([10, 20, 30, 40, 50, 100, 200, table.getState().pagination.pageSize])
   ).sort((a, b) => a - b);
 
   const rows = showPagination ? table.getRowModel().rows : table.getFilteredRowModel().rows;
@@ -358,14 +363,14 @@ export function TanStackTable<TData extends Record<string, any>>({
           {showSearch && (
             <>
               <Input
-                placeholder={searchPlaceholder}
+                placeholder={resolvedSearchPlaceholder}
                 value={globalFilter ?? ''}
                 onChange={(e) => setGlobalFilter(e.target.value)}
                 className="max-w-sm"
                 disabled={isLoading}
               />
               <span className="text-sm text-muted-foreground">
-                {table.getFilteredRowModel().rows.length} résultat(s)
+                {t('results', { count: table.getFilteredRowModel().rows.length })}
               </span>
             </>
           )}
@@ -380,7 +385,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                       disabled={isLoading}
                     >
                       <Download className="h-4 w-4" />
-                      Export
+                      {t('export')}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -399,7 +404,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                   onClick={printTableOnly}
                 >
                   <Printer className="h-4 w-4" />
-                  Imprimer
+                  {t('print')}
                 </Button>
               )}
 
@@ -574,7 +579,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                   colSpan={columns.length}
                   className="text-center py-8 text-muted-foreground"
                 >
-                  {emptyMessage}
+                  {resolvedEmptyMessage}
                 </TableCell>
               </TableRow>
             )}
@@ -587,10 +592,14 @@ export function TanStackTable<TData extends Record<string, any>>({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">
-              Page {table.getState().pagination.pageIndex + 1} sur {table.getPageCount()} - Total:{" "}
-              {manualPagination && typeof totalRows === "number"
-                ? totalRows
-                : table.getFilteredRowModel().rows.length}
+              {t('pagination.summary', {
+                current: table.getState().pagination.pageIndex + 1,
+                total: table.getPageCount(),
+                count:
+                  manualPagination && typeof totalRows === "number"
+                    ? totalRows
+                    : table.getFilteredRowModel().rows.length,
+              })}
             </span>
           </div>
 
@@ -602,7 +611,7 @@ export function TanStackTable<TData extends Record<string, any>>({
               disabled={!table.getCanPreviousPage() || isLoading}
               className="border-primary/40 text-primary hover:bg-primary/10"
             >
-              Précédent
+              {t('pagination.previous')}
             </Button>
 
             <Select
@@ -613,12 +622,12 @@ export function TanStackTable<TData extends Record<string, any>>({
               disabled={isLoading}
             >
               <SelectTrigger className="w-30 sm:w-35">
-                <SelectValue aria-label="Taille de page" />
+                <SelectValue aria-label={t('pagination.page_size_label')} />
               </SelectTrigger>
               <SelectContent>
                 {pageSizeOptions.map((pageSize) => (
                   <SelectItem key={pageSize} value={String(pageSize)}>
-                    {pageSize} par page
+                    {t('pagination.page_size_option', { count: pageSize })}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -631,7 +640,7 @@ export function TanStackTable<TData extends Record<string, any>>({
               disabled={!table.getCanNextPage() || isLoading}
               className="border-primary/40 text-primary hover:bg-primary/10"
             >
-              Suivant
+              {t('pagination.next')}
             </Button>
           </div>
         </div>

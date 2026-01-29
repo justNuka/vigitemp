@@ -1,9 +1,10 @@
 "use client"
 
 import { format } from "date-fns"
-import { fr } from "date-fns/locale"
+import { enUS, fr } from "date-fns/locale"
 import { Calendar as CalendarIcon } from "lucide-react"
 import type { Control } from "react-hook-form"
+import { useLocale, useTranslations } from "next-intl"
 
 import { cn } from "@/lib/utils"
 
@@ -24,14 +25,15 @@ export function UserNameFields<T extends { prenom: string; nom: string }>({
   control: Control<T>
   order?: "first-last" | "last-first"
 }) {
+  const t = useTranslations("userForm")
   const left = order === "first-last" ? "prenom" : "nom"
   const right = order === "first-last" ? "nom" : "prenom"
 
-  const leftLabel = left === "prenom" ? "Prénom *" : "Nom *"
-  const rightLabel = right === "prenom" ? "Prénom *" : "Nom *"
+  const leftLabel = left === "prenom" ? t("fields.first_name_label") : t("fields.last_name_label")
+  const rightLabel = right === "prenom" ? t("fields.first_name_label") : t("fields.last_name_label")
 
-  const leftPlaceholder = left === "prenom" ? "Jean" : "Dupont"
-  const rightPlaceholder = right === "prenom" ? "Jean" : "Dupont"
+  const leftPlaceholder = left === "prenom" ? t("placeholders.first_name") : t("placeholders.last_name")
+  const rightPlaceholder = right === "prenom" ? t("placeholders.first_name") : t("placeholders.last_name")
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -66,15 +68,16 @@ export function UserNameFields<T extends { prenom: string; nom: string }>({
 }
 
 export function UserEmailField<T extends { email: string }>({ control }: { control: Control<T> }) {
+  const t = useTranslations("userForm")
   return (
     <FormField
       control={control}
       name={"email" as any}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Email *</FormLabel>
+          <FormLabel>{t("fields.email_label")}</FormLabel>
           <FormControl>
-            <Input type="email" placeholder="jean.dupont@example.com" {...field} />
+            <Input type="email" placeholder={t("placeholders.email")} {...field} />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -84,15 +87,16 @@ export function UserEmailField<T extends { email: string }>({ control }: { contr
 }
 
 export function UserUsernameField<T extends { username: string }>({ control }: { control: Control<T> }) {
+  const t = useTranslations("userForm")
   return (
     <FormField
       control={control}
       name={"username" as any}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Login *</FormLabel>
+          <FormLabel>{t("fields.username_label")}</FormLabel>
           <FormControl>
-            <Input placeholder="jdupont" autoComplete="off" {...field} />
+            <Input placeholder={t("placeholders.username")} autoComplete="off" {...field} />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -102,15 +106,16 @@ export function UserUsernameField<T extends { username: string }>({ control }: {
 }
 
 export function UserPhoneField<T extends { telephone?: string }>({ control }: { control: Control<T> }) {
+  const t = useTranslations("userForm")
   return (
     <FormField
       control={control}
       name={"telephone" as any}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Téléphone</FormLabel>
+          <FormLabel>{t("fields.phone_label")}</FormLabel>
           <FormControl>
-            <Input placeholder="+33612345678" {...field} />
+            <Input placeholder={t("placeholders.phone")} {...field} />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -130,17 +135,18 @@ export function UserProfileField<T extends { profileId: string }>({
   isLoading: boolean
   description?: string
 }) {
+  const t = useTranslations("userForm")
   return (
     <FormField
       control={control}
       name={"profileId" as any}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Profil *</FormLabel>
+          <FormLabel>{t("fields.profile_label")}</FormLabel>
           <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoading}>
             <FormControl>
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un profil" />
+                <SelectValue placeholder={t("placeholders.profile")} />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
@@ -171,16 +177,17 @@ export function UserSitesField<T extends { siteIds?: number[] }>({
   sites?: SiteOption[]
   isLoading: boolean
 }) {
+  const t = useTranslations("userForm")
   return (
     <FormField
       control={control}
       name={"siteIds" as any}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Sites</FormLabel>
+          <FormLabel>{t("fields.sites_label")}</FormLabel>
           <div className="space-y-2">
             {isLoading ? (
-              <p className="text-sm text-muted-foreground">Chargement...</p>
+              <p className="text-sm text-muted-foreground">{t("actions.loading")}</p>
             ) : (
               sites?.map((site) => (
                 <div key={site.id} className="flex items-center space-x-2">
@@ -203,7 +210,7 @@ export function UserSitesField<T extends { siteIds?: number[] }>({
             )}
           </div>
           <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-900">
-            Si aucun groupe ou site n'est assigne, tous les lieux seront affiches sur la page de surveillance.
+            {t("infos.default_visibility")}
           </div>
           <FormMessage />
         </FormItem>
@@ -221,16 +228,17 @@ export function UserGroupsField<T extends { groupeIds?: number[] }>({
   groups?: GroupOption[]
   isLoading: boolean
 }) {
+  const t = useTranslations("userForm")
   return (
     <FormField
       control={control}
       name={"groupeIds" as any}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Groupes</FormLabel>
+          <FormLabel>{t("fields.groups_label")}</FormLabel>
           <div className="space-y-2">
             {isLoading ? (
-              <p className="text-sm text-muted-foreground">Chargement...</p>
+              <p className="text-sm text-muted-foreground">{t("actions.loading")}</p>
             ) : (
               groups?.map((group) => (
                 <div key={group.Id_Groupe} className="flex items-center space-x-2">
@@ -248,14 +256,14 @@ export function UserGroupsField<T extends { groupeIds?: number[] }>({
                     className="rounded border-gray-300"
                   />
                   <label htmlFor={`groupe-${group.Id_Groupe}`} className="text-sm">
-                    {group.Nom_Groupe ?? `Groupe ${group.Id_Groupe}`}
+                    {group.Nom_Groupe ?? t("groups.fallback", { id: group.Id_Groupe })}
                   </label>
                 </div>
               ))
             )}
           </div>
           <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-900">
-            Si aucun groupe ou site n'est assigne, tous les lieux seront affiches sur la page de surveillance.
+            {t("infos.default_visibility")}
           </div>
           <FormMessage />
         </FormItem>
@@ -271,6 +279,10 @@ export function UserExpiryFields<T extends { hasExpiryDate: boolean; expiryDate?
   control: Control<T>
   enabled: boolean
 }) {
+  const t = useTranslations("userForm")
+  const locale = useLocale()
+  const dateLocale = locale.toLowerCase().startsWith("fr") ? fr : enUS
+
   return (
     <>
       <FormField
@@ -279,8 +291,8 @@ export function UserExpiryFields<T extends { hasExpiryDate: boolean; expiryDate?
         render={({ field }) => (
           <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
-              <FormLabel className="text-base">Date de validité</FormLabel>
-              <FormDescription>Définir une date d'expiration</FormDescription>
+              <FormLabel className="text-base">{t("expiry.title")}</FormLabel>
+              <FormDescription>{t("expiry.description")}</FormDescription>
             </div>
             <FormControl>
               <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -295,7 +307,7 @@ export function UserExpiryFields<T extends { hasExpiryDate: boolean; expiryDate?
           name={"expiryDate" as any}
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Date d'expiration *</FormLabel>
+              <FormLabel>{t("expiry.date_label")}</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
                   <FormControl>
@@ -303,7 +315,11 @@ export function UserExpiryFields<T extends { hasExpiryDate: boolean; expiryDate?
                       variant="outline"
                       className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
                     >
-                      {field.value ? format(field.value, "PPP", { locale: fr }) : <span>Sélectionner une date</span>}
+                      {field.value ? (
+                        format(field.value, "PPP", { locale: dateLocale })
+                      ) : (
+                        <span>{t("expiry.select_date")}</span>
+                      )}
                       <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
                   </FormControl>

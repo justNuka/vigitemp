@@ -7,7 +7,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { clearLocationCache } from "@/lib/measurement-cache"
 
 const updateLieuSchema = z.object({
-  Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(20).optional(),
+  Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(50).optional(),
   Lieu_Etat: z.string().max(1).nullable().optional(),
   Commentaire: z.string().nullable().optional(),
   Id_Site: z.number().nullable().optional(),
@@ -66,6 +66,11 @@ export const PATCH = withLogging(
 
       const { GroupIds, Lieu_Etat, Id_Site, Sonde_Numero_Serie, Id_Groupe1, Id_Groupe2, ...lieuPatch } =
         validated as any
+      if (Object.prototype.hasOwnProperty.call(validated, "Frequence")) {
+        const value = validated.Frequence
+        lieuPatch.Frequence =
+          value === null || value === undefined ? value : Math.round(value * 60)
+      }
       const hasLieuEtat = Object.prototype.hasOwnProperty.call(validated, "Lieu_Etat")
       const applyLieuEtat = hasLieuEtat && !shouldArchive
       const hasIdSite = Object.prototype.hasOwnProperty.call(validated, "Id_Site")
@@ -132,6 +137,18 @@ export const PATCH = withLogging(
           }
         }
 
+        if (hasSondeNumeroSerie && !shouldArchive) {
+          const currentSonde = current?.Sonde_Numero_Serie ?? null
+          const nextSonde = validated.Sonde_Numero_Serie ?? null
+
+          if (currentSonde && currentSonde !== nextSonde) {
+            await tx.t_sonde.updateMany({
+              where: { Sonde_Numero_Serie: currentSonde },
+              data: { Surveillance_Etat: "D" },
+            })
+          }
+        }
+
         if (shouldArchive) {
           const sondeNumeroSerie = current?.Sonde_Numero_Serie ?? null
           if (sondeNumeroSerie) {
@@ -159,8 +176,16 @@ export const PATCH = withLogging(
         JSON.stringify(lieu, (_, value) => (typeof value === "bigint" ? value.toString() : value)),
       )
 
+      const normalized = {
+        ...serialized,
+        Frequence:
+          serialized?.Frequence === null || serialized?.Frequence === undefined
+            ? serialized?.Frequence
+            : Number(serialized.Frequence) / 60,
+      }
+
       clearLocationCache(lieuId)
-      return apiOk(serialized)
+      return apiOk(normalized)
     } catch (error) {
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Invalid input", { issues: error.issues })

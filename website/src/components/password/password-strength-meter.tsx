@@ -2,12 +2,13 @@
 
 import { Progress } from "@/components/ui/progress";
 import { calculatePasswordStrength } from "@/lib/password-validation";
+import { useTranslations } from "next-intl";
 
-function getStrengthLabel(score: number) {
-  if (score < 25) return "Faible";
-  if (score < 50) return "Moyen";
-  if (score < 75) return "Bon";
-  return "Fort";
+function getStrengthLabel(score: number, t: (key: string) => string) {
+  if (score < 25) return t("levels.weak");
+  if (score < 50) return t("levels.medium");
+  if (score < 75) return t("levels.good");
+  return t("levels.strong");
 }
 
 function getStrengthBarClass(score: number) {
@@ -19,14 +20,15 @@ function getStrengthBarClass(score: number) {
 
 export function PasswordStrengthMeter({ password }: { password: string }) {
   if (!password) return null;
+  const t = useTranslations("passwordStrength");
 
   const score = calculatePasswordStrength(password);
 
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">Force du mot de passe</span>
-        <span className="font-medium">{getStrengthLabel(score)}</span>
+        <span className="text-muted-foreground">{t("label")}</span>
+        <span className="font-medium">{getStrengthLabel(score, t)}</span>
       </div>
       <Progress value={score} className="h-2" indicatorClassName={getStrengthBarClass(score)} />
     </div>

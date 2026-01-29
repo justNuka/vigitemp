@@ -9,9 +9,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/components/theme-provider";
+import { useTranslations } from "next-intl";
 
 export function ThemeToggle() {
   const { setTheme, theme } = useTheme();
+  const t = useTranslations("themeToggle");
 
   return (
     <DropdownMenu>
@@ -20,11 +22,11 @@ export function ThemeToggle() {
           variant="ghost" 
           size="icon"
           data-testid="button-theme-toggle"
-          aria-label="Changer le thème"
+          aria-label={t("aria")}
         >
           <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <span className="sr-only">Changer le thème</span>
+          <span className="sr-only">{t("aria")}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -34,7 +36,7 @@ export function ThemeToggle() {
           className={theme === "light" ? "bg-accent" : ""}
         >
           <Sun className="mr-2 h-4 w-4" />
-          Clair
+          {t("light")}
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => setTheme("dark")}
@@ -42,7 +44,7 @@ export function ThemeToggle() {
           className={theme === "dark" ? "bg-accent" : ""}
         >
           <Moon className="mr-2 h-4 w-4" />
-          Sombre
+          {t("dark")}
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => setTheme("system")}
@@ -50,7 +52,7 @@ export function ThemeToggle() {
           className={theme === "system" ? "bg-accent" : ""}
         >
           <span className="mr-2 h-4 w-4 flex items-center justify-center text-xs">💻</span>
-          Système
+          {t("system")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

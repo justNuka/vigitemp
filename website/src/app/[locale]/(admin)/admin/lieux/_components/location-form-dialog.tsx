@@ -1,6 +1,5 @@
 'use client';
 
-import type { Dispatch, SetStateAction } from 'react';
 import type { AvailableProbe } from '@/hooks/useAvailableProbes';
 import type { Group } from '@/hooks/useGroups';
 import type { SiteSimple } from '@/hooks/useSites';
@@ -16,6 +15,8 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLicense } from "@/components/license/license-provider";
 import { Check, X } from "lucide-react";
+import { FormProvider, type UseFormReturn } from 'react-hook-form';
+import { useTranslations } from 'next-intl';
 
 import type { LocationFormData, LocationFormMode } from './location-form-types';
 import { LocationFormTabGeneral } from './location-form-tab-general';
@@ -25,21 +26,19 @@ import { LocationFormTabTelephony } from './location-form-tab-telephony';
 type LocationFormDialogProps = {
   open: boolean;
   mode: LocationFormMode;
-  formData: LocationFormData;
-  setFormData: Dispatch<SetStateAction<LocationFormData>>;
+  form: UseFormReturn<LocationFormData>;
   sites: SiteSimple[];
   groups: Group[];
   availableProbes: AvailableProbe[];
   isSubmitting: boolean;
   onCancel: () => void;
-  onSubmit: () => void;
+  onSubmit: (values: LocationFormData) => void;
 };
 
 export function LocationFormDialog({
   open,
   mode,
-  formData,
-  setFormData,
+  form,
   sites,
   groups,
   availableProbes,
@@ -51,6 +50,8 @@ export function LocationFormDialog({
   const { license } = useLicense();
   const edition = (license?.edition || "light").trim().toLowerCase();
   const isLight = edition === "light";
+  const t = useTranslations('locationsForm.dialog');
+  const tCommon = useTranslations('common');
 
   return (
     <Dialog
@@ -61,38 +62,40 @@ export function LocationFormDialog({
     >
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white dark:bg-card">
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Modifier le lieu' : 'Créer un nouveau lieu'}</DialogTitle>
-          <DialogDescription>Remplissez les informations du lieu</DialogDescription>
+          <DialogTitle>{isEdit ? t('title_edit') : t('title_create')}</DialogTitle>
+          <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="general" className="w-full">
-          <TabsList className={`grid w-full ${isLight ? "grid-cols-1" : "grid-cols-3"}`}>
-            <TabsTrigger value="general">Général</TabsTrigger>
-            {!isLight && <TabsTrigger value="metrologie">Métrologie</TabsTrigger>}
-            {!isLight && <TabsTrigger value="telephonie">Téléphonie/Planning</TabsTrigger>}
-          </TabsList>
+        <FormProvider {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Tabs defaultValue="general" className="w-full">
+              <TabsList className={`grid w-full ${isLight ? "grid-cols-1" : "grid-cols-3"}`}>
+                <TabsTrigger value="general">{t('tabs.general')}</TabsTrigger>
+                {!isLight && <TabsTrigger value="metrologie">{t('tabs.metrology')}</TabsTrigger>}
+                {!isLight && <TabsTrigger value="telephonie">{t('tabs.telephony')}</TabsTrigger>}
+              </TabsList>
 
-          <LocationFormTabGeneral
-            formData={formData}
-            setFormData={setFormData}
-            sites={sites}
-            groups={groups}
-            availableProbes={availableProbes}
-          />
-          {!isLight && <LocationFormTabMetrology formData={formData} setFormData={setFormData} />}
-          {!isLight && <LocationFormTabTelephony />}
-        </Tabs>
+              <LocationFormTabGeneral
+                sites={sites}
+                groups={groups}
+                availableProbes={availableProbes}
+              />
+              {!isLight && <LocationFormTabMetrology />}
+              {!isLight && <LocationFormTabTelephony />}
+            </Tabs>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onCancel} className="gap-2">
-            <X className="h-4 w-4" />
-            Annuler
-          </Button>
-          <Button onClick={onSubmit} disabled={isSubmitting} className="gap-2">
-            <Check className="h-4 w-4" />
-            {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
-          </Button>
-        </DialogFooter>
+            <DialogFooter>
+              <Button variant="outline" onClick={onCancel} className="gap-2" type="button">
+                <X className="h-4 w-4" />
+                {tCommon('cancel')}
+              </Button>
+              <Button type="submit" disabled={isSubmitting} className="gap-2">
+                <Check className="h-4 w-4" />
+                {isSubmitting ? t('submit.saving') : tCommon('save')}
+              </Button>
+            </DialogFooter>
+          </form>
+        </FormProvider>
       </DialogContent>
     </Dialog>
   );

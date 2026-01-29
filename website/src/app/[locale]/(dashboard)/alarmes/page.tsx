@@ -1,14 +1,22 @@
 import { Suspense } from "react";
-import { Metadata } from "next";
 import { ServerAlarms, ServerAlarmStats } from "./server-alarms";
 import { AlarmsPageClient } from "./alarms-page-client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
+import { getTranslations } from 'next-intl/server';
 
-export const metadata: Metadata = {
-  title: "Alarmes - Vigitemp",
-  description: "Gestion et suivi des alarmes",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'alarmsPage' });
+  return {
+    title: t('meta.title'),
+    description: t('meta.description'),
+  };
+}
 
 // Skeleton pour la table d'alarmes
 function AlarmsLoadingSkeleton() {

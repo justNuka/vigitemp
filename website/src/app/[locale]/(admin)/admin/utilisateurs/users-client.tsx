@@ -9,6 +9,7 @@ import { usersApi, type CreateUserInput, type User } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "@/i18n/navigation";
 import { getJson } from "@/lib/http";
+import { useTranslations } from "next-intl";
 
 import { usePasswordRules } from "@/hooks/usePasswordRules";
 import { useProfiles } from "@/hooks/useProfiles";
@@ -35,6 +36,7 @@ export function UsersClient({ users }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const didPrefetchRef = useRef(false);
+  const t = useTranslations("usersPage");
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -72,11 +74,11 @@ export function UsersClient({ users }: Props) {
   const createMutation = useMutation({
     mutationFn: (data: CreateUserInput) => usersApi.create(data),
     onSuccess: () => {
-      toast.success("Utilisateur créé avec succès");
+      toast.success(t("toast.create_success"));
       setIsCreateDialogOpen(false);
     },
     onError: () => {
-      toast.error("Erreur lors de la création");
+      toast.error(t("toast.create_error"));
     },
   });
 
@@ -84,12 +86,12 @@ export function UsersClient({ users }: Props) {
     mutationFn: ({ id, data }: { id: string; data: any }) =>
       usersApi.update(id, data),
     onSuccess: () => {
-      toast.success("Utilisateur modifié avec succès");
+      toast.success(t("toast.update_success"));
       setIsEditDialogOpen(false);
       setSelectedUser(null);
     },
     onError: () => {
-      toast.error("Erreur lors de la modification");
+      toast.error(t("toast.update_error"));
     },
   });
 
@@ -98,12 +100,12 @@ export function UsersClient({ users }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       router.refresh();
-      toast.success("Compte archivé avec succès");
+      toast.success(t("toast.archive_success"));
       setIsEditDialogOpen(false);
       setSelectedUser(null);
     },
     onError: () => {
-      toast.error("Erreur lors de l'archivage");
+      toast.error(t("toast.archive_error"));
     },
   });
 
@@ -112,12 +114,12 @@ export function UsersClient({ users }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       router.refresh();
-      toast.success("Compte rÇ¸activÇ¸ avec succÇùs");
+      toast.success(t("toast.reactivate_success"));
       setIsEditDialogOpen(false);
       setSelectedUser(null);
     },
     onError: () => {
-      toast.error("Erreur lors de la rÇ¸activation");
+      toast.error(t("toast.reactivate_error"));
     },
   });
 
@@ -218,14 +220,14 @@ export function UsersClient({ users }: Props) {
       <Card className="bg-white">
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle>Gestion des utilisateurs</CardTitle>
+            <CardTitle>{t("title")}</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {users.length} utilisateur{users.length > 1 ? "s" : ""}
+              {t("count", { count: users.length })}
             </p>
           </div>
           <Button className="gap-2" onClick={() => setIsCreateDialogOpen(true)}>
             <UserPlus className="h-4 w-4" />
-            Nouvel utilisateur
+            {t("actions.new")}
           </Button>
         </CardHeader>
         <CardContent className="p-2 md:p-4 xl:p-4 bg-white">

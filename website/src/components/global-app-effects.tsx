@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from "react"
 import { usePathname } from "next/navigation"
 import { toast } from "sonner"
+import { useTranslations } from "next-intl"
 
 import { stripLocalePrefix } from "@/i18n/pathnames"
 import { useRouter } from "@/i18n/navigation"
@@ -59,6 +60,7 @@ function isPublicRoute(pathname: string) {
 }
 
 export function GlobalAppEffects() {
+  const t = useTranslations("globalAppEffects")
   const router = useRouter()
   const pathname = usePathname()
   const seenAlarmIdsRef = useRef<Set<number>>(new Set())
@@ -85,13 +87,20 @@ export function GlobalAppEffects() {
         seenAlarmIdsRef.current.add(data.id)
 
         const labelType =
-          data.type === "H" ? "Alarme haute" : data.type === "B" ? "Alarme basse" : "Alarme"
-        const value = data.valeur === null ? "N/A" : `${data.valeur}${data.unite ?? "°C"}`
+          data.type === "H"
+            ? t("alarm.type.high")
+            : data.type === "B"
+              ? t("alarm.type.low")
+              : t("alarm.type.default")
+        const value =
+          data.valeur === null
+            ? t("alarm.value.na")
+            : `${data.valeur}${data.unite ?? "°C"}`
 
-        toast.error(`${labelType} - ${data.lieu}`, {
-          description: `Valeur: ${value}`,
+        toast.error(t("alarm.toast.title", { type: labelType, lieu: data.lieu }), {
+          description: t("alarm.toast.description", { value }),
           action: {
-            label: "Voir",
+            label: t("alarm.toast.action"),
             onClick: () => router.push("/surveillance"),
           },
         })
@@ -113,7 +122,7 @@ export function GlobalAppEffects() {
       eventSource.removeEventListener("error", onError)
       eventSource.close()
     }
-  }, [alarmStreamUrl, currentUser, router])
+  }, [alarmStreamUrl, currentUser, router, t])
 
   useEffect(() => {
     const run = async () => {
@@ -131,25 +140,25 @@ export function GlobalAppEffects() {
       if (localStorage.getItem(key) === "1") return
       localStorage.setItem(key, "1")
 
-      toast("Activer les notifications Windows ?", {
-        description: "Pour recevoir les alarmes même si le site est fermé.",
+      toast(t("push_prompt.title"), {
+        description: t("push_prompt.description"),
         action: {
-          label: "Activer",
+          label: t("push_prompt.action"),
           onClick: async () => {
             const permission = await Notification.requestPermission()
             if (permission !== "granted") {
-              toast.error("Notifications refusées")
+              toast.error(t("push_prompt.denied"))
               return
             }
             await ensurePushSubscription()
-            toast.success("Notifications activées")
+            toast.success(t("push_prompt.enabled"))
           },
         },
       })
     }
 
     void run()
-  }, [currentUser])
+  }, [currentUser, t])
 
   return null
 }

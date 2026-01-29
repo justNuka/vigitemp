@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import type { Measurement } from "@/lib/api";
+import { useTranslations } from "next-intl";
 
 interface MiniChartProps {
   measurements: Measurement[];
@@ -19,6 +20,7 @@ export function MiniChart({
   className,
   height = 60,
 }: MiniChartProps) {
+  const t = useTranslations("miniChart");
   const chartData = useMemo(() => {
     if (measurements.length === 0) return null;
 
@@ -62,7 +64,7 @@ export function MiniChart({
         )}
         style={{ height }}
       >
-        <p className="text-xs text-muted-foreground">Pas assez de données</p>
+        <p className="text-xs text-muted-foreground">{t("empty")}</p>
       </div>
     );
   }
@@ -88,7 +90,7 @@ export function MiniChart({
         preserveAspectRatio="none"
         className="w-full h-full"
         role="img"
-        aria-label="Graphique des mesures récentes"
+        aria-label={t("aria_label")}
       >
         <defs>
           <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">

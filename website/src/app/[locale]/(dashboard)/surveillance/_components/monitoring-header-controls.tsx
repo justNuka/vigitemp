@@ -6,6 +6,7 @@ import { SurveillanceFilters } from "../monitoring-filters"
 import { SurveillanceViewTabs } from "./monitoring-view-tabs"
 import { Button } from "@/components/ui/button"
 import { ArrowUpDown, RefreshCw } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 type ViewMode = "tree" | "graphs"
 
@@ -41,6 +42,8 @@ export function SurveillanceHeaderControls({
   orderToggleLabel,
   onToggleOrder,
 }: Props) {
+  const t = useTranslations("surveillance")
+
   return (
     <div className="flex flex-col gap-4 w-full rounded-lg border border-slate-200 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-900/60">
       <SurveillanceFilters onFilterChange={onFilterChange} sites={sites} groups={groups} />
@@ -69,7 +72,7 @@ export function SurveillanceHeaderControls({
               data-testid="button-refresh-surveillance"
             >
               <RefreshCw className={isRefreshing ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
-              {isRefreshing ? "Actualisation..." : "Actualiser"}
+              {isRefreshing ? t("refresh.loading") : t("refresh.label")}
             </Button>
           ) : null}
         </div>

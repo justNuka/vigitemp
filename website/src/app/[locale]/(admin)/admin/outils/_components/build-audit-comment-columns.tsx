@@ -4,15 +4,20 @@ import type { AuditCode, AuditComment } from "./audit-comments-types"
 
 type BuildAuditCommentColumnsParams = {
   auditCodes: AuditCode[]
+  labels: {
+    type: string
+    comment: string
+  }
 }
 
 export function buildAuditCommentColumns({
   auditCodes,
+  labels,
 }: BuildAuditCommentColumnsParams): ColumnDef<AuditComment>[] {
   return [
     {
       accessorKey: "type",
-      header: "Type",
+      header: labels.type,
       cell: ({ row }) => {
         const code = auditCodes.find((item) => item.Code_Journal === row.original.type)
         return (
@@ -25,7 +30,7 @@ export function buildAuditCommentColumns({
     },
     {
       accessorKey: "text",
-      header: "Commentaire",
+      header: labels.comment,
       cell: ({ row }) => <div>{row.original.text}</div>,
     },
   ]

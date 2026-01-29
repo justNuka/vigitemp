@@ -1,15 +1,23 @@
 import { Suspense } from "react";
-import { Metadata } from "next";
 import { ServerAuditLogs, ServerAuditStats } from "./server-audit-logs";
 import { AuditClient } from "./audit-client";
 import { PageHeader } from "@/components/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
+import { getTranslations } from 'next-intl/server';
 
-export const metadata: Metadata = {
-  title: "Audit - Vigitemp",
-  description: "Journal d'audit et historique des événements",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'auditPage' });
+  return {
+    title: t('meta.title'),
+    description: t('meta.description'),
+  };
+}
 
 // Skeleton pour la table d'audit
 function AuditLoadingSkeleton() {
@@ -34,6 +42,7 @@ function AuditLoadingSkeleton() {
 }
 
 export default async function AuditPage() {
+  const t = await getTranslations('auditPage');
   // Chargement des données côté serveur avec cache
   const [logsData, statsData] = await Promise.all([
     ServerAuditLogs(100),
@@ -43,8 +52,8 @@ export default async function AuditPage() {
   return (
     <div className="flex flex-col min-h-full">
       <PageHeader
-        title="Journal d'audit"
-        description="Historique des actions et événements"
+        title={t('title')}
+        description={t('description')}
         activeAlarms={0}
       />
 

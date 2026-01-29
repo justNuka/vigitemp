@@ -80,7 +80,7 @@ export function SensorsCardsGrid({
             const groupName =
               sensor.location.groupNames && sensor.location.groupNames.length > 0
                 ? sensor.location.groupNames.join(" / ")
-                : sensor.location.groupName1 || "Sans groupe"
+                : sensor.location.groupName1 || t("grid.no_group")
 
             return (
               <MonitoringCard
@@ -88,9 +88,10 @@ export function SensorsCardsGrid({
                 idLieu={Number(sensor.id)}
                 nomLieu={sensor.name ?? ""}
                 lieuType={sensor.lieuType ?? sensor.location.lieuType ?? null}
-                siteName={sensor.location.site ?? "Site inconnu"}
+                siteName={sensor.location.site ?? t("grid.unknown_site")}
                 groupName={groupName}
                 status={sensor.status}
+                alarmType={sensor.alarmType ?? null}
                 alarmDisabled={sensor.location.alarmDisabled ?? false}
                 alarmDisabledUntil={sensor.location.alarmDisabledUntil ?? null}
                 alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}

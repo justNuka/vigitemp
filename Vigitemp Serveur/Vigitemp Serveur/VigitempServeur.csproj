@@ -152,6 +152,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Sensor.cs" />
+    <Compile Include="SondeScheduleInfo.cs" />
     <Compile Include="sensors\SensorIH.cs" />
     <Compile Include="sensors\SensorIC.cs" />
     <Compile Include="sensors\SensorIP.cs" />

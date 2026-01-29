@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { useRouter } from '@/i18n/navigation'
 import { Archive, Pencil, Plus } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -35,6 +36,9 @@ import {
 export function SitesClient() {
   const queryClient = useQueryClient()
   const router = useRouter()
+  const t = useTranslations('sitesPage')
+  const tDialog = useTranslations('sitesDialog')
+  const tCommon = useTranslations('common')
   const { data: sites = [], isLoading } = useSites()
 
   const [selectedSite, setSelectedSite] = useState<SiteAdmin | null>(null)
@@ -45,7 +49,7 @@ export function SitesClient() {
   const [archiveBlockedMessage, setArchiveBlockedMessage] = useState<string | null>(null)
 
   const createForm = useForm<CreateSiteInput>({
-    resolver: zodResolver(createSiteSchema),
+    resolver: zodResolver(createSiteSchema(tDialog)),
     defaultValues: {
       Code_Site: '',
       Libelle_Site: '',
@@ -54,7 +58,7 @@ export function SitesClient() {
   })
 
   const editForm = useForm<EditSiteInput>({
-    resolver: zodResolver(editSiteSchema),
+    resolver: zodResolver(editSiteSchema(tDialog)),
     defaultValues: {
       Libelle_Site: '',
       Commentaire: null,
@@ -66,41 +70,41 @@ export function SitesClient() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sites'] })
       router.refresh()
-      toast.success('Site créé avec succès')
+      toast.success(t('toast.create_success'))
       setIsCreateOpen(false)
       createForm.reset()
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Erreur lors de la création du site')
+      toast.error(error instanceof Error ? error.message : t('toast.create_error'))
     },
   })
 
   const updateMutation = useMutation({
     mutationFn: async (data: EditSiteInput) => {
-      if (!selectedSite?.Id_Site) throw new Error('Aucun site sélectionné')
+      if (!selectedSite?.Id_Site) throw new Error(t('errors.no_site_selected'))
       return patchJson(`/api/sites/${selectedSite.Id_Site}`, data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sites'] })
       router.refresh()
-      toast.success('Site modifié avec succès')
+      toast.success(t('toast.update_success'))
       setIsEditOpen(false)
       setSelectedSite(null)
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Erreur lors de la modification du site')
+      toast.error(error instanceof Error ? error.message : t('toast.update_error'))
     },
   })
 
   const archiveMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedSite?.Id_Site) throw new Error('Aucun site sélectionné')
+      if (!selectedSite?.Id_Site) throw new Error(t('errors.no_site_selected'))
       return patchJson(`/api/sites/${selectedSite.Id_Site}`, { Est_Archive: true })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sites'] })
       router.refresh()
-      toast.success('Site archivé avec succès')
+      toast.success(t('toast.archive_success'))
       setSelectedSite(null)
       setIsArchiveAlertOpen(false)
     },
@@ -109,13 +113,13 @@ export function SitesClient() {
         const linked = (error.payload as any)?.linkedLieuxCount
         const detail =
           typeof linked === 'number' && linked > 0
-            ? `Ce site est lié à ${linked} lieu${linked > 1 ? 'x' : ''}.`
+            ? t('archive_blocked_detail', { count: linked })
             : ''
         setArchiveBlockedMessage(`${error.message}${detail ? ` ${detail}` : ''}`)
         setArchiveBlockedOpen(true)
         return
       }
-      toast.error(error instanceof Error ? error.message : "Erreur lors de l'archivage du site")
+      toast.error(error instanceof Error ? error.message : t('toast.archive_error'))
     },
   })
 
@@ -133,19 +137,19 @@ export function SitesClient() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle>Gestion des sites</CardTitle>
+            <CardTitle>{t('title')}</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {sites.length} site{sites.length > 1 ? 's' : ''}
+              {t('count', { count: sites.length })}
             </p>
           </div>
           <div className="flex gap-2">
             <Button onClick={() => setIsCreateOpen(true)} variant="default" size="sm" className="gap-2">
               <Plus className="h-4 w-4" />
-              Nouveau
+              {tCommon('add')}
             </Button>
             <Button onClick={handleEdit} variant="outline" size="sm" disabled={!selectedSite} className="gap-2">
               <Pencil className="h-4 w-4" />
-              Modifier
+              {tCommon('edit')}
             </Button>
             <Button
               onClick={() => setIsArchiveAlertOpen(true)}
@@ -155,7 +159,7 @@ export function SitesClient() {
               className="gap-2"
             >
               <Archive className="h-4 w-4" />
-              Archiver
+              {t('actions.archive')}
             </Button>
           </div>
         </CardHeader>
@@ -197,13 +201,13 @@ export function SitesClient() {
       <AlertDialog open={archiveBlockedOpen} onOpenChange={setArchiveBlockedOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Archivage impossible</AlertDialogTitle>
+            <AlertDialogTitle>{t('archive_blocked_title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {archiveBlockedMessage || "Ce site est encore lié à d'autres éléments."}
+              {archiveBlockedMessage || t('archive_blocked_fallback')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogAction onClick={() => setArchiveBlockedOpen(false)}>
-            OK
+            {tCommon('confirm')}
           </AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>

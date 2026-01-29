@@ -12,6 +12,7 @@ type Options = {
   endDate?: string | Date | null
   listenForUpdates?: boolean
   includeMeta?: boolean
+  source?: "graphique" | "mesures"
 }
 
 export function useLieuMeasurements(
@@ -23,6 +24,7 @@ export function useLieuMeasurements(
     endDate,
     listenForUpdates = true,
     includeMeta = false,
+    source = "graphique",
   }: Options = {},
 ) {
   const [data, setData] = useState<MeasureData[]>([])
@@ -44,6 +46,9 @@ export function useLieuMeasurements(
         if (includeMeta) {
           params.set("includeMeta", "true")
         }
+        if (source !== "graphique") {
+          params.set("source", source)
+        }
         const payload = await fetchJson<
           MeasureData[] | { measurements?: MeasureData[]; lieuType?: string | null }
         >(`/api/mesures/${idLieu}?${params}`)
@@ -62,7 +67,7 @@ export function useLieuMeasurements(
       setIsLoading(false)
     }
     },
-    [idLieu, rowNumber, includeMeta, startDate, endDate],
+    [idLieu, rowNumber, includeMeta, startDate, endDate, source],
   )
 
   useEffect(() => {

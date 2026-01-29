@@ -27,9 +27,9 @@ namespace Vigitemp_Serveur
 
         public static LicenseValidationResult ValidateFromConfig()
         {
-            var licensePath = ExpandPath(GetSetting("Vigitemp.License.Path", DefaultLicensePath));
-            var publicKeyPath = ExpandPath(GetSetting("Vigitemp.License.PublicKeyPath", DefaultPublicKeyPath));
-            var instancePublicKey = GetSetting("Vigitemp.License.InstancePublicKey", string.Empty);
+            var licensePath = ExpandPath(GetSetting("Vigi.License.Path", DefaultLicensePath));
+            var publicKeyPath = ExpandPath(GetSetting("Vigi.License.PublicKeyPath", DefaultPublicKeyPath));
+            var instancePublicKey = GetSetting("Vigi.License.InstancePublicKey", string.Empty);
 
             if (!File.Exists(licensePath))
             {
@@ -60,9 +60,9 @@ namespace Vigitemp_Serveur
 
         public static HotlineLicenseConfigResult GetHotlineConfigFromConfig()
         {
-            var licensePath = ExpandPath(GetSetting("Vigitemp.License.Path", DefaultLicensePath));
-            var publicKeyPath = ExpandPath(GetSetting("Vigitemp.License.PublicKeyPath", DefaultPublicKeyPath));
-            var instancePublicKey = GetSetting("Vigitemp.License.InstancePublicKey", string.Empty);
+            var licensePath = ExpandPath(GetSetting("Vigi.License.Path", DefaultLicensePath));
+            var publicKeyPath = ExpandPath(GetSetting("Vigi.License.PublicKeyPath", DefaultPublicKeyPath));
+            var instancePublicKey = GetSetting("Vigi.License.InstancePublicKey", string.Empty);
 
             if (!File.Exists(licensePath))
             {

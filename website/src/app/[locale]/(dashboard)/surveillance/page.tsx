@@ -1,17 +1,25 @@
 "use cache";
 
 import { Suspense } from "react";
-import { Metadata } from "next";
 import { ServerDashboardStats } from "./server-stats";
 import { ServerFilterOptions } from "./server-filters";
 import { SurveillancePageClient } from "./monitoring-page-client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MonitoringCardSkeleton } from "@/components/monitoring-card-skeleton";
+import { getTranslations } from 'next-intl/server';
 
-export const metadata: Metadata = {
-  title: "Surveillance - Vigitemp",
-  description: "Suivi en temps réel des sondes et capteurs",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'surveillance' });
+  return {
+    title: t('meta.title'),
+    description: t('meta.description'),
+  };
+}
 
 // Skeleton pour les stats
 function StatsLoadingSkeleton() {

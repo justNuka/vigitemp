@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus, Pencil } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 import { useProbes } from "@/hooks/useProbes";
 import { useAdjustments } from "@/hooks/useAdjustments";
@@ -20,6 +21,7 @@ import { ProbesTable, toProbeRows } from "./_components/probes-table";
 
 export function ProbesClient() {
   const queryClient = useQueryClient();
+  const t = useTranslations('probesPage');
   const didPrefetchRef = useRef(false);
   const [selectedProbeId, setSelectedProbeId] = useState<number | null>(null);
   const [selectedAdjustmentId, setSelectedAdjustmentId] = useState<number | null>(null);
@@ -89,7 +91,7 @@ export function ProbesClient() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle>Sondes ({probes?.length || 0})</CardTitle>
+            <CardTitle>{t('title', { count: probes?.length || 0 })}</CardTitle>
             <div className="flex gap-2">
               <Button
                 size="sm"
@@ -100,7 +102,7 @@ export function ProbesClient() {
                 }}
               >
                 <Plus className="w-4 h-4" />
-                Ajouter
+                {t('actions.add')}
               </Button>
               <Button
                 size="sm"
@@ -113,7 +115,7 @@ export function ProbesClient() {
                 }}
               >
                 <Pencil className="w-4 h-4" />
-                Modifier
+                {t('actions.edit')}
               </Button>
             </div>
           </div>

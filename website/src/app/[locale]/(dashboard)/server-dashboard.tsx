@@ -144,7 +144,12 @@ export async function ServerActiveAlarms() {
     id: alarm.Id_Alarme.toString(),
     sensorId: alarm.Id_Lieu?.toString() || "0",
     locationId: alarm.t_lieu?.Id_Site?.toString() || "0",
-    type: alarm.Type === "H" ? ("high" as const) : ("low" as const),
+    type:
+      alarm.Type === "H"
+        ? ("high" as const)
+        : alarm.Type === "B"
+          ? ("low" as const)
+          : ("no-response" as const),
     status: alarm.Est_Acquittee ? ("acknowledged" as const) : ("active" as const),
     value: alarm.Valeur !== null ? parseFloat(alarm.Valeur.toString()) : 0,
     threshold: 0, // Pas de champ threshold direct dans t_alarme
@@ -212,27 +217,46 @@ export async function ServerSensorOverview() {
     take: 8, // 8 premiers pour le dashboard
   });
 
+  const overviewIds = locations.map((lieu) => lieu.Id_Lieu).filter(Boolean)
+  const overviewAlarms = overviewIds.length
+    ? await prisma.t_alarme.findMany({
+        where: {
+          Id_Lieu: { in: overviewIds },
+          Date_Heure_Fin: null,
+          Est_Acquittee: false,
+        },
+        select: { Id_Lieu: true, Type: true, Date_Heure_Debut: true },
+        orderBy: { Date_Heure_Debut: "desc" },
+      })
+    : []
+
+  const overviewAlarmTypeByLieu = new Map<number, "H" | "B" | "N">()
+  for (const alarm of overviewAlarms) {
+    if (!alarm.Id_Lieu) continue
+    const type = alarm.Type as "H" | "B" | "N" | null
+    if (!type) continue
+    if (!overviewAlarmTypeByLieu.has(alarm.Id_Lieu)) {
+      overviewAlarmTypeByLieu.set(alarm.Id_Lieu, type)
+    }
+  }
+
   return locations.map((lieu) => {
+    const alarmType = overviewAlarmTypeByLieu.get(lieu.Id_Lieu) ?? null
     const status = mapSensorStatus({
-      isCritical: lieu.Est_Lieu_En_Alarme === 1,
+      isCritical: (alarmType === "H" || alarmType === "B") || lieu.Est_Lieu_En_Alarme === 1,
       isWarning: lieu.Est_Lieu_En_Alarme !== 1 && lieu.Est_Lieu_En_Pre_Alarme === 1,
       isEnded:
         lieu.Est_Lieu_En_Alarme !== 1 &&
         (lieu.Est_Lieu_Alarme_Terminee_Non_Acquittee === 1 ||
           lieu.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 === 1),
-      isTechnical: (() => {
-        if (!lieu.Retard_Non_Reponse || !lieu.Date_Heure_Derniere_Reponse) return false
-        const lastResponse = new Date(lieu.Date_Heure_Derniere_Reponse)
-        if (Number.isNaN(lastResponse.getTime())) return false
-        const diffMinutes = (Date.now() - lastResponse.getTime()) / 60000
-        return diffMinutes >= lieu.Retard_Non_Reponse
-      })(),
+      isTechnical: alarmType === "N",
     });
     return {
       id: lieu.Id_Lieu.toString(),
       name: lieu.Nom_Lieu || "Capteur sans nom",
       type: "temperature" as const,
       status: status === "offline" ? "warning" : status, // Map offline to warning for compatibility
+      alarmType,
       currentValue: lieu.Derniere_Valeur !== null ? parseFloat(lieu.Derniere_Valeur.toString()) : null,
       unit: lieu.Derniere_Unite || "°C",
       minThreshold: lieu.Consigne_Inf ?? 0,
