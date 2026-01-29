@@ -71,7 +71,6 @@ namespace Vigitemp_Serveur
 
         private bool InitConnexion()
         {
-            VigitempServeur.Log("Tentative de connexion a la BDD (MSSQL)...");
             try
             {
                 var mainDb = GetSetting("Vigi.Db.MainDatabase", "vigitemp");
@@ -85,7 +84,6 @@ namespace Vigitemp_Serveur
                 _connectionMeasure = CreateConnection(mesureDb);
                 _connectionMeasure.Open();
 
-                VigitempServeur.Log("Tentative reussie.");
                 return true;
             }
             catch (Exception ex)

@@ -19,7 +19,7 @@
     "previous": "Previous",
     "user": "User",
     "logout": "Log out",
-    "license_light": "Light license",
+    "license_one": "One license",
     "license_prefix": "License",
     "license_unknown": "Unknown license",
     "license_invalid": "Invalid license"
@@ -500,7 +500,7 @@
       }
     },
     "telephony": {
-      "unavailable_light": "This section is not available for light licenses. Please contact MC2 sales to upgrade your current license to standard or expert."
+      "unavailable_one": "This section is not available for One licenses. Please contact MC2 sales to upgrade your current license to standard or expert."
     }
   },
   "modulesPage": {

@@ -70,7 +70,6 @@ namespace Vigitemp_Serveur
         // Méthode pour initialiser la connexion 
         private bool InitConnexion()
         {
-            VigitempServeur.Log("Tentative de connexion à la BDD...");
             try
             {
                 var mainDb = GetSetting("Vigi.Db.MainDatabase", "vigitemp");
@@ -83,7 +82,6 @@ namespace Vigitemp_Serveur
 
                 connection_vigitemp_mesure = CreateConnection(mesureDb);
                 connection_vigitemp_mesure.Open();
-                VigitempServeur.Log("Tentative réussie!");
                 return true;
             }
             catch (Exception ex)

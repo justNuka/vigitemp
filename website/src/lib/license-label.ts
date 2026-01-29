@@ -10,7 +10,7 @@ export function formatLicenseLabel(
   if (!license.ok) {
     return tCommon("license_invalid");
   }
-  const edition = (license.edition || "light").trim();
+  const edition = (license.edition || "one").trim();
   if (!edition) {
     return tCommon("license_unknown");
   }

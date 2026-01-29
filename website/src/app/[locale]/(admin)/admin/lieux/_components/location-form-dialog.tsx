@@ -51,8 +51,8 @@ export function LocationFormDialog({
 }: LocationFormDialogProps) {
   const isEdit = mode === 'edit';
   const { license } = useLicense();
-  const edition = (license?.edition || "light").trim().toLowerCase();
-  const isLight = edition === "light";
+  const edition = (license?.edition || "one").trim().toLowerCase();
+  const isOne = edition === "one";
   const t = useTranslations('locationsForm.dialog');
   const tCommon = useTranslations('common');
   const handleSubmit = form.handleSubmit(async (values) => onSubmit(values));
@@ -73,10 +73,10 @@ export function LocationFormDialog({
         <FormProvider {...form}>
           <form onSubmit={handleSubmit} className="space-y-6">
             <Tabs defaultValue="general" className="w-full">
-              <TabsList className={`grid w-full ${isLight ? "grid-cols-1" : "grid-cols-3"}`}>
+              <TabsList className={`grid w-full ${isOne ? "grid-cols-1" : "grid-cols-3"}`}>
                 <TabsTrigger value="general">{t('tabs.general')}</TabsTrigger>
-                {!isLight && <TabsTrigger value="metrologie">{t('tabs.metrology')}</TabsTrigger>}
-                {!isLight && <TabsTrigger value="telephonie">{t('tabs.telephony')}</TabsTrigger>}
+                {!isOne && <TabsTrigger value="metrologie">{t('tabs.metrology')}</TabsTrigger>}
+                {!isOne && <TabsTrigger value="telephonie">{t('tabs.telephony')}</TabsTrigger>}
               </TabsList>
 
               <LocationFormTabGeneral
@@ -84,8 +84,8 @@ export function LocationFormDialog({
                 groups={groups}
                 availableProbes={availableProbes}
               />
-              {!isLight && <LocationFormTabMetrology />}
-              {!isLight && <LocationFormTabTelephony />}
+              {!isOne && <LocationFormTabMetrology />}
+              {!isOne && <LocationFormTabTelephony />}
             </Tabs>
 
             <DialogFooter>

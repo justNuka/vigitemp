@@ -9,7 +9,7 @@ export function LocationFormTabTelephony() {
     <TabsContent value="telephonie" className="space-y-6">
       <div className="border p-12 rounded-lg text-center">
         <p className="text-muted-foreground">
-          {t('unavailable_light')}
+          {t('unavailable_one')}
         </p>
       </div>
     </TabsContent>

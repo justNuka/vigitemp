@@ -308,9 +308,20 @@ namespace Vigitemp_Serveur
                 }
 
                 var now = DateTime.Now;
+                double ComputePriority(SensorSchedule schedule)
+                {
+                    if (schedule == null) return double.MinValue;
+                    var freq = Math.Max(1, schedule.FrequencySeconds);
+                    var latenessSeconds = (now - schedule.NextDue).TotalSeconds;
+                    if (latenessSeconds < 0) latenessSeconds = 0;
+                    return latenessSeconds / freq;
+                }
+
                 var due = _schedules.Values
                     .Where(s => !s.InProgress && IsScheduleDue(s, now))
-                    .OrderBy(s => s.NextDue)
+                    .OrderByDescending(ComputePriority)
+                    .ThenBy(s => s.FrequencySeconds)
+                    .ThenBy(s => s.NextDue)
                     .ToList();
 
                 foreach (var schedule in due)
@@ -352,7 +363,9 @@ namespace Vigitemp_Serveur
 
             VigitempServeur.Log("--------------------ID SERVEUR : " + _idServer + "---CAPTEUR : " + serial + "--------------------");
             VigitempServeur.Log("Ouverture du port " + schedule.Port + " pour la sonde " + serial);
-            sensorType = serial.Substring(0, 2);
+            sensorType = serial.StartsWith("GSP", StringComparison.OrdinalIgnoreCase)
+                ? "GSP"
+                : serial.Substring(0, 2);
 
             switch (sensorType)
             {
@@ -398,6 +411,12 @@ namespace Vigitemp_Serveur
                     VigitempServeur.nombres_interrogations++;
                     sensor = new SensorHN(this, schedule.Port, serial, schedule.Adresse, schedule.Module);
                     VigitempServeur.Log($"Interrogation sonde HN serial={serial} port={schedule.Port} adresse={schedule.Adresse} module={schedule.Module}");
+                    await sensor.read();
+                    break;
+                case "GSP":
+                    VigitempServeur.nombres_interrogations++;
+                    sensor = new SensorGSP(this, schedule.Port, serial, schedule.Adresse);
+                    VigitempServeur.Log($"Interrogation sonde GSP serial={serial} port={schedule.Port} adresse={schedule.Adresse}");
                     await sensor.read();
                     break;
                 default:
@@ -454,7 +473,9 @@ namespace Vigitemp_Serveur
                             continue;
                         }
                         VigitempServeur.Log("Ouverture du port " + arr_portSerie + " pour la sonde " + arr_sondeNumeroSerie);
-                                sensorType = arr_sondeNumeroSerie.Substring(0, 2);
+                                sensorType = arr_sondeNumeroSerie.StartsWith("GSP", StringComparison.OrdinalIgnoreCase)
+                                    ? "GSP"
+                                    : arr_sondeNumeroSerie.Substring(0, 2);
 
                                 switch (sensorType)
                                 {
@@ -495,6 +516,9 @@ namespace Vigitemp_Serveur
                                         //VigitempServeur.nombres_interrogations++;
                                         sensor = new SensorHN(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse, arr_moduleNumeroSerie);
                                         //await sensor.read();
+                                        break;
+                                    case "GSP":
+                                        sensor = new SensorGSP(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
                                         break;
                                     default: break;
                                 }

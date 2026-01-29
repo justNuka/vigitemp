@@ -153,7 +153,7 @@ async function validateLicense(): Promise<LicenseResponse> {
     reason: "OK",
     licenseId: payload.licenseId,
     customerId: payload.customerId,
-    edition: payload.edition || "light",
+    edition: (payload.edition || "one").trim(),
     concurrentAccess: payload.concurrentAccess?.toString(),
     options: payload.options ?? [],
     issuedAtRaw: payload.issuedAt,

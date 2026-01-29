@@ -44,7 +44,7 @@ Le fichier de licence contient les informations suivantes (exemples) :
 
 - licenseId  
 - customerId (format attendu: X9999999)  
-- edition: light | standard | expert  
+- edition: one | standard | expert  
 - concurrentAccess: 5 | 10 | 25 | illimite  
 - options: telephonie, mail, options_futures, ...  
 - expiresAt (optionnel)  

@@ -103,13 +103,13 @@ namespace Vigitemp_License_Generator
             );
 
             _cmbEdition = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240 };
-            _cmbEdition.Items.AddRange(new object[] { "light", "standard", "expert" });
+            _cmbEdition.Items.AddRange(new object[] { "one", "standard", "expert" });
             _cmbEdition.SelectedIndex = 0;
             AddRowWithInfo(
                 inputTable,
                 "Type licence",
                 _cmbEdition,
-                "Light : fonctions essentielles de surveillance.\nStandard : Ajout des fonctions de métrologie.\nExpert : environnement complet MC2."
+                "One : fonctions essentielles de surveillance.\nStandard : Ajout des fonctions de métrologie.\nExpert : environnement complet MC2."
             );
 
             _cmbConcurrent = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240 };
@@ -477,7 +477,7 @@ namespace Vigitemp_License_Generator
                 return;
             }
 
-            var edition = _cmbEdition.SelectedItem?.ToString() ?? "light";
+            var edition = _cmbEdition.SelectedItem?.ToString() ?? "one";
             var concurrent = _cmbConcurrent.SelectedItem?.ToString() ?? "5";
             var options = new List<string>();
             foreach (var item in _clbOptions.CheckedItems)

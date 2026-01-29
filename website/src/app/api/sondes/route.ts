@@ -55,9 +55,9 @@ export const POST = withAuthLogging(async (req: NextRequest) => {
 
     const normalizedType = data.sondeType.toUpperCase()
     const serial =
-      normalizedType === "GSO" || normalizedType === "GSP"
+      normalizedType === "GSO"
         ? data.serieNum
-        : `${data.sondeType}${data.serieNum}`
+        : `${normalizedType}${data.serieNum}`
     const adresseSonde = data.serieNum
 
     const existing = await prisma.t_sonde.findUnique({

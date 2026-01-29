@@ -19,7 +19,7 @@
     "previous": "Précédent",
     "user": "Utilisateur",
     "logout": "Se déconnecter",
-    "license_light": "Licence Light",
+    "license_one": "Licence One",
     "license_prefix": "Licence",
     "license_unknown": "Licence inconnue",
     "license_invalid": "Licence invalide"
@@ -631,7 +631,7 @@
       }
     },
     "telephony": {
-      "unavailable_light": "Cette section n'est pas disponible pour les licences light. Veuillez contacter le service commercial MC2 pour faire une upgrade de votre licence actuelle vers une licence standard ou expert."
+      "unavailable_one": "Cette section n'est pas disponible pour les licences One. Veuillez contacter le service commercial MC2 pour faire une upgrade de votre licence actuelle vers une licence standard ou expert."
     }
   },
   "modulesPage": {
