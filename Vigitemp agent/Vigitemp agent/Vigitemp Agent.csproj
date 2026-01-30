@@ -163,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AgentLog.cs" />
+    <Compile Include="AgentSecretStore.cs" />
     <Compile Include="LoopbackSessionServer.cs" />
     <Compile Include="StatusForm.cs">
       <SubType>Form</SubType>
@@ -178,6 +179,7 @@
     <Compile Include="MyCustomApplicationContext.cs" />
     <Compile Include="LogTagNet2.9.cs" />
     <Compile Include="HttpServer.cs" />
+    <Compile Include="NotificationTracking.cs" />
     <Compile Include="SessionStore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form_Alert.resx">

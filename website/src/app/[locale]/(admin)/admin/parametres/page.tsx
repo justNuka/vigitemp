@@ -65,9 +65,13 @@ async function ActiveAlarmsCount({
   );
 }
 
-export default async function SettingsPage({ params }: { params: { locale: string } }) {
-  const settingsData = await ServerSettings();
-  const t = await getTranslations({ locale: params.locale, namespace: "adminSettingsPage" });
+export default async function SettingsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const [{ locale }, settingsData] = await Promise.all([params, ServerSettings()]);
+  const t = await getTranslations({ locale, namespace: "adminSettingsPage" });
   const title = t("title");
   const description = t("description");
 

@@ -42,9 +42,9 @@ type Props = {
 type Measurement = MeasurementPoint
 
 const measurementSchema = z.object({
-  reference: z.string().optional(),
-  value: z.string().optional(),
-  incertitude: z.string().optional(),
+  reference: z.string().default(""),
+  value: z.string().default(""),
+  incertitude: z.string().default(""),
 })
 
 const standardSchema = z.object({
@@ -60,10 +60,10 @@ const standardSchema = z.object({
   dateCertif: z.string().optional(),
   unite: z.string().optional(),
   numeroCertif: z.string().optional(),
-  mesures: z.array(measurementSchema).optional(),
+  mesures: z.array(measurementSchema).default([]),
 })
 
-type StandardFormValues = z.infer<typeof standardSchema>
+type StandardFormValues = z.input<typeof standardSchema>
 
 export function StandardModal({ open, onOpenChange, standard, isEditing }: Props) {
   const queryClient = useQueryClient()
@@ -102,7 +102,11 @@ export function StandardModal({ open, onOpenChange, standard, isEditing }: Props
     name: "mesures",
   })
 
-  const mesures = useWatch({ control: form.control, name: "mesures" }) ?? []
+  const mesures = (useWatch({ control: form.control, name: "mesures" }) ?? []).map((mesure) => ({
+    reference: mesure?.reference ?? "",
+    value: mesure?.value ?? "",
+    incertitude: mesure?.incertitude ?? "",
+  }))
   const [selectedMesureIndex, setSelectedMesureIndex] = useState<number | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 

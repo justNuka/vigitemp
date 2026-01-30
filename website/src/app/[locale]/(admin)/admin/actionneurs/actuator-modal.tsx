@@ -127,9 +127,9 @@ export function ActuatorModal({ open, onOpenChange, actuator, isEditing }: Props
                     <SelectValue placeholder={t('fields.type_placeholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {types?.map((type) => (
-                      <SelectItem key={type.Type} value={type.Type?.toString() || ""}>
-                        {type.Description || t('fields.type_fallback', { id: type.Type })}
+                    {types?.filter((type) => type.Type != null).map((type) => (
+                      <SelectItem key={type.Type} value={type.Type!.toString()}>
+                        {type.Description || t('fields.type_fallback', { id: type.Type! })}
                       </SelectItem>
                     ))}
                   </SelectContent>

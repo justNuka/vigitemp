@@ -118,9 +118,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         Est_Consigne_Inf_Pre_Alarme_Active: validated.Est_Consigne_Inf_Pre_Alarme_Active ?? false,
         Retard_Alarme_Bas: validated.Retard_Alarme_Bas,
         Est_Archive: false,
-        t_etat_surveillance_lieu: {
-          connect: { Surveillance_Etat: lieuEtat },
-        },
+        Lieu_Etat: lieuEtat,
         ...(validated.Id_Site
           ? {
               t_site: {

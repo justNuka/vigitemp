@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
-import { sendWebPushToActiveSubscriptions } from "@/lib/web-push"
 import { withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { routing } from "@/i18n/routing"
 import { log } from "@/lib/logger"
+import { randomUUID } from "crypto"
 
 const AGENT_PORT = Number.parseInt(process.env.VIGITEMP_AGENT_PORT ?? "8000", 10)
 const AGENT_TIMEOUT_MS = Number.parseInt(process.env.VIGITEMP_AGENT_TIMEOUT_MS ?? "1500", 10)
@@ -14,7 +14,16 @@ const AGENT_ACTIVE_WINDOW_MINUTES = Number.parseInt(
   10,
 )
 
-async function dispatchAgentNotifications(payload: {
+type AgentTarget = {
+  idPoste: number
+  ip: string
+  machineName: string | null
+  deliveryId: number
+  correlationId: string
+}
+
+async function dispatchAgentNotifications(
+  payload: {
   title: string
   messageBody: string
   locationLabel: string
@@ -22,28 +31,17 @@ async function dispatchAgentNotifications(payload: {
   alarmUrl: string
   alarmId?: number
   lieuId?: number
-}) {
-  const activeSince = new Date(Date.now() - AGENT_ACTIVE_WINDOW_MINUTES * 60 * 1000)
-  const clients = await prisma.t_postes_clients.findMany({
-    where: {
-      Adresse_IP_Connexion: { not: null },
-      Date_Heure_Derniere_Connexion: { gte: activeSince },
-    },
-    select: {
-      Adresse_IP_Connexion: true,
-      Nom_Machine_Connexion: true,
-    },
-  })
-
-  const uniqueIps = new Map<string, string | null>()
-  for (const client of clients) {
-    if (!client.Adresse_IP_Connexion) continue
-    if (!uniqueIps.has(client.Adresse_IP_Connexion)) {
-      uniqueIps.set(client.Adresse_IP_Connexion, client.Nom_Machine_Connexion ?? null)
-    }
+},
+  targets: AgentTarget[],
+) {
+  if (targets.length === 0) {
+    return { attempted: 0, failed: 0 }
   }
 
-  const requests = Array.from(uniqueIps.entries()).map(async ([ip, machineName]) => {
+  let failed = 0
+
+  const requests = targets.map(async (target) => {
+    const { ip, machineName, deliveryId, correlationId } = target
     const url = `http://${ip}:${AGENT_PORT}/notify`
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), AGENT_TIMEOUT_MS)
@@ -60,14 +58,60 @@ async function dispatchAgentNotifications(payload: {
           url: payload.alarmUrl,
           alarmId: payload.alarmId,
           lieuId: payload.lieuId,
+          deliveryId,
+          correlationId,
         }),
         signal: controller.signal,
       })
+
+      const now = new Date()
+      await prisma.$transaction([
+        prisma.t_notification_delivery.update({
+          where: { Id_Delivery: deliveryId },
+          data: {
+            Statut: "sent",
+            Nb_Tentatives: { increment: 1 },
+            Date_Envoi: now,
+            Date_Dernier_Event: now,
+            Derniere_Erreur: null,
+          },
+        }),
+        prisma.t_notification_event.create({
+          data: {
+            Id_Delivery: deliveryId,
+            Event_Type: "sent",
+            Event_Data: JSON.stringify({ ip, machineName }),
+            Date_Event: now,
+          },
+        }),
+      ])
     } catch (error) {
+      failed += 1
+      const now = new Date()
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      await prisma.$transaction([
+        prisma.t_notification_delivery.update({
+          where: { Id_Delivery: deliveryId },
+          data: {
+            Statut: "failed",
+            Nb_Tentatives: { increment: 1 },
+            Date_Dernier_Event: now,
+            Derniere_Erreur: errorMessage.slice(0, 255),
+          },
+        }),
+        prisma.t_notification_event.create({
+          data: {
+            Id_Delivery: deliveryId,
+            Event_Type: "failed",
+            Event_Data: JSON.stringify({ ip, machineName, error: errorMessage }),
+            Date_Event: now,
+          },
+        }),
+      ])
       log.warn("ALARM_DISPATCH", "Agent notification failed", {
         ip,
         machineName,
-        error: error instanceof Error ? error.message : String(error),
+        error: errorMessage,
       })
     } finally {
       clearTimeout(timeout)
@@ -75,6 +119,43 @@ async function dispatchAgentNotifications(payload: {
   })
 
   await Promise.all(requests)
+
+  return {
+    attempted: targets.length,
+    failed,
+  }
+}
+
+async function getActiveAgentTargets() {
+  const activeSince = new Date(Date.now() - AGENT_ACTIVE_WINDOW_MINUTES * 60 * 1000)
+  const clients = await prisma.t_postes_clients.findMany({
+    where: {
+      Adresse_IP_Connexion: { not: null },
+      Date_Heure_Derniere_Connexion: { gte: activeSince },
+    },
+    select: {
+      Id_Poste: true,
+      Adresse_IP_Connexion: true,
+      Nom_Machine_Connexion: true,
+    },
+  })
+
+  const uniqueIps = new Map<string, { idPoste: number; machineName: string | null }>()
+  for (const client of clients) {
+    if (!client.Adresse_IP_Connexion) continue
+    if (!uniqueIps.has(client.Adresse_IP_Connexion)) {
+      uniqueIps.set(client.Adresse_IP_Connexion, {
+        idPoste: client.Id_Poste,
+        machineName: client.Nom_Machine_Connexion ?? null,
+      })
+    }
+  }
+
+  return Array.from(uniqueIps.entries()).map(([ip, info]) => ({
+    ip,
+    idPoste: info.idPoste,
+    machineName: info.machineName,
+  }))
 }
 
 const dispatchSchema = z.object({
@@ -200,29 +281,72 @@ export const POST = withLogging(async (req: NextRequest) => {
     ? url
     : `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`
 
-
-  const result = await sendWebPushToActiveSubscriptions({
-    title,
-    body: messageBody,
-    data: { url, alarmId },
-    tag: alarmId ? `alarm-${alarmId}` : "alarm",
+  const safeTitle = title.slice(0, 128)
+  const safeMessage = messageBody.slice(0, 512)
+  const payloadJson = JSON.stringify({
+    title: safeTitle,
+    message: safeMessage,
+    location: locationLabel,
+    date: dateLabel,
+    url: alarmUrl,
+    alarmId,
+    lieuId,
   })
 
+  const notification = await prisma.t_notification.create({
+    data: {
+      Type: "ALARM",
+      Id_Alarme: alarmId ?? null,
+      Titre: safeTitle,
+      Message: safeMessage,
+      Payload_Json: payloadJson,
+      Priorite: 0,
+    },
+  })
 
-  await dispatchAgentNotifications({
-    title,
-    messageBody,
+  const targets = await getActiveAgentTargets()
+  const deliveries = await Promise.all(
+    targets.map(async (target) => {
+      const correlationId = randomUUID()
+      const delivery = await prisma.t_notification_delivery.create({
+        data: {
+          Id_Notification: notification.Id_Notification,
+          Id_Poste: target.idPoste,
+          Id_Utilisateur: null,
+          Statut: "queued",
+          Nb_Tentatives: 0,
+          Date_Queue: new Date(),
+          Correlation_Id: correlationId,
+        },
+        select: { Id_Delivery: true },
+      })
+
+      return {
+        ...target,
+        deliveryId: delivery.Id_Delivery,
+        correlationId,
+      }
+    })
+  )
+
+  const agentResult = await dispatchAgentNotifications({
+    title: safeTitle,
+    messageBody: safeMessage,
     locationLabel,
     dateLabel,
     alarmUrl,
     alarmId,
     lieuId,
-  })
+  }, deliveries)
 
-  log.info("ALARM_DISPATCH", "Alarm dispatched to web push and agents", {
+  log.info("ALARM_DISPATCH", "Alarm dispatched to agents", {
     alarmId,
-    agentTargets: result?.sent ?? undefined,
+    agentTargets: agentResult.attempted,
+    agentFailed: agentResult.failed,
   })
 
-  return apiOk(result)
+  return apiOk({
+    agentTargets: agentResult.attempted,
+    agentFailed: agentResult.failed,
+  })
 })

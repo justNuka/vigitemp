@@ -47,7 +47,9 @@ export async function ServerAlarms(status?: AlarmStatus) {
       ? "high"
       : alarm.Type === "B"
         ? "low"
-        : "no-response") as "high" | "low" | "no-response",
+        : alarm.Type === "T"
+          ? "ended"
+          : "no-response") as "high" | "low" | "no-response" | "ended",
     value: alarm.Valeur || 0,
     threshold: 0, // Threshold from t_lieu if needed
     status: alarm.Est_Acquittee ? ("acknowledged" as const) : ("active" as const),

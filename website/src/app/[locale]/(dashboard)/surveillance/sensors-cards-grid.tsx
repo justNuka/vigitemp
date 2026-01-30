@@ -15,7 +15,12 @@ interface SensorsCardsGridProps {
   sensors: SensorWithLocation[]
   disabledFirst?: boolean
   isLoading?: boolean
-  onSurveillanceToggle?: (idLieu: number, newState: boolean, durationMinutes?: number | null) => void
+  onSurveillanceToggle?: (
+    idLieu: number,
+    action: "surveillance" | "alarms",
+    newState: boolean,
+    durationMinutes?: number | null,
+  ) => void
 }
 
 /**
@@ -33,7 +38,7 @@ export function SensorsCardsGrid({
   const t = useTranslations("surveillance")
   const handleSurveillanceToggle =
     onSurveillanceToggle ??
-    ((_: number, __: boolean, ___: number | null) => {
+    ((_: number, __: "surveillance" | "alarms", ___: boolean, ____: number | null) => {
       // no-op
     })
 

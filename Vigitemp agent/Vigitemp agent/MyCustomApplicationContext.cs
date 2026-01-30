@@ -5,6 +5,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Net.Http;
+using System.Text;
 using System.Windows.Forms;
 using VigitempAgent.Properties;
 
@@ -14,11 +16,14 @@ namespace VigitempAgent
     {
         public static MyCustomApplicationContext Instance { get; private set; }
         public string SITEWEB_URL;
+        public string AGENT_SECRET;
         private NotifyIcon trayIcon;
         private System.Windows.Forms.Timer sessionTimer;
         private DateTime lastNoSessionTipUtc = DateTime.MinValue;
         private DateTime lastExpiryTipUtc = DateTime.MinValue;
         private string lastAlarmUrl;
+        private NotificationTracking lastNotificationTracking;
+        private bool lastNotificationClicked;
         public static Thread UIThread;
         public Thread serverThread;
         public Form_Alert frm;
@@ -26,6 +31,10 @@ namespace VigitempAgent
         private StatusForm statusForm;
         private ToolStripMenuItem sessionStatusMenuItem;
         private LoopbackSessionServer loopbackSessionServer;
+        private static readonly HttpClient NotificationClient = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(3)
+        };
 
         private static (string url, bool explicitOverride) ResolveSiteWebUrl()
         {
@@ -62,11 +71,51 @@ namespace VigitempAgent
             return ("http://192.168.63.144:3000", false);
         }
 
+        private static string ResolveAgentSecret()
+        {
+            try
+            {
+                var env = Environment.GetEnvironmentVariable("VIGITEMP_AGENT_SECRET");
+                if (!string.IsNullOrWhiteSpace(env)) return env.Trim();
+            }
+            catch
+            {
+                // ignore
+            }
+
+            try
+            {
+                var cfg =
+                    ConfigurationManager.AppSettings["VigitempAgentSecret"] ??
+                    ConfigurationManager.AppSettings["VIGITEMP_AGENT_SECRET"];
+                if (!string.IsNullOrWhiteSpace(cfg)) return cfg.Trim();
+            }
+            catch
+            {
+                // ignore
+            }
+
+            return null;
+        }
+
         public MyCustomApplicationContext(string[] args)
         {
             Instance = this;
             var resolved = ResolveSiteWebUrl();
             SITEWEB_URL = resolved.url;
+            AGENT_SECRET = ResolveAgentSecret();
+            if (string.IsNullOrWhiteSpace(AGENT_SECRET))
+            {
+                try
+                {
+                    AgentSecretStore.Load();
+                    AGENT_SECRET = AgentSecretStore.Get();
+                }
+                catch
+                {
+                    // ignore
+                }
+            }
 
             sessionStatusMenuItem = new ToolStripMenuItem("Statut: ...")
             {
@@ -92,7 +141,8 @@ namespace VigitempAgent
                 },
                 Visible = true
             };
-            trayIcon.BalloonTipClicked += OpenPortal;
+            trayIcon.BalloonTipClicked += OnBalloonTipClicked;
+            trayIcon.BalloonTipClosed += OnBalloonTipClosed;
             AgentLog.Info("Agent started.");
 
             try
@@ -207,11 +257,48 @@ namespace VigitempAgent
             }
         }
 
-        private void ShowTrayTip(string title, string message, ToolTipIcon icon)
+        private bool ShowTrayTip(string title, string message, ToolTipIcon icon)
         {
             try
             {
                 trayIcon.ShowBalloonTip(6000, title, message, icon);
+                return true;
+            }
+            catch
+            {
+                // ignore
+                return false;
+            }
+        }
+
+        public void ShowAlarmNotification(string title, string message, string alarmUrl, NotificationTracking tracking)
+        {
+            if (!string.IsNullOrWhiteSpace(alarmUrl))
+            {
+                lastAlarmUrl = alarmUrl;
+            }
+
+            lastNotificationTracking = tracking;
+            lastNotificationClicked = false;
+
+            var body = string.IsNullOrWhiteSpace(message)
+                ? "Cliquez sur la notification pour vous rendre sur la page des alarmes."
+                : message + Environment.NewLine + "Cliquez sur la notification pour vous rendre sur la page des alarmes.";
+
+            var shown = ShowTrayTip(title ?? "Alarme Vigitemp", body, ToolTipIcon.Warning);
+            if (tracking != null)
+            {
+                _ = SendNotificationEvent(tracking, shown ? "shown" : "error", shown ? null : "Affichage notification impossible");
+            }
+        }
+
+        public void SetAgentSecret(string secret)
+        {
+            if (string.IsNullOrWhiteSpace(secret)) return;
+            AGENT_SECRET = secret.Trim();
+            try
+            {
+                AgentSecretStore.Save(AGENT_SECRET);
             }
             catch
             {
@@ -219,18 +306,88 @@ namespace VigitempAgent
             }
         }
 
-        public void ShowAlarmNotification(string title, string message, string alarmUrl)
+        private void OnBalloonTipClicked(object sender, EventArgs e)
         {
-            if (!string.IsNullOrWhiteSpace(alarmUrl))
+            try
             {
-                lastAlarmUrl = alarmUrl;
+                lastNotificationClicked = true;
+                if (lastNotificationTracking != null)
+                {
+                    _ = SendNotificationEvent(lastNotificationTracking, "clicked", null);
+                }
+            }
+            catch
+            {
+                // ignore
             }
 
-            var body = string.IsNullOrWhiteSpace(message)
-                ? "Cliquez sur la notification pour vous rendre sur la page des alarmes."
-                : message + Environment.NewLine + "Cliquez sur la notification pour vous rendre sur la page des alarmes.";
+            OpenPortal(sender, e);
+        }
 
-            ShowTrayTip(title ?? "Alarme Vigitemp", body, ToolTipIcon.Warning);
+        private void OnBalloonTipClosed(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!lastNotificationClicked && lastNotificationTracking != null)
+                {
+                    _ = SendNotificationEvent(lastNotificationTracking, "closed", null);
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+            finally
+            {
+                lastNotificationClicked = false;
+            }
+        }
+
+        private static string JsonEscape(string value)
+        {
+            if (value == null) return "";
+            return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+        }
+
+        private async Task SendNotificationEvent(NotificationTracking tracking, string eventType, string eventData)
+        {
+            if (tracking == null) return;
+            if (tracking.DeliveryId == null && string.IsNullOrWhiteSpace(tracking.CorrelationId)) return;
+
+            var baseUrl = (SITEWEB_URL ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(baseUrl)) return;
+
+            var endpoint = baseUrl.TrimEnd('/') + "/api/notifications/agent-event";
+            var payload = "{" +
+                         "\"deliveryId\":" + (tracking.DeliveryId.HasValue ? tracking.DeliveryId.Value.ToString() : "null") + "," +
+                         "\"correlationId\":\"" + JsonEscape(tracking.CorrelationId ?? "") + "\"," +
+                         "\"eventType\":\"" + JsonEscape(eventType ?? "") + "\"," +
+                         "\"eventData\":\"" + JsonEscape(eventData ?? "") + "\"," +
+                         "\"alarmId\":" + (tracking.AlarmId.HasValue ? tracking.AlarmId.Value.ToString() : "null") + "," +
+                         "\"lieuId\":" + (tracking.LieuId.HasValue ? tracking.LieuId.Value.ToString() : "null") + "," +
+                         "\"machineName\":\"" + JsonEscape(Environment.MachineName) + "\"," +
+                         "\"ip\":\"" + JsonEscape(GetLocalIPAddress()) + "\"" +
+                         "}";
+
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
+                {
+                    Content = new StringContent(payload, Encoding.UTF8, "application/json")
+                };
+
+                if (!string.IsNullOrWhiteSpace(AGENT_SECRET))
+                {
+                    request.Headers.Add("x-vigitemp-agent-secret", AGENT_SECRET);
+                }
+
+                var response = await NotificationClient.SendAsync(request).ConfigureAwait(false);
+                response.Dispose();
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("SendNotificationEvent failed.", ex);
+            }
         }
 
         private void CheckSessionAndNotify()

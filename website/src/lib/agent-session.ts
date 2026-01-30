@@ -62,6 +62,16 @@ export async function setAgentSession(input: {
   });
 }
 
+export async function setAgentSecret(secret: string): Promise<void> {
+  if (!secret) return;
+  await tryAgentFetch("/agent-secret", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ secret }),
+    signal: createTimeoutSignal(800),
+  });
+}
+
 export async function clearAgentSession(): Promise<void> {
   await tryAgentFetch("/session", {
     method: "DELETE",

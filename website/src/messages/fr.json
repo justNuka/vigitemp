@@ -118,6 +118,10 @@
     "my_account": "Mon compte",
     "sound_alarms": "Alarmes sonores"
   },
+  "agentSecretAlert": {
+    "title": "Secret agent invalide",
+    "status_error": "Erreur lors de la vérification du secret agent."
+  },
   "dashboard": {
     "title": "Tableau de bord",
     "description": "Vue d'ensemble de la surveillance",
@@ -423,6 +427,14 @@
       "active": "Active",
       "acknowledged": "Acquittée",
       "resolved": "À acquitter"
+    }
+  },
+  "adminAlarmsPage": {
+    "title": "Gestion des alarmes (admin)",
+    "description": "Suivi et traitement des alarmes côté administration",
+    "meta": {
+      "title": "Alarmes admin - Vigitemp",
+      "description": "Gestion des alarmes côté administration"
     }
   },
   "auditPage": {
@@ -1766,6 +1778,12 @@
           "1": "Type GSO : fréquence verrouillée à 15 min.",
           "2": "Liste des modules simplifiée."
         }
+      },
+      "notifications": {
+        "title": "Notifications",
+        "items": {
+          "0": "Alerte portail si le secret agent est invalide ou absent."
+        }
       }
     }
   },
@@ -1824,12 +1842,17 @@
     "alarmTypes": {
       "high": "Alarme haute",
       "low": "Alarme basse",
-      "no_response": "Non réponse"
+      "no_response": "Non réponse",
+      "ended": "Alarme terminée"
     },
     "surveillance": {
       "active": "En surveillance",
       "disabled": "Surveillance désactivée",
       "disabled_until": "Surveillance désactivée jusqu'au {date}"
+    },
+    "alarms": {
+      "disabled": "Alarmes désactivées",
+      "disabled_until": "Alarmes désactivées jusqu'au {date}"
     },
     "site": {
       "unknown": "Site inconnu"
@@ -1852,14 +1875,24 @@
       "details": "Détails des mesures",
       "disable": "Désactiver la surveillance",
       "enable": "Activer la surveillance",
+      "toggle": "Gérer surveillance / alarmes",
       "location": "Localisation",
       "settings": "Modifier les paramètres du lieu"
     },
     "confirm": {
       "title": "Confirmation",
-      "description": "Voulez-vous {action} la surveillance de ce lieu ?",
+      "description_surveillance": "Voulez-vous {action} la surveillance de ce lieu ?",
+      "description_alarms": "Voulez-vous {action} les alarmes de ce lieu ?",
       "action_disable": "désactiver",
       "action_enable": "activer",
+      "action_type": {
+        "label": "Type d'action",
+        "placeholder": "Choisir une action",
+        "options": {
+          "surveillance": "Surveillance",
+          "alarms": "Alarmes"
+        }
+      },
       "disable_duration": {
         "label": "Durée de désactivation",
         "placeholder": "Choisir une durée",

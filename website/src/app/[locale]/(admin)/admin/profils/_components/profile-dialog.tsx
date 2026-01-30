@@ -82,9 +82,9 @@ export function ProfileDialog({
 
   const profileSchema = z.object({
     name: z.string().min(1, t('validation.name_required')),
-    description: z.string().optional(),
-    mc2: z.boolean().optional().default(false),
-    authorizations: z.array(z.number()).optional().default([]),
+    description: z.string(),
+    mc2: z.boolean(),
+    authorizations: z.array(z.number()),
   });
 
   const form = useForm<ProfileFormData>({

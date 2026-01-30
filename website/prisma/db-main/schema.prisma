@@ -40,22 +40,23 @@ model t_actionneur {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model t_alarme {
-  Id_Alarme                    Int       @id @default(autoincrement())
-  Date_Heure_Debut             DateTime? @db.DateTime(0)
-  Valeur                       Float?    @db.Float
-  Type                         String?   @db.VarChar(1)
-  Date_Heure_Fin               DateTime? @db.DateTime(0)
-  Est_Alarme_Vrai              Boolean?  @default(false)
+  Id_Alarme                    Int              @id @default(autoincrement())
+  Date_Heure_Debut             DateTime?        @db.DateTime(0)
+  Valeur                       Float?           @db.Float
+  Type                         String?          @db.VarChar(1)
+  Date_Heure_Fin               DateTime?        @db.DateTime(0)
+  Est_Alarme_Vrai              Boolean?         @default(false)
   Id_Lieu                      Int?
-  Sonde_Numero_Serie           String?   @db.VarChar(50)
-  Unite                        String?   @db.VarChar(10)
-  Est_Acquittee                Boolean?  @default(false)
-  Date_Heure_Derniere_Mesure   DateTime? @db.DateTime(0)
-  Date_Heure_Debut_Alarme_Vrai DateTime? @db.DateTime(0)
-  Est_Alarme_Pour_VigiTel      Boolean?  @default(false)
+  Sonde_Numero_Serie           String?          @db.VarChar(50)
+  Unite                        String?          @db.VarChar(10)
+  Est_Acquittee                Boolean?         @default(false)
+  Date_Heure_Derniere_Mesure   DateTime?        @db.DateTime(0)
+  Date_Heure_Debut_Alarme_Vrai DateTime?        @db.DateTime(0)
+  Est_Alarme_Pour_VigiTel      Boolean?         @default(false)
   Est_Mail_Envoye              Boolean?
   Est_Tel_Acquittee            Boolean?
-  t_lieu                       t_lieu?   @relation("lieu_alarme", fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ALARME")
+  t_lieu                       t_lieu?          @relation("lieu_alarme", fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ALARME")
+  t_notification               t_notification[]
 
   @@index([Est_Acquittee], map: "IDX_Est_Acquittee")
   @@index([Est_Alarme_Vrai], map: "IDX_Est_Alarme_Vrai")
@@ -389,6 +390,7 @@ model t_lieu {
   Infos_Modifiees_Depuis_Derniere_Mesure    Boolean                    @default(true)
   Est_Lieu_Alarme_Terminee_Non_Acquittee    Int?                       @default(0) @db.TinyInt
   Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 Int?                       @default(0) @db.TinyInt
+  Date_Heure_Reactivation_Surveillance      DateTime?                  @db.DateTime(0)
   t_alarme                                  t_alarme[]                 @relation("lieu_alarme")
   t_alarme_histo                            t_alarme_histo[]           @relation("lieu_alarme_histo")
   t_groupe1                                 t_groupe?                  @relation("groupe1", fields: [Id_Groupe1], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE1_LIEU")
@@ -505,13 +507,14 @@ model t_plan {
 }
 
 model t_postes_clients {
-  Id_Poste                      Int       @id @default(autoincrement())
-  Nom_Machine_Connexion         String?   @unique(map: "nomMachineId") @db.VarChar(255)
-  Adresse_IP_Connexion          String?   @db.VarChar(50)
-  Login                         String?   @db.VarChar(64)
-  Nom                           String?   @db.VarChar(50)
-  Prenom                        String?   @db.VarChar(50)
-  Date_Heure_Derniere_Connexion DateTime? @db.DateTime(0)
+  Id_Poste                      Int                       @id @default(autoincrement())
+  Nom_Machine_Connexion         String?                   @unique(map: "nomMachineId") @db.VarChar(255)
+  Adresse_IP_Connexion          String?                   @db.VarChar(50)
+  Login                         String?                   @db.VarChar(64)
+  Nom                           String?                   @db.VarChar(50)
+  Prenom                        String?                   @db.VarChar(50)
+  Date_Heure_Derniere_Connexion DateTime?                 @db.DateTime(0)
+  t_notification_delivery       t_notification_delivery[]
 }
 
 model t_profil {
@@ -594,28 +597,64 @@ model t_utilisateur {
   t_ancien_mot_de_passe          t_ancien_mot_de_passe[]
   t_liaison_utilisateur_groupe   t_liaison_utilisateur_groupe[]
   t_liaison_utilisateur_site     t_liaison_utilisateur_site[]
-  t_push_subscription            t_push_subscription[]
+  t_notification_delivery        t_notification_delivery[]
 
   @@index([Est_Archive], map: "IDX_Est_Archive")
   @@index([Profil_Utilisateur], map: "IDX_Profil_Utilisateur")
 }
 
-model t_push_subscription {
-  Id_Push_Subscription Int            @id @default(autoincrement())
-  Id_Utilisateur       Int?
-  Endpoint             String         @db.VarChar(2048)
-  Endpoint_Hash        String         @unique(map: "Endpoint_Hash") @db.Char(64)
-  Key_P256dh           String         @db.VarChar(255)
-  Key_Auth             String         @db.VarChar(255)
-  Expiration_Time      BigInt?
-  User_Agent           String?        @db.VarChar(255)
-  Date_Creation        DateTime?      @db.DateTime(0)
-  Date_Modification    DateTime?      @db.DateTime(0)
-  Est_Archive          Boolean?       @default(false)
-  t_utilisateur        t_utilisateur? @relation(fields: [Id_Utilisateur], references: [Id_Utilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_UTILISATEUR_PUSH_SUBSCRIPTION")
+model t_notification {
+  Id_Notification         Int                       @id @default(autoincrement())
+  Type                    String                    @db.VarChar(32)
+  Id_Alarme               Int?
+  Titre                   String?                   @db.VarChar(128)
+  Message                 String                    @db.VarChar(512)
+  Payload_Json            String?                   @db.LongText
+  Priorite                Int?                      @default(0)
+  Date_Creation           DateTime                  @default(now()) @db.DateTime(0)
+  Est_Archive             Boolean                   @default(false)
+  t_alarme                t_alarme?                 @relation(fields: [Id_Alarme], references: [Id_Alarme], onUpdate: NoAction, map: "FK_ALARME_NOTIFICATION")
+  t_notification_delivery t_notification_delivery[]
 
-  @@index([Est_Archive], map: "IDX_Est_Archive_Push_Subscription")
-  @@index([Id_Utilisateur], map: "IDX_Id_Utilisateur_Push_Subscription")
+  @@index([Id_Alarme], map: "IDX_Id_Alarme_Notification")
+  @@index([Date_Creation], map: "IDX_Date_Creation_Notification")
+}
+
+model t_notification_delivery {
+  Id_Delivery          Int                    @id @default(autoincrement())
+  Id_Notification      Int
+  Id_Poste             Int
+  Id_Utilisateur       Int?
+  Statut               String                 @db.VarChar(32)
+  Nb_Tentatives        Int                    @default(0)
+  Derniere_Erreur      String?                @db.VarChar(255)
+  Date_Queue           DateTime               @default(now()) @db.DateTime(0)
+  Date_Envoi           DateTime?              @db.DateTime(0)
+  Date_Ack_Agent       DateTime?              @db.DateTime(0)
+  Date_Dernier_Event   DateTime?              @db.DateTime(0)
+  Correlation_Id       String?                @db.VarChar(64)
+  t_notification       t_notification         @relation(fields: [Id_Notification], references: [Id_Notification], onDelete: Cascade, onUpdate: NoAction, map: "FK_NOTIFICATION_DELIVERY")
+  t_postes_clients     t_postes_clients       @relation(fields: [Id_Poste], references: [Id_Poste], onDelete: Cascade, onUpdate: NoAction, map: "FK_POSTE_DELIVERY")
+  t_utilisateur        t_utilisateur?         @relation(fields: [Id_Utilisateur], references: [Id_Utilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_UTILISATEUR_DELIVERY")
+  t_notification_event t_notification_event[]
+
+  @@unique([Id_Notification, Id_Poste], map: "UK_NOTIFICATION_POSTE")
+  @@index([Statut], map: "IDX_STATUT_DELIVERY")
+  @@index([Date_Envoi], map: "IDX_Date_Envoi_Delivery")
+  @@index([Id_Poste], map: "FK_POSTE_DELIVERY")
+  @@index([Id_Utilisateur], map: "FK_UTILISATEUR_DELIVERY")
+}
+
+model t_notification_event {
+  Id_Event                Int                     @id @default(autoincrement())
+  Id_Delivery             Int
+  Event_Type              String                  @db.VarChar(32)
+  Event_Data              String?                 @db.LongText
+  Date_Event              DateTime                @default(now()) @db.DateTime(0)
+  t_notification_delivery t_notification_delivery @relation(fields: [Id_Delivery], references: [Id_Delivery], onDelete: Cascade, onUpdate: NoAction, map: "FK_DELIVERY_EVENT")
+
+  @@index([Id_Delivery], map: "IDX_Id_Delivery_Event")
+  @@index([Date_Event], map: "IDX_Date_Event")
 }
 
 model liste_clients {
@@ -846,4 +885,9 @@ model t_sonde_type_mesure {
   Unite_Mesure                 String?  @db.VarChar(20)
   Libelle_Unite_Mesure         String?  @db.VarChar(50)
   Reserve_MC2                  String?  @db.VarChar(50)
+}
+
+model t_mem_gso {
+  id         Int     @id
+  last_sonde String? @db.VarChar(20)
 }

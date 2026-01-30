@@ -269,6 +269,8 @@ namespace Vigitemp_Serveur
             }
             else if (prevAlarm && !alarmActive)
             {
+                ths.GetDatabase().setThresholdAlarmEnded(m_idLieu);
+                VigitempServeur.Log($"Alarme terminée (H/B) pour le lieu {m_idLieu} - sonde {m_sondeSerialNumber}");
                 var ips_clients = ths.GetDatabase().getPCsClients();
                 for (int i = 0; i < ips_clients.Count; i++)
                 {

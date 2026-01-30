@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react"
-import { AlertCircle, AlertOctagon, CheckCircle2, PowerOff, Zap } from "lucide-react"
+import { AlertCircle, AlertOctagon, BellOff, CheckCircle2, PowerOff, Zap } from "lucide-react"
 
 export type SensorStatus =
   | "ok"
@@ -100,7 +100,7 @@ export function getStatusTheme(
     case "ended":
       return {
         label: labels.ended,
-        Icon: Zap,
+        Icon: BellOff,
         textClassName: "text-violet-700 dark:text-violet-300",
         softBgClassName: "bg-violet-50 dark:bg-violet-950",
         headerBgClassName: "bg-violet-600 dark:bg-violet-700",

@@ -64,12 +64,17 @@ interface MonitoringCardProps {
   siteName: string;
   groupName: string;
   status: SensorStatus;
-  alarmType?: "H" | "B" | "N" | null;
+  alarmType?: "H" | "B" | "N" | "T" | null;
   alarmDisabled: boolean;
   alarmDisabledUntil: Date | string | null;
   alarmDelayMinutes: number | null;
   surveillanceDisabled: boolean;
-  onSurveillanceToggle: (idLieu: number, newState: boolean, durationMinutes: number | null) => void;
+  onSurveillanceToggle: (
+    idLieu: number,
+    action: "surveillance" | "alarms",
+    newState: boolean,
+    durationMinutes: number | null,
+  ) => void;
 }
 
 export default function MonitoringCard({
@@ -113,10 +118,12 @@ export default function MonitoringCard({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [disableDuration, setDisableDuration] = useState<string>("60");
+  const [actionType, setActionType] = useState<"surveillance" | "alarms">("surveillance");
 
   const [isSurveillanceActive, setIsSurveillanceActive] = useState(
     surveillanceDisabled !== undefined ? !surveillanceDisabled : lieuEtat !== "D"
   );
+  const [isAlarmActive, setIsAlarmActive] = useState(!alarmDisabled);
 
   useEffect(() => {
     if (surveillanceDisabled !== undefined) {
@@ -127,6 +134,10 @@ export default function MonitoringCard({
       setIsSurveillanceActive(lieuEtat !== "D");
     }
   }, [lieuEtat, surveillanceDisabled]);
+
+  useEffect(() => {
+    setIsAlarmActive(!alarmDisabled);
+  }, [alarmDisabled]);
 
   useEffect(() => {
     if (!isModalOpen) return;
@@ -174,6 +185,13 @@ export default function MonitoringCard({
           headerBorderClassName: "border-black",
           headerTextClassName: "text-white",
         };
+      case "T":
+        return {
+          label: t("alarmTypes.ended"),
+          headerBgClassName: "bg-violet-600",
+          headerBorderClassName: "border-violet-700",
+          headerTextClassName: "text-white",
+        };
       default:
         return null;
     }
@@ -187,22 +205,30 @@ export default function MonitoringCard({
   const headerBorderClassName = alarmTypeTheme?.headerBorderClassName ?? headerTheme.headerBorderClassName;
 
   const handleSurveillanceToggle = () => {
+    setActionType("surveillance");
     setShowConfirmModal(true);
   };
 
   const confirmSurveillanceToggle = () => {
-    const newState = !isSurveillanceActive;
+    const isDisabling = actionType === "surveillance" ? isSurveillanceActive : isAlarmActive;
     const durationMinutes =
-      newState === false
+      isDisabling
         ? disableDuration === "manual"
           ? null
           : Number(disableDuration)
         : null;
-    setIsSurveillanceActive(newState);
-    setShowConfirmModal(false);
-    if (onSurveillanceToggle) {
-      onSurveillanceToggle(idLieu, newState, durationMinutes);
+
+    if (actionType === "surveillance") {
+      const newState = !isSurveillanceActive;
+      setIsSurveillanceActive(newState);
+      onSurveillanceToggle(idLieu, "surveillance", newState, durationMinutes);
+    } else {
+      const newState = !isAlarmActive;
+      setIsAlarmActive(newState);
+      onSurveillanceToggle(idLieu, "alarms", newState, durationMinutes);
     }
+
+    setShowConfirmModal(false);
   };
 
   const HeaderIcon = headerTheme.Icon;
@@ -217,24 +243,29 @@ export default function MonitoringCard({
     [consigne, consigneInf, consigneSup, orderedData]
   );
 
-  const alarmDisabledLabel = useMemo(() => {
+  const surveillanceDisabledLabel = useMemo(() => {
     if (isSurveillanceActive) return null;
-    if (!alarmDisabledUntil) return t("surveillance.disabled");
+    return t("surveillance.disabled");
+  }, [isSurveillanceActive, t]);
+
+  const alarmDisabledLabel = useMemo(() => {
+    if (isAlarmActive) return null;
+    if (!alarmDisabledUntil) return t("alarms.disabled");
     const date = new Date(alarmDisabledUntil);
-    if (Number.isNaN(date.getTime())) return t("surveillance.disabled");
-    return t("surveillance.disabled_until", {
+    if (Number.isNaN(date.getTime())) return t("alarms.disabled");
+    return t("alarms.disabled_until", {
       date: date.toLocaleString(localeTag, {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     });
-  }, [alarmDisabledUntil, isSurveillanceActive, localeTag, t]);
+  }, [alarmDisabledUntil, isAlarmActive, localeTag, t]);
 
   const alarmBadgeClassName = isSurveillanceActive
-    ? "bg-gray-500/20 text-gray-900 dark:text-gray-100"
+    ? "bg-orange-500/20 text-orange-900 dark:text-orange-100"
     : "bg-white/20 text-white";
 
   const contentTextClassName = isSurveillanceActive
@@ -315,6 +346,12 @@ export default function MonitoringCard({
               })()}
               {groupName ? <div className="truncate">{groupName}</div> : null}
               <div className="text-base font-semibold truncate">{nomLieu}</div>
+              {surveillanceDisabledLabel ? (
+                <div className={`inline-flex items-center w-fit gap-1 rounded-full text-[10px] px-2 py-0.5 ${alarmBadgeClassName}`}>
+                  <PowerOff className="h-3 w-3" />
+                  <span>{surveillanceDisabledLabel}</span>
+                </div>
+              ) : null}
               {alarmDisabledLabel ? (
                 <div className={`inline-flex items-center w-fit gap-1 rounded-full text-[10px] px-2 py-0.5 ${alarmBadgeClassName}`}>
                   <PowerOff className="h-3 w-3" />
@@ -342,14 +379,18 @@ export default function MonitoringCard({
                         ? "bg-red-700 text-white"
                         : alarmType === "B"
                           ? "bg-blue-700 text-white"
-                          : "bg-black text-white"
+                          : alarmType === "T"
+                            ? "bg-violet-600 text-white"
+                            : "bg-black text-white"
                     }`}
                     title={
                       alarmType === "H"
                         ? t("alarmTypes.high")
                         : alarmType === "B"
                           ? t("alarmTypes.low")
-                          : t("alarmTypes.no_response")
+                          : alarmType === "T"
+                            ? t("alarmTypes.ended")
+                            : t("alarmTypes.no_response")
                     }
                   >
                     {alarmType}
@@ -564,9 +605,7 @@ export default function MonitoringCard({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs">
-                      {isSurveillanceActive ? t("actions.disable") : t("actions.enable")}
-                    </p>
+                    <p className="text-xs">{t("actions.toggle")}</p>
                   </TooltipContent>
                 </UITooltip>
 
@@ -611,13 +650,30 @@ export default function MonitoringCard({
             <DialogHeader>
               <DialogTitle>{t("confirm.title")}</DialogTitle>
               <DialogDescription>
-                {t("confirm.description", {
-                  action: isSurveillanceActive ? t("confirm.action_disable") : t("confirm.action_enable"),
-                })}
+                {actionType === "surveillance"
+                  ? t("confirm.description_surveillance", {
+                      action: isSurveillanceActive ? t("confirm.action_disable") : t("confirm.action_enable"),
+                    })
+                  : t("confirm.description_alarms", {
+                      action: isAlarmActive ? t("confirm.action_disable") : t("confirm.action_enable"),
+                    })}
               </DialogDescription>
             </DialogHeader>
 
-            {isSurveillanceActive ? (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t("confirm.action_type.label")}</label>
+              <Select value={actionType} onValueChange={(value) => setActionType(value as "surveillance" | "alarms")}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t("confirm.action_type.placeholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="surveillance">{t("confirm.action_type.options.surveillance")}</SelectItem>
+                  <SelectItem value="alarms">{t("confirm.action_type.options.alarms")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {(actionType === "surveillance" ? isSurveillanceActive : isAlarmActive) ? (
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t("confirm.disable_duration.label")}</label>
                 <Select value={disableDuration} onValueChange={setDisableDuration}>
@@ -640,7 +696,7 @@ export default function MonitoringCard({
                 {t("confirm.cancel")}
               </Button>
               <Button
-                variant={isSurveillanceActive ? "destructive" : "default"}
+                variant={(actionType === "surveillance" ? isSurveillanceActive : isAlarmActive) ? "destructive" : "default"}
                 onClick={confirmSurveillanceToggle}
               >
                 {t("confirm.confirm")}

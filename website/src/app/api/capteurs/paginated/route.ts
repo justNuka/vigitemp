@@ -91,6 +91,40 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       },
     })
 
+    const lieuxToReactivate = await prisma.t_lieu.findMany({
+      where: {
+        Est_Archive: false,
+        Lieu_Etat: "D",
+        Date_Heure_Reactivation_Surveillance: { lt: new Date() },
+      },
+      select: {
+        Id_Lieu: true,
+        Sonde_Numero_Serie: true,
+      },
+    })
+
+    if (lieuxToReactivate.length > 0) {
+      const ids = lieuxToReactivate.map((lieu) => lieu.Id_Lieu)
+      await prisma.t_lieu.updateMany({
+        where: { Id_Lieu: { in: ids } },
+        data: {
+          Lieu_Etat: "S",
+          Date_Heure_Reactivation_Surveillance: null,
+        },
+      })
+
+      const sondes = lieuxToReactivate
+        .map((lieu) => lieu.Sonde_Numero_Serie)
+        .filter((serie): serie is string => typeof serie === "string" && serie.length > 0)
+
+      if (sondes.length > 0) {
+        await prisma.t_sonde.updateMany({
+          where: { Sonde_Numero_Serie: { in: sondes } },
+          data: { Surveillance_Etat: "S" },
+        })
+      }
+    }
+
     const total = await prisma.t_lieu.count({ where })
 
     const locations = await prisma.t_lieu.findMany({
@@ -130,6 +164,22 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
         })
       : []
 
+    const endedAlarms = locationIds.length
+      ? await prisma.t_alarme.findMany({
+          where: {
+            Id_Lieu: { in: locationIds },
+            Type: "T",
+            Est_Acquittee: false,
+            Date_Heure_Fin: { not: null },
+          },
+          select: {
+            Id_Lieu: true,
+            Date_Heure_Fin: true,
+          },
+          orderBy: { Date_Heure_Fin: "desc" },
+        })
+      : []
+
     const alarmTypeByLieu = new Map<number, "H" | "B" | "N">()
     for (const alarm of activeAlarms) {
       if (!alarm.Id_Lieu) continue
@@ -137,6 +187,14 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       if (!type) continue
       if (!alarmTypeByLieu.has(alarm.Id_Lieu)) {
         alarmTypeByLieu.set(alarm.Id_Lieu, type)
+      }
+    }
+
+    const endedAlarmByLieu = new Set<number>()
+    for (const alarm of endedAlarms) {
+      if (!alarm.Id_Lieu) continue
+      if (!endedAlarmByLieu.has(alarm.Id_Lieu)) {
+        endedAlarmByLieu.add(alarm.Id_Lieu)
       }
     }
 
@@ -155,15 +213,18 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
           select: { Valeur: true, Date_Heure_Mesure: true },
         })
 
-        const alarmType = alarmTypeByLieu.get(location.Id_Lieu) ?? null
+        const hasEndedFlag =
+          location.Est_Lieu_Alarme_Terminee_Non_Acquittee === 1 ||
+          location.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 === 1 ||
+          endedAlarmByLieu.has(location.Id_Lieu)
+
+        const alarmType =
+          alarmTypeByLieu.get(location.Id_Lieu) ?? (hasEndedFlag ? ("T" as const) : null)
         const isCriticalByType = alarmType === "H" || alarmType === "B"
         const isTechnical = alarmType === "N"
         const isCritical = isCriticalByType || location.Est_Lieu_En_Alarme === 1
-        const isWarning = !isCritical && !isTechnical && location.Est_Lieu_En_Pre_Alarme === 1
-        const isEnded =
-          !isCritical &&
-          (location.Est_Lieu_Alarme_Terminee_Non_Acquittee === 1 ||
-            location.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 === 1)
+        const isEnded = !isCritical && !isTechnical && hasEndedFlag
+        const isWarning = !isCritical && !isTechnical && !isEnded && location.Est_Lieu_En_Pre_Alarme === 1
 
         const status: "ok" | "warning" | "critical" | "technical" | "ended" = isTechnical
           ? "technical"

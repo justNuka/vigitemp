@@ -37,7 +37,7 @@ export const PATCH = withAuthLogging(
         },
       })
 
-      log.audit(payload.disabled ? "alarm_disabled" : "alarm_enabled", {
+      log.audit(payload.disabled ? "DESA" : "ACTA", {
         user: user.username,
         userId: user.userId,
         userProfile: user.profile,

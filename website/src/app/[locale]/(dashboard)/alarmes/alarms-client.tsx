@@ -52,7 +52,7 @@ interface Props {
 
 interface AlarmRow {
   id: string;
-  type: "high" | "low" | "no-response";
+  type: "high" | "low" | "no-response" | "ended";
   location: AlarmWithDetails["location"];
   sensor: AlarmWithDetails["sensor"];
   value: number;

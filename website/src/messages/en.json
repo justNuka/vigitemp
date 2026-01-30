@@ -18,8 +18,8 @@
     "next": "Next",
     "previous": "Previous",
     "user": "User",
-    "logout": "Log out",
-    "license_one": "One license",
+    "logout": "Sign out",
+    "license_one": "Licence One",
     "license_prefix": "License",
     "license_unknown": "Unknown license",
     "license_invalid": "Invalid license"
@@ -27,7 +27,7 @@
   "dateRangePicker": {
     "selectRange": "Select a range",
     "cancel": "Cancel",
-    "update": "Update",
+    "update": "Apply",
     "compare": "Compare",
     "select": "Select...",
     "presets": {
@@ -36,10 +36,10 @@
       "last7": "Last 7 days",
       "last14": "Last 14 days",
       "last30": "Last 30 days",
-      "thisWeek": "This Week",
-      "lastWeek": "Last Week",
-      "thisMonth": "This Month",
-      "lastMonth": "Last Month"
+      "thisWeek": "This week",
+      "lastWeek": "Last week",
+      "thisMonth": "This month",
+      "lastMonth": "Last month"
     }
   },
   "pageHeader": {
@@ -47,7 +47,7 @@
   },
   "appMeta": {
     "title": "Vigitemp - Real-time monitoring",
-    "description": "Monitoring system and alarm management"
+    "description": "Monitoring and alarm management system"
   },
   "dock": {
     "sondes": "Probes",
@@ -72,22 +72,13 @@
   },
   "tables": {
     "address": "Address",
-    "serialNumber": "Serial Number",
+    "serialNumber": "Serial number",
     "state": "State",
-    "refresh": {
-      "label": "Refresh",
-      "loading": "Refreshing..."
-    },
-    "load_more": "Load more",
-    "footer": {
-      "count": "{count, plural, one {# sensor} other {# sensors}}",
-      "total": " of {total} total"
-    },
     "location": "Location",
     "site": "Site",
     "group": "Group",
     "frequency": "Frequency",
-    "lastMeasure": "Last Measurement",
+    "lastMeasure": "Last measure",
     "threshold": "Threshold",
     "value": "Value",
     "date": "Date",
@@ -101,8 +92,8 @@
   },
   "buttons": {
     "acknowledge": "Acknowledge",
-    "acknowledge_alarm": "Acknowledge Alarm",
-    "add_new": "Add New",
+    "acknowledge_alarm": "Acknowledge alarm",
+    "add_new": "Add new",
     "edit_item": "Edit",
     "delete_item": "Delete",
     "print": "Print"
@@ -111,7 +102,7 @@
     "dashboard": "Dashboard",
     "monitoring": "Monitoring",
     "alarms": "Alarms",
-    "audit": "Audit trail",
+    "audit": "Audit log",
     "reports": "Reports",
     "settings": "Settings",
     "admin": "Administration",
@@ -122,10 +113,14 @@
   },
   "sidebarGroups": {
     "navigation": "Navigation",
-    "tracking": "Tracking",
+    "tracking": "Monitoring",
     "administration": "Administration",
     "my_account": "My account",
     "sound_alarms": "Sound alarms"
+  },
+  "agentSecretAlert": {
+    "title": "Invalid agent secret",
+    "status_error": "Unable to verify agent secret."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -141,79 +136,14 @@
       "sensors_ok": "Monitoring disabled",
       "locations_disabled": "Monitoring disabled",
       "sensors_alert": "Sensors in alert"
-    }
-  },
-  "surveillance": {
-    "title": "Monitoring",
-    "description": "Real-time monitoring of probes and sensors",
-    "meta": {
-      "title": "Monitoring - Vigitemp",
-      "description": "Real-time monitoring of probes and sensors"
-    },
-    "filters": {
-      "sites": {
-        "label": "Sites",
-        "placeholder": "All sites"
-      },
-      "groups": {
-        "label": "Groups",
-        "placeholder": "All groups"
-      }
-    },
-    "tabs": {
-      "graphs": "Charts",
-      "tree": "Tree"
-    },
-    "grid": {
-      "active_title": "Locations in monitoring"
     },
     "stats_descriptions": {
       "active_locations": "Active locations",
       "disabled_locations": "Monitoring off",
       "active_alarms_warning": "Action required",
       "active_alarms_ok": "All good",
-      "alert_sensors": "Pre-alarms + alarms",
-      "disabled_title": "Locations with monitoring disabled",
-      "disabled_empty": "No locations with monitoring disabled",
-      "toggle_disabled_first": "Show disabled locations first",
-      "toggle_active_first": "Show monitoring locations first",
-      "disabled_badge": "Monitoring disabled",
-      "disabled_until": "Monitoring disabled until {date}",
-      "empty_title": "No sensors",
-      "unknown_site": "Unknown site",
-      "no_group": "No group"
-    },
-    "empty_state": {
-      "title": "No probes",
-      "description": "No data available at the moment."
-    },
-    "group_modal": {
-      "title": "Confirmation",
-      "description": "Do you want to {action} monitoring for group {group}?",
-      "action_disable": "disable",
-      "action_enable": "enable",
-      "toggle_disable": "Disable group monitoring",
-      "toggle_enable": "Re-enable group monitoring",
-      "duration_label": "Disable duration",
-      "duration_placeholder": "Choose a duration",
-      "duration_options": {
-        "15": "15 minutes",
-        "60": "1 hour",
-        "240": "4 hours",
-        "720": "12 hours",
-        "manual": "Unlimited (manual)"
-      },
-      "cancel": "Cancel",
-      "confirm": "Confirm"
+      "alert_sensors": "Pre-alarms + alarms"
     }
-  },
-  "surveillanceStatus": {
-    "inactive": "Disabled",
-    "critical": "Critical",
-    "technical": "No response",
-    "warning": "Warning",
-    "ended": "Alarm ended",
-    "ok": "OK"
   },
   "alarmsPage": {
     "title": "Alarm management",
@@ -262,27 +192,27 @@
       }
     },
     "thresholds": {
-      "sup": "High: {value} {unit}",
+      "sup": "Up: {value} {unit}",
       "inf": "Low: {value} {unit}",
-      "sup_empty": "High: -",
+      "sup_empty": "Up: -",
       "inf_empty": "Low: -"
     },
     "empty_state": {
       "active_title": "No active alarms",
       "acknowledged_title": "No acknowledged alarms",
       "resolved_title": "No alarms to acknowledge",
-      "active_description": "All clear - No ongoing alarms",
-      "other_description": "No alarms in this category for now"
+      "active_description": "All clear - no alarms in progress",
+      "other_description": "No alarms in this category at the moment"
     },
     "dialog": {
       "title": "Acknowledge alarm",
       "description": "Alarm on {sensor} in {location}",
       "last_value_label": "Last value",
       "thresholds_label": "Upper/Lower thresholds",
-      "sup_value": "High: {value} {unit}",
+      "sup_value": "Up: {value} {unit}",
       "inf_value": "Low: {value} {unit}",
       "comment_label": "Comment (optional)",
-      "comment_placeholder": "Add a comment for this alarm...",
+      "comment_placeholder": "Add a comment on this alarm...",
       "comment_count": "{count}/200 characters",
       "cancel": "Cancel",
       "confirm": "Acknowledge",
@@ -302,60 +232,62 @@
       "description": "Audit log and event history"
     }
   },
-  "locationsPage": {
-    "title": "Location management",
-    "count": "{count, plural, one {{count} location} other {{count} locations}}",
-    "tabs": {
-      "all": "All ({count})",
-      "unassigned": "Unassigned ({count})"
-    },
-    "actions": {
-      "new": "New",
-      "edit": "Edit",
-      "archive": "Archive"
-    },
-    "toast": {
-      "create_success": "Location created successfully",
-      "create_no_probe": "Location created without a probe. Remember to assign one later.",
-      "create_error": "Error while creating the location",
-      "update_success": "Location updated successfully",
-      "update_error": "Error while updating the location",
-      "archive_success": "Location archived successfully",
-      "archive_error": "Error while archiving the location"
-    },
-    "errors": {
-      "no_location_selected": "No location selected"
-    },
-    "dialogs": {
-      "archive": {
-        "title": "Archive the location",
-        "description": "This location will switch to monitoring disabled and the probe will be unassigned. Do you want to continue?",
-        "submitting": "Archiving...",
-        "confirm": "Archive"
-      },
-      "create_no_probe": {
-        "title": "Create a location without a probe?",
-        "description": "This location will be created without an associated probe. You can assign one later in location management. Do you want to continue?",
-        "submitting": "Creating...",
-        "confirm": "Continue"
-      }
-    }
+  "surveillanceStatus": {
+    "inactive": "Disabled",
+    "critical": "Critical",
+    "technical": "No response",
+    "warning": "Warning",
+    "ended": "Alarm ended",
+    "ok": "OK"
   },
-  "locationsTable": {
-    "columns": {
-      "location": "Location",
-      "type": "Type",
-      "site": "Site",
-      "groups": "Groups",
-      "probe": "Probe",
-      "status": "Status",
-      "setpoint": "Setpoint",
-      "unit": "Unit",
-      "frequency": "Frequency",
-      "max": "Max",
-      "min": "Min",
-      "alarm_delay_high": "High alarm delay",
-      "alarm_delay_low": "Low alarm delay"
+  "surveillance": {
+    "title": "Monitoring",
+    "description": "Real-time monitoring of probes and sensors",
+    "meta": {
+      "title": "Monitoring - Vigitemp",
+      "description": "Real-time monitoring of probes and sensors"
+    },
+    "filters": {
+      "sites": {
+        "label": "Sites",
+        "placeholder": "All sites"
+      },
+      "groups": {
+        "label": "Groups",
+        "placeholder": "All groups"
+      }
+    },
+    "tabs": {
+      "graphs": "Charts",
+      "tree": "Tree"
+    },
+    "refresh": {
+      "label": "Refresh",
+      "loading": "Refreshing..."
+    },
+    "load_more": "Load more",
+    "footer": {
+      "count": "{count, plural, one {# probe} other {# probes}}",
+      "total": " out of {total} total"
+    },
+    "grid": {
+      "active_title": "Locations in monitoring",
+      "disabled_title": "Locations with monitoring disabled",
+      "disabled_empty": "No locations with monitoring disabled",
+      "toggle_disabled_first": "Show disabled locations first",
+      "toggle_active_first": "Show monitoring locations first",
+      "disabled_badge": "Monitoring disabled",
+      "disabled_until": "Monitoring disabled until {date}",
+      "empty_title": "No probes",
+      "unknown_site": "Unknown site",
+      "no_group": "No group"
+    },
+    "stats_descriptions": {
+      "active_locations": "Active locations",
+      "disabled_locations": "Monitoring off",
+      "active_alarms_warning": "Action required",
+      "active_alarms_ok": "All good",
+      "alert_sensors": "Pre-alarms + alarms"
     },
     "status": {
       "active": "Monitoring active",
@@ -1062,6 +994,30 @@
       "empty": "No groups"
     },
     "panels": {
+      "locations": {
+        "title": "Linked locations",
+        "search_placeholder": "Search a location...",
+        "empty": "No locations",
+        "empty_unselected": "Select a group",
+        "columns": {
+          "name": "Location"
+        }
+      },
+      "users": {
+        "title": "Linked users",
+        "search_placeholder": "Search a user...",
+        "empty": "No users",
+        "empty_unselected": "Select a group",
+        "columns": {
+          "name": "User"
+        }
+      }
+    },
+    "toast": {
+      "archive_success": "Group archived successfully",
+      "archive_error": "Error while archiving"
+    }
+  },
   "adminSettingsPage": {
     "title": "Settings",
     "description": "Application configuration",
@@ -1193,30 +1149,14 @@
       }
     }
   },
-      "locations": {
-        "title": "Linked locations",
-        "search_placeholder": "Search a location...",
-        "empty": "No locations",
-        "empty_unselected": "Select a group",
-        "columns": {
-          "name": "Location"
-        }
-      },
-      "users": {
-        "title": "Linked users",
-        "search_placeholder": "Search a user...",
-        "empty": "No users",
-        "empty_unselected": "Select a group",
-        "columns": {
-          "name": "User"
-        }
+    "adminAlarmsPage": {
+      "title": "Admin alarms",
+      "description": "Alarm management for administrators",
+      "meta": {
+        "title": "Admin alarms - Vigitemp",
+        "description": "Alarm management for administrators"
       }
     },
-    "toast": {
-      "archive_success": "Group archived successfully",
-      "archive_error": "Error while archiving"
-    }
-  },
   "probesPage": {
     "title": "Probe management ({count, plural, one {# probe} other {# probes}})",
     "actions": {
@@ -1766,6 +1706,12 @@
           "1": "GSO type: frequency locked to 15 min.",
           "2": "Simplified module list."
         }
+      },
+      "notifications": {
+        "title": "Notifications",
+        "items": {
+          "0": "Portal alert when the agent secret is invalid or missing."
+        }
       }
     }
   },
@@ -1824,12 +1770,17 @@
     "alarmTypes": {
       "high": "High alarm",
       "low": "Low alarm",
-      "no_response": "No response"
+      "no_response": "No response",
+      "ended": "Alarm ended"
     },
     "surveillance": {
       "active": "Monitoring",
       "disabled": "Monitoring disabled",
       "disabled_until": "Monitoring disabled until {date}"
+    },
+    "alarms": {
+      "disabled": "Alarms disabled",
+      "disabled_until": "Alarms disabled until {date}"
     },
     "site": {
       "unknown": "Unknown site"
@@ -1852,14 +1803,24 @@
       "details": "Measurement details",
       "disable": "Disable monitoring",
       "enable": "Enable monitoring",
+      "toggle": "Manage monitoring / alarms",
       "location": "Location",
       "settings": "Edit location settings"
     },
     "confirm": {
       "title": "Confirmation",
-      "description": "Do you want to {action} monitoring for this location?",
+      "description_surveillance": "Do you want to {action} monitoring for this location?",
+      "description_alarms": "Do you want to {action} alarms for this location?",
       "action_disable": "disable",
       "action_enable": "enable",
+      "action_type": {
+        "label": "Action type",
+        "placeholder": "Choose an action",
+        "options": {
+          "surveillance": "Monitoring",
+          "alarms": "Alarms"
+        }
+      },
       "disable_duration": {
         "label": "Disable duration",
         "placeholder": "Choose a duration",

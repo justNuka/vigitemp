@@ -30,7 +30,12 @@ interface MonitoringCardsGridProps {
   sensors: SensorWithLocation[]
   disabledFirst?: boolean
   isLoading?: boolean
-  onSurveillanceToggle?: (idLieu: number, newState: boolean, durationMinutes?: number | null) => void
+  onSurveillanceToggle?: (
+    idLieu: number,
+    action: "surveillance" | "alarms",
+    newState: boolean,
+    durationMinutes?: number | null,
+  ) => void
   onGroupSurveillanceToggle?: (groupId: number, newState: boolean, durationMinutes?: number | null) => void
 }
 
@@ -75,7 +80,7 @@ export function MonitoringCardsGrid({
   const [groupDisableDuration, setGroupDisableDuration] = useState("60")
   const handleSurveillanceToggle =
     onSurveillanceToggle ??
-    ((_: number, __: boolean, ___: number | null) => {
+    ((_: number, __: "surveillance" | "alarms", ___: boolean, ____: number | null) => {
       // no-op
     })
 
@@ -265,8 +270,8 @@ export function MonitoringCardsGrid({
                               lieuEtat={sensor.location.lieuEtat ?? ""}
                               surveillanceDisabled={sensor.location.surveillanceDisabled ?? false}
                               sondeNumeroSerie={sensor.location.sondeNumeroSerie ?? ""}
-                              onSurveillanceToggle={(id, newState, durationMinutes) =>
-                                handleSurveillanceToggle(id, newState, durationMinutes ?? null)
+                              onSurveillanceToggle={(id, action, newState, durationMinutes) =>
+                                handleSurveillanceToggle(id, action, newState, durationMinutes ?? null)
                               }
                             />
                           ))}
@@ -338,8 +343,8 @@ export function MonitoringCardsGrid({
                               lieuEtat={sensor.location.lieuEtat ?? ""}
                               surveillanceDisabled={sensor.location.surveillanceDisabled ?? false}
                               sondeNumeroSerie={sensor.location.sondeNumeroSerie ?? ""}
-                              onSurveillanceToggle={(id, newState, durationMinutes) =>
-                                handleSurveillanceToggle(id, newState, durationMinutes ?? null)
+                              onSurveillanceToggle={(id, action, newState, durationMinutes) =>
+                                handleSurveillanceToggle(id, action, newState, durationMinutes ?? null)
                               }
                             />
                           ))}

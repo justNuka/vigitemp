@@ -10,6 +10,8 @@ using System.Security.Cryptography;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Encodings;
+using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Signers;
@@ -30,6 +32,11 @@ namespace Vigitemp_License_Generator
         private readonly ComboBox _cmbConcurrent;
         private readonly CheckedListBox _clbOptions;
         private readonly TextBox _txtInstancePublicKey;
+        private readonly TextBox _txtAgentSecretPublicKey;
+        private readonly TextBox _txtAgentSecretPrivateKeyPath;
+        private readonly Button _btnGenerateAgentSecretKeys;
+        private readonly Button _btnLoadAgentSecretPublicKey;
+        private readonly Button _btnCopyAgentSecretPublicKey;
         private readonly TextBox _txtHotlineLogin;
         private readonly TextBox _txtHotlinePassword;
         private readonly TextBox _txtHotlinePasswordConfirm;
@@ -49,6 +56,8 @@ namespace Vigitemp_License_Generator
         private readonly string _keysFolder;
         private readonly string _privateKeyPath;
         private readonly string _publicKeyPath;
+        private readonly string _agentSecretPrivateKeyPath;
+        private readonly string _agentSecretPublicKeyPath;
 
         public MainForm()
         {
@@ -59,6 +68,8 @@ namespace Vigitemp_License_Generator
             _keysFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "license_keys");
             _privateKeyPath = Path.Combine(_keysFolder, "private_key.pem");
             _publicKeyPath = Path.Combine(_keysFolder, "public_key.pem");
+            _agentSecretPrivateKeyPath = Path.Combine(_keysFolder, "agent_secret_private.pem");
+            _agentSecretPublicKeyPath = Path.Combine(_keysFolder, "agent_secret_public.pem");
 
             _toolTip = new ToolTip
             {
@@ -86,6 +97,16 @@ namespace Vigitemp_License_Generator
 
             scrollPanel.Controls.Add(root);
             Controls.Add(scrollPanel);
+
+            scrollPanel.Resize += (s, e) =>
+            {
+                var width = Math.Max(0, scrollPanel.ClientSize.Width - scrollPanel.Padding.Horizontal - 20);
+                root.MaximumSize = new Size(width, 0);
+                foreach (Control child in root.Controls)
+                {
+                    child.Width = Math.Max(0, width - root.Padding.Horizontal);
+                }
+            };
 
             var inputGroup = CreateGroup("Inputs");
             AddGroup(root, inputGroup);
@@ -175,12 +196,53 @@ namespace Vigitemp_License_Generator
                 hotlineConfirmPanel,
                 "Confirmer le mot de passe hotline."
             );
-            _txtInstancePublicKey = new TextBox { Width = 520 };
+            _txtInstancePublicKey = new TextBox { Width = 520, Multiline = true, Height = 80, ScrollBars = ScrollBars.Vertical };
             AddRowWithInfo(
                 inputTable,
-                "Instance public key (optionnel)",
+                "Clé publique instance (RSA)",
                 _txtInstancePublicKey,
-                "Clé publique de l'instance cible.\nSi renseigné, la licence est liée à cette instance.\nLaisser vide pour une licence portable."
+                "Clé publique RSA optionnelle pour lier la licence à une instance.\nLaisser vide si aucune liaison n'est requise."
+            );
+
+            _txtAgentSecretPublicKey = new TextBox { Width = 520, Multiline = true, Height = 80, ScrollBars = ScrollBars.Vertical };
+            AddRowWithInfo(
+                inputTable,
+                "Clé publique secret agent (RSA)",
+                _txtAgentSecretPublicKey,
+                "Clé publique RSA du secret agent.\nGénérée via le bouton ci-dessous ou chargée depuis un fichier PEM."
+            );
+
+            var agentSecretKeyPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true };
+            _btnGenerateAgentSecretKeys = new Button { Text = "Générer paire RSA (secret agent)", AutoSize = true };
+            _btnLoadAgentSecretPublicKey = new Button { Text = "Charger clé publique RSA", AutoSize = true };
+            _btnCopyAgentSecretPublicKey = new Button { Text = "Copier clé publique RSA", AutoSize = true, Enabled = false };
+
+            _btnGenerateAgentSecretKeys.Click += (s, e) => GenerateAgentSecretKeyPair();
+            _btnLoadAgentSecretPublicKey.Click += (s, e) => LoadAgentSecretPublicKeyFromDialog();
+            _btnCopyAgentSecretPublicKey.Click += (s, e) => CopyToClipboard(_txtAgentSecretPublicKey.Text, "Clé publique RSA copiée.");
+            _txtAgentSecretPublicKey.TextChanged += (s, e) =>
+            {
+                _btnCopyAgentSecretPublicKey.Enabled = !string.IsNullOrWhiteSpace(_txtAgentSecretPublicKey.Text);
+            };
+
+            agentSecretKeyPanel.Controls.Add(_btnGenerateAgentSecretKeys);
+            agentSecretKeyPanel.Controls.Add(_btnLoadAgentSecretPublicKey);
+            agentSecretKeyPanel.Controls.Add(_btnCopyAgentSecretPublicKey);
+
+            AddRowWithInfo(
+                inputTable,
+                "Secret agent (RSA)",
+                agentSecretKeyPanel,
+                "Génère une paire RSA dédiée au secret agent.\nLa clé publique est collée ci-dessus, la clé privée reste à déposer sur le serveur web."
+            );
+
+            _txtAgentSecretPrivateKeyPath = new TextBox { Width = 520, ReadOnly = true };
+            _txtAgentSecretPrivateKeyPath.Text = _agentSecretPrivateKeyPath;
+            AddRowWithInfo(
+                inputTable,
+                "Chemin clé privée RSA",
+                _txtAgentSecretPrivateKeyPath,
+                "Chemin où la clé privée RSA est enregistrée localement.\nÀ copier sur le serveur web (agent_secret_private.pem)."
             );
 
             var expiryPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true };
@@ -506,6 +568,8 @@ namespace Vigitemp_License_Generator
             var licenseId = $"VT-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpperInvariant()}";
             _txtLicenseId.Text = licenseId;
 
+            var agentSecret = GenerateAgentSecret();
+
             var payload = new Dictionary<string, object>
             {
                 { "licenseId", licenseId },
@@ -515,6 +579,8 @@ namespace Vigitemp_License_Generator
                 { "options", options },
                 { "issuedAt", DateTime.UtcNow.ToString("o") },
             };
+
+            payload["agentSecret"] = agentSecret;
 
             payload["hotline"] = new Dictionary<string, object>
             {
@@ -535,6 +601,19 @@ namespace Vigitemp_License_Generator
                     { "instancePublicKey", instanceKey }
                 };
             }
+
+            var agentSecretPublicKey = _txtAgentSecretPublicKey.Text.Trim();
+            if (string.IsNullOrWhiteSpace(agentSecretPublicKey))
+            {
+                MessageBox.Show("Clé publique du secret agent requise pour chiffrer le secret.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            payload["agentSecretEnc"] = new Dictionary<string, object>
+            {
+                { "alg", "RSA-OAEP" },
+                { "value", EncryptAgentSecret(agentSecret, agentSecretPublicKey) }
+            };
 
             var header = new Dictionary<string, object>
             {
@@ -572,6 +651,94 @@ namespace Vigitemp_License_Generator
                 .TrimEnd('=')
                 .Replace('+', '-')
                 .Replace('/', '_');
+        }
+
+        private static string GenerateAgentSecret()
+        {
+            var bytes = new byte[32];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(bytes);
+            }
+            return Base64UrlEncode(bytes);
+        }
+
+        private static AsymmetricKeyParameter LoadPublicKeyFromPemString(string pem)
+        {
+            using (var reader = new StringReader(pem))
+            {
+                var pemReader = new PemReader(reader);
+                var obj = pemReader.ReadObject();
+                if (obj is AsymmetricKeyParameter key && !key.IsPrivate)
+                {
+                    return key;
+                }
+
+                if (obj is AsymmetricCipherKeyPair pair)
+                {
+                    return pair.Public;
+                }
+            }
+
+            throw new InvalidOperationException("Clé publique instance invalide (PEM attendu).");
+        }
+
+        private static string EncryptAgentSecret(string secret, string publicKeyPem)
+        {
+            var publicKey = LoadPublicKeyFromPemString(publicKeyPem);
+            var cipher = new OaepEncoding(new RsaEngine());
+            cipher.Init(true, publicKey);
+            var input = Encoding.UTF8.GetBytes(secret ?? string.Empty);
+            var encrypted = cipher.ProcessBlock(input, 0, input.Length);
+            return Base64UrlEncode(encrypted);
+        }
+
+        private void GenerateAgentSecretKeyPair()
+        {
+            try
+            {
+                Directory.CreateDirectory(_keysFolder);
+
+                var generator = new RsaKeyPairGenerator();
+                generator.Init(new KeyGenerationParameters(new SecureRandom(), 2048));
+                var keyPair = generator.GenerateKeyPair();
+
+                WritePrivateKey(_agentSecretPrivateKeyPath, keyPair.Private);
+                WritePublicKey(_agentSecretPublicKeyPath, keyPair.Public);
+
+                _txtAgentSecretPublicKey.Text = File.ReadAllText(_agentSecretPublicKeyPath, Encoding.ASCII);
+                _txtAgentSecretPrivateKeyPath.Text = _agentSecretPrivateKeyPath;
+
+                MessageBox.Show(
+                    "Paire RSA générée.\n- Clé publique copiée dans le champ.\n- Clé privée enregistrée sur disque.",
+                    "OK",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur génération RSA : {ex.Message}", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void LoadAgentSecretPublicKeyFromDialog()
+        {
+            using (var dialog = new OpenFileDialog())
+            {
+                dialog.Title = "Charger clé publique RSA";
+                dialog.Filter = "PEM|*.pem|All files|*.*";
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+
+                try
+                {
+                    _txtAgentSecretPublicKey.Text = File.ReadAllText(dialog.FileName, Encoding.ASCII);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lecture clé publique : {ex.Message}", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
         }
 
         private void SaveTokenToFile()

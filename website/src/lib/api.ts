@@ -201,14 +201,14 @@ export type SensorWithLocation = {
   location: Location;
   status: "ok" | "warning" | "critical" | "technical" | "ended";
   lieuType?: string | null;
-  alarmType?: "H" | "B" | "N" | null;
+  alarmType?: "H" | "B" | "N" | "T" | null;
 };
 
 export type AlarmWithDetails = {
   id: string;
   sensorId: string;
   locationId: string;
-  type: "high" | "low" | "no-response";
+  type: "high" | "low" | "no-response" | "ended";
   value: number;
   threshold: number;
   status: "active" | "acknowledged" | "resolved";

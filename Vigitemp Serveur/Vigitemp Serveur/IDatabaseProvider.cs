@@ -15,13 +15,17 @@ namespace Vigitemp_Serveur
         List<int> getDistinctIdServeur();
         List<int> getDistinctFrequenciesByIdServeur(int p_idServeur);
         (List<int>, List<DateTime>) getLieuxAvecAlarmesEnSnooze();
+        (List<int>, List<DateTime>) getLieuxAvecSurveillanceEnSnooze();
         double getLastMeasure(int p_IdLieu);
         bool setAlarmeByIdLieu(int p_idLieu, bool p_valeur);
+        bool setSurveillanceByIdLieu(int p_idLieu, bool p_valeur);
+        bool setThresholdAlarmEnded(int idLieu);
         bool setThresholdAlarm(int idLieu, string sondeNumeroSerie, string type, double value, string unite, bool isActive);
         bool setLieuAlarmFlags(int idLieu, bool isPreAlarm, bool isAlarm);
         bool setLieuInfosModifiees(int idLieu, bool value);
         bool setNonResponseAlarm(int idLieu, string sondeNumeroSerie, bool isActive);
         string getLieuUnite(int idLieu);
         (double, double) getCoeffCalibrageBySerialNumber(string p_serial_number);
+        bool writeAuditJournal(string codeJournal, string username, string userProfile, int? idLieu, string commentaire, string commentaireUtilisateur);
     }
 }

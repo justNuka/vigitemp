@@ -9,6 +9,9 @@ import { useEffect, useState } from "react";
 import { clearAgentSession } from "@/lib/agent-session";
 import PageTransitionWrapper from "@/components/animations/transitions/page-transitions/PageTransitionWrapper";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useTranslations } from "next-intl";
+import { AlertTriangle } from "lucide-react";
 
 export default function AdminGroupLayout({
   children,
@@ -20,6 +23,11 @@ export default function AdminGroupLayout({
 
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  const [agentSecretStatus, setAgentSecretStatus] = useState<{
+    status: string;
+    message: string;
+  } | null>(null);
+  const t = useTranslations("agentSecretAlert");
 
   // Fetch current user
   const { data: currentUser } = useCurrentUser();
@@ -30,6 +38,24 @@ export default function AdminGroupLayout({
       setIsAuthorized(true);
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const loadStatus = async () => {
+      try {
+        const res = await fetch("/api/agent/secret/status", { method: "GET" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { status: string; message: string };
+        setAgentSecretStatus(data);
+      } catch {
+        setAgentSecretStatus({
+          status: "error",
+          message: t("status_error"),
+        });
+      }
+    };
+    loadStatus();
+  }, [currentUser, t]);
 
   const handleLogout = async () => {
     try {
@@ -62,6 +88,17 @@ export default function AdminGroupLayout({
           onLogout={handleLogout}
         />
         <main className="flex-1 min-h-0 bg-background">
+          {agentSecretStatus && agentSecretStatus.status !== "ok" && (
+            <div className="px-6 pt-6">
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>{t("title")}</AlertTitle>
+                <AlertDescription>
+                  {agentSecretStatus.message || t("status_error")}
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
           <PageTransitionWrapper className="min-h-0">
             {children}
           </PageTransitionWrapper>

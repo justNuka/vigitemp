@@ -16,7 +16,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
-import { getAgentInfo, setAgentSession } from "@/lib/agent-session";
+import { getAgentInfo, setAgentSecret, setAgentSession } from "@/lib/agent-session";
 import { HttpError, postJson } from "@/lib/http";
 import { LoginCredentialsForm } from "./_components/login-credentials-form";
 import { ForgotPasswordDialog } from "./_components/forgot-password-dialog";
@@ -151,6 +151,14 @@ export function LoginForm() {
           userId: String(data.id),
           username: data.displayName || data.username,
         });
+
+        const secretRes = await fetch("/api/agent/secret", { method: "GET" });
+        if (secretRes.ok) {
+          const payload = (await secretRes.json()) as { secret?: string };
+          if (payload.secret) {
+            await setAgentSecret(payload.secret);
+          }
+        }
       } catch {
         // Agent not installed/running: ignore
       }

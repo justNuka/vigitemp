@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Terminal } from "@/components/magicui/terminal"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertTriangle } from "lucide-react"
 
 type HealthStatus = "ok" | "error" | "unknown"
 
@@ -72,6 +74,7 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
   const params = useParams()
   const locale = typeof params?.locale === "string" ? params.locale : "fr"
   const t = useTranslations("hotlineDashboard")
+  const tAlert = useTranslations("agentSecretAlert")
 
   const [health, setHealth] = useState<HotlineHealth | null>(null)
   const [loadingHealth, setLoadingHealth] = useState(true)
@@ -83,6 +86,10 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
   >("web")
   const [logDate, setLogDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [logLimit, setLogLimit] = useState("200")
+  const [agentSecretStatus, setAgentSecretStatus] = useState<{
+    status: string
+    message: string
+  } | null>(null)
 
   const safeLimit = useMemo(() => {
     const parsed = Number(logLimit)
@@ -128,14 +135,39 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
     }
   }
 
+  const loadAgentSecretStatus = async () => {
+    try {
+      const data = await getJson<{ status: string; message: string }>(
+        "/api/hotline/agent-secret-status"
+      )
+      setAgentSecretStatus(data)
+    } catch (error) {
+      if (isUnauthorizedError(error)) {
+        router.replace(`/${locale}/hotline/${slug}/login`)
+        return
+      }
+      setAgentSecretStatus({ status: "error", message: tAlert("status_error") })
+    }
+  }
+
   useEffect(() => {
     loadHealth()
     loadLogs()
+    loadAgentSecretStatus()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
     <div className="flex w-full flex-1 flex-col gap-6">
+      {agentSecretStatus && agentSecretStatus.status !== "ok" && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>{tAlert("title")}</AlertTitle>
+          <AlertDescription>
+            {agentSecretStatus.message || tAlert("status_error")}
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">{t("title")}</h1>

@@ -36,10 +36,21 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
     ])
 
     const formatted = alarms.map((alarm: any) => {
-      const alarmType = alarm.Type === "H" ? "high" : alarm.Type === "B" ? "low" : alarm.Type === "N" ? "no-response" : "temperature"
+      const alarmType =
+        alarm.Type === "H"
+          ? "high"
+          : alarm.Type === "B"
+            ? "low"
+            : alarm.Type === "N"
+              ? "no-response"
+              : alarm.Type === "T"
+                ? "ended"
+                : "temperature"
       const message =
         alarm.Type === "N"
           ? "Alarme non réponse"
+          : alarm.Type === "T"
+            ? "Alarme terminée (non acquittée)"
           : alarm.Type === "H"
             ? `Alarme haute - ${alarm.Valeur}°C`
             : alarm.Type === "B"
@@ -53,7 +64,14 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
       locationId: alarm.Id_Lieu || 0,
       locationName: alarm.t_lieu?.Nom_Lieu || "Unknown",
       type: alarmType,
-      severity: alarm.Type === "N" ? "technical" : alarm.Type === "H" || alarm.Type === "B" ? "critical" : "warning",
+      severity:
+        alarm.Type === "N"
+          ? "technical"
+          : alarm.Type === "H" || alarm.Type === "B"
+            ? "critical"
+            : alarm.Type === "T"
+              ? "ended"
+              : "warning",
       status: alarm.Date_Heure_Fin ? "resolved" : alarm.Est_Acquittee ? "acknowledged" : "active",
       message,
       timestamp: alarm.Date_Heure_Debut?.toISOString() || new Date().toISOString(),

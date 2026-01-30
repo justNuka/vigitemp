@@ -9,7 +9,6 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
   try {
     const sondes = await prisma.t_sonde.findMany({
       include: {
-        t_etat_surveillance: true,
         t_lieu: {
           select: {
             Nom_Lieu: true,
@@ -29,8 +28,7 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
       Port_Serie: sonde.Port_Serie,
       Sonde_Type: (sonde as any).Sonde_Type ?? null,
       Surveillance_Etat: sonde.Surveillance_Etat,
-      Surveillance_Etat_Libelle:
-        sonde.t_etat_surveillance?.Surveillance_Etat_Libelle || sonde.Surveillance_Etat,
+      Surveillance_Etat_Libelle: sonde.Surveillance_Etat,
       Id_Module: sonde.Id_Module,
       Lieu: sonde.t_lieu[0]?.Nom_Lieu || null,
     }))

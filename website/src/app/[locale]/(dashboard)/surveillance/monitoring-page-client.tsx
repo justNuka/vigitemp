@@ -181,26 +181,56 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
   );
 
   const handleSurveillanceToggle = useCallback(
-    async (idLieu: number, newState: boolean) => {
-      const nextEtat = newState ? "S" : "D"
+    async (idLieu: number, action: "surveillance" | "alarms", newState: boolean, durationMinutes?: number | null) => {
+      if (action === "surveillance") {
+        const nextEtat = newState ? "S" : "D"
+        try {
+          const res = await fetch(`/api/lieux/${idLieu}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              Lieu_Etat: nextEtat,
+              surveillanceDurationMinutes: newState ? null : durationMinutes ?? null,
+            }),
+          })
+
+          const payload = await res.json().catch(() => null)
+          if (!res.ok) {
+            console.error("Surveillance toggle failed", payload ?? (await res.text()))
+          } else if (payload?.ok && payload.data) {
+            updateSensorsCache([idLieu], payload.data.Lieu_Etat ?? null, payload.data.Lieu_Etat === "D")
+          }
+        } catch (error) {
+          console.error("Error toggling surveillance:", error)
+        }
+        return
+      }
+
       try {
-        const res = await fetch(`/api/lieux/${idLieu}`, {
+        const res = await fetch(`/api/lieux/${idLieu}/alarm`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ Lieu_Etat: nextEtat }),
+          body: JSON.stringify({
+            disabled: !newState,
+            durationMinutes: newState ? null : durationMinutes ?? null,
+          }),
         })
 
         const payload = await res.json().catch(() => null)
         if (!res.ok) {
-          console.error("Surveillance toggle failed", payload ?? (await res.text()))
+          console.error("Alarm toggle failed", payload ?? (await res.text()))
         } else if (payload?.ok && payload.data) {
-          updateSensorsCache([idLieu], payload.data.Lieu_Etat ?? null, payload.data.Lieu_Etat === "D")
+          updateAlarmCache(
+            [idLieu],
+            payload.data.Notification_Active === false,
+            payload.data.Date_Heure_Reactivation_Alarme ? new Date(payload.data.Date_Heure_Reactivation_Alarme) : null,
+          )
         }
       } catch (error) {
-        console.error("Error toggling surveillance:", error)
+        console.error("Error toggling alarms:", error)
       }
     },
-    [updateSensorsCache],
+    [updateAlarmCache, updateSensorsCache],
   );
 
   const handleGroupSurveillanceToggle = useCallback(

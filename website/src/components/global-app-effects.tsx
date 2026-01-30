@@ -8,52 +8,6 @@ import { useTranslations } from "next-intl"
 import { stripLocalePrefix } from "@/i18n/pathnames"
 import { useRouter } from "@/i18n/navigation"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { postJson } from "@/lib/http"
-
-function urlBase64ToUint8Array(base64String: string) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4)
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/")
-  const rawData = window.atob(base64)
-  const outputArray = new Uint8Array(rawData.length)
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i)
-  }
-  return outputArray
-}
-
-async function registerServiceWorker() {
-  if (!("serviceWorker" in navigator)) return null
-  const registration = await navigator.serviceWorker.register("/service-worker.js")
-  await navigator.serviceWorker.ready
-  return registration
-}
-
-async function postSubscription(subscription: PushSubscription) {
-  const payload = subscription.toJSON()
-  await postJson<{ success: true }>("/api/push/subscribe", {
-    ...payload,
-    userAgent: navigator.userAgent,
-  })
-}
-
-async function ensurePushSubscription() {
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-  if (!publicKey) return
-
-  const registration = await registerServiceWorker()
-  if (!registration) return
-
-  const existing = await registration.pushManager.getSubscription()
-  const subscription =
-    existing ??
-    (await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(publicKey),
-    }))
-
-  await postSubscription(subscription)
-}
-
 function isPublicRoute(pathname: string) {
   const normalized = stripLocalePrefix(pathname)
   return normalized === "/login" || normalized === "/reset-password" || normalized === "/force-password-change"
@@ -123,42 +77,6 @@ export function GlobalAppEffects() {
       eventSource.close()
     }
   }, [alarmStreamUrl, currentUser, router, t])
-
-  useEffect(() => {
-    const run = async () => {
-      if (!("Notification" in window) || !("serviceWorker" in navigator)) return
-      if (!currentUser) return
-
-      if (Notification.permission === "granted") {
-        await ensurePushSubscription().catch(() => null)
-        return
-      }
-
-      if (Notification.permission !== "default") return
-
-      const key = "vigitemp_push_prompted_v1"
-      if (localStorage.getItem(key) === "1") return
-      localStorage.setItem(key, "1")
-
-      toast(t("push_prompt.title"), {
-        description: t("push_prompt.description"),
-        action: {
-          label: t("push_prompt.action"),
-          onClick: async () => {
-            const permission = await Notification.requestPermission()
-            if (permission !== "granted") {
-              toast.error(t("push_prompt.denied"))
-              return
-            }
-            await ensurePushSubscription()
-            toast.success(t("push_prompt.enabled"))
-          },
-        },
-      })
-    }
-
-    void run()
-  }, [currentUser, t])
 
   return null
 }

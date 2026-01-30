@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server"
 import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { withLogging } from "@/lib/api-logger"
+import { getClientIp, withLogging } from "@/lib/api-logger"
+import { log } from "@/lib/logger"
 import { z } from "zod"
 import { apiError, apiOk } from "@/lib/api-response"
 import { clearLocationCache } from "@/lib/measurement-cache"
@@ -28,6 +29,7 @@ const updateLieuSchema = z.object({
   Est_Consigne_Inf_Pre_Alarme_Active: z.boolean().optional(),
   Retard_Alarme_Bas: z.number().nullable().optional(),
   Est_Archive: z.boolean().optional(),
+  surveillanceDurationMinutes: z.number().int().positive().nullable().optional(),
 })
 
 export const PATCH = withLogging(
@@ -64,8 +66,16 @@ export const PATCH = withLogging(
           )
         : undefined
 
-      const { GroupIds, Lieu_Etat, Id_Site, Sonde_Numero_Serie, Id_Groupe1, Id_Groupe2, ...lieuPatch } =
-        validated as any
+      const {
+        GroupIds,
+        Lieu_Etat,
+        Id_Site,
+        Sonde_Numero_Serie,
+        Id_Groupe1,
+        Id_Groupe2,
+        surveillanceDurationMinutes,
+        ...lieuPatch
+      } = validated as any
       if (Object.prototype.hasOwnProperty.call(validated, "Frequence")) {
         const value = validated.Frequence
         lieuPatch.Frequence =
@@ -73,14 +83,34 @@ export const PATCH = withLogging(
       }
       const hasLieuEtat = Object.prototype.hasOwnProperty.call(validated, "Lieu_Etat")
       const applyLieuEtat = hasLieuEtat && !shouldArchive
+      const hasSurveillanceDuration = Object.prototype.hasOwnProperty.call(
+        validated,
+        "surveillanceDurationMinutes",
+      )
+      const shouldScheduleSurveillanceReactivation =
+        applyLieuEtat &&
+        Lieu_Etat === "D" &&
+        hasSurveillanceDuration &&
+        typeof surveillanceDurationMinutes === "number" &&
+        surveillanceDurationMinutes > 0
+      const surveillanceReactivationAt = shouldScheduleSurveillanceReactivation
+        ? new Date(Date.now() + surveillanceDurationMinutes * 60 * 1000)
+        : null
       const hasIdSite = Object.prototype.hasOwnProperty.call(validated, "Id_Site")
       const hasSondeNumeroSerie = Object.prototype.hasOwnProperty.call(validated, "Sonde_Numero_Serie")
+
+      const ip = getClientIp(req)
+      let previousLieuEtat: string | null = null
+      let lieuName: string | null = null
 
       const lieu = await prisma.$transaction(async (tx) => {
         const current = await tx.t_lieu.findUnique({
           where: { Id_Lieu: lieuId },
-          select: { Sonde_Numero_Serie: true },
+          select: { Sonde_Numero_Serie: true, Lieu_Etat: true, Nom_Lieu: true },
         })
+
+        previousLieuEtat = current?.Lieu_Etat ?? null
+        lieuName = current?.Nom_Lieu ?? null
 
         const group1Id = groupIds?.[0] ?? null
         const group2Id = groupIds?.[1] ?? null
@@ -94,6 +124,8 @@ export const PATCH = withLogging(
                   t_etat_surveillance_lieu: Lieu_Etat
                     ? { connect: { Surveillance_Etat: Lieu_Etat } }
                     : { disconnect: true },
+                  Date_Heure_Reactivation_Surveillance:
+                    Lieu_Etat === "D" ? surveillanceReactivationAt : null,
                 }
               : {}),
             ...(shouldArchive
@@ -132,7 +164,7 @@ export const PATCH = withLogging(
           if (sondeNumeroSerie) {
             await tx.t_sonde.updateMany({
               where: { Sonde_Numero_Serie: sondeNumeroSerie },
-              data: { Surveillance_Etat: updated.Lieu_Etat ?? null },
+              data: { Surveillance_Etat: updated.Lieu_Etat ?? "D" },
             })
           }
         }
@@ -182,6 +214,25 @@ export const PATCH = withLogging(
           serialized?.Frequence === null || serialized?.Frequence === undefined
             ? serialized?.Frequence
             : Number(serialized.Frequence) / 60,
+      }
+
+      if (hasLieuEtat && user && typeof Lieu_Etat === "string" && previousLieuEtat !== Lieu_Etat) {
+        const reason =
+          Lieu_Etat === "D"
+            ? shouldScheduleSurveillanceReactivation
+              ? `Désactivation ${surveillanceDurationMinutes} min`
+              : "Désactivation manuelle"
+            : "Réactivation manuelle"
+
+        log.audit(Lieu_Etat === "D" ? "DES" : "ACT", {
+          user: user.username,
+          userId: user.userId,
+          ip,
+          userProfile: user.profile,
+          resource: `Lieu: ${lieuName ?? lieuId}`,
+          resourceId: lieuId,
+          reason,
+        })
       }
 
       clearLocationCache(lieuId)

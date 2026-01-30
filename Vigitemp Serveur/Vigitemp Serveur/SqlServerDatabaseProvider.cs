@@ -858,6 +858,73 @@ namespace Vigitemp_Serveur
             }
         }
 
+        public (List<int>, List<DateTime>) getLieuxAvecSurveillanceEnSnooze()
+        {
+            lock (_lock)
+            {
+                var ids = new List<int>();
+                var dates = new List<DateTime>();
+
+                if (!InitConnexion())
+                {
+                    return (ids, dates);
+                }
+
+                using (var cmd = CreateCommand(
+                    _connectionMain,
+                    "SELECT distinct Id_Lieu, Date_Heure_Reactivation_Surveillance FROM t_lieu " +
+                    "where Date_Heure_Reactivation_Surveillance is not null AND Lieu_Etat = 'D';"))
+                {
+                    try
+                    {
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                ids.Add(Convert.ToInt32(reader["Id_Lieu"]));
+                                dates.Add(DateTime.Parse(reader["Date_Heure_Reactivation_Surveillance"].ToString()));
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        VigitempServeur.Log("SQL Error getLieuxAvecSurveillanceEnSnooze MSSQL: " + e);
+                    }
+                }
+
+                CloseConnexion();
+                return (ids, dates);
+            }
+        }
+
+        public string getLieuUnite(int idLieu)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!InitConnexion())
+                    {
+                        return "";
+                    }
+
+                    using (var cmd = CreateCommand(_connectionMain, "SELECT Derniere_Unite FROM t_lieu WHERE Id_Lieu = @idLieu;"))
+                    {
+                        cmd.Parameters.AddWithValue("@idLieu", idLieu);
+                        var result = cmd.ExecuteScalar();
+                        CloseConnexion();
+                        return result == null || result == DBNull.Value ? "" : result.ToString();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    CloseConnexion();
+                    VigitempServeur.Log("(getLieuUnite MSSQL) SQL Erreur: " + ex.Message);
+                    return "";
+                }
+            }
+        }
+
         public double getLastMeasure(int p_IdLieu)
         {
             lock (_lock)
@@ -914,6 +981,121 @@ namespace Vigitemp_Serveur
                 {
                     VigitempServeur.Log("ERREUR : IMPOSSIBLE DE CHANGER LE REGLAGE DE NOTIFICATION POUR LE LIEU IdLieu: " + p_idLieu);
                     CloseConnexion();
+                    return false;
+                }
+            }
+        }
+
+        public bool setSurveillanceByIdLieu(int p_idLieu, bool p_valeur)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!InitConnexion())
+                    {
+                        return false;
+                    }
+
+                    using (var cmd = CreateCommand(
+                        _connectionMain,
+                        "UPDATE t_lieu SET Lieu_Etat = @etat, Date_Heure_Reactivation_Surveillance = NULL WHERE Id_Lieu = @idLieu;"))
+                    {
+                        cmd.Parameters.AddWithValue("@etat", p_valeur ? "S" : "D");
+                        cmd.Parameters.AddWithValue("@idLieu", p_idLieu);
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    using (var cmdSonde = CreateCommand(
+                        _connectionMain,
+                        "UPDATE t_sonde SET Surveillance_Etat = @etat " +
+                        "WHERE Sonde_Numero_Serie IN (SELECT Sonde_Numero_Serie FROM t_lieu WHERE Id_Lieu = @idLieu);"))
+                    {
+                        cmdSonde.Parameters.AddWithValue("@etat", p_valeur ? "S" : "D");
+                        cmdSonde.Parameters.AddWithValue("@idLieu", p_idLieu);
+                        cmdSonde.ExecuteNonQuery();
+                    }
+
+                    CloseConnexion();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    CloseConnexion();
+                    VigitempServeur.Log("(setSurveillanceByIdLieu MSSQL) SQL Erreur: " + ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        public bool writeAuditJournal(string codeJournal, string username, string userProfile, int? idLieu, string commentaire, string commentaireUtilisateur)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!InitConnexion())
+                    {
+                        return false;
+                    }
+
+                    const int serveurId = 1;
+                    const string tableName = "tm_journal";
+                    int nextId;
+
+                    using (var transaction = _connectionMeasure.BeginTransaction())
+                    {
+                        using (var ensureCmd = _connectionMeasure.CreateCommand())
+                        {
+                            ensureCmd.Transaction = transaction;
+                            ensureCmd.CommandText =
+                                "IF NOT EXISTS (SELECT 1 FROM tm_compteur_id_table WHERE Id_Serveur_BDD = @idServeur AND Nom_Table = @tableName) " +
+                                "INSERT INTO tm_compteur_id_table (Id_Serveur_BDD, Nom_Table, Compteur_Id) VALUES (@idServeur, @tableName, 0);";
+                            ensureCmd.Parameters.AddWithValue("@idServeur", serveurId);
+                            ensureCmd.Parameters.AddWithValue("@tableName", tableName);
+                            ensureCmd.ExecuteNonQuery();
+                        }
+
+                        using (var updateCmd = _connectionMeasure.CreateCommand())
+                        {
+                            updateCmd.Transaction = transaction;
+                            updateCmd.CommandText =
+                                "UPDATE tm_compteur_id_table " +
+                                "SET Compteur_Id = Compteur_Id + 1 " +
+                                "OUTPUT INSERTED.Compteur_Id " +
+                                "WHERE Id_Serveur_BDD = @idServeur AND Nom_Table = @tableName;";
+                            updateCmd.Parameters.AddWithValue("@idServeur", serveurId);
+                            updateCmd.Parameters.AddWithValue("@tableName", tableName);
+                            nextId = Convert.ToInt32(updateCmd.ExecuteScalar());
+                        }
+
+                        transaction.Commit();
+                    }
+
+                    using (var insertCmd = _connectionMeasure.CreateCommand())
+                    {
+                        insertCmd.CommandText =
+                            "INSERT INTO tm_journal (Id_Serveur_BDD, Id_Journal, Code_Journal, Nom_Utilisateur, Profil_Utilisateur, Date_Heure_Journal, Id_Lieu, Commentaire, Commentaire_Utilisateur) " +
+                            "VALUES (@idServeur, @idJournal, @codeJournal, @username, @userProfile, @dateJournal, @idLieu, @commentaire, @commentaireUtilisateur);";
+                        insertCmd.Parameters.AddWithValue("@idServeur", serveurId);
+                        insertCmd.Parameters.AddWithValue("@idJournal", nextId);
+                        insertCmd.Parameters.AddWithValue("@codeJournal", codeJournal ?? string.Empty);
+                        insertCmd.Parameters.AddWithValue("@username", username ?? string.Empty);
+                        insertCmd.Parameters.AddWithValue("@userProfile", userProfile ?? string.Empty);
+                        insertCmd.Parameters.AddWithValue("@dateJournal", DateTime.Now);
+                        insertCmd.Parameters.AddWithValue("@idLieu", idLieu.HasValue ? (object)idLieu.Value : DBNull.Value);
+                        insertCmd.Parameters.AddWithValue("@commentaire", string.IsNullOrWhiteSpace(commentaire) ? (object)DBNull.Value : commentaire);
+                        insertCmd.Parameters.AddWithValue("@commentaireUtilisateur", string.IsNullOrWhiteSpace(commentaireUtilisateur) ? (object)DBNull.Value : commentaireUtilisateur);
+                        insertCmd.ExecuteNonQuery();
+                    }
+
+                    CloseConnexion();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    CloseConnexion();
+                    VigitempServeur.Log("(writeAuditJournal MSSQL) SQL Erreur: " + ex.Message);
                     return false;
                 }
             }
@@ -1038,7 +1220,8 @@ namespace Vigitemp_Serveur
                         using (var cmdResolve = CreateCommand(
                             _connectionMain,
                             "UPDATE t_alarme " +
-                            "SET Date_Heure_Fin = GETDATE(), Est_Alarme_Vrai = 0 " +
+                            "SET Date_Heure_Fin = GETDATE(), Est_Alarme_Vrai = 0, " +
+                            "Type = CASE WHEN ISNULL(Est_Acquittee, 0) = 0 THEN 'T' ELSE Type END " +
                             "WHERE Id_Lieu = @idLieu AND Type = 'N' AND Date_Heure_Fin IS NULL;"))
                         {
                             cmdResolve.Parameters.AddWithValue("@idLieu", idLieu);
@@ -1053,6 +1236,123 @@ namespace Vigitemp_Serveur
                 {
                     CloseConnexion();
                     VigitempServeur.Log("(setNonResponseAlarm MSSQL) SQL Erreur: " + ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        public bool setThresholdAlarm(int idLieu, string sondeNumeroSerie, string type, double value, string unite, bool isActive)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!InitConnexion())
+                    {
+                        return false;
+                    }
+
+                    if (isActive)
+                    {
+                        using (var cmdCheck = CreateCommand(
+                            _connectionMain,
+                            "SELECT TOP 1 Id_Alarme FROM t_alarme " +
+                            "WHERE Id_Lieu = @idLieu AND Type = @type AND Date_Heure_Fin IS NULL " +
+                            "ORDER BY Date_Heure_Debut DESC;"))
+                        {
+                            cmdCheck.Parameters.AddWithValue("@idLieu", idLieu);
+                            cmdCheck.Parameters.AddWithValue("@type", type);
+
+                            var existing = cmdCheck.ExecuteScalar();
+                            if (existing == null || existing == DBNull.Value)
+                            {
+                                using (var cmdInsert = CreateCommand(
+                                    _connectionMain,
+                                    "INSERT INTO t_alarme " +
+                                    "(Date_Heure_Debut, Valeur, Type, Est_Alarme_Vrai, Id_Lieu, Sonde_Numero_Serie, Unite, " +
+                                    "Est_Acquittee, Date_Heure_Derniere_Mesure, Date_Heure_Debut_Alarme_Vrai, " +
+                                    "Est_Alarme_Pour_VigiTel, Est_Mail_Envoye, Est_Tel_Acquittee) " +
+                                    "VALUES (GETDATE(), @valeur, @type, 1, @idLieu, @serie, @unite, 0, GETDATE(), GETDATE(), 0, 0, 0);"))
+                                {
+                                    cmdInsert.Parameters.AddWithValue("@idLieu", idLieu);
+                                    cmdInsert.Parameters.AddWithValue("@type", type);
+                                    cmdInsert.Parameters.AddWithValue("@valeur", value);
+                                    cmdInsert.Parameters.AddWithValue("@serie", sondeNumeroSerie ?? string.Empty);
+                                    cmdInsert.Parameters.AddWithValue("@unite", unite ?? string.Empty);
+                                    cmdInsert.ExecuteNonQuery();
+                                }
+                            }
+                            else
+                            {
+                                using (var cmdUpdate = CreateCommand(
+                                    _connectionMain,
+                                    "UPDATE t_alarme SET Valeur = @valeur, Unite = @unite, Date_Heure_Derniere_Mesure = GETDATE(), Est_Alarme_Vrai = 1 " +
+                                    "WHERE Id_Alarme = @idAlarme;"))
+                                {
+                                    cmdUpdate.Parameters.AddWithValue("@valeur", value);
+                                    cmdUpdate.Parameters.AddWithValue("@unite", unite ?? string.Empty);
+                                    cmdUpdate.Parameters.AddWithValue("@idAlarme", Convert.ToInt32(existing));
+                                    cmdUpdate.ExecuteNonQuery();
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        using (var cmdResolve = CreateCommand(
+                            _connectionMain,
+                            "UPDATE t_alarme " +
+                            "SET Date_Heure_Fin = GETDATE(), Est_Alarme_Vrai = 0, " +
+                            "Type = CASE WHEN ISNULL(Est_Acquittee, 0) = 0 THEN 'T' ELSE Type END " +
+                            "WHERE Id_Lieu = @idLieu AND Type = @type AND Date_Heure_Fin IS NULL;"))
+                        {
+                            cmdResolve.Parameters.AddWithValue("@idLieu", idLieu);
+                            cmdResolve.Parameters.AddWithValue("@type", type);
+                            cmdResolve.ExecuteNonQuery();
+                        }
+                    }
+
+                    CloseConnexion();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    CloseConnexion();
+                    VigitempServeur.Log("(setThresholdAlarm MSSQL) SQL Erreur: " + ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        public bool setThresholdAlarmEnded(int idLieu)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!InitConnexion())
+                    {
+                        return false;
+                    }
+
+                    using (var cmdResolve = CreateCommand(
+                        _connectionMain,
+                        "UPDATE t_alarme " +
+                        "SET Date_Heure_Fin = GETDATE(), Est_Alarme_Vrai = 0, " +
+                        "Type = CASE WHEN ISNULL(Est_Acquittee, 0) = 0 THEN 'T' ELSE Type END " +
+                        "WHERE Id_Lieu = @idLieu AND Type IN ('H','B') AND Date_Heure_Fin IS NULL;"))
+                    {
+                        cmdResolve.Parameters.AddWithValue("@idLieu", idLieu);
+                        cmdResolve.ExecuteNonQuery();
+                    }
+
+                    CloseConnexion();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    CloseConnexion();
+                    VigitempServeur.Log("(setThresholdAlarmEnded MSSQL) SQL Erreur: " + ex.Message);
                     return false;
                 }
             }

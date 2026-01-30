@@ -535,6 +535,24 @@ namespace Vigitemp_Serveur
                         sensor.compareMeasuresAndLimits(derniereMesure);
                     }
                 }
+
+                // Réactivation automatique de la surveillance (Lieu_Etat)
+                (List<int> arr_lieuxSurveillanceSnooze, List<DateTime> arr_dateSurveillance) = GetDatabase().getLieuxAvecSurveillanceEnSnooze();
+                for (int i = 0; i < arr_lieuxSurveillanceSnooze.Count(); i++)
+                {
+                    if (arr_dateSurveillance[i].CompareTo(DateTime.Now) <= 0)
+                    {
+                        VigitempServeur.Log("Surveillance réactivée pour le lieu " + arr_lieuxSurveillanceSnooze[i] + ".");
+                        GetDatabase().setSurveillanceByIdLieu(arr_lieuxSurveillanceSnooze[i], true);
+                        GetDatabase().writeAuditJournal(
+                            "ACT",
+                            "SERVEUR",
+                            "SYSTEME",
+                            arr_lieuxSurveillanceSnooze[i],
+                            "Réactivation automatique de la surveillance",
+                            null);
+                    }
+                }
             }
             catch (Exception ex)
             {
