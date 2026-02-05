@@ -35,36 +35,54 @@ export const POST = withAuthLogging(
           data: {
             Est_Acquittee: true,
             Est_Tel_Acquittee: true,
-            Date_Heure_Fin: acknowledgedAt,
           },
         })
 
         await tx.t_alarme.delete({ where: { Id_Alarme: alarmId } })
 
         if (current.t_lieu?.Id_Lieu) {
+          const lieuId = current.t_lieu.Id_Lieu
+
           const remainingActive = await tx.t_alarme.count({
             where: {
-              Id_Lieu: current.t_lieu.Id_Lieu,
-              Est_Acquittee: false,
+              Id_Lieu: lieuId,
               Date_Heure_Fin: null,
               Est_Alarme_Vrai: true,
             },
           })
 
+          const remainingEndedUnack = await tx.t_alarme.count({
+            where: {
+              Id_Lieu: lieuId,
+              Date_Heure_Fin: { not: null },
+              Est_Acquittee: false,
+            },
+          })
+
+          const updateData: {
+            Est_Lieu_Alarme_Terminee_Non_Acquittee: number
+            Est_Lieu_En_Alarme?: number
+            Est_Lieu_En_Pre_Alarme?: number
+            Id_Alarme?: number
+          } = {
+            Est_Lieu_Alarme_Terminee_Non_Acquittee: remainingEndedUnack > 0 ? 1 : 0,
+          }
+
           if (remainingActive === 0) {
             const lieu = await tx.t_lieu.findUnique({
-              where: { Id_Lieu: current.t_lieu.Id_Lieu },
+              where: { Id_Lieu: lieuId },
               select: { Est_Lieu_En_Pre_Alarme: true },
             })
 
-            await tx.t_lieu.update({
-              where: { Id_Lieu: current.t_lieu.Id_Lieu },
-              data: {
-                Est_Lieu_En_Alarme: 0,
-                Est_Lieu_En_Pre_Alarme: lieu?.Est_Lieu_En_Pre_Alarme ?? 0,
-              },
-            })
+            updateData.Est_Lieu_En_Alarme = 0
+            updateData.Est_Lieu_En_Pre_Alarme = lieu?.Est_Lieu_En_Pre_Alarme ?? 0
+            updateData.Id_Alarme = 0
           }
+
+          await tx.t_lieu.update({
+            where: { Id_Lieu: lieuId },
+            data: updateData,
+          })
         }
 
         return current

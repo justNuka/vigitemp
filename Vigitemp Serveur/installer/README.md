@@ -31,7 +31,7 @@ cd "Vigitemp Serveur\\installer"
 
 ## Fichiers
 - Licence : `C:\ProgramData\Vigitemp\licenses\<license>.vtlic`
-- Clé publique : `C:\ProgramData\Vigitemp\license_keys\license_public.pem`
+- Clé publique : `C:\ProgramData\Vigitemp\license_keys\public_key`
 - Logs install : `C:\ProgramData\Vigitemp\install-logs\install-server-*.log`
 
 ## Rollback

@@ -4,9 +4,15 @@ import { getJson, isUnauthorizedError } from "@/lib/http";
 type AlarmListItem = {
   id: number;
   locationName?: string;
+  type: "high" | "low" | "no-response" | "temperature";
   status: "active" | "acknowledged" | "resolved";
   timestamp: string;
   resolvedAt?: string | null;
+  minThreshold?: number | null;
+  maxThreshold?: number | null;
+  unit?: string | null;
+  currentValue?: number | null;
+  count30Days?: number | null;
 };
 
 export interface Alarm {
@@ -16,6 +22,13 @@ export interface Alarm {
   Est_Alarme_Vrai: boolean | null;
   Date_Heure_Fin: string | null;
   Est_Acquittee: boolean | null;
+  Type: AlarmListItem["type"];
+  Min_Threshold: number | null;
+  Max_Threshold: number | null;
+  Unite: string | null;
+  Derniere_Valeur: number | null;
+  Status: AlarmListItem["status"];
+  Count_30_Days: number | null;
 }
 
 type Paginated<T> = {
@@ -35,6 +48,13 @@ export async function fetchAlarmsPage(page: number, limit: number): Promise<Pagi
     Est_Alarme_Vrai: item.status === "resolved" ? false : true,
     Date_Heure_Fin: item.resolvedAt ?? null,
     Est_Acquittee: item.status === "acknowledged",
+    Type: item.type,
+    Min_Threshold: item.minThreshold ?? null,
+    Max_Threshold: item.maxThreshold ?? null,
+    Unite: item.unit ?? null,
+    Derniere_Valeur: item.currentValue ?? null,
+    Status: item.status,
+    Count_30_Days: item.count30Days ?? null,
   }));
 
   return { data, pagination: response.pagination };

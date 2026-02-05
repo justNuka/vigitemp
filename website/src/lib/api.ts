@@ -193,6 +193,7 @@ export type SensorWithLocation = {
   name: string;
   type: string;
   unit: string;
+  decimals?: number | null;
   currentValue: number | null;
   minThreshold: number;
   maxThreshold: number;
@@ -201,6 +202,7 @@ export type SensorWithLocation = {
   location: Location;
   status: "ok" | "warning" | "critical" | "technical" | "ended";
   lieuType?: string | null;
+  alarmId?: number | null;
   alarmType?: "H" | "B" | "N" | "T" | null;
 };
 
@@ -233,6 +235,10 @@ export type Location = {
   lieuEtat?: string | null;
   surveillanceDisabled?: boolean;
   lieuType?: string | null;
+  alarmId?: number | null;
+  isGso?: boolean | null;
+  gsoRssi?: string | null;
+  gsoTension?: string | null;
   siteId?: number;
   groupIds?: number[];
   groupNames?: string[];

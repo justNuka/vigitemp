@@ -28,6 +28,20 @@ namespace Vigitemp_Serveur
         private static readonly ConcurrentDictionary<string, RuntimeState> _stateByKey =
             new ConcurrentDictionary<string, RuntimeState>();
 
+        public static void ResetState(string channel, int idLieu)
+        {
+            if (idLieu <= 0) return;
+            if (channel == null) channel = "alarm";
+            var key = channel + ":" + idLieu;
+            if (!_stateByKey.TryGetValue(key, out var state)) return;
+
+            lock (state)
+            {
+                state.IsActive = false;
+                state.OutOfRangeSinceUtc = null;
+            }
+        }
+
         public static AlarmEvaluation Evaluate(
             string channel,
             int idLieu,

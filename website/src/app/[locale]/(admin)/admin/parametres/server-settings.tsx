@@ -16,7 +16,7 @@ export async function ServerSettings() {
     const dbSettings = await prisma.t_parametre.findMany({
       where: {
         Section: {
-          in: ["notifications", "alarms", "dashboard"],
+          in: ["general", "notifications", "alarms", "dashboard"],
         },
       },
       select: {
@@ -33,6 +33,7 @@ export async function ServerSettings() {
 
     // Définir les paramètres par défaut (toujours affichés)
     const defaultSettings = [
+      { key: "general:timezone", value: "Europe/Paris", label: "Fuseau horaire" },
       { key: "notifications:email", value: "true", label: "Notifications par email" },
       { key: "notifications:sms", value: "false", label: "Notifications SMS" },
       { key: "alarms:sound", value: "true", label: "Son des alarmes" },
@@ -59,6 +60,7 @@ export async function ServerSettings() {
     console.error("Erreur lors du chargement des paramètres:", error);
     // Fallback sur les valeurs par défaut en cas d'erreur
     return [
+      { key: "general:timezone", value: "Europe/Paris", label: "Fuseau horaire" },
       { key: "notifications:email", value: "true", label: "Notifications par email" },
       { key: "notifications:sms", value: "false", label: "Notifications SMS" },
       { key: "alarms:sound", value: "true", label: "Son des alarmes" },

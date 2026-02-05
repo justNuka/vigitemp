@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/page-header";
 import { ProfilesClient } from "./profiles-client";
 
-export default function ProfilesPage() {
+export default async function ProfilesPage() {
   return (
     <div className="flex flex-col min-h-full">
       <PageHeader

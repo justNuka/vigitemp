@@ -11,7 +11,7 @@ export function MonitoringCardSkeleton() {
         </div>
       </div>
       <div className="p-4 space-y-4">
-        <Skeleton className="h-[130px] w-full rounded-md" />
+        <Skeleton className="h-32.5 w-full rounded-md" />
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Skeleton className="h-3 w-32" />

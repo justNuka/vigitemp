@@ -30,6 +30,7 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
       Surveillance_Etat: sonde.Surveillance_Etat,
       Surveillance_Etat_Libelle: sonde.Surveillance_Etat,
       Id_Module: sonde.Id_Module,
+      Sonde_Offset: sonde.Sonde_Offset,
       Lieu: sonde.t_lieu[0]?.Nom_Lieu || null,
     }))
 
@@ -44,6 +45,7 @@ const createProbeSchema = z.object({
   sondeType: z.string().min(1),
   serieNum: z.string().regex(/^\d+(?:-?[TH])?$/i, "Numéro de série invalide"),
   moduleId: z.number().int().positive().nullable().optional(),
+  sondeOffset: z.number().nullable().optional(),
 })
 
 export const POST = withAuthLogging(async (req: NextRequest) => {
@@ -71,6 +73,7 @@ export const POST = withAuthLogging(async (req: NextRequest) => {
         Adresse_Sonde: adresseSonde,
         Sonde_Numero_Serie: serial,
         Id_Module: data.moduleId ?? null,
+        Sonde_Offset: data.sondeOffset ?? 0,
         Surveillance_Etat: "D",
       },
     })

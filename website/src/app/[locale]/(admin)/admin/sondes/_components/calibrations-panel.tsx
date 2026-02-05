@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDateFr, formatDateTimeFr } from './date-format';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { useAppTimezone } from '@/components/timezone-provider';
 
 export type CalibrationRow = {
   Id_Etalonnage: number;
@@ -30,16 +31,19 @@ export function CalibrationsPanel({
   onSelectCalibration,
 }: CalibrationsPanelProps) {
   const t = useTranslations('probesPage');
+  const locale = useLocale();
+  const localeTag = locale.toLowerCase().startsWith('fr') ? 'fr-FR' : locale;
+  const timezone = useAppTimezone();
   const columns: ColumnDef<CalibrationRow>[] = [
     {
       accessorKey: 'Date_Heure_Etalonnage',
       header: t('panels.calibrations.columns.date'),
-      cell: ({ row }) => formatDateTimeFr(row.original.Date_Heure_Etalonnage),
+      cell: ({ row }) => formatDateTimeFr(row.original.Date_Heure_Etalonnage, timezone, localeTag),
     },
     {
       accessorKey: 'Date_Validite',
       header: t('panels.calibrations.columns.validity'),
-      cell: ({ row }) => formatDateFr(row.original.Date_Validite),
+      cell: ({ row }) => formatDateFr(row.original.Date_Validite, timezone, localeTag),
     },
     {
       accessorKey: 'Operateur',

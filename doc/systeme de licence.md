@@ -77,7 +77,7 @@ Regles internes:
 Fichiers attendus (serveur C#):
 
 - C:\ProgramData\Vigitemp\licenses\*.vtlic  
-- C:\ProgramData\Vigitemp\license_keys\license_public.pem  
+- C:\ProgramData\Vigitemp\license_keys\public_key  
 
 La route d’installation peut aussi stocker ces chemins dans le registre :
 

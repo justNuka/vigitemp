@@ -56,6 +56,7 @@ export function LoginForm() {
 
   const reason = searchParams.get("reason");
   const passwordChanged = searchParams.get("passwordChanged");
+  const fromParam = searchParams.get("from");
   const showInactivityMessage = reason === "inactivity";
 
   useEffect(() => {
@@ -163,7 +164,15 @@ export function LoginForm() {
         // Agent not installed/running: ignore
       }
 
-      router.push("/");
+      const getRedirectTarget = () => {
+        if (!fromParam) return "/";
+        const trimmed = fromParam.trim();
+        if (!trimmed.startsWith("/")) return "/";
+        if (trimmed.startsWith("//")) return "/";
+        return trimmed;
+      };
+
+      router.push(getRedirectTarget());
     },
     onError: (error: Error) => {
       if (error.message !== "password_change_required") {

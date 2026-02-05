@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
+import { useAppTimezone } from "@/components/timezone-provider"
 import { AlertTriangle, BookOpen, CheckCircle2, Clock, Database, Users, Cpu } from "lucide-react"
 import type { ColumnDef } from "@tanstack/react-table"
 
@@ -91,6 +92,7 @@ function PaginationControls(props: {
 export default function AdminDashboard() {
   const t = useTranslations("adminDashboard")
   const locale = useLocale()
+  const timezone = useAppTimezone()
   const [ackPage, setAckPage] = useState(1)
   const [connectedUsersPage, setConnectedUsersPage] = useState(1)
   const [activeAlarmsPage, setActiveAlarmsPage] = useState(1)
@@ -159,7 +161,7 @@ export default function AdminDashboard() {
 
   const lastBackupDate = (backupsQuery.data as any)?.[0]?.dateHeure
   const lastBackupLabel = lastBackupDate
-    ? new Date(lastBackupDate).toLocaleString(locale)
+    ? new Date(lastBackupDate).toLocaleString(locale, { timeZone: timezone })
     : t("backup.last.none")
 
   const isInitialLoading =

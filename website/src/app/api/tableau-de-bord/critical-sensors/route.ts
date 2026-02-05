@@ -43,8 +43,8 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
           id: String(location.Id_Lieu),
           name: siteLabel,
         },
-        minThreshold: location.Consigne_Inf,
-        maxThreshold: location.Consigne_Sup,
+        minThreshold: location.Tolerance_Surveillance_Inf,
+        maxThreshold: location.Tolerance_Surveillance_Sup,
       }
     })
 

@@ -22,6 +22,10 @@ export const FEATURE_FLAGS = {
   
   // React Query DevTools
   enableReactQueryDevTools: IS_DEV,
+
+  // Alerte secret agent (prod uniquement par défaut)
+  enableAgentSecretAlert:
+    IS_PROD || process.env.NEXT_PUBLIC_ENABLE_AGENT_SECRET_ALERT === 'true',
 } as const
 
 // Helper pour vérifier une feature

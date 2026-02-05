@@ -15,11 +15,13 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLicense } from "@/components/license/license-provider";
 import { Check, X } from "lucide-react";
-import { FormProvider, type UseFormReturn } from 'react-hook-form';
-import type { Dispatch, SetStateAction } from 'react';
+import { useEffect } from "react";
+import type { Dispatch, SetStateAction } from "react";
+import { FormProvider, type UseFormReturn, useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 
 import type { LocationFormData, LocationFormMode } from './location-form-types';
+import { getDefaultLocationFormData } from "./location-form-defaults";
 import { LocationFormTabGeneral } from './location-form-tab-general';
 import { LocationFormTabMetrology } from './location-form-tab-metrology';
 import { LocationFormTabTelephony } from './location-form-tab-telephony';
@@ -27,7 +29,8 @@ import { LocationFormTabTelephony } from './location-form-tab-telephony';
 type LocationFormDialogProps = {
   open: boolean;
   mode: LocationFormMode;
-  form: UseFormReturn<LocationFormData>;
+  form?: UseFormReturn<LocationFormData>;
+  // Legacy props kept for backward compatibility
   formData?: LocationFormData;
   setFormData?: Dispatch<SetStateAction<LocationFormData>>;
   sites: SiteSimple[];
@@ -42,6 +45,8 @@ export function LocationFormDialog({
   open,
   mode,
   form,
+  formData,
+  setFormData,
   sites,
   groups,
   availableProbes,
@@ -55,7 +60,24 @@ export function LocationFormDialog({
   const isOne = edition === "one";
   const t = useTranslations('locationsForm.dialog');
   const tCommon = useTranslations('common');
-  const handleSubmit = form.handleSubmit(async (values) => onSubmit(values));
+  const internalForm = useForm<LocationFormData>({
+    defaultValues: formData ?? getDefaultLocationFormData(),
+  });
+  const resolvedForm = form ?? internalForm;
+  const handleSubmit = resolvedForm.handleSubmit(onSubmit);
+
+  useEffect(() => {
+    if (form || !formData) return;
+    internalForm.reset(formData);
+  }, [form, formData, internalForm]);
+
+  useEffect(() => {
+    if (form || !setFormData) return;
+    const subscription = internalForm.watch((value) => {
+      setFormData(value as LocationFormData);
+    });
+    return () => subscription.unsubscribe();
+  }, [form, internalForm, setFormData]);
 
   return (
     <Dialog
@@ -70,13 +92,34 @@ export function LocationFormDialog({
           <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
 
-        <FormProvider {...form}>
+        <FormProvider {...resolvedForm}>
           <form onSubmit={handleSubmit} className="space-y-6">
             <Tabs defaultValue="general" className="w-full">
-              <TabsList className={`grid w-full ${isOne ? "grid-cols-1" : "grid-cols-3"}`}>
-                <TabsTrigger value="general">{t('tabs.general')}</TabsTrigger>
-                {!isOne && <TabsTrigger value="metrologie">{t('tabs.metrology')}</TabsTrigger>}
-                {!isOne && <TabsTrigger value="telephonie">{t('tabs.telephony')}</TabsTrigger>}
+              <TabsList
+                className={`grid w-full ${isOne ? "grid-cols-1" : "grid-cols-3"} bg-[#26A5DA]/10 text-[#26A5DA] border border-[#26A5DA]/30`}
+              >
+                <TabsTrigger
+                  value="general"
+                  className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-sidebar-foreground hover:bg-[#26A5DA]/15"
+                >
+                  {t('tabs.general')}
+                </TabsTrigger>
+                {!isOne && (
+                  <TabsTrigger
+                    value="metrologie"
+                    className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-sidebar-foreground hover:bg-[#26A5DA]/15"
+                  >
+                    {t('tabs.metrology')}
+                  </TabsTrigger>
+                )}
+                {!isOne && (
+                  <TabsTrigger
+                    value="telephonie"
+                    className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-sidebar-foreground hover:bg-[#26A5DA]/15"
+                  >
+                    {t('tabs.telephony')}
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <LocationFormTabGeneral

@@ -258,7 +258,7 @@ New-Item -ItemType Directory -Force -Path $licenseDir | Out-Null
 New-Item -ItemType Directory -Force -Path $publicKeyDir | Out-Null
 
 $licenseDestPath = Join-Path $licenseDir (Split-Path $licenseSourcePath -Leaf)
-$publicKeyDestPath = Join-Path $publicKeyDir "license_public.pem"
+$publicKeyDestPath = Join-Path $publicKeyDir "public_key.pem"
 
 Copy-Item -Path $licenseSourcePath -Destination $licenseDestPath -Force
 Copy-Item -Path $publicKeySourcePath -Destination $publicKeyDestPath -Force

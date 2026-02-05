@@ -14,9 +14,9 @@ const DEFAULT_PUBLIC_KEY_PATH = path.join(
   PROGRAM_DATA,
   "Vigitemp",
   "license_keys",
-  "license_public.pem"
+  "public_key.pem"
 )
-const FALLBACK_PUBLIC_KEY_PATH = path.join(PROGRAM_DATA, "Vigitemp", "license_public.pem")
+const FALLBACK_PUBLIC_KEY_PATH = path.join(PROGRAM_DATA, "Vigitemp", "public_key.pem")
 const DEFAULT_PRIVATE_KEY_PATH = path.join(PROGRAM_DATA, "Vigitemp", "agent_secret_private.pem")
 
 function base64UrlToBuffer(input: string) {

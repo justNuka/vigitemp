@@ -19,7 +19,7 @@ namespace Vigitemp_Serveur
         // En base/UI, les retards d'alarme sont en minutes.
         public int RetardAlarmeBasMinutes { get; }
         public int RetardAlarmeHautMinutes { get; }
-        public int RetardNonReponseSeconds { get; }
+        public int RetardNonReponseMinutes { get; }
 
         // Legacy fields (if present in schema)
         public bool NotificationActive { get; }
@@ -37,7 +37,7 @@ namespace Vigitemp_Serveur
             bool consigneSupPreAlarmeActive,
             int retardAlarmeBasMinutes,
             int retardAlarmeHautMinutes,
-            int retardNonReponseSeconds,
+            int retardNonReponseMinutes,
             bool notificationActive,
             DateTime dateHeureReactivationAlarme)
         {
@@ -52,7 +52,7 @@ namespace Vigitemp_Serveur
             ConsigneSupPreAlarmeActive = consigneSupPreAlarmeActive;
             RetardAlarmeBasMinutes = retardAlarmeBasMinutes;
             RetardAlarmeHautMinutes = retardAlarmeHautMinutes;
-            RetardNonReponseSeconds = retardNonReponseSeconds;
+            RetardNonReponseMinutes = retardNonReponseMinutes;
             NotificationActive = notificationActive;
             DateHeureReactivationAlarme = dateHeureReactivationAlarme;
         }

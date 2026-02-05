@@ -6,6 +6,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { routing } from "@/i18n/routing"
 import { log } from "@/lib/logger"
 import { randomUUID } from "crypto"
+import { getAppTimezone } from "@/lib/timezone"
 
 const AGENT_PORT = Number.parseInt(process.env.VIGITEMP_AGENT_PORT ?? "8000", 10)
 const AGENT_TIMEOUT_MS = Number.parseInt(process.env.VIGITEMP_AGENT_TIMEOUT_MS ?? "1500", 10)
@@ -31,6 +32,10 @@ async function dispatchAgentNotifications(
   alarmUrl: string
   alarmId?: number
   lieuId?: number
+  alarmType?: string
+  triggeredAt?: string
+  lastValue?: string
+  lastMeasureAt?: string
 },
   targets: AgentTarget[],
 ) {
@@ -58,6 +63,10 @@ async function dispatchAgentNotifications(
           url: payload.alarmUrl,
           alarmId: payload.alarmId,
           lieuId: payload.lieuId,
+          alarmType: payload.alarmType,
+          triggeredAt: payload.triggeredAt,
+          lastValue: payload.lastValue,
+          lastMeasureAt: payload.lastMeasureAt,
           deliveryId,
           correlationId,
         }),
@@ -190,12 +199,26 @@ export const POST = withLogging(async (req: NextRequest) => {
   const alarmId = validated.data.alarmId
   const defaultUrl = `/${routing.defaultLocale}/alarmes`
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  const timezone = await getAppTimezone()
+  const formatDateTime = (value?: Date | null) =>
+    value
+      ? new Intl.DateTimeFormat("fr-FR", {
+          timeZone: timezone,
+          dateStyle: "short",
+          timeStyle: "medium",
+        }).format(value)
+      : undefined
   const dateLabel = new Intl.DateTimeFormat("fr-FR", {
+    timeZone: timezone,
     dateStyle: "short",
     timeStyle: "medium",
   }).format(new Date())
   let lieuId: number | undefined
   let locationLabel = "Lieu inconnu"
+  let alarmTypeLabel: string | undefined
+  let triggeredAtLabel: string | undefined
+  let lastValueLabel: string | undefined
+  let lastMeasureAtLabel: string | undefined
 
   if (alarmId && (!title || !messageBody || !url)) {
     const alarm = await prisma.t_alarme.findUnique({
@@ -239,6 +262,10 @@ export const POST = withLogging(async (req: NextRequest) => {
       const alarmType =
         alarm.Type === "H" ? "Alarme haute" : alarm.Type === "B" ? "Alarme basse" : "Alarme"
       const valueLabel = `${alarm.Valeur ?? "N/A"}${alarm.Unite ?? "°C"}`
+      alarmTypeLabel = alarmType
+      lastValueLabel = valueLabel
+      triggeredAtLabel = formatDateTime(alarm.Date_Heure_Debut_Alarme_Vrai ?? alarm.Date_Heure_Debut)
+      lastMeasureAtLabel = formatDateTime(alarm.Date_Heure_Derniere_Mesure)
       const thresholds = [
         alarm.t_lieu?.Consigne_Sup != null ? `Sup ${alarm.t_lieu?.Consigne_Sup}${alarm.Unite ?? "°C"}` : null,
         alarm.t_lieu?.Consigne_Inf != null ? `Inf ${alarm.t_lieu?.Consigne_Inf}${alarm.Unite ?? "°C"}` : null,
@@ -291,6 +318,10 @@ export const POST = withLogging(async (req: NextRequest) => {
     url: alarmUrl,
     alarmId,
     lieuId,
+    alarmType: alarmTypeLabel,
+    triggeredAt: triggeredAtLabel,
+    lastValue: lastValueLabel,
+    lastMeasureAt: lastMeasureAtLabel,
   })
 
   const notification = await prisma.t_notification.create({
@@ -337,6 +368,10 @@ export const POST = withLogging(async (req: NextRequest) => {
     alarmUrl,
     alarmId,
     lieuId,
+    alarmType: alarmTypeLabel,
+    triggeredAt: triggeredAtLabel,
+    lastValue: lastValueLabel,
+    lastMeasureAt: lastMeasureAtLabel,
   }, deliveries)
 
   log.info("ALARM_DISPATCH", "Alarm dispatched to agents", {

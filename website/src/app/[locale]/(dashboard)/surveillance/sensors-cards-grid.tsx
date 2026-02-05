@@ -69,7 +69,12 @@ export function SensorsCardsGrid({
   const disabledSensors = sortedSensors.filter((sensor) => sensor.location.surveillanceDisabled)
   const activeSensors = sortedSensors.filter((sensor) => !sensor.location.surveillanceDisabled)
 
-  const renderSection = (title: string, icon: ReactNode, items: SensorWithLocation[]) => (
+  const renderSection = (
+    title: string,
+    icon: ReactNode,
+    items: SensorWithLocation[],
+    isDisabledSection = false,
+  ) => (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-xl font-semibold text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2">
         {icon}
@@ -97,12 +102,16 @@ export function SensorsCardsGrid({
                 groupName={groupName}
                 status={sensor.status}
                 alarmType={sensor.alarmType ?? null}
+                alarmId={sensor.alarmId ?? sensor.location.alarmId ?? null}
                 alarmDisabled={sensor.location.alarmDisabled ?? false}
                 alarmDisabledUntil={sensor.location.alarmDisabledUntil ?? null}
                 alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
                 lieuEtat={sensor.location.lieuEtat ?? ""}
                 surveillanceDisabled={sensor.location.surveillanceDisabled ?? false}
                 sondeNumeroSerie={sensor.location.sondeNumeroSerie ?? ""}
+                isGso={sensor.location.isGso ?? null}
+                gsoRssi={sensor.location.gsoRssi ?? null}
+                gsoTension={sensor.location.gsoTension ?? null}
                 onSurveillanceToggle={handleSurveillanceToggle}
               />
             )
@@ -120,6 +129,7 @@ export function SensorsCardsGrid({
             t("grid.disabled_title"),
             <PowerOff className="h-5 w-5 text-slate-400" />,
             disabledSensors,
+            true,
           )}
           {renderSection(
             t("grid.active_title"),
@@ -138,6 +148,7 @@ export function SensorsCardsGrid({
             t("grid.disabled_title"),
             <PowerOff className="h-5 w-5 text-slate-400" />,
             disabledSensors,
+            true,
           )}
         </>
       )}

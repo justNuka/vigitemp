@@ -17,11 +17,13 @@ const createLieuSchema = z.object({
   Consigne: z.number().nullable().optional(),
   Frequence: z.number().nullable().optional(),
   Consigne_Sup: z.number().nullable().optional(),
+  Tolerance_Surveillance_Sup: z.number().nullable().optional(),
   Est_Consigne_Sup_Active: z.boolean().optional(),
   Consigne_Sup_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Sup_Pre_Alarme_Active: z.boolean().optional(),
   Retard_Alarme_Haut: z.number().nullable().optional(),
   Consigne_Inf: z.number().nullable().optional(),
+  Tolerance_Surveillance_Inf: z.number().nullable().optional(),
   Est_Consigne_Inf_Active: z.boolean().optional(),
   Consigne_Inf_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Inf_Pre_Alarme_Active: z.boolean().optional(),
@@ -99,6 +101,14 @@ export const POST = withLogging(async (req: NextRequest) => {
     const group2Id = groupIds[1] ?? validated.Id_Groupe2 ?? null
     const dateCreation = new Date()
     dateCreation.setHours(0, 0, 0, 0)
+    const toleranceSup =
+      Object.prototype.hasOwnProperty.call(validated, "Tolerance_Surveillance_Sup")
+        ? validated.Tolerance_Surveillance_Sup
+        : validated.Consigne_Sup ?? null
+    const toleranceInf =
+      Object.prototype.hasOwnProperty.call(validated, "Tolerance_Surveillance_Inf")
+        ? validated.Tolerance_Surveillance_Inf
+        : validated.Consigne_Inf ?? null
 
     const lieu = await prisma.t_lieu.create({
       data: {
@@ -108,11 +118,13 @@ export const POST = withLogging(async (req: NextRequest) => {
         Consigne: validated.Consigne,
         Frequence: frequencySeconds,
         Consigne_Sup: validated.Consigne_Sup,
+        Tolerance_Surveillance_Sup: toleranceSup,
         Est_Consigne_Sup_Active: validated.Est_Consigne_Sup_Active ?? false,
         Consigne_Sup_Pre_Alarme: validated.Consigne_Sup_Pre_Alarme,
         Est_Consigne_Sup_Pre_Alarme_Active: validated.Est_Consigne_Sup_Pre_Alarme_Active ?? false,
         Retard_Alarme_Haut: validated.Retard_Alarme_Haut,
         Consigne_Inf: validated.Consigne_Inf,
+        Tolerance_Surveillance_Inf: toleranceInf,
         Est_Consigne_Inf_Active: validated.Est_Consigne_Inf_Active ?? false,
         Consigne_Inf_Pre_Alarme: validated.Consigne_Inf_Pre_Alarme,
         Est_Consigne_Inf_Pre_Alarme_Active: validated.Est_Consigne_Inf_Pre_Alarme_Active ?? false,

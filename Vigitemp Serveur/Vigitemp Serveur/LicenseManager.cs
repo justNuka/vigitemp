@@ -23,7 +23,7 @@ namespace Vigitemp_Serveur
         private static readonly string DefaultPublicKeyPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
             "Vigitemp",
-            "license_public.pem");
+            "public_key.pem");
 
         public static LicenseValidationResult ValidateFromConfig()
         {

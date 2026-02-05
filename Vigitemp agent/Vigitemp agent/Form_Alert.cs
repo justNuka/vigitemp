@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Text;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -8,10 +9,9 @@ namespace VigitempAgent
 {
     public partial class Form_Alert : Form
     {
-
-
         PrivateFontCollection fonts = new PrivateFontCollection();
         private string SITEWEB_URL;
+        private const string DefaultAlertText = "Une alarme Vigitemp est actuellement en cours";
         public Form_Alert(string p_SITEWEB_URL)
         {
             InitializeComponent();
@@ -20,6 +20,15 @@ namespace VigitempAgent
             {
                 ctl.MouseClick += new MouseEventHandler(Form_Alert_Click);
             }
+        }
+
+        public class AlarmBannerDetails
+        {
+            public string Location { get; set; }
+            public string TriggeredAt { get; set; }
+            public string AlarmType { get; set; }
+            public string LastValue { get; set; }
+            public string LastMeasureAt { get; set; }
         }
 
         public enum enumAction
@@ -174,6 +183,43 @@ namespace VigitempAgent
             action = enumAction.close;
         }
 
+        public void SetAlarmBannerDetails(AlarmBannerDetails details)
+        {
+            if (details == null)
+            {
+                ResetAlarmBannerDetails();
+                return;
+            }
+
+            var line1 = DefaultAlertText;
+            var line2Parts = new[]
+            {
+                !string.IsNullOrWhiteSpace(details.Location) ? $"Lieu: {details.Location}" : null,
+                !string.IsNullOrWhiteSpace(details.AlarmType) ? $"Type: {details.AlarmType}" : null,
+                !string.IsNullOrWhiteSpace(details.LastValue) ? $"Valeur: {details.LastValue}" : null,
+            }.Where(part => !string.IsNullOrWhiteSpace(part)).ToList();
+
+            var line3Parts = new[]
+            {
+                !string.IsNullOrWhiteSpace(details.TriggeredAt) ? $"Déclenchement: {details.TriggeredAt}" : null,
+                !string.IsNullOrWhiteSpace(details.LastMeasureAt) ? $"Dernière mesure: {details.LastMeasureAt}" : null,
+            }.Where(part => !string.IsNullOrWhiteSpace(part)).ToList();
+
+            var lines = new[]
+            {
+                line1,
+                line2Parts.Count > 0 ? string.Join(" | ", line2Parts) : null,
+                line3Parts.Count > 0 ? string.Join(" | ", line3Parts) : null,
+            }.Where(line => !string.IsNullOrWhiteSpace(line));
+
+            label2.Text = string.Join(Environment.NewLine, lines);
+        }
+
+        public void ResetAlarmBannerDetails()
+        {
+            label2.Text = DefaultAlertText;
+        }
+
 
         private void Form_Alert_Load(object sender, EventArgs e)
         {
@@ -198,15 +244,13 @@ namespace VigitempAgent
         private void Form_Alert_Click(object sender, EventArgs e)
         {
             System.Diagnostics.Process.Start(SITEWEB_URL + "/alarmes");
-            //timer1.Interval = 1;
-            //action = enumAction.close;
+            HideAlarm();
         }
 
         private void button1_Click_1(object sender, EventArgs e)
         {
             System.Diagnostics.Process.Start(SITEWEB_URL + "/alarmes");
-            //timer1.Interval = 1;
-            action = enumAction.close;
+            HideAlarm();
         }
 
         private void labelmessage_Click_1(object sender, EventArgs e)
@@ -263,13 +307,14 @@ namespace VigitempAgent
             {
                 this.Invoke(new Action(() =>
                 {
+                    ResetAlarmBannerDetails();
                     this.hideAlert("alarm");
                     //MessageBox.Show("Alarm triggered!");
                 }));
             }
             else
             {
-
+                ResetAlarmBannerDetails();
                 this.hideAlert("alarm");
                 //MessageBox.Show("Alarm triggered!");
             }

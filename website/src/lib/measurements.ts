@@ -2,6 +2,7 @@
   id: string
   Valeur: number
   Unite: string
+  Nb_Decimal?: number | null
   DateHeureMesure: string
   DateHeureMesureIso?: string
   DateHeureMesureXaxis: string
@@ -20,7 +21,27 @@ export type MeasureSummary = {
   unite: string
   frequence: number
   lastMeasureText: string
+  lastValue: number | null
   lastDateTime: string
+  decimals: number | null
+}
+
+export function formatMeasureValue(
+  value: number | null | undefined,
+  decimals?: number | null,
+  locale = "fr-FR",
+): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return ""
+
+  if (decimals === null || decimals === undefined || Number.isNaN(decimals)) {
+    return value.toString()
+  }
+
+  const fractionDigits = Math.max(0, Math.min(10, Math.trunc(decimals)))
+  return new Intl.NumberFormat(locale, {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  }).format(value)
 }
 
 export function getMeasureSummary(
@@ -32,8 +53,10 @@ export function getMeasureSummary(
 
   const unite = last?.Unite || first?.Unite || fallback?.unite || "\u00B0C"
   const frequence = last?.Frequence || first?.Frequence || fallback?.frequence || 15
+  const decimals = last?.Nb_Decimal ?? first?.Nb_Decimal ?? null
 
-  const lastMeasureText = last ? `${last.Valeur}${last.Unite || unite}` : ""
+  const formattedValue = last ? formatMeasureValue(last.Valeur, decimals) : ""
+  const lastMeasureText = last ? `${formattedValue}${last.Unite || unite}` : ""
   const lastDateTime = last?.DateHeureMesure || ""
 
   return {
@@ -43,7 +66,9 @@ export function getMeasureSummary(
     unite,
     frequence,
     lastMeasureText,
+    lastValue: last?.Valeur ?? null,
     lastDateTime,
+    decimals,
   }
 }
 

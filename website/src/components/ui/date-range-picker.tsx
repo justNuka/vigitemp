@@ -334,6 +334,12 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
     )
   }
 
+  const restoreOpenedValues = (): void => {
+    if (openedRangeRef.current === undefined) return
+    setRange(openedRangeRef.current ?? null)
+    setRangeCompare(openedRangeCompareRef.current ?? undefined)
+  }
+
   useEffect(() => {
     checkPreset()
   }, [range])
@@ -392,7 +398,7 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
       open={isOpen}
       onOpenChange={(open: boolean) => {
         if (!open) {
-          resetValues()
+          restoreOpenedValues()
         }
         setIsOpen(open)
       }}
@@ -786,8 +792,8 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
         <div className="flex justify-end gap-2 py-2 pr-4">
           <Button
             onClick={() => {
+              restoreOpenedValues()
               setIsOpen(false)
-              resetValues()
             }}
             variant="ghost"
             className="text-red-600 hover:text-red-700 bg-red-500/10 hover:bg-red-500/20"
@@ -796,9 +802,10 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
           </Button>
           <Button
             onClick={() => {
-              setIsOpen(false)
               if (allowEmpty && !range?.from) {
-                resetValues()
+                openedRangeRef.current = null
+                openedRangeCompareRef.current = undefined
+                setIsOpen(false)
                 return
               }
               if (
@@ -809,6 +816,9 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
                   onUpdate?.({ range, rangeCompare })
                 }
               }
+              openedRangeRef.current = range
+              openedRangeCompareRef.current = rangeCompare
+              setIsOpen(false)
             }}
           >
             {t('update')}

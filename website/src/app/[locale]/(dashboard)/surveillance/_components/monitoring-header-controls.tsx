@@ -43,6 +43,18 @@ export function SurveillanceHeaderControls({
   onToggleOrder,
 }: Props) {
   const t = useTranslations("surveillance")
+  const tStatus = useTranslations("surveillanceStatus")
+  const tCard = useTranslations("monitoringCard")
+
+  const legendItems = [
+    { key: "alarm_high", label: tCard("alarmTypes.high"), dotClassName: "bg-red-600" },
+    { key: "alarm_low", label: tCard("alarmTypes.low"), dotClassName: "bg-blue-600" },
+    { key: "warning", label: tStatus("warning"), dotClassName: "bg-amber-500" },
+    { key: "technical", label: tStatus("technical"), dotClassName: "bg-black" },
+    { key: "ended", label: tStatus("ended"), dotClassName: "bg-violet-600" },
+    { key: "ok", label: tStatus("ok"), dotClassName: "bg-primary" },
+    { key: "inactive", label: tStatus("inactive"), dotClassName: "bg-slate-500" },
+  ]
 
   return (
     <div className="flex flex-col gap-4 w-full rounded-lg border border-slate-200 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-900/60">
@@ -76,6 +88,14 @@ export function SurveillanceHeaderControls({
             </Button>
           ) : null}
         </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        {legendItems.map((item) => (
+          <span key={item.key} className="inline-flex items-center gap-1">
+            <span className={`h-2 w-2 rounded-full ${item.dotClassName}`} aria-hidden="true" />
+            <span>{item.label}</span>
+          </span>
+        ))}
       </div>
     </div>
   )

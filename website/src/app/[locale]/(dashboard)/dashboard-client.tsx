@@ -20,7 +20,7 @@ import {
 import { alarmsApi, type AlarmWithDetails, type SensorWithLocation } from "@/lib/api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { enUS, fr } from "date-fns/locale";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { ColumnDef } from "@tanstack/react-table";
@@ -37,12 +37,20 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale, useTranslations } from "next-intl";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useAppTimezone } from "@/components/timezone-provider";
 
 interface DashboardClientProps {
   criticalSensors: SensorWithLocation[];
   activeAlarms: AlarmWithDetails[];
   sensorOverview: SensorWithLocation[];
   totalActiveAlarms: number;
+  trendCountLast24h: number;
 }
 
 interface AlarmRow {
@@ -66,10 +74,26 @@ export function DashboardClient({
   activeAlarms,
   sensorOverview,
   totalActiveAlarms,
+  trendCountLast24h,
 }: DashboardClientProps) {
   const t = useTranslations("dashboardClient");
   const locale = useLocale();
   const dateLocale = locale.toLowerCase().startsWith("fr") ? fr : enUS;
+  const localeTag = locale.toLowerCase().startsWith("fr") ? "fr-FR" : locale;
+  const timezone = useAppTimezone();
+  const formatTzDateTime = (value: string | Date) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    return date.toLocaleString(localeTag, {
+      timeZone: timezone,
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  };
 
   const [localAlarms, setLocalAlarms] = useState(activeAlarms);
   const [activeCount, setActiveCount] = useState(totalActiveAlarms);
@@ -206,9 +230,18 @@ export function DashboardClient({
         return (
           <div className="flex items-center gap-1.5 text-sm">
             <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-            <span title={format(triggeredDate, "dd/MM/yyyy HH:mm:ss", { locale: dateLocale })}>
-              {formatDistanceToNow(triggeredDate, { addSuffix: true, locale: dateLocale })}
-            </span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="cursor-help">
+                    {formatDistanceToNow(triggeredDate, { addSuffix: true, locale: dateLocale })}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">{formatTzDateTime(triggeredDate)}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         );
       },
@@ -358,7 +391,9 @@ export function DashboardClient({
                 className="rounded-lg overflow-hidden"
               />
               <div className="mt-4 flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">{t("trend.count", { count: 0 })}</span>
+                <span className="text-muted-foreground">
+                  {t("trend.count", { count: trendCountLast24h })}
+                </span>
                 <Link href="surveillance">
                   <Button variant="ghost" size="sm" className="gap-1 -mr-2">
                     {t("trend.details")}

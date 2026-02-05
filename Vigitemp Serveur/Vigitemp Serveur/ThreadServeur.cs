@@ -186,7 +186,7 @@ namespace Vigitemp_Serveur
                 $"consigneSupPreActive={settings.ConsigneSupPreAlarmeActive} " +
                 $"retardBasMin={settings.RetardAlarmeBasMinutes} " +
                 $"retardHautMin={settings.RetardAlarmeHautMinutes} " +
-                $"retardNonReponseSec={settings.RetardNonReponseSeconds} " +
+                $"retardNonReponseMin={settings.RetardNonReponseMinutes} " +
                 $"notificationActive={settings.NotificationActive} " +
                 $"reactivationUtc={settings.DateHeureReactivationAlarme:O}"
             );

@@ -11,6 +11,7 @@ import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
+import { getAppTimezone } from "@/lib/timezone";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -91,11 +92,30 @@ export async function generateMetadata({
 
 type RootLayoutProps = Readonly<{
   children: React.ReactNode;
-  params: Promise<{locale: string}>;
+  params: Promise<{ locale: string }>;
 }>;
 
 export function generateStaticParams() {
   return [{ locale: 'fr' }, { locale: 'en' }];
+}
+
+type LocaleProvidersProps = Readonly<{
+  children: React.ReactNode;
+  locale: string;
+}>;
+
+async function LocaleProviders({ children, locale }: LocaleProvidersProps) {
+  const messages = await getMessages();
+  const timezone = await getAppTimezone();
+
+  return (
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <Providers timezone={timezone}>
+        <Toaster position="bottom-right" richColors closeButton />
+        {children}
+      </Providers>
+    </NextIntlClientProvider>
+  );
 }
 
 export default async function RootLayout({ children, params }: RootLayoutProps) {
@@ -106,18 +126,12 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
   
   // Enable static rendering - CRITICAL!
   setRequestLocale(locale);
-  const messages = await getMessages();
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={`${inter.variable} ${jetbrainsMono.variable} ${montserrat.variable} font-sans antialiased`}>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <Suspense fallback={null}>
-            <Providers>
-              <Toaster position="bottom-right" richColors closeButton />
-              {children}
-            </Providers>
-          </Suspense>
-        </NextIntlClientProvider>
+        <Suspense fallback={null}>
+          <LocaleProviders locale={locale}>{children}</LocaleProviders>
+        </Suspense>
       </body>
     </html>
   );

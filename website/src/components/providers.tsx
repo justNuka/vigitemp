@@ -6,6 +6,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { GlobalAppEffects } from "@/components/global-app-effects";
 import { VersionChangelogModal } from "@/components/version-changelog-modal";
 import { LicenseProvider } from "@/components/license/license-provider";
+import { TimezoneProvider } from "@/components/timezone-provider";
 
 declare global {
   interface Window {
@@ -54,7 +55,13 @@ function safeSavePersistedCache(cache: PersistedQueryCache) {
   }
 }
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  children,
+  timezone,
+}: {
+  children: React.ReactNode;
+  timezone?: string | null;
+}) {
   const reactId = useId()
   const instanceNumberRef = useRef<number | null>(null)
   if (instanceNumberRef.current === null) {
@@ -139,16 +146,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider 
-        attribute="class" 
-        defaultTheme="dark" 
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
         storageKey="vigitemp-theme"
         enableSystem
         disableTransitionOnChange
       >
-        <GlobalAppEffects />
-        <VersionChangelogModal />
-        <LicenseProvider>{children}</LicenseProvider>
+        <TimezoneProvider timezone={timezone}>
+          <GlobalAppEffects />
+          <VersionChangelogModal />
+          <LicenseProvider>{children}</LicenseProvider>
+        </TimezoneProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

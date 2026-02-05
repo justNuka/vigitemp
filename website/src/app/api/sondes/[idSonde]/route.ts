@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma"
 
 const updateProbeSchema = z.object({
   moduleId: z.number().int().positive().nullable().optional(),
+  sondeOffset: z.number().nullable().optional(),
 })
 
 export const PATCH = withAuthLogging(
@@ -31,6 +32,7 @@ export const PATCH = withAuthLogging(
         where: { Id_Sonde: id },
         data: {
           Id_Module: data.moduleId === undefined ? existing.Id_Module : data.moduleId,
+          Sonde_Offset: data.sondeOffset === undefined ? existing.Sonde_Offset : data.sondeOffset ?? 0,
         },
       })
 

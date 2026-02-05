@@ -12,6 +12,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export default function AdminGroupLayout({
   children,
@@ -45,8 +46,11 @@ export default function AdminGroupLayout({
       try {
         const res = await fetch("/api/agent/secret/status", { method: "GET" });
         if (!res.ok) return;
-        const data = (await res.json()) as { status: string; message: string };
-        setAgentSecretStatus(data);
+        const payload = (await res.json()) as
+          | { status: string; message: string }
+          | { ok: true; data: { status: string; message: string } };
+        const normalized = "ok" in payload ? payload.data : payload;
+        setAgentSecretStatus(normalized);
       } catch {
         setAgentSecretStatus({
           status: "error",
@@ -88,7 +92,7 @@ export default function AdminGroupLayout({
           onLogout={handleLogout}
         />
         <main className="flex-1 min-h-0 bg-background">
-          {agentSecretStatus && agentSecretStatus.status !== "ok" && (
+          {isFeatureEnabled("enableAgentSecretAlert") && agentSecretStatus && agentSecretStatus.status !== "ok" && (
             <div className="px-6 pt-6">
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />

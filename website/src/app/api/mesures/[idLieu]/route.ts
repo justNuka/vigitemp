@@ -3,6 +3,7 @@ import { prisma, prismaMesure } from "@/lib/prisma"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { getCachedMeasurements, setCachedMeasurements } from "@/lib/measurement-cache"
 import { apiError, apiOk } from "@/lib/api-response"
+import { getAppTimezone } from "@/lib/timezone"
 
 export const GET = withAuthLogging(
   async (req: NextRequest, _ctx: any, { params }: { params: Promise<{ idLieu: string }> }) => {
@@ -79,6 +80,7 @@ export const GET = withAuthLogging(
                 Id_Mesure: true,
                 Date_Heure_Mesure: true,
                 Valeur: true,
+                Nb_Decimal: true,
                 Unite: true,
                 Consigne: true,
                 Consigne_Sup: true,
@@ -99,6 +101,7 @@ export const GET = withAuthLogging(
                 Id_Graphique: true,
                 Date_Heure_Mesure: true,
                 Valeur: true,
+                Nb_Decimal: true,
                 Unite: true,
                 Consigne: true,
                 Consigne_Sup: true,
@@ -114,8 +117,9 @@ export const GET = withAuthLogging(
             Consigne: true,
             Consigne_Sup: true,
             Consigne_Inf: true,
-            Consigne_Sup_Corrigee: true,
-            Consigne_Inf_Corrigee: true,
+            Tolerance_Surveillance_Sup: true,
+            Tolerance_Surveillance_Inf: true,
+            Derniere_Nb_Decimal: true,
             Type_Lieu: true,
           },
         }),
@@ -129,11 +133,16 @@ export const GET = withAuthLogging(
           : Promise.resolve(0),
       ])
 
-      const consigneSupLieu = lieu?.Consigne_Sup_Corrigee ?? lieu?.Consigne_Sup ?? null
-      const consigneInfLieu = lieu?.Consigne_Inf_Corrigee ?? lieu?.Consigne_Inf ?? null
+      const consigneSupLieu =
+        lieu?.Tolerance_Surveillance_Sup ?? lieu?.Consigne_Sup ?? null
+      const consigneInfLieu =
+        lieu?.Tolerance_Surveillance_Inf ?? lieu?.Consigne_Inf ?? null
       const consigneLieu = lieu?.Consigne ?? null
+      const decimalsLieu = lieu?.Derniere_Nb_Decimal ?? null
 
       const chronologicalMeasurements = measurements.reverse()
+
+      const timezone = await getAppTimezone()
 
       const formattedMeasurements = chronologicalMeasurements.map((m: any) => {
         const dateHeure = m.Date_Heure_Mesure ? new Date(m.Date_Heure_Mesure) : new Date()
@@ -144,18 +153,24 @@ export const GET = withAuthLogging(
           year: "numeric",
           hour: "2-digit",
           minute: "2-digit",
-          timeZone: "UTC",
+          timeZone: timezone,
         })
 
         const dateXaxis = dateHeure.toLocaleString("fr-FR", {
           hour: "2-digit",
           minute: "2-digit",
-          timeZone: "UTC",
+          timeZone: timezone,
         })
 
         return {
           id: (source === "mesures" ? m.Id_Mesure : m.Id_Graphique)?.toString() || "",
           Valeur: m.Valeur !== null ? parseFloat(m.Valeur.toString()) : 0,
+          Nb_Decimal:
+            m.Nb_Decimal !== null && m.Nb_Decimal !== undefined
+              ? Number(m.Nb_Decimal)
+              : decimalsLieu !== null
+                ? Number(decimalsLieu)
+                : null,
           Unite: m.Unite || "\u00B0C",
           DateHeureMesure: dateDisplay,
           DateHeureMesureIso: dateHeure.toISOString(),

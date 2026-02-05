@@ -60,6 +60,7 @@ export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalP
     sondeType: z.string().min(1, t('validation.type_required')),
     serieNum: z.string().regex(/^\d+(?:-?[TH])?$/i, t('validation.serial_invalid')),
     moduleId: z.string().optional(),
+    sondeOffset: z.number({ message: t('validation.offset_invalid') }).optional(),
   });
 
   type ProbeFormValues = z.infer<typeof probeSchema>;
@@ -70,6 +71,7 @@ export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalP
       sondeType: "",
       serieNum: "",
       moduleId: "",
+      sondeOffset: undefined,
     },
     mode: "onChange",
   });
@@ -85,17 +87,19 @@ export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalP
         sondeType: probe.Sonde_Numero_Serie?.substring(0, 2) || "",
         serieNum: probe.Sonde_Numero_Serie || "",
         moduleId: probe.Id_Module?.toString() || "",
+        sondeOffset: probe.Sonde_Offset ?? 0,
       });
       return;
     }
 
-    form.reset({ sondeType: "", serieNum: "", moduleId: "" });
+    form.reset({ sondeType: "", serieNum: "", moduleId: "", sondeOffset: undefined });
   }, [form, isEdit, open, probe]);
 
   const handleSubmit = async (values: ProbeFormValues) => {
     try {
       const moduleIdNumber = values.moduleId ? parseInt(values.moduleId, 10) : null;
       const moduleIdValue = Number.isNaN(moduleIdNumber) ? null : moduleIdNumber;
+      const sondeOffsetValue = values.sondeOffset ?? 0;
 
       if (isEdit) {
         if (!probe?.Id_Sonde) {
@@ -103,20 +107,24 @@ export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalP
           return;
         }
 
-        await patchJson(`/api/sondes/${probe.Id_Sonde}`, { moduleId: moduleIdValue });
+        await patchJson(`/api/sondes/${probe.Id_Sonde}`, {
+          moduleId: moduleIdValue,
+          sondeOffset: sondeOffsetValue,
+        });
         toast.success(t('toast.update_success'));
       } else {
         await postJson(`/api/sondes`, {
           sondeType: values.sondeType,
           serieNum: values.serieNum,
           moduleId: moduleIdValue,
+          sondeOffset: sondeOffsetValue,
         });
         toast.success(t('toast.create_success'));
       }
 
       await queryClient.invalidateQueries({ queryKey: ["probes"] });
       router.refresh();
-      form.reset({ sondeType: "", serieNum: "", moduleId: "" });
+      form.reset({ sondeType: "", serieNum: "", moduleId: "", sondeOffset: undefined });
       onOpenChange(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('toast.save_error'));
@@ -216,6 +224,36 @@ export function ProbeModal({ open, onOpenChange, probe, isEditing }: ProbeModalP
                           mod.Port_Serie || ""
                         } ${mod.Emplacement || ""} ${mod.Id_Module}`,
                       }))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="sondeOffset"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('fields.offset_label')}</FormLabel>
+                  <p className="text-xs text-muted-foreground">{t('fields.offset_hint')}</p>
+                  <FormControl>
+                    <Input
+                      id="sonde-offset"
+                      type="number"
+                      step="0.01"
+                      placeholder={t('fields.offset_placeholder')}
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        if (raw === "") {
+                          field.onChange(undefined);
+                          return;
+                        }
+                        const parsed = Number(raw);
+                        field.onChange(Number.isFinite(parsed) ? parsed : undefined);
+                      }}
                     />
                   </FormControl>
                   <FormMessage />

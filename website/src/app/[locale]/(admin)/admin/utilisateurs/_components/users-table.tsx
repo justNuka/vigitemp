@@ -6,9 +6,8 @@ import { TanStackTable } from "@/components/data-table/tanstack-table";
 import type { User } from "@/lib/api";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Shield } from "lucide-react";
-import { format } from "date-fns";
-import { enUS, fr } from "date-fns/locale";
 import { useLocale, useTranslations } from "next-intl";
+import { useAppTimezone } from "@/components/timezone-provider";
 
 interface Props {
   users: User[];
@@ -25,7 +24,8 @@ export function UsersTable({
 }: Props) {
   const t = useTranslations("usersTable");
   const locale = useLocale();
-  const dateLocale = locale.toLowerCase().startsWith("fr") ? fr : enUS;
+  const localeTag = locale.toLowerCase().startsWith("fr") ? "fr-FR" : locale;
+  const timezone = useAppTimezone();
 
   const columns: ColumnDef<User>[] = [
     {
@@ -79,7 +79,12 @@ export function UsersTable({
       cell: ({ row }) => {
         const date = row.getValue("expiry_date");
         return date
-          ? format(new Date(date as string), "dd/MM/yyyy", { locale: dateLocale })
+          ? new Date(date as string).toLocaleDateString(localeTag, {
+              timeZone: timezone,
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })
           : t("placeholders.na");
       },
     },

@@ -16,12 +16,13 @@ export async function ServerAlarms(status?: AlarmStatus) {
   const where: any = {};
 
   if (status === "active") {
-    where.Acquite = false;
+    where.Est_Acquittee = false;
+    where.Date_Heure_Fin = null;
   } else if (status === "acknowledged") {
-    where.Acquite = true;
+    where.Est_Acquittee = true;
   } else if (status === "resolved") {
-    // Pour l'instant, pas d'alarmes résolues - tout est basé sur Acquite
-    where.Acquite = null; // Aucune alarme ne correspondra
+    where.Est_Acquittee = false;
+    where.Date_Heure_Fin = { not: null };
   }
 
   const alarms = await prisma.t_alarme.findMany({
@@ -31,6 +32,12 @@ export async function ServerAlarms(status?: AlarmStatus) {
         select: {
           Id_Lieu: true,
           Nom_Lieu: true,
+          Derniere_Valeur: true,
+          Derniere_Unite: true,
+          Consigne_Sup: true,
+          Consigne_Inf: true,
+          Tolerance_Surveillance_Sup: true,
+          Tolerance_Surveillance_Inf: true,
         },
       },
     },
@@ -39,20 +46,39 @@ export async function ServerAlarms(status?: AlarmStatus) {
   });
 
   // Transform to API format (AlarmWithDetails)
-  const formatted = alarms.map((alarm) => ({
-    id: alarm.Id_Alarme.toString(),
-    sensorId: alarm.Id_Lieu?.toString() || "0",
-    locationId: alarm.Id_Lieu?.toString() || "0",
-    type: (alarm.Type === "H"
+  const formatted = alarms.map((alarm) => {
+    const consigneSup =
+      alarm.t_lieu?.Tolerance_Surveillance_Sup ?? alarm.t_lieu?.Consigne_Sup ?? null;
+    const consigneInf =
+      alarm.t_lieu?.Tolerance_Surveillance_Inf ?? alarm.t_lieu?.Consigne_Inf ?? null;
+
+    const statusValue = alarm.Est_Acquittee
+      ? ("acknowledged" as const)
+      : alarm.Date_Heure_Fin
+        ? ("resolved" as const)
+        : ("active" as const);
+
+    const alarmType = (alarm.Type === "H"
       ? "high"
       : alarm.Type === "B"
         ? "low"
-        : alarm.Type === "T"
-          ? "ended"
-          : "no-response") as "high" | "low" | "no-response" | "ended",
+          : "no-response") as "high" | "low" | "no-response";
+
+    const thresholdValue =
+      alarmType === "high"
+        ? consigneSup ?? 0
+        : alarmType === "low"
+          ? consigneInf ?? 0
+          : 0;
+
+    return {
+    id: alarm.Id_Alarme.toString(),
+    sensorId: alarm.Id_Lieu?.toString() || "0",
+    locationId: alarm.Id_Lieu?.toString() || "0",
+    type: alarmType,
     value: alarm.Valeur || 0,
-    threshold: 0, // Threshold from t_lieu if needed
-    status: alarm.Est_Acquittee ? ("acknowledged" as const) : ("active" as const),
+    threshold: thresholdValue,
+    status: statusValue,
     triggeredAt: alarm.Date_Heure_Debut || new Date(),
     acknowledgedAt: alarm.Est_Acquittee ? alarm.Date_Heure_Debut : null,
     resolvedAt: alarm.Date_Heure_Fin || null,
@@ -62,11 +88,11 @@ export async function ServerAlarms(status?: AlarmStatus) {
       id: alarm.Id_Lieu?.toString() || "0",
       name: alarm.t_lieu?.Nom_Lieu || "Unknown",
       type: "temperature",
-      unit: alarm.Unite || "°C",
+      unit: alarm.Unite || alarm.t_lieu?.Derniere_Unite || "°C",
       locationId: alarm.Id_Lieu?.toString() || "0",
-      currentValue: alarm.Valeur || null,
-      minThreshold: 0,
-      maxThreshold: 30,
+      currentValue: alarm.t_lieu?.Derniere_Valeur ?? alarm.Valeur ?? null,
+      minThreshold: consigneInf ?? 0,
+      maxThreshold: consigneSup ?? 0,
       measurementFrequency: 60,
       alarmDelay: 0,
       lastMeasurement: alarm.Date_Heure_Derniere_Mesure || null,
@@ -79,7 +105,8 @@ export async function ServerAlarms(status?: AlarmStatus) {
       siteGroup: null,
       isActive: true,
     },
-  }));
+    };
+  });
 
   return formatted;
 }
@@ -93,13 +120,13 @@ export async function ServerAlarmStats() {
 
   const [activeCount, acknowledgedCount, resolvedCount] = await Promise.all([
     prisma.t_alarme.count({
-      where: { Est_Acquittee: false },
+      where: { Est_Acquittee: false, Date_Heure_Fin: null },
     }),
     prisma.t_alarme.count({
       where: { Est_Acquittee: true },
     }),
     prisma.t_alarme.count({
-      where: { Est_Acquittee: null }, // Pour l'instant, pas d'alarmes résolues
+      where: { Est_Acquittee: false, Date_Heure_Fin: { not: null } },
     }),
   ]);
 

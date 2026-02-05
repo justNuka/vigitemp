@@ -11,6 +11,7 @@ interface MeasureData {
   id: string;
   Valeur: number;
   Unite: string;
+  Nb_Decimal?: number | null;
   DateHeureMesure: string;
   DateHeureMesureIso?: string;
   DateHeureMesureXaxis: string;

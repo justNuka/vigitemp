@@ -242,6 +242,10 @@ namespace VigitempAgent
                                 var correlationId = ExtractJsonString(payload, "correlationId");
                                 var alarmId = ExtractJsonInt(payload, "alarmId");
                                 var lieuId = ExtractJsonInt(payload, "lieuId");
+                                var alarmType = ExtractJsonString(payload, "alarmType");
+                                var triggeredAt = ExtractJsonString(payload, "triggeredAt");
+                                var lastValue = ExtractJsonString(payload, "lastValue");
+                                var lastMeasureAt = ExtractJsonString(payload, "lastMeasureAt");
 
                                 var combined = message;
                                 if (!string.IsNullOrWhiteSpace(location) || !string.IsNullOrWhiteSpace(date))
@@ -256,7 +260,18 @@ namespace VigitempAgent
                                 {
                                     if (SessionStore.HasValidSession())
                                     {
-                                        frm_alert.Invoke((Action)(() => frm_alert.DisplayAlarm()));
+                                        frm_alert.Invoke((Action)(() =>
+                                        {
+                                            frm_alert.SetAlarmBannerDetails(new Form_Alert.AlarmBannerDetails
+                                            {
+                                                Location = location,
+                                                TriggeredAt = triggeredAt,
+                                                AlarmType = alarmType,
+                                                LastValue = lastValue,
+                                                LastMeasureAt = lastMeasureAt,
+                                            });
+                                            frm_alert.DisplayAlarm();
+                                        }));
                                     }
                                 }
                                 catch (Exception ex)

@@ -25,6 +25,7 @@ import { groupSensorsBySiteAndGroup } from "./_helpers/group-sensors"
 import { sortSensorsByStatus } from "./_helpers/monitoring-derived"
 import { formatAlarmes, formatGroupes, formatPreAlarmes, formatSondes } from "./_helpers/monitoring-labels"
 import { usePersistentStringSet } from "./_hooks/use-persistent-string-set"
+import { useAppTimezone } from "@/components/timezone-provider"
 
 interface MonitoringCardsGridProps {
   sensors: SensorWithLocation[]
@@ -42,12 +43,14 @@ interface MonitoringCardsGridProps {
 function formatDisabledLabel(
   disabledUntil: Date | string | null,
   locale: string,
+  timezone: string,
   t: (key: string, values?: Record<string, string>) => string,
 ) {
   if (!disabledUntil) return t("grid.disabled_badge")
   const date = new Date(disabledUntil)
   if (Number.isNaN(date.getTime())) return t("grid.disabled_badge")
   const formatted = new Intl.DateTimeFormat(locale, {
+    timeZone: timezone,
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -66,6 +69,7 @@ export function MonitoringCardsGrid({
 }: MonitoringCardsGridProps) {
   const t = useTranslations("surveillance")
   const locale = useLocale()
+  const timezone = useAppTimezone()
   const { value: expandedSites, toggle: toggleSite } = usePersistentStringSet(
     "surveillance-expanded-sites",
   )
@@ -115,7 +119,7 @@ export function MonitoringCardsGrid({
             </div>
             <div className="h-px w-full bg-slate-200 dark:bg-slate-700" />
           </div>
-          <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))] max-w-4xl">
+          <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
             {Array.from({ length: 4 }).map((_, i) => (
               <MonitoringCardSkeleton key={`skeleton-disabled-${i}`} />
             ))}
@@ -221,7 +225,7 @@ export function MonitoringCardsGrid({
                         {groupDisabled ? (
                           <span
                             className="ml-2 inline-flex items-center rounded-full bg-orange-500/20 text-orange-900 dark:text-orange-100 text-[10px] px-2 py-0.5"
-                            title={formatDisabledLabel(groupDisabledUntil, locale, t)}
+                            title={formatDisabledLabel(groupDisabledUntil, locale, timezone, t)}
                           >
                             {t("grid.disabled_badge")}
                           </span>
@@ -263,13 +267,17 @@ export function MonitoringCardsGrid({
                               siteName={siteName ?? ""}
                               groupName={groupName ?? ""}
                               status={sensor.status}
-                                alarmType={sensor.alarmType ?? null}
+                              alarmType={sensor.alarmType ?? null}
+                              alarmId={sensor.alarmId ?? sensor.location.alarmId ?? null}
                               alarmDisabled={sensor.location.alarmDisabled ?? false}
                               alarmDisabledUntil={sensor.location.alarmDisabledUntil ?? null}
                               alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
                               lieuEtat={sensor.location.lieuEtat ?? ""}
                               surveillanceDisabled={sensor.location.surveillanceDisabled ?? false}
                               sondeNumeroSerie={sensor.location.sondeNumeroSerie ?? ""}
+                              isGso={sensor.location.isGso ?? null}
+                              gsoRssi={sensor.location.gsoRssi ?? null}
+                              gsoTension={sensor.location.gsoTension ?? null}
                               onSurveillanceToggle={(id, action, newState, durationMinutes) =>
                                 handleSurveillanceToggle(id, action, newState, durationMinutes ?? null)
                               }
@@ -298,7 +306,7 @@ export function MonitoringCardsGrid({
         <div className="h-px w-full bg-slate-200 dark:bg-slate-700" />
       </div>
       {hasDisabled ? (
-        <div className="max-w-4xl">
+        <div>
           {groupedDisabled.map(({ siteId, siteName, sensorsCount, groups }) => {
             const isSiteExpanded = expandedSites.has(`disabled-${siteId}`)
             return (
@@ -337,12 +345,16 @@ export function MonitoringCardsGrid({
                               siteName={siteName ?? ""}
                               groupName={groupName ?? ""}
                               status={sensor.status}
+                              alarmId={sensor.alarmId ?? sensor.location.alarmId ?? null}
                               alarmDisabled={sensor.location.alarmDisabled ?? false}
                               alarmDisabledUntil={sensor.location.alarmDisabledUntil ?? null}
                               alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
                               lieuEtat={sensor.location.lieuEtat ?? ""}
                               surveillanceDisabled={sensor.location.surveillanceDisabled ?? false}
                               sondeNumeroSerie={sensor.location.sondeNumeroSerie ?? ""}
+                              isGso={sensor.location.isGso ?? null}
+                              gsoRssi={sensor.location.gsoRssi ?? null}
+                              gsoTension={sensor.location.gsoTension ?? null}
                               onSurveillanceToggle={(id, action, newState, durationMinutes) =>
                                 handleSurveillanceToggle(id, action, newState, durationMinutes ?? null)
                               }

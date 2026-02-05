@@ -9,6 +9,7 @@ export interface Probe {
   Surveillance_Etat: string | null;
   Surveillance_Etat_Libelle: string | null;
   Id_Module: number | null;
+  Sonde_Offset: number | null;
   Lieu: string | null;
   Sonde_Type?: string | null;
 }

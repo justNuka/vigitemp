@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Terminal } from "@/components/magicui/terminal"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
+import { isFeatureEnabled } from "@/lib/feature-flags"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertTriangle } from "lucide-react"
 
@@ -137,10 +138,11 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
 
   const loadAgentSecretStatus = async () => {
     try {
-      const data = await getJson<{ status: string; message: string }>(
-        "/api/hotline/agent-secret-status"
-      )
-      setAgentSecretStatus(data)
+      const payload = await getJson<
+        { status: string; message: string } | { ok: true; data: { status: string; message: string } }
+      >("/api/hotline/agent-secret-status")
+      const normalized = "ok" in payload ? payload.data : payload
+      setAgentSecretStatus(normalized)
     } catch (error) {
       if (isUnauthorizedError(error)) {
         router.replace(`/${locale}/hotline/${slug}/login`)
@@ -159,7 +161,7 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
 
   return (
     <div className="flex w-full flex-1 flex-col gap-6">
-      {agentSecretStatus && agentSecretStatus.status !== "ok" && (
+      {isFeatureEnabled("enableAgentSecretAlert") && agentSecretStatus && agentSecretStatus.status !== "ok" && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>{tAlert("title")}</AlertTitle>

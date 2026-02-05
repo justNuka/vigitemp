@@ -1,14 +1,18 @@
-import { Suspense } from "react";
+﻿import { Suspense } from "react";
+import { getTranslations } from "next-intl/server";
+
 import { Skeleton } from "@/components/ui/skeleton";
+import { validateLicense } from "@/lib/license-server";
 import { DashboardClient } from "./dashboard-client";
 import { DashboardHeader } from "./dashboard-header";
+import { DashboardOne } from "./dashboard-one";
 import {
-  ServerDashboardStats,
-  ServerCriticalSensors,
   ServerActiveAlarms,
+  ServerAlarmTrendCount,
+  ServerCriticalSensors,
+  ServerDashboardStats,
   ServerSensorOverview,
 } from "./server-dashboard";
-import { getTranslations } from 'next-intl/server';
 
 export async function generateMetadata({
   params,
@@ -16,26 +20,42 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'dashboard' });
+  const t = await getTranslations({ locale, namespace: "dashboard" });
   return {
-    title: t('meta.title'),
-    description: t('meta.description'),
+    title: t("meta.title"),
+    description: t("meta.description"),
   };
 }
 
-
 /**
  * Dashboard principal - Server Component avec Cache Components
- * Architecture optimisée: données cached côté serveur + interactivité côté client
+ * Architecture optimisee: donnees cached cote serveur + interactivite cote client
  */
-export default async function DashboardPage() {
-  // Chargement parallèle des données avec cache
-  const [stats, criticalSensors, activeAlarms, sensorOverview] =
+export default async function DashboardPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const license = await validateLicense();
+  const edition = license?.edition?.toLowerCase() ?? "standard";
+
+  if (edition === "one") {
+    return (
+      <div className="flex flex-col min-h-full dashboard-light">
+        <DashboardOne locale={locale} />
+      </div>
+    );
+  }
+
+  // Chargement parallele des donnees avec cache
+  const [stats, criticalSensors, activeAlarms, sensorOverview, trendStats] =
     await Promise.all([
       ServerDashboardStats(),
       ServerCriticalSensors(),
       ServerActiveAlarms(),
       ServerSensorOverview(),
+      ServerAlarmTrendCount(),
     ]);
 
   return (
@@ -49,6 +69,7 @@ export default async function DashboardPage() {
           activeAlarms={activeAlarms}
           sensorOverview={sensorOverview}
           totalActiveAlarms={stats.activeAlarms}
+          trendCountLast24h={trendStats.countLast24h}
         />
       </Suspense>
     </div>

@@ -19,11 +19,13 @@ const updateLieuSchema = z.object({
   Consigne: z.number().nullable().optional(),
   Frequence: z.number().nullable().optional(),
   Consigne_Sup: z.number().nullable().optional(),
+  Tolerance_Surveillance_Sup: z.number().nullable().optional(),
   Est_Consigne_Sup_Active: z.boolean().optional(),
   Consigne_Sup_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Sup_Pre_Alarme_Active: z.boolean().optional(),
   Retard_Alarme_Haut: z.number().nullable().optional(),
   Consigne_Inf: z.number().nullable().optional(),
+  Tolerance_Surveillance_Inf: z.number().nullable().optional(),
   Est_Consigne_Inf_Active: z.boolean().optional(),
   Consigne_Inf_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Inf_Pre_Alarme_Active: z.boolean().optional(),
@@ -121,16 +123,15 @@ export const PATCH = withLogging(
             ...lieuPatch,
             ...(applyLieuEtat
               ? {
-                  t_etat_surveillance_lieu: Lieu_Etat
-                    ? { connect: { Surveillance_Etat: Lieu_Etat } }
-                    : { disconnect: true },
+                  Lieu_Etat,
                   Date_Heure_Reactivation_Surveillance:
                     Lieu_Etat === "D" ? surveillanceReactivationAt : null,
                 }
               : {}),
             ...(shouldArchive
               ? {
-                  t_etat_surveillance_lieu: { connect: { Surveillance_Etat: "D" } },
+                  Lieu_Etat: "D",
+                  Date_Heure_Reactivation_Surveillance: null,
                   t_sonde: { disconnect: true },
                 }
               : {}),
@@ -242,7 +243,10 @@ export const PATCH = withLogging(
         return apiError(400, "validation_error", "Invalid input", { issues: error.issues })
       }
       console.error("[PATCH /api/lieux/[id]]", error)
-      return apiError(500, "lieu_update_failed", "Erreur lors de la modification du lieu")
+      const errorDetail = error instanceof Error ? error.message : String(error)
+      const extra =
+        process.env.NODE_ENV === "production" ? { detail: errorDetail } : undefined
+      return apiError(500, "lieu_update_failed", "Erreur lors de la modification du lieu", extra)
     }
   },
 )

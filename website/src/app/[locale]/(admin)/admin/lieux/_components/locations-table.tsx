@@ -140,7 +140,7 @@ export function LocationsTable({
       header: t('columns.frequency'),
       cell: ({ row }) =>
         row.original.Frequence
-          ? t('frequency_value', { count: row.original.Frequence })
+          ? t('frequency_value', { count: Math.round(row.original.Frequence / 60) })
           : t('placeholders.na'),
     },
     {

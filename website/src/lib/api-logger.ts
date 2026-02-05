@@ -63,8 +63,8 @@ export function withLogging(
           return undefined;
         }
         try {
-          const parsed = JSON.parse(trimmed) as { message?: string; error?: string; detail?: string };
-          const message = parsed?.message || parsed?.error || parsed?.detail;
+          const parsed = JSON.parse(trimmed) as { message?: string; error?: string; detail?: string; details?: string };
+          const message = parsed?.message || parsed?.error || parsed?.detail || parsed?.details;
           if (message) {
             return String(message);
           }

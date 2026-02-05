@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import {
   Dialog,
   DialogContent,
@@ -29,9 +27,10 @@ import {
 } from 'chart.js';
 import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
 import { useLieuMeasurementsPaged } from "@/hooks/useLieuMeasurementsPaged";
-import { calculateYDomain, getMeasureSummary } from "@/lib/measurements";
+import { calculateYDomain, formatMeasureValue, getMeasureSummary } from "@/lib/measurements";
 import type { MeasureData } from "@/lib/measurements";
 import { fetchJson } from "@/lib/http";
+import { useAppTimezone } from "@/components/timezone-provider";
 
 // Register Chart.js components
 ChartJS.register(
@@ -51,6 +50,9 @@ interface MonitoringDetailsModalProps {
   idLieu: number;
   nomLieu: string;
   sondeNumeroSerie: string;
+  isGso?: boolean | null;
+  gsoRssi?: string | null;
+  gsoTension?: string | null;
   consigneSup: number | null;
   consigneInf: number | null;
   consigne: number | null;
@@ -77,6 +79,9 @@ export default function MonitoringDetailsModal({
   idLieu,
   nomLieu,
   sondeNumeroSerie,
+  isGso,
+  gsoRssi,
+  gsoTension,
   consigneSup: initialConsigneSup,
   consigneInf: initialConsigneInf,
   consigne: initialConsigne,
@@ -86,15 +91,14 @@ export default function MonitoringDetailsModal({
 }: MonitoringDetailsModalProps) {
   const locale = useLocale();
   const localeTag = locale === "fr" ? "fr-FR" : locale;
+  const timezone = useAppTimezone();
   const t = useTranslations("monitoringDetailsModal");
   const [dateRange, setDateRange] = useState<{ from: Date; to?: Date } | null>(null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
   const chartRef = useRef<ChartJS<"line"> | null>(null);
   const [guidePositions, setGuidePositions] = useState<{
-    sup: number | null;
-    inf: number | null;
     consigne: number | null;
-  }>({ sup: null, inf: null, consigne: null });
+  }>({ consigne: null });
   const [activeTab, setActiveTab] = useState<"graph" | "table" | "audit">("graph");
   const [rangeGraphData, setRangeGraphData] = useState<MeasureData[]>([]);
   const [rangeGraphLoading, setRangeGraphLoading] = useState(false);
@@ -102,6 +106,7 @@ export default function MonitoringDetailsModal({
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError] = useState<string | null>(null);
   const [auditLoaded, setAuditLoaded] = useState(false);
+  const hasGsoMetrics = Boolean(isGso && (gsoRssi || gsoTension));
 
   const effectiveRange = useMemo(() => {
     if (!dateRange?.from) return null;
@@ -242,7 +247,7 @@ export default function MonitoringDetailsModal({
     [orderedData, initialConsigneInf, initialConsigne, initialConsigneSup, initialUnite],
   );
 
-  const { consigneSup, consigneInf, consigne, unite } = summary;
+  const { consigneSup, consigneInf, consigne, unite, decimals } = summary;
 
   const [yMin, yMax] = useMemo(
     () => calculateYDomain(orderedData, { consigneSup, consigneInf, consigne }),
@@ -263,11 +268,9 @@ export default function MonitoringDetailsModal({
       value === null ? null : clamp(yScale.getPixelForValue(value));
 
     setGuidePositions({
-      sup: toPos(consigneSup),
-      inf: toPos(consigneInf),
       consigne: toPos(consigne),
     });
-  }, [consigne, consigneInf, consigneSup]);
+  }, [consigne]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -356,15 +359,17 @@ export default function MonitoringDetailsModal({
       dateIso: measure.DateHeureMesureIso ?? measure.DateHeureMesure,
       dateLabel: measure.DateHeureMesure,
       value: measure.Valeur,
+      decimals: measure.Nb_Decimal ?? decimals,
       unit: unite,
     }));
-  }, [tableMeasurements, unite]);
+  }, [tableMeasurements, decimals, unite]);
 
   const columns: ColumnDef<{
     id: number | string;
     dateIso: string;
     dateLabel: string;
     value: number;
+    decimals?: number | null;
     unit: string;
   }>[] = [
     {
@@ -384,45 +389,8 @@ export default function MonitoringDetailsModal({
       header: t("table.columns.value"),
       cell: ({ row }) => {
         const value = row.getValue("value") as number;
-        const isOutOfRange =
-          (consigneInf !== null && value < consigneInf) ||
-          (consigneSup !== null && value > consigneSup);
-
-        return (
-          <span className={isOutOfRange ? "text-red-600 dark:text-red-400 font-bold" : ""}>
-            {value}{row.original.unit}
-          </span>
-        );
-      },
-    },
-    {
-      id: "consigneInf",
-      header: t("table.columns.lower_threshold"),
-      cell: () => (
-        <span>{consigneInf !== null ? `${consigneInf}${unite}` : "-"}</span>
-      ),
-    },
-    {
-      id: "consigneSup",
-      header: t("table.columns.upper_threshold"),
-      cell: () => (
-        <span>{consigneSup !== null ? `${consigneSup}${unite}` : "-"}</span>
-      ),
-    },
-    {
-      id: "statut",
-      header: t("table.columns.status"),
-      cell: ({ row }) => {
-        const value = row.getValue("value") as number;
-        const isOutOfRange =
-          (consigneInf !== null && value < consigneInf) ||
-          (consigneSup !== null && value > consigneSup);
-
-        return isOutOfRange ? (
-          <span className="text-red-600 dark:text-red-400 font-semibold">{t("table.status.out_of_range")}</span>
-        ) : (
-          <span className="text-green-600 dark:text-green-400">{t("table.status.ok")}</span>
-        );
+        const formatted = formatMeasureValue(value, row.original.decimals, localeTag);
+        return <span>{formatted}{row.original.unit}</span>;
       },
     },
   ];
@@ -441,7 +409,15 @@ export default function MonitoringDetailsModal({
     return auditLogs.map((log) => {
       const dateIso = log.timestamp ?? "";
       const dateLabel = log.timestamp
-        ? format(new Date(log.timestamp), "dd/MM/yyyy HH:mm:ss", { locale: fr })
+        ? new Date(log.timestamp).toLocaleString(localeTag, {
+            timeZone: timezone,
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          })
         : "-";
 
       return {
@@ -454,7 +430,7 @@ export default function MonitoringDetailsModal({
         details: log.commentaireUtilisateur || log.commentaire || "-",
       };
     });
-  }, [auditLogs]);
+  }, [auditLogs, localeTag, timezone]);
 
   const auditColumns: ColumnDef<AuditRow>[] = [
     {
@@ -494,9 +470,17 @@ export default function MonitoringDetailsModal({
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>{nomLieu}</DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            {t("probe", { serial: sondeNumeroSerie })}
-          </p>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">
+              {t("probe", { serial: sondeNumeroSerie })}
+            </p>
+            {hasGsoMetrics ? (
+              <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                {gsoRssi ? <span>{t("gso.rssi", { value: gsoRssi })}</span> : null}
+                {gsoTension ? <span>{t("gso.tension", { value: gsoTension })}</span> : null}
+              </div>
+            ) : null}
+          </div>
         </DialogHeader>
 
         {(isSurveillanceActive ? baseLoading : rangeEnabled && rangeGraphLoading) ? (
@@ -551,34 +535,6 @@ export default function MonitoringDetailsModal({
                   data={{
                     labels: orderedData.map(d => d.DateHeureMesureXaxis),
                     datasets: [
-                      ...(consigneSup !== null
-                        ? [
-                            {
-                              label: t("chart.over_high"),
-                              data: orderedData.map(() => consigneSup),
-                              borderColor: "transparent",
-                              borderWidth: 0,
-                              pointRadius: 0,
-                              fill: "end",
-                              backgroundColor: "rgba(220, 38, 38, 0.2)",
-                              order: 0,
-                            },
-                          ]
-                        : []),
-                      ...(consigneInf !== null
-                        ? [
-                            {
-                              label: t("chart.over_low"),
-                              data: orderedData.map(() => consigneInf),
-                              borderColor: "transparent",
-                              borderWidth: 0,
-                              pointRadius: 0,
-                              fill: "start",
-                              backgroundColor: "rgba(30, 64, 175, 0.2)",
-                              order: 0,
-                            },
-                          ]
-                        : []),
                       {
                         label: t("chart.measures", { unit: unite }),
                         data: orderedData.map(d => d.Valeur),
@@ -609,10 +565,6 @@ export default function MonitoringDetailsModal({
                           font: {
                             size: 12,
                           },
-                          filter: (legendItem) =>
-                            ![t("chart.over_high"), t("chart.over_low")].includes(
-                              legendItem.text ?? "",
-                            ),
                         },
                       },
                       tooltip: {
@@ -636,7 +588,12 @@ export default function MonitoringDetailsModal({
                           label: (context) => {
                             const index = context.dataIndex;
                             const measure = orderedData[index];
-                            const lines = [t("tooltip.value", { value: measure.Valeur, unit: unite })];
+                            const formattedValue = formatMeasureValue(
+                              measure.Valeur,
+                              measure.Nb_Decimal ?? decimals,
+                              localeTag
+                            );
+                            const lines = [t("tooltip.value", { value: formattedValue, unit: unite })];
                             
                             if (measure.Etat_Alarme === 1) {
                               lines.push(t("tooltip.in_alarm"));
@@ -673,7 +630,11 @@ export default function MonitoringDetailsModal({
                           font: {
                             size: 11,
                           },
-                          callback: (value) => `${value}${unite}`,
+                          callback: (value) => {
+                            const numericValue = typeof value === "string" ? Number(value) : value;
+                            if (Number.isNaN(numericValue)) return `${value}${unite}`;
+                            return `${formatMeasureValue(numericValue, decimals, localeTag)}${unite}`;
+                          },
                         },
                         title: {
                           display: true,
@@ -695,25 +656,6 @@ export default function MonitoringDetailsModal({
 
                 {/* Lignes de consigne superposées + labels */}
                 <div className="absolute inset-0 pointer-events-none">
-                  {consigneSup !== null && guidePositions.sup !== null && (
-                    <>
-                      <div
-                        className="absolute w-full border-t-2 border-red-500 border-dashed"
-                        style={{
-                          top: `${guidePositions.sup}px`,
-                        }}
-                      />
-                      <div
-                        className="absolute right-4 text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-md"
-                        style={{
-                          top: `${guidePositions.sup}px`,
-                          transform: 'translateY(-50%)',
-                        }}
-                      >
-                        {t("guides.max", { value: consigneSup, unit: unite })}
-                      </div>
-                    </>
-                  )}
                   {consigne !== null && guidePositions.consigne !== null && (
                     <>
                       <div
@@ -729,26 +671,10 @@ export default function MonitoringDetailsModal({
                           transform: 'translateY(-50%)',
                         }}
                       >
-                        {t("guides.target", { value: consigne, unit: unite })}
-                      </div>
-                    </>
-                  )}
-                  {consigneInf !== null && guidePositions.inf !== null && (
-                    <>
-                      <div
-                        className="absolute w-full border-t-2 border-red-500 border-dashed"
-                        style={{
-                          top: `${guidePositions.inf}px`,
-                        }}
-                      />
-                      <div
-                        className="absolute right-4 text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-md"
-                        style={{
-                          top: `${guidePositions.inf}px`,
-                          transform: 'translateY(-50%)',
-                        }}
-                      >
-                        {t("guides.min", { value: consigneInf, unit: unite })}
+                        {t("guides.target", {
+                          value: formatMeasureValue(consigne, decimals, localeTag),
+                          unit: unite
+                        })}
                       </div>
                     </>
                   )}

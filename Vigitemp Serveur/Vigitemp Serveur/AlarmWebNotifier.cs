@@ -14,32 +14,54 @@ namespace Vigitemp_Serveur
         private static string BaseUrl => ConfigurationManager.AppSettings["Vigi.WebsiteBaseUrl"];
         private static string Secret => ConfigurationManager.AppSettings["Vigi.AlarmDispatchSecret"];
 
-        public static Task NotifyAlarmAsync(int idLieu, double valeur)
+        public static async Task NotifyAlarmAsync(int idLieu, double valeur, int? alarmId = null)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
                 {
-                    return Task.CompletedTask;
+                    VigitempServeur.Log("AlarmWebNotifier: configuration manquante (BaseUrl/Secret)");
+                    return;
                 }
 
                 var url = Combine(BaseUrl, "/api/alarmes/dispatch");
-                var payload =
-                    "{" +
-                    "\"title\":\"Alarme Vigitemp\"," +
-                    "\"body\":\"Alarme declenchee (Lieu " + idLieu + ", valeur " + valeur.ToString("0.##", CultureInfo.InvariantCulture) + ")\"," +
-                    "\"url\":\"/surveillance\"" +
-                    "}";
+                string payload;
+                if (alarmId.HasValue)
+                {
+                    payload = "{" + "\"alarmId\":" + alarmId.Value + "}";
+                }
+                else
+                {
+                    payload =
+                        "{" +
+                        "\"title\":\"Alarme Vigitemp\"," +
+                        "\"body\":\"Alarme declenchee (Lieu " + idLieu + ", valeur " + valeur.ToString("0.##", CultureInfo.InvariantCulture) + ")\"," +
+                        "\"url\":\"/surveillance\"" +
+                        "}";
+                }
 
                 var req = new HttpRequestMessage(HttpMethod.Post, url);
                 req.Headers.Add("x-vigitemp-secret", Secret);
                 req.Content = new StringContent(payload, Encoding.UTF8, "application/json");
 
-                return _http.SendAsync(req);
+                VigitempServeur.Log(
+                    "AlarmWebNotifier: envoi notification web " +
+                    "idLieu=" + idLieu +
+                    (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : "") +
+                    " url=" + url);
+
+                var response = await _http.SendAsync(req);
+                VigitempServeur.Log(
+                    "AlarmWebNotifier: notification envoyee (status=" + (int)response.StatusCode + ") " +
+                    "idLieu=" + idLieu +
+                    (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : ""));
+
+                return;
             }
-            catch
+            catch (Exception ex)
             {
-                return Task.CompletedTask;
+                VigitempServeur.Log("AlarmWebNotifier: echec envoi notification: " + ex.Message);
+                return;
             }
         }
 

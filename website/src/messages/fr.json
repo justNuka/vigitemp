@@ -143,6 +143,36 @@
       "active_alarms_warning": "Attention requise",
       "active_alarms_ok": "Tout est normal",
       "alert_sensors": "Pré-alarmes + alarmes"
+    },
+    "one": {
+      "title": "Tableau de bord",
+      "subtitle": "Acces rapide aux sections principales",
+      "links": {
+        "surveillance": {
+          "title": "Surveillance",
+          "description": "Consulter les lieux, les mesures et l'etat en temps reel."
+        },
+        "alarmes": {
+          "title": "Alarmes",
+          "description": "Voir et acquitter les alarmes en cours."
+        },
+        "lieux": {
+          "title": "Lieux",
+          "description": "Gerer les lieux surveilles et leurs parametres."
+        },
+        "sondes": {
+          "title": "Sondes",
+          "description": "Configurer les sondes et leurs associations."
+        },
+        "utilisateurs": {
+          "title": "Utilisateurs",
+          "description": "Gerer les comptes et les profils."
+        },
+        "parametres": {
+          "title": "Parametres",
+          "description": "Acceder aux reglages generaux."
+        }
+      }
     }
   },
   "surveillance": {
@@ -250,6 +280,12 @@
         "manual": "Manuel (désactivé)",
         "custom": "{seconds} secondes"
       }
+    },
+    "timezone": {
+      "title": "Fuseau horaire",
+      "description": "Définir le fuseau horaire d'affichage",
+      "label": "Fuseau horaire",
+      "helper": "L'affichage des dates s'adaptera à ce fuseau horaire."
     },
     "security": {
       "title": "Sécurité",
@@ -411,22 +447,43 @@
     },
     "dialog": {
       "title": "Acquitter l'alarme",
-      "description": "Alarme sur {sensor} dans {location}",
+      "location_label": "Lieu",
+      "sensor_label": "Sonde",
+      "type_label": "Type d'alarme",
+      "type_high": "Dépassement haut",
+      "type_low": "Dépassement bas",
+      "type_no_response": "Non réponse",
+      "type_other": "Autre",
       "last_value_label": "Dernière valeur",
+      "start_label": "Début alarme",
+      "end_label": "Fin alarme",
+      "end_in_progress": "Non terminée",
+      "duration_label": "Durée",
       "thresholds_label": "Consignes sup/inf",
       "sup_value": "Sup: {value} {unit}",
       "inf_value": "Inf: {value} {unit}",
+      "graph_label": "Graphique du lieu",
+      "graph_hint": "Afficher la courbe des mesures du lieu",
+      "graph_show": "Afficher",
+      "graph_hide": "Masquer",
+      "comment_select_label": "Commentaire pré‑existant",
+      "comment_select_placeholder": "Choisir un commentaire",
+      "comment_select_empty": "Aucun commentaire disponible",
+      "count_30_label": "Alarmes sur 30 jours",
+      "count_30_value": "{count} alarme(s)",
+      "loading": "Chargement...",
       "comment_label": "Commentaire (optionnel)",
       "comment_placeholder": "Ajouter un commentaire sur cette alarme...",
       "comment_count": "{count}/200 caractères",
+      "na": "-",
       "cancel": "Annuler",
       "confirm": "Acquitter",
       "confirming": "Acquittement..."
     },
     "status": {
-      "active": "Active",
+      "active": "En cours",
       "acknowledged": "Acquittée",
-      "resolved": "À acquitter"
+      "resolved": "Terminée (à acquitter)"
     }
   },
   "adminAlarmsPage": {
@@ -1112,13 +1169,17 @@
       "module_label": "Module",
       "module_placeholder": "Sélectionner un module",
       "module_search_placeholder": "Rechercher un module...",
-      "module_empty": "Aucun module"
+      "module_empty": "Aucun module",
+      "offset_label": "Offset sonde",
+      "offset_placeholder": "0",
+      "offset_hint": "Laissez vide pour utiliser 0."
     },
     "submit_create": "Ajouter",
     "submit_update": "Mettre à jour",
     "validation": {
       "type_required": "Type de sonde requis",
-      "serial_invalid": "Numéro de série invalide"
+      "serial_invalid": "Numéro de série invalide",
+      "offset_invalid": "Offset invalide"
     },
     "toast": {
       "invalid_probe": "Sonde invalide",
@@ -1371,9 +1432,23 @@
     "off": "Son désactivé"
   },
   "errors": {
+    "default_badge": "Erreur {code}",
+    "not_found_badge": "Erreur 404",
     "not_found_title": "Page introuvable",
     "not_found_description": "La page que vous recherchez n'existe pas ou a été déplacée.",
-    "back_home": "Retour à l'accueil"
+    "back_home": "Retour à l'accueil",
+    "retry": "Réessayer",
+    "system_status": "Statut système",
+    "monitoring_live": "Surveillance en cours",
+    "connected": "Connecté",
+    "forbidden_badge": "Accès restreint",
+    "forbidden_title": "Accès refusé",
+    "forbidden_description": "Vous n'avez pas l'autorisation d'accéder à cette page.",
+    "forbidden_helper": "Si vous pensez qu'il s'agit d'une erreur, contactez un administrateur.",
+    "server_error_badge": "Incident détecté",
+    "server_error_title": "Erreur serveur",
+    "server_error_description": "Un problème technique est survenu lors du chargement.",
+    "server_error_helper": "Nos équipes ont été averties. Vous pouvez réessayer dans un instant."
   },
   "login": {
     "title": "Connexion",
@@ -1546,9 +1621,9 @@
       "empty": "Aucune alarme active - Tout est sous contrôle"
     },
     "trend": {
-      "title": "Tendance récente",
+      "title": "Tendance des alarmes",
       "subtitle": "Dernières 24h",
-      "count": "{count} mesures",
+      "count": "{count} alarme(s)",
       "details": "Détails"
     },
     "ack_dialog": {
@@ -1634,6 +1709,10 @@
   },
   "monitoringDetailsModal": {
     "probe": "Sonde: {serial}",
+    "gso": {
+      "rssi": "RSSI : {value}",
+      "tension": "Tension : {value}"
+    },
     "tabs": {
       "graph": "Graphique",
       "table": "Tableau des mesures",
@@ -1752,8 +1831,13 @@
         "items": {
           "0": "Cartes harmonisées (boutons, icônes de type, tooltips, mode light).",
           "1": "Filtres et actions en couleur primary, tri et vues ajustés.",
-          "2": "Dernière valeur et consignes sup/inf dans le tableau.",
-          "3": "Ajout de l'onglet Audit dans les détails d'un lieu."
+          "2": "Dernière valeur dans le tableau des mesures.",
+          "3": "Ajout de l'onglet Audit dans les détails d'un lieu.",
+          "4": "Suppression de l’affichage mini/maxi sur la surveillance (cartes et détails).",
+          "5": "Acquittement rapide des alarmes depuis la carte de surveillance.",
+          "6": "Légende des statuts avec pastilles de couleur dans l'en-tête de surveillance.",
+          "7": "Précision décimale des mesures respectée sur les cartes et tableaux.",
+          "8": "Grille des lieux désactivés alignée sur la largeur complète."
         }
       },
       "measures": {
@@ -1768,7 +1852,8 @@
         "items": {
           "0": "Headers fixes avec blur, hauteurs adaptées et bords plus visibles.",
           "1": "Actions harmonisées (icônes, tailles, couleurs).",
-          "2": "Sélection de ligne plus lisible."
+          "2": "Sélection de ligne plus lisible.",
+          "3": "Fuseau horaire configurable pour l'affichage des dates."
         }
       },
       "creation": {
@@ -1782,7 +1867,13 @@
       "notifications": {
         "title": "Notifications",
         "items": {
-          "0": "Alerte portail si le secret agent est invalide ou absent."
+          "0": "Alerte secret agent activée par défaut en production (activable en dev via flag)."
+        }
+      },
+      "experience": {
+        "title": "Expérience",
+        "items": {
+          "0": "Nouvelles pages d'erreur 403, 404 et 500 avec animations et visuels modernisés."
         }
       }
     }
@@ -1868,6 +1959,10 @@
     "last_measure": {
       "label": "Dernière mesure : {value}"
     },
+    "gso": {
+      "rssi": "RSSI : {value}",
+      "tension": "Tension : {value}"
+    },
     "frequency": "Fréq : {minutes} min",
     "alarm_delay": "Retard alarme : {minutes} min",
     "no_measurements": "Aucune mesure disponible",
@@ -1906,6 +2001,15 @@
       },
       "cancel": "Annuler",
       "confirm": "Confirmer"
+    },
+    "acknowledge": {
+      "button": "Acquitter",
+      "title": "Acquitter l'alarme",
+      "description": "Confirmez l'acquittement de l'alarme en ajoutant un commentaire si besoin.",
+      "comment_label": "Commentaire",
+      "comment_placeholder": "Ajouter un commentaire (optionnel)",
+      "cancel": "Annuler",
+      "confirm": "Acquitter"
     }
   },
   "adminDashboard": {
@@ -1990,9 +2094,9 @@
       }
     },
     "unassigned": {
-      "title": "Sondes sans lieu",
-      "description": "{count, plural, one {# sonde non affectée} other {# sondes non affectées}}",
-      "empty": "Aucune sonde sans lieu",
+      "title": "Sondes sans lieu actif",
+      "description": "{count, plural, one {# sonde non affectée à un lieu actif} other {# sondes non affectées à un lieu actif}}",
+      "empty": "Aucune sonde sans lieu actif",
       "columns": {
         "probe": "Sonde",
         "type": "Type",
@@ -2028,15 +2132,26 @@
       "na": "-"
     },
     "columns": {
+      "type": "Type",
       "location": "Lieu",
+      "last_value": "Dernière valeur",
+      "thresholds": "Consignes sup/inf",
       "start": "Début alarme",
       "status": "État",
+      "count_30": "Alarmes 30j",
       "end": "Fin alarme",
       "acknowledged": "Acquittée"
     },
     "status": {
       "awaiting_ack": "En attente d'acquittement",
-      "active": "Alarme en cours"
+      "active": "Alarme en cours",
+      "acknowledged": "Acquittée"
+    },
+    "thresholds": {
+      "sup": "Sup: {value} {unit}",
+      "inf": "Inf: {value} {unit}",
+      "sup_empty": "Sup: -",
+      "inf_empty": "Inf: -"
     },
     "ack_status": {
       "na": "-",
@@ -2169,8 +2284,7 @@
     "empty": "Aucun utilisateur trouvé"
   },
   "sitesTable": {
-    "columns": {
-    },
+    "columns": {},
     "placeholders": {
       "na": "-"
     },

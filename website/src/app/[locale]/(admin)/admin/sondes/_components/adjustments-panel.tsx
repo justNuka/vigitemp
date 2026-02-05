@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDateTimeFr } from './date-format';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { useAppTimezone } from '@/components/timezone-provider';
 
 export type AdjustmentRow = {
-  Id_Calibrage: number;
-  Date_Heure_Calibrage: Date | null;
+  Id_Ajustage: number;
+  Date_Heure_Ajustage: Date | null;
   Operateur: string | null;
   Unite: string | null;
   Nb_Decimale: number | null;
@@ -30,11 +31,14 @@ export function AdjustmentsPanel({
   onSelectAdjustment,
 }: AdjustmentsPanelProps) {
   const t = useTranslations('probesPage');
+  const locale = useLocale();
+  const localeTag = locale.toLowerCase().startsWith('fr') ? 'fr-FR' : locale;
+  const timezone = useAppTimezone();
   const columns: ColumnDef<AdjustmentRow>[] = [
     {
-      accessorKey: 'Date_Heure_Calibrage',
+      accessorKey: 'Date_Heure_Ajustage',
       header: t('panels.adjustments.columns.date'),
-      cell: ({ row }) => formatDateTimeFr(row.original.Date_Heure_Calibrage),
+      cell: ({ row }) => formatDateTimeFr(row.original.Date_Heure_Ajustage, timezone, localeTag),
     },
     {
       accessorKey: 'Operateur',
@@ -76,7 +80,7 @@ export function AdjustmentsPanel({
               showPagination={false}
               maxHeight="16rem"
               selectedRowId={selectedAdjustmentId ?? undefined}
-              onRowClick={(row: AdjustmentRow) => onSelectAdjustment(row.Id_Calibrage)}
+              onRowClick={(row: AdjustmentRow) => onSelectAdjustment(row.Id_Ajustage)}
               headerClassName="!bg-sidebar !text-sidebar-foreground"
               headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
               tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"

@@ -156,6 +156,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
             Est_Acquittee: false,
           },
           select: {
+            Id_Alarme: true,
             Id_Lieu: true,
             Type: true,
             Date_Heure_Debut: true,
@@ -181,12 +182,16 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       : []
 
     const alarmTypeByLieu = new Map<number, "H" | "B" | "N">()
+    const alarmIdByLieu = new Map<number, number>()
     for (const alarm of activeAlarms) {
       if (!alarm.Id_Lieu) continue
       const type = alarm.Type as "H" | "B" | "N" | null
       if (!type) continue
       if (!alarmTypeByLieu.has(alarm.Id_Lieu)) {
         alarmTypeByLieu.set(alarm.Id_Lieu, type)
+      }
+      if (!alarmIdByLieu.has(alarm.Id_Lieu)) {
+        alarmIdByLieu.set(alarm.Id_Lieu, alarm.Id_Alarme)
       }
     }
 
@@ -220,6 +225,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
 
         const alarmType =
           alarmTypeByLieu.get(location.Id_Lieu) ?? (hasEndedFlag ? ("T" as const) : null)
+        const alarmId = alarmIdByLieu.get(location.Id_Lieu) ?? null
         const isCriticalByType = alarmType === "H" || alarmType === "B"
         const isTechnical = alarmType === "N"
         const isCritical = isCriticalByType || location.Est_Lieu_En_Alarme === 1
@@ -238,14 +244,19 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
 
         const alarmDisabled = location.Notification_Active === false
         const surveillanceDisabled = location.Lieu_Etat === "D"
+        const isGso = location.t_sonde?.Est_Sonde_GSO ?? location.Sonde_Numero_Serie?.startsWith("GSO")
+        const unit = location.Derniere_Unite ?? "°C"
+        const decimals = location.Derniere_Nb_Decimal ?? null
 
         return {
           id: location.Id_Lieu.toString(),
           name: location.Nom_Lieu,
           lieuType: location.Type_Lieu ?? null,
+          alarmId,
           alarmType,
           type: "temperature",
-          unit: "ÃÂ°C",
+          unit,
+          decimals,
           currentValue: lastMeasurement?.Valeur ?? null,
           minThreshold: location.Consigne_Inf ?? 0,
           maxThreshold: location.Consigne_Sup ?? 25,
@@ -263,7 +274,11 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
             lieuEtat: location.Lieu_Etat ?? null,
             surveillanceDisabled,
             lieuType: location.Type_Lieu ?? null,
+            alarmId,
             alarmDelayMinutes: location.Retard_Alarme_Changement_Consigne ?? null,
+            isGso: isGso ?? null,
+            gsoRssi: location.Derniere_Val_Rssi ?? null,
+            gsoTension: location.Derniere_Val_Tension ?? null,
             siteId: location.Id_Site,
             groupIds: locationGroupIds,
             groupNames,

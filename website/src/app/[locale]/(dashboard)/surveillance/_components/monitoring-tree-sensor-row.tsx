@@ -2,11 +2,13 @@
 
 import type { SensorWithLocation } from "@/lib/api";
 import { getStatusBadge, getStatusColor } from "./monitoring-tree-status";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatMeasureValue } from "@/lib/measurements";
 
 export function SurveillanceTreeSensorRow({ sensor }: { sensor: SensorWithLocation }) {
   const tStatus = useTranslations("surveillanceStatus");
   const tCard = useTranslations("monitoringCard");
+  const locale = useLocale();
   const statusLabels = {
     inactive: tStatus("inactive"),
     critical: tStatus("critical"),
@@ -27,7 +29,7 @@ export function SurveillanceTreeSensorRow({ sensor }: { sensor: SensorWithLocati
           <p className={`font-medium text-sm truncate ${colors.text}`}>{sensor.name}</p>
           {sensor.currentValue !== null && (
             <p className="text-xs text-muted-foreground">
-              {sensor.currentValue.toFixed(1)}
+              {formatMeasureValue(sensor.currentValue, sensor.decimals ?? null, locale)}
               {sensor.unit}
             </p>
           )}
@@ -35,7 +37,7 @@ export function SurveillanceTreeSensorRow({ sensor }: { sensor: SensorWithLocati
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {sensor.location.alarmDisabled ? (
-          <span className="rounded-full bg-orange-500/20 text-orange-900 dark:text-orange-100 text-[10px] px-2 py-0.5">
+          <span className="rounded-full bg-red-500/70 text-red-500 dark:text-red-100 text-[10px] px-2 py-0.5">
             {tCard("alarms.disabled")}
           </span>
         ) : null}

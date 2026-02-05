@@ -36,9 +36,7 @@ import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import type { Locale } from "date-fns";
-import { enUS, fr } from "date-fns/locale";
+import { useAppTimezone } from "@/components/timezone-provider";
 
 interface Props {
   logs: AuditLog[];
@@ -72,18 +70,27 @@ type ParsedDetails = {
   raw?: string;
 };
 
-function formatDateSafe(value: string, locale: Locale): string | null {
+function formatDateSafe(value: string, localeTag: string, timezone: string): string | null {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
     return null;
   }
-  return format(date, "dd/MM/yyyy HH:mm:ss", { locale });
+  return date.toLocaleString(localeTag, {
+    timeZone: timezone,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 function parseAuditDetails(
   details: string | null,
   t: (key: string, values?: Record<string, string | number>) => string,
-  locale: Locale,
+  localeTag: string,
+  timezone: string,
 ): ParsedDetails {
   if (!details) {
     return { title: t("table.empty_value") };
@@ -120,7 +127,7 @@ function parseAuditDetails(
       subtitleParts.push([machine, address].filter(Boolean).join(" • "));
     }
     if (changes.connectedAt) {
-      const connectedAt = formatDateSafe(changes.connectedAt, locale);
+      const connectedAt = formatDateSafe(changes.connectedAt, localeTag, timezone);
       if (connectedAt) {
         subtitleParts.push(t("details.connection", { date: connectedAt }));
       }
@@ -155,11 +162,12 @@ function parseAuditDetails(
 export function AuditClient({ logs }: Props) {
   const t = useTranslations("audit");
   const locale = useLocale();
+  const timezone = useAppTimezone();
+  const localeTag = locale.toLowerCase().startsWith("fr") ? "fr-FR" : locale;
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [codeFilter, setCodeFilter] = useState<string>("all");
   const [codesOpen, setCodesOpen] = useState(false);
-  const dateLocale = locale === "fr" ? fr : enUS;
 
   const actionConfig: Record<string, ActionConfig> = {
     CONNEXION: { icon: LogIn, label: t("actions.CONNEXION"), color: "text-success", badgeVariant: "outline" },
@@ -238,7 +246,15 @@ export function AuditClient({ logs }: Props) {
         const timestamp = new Date(row.getValue("timestamp") as string);
         return (
           <span className="font-mono text-sm whitespace-nowrap">
-            {format(timestamp, "dd/MM/yyyy HH:mm:ss", { locale: dateLocale })}
+            {timestamp.toLocaleString(localeTag, {
+              timeZone: timezone,
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            })}
           </span>
         );
       },
@@ -268,16 +284,17 @@ export function AuditClient({ logs }: Props) {
     {
       accessorKey: "userId",
       header: t("table.columns.user"),
-      cell: ({ row }) => (
-        <span className="font-medium">{row.getValue("userId") || t("table.system")}</span>
-      ),
+      cell: ({ row }) => {
+        const userId = row.getValue("userId") as string | null;
+        return <span className="text-sm">{userId || t("table.empty_value")}</span>;
+      },
     },
     {
       accessorKey: "details",
       header: t("table.columns.details"),
       cell: ({ row }) => {
         const details = row.getValue("details") as string | null;
-        const parsed = parseAuditDetails(details, t, dateLocale);
+        const parsed = parseAuditDetails(details, t, localeTag, timezone);
         return (
           <div className="flex flex-col gap-1 max-w-90">
             <p className="text-sm font-medium truncate" title={parsed.subtitle}>

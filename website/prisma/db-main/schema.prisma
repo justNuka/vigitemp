@@ -127,8 +127,8 @@ model t_autorisation {
   @@index([Code_Autorisation], map: "IDX_Code_Autorisation")
 }
 
-model t_bain {
-  Id_Bain         Int      @id @default(autoincrement())
+model t_milieu {
+  Id_Milieu       Int      @id @default(autoincrement())
   Model           String?  @db.VarChar(50)
   Reference       String?  @db.VarChar(50)
   Stabilite       Float?   @db.Float
@@ -141,12 +141,12 @@ model t_bain {
   @@index([Reference], map: "IDX_Reference")
 }
 
-model t_calibrage {
-  Id_Calibrage         Int       @id @default(autoincrement())
-  Date_Heure_Calibrage DateTime? @db.DateTime(0)
-  Sonde_Numero_Serie   String?   @db.VarChar(50)
-  Coeff_X2             Float?    @db.Float
-  Coeff_X              Float?    @db.Float
+model t_ajustage {
+  Id_Ajustage         Int       @id @default(autoincrement())
+  Date_Heure_Ajustage DateTime? @db.DateTime(0)
+  Sonde_Numero_Serie  String?   @db.VarChar(50)
+  Coeff_X2            Float?    @db.Float
+  Coeff_X             Float?    @db.Float
   Coeff_Constant       Float?    @db.Float
   Unite                String?   @db.VarChar(10)
   Nb_Decimale          Int?
@@ -163,10 +163,10 @@ model t_calibrage {
   Ancienne_Mesure2     Float?    @db.Float
   Nouvelle_Mesure1     Float?    @db.Float
   Nouvelle_Mesure2     Float?    @db.Float
-  Id_Bain              Int?
+  Id_Milieu            Int?
 
-  @@index([Date_Heure_Calibrage], map: "IDX_Date_Heure_Calibrage")
-  @@index([Id_Bain], map: "IDX_Id_Bain")
+  @@index([Date_Heure_Ajustage], map: "IDX_Date_Heure_Ajustage")
+  @@index([Id_Milieu], map: "IDX_Id_Bain")
   @@index([Sonde_Numero_Serie], map: "IDX_Sonde_Numero_Serie")
   @@index([SE_Numero], map: "IDX_SE_Numero")
 }
@@ -230,12 +230,12 @@ model t_etalonnage {
   Moyenne_Etalon        Float?    @db.Float
   Moyenne_Sonde         Float?    @db.Float
   Repetabilite          String?   @db.VarChar(50)
-  Id_Bain               Int?
+  Id_Milieu             Int?
   Err_Justesse          String?   @db.VarChar(50)
 
   @@index([Date_Certif], map: "IDX_Date_Certif")
   @@index([Date_Heure_Etalonnage], map: "IDX_Date_Heure_Etalonnage")
-  @@index([Id_Bain], map: "IDX_Id_Bain")
+  @@index([Id_Milieu], map: "IDX_Id_Bain")
   @@index([Incertitude], map: "IDX_Incertitude")
   @@index([Moyenne_Etalon], map: "IDX_Moyenne_Etalon")
   @@index([Moyenne_Sonde], map: "IDX_Moyenne_Sonde")
@@ -333,12 +333,12 @@ model t_lieu {
   Sonde_Numero_Serie                        String?                    @db.VarChar(50)
   Consigne                                  Float?                     @db.Float
   Consigne_Sup                              Float?                     @db.Float
-  Consigne_Sup_Corrigee                     Float?                     @db.Float
+  Tolerance_Surveillance_Sup                Float?                     @db.Float
   Est_Consigne_Sup_Active                   Boolean?                   @default(false)
   Consigne_Sup_Pre_Alarme                   Float?                     @db.Float
   Est_Consigne_Sup_Pre_Alarme_Active        Boolean?                   @default(false)
   Consigne_Inf                              Float?                     @db.Float
-  Consigne_Inf_Corrigee                     Float?                     @db.Float
+  Tolerance_Surveillance_Inf                Float?                     @db.Float
   Est_Consigne_Inf_Active                   Boolean?                   @default(false)
   Consigne_Inf_Pre_Alarme                   Float?                     @db.Float
   Est_Consigne_Inf_Pre_Alarme_Active        Boolean?                   @default(false)
@@ -391,6 +391,8 @@ model t_lieu {
   Est_Lieu_Alarme_Terminee_Non_Acquittee    Int?                       @default(0) @db.TinyInt
   Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 Int?                       @default(0) @db.TinyInt
   Date_Heure_Reactivation_Surveillance      DateTime?                  @db.DateTime(0)
+  Derniere_Val_Rssi                         String?                    @db.VarChar(10)
+  Derniere_Val_Tension                      String?                    @db.VarChar(10)
   t_alarme                                  t_alarme[]                 @relation("lieu_alarme")
   t_alarme_histo                            t_alarme_histo[]           @relation("lieu_alarme_histo")
   t_groupe1                                 t_groupe?                  @relation("groupe1", fields: [Id_Groupe1], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE1_LIEU")
@@ -552,6 +554,7 @@ model t_sonde {
   Id_Serveur         Int?
   Surveillance_Etat  String   @default("D") @map("Etat_Sonde") @db.Char(1)
   Est_Sonde_GSO      Boolean  @default(false)
+  Sonde_Offset       Float    @default(0) @db.Float
   t_lieu             t_lieu[]
 
   @@index([Adresse_Sonde], map: "IDX_Adresse_Sonde")

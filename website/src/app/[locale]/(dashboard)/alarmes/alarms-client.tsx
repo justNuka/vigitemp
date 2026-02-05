@@ -11,19 +11,20 @@ import {
   Clock,
   MessageSquare,
   RefreshCw,
+  WifiOff,
 } from "lucide-react";
 import { alarmsApi, type AlarmWithDetails } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { ColumnDef } from "@tanstack/react-table";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceStrict, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -32,10 +33,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import MonitoringDetailsModal from "@/components/monitoring-details-modal";
+import { useAppTimezone } from "@/components/timezone-provider";
 
 type AlarmStatus = "active" | "acknowledged" | "resolved";
 
@@ -64,10 +80,39 @@ interface AlarmRow {
 
 export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Props) {
   const t = useTranslations("alarmsPage");
+  const locale = useLocale();
+  const localeTag = locale === "fr" ? "fr-FR" : locale;
+  const timezone = useAppTimezone();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isRefreshing, startTransition] = useTransition();
   const [selectedAlarm, setSelectedAlarm] = useState<AlarmWithDetails | null>(null);
+  const [localAlarms, setLocalAlarms] = useState<AlarmWithDetails[]>(alarms);
+  const formatTzDateTime = (value: string | Date) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    return date.toLocaleString(localeTag, {
+      timeZone: timezone,
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  };
+  const [commentOptions, setCommentOptions] = useState<
+    { id: number; type: string | null; text: string }[]
+  >([]);
+  const [isCommentsLoading, setIsCommentsLoading] = useState(false);
+  const [selectedCommentId, setSelectedCommentId] = useState<string>("");
+  const [showGraph, setShowGraph] = useState(false);
+  const [alarmCount30, setAlarmCount30] = useState<number | null>(null);
+  const [isStatsLoading, setIsStatsLoading] = useState(false);
+
+  useEffect(() => {
+    setLocalAlarms(alarms);
+  }, [alarms]);
 
   const commentSchema = z.object({
     comment: z.string().max(200, t("validation.comment_max", { max: 200 })).optional(),
@@ -80,6 +125,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<CommentFormValues>({
     resolver: zodResolver(commentSchema),
@@ -88,11 +134,73 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
 
   const comment = watch("comment") ?? "";
 
+  useEffect(() => {
+    if (!selectedAlarm) return;
+    setShowGraph(false);
+    setSelectedCommentId("");
+    setAlarmCount30(null);
+    let isActive = true;
+    setIsCommentsLoading(true);
+    fetch("/api/alarmes/commentaires-acquittement")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((payload) => {
+        if (!isActive) return;
+        const data = Array.isArray(payload?.data) ? payload.data : [];
+        setCommentOptions(data);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setCommentOptions([]);
+      })
+      .finally(() => {
+        if (!isActive) return;
+        setIsCommentsLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedAlarm]);
+
+  useEffect(() => {
+    if (!selectedAlarm) return;
+    let isActive = true;
+    setIsStatsLoading(true);
+    fetch(`/api/alarmes/${selectedAlarm.id}/stats`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((payload) => {
+        if (!isActive) return;
+        setAlarmCount30(typeof payload?.data?.count === "number" ? payload.data.count : null);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setAlarmCount30(null);
+      })
+      .finally(() => {
+        if (!isActive) return;
+        setIsStatsLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedAlarm]);
+
   const acknowledgeMutation = useMutation({
     mutationFn: ({ id, commentValue }: { id: string; commentValue?: string }) =>
       alarmsApi.acknowledge(id, commentValue),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["alarms"] });
+      setLocalAlarms((prev) => {
+        if (statusFilter !== "acknowledged") {
+          return prev.filter((alarm) => alarm.id !== variables.id);
+        }
+        return prev.map((alarm) =>
+          alarm.id === variables.id
+            ? { ...alarm, status: "acknowledged" as const }
+            : alarm
+        );
+      });
       toast.success(t("toast.acknowledge_success"));
       router.refresh();
     },
@@ -171,7 +279,16 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
       header: t("table.columns.type"),
       size: 60,
       cell: ({ row }) => {
-        const isHigh = row.getValue("type") === "high";
+        const type = row.getValue("type") as AlarmRow["type"];
+        if (type === "no-response") {
+          return (
+            <div className="p-1.5 rounded-md w-fit bg-slate-900/10">
+              <WifiOff className="h-4 w-4 text-slate-900" />
+            </div>
+          );
+        }
+
+        const isHigh = type === "high";
         return (
           <div
             className={cn(
@@ -189,7 +306,8 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
       },
     },
     {
-      accessorKey: "location",
+      id: "location",
+      accessorFn: (row) => `${row.location.name} ${row.sensor.name}`,
       header: t("table.columns.location"),
       cell: ({ row }) => {
         const alarm = row.original;
@@ -247,9 +365,18 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
         return (
           <div className="flex items-center gap-1.5 text-sm">
             <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-            <span title={format(triggeredDate, "dd/MM/yyyy HH:mm:ss", { locale: fr })}>
-              {formatDistanceToNow(triggeredDate, { addSuffix: true, locale: fr })}
-            </span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="cursor-help">
+                    {formatDistanceToNow(triggeredDate, { addSuffix: true, locale: fr })}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">{formatTzDateTime(triggeredDate)}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         );
       },
@@ -302,7 +429,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     },
   ];
 
-  const tableData: AlarmRow[] = alarms.map((alarm) => ({
+  const tableData: AlarmRow[] = localAlarms.map((alarm) => ({
     id: alarm.id,
     type: alarm.type,
     location: alarm.location,
@@ -319,15 +446,45 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     try {
       await handleAcknowledge(selectedAlarm.id, values.comment || "");
       setSelectedAlarm(null);
+      setSelectedCommentId("");
       reset({ comment: "" });
     } catch {
       // toast already handled
     }
   };
 
+  const alarmTypeLabel = useMemo(() => {
+    if (!selectedAlarm) return "-";
+    if (selectedAlarm.type === "high") return t("dialog.type_high");
+    if (selectedAlarm.type === "low") return t("dialog.type_low");
+    if (selectedAlarm.type === "no-response") return t("dialog.type_no_response");
+    return t("dialog.type_other");
+  }, [selectedAlarm, t]);
+
+  const formattedStart = useMemo(() => {
+    if (!selectedAlarm?.triggeredAt) return t("dialog.na");
+    return formatTzDateTime(selectedAlarm.triggeredAt);
+  }, [selectedAlarm, t]);
+
+  const formattedEnd = useMemo(() => {
+    if (!selectedAlarm) return t("dialog.na");
+    if (!selectedAlarm.resolvedAt) return t("dialog.end_in_progress");
+    return formatTzDateTime(selectedAlarm.resolvedAt);
+  }, [selectedAlarm, t]);
+
+  const formattedDuration = useMemo(() => {
+    if (!selectedAlarm?.triggeredAt) return t("dialog.na");
+    const start = new Date(selectedAlarm.triggeredAt);
+    if (!selectedAlarm.resolvedAt) {
+      return formatDistanceToNow(start, { addSuffix: true, locale: fr });
+    }
+    const end = new Date(selectedAlarm.resolvedAt);
+    return formatDistanceStrict(start, end, { locale: fr });
+  }, [selectedAlarm, t]);
+
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
-      {alarms.length === 0 ? (
+      {localAlarms.length === 0 ? (
         <Card>
           <CardHeader className="space-y-4">
             <CardTitle>
@@ -382,7 +539,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
               emptyMessage={t("table.empty")}
               selectedRowId={selectedAlarm?.id}
               onRowClick={(row: AlarmRow) => {
-                const fullAlarm = alarms.find((item) => item.id === row.id);
+                const fullAlarm = localAlarms.find((item) => item.id === row.id);
                 if (fullAlarm) setSelectedAlarm(fullAlarm);
               }}
               toolbarRight={refreshButton}
@@ -396,33 +553,59 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
       )}
 
       <Dialog open={!!selectedAlarm} onOpenChange={() => setSelectedAlarm(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-warning" />
               {t("dialog.title")}
             </DialogTitle>
-            <DialogDescription>
-              {selectedAlarm && (
-                <>
-                  {t("dialog.description", {
-                    sensor: selectedAlarm.sensor.name,
-                    location: selectedAlarm.location.name,
-                  })}
-                </>
-              )}
-            </DialogDescription>
+            {selectedAlarm ? (
+              <DialogDescription>
+                <span className="block">
+                  {t("dialog.location_label")}: {selectedAlarm.location.name}
+                </span>
+                <span className="block">
+                  {t("dialog.sensor_label")}: {selectedAlarm.sensor.name}
+                </span>
+              </DialogDescription>
+            ) : null}
           </DialogHeader>
           <div className="space-y-4">
-            <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">{t("dialog.last_value_label")}</p>
-                <p className="text-xl font-bold font-mono">
+            <div className="grid gap-3 md:grid-cols-2 p-3 bg-muted/50 rounded-lg">
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">{t("dialog.type_label")}</p>
+                <p className="text-sm font-medium">{alarmTypeLabel}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">{t("dialog.last_value_label")}</p>
+                <p className="text-sm font-mono font-semibold">
                   {selectedAlarm?.sensor.currentValue ?? selectedAlarm?.value ?? "-"} {selectedAlarm?.sensor.unit}
                 </p>
               </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">{t("dialog.thresholds_label")}</p>
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">{t("dialog.start_label")}</p>
+                <p className="text-sm font-medium">{formattedStart}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">{t("dialog.end_label")}</p>
+                <p className="text-sm font-medium">{formattedEnd}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">{t("dialog.duration_label")}</p>
+                <p className="text-sm font-medium">{formattedDuration}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">{t("dialog.count_30_label")}</p>
+                <p className="text-sm font-medium">
+                  {isStatsLoading
+                    ? t("dialog.loading")
+                    : alarmCount30 !== null
+                      ? t("dialog.count_30_value", { count: alarmCount30 })
+                      : t("dialog.na")}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">{t("dialog.thresholds_label")}</p>
                 <p className="text-sm font-mono text-muted-foreground">
                   {t("dialog.sup_value", {
                     value: selectedAlarm?.sensor.maxThreshold ?? "-",
@@ -437,7 +620,56 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
                 </p>
               </div>
             </div>
-            
+
+            <div className="flex items-center justify-between gap-2 rounded-md border border-dashed border-border px-3 py-2">
+              <div className="space-y-0.5">
+                <p className="text-sm font-medium">{t("dialog.graph_label")}</p>
+                <p className="text-xs text-muted-foreground">{t("dialog.graph_hint")}</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowGraph((prev) => !prev)}
+              >
+                {showGraph ? t("dialog.graph_hide") : t("dialog.graph_show")}
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor="comment-template">
+                {t("dialog.comment_select_label")}
+              </label>
+              <Select
+                value={selectedCommentId}
+                onValueChange={(value) => {
+                  setSelectedCommentId(value);
+                  const selected = commentOptions.find((item) => String(item.id) === value);
+                  if (selected) {
+                    setValue("comment", selected.text, { shouldDirty: true, shouldTouch: true });
+                  }
+                }}
+                disabled={isCommentsLoading}
+              >
+                <SelectTrigger id="comment-template">
+                  <SelectValue placeholder={t("dialog.comment_select_placeholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {commentOptions.length === 0 ? (
+                    <SelectItem value="empty" disabled>
+                      {t("dialog.comment_select_empty")}
+                    </SelectItem>
+                  ) : (
+                    commentOptions.map((option) => (
+                      <SelectItem key={option.id} value={String(option.id)}>
+                        {option.text}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <label htmlFor="comment" className="text-sm font-medium">
                 {t("dialog.comment_label")}
@@ -447,7 +679,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
                 placeholder={t("dialog.comment_placeholder")}
                 {...register("comment")}
                 maxLength={200}
-                rows={3}
+                rows={4}
                 aria-invalid={!!errors.comment}
                 aria-describedby={errors.comment ? "comment-error" : undefined}
                 data-testid="input-alarm-comment"
@@ -480,6 +712,21 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {selectedAlarm && showGraph ? (
+        <MonitoringDetailsModal
+          isOpen={showGraph}
+          onClose={() => setShowGraph(false)}
+          idLieu={Number(selectedAlarm.locationId)}
+          nomLieu={selectedAlarm.location.name}
+          sondeNumeroSerie={selectedAlarm.sensor.name}
+          consigneSup={selectedAlarm.sensor.maxThreshold ?? null}
+          consigneInf={selectedAlarm.sensor.minThreshold ?? null}
+          consigne={selectedAlarm.threshold ?? null}
+          unite={selectedAlarm.sensor.unit}
+          isSurveillanceActive={true}
+        />
+      ) : null}
     </main>
   );
 }

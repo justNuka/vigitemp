@@ -164,7 +164,7 @@ export function LocationsClient() {
           />
         </CardHeader>
         <CardContent>
-          <Tabs value={tabFilter} onValueChange={(val) => setTabFilter(val as 'all' | 'unassigned')}>
+          <Tabs value={tabFilter} onValueChange={(val) => setTabFilter(val as 'all' | 'unassigned')} className='mb-3'>
             <TabsList className="grid w-full grid-cols-2 bg-primary/10 text-primary md:w-auto">
               <TabsTrigger
                 value="all"

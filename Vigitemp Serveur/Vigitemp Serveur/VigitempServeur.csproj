@@ -137,6 +137,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlarmPolicy.cs" />
+    <Compile Include="AlarmSummary.cs" />
     <Compile Include="AlarmStateEvaluator.cs" />
     <Compile Include="DatabaseFactory.cs" />
     <Compile Include="IDatabaseProvider.cs" />

@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchJson, isUnauthorizedError } from "@/lib/http";
 
 export interface Adjustment {
-  Id_Calibrage: number;
-  Date_Heure_Calibrage: Date | null;
+  Id_Ajustage: number;
+  Date_Heure_Ajustage: Date | null;
   Sonde_Numero_Serie: string | null;
   Operateur: string | null;
   Unite: string | null;

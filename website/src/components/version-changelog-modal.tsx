@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { useTranslations } from "next-intl"
 
-const RELEASE_VERSION = "0.2.4"
+const RELEASE_VERSION = "0.2.8"
 const COOKIE_NAME = "vigitemp_release_seen"
 
 type ChangelogItem = {
@@ -39,7 +39,6 @@ function setSessionCookie(name: string, value: string) {
 export function VersionChangelogModal() {
   const t = useTranslations("versionChangelog")
   const [open, setOpen] = useState(false)
-  const isDev = useMemo(() => process.env.NODE_ENV !== "production", [])
 
   const changelog = useMemo<ChangelogItem[]>(
     () => [
@@ -72,6 +71,7 @@ export function VersionChangelogModal() {
           t("sections.admin_tables.items.0"),
           t("sections.admin_tables.items.1"),
           t("sections.admin_tables.items.2"),
+          t("sections.admin_tables.items.3"),
         ],
       },
       {
@@ -86,17 +86,20 @@ export function VersionChangelogModal() {
         title: t("sections.notifications.title"),
         details: [t("sections.notifications.items.0")],
       },
+      {
+        title: t("sections.experience.title"),
+        details: [t("sections.experience.items.0")],
+      },
     ],
     [t]
   )
 
   useEffect(() => {
-    if (!isDev) return
     const seen = readCookieValue(COOKIE_NAME)
     if (seen !== RELEASE_VERSION) {
       setOpen(true)
     }
-  }, [isDev])
+  }, [])
 
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen)
@@ -104,8 +107,6 @@ export function VersionChangelogModal() {
       setSessionCookie(COOKIE_NAME, RELEASE_VERSION)
     }
   }
-
-  if (!isDev) return null
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>

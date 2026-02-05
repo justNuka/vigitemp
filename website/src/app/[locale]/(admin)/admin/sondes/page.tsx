@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import { PageHeader } from "@/components/page-header";
 import { ProbesClient } from "./probes-client";
 
@@ -16,7 +17,9 @@ export default function SondesPage() {
       />
 
       <div className="space-y-6 p-6">
-        <ProbesClient />
+        <Suspense fallback={<div className="text-sm text-muted-foreground">Chargement…</div>}>
+          <ProbesClient />
+        </Suspense>
       </div>
     </div>
   );

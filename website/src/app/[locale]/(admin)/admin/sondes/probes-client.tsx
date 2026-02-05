@@ -57,8 +57,8 @@ export function ProbesClient() {
   const probesTableData = toProbeRows(probes || []);
 
   const adjustmentsTableData: AdjustmentRow[] = (adjustments || []).map((calib) => ({
-    Id_Calibrage: calib.Id_Calibrage,
-    Date_Heure_Calibrage: calib.Date_Heure_Calibrage,
+    Id_Ajustage: calib.Id_Ajustage,
+    Date_Heure_Ajustage: calib.Date_Heure_Ajustage,
     Operateur: calib.Operateur,
     Unite: calib.Unite,
     Nb_Decimale: calib.Nb_Decimale,

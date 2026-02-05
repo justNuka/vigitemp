@@ -13,9 +13,15 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
     const limit = Math.max(1, Number(searchParams.get("limit") ?? "15"))
 
     const where: any = {}
-    if (status === "active") where.Est_Acquittee = false
+    if (status === "active") {
+      where.Est_Acquittee = false
+      where.Date_Heure_Fin = null
+    }
     if (status === "acknowledged") where.Est_Acquittee = true
-    if (status === "resolved") where.Est_Acquittee = null
+    if (status === "resolved") {
+      where.Est_Acquittee = false
+      where.Date_Heure_Fin = { not: null }
+    }
 
     const [total, alarms] = await Promise.all([
       prisma.t_alarme.count({ where }),
@@ -26,6 +32,12 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
           select: {
             Id_Lieu: true,
             Nom_Lieu: true,
+            Derniere_Valeur: true,
+            Derniere_Unite: true,
+            Consigne_Sup: true,
+            Consigne_Inf: true,
+            Tolerance_Surveillance_Sup: true,
+            Tolerance_Surveillance_Inf: true,
           },
         },
       },
@@ -35,6 +47,47 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
     }),
     ])
 
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - 30)
+
+    const lieuIds = Array.from(
+      new Set(
+        alarms
+          .map((alarm) => alarm.t_lieu?.Id_Lieu)
+          .filter((id): id is number => typeof id === "number" && !Number.isNaN(id))
+      )
+    )
+
+    const [activeCounts, histoCounts] = lieuIds.length
+      ? await Promise.all([
+          prisma.t_alarme.groupBy({
+            by: ["Id_Lieu"],
+            where: {
+              Id_Lieu: { in: lieuIds },
+              Date_Heure_Debut: { gte: startDate },
+            },
+            _count: { _all: true },
+          }),
+          prisma.t_alarme_histo.groupBy({
+            by: ["Id_Lieu"],
+            where: {
+              Id_Lieu: { in: lieuIds },
+              Date_Heure_Debut: { gte: startDate },
+            },
+            _count: { _all: true },
+          }),
+        ])
+      : [[], []]
+
+    const countsByLieu = new Map<number, number>()
+    for (const row of activeCounts as Array<{ Id_Lieu: number; _count: { _all: number } }>) {
+      countsByLieu.set(row.Id_Lieu, row._count._all)
+    }
+    for (const row of histoCounts as Array<{ Id_Lieu: number; _count: { _all: number } }>) {
+      const current = countsByLieu.get(row.Id_Lieu) ?? 0
+      countsByLieu.set(row.Id_Lieu, current + row._count._all)
+    }
+
     const formatted = alarms.map((alarm: any) => {
       const alarmType =
         alarm.Type === "H"
@@ -43,19 +96,20 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
             ? "low"
             : alarm.Type === "N"
               ? "no-response"
-              : alarm.Type === "T"
-                ? "ended"
-                : "temperature"
+              : "temperature"
       const message =
         alarm.Type === "N"
           ? "Alarme non réponse"
-          : alarm.Type === "T"
-            ? "Alarme terminée (non acquittée)"
           : alarm.Type === "H"
             ? `Alarme haute - ${alarm.Valeur}°C`
             : alarm.Type === "B"
               ? `Alarme basse - ${alarm.Valeur}°C`
               : `Alarme température - ${alarm.Valeur}°C`
+
+      const consigneSup =
+        alarm.t_lieu?.Tolerance_Surveillance_Sup ?? alarm.t_lieu?.Consigne_Sup ?? null
+      const consigneInf =
+        alarm.t_lieu?.Tolerance_Surveillance_Inf ?? alarm.t_lieu?.Consigne_Inf ?? null
 
       return {
       id: alarm.Id_Alarme,
@@ -72,12 +126,21 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
             : alarm.Type === "T"
               ? "ended"
               : "warning",
-      status: alarm.Date_Heure_Fin ? "resolved" : alarm.Est_Acquittee ? "acknowledged" : "active",
+      status: alarm.Est_Acquittee
+        ? "acknowledged"
+        : alarm.Date_Heure_Fin
+          ? "resolved"
+          : "active",
       message,
       timestamp: alarm.Date_Heure_Debut?.toISOString() || new Date().toISOString(),
       acknowledgedAt: alarm.Est_Acquittee ? alarm.Date_Heure_Debut?.toISOString() : null,
       acknowledgedBy: null,
       resolvedAt: alarm.Date_Heure_Fin?.toISOString() || null,
+      minThreshold: consigneInf,
+      maxThreshold: consigneSup,
+      unit: alarm.Unite || alarm.t_lieu?.Derniere_Unite || "°C",
+      currentValue: alarm.t_lieu?.Derniere_Valeur ?? alarm.Valeur ?? null,
+      count30Days: countsByLieu.get(alarm.t_lieu?.Id_Lieu ?? 0) ?? 0,
     }
     })
 

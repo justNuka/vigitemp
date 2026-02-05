@@ -42,7 +42,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
-import { calculateYDomain, getMeasureSummary } from "@/lib/measurements";
+import { calculateYDomain, formatMeasureValue, getMeasureSummary } from "@/lib/measurements";
+import { useAppTimezone } from "@/components/timezone-provider";
 
 ChartJS.register(
   CategoryScale,
@@ -69,6 +70,10 @@ interface MonitoringCardProps {
   alarmDisabledUntil: Date | string | null;
   alarmDelayMinutes: number | null;
   surveillanceDisabled: boolean;
+  isGso?: boolean | null;
+  gsoRssi?: string | null;
+  gsoTension?: string | null;
+  alarmId?: number | null;
   onSurveillanceToggle: (
     idLieu: number,
     action: "surveillance" | "alarms",
@@ -91,12 +96,17 @@ export default function MonitoringCard({
   alarmDisabledUntil,
   alarmDelayMinutes,
   surveillanceDisabled,
+  isGso,
+  gsoRssi,
+  gsoTension,
+  alarmId = null,
   onSurveillanceToggle,
 }: MonitoringCardProps) {
   const t = useTranslations("monitoringCard");
   const tStatus = useTranslations("surveillanceStatus");
   const locale = useLocale();
   const localeTag = locale === "fr" ? "fr-FR" : locale;
+  const timezone = useAppTimezone();
   const { data, isLoading, reload, meta } = useLieuMeasurements(idLieu, { includeMeta: true });
 
   const orderedData = useMemo(() => {
@@ -113,10 +123,22 @@ export default function MonitoringCard({
   }, [data]);
 
   const summary = useMemo(() => getMeasureSummary(orderedData), [orderedData]);
-  const { consigneSup, consigneInf, consigne, unite, frequence, lastMeasureText, lastDateTime } = summary;
+  const {
+    consigneSup,
+    consigneInf,
+    consigne,
+    unite,
+    frequence,
+    lastMeasureText,
+    lastDateTime,
+    decimals,
+    lastValue,
+  } = summary;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showAcknowledgeModal, setShowAcknowledgeModal] = useState(false);
+  const [ackComment, setAckComment] = useState("");
   const [disableDuration, setDisableDuration] = useState<string>("60");
   const [actionType, setActionType] = useState<"surveillance" | "alarms">("surveillance");
 
@@ -255,6 +277,7 @@ export default function MonitoringCard({
     if (Number.isNaN(date.getTime())) return t("alarms.disabled");
     return t("alarms.disabled_until", {
       date: date.toLocaleString(localeTag, {
+        timeZone: timezone,
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
@@ -262,10 +285,10 @@ export default function MonitoringCard({
         minute: "2-digit",
       }),
     });
-  }, [alarmDisabledUntil, isAlarmActive, localeTag, t]);
+  }, [alarmDisabledUntil, isAlarmActive, localeTag, t, timezone]);
 
   const alarmBadgeClassName = isSurveillanceActive
-    ? "bg-orange-500/20 text-orange-900 dark:text-orange-100"
+    ? "bg-red-500/30 text-red-500 dark:text-red-100"
     : "bg-white/20 text-white";
 
   const contentTextClassName = isSurveillanceActive
@@ -280,9 +303,15 @@ export default function MonitoringCard({
     ? "text-gray-600 dark:text-gray-400"
     : "text-white";
 
+  const canAcknowledge =
+    isSurveillanceActive &&
+    alarmId !== null &&
+    alarmId !== undefined &&
+    (status === "critical" || status === "technical");
+
   const frequencyMinutes = useMemo(() => {
     if (!frequence || frequence <= 0) return null
-    return frequence >= 60 ? Math.round(frequence / 60) : frequence
+    return Math.round(frequence / 60)
   }, [frequence])
 
 
@@ -307,15 +336,55 @@ export default function MonitoringCard({
     return datasets
   }, [consigne, consigneInf, consigneSup, orderedData, t, unite])
 
+  const formattedConsigne = useMemo(
+    () => formatMeasureValue(consigne, decimals, localeTag),
+    [consigne, decimals, localeTag]
+  );
+
+  const formattedConsigneSup = useMemo(
+    () => formatMeasureValue(consigneSup, decimals, localeTag),
+    [consigneSup, decimals, localeTag]
+  );
+
+  const formattedConsigneInf = useMemo(
+    () => formatMeasureValue(consigneInf, decimals, localeTag),
+    [consigneInf, decimals, localeTag]
+  );
+
+  const formattedLastValue = useMemo(
+    () => formatMeasureValue(lastValue, decimals, localeTag),
+    [lastValue, decimals, localeTag]
+  );
+
+  const hasGsoMetrics = Boolean(isGso && (gsoRssi || gsoTension));
+
   return (
     <>
       <div
-        className={`relative w-full rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden ${
+        className={`relative w-full rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden flex flex-col ${
           isSurveillanceActive ? "bg-white dark:bg-gray-800" : "bg-slate-700 dark:bg-gray-800"
         }`}
       >
         <div
-          className={`px-3 py-2 ${headerBgClassName} border-b-2 ${headerBorderClassName}`}
+          className={`px-3 py-2 ${headerBgClassName} border-b-2 ${headerBorderClassName} ${
+            canAcknowledge ? "cursor-pointer" : ""
+          }`}
+          onClick={() => {
+            if (!canAcknowledge) return;
+            setAckComment("");
+            setShowAcknowledgeModal(true);
+          }}
+          onKeyDown={(event) => {
+            if (!canAcknowledge) return;
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              setAckComment("");
+              setShowAcknowledgeModal(true);
+            }
+          }}
+          role={canAcknowledge ? "button" : undefined}
+          tabIndex={canAcknowledge ? 0 : undefined}
+          aria-label={canAcknowledge ? t("acknowledge.button") : undefined}
         >
           <div className="flex items-start justify-between gap-2">
             <div className={`${headerTextClassName} text-xs font-medium space-y-1 flex-1`}>
@@ -345,7 +414,9 @@ export default function MonitoringCard({
                 )
               })()}
               {groupName ? <div className="truncate">{groupName}</div> : null}
-              <div className="text-base font-semibold truncate">{nomLieu}</div>
+              <div className="flex items-center gap-2">
+                <div className="text-base font-semibold truncate">{nomLieu}</div>
+              </div>
               {surveillanceDisabledLabel ? (
                 <div className={`inline-flex items-center w-fit gap-1 rounded-full text-[10px] px-2 py-0.5 ${alarmBadgeClassName}`}>
                   <PowerOff className="h-3 w-3" />
@@ -413,7 +484,7 @@ export default function MonitoringCard({
           </div>
         </div>
 
-        <div className="p-4 flex flex-col">
+        <div className="p-4 flex flex-col flex-1">
           {isSurveillanceActive ? (
             <>
               <div
@@ -465,11 +536,23 @@ export default function MonitoringCard({
                     </div>
 
                     <div className="absolute inset-0 pointer-events-none">
+                      {consigneInf !== null ? (
+                        <div
+                          className="absolute w-full h-0.5"
+                          style={{
+                            top: `${yMax === yMin ? 0 : ((yMax - consigneInf) / (yMax - yMin)) * 100}%`,
+                            backgroundImage:
+                              "repeating-linear-gradient(to right, rgba(239, 68, 68, 0.8) 0 10px, transparent 10px 16px)",
+                          }}
+                        />
+                      ) : null}
                       {consigneSup !== null ? (
                         <div
-                          className="absolute w-full border-t-2 border-red-500 border-dashed"
+                          className="absolute w-full h-0.5"
                           style={{
-                            top: `${((yMax - consigneSup) / (yMax - yMin)) * 100}%`,
+                            top: `${yMax === yMin ? 0 : ((yMax - consigneSup) / (yMax - yMin)) * 100}%`,
+                            backgroundImage:
+                              "repeating-linear-gradient(to right, rgba(239, 68, 68, 0.8) 0 10px, transparent 10px 16px)",
                           }}
                         />
                       ) : null}
@@ -477,15 +560,7 @@ export default function MonitoringCard({
                         <div
                           className="absolute w-full border-t border-gray-900 dark:border-white"
                           style={{
-                            top: `${((yMax - consigne) / (yMax - yMin)) * 100}%`,
-                          }}
-                        />
-                      ) : null}
-                      {consigneInf !== null ? (
-                        <div
-                          className="absolute w-full border-t-2 border-red-500 border-dashed"
-                          style={{
-                            top: `${((yMax - consigneInf) / (yMax - yMin)) * 100}%`,
+                            top: `${yMax === yMin ? 0 : ((yMax - consigne) / (yMax - yMin)) * 100}%`,
                           }}
                         />
                       ) : null}
@@ -494,15 +569,29 @@ export default function MonitoringCard({
                     <div className="absolute right-0 top-0 bottom-0 flex flex-col justify-between py-2 pointer-events-none pr-1">
                       {consigneSup !== null ? (
                         <div
-                          className="text-[9px] font-medium text-red-600 dark:text-red-400 bg-white/90 dark:bg-gray-800/90 px-1 rounded shadow-sm whitespace-nowrap"
+                          className="text-[9px] font-medium text-red-600 dark:text-red-200 bg-white/90 dark:bg-gray-800/90 px-1 rounded shadow-sm whitespace-nowrap"
                           style={{
                             position: "absolute",
-                            top: `${((yMax - consigneSup) / (yMax - yMin)) * 100}%`,
+                            top: `${yMax === yMin ? 0 : ((yMax - consigneSup) / (yMax - yMin)) * 100}%`,
                             transform: "translateY(-50%)",
                             right: "4px",
                           }}
                         >
-                          {t("guides.max", { value: consigneSup })}
+                          {formattedConsigneSup || consigneSup}
+                          {unite}
+                        </div>
+                      ) : null}
+                      {consigneInf !== null ? (
+                        <div
+                          className="text-[9px] font-medium text-red-600 dark:text-red-200 bg-white/90 dark:bg-gray-800/90 px-1 rounded shadow-sm whitespace-nowrap"
+                          style={{
+                            position: "absolute",
+                            top: `${yMax === yMin ? 0 : ((yMax - consigneInf) / (yMax - yMin)) * 100}%`,
+                            transform: "translateY(-50%)",
+                            right: "4px",
+                          }}
+                        >
+                          {formattedConsigneInf || consigneInf}
                           {unite}
                         </div>
                       ) : null}
@@ -511,26 +600,12 @@ export default function MonitoringCard({
                           className="text-[9px] font-medium text-gray-900 dark:text-white bg-white/90 dark:bg-gray-800/90 px-1 rounded shadow-sm whitespace-nowrap"
                           style={{
                             position: "absolute",
-                            top: `${((yMax - consigne) / (yMax - yMin)) * 100}%`,
+                            top: `${yMax === yMin ? 0 : ((yMax - consigne) / (yMax - yMin)) * 100}%`,
                             transform: "translateY(-50%)",
                             right: "4px",
                           }}
                         >
-                          {consigne}
-                          {unite}
-                        </div>
-                      ) : null}
-                      {consigneInf !== null ? (
-                        <div
-                          className="text-[9px] font-medium text-red-600 dark:text-red-400 bg-white/90 dark:bg-gray-800/90 px-1 rounded shadow-sm whitespace-nowrap"
-                          style={{
-                            position: "absolute",
-                            top: `${((yMax - consigneInf) / (yMax - yMin)) * 100}%`,
-                            transform: "translateY(-50%)",
-                            right: "4px",
-                          }}
-                        >
-                          {t("guides.min", { value: consigneInf })}
+                          {formattedConsigne || consigne}
                           {unite}
                         </div>
                       ) : null}
@@ -543,9 +618,19 @@ export default function MonitoringCard({
                 {lastDateTime ? (
                   <>
                     <div className={`flex items-center justify-between text-[11px] ${contentTextClassName}`}>
-                      <span>{t("last_measure.label", { value: lastMeasureText })}</span>
+                      <span>
+                        {t("last_measure.label", {
+                          value: formattedLastValue ? `${formattedLastValue}${unite}` : lastMeasureText,
+                        })}
+                      </span>
                       <span>{lastDateTime}</span>
                     </div>
+                    {hasGsoMetrics ? (
+                      <div className={`flex flex-wrap items-center justify-center gap-4 text-[11px] ${contentTextClassName}`}>
+                        {gsoRssi ? <span>{t("gso.rssi", { value: gsoRssi })}</span> : null}
+                        {gsoTension ? <span>{t("gso.tension", { value: gsoTension })}</span> : null}
+                      </div>
+                    ) : null}
                     <div className={`flex items-center justify-center gap-4 text-[11px] ${contentTextClassName}`}>
                       <span>{t("frequency", { minutes: frequencyMinutes ?? "-" })}</span>
                       {alarmDelayMinutes !== null && alarmDelayMinutes !== undefined ? (
@@ -712,6 +797,9 @@ export default function MonitoringCard({
             idLieu={idLieu}
             nomLieu={nomLieu}
             sondeNumeroSerie={sondeNumeroSerie || ""}
+            isGso={isGso ?? null}
+            gsoRssi={gsoRssi ?? null}
+            gsoTension={gsoTension ?? null}
             consigneSup={consigneSup}
             consigneInf={consigneInf}
             consigne={consigne}
@@ -720,6 +808,66 @@ export default function MonitoringCard({
             measurements={isSurveillanceActive ? orderedData : []}
           />
         ) : null}
+
+        <Dialog
+          open={showAcknowledgeModal}
+          onOpenChange={(open) => {
+            setShowAcknowledgeModal(open);
+            if (!open) setAckComment("");
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>{t("acknowledge.title")}</DialogTitle>
+              <DialogDescription>{t("acknowledge.description")}</DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium" htmlFor={`ack-comment-${idLieu}`}>
+                {t("acknowledge.comment_label")}
+              </label>
+              <textarea
+                id={`ack-comment-${idLieu}`}
+                className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                placeholder={t("acknowledge.comment_placeholder")}
+                value={ackComment}
+                onChange={(event) => setAckComment(event.target.value)}
+              />
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowAcknowledgeModal(false)}>
+                {t("acknowledge.cancel")}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={async () => {
+                  if (!alarmId) return;
+                  try {
+                    const res = await fetch(`/api/alarmes/${alarmId}/acknowledge`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ comment: ackComment || undefined }),
+                    });
+
+                    if (!res.ok) {
+                      console.error("Acknowledge alarm error", await res.text());
+                      return;
+                    }
+
+                    setShowAcknowledgeModal(false);
+                    setAckComment("");
+                    reload(true);
+                  } catch (error) {
+                    console.error("Acknowledge alarm error", error);
+                  }
+                }}
+              >
+                {t("acknowledge.confirm")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );

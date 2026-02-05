@@ -521,6 +521,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                 const isSelected = selectedRowId !== null && selectedRowId !== undefined && (
                   (row.original as any).Id_Sonde === selectedRowId ||
                   (row.original as any).Id_Calibrage === selectedRowId ||
+                  (row.original as any).Id_Ajustage === selectedRowId ||
                   (row.original as any).Id_Etalonnage === selectedRowId ||
                   (row.original as any).Id_Site === selectedRowId ||
                   (row.original as any).Id_Lieu === selectedRowId ||

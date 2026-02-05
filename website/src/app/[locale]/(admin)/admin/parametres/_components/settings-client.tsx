@@ -13,6 +13,7 @@ import { GeneralSettingsCard } from "./general-settings-card";
 import { NotificationsSettingsCard } from "./notifications-settings-card";
 import { PasswordPolicyCard } from "./password-policy-card";
 import { SmtpSettingsCard } from "./smtp-settings-card";
+import { TimezoneSettingsCard } from "./timezone-settings-card";
 
 interface Setting {
   key: string;
@@ -117,6 +118,36 @@ export function SettingsClient({ settings: initialSettings }: Props) {
     );
   };
 
+  const handleSettingChange = (key: string, newValue: string) => {
+    setSettings((prev) => prev.map((setting) => (setting.key === key ? { ...setting, value: newValue } : setting)));
+    setLoadingKeys((prev) => new Set(prev).add(key));
+
+    updateMutation.mutate(
+      { key, value: newValue },
+      {
+        onSuccess: () => {
+          setTimeout(() => {
+            router.refresh();
+          }, 100);
+          toast.success(t("toast.update_success"));
+        },
+        onError: () => {
+          const currentSetting = settings.find((s) => s.key === key);
+          const currentValue = currentSetting?.value || "";
+          setSettings((prev) => prev.map((setting) => (setting.key === key ? { ...setting, value: currentValue } : setting)));
+          toast.error(t("toast.update_error"));
+        },
+        onSettled: () => {
+          setLoadingKeys((prev) => {
+            const next = new Set(prev);
+            next.delete(key);
+            return next;
+          });
+        },
+      }
+    );
+  };
+
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       <GeneralSettingsCard
@@ -124,6 +155,12 @@ export function SettingsClient({ settings: initialSettings }: Props) {
         loadingKeys={loadingKeys}
         onToggle={handleToggle}
         onRefreshIntervalChange={handleRefreshIntervalChange}
+      />
+
+      <TimezoneSettingsCard
+        settings={settings}
+        loadingKeys={loadingKeys}
+        onTimezoneChange={handleSettingChange}
       />
 
       <AutoLockSettingsCard />

@@ -1,6 +1,5 @@
 "use cache";
 
-import { cacheTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 const shouldSkipDbOnBuild = process.env.VIGITEMP_SKIP_DB_ON_BUILD === "1";
@@ -14,9 +13,6 @@ const shouldSkipDbOnBuild = process.env.VIGITEMP_SKIP_DB_ON_BUILD === "1";
  * Statistiques principales du dashboard
  */
 export async function ServerDashboardStats() {
-  "use cache";
-  cacheTag("dashboard-stats");
-
   if (shouldSkipDbOnBuild) {
     return {
       activeLocations: 0,
@@ -31,7 +27,8 @@ export async function ServerDashboardStats() {
     prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "D" } }),
     prisma.t_alarme.count({
       where: {
-        Est_Acquittee: false,
+        Est_Alarme_Vrai: true,
+        Date_Heure_Fin: null,
       },
     }),
     prisma.t_lieu.count({
@@ -54,9 +51,6 @@ export async function ServerDashboardStats() {
  * Capteurs critiques pour affichage prioritaire sur le dashboard
  */
 export async function ServerCriticalSensors() {
-  "use cache";
-  cacheTag("dashboard-critical-sensors");
-
   if (shouldSkipDbOnBuild) {
     return [];
   }
@@ -88,8 +82,8 @@ export async function ServerCriticalSensors() {
     status: "critical" as const,
     currentValue: lieu.Derniere_Valeur !== null ? parseFloat(lieu.Derniere_Valeur.toString()) : null,
     unit: lieu.Derniere_Unite || "°C",
-    minThreshold: lieu.Consigne_Inf ?? 0,
-    maxThreshold: lieu.Consigne_Sup ?? 30,
+    minThreshold: lieu.Tolerance_Surveillance_Inf ?? 0,
+    maxThreshold: lieu.Tolerance_Surveillance_Sup ?? 30,
     lastMeasurement: lieu.Derniere_Date_Heure || null,
     isActive: !lieu.Est_Archive,
     location: {
@@ -110,16 +104,14 @@ export async function ServerCriticalSensors() {
  * Alarmes actives récentes pour le tableau du dashboard
  */
 export async function ServerActiveAlarms() {
-  "use cache";
-  cacheTag("dashboard-active-alarms");
-
   if (shouldSkipDbOnBuild) {
     return [];
   }
 
   const alarms = await prisma.t_alarme.findMany({
     where: {
-      Est_Acquittee: false,
+      Est_Alarme_Vrai: true,
+      Date_Heure_Fin: null,
     },
     include: {
       t_lieu: {
@@ -166,8 +158,8 @@ export async function ServerActiveAlarms() {
       currentValue: alarm.Valeur !== null ? parseFloat(alarm.Valeur.toString()) : null,
       unit: alarm.Unite || "°C",
       locationId: alarm.t_lieu?.Id_Site?.toString() || "0",
-      minThreshold: alarm.t_lieu?.Consigne_Inf ?? 0,
-      maxThreshold: alarm.t_lieu?.Consigne_Sup ?? 30,
+      minThreshold: alarm.t_lieu?.Tolerance_Surveillance_Inf ?? 0,
+      maxThreshold: alarm.t_lieu?.Tolerance_Surveillance_Sup ?? 30,
       measurementFrequency: 60,
       alarmDelay: 0,
       lastMeasurement: alarm.t_lieu?.Derniere_Date_Heure || null,
@@ -191,9 +183,6 @@ export async function ServerActiveAlarms() {
  * Aperçu des capteurs (8 premiers pour le dashboard)
  */
 export async function ServerSensorOverview() {
-  "use cache";
-  cacheTag("dashboard-sensor-overview");
-
   if (shouldSkipDbOnBuild) {
     return [];
   }
@@ -259,8 +248,8 @@ export async function ServerSensorOverview() {
       alarmType,
       currentValue: lieu.Derniere_Valeur !== null ? parseFloat(lieu.Derniere_Valeur.toString()) : null,
       unit: lieu.Derniere_Unite || "°C",
-      minThreshold: lieu.Consigne_Inf ?? 0,
-      maxThreshold: lieu.Consigne_Sup ?? 30,
+      minThreshold: lieu.Tolerance_Surveillance_Inf ?? 0,
+      maxThreshold: lieu.Tolerance_Surveillance_Sup ?? 30,
       lastMeasurement: lieu.Derniere_Date_Heure || null,
       isActive: !lieu.Est_Archive,
       location: {
@@ -276,6 +265,33 @@ export async function ServerSensorOverview() {
       },
     };
   });
+}
+
+/**
+ * Compteur d'alarmes sur les dernières 24h (t_alarme + t_alarme_histo)
+ */
+export async function ServerAlarmTrendCount() {
+  if (shouldSkipDbOnBuild) {
+    return { countLast24h: 0 };
+  }
+
+  const startDate = new Date();
+  startDate.setHours(startDate.getHours() - 24);
+
+  const [activeCount, histoCount] = await Promise.all([
+    prisma.t_alarme.count({
+      where: {
+        Date_Heure_Debut: { gte: startDate },
+      },
+    }),
+    prisma.t_alarme_histo.count({
+      where: {
+        Date_Heure_Debut: { gte: startDate },
+      },
+    }),
+  ]);
+
+  return { countLast24h: activeCount + histoCount };
 }
 
 function mapSensorStatus({

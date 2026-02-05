@@ -7,24 +7,36 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { enUS, fr } from "date-fns/locale";
 import { useLocale, useTranslations } from "next-intl";
+import { ArrowDown, ArrowUp, WifiOff } from "lucide-react";
+import { useAppTimezone } from "@/components/timezone-provider";
 
 interface AlarmRow {
   Id_Alarme: number;
+  Type: "high" | "low" | "no-response" | "temperature";
   Libelle_Lieu: string;
   Date_Heure_Debut: string;
   Est_Alarme_Vrai: boolean | null;
   Date_Heure_Fin: string | null;
   Est_Acquittee: boolean | null;
+  Min_Threshold: number | null;
+  Max_Threshold: number | null;
+  Unite: string | null;
+  Derniere_Valeur: number | null;
+  Status: "active" | "acknowledged" | "resolved";
+  Count_30_Days: number | null;
 }
 
 const getAlarmStatus = (
   t: ReturnType<typeof useTranslations>,
-  dateHeureFin: string | null
+  status: AlarmRow["Status"],
+  dateHeureFin: string | null,
+  estAcquittee: boolean | null
 ) => {
-  if (dateHeureFin) {
+  if (status === "acknowledged" || estAcquittee) {
+    return { label: t("status.acknowledged"), variant: "secondary" as const };
+  }
+  if (dateHeureFin || status === "resolved") {
     return { label: t("status.awaiting_ack"), variant: "default" as const };
   }
   return { label: t("status.active"), variant: "destructive" as const };
@@ -43,29 +55,103 @@ const getAcknowledgmentStatus = (
 export function AlarmsClientTanStack() {
   const t = useTranslations("alarmsTanstack");
   const locale = useLocale();
+  const timezone = useAppTimezone();
   const queryClient = useQueryClient();
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 });
   const page = pagination.pageIndex + 1;
   const limit = pagination.pageSize;
 
-  const dateLocale = useMemo(
-    () => (locale.toLowerCase().startsWith("fr") ? fr : enUS),
-    [locale]
-  );
+  const localeTag = locale.toLowerCase().startsWith("fr") ? "fr-FR" : locale;
 
   const formatDateTime = (date: string | null) => {
     if (!date) return t("date.na");
-    return format(new Date(date), "dd/MM/yyyy HH:mm:ss", { locale: dateLocale });
+    return new Date(date).toLocaleString(localeTag, {
+      timeZone: timezone,
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
   };
 
   const columns = useMemo<ColumnDef<AlarmRow>[]>(
     () => [
+      {
+        accessorKey: "Type",
+        header: t("columns.type"),
+        cell: ({ row }) => {
+          const type = row.getValue("Type") as AlarmRow["Type"];
+          if (type === "no-response") {
+            return (
+              <div className="p-1.5 rounded-md w-fit bg-slate-900/10">
+                <WifiOff className="h-4 w-4 text-slate-900" />
+              </div>
+            );
+          }
+
+          if (type === "high") {
+            return (
+              <div className="p-1.5 rounded-md w-fit bg-destructive/10">
+                <ArrowUp className="h-4 w-4 text-destructive" />
+              </div>
+            );
+          }
+
+          if (type === "low") {
+            return (
+              <div className="p-1.5 rounded-md w-fit bg-info/10">
+                <ArrowDown className="h-4 w-4 text-info" />
+              </div>
+            );
+          }
+
+          return <span className="text-xs text-muted-foreground">-</span>;
+        },
+      },
       {
         accessorKey: "Libelle_Lieu",
         header: t("columns.location"),
         cell: ({ row }) => (
           <span className="font-medium">{row.getValue("Libelle_Lieu")}</span>
         ),
+      },
+      {
+        accessorKey: "Derniere_Valeur",
+        header: () => <div className="text-right">{t("columns.last_value")}</div>,
+        cell: ({ row }) => {
+          const value = row.getValue("Derniere_Valeur") as number | null;
+          const unit = row.getValue("Unite") as string | null;
+          return (
+            <div className="text-right font-mono font-medium">
+              {value !== null && value !== undefined ? `${value.toFixed(1)} ${unit ?? ""}` : "-"}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "Min_Threshold",
+        header: () => <div className="text-right">{t("columns.thresholds")}</div>,
+        cell: ({ row }) => {
+          const sup = row.getValue("Max_Threshold") as number | null;
+          const inf = row.getValue("Min_Threshold") as number | null;
+          const unit = row.getValue("Unite") as string | null;
+          return (
+            <div className="text-right font-mono text-muted-foreground">
+              <div>
+                {sup !== null && sup !== undefined
+                  ? t("thresholds.sup", { value: sup, unit: unit ?? "" })
+                  : t("thresholds.sup_empty")}
+              </div>
+              <div>
+                {inf !== null && inf !== undefined
+                  ? t("thresholds.inf", { value: inf, unit: unit ?? "" })
+                  : t("thresholds.inf_empty")}
+              </div>
+            </div>
+          );
+        },
       },
       {
         accessorKey: "Date_Heure_Debut",
@@ -84,8 +170,25 @@ export function AlarmsClientTanStack() {
           cellClassName: "!border-l border-border !border-r border-border",
         },
         cell: ({ row }) => {
-          const status = getAlarmStatus(t, row.getValue("Date_Heure_Fin"));
+          const status = getAlarmStatus(
+            t,
+            row.getValue("Status"),
+            row.getValue("Date_Heure_Fin"),
+            row.getValue("Est_Acquittee")
+          );
           return <Badge variant={status.variant}>{status.label}</Badge>;
+        },
+      },
+      {
+        accessorKey: "Count_30_Days",
+        header: t("columns.count_30"),
+        meta: {
+          headerClassName: "!border-l border-white/25 !border-r border-white/25",
+          cellClassName: "!border-l border-border !border-r border-border",
+        },
+        cell: ({ row }) => {
+          const value = row.getValue("Count_30_Days") as number | null;
+          return <span className="font-mono text-sm">{value ?? 0}</span>;
         },
       },
       {
@@ -110,7 +213,7 @@ export function AlarmsClientTanStack() {
         },
       },
     ],
-    [t, dateLocale]
+    [t, localeTag, timezone]
   );
 
   const { data, isLoading, isFetching } = useAlarms({ page, limit });
@@ -131,11 +234,18 @@ export function AlarmsClientTanStack() {
 
   const tableData: AlarmRow[] = alarms.map((alarm) => ({
     Id_Alarme: alarm.Id_Alarme,
+    Type: alarm.Type,
     Libelle_Lieu: alarm.Libelle_Lieu || t("unknown_location"),
     Date_Heure_Debut: String(alarm.Date_Heure_Debut) || "",
     Est_Alarme_Vrai: alarm.Est_Alarme_Vrai,
     Date_Heure_Fin: alarm.Date_Heure_Fin ? String(alarm.Date_Heure_Fin) : null,
     Est_Acquittee: alarm.Est_Acquittee,
+    Min_Threshold: alarm.Min_Threshold ?? null,
+    Max_Threshold: alarm.Max_Threshold ?? null,
+    Unite: alarm.Unite ?? null,
+    Derniere_Valeur: alarm.Derniere_Valeur ?? null,
+    Status: alarm.Status,
+    Count_30_Days: alarm.Count_30_Days ?? null,
   }));
 
   return (

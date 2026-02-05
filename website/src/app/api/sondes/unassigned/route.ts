@@ -17,7 +17,7 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
     const skip = (page - 1) * limit
 
     const where = {
-      t_lieu: { none: {} },
+      t_lieu: { none: { Est_Archive: false } },
     }
 
     const total = await prisma.t_sonde.count({ where })
@@ -37,6 +37,7 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
         Adresse_Sonde: true,
         Sonde_Numero_Serie: true,
         Id_Module: true,
+        Sonde_Offset: true,
       },
       orderBy: {
         Sonde_Numero_Serie: "asc",
@@ -50,6 +51,7 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
       Adresse_Sonde: sonde.Adresse_Sonde,
       Sonde_Numero_Serie: sonde.Sonde_Numero_Serie,
       Id_Module: sonde.Id_Module,
+      Sonde_Offset: sonde.Sonde_Offset,
       Sonde_Type: null,
       Lieu: null,
       Port_Serie: null,

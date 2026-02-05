@@ -39,15 +39,25 @@
       "thisWeek": "This week",
       "lastWeek": "Last week",
       "thisMonth": "This month",
-      "lastMonth": "Last month"
+      "module_empty": "No module",
+      "offset_label": "Probe offset",
+      "offset_placeholder": "0",
+      "offset_hint": "Leave empty to use 0."
     }
   },
   "pageHeader": {
-    "title": "Vigitemp - Temperature Monitoring"
+    "title": "Vigitemp - Temperature Monitoring",
+    "offset_invalid": "Invalid offset"
   },
   "appMeta": {
     "title": "Vigitemp - Real-time monitoring",
-    "description": "Monitoring and alarm management system"
+    "description": "Monitoring and alarm management system",
+    "timezone": {
+      "title": "Time zone",
+      "description": "Set the display time zone",
+      "label": "Time zone",
+      "helper": "Date displays will follow this time zone."
+    }
   },
   "dock": {
     "sondes": "Probes",
@@ -143,6 +153,36 @@
       "active_alarms_warning": "Action required",
       "active_alarms_ok": "All good",
       "alert_sensors": "Pre-alarms + alarms"
+    },
+    "one": {
+      "title": "Dashboard",
+      "subtitle": "Quick access to the main sections",
+      "links": {
+        "surveillance": {
+          "title": "Monitoring",
+          "description": "Review locations, measurements, and live status."
+        },
+        "alarmes": {
+          "title": "Alarms",
+          "description": "View and acknowledge active alarms."
+        },
+        "lieux": {
+          "title": "Locations",
+          "description": "Manage monitored locations and settings."
+        },
+        "sondes": {
+          "title": "Sensors",
+          "description": "Configure sensors and their assignments."
+        },
+        "utilisateurs": {
+          "title": "Users",
+          "description": "Manage accounts and profiles."
+        },
+        "parametres": {
+          "title": "Settings",
+          "description": "Open the general configuration."
+        }
+      }
     }
   },
   "alarmsPage": {
@@ -159,14 +199,32 @@
     },
     "titles": {
       "active": "Active alarms",
-      "acknowledged": "Acknowledged alarms",
-      "resolved": "Alarms to acknowledge"
+      "location_label": "Location",
+      "sensor_label": "Sensor",
+      "type_label": "Alarm type",
+      "type_high": "High threshold",
+      "type_low": "Low threshold",
+      "type_no_response": "No response",
+      "type_other": "Other",
+      "resolved": "Alarms to acknowledge",
+      "start_label": "Alarm start",
+      "end_label": "Alarm end",
+      "end_in_progress": "Not ended",
+      "duration_label": "Duration"
     },
     "refresh": {
       "label": "Refresh",
+      "graph_label": "Location chart",
+      "graph_hint": "Show the measurement chart for this location",
+      "graph_show": "Show",
+      "graph_hide": "Hide",
+      "comment_select_label": "Predefined comment",
+      "comment_select_placeholder": "Choose a comment",
+      "comment_select_empty": "No comments available",
       "loading": "Refreshing..."
     },
     "toast": {
+      "na": "-",
       "acknowledge_success": "Alarm acknowledged successfully",
       "acknowledge_error": "Error while acknowledging the alarm",
       "refreshed": "Data refreshed"
@@ -206,14 +264,35 @@
     },
     "dialog": {
       "title": "Acknowledge alarm",
-      "description": "Alarm on {sensor} in {location}",
+      "location_label": "Location",
+      "sensor_label": "Sensor",
+      "type_label": "Alarm type",
+      "type_high": "High threshold",
+      "type_low": "Low threshold",
+      "type_no_response": "No response",
+      "type_other": "Other",
       "last_value_label": "Last value",
+      "start_label": "Alarm start",
+      "end_label": "Alarm end",
+      "end_in_progress": "Not ended",
+      "duration_label": "Duration",
       "thresholds_label": "Upper/Lower thresholds",
       "sup_value": "Up: {value} {unit}",
       "inf_value": "Low: {value} {unit}",
+      "graph_label": "Location chart",
+      "graph_hint": "Show the measurement chart for this location",
+      "graph_show": "Show",
+      "graph_hide": "Hide",
+      "comment_select_label": "Predefined comment",
+      "comment_select_placeholder": "Choose a comment",
+      "comment_select_empty": "No comments available",
+      "count_30_label": "Alarms in last 30 days",
+      "count_30_value": "{count} alarm(s)",
+      "loading": "Loading...",
       "comment_label": "Comment (optional)",
       "comment_placeholder": "Add a comment on this alarm...",
       "comment_count": "{count}/200 characters",
+      "na": "-",
       "cancel": "Cancel",
       "confirm": "Acknowledge",
       "confirming": "Acknowledging..."
@@ -1149,14 +1228,14 @@
       }
     }
   },
-    "adminAlarmsPage": {
-      "title": "Admin alarms",
-      "description": "Alarm management for administrators",
-      "meta": {
-        "title": "Admin alarms - Vigitemp",
-        "description": "Alarm management for administrators"
-      }
-    },
+  "adminAlarmsPage": {
+    "title": "Admin alarms",
+    "description": "Alarm management for administrators",
+    "meta": {
+      "title": "Admin alarms - Vigitemp",
+      "description": "Alarm management for administrators"
+    }
+  },
   "probesPage": {
     "title": "Probe management ({count, plural, one {# probe} other {# probes}})",
     "actions": {
@@ -1299,9 +1378,23 @@
     "off": "Sound off"
   },
   "errors": {
+    "default_badge": "Error {code}",
+    "not_found_badge": "Error 404",
     "not_found_title": "Page not found",
     "not_found_description": "The page you are looking for doesn't exist or has been moved.",
-    "back_home": "Back to home"
+    "back_home": "Back to home",
+    "retry": "Try again",
+    "system_status": "System status",
+    "monitoring_live": "Monitoring in progress",
+    "connected": "Connected",
+    "forbidden_badge": "Restricted access",
+    "forbidden_title": "Access denied",
+    "forbidden_description": "You don't have permission to access this page.",
+    "forbidden_helper": "If you believe this is an error, please contact an administrator.",
+    "server_error_badge": "Incident detected",
+    "server_error_title": "Server error",
+    "server_error_description": "A technical issue occurred while loading the page.",
+    "server_error_helper": "Our teams have been notified. You can try again in a moment."
   },
   "login": {
     "title": "Sign in",
@@ -1474,9 +1567,9 @@
       "empty": "No active alarms - All clear"
     },
     "trend": {
-      "title": "Recent trend",
+      "title": "Alarm trend",
       "subtitle": "Last 24h",
-      "count": "{count} measurements",
+      "count": "{count} alarm(s)",
       "details": "Details"
     },
     "ack_dialog": {
@@ -1562,6 +1655,10 @@
   },
   "monitoringDetailsModal": {
     "probe": "Probe: {serial}",
+    "gso": {
+      "rssi": "RSSI: {value}",
+      "tension": "Voltage: {value}"
+    },
     "tabs": {
       "graph": "Chart",
       "table": "Measurements table",
@@ -1680,8 +1777,13 @@
         "items": {
           "0": "Unified cards (buttons, type icons, tooltips, light mode).",
           "1": "Primary-colored filters/actions, improved sorting and views.",
-          "2": "Latest value and upper/lower limits in the table.",
-          "3": "Added the Audit tab in location details."
+          "2": "Latest value in the measurements table.",
+          "3": "Added the Audit tab in location details.",
+          "4": "Removed min/max display from monitoring (cards and details).",
+          "5": "Quick alarm acknowledgment from the monitoring card.",
+          "6": "Status legend with colored dots in the monitoring header.",
+          "7": "Decimal precision applied on cards and tables.",
+          "8": "Disabled locations grid now uses full width."
         }
       },
       "measures": {
@@ -1696,7 +1798,8 @@
         "items": {
           "0": "Sticky headers with blur, adjusted heights and clearer borders.",
           "1": "Harmonized actions (icons, sizes, colors).",
-          "2": "More readable row selection."
+          "2": "More readable row selection.",
+          "3": "Configurable time zone for date displays."
         }
       },
       "creation": {
@@ -1710,7 +1813,13 @@
       "notifications": {
         "title": "Notifications",
         "items": {
-          "0": "Portal alert when the agent secret is invalid or missing."
+          "0": "Agent secret alert enabled by default in production (opt-in in dev via flag)."
+        }
+      },
+      "experience": {
+        "title": "Experience",
+        "items": {
+          "0": "New 403, 404, and 500 error pages with animated, modern visuals."
         }
       }
     }
@@ -1796,6 +1905,10 @@
     "last_measure": {
       "label": "Last measurement: {value}"
     },
+    "gso": {
+      "rssi": "RSSI: {value}",
+      "tension": "Voltage: {value}"
+    },
     "frequency": "Freq: {minutes} min",
     "alarm_delay": "Alarm delay: {minutes} min",
     "no_measurements": "No measurements available",
@@ -1834,6 +1947,15 @@
       },
       "cancel": "Cancel",
       "confirm": "Confirm"
+    },
+    "acknowledge": {
+      "button": "Acknowledge",
+      "title": "Acknowledge alarm",
+      "description": "Confirm the alarm acknowledgment and add a comment if needed.",
+      "comment_label": "Comment",
+      "comment_placeholder": "Add a comment (optional)",
+      "cancel": "Cancel",
+      "confirm": "Acknowledge"
     }
   },
   "adminDashboard": {
@@ -1918,9 +2040,9 @@
       }
     },
     "unassigned": {
-      "title": "Unassigned probes",
-      "description": "{count, plural, one {# unassigned probe} other {# unassigned probes}}",
-      "empty": "No unassigned probes",
+      "title": "Unassigned active probes",
+      "description": "{count, plural, one {# probe not assigned to an active location} other {# probes not assigned to an active location}}",
+      "empty": "No probes without an active location",
       "columns": {
         "probe": "Probe",
         "type": "Type",
@@ -1959,6 +2081,7 @@
       "location": "Location",
       "start": "Alarm start",
       "status": "Status",
+      "count_30": "Alarms 30d",
       "end": "Alarm end",
       "acknowledged": "Acknowledged"
     },
