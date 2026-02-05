@@ -10,13 +10,25 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
+        primary: 'bg-primary text-primary-foreground hover:bg-primary/90 data-[state=open]:bg-primary/90',
         default:
           "border-transparent bg-primary text-primary-foreground shadow-xs",
         secondary: "border-transparent bg-secondary text-secondary-foreground",
+        success:
+          'bg-[var(--color-success-accent,var(--color-green-500))] text-[var(--color-success-foreground,var(--color-white))]',
+        warning:
+          'bg-[var(--color-warning-accent,var(--color-yellow-500))] text-[var(--color-warning-foreground,var(--color-white))]',
+        info: 'bg-[var(--color-info-accent,var(--color-violet-500))] text-[var(--color-info-foreground,var(--color-white))]',
         destructive:
           "border-transparent bg-destructive text-destructive-foreground shadow-xs",
 
         outline: " border [border-color:var(--badge-outline)] shadow-xs",
+      },
+      size: {
+        lg: 'rounded-md px-[0.5rem] h-7 min-w-7 gap-1.5 text-xs [&_svg]:size-3.5',
+        md: 'rounded-md px-[0.45rem] h-6 min-w-6 gap-1.5 text-xs [&_svg]:size-3.5 ',
+        sm: 'rounded-sm px-[0.325rem] h-5 min-w-5 gap-1 text-[0.6875rem] leading-[0.75rem] [&_svg]:size-3',
+        xs: 'rounded-sm px-[0.25rem] h-4 min-w-4 gap-1 text-[0.625rem] leading-[0.5rem] [&_svg]:size-3',
       },
     },
     defaultVariants: {

@@ -15,19 +15,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const queryClient = useQueryClient()
 
-  // Sidebar badge only needs a best-effort value.
-  // Do not poll here: it can cascade into expensive remount/refetch patterns on heavy pages like /surveillance.
+  // Sidebar badge should stay reasonably fresh without stressing heavy pages.
   const alarmsQueryKey = ["alarms", "active"] as const
   const hasCachedAlarms = queryClient.getQueryData(alarmsQueryKey) !== undefined
   const { data: alarms } = useQuery({
     queryKey: alarmsQueryKey,
     queryFn: () => alarmsApi.getActive(),
     enabled: !hasCachedAlarms,
-    refetchInterval: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    refetchOnWindowFocus: false,
-    staleTime: Infinity,
+    refetchInterval: 60_000,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
     retry: false,
   })
 

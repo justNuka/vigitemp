@@ -65,6 +65,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
             where: {
               Id_Lieu: { in: lieuIds },
               Date_Heure_Debut: { gte: startDate },
+              Est_Alarme_Vrai: true,
             },
             _count: { _all: true },
           }),
@@ -73,6 +74,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
             where: {
               Id_Lieu: { in: lieuIds },
               Date_Heure_Debut: { gte: startDate },
+              Est_Alarme_Vrai: true,
             },
             _count: { _all: true },
           }),

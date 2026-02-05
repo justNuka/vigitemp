@@ -16,7 +16,7 @@ import {
 import { alarmsApi, type AlarmWithDetails } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { ColumnDef } from "@tanstack/react-table";
@@ -109,6 +109,9 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
   const [showGraph, setShowGraph] = useState(false);
   const [alarmCount30, setAlarmCount30] = useState<number | null>(null);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const dragOriginRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     setLocalAlarms(alarms);
@@ -139,6 +142,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     setShowGraph(false);
     setSelectedCommentId("");
     setAlarmCount30(null);
+    setDragOffset({ x: 0, y: 0 });
     let isActive = true;
     setIsCommentsLoading(true);
     fetch("/api/alarmes/commentaires-acquittement")
@@ -161,6 +165,31 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
       isActive = false;
     };
   }, [selectedAlarm]);
+
+  useEffect(() => {
+    if (!dragStartRef.current) return;
+    const handleMove = (event: PointerEvent) => {
+      if (!dragStartRef.current || !dragOriginRef.current) return;
+      const dx = event.clientX - dragStartRef.current.x;
+      const dy = event.clientY - dragStartRef.current.y;
+      setDragOffset({
+        x: dragOriginRef.current.x + dx,
+        y: dragOriginRef.current.y + dy,
+      });
+    };
+    const handleUp = () => {
+      dragStartRef.current = null;
+      dragOriginRef.current = null;
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+    };
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+    return () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+    };
+  }, [dragOffset]);
 
   useEffect(() => {
     if (!selectedAlarm) return;
@@ -202,7 +231,6 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
         );
       });
       toast.success(t("toast.acknowledge_success"));
-      router.refresh();
     },
     onError: () => {
       toast.error(t("toast.acknowledge_error"));
@@ -282,8 +310,8 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
         const type = row.getValue("type") as AlarmRow["type"];
         if (type === "no-response") {
           return (
-            <div className="p-1.5 rounded-md w-fit bg-slate-900/10">
-              <WifiOff className="h-4 w-4 text-slate-900" />
+            <div className="p-1.5 rounded-md w-fit bg-black/10">
+              <WifiOff className="h-4 w-4 text-black" />
             </div>
           );
         }
@@ -293,13 +321,13 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
           <div
             className={cn(
               "p-1.5 rounded-md w-fit",
-              isHigh ? "bg-destructive/10" : "bg-info/10"
+              isHigh ? "bg-destructive/10" : "bg-[#26A5DA]/10"
             )}
           >
             {isHigh ? (
               <ArrowUp className="h-4 w-4 text-destructive" />
             ) : (
-              <ArrowDown className="h-4 w-4 text-info" />
+              <ArrowDown className="h-4 w-4 text-[#26A5DA]" />
             )}
           </div>
         );
@@ -419,6 +447,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
                   if (fullAlarm) setSelectedAlarm(fullAlarm);
                 }}
                 data-testid={`button-acknowledge-${alarm.id}`}
+                className="border-amber-300 bg-amber-300 text-slate-900 hover:bg-amber-200 hover:text-slate-900 dark:border-warning dark:bg-warning/20 dark:text-warning-foreground dark:hover:bg-warning/30"
               >
                 {t("table.actions.acknowledge")}
               </Button>
@@ -482,6 +511,17 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     return formatDistanceStrict(start, end, { locale: fr });
   }, [selectedAlarm, t]);
 
+  const focusRange = useMemo(() => {
+    if (!selectedAlarm?.triggeredAt) return null;
+    const start = new Date(selectedAlarm.triggeredAt);
+    const end = selectedAlarm.resolvedAt ? new Date(selectedAlarm.resolvedAt) : new Date(selectedAlarm.triggeredAt);
+    const padMs = 60 * 60 * 1000;
+    return {
+      from: new Date(start.getTime() - padMs),
+      to: new Date(end.getTime() + padMs),
+    };
+  }, [selectedAlarm]);
+
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       {localAlarms.length === 0 ? (
@@ -498,7 +538,6 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
             </div>
           </CardHeader>
           <CardContent>
-            <div className="mb-4 flex justify-end">{refreshButton}</div>
             <EmptyState
               icon={AlertTriangle}
               title={
@@ -542,7 +581,6 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
                 const fullAlarm = localAlarms.find((item) => item.id === row.id);
                 if (fullAlarm) setSelectedAlarm(fullAlarm);
               }}
-              toolbarRight={refreshButton}
               maxHeight="calc(100dvh - 25rem)"
               headerClassName="!bg-sidebar !text-sidebar-foreground"
               headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
@@ -553,8 +591,20 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
       )}
 
       <Dialog open={!!selectedAlarm} onOpenChange={() => setSelectedAlarm(null)}>
-        <DialogContent className="sm:max-w-3xl">
-          <DialogHeader>
+        <DialogContent
+          className="sm:max-w-3xl"
+          style={{
+            transform: `translate(-50%, -50%) translate(${dragOffset.x}px, ${dragOffset.y}px)`,
+          }}
+        >
+          <DialogHeader
+            className="cursor-move select-none"
+            onPointerDown={(event) => {
+              dragStartRef.current = { x: event.clientX, y: event.clientY };
+              dragOriginRef.current = { x: dragOffset.x, y: dragOffset.y };
+              (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
+            }}
+          >
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-warning" />
               {t("dialog.title")}
@@ -724,7 +774,8 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
           consigneInf={selectedAlarm.sensor.minThreshold ?? null}
           consigne={selectedAlarm.threshold ?? null}
           unite={selectedAlarm.sensor.unit}
-          isSurveillanceActive={true}
+          isSurveillanceActive={false}
+          initialRange={focusRange ?? undefined}
         />
       ) : null}
     </main>

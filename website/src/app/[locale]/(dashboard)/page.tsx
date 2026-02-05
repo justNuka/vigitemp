@@ -5,7 +5,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { validateLicense } from "@/lib/license-server";
 import { DashboardClient } from "./dashboard-client";
 import { DashboardHeader } from "./dashboard-header";
-import { DashboardOne } from "./dashboard-one";
 import {
   ServerActiveAlarms,
   ServerAlarmTrendCount,
@@ -37,16 +36,6 @@ export default async function DashboardPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const license = await validateLicense();
-  const edition = license?.edition?.toLowerCase() ?? "standard";
-
-  if (edition === "one") {
-    return (
-      <div className="flex flex-col min-h-full dashboard-light">
-        <DashboardOne locale={locale} />
-      </div>
-    );
-  }
 
   // Chargement parallele des donnees avec cache
   const [stats, criticalSensors, activeAlarms, sensorOverview, trendStats] =

@@ -71,8 +71,8 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
             ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
             : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || null,
       },
-      minThreshold: lieu.Consigne_Inf,
-      maxThreshold: lieu.Consigne_Sup,
+      minThreshold: lieu.Tolerance_Surveillance_Inf ?? lieu.Consigne_Inf,
+      maxThreshold: lieu.Tolerance_Surveillance_Sup ?? lieu.Consigne_Sup,
     }))
 
     return apiOk(formatted)

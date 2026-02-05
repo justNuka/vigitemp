@@ -96,7 +96,7 @@ export function ErrorPageLayout({
             <div className="space-y-8">
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 <Logo size="sm" showText={false} />
-                <span className="rounded-full border border-muted/60 bg-muted/30 px-3 py-1">
+                <span className="text-4xl rounded-full border border-muted/60 bg-muted/30 px-3 py-1">
                   {badge ?? t("default_badge", { code })}
                 </span>
               </div>

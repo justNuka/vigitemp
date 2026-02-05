@@ -121,7 +121,7 @@
     "eslint-config-next": "^16.1.1",
     "postcss": "^8",
     "react-email": "5.0.6",
-    "shadcn": "^3.6.3",
+    "shadcn": "^3.8.3",
     "tailwindcss": "^4.0.0",
     "tsx": "^4.21.0",
     "typescript": "^5"

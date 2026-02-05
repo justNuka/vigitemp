@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -14,6 +15,7 @@ namespace Vigitemp_Serveur
 {
     class ThreadServeur
     {
+        private static readonly HttpClient _http = new HttpClient();
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
         private static readonly object _lock = new object();
         private CancellationToken m_cts;
@@ -34,6 +36,12 @@ namespace Vigitemp_Serveur
         private readonly bool _logSettingsCache = GetSettingBool("Vigitemp.Alarms.LogSettingsCache", true);
         private readonly int _schedulerTickMs = GetSettingInt("Vigitemp.Scheduler.TickMs", 5000);
         private readonly bool _logScheduler = GetSettingBool("Vigitemp.Scheduler.Log", true);
+        private readonly int _alarmPollSeconds = GetSettingInt("Vigitemp.Alarms.PollSeconds", 15);
+        private readonly int _alarmPollMaxBatch = GetSettingInt("Vigitemp.Alarms.PollMaxBatch", 50);
+        private readonly object _alarmPollLock = new object();
+        private DateTime _lastAlarmPollUtc = DateTime.MinValue;
+        private int _lastAlarmIdSeen = 0;
+        private DateTime _lastAlarmEndPollLocal = DateTime.MinValue;
 
         private sealed class CachedLieuSettings
         {
@@ -192,6 +200,112 @@ namespace Vigitemp_Serveur
             );
         }
 
+        private void EnsureAlarmCursorInitialized()
+        {
+            if (_lastAlarmIdSeen > 0)
+            {
+                return;
+            }
+
+            try
+            {
+                var lastId = GetDatabase().getLastAlarmIdByServeur(_idServer);
+                _lastAlarmIdSeen = Math.Max(0, lastId);
+                VigitempServeur.Log($"Alarm poll init: lastAlarmId={_lastAlarmIdSeen} server={_idServer}");
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("Alarm poll init error: " + ex.Message);
+            }
+        }
+
+        private void EnsureAlarmEndCursorInitialized()
+        {
+            if (_lastAlarmEndPollLocal != DateTime.MinValue)
+            {
+                return;
+            }
+
+            _lastAlarmEndPollLocal = DateTime.Now;
+            VigitempServeur.Log($"Alarm end poll init: since={_lastAlarmEndPollLocal:O} server={_idServer}");
+        }
+
+        private async Task PollNewAlarmsAsync()
+        {
+            if (_alarmPollSeconds <= 0)
+            {
+                return;
+            }
+
+            var nowUtc = DateTime.UtcNow;
+            if ((nowUtc - _lastAlarmPollUtc).TotalSeconds < _alarmPollSeconds)
+            {
+                return;
+            }
+
+            lock (_alarmPollLock)
+            {
+                if ((nowUtc - _lastAlarmPollUtc).TotalSeconds < _alarmPollSeconds)
+                {
+                    return;
+                }
+                _lastAlarmPollUtc = nowUtc;
+            }
+
+            EnsureAlarmCursorInitialized();
+
+            var newAlarms = GetDatabase().getNewAlarmsSince(_idServer, _lastAlarmIdSeen, _alarmPollMaxBatch);
+            if (newAlarms == null || newAlarms.Count == 0)
+            {
+                return;
+            }
+
+            var maxId = _lastAlarmIdSeen;
+            foreach (var alarm in newAlarms)
+            {
+                if (alarm != null && alarm.IdAlarme > maxId)
+                {
+                    maxId = alarm.IdAlarme;
+                }
+            }
+            _lastAlarmIdSeen = maxId;
+
+            await AlarmWebNotifier.NotifyAlarmBatchAsync(newAlarms);
+
+            var ips_clients = GetDatabase().getPCsClients();
+            for (int i = 0; i < ips_clients.Count; i++)
+            {
+                _ = _http.PostAsync("http://" + ips_clients[i] + ":8000/alarm?action=show", null);
+            }
+        }
+
+        private void PollEndedAlarms()
+        {
+            if (_alarmPollSeconds <= 0)
+            {
+                return;
+            }
+
+            EnsureAlarmEndCursorInitialized();
+
+            var ended = GetDatabase().getEndedAlarmLieuxSince(_idServer, _lastAlarmEndPollLocal, _alarmPollMaxBatch);
+            _lastAlarmEndPollLocal = DateTime.Now;
+
+            if (ended == null || ended.Count == 0)
+            {
+                return;
+            }
+
+            var ips_clients = GetDatabase().getPCsClients();
+            foreach (var idLieu in ended.Distinct())
+            {
+                for (int i = 0; i < ips_clients.Count; i++)
+                {
+                    _ = _http.PostAsync("http://" + ips_clients[i] + ":8000/alarm?action=hide&idLieu=" + idLieu, null);
+                }
+            }
+        }
+
         public void Start()
         {
             VigitempServeur.Log("Starting Thread#" + _idServer + "...");
@@ -342,6 +456,9 @@ namespace Vigitemp_Serveur
                         schedule.InProgress = false;
                     }
                 }
+
+                await PollNewAlarmsAsync();
+                PollEndedAlarms();
             }
             finally
             {

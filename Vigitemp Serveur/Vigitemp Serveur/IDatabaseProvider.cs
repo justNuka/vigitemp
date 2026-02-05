@@ -26,6 +26,9 @@ namespace Vigitemp_Serveur
         bool setNonResponseAlarm(int idLieu, string sondeNumeroSerie, bool isActive);
         AlarmSummary getActiveAlarmSummary(int idLieu);
         bool hasActiveAcknowledgedAlarm(int idLieu, string type);
+        int getLastAlarmIdByServeur(int idServeur);
+        List<AlarmNotificationItem> getNewAlarmsSince(int idServeur, int lastAlarmId, int maxCount);
+        List<int> getEndedAlarmLieuxSince(int idServeur, DateTime sinceLocalTime, int maxCount);
         string getLieuUnite(int idLieu);
         (double, double) getCoeffCalibrageBySerialNumber(string p_serial_number);
         bool writeAuditJournal(string codeJournal, string username, string userProfile, int? idLieu, string commentaire, string commentaireUtilisateur);

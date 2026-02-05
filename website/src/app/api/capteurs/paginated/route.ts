@@ -248,18 +248,24 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
         const unit = location.Derniere_Unite ?? "°C"
         const decimals = location.Derniere_Nb_Decimal ?? null
 
-        return {
-          id: location.Id_Lieu.toString(),
-          name: location.Nom_Lieu,
-          lieuType: location.Type_Lieu ?? null,
-          alarmId,
-          alarmType,
+          const alarmDelayMinutes =
+            location.Retard_Alarme_Haut ??
+            location.Retard_Alarme_Bas ??
+            location.Retard_Alarme_Changement_Consigne ??
+            null
+
+          return {
+            id: location.Id_Lieu.toString(),
+            name: location.Nom_Lieu,
+            lieuType: location.Type_Lieu ?? null,
+            alarmId,
+            alarmType,
           type: "temperature",
           unit,
           decimals,
           currentValue: lastMeasurement?.Valeur ?? null,
-          minThreshold: location.Consigne_Inf ?? 0,
-          maxThreshold: location.Consigne_Sup ?? 25,
+          minThreshold: location.Tolerance_Surveillance_Inf ?? location.Consigne_Inf ?? 0,
+          maxThreshold: location.Tolerance_Surveillance_Sup ?? location.Consigne_Sup ?? 25,
           lastMeasurement: lastMeasurement?.Date_Heure_Mesure ?? null,
           isActive: !location.Est_Archive,
           status,
@@ -275,7 +281,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
             surveillanceDisabled,
             lieuType: location.Type_Lieu ?? null,
             alarmId,
-            alarmDelayMinutes: location.Retard_Alarme_Changement_Consigne ?? null,
+            alarmDelayMinutes,
             isGso: isGso ?? null,
             gsoRssi: location.Derniere_Val_Rssi ?? null,
             gsoTension: location.Derniere_Val_Tension ?? null,

@@ -3,6 +3,9 @@
 import { AdminNavDock } from "@/components/admin-nav-dock";
 import { useAutoLock } from "@/hooks/useAutoLock";
 import PageTransitionWrapper from "@/components/animations/transitions/page-transitions/PageTransitionWrapper";
+import { useLicense } from "@/components/license/license-provider";
+import { usePathname } from "@/i18n/navigation";
+import { stripLocalePrefix } from "@/i18n/pathnames";
 
 export default function AdminLayout({
   children,
@@ -11,6 +14,11 @@ export default function AdminLayout({
 }) {
   // Activer le verrouillage automatique pour toutes les pages protégées
   useAutoLock();
+  const { license } = useLicense();
+  const edition = (license?.edition || "standard").trim().toLowerCase();
+  const pathname = usePathname();
+  const normalizedPathname = stripLocalePrefix(pathname);
+  const showDock = !(edition === "one" && normalizedPathname === "/admin");
 
   // Obtenir l'intervalle de rafraîchissement depuis les paramètres
 
@@ -24,7 +32,7 @@ export default function AdminLayout({
       </main>
       
       {/* Admin Navigation Dock (bottom) */}
-      <AdminNavDock />
+      {showDock ? <AdminNavDock /> : null}
     </div>
   );
 }

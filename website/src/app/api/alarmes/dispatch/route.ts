@@ -7,6 +7,7 @@ import { routing } from "@/i18n/routing"
 import { log } from "@/lib/logger"
 import { randomUUID } from "crypto"
 import { getAppTimezone } from "@/lib/timezone"
+import { revalidateTag } from "next/cache"
 
 const AGENT_PORT = Number.parseInt(process.env.VIGITEMP_AGENT_PORT ?? "8000", 10)
 const AGENT_TIMEOUT_MS = Number.parseInt(process.env.VIGITEMP_AGENT_TIMEOUT_MS ?? "1500", 10)
@@ -233,6 +234,8 @@ export const POST = withLogging(async (req: NextRequest) => {
             Consigne_Inf: true,
             Consigne_Sup_Pre_Alarme: true,
             Consigne_Inf_Pre_Alarme: true,
+            Tolerance_Surveillance_Sup: true,
+            Tolerance_Surveillance_Inf: true,
             Retard_Alarme_Haut: true,
             Retard_Alarme_Bas: true,
             t_site: { select: { Libelle_Site: true } },
@@ -266,9 +269,13 @@ export const POST = withLogging(async (req: NextRequest) => {
       lastValueLabel = valueLabel
       triggeredAtLabel = formatDateTime(alarm.Date_Heure_Debut_Alarme_Vrai ?? alarm.Date_Heure_Debut)
       lastMeasureAtLabel = formatDateTime(alarm.Date_Heure_Derniere_Mesure)
+      const supTolerance =
+        alarm.t_lieu?.Tolerance_Surveillance_Sup ?? alarm.t_lieu?.Consigne_Sup ?? null
+      const infTolerance =
+        alarm.t_lieu?.Tolerance_Surveillance_Inf ?? alarm.t_lieu?.Consigne_Inf ?? null
       const thresholds = [
-        alarm.t_lieu?.Consigne_Sup != null ? `Sup ${alarm.t_lieu?.Consigne_Sup}${alarm.Unite ?? "°C"}` : null,
-        alarm.t_lieu?.Consigne_Inf != null ? `Inf ${alarm.t_lieu?.Consigne_Inf}${alarm.Unite ?? "°C"}` : null,
+        supTolerance != null ? `Sup ${supTolerance}${alarm.Unite ?? "°C"}` : null,
+        infTolerance != null ? `Inf ${infTolerance}${alarm.Unite ?? "°C"}` : null,
       ].filter(Boolean).join(" / ")
       const preAlarms = [
         alarm.t_lieu?.Consigne_Sup_Pre_Alarme != null
@@ -379,6 +386,12 @@ export const POST = withLogging(async (req: NextRequest) => {
     agentTargets: agentResult.attempted,
     agentFailed: agentResult.failed,
   })
+
+  revalidateTag("dashboard-active-alarms", "default")
+  revalidateTag("dashboard-stats", "default")
+  revalidateTag("dashboard-critical-sensors", "default")
+  revalidateTag("dashboard-sensor-overview", "default")
+  revalidateTag("dashboard-alarm-trend", "default")
 
   return apiOk({
     agentTargets: agentResult.attempted,

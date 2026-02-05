@@ -3,16 +3,33 @@
 import { useCallback, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { useAppTimezone } from "@/components/timezone-provider"
-import { AlertTriangle, BookOpen, CheckCircle2, Clock, Database, Users, Cpu } from "lucide-react"
+import {
+  AlertTriangle,
+  BookOpen,
+  CheckCircle2,
+  Clock,
+  Cpu,
+  Database,
+  Gauge,
+  Globe,
+  MapPin,
+  Radio,
+  Ruler,
+  Users,
+  WifiCog,
+  Wrench,
+} from "lucide-react"
 import type { ColumnDef } from "@tanstack/react-table"
 
 import { PageHeader } from "@/components/page-header"
+import { DashboardLinkCard } from "@/components/dashboard-link-card"
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { getAcknowledgmentColumns } from "@/components/data-table/acknowledgment-columns"
 import { getActiveAlarmsColumns } from "@/components/data-table/active-alarms-columns"
 import { getBackupColumns } from "@/components/data-table/backup-columns"
 import { getConnectedUsersColumns } from "@/components/data-table/connected-users-columns"
 import { getSystemLogsColumns } from "@/components/data-table/system-logs-columns"
+import { useLicense } from "@/components/license/license-provider"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -93,6 +110,9 @@ export default function AdminDashboard() {
   const t = useTranslations("adminDashboard")
   const locale = useLocale()
   const timezone = useAppTimezone()
+  const { license } = useLicense()
+  const edition = (license?.edition || "standard").trim().toLowerCase()
+  const isOne = edition === "one"
   const [ackPage, setAckPage] = useState(1)
   const [connectedUsersPage, setConnectedUsersPage] = useState(1)
   const [activeAlarmsPage, setActiveAlarmsPage] = useState(1)
@@ -177,6 +197,68 @@ export default function AdminDashboard() {
     { accessorKey: "Adresse_Sonde", header: t("unassigned.columns.address"), cell: ({ row }) => row.original.Adresse_Sonde || "-" },
     { accessorKey: "Id_Module", header: t("unassigned.columns.module"), cell: ({ row }) => row.original.Id_Module ?? "-" },
   ]
+
+  if (isOne) {
+    const linkCards = [
+      {
+        key: "sondes",
+        href: `/${locale}/admin/sondes`,
+        icon: <Gauge className="h-5 w-5" />,
+      },
+      {
+        key: "modules",
+        href: `/${locale}/admin/modules`,
+        icon: <WifiCog className="h-5 w-5" />,
+      },
+      {
+        key: "etalons",
+        href: `/${locale}/admin/etalons`,
+        icon: <Ruler className="h-5 w-5" />,
+      },
+      {
+        key: "actionneurs",
+        href: `/${locale}/admin/actionneurs`,
+        icon: <Radio className="h-5 w-5" />,
+      },
+      {
+        key: "groupes",
+        href: `/${locale}/admin/groupes`,
+        icon: <Users className="h-5 w-5" />,
+      },
+      {
+        key: "lieux",
+        href: `/${locale}/admin/lieux`,
+        icon: <MapPin className="h-5 w-5" />,
+      },
+      {
+        key: "sites",
+        href: `/${locale}/admin/sites`,
+        icon: <Globe className="h-5 w-5" />,
+      },
+      {
+        key: "outils",
+        href: `/${locale}/admin/outils`,
+        icon: <Wrench className="h-5 w-5" />,
+      },
+    ]
+
+    return (
+      <div className="flex min-h-full flex-col">
+        <PageHeader title={t("title")} />
+        <div className="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
+          {linkCards.map((card) => (
+            <DashboardLinkCard
+              key={card.key}
+              title={t(`links.${card.key}.title`)}
+              description={t(`links.${card.key}.description`)}
+              href={card.href}
+              icon={card.icon}
+            />
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   if (isInitialLoading) {
     return (

@@ -1,15 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchAlarmsPage, useAlarms } from "@/hooks/useAlarms";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowDown, ArrowUp, WifiOff } from "lucide-react";
+import { ArrowDown, ArrowUp, RefreshCw, WifiOff } from "lucide-react";
 import { useAppTimezone } from "@/components/timezone-provider";
+import { cn } from "@/lib/utils";
+import { alarmsApi } from "@/lib/api";
+import { toast } from "sonner";
 
 interface AlarmRow {
   Id_Alarme: number;
@@ -42,22 +46,14 @@ const getAlarmStatus = (
   return { label: t("status.active"), variant: "destructive" as const };
 };
 
-const getAcknowledgmentStatus = (
-  t: ReturnType<typeof useTranslations>,
-  estAcquittee: boolean | null
-) => {
-  if (estAcquittee === null) return { label: t("ack_status.na"), variant: "secondary" as const };
-  return estAcquittee
-    ? { label: t("ack_status.acknowledged"), variant: "default" as const }
-    : { label: t("ack_status.not_acknowledged"), variant: "outline" as const };
-};
-
 export function AlarmsClientTanStack() {
   const t = useTranslations("alarmsTanstack");
+  const tButtons = useTranslations("buttons");
   const locale = useLocale();
   const timezone = useAppTimezone();
   const queryClient = useQueryClient();
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 });
+  const [isRefreshing, startRefresh] = useTransition();
   const page = pagination.pageIndex + 1;
   const limit = pagination.pageSize;
 
@@ -76,6 +72,19 @@ export function AlarmsClientTanStack() {
     });
   };
 
+  const acknowledgeMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return alarmsApi.acknowledge(String(id), "");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["alarms"] });
+      toast.success(t("acknowledge_success"));
+    },
+    onError: () => {
+      toast.error(t("acknowledge_error"));
+    },
+  });
+
   const columns = useMemo<ColumnDef<AlarmRow>[]>(
     () => [
       {
@@ -85,8 +94,8 @@ export function AlarmsClientTanStack() {
           const type = row.getValue("Type") as AlarmRow["Type"];
           if (type === "no-response") {
             return (
-              <div className="p-1.5 rounded-md w-fit bg-slate-900/10">
-                <WifiOff className="h-4 w-4 text-slate-900" />
+              <div className="p-1.5 rounded-md w-fit bg-black/10">
+                <WifiOff className="h-4 w-4 text-black" />
               </div>
             );
           }
@@ -101,8 +110,8 @@ export function AlarmsClientTanStack() {
 
           if (type === "low") {
             return (
-              <div className="p-1.5 rounded-md w-fit bg-info/10">
-                <ArrowDown className="h-4 w-4 text-info" />
+              <div className="p-1.5 rounded-md w-fit bg-[#26A5DA]/10">
+                <ArrowDown className="h-4 w-4 text-[#26A5DA]" />
               </div>
             );
           }
@@ -201,19 +210,32 @@ export function AlarmsClientTanStack() {
         cell: ({ row }) => formatDateTime(row.getValue("Date_Heure_Fin")),
       },
       {
-        accessorKey: "Est_Acquittee",
-        header: t("columns.acknowledged"),
+        id: "actions",
+        header: () => <div className="text-center">{tButtons("acknowledge")}</div>,
         meta: {
           headerClassName: "!border-l border-white/25",
           cellClassName: "!border-l border-border",
         },
         cell: ({ row }) => {
-          const status = getAcknowledgmentStatus(t, row.getValue("Est_Acquittee"));
-          return <Badge variant={status.variant}>{status.label}</Badge>;
+          const alarm = row.original;
+          if (alarm.Est_Acquittee) return null;
+          return (
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => acknowledgeMutation.mutate(alarm.Id_Alarme)}
+                disabled={acknowledgeMutation.isPending}
+                className="border-amber-300 bg-amber-300 text-slate-900 hover:bg-amber-200 hover:text-slate-900 dark:border-warning dark:bg-warning/20 dark:text-warning-foreground dark:hover:bg-warning/30"
+              >
+                {tButtons("acknowledge")}
+              </Button>
+            </div>
+          );
         },
       },
     ],
-    [t, localeTag, timezone]
+    [acknowledgeMutation, t, tButtons, localeTag, timezone]
   );
 
   const { data, isLoading, isFetching } = useAlarms({ page, limit });
@@ -248,6 +270,28 @@ export function AlarmsClientTanStack() {
     Count_30_Days: alarm.Count_30_Days ?? null,
   }));
 
+  const handleRefresh = () => {
+    startRefresh(() => {
+      queryClient.invalidateQueries({ queryKey: ["alarms"] });
+    });
+  };
+
+  const refreshButton = (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleRefresh}
+      className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 border-primary/40"
+      disabled={isRefreshing}
+      data-testid="button-refresh"
+    >
+      <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+      <span className="hidden sm:inline">
+        {isRefreshing ? t("refresh.loading") : t("refresh.label")}
+      </span>
+    </Button>
+  );
+
   return (
     <Card>
       <CardHeader>
@@ -263,6 +307,7 @@ export function AlarmsClientTanStack() {
           maxHeight="60vh"
           isLoading={isLoading || isFetching}
           emptyMessage={t("empty")}
+          toolbarRight={refreshButton}
           manualPagination
           pageCount={pageCount}
           totalRows={total}

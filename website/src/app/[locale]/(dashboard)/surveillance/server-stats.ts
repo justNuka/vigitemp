@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { unstable_noStore } from "next/cache"
 
 export interface DashboardStats {
   total: number
@@ -14,6 +15,7 @@ export interface DashboardStats {
  * - `critical` = alarme
  */
 export async function ServerDashboardStats(): Promise<DashboardStats> {
+  unstable_noStore()
   try {
     const locations = await prisma.t_lieu.findMany({
       where: { Est_Archive: false },

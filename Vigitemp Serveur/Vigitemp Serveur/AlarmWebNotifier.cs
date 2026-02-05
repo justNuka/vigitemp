@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Globalization;
 using System.Net.Http;
@@ -63,6 +64,81 @@ namespace Vigitemp_Serveur
                 VigitempServeur.Log("AlarmWebNotifier: echec envoi notification: " + ex.Message);
                 return;
             }
+        }
+
+        public static async Task NotifyAlarmBatchAsync(IReadOnlyList<AlarmNotificationItem> alarms)
+        {
+            try
+            {
+                if (alarms == null || alarms.Count == 0)
+                {
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
+                {
+                    VigitempServeur.Log("AlarmWebNotifier: configuration manquante (BaseUrl/Secret)");
+                    return;
+                }
+
+                var url = Combine(BaseUrl, "/api/alarmes/dispatch");
+                var title = alarms.Count == 1 ? "Alarme Vigitemp" : $"Alarmes Vigitemp ({alarms.Count})";
+
+                var lines = new List<string>();
+                var maxLines = Math.Min(alarms.Count, 5);
+                for (int i = 0; i < maxLines; i++)
+                {
+                    var alarm = alarms[i];
+                    var type = string.IsNullOrWhiteSpace(alarm.Type) ? "?" : alarm.Type;
+                    var valueText = alarm.Valeur.HasValue
+                        ? alarm.Valeur.Value.ToString("0.##", CultureInfo.InvariantCulture)
+                        : "-";
+                    var unite = string.IsNullOrWhiteSpace(alarm.Unite) ? "" : (" " + alarm.Unite);
+                    lines.Add($"Lieu {alarm.IdLieu} ({type}) {valueText}{unite}".Trim());
+                }
+
+                if (alarms.Count > maxLines)
+                {
+                    lines.Add($"et {alarms.Count - maxLines} autre(s)...");
+                }
+
+                var body = string.Join("\n", lines);
+
+                var payload =
+                    "{" +
+                    "\"title\":\"" + title + "\"," +
+                    "\"body\":\"" + EscapeJson(body) + "\"," +
+                    "\"url\":\"/surveillance\"" +
+                    "}";
+
+                var req = new HttpRequestMessage(HttpMethod.Post, url);
+                req.Headers.Add("x-vigitemp-secret", Secret);
+                req.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+                VigitempServeur.Log(
+                    "AlarmWebNotifier: envoi notification web batch " +
+                    "count=" + alarms.Count +
+                    " url=" + url);
+
+                var response = await _http.SendAsync(req);
+                VigitempServeur.Log(
+                    "AlarmWebNotifier: notification batch envoyee (status=" + (int)response.StatusCode + ") " +
+                    "count=" + alarms.Count);
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("AlarmWebNotifier: echec envoi notification batch: " + ex.Message);
+            }
+        }
+
+        private static string EscapeJson(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return "";
+            return value
+                .Replace("\\", "\\\\")
+                .Replace("\"", "\\\"")
+                .Replace("\r", "\\r")
+                .Replace("\n", "\\n");
         }
 
         private static string Combine(string baseUrl, string path)

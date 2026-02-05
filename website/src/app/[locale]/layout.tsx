@@ -6,7 +6,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "sonner";
 import { Providers } from "@/components/providers";
-import "./globals.css";
+import "../../app/globals.css";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
@@ -124,7 +124,7 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
     return notFound();
   }
   
-  // Enable static rendering - CRITICAL!
+  // Enable static rendering
   setRequestLocale(locale);
   return (
     <html lang={locale} suppressHydrationWarning>

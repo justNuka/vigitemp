@@ -11,6 +11,7 @@ import { useCalibrations } from "@/hooks/useCalibrations";
 import { getJson } from "@/lib/http";
 
 import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -93,6 +94,11 @@ export function ProbesClient() {
           <div className="flex items-center justify-between">
             <CardTitle>{t('title', { count: probes?.length || 0 })}</CardTitle>
             <div className="flex gap-2">
+              <Button size="sm" className="gap-2" asChild>
+                <Link href="/admin/sondes/ajustage-import">
+                  {t("actions.create_from_adjustment_file")}
+                </Link>
+              </Button>
               <Button
                 size="sm"
                 className="gap-2"

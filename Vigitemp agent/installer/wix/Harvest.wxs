@@ -11,131 +11,131 @@
   <Fragment>
     <DirectoryRef Id="INSTALLFOLDER">
 <Component Id="cmp_2" Guid="*">
-  <File Id="fil_2" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\BouncyCastle.Cryptography.dll" KeyPath="yes" />
+  <File Id="fil_2" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\BouncyCastle.Cryptography.dll" KeyPath="yes" />
 </Component>
 <Component Id="cmp_3" Guid="*">
-  <File Id="fil_3" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\BouncyCastle.Cryptography.xml" KeyPath="yes" />
+  <File Id="fil_3" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\BouncyCastle.Cryptography.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_4" Guid="*">
-  <File Id="fil_4" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\Google.Protobuf.dll" KeyPath="yes" />
+  <File Id="fil_4" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\Google.Protobuf.dll" KeyPath="yes" />
 </Component>
 <Component Id="cmp_5" Guid="*">
-  <File Id="fil_5" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\Google.Protobuf.pdb" KeyPath="yes" />
+  <File Id="fil_5" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\Google.Protobuf.pdb" KeyPath="yes" />
 </Component>
 <Component Id="cmp_6" Guid="*">
-  <File Id="fil_6" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\Google.Protobuf.xml" KeyPath="yes" />
+  <File Id="fil_6" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\Google.Protobuf.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_7" Guid="*">
-  <File Id="fil_7" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\K4os.Compression.LZ4.dll" KeyPath="yes" />
+  <File Id="fil_7" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\K4os.Compression.LZ4.dll" KeyPath="yes" />
 </Component>
 <Component Id="cmp_8" Guid="*">
-  <File Id="fil_8" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\K4os.Compression.LZ4.Streams.dll" KeyPath="yes" />
+  <File Id="fil_8" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\K4os.Compression.LZ4.Streams.dll" KeyPath="yes" />
 </Component>
 <Component Id="cmp_9" Guid="*">
-  <File Id="fil_9" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\K4os.Compression.LZ4.Streams.xml" KeyPath="yes" />
+  <File Id="fil_9" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\K4os.Compression.LZ4.Streams.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_10" Guid="*">
-  <File Id="fil_10" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\K4os.Compression.LZ4.xml" KeyPath="yes" />
+  <File Id="fil_10" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\K4os.Compression.LZ4.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_11" Guid="*">
-  <File Id="fil_11" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\K4os.Hash.xxHash.dll" KeyPath="yes" />
+  <File Id="fil_11" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\K4os.Hash.xxHash.dll" KeyPath="yes" />
 </Component>
 <Component Id="cmp_12" Guid="*">
-  <File Id="fil_12" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\K4os.Hash.xxHash.xml" KeyPath="yes" />
+  <File Id="fil_12" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\K4os.Hash.xxHash.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_13" Guid="*">
-  <File Id="fil_13" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\Microsoft.Bcl.AsyncInterfaces.dll" KeyPath="yes" />
+  <File Id="fil_13" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\Microsoft.Bcl.AsyncInterfaces.dll" KeyPath="yes" />
 </Component>
 <Component Id="cmp_14" Guid="*">
-  <File Id="fil_14" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\Microsoft.Bcl.AsyncInterfaces.xml" KeyPath="yes" />
+  <File Id="fil_14" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\Microsoft.Bcl.AsyncInterfaces.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_15" Guid="*">
-  <File Id="fil_15" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\MySql.Data.dll" KeyPath="yes" />
+  <File Id="fil_15" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\MySql.Data.dll" KeyPath="yes" />
 </Component>
 <Component Id="cmp_16" Guid="*">
-  <File Id="fil_16" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\MySql.Data.xml" KeyPath="yes" />
+  <File Id="fil_16" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\MySql.Data.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_17" Guid="*">
-  <File Id="fil_17" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\Newtonsoft.Json.dll" KeyPath="yes" />
+  <File Id="fil_17" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\Newtonsoft.Json.dll" KeyPath="yes" />
 </Component>
 <Component Id="cmp_18" Guid="*">
-  <File Id="fil_18" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\Newtonsoft.Json.xml" KeyPath="yes" />
+  <File Id="fil_18" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\Newtonsoft.Json.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_20" Guid="*">
-  <File Id="fil_20" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Buffers.dll" KeyPath="yes" />
+  <File Id="fil_20" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Buffers.dll" KeyPath="yes" />
 </Component>
 <Component Id="cmp_21" Guid="*">
-  <File Id="fil_21" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Buffers.xml" KeyPath="yes" />
+  <File Id="fil_21" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Buffers.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_22" Guid="*">
-  <File Id="fil_22" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Configuration.ConfigurationManager.dll" KeyPath="yes" />
+  <File Id="fil_22" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Configuration.ConfigurationManager.dll" KeyPath="yes" />
 </Component>
 <Component Id="cmp_23" Guid="*">
-  <File Id="fil_23" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Configuration.ConfigurationManager.xml" KeyPath="yes" />
+  <File Id="fil_23" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Configuration.ConfigurationManager.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_24" Guid="*">
-  <File Id="fil_24" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Diagnostics.DiagnosticSource.dll" KeyPath="yes" />
+  <File Id="fil_24" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Diagnostics.DiagnosticSource.dll" KeyPath="yes" />
 </Component>
 <Component Id="cmp_25" Guid="*">
-  <File Id="fil_25" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Diagnostics.DiagnosticSource.xml" KeyPath="yes" />
+  <File Id="fil_25" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Diagnostics.DiagnosticSource.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_26" Guid="*">
-  <File Id="fil_26" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.IO.Pipelines.dll" KeyPath="yes" />
+  <File Id="fil_26" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.IO.Pipelines.dll" KeyPath="yes" />
 </Component>
 <Component Id="cmp_27" Guid="*">
-  <File Id="fil_27" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.IO.Pipelines.xml" KeyPath="yes" />
+  <File Id="fil_27" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.IO.Pipelines.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_28" Guid="*">
-  <File Id="fil_28" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Memory.dll" KeyPath="yes" />
+  <File Id="fil_28" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Memory.dll" KeyPath="yes" />
 </Component>
 <Component Id="cmp_29" Guid="*">
-  <File Id="fil_29" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Memory.xml" KeyPath="yes" />
+  <File Id="fil_29" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Memory.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_30" Guid="*">
-  <File Id="fil_30" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Numerics.Vectors.dll" KeyPath="yes" />
+  <File Id="fil_30" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Numerics.Vectors.dll" KeyPath="yes" />
 </Component>
 <Component Id="cmp_31" Guid="*">
-  <File Id="fil_31" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Numerics.Vectors.xml" KeyPath="yes" />
+  <File Id="fil_31" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Numerics.Vectors.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_32" Guid="*">
-  <File Id="fil_32" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Runtime.CompilerServices.Unsafe.dll" KeyPath="yes" />
+  <File Id="fil_32" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Runtime.CompilerServices.Unsafe.dll" KeyPath="yes" />
 </Component>
 <Component Id="cmp_33" Guid="*">
-  <File Id="fil_33" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Runtime.CompilerServices.Unsafe.xml" KeyPath="yes" />
+  <File Id="fil_33" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Runtime.CompilerServices.Unsafe.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_34" Guid="*">
-  <File Id="fil_34" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Threading.Tasks.Extensions.dll" KeyPath="yes" />
+  <File Id="fil_34" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Threading.Tasks.Extensions.dll" KeyPath="yes" />
 </Component>
 <Component Id="cmp_35" Guid="*">
-  <File Id="fil_35" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Threading.Tasks.Extensions.xml" KeyPath="yes" />
+  <File Id="fil_35" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Threading.Tasks.Extensions.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_36" Guid="*">
-  <File Id="fil_36" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.application" KeyPath="yes" />
+  <File Id="fil_36" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.application" KeyPath="yes" />
 </Component>
 <Component Id="cmp_37" Guid="*">
-  <File Id="fil_37" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.exe" KeyPath="yes" />
+  <File Id="fil_37" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.exe" KeyPath="yes" />
 </Component>
 <Component Id="cmp_38" Guid="*">
-  <File Id="fil_38" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.exe.config" KeyPath="yes" />
+  <File Id="fil_38" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.exe.config" KeyPath="yes" />
 </Component>
 <Component Id="cmp_39" Guid="*">
-  <File Id="fil_39" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.exe.manifest" KeyPath="yes" />
+  <File Id="fil_39" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.exe.manifest" KeyPath="yes" />
 </Component>
 <Component Id="cmp_40" Guid="*">
-  <File Id="fil_40" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.pdb" KeyPath="yes" />
+  <File Id="fil_40" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.pdb" KeyPath="yes" />
 </Component>
 <Component Id="cmp_41" Guid="*">
-  <File Id="fil_41" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\ZstdSharp.dll" KeyPath="yes" />
+  <File Id="fil_41" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\ZstdSharp.dll" KeyPath="yes" />
 </Component>
 </DirectoryRef>
 <DirectoryRef Id="DIR_2">
 <Component Id="cmp_19" Guid="*">
-  <File Id="fil_19" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\Resources\captive_portal_16dp_D40D33_FILL0_wght400_GRAD0_opsz20.png" KeyPath="yes" />
+  <File Id="fil_19" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\Resources\captive_portal_16dp_D40D33_FILL0_wght400_GRAD0_opsz20.png" KeyPath="yes" />
 </Component>
 </DirectoryRef>
 <DirectoryRef Id="DIR_1">
 <Component Id="cmp_1" Guid="*">
-  <File Id="fil_1" Source="C:\Vigitemp project\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\app.publish\VigitempAgent.exe" KeyPath="yes" />
+  <File Id="fil_1" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\app.publish\VigitempAgent.exe" KeyPath="yes" />
 </Component>
 </DirectoryRef>
   </Fragment>

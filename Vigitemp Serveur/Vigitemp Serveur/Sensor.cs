@@ -303,33 +303,7 @@ _lowAlarmStateByLieu[m_idLieu] = lowEval.IsActive;
 
             if (!prevAlarm && alarmActive)
             {
-                int? alarmId = null;
-                try
-                {
-                    var summary = ths.GetDatabase().getActiveAlarmSummary(m_idLieu);
-                    if (summary != null)
-                    {
-                        alarmId = summary.IdAlarme;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    VigitempServeur.Log("getActiveAlarmSummary error: " + ex.Message);
-                }
-
-                if (valueForNotify.HasValue || alarmId.HasValue)
-                {
-                    _ = AlarmWebNotifier.NotifyAlarmAsync(
-                        m_idLieu,
-                        valueForNotify ?? 0d,
-                        alarmId);
-                }
-
-                var ips_clients = ths.GetDatabase().getPCsClients();
-                for (int i = 0; i < ips_clients.Count; i++)
-                {
-                    _ = client.PostAsync("http://" + ips_clients[i] + ":8000/alarm?action=show&idLieu=" + m_idLieu, null);
-                }
+                // Notifications dispatchées via le poll d'alarme (évite les doublons et couvre les sondes GSO).
             }
             else if (prevAlarm && !alarmActive)
             {

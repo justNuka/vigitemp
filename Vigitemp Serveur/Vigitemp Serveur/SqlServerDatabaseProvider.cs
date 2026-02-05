@@ -289,14 +289,37 @@ namespace Vigitemp_Serveur
                 return default(DateTime);
             }
         }
+
+        private static float GetFloatOrDefault(object value, float defaultValue = 0f)
+        {
+            try
+            {
+                if (value == null || value == DBNull.Value) return defaultValue;
+                var raw = value.ToString();
+                if (string.IsNullOrWhiteSpace(raw)) return defaultValue;
+                if (float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed))
+                {
+                    return parsed;
+                }
+                if (float.TryParse(raw, NumberStyles.Float, CultureInfo.CurrentCulture, out parsed))
+                {
+                    return parsed;
+                }
+                return defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
         private LieuAlarmSettings ReadLieuAlarmSettingsV2(int idLieu)
         {
             var cmd = CreateCommand(
                 _connectionMain,
                 "SELECT " +
                 "Id_Lieu, " +
-                "ISNULL(Tolerance_Surveillance_Inf, Consigne_Inf) as Consigne_Inf, Est_Consigne_Inf_Active, Retard_Alarme_Bas, Consigne_Inf_Pre_Alarme, Est_Consigne_Inf_Pre_Alarme_Active, " +
-                "ISNULL(Tolerance_Surveillance_Sup, Consigne_Sup) as Consigne_Sup, Est_Consigne_Sup_Active, Retard_Alarme_Haut, Consigne_Sup_Pre_Alarme, Est_Consigne_Sup_Pre_Alarme_Active, " +
+                "Tolerance_Surveillance_Inf as Consigne_Inf, Est_Consigne_Inf_Active, Retard_Alarme_Bas, Consigne_Inf_Pre_Alarme, Est_Consigne_Inf_Pre_Alarme_Active, " +
+                "Tolerance_Surveillance_Sup as Consigne_Sup, Est_Consigne_Sup_Active, Retard_Alarme_Haut, Consigne_Sup_Pre_Alarme, Est_Consigne_Sup_Pre_Alarme_Active, " +
                 "Retard_Non_Reponse " +
                 "FROM t_lieu WHERE Id_Lieu = @idLieu;");
             cmd.Parameters.AddWithValue("@idLieu", idLieu);
@@ -452,8 +475,8 @@ namespace Vigitemp_Serveur
                     using (var cmdMain = CreateCommand(
                         _connectionMain,
                         "SELECT Frequence, Consigne, " +
-                        "ISNULL(Tolerance_Surveillance_Sup, Consigne_Sup) as Consigne_Sup, " +
-                        "ISNULL(Tolerance_Surveillance_Inf, Consigne_Inf) as Consigne_Inf, " +
+                        "Tolerance_Surveillance_Sup as Consigne_Sup, " +
+                        "Tolerance_Surveillance_Inf as Consigne_Inf, " +
                         "t_module.Id_Serveur, Nom_Lieu, Id_Lieu, t_lieu.Sonde_Numero_Serie, t_sonde.Id_Sonde FROM t_lieu " +
                             "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                             "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
@@ -473,9 +496,9 @@ namespace Vigitemp_Serveur
 
                             idSonde = (int)reader["Id_Sonde"];
                             idLieu = (int)reader["Id_Lieu"];
-                            consigne = float.Parse(reader["Consigne"].ToString());
-                            consigneSup = float.Parse(reader["Consigne_Sup"].ToString());
-                            consigneInf = float.Parse(reader["Consigne_Inf"].ToString());
+                            consigne = GetFloatOrDefault(reader["Consigne"]);
+                            consigneSup = GetFloatOrDefault(reader["Consigne_Sup"]);
+                            consigneInf = GetFloatOrDefault(reader["Consigne_Inf"]);
                             frequence = (int)reader["Frequence"];
                             idServeur = reader["Id_Serveur"];
                         }
@@ -1518,6 +1541,159 @@ namespace Vigitemp_Serveur
                     CloseConnexion();
                     VigitempServeur.Log("(hasActiveAcknowledgedAlarm MSSQL) SQL Erreur: " + ex.Message);
                     return false;
+                }
+            }
+        }
+
+        public int getLastAlarmIdByServeur(int idServeur)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!InitConnexion())
+                    {
+                        return 0;
+                    }
+
+                    using (var cmd = CreateCommand(
+                        _connectionMain,
+                        "SELECT MAX(a.Id_Alarme) " +
+                        "FROM t_alarme a " +
+                        "INNER JOIN t_lieu l ON a.Id_Lieu = l.Id_Lieu " +
+                        "INNER JOIN t_sonde s ON l.Sonde_Numero_Serie = s.Sonde_Numero_Serie " +
+                        "INNER JOIN t_module m ON s.Id_Module = m.Id_Module " +
+                        "WHERE m.Id_Serveur = @idServeur;"))
+                    {
+                        cmd.Parameters.AddWithValue("@idServeur", idServeur);
+                        var result = cmd.ExecuteScalar();
+                        CloseConnexion();
+                        if (result == null || result == DBNull.Value) return 0;
+                        return Convert.ToInt32(result);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    CloseConnexion();
+                    VigitempServeur.Log("(getLastAlarmIdByServeur MSSQL) SQL Erreur: " + ex.Message);
+                    return 0;
+                }
+            }
+        }
+
+        public List<AlarmNotificationItem> getNewAlarmsSince(int idServeur, int lastAlarmId, int maxCount)
+        {
+            lock (_lock)
+            {
+                var list = new List<AlarmNotificationItem>();
+                try
+                {
+                    if (!InitConnexion())
+                    {
+                        return list;
+                    }
+
+                    var limit = Math.Max(1, maxCount);
+                    using (var cmd = CreateCommand(
+                        _connectionMain,
+                        "SELECT TOP (@limit) a.Id_Alarme, a.Id_Lieu, a.Type, a.Valeur, a.Unite, a.Date_Heure_Debut " +
+                        "FROM t_alarme a " +
+                        "INNER JOIN t_lieu l ON a.Id_Lieu = l.Id_Lieu " +
+                        "INNER JOIN t_sonde s ON l.Sonde_Numero_Serie = s.Sonde_Numero_Serie " +
+                        "INNER JOIN t_module m ON s.Id_Module = m.Id_Module " +
+                        "WHERE a.Id_Alarme > @lastId " +
+                        "AND a.Est_Alarme_Vrai = 1 " +
+                        "AND m.Id_Serveur = @idServeur " +
+                        "ORDER BY a.Id_Alarme ASC;"))
+                    {
+                        cmd.Parameters.AddWithValue("@limit", limit);
+                        cmd.Parameters.AddWithValue("@lastId", lastAlarmId);
+                        cmd.Parameters.AddWithValue("@idServeur", idServeur);
+
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                var id = Convert.ToInt32(reader["Id_Alarme"]);
+                                var idLieu = Convert.ToInt32(reader["Id_Lieu"]);
+                                var type = reader["Type"] == DBNull.Value ? null : reader["Type"].ToString();
+                                var valeur = GetNullableDouble(reader, "Valeur");
+                                var unite = reader["Unite"] == DBNull.Value ? null : reader["Unite"].ToString();
+                                var dateDebut = reader["Date_Heure_Debut"] == DBNull.Value
+                                    ? (DateTime?)null
+                                    : Convert.ToDateTime(reader["Date_Heure_Debut"]);
+
+                                list.Add(new AlarmNotificationItem(
+                                    id,
+                                    idLieu,
+                                    type,
+                                    valeur,
+                                    unite,
+                                    dateDebut));
+                            }
+                        }
+                    }
+
+                    CloseConnexion();
+                    return list;
+                }
+                catch (Exception ex)
+                {
+                    CloseConnexion();
+                    VigitempServeur.Log("(getNewAlarmsSince MSSQL) SQL Erreur: " + ex.Message);
+                    return list;
+                }
+            }
+        }
+
+        public List<int> getEndedAlarmLieuxSince(int idServeur, DateTime sinceLocalTime, int maxCount)
+        {
+            lock (_lock)
+            {
+                var list = new List<int>();
+                try
+                {
+                    if (!InitConnexion())
+                    {
+                        return list;
+                    }
+
+                    var limit = Math.Max(1, maxCount);
+                    using (var cmd = CreateCommand(
+                        _connectionMain,
+                        "SELECT DISTINCT TOP (@limit) a.Id_Lieu " +
+                        "FROM t_alarme a " +
+                        "INNER JOIN t_lieu l ON a.Id_Lieu = l.Id_Lieu " +
+                        "INNER JOIN t_sonde s ON l.Sonde_Numero_Serie = s.Sonde_Numero_Serie " +
+                        "INNER JOIN t_module m ON s.Id_Module = m.Id_Module " +
+                        "WHERE a.Date_Heure_Fin IS NOT NULL " +
+                        "AND a.Date_Heure_Fin > @since " +
+                        "AND m.Id_Serveur = @idServeur " +
+                        "AND NOT EXISTS (SELECT 1 FROM t_alarme x WHERE x.Id_Lieu = a.Id_Lieu AND x.Date_Heure_Fin IS NULL) " +
+                        "ORDER BY a.Date_Heure_Fin ASC;"))
+                    {
+                        cmd.Parameters.AddWithValue("@limit", limit);
+                        cmd.Parameters.AddWithValue("@since", sinceLocalTime);
+                        cmd.Parameters.AddWithValue("@idServeur", idServeur);
+
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                var idLieu = Convert.ToInt32(reader["Id_Lieu"]);
+                                list.Add(idLieu);
+                            }
+                        }
+                    }
+
+                    CloseConnexion();
+                    return list;
+                }
+                catch (Exception ex)
+                {
+                    CloseConnexion();
+                    VigitempServeur.Log("(getEndedAlarmLieuxSince MSSQL) SQL Erreur: " + ex.Message);
+                    return list;
                 }
             }
         }

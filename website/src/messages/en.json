@@ -40,7 +40,7 @@
       "lastWeek": "Last week",
       "thisMonth": "This month",
       "module_empty": "No module",
-      "offset_label": "Probe offset",
+      "offset_label": "Sensor offset",
       "offset_placeholder": "0",
       "offset_hint": "Leave empty to use 0."
     }
@@ -60,7 +60,7 @@
     }
   },
   "dock": {
-    "sondes": "Probes",
+    "sondes": "Sensors",
     "modules": "Modules",
     "lieux": "Locations",
     "sites": "Sites",
@@ -237,7 +237,7 @@
       "empty": "No alarms",
       "columns": {
         "type": "Type",
-        "location": "Location / Probe",
+        "location": "Location / Sensor",
         "last_value": "Last value",
         "thresholds": "Upper/Lower thresholds",
         "triggered_at": "Triggered",
@@ -321,10 +321,10 @@
   },
   "surveillance": {
     "title": "Monitoring",
-    "description": "Real-time monitoring of probes and sensors",
+    "description": "Real-time monitoring of sensors and sensors",
     "meta": {
       "title": "Monitoring - Vigitemp",
-      "description": "Real-time monitoring of probes and sensors"
+      "description": "Real-time monitoring of sensors and sensors"
     },
     "filters": {
       "sites": {
@@ -346,7 +346,7 @@
     },
     "load_more": "Load more",
     "footer": {
-      "count": "{count, plural, one {# probe} other {# probes}}",
+      "count": "{count, plural, one {# sensor} other {# sensors}}",
       "total": " out of {total} total"
     },
     "grid": {
@@ -357,7 +357,7 @@
       "toggle_active_first": "Show monitoring locations first",
       "disabled_badge": "Monitoring disabled",
       "disabled_until": "Monitoring disabled until {date}",
-      "empty_title": "No probes",
+      "empty_title": "No sensors",
       "unknown_site": "Unknown site",
       "no_group": "No group"
     },
@@ -374,7 +374,7 @@
     },
     "placeholders": {
       "na": "N/A",
-      "no_probe": "No probe"
+      "no_probe": "No sensor"
     },
     "types": {
       "bain_marie": "Water bath",
@@ -403,7 +403,7 @@
     },
     "general": {
       "sections": {
-        "probe": "Probe",
+        "probe": "Sensor",
         "setpoints": "Setpoints"
       },
       "labels": {
@@ -415,8 +415,8 @@
         "monitoring_disable": "Disable monitoring",
         "site": "Site",
         "groups": "Group(s)",
-        "probe_select": "Probe selection",
-        "probe_state": "Probe status",
+        "probe_select": "Sensor selection",
+        "probe_state": "Sensor status",
         "setpoint": "Setpoint",
         "frequency": "Measurement frequency (min)",
         "upper_enable": "Enable upper setpoint",
@@ -438,9 +438,9 @@
         "site_empty": "No site",
         "groups": "Select...",
         "groups_search": "Search a group...",
-        "probe": "Choose a probe",
-        "probe_search": "Search a probe...",
-        "probe_empty": "No probe",
+        "probe": "Choose a sensor",
+        "probe_search": "Search a sensor...",
+        "probe_empty": "No sensor",
         "auto": "Automatic",
         "numeric": "0.0",
         "frequency": "15",
@@ -454,16 +454,16 @@
         "autre": "Other"
       },
       "options": {
-        "no_probe": "No probe"
+        "no_probe": "No sensor"
       },
       "tooltips": {
-        "frequency_gso": "Frequency is fixed to 15 minutes for GSO probes."
+        "frequency_gso": "Frequency is fixed to 15 minutes for GSO sensors."
       },
       "group_fallback": "Group {id}"
     },
     "metrology": {
       "sections": {
-        "probe": "Probe",
+        "probe": "Sensor",
         "setpoints": "Setpoints"
       },
       "labels": {
@@ -492,15 +492,15 @@
         "option": {
           "quart": {
             "title": "MPE follows the quarter rule",
-            "description": "The probe MPE is set by default to one quarter of the equipment MPE"
+            "description": "The sensor MPE is set by default to one quarter of the equipment MPE"
           },
           "manuel": {
             "title": "MPE entered manually",
-            "description": "In manual entry, the probe MPE must be less than or equal to one quarter of the equipment MPE"
+            "description": "In manual entry, the sensor MPE must be less than or equal to one quarter of the equipment MPE"
           },
           "uncertainties": {
             "title": "Including usage uncertainties",
-            "description": "Usage uncertainties are calculated during probe calibration and differ for each probe"
+            "description": "Usage uncertainties are calculated during sensor calibration and differ for each sensor"
           },
           "na": "Not applicable"
         }
@@ -533,7 +533,7 @@
     "archive_blocked": {
       "title": "Archive not possible",
       "default": "This module is still linked to other items.",
-      "detail": "{count, plural, one {This module is linked to {count} probe.} other {This module is linked to {count} probes.}}"
+      "detail": "{count, plural, one {This module is linked to {count} sensor.} other {This module is linked to {count} sensors.}}"
     },
     "toast": {
       "archive_error": "Error while archiving"
@@ -584,10 +584,10 @@
       "serial": "Serial number",
       "location": "Location",
       "port": "Port",
-      "probes_count": "Probe count",
+      "probes_count": "Sensors count",
       "server": "Server"
     },
-    "probes_count_value": "{count, plural, one {{count} probe} other {{count} probes}}",
+    "probes_count_value": "{count, plural, one {{count} sensor} other {{count} sensors}}",
     "search_placeholder": "Serial number, location...",
     "empty": "No modules found"
   },
@@ -721,10 +721,10 @@
   },
   "toolsTestConnection": {
     "table": {
-      "title": "Probes",
-      "count": "{count, plural, one {{count} probe} other {{count} probes}}",
-      "search_placeholder": "Search a probe...",
-      "empty": "No probes available",
+      "title": "Sensors",
+      "count": "{count, plural, one {{count} sensor} other {{count} sensors}}",
+      "search_placeholder": "Search a sensor...",
+      "empty": "No sensors available",
       "actions": {
         "run_tests": "Run tests",
         "testing": "Testing...",
@@ -734,7 +734,7 @@
         "reset": "Reset states"
       },
       "columns": {
-        "probe": "Probe",
+        "probe": "Sensor",
         "module": "Module",
         "relay1": "Relay 1",
         "relay2": "Relay 2",
@@ -749,16 +749,16 @@
         "error": "Error"
       },
       "aria": {
-        "select_all": "Select all probes",
+        "select_all": "Select all sensors",
         "select_one": "Select {serial}"
       }
     },
     "stats": {
       "global_response_rate": "Global response rate",
-      "probe_count": "{count, plural, one {{count} probe} other {{count} probes}}",
+      "probe_count": "{count, plural, one {{count} sensor} other {{count} sensors}}",
       "measurement_count": "Measurement count",
       "last_24h": "last 24h",
-      "selected_probes": "Selected probes",
+      "selected_probes": "Selected sensors",
       "selected_over_total": "out of {total}"
     }
   },
@@ -969,10 +969,10 @@
     }
   },
   "probesDialog": {
-    "title_create": "Add probe",
-    "title_edit": "Edit probe",
+    "title_create": "Add sensor",
+    "title_edit": "Edit sensor",
     "fields": {
-      "type_label": "Probe type",
+      "type_label": "Sensor type",
       "type_placeholder": "Select a type",
       "serial_label": "Serial number",
       "serial_placeholder": "e.g., 00002",
@@ -985,13 +985,13 @@
     "submit_create": "Add",
     "submit_update": "Update",
     "validation": {
-      "type_required": "Probe type is required",
+      "type_required": "Sensor type is required",
       "serial_invalid": "Invalid serial number"
     },
     "toast": {
-      "invalid_probe": "Invalid probe",
-      "update_success": "Probe updated",
-      "create_success": "Probe created",
+      "invalid_probe": "Invalid sensor",
+      "update_success": "Sensor updated",
+      "create_success": "Sensor created",
       "save_error": "Server error"
     }
   },
@@ -1237,10 +1237,11 @@
     }
   },
   "probesPage": {
-    "title": "Probe management ({count, plural, one {# probe} other {# probes}})",
+    "title": "Sensor management ({count, plural, one {# sensor} other {# sensors}})",
     "actions": {
       "add": "Add",
-      "edit": "Edit"
+      "edit": "Edit",
+      "create_from_adjustment_file": "Add sensor from adjustment/calibration file"
     },
     "table": {
       "columns": {
@@ -1252,7 +1253,7 @@
         "location": "Location"
       },
       "search_placeholder": "Address, serial, location...",
-      "empty": "No probes"
+      "empty": "No sensors"
     },
     "status": {
       "surveillance": "Monitoring",
@@ -1292,6 +1293,66 @@
           "print": "Print"
         }
       }
+    }
+  },
+  "probeAdjustmentImport": {
+    "page": {
+      "title": "Adjustment/Calibration import",
+      "description": "Import XML adjustment or calibration files"
+    },
+    "actions": {
+      "import": "Import files"
+    },
+    "table": {
+      "title": "Adjustment/Calibration files",
+      "columns": {
+        "file": "File",
+        "status": "Status",
+        "uploaded_at": "Imported at"
+      },
+      "empty": "Please import one or more adjustment/calibration file(s)..."
+    },
+    "modal": {
+      "title": "Import an adjustment/calibration file",
+      "description": "Upload one or more XML files to create sensors."
+    }
+  },
+  "probeAdjustmentUpload": {
+    "drop_prefix": "Drop files here or",
+    "browse": "browse",
+    "drop_suffix": "to add",
+    "supported": "Supported format: XML",
+    "sections": {
+      "uploading": "Uploading",
+      "finished": "Finished",
+      "failed": "Failed"
+    },
+    "remove": "Remove",
+    "errors": {
+      "invalid_type": "Invalid file type (XML only).",
+      "upload_failed": "Upload failed",
+      "label": "Error"
+    }
+  },
+  "probeAdjustmentStepper": {
+    "step_label": "Step {step}",
+    "steps": {
+      "upload": "Upload files",
+      "review": "Review data",
+      "create": "Create sensors"
+    },
+    "status": {
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "pending": "Pending"
+    },
+    "actions": {
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "placeholders": {
+      "review": "Review step coming soon.",
+      "create": "Creation step coming soon."
     }
   },
   "standardsPage": {
@@ -1394,7 +1455,7 @@
     "server_error_badge": "Incident detected",
     "server_error_title": "Server error",
     "server_error_description": "A technical issue occurred while loading the page.",
-    "server_error_helper": "Our teams have been notified. You can try again in a moment."
+    "server_error_helper": "The error has been logged. You can try again in a moment. If this error persists, please contact technical support."
   },
   "login": {
     "title": "Sign in",
@@ -1408,7 +1469,7 @@
     "fields": {
       "username_label": "Username",
       "username_placeholder": "Your username",
-      "password_label": "Passoword",
+      "password_label": "Password",
       "password_placeholder": "Your password",
       "reset_email_label": "Email address",
       "reset_email_placeholder": "your@email.com"
@@ -1543,7 +1604,7 @@
     "table": {
       "columns": {
         "type": "Type",
-        "location_sensor": "Location / Probe",
+        "location_sensor": "Location / Sensor",
         "last_value": "Last value",
         "thresholds": "Upper/lower limits",
         "triggered": "Triggered",
@@ -1654,7 +1715,7 @@
     }
   },
   "monitoringDetailsModal": {
-    "probe": "Probe: {serial}",
+    "probe": "Sensor: {serial}",
     "gso": {
       "rssi": "RSSI: {value}",
       "tension": "Voltage: {value}"
@@ -1768,7 +1829,7 @@
       "forms": {
         "title": "Forms",
         "items": {
-          "0": "Harmonized validation (react-hook-form + Zod) for Profiles, Groups, Probes and Standards.",
+          "0": "Harmonized validation (react-hook-form + Zod) for Profiles, Groups, Sensors and Standards.",
           "1": "Consistent error messages on required fields."
         }
       },
@@ -1805,7 +1866,7 @@
       "creation": {
         "title": "Creation and editing",
         "items": {
-          "0": "Create locations without a probe with confirmation.",
+          "0": "Create locations without a sensor with confirmation.",
           "1": "GSO type: frequency locked to 15 min.",
           "2": "Simplified module list."
         }
@@ -1855,8 +1916,8 @@
   },
   "locationFilter": {
     "search": {
-      "placeholder": "Search a probe...",
-      "aria": "Search a probe",
+      "placeholder": "Search a sensor...",
+      "aria": "Search a sensor",
       "clear": "Clear search"
     },
     "site_group": {
@@ -1960,6 +2021,40 @@
   },
   "adminDashboard": {
     "title": "Admin dashboard",
+    "links": {
+      "sondes": {
+        "title": "Sensors",
+        "description": "Configure sensors and their assignments."
+      },
+      "modules": {
+        "title": "Modules",
+        "description": "Manage modules and their settings."
+      },
+      "etalons": {
+        "title": "Standards",
+        "description": "Administer calibration standards."
+      },
+      "actionneurs": {
+        "title": "Actuators",
+        "description": "Configure and manage actuators."
+      },
+      "groupes": {
+        "title": "Groups",
+        "description": "Organize locations by groups."
+      },
+      "lieux": {
+        "title": "Locations",
+        "description": "Manage monitored locations."
+      },
+      "sites": {
+        "title": "Sites",
+        "description": "Manage sites and their assignments."
+      },
+      "outils": {
+        "title": "Tools",
+        "description": "Access administration tools."
+      }
+    },
     "loading": "Loading data...",
     "updating": "Updating...",
     "pagination": {
@@ -1977,7 +2072,7 @@
         "date_time": "Date & Time",
         "user": "User",
         "action": "Action",
-        "probe": "Probe",
+        "probe": "Sensor",
         "alarm": "Alarm"
       }
     },
@@ -1997,7 +2092,7 @@
       "description": "Current status ({total}, max {max})",
       "empty": "No active alarms",
       "columns": {
-        "probe": "Probe",
+        "probe": "Sensor",
         "location_time": "Location / Time",
         "value": "Value",
         "threshold": "Threshold",
@@ -2040,11 +2135,11 @@
       }
     },
     "unassigned": {
-      "title": "Unassigned active probes",
-      "description": "{count, plural, one {# probe not assigned to an active location} other {# probes not assigned to an active location}}",
-      "empty": "No probes without an active location",
+      "title": "Unassigned active sensors",
+      "description": "{count, plural, one {# sensor not assigned to an active location} other {# sensors not assigned to an active location}}",
+      "empty": "No sensors without an active location",
       "columns": {
-        "probe": "Probe",
+        "probe": "Sensor",
         "type": "Type",
         "address": "Address",
         "module": "Module"
@@ -2071,6 +2166,12 @@
   },
   "alarmsTanstack": {
     "title": "Alarm management",
+    "refresh": {
+      "label": "Refresh",
+      "loading": "Refreshing..."
+    },
+    "acknowledge_success": "Alarm acknowledged successfully",
+    "acknowledge_error": "Failed to acknowledge alarm",
     "search_placeholder": "Search by location...",
     "empty": "No alarms found",
     "unknown_location": "Unknown",

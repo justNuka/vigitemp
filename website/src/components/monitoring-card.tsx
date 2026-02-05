@@ -310,9 +310,10 @@ export default function MonitoringCard({
     (status === "critical" || status === "technical");
 
   const frequencyMinutes = useMemo(() => {
+    if (isGso) return 15
     if (!frequence || frequence <= 0) return null
     return Math.round(frequence / 60)
-  }, [frequence])
+  }, [frequence, isGso])
 
 
   const chartDatasets = useMemo(() => {

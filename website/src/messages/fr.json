@@ -1294,7 +1294,8 @@
     "title": "Gestion des sondes ({count, plural, one {# sonde} other {# sondes}})",
     "actions": {
       "add": "Ajouter",
-      "edit": "Modifier"
+      "edit": "Modifier",
+      "create_from_adjustment_file": "Ajouter sonde avec fichier d'ajustage/calibrage"
     },
     "table": {
       "columns": {
@@ -1346,6 +1347,66 @@
           "print": "Imprimer"
         }
       }
+    }
+  },
+  "probeAdjustmentImport": {
+    "page": {
+      "title": "Import ajustage/calibrage",
+      "description": "Importer des fichiers XML d'ajustage ou de calibrage"
+    },
+    "actions": {
+      "import": "Importer des fichiers"
+    },
+    "table": {
+      "title": "Fichiers d'ajustage/calibrage",
+      "columns": {
+        "file": "Fichier",
+        "status": "Statut",
+        "uploaded_at": "Importé le"
+      },
+      "empty": "Veuillez importer un ou plusieurs fichier(s) d'ajustage/calibrage..."
+    },
+    "modal": {
+      "title": "Importer un fichier d'ajustage/calibrage",
+      "description": "Chargez un ou plusieurs fichiers XML pour créer des sondes."
+    }
+  },
+  "probeAdjustmentUpload": {
+    "drop_prefix": "Déposez les fichiers ici ou",
+    "browse": "parcourir",
+    "drop_suffix": "pour ajouter",
+    "supported": "Formats supportés : XML",
+    "sections": {
+      "uploading": "En cours",
+      "finished": "Terminé",
+      "failed": "Échec"
+    },
+    "remove": "Retirer",
+    "errors": {
+      "invalid_type": "Type de fichier invalide (XML uniquement).",
+      "upload_failed": "Échec de l'import",
+      "label": "Erreur"
+    }
+  },
+  "probeAdjustmentStepper": {
+    "step_label": "Étape {step}",
+    "steps": {
+      "upload": "Importer les fichiers",
+      "review": "Vérifier les données",
+      "create": "Créer les sondes"
+    },
+    "status": {
+      "in_progress": "En cours",
+      "completed": "Terminé",
+      "pending": "En attente"
+    },
+    "actions": {
+      "previous": "Précédent",
+      "next": "Suivant"
+    },
+    "placeholders": {
+      "review": "Étape de vérification à venir.",
+      "create": "Étape de création à venir."
     }
   },
   "standardsPage": {
@@ -1448,7 +1509,7 @@
     "server_error_badge": "Incident détecté",
     "server_error_title": "Erreur serveur",
     "server_error_description": "Un problème technique est survenu lors du chargement.",
-    "server_error_helper": "Nos équipes ont été averties. Vous pouvez réessayer dans un instant."
+    "server_error_helper": "L'erreur a été enregistrée. Vous pouvez réessayer dans un instant. Si cette erreur persiste, contactez le support technique."
   },
   "login": {
     "title": "Connexion",
@@ -2014,6 +2075,40 @@
   },
   "adminDashboard": {
     "title": "Tableau de bord admin",
+    "links": {
+      "sondes": {
+        "title": "Sondes",
+        "description": "Configurer les sondes et leurs associations."
+      },
+      "modules": {
+        "title": "Modules",
+        "description": "Gerer les modules et leurs parametres."
+      },
+      "etalons": {
+        "title": "Etalons",
+        "description": "Administrer les etalons de calibration."
+      },
+      "actionneurs": {
+        "title": "Actionneurs",
+        "description": "Piloter et configurer les actionneurs."
+      },
+      "groupes": {
+        "title": "Groupes",
+        "description": "Organiser les lieux par groupes."
+      },
+      "lieux": {
+        "title": "Lieux",
+        "description": "Gerer les lieux surveilles."
+      },
+      "sites": {
+        "title": "Sites",
+        "description": "Gerer les sites et les rattachements."
+      },
+      "outils": {
+        "title": "Outils",
+        "description": "Acceder aux outils d'administration."
+      }
+    },
     "loading": "Chargement des données...",
     "updating": "Mise à jour...",
     "pagination": {
@@ -2125,6 +2220,12 @@
   },
   "alarmsTanstack": {
     "title": "Gestion des alarmes",
+    "refresh": {
+      "label": "Actualiser",
+      "loading": "Actualisation..."
+    },
+    "acknowledge_success": "Alarme acquittée avec succès",
+    "acknowledge_error": "Erreur lors de l'acquittement",
     "search_placeholder": "Rechercher par lieu...",
     "empty": "Aucune alarme trouvée",
     "unknown_location": "Inconnu",

@@ -64,6 +64,6 @@ export function useAlarms({ page = 1, limit = 15 }: { page?: number; limit?: num
   return useQuery({
     queryKey: ["alarms", page, limit],
     queryFn: () => fetchAlarmsPage(page, limit),
-    refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 30000),
+    refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000),
   });
 }

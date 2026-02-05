@@ -1,6 +1,7 @@
 "use cache";
 
 import { prisma } from "@/lib/prisma";
+import { cacheTag, unstable_noStore } from "next/cache";
 
 const shouldSkipDbOnBuild = process.env.VIGITEMP_SKIP_DB_ON_BUILD === "1";
 
@@ -13,6 +14,8 @@ const shouldSkipDbOnBuild = process.env.VIGITEMP_SKIP_DB_ON_BUILD === "1";
  * Statistiques principales du dashboard
  */
 export async function ServerDashboardStats() {
+  unstable_noStore();
+  cacheTag("dashboard-stats");
   if (shouldSkipDbOnBuild) {
     return {
       activeLocations: 0,
@@ -51,6 +54,7 @@ export async function ServerDashboardStats() {
  * Capteurs critiques pour affichage prioritaire sur le dashboard
  */
 export async function ServerCriticalSensors() {
+  cacheTag("dashboard-critical-sensors");
   if (shouldSkipDbOnBuild) {
     return [];
   }
@@ -104,6 +108,8 @@ export async function ServerCriticalSensors() {
  * Alarmes actives récentes pour le tableau du dashboard
  */
 export async function ServerActiveAlarms() {
+  unstable_noStore();
+  cacheTag("dashboard-active-alarms");
   if (shouldSkipDbOnBuild) {
     return [];
   }
@@ -183,6 +189,7 @@ export async function ServerActiveAlarms() {
  * Aperçu des capteurs (8 premiers pour le dashboard)
  */
 export async function ServerSensorOverview() {
+  cacheTag("dashboard-sensor-overview");
   if (shouldSkipDbOnBuild) {
     return [];
   }
@@ -271,6 +278,7 @@ export async function ServerSensorOverview() {
  * Compteur d'alarmes sur les dernières 24h (t_alarme + t_alarme_histo)
  */
 export async function ServerAlarmTrendCount() {
+  cacheTag("dashboard-alarm-trend");
   if (shouldSkipDbOnBuild) {
     return { countLast24h: 0 };
   }

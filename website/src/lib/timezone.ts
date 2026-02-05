@@ -5,12 +5,12 @@ const DEFAULT_TIMEZONE = "Europe/Paris";
 
 export const getAppTimezone = cache(async (): Promise<string> => {
   try {
-    const setting = await prisma.t_parametre.findUnique({
+    const setting = await prisma.t_parametre.findFirst({
       where: {
-        Section_Mot_Cle: {
-          Section: "general",
-          Mot_Cle: "timezone",
-        },
+        OR: [
+          { Section: "GENERAL", Mot_Cle: "TIMEZONE" },
+          { Section: "general", Mot_Cle: "timezone" },
+        ],
       },
       select: { Valeur: true },
     });

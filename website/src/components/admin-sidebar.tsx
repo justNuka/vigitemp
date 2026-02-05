@@ -29,6 +29,8 @@ import {
   FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 import { CurrentUser } from "@/lib/types";
 import { useLocale } from "next-intl";
@@ -43,9 +45,10 @@ interface NavItem {
 interface AdminSidebarProps {
   currentUser?: CurrentUser | null;
   onLogout?: () => void;
+  activeAlarms?: number;
 }
 
-export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
+export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminSidebarProps) {
   const pathname = usePathname();
   const locale = useLocale();
   const normalizedPathname = stripLocalePrefix(pathname);
@@ -69,10 +72,16 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
   ];
 
   // Section 2: Gestion profils, utilisateurs, alarmes, mesures archivées
-  const managementNavItems: NavItem[] = [
+  const managementNavItems: Array<NavItem & { badge?: number; badgeVariant?: "default" | "destructive" }> = [
     { title: t("management.profiles"), href: "/admin/profils", icon: Lock },
     { title: t("management.users"), href: "/admin/utilisateurs", icon: Users },
-    { title: t("management.alarms"), href: "/admin/alarmes", icon: Bell },
+    {
+      title: t("management.alarms"),
+      href: "/admin/alarmes",
+      icon: Bell,
+      badge: activeAlarms > 0 ? activeAlarms : undefined,
+      badgeVariant: "destructive",
+    },
     { title: t("management.audit"), href: "/admin/audit", icon: FileText },
   ];
 
@@ -112,7 +121,18 @@ export function AdminSidebar({ currentUser, onLogout }: AdminSidebarProps) {
                       return (
                         <LinkComponent href={item.href as any} data-testid={`nav-${item.href.replace("/", "")}`}>
                           <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
+                          <span className="flex-1">{item.title}</span>
+                          {item.badge !== undefined && item.badge > 0 && (
+                            <Badge
+                              variant={item.badgeVariant || "default"}
+                              className={cn(
+                                "ml-auto h-5 min-w-5 px-1.5 text-xs",
+                                item.badgeVariant === "destructive" && "animate-pulse-subtle"
+                              )}
+                            >
+                              {item.badge}
+                            </Badge>
+                          )}
                         </LinkComponent>
                       );
                     })()}

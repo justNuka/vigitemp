@@ -2,10 +2,11 @@
 
 import { AdminSidebar } from "@/components/admin-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { authApi } from "@/lib/api";
+import { alarmsApi, authApi } from "@/lib/api";
 import { useAutoLock } from "@/hooks/useAutoLock";
 import { useRouter } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { clearAgentSession } from "@/lib/agent-session";
 import PageTransitionWrapper from "@/components/animations/transitions/page-transitions/PageTransitionWrapper";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -29,9 +30,24 @@ export default function AdminGroupLayout({
     message: string;
   } | null>(null);
   const t = useTranslations("agentSecretAlert");
+  const queryClient = useQueryClient();
 
   // Fetch current user
   const { data: currentUser } = useCurrentUser();
+
+  const alarmsQueryKey = ["alarms", "active"] as const;
+  const hasCachedAlarms = queryClient.getQueryData(alarmsQueryKey) !== undefined;
+  const { data: alarms } = useQuery({
+    queryKey: alarmsQueryKey,
+    queryFn: () => alarmsApi.getActive(),
+    enabled: !hasCachedAlarms,
+    refetchInterval: 60_000,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
+    retry: false,
+  });
 
   // NOTE: Admin check disabled for now (rights handling will be redesigned).
   useEffect(() => {
@@ -90,6 +106,7 @@ export default function AdminGroupLayout({
         <AdminSidebar
           currentUser={currentUser}
           onLogout={handleLogout}
+          activeAlarms={alarms?.length ?? 0}
         />
         <main className="flex-1 min-h-0 bg-background">
           {isFeatureEnabled("enableAgentSecretAlert") && agentSecretStatus && agentSecretStatus.status !== "ok" && (
