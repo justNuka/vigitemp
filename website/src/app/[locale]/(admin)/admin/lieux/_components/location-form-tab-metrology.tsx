@@ -17,7 +17,7 @@ export function LocationFormTabMetrology() {
   return (
     <TabsContent value="metrologie" className="space-y-6">
       <div className="border p-4 rounded-lg space-y-4">
-        <h3 className="font-semibold">{t('sections.probe')}</h3>
+        <h3 className="font-semibold">{t('sections.sensor')}</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>{t('labels.serial')}</Label>
@@ -206,4 +206,5 @@ export function LocationFormTabMetrology() {
     </TabsContent>
   )
 }
+
 

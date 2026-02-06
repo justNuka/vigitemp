@@ -981,6 +981,51 @@ namespace Vigitemp_Serveur
                 return value;
             }
         }
+
+        public (double value, string unit) getLastMeasureWithUnit(int idLieu)
+        {
+            lock (_lock)
+            {
+                double value = 0.0;
+                string unit = "";
+
+                if (!InitConnexion())
+                {
+                    return (value, unit);
+                }
+
+                using (var cmd = CreateCommand(
+                    _connectionMeasure,
+                    "SELECT TOP 1 Valeur, Unite FROM tm_mesures WHERE Id_Lieu = @idLieu ORDER BY Date_Heure_Mesure DESC"))
+                {
+                    cmd.Parameters.AddWithValue("@idLieu", idLieu);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            var rawValue = reader["Valeur"];
+                            if (rawValue != null && rawValue != DBNull.Value)
+                            {
+                                var rawText = rawValue.ToString();
+                                if (!double.TryParse(rawText, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
+                                {
+                                    double.TryParse(rawText, NumberStyles.Float, CultureInfo.CurrentCulture, out value);
+                                }
+                            }
+
+                            var rawUnit = reader["Unite"];
+                            if (rawUnit != null && rawUnit != DBNull.Value)
+                            {
+                                unit = rawUnit.ToString();
+                            }
+                        }
+                    }
+                }
+
+                CloseConnexion();
+                return (value, unit);
+            }
+        }
         public bool setAlarmeByIdLieu(int p_idLieu, bool p_valeur)
         {
             lock (_lock)

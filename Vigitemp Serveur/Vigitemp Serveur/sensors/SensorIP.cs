@@ -123,7 +123,7 @@ namespace Vigitemp_Serveur.sensors
                 Trace.WriteLine("Données corrigées: " + float.Parse(String.Format("{0:0.00}", mesureCalculée)));
                 ths.GetDatabase().AddMesure(m_sondeSerialNumber, mesureCalculée, "°C", tmp_resistance);
                 HandleNoResponseAlarm(true);
-                compareMeasuresAndLimits(mesureCalculée);
+                compareMeasuresAndLimits(mesureCalculée, "°C");
                 VigitempServeur.Log($"[SONDE][DONE] type=IP serial={m_sondeSerialNumber} port={m_comPort} status=success value={float.Parse(String.Format("{0:0.00}", mesureCalculée))} unit=°C raw={tmp_resistance}");
 
                 m_port.Close();

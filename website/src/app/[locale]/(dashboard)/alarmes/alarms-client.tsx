@@ -565,7 +565,6 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
             </CardTitle>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               {statusTabs}
-              <div className="flex justify-end">{refreshButton}</div>
             </div>
           </CardHeader>
           <CardContent>
@@ -581,6 +580,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
                 const fullAlarm = localAlarms.find((item) => item.id === row.id);
                 if (fullAlarm) setSelectedAlarm(fullAlarm);
               }}
+              toolbarRight={refreshButton}
               maxHeight="calc(100dvh - 25rem)"
               headerClassName="!bg-sidebar !text-sidebar-foreground"
               headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"

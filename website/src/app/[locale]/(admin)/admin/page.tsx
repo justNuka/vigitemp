@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useCallback, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
@@ -46,7 +46,7 @@ import {
   useConnectedUsers,
   useSystemLogs,
 } from "@/hooks/useAdminData"
-import { useUnassignedProbes, type Probe } from "@/hooks/useProbes"
+import { useUnassignedSensors, type Sensor } from "@/hooks/useSensors"
 import { usePrefetchNextPage } from "@/hooks/usePrefetchNextPage"
 import { getJson } from "@/lib/http"
 
@@ -124,7 +124,7 @@ export default function AdminDashboard() {
   const acknowledgmentsQuery = useAcknowledgments(ackPage)
   const systemLogsQuery = useSystemLogs()
   const backupsQuery = useBackups()
-  const unassignedProbesQuery = useUnassignedProbes({
+  const unassignedSensorsQuery = useUnassignedSensors({
     page: unassignedPage,
     limit: unassignedPageSize,
   })
@@ -163,11 +163,11 @@ export default function AdminDashboard() {
   })
 
   usePrefetchNextPage({
-    enabled: Boolean(unassignedProbesQuery.data),
+    enabled: Boolean(unassignedSensorsQuery.data),
     page: unassignedPage,
-    pages: unassignedProbesQuery.data?.pagination.pages || 1,
+    pages: unassignedSensorsQuery.data?.pagination.pages || 1,
     queryKey: useCallback(
-      (page: number) => ["probes", "unassigned", page, unassignedPageSize],
+      (page: number) => ["sensors", "unassigned", page, unassignedPageSize],
       [unassignedPageSize],
     ),
     queryFn: useCallback(
@@ -191,8 +191,8 @@ export default function AdminDashboard() {
     systemLogsQuery.isLoading &&
     backupsQuery.isLoading
 
-  const unassignedColumns: ColumnDef<Probe>[] = [
-    { accessorKey: "Sonde_Numero_Serie", header: t("unassigned.columns.probe") },
+  const unassignedColumns: ColumnDef<Sensor>[] = [
+    { accessorKey: "Sonde_Numero_Serie", header: t("unassigned.columns.sensor") },
     { accessorKey: "Sonde_Type", header: t("unassigned.columns.type"), cell: ({ row }) => row.original.Sonde_Type || "-" },
     { accessorKey: "Adresse_Sonde", header: t("unassigned.columns.address"), cell: ({ row }) => row.original.Adresse_Sonde || "-" },
     { accessorKey: "Id_Module", header: t("unassigned.columns.module"), cell: ({ row }) => row.original.Id_Module ?? "-" },
@@ -502,17 +502,17 @@ export default function AdminDashboard() {
             </CardTitle>
             <CardDescription>
               {t("unassigned.description", {
-                count: unassignedProbesQuery.data?.pagination.total || 0,
+                count: unassignedSensorsQuery.data?.pagination.total || 0,
               })}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <TanStackTable
               columns={unassignedColumns}
-              data={unassignedProbesQuery.data?.data || []}
+              data={unassignedSensorsQuery.data?.data || []}
               emptyMessage={t("unassigned.empty")}
               maxHeight="240px"
-              isLoading={unassignedProbesQuery.isLoading}
+              isLoading={unassignedSensorsQuery.isLoading}
               showPagination={false}
               showSearch={false}
               enableExport={false}
@@ -524,7 +524,7 @@ export default function AdminDashboard() {
             />
             <PaginationControls
               page={unassignedPage}
-              pages={unassignedProbesQuery.data?.pagination.pages || 1}
+              pages={unassignedSensorsQuery.data?.pagination.pages || 1}
               pageSize={unassignedPageSize}
               pageSizeOptions={[10, 20, 50]}
               onPageSizeChange={(next) => {
@@ -534,7 +534,7 @@ export default function AdminDashboard() {
               onPrev={() => setUnassignedPage((p) => Math.max(1, p - 1))}
               onNext={() =>
                 setUnassignedPage((p) =>
-                  Math.min(unassignedProbesQuery.data?.pagination.pages || 1, p + 1),
+                  Math.min(unassignedSensorsQuery.data?.pagination.pages || 1, p + 1),
                 )
               }
             />
@@ -544,3 +544,4 @@ export default function AdminDashboard() {
     </div>
   )
 }
+

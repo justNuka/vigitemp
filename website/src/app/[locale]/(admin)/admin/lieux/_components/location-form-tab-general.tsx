@@ -1,8 +1,8 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useMemo } from 'react'
 
-import type { AvailableProbe } from '@/hooks/useAvailableProbes'
+import type { AvailableSensor } from '@/hooks/useAvailableSensors'
 import type { Group } from '@/hooks/useGroups'
 import type { SiteSimple } from '@/hooks/useSites'
 import { MultiSelectFilter } from '@/components/multi-select-filter'
@@ -22,10 +22,10 @@ import type { LocationFormData } from './location-form-types'
 type Props = {
   sites: SiteSimple[]
   groups: Group[]
-  availableProbes: AvailableProbe[]
+  availableSensors: AvailableSensor[]
 }
 
-export function LocationFormTabGeneral({ sites, groups, availableProbes }: Props) {
+export function LocationFormTabGeneral({ sites, groups, availableSensors }: Props) {
   const t = useTranslations('locationsForm.general')
   const {
     register,
@@ -36,16 +36,16 @@ export function LocationFormTabGeneral({ sites, groups, availableProbes }: Props
   } = useFormContext<LocationFormData>()
 
   const formData = watch()
-  const selectedProbe = useMemo(
-    () => (availableProbes ?? []).find((probe) => probe.Sonde_Numero_Serie === formData.Sonde_Numero_Serie),
-    [availableProbes, formData.Sonde_Numero_Serie],
+  const selectedSensor = useMemo(
+    () => (availableSensors ?? []).find((sensor) => sensor.Sonde_Numero_Serie === formData.Sonde_Numero_Serie),
+    [availableSensors, formData.Sonde_Numero_Serie],
   )
-  const isGsoProbe = selectedProbe?.Sonde_Type?.toUpperCase() === 'GSO'
+  const isGsoSensor = selectedSensor?.Sonde_Type?.toUpperCase() === 'GSO'
 
   useEffect(() => {
-    if (!isGsoProbe) return
+    if (!isGsoSensor) return
     setValue('Frequence', 15)
-  }, [isGsoProbe, setValue])
+  }, [isGsoSensor, setValue])
 
   return (
     <TabsContent value="general" className="space-y-4">
@@ -170,10 +170,10 @@ export function LocationFormTabGeneral({ sites, groups, availableProbes }: Props
       </div>
 
       <div className="border p-4 rounded-lg space-y-4 mt-6">
-        <h3 className="font-semibold">{t('sections.probe')}</h3>
+        <h3 className="font-semibold">{t('sections.sensor')}</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>{t('labels.probe_select')}</Label>
+            <Label>{t('labels.sensor_select')}</Label>
             <Controller
               control={control}
               name="Sonde_Numero_Serie"
@@ -182,15 +182,15 @@ export function LocationFormTabGeneral({ sites, groups, availableProbes }: Props
                   triggerId="sonde"
                   value={field.value || ''}
                   onValueChange={(val) => field.onChange(val || null)}
-                  placeholder={t('placeholders.probe')}
-                  searchPlaceholder={t('placeholders.probe_search')}
-                  emptyMessage={t('placeholders.probe_empty')}
+                  placeholder={t('placeholders.sensor')}
+                  searchPlaceholder={t('placeholders.sensor_search')}
+                  emptyMessage={t('placeholders.sensor_empty')}
                   options={[
-                    { value: '', label: t('options.no_probe'), searchText: t('options.no_probe') },
-                    ...(availableProbes ?? []).map((probe) => ({
-                      value: probe.Sonde_Numero_Serie || '',
-                      label: probe.Sonde_Numero_Serie || '',
-                      searchText: probe.Sonde_Numero_Serie || '',
+                    { value: '', label: t('options.no_sensor'), searchText: t('options.no_sensor') },
+                    ...(availableSensors ?? []).map((sensor) => ({
+                      value: sensor.Sonde_Numero_Serie || '',
+                      label: sensor.Sonde_Numero_Serie || '',
+                      searchText: sensor.Sonde_Numero_Serie || '',
                     })),
                   ]}
                 />
@@ -198,7 +198,7 @@ export function LocationFormTabGeneral({ sites, groups, availableProbes }: Props
             />
           </div>
           <div className="space-y-2">
-            <Label>{t('labels.probe_state')}</Label>
+            <Label>{t('labels.sensor_state')}</Label>
             <Input disabled placeholder={t('placeholders.auto')} className="bg-muted" />
           </div>
         </div>
@@ -224,7 +224,7 @@ export function LocationFormTabGeneral({ sites, groups, availableProbes }: Props
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className={isGsoProbe ? 'cursor-not-allowed' : ''}>
+                      <div className={isGsoSensor ? 'cursor-not-allowed' : ''}>
                         <Input
                           type="number"
                           {...register('Frequence', {
@@ -232,12 +232,12 @@ export function LocationFormTabGeneral({ sites, groups, availableProbes }: Props
                               value === '' || Number.isNaN(Number(value)) ? undefined : Number(value),
                           })}
                           placeholder={t('placeholders.frequency')}
-                          disabled={isGsoProbe}
-                          className={isGsoProbe ? 'bg-muted' : ''}
+                          disabled={isGsoSensor}
+                          className={isGsoSensor ? 'bg-muted' : ''}
                         />
                       </div>
                     </TooltipTrigger>
-                    {isGsoProbe ? (
+                    {isGsoSensor ? (
                       <TooltipContent>
                         <p>{t('tooltips.frequency_gso')}</p>
                       </TooltipContent>

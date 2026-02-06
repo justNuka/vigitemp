@@ -23,7 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { ModuleModal } from "./module-modal";
 import { ModulesTable, type ModuleRow } from "./_components/modules-table";
-import { ProbesTable, type ProbeRow } from "./_components/probes-table";
+import { SensorsTable, type SensorRow } from "./_components/sensors-table";
 import { useTranslations } from 'next-intl';
 
 export function ModulesClient() {
@@ -66,7 +66,7 @@ export function ModulesClient() {
     Id_Serveur: m.Id_Serveur,
   }));
 
-  const sondesTableData: ProbeRow[] = (sondes || []).map((s) => ({
+  const sondesTableData: SensorRow[] = (sondes || []).map((s) => ({
     Id_Sonde: s.Id_Sonde,
     Adresse_Sonde: s.Adresse_Sonde,
     Sonde_Numero_Serie: s.Sonde_Numero_Serie,
@@ -177,11 +177,11 @@ export function ModulesClient() {
                 ))}
               </div>
             ) : sondesTableData.length > 0 ? (
-              <ProbesTable
-                probes={sondesTableData}
+              <SensorsTable
+                sensors={sondesTableData}
                 isLoading={false}
-                selectedProbeId={selectedSondeId}
-                onSelectProbe={setSelectedSondeId}
+                selectedSensorId={selectedSondeId}
+                onSelectSensor={setSelectedSondeId}
               />
             ) : (
               <div className="text-center py-8 text-sm text-muted-foreground">{t('associated.empty')}</div>
@@ -235,4 +235,5 @@ export function ModulesClient() {
     </div>
   );
 }
+
 

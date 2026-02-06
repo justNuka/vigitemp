@@ -30,7 +30,7 @@ export function AdjustmentsPanel({
   selectedAdjustmentId,
   onSelectAdjustment,
 }: AdjustmentsPanelProps) {
-  const t = useTranslations('probesPage');
+  const t = useTranslations('sensorsPage');
   const locale = useLocale();
   const localeTag = locale.toLowerCase().startsWith('fr') ? 'fr-FR' : locale;
   const timezone = useAppTimezone();
@@ -99,4 +99,5 @@ export function AdjustmentsPanel({
     </Card>
   );
 }
+
 

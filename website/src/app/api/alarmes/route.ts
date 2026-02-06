@@ -99,6 +99,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
             : alarm.Type === "N"
               ? "no-response"
               : "temperature"
+      const unit = alarm.Unite?.trim() || "Unité inconnue"
       const message =
         alarm.Type === "N"
           ? "Alarme non réponse"
@@ -140,7 +141,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
       resolvedAt: alarm.Date_Heure_Fin?.toISOString() || null,
       minThreshold: consigneInf,
       maxThreshold: consigneSup,
-      unit: alarm.Unite || alarm.t_lieu?.Derniere_Unite || "°C",
+      unit,
       currentValue: alarm.t_lieu?.Derniere_Valeur ?? alarm.Valeur ?? null,
       count30Days: countsByLieu.get(alarm.t_lieu?.Id_Lieu ?? 0) ?? 0,
     }

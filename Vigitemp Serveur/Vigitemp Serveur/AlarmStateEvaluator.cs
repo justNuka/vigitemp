@@ -50,6 +50,7 @@ namespace Vigitemp_Serveur
             double high,
             bool eligible,
             int debounceSeconds,
+            bool ignorePolicyDebounce,
             DateTime nowUtc)
         {
             if (idLieu <= 0) return new AlarmEvaluation(false, false, false);
@@ -74,7 +75,10 @@ namespace Vigitemp_Serveur
             var policy = AlarmPolicy.Current;
             var effectiveDebounceSeconds = debounceSeconds;
             if (effectiveDebounceSeconds < 0) effectiveDebounceSeconds = 0;
-            if (policy.DebounceSeconds > effectiveDebounceSeconds) effectiveDebounceSeconds = policy.DebounceSeconds;
+            if (!ignorePolicyDebounce && policy.DebounceSeconds > effectiveDebounceSeconds)
+            {
+                effectiveDebounceSeconds = policy.DebounceSeconds;
+            }
 
                 var nextActive = ComputeNextActive(
                     state,

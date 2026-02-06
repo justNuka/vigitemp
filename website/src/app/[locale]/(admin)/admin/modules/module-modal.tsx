@@ -34,7 +34,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { useModuleSondes, useModuleTypes } from "@/hooks/useModules";
-import { ModuleAssociatedProbes } from "./_components/module-associated-probes";
+import { ModuleAssociatedSensors } from "./_components/module-associated-sensors";
 import { moduleSchema, type ModuleFormData } from "./_components/module-schemas";
 import { useTranslations } from 'next-intl';
 
@@ -303,7 +303,7 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
             {isEditing && (
               <div className="mt-6 pt-6 border-t space-y-3">
                 <h3 className="font-semibold text-sm">{t('associated.title')}</h3>
-                <ModuleAssociatedProbes sondes={sondes} isLoading={sondesLoading} />
+                <ModuleAssociatedSensors sondes={sondes} isLoading={sondesLoading} />
               </div>
             )}
           </form>
@@ -312,3 +312,4 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
     </Dialog>
   );
 }
+

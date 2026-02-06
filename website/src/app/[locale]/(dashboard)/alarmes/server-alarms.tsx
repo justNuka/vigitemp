@@ -71,6 +71,8 @@ export async function ServerAlarms(status?: AlarmStatus) {
           ? consigneInf ?? 0
           : 0;
 
+    const unit = alarm.Unite?.trim() || "Unité inconnue";
+
     return {
     id: alarm.Id_Alarme.toString(),
     sensorId: alarm.Id_Lieu?.toString() || "0",
@@ -88,7 +90,7 @@ export async function ServerAlarms(status?: AlarmStatus) {
       id: alarm.Id_Lieu?.toString() || "0",
       name: alarm.t_lieu?.Nom_Lieu || "Unknown",
       type: "temperature",
-      unit: alarm.Unite || alarm.t_lieu?.Derniere_Unite || "°C",
+      unit,
       locationId: alarm.Id_Lieu?.toString() || "0",
       currentValue: alarm.t_lieu?.Derniere_Valeur ?? alarm.Valeur ?? null,
       minThreshold: consigneInf ?? 0,

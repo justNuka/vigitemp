@@ -2,36 +2,36 @@
 
 import { useCallback, useMemo, useState } from "react"
 
-import { buildProbeColumns } from "./_components/build-probe-columns"
-import { MOCK_PROBES } from "./_components/mock-probes"
-import { ProbesTableCard } from "./_components/probes-table-card"
+import { buildSensorColumns } from "./_components/build-sensor-columns"
+import { MOCK_SENSORS } from "./_components/mock-sensors"
+import { SensorsTableCard } from "./_components/sensors-table-card"
 import { TestConnectionStats } from "./_components/test-connection-stats"
-import type { ProbeWithSelection } from "./_components/probe-types"
+import type { SensorWithSelection } from "./_components/sensor-types"
 import { useTranslations } from 'next-intl'
 
 export function TestConnectionTab() {
   const t = useTranslations('toolsTestConnection')
   const [selectedIds, setSelectedIds] = useState<number[]>([])
-  const [probes, setProbes] = useState<ProbeWithSelection[]>(MOCK_PROBES)
+  const [sensors, setSensors] = useState<SensorWithSelection[]>(MOCK_SENSORS)
   const [isLoading, setIsLoading] = useState(false)
 
   const globalResponseRate = useMemo(() => {
-    if (probes.length === 0) return 0
-    const avg = probes.reduce((sum, probe) => sum + probe.Taux_Reponse, 0) / probes.length
+    if (sensors.length === 0) return 0
+    const avg = sensors.reduce((sum, sensor) => sum + sensor.Taux_Reponse, 0) / sensors.length
     return Math.round(avg * 10) / 10
-  }, [probes])
+  }, [sensors])
 
   const lastMeasurementCount = useMemo(() => {
-    return probes.length * 125
-  }, [probes])
+    return sensors.length * 125
+  }, [sensors])
 
   const handleToggleAll = useCallback(() => {
-    if (selectedIds.length === probes.length) {
+    if (selectedIds.length === sensors.length) {
       setSelectedIds([])
       return
     }
-    setSelectedIds(probes.map((probe) => probe.Id_Sonde))
-  }, [probes, selectedIds.length])
+    setSelectedIds(sensors.map((sensor) => sensor.Id_Sonde))
+  }, [sensors, selectedIds.length])
 
   const handleToggleOne = useCallback((id: number, selected: boolean) => {
     if (selected) {
@@ -47,7 +47,7 @@ export function TestConnectionTab() {
 
   const handleReset = () => {
     setSelectedIds([])
-    setProbes(MOCK_PROBES)
+    setSensors(MOCK_SENSORS)
   }
 
   const handleLaunchTests = async () => {
@@ -55,7 +55,7 @@ export function TestConnectionTab() {
 
     setIsLoading(true)
     try {
-      console.log("Launching tests for probes:", selectedIds)
+      console.log("Launching tests for sensors:", selectedIds)
       await new Promise((resolve) => setTimeout(resolve, 1500))
     } finally {
       setIsLoading(false)
@@ -64,8 +64,8 @@ export function TestConnectionTab() {
 
   const columns = useMemo(
     () =>
-      buildProbeColumns({
-        probes,
+      buildSensorColumns({
+        sensors,
         selectedIds,
         onToggleAll: handleToggleAll,
         onToggleOne: handleToggleOne,
@@ -76,7 +76,7 @@ export function TestConnectionTab() {
             error: t('table.status.error'),
           },
           headers: {
-            probe: t('table.columns.probe'),
+            sensor: t('table.columns.sensor'),
             module: t('table.columns.module'),
             relay1: t('table.columns.relay1'),
             relay2: t('table.columns.relay2'),
@@ -91,20 +91,20 @@ export function TestConnectionTab() {
           },
         },
       }),
-    [handleToggleAll, handleToggleOne, probes, selectedIds, t],
+    [handleToggleAll, handleToggleOne, sensors, selectedIds, t],
   )
 
   return (
     <div className="space-y-6">
       <TestConnectionStats
         globalResponseRate={globalResponseRate}
-        probeCount={probes.length}
+        sensorCount={sensors.length}
         lastMeasurementCount={lastMeasurementCount}
         selectedCount={selectedIds.length}
       />
 
-      <ProbesTableCard
-        probes={probes}
+      <SensorsTableCard
+        sensors={sensors}
         columns={columns}
         isLoading={isLoading}
         selectedCount={selectedIds.length}
@@ -116,3 +116,4 @@ export function TestConnectionTab() {
     </div>
   )
 }
+

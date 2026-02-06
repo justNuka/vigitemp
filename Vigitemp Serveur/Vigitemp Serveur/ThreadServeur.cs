@@ -575,7 +575,7 @@ namespace Vigitemp_Serveur
 
                         GetDatabase().setAlarmeByIdLieu(arr_lieuxAvecAlarmeSnooze[i], true);
 
-                        double derniereMesure =  GetDatabase().getLastMeasure(arr_lieuxAvecAlarmeSnooze[i]);
+                        var derniereMesure = GetDatabase().getLastMeasureWithUnit(arr_lieuxAvecAlarmeSnooze[i]);
 
 
                         //recuperer infos du lieu
@@ -649,7 +649,20 @@ namespace Vigitemp_Serveur
                             VigitempServeur.Log("Aucun capteur cree pour le lieu " + arr_lieuxAvecAlarmeSnooze[i] + ".");
                             continue;
                         }
-                        sensor.compareMeasuresAndLimits(derniereMesure);
+                        string unit;
+                        if (string.IsNullOrWhiteSpace(derniereMesure.unit))
+                        {
+                            var fallbackUnit = GetDatabase().getLieuUnite(arr_lieuxAvecAlarmeSnooze[i]);
+                            VigitempServeur.Log(
+                                $"Unite mesure absente en maintenance (lieu {arr_lieuxAvecAlarmeSnooze[i]}). Fallback Derniere_Unite={fallbackUnit}");
+                            unit = fallbackUnit;
+                        }
+                        else
+                        {
+                            unit = derniereMesure.unit;
+                        }
+
+                        sensor.compareMeasuresAndLimits(derniereMesure.value, unit);
                     }
                 }
 

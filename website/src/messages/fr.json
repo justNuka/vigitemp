@@ -516,7 +516,7 @@
     },
     "toast": {
       "create_success": "Lieu créé avec succès",
-      "create_no_probe": "Lieu créé sans sonde. Pensez à l'affecter plus tard.",
+      "create_no_sensor": "Lieu créé sans sonde. Pensez à l'affecter plus tard.",
       "create_error": "Erreur lors de la création du lieu",
       "update_success": "Lieu modifié avec succès",
       "update_error": "Erreur lors de la modification du lieu",
@@ -533,7 +533,7 @@
         "submitting": "Archivage...",
         "confirm": "Archiver"
       },
-      "create_no_probe": {
+      "create_no_sensor": {
         "title": "Créer un lieu sans sonde ?",
         "description": "Ce lieu sera créé sans sonde associée. Vous pourrez l'affecter plus tard dans la gestion des lieux. Voulez-vous continuer ?",
         "submitting": "Création...",
@@ -547,7 +547,7 @@
       "type": "Type",
       "site": "Site",
       "groups": "Groupes",
-      "probe": "Sonde",
+      "sensor": "Sonde",
       "status": "État",
       "setpoint": "Consigne",
       "unit": "Unité",
@@ -563,7 +563,7 @@
     },
     "placeholders": {
       "na": "N/A",
-      "no_probe": "Sans sonde"
+      "no_sensor": "Sans sonde"
     },
     "types": {
       "bain_marie": "Bain marie",
@@ -592,7 +592,7 @@
     },
     "general": {
       "sections": {
-        "probe": "Sonde",
+        "sensor": "Sonde",
         "setpoints": "Consignes"
       },
       "labels": {
@@ -604,8 +604,8 @@
         "monitoring_disable": "Désactiver la surveillance",
         "site": "Site",
         "groups": "Groupe(s)",
-        "probe_select": "Sélection de sonde",
-        "probe_state": "État de la sonde",
+        "sensor_select": "Sélection de sonde",
+        "sensor_state": "État de la sonde",
         "setpoint": "Consigne",
         "frequency": "Fréquence de mesure (min)",
         "upper_enable": "Activation consigne sup",
@@ -627,9 +627,9 @@
         "site_empty": "Aucun site",
         "groups": "Sélectionner...",
         "groups_search": "Rechercher un groupe...",
-        "probe": "Choisir une sonde",
-        "probe_search": "Rechercher une sonde...",
-        "probe_empty": "Aucune sonde",
+        "sensor": "Choisir une sonde",
+        "sensor_search": "Rechercher une sonde...",
+        "sensor_empty": "Aucune sonde",
         "auto": "Automatique",
         "numeric": "0.0",
         "frequency": "15",
@@ -643,7 +643,7 @@
         "autre": "Autre"
       },
       "options": {
-        "no_probe": "Aucune sonde"
+        "no_sensor": "Aucune sonde"
       },
       "tooltips": {
         "frequency_gso": "Fréquence fixée à 15 min pour les sondes GSO."
@@ -652,7 +652,7 @@
     },
     "metrology": {
       "sections": {
-        "probe": "Sonde",
+        "sensor": "Sonde",
         "setpoints": "Consignes"
       },
       "labels": {
@@ -773,14 +773,14 @@
       "serial": "Numéro de série",
       "location": "Emplacement",
       "port": "Port",
-      "probes_count": "Nombre de sondes",
+      "sensors_count": "Nombre de sondes",
       "server": "Serveur"
     },
-    "probes_count_value": "{count, plural, one {{count} sonde} other {{count} sondes}}",
+    "sensors_count_value": "{count, plural, one {{count} sonde} other {{count} sondes}}",
     "search_placeholder": "Numéro de série, emplacement...",
     "empty": "Aucun module trouvé"
   },
-  "moduleProbesTable": {
+  "moduleSensorsTable": {
     "columns": {
       "address": "Adresse",
       "serial": "Numéro de série",
@@ -789,7 +789,7 @@
     },
     "empty": "Aucun matériel associé à ce module"
   },
-  "moduleAssociatedProbes": {
+  "moduleAssociatedSensors": {
     "columns": {
       "type": "Type",
       "serial": "Numéro de série"
@@ -923,7 +923,7 @@
         "reset": "Réinitialiser états"
       },
       "columns": {
-        "probe": "Sonde",
+        "sensor": "Sonde",
         "module": "Module",
         "relay1": "Relai 1",
         "relay2": "Relai 2",
@@ -944,10 +944,10 @@
     },
     "stats": {
       "global_response_rate": "Taux de réponse global",
-      "probe_count": "{count, plural, one {{count} sonde} other {{count} sondes}}",
+      "sensor_count": "{count, plural, one {{count} sonde} other {{count} sondes}}",
       "measurement_count": "Nombre de mesures",
       "last_24h": "dernières 24h",
-      "selected_probes": "Sondes sélectionnées",
+      "selected_sensors": "Sondes sélectionnées",
       "selected_over_total": "sur {total}"
     }
   },
@@ -1157,7 +1157,7 @@
       "save_error": "Erreur lors de la sauvegarde du groupe"
     }
   },
-  "probesDialog": {
+  "sensorsDialog": {
     "title_create": "Ajouter une sonde",
     "title_edit": "Modifier la sonde",
     "fields": {
@@ -1182,7 +1182,7 @@
       "offset_invalid": "Offset invalide"
     },
     "toast": {
-      "invalid_probe": "Sonde invalide",
+      "invalid_sensor": "Sonde invalide",
       "update_success": "Sonde mise à jour",
       "create_success": "Sonde créée",
       "save_error": "Erreur serveur"
@@ -1290,7 +1290,7 @@
       "archive_error": "Erreur lors de l'archivage"
     }
   },
-  "probesPage": {
+  "sensorsPage": {
     "title": "Gestion des sondes ({count, plural, one {# sonde} other {# sondes}})",
     "actions": {
       "add": "Ajouter",
@@ -1349,10 +1349,10 @@
       }
     }
   },
-  "probeAdjustmentImport": {
+  "sensorAdjustmentImport": {
     "page": {
       "title": "Import ajustage/calibrage",
-      "description": "Importer des fichiers XML d'ajustage ou de calibrage"
+      "description": "Importer des fichiers XML d'ajustage (anciennement calibrage)"
     },
     "actions": {
       "import": "Importer des fichiers"
@@ -1361,8 +1361,13 @@
       "title": "Fichiers d'ajustage/calibrage",
       "columns": {
         "file": "Fichier",
-        "status": "Statut",
-        "uploaded_at": "Importé le"
+        "sensor": "Sonde",
+        "date": "Date",
+        "operator": "Opérateur",
+        "coeff_x": "Coeff. X",
+        "coeff_constant": "Coeff. constante",
+        "measure_etalon_1": "Mesure étalon 1",
+        "measure_etalon_2": "Mesure étalon 2"
       },
       "empty": "Veuillez importer un ou plusieurs fichier(s) d'ajustage/calibrage..."
     },
@@ -1371,10 +1376,8 @@
       "description": "Chargez un ou plusieurs fichiers XML pour créer des sondes."
     }
   },
-  "probeAdjustmentUpload": {
-    "drop_prefix": "Déposez les fichiers ici ou",
-    "browse": "parcourir",
-    "drop_suffix": "pour ajouter",
+  "sensorAdjustmentUpload": {
+    "drop_browse_zone": "Déposez les fichiers ici ou cliquer pour ajouter",
     "supported": "Formats supportés : XML",
     "sections": {
       "uploading": "En cours",
@@ -1386,9 +1389,14 @@
       "invalid_type": "Type de fichier invalide (XML uniquement).",
       "upload_failed": "Échec de l'import",
       "label": "Erreur"
+    },
+    "placeholders": {
+      "uploading": "Aucun fichier en cours d'upload.",
+      "finished": "Aucun fichier termin?.",
+      "failed": "Aucun fichier en erreur."
     }
   },
-  "probeAdjustmentStepper": {
+  "sensorAdjustmentStepper": {
     "step_label": "Étape {step}",
     "steps": {
       "upload": "Importer les fichiers",
@@ -1401,12 +1409,42 @@
       "pending": "En attente"
     },
     "actions": {
-      "previous": "Précédent",
-      "next": "Suivant"
+      "previous": "Étape précédente",
+      "next": "Étape suivante",
+      "next_disabled_no_file": "Veuillez charger au moins 1 fichier pour continuer.",
+      "process": "Traiter",
+      "processing": "Traitement...",
+      "finish": "Fermer"
     },
     "placeholders": {
       "review": "Étape de vérification à venir.",
       "create": "Étape de création à venir."
+    },
+    "validation": {
+      "description": "Vérification du format XML et de l'encodage.",
+      "empty": "Aucun fichier à vérifier.",
+      "encoding": "Encodage détecté : {encoding}",
+      "status": {
+        "ok": "Format valide",
+        "fixed": "Encodage corrigé",
+        "error": "Erreur de format"
+      },
+      "errors": {
+        "invalid_xml": "XML invalide ou mal formé.",
+        "invalid_root": "Racine XML inattendue (attendu AJUSTAGE ou CALIBRAGE).",
+        "unreadable": "Impossible de lire le fichier."
+      }
+    },
+    "create": {
+      "summary_title": "Récapitulatif",
+      "summary_total": "Fichiers importés : {count}",
+      "summary_valid": "Fichiers valides : {count}",
+      "summary_fixed": "Encodages corrigés : {count}",
+      "summary_error": "Fichiers en erreur : {count}",
+      "processing": "Traitement des fichiers... ({processed}/{total})",
+      "process_done": "Traitement terminé. {count} fichier(s) importé(s).",
+      "process_errors": "{count} fichier(s) n'ont pas pu être importé(s).",
+      "process_result": "R?ussis : {success} ? ?checs : {failed}"
     }
   },
   "standardsPage": {
@@ -1769,7 +1807,7 @@
     }
   },
   "monitoringDetailsModal": {
-    "probe": "Sonde: {serial}",
+    "sensor": "Sonde: {serial}",
     "gso": {
       "rssi": "RSSI : {value}",
       "tension": "Tension : {value}"
@@ -2126,7 +2164,7 @@
         "date_time": "Date et Heure",
         "user": "Utilisateur",
         "action": "Action",
-        "probe": "Sonde",
+        "sensor": "Sonde",
         "alarm": "Alarme"
       }
     },
@@ -2146,7 +2184,7 @@
       "description": "État actuel ({total}, max {max})",
       "empty": "Aucune alarme active en cours",
       "columns": {
-        "probe": "Sonde",
+        "sensor": "Sonde",
         "location_time": "Lieu / Temps",
         "value": "Valeur",
         "threshold": "Seuil",
@@ -2193,7 +2231,7 @@
       "description": "{count, plural, one {# sonde non affectée à un lieu actif} other {# sondes non affectées à un lieu actif}}",
       "empty": "Aucune sonde sans lieu actif",
       "columns": {
-        "probe": "Sonde",
+        "sensor": "Sonde",
         "type": "Type",
         "address": "Adresse",
         "module": "Module"

@@ -39,6 +39,16 @@ export default function middleware(request: NextRequest) {
   const locale = localeInPath ?? routing.defaultLocale
   const pathnameWithoutLocale = localeInPath ? pathname.slice(localeInPath.length + 1) || "/" : pathname
 
+  const getLocalizedPathname = (path: string) => {
+    const pathnames = routing.pathnames as Record<string, string | Record<string, string>> | undefined
+    const entry = pathnames?.[path]
+    if (!entry) return path
+    if (typeof entry === "string") return entry
+    return entry[locale] ?? entry[routing.defaultLocale] ?? path
+  }
+
+  const localizedLoginPath = getLocalizedPathname("/login")
+
   if (process.env.NODE_ENV === "production") {
     const isTestRoute = TEST_ROUTES.some((route) => pathnameWithoutLocale.startsWith(route))
     if (isTestRoute) {
@@ -62,15 +72,15 @@ export default function middleware(request: NextRequest) {
 
   const isAuthRoute = authRoutes.some(
     (route) => pathnameWithoutLocale === route || pathnameWithoutLocale.startsWith(`${route}/`),
-  )
+  ) || pathnameWithoutLocale === localizedLoginPath
 
   if (isProtectedRoute && !token) {
     if (shouldLog) {
       console.log(`[Proxy] No token for protected route ${pathname}, redirecting to login`)
     }
-    const loginUrl = new URL(`/${locale}/login`, request.url)
-    if (!pathname.includes("/surveillance")) {
-      loginUrl.searchParams.set("from", pathname)
+    const loginUrl = new URL(`/${locale}${localizedLoginPath}`, request.url)
+    if (!pathnameWithoutLocale.includes("/surveillance")) {
+      loginUrl.searchParams.set("from", pathnameWithoutLocale)
     }
     return NextResponse.redirect(loginUrl)
   }

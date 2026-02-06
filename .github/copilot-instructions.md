@@ -13,6 +13,10 @@
 - Toujours bien gérer les erreurs avec des messages clairs et précis (prendre en compte la traduction) à renvoyer à l'utilisateur.
 - Toujours bien gérer l'authentification et les droits (autorisations, licences) sur chaque endpoint API créé ou modifié.
 - Toujours mettre à jour la modal de nouveautés à chaque ajout/modification de features (+ la version).
+- Toujours faire attention à la performance : éviter les requêtes redondantes, optimiser les requêtes Prisma, utiliser le caching quand nécessaire, etc...
+- Toujours faire attention à la maintenabilité du code : éviter les duplications, respecter les conventions de nommage, structurer le code de manière claire, etc...
+- Toujours "componentiser" au maximum : créer des composants réutilisables pour éviter les duplications et faciliter la maintenance.
+- Utilisation de "sensor" à la place de "probe" pour les sondes.
 
 # Vigitemp Codebase Guide for AI Agents
 
@@ -32,7 +36,7 @@ Vigitemp is a comprehensive temperature/sensor monitoring system with:
 └─────────┬──────────────┬────────────┘
           │              │
     ┌─────▼──┐      ┌────▼──────┐
-    │ db-main│      │db-mesure   │
+    │ db-main│      │db-mesures   │
     │ (MySQL)│      │(MySQL)     │
     └────────┘      └────────────┘
    Config, users,   Time-series data
@@ -42,7 +46,7 @@ Vigitemp is a comprehensive temperature/sensor monitoring system with:
 **Key Files:**
 - [prisma.ts](../website/src/lib/prisma.ts) - Two Prisma clients (main + mesure databases)
 - [db-main schema](../website/prisma/db-main/schema.prisma) - Users, profiles, sensors, alarms
-- [db-mesure schema](../website/prisma/db-mesure/schema.prisma) - Time-series measurements
+- [db-mesures schema](../website/prisma/db-mesures/schema.prisma) - Time-series measurements
 
 **Import Pattern:**
 ```typescript
@@ -305,7 +309,7 @@ if (!authorizations.includes('REQUIRED_CODE')) {
 ├── prisma/
 │   ├── db-main/
 │   │   └── schema.prisma           # Main database schema (users, locations, profiles, etc)
-│   └── db-mesure/
+│   └── db-mesures/
 │       └── schema.prisma           # Measurements database schema (time-series)
 └── public/
     └── service-worker.js           # Offline detection
@@ -467,7 +471,7 @@ if (!authorizations.includes('REQUIRED_CODE')) {
    - ✅ [groupes-client.tsx](../website/src/app/(admin)/admin/groupes/groupes-client.tsx) - `selectedRowId={selectedGroupe?.Id_Groupe}`
    - ✅ [etalons-client.tsx](../website/src/app/(admin)/admin/etalons/etalons-client.tsx) - `selectedRowId={selectedEtalon?.Id_Etalon}`
    - ✅ [actionneurs-client.tsx](../website/src/app/(admin)/admin/actionneurs/actionneurs-client.tsx) - `selectedRowId={selectedActionneur?.Id_Actionneur}`
-   - ✅ [alarm-table.tsx](../website/src/components/alarm-table.tsx) - `selectedRowId={selectedAlarm?.id}`
+   - ✅ [alarm-table.tsx](/website/src/components/alarm-table.tsx) - `selectedRowId={selectedAlarm?.id}`
    - Already present: [lieux-client.tsx](../website/src/app/(admin)/admin/lieux/lieux-client.tsx), [sites-client.tsx](../website/src/app/(admin)/admin/sites/sites-client.tsx)
 
 ### Previous Sessions - Core Features
@@ -618,7 +622,7 @@ if (!authorizations.includes('REQUIRED_CODE')) {
 1. **Toujours en français:** Tous les labels UI, messages, descriptions DOIVENT être en français
 2. **Use shadcn Table NOT TanStack Table:** For consistency with users page
 3. **Table heights:** Use max-h-96 for main tables, max-h-64 for sub-tables with `overflow-y-auto` div wrapper
-4. **Database:** Never join across db-main and db-mesure — load separately in JavaScript
+4. **Database:** Never join across db-main and db-mesures — load separately in JavaScript
 5. **Cookie:** Standardize to `token` (not `auth-token`) in new code
 6. **Timezone:** MySQL datetimes are UTC — handle conversions on frontend with date-fns
 7. **API Response:** Always return `NextResponse.json()`, never plain objects

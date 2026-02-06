@@ -1,6 +1,6 @@
 'use client';
 
-import type { AvailableProbe } from '@/hooks/useAvailableProbes';
+import type { AvailableSensor } from '@/hooks/useAvailableSensors';
 import type { Group } from '@/hooks/useGroups';
 import type { SiteSimple } from '@/hooks/useSites';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,7 @@ type LocationFormDialogProps = {
   setFormData?: Dispatch<SetStateAction<LocationFormData>>;
   sites: SiteSimple[];
   groups: Group[];
-  availableProbes: AvailableProbe[];
+  availableSensors: AvailableSensor[];
   isSubmitting: boolean;
   onCancel: () => void;
   onSubmit: (values: LocationFormData) => void | Promise<void>;
@@ -49,7 +49,7 @@ export function LocationFormDialog({
   setFormData,
   sites,
   groups,
-  availableProbes,
+  availableSensors,
   isSubmitting,
   onCancel,
   onSubmit,
@@ -125,7 +125,7 @@ export function LocationFormDialog({
               <LocationFormTabGeneral
                 sites={sites}
                 groups={groups}
-                availableProbes={availableProbes}
+                availableSensors={availableSensors}
               />
               {!isOne && <LocationFormTabMetrology />}
               {!isOne && <LocationFormTabTelephony />}
@@ -147,3 +147,4 @@ export function LocationFormDialog({
     </Dialog>
   );
 }
+

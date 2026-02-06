@@ -45,18 +45,24 @@ ChartJS.register(
   Filler
 );
 
+type DateRangeValue = { from: Date; to?: Date };
+
 interface MonitoringDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   idLieu: number;
   nomLieu: string;
   sondeNumeroSerie: string;
+  isGso?: boolean | null;
+  gsoRssi?: string | null;
+  gsoTension?: string | null;
   consigneSup: number | null;
   consigneInf: number | null;
   consigne: number | null;
   unite: string;
   isSurveillanceActive: boolean;
   measurements?: MeasureData[];
+  initialRange?: DateRangeValue;
 }
 
 type AuditLog = {
@@ -83,11 +89,12 @@ export default function MonitoringDetailsModal({
   unite: initialUnite,
   isSurveillanceActive,
   measurements: initialMeasurements,
+  initialRange,
 }: MonitoringDetailsModalProps) {
   const locale = useLocale();
   const localeTag = locale === "fr" ? "fr-FR" : locale;
   const t = useTranslations("monitoringDetailsModal");
-  const [dateRange, setDateRange] = useState<{ from: Date; to?: Date } | null>(null);
+  const [dateRange, setDateRange] = useState<DateRangeValue | null>(initialRange ?? null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
   const chartRef = useRef<ChartJS<"line"> | null>(null);
   const [guidePositions, setGuidePositions] = useState<{
@@ -102,6 +109,12 @@ export default function MonitoringDetailsModal({
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError] = useState<string | null>(null);
   const [auditLoaded, setAuditLoaded] = useState(false);
+
+  useEffect(() => {
+    if (initialRange) {
+      setDateRange(initialRange);
+    }
+  }, [initialRange]);
 
   const effectiveRange = useMemo(() => {
     if (!dateRange?.from) return null;
@@ -499,7 +512,7 @@ export default function MonitoringDetailsModal({
         <DialogHeader>
           <DialogTitle>{nomLieu}</DialogTitle>
           <p className="text-sm text-muted-foreground">
-            {t("probe", { serial: sondeNumeroSerie })}
+            {t("sensor", { serial: sondeNumeroSerie })}
           </p>
         </DialogHeader>
 
@@ -826,3 +839,4 @@ export default function MonitoringDetailsModal({
     </Dialog>
   );
 }
+

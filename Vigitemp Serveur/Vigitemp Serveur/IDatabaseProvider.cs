@@ -17,6 +17,7 @@ namespace Vigitemp_Serveur
         (List<int>, List<DateTime>) getLieuxAvecAlarmesEnSnooze();
         (List<int>, List<DateTime>) getLieuxAvecSurveillanceEnSnooze();
         double getLastMeasure(int p_IdLieu);
+        (double value, string unit) getLastMeasureWithUnit(int idLieu);
         bool setAlarmeByIdLieu(int p_idLieu, bool p_valeur);
         bool setSurveillanceByIdLieu(int p_idLieu, bool p_valeur);
         bool setThresholdAlarmEnded(int idLieu);

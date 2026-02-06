@@ -111,7 +111,7 @@ namespace Vigitemp_Serveur.sensors
                     ths.GetDatabase().AddMesure(m_sondeSerialNumber, Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero), "%CO2", tmp_resistance);
                     VigitempServeur.Log($"[SONDE][DONE] type=IC serial={m_sondeSerialNumber} port={m_comPort} status=success value={Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero)} unit=%CO2 raw={tmp_resistance}");
                     HandleNoResponseAlarm(true);
-                    compareMeasuresAndLimits(Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero));
+                    compareMeasuresAndLimits(Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero), "%CO2");
                 }
                 else
                 {

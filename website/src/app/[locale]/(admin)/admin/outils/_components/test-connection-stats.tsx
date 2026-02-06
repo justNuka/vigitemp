@@ -7,14 +7,14 @@ import { useTranslations } from 'next-intl'
 
 type TestConnectionStatsProps = {
   globalResponseRate: number
-  probeCount: number
+  sensorCount: number
   lastMeasurementCount: number
   selectedCount: number
 }
 
 export function TestConnectionStats({
   globalResponseRate,
-  probeCount,
+  sensorCount,
   lastMeasurementCount,
   selectedCount,
 }: TestConnectionStatsProps) {
@@ -32,7 +32,7 @@ export function TestConnectionStats({
             <Activity className="h-6 w-6 text-green-600" />
             <div>
               <p className="text-2xl font-bold">{globalResponseRate}%</p>
-              <p className="mt-1 text-xs text-muted-foreground">{t('probe_count', { count: probeCount })}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t('sensor_count', { count: sensorCount })}</p>
             </div>
           </div>
         </CardContent>
@@ -58,7 +58,7 @@ export function TestConnectionStats({
       <Card className="border-0 shadow-md">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            {t('selected_probes')}
+            {t('selected_sensors')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -66,7 +66,7 @@ export function TestConnectionStats({
             <CheckCircle2 className="h-6 w-6 text-purple-600" />
             <div>
               <p className="text-2xl font-bold">{selectedCount}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{t('selected_over_total', { total: probeCount })}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t('selected_over_total', { total: sensorCount })}</p>
             </div>
           </div>
         </CardContent>
@@ -74,3 +74,4 @@ export function TestConnectionStats({
     </div>
   )
 }
+

@@ -51,10 +51,10 @@ export function ModulesTable({
     },
     {
       accessorKey: 'sondes_count',
-      header: () => <div className="text-right">{t('columns.probes_count')}</div>,
+      header: () => <div className="text-right">{t('columns.sensors_count')}</div>,
       cell: ({ row }) => (
         <div className="text-right font-medium">
-          {t('probes_count_value', { count: row.getValue('sondes_count') })}
+          {t('sensors_count_value', { count: row.getValue('sondes_count') })}
         </div>
       ),
     },
@@ -81,3 +81,4 @@ export function ModulesTable({
     />
   );
 }
+

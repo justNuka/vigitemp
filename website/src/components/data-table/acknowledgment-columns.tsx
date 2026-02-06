@@ -31,7 +31,7 @@ export const getAcknowledgmentColumns = (
   },
   {
     accessorKey: "sonde",
-    header: t("acknowledgments.columns.probe"),
+    header: t("acknowledgments.columns.sensor"),
     enableSorting: true,
     cell: ({ getValue }) => (getValue() ? String(getValue()) : "-"),
   },
@@ -42,4 +42,5 @@ export const getAcknowledgmentColumns = (
     cell: ({ getValue }) => (getValue() ? String(getValue()) : "-"),
   },
 ]
+
 

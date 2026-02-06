@@ -30,7 +30,7 @@ export function CalibrationsPanel({
   selectedCalibrationId,
   onSelectCalibration,
 }: CalibrationsPanelProps) {
-  const t = useTranslations('probesPage');
+  const t = useTranslations('sensorsPage');
   const locale = useLocale();
   const localeTag = locale.toLowerCase().startsWith('fr') ? 'fr-FR' : locale;
   const timezone = useAppTimezone();
@@ -102,4 +102,5 @@ export function CalibrationsPanel({
     </Card>
   );
 }
+
 

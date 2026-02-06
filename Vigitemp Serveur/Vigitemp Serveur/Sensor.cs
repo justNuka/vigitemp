@@ -71,7 +71,7 @@ namespace Vigitemp_Serveur
         protected abstract void DataReceivedHandler(object sender, SerialDataReceivedEventArgs e);
 
         
-        public bool compareMeasuresAndLimits(double p_valeur)
+        public bool compareMeasuresAndLimits(double p_valeur, string p_unite)
         {
             try
             {
@@ -116,6 +116,7 @@ namespace Vigitemp_Serveur
                     high: hasLow ? 1_000_000_000d : 0d,
                     eligible: eligible,
                     debounceSeconds: forceLowImmediate ? 0 : Math.Max(0, settings.RetardAlarmeBasMinutes * 60),
+                    ignorePolicyDebounce: forceLowImmediate,
                     nowUtc: nowUtc);
 
                 var highEval = EvaluateAlarmChannel(
@@ -126,10 +127,20 @@ namespace Vigitemp_Serveur
                     high: hasHigh ? settings.ConsigneSup.Value : 0d,
                     eligible: eligible,
                     debounceSeconds: forceHighImmediate ? 0 : Math.Max(0, settings.RetardAlarmeHautMinutes * 60),
+                    ignorePolicyDebounce: forceHighImmediate,
                     nowUtc: nowUtc);
 
-                                if (lowEval.TransitionToActive)
+                var unit = string.IsNullOrWhiteSpace(p_unite)
+                    ? ths.GetDatabase().getLieuUnite(m_idLieu)
+                    : p_unite;
+
+                if (lowEval.TransitionToActive)
                 {
+                    if (forceLowImmediate)
+                    {
+                        VigitempServeur.Log(
+                            $"Re-declenchement immediat (alarme basse acquittee) lieu {m_idLieu} - sonde {m_sondeSerialNumber} valeur={p_valeur} unite={unit ?? ""}");
+                    }
                     VigitempServeur.Log($"Alarme basse declenchee pour le lieu {m_idLieu} - sonde {m_sondeSerialNumber} valeur={p_valeur}");
                 }
                 else if (lowEval.TransitionToInactive)
@@ -139,16 +150,19 @@ namespace Vigitemp_Serveur
 
                 if (highEval.TransitionToActive)
                 {
+                    if (forceHighImmediate)
+                    {
+                        VigitempServeur.Log(
+                            $"Re-declenchement immediat (alarme haute acquittee) lieu {m_idLieu} - sonde {m_sondeSerialNumber} valeur={p_valeur} unite={unit ?? ""}");
+                    }
                     VigitempServeur.Log($"Alarme haute declenchee pour le lieu {m_idLieu} - sonde {m_sondeSerialNumber} valeur={p_valeur}");
                 }
                 else if (highEval.TransitionToInactive)
                 {
                     VigitempServeur.Log($"Alarme haute terminee pour le lieu {m_idLieu} - sonde {m_sondeSerialNumber}");
                 }
-_lowAlarmStateByLieu[m_idLieu] = lowEval.IsActive;
+                _lowAlarmStateByLieu[m_idLieu] = lowEval.IsActive;
                 _highAlarmStateByLieu[m_idLieu] = highEval.IsActive;
-
-                var unit = ths.GetDatabase().getLieuUnite(m_idLieu);
                 ths.GetDatabase().setThresholdAlarm(m_idLieu, m_sondeSerialNumber, "B", p_valeur, unit, lowEval.IsActive);
                 ths.GetDatabase().setThresholdAlarm(m_idLieu, m_sondeSerialNumber, "H", p_valeur, unit, highEval.IsActive);
 
@@ -174,6 +188,7 @@ _lowAlarmStateByLieu[m_idLieu] = lowEval.IsActive;
                         high: highPre,
                         eligible: eligible,
                         debounceSeconds: 0,
+                        ignorePolicyDebounce: false,
                         nowUtc: nowUtc);
                 }
 
@@ -222,10 +237,16 @@ _lowAlarmStateByLieu[m_idLieu] = lowEval.IsActive;
                     high: 0.1d,
                     eligible: eligible,
                     debounceSeconds: forceImmediate ? 0 : Math.Max(0, settings.RetardNonReponseMinutes * 60),
+                    ignorePolicyDebounce: forceImmediate,
                     nowUtc: nowUtc);
 
                 if (eval.TransitionToActive)
                 {
+                    if (forceImmediate)
+                    {
+                        VigitempServeur.Log(
+                            $"Re-declenchement immediat (alarme non-reponse acquittee) lieu {m_idLieu} - sonde {m_sondeSerialNumber}");
+                    }
                     ths.GetDatabase().setNonResponseAlarm(m_idLieu, m_sondeSerialNumber, true);
                     VigitempServeur.Log($"Alarme non-reponse declenchee pour le lieu {m_idLieu} - sonde {m_sondeSerialNumber}");
                 }
@@ -263,6 +284,7 @@ _lowAlarmStateByLieu[m_idLieu] = lowEval.IsActive;
             double high,
             bool eligible,
             int debounceSeconds,
+            bool ignorePolicyDebounce,
             DateTime nowUtc)
         {
             if (!enabled)
@@ -275,6 +297,7 @@ _lowAlarmStateByLieu[m_idLieu] = lowEval.IsActive;
                     high: 0d,
                     eligible: false,
                     debounceSeconds: 0,
+                    ignorePolicyDebounce: false,
                     nowUtc: nowUtc);
             }
 
@@ -286,6 +309,7 @@ _lowAlarmStateByLieu[m_idLieu] = lowEval.IsActive;
                 high: high,
                 eligible: eligible,
                 debounceSeconds: debounceSeconds,
+                ignorePolicyDebounce: ignorePolicyDebounce,
                 nowUtc: nowUtc);
         }
 

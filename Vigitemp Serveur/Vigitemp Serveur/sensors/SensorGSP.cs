@@ -112,7 +112,7 @@ namespace Vigitemp_Serveur.sensors
                 ths.GetDatabase().AddMesure(m_sondeSerialNumber, float.Parse(String.Format("{0:0.00}", tmp_valeur)), "°C", null);
                 VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=success value={float.Parse(String.Format("{0:0.00}", tmp_valeur))} unit=°C");
                 HandleNoResponseAlarm(true);
-                compareMeasuresAndLimits(float.Parse(String.Format("{0:0.00}", tmp_valeur)));
+                compareMeasuresAndLimits(float.Parse(String.Format("{0:0.00}", tmp_valeur)), "°C");
                 m_port.Close();
                 pendingResults = false;
                 Trace.WriteLine("Fermeture du port " + m_comPort);

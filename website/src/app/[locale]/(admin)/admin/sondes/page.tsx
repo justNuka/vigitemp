@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
 import { PageHeader } from "@/components/page-header";
-import { ProbesClient } from "./probes-client";
+import { SensorsClient } from "./sensors-client";
 
 export const metadata: Metadata = {
   title: "Gestion des Sondes - Vigitemp",
@@ -18,9 +18,10 @@ export default function SondesPage() {
 
       <div className="space-y-6 p-6">
         <Suspense fallback={<div className="text-sm text-muted-foreground">Chargement…</div>}>
-          <ProbesClient />
+          <SensorsClient />
         </Suspense>
       </div>
     </div>
   );
 }
+

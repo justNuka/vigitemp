@@ -17,7 +17,7 @@ export const getActiveAlarmsColumns = (
 ): ColumnDef<ActiveAlarm>[] => [
   {
     accessorKey: "sonde",
-    header: t("active_alarms.columns.probe"),
+    header: t("active_alarms.columns.sensor"),
     enableSorting: true,
   },
   {
@@ -52,4 +52,5 @@ export const getActiveAlarmsColumns = (
     ),
   },
 ]
+
 

@@ -41,7 +41,7 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
   }
 })
 
-const createProbeSchema = z.object({
+const createSensorSchema = z.object({
   sondeType: z.string().min(1),
   serieNum: z.string().regex(/^\d+(?:-?[TH])?$/i, "Numéro de série invalide"),
   moduleId: z.number().int().positive().nullable().optional(),
@@ -51,7 +51,7 @@ const createProbeSchema = z.object({
 export const POST = withAuthLogging(async (req: NextRequest) => {
   try {
     const body = await req.json()
-    const data = createProbeSchema.parse(body)
+    const data = createSensorSchema.parse(body)
 
     const normalizedType = data.sondeType.toUpperCase()
     const serial =
@@ -81,7 +81,7 @@ export const POST = withAuthLogging(async (req: NextRequest) => {
     return apiOk(
       {
         message: "Sonde créée avec succès",
-        probe: { Id_Sonde: created.Id_Sonde, Sonde_Numero_Serie: created.Sonde_Numero_Serie },
+        sensor: { Id_Sonde: created.Id_Sonde, Sonde_Numero_Serie: created.Sonde_Numero_Serie },
       },
       { status: 201 },
     )
@@ -94,3 +94,4 @@ export const POST = withAuthLogging(async (req: NextRequest) => {
     return apiError(500, "internal_error", "Erreur lors de la création de la sonde")
   }
 })
+

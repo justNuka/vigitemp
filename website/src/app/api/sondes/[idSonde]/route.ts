@@ -5,7 +5,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 
-const updateProbeSchema = z.object({
+const updateSensorSchema = z.object({
   moduleId: z.number().int().positive().nullable().optional(),
   sondeOffset: z.number().nullable().optional(),
 })
@@ -14,7 +14,7 @@ export const PATCH = withAuthLogging(
   async (req: NextRequest, _ctx: any, { params }: { params: Promise<{ idSonde: string }> }) => {
     try {
       const body = await req.json()
-      const data = updateProbeSchema.parse(body)
+      const data = updateSensorSchema.parse(body)
 
       const resolvedParams = await params
       const id = parseInt(resolvedParams.idSonde, 10)
@@ -47,3 +47,4 @@ export const PATCH = withAuthLogging(
     }
   },
 )
+

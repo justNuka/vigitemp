@@ -374,7 +374,7 @@
     },
     "placeholders": {
       "na": "N/A",
-      "no_probe": "No sensor"
+      "no_sensor": "No sensor"
     },
     "types": {
       "bain_marie": "Water bath",
@@ -403,7 +403,7 @@
     },
     "general": {
       "sections": {
-        "probe": "Sensor",
+        "sensor": "Sensor",
         "setpoints": "Setpoints"
       },
       "labels": {
@@ -415,8 +415,8 @@
         "monitoring_disable": "Disable monitoring",
         "site": "Site",
         "groups": "Group(s)",
-        "probe_select": "Sensor selection",
-        "probe_state": "Sensor status",
+        "sensor_select": "Sensor selection",
+        "sensor_state": "Sensor status",
         "setpoint": "Setpoint",
         "frequency": "Measurement frequency (min)",
         "upper_enable": "Enable upper setpoint",
@@ -438,9 +438,9 @@
         "site_empty": "No site",
         "groups": "Select...",
         "groups_search": "Search a group...",
-        "probe": "Choose a sensor",
-        "probe_search": "Search a sensor...",
-        "probe_empty": "No sensor",
+        "sensor": "Choose a sensor",
+        "sensor_search": "Search a sensor...",
+        "sensor_empty": "No sensor",
         "auto": "Automatic",
         "numeric": "0.0",
         "frequency": "15",
@@ -454,7 +454,7 @@
         "autre": "Other"
       },
       "options": {
-        "no_probe": "No sensor"
+        "no_sensor": "No sensor"
       },
       "tooltips": {
         "frequency_gso": "Frequency is fixed to 15 minutes for GSO sensors."
@@ -463,7 +463,7 @@
     },
     "metrology": {
       "sections": {
-        "probe": "Sensor",
+        "sensor": "Sensor",
         "setpoints": "Setpoints"
       },
       "labels": {
@@ -584,14 +584,14 @@
       "serial": "Serial number",
       "location": "Location",
       "port": "Port",
-      "probes_count": "Sensors count",
+      "sensors_count": "Sensors count",
       "server": "Server"
     },
-    "probes_count_value": "{count, plural, one {{count} sensor} other {{count} sensors}}",
+    "sensors_count_value": "{count, plural, one {{count} sensor} other {{count} sensors}}",
     "search_placeholder": "Serial number, location...",
     "empty": "No modules found"
   },
-  "moduleProbesTable": {
+  "moduleSensorsTable": {
     "columns": {
       "address": "Address",
       "serial": "Serial number",
@@ -600,7 +600,7 @@
     },
     "empty": "No equipment associated with this module"
   },
-  "moduleAssociatedProbes": {
+  "moduleAssociatedSensors": {
     "columns": {
       "type": "Type",
       "serial": "Serial number"
@@ -734,7 +734,7 @@
         "reset": "Reset states"
       },
       "columns": {
-        "probe": "Sensor",
+        "sensor": "Sensor",
         "module": "Module",
         "relay1": "Relay 1",
         "relay2": "Relay 2",
@@ -755,10 +755,10 @@
     },
     "stats": {
       "global_response_rate": "Global response rate",
-      "probe_count": "{count, plural, one {{count} sensor} other {{count} sensors}}",
+      "sensor_count": "{count, plural, one {{count} sensor} other {{count} sensors}}",
       "measurement_count": "Measurement count",
       "last_24h": "last 24h",
-      "selected_probes": "Selected sensors",
+      "selected_sensors": "Selected sensors",
       "selected_over_total": "out of {total}"
     }
   },
@@ -968,7 +968,7 @@
       "save_error": "Error while saving group"
     }
   },
-  "probesDialog": {
+  "sensorsDialog": {
     "title_create": "Add sensor",
     "title_edit": "Edit sensor",
     "fields": {
@@ -989,7 +989,7 @@
       "serial_invalid": "Invalid serial number"
     },
     "toast": {
-      "invalid_probe": "Invalid sensor",
+      "invalid_sensor": "Invalid sensor",
       "update_success": "Sensor updated",
       "create_success": "Sensor created",
       "save_error": "Server error"
@@ -1236,7 +1236,7 @@
       "description": "Alarm management for administrators"
     }
   },
-  "probesPage": {
+  "sensorsPage": {
     "title": "Sensor management ({count, plural, one {# sensor} other {# sensors}})",
     "actions": {
       "add": "Add",
@@ -1295,10 +1295,10 @@
       }
     }
   },
-  "probeAdjustmentImport": {
+  "sensorAdjustmentImport": {
     "page": {
       "title": "Adjustment/Calibration import",
-      "description": "Import XML adjustment or calibration files"
+      "description": "Import XML adjustment (formerly calibration files)"
     },
     "actions": {
       "import": "Import files"
@@ -1307,8 +1307,13 @@
       "title": "Adjustment/Calibration files",
       "columns": {
         "file": "File",
-        "status": "Status",
-        "uploaded_at": "Imported at"
+        "sensor": "Sensor",
+        "date": "Date",
+        "operator": "Operator",
+        "coeff_x": "Coeff. X",
+        "coeff_constant": "Constant coeff.",
+        "measure_etalon_1": "Standard measure 1",
+        "measure_etalon_2": "Standard measure 2"
       },
       "empty": "Please import one or more adjustment/calibration file(s)..."
     },
@@ -1317,10 +1322,8 @@
       "description": "Upload one or more XML files to create sensors."
     }
   },
-  "probeAdjustmentUpload": {
-    "drop_prefix": "Drop files here or",
-    "browse": "browse",
-    "drop_suffix": "to add",
+  "sensorAdjustmentUpload": {
+    "drop_browse_zone": "Drop files here or click to add",
     "supported": "Supported format: XML",
     "sections": {
       "uploading": "Uploading",
@@ -1332,9 +1335,14 @@
       "invalid_type": "Invalid file type (XML only).",
       "upload_failed": "Upload failed",
       "label": "Error"
+    },
+    "placeholders": {
+      "uploading": "No file uploading.",
+      "finished": "No file finished.",
+      "failed": "No file failed."
     }
   },
-  "probeAdjustmentStepper": {
+  "sensorAdjustmentStepper": {
     "step_label": "Step {step}",
     "steps": {
       "upload": "Upload files",
@@ -1347,12 +1355,42 @@
       "pending": "Pending"
     },
     "actions": {
-      "previous": "Previous",
-      "next": "Next"
+      "previous": "Previous step",
+      "next": "Next step",
+      "next_disabled_no_file": "Please upload at least 1 file to continue.",
+      "process": "Process",
+      "processing": "Processing...",
+      "finish": "Close"
     },
     "placeholders": {
       "review": "Review step coming soon.",
       "create": "Creation step coming soon."
+    },
+    "validation": {
+      "description": "XML format and encoding validation.",
+      "empty": "No file to validate.",
+      "encoding": "Detected encoding: {encoding}",
+      "status": {
+        "ok": "Valid format",
+        "fixed": "Encoding corrected",
+        "error": "Format error"
+      },
+      "errors": {
+        "invalid_xml": "Invalid or malformed XML.",
+        "invalid_root": "Unexpected XML root (expected AJUSTAGE or CALIBRAGE).",
+        "unreadable": "Unable to read file."
+      }
+    },
+    "create": {
+      "summary_title": "Summary",
+      "summary_total": "Imported files: {count}",
+      "summary_valid": "Valid files: {count}",
+      "summary_fixed": "Fixed encodings: {count}",
+      "summary_error": "Files in error: {count}",
+      "processing": "Processing files... ({processed}/{total})",
+      "process_done": "Processing finished. {count} file(s) imported.",
+      "process_errors": "{count} file(s) could not be imported.",
+      "process_result": "Success: {success} ? Failed: {failed}"
     }
   },
   "standardsPage": {
@@ -1715,7 +1753,7 @@
     }
   },
   "monitoringDetailsModal": {
-    "probe": "Sensor: {serial}",
+    "sensor": "Sensor: {serial}",
     "gso": {
       "rssi": "RSSI: {value}",
       "tension": "Voltage: {value}"
@@ -2072,7 +2110,7 @@
         "date_time": "Date & Time",
         "user": "User",
         "action": "Action",
-        "probe": "Sensor",
+        "sensor": "Sensor",
         "alarm": "Alarm"
       }
     },
@@ -2092,7 +2130,7 @@
       "description": "Current status ({total}, max {max})",
       "empty": "No active alarms",
       "columns": {
-        "probe": "Sensor",
+        "sensor": "Sensor",
         "location_time": "Location / Time",
         "value": "Value",
         "threshold": "Threshold",
@@ -2139,7 +2177,7 @@
       "description": "{count, plural, one {# sensor not assigned to an active location} other {# sensors not assigned to an active location}}",
       "empty": "No sensors without an active location",
       "columns": {
-        "probe": "Sensor",
+        "sensor": "Sensor",
         "type": "Type",
         "address": "Address",
         "module": "Module"

@@ -40,6 +40,8 @@ interface NavItem {
   title: string;
   href: string;
   icon: typeof LayoutDashboard;
+  badge?: number;
+  badgeVariant?: "default" | "destructive";
 }
 
 interface AdminSidebarProps {

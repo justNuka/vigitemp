@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
-import { useAvailableProbes } from '@/hooks/useAvailableProbes'
+import { useAvailableSensors } from '@/hooks/useAvailableSensors'
 import { useGroups } from '@/hooks/useGroups'
 import { useLocations, type LocationRow } from '@/hooks/useLocations'
 import { useSitesSimple } from '@/hooks/useSites'
@@ -45,10 +45,10 @@ export function LocationsClient() {
   const form = useForm<LocationFormData>({
     defaultValues: getDefaultLocationFormData(),
   })
-  const watchedProbe = form.watch('Sonde_Numero_Serie')
+  const watchedSensor = form.watch('Sonde_Numero_Serie')
   const { data: sites = [] } = useSitesSimple(shouldLoadFormData)
   const { data: groups = [] } = useGroups(undefined, shouldLoadFormData)
-  const { data: availableProbes = [] } = useAvailableProbes(watchedProbe, shouldLoadFormData)
+  const { data: availableSensors = [] } = useAvailableSensors(watchedSensor, shouldLoadFormData)
 
   useEffect(() => {
     if (isLoading || didPrefetchRef.current) return
@@ -63,10 +63,10 @@ export function LocationsClient() {
       queryFn: () => getJson('/api/groupes'),
     })
     queryClient.prefetchQuery({
-      queryKey: ['available-probes', null],
+      queryKey: ['available-sensors', null],
       queryFn: async () => {
         const data = await getJson<any[]>('/api/sondes')
-        return data.filter((probe: any) => !probe?.Lieu)
+        return data.filter((sensor: any) => !sensor?.Lieu)
       },
     })
   }, [isLoading, queryClient])
@@ -199,7 +199,7 @@ export function LocationsClient() {
         form={form}
         sites={sites}
         groups={groups}
-        availableProbes={availableProbes}
+        availableSensors={availableSensors}
         isSubmitting={createMutation.isPending}
         onCancel={() => setIsCreateOpen(false)}
         onSubmit={(values) => {
@@ -218,7 +218,7 @@ export function LocationsClient() {
         form={form}
         sites={sites}
         groups={groups}
-        availableProbes={availableProbes}
+        availableSensors={availableSensors}
         isSubmitting={updateMutation.isPending}
         onCancel={() => setIsEditOpen(false)}
         onSubmit={(values) => updateMutation.mutate(normalizePayload(values))}
@@ -269,4 +269,5 @@ export function LocationsClient() {
     </main>
   )
 }
+
 

@@ -99,11 +99,11 @@ export function LocationsTable({
     },
     {
       accessorKey: 'Sonde_Numero_Serie',
-      header: t('columns.probe'),
+      header: t('columns.sensor'),
       cell: ({ row }) => {
         const serial = row.original.Sonde_Numero_Serie;
         if (!serial) {
-          return <Badge variant="secondary">{t('placeholders.no_probe')}</Badge>;
+          return <Badge variant="secondary">{t('placeholders.no_sensor')}</Badge>;
         }
         return serial;
       },
@@ -178,3 +178,4 @@ export function LocationsTable({
     />
   );
 }
+
