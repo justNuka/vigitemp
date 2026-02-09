@@ -102,16 +102,15 @@ namespace Vigitemp_Serveur.sensors
                 if (int.Parse(tmp_resistance) > -2048 && int.Parse(tmp_resistance) < 2048)
                 {
                     // recuperer a et b our corriger la valeur brute
-                    (double coeffX, double coeffConstant) = ths.GetDatabase().getCoeffCalibrageBySerialNumber(m_sondeSerialNumber);
-                    // Console.WriteLine("Convert.ToDouble: " + (Convert.ToDouble(tmp_temperature, CultureInfo.InvariantCulture.NumberFormat)*coeffX+coeffConstant).ToString());
-                    tmp_valeur = (Convert.ToDouble(float.Parse(tmp_resistance, CultureInfo.InvariantCulture.NumberFormat)) * coeffX + coeffConstant).ToString();
-                    Console.WriteLine("Données corrigées: " + Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero));
-                    Trace.WriteLine("Données corrigées: " + Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero));
+                    var rawValue = Convert.ToDouble(float.Parse(tmp_resistance, CultureInfo.InvariantCulture.NumberFormat));
+                    var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
+                    Console.WriteLine("Données corrigées: " + correctedValue);
+                    Trace.WriteLine("Données corrigées: " + correctedValue);
 
-                    ths.GetDatabase().AddMesure(m_sondeSerialNumber, Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero), "%CO2", tmp_resistance);
-                    VigitempServeur.Log($"[SONDE][DONE] type=IC serial={m_sondeSerialNumber} port={m_comPort} status=success value={Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero)} unit=%CO2 raw={tmp_resistance}");
+                    ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "%CO2", ToInvariantRaw(rawValue));
+                    VigitempServeur.Log($"[SONDE][DONE] type=IC serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=%CO2 raw={ToInvariantRaw(rawValue)}");
                     HandleNoResponseAlarm(true);
-                    compareMeasuresAndLimits(Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero), "%CO2");
+                    compareMeasuresAndLimits(correctedValue, "%CO2");
                 }
                 else
                 {
@@ -132,5 +131,6 @@ namespace Vigitemp_Serveur.sensors
         }
     }
 }
+
 
 

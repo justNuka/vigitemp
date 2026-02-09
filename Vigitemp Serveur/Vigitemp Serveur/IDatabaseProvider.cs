@@ -32,6 +32,8 @@ namespace Vigitemp_Serveur
         List<int> getEndedAlarmLieuxSince(int idServeur, DateTime sinceLocalTime, int maxCount);
         string getLieuUnite(int idLieu);
         (double, double) getCoeffCalibrageBySerialNumber(string p_serial_number);
+        SondeMetrologySettings getSondeMetrologyBySerialNumber(string p_serial_number);
         bool writeAuditJournal(string codeJournal, string username, string userProfile, int? idLieu, string commentaire, string commentaireUtilisateur);
     }
 }
+

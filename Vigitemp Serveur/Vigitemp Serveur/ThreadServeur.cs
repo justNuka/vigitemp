@@ -1,4 +1,4 @@
-ï»¿ï»¿using System;
+using System;
 using System.Diagnostics;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -31,6 +31,8 @@ namespace Vigitemp_Serveur
         private int _idServer;
         private readonly ConcurrentDictionary<int, CachedLieuSettings> _lieuSettingsCache =
             new ConcurrentDictionary<int, CachedLieuSettings>();
+        private readonly ConcurrentDictionary<string, SondeMetrologySettings> _sondeMetrologyCache =
+            new ConcurrentDictionary<string, SondeMetrologySettings>(StringComparer.OrdinalIgnoreCase);
         private readonly object _lieuSettingsLock = new object();
         private readonly int _settingsCacheSeconds = GetSettingInt("Vigi.License.SettingsCacheSeconds", 60);
         private readonly bool _logSettingsCache = GetSettingBool("Vigitemp.Alarms.LogSettingsCache", true);
@@ -149,6 +151,39 @@ namespace Vigitemp_Serveur
             }
         }
 
+
+        public SondeMetrologySettings GetSondeMetrologyCached(string serialNumber)
+        {
+            if (string.IsNullOrWhiteSpace(serialNumber))
+            {
+                return new SondeMetrologySettings();
+            }
+
+            if (_sondeMetrologyCache.TryGetValue(serialNumber, out var cached) && cached != null)
+            {
+                return cached;
+            }
+
+            var fromDb = GetDatabase().getSondeMetrologyBySerialNumber(serialNumber) ?? new SondeMetrologySettings();
+            _sondeMetrologyCache[serialNumber] = fromDb;
+            return fromDb;
+        }
+
+        private void SetSondeMetrologyFromSchedule(SondeScheduleInfo row)
+        {
+            if (row == null || string.IsNullOrWhiteSpace(row.SondeNumeroSerie))
+            {
+                return;
+            }
+
+            _sondeMetrologyCache[row.SondeNumeroSerie] = new SondeMetrologySettings
+            {
+                Offset = row.SondeOffset,
+                HasAjustage = row.HasAjustage,
+                CoeffX = row.CoeffX,
+                CoeffConstant = row.CoeffConstant,
+            };
+        }
         private static int GetSettingInt(string key, int defaultValue)
         {
             try
@@ -564,14 +599,14 @@ namespace Vigitemp_Serveur
 
                 RefreshSchedule();
 
-                //cherche les lieux avec une dateReactivationAlarme passÃ© pour rÃ©activer les alarmes
+                //cherche les lieux avec une dateReactivationAlarme passé pour réactiver les alarmes
                 //VigitempServeur.Log("process 1 minute");
                 (List<int> arr_lieuxAvecAlarmeSnooze, List<DateTime> arr_dateDeRemiseEnAlarme) = GetDatabase().getLieuxAvecAlarmesEnSnooze();
                 for (int i = 0; i < arr_lieuxAvecAlarmeSnooze.Count(); i++)
                 {
                     if (arr_dateDeRemiseEnAlarme[i].CompareTo(DateTime.Now) <= 0 )
                     {
-                        VigitempServeur.Log("Le lieu " + arr_lieuxAvecAlarmeSnooze[i] + " doit etre reactivÃ©.");
+                        VigitempServeur.Log("Le lieu " + arr_lieuxAvecAlarmeSnooze[i] + " doit etre reactivé.");
 
                         GetDatabase().setAlarmeByIdLieu(arr_lieuxAvecAlarmeSnooze[i], true);
 
@@ -666,20 +701,20 @@ namespace Vigitemp_Serveur
                     }
                 }
 
-                // RÃ©activation automatique de la surveillance (Lieu_Etat)
+                // Réactivation automatique de la surveillance (Lieu_Etat)
                 (List<int> arr_lieuxSurveillanceSnooze, List<DateTime> arr_dateSurveillance) = GetDatabase().getLieuxAvecSurveillanceEnSnooze();
                 for (int i = 0; i < arr_lieuxSurveillanceSnooze.Count(); i++)
                 {
                     if (arr_dateSurveillance[i].CompareTo(DateTime.Now) <= 0)
                     {
-                        VigitempServeur.Log("Surveillance rÃ©activÃ©e pour le lieu " + arr_lieuxSurveillanceSnooze[i] + ".");
+                        VigitempServeur.Log("Surveillance réactivée pour le lieu " + arr_lieuxSurveillanceSnooze[i] + ".");
                         GetDatabase().setSurveillanceByIdLieu(arr_lieuxSurveillanceSnooze[i], true);
                         GetDatabase().writeAuditJournal(
                             "ACT",
                             "SERVEUR",
                             "SYSTEME",
                             arr_lieuxSurveillanceSnooze[i],
-                            "RÃ©activation automatique de la surveillance",
+                            "Réactivation automatique de la surveillance",
                             null);
                     }
                 }
@@ -714,6 +749,7 @@ namespace Vigitemp_Serveur
                 {
                     schedule = BuildSchedule(row, now);
                     _schedules[row.IdLieu] = schedule;
+                    SetSondeMetrologyFromSchedule(row);
                     if (_logScheduler)
                     {
                         VigitempServeur.Log($"Scheduler add idLieu={row.IdLieu} serial={row.SondeNumeroSerie} freqSec={row.FrequenceSecondes}");
@@ -735,6 +771,7 @@ namespace Vigitemp_Serveur
 
                 if (hasChanges)
                 {
+                    SetSondeMetrologyFromSchedule(row);
                     schedule.Serial = row.SondeNumeroSerie;
                     schedule.Adresse = row.AdresseSonde;
                     schedule.Port = row.PortSerie;
@@ -758,7 +795,10 @@ namespace Vigitemp_Serveur
             var toRemove = _schedules.Keys.Where(id => !seen.Contains(id)).ToList();
             foreach (var idLieu in toRemove)
             {
-                _schedules.TryRemove(idLieu, out _);
+                if (_schedules.TryRemove(idLieu, out var removed) && removed != null && !string.IsNullOrWhiteSpace(removed.Serial))
+                {
+                    _sondeMetrologyCache.TryRemove(removed.Serial, out _);
+                }
                 if (_logScheduler)
                 {
                     VigitempServeur.Log($"Scheduler remove idLieu={idLieu}");
@@ -806,3 +846,14 @@ namespace Vigitemp_Serveur
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+

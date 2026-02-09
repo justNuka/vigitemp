@@ -1,7 +1,8 @@
-ï»¿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO.Ports;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -69,6 +70,41 @@ namespace Vigitemp_Serveur
 
         public abstract Task<bool> read();
         protected abstract void DataReceivedHandler(object sender, SerialDataReceivedEventArgs e);
+        protected double ApplyMetrology(double rawValue)
+        {
+            var metrology = ths.GetSondeMetrologyCached(m_sondeSerialNumber);
+
+            if (metrology == null)
+            {
+                return rawValue;
+            }
+
+            if (metrology.HasAjustage)
+            {
+                if (metrology.Offset.HasValue)
+                {
+                    VigitempServeur.Log($"[METROLOGY] serial={m_sondeSerialNumber} ajustage actif, offset ignore");
+                }
+                return metrology.CoeffX * rawValue + metrology.CoeffConstant;
+            }
+
+            if (metrology.Offset.HasValue)
+            {
+                return rawValue + metrology.Offset.Value;
+            }
+
+            return rawValue;
+        }
+
+        protected string ToInvariantRaw(double rawValue)
+        {
+            return rawValue.ToString("0.########", CultureInfo.InvariantCulture);
+        }
+
+        protected double RoundMeasure(double value)
+        {
+            return Math.Round(value, 2, MidpointRounding.AwayFromZero);
+        }
 
         
         public bool compareMeasuresAndLimits(double p_valeur, string p_unite)
@@ -327,7 +363,7 @@ namespace Vigitemp_Serveur
 
             if (!prevAlarm && alarmActive)
             {
-                // Notifications dispatchÃ©es via le poll d'alarme (Ã©vite les doublons et couvre les sondes GSO).
+                // Notifications dispatchées via le poll d'alarme (évite les doublons et couvre les sondes GSO).
             }
             else if (prevAlarm && !alarmActive)
             {
@@ -343,6 +379,9 @@ namespace Vigitemp_Serveur
 
     }
 }
+
+
+
 
 
 

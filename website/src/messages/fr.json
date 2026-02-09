@@ -1357,7 +1357,12 @@
       "description": "Importer des fichiers XML d'ajustage (anciennement calibrage)"
     },
     "actions": {
-      "import": "Importer des fichiers"
+      "import": "Importer des fichiers",
+      "save_to_db": "Insérer en base",
+      "saving_to_db": "Insertion en base...",
+      "edit": "Modifier",
+      "cancel": "Annuler",
+      "apply": "Appliquer"
     },
     "table": {
       "title": "Fichiers d'ajustage/calibrage",
@@ -1369,13 +1374,30 @@
         "coeff_x": "Coeff. X",
         "coeff_constant": "Coeff. constant",
         "measure_etalon_1": "Mesure étalon 1",
-        "measure_etalon_2": "Mesure étalon 2"
+        "measure_etalon_2": "Mesure étalon 2",
+        "unit": "Unité",
+        "actions": "Actions"
       },
       "empty": "Veuillez importer un ou plusieurs fichier(s) d'ajustage/calibrage..."
     },
     "modal": {
       "title": "Importer un fichier d'ajustage/calibrage",
       "description": "Chargez un ou plusieurs fichiers XML pour créer des sondes."
+    },
+    "edit": {
+      "title": "Modifier les données",
+      "operator": "Opérateur",
+      "unit": "Unité"
+    },
+    "toast": {
+      "save_success": "{count} ligne(s) insérée(s) en base.",
+      "save_error": "Erreur lors de l'insertion en base.",
+      "save_skipped": "{count} ligne(s) ignorée(s) car déjà présentes.",
+      "no_pending": "Aucune ligne ? ins?rer.",
+      "confirm_adjustment_overwrite": "Des ajustages existent d\u00e9j\u00e0 pour {count} sonde(s). Ils seront remplac\u00e9s:",
+      "confirm_offset_clear": "Un offset est pr\u00e9sent sur {count} sonde(s). Il sera remis \u00e0 0:",
+      "overwrite_done": "Ajustages remplac\u00e9s pour {count} sonde(s).",
+      "offsets_cleared": "Offsets remis \u00e0 0 pour {count} sonde(s)."
     }
   },
   "sensorAdjustmentUpload": {
@@ -1394,7 +1416,7 @@
     },
     "placeholders": {
       "uploading": "Aucun fichier en cours d'upload.",
-      "finished": "Aucun fichier termin?.",
+      "finished": "Aucun fichier terminé.",
       "failed": "Aucun fichier en erreur."
     }
   },
@@ -1446,7 +1468,7 @@
       "processing": "Traitement des fichiers... ({processed}/{total})",
       "process_done": "Traitement terminé. {count} fichier(s) importé(s).",
       "process_errors": "{count} fichier(s) n'ont pas pu être importé(s).",
-      "process_result": "R?ussis : {success} ? ?checs : {failed}"
+      "process_result": "Réussis : {success} Échecs : {failed}"
     }
   },
   "standardsPage": {

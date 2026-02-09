@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Ports;
@@ -133,21 +133,19 @@ namespace Vigitemp_Serveur.sensors
 
 
                 tmp_resistance = (poidsFort * 256 + poidsFaible - 2048).ToString();
-                Console.WriteLine("resultat dÃ©cimal: " + tmp_resistance);
-                Trace.WriteLine("resultat dÃ©cimal: " + tmp_resistance);
+                Console.WriteLine("resultat décimal: " + tmp_resistance);
+                Trace.WriteLine("resultat décimal: " + tmp_resistance);
 
                 if (int.Parse(tmp_resistance) > -2048 && int.Parse(tmp_resistance) < 2048)
                 {
                     // recuperer a et b our corriger la valeur brute
-                    (double coeffX, double coeffConstant) = ths.GetDatabase().getCoeffCalibrageBySerialNumber(m_sondeSerialNumber);
-                    // Console.WriteLine("Convert.ToDouble: " + (Convert.ToDouble(tmp_temperature, CultureInfo.InvariantCulture.NumberFormat)*coeffX+coeffConstant).ToString());
-                    tmp_valeur = (Convert.ToDouble(float.Parse(tmp_resistance, CultureInfo.InvariantCulture.NumberFormat)) * coeffX + coeffConstant).ToString();
-                    // Console.WriteLine("DonnÃ©es corrigÃ©es: " + Math.Round(Convert.ToDouble(tmp_temperature), 2, MidpointRounding.AwayFromZero));
+                    var rawValue = Convert.ToDouble(float.Parse(tmp_resistance, CultureInfo.InvariantCulture.NumberFormat));
+                    var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
 
-                    ths.GetDatabase().AddMesure(m_sondeSerialNumber, Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero), "Â°C", tmp_resistance);
-                    VigitempServeur.Log($"[SONDE][DONE] type=EN serial={m_sondeSerialNumber} port={m_comPort} status=success value={Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero)} unit=Â°C raw={tmp_resistance}");
+                    ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
+                    VigitempServeur.Log($"[SONDE][DONE] type=EN serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=°C raw={ToInvariantRaw(rawValue)}");
                     HandleNoResponseAlarm(true);
-                    compareMeasuresAndLimits(Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero), "Â°C");
+                    compareMeasuresAndLimits(correctedValue, "°C");
                 }
                 else
                 {
@@ -170,3 +168,4 @@ namespace Vigitemp_Serveur.sensors
         }
     }
 }
+

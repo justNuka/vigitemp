@@ -30,8 +30,6 @@ namespace Vigitemp_Serveur.sensors
                 m_port.Write(command);
                 Stopwatch tmp_sw = new Stopwatch();
                 tmp_sw.Start();
-                // while (tmp_sw.Elapsed.TotalMilliseconds < 100) {}
-                // m_port.Write("SM"+m_serialNumber.Substring(m_serialNumber.Length - 4)+"0000000000000000");
 
                 Console.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
                 Trace.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
@@ -93,38 +91,20 @@ namespace Vigitemp_Serveur.sensors
                     return;
                 }
 
-                // Console.WriteLine("Données recues dans le port COM: " + regex_res); 
-
-                //recuperer les coeffs our corriger la valeur brute
-                (double coeffX, double constant) = ths.GetDatabase().getCoeffCalibrageBySerialNumber(m_sondeSerialNumber);
-
-                double mesureNonCorrigée, mesureCalculée;
-
-                double coeffTemp;
-                double coeffA = 0.0039083;
-                double coeffB = -0.0000005775;
-
                 int poidsFort = regex_res[6];
                 int poidsFaible = regex_res[7];
                 tmp_resistance = (poidsFort * 256 + poidsFaible - 2048).ToString();
                 VigitempServeur.Log($"[SONDE][RX] type=IP serial={m_sondeSerialNumber} resistance={tmp_resistance}");
 
-                coeffTemp = Math.Pow(coeffA / (2 * coeffB), 2) + (coeffX * int.Parse(tmp_resistance.Replace(",", ".")) + (constant - 1)) / coeffB;
+                var rawValue = Convert.ToDouble(tmp_resistance, System.Globalization.CultureInfo.InvariantCulture);
+                var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
 
-                if (coeffTemp < 0)
-                {
-                    mesureCalculée = 0.0;
-                    return;
-                }
-                mesureNonCorrigée = -(coeffA / (2 * coeffB)) - Math.Sqrt(coeffTemp);
-
-                mesureCalculée = mesureNonCorrigée;
-                Console.WriteLine("Données corrigées: " + float.Parse(String.Format("{0:0.00}", mesureCalculée)));
-                Trace.WriteLine("Données corrigées: " + float.Parse(String.Format("{0:0.00}", mesureCalculée)));
-                ths.GetDatabase().AddMesure(m_sondeSerialNumber, mesureCalculée, "°C", tmp_resistance);
+                Console.WriteLine("Données corrigées: " + correctedValue);
+                Trace.WriteLine("Données corrigées: " + correctedValue);
+                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "�C", ToInvariantRaw(rawValue));
                 HandleNoResponseAlarm(true);
-                compareMeasuresAndLimits(mesureCalculée, "°C");
-                VigitempServeur.Log($"[SONDE][DONE] type=IP serial={m_sondeSerialNumber} port={m_comPort} status=success value={float.Parse(String.Format("{0:0.00}", mesureCalculée))} unit=°C raw={tmp_resistance}");
+                compareMeasuresAndLimits(correctedValue, "�C");
+                VigitempServeur.Log($"[SONDE][DONE] type=IP serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=�C raw={ToInvariantRaw(rawValue)}");
 
                 m_port.Close();
                 pendingResults = false;
@@ -137,5 +117,3 @@ namespace Vigitemp_Serveur.sensors
         }
     }
 }
-
-

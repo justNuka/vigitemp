@@ -2,11 +2,12 @@
 
 import { useRef } from "react";
 import { heroContent, proofStats } from "./upgradeContent";
-import { AuroraText } from "./AuroraText";
-import { RainbowButton } from "./RainbowButton";
+import { AuroraText } from "@/components/ui/aurora-text";
+import { RainbowButton } from "@/components/ui/rainbow-button";
 import { BlurFade } from "./BlurFade";
-import { MagicCard } from "./MagicCard";
-import { BorderBeam } from "./BorderBeam";
+import { MagicCard } from "@/components/ui/magic-card";
+import { ShineBorder } from "@/components/ui/shine-border";
+import { Card, CardHeader } from "@/components/ui/card";
 import { useParallax } from "./useParallax";
 
 export function HeroSection() {
@@ -54,14 +55,22 @@ export function HeroSection() {
         <BlurFade delay={200}>
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-foreground mb-4 text-balance">
             <span className="font-light">Vigi</span>
-            <span className="font-extrabold text-primary">Sensys</span>
+            <AuroraText
+              className="font-extrabold"
+              colors={["#a142fe","#40a1ff"]}
+            >
+              Sensys
+            </AuroraText>
           </h1>
         </BlurFade>
 
         <BlurFade delay={350}>
           <p className="text-xl sm:text-2xl md:text-3xl font-light text-foreground/90 mb-2 text-balance leading-relaxed">
             {"Passez a une "}
-            <AuroraText className="font-semibold">
+            <AuroraText 
+              className="font-semibold"
+              colors={["#40a1ff","#a142fe"]}
+            >
               {heroContent.titleHighlight}
             </AuroraText>
           </p>
@@ -86,11 +95,11 @@ export function HeroSection() {
 
         <BlurFade delay={700}>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <RainbowButton variant="solid" href="#standard">
-              {heroContent.ctaPrimary}
+            <RainbowButton size="lg" asChild>
+              <a href="#standard">{heroContent.ctaPrimary}</a>
             </RainbowButton>
-            <RainbowButton variant="outline" href="#licences">
-              {heroContent.ctaSecondary}
+            <RainbowButton size="lg" variant="outline" asChild>
+              <a href="#licences">{heroContent.ctaSecondary}</a>
             </RainbowButton>
           </div>
         </BlurFade>
@@ -99,11 +108,28 @@ export function HeroSection() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
           {proofStats.map((stat, i) => (
             <BlurFade key={stat.title} delay={800 + i * 100}>
-              <MagicCard className="p-5 text-center h-full">
-                {stat.highlight && <BorderBeam size={120} duration={6} />}
-                <p className="text-sm font-semibold text-foreground mb-1">{stat.title}</p>
-                <p className="text-xs text-muted-foreground">{stat.description}</p>
-              </MagicCard>
+              {stat.highlight ? (
+                <Card className="relative h-full overflow-hidden glass border-0 shadow-none">
+                  <ShineBorder
+                    shineColor={["#A07CFE", "#FE8FB5", "#FFBE7B"]}
+                    duration={20}
+                    borderWidth={1}
+                  />
+                  <CardHeader className="p-5 text-center">
+                    <p className="text-sm font-semibold text-foreground mb-1">
+                      {stat.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{stat.description}</p>
+                  </CardHeader>
+                </Card>
+              ) : (
+                <Card className="border-0 shadow-none p-0 h-full bg-transparent">
+                  <MagicCard className="glass overflow-hidden rounded-xl p-5 text-center h-full">
+                    <p className="text-sm font-semibold text-foreground mb-1">{stat.title}</p>
+                    <p className="text-xs text-muted-foreground">{stat.description}</p>
+                  </MagicCard>
+                </Card>
+              )}
             </BlurFade>
           ))}
         </div>

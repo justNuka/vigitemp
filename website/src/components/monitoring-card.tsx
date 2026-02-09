@@ -56,6 +56,22 @@ ChartJS.register(
   Filler
 );
 
+const parseRssiValue = (value?: string | null) => {
+  if (!value) return null;
+  const match = value.match(/-?\d+/);
+  if (!match) return null;
+  const num = Number(match[0]);
+  return Number.isFinite(num) ? num : null;
+};
+
+const getRssiLevel = (dbm: number | null) => {
+  if (dbm === null) return 0;
+  if (dbm >= -60) return 5;
+  if (dbm >= -70) return 4;
+  if (dbm >= -80) return 3;
+  if (dbm >= -90) return 2;
+  return 1;
+};
 interface MonitoringCardProps {
   idLieu: number;
   nomLieu: string;
@@ -80,6 +96,38 @@ interface MonitoringCardProps {
     newState: boolean,
     durationMinutes: number | null,
   ) => void;
+}
+
+function RssiBars({ value, label }: { value?: string | null; label: string }) {
+  const dbm = parseRssiValue(value ?? null);
+  const level = getRssiLevel(dbm);
+  const levelClass =
+    level >= 4
+      ? "bg-emerald-500"
+      : level == 3
+        ? "bg-yellow-500"
+        : level == 2
+          ? "bg-orange-500"
+          : "bg-red-500";
+
+  return (
+    <div className="inline-flex items-center gap-2" title={label} aria-label={label}>
+      <div className="flex items-end gap-0.5">
+        {Array.from({ length: 5 }).map((_, index) => {
+          const isActive = index < level;
+          const height = 4 + index * 3;
+          return (
+            <span
+              key={index}
+              className={`w-1 rounded-sm transition-colors ${isActive ? levelClass : "bg-muted/50"}`}
+              style={{ height }}
+            />
+          );
+        })}
+      </div>
+      <span className="tabular-nums">{value ?? "-"}</span>
+    </div>
+  );
 }
 
 export default function MonitoringCard({
@@ -628,7 +676,7 @@ export default function MonitoringCard({
                     </div>
                     {hasGsoMetrics ? (
                       <div className={`flex flex-wrap items-center justify-center gap-4 text-[11px] ${contentTextClassName}`}>
-                        {gsoRssi ? <span>{t("gso.rssi", { value: gsoRssi })}</span> : null}
+                        {gsoRssi ? <RssiBars value={gsoRssi} label={t("gso.rssi", { value: gsoRssi })} /> : null}
                         {gsoTension ? <span>{t("gso.tension", { value: gsoTension })}</span> : null}
                       </div>
                     ) : null}

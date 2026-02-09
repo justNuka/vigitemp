@@ -187,6 +187,7 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
                   <FormMessage />
                 </FormItem>
               )}
+            />
 
             <FormField
               control={form.control}
@@ -202,8 +203,6 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
                   </FormControl>
                 </FormItem>
               )}
-            />
-
             />
 
             <FormField

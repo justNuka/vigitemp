@@ -3,7 +3,8 @@
 import { standardBlocks } from "./upgradeContent";
 import { BlurFade } from "./BlurFade";
 import { SparklesText } from "./SparklesText";
-import { MagicCard } from "./MagicCard";
+import { MagicCard } from "@/components/ui/magic-card";
+import { Card } from "@/components/ui/card";
 import { Check } from "lucide-react";
 
 export function StandardDeepDiveSection() {
@@ -46,16 +47,18 @@ export function StandardDeepDiveSection() {
 
                 {/* Visual mock */}
                 <div className="flex-1 w-full">
-                  <MagicCard className="p-6 aspect-16/10">
-                    <div className="w-full h-full rounded-lg bg-secondary/30 flex flex-col items-center justify-center gap-3">
-                      <div className="w-3/4 h-2 rounded-full bg-primary/20" />
-                      <div className="w-2/3 h-2 rounded-full bg-primary/10" />
-                      <div className="w-1/2 h-2 rounded-full bg-primary/5" />
-                      <p className="text-[10px] text-muted-foreground/50 mt-2">
-                        {"Apercu " + block.title.toLowerCase()}
-                      </p>
-                    </div>
-                  </MagicCard>
+                  <Card className="glass border-0 shadow-none p-0 overflow-hidden">
+                    <MagicCard className="p-6 aspect-16/10">
+                      <div className="w-full h-full rounded-lg bg-secondary/30 flex flex-col items-center justify-center gap-3">
+                        <div className="w-3/4 h-2 rounded-full bg-primary/20" />
+                        <div className="w-2/3 h-2 rounded-full bg-primary/10" />
+                        <div className="w-1/2 h-2 rounded-full bg-primary/5" />
+                        <p className="text-[10px] text-muted-foreground/50 mt-2">
+                          {"Apercu " + block.title.toLowerCase()}
+                        </p>
+                      </div>
+                    </MagicCard>
+                  </Card>
                 </div>
               </div>
             </BlurFade>

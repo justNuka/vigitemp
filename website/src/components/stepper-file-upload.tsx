@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, LazyMotion, domAnimation, m, useReducedMotion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
@@ -16,8 +16,32 @@ import {
   StepperTrigger,
 } from "@/components/ui/stepper";
 import { Check, FileText, ListTodo, LoaderCircleIcon, WandSparkles } from "lucide-react";
+
+export type AdjustmentInsertData = {
+  Date_Heure_Ajustage: string | null;
+  Sonde_Numero_Serie: string | null;
+  Coeff_X2: number | null;
+  Coeff_X: number | null;
+  Coeff_Constant: number | null;
+  Unite: string | null;
+  Nb_Decimale: number | null;
+  Operateur: string | null;
+  SE_Numero: string | null;
+  SE_Organisme: string | null;
+  SE_Date_Certif: string | null;
+  SE_Numero_Certif: string | null;
+  Mesure_Etalon1: number | null;
+  Mesure_Etalon2: number | null;
+  Valeur_Brute1: number | null;
+  Valeur_Brute2: number | null;
+  Ancienne_Mesure1: number | null;
+  Ancienne_Mesure2: number | null;
+  Nouvelle_Mesure1: number | null;
+  Nouvelle_Mesure2: number | null;
+};
+
 export type AdjustmentImportResult = {
-  id: number;
+  id: string;
   file: string;
   sensor: string | null;
   date: string | Date | null;
@@ -29,8 +53,8 @@ export type AdjustmentImportResult = {
   measureEtalon2: number | null;
   unit: string | null;
   warnings?: string[];
+  insertData: AdjustmentInsertData;
 };
-
 
 type ValidationStatus = "ok" | "fixed" | "error";
 
@@ -49,8 +73,6 @@ type ValidationResult = {
   encoding: string;
   xmlText: string;
 };
-
-
 
 type StepperFileUploadProps = {
   onUploadResult?: (result: AdjustmentImportResult) => void;
@@ -91,7 +113,7 @@ export default function StepperFileUpload({ onUploadResult, onFinish }: StepperF
 
     const fixTagContent = (tagName: string, fixer: (value: string) => string) => {
       const pattern = new RegExp(`<${tagName}>([\\s\\S]*?)</${tagName}>`, "gi");
-      utf8Text = utf8Text.replace(pattern, (match, content) => {
+      utf8Text = utf8Text.replace(pattern, (_match, content) => {
         const next = fixer(content);
         if (next !== content) corrected = true;
         return `<${tagName}>${next}</${tagName}>`;
@@ -134,12 +156,11 @@ export default function StepperFileUpload({ onUploadResult, onFinish }: StepperF
         const buffer = await file.arrayBuffer();
         const decoded = decodeXmlContent(buffer);
         const validation = validateXml(decoded.text);
-        let status: ValidationStatus = validation.ok ? (decoded.corrected ? "fixed" : "ok") : "error";
-        const errors = validation.errors;
+        const status: ValidationStatus = validation.ok ? (decoded.corrected ? "fixed" : "ok") : "error";
         results.push({
           file,
           status,
-          errors,
+          errors: validation.errors,
           encoding: decoded.encoding,
           xmlText: decoded.text,
         });
@@ -209,7 +230,7 @@ export default function StepperFileUpload({ onUploadResult, onFinish }: StepperF
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("/api/sondes/ajustages/import", {
+        const response = await fetch("/api/sondes/ajustages/preview", {
           method: "POST",
           body: formData,
         });
@@ -222,7 +243,7 @@ export default function StepperFileUpload({ onUploadResult, onFinish }: StepperF
 
         const payload = await response.json();
         if (payload?.data) {
-          onUploadResult?.(payload.data);
+          onUploadResult?.(payload.data as AdjustmentImportResult);
           success += 1;
           setProcessStats({ processed, success, failed });
         } else {
@@ -260,56 +281,45 @@ export default function StepperFileUpload({ onUploadResult, onFinish }: StepperF
       className="space-y-6 flex flex-col h-full min-h-0 overflow-hidden"
     >
       <StepperNav className="gap-6 mb-6 justify-center w-full">
-        {steps.map((step, index) => {
-          return (
-            <StepperItem key={step.title} step={index + 1} className="relative flex-1 flex-col items-center">
-              <StepperTrigger className="flex flex-col items-center justify-center gap-2.5 grow text-center" asChild>
-                <StepperIndicator className="size-9 border-2 flex items-center justify-center transition-colors duration-300 data-[state=completed]:bg-emerald-500 data-[state=completed]:text-emerald-50 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:border-border data-[state=inactive]:text-muted-foreground">
-                  <span className="relative inline-flex size-4 items-center justify-center">
-                    <Check className="absolute left-1/2 top-2.5 size-4 -translate-x-1/2 -translate-y-[55%] opacity-0 scale-50 transition-all duration-300 group-data-[state=completed]/step:opacity-100 group-data-[state=completed]/step:scale-100 text-emerald-50" />
-                    <step.icon className="absolute left-1/2 top-2.5 size-4 -translate-x-1/2 -translate-y-[55%] opacity-100 scale-100 transition-all duration-300 group-data-[state=completed]/step:opacity-0 group-data-[state=completed]/step:scale-75 group-data-[state=active]/step:text-primary-foreground group-data-[state=inactive]/step:text-muted-foreground" />
-                  </span>
-                </StepperIndicator>
-                <div className="flex flex-col items-center gap-1">
-                  <div className="text-[10px] font-semibold uppercase text-muted-foreground">
-                    {t("step_label", { step: index + 1 })}
-                  </div>
-                  <StepperTitle className="text-center text-base font-semibold group-data-[state=inactive]/step:text-muted-foreground">
-                    {step.title}
-                  </StepperTitle>
-                  <div>
-                    <Badge
-                      variant="primary"
-                      className="hidden group-data-[state=active]/step:inline-flex"
-                    >
-                      {t("status.in_progress")}
-                    </Badge>
-
-                    <Badge
-                      variant="success"
-                      size="sm"
-                      className="hidden group-data-[state=completed]/step:inline-flex"
-                    >
-                      {t("status.completed")}
-                    </Badge>
-
-                    <Badge
-                      variant="secondary"
-                      size="sm"
-                      className="hidden group-data-[state=inactive]/step:inline-flex text-muted-foreground"
-                    >
-                      {t("status.pending")}
-                    </Badge>
-                  </div>
+        {steps.map((step, index) => (
+          <StepperItem key={step.title} step={index + 1} className="relative flex-1 flex-col items-center">
+            <StepperTrigger className="flex flex-col items-center justify-center gap-2.5 grow text-center" asChild>
+              <StepperIndicator className="size-9 border-2 flex items-center justify-center transition-colors duration-300 data-[state=completed]:bg-emerald-500 data-[state=completed]:text-emerald-50 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:border-border data-[state=inactive]:text-muted-foreground">
+                <span className="relative inline-flex size-4 items-center justify-center">
+                  <Check className="absolute left-1/2 top-2.5 size-4 -translate-x-1/2 -translate-y-[55%] opacity-0 scale-50 transition-all duration-300 group-data-[state=completed]/step:opacity-100 group-data-[state=completed]/step:scale-100 text-emerald-50" />
+                  <step.icon className="absolute left-1/2 top-2.5 size-4 -translate-x-1/2 -translate-y-[55%] opacity-100 scale-100 transition-all duration-300 group-data-[state=completed]/step:opacity-0 group-data-[state=completed]/step:scale-75 group-data-[state=active]/step:text-primary-foreground group-data-[state=inactive]/step:text-muted-foreground" />
+                </span>
+              </StepperIndicator>
+              <div className="flex flex-col items-center gap-1">
+                <div className="text-[10px] font-semibold uppercase text-muted-foreground">
+                  {t("step_label", { step: index + 1 })}
                 </div>
-              </StepperTrigger>
+                <StepperTitle className="text-center text-base font-semibold group-data-[state=inactive]/step:text-muted-foreground">
+                  {step.title}
+                </StepperTitle>
+                <div>
+                  <Badge variant="primary" className="hidden group-data-[state=active]/step:inline-flex">
+                    {t("status.in_progress")}
+                  </Badge>
+                  <Badge variant="success" size="sm" className="hidden group-data-[state=completed]/step:inline-flex">
+                    {t("status.completed")}
+                  </Badge>
+                  <Badge
+                    variant="secondary"
+                    size="sm"
+                    className="hidden group-data-[state=inactive]/step:inline-flex text-muted-foreground"
+                  >
+                    {t("status.pending")}
+                  </Badge>
+                </div>
+              </div>
+            </StepperTrigger>
 
-              {steps.length > index + 1 && (
-                <StepperSeparator className="absolute top-4.5 left-[calc(55%+1.125rem)] w-[calc(100%-2.25rem)] h-0.5 bg-muted-foreground/30 group-data-[state=completed]/step:bg-emerald-500" />
-              )}
-            </StepperItem>
-          );
-        })}
+            {steps.length > index + 1 && (
+              <StepperSeparator className="absolute top-4.5 left-[calc(55%+1.125rem)] w-[calc(100%-2.25rem)] h-0.5 bg-muted-foreground/30 group-data-[state=completed]/step:bg-emerald-500" />
+            )}
+          </StepperItem>
+        ))}
       </StepperNav>
 
       <StepperPanel className="text-sm flex-1 min-h-0 overflow-y-auto pr-2 pb-10 pt-2">
@@ -335,6 +345,7 @@ export default function StepperFileUpload({ onUploadResult, onFinish }: StepperF
                   />
                 </div>
               )}
+
               {currentStep === 2 && (
                 <div className="flex flex-col gap-4 w-full">
                   <div className="text-sm text-muted-foreground">{t("validation.description")}</div>
@@ -368,6 +379,7 @@ export default function StepperFileUpload({ onUploadResult, onFinish }: StepperF
                   )}
                 </div>
               )}
+
               {currentStep === 3 && (
                 <div className="flex flex-col gap-4">
                   <div className="rounded-lg border bg-muted/30 p-4">
@@ -389,7 +401,9 @@ export default function StepperFileUpload({ onUploadResult, onFinish }: StepperF
                   {processState === "done" && (
                     <div className="rounded-md border border-emerald-200 bg-emerald-50/50 p-3 text-sm text-emerald-700">
                       {t("create.process_done", { count: processStats.success })}
-                      <div className="mt-1 text-emerald-700/80">{t("create.process_result", { success: processStats.success, failed: processStats.failed })}</div>
+                      <div className="mt-1 text-emerald-700/80">
+                        {t("create.process_result", { success: processStats.success, failed: processStats.failed })}
+                      </div>
                     </div>
                   )}
 
@@ -407,10 +421,7 @@ export default function StepperFileUpload({ onUploadResult, onFinish }: StepperF
 
       <div className="mt-auto flex shrink-0 items-center justify-between gap-2.5 border-t pt-4">
         {currentStep > 1 ? (
-          <Button
-            variant="outline"
-            onClick={() => setCurrentStep((prev) => prev - 1)}
-          >
+          <Button variant="outline" onClick={() => setCurrentStep((prev) => prev - 1)}>
             {t("actions.previous")}
           </Button>
         ) : (
@@ -451,9 +462,7 @@ export default function StepperFileUpload({ onUploadResult, onFinish }: StepperF
               </span>
             </TooltipTrigger>
             {nextDisabledReason ? (
-              <TooltipContent>
-                {nextDisabledReason}
-              </TooltipContent>
+              <TooltipContent>{nextDisabledReason}</TooltipContent>
             ) : null}
           </Tooltip>
         </TooltipProvider>
@@ -461,4 +470,3 @@ export default function StepperFileUpload({ onUploadResult, onFinish }: StepperF
     </Stepper>
   );
 }
-

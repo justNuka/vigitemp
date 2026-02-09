@@ -1,65 +1,40 @@
 "use client";
 
-import React from "react"
+import React, { forwardRef } from "react"
 
-import { useRef, useEffect, useState } from "react";
+import { useRef } from "react";
 import { architectureNodes, architectureLeft, architectureRight } from "./upgradeContent";
 import { BlurFade } from "./BlurFade";
 import { TypingAnimation } from "./TypingAnimation";
+import { AnimatedBeam } from "@/components/ui/animated-beam";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 
-function AnimatedBeamLine({ fromRef, toRef, containerRef, delay = 0 }: {
-  fromRef: React.RefObject<HTMLDivElement | null>;
-  toRef: React.RefObject<HTMLDivElement | null>;
-  containerRef: React.RefObject<HTMLDivElement | null>;
-  delay?: number;
-}) {
-  const [line, setLine] = useState({ x1: 0, y1: 0, x2: 0, y2: 0 });
+const Circle = forwardRef<
+  HTMLDivElement,
+  { className?: string; children?: React.ReactNode }
+>(({ className, children }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "z-10 flex size-12 items-center justify-center rounded-full border border-border bg-background p-3",
+      "shadow-[0_0_20px_-12px_rgba(0,0,0,0.8)]",
+      className
+    )}
+  >
+    {children}
+  </div>
+));
 
-  useEffect(() => {
-    function update() {
-      if (!fromRef.current || !toRef.current || !containerRef.current) return;
-      const container = containerRef.current.getBoundingClientRect();
-      const from = fromRef.current.getBoundingClientRect();
-      const to = toRef.current.getBoundingClientRect();
-      setLine({
-        x1: from.left + from.width / 2 - container.left,
-        y1: from.top + from.height / 2 - container.top,
-        x2: to.left + to.width / 2 - container.left,
-        y2: to.top + to.height / 2 - container.top,
-      });
-    }
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, [fromRef, toRef, containerRef]);
-
-  return (
-    <svg className="absolute inset-0 pointer-events-none overflow-visible" style={{ zIndex: 0 }}>
-      <line
-        x1={line.x1} y1={line.y1} x2={line.x2} y2={line.y2}
-        stroke="hsla(190, 95%, 45%, 0.15)"
-        strokeWidth="2"
-        strokeDasharray="6 4"
-      />
-      <circle r="4" fill="hsl(190, 95%, 45%)" opacity="0.8">
-        <animateMotion
-          dur="2.5s"
-          repeatCount="indefinite"
-          begin={`${delay}s`}
-          path={`M${line.x1},${line.y1} L${line.x2},${line.y2}`}
-        />
-      </circle>
-    </svg>
-  );
-}
+Circle.displayName = "Circle";
 
 export function ArchitectureSection() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const nodeRefs = useRef<(React.RefObject<HTMLDivElement | null>)[]>(
-    architectureNodes.map(() => ({ current: null }))
-  );
+  const sondesRef = useRef<HTMLDivElement>(null);
+  const serveurRef = useRef<HTMLDivElement>(null);
+  const bddRef = useRef<HTMLDivElement>(null);
+  const webappRef = useRef<HTMLDivElement>(null);
+  const agentRef = useRef<HTMLDivElement>(null);
 
   return (
     <section id="architecture" className="py-24 px-4">
@@ -78,18 +53,24 @@ export function ArchitectureSection() {
         {/* Beam diagram */}
         <BlurFade delay={200}>
           <div ref={containerRef} className="relative glass rounded-2xl p-8 mb-12 min-h-50">
-            <div className="flex items-center justify-between gap-4 flex-wrap relative z-10">
-              {architectureNodes.map((node, i) => {
+            <div className="flex items-center justify-between gap-6 flex-wrap relative z-10">
+              {architectureNodes.map((node) => {
                 const Icon = node.icon;
+                const refMap: Record<string, React.RefObject<HTMLDivElement | null>> = {
+                  sondes: sondesRef,
+                  serveur: serveurRef,
+                  bdd: bddRef,
+                  webapp: webappRef,
+                  agent: agentRef,
+                };
                 return (
                   <div
                     key={node.id}
-                    ref={(el) => { nodeRefs.current[i] = { current: el }; }}
                     className="flex flex-col items-center gap-2 z-10"
                   >
-                    <div className="w-14 h-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center glow-cyan">
+                    <Circle ref={refMap[node.id]}>
                       <Icon className="w-6 h-6 text-primary" />
-                    </div>
+                    </Circle>
                     <span className="text-xs font-semibold text-foreground text-center">{node.label}</span>
                     <span className="text-[10px] text-muted-foreground text-center">{node.sublabel}</span>
                   </div>
@@ -97,16 +78,77 @@ export function ArchitectureSection() {
               })}
             </div>
 
-            {/* Animated beam lines */}
-            {architectureNodes.slice(0, -1).map((_, i) => (
-              <AnimatedBeamLine
-                key={`beam-${architectureNodes[i].id}`}
-                fromRef={nodeRefs.current[i]}
-                toRef={nodeRefs.current[i + 1]}
-                containerRef={containerRef}
-                delay={i * 0.5}
-              />
-            ))}
+            {/* Animated beams */}
+            <AnimatedBeam
+              containerRef={containerRef}
+              fromRef={sondesRef}
+              toRef={serveurRef}
+              duration={6}
+              startYOffset={10}
+              endYOffset={10}
+              curvature={-20}
+              pathColor="hsla(190, 95%, 45%, 0.2)"
+              gradientStartColor="#40a1ff"
+              gradientStopColor="#0b6bff"
+            />
+            <AnimatedBeam
+              containerRef={containerRef}
+              fromRef={serveurRef}
+              toRef={sondesRef}
+              duration={6}
+              startYOffset={-10}
+              endYOffset={-10}
+              curvature={20}
+              reverse
+              pathColor="hsla(190, 95%, 45%, 0.2)"
+              gradientStartColor="#40a1ff"
+              gradientStopColor="#0b6bff"
+            />
+            <AnimatedBeam
+              containerRef={containerRef}
+              fromRef={serveurRef}
+              toRef={bddRef}
+              duration={5.6}
+              curvature={0}
+              pathColor="hsla(190, 95%, 45%, 0.2)"
+              gradientStartColor="#40a1ff"
+              gradientStopColor="#0b6bff"
+            />
+            <AnimatedBeam
+              containerRef={containerRef}
+              fromRef={bddRef}
+              toRef={webappRef}
+              duration={6.2}
+              startYOffset={10}
+              endYOffset={10}
+              curvature={-20}
+              pathColor="hsla(190, 95%, 45%, 0.2)"
+              gradientStartColor="#40a1ff"
+              gradientStopColor="#0b6bff"
+            />
+            <AnimatedBeam
+              containerRef={containerRef}
+              fromRef={webappRef}
+              toRef={bddRef}
+              duration={6.2}
+              startYOffset={-10}
+              endYOffset={-10}
+              curvature={20}
+              reverse
+              pathColor="hsla(190, 95%, 45%, 0.2)"
+              gradientStartColor="#40a1ff"
+              gradientStopColor="#0b6bff"
+            />
+            <AnimatedBeam
+              containerRef={containerRef}
+              fromRef={webappRef}
+              toRef={agentRef}
+              duration={5.4}
+              curvature={0}
+              pathColor="hsla(190, 95%, 45%, 0.2)"
+              gradientStartColor="#40a1ff"
+              gradientStopColor="#0b6bff"
+            />
           </div>
         </BlurFade>
 

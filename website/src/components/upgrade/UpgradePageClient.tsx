@@ -1,6 +1,6 @@
 "use client";
 
-import { ScrollProgress } from "./ScrollProgress";
+import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { UpgradeToc } from "./UpgradeToc";
 import { BackToTop } from "./BackToTop";
 import { UpgradeNavbar } from "./UpgradeNavbar";

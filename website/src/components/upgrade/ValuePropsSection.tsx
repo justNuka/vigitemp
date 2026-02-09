@@ -1,10 +1,11 @@
 "use client";
 
 import { valueProps } from "./upgradeContent";
-import { MagicCard } from "./MagicCard";
-import { BorderBeam } from "./BorderBeam";
+import { MagicCard } from "@/components/ui/magic-card";
+import { ShineBorder } from "@/components/ui/shine-border";
+import { Card, CardHeader } from "@/components/ui/card";
 import { BlurFade } from "./BlurFade";
-import { DotPattern } from "./DotPattern";
+import { DotPattern } from "@/components/ui/dot-pattern";
 
 export function ValuePropsSection() {
   return (
@@ -35,29 +36,58 @@ export function ValuePropsSection() {
             const isStarCard = i === 0 || i === 5;
             return (
               <BlurFade key={prop.title} delay={i * 100}>
-                <MagicCard className="p-6 h-full">
-                  {isStarCard && <BorderBeam size={150} duration={8} />}
-                  <div className="flex items-start gap-4">
-                    <div className="shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-sm font-semibold text-foreground">
-                          {prop.title}
-                        </h3>
-                        {prop.badge && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                            {prop.badge}
-                          </span>
-                        )}
+                {isStarCard ? (
+                  <Card className="relative h-full overflow-hidden glass border-0 shadow-none">
+                    <ShineBorder shineColor={["#A07CFE", "#FE8FB5", "#FFBE7B"]} />
+                    <CardHeader className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Icon className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="text-sm font-semibold text-foreground">
+                              {prop.title}
+                            </h3>
+                            {prop.badge && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                                {prop.badge}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            {prop.description}
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        {prop.description}
-                      </p>
-                    </div>
-                  </div>
-                </MagicCard>
+                    </CardHeader>
+                  </Card>
+                ) : (
+                  <Card className="glass border-0 shadow-none p-0 h-full">
+                    <MagicCard className="p-6 h-full">
+                      <div className="flex items-start gap-4">
+                        <div className="shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Icon className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="text-sm font-semibold text-foreground">
+                              {prop.title}
+                            </h3>
+                            {prop.badge && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                                {prop.badge}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            {prop.description}
+                          </p>
+                        </div>
+                      </div>
+                    </MagicCard>
+                  </Card>
+                )}
               </BlurFade>
             );
           })}

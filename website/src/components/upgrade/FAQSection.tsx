@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { faqItems } from "./upgradeContent";
 import { BlurFade } from "./BlurFade";
-import { DotPattern } from "./DotPattern";
+import { DotPattern } from "@/components/ui/dot-pattern";
 import { cn } from "@/lib/utils";
 import { ChevronDown, Shield } from "lucide-react";
 

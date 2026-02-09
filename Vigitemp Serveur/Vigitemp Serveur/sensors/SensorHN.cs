@@ -1,4 +1,4 @@
-ï»¿using System;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Ports;
@@ -143,26 +143,22 @@ namespace Vigitemp_Serveur.sensors
             Console.WriteLine("resultat binaire: " + tmp_valeur);
             Trace.WriteLine("resultat binaire: " + tmp_valeur);
             int tmp_temperature_int = (int)Convert.ToInt64(tmp_valeur, 2);
-            Console.WriteLine("resultat dÃ©cimal: " + tmp_temperature_int);
-            Trace.WriteLine("resultat dÃ©cimal: " + tmp_temperature_int);
+            Console.WriteLine("resultat décimal: " + tmp_temperature_int);
+            Trace.WriteLine("resultat décimal: " + tmp_temperature_int);
             tmp_valeur = ((1 - tmp_temperature_int / Math.Pow(2, 20) - 0.32) / 0.0047).ToString();
             tmp_valeur = tmp_valeur.Replace(",", ".");
             Console.WriteLine("resultat final: " + tmp_valeur);
             Trace.WriteLine("resultat final: " + tmp_valeur);
 
-            // recuperer a et b our corriger la valeur brute
-            (double coeffX, double coeffConstant) = ths.GetDatabase().getCoeffCalibrageBySerialNumber(m_sondeSerialNumber);
-            Console.WriteLine("Convert.ToDouble: " + (Convert.ToDouble(tmp_valeur, CultureInfo.InvariantCulture.NumberFormat) * coeffX + coeffConstant).ToString());
-            Trace.WriteLine("Convert.ToDouble: " + (Convert.ToDouble(tmp_valeur, CultureInfo.InvariantCulture.NumberFormat) * coeffX + coeffConstant).ToString());
-            tmp_valeur = (Convert.ToDouble(float.Parse(tmp_valeur, CultureInfo.InvariantCulture.NumberFormat)) * coeffX + coeffConstant).ToString();
-            Console.WriteLine("DonnÃ©es corrigÃ©es: " + Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero));
-            Trace.WriteLine("DonnÃ©es corrigÃ©es: " + Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero));
-            
+            var rawValue = Convert.ToDouble(float.Parse(tmp_valeur, CultureInfo.InvariantCulture.NumberFormat));
+            var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
+            Console.WriteLine("Données corrigées: " + correctedValue);
+            Trace.WriteLine("Données corrigées: " + correctedValue);
 
-                ths.GetDatabase().AddMesure(m_sondeSerialNumber, Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero), "Â°C", null);
-                VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=success value={Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero)} unit=Â°C");
+                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
+                VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=°C raw={ToInvariantRaw(rawValue)}");
                 HandleNoResponseAlarm(true);
-                compareMeasuresAndLimits(Math.Round(Convert.ToDouble(tmp_valeur), 2, MidpointRounding.AwayFromZero), "Â°C");
+                compareMeasuresAndLimits(correctedValue, "°C");
                 m_port.DiscardInBuffer(); 
                 m_port.DiscardOutBuffer();
                 m_port.Close();
@@ -229,3 +225,4 @@ namespace Vigitemp_Serveur.sensors
         }
     }
 }
+

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
@@ -689,10 +689,16 @@ namespace Vigitemp_Serveur
                         "SELECT t_lieu.Id_Lieu, t_lieu.Frequence, t_lieu.Derniere_Date_Heure, " +
                         "t_lieu.Infos_Modifiees_Depuis_Derniere_Mesure, " +
                         "t_module.Port_Serie, t_module.Module_Numero_Serie, " +
-                        "t_sonde.Sonde_Numero_Serie, t_sonde.Adresse_Sonde " +
+                        "t_sonde.Sonde_Numero_Serie, t_sonde.Adresse_Sonde, t_sonde.Sonde_Offset, " +
+                        "ta.Coeff_X, ta.Coeff_Constant " +
                         "FROM t_lieu " +
                         "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                         "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
+                        "OUTER APPLY (" +
+                        "  SELECT TOP 1 Coeff_X, Coeff_Constant FROM t_ajustage " +
+                        "  WHERE Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
+                        "  ORDER BY Date_Heure_Ajustage DESC, Id_Ajustage DESC" +
+                        ") ta " +
                         "WHERE t_module.Id_Serveur = @idServeur " +
                         "AND t_lieu.Lieu_Etat = 'S' " +
                         "AND t_sonde.Etat_Sonde = 'S' " +
@@ -730,7 +736,11 @@ namespace Vigitemp_Serveur
                                     PortSerie = "COM" + reader["Port_Serie"].ToString(),
                                     ModuleNumeroSerie = reader["Module_Numero_Serie"].ToString(),
                                     SondeNumeroSerie = reader["Sonde_Numero_Serie"].ToString(),
-                                    AdresseSonde = reader["Adresse_Sonde"].ToString()
+                                    AdresseSonde = reader["Adresse_Sonde"].ToString(),
+                                    SondeOffset = GetOptionalDouble(reader, "Sonde_Offset"),
+                                    HasAjustage = GetOptionalDouble(reader, "Coeff_X").HasValue && GetOptionalDouble(reader, "Coeff_Constant").HasValue,
+                                    CoeffX = GetOptionalDouble(reader, "Coeff_X") ?? 1d,
+                                    CoeffConstant = GetOptionalDouble(reader, "Coeff_Constant") ?? 0d
                                 });
                             }
                         }
@@ -1815,6 +1825,67 @@ namespace Vigitemp_Serveur
                 return (coeffX, coeffConstant);
             }
         }
+        public SondeMetrologySettings getSondeMetrologyBySerialNumber(string p_serial_number)
+        {
+            lock (_lock)
+            {
+                var settings = new SondeMetrologySettings
+                {
+                    CoeffX = 1d,
+                    CoeffConstant = 0d,
+                    Offset = null,
+                    HasAjustage = false,
+                };
+
+                if (!InitConnexion())
+                {
+                    return settings;
+                }
+
+                using (var cmd = CreateCommand(
+                    _connectionMain,
+                    "SELECT t_sonde.Sonde_Offset, ta.Coeff_X, ta.Coeff_Constant FROM t_sonde " +
+                    "OUTER APPLY (" +
+                    "  SELECT TOP 1 Coeff_X, Coeff_Constant FROM t_ajustage " +
+                    "  WHERE Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
+                    "  ORDER BY Date_Heure_Ajustage DESC, Id_Ajustage DESC" +
+                    ") ta " +
+                    "WHERE t_sonde.Sonde_Numero_Serie = @serial"))
+                {
+                    cmd.Parameters.AddWithValue("@serial", p_serial_number);
+                    try
+                    {
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                var offset = GetOptionalDouble(reader, "Sonde_Offset");
+                                if (offset.HasValue && Math.Abs(offset.Value) > 0.0000001d)
+                                {
+                                    settings.Offset = offset;
+                                }
+
+                                var coeffX = GetOptionalDouble(reader, "Coeff_X");
+                                var coeffConstant = GetOptionalDouble(reader, "Coeff_Constant");
+
+                                if (coeffX.HasValue && coeffConstant.HasValue)
+                                {
+                                    settings.HasAjustage = true;
+                                    settings.CoeffX = coeffX.Value;
+                                    settings.CoeffConstant = coeffConstant.Value;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        VigitempServeur.Log("getSondeMetrologyBySerialNumber MSSQL error: " + ex.Message);
+                    }
+                }
+
+                CloseConnexion();
+                return settings;
+            }
+        }
     }
 }
-

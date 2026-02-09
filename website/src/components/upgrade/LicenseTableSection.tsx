@@ -2,7 +2,8 @@
 
 import { licenseFeatures } from "./upgradeContent";
 import { BlurFade } from "./BlurFade";
-import { BorderBeam } from "./BorderBeam";
+import { ShineBorder } from "@/components/ui/shine-border";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Check, X, Clock } from "lucide-react";
 
 function CellValue({ value }: { value: boolean | string }) {
@@ -81,14 +82,16 @@ export function LicenseTableSection() {
           </div>
 
           {/* Standard highlight border */}
-          <div className="relative glass rounded-xl p-4 mt-6 text-center">
-            <BorderBeam size={200} duration={10} />
-            <p className="text-sm text-foreground">
-              {"La licence "}
-              <span className="text-primary font-bold">Standard</span>
-              {" est le meilleur rapport fonctionnalites/prix pour la metrologie."}
-            </p>
-          </div>
+          <Card className="relative overflow-hidden glass border-0 shadow-none mt-6 text-center">
+            <ShineBorder shineColor={["#A07CFE", "#FE8FB5", "#FFBE7B"]} />
+            <CardHeader className="p-4">
+              <p className="text-sm text-foreground">
+                {"La licence "}
+                <span className="text-primary font-bold">Standard</span>
+                {" est le meilleur rapport fonctionnalites/prix pour la metrologie."}
+              </p>
+            </CardHeader>
+          </Card>
         </BlurFade>
       </div>
     </section>

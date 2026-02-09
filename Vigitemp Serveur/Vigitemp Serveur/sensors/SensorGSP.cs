@@ -105,14 +105,14 @@ namespace Vigitemp_Serveur.sensors
                 tmp_numeroSerie = NormalizeSerialWithoutType(tmp_numeroSerie);
                 VigitempServeur.Log($"[SONDE][RX] type=GSP serial={m_sondeSerialNumber} parsedSerial={tmp_numeroSerie} rawValue={tmp_valeur}");
 
-                (double coeffX, double coeffConstant) = ths.GetDatabase().getCoeffCalibrageBySerialNumber(m_sondeSerialNumber);
-                tmp_valeur = (Convert.ToDouble(float.Parse(tmp_valeur.Remove(tmp_valeur.Length - 2, 2), CultureInfo.InvariantCulture.NumberFormat)) * coeffX + coeffConstant).ToString();
-                VigitempServeur.Log("Données corrigées: " + float.Parse(String.Format("{0:0.00}", tmp_valeur)));
+                var rawValue = Convert.ToDouble(float.Parse(tmp_valeur.Remove(tmp_valeur.Length - 2, 2), CultureInfo.InvariantCulture.NumberFormat));
+                var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
+                VigitempServeur.Log("Données corrigées: " + correctedValue);
 
-                ths.GetDatabase().AddMesure(m_sondeSerialNumber, float.Parse(String.Format("{0:0.00}", tmp_valeur)), "°C", null);
-                VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=success value={float.Parse(String.Format("{0:0.00}", tmp_valeur))} unit=°C");
+                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "�C", ToInvariantRaw(rawValue));
+                VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=�C raw={ToInvariantRaw(rawValue)}");
                 HandleNoResponseAlarm(true);
-                compareMeasuresAndLimits(float.Parse(String.Format("{0:0.00}", tmp_valeur)), "°C");
+                compareMeasuresAndLimits(correctedValue, "�C");
                 m_port.Close();
                 pendingResults = false;
                 Trace.WriteLine("Fermeture du port " + m_comPort);
@@ -124,3 +124,4 @@ namespace Vigitemp_Serveur.sensors
         }
     }
 }
+

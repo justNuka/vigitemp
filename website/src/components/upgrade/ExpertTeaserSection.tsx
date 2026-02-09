@@ -2,8 +2,9 @@
 
 import { expertCards } from "./upgradeContent";
 import { BlurFade } from "./BlurFade";
-import { AuroraText } from "./AuroraText";
-import { MagicCard } from "./MagicCard";
+import { AuroraText } from "@/components/ui/aurora-text";
+import { MagicCard } from "@/components/ui/magic-card";
+import { Card } from "@/components/ui/card";
 import { TypingAnimation } from "./TypingAnimation";
 import { Sparkles, Bot, BarChart3, Wrench } from "lucide-react";
 
@@ -46,17 +47,19 @@ export function ExpertTeaserSection() {
             const Icon = icons[i];
             return (
               <BlurFade key={card.title} delay={i * 150}>
-                <MagicCard className="p-6 h-full" gradientColor="hsla(185, 80%, 40%, 0.08)">
-                  <div className="flex items-start gap-4">
-                    <div className="shrink-0 w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-accent" />
+                <Card className="border-none shadow-none p-0 h-full">
+                  <MagicCard className="p-6 h-full" gradientColor="hsla(185, 80%, 40%, 0.08)">
+                    <div className="flex items-start gap-4">
+                      <div className="shrink-0 w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+                        <Icon className="w-5 h-5 text-accent" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold text-foreground mb-1">{card.title}</h3>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{card.description}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-foreground mb-1">{card.title}</h3>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{card.description}</p>
-                    </div>
-                  </div>
-                </MagicCard>
+                  </MagicCard>
+                </Card>
               </BlurFade>
             );
           })}

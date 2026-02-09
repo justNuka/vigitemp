@@ -102,18 +102,18 @@ namespace Vigitemp_Serveur.sensors
 
                 //recuperer a et b our corriger la valeur brute
                 // (double coeffX, double coeffConstant) = ThreadServeur.GetDatabase().getCoeffCalibrageBySerialNumber(m_serialNumber);
-                (double coeffX, double coeffConstant) = ths.GetDatabase().getCoeffCalibrageBySerialNumber(m_sondeSerialNumber);
-                tmp_valeur = (Convert.ToDouble(float.Parse(tmp_valeur.Remove(tmp_valeur.Length - 2, 2), CultureInfo.InvariantCulture.NumberFormat)) * coeffX + coeffConstant).ToString();
+                var rawValue = Convert.ToDouble(float.Parse(tmp_valeur.Remove(tmp_valeur.Length - 2, 2), CultureInfo.InvariantCulture.NumberFormat));
+                var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
                 // tmp_temperature = (-19.5262).ToString();
-                Console.WriteLine("Données corrigées: " + float.Parse(String.Format("{0:0.00}", tmp_valeur)));
-                Trace.WriteLine("Données corrigées: " + float.Parse(String.Format("{0:0.00}", tmp_valeur)));
+                Console.WriteLine("Données corrigées: " + correctedValue);
+                Trace.WriteLine("Données corrigées: " + correctedValue);
 
 
                 // ThreadServeur.GetDatabase().AddMesure(m_serialNumber, float.Parse(String.Format("{0:0.00}", tmp_temperature)), "éC");
-                ths.GetDatabase().AddMesure(m_sondeSerialNumber, float.Parse(String.Format("{0:0.00}", tmp_valeur)), "°C", null);
-                VigitempServeur.Log($"[SONDE][DONE] type=IE serial={m_sondeSerialNumber} port={m_comPort} status=success value={float.Parse(String.Format("{0:0.00}", tmp_valeur))} unit=°C");
+                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "�C", ToInvariantRaw(rawValue));
+                VigitempServeur.Log($"[SONDE][DONE] type=IE serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=�C raw={ToInvariantRaw(rawValue)}");
                 HandleNoResponseAlarm(true);
-                compareMeasuresAndLimits(float.Parse(String.Format("{0:0.00}", tmp_valeur)), "°C");
+                compareMeasuresAndLimits(correctedValue, "�C");
                 m_port.Close();
                 pendingResults = false;
                 System.Diagnostics.Trace.WriteLine("Fermeture du port " + m_comPort);
@@ -126,5 +126,6 @@ namespace Vigitemp_Serveur.sensors
 
     }
 }
+
 
 

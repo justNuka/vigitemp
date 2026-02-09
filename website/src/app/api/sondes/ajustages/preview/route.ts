@@ -1,7 +1,7 @@
+﻿import { randomUUID } from "crypto";
 import { NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { apiError, apiOk } from "@/lib/api-response";
-import { prisma } from "@/lib/prisma";
 import { parseAdjustmentXml } from "@/lib/adjustment-import";
 
 const isXmlFile = (file: File) => {
@@ -51,6 +51,13 @@ const decodeXmlFile = async (file: File) => {
   return utf8Score <= latin1Score ? utf8 : latin1;
 };
 
+const toIso = (value: Date | string | null | undefined) => {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString();
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+};
+
 export const POST = async (req: NextRequest) => {
   const user = getAuthenticatedUser(req);
   if (!user) return apiError(401, "unauthenticated", "Non authentifie");
@@ -70,12 +77,8 @@ export const POST = async (req: NextRequest) => {
     const xml = await decodeXmlFile(file);
     const parsed = parseAdjustmentXml(xml, file.name);
 
-    const created = await prisma.t_ajustage.create({
-      data: parsed.data,
-    });
-
     return apiOk({
-      id: created.Id_Ajustage,
+      id: randomUUID(),
       file: file.name,
       sensor: parsed.summary.sensor,
       date: parsed.summary.date,
@@ -87,9 +90,31 @@ export const POST = async (req: NextRequest) => {
       measureEtalon2: parsed.summary.measureEtalon2,
       unit: parsed.summary.unit,
       warnings: parsed.warnings,
+      insertData: {
+        Date_Heure_Ajustage: toIso(parsed.data.Date_Heure_Ajustage ?? null),
+        Sonde_Numero_Serie: parsed.data.Sonde_Numero_Serie ?? null,
+        Coeff_X2: parsed.data.Coeff_X2 ?? 0,
+        Coeff_X: parsed.data.Coeff_X ?? null,
+        Coeff_Constant: parsed.data.Coeff_Constant ?? null,
+        Unite: parsed.data.Unite ?? null,
+        Nb_Decimale: parsed.data.Nb_Decimale ?? null,
+        Operateur: parsed.data.Operateur ?? null,
+        SE_Numero: parsed.data.SE_Numero ?? null,
+        SE_Organisme: parsed.data.SE_Organisme ?? null,
+        SE_Date_Certif: toIso(parsed.data.SE_Date_Certif ?? null),
+        SE_Numero_Certif: parsed.data.SE_Numero_Certif ?? null,
+        Mesure_Etalon1: parsed.data.Mesure_Etalon1 ?? null,
+        Mesure_Etalon2: parsed.data.Mesure_Etalon2 ?? null,
+        Valeur_Brute1: parsed.data.Valeur_Brute1 ?? null,
+        Valeur_Brute2: parsed.data.Valeur_Brute2 ?? null,
+        Ancienne_Mesure1: parsed.data.Ancienne_Mesure1 ?? null,
+        Ancienne_Mesure2: parsed.data.Ancienne_Mesure2 ?? null,
+        Nouvelle_Mesure1: parsed.data.Nouvelle_Mesure1 ?? null,
+        Nouvelle_Mesure2: parsed.data.Nouvelle_Mesure2 ?? null,
+      },
     });
   } catch (error) {
-    console.error("[POST /api/sondes/ajustages/import]", error);
-    return apiError(500, "upload_failed", "Erreur lors de l'import");
+    console.error("[POST /api/sondes/ajustages/preview]", error);
+    return apiError(500, "preview_failed", "Erreur lors de la preparation");
   }
 };
