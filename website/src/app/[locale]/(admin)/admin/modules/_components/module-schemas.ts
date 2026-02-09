@@ -11,6 +11,7 @@ export const moduleSchema = z.object({
     .refine((val) => !val || /^(\d{1,3}\.){3}\d{1,3}$/.test(val), 'Adresse IP invalide'),
   Id_Serveur: z.string().optional(),
   Delai_Reseau: z.number().optional(),
+  Est_Module_GSO: z.boolean().optional(),
 });
 
 export type ModuleFormData = z.infer<typeof moduleSchema>;

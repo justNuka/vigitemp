@@ -144,25 +144,25 @@ model t_ajustage {
   Id_Ajustage         Int       @id @default(autoincrement())
   Date_Heure_Ajustage DateTime? @db.DateTime(0)
   Sonde_Numero_Serie  String?   @db.VarChar(50)
-  Coeff_X2            Float?    @db.Float
+  Coeff_X2            Float?    @default(0) @db.Float
   Coeff_X             Float?    @db.Float
-  Coeff_Constant       Float?    @db.Float
-  Unite                String?   @db.VarChar(10)
-  Nb_Decimale          Int?
-  Operateur            String?   @db.VarChar(255)
-  SE_Numero            String?   @db.VarChar(50)
-  SE_Organisme         String?   @db.VarChar(50)
-  SE_Date_Certif       DateTime? @db.Date
-  SE_Numero_Certif     String?   @db.VarChar(50)
-  Mesure_Etalon1       Float?    @db.Float
-  Mesure_Etalon2       Float?    @db.Float
-  Valeur_Brute1        Float?    @db.Float
-  Valeur_Brute2        Float?    @db.Float
-  Ancienne_Mesure1     Float?    @db.Float
-  Ancienne_Mesure2     Float?    @db.Float
-  Nouvelle_Mesure1     Float?    @db.Float
-  Nouvelle_Mesure2     Float?    @db.Float
-  Id_Milieu            Int?
+  Coeff_Constant      Float?    @db.Float
+  Unite               String?   @db.VarChar(10)
+  Nb_Decimale         Int?
+  Operateur           String?   @db.VarChar(255)
+  SE_Numero           String?   @db.VarChar(50)
+  SE_Organisme        String?   @db.VarChar(50)
+  SE_Date_Certif      DateTime? @db.Date
+  SE_Numero_Certif    String?   @db.VarChar(50)
+  Mesure_Etalon1      Float?    @db.Float
+  Mesure_Etalon2      Float?    @db.Float
+  Valeur_Brute1       Float?    @db.Float
+  Valeur_Brute2       Float?    @db.Float
+  Ancienne_Mesure1    Float?    @db.Float
+  Ancienne_Mesure2    Float?    @db.Float
+  Nouvelle_Mesure1    Float?    @db.Float
+  Nouvelle_Mesure2    Float?    @db.Float
+  Id_Milieu           Int?
 
   @@index([Date_Heure_Ajustage], map: "IDX_Date_Heure_Ajustage")
   @@index([Id_Milieu], map: "IDX_Id_Bain")
@@ -229,8 +229,8 @@ model t_etalonnage {
   Moyenne_Etalon        Float?    @db.Float
   Moyenne_Sonde         Float?    @db.Float
   Repetabilite          String?   @db.VarChar(50)
-  Id_Milieu             Int?
   Err_Justesse          String?   @db.VarChar(50)
+  Id_Milieu             Int?
 
   @@index([Date_Certif], map: "IDX_Date_Certif")
   @@index([Date_Heure_Etalonnage], map: "IDX_Date_Heure_Etalonnage")
@@ -332,12 +332,10 @@ model t_lieu {
   Sonde_Numero_Serie                        String?                    @db.VarChar(50)
   Consigne                                  Float?                     @db.Float
   Consigne_Sup                              Float?                     @db.Float
-  Tolerance_Surveillance_Sup                Float?                     @db.Float
   Est_Consigne_Sup_Active                   Boolean?                   @default(false)
   Consigne_Sup_Pre_Alarme                   Float?                     @db.Float
   Est_Consigne_Sup_Pre_Alarme_Active        Boolean?                   @default(false)
   Consigne_Inf                              Float?                     @db.Float
-  Tolerance_Surveillance_Inf                Float?                     @db.Float
   Est_Consigne_Inf_Active                   Boolean?                   @default(false)
   Consigne_Inf_Pre_Alarme                   Float?                     @db.Float
   Est_Consigne_Inf_Pre_Alarme_Active        Boolean?                   @default(false)
@@ -392,6 +390,9 @@ model t_lieu {
   Date_Heure_Reactivation_Surveillance      DateTime?                  @db.DateTime(0)
   Derniere_Val_Rssi                         String?                    @db.VarChar(10)
   Derniere_Val_Tension                      String?                    @db.VarChar(10)
+  Tolerance_Surveillance_Inf                Float?                     @db.Float
+  Tolerance_Surveillance_Sup                Float?                     @db.Float
+  Est_Lieu_GSO                              Boolean                    @default(false)
   t_alarme                                  t_alarme[]                 @relation("lieu_alarme")
   t_alarme_histo                            t_alarme_histo[]           @relation("lieu_alarme_histo")
   t_groupe1                                 t_groupe?                  @relation("groupe1", fields: [Id_Groupe1], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE1_LIEU")
@@ -464,6 +465,7 @@ model t_module {
   Emplacement         String? @db.VarChar(50)
   Archive             Int?    @default(0) @db.TinyInt
   Id_Serveur          Int?
+  Est_Module_GSO      Boolean @default(false)
 
   @@unique([Type_Module, Module_Numero_Serie], map: "Identifiant_Module")
   @@index([Id_Plan], map: "IDX_Id_Plan")

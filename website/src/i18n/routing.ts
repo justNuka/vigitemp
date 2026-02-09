@@ -120,5 +120,9 @@ export const routing = defineRouting({
       fr: '/reinitialisation-mot-de-passe',
       en: '/reset-password',
     },
+    '/upgrade-licence': {
+      fr: '/upgrade-licence',
+      en: '/upgrade-licence',
+    },
   }
 });

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -50,6 +51,7 @@ interface ModuleModalProps {
     Adresse_IP?: string | null;
     Id_Serveur?: number | null;
     Delai_Reseau?: number | null;
+    Est_Module_GSO?: boolean | null;
   } | null;
   onSuccess?: () => void;
 }
@@ -63,6 +65,7 @@ function getDefaultValues(module: ModuleModalProps["module"]): ModuleFormData {
     Adresse_IP: module?.Adresse_IP || "",
     Id_Serveur: module?.Id_Serveur ? String(module.Id_Serveur) : "",
     Delai_Reseau: module?.Delai_Reseau || undefined,
+    Est_Module_GSO: module?.Est_Module_GSO || false,
   };
 }
 
@@ -110,6 +113,7 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
           Adresse_IP: data.Adresse_IP || null,
           Id_Serveur: data.Id_Serveur ? parseInt(data.Id_Serveur) : null,
           Delai_Reseau: data.Delai_Reseau || null,
+          Est_Module_GSO: data.Est_Module_GSO ?? false,
         }),
       });
 
@@ -183,6 +187,23 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
                   <FormMessage />
                 </FormItem>
               )}
+
+            <FormField
+              control={form.control}
+              name="Est_Module_GSO"
+              render={({ field }) => (
+                <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                  <div className="space-y-1">
+                    <FormLabel>{t('fields.gso_label')}</FormLabel>
+                    <FormDescription>{t('fields.gso_help')}</FormDescription>
+                  </div>
+                  <FormControl>
+                    <Checkbox checked={!!field.value} onCheckedChange={(checked) => field.onChange(!!checked)} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
             />
 
             <FormField

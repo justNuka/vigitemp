@@ -14,6 +14,7 @@ const createModuleSchema = z.object({
   Adresse_IP: z.string().optional().nullable(),
   Id_Serveur: z.number().optional().nullable(),
   Delai_Reseau: z.number().optional().nullable(),
+  Est_Module_GSO: z.boolean().optional(),
 })
 
 export const GET = withLogging(async (req: NextRequest) => {
@@ -32,7 +33,8 @@ export const GET = withLogging(async (req: NextRequest) => {
         Emplacement: true,
         Id_Serveur: true,
         Archive: true,
-      },
+        Est_Module_GSO: true,
+      } as any,
       where: {
         Archive: 0,
       },
@@ -67,6 +69,7 @@ export const GET = withLogging(async (req: NextRequest) => {
           Emplacement: module.Emplacement,
           Id_Serveur: module.Id_Serveur,
           sondes_count: sondesCount,
+          Est_Module_GSO: (module as any).Est_Module_GSO ?? false,
         }
       }),
     )
@@ -107,8 +110,9 @@ export const POST = withLogging(async (req: NextRequest) => {
         Adresse_IP: validData.Adresse_IP,
         Id_Serveur: validData.Id_Serveur,
         Delai_Reseau: validData.Delai_Reseau,
+        Est_Module_GSO: validData.Est_Module_GSO ?? false,
         Archive: 0,
-      },
+      } as any,
     })
 
     log.data.create(

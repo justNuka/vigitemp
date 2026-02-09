@@ -325,7 +325,7 @@ export default function StepperFileUpload({ onUploadResult, onFinish }: StepperF
               className="w-full min-h-full"
             >
               {currentStep === 1 && (
-                <div className="flex items-center justify-center border-1.5 rounded-md p-6 w-full">
+                <div className="flex items-center justify-center border-1.5 rounded-md p-6 w-full bg-slate-200/10">
                   <FileUpload
                     mode="local"
                     uploads={uploads}

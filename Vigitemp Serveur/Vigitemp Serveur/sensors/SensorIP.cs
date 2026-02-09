@@ -96,7 +96,7 @@ namespace Vigitemp_Serveur.sensors
                 // Console.WriteLine("Données recues dans le port COM: " + regex_res); 
 
                 //recuperer les coeffs our corriger la valeur brute
-                (double coeffX, double constante) = ths.GetDatabase().getCoeffCalibrageBySerialNumber(m_sondeSerialNumber);
+                (double coeffX, double constant) = ths.GetDatabase().getCoeffCalibrageBySerialNumber(m_sondeSerialNumber);
 
                 double mesureNonCorrigée, mesureCalculée;
 
@@ -109,7 +109,7 @@ namespace Vigitemp_Serveur.sensors
                 tmp_resistance = (poidsFort * 256 + poidsFaible - 2048).ToString();
                 VigitempServeur.Log($"[SONDE][RX] type=IP serial={m_sondeSerialNumber} resistance={tmp_resistance}");
 
-                coeffTemp = Math.Pow(coeffA / (2 * coeffB), 2) + (coeffX * int.Parse(tmp_resistance.Replace(",", ".")) + (constante - 1)) / coeffB;
+                coeffTemp = Math.Pow(coeffA / (2 * coeffB), 2) + (coeffX * int.Parse(tmp_resistance.Replace(",", ".")) + (constant - 1)) / coeffB;
 
                 if (coeffTemp < 0)
                 {

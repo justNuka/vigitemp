@@ -97,6 +97,15 @@ export const POST = withLogging(async (req: NextRequest) => {
     const lieuEtat = validated.Lieu_Etat ?? "D"
     const sondeNumeroSerie = validated.Sonde_Numero_Serie?.trim() || null
 
+    let estLieuGso = false
+    if (sondeNumeroSerie) {
+      const gsoInfo = await prisma.t_sonde.findUnique({
+        where: { Sonde_Numero_Serie: sondeNumeroSerie },
+        select: { Est_Sonde_GSO: true },
+      })
+      estLieuGso = gsoInfo?.Est_Sonde_GSO ?? sondeNumeroSerie.toUpperCase().startsWith("GSO")
+    }
+
     const group1Id = groupIds[0] ?? validated.Id_Groupe1 ?? null
     const group2Id = groupIds[1] ?? validated.Id_Groupe2 ?? null
     const dateCreation = new Date()
@@ -111,7 +120,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         : validated.Consigne_Inf ?? null
 
     const lieu = await prisma.t_lieu.create({
-      data: {
+      data: ({
         Nom_Lieu: validated.Nom_Lieu,
         Date_Creation: dateCreation,
         Commentaire: validated.Commentaire ?? null,
@@ -130,6 +139,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         Est_Consigne_Inf_Pre_Alarme_Active: validated.Est_Consigne_Inf_Pre_Alarme_Active ?? false,
         Retard_Alarme_Bas: validated.Retard_Alarme_Bas,
         Est_Archive: false,
+        Est_Lieu_GSO: estLieuGso,
         Lieu_Etat: lieuEtat,
         ...(validated.Id_Site
           ? {
@@ -169,7 +179,7 @@ export const POST = withLogging(async (req: NextRequest) => {
               },
             }
           : {}),
-      },
+      }) as any,
     })
 
     if (sondeNumeroSerie && Object.prototype.hasOwnProperty.call(validated, "Lieu_Etat")) {

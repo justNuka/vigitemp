@@ -741,7 +741,9 @@
       "port_label": "Port série (1-255)",
       "port_placeholder": "ex: 1",
       "location_label": "Emplacement",
-      "location_placeholder": "ex: Salle serveur 1"
+      "location_placeholder": "ex: Salle serveur 1",
+      "gso_label": "Module GSO",
+      "gso_help": "Activer si le module est de type GSO."
     },
     "advanced": {
       "title": "Options avancées",
@@ -1365,7 +1367,7 @@
         "date": "Date",
         "operator": "Opérateur",
         "coeff_x": "Coeff. X",
-        "coeff_constant": "Coeff. constante",
+        "coeff_constant": "Coeff. constant",
         "measure_etalon_1": "Mesure étalon 1",
         "measure_etalon_2": "Mesure étalon 2"
       },

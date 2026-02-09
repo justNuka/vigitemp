@@ -17,6 +17,7 @@ const updateModuleSchema = z.object({
   Adresse_IP: z.string().max(50, "L'adresse IP ne peut pas dépasser 50 caractères").optional().nullable(),
   Id_Serveur: z.number().int().optional().nullable(),
   Delai_Reseau: z.number().int().optional().nullable(),
+  Est_Module_GSO: z.boolean().optional(),
 })
 
 export const PATCH = withLogging(
@@ -64,14 +65,14 @@ export const PATCH = withLogging(
 
       const updatedModule = await prisma.t_module.update({
         where: { Id_Module: id },
-        data: {
+        data: ({
           ...validatedData,
           Port_Serie: validatedData.Port_Serie || null,
           Emplacement: validatedData.Emplacement || null,
           Adresse_IP: validatedData.Adresse_IP || null,
           Id_Serveur: validatedData.Id_Serveur || null,
           Delai_Reseau: validatedData.Delai_Reseau || null,
-        },
+        }) as any,
       })
 
       const sondesCount = await prisma.t_sonde.count({

@@ -9,6 +9,7 @@ export interface Module {
   Port_Serie: string | null;
   Emplacement: string | null;
   Id_Serveur: number | null;
+  Est_Module_GSO?: boolean | null;
   sondes_count: number;
 }
 
