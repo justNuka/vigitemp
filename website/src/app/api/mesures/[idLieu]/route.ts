@@ -3,7 +3,6 @@ import { prisma, prismaMesure } from "@/lib/prisma"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { getCachedMeasurements, setCachedMeasurements } from "@/lib/measurement-cache"
 import { apiError, apiOk } from "@/lib/api-response"
-import { getAppTimezone } from "@/lib/timezone"
 
 export const GET = withAuthLogging(
   async (req: NextRequest, _ctx: any, { params }: { params: Promise<{ idLieu: string }> }) => {
@@ -142,8 +141,6 @@ export const GET = withAuthLogging(
 
       const chronologicalMeasurements = measurements.reverse()
 
-      const timezone = await getAppTimezone()
-
       const formattedMeasurements = chronologicalMeasurements.map((m: any) => {
         const dateHeure = m.Date_Heure_Mesure ? new Date(m.Date_Heure_Mesure) : new Date()
 
@@ -153,13 +150,11 @@ export const GET = withAuthLogging(
           year: "numeric",
           hour: "2-digit",
           minute: "2-digit",
-          timeZone: timezone,
         })
 
         const dateXaxis = dateHeure.toLocaleString("fr-FR", {
           hour: "2-digit",
           minute: "2-digit",
-          timeZone: timezone,
         })
 
         return {

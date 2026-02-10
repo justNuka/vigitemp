@@ -1,10 +1,12 @@
 "use client";
 
-import { licenseFeatures } from "./upgradeContent";
+import { getLicenseFeatures } from "./upgradeContent";
 import { BlurFade } from "./BlurFade";
 import { ShineBorder } from "@/components/ui/shine-border";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Check, X, Clock } from "lucide-react";
+import { useTheme } from "next-themes";
+import { useTranslations } from "next-intl";
 
 function CellValue({ value }: { value: boolean | string }) {
   if (value === true) return <Check className="w-4 h-4 text-primary mx-auto" />;
@@ -13,19 +15,23 @@ function CellValue({ value }: { value: boolean | string }) {
 }
 
 export function LicenseTableSection() {
+  const theme = useTheme();
+  const t = useTranslations();
+  const licenseFeatures = getLicenseFeatures(t);
+  
   return (
     <section id="licences" className="py-24 px-4">
       <div className="max-w-5xl mx-auto">
         <BlurFade>
           <div className="text-center mb-16">
             <p className="text-xs uppercase tracking-[0.3em] text-primary mb-4">
-              Licences
+              {t("upgrade.licenses.eyebrow")}
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 text-balance">
-              {"Tableau comparatif des licences"}
+              {t("upgrade.licenses.title")}
             </h2>
             <p className="text-muted-foreground">
-              {"Choisissez le niveau qui correspond a vos besoins."}
+              {t("upgrade.licenses.subtitle")}
             </p>
           </div>
         </BlurFade>
@@ -36,22 +42,24 @@ export function LicenseTableSection() {
               <thead>
                 <tr>
                   <th className="text-left text-xs font-medium text-muted-foreground p-4 w-[40%]">
-                    Fonctionnalite
+                    {t("upgrade.licenses.table.feature")}
                   </th>
                   <th className="text-center text-xs font-medium text-muted-foreground p-4 w-[20%]">
-                    One
+                    {t("upgrade.licenses.table.one")}
                   </th>
                   <th className="text-center p-4 w-[20%] relative">
                     <div className="relative inline-flex flex-col items-center">
-                      <span className="text-xs font-bold text-primary">Standard</span>
+                      <span className="text-xs font-bold text-primary">
+                        {t("upgrade.licenses.table.standard")}
+                      </span>
                       <span className="text-[10px] mt-0.5 px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                        Recommande
+                        {t("upgrade.licenses.table.recommended")}
                       </span>
                     </div>
                   </th>
                   <th className="text-center text-xs font-medium text-muted-foreground p-4 w-[20%]">
                     <span className="flex items-center justify-center gap-1">
-                      Expert
+                      {t("upgrade.licenses.table.expert")}
                       <Clock className="w-3 h-3 text-muted-foreground" />
                     </span>
                   </th>
@@ -83,12 +91,12 @@ export function LicenseTableSection() {
 
           {/* Standard highlight border */}
           <Card className="relative overflow-hidden glass border-0 shadow-none mt-6 text-center">
-            <ShineBorder shineColor={["#A07CFE", "#FE8FB5", "#FFBE7B"]} />
+            <ShineBorder shineColor={theme.theme === "dark" ? "white" : "black"} />
             <CardHeader className="p-4">
               <p className="text-sm text-foreground">
-                {"La licence "}
+                {t("upgrade.licenses.highlight.prefix")} 
                 <span className="text-primary font-bold">Standard</span>
-                {" est le meilleur rapport fonctionnalites/prix pour la metrologie."}
+                {t("upgrade.licenses.highlight.suffix")}
               </p>
             </CardHeader>
           </Card>

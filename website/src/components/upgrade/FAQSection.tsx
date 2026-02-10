@@ -1,14 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { faqItems } from "./upgradeContent";
+import { getFaqItems } from "./upgradeContent";
 import { BlurFade } from "./BlurFade";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { cn } from "@/lib/utils";
 import { ChevronDown, Shield } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const t = useTranslations();
+  const faqItems = getFaqItems(t);
 
   return (
     <section id="securite" className="relative py-24 px-4">
@@ -20,14 +23,14 @@ export function FAQSection() {
             <div className="inline-flex items-center gap-2 mb-4">
               <Shield className="w-5 h-5 text-primary" />
               <p className="text-xs uppercase tracking-[0.3em] text-primary">
-                Securite & On-Premise
+                {t("upgrade.faq.eyebrow")}
               </p>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 text-balance">
-              {"Questions frequentes"}
+              {t("upgrade.faq.title")}
             </h2>
             <p className="text-muted-foreground">
-              {"Tout ce que vous devez savoir avant de passer a Standard."}
+              {t("upgrade.faq.subtitle")}
             </p>
           </div>
         </BlurFade>

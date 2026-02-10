@@ -1,54 +1,40 @@
 "use client";
 
-import { useRef } from "react";
-import { heroContent, proofStats } from "./upgradeContent";
+import { getHeroContent, getHeroParallaxProducts, getProofStats } from "./upgradeContent";
 import { AuroraText } from "@/components/ui/aurora-text";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { BlurFade } from "./BlurFade";
 import { MagicCard } from "@/components/ui/magic-card";
 import { ShineBorder } from "@/components/ui/shine-border";
 import { Card, CardHeader } from "@/components/ui/card";
-import { useParallax } from "./useParallax";
+import { HeroParallax } from "@/components/ui/hero-parallax";
+import { useTheme } from "next-themes";
+import { useTranslations } from "next-intl";
 
 export function HeroSection() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const scrollY = useParallax();
+  const theme = useTheme();
+  const t = useTranslations();
+  const heroContent = getHeroContent(t);
+  const heroParallaxProducts = getHeroParallaxProducts(t);
+  const proofStats = getProofStats(t);
 
   return (
     <section id="intro" className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-24 pb-16">
       {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* Gradient orbs */}
-        <div
-          className="absolute -top-40 -left-40 w-150 h-150 rounded-full opacity-20"
-          style={{
-            background: "radial-gradient(circle, hsla(190, 95%, 45%, 0.3) 0%, transparent 70%)",
-            transform: `translateY(${scrollY * 0.1}px)`,
-          }}
+        <HeroParallax
+          products={heroParallaxProducts}
+          showHeader={false}
+          className="pointer-events-none absolute -top-48 left-1/2 w-[160%] -translate-x-1/2 opacity-55"
         />
-        <div
-          className="absolute -bottom-40 -right-40 w-125 h-125 rounded-full opacity-15"
-          style={{
-            background: "radial-gradient(circle, hsla(185, 80%, 40%, 0.3) 0%, transparent 70%)",
-            transform: `translateY(${scrollY * -0.05}px)`,
-          }}
-        />
-        {/* Grid */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: "linear-gradient(hsla(190,95%,45%,0.3) 1px, transparent 1px), linear-gradient(90deg, hsla(190,95%,45%,0.3) 1px, transparent 1px)",
-            backgroundSize: "60px 60px",
-            transform: `translateY(${scrollY * 0.05}px)`,
-          }}
-        />
+        <div className="absolute inset-0 bg-linear-to-b from-background/40 via-background/75 to-background" />
       </div>
 
       {/* Hero content */}
-      <div ref={containerRef} className="relative z-10 max-w-5xl mx-auto px-4 text-center">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
         <BlurFade delay={100}>
           <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-6">
-            Upgrade de licence
+            {t("upgrade.hero.eyebrow")}
           </p>
         </BlurFade>
 
@@ -57,7 +43,7 @@ export function HeroSection() {
             <span className="font-light">Vigi</span>
             <AuroraText
               className="font-extrabold"
-              colors={["#a142fe","#40a1ff"]}
+              colors={["hsl(var(--primary))", "hsl(var(--accent))"]}
             >
               Sensys
             </AuroraText>
@@ -66,10 +52,11 @@ export function HeroSection() {
 
         <BlurFade delay={350}>
           <p className="text-xl sm:text-2xl md:text-3xl font-light text-foreground/90 mb-2 text-balance leading-relaxed">
-            {"Passez a une "}
+            {t("upgrade.hero.leadPrefix")}
+            {(" ")}
             <AuroraText 
               className="font-semibold"
-              colors={["#40a1ff","#a142fe"]}
+              colors={["hsl(var(--primary))", "hsl(var(--accent))"]}
             >
               {heroContent.titleHighlight}
             </AuroraText>
@@ -83,10 +70,10 @@ export function HeroSection() {
         </BlurFade>
 
         <BlurFade delay={600}>
-          <p className="text-sm text-muted-foreground mb-10">
+          <p className="text-lg text-muted-foreground mb-10">
             {heroContent.subtitleHighlights.map((word, i) => (
               <span key={word}>
-                {i > 0 && " / "}
+                {i > 0 && " "}
                 <span className="text-primary font-medium">{word}</span>
               </span>
             ))}
@@ -111,7 +98,7 @@ export function HeroSection() {
               {stat.highlight ? (
                 <Card className="relative h-full overflow-hidden glass border-0 shadow-none">
                   <ShineBorder
-                    shineColor={["#A07CFE", "#FE8FB5", "#FFBE7B"]}
+                    shineColor={theme.theme === "dark" ? "white" : "black"}
                     duration={20}
                     borderWidth={1}
                   />
@@ -138,7 +125,9 @@ export function HeroSection() {
       {/* Scroll indicator */}
       <BlurFade delay={1200} className="absolute bottom-8">
         <div className="flex flex-col items-center gap-2 text-muted-foreground/50">
-          <span className="text-[10px] uppercase tracking-widest">Scroll</span>
+          <span className="text-[10px] uppercase tracking-widest">
+            {t("upgrade.hero.scroll")}
+          </span>
           <div className="w-px h-8 bg-linear-to-b from-primary/50 to-transparent animate-pulse-glow" />
         </div>
       </BlurFade>

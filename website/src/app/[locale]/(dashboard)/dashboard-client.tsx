@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,18 +24,6 @@ import { formatDistanceToNow } from "date-fns";
 import { enUS, fr } from "date-fns/locale";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { ColumnDef } from "@tanstack/react-table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale, useTranslations } from "next-intl";
 import {
   Tooltip,
@@ -44,6 +32,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useAppTimezone } from "@/components/timezone-provider";
+import { AlarmAcknowledgeDialog } from "@/components/alarm-acknowledge-dialog";
 
 interface DashboardClientProps {
   criticalSensors: SensorWithLocation[];
@@ -67,7 +56,7 @@ interface AlarmRow {
 
 /**
  * Composant client pour les parties interactives du dashboard
- * Affiche alarmes actives, capteurs critiques, et aperçu des sondes
+ * Affiche alarmes actives, capteurs critiques, et aperÃ§u des sondes
  */
 export function DashboardClient({
   criticalSensors,
@@ -99,26 +88,6 @@ export function DashboardClient({
   const [activeCount, setActiveCount] = useState(totalActiveAlarms);
   const [selectedAlarm, setSelectedAlarm] = useState<AlarmWithDetails | null>(null);
   const [isAcknowledging, setIsAcknowledging] = useState(false);
-
-  const commentSchema = z.object({
-    comment: z.string().max(200, t("comment.max")).optional(),
-  });
-
-  type CommentFormValues = z.infer<typeof commentSchema>;
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm<CommentFormValues>({
-    resolver: zodResolver(commentSchema),
-    defaultValues: { comment: "" },
-  });
-
-  const comment = watch("comment") ?? "";
-
   useEffect(() => {
     setLocalAlarms(activeAlarms);
     setActiveCount(totalActiveAlarms);
@@ -306,19 +275,6 @@ export function DashboardClient({
     status: alarm.status,
     comment: alarm.comment,
   }));
-
-  const handleDialogAcknowledge = async (values: CommentFormValues) => {
-    if (!selectedAlarm) return;
-    setIsAcknowledging(true);
-    try {
-      await handleAcknowledge(selectedAlarm.id, values.comment || "");
-      setSelectedAlarm(null);
-      reset({ comment: "" });
-    } finally {
-      setIsAcknowledging(false);
-    }
-  };
-
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -369,7 +325,7 @@ export function DashboardClient({
           </Card>
         </section>
 
-        {/* Section tendance récente (1 colonne) */}
+        {/* Section tendance rÃ©cente (1 colonne) */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -406,14 +362,14 @@ export function DashboardClient({
         </section>
       </div>
 
-      {/* Sondes critiques (si présentes) */}
+      {/* Sondes critiques (si prÃ©sentes) */}
       {/*
 {criticalSensors.length > 0 && (
         <section aria-label="Sondes critiques" className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold flex items-center gap-2">
               <Thermometer className="h-5 w-5 text-destructive" />
-              Sondes en état critique
+              Sondes en Ã©tat critique
               <Badge variant="destructive">{criticalSensors.length}</Badge>
             </h2>
             <Link href="surveillance">
@@ -432,11 +388,11 @@ export function DashboardClient({
         </section>
       */}
 
-      {/* Aperçu des sondes */}
+      {/* AperÃ§u des sondes */}
       {/*
-<section aria-label="Aperçu des sondes" className="space-y-4">
+<section aria-label="AperÃ§u des sondes" className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Aperçu des sondes</h2>
+          <h2 className="text-lg font-semibold">AperÃ§u des sondes</h2>
           <Link href="surveillance">
             <Button variant="ghost" size="sm" className="gap-1">
               Voir tout
@@ -452,92 +408,35 @@ export function DashboardClient({
         </div>
       </section>
       */}
-
-      <Dialog open={!!selectedAlarm} onOpenChange={() => setSelectedAlarm(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-warning" />
-              {t("ack_dialog.title")}
-            </DialogTitle>
-            <DialogDescription>
-              {selectedAlarm && (
-                <>
-                  {t("ack_dialog.description", {
-                    sensor: selectedAlarm.sensor.name,
-                    location: selectedAlarm.location.name,
-                  })}
-                </>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">{t("ack_dialog.last_value")}</p>
-                <p className="text-xl font-bold font-mono">
-                  {selectedAlarm?.sensor.currentValue ?? selectedAlarm?.value ?? "-"} {selectedAlarm?.sensor.unit}
-                </p>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">{t("ack_dialog.thresholds")}</p>
-                <p className="text-sm font-mono text-muted-foreground">
-                  {t("table.thresholds.upper", {
-                    value: selectedAlarm?.sensor.maxThreshold ?? "-",
-                    unit: selectedAlarm?.sensor.unit ?? "",
-                  })}
-                </p>
-                <p className="text-sm font-mono text-muted-foreground">
-                  {t("table.thresholds.lower", {
-                    value: selectedAlarm?.sensor.minThreshold ?? "-",
-                    unit: selectedAlarm?.sensor.unit ?? "",
-                  })}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="comment" className="text-sm font-medium">
-                {t("ack_dialog.comment_label")}
-              </label>
-              <Textarea
-                id="comment"
-                placeholder={t("ack_dialog.comment_placeholder")}
-                {...register("comment")}
-                maxLength={200}
-                rows={3}
-                aria-invalid={!!errors.comment}
-                aria-describedby={errors.comment ? "comment-error" : undefined}
-                data-testid="input-alarm-comment"
-              />
-              {errors.comment?.message && (
-                <p id="comment-error" className="text-sm text-destructive">
-                  {String(errors.comment.message)}
-                </p>
-              )}
-              <p className="text-xs text-muted-foreground text-right">
-                {t("ack_dialog.comment_count", { count: comment.length, max: 200 })}
-              </p>
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setSelectedAlarm(null)}
-              data-testid="button-cancel-acknowledge"
-            >
-              {t("ack_dialog.cancel")}
-            </Button>
-            <Button
-              onClick={handleSubmit(handleDialogAcknowledge)}
-              disabled={isAcknowledging || isSubmitting}
-              data-testid="button-confirm-acknowledge"
-            >
-              {isAcknowledging ? t("ack_dialog.submitting") : t("ack_dialog.submit")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AlarmAcknowledgeDialog
+        open={!!selectedAlarm}
+        alarm={
+          selectedAlarm
+            ? {
+                id: selectedAlarm.id,
+                locationId: selectedAlarm.locationId,
+                locationName: selectedAlarm.location.name,
+                sensorName: selectedAlarm.sensor.name,
+                type: selectedAlarm.type,
+                currentValue: selectedAlarm.sensor.currentValue,
+                value: selectedAlarm.value,
+                unit: selectedAlarm.sensor.unit,
+                minThreshold: selectedAlarm.sensor.minThreshold,
+                maxThreshold: selectedAlarm.sensor.maxThreshold,
+                triggeredAt: selectedAlarm.triggeredAt,
+                endedAt: selectedAlarm.resolvedAt,
+              }
+            : null
+        }
+        onOpenChange={(open) => {
+          if (!open) setSelectedAlarm(null);
+        }}
+        onConfirm={async (alarmId, commentValue) => {
+          await handleAcknowledge(alarmId, commentValue ?? "");
+          setSelectedAlarm(null);
+        }}
+        isConfirming={isAcknowledging}
+      />
     </main>
   );
 }
@@ -572,3 +471,6 @@ function AlarmStatusBadge({ status, t }: { status: string; t: ReturnType<typeof 
     </Badge>
   );
 }
+
+
+

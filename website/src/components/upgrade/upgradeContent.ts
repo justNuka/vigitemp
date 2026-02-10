@@ -13,67 +13,148 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-/* ───── NAV LINKS ───── */
-export const navLinks = [
-  { label: "Pourquoi upgrader", href: "#pourquoi" },
-  { label: "Comparaison", href: "#comparaison" },
-  { label: "Standard", href: "#standard" },
-  { label: "Expert", href: "#expert" },
-  { label: "Licences", href: "#licences" },
-  { label: "Contact", href: "#contact" },
+type UpgradeTranslator = (
+  key: string,
+  values?: Record<string, string | number | Date>
+) => string;
+
+export const getNavLinks = (t: UpgradeTranslator) => [
+  { label: t("upgrade.nav.pourquoi"), href: "#pourquoi" },
+  { label: t("upgrade.nav.comparaison"), href: "#comparaison" },
+  { label: t("upgrade.nav.standard"), href: "#standard" },
+  { label: t("upgrade.nav.expert"), href: "#expert" },
+  { label: t("upgrade.nav.licences"), href: "#licences" },
+  { label: t("upgrade.nav.contact"), href: "#contact" },
 ];
 
-/* ───── TOC ITEMS ───── */
-export const tocItems = [
-  { id: "intro", label: "Introduction" },
-  { id: "pourquoi", label: "Pourquoi upgrader" },
-  { id: "comparaison", label: "Comparaison" },
-  { id: "architecture", label: "Architecture" },
-  { id: "plans", label: "Plans & Sondes" },
-  { id: "licences", label: "Licences" },
-  { id: "standard", label: "Standard" },
-  { id: "expert", label: "Expert" },
-  { id: "securite", label: "Securite" },
-  { id: "contact", label: "Contact" },
+export const getTocItems = (t: UpgradeTranslator) => [
+  { id: "intro", label: t("upgrade.toc.intro") },
+  { id: "pourquoi", label: t("upgrade.toc.pourquoi") },
+  { id: "comparaison", label: t("upgrade.toc.comparaison") },
+  { id: "architecture", label: t("upgrade.toc.architecture") },
+  { id: "plans", label: t("upgrade.toc.plans") },
+  { id: "licences", label: t("upgrade.toc.licences") },
+  { id: "standard", label: t("upgrade.toc.standard") },
+  { id: "expert", label: t("upgrade.toc.expert") },
+  { id: "securite", label: t("upgrade.toc.securite") },
+  { id: "contact", label: t("upgrade.toc.contact") },
 ];
 
-/* ───── HERO ───── */
-export const heroContent = {
-  title: "VigiSensys",
-  titleHighlight: "metrologie plus intelligente",
-  subtitle:
-    "Surveillance + metrologie reunies dans une centrale 100% on-premise.",
-  subtitleHighlights: ["securite", "conformite", "performance"],
-  tagline: "Vos donnees restent chez vous.",
-  ctaPrimary: "Passer a Standard",
-  ctaSecondary: "Comparer les licences",
-};
+export const getHeroContent = (t: UpgradeTranslator) => ({
+  title: t("upgrade.hero.title"),
+  titleHighlight: t("upgrade.hero.titleHighlight"),
+  subtitle: t("upgrade.hero.subtitle"),
+  subtitleHighlights: [
+    t("upgrade.hero.subtitleHighlights.0"),
+    t("upgrade.hero.subtitleHighlights.1"),
+    t("upgrade.hero.subtitleHighlights.2"),
+  ],
+  tagline: t("upgrade.hero.tagline"),
+  ctaPrimary: t("upgrade.hero.ctaPrimary"),
+  ctaSecondary: t("upgrade.hero.ctaSecondary"),
+});
 
-/* ───── PROOF STATS ───── */
-export const proofStats = [
+export const getHeroParallaxProducts = (t: UpgradeTranslator) => [
   {
-    title: "100% on-premise",
-    description: "Aucune donnee dans le cloud",
+    title: t("upgrade.heroParallax.items.0.title"),
+    link: "#surveillance",
+    thumbnail: "/images/upgrade_licence/dashboard.png",
+  },
+  {
+    title: t("upgrade.heroParallax.items.1.title"),
+    link: "#surveillance",
+    thumbnail: "/images/upgrade_licence/surveillance1.png",
+  },
+  {
+    title: t("upgrade.heroParallax.items.2.title"),
+    link: "#surveillance",
+    thumbnail: "/images/upgrade_licence/surveillance2.png",
+  },
+  {
+    title: t("upgrade.heroParallax.items.3.title"),
+    link: "#standard",
+    thumbnail: "/images/upgrade_licence/dashboard.png",
+  },
+  {
+    title: t("upgrade.heroParallax.items.4.title"),
+    link: "#pourquoi",
+    thumbnail: "/images/upgrade_licence/surveillance1.png",
+  },
+  {
+    title: t("upgrade.heroParallax.items.5.title"),
+    link: "#securite",
+    thumbnail: "/images/upgrade_licence/surveillance2.png",
+  },
+  {
+    title: t("upgrade.heroParallax.items.6.title"),
+    link: "#surveillance",
+    thumbnail: "/images/upgrade_licence/dashboard.png",
+  },
+  {
+    title: t("upgrade.heroParallax.items.7.title"),
+    link: "#standard",
+    thumbnail: "/images/upgrade_licence/surveillance1.png",
+  },
+  {
+    title: t("upgrade.heroParallax.items.8.title"),
+    link: "#standard",
+    thumbnail: "/images/upgrade_licence/surveillance2.png",
+  },
+  {
+    title: t("upgrade.heroParallax.items.9.title"),
+    link: "#licences",
+    thumbnail: "/images/upgrade_licence/dashboard.png",
+  },
+  {
+    title: t("upgrade.heroParallax.items.10.title"),
+    link: "#pourquoi",
+    thumbnail: "/images/upgrade_licence/surveillance1.png",
+  },
+  {
+    title: t("upgrade.heroParallax.items.11.title"),
+    link: "#securite",
+    thumbnail: "/images/upgrade_licence/surveillance2.png",
+  },
+  {
+    title: t("upgrade.heroParallax.items.12.title"),
+    link: "#surveillance",
+    thumbnail: "/images/upgrade_licence/dashboard.png",
+  },
+  {
+    title: t("upgrade.heroParallax.items.13.title"),
+    link: "#plans",
+    thumbnail: "/images/upgrade_licence/surveillance1.png",
+  },
+  {
+    title: t("upgrade.heroParallax.items.14.title"),
+    link: "#comparaison",
+    thumbnail: "/images/upgrade_licence/surveillance2.png",
+  },
+];
+
+export const getProofStats = (t: UpgradeTranslator) => [
+  {
+    title: t("upgrade.proofStats.items.0.title"),
+    description: t("upgrade.proofStats.items.0.description"),
     highlight: true,
   },
   {
-    title: "Alarmes temps reel",
-    description: "Detection instantanee des ecarts",
+    title: t("upgrade.proofStats.items.1.title"),
+    description: t("upgrade.proofStats.items.1.description"),
     highlight: false,
   },
   {
-    title: "Tracabilite metrologique",
-    description: "Historique complet et auditable",
+    title: t("upgrade.proofStats.items.2.title"),
+    description: t("upgrade.proofStats.items.2.description"),
     highlight: false,
   },
   {
-    title: "Notifications Windows",
-    description: "Meme navigateur ferme",
+    title: t("upgrade.proofStats.items.3.title"),
+    description: t("upgrade.proofStats.items.3.description"),
     highlight: false,
   },
 ];
 
-/* ───── VALUE PROPS ───── */
 export interface ValueProp {
   icon: LucideIcon;
   title: string;
@@ -81,120 +162,131 @@ export interface ValueProp {
   badge?: string;
 }
 
-export const valueProps: ValueProp[] = [
+export const getValueProps = (t: UpgradeTranslator): ValueProp[] => [
   {
     icon: Shield,
-    title: "Reduire les non-conformites",
-    description: "Detectez derive et ecarts plus tot grace au suivi continu.",
-    badge: "Standard",
+    title: t("upgrade.valueProps.items.0.title"),
+    description: t("upgrade.valueProps.items.0.description"),
+    badge: t("upgrade.valueProps.items.0.badge"),
   },
   {
     icon: Activity,
-    title: "Accelerer le calibrage",
-    description:
-      "Calibrage 2 points, suivi historique, coefficients automatiques.",
-    badge: "Standard",
+    title: t("upgrade.valueProps.items.1.title"),
+    description: t("upgrade.valueProps.items.1.description"),
+    badge: t("upgrade.valueProps.items.1.badge"),
   },
   {
     icon: FileCheck,
-    title: "Renforcer la tracabilite",
-    description: "Rapports, historique, parametres : tout est enregistre.",
-    badge: "Standard",
+    title: t("upgrade.valueProps.items.2.title"),
+    description: t("upgrade.valueProps.items.2.description"),
+    badge: t("upgrade.valueProps.items.2.badge"),
   },
   {
     icon: Target,
-    title: "Standardiser les EMT par lieu",
-    description: "Tolerances maitrisees site par site, zone par zone.",
-    badge: "Standard",
+    title: t("upgrade.valueProps.items.3.title"),
+    description: t("upgrade.valueProps.items.3.description"),
+    badge: t("upgrade.valueProps.items.3.badge"),
   },
   {
     icon: MessageSquare,
-    title: "Collaborer sans perdre d'infos",
-    description: "Messagerie interne et tracabilite des echanges.",
-    badge: "Standard",
+    title: t("upgrade.valueProps.items.4.title"),
+    description: t("upgrade.valueProps.items.4.description"),
+    badge: t("upgrade.valueProps.items.4.badge"),
   },
   {
     icon: Lock,
-    title: "Securite au coeur",
-    description: "Roles, audit, logique on-prem. Zero compromis.",
-    badge: "Standard",
+    title: t("upgrade.valueProps.items.5.title"),
+    description: t("upgrade.valueProps.items.5.description"),
+    badge: t("upgrade.valueProps.items.5.badge"),
   },
 ];
 
-/* ───── COMPARE ───── */
-export const compareItems = [
+export const getCompareItems = (t: UpgradeTranslator) => [
   {
     id: "surveillance",
-    title: "Surveillance",
-    leftLabel: "One",
-    rightLabel: "Standard",
+    title: t("upgrade.compare.items.0.title"),
+    leftLabel: t("upgrade.compare.items.0.leftLabel"),
+    rightLabel: t("upgrade.compare.items.0.rightLabel"),
     leftItems: [
-      "Cards basiques",
-      "Graphiques simples",
-      "Alarmes simples",
+      t("upgrade.compare.items.0.leftItems.0"),
+      t("upgrade.compare.items.0.leftItems.1"),
+      t("upgrade.compare.items.0.leftItems.2"),
     ],
     rightItems: [
-      "Indicateurs metrologie avances",
-      "Detection de derive en temps reel",
-      "Historique complet des ecarts",
-    ],
-    gains: [
-      "Visibilite sur la derive avant non-conformite",
-      "Indicateurs metrologie integres",
-      "Historique complet auditable",
+      t("upgrade.compare.items.0.rightItems.0"),
+      t("upgrade.compare.items.0.rightItems.1"),
+      t("upgrade.compare.items.0.rightItems.2"),
     ],
   },
   {
     id: "metrologie",
-    title: "Metrologie",
-    leftLabel: "Basique",
-    rightLabel: "Standard",
+    title: t("upgrade.compare.items.1.title"),
+    leftLabel: t("upgrade.compare.items.1.leftLabel"),
+    rightLabel: t("upgrade.compare.items.1.rightLabel"),
     leftItems: [
-      "Pas de calibrage",
-      "Pas d'incertitude",
-      "Pas d'ajustage",
+      t("upgrade.compare.items.1.leftItems.0"),
+      t("upgrade.compare.items.1.leftItems.1"),
+      t("upgrade.compare.items.1.leftItems.2"),
     ],
     rightItems: [
-      "Calibrage 2 points + historique",
-      "Incertitude + justesse",
-      "Derive et coefficients a/b",
-    ],
-    gains: [
-      "Calibrage 2 points avec tracabilite",
-      "Calcul d'incertitude automatique",
-      "Gestion complete de la derive",
+      t("upgrade.compare.items.1.rightItems.0"),
+      t("upgrade.compare.items.1.rightItems.1"),
+      t("upgrade.compare.items.1.rightItems.2"),
     ],
   },
 ];
 
-/* ───── ARCHITECTURE ───── */
-export const architectureNodes = [
-  { id: "sondes", label: "Sondes", sublabel: "Temp, HR, CO2...", icon: Thermometer },
-  { id: "serveur", label: "Serveur C#", sublabel: "Interrogation + Alarmes", icon: Server },
-  { id: "bdd", label: "Base de donnees", sublabel: "Mesures / Metier", icon: Database },
-  { id: "webapp", label: "Web App", sublabel: "Next.js", icon: Globe },
-  { id: "agent", label: "Agent Windows", sublabel: "Notifications", icon: Bell },
+export const getArchitectureNodes = (t: UpgradeTranslator) => [
+  {
+    id: "sondes",
+    label: t("upgrade.architecture.nodes.sondes.label"),
+    sublabel: t("upgrade.architecture.nodes.sondes.sublabel"),
+    icon: Thermometer,
+  },
+  {
+    id: "serveur",
+    label: t("upgrade.architecture.nodes.serveur.label"),
+    sublabel: t("upgrade.architecture.nodes.serveur.sublabel"),
+    icon: Server,
+  },
+  {
+    id: "bdd",
+    label: t("upgrade.architecture.nodes.bdd.label"),
+    sublabel: t("upgrade.architecture.nodes.bdd.sublabel"),
+    icon: Database,
+  },
+  {
+    id: "webapp",
+    label: t("upgrade.architecture.nodes.webapp.label"),
+    sublabel: t("upgrade.architecture.nodes.webapp.sublabel"),
+    icon: Globe,
+  },
+  {
+    id: "agent",
+    label: t("upgrade.architecture.nodes.agent.label"),
+    sublabel: t("upgrade.architecture.nodes.agent.sublabel"),
+    icon: Bell,
+  },
 ];
 
-export const architectureLeft = {
-  title: "Pourquoi c'est robuste",
+export const getArchitectureLeft = (t: UpgradeTranslator) => ({
+  title: t("upgrade.architecture.left.title"),
   items: [
-    "Fonctionne offline / LAN",
-    "Performance industrielle",
-    "Centralisation des donnees",
+    t("upgrade.architecture.left.items.0"),
+    t("upgrade.architecture.left.items.1"),
+    t("upgrade.architecture.left.items.2"),
   ],
-};
+});
 
-export const architectureRight = {
-  title: "Pourquoi c'est securise",
+export const getArchitectureRight = (t: UpgradeTranslator) => ({
+  title: t("upgrade.architecture.right.title"),
   items: [
-    "Donnees chez vous uniquement",
-    "Controle d'acces granulaire",
-    "Logs et audit complets",
+    t("upgrade.architecture.right.items.0"),
+    t("upgrade.architecture.right.items.1"),
+    t("upgrade.architecture.right.items.2"),
   ],
-};
+});
 
-/* ───── LICENSE TABLE ───── */
 export interface LicenseFeature {
   name: string;
   one: boolean | string;
@@ -202,115 +294,106 @@ export interface LicenseFeature {
   expert: boolean | string;
 }
 
-export const licenseFeatures: LicenseFeature[] = [
-  { name: "Surveillance (cards + graph)", one: true, standard: true, expert: true },
-  { name: "Alarmes & tolerances", one: true, standard: true, expert: true },
-  { name: "Notifications Windows agent", one: true, standard: true, expert: true },
-  { name: "Metrologie (calibrage 2 points)", one: false, standard: true, expert: true },
-  { name: "Ajustage : coeff a/b", one: false, standard: true, expert: true },
-  { name: "Ajustage : justesse + incertitude", one: false, standard: true, expert: true },
-  { name: "Gestion derive", one: false, standard: true, expert: true },
-  { name: "Messagerie interne", one: false, standard: true, expert: true },
-  { name: "EMT par lieu", one: false, standard: true, expert: true },
-  { name: "Dashboard personnalisable", one: false, standard: false, expert: true },
-  { name: "IA assistant", one: false, standard: false, expert: true },
-  { name: "Analyse temps reel", one: false, standard: false, expert: true },
-  { name: "Ecosysteme interventions", one: false, standard: false, expert: true },
+export const getLicenseFeatures = (t: UpgradeTranslator): LicenseFeature[] => [
+  { name: t("upgrade.licenses.features.0"), one: true, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.1"), one: true, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.2"), one: true, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.3"), one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.4"), one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.5"), one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.6"), one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.7"), one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.8"), one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.9"), one: false, standard: false, expert: true },
+  { name: t("upgrade.licenses.features.10"), one: false, standard: false, expert: true },
+  { name: t("upgrade.licenses.features.11"), one: false, standard: false, expert: true },
+  { name: t("upgrade.licenses.features.12"), one: false, standard: false, expert: true },
 ];
 
-/* ───── STANDARD DEEP DIVE ───── */
-export const standardBlocks = [
+export const getStandardBlocks = (t: UpgradeTranslator) => [
   {
-    title: "Calibrage 2 points + historique",
+    title: t("upgrade.standard.blocks.0.title"),
     bullets: [
-      "Definissez vos 2 points de reference",
-      "Historique de chaque operation",
-      "Certificats de calibrage integres",
-      "Tracabilite complete par sonde",
+      t("upgrade.standard.blocks.0.bullets.0"),
+      t("upgrade.standard.blocks.0.bullets.1"),
+      t("upgrade.standard.blocks.0.bullets.2"),
+      t("upgrade.standard.blocks.0.bullets.3"),
     ],
   },
   {
-    title: "Gestion de derive & tracabilite",
+    title: t("upgrade.standard.blocks.1.title"),
     bullets: [
-      "Suivi de derive automatique",
-      "Alertes sur seuil de derive",
-      "Graphiques d'evolution",
-      "Export PDF pour audit",
+      t("upgrade.standard.blocks.1.bullets.0"),
+      t("upgrade.standard.blocks.1.bullets.1"),
+      t("upgrade.standard.blocks.1.bullets.2"),
+      t("upgrade.standard.blocks.1.bullets.3"),
     ],
   },
   {
-    title: "Ajustage (coeff a/b)",
+    title: t("upgrade.standard.blocks.2.title"),
     bullets: [
-      "Calcul automatique des coefficients",
-      "Application en temps reel",
-      "Historique des ajustages",
-      "Comparaison avant/apres",
+      t("upgrade.standard.blocks.2.bullets.0"),
+      t("upgrade.standard.blocks.2.bullets.1"),
+      t("upgrade.standard.blocks.2.bullets.2"),
+      t("upgrade.standard.blocks.2.bullets.3"),
     ],
   },
   {
-    title: "Ajustage (justesse + incertitude)",
+    title: t("upgrade.standard.blocks.3.title"),
     bullets: [
-      "Calcul d'incertitude type A et B",
-      "Justesse mesuree et tracee",
-      "Rapports conformes aux normes",
-      "Integration au workflow qualite",
+      t("upgrade.standard.blocks.3.bullets.0"),
+      t("upgrade.standard.blocks.3.bullets.1"),
+      t("upgrade.standard.blocks.3.bullets.2"),
+      t("upgrade.standard.blocks.3.bullets.3"),
     ],
   },
 ];
 
-/* ───── EXPERT CARDS ───── */
-export const expertCards = [
+export const getExpertCards = (t: UpgradeTranslator) => [
   {
-    title: "Dashboard tuiles",
-    description: "Add / remove / resize / drag : construisez votre vue.",
+    title: t("upgrade.expert.cards.0.title"),
+    description: t("upgrade.expert.cards.0.description"),
   },
   {
-    title: "Chatbot IA",
-    description: "Troubleshooting intelligent, contexte capteur integre.",
+    title: t("upgrade.expert.cards.1.title"),
+    description: t("upgrade.expert.cards.1.description"),
   },
   {
-    title: "Analyse temps reel",
-    description: "Evenements + mesures croises, detection de patterns.",
+    title: t("upgrade.expert.cards.2.title"),
+    description: t("upgrade.expert.cards.2.description"),
   },
   {
-    title: "Ecosysteme interventions",
-    description: "Planification technicien, suivi MC2 complet.",
-  },
-];
-
-/* ───── FAQ ───── */
-export const faqItems = [
-  {
-    question: "Les donnees sortent-elles de notre site ?",
-    answer:
-      "Non. VigiSensys fonctionne a 100% en on-premise. Aucune donnee ne transite par le cloud. Tout reste sur votre infrastructure locale.",
-  },
-  {
-    question: "Fonctionne-t-il sans internet ?",
-    answer:
-      "Oui. Le systeme fonctionne en LAN complet. La connexion internet n'est pas necessaire pour le fonctionnement quotidien.",
-  },
-  {
-    question: "Comment se passe l'upgrade ?",
-    answer:
-      "Simple : nouvelle cle de licence, redemarrage des services si necessaire. Aucune perte de donnees, migration automatique des parametres.",
-  },
-  {
-    question: "Quel support MC2 est disponible ?",
-    answer:
-      "Support technique, interventions sur site, formation. Options personnalisables selon vos besoins.",
-  },
-  {
-    question: "Quelle est la politique de mises a jour ?",
-    answer:
-      "Mises a jour incluses dans la licence active. Deploiement controle par vos equipes IT, a votre rythme.",
+    title: t("upgrade.expert.cards.3.title"),
+    description: t("upgrade.expert.cards.3.description"),
   },
 ];
 
-/* ───── CONTACT ───── */
-export const contactInfo = {
-  email: "contact@mc2-info.com",
-  phone: "+33 (0)4 XX XX XX XX",
-  responseTime: "< 24h en moyenne",
-  installation: "Installation 100% sur site",
-};
+export const getFaqItems = (t: UpgradeTranslator) => [
+  {
+    question: t("upgrade.faq.items.0.question"),
+    answer: t("upgrade.faq.items.0.answer"),
+  },
+  {
+    question: t("upgrade.faq.items.1.question"),
+    answer: t("upgrade.faq.items.1.answer"),
+  },
+  {
+    question: t("upgrade.faq.items.2.question"),
+    answer: t("upgrade.faq.items.2.answer"),
+  },
+  {
+    question: t("upgrade.faq.items.3.question"),
+    answer: t("upgrade.faq.items.3.answer"),
+  },
+  {
+    question: t("upgrade.faq.items.4.question"),
+    answer: t("upgrade.faq.items.4.answer"),
+  },
+];
+
+export const getContactInfo = (t: UpgradeTranslator) => ({
+  email: t("upgrade.contact.values.email"),
+  phone: t("upgrade.contact.values.phone"),
+  responseTime: t("upgrade.contact.values.responseTime"),
+  installation: t("upgrade.contact.values.installation"),
+});

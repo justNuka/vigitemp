@@ -3,12 +3,17 @@
 import React, { forwardRef } from "react"
 
 import { useRef } from "react";
-import { architectureNodes, architectureLeft, architectureRight } from "./upgradeContent";
+import {
+  getArchitectureNodes,
+  getArchitectureLeft,
+  getArchitectureRight,
+} from "./upgradeContent";
 import { BlurFade } from "./BlurFade";
-import { TypingAnimation } from "./TypingAnimation";
+import { TypewriterEffect } from "@/components/ui/typewriter-effect";
 import { AnimatedBeam } from "@/components/ui/animated-beam";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const Circle = forwardRef<
   HTMLDivElement,
@@ -29,6 +34,10 @@ const Circle = forwardRef<
 Circle.displayName = "Circle";
 
 export function ArchitectureSection() {
+  const t = useTranslations();
+  const architectureNodes = getArchitectureNodes(t);
+  const architectureLeft = getArchitectureLeft(t);
+  const architectureRight = getArchitectureRight(t);
   const containerRef = useRef<HTMLDivElement>(null);
   const sondesRef = useRef<HTMLDivElement>(null);
   const serveurRef = useRef<HTMLDivElement>(null);
@@ -42,10 +51,10 @@ export function ArchitectureSection() {
         <BlurFade>
           <div className="text-center mb-16">
             <p className="text-xs uppercase tracking-[0.3em] text-primary mb-4">
-              Architecture
+              {t("upgrade.architecture.eyebrow")}
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 text-balance">
-              {"Ecosysteme 100% on-premise"}
+              {t("upgrade.architecture.title")}
             </h2>
           </div>
         </BlurFade>
@@ -87,9 +96,9 @@ export function ArchitectureSection() {
               startYOffset={10}
               endYOffset={10}
               curvature={-20}
-              pathColor="hsla(190, 95%, 45%, 0.2)"
-              gradientStartColor="#40a1ff"
-              gradientStopColor="#0b6bff"
+              pathColor="hsl(var(--primary) / 0.2)"
+              gradientStartColor="hsl(var(--primary))"
+              gradientStopColor="hsl(var(--accent))"
             />
             <AnimatedBeam
               containerRef={containerRef}
@@ -100,9 +109,9 @@ export function ArchitectureSection() {
               endYOffset={-10}
               curvature={20}
               reverse
-              pathColor="hsla(190, 95%, 45%, 0.2)"
-              gradientStartColor="#40a1ff"
-              gradientStopColor="#0b6bff"
+              pathColor="hsl(var(--primary) / 0.2)"
+              gradientStartColor="hsl(var(--primary))"
+              gradientStopColor="hsl(var(--accent))"
             />
             <AnimatedBeam
               containerRef={containerRef}
@@ -110,9 +119,9 @@ export function ArchitectureSection() {
               toRef={bddRef}
               duration={5.6}
               curvature={0}
-              pathColor="hsla(190, 95%, 45%, 0.2)"
-              gradientStartColor="#40a1ff"
-              gradientStopColor="#0b6bff"
+              pathColor="hsl(var(--primary) / 0.2)"
+              gradientStartColor="hsl(var(--primary))"
+              gradientStopColor="hsl(var(--accent))"
             />
             <AnimatedBeam
               containerRef={containerRef}
@@ -122,9 +131,9 @@ export function ArchitectureSection() {
               startYOffset={10}
               endYOffset={10}
               curvature={-20}
-              pathColor="hsla(190, 95%, 45%, 0.2)"
-              gradientStartColor="#40a1ff"
-              gradientStopColor="#0b6bff"
+              pathColor="hsl(var(--primary) / 0.2)"
+              gradientStartColor="hsl(var(--primary))"
+              gradientStopColor="hsl(var(--accent))"
             />
             <AnimatedBeam
               containerRef={containerRef}
@@ -135,9 +144,9 @@ export function ArchitectureSection() {
               endYOffset={-10}
               curvature={20}
               reverse
-              pathColor="hsla(190, 95%, 45%, 0.2)"
-              gradientStartColor="#40a1ff"
-              gradientStopColor="#0b6bff"
+              pathColor="hsl(var(--primary) / 0.2)"
+              gradientStartColor="hsl(var(--primary))"
+              gradientStopColor="hsl(var(--accent))"
             />
             <AnimatedBeam
               containerRef={containerRef}
@@ -145,9 +154,9 @@ export function ArchitectureSection() {
               toRef={agentRef}
               duration={5.4}
               curvature={0}
-              pathColor="hsla(190, 95%, 45%, 0.2)"
-              gradientStartColor="#40a1ff"
-              gradientStopColor="#0b6bff"
+              pathColor="hsl(var(--primary) / 0.2)"
+              gradientStartColor="hsl(var(--primary))"
+              gradientStopColor="hsl(var(--accent))"
             />
           </div>
         </BlurFade>
@@ -186,10 +195,17 @@ export function ArchitectureSection() {
         {/* Typing animation */}
         <BlurFade delay={500}>
           <div className="mt-8 text-center">
-            <TypingAnimation
-              text="Vos mesures restent chez vous. Toujours."
-              className="text-lg text-primary"
-              speed={60}
+            <TypewriterEffect
+              words={[
+                { text: t("upgrade.architecture.typewriter.words.0") },
+                { text: t("upgrade.architecture.typewriter.words.1") },
+                { text: t("upgrade.architecture.typewriter.words.2") },
+                { text: t("upgrade.architecture.typewriter.words.3") },
+                { text: t("upgrade.architecture.typewriter.words.4") },
+                { text: t("upgrade.architecture.typewriter.words.5") },
+              ]}
+              className="inline-flex items-center justify-center text-md sm:text-base md:text-lg font-medium text-primary"
+              cursorClassName="bg-primary h-3 sm:h-4"
             />
           </div>
         </BlurFade>

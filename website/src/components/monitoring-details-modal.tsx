@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -136,7 +136,7 @@ export default function MonitoringDetailsModal({
   }, [effectiveRange]);
 
   useEffect(() => {
-    if (!isOpen || isSurveillanceActive) return;
+    if (!isOpen) return;
     if (!rangeEnabled || !rangeStart || !rangeEnd) {
       setRangeGraphData([]);
       setRangeGraphLoading(false);
@@ -207,7 +207,7 @@ export default function MonitoringDetailsModal({
       isActive = false;
       controller.abort();
     };
-  }, [idLieu, isOpen, isSurveillanceActive, rangeEnabled, rangeEnd, rangeStart]);
+  }, [idLieu, isOpen, rangeEnabled, rangeEnd, rangeStart]);
 
   const hasLocalMeasurements = Boolean(initialMeasurements?.length);
   const shouldLoadBase = isOpen && isSurveillanceActive && !hasLocalMeasurements;
@@ -215,11 +215,12 @@ export default function MonitoringDetailsModal({
     enabled: shouldLoadBase,
   });
   const baseLoading = isSurveillanceActive && shouldLoadBase && isLoading;
-  const data = isSurveillanceActive
+  const baseData = isSurveillanceActive
     ? hasLocalMeasurements
       ? initialMeasurements ?? []
       : fetchedData ?? []
     : rangeGraphData;
+  const data = rangeEnabled ? rangeGraphData : baseData;
 
   const {
     data: historyData,
@@ -313,7 +314,7 @@ export default function MonitoringDetailsModal({
   }, [idLieu, isOpen, isSurveillanceActive]);
 
   useEffect(() => {
-    if (!isOpen || isSurveillanceActive) return;
+    if (!isOpen) return;
     setAuditLogs([]);
     setAuditError(null);
     setAuditLoaded(false);
@@ -516,7 +517,7 @@ export default function MonitoringDetailsModal({
           </p>
         </DialogHeader>
 
-        {(isSurveillanceActive ? baseLoading : rangeEnabled && rangeGraphLoading) ? (
+        {(rangeEnabled ? rangeGraphLoading : baseLoading) ? (
           <div className="space-y-4 pt-4">
             <Skeleton className="h-10 w-64" />
             <Skeleton className="h-100 w-full" />
@@ -722,7 +723,7 @@ export default function MonitoringDetailsModal({
                   }}
                 />
 
-                {/* Lignes de consigne superposées + labels */}
+                {/* Lignes de consigne superposÃ©es + labels */}
                 <div className="absolute inset-0 pointer-events-none">
                   {consigneSup !== null && guidePositions.sup !== null && (
                     <>
@@ -839,4 +840,7 @@ export default function MonitoringDetailsModal({
     </Dialog>
   );
 }
+
+
+
 

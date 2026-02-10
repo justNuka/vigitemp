@@ -282,6 +282,10 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
             lieuType: location.Type_Lieu ?? null,
             alarmId,
             alarmDelayMinutes,
+            alarmDelayHighMinutes: location.Retard_Alarme_Haut ?? null,
+            alarmDelayLowMinutes: location.Retard_Alarme_Bas ?? null,
+            noResponseDelayMinutes: location.Retard_Non_Reponse ?? null,
+            comment: location.Commentaire ?? null,
             isGso: isGso ?? null,
             gsoRssi: location.Derniere_Val_Rssi ?? null,
             gsoTension: location.Derniere_Val_Tension ?? null,
@@ -310,3 +314,4 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
     return apiError(500, "internal_error", "Erreur lors du chargement des sondes")
   }
 })
+

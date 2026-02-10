@@ -1,27 +1,39 @@
 "use client";
 
-import { standardBlocks } from "./upgradeContent";
+import { getStandardBlocks } from "./upgradeContent";
 import { BlurFade } from "./BlurFade";
-import { SparklesText } from "./SparklesText";
+import { SparklesText } from "@/components/ui/sparkles-text";
+import { AuroraText } from "@/components/ui/aurora-text";
 import { MagicCard } from "@/components/ui/magic-card";
 import { Card } from "@/components/ui/card";
 import { Check } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function StandardDeepDiveSection() {
+  const t = useTranslations();
+  const standardBlocks = getStandardBlocks(t);
+
   return (
     <section id="standard" className="py-24 px-4">
       <div className="max-w-5xl mx-auto">
         <BlurFade>
           <div className="text-center mb-16">
             <p className="text-xs uppercase tracking-[0.3em] text-primary mb-4">
-              Deep dive
+              {t("upgrade.standard.eyebrow")}
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 text-balance">
-              <SparklesText>Standard</SparklesText>
-              {" : ce que vous obtenez concretement"}
+              <AuroraText colors={["hsl(var(--primary))", "hsl(var(--accent))"]}>
+                <SparklesText 
+                  className="inline-flex text-inherit"
+                  sparklesCount={3}
+                >
+                  {t("upgrade.standard.titleHighlight")}
+                </SparklesText>
+              </AuroraText>
+              {t("upgrade.standard.titleSuffix")}
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              {"Chaque fonctionnalite a ete pensee pour des equipes metrologie exigeantes."}
+              {t("upgrade.standard.subtitle")}
             </p>
           </div>
         </BlurFade>
@@ -54,7 +66,7 @@ export function StandardDeepDiveSection() {
                         <div className="w-2/3 h-2 rounded-full bg-primary/10" />
                         <div className="w-1/2 h-2 rounded-full bg-primary/5" />
                         <p className="text-[10px] text-muted-foreground/50 mt-2">
-                          {"Apercu " + block.title.toLowerCase()}
+                          {t("upgrade.standard.preview", { title: block.title })}
                         </p>
                       </div>
                     </MagicCard>

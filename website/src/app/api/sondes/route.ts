@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
@@ -37,13 +37,13 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
     return apiOk(formatted)
   } catch (error) {
     console.error("Sondes fetch error:", error)
-    return apiError(500, "internal_error", "Erreur lors de la récupération des sondes")
+    return apiError(500, "internal_error", "Erreur lors de la rÃ©cupÃ©ration des sondes")
   }
 })
 
 const createSensorSchema = z.object({
   sondeType: z.string().min(1),
-  serieNum: z.string().regex(/^\d+(?:-?[TH])?$/i, "Numéro de série invalide"),
+  serieNum: z.string().regex(/^\d+(?:-?[TH])?$/i, "NumÃ©ro de sÃ©rie invalide"),
   moduleId: z.number().int().positive().nullable().optional(),
   sondeOffset: z.number().nullable().optional(),
 })
@@ -65,7 +65,19 @@ export const POST = withAuthLogging(async (req: NextRequest) => {
     })
 
     if (existing) {
-      return apiError(409, "conflict", "Une sonde avec ce numéro de série existe déjà")
+      return apiError(409, "conflict", "Une sonde avec ce numÃ©ro de sÃ©rie existe dÃ©jÃ ")
+    }
+
+    let portSerie: string | null = null
+    if (data.moduleId) {
+      const module = await prisma.t_module.findUnique({
+        where: { Id_Module: data.moduleId },
+        select: { Port_Serie: true },
+      })
+      if (!module) {
+        return apiError(400, "invalid_module", "Module introuvable")
+      }
+      portSerie = module.Port_Serie ?? null
     }
 
     const created = await prisma.t_sonde.create({
@@ -73,6 +85,7 @@ export const POST = withAuthLogging(async (req: NextRequest) => {
         Adresse_Sonde: adresseSonde,
         Sonde_Numero_Serie: serial,
         Id_Module: data.moduleId ?? null,
+        Port_Serie: portSerie,
         Sonde_Offset: data.sondeOffset ?? 0,
         Surveillance_Etat: "D",
       },
@@ -80,18 +93,19 @@ export const POST = withAuthLogging(async (req: NextRequest) => {
 
     return apiOk(
       {
-        message: "Sonde créée avec succès",
+        message: "Sonde crÃ©Ã©e avec succÃ¨s",
         sensor: { Id_Sonde: created.Id_Sonde, Sonde_Numero_Serie: created.Sonde_Numero_Serie },
       },
       { status: 201 },
     )
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return apiError(400, "validation_error", "Données invalides", { details: error.issues })
+      return apiError(400, "validation_error", "DonnÃ©es invalides", { details: error.issues })
     }
 
     console.error("Sonde create error:", error)
-    return apiError(500, "internal_error", "Erreur lors de la création de la sonde")
+    return apiError(500, "internal_error", "Erreur lors de la crÃ©ation de la sonde")
   }
 })
+
 

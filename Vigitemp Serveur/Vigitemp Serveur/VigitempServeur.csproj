@@ -143,6 +143,7 @@
     <Compile Include="IDatabaseProvider.cs" />
     <Compile Include="CacheService.cs" />
     <Compile Include="AlarmWebNotifier.cs" />
+    <Compile Include="AlarmNotificationItem.cs" />
     <Compile Include="HotlineApiServer.cs" />
     <Compile Include="HotlinePasswordHasher.cs" />
     <Compile Include="LieuAlarmSettings.cs" />
@@ -199,5 +200,6 @@
   </Target>
   <Import Project="..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" />
 </Project>
+
 
 

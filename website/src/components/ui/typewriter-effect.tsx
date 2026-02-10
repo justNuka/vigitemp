@@ -2,12 +2,14 @@
 
 import { cn } from "@/lib/utils";
 import { motion, stagger, useAnimate, useInView } from "motion/react";
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export const TypewriterEffect = ({
   words,
   className,
   cursorClassName,
+  onComplete,
+  hideCursorOnComplete = true,
 }: {
   words: {
     text: string;
@@ -15,6 +17,8 @@ export const TypewriterEffect = ({
   }[];
   className?: string;
   cursorClassName?: string;
+  onComplete?: () => void;
+  hideCursorOnComplete?: boolean;
 }) => {
   // split text inside of words into array of characters
   const wordsArray = words.map((word) => {
@@ -26,8 +30,15 @@ export const TypewriterEffect = ({
 
   const [scope, animate] = useAnimate();
   const isInView = useInView(scope);
+  const [cursorHidden, setCursorHidden] = useState(false);
+  const startedRef = useRef(false);
+  const totalChars = useMemo(
+    () => wordsArray.reduce((sum, word) => sum + word.text.length, 0),
+    [wordsArray],
+  );
   useEffect(() => {
-    if (isInView) {
+    if (isInView && !startedRef.current) {
+      startedRef.current = true;
       animate(
         "span",
         {
@@ -41,12 +52,20 @@ export const TypewriterEffect = ({
           ease: "easeInOut",
         }
       );
+      const totalMs = totalChars * 100 + 300;
+      const timeout = window.setTimeout(() => {
+        if (hideCursorOnComplete) {
+          setCursorHidden(true);
+        }
+        onComplete?.();
+      }, totalMs);
+      return () => window.clearTimeout(timeout);
     }
-  }, [isInView]);
+  }, [isInView, animate, totalChars, hideCursorOnComplete, onComplete]);
 
   const renderWords = () => {
     return (
-      <motion.div ref={scope} className="inline">
+      <motion.div ref={scope} className="inline whitespace-pre">
         {wordsArray.map((word, idx) => {
           return (
             <div key={`word-${idx}`} className="inline-block">
@@ -54,10 +73,7 @@ export const TypewriterEffect = ({
                 <motion.span
                   initial={{}}
                   key={`char-${index}`}
-                  className={cn(
-                    `dark:text-white text-black opacity-0 hidden`,
-                    word.className
-                  )}
+                  className={cn("opacity-0 hidden", word.className)}
                 >
                   {char}
                 </motion.span>
@@ -72,28 +88,30 @@ export const TypewriterEffect = ({
   return (
     <div
       className={cn(
-        "text-base sm:text-xl md:text-3xl lg:text-5xl font-bold text-center",
+        "text-base sm:text-lg md:text-xl font-semibold text-center",
         className
       )}
     >
       {renderWords()}
-      <motion.span
-        initial={{
-          opacity: 0,
-        }}
-        animate={{
-          opacity: 1,
-        }}
-        transition={{
-          duration: 0.8,
-          repeat: Infinity,
-          repeatType: "reverse",
-        }}
-        className={cn(
-          "inline-block rounded-sm w-[4px] h-4 md:h-6 lg:h-10 bg-blue-500",
-          cursorClassName
-        )}
-      ></motion.span>
+      {!cursorHidden && (
+        <motion.span
+          initial={{
+            opacity: 0,
+          }}
+          animate={{
+            opacity: 1,
+          }}
+          transition={{
+            duration: 0.8,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+          className={cn(
+            "inline-block rounded-sm w-0.75 h-3 md:h-4 bg-current",
+            cursorClassName
+          )}
+        ></motion.span>
+      )}
     </div>
   );
 };
@@ -124,10 +142,7 @@ export const TypewriterEffectSmooth = ({
           return (
             <div key={`word-${idx}`} className="inline-block">
               {word.text.map((char, index) => (
-                <span
-                  key={`char-${index}`}
-                  className={cn(`dark:text-white text-black `, word.className)}
-                >
+                <span key={`char-${index}`} className={cn(word.className)}>
                   {char}
                 </span>
               ))}
@@ -156,7 +171,7 @@ export const TypewriterEffectSmooth = ({
         }}
       >
         <div
-          className="text-xs sm:text-base md:text-xl lg:text:3xl xl:text-5xl font-bold"
+          className="text-base sm:text-lg md:text-xl font-semibold"
           style={{
             whiteSpace: "nowrap",
           }}
@@ -178,7 +193,7 @@ export const TypewriterEffectSmooth = ({
           repeatType: "reverse",
         }}
         className={cn(
-          "block rounded-sm w-[4px]  h-4 sm:h-6 xl:h-12 bg-blue-500",
+          "block rounded-sm w-0.75 h-3 sm:h-4 bg-current",
           cursorClassName
         )}
       ></motion.span>

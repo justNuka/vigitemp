@@ -227,7 +227,7 @@
     --ring: var(--sidebar-ring);
 
     /* Sidebar colors - Light mode avec fond clair harmonieux */
-    --sidebar: 224 26% 18%;
+    --sidebar: 217 27% 10%;
     --sidebar-foreground: 220 20% 96%;
     --sidebar-accent: 224 22% 24%;
     --sidebar-accent-foreground: 220 20% 98%;

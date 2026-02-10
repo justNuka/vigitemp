@@ -1,13 +1,23 @@
 "use client";
 
-import { valueProps } from "./upgradeContent";
+import { getValueProps } from "./upgradeContent";
 import { MagicCard } from "@/components/ui/magic-card";
 import { ShineBorder } from "@/components/ui/shine-border";
 import { Card, CardHeader } from "@/components/ui/card";
 import { BlurFade } from "./BlurFade";
 import { DotPattern } from "@/components/ui/dot-pattern";
+import { LayoutTextFlip } from "@/components/ui/layout-text-flip";
+import { TypewriterEffect } from "@/components/ui/typewriter-effect";
+import { useTheme } from "next-themes";
+import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 export function ValuePropsSection() {
+  const theme = useTheme();
+  const t = useTranslations();
+  const valueProps = getValueProps(t);
+  const [isTypewriterDone, setIsTypewriterDone] = useState(false);
+  
   return (
     <section id="pourquoi" className="relative py-24 px-4">
       <DotPattern className="opacity-40" />
@@ -16,16 +26,35 @@ export function ValuePropsSection() {
         <BlurFade>
           <div className="text-center mb-16">
             <p className="text-xs uppercase tracking-[0.3em] text-primary mb-4">
-              Pourquoi upgrader
+              {t("upgrade.valueProps.eyebrow")}
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 text-balance">
-              {"Passez d'une surveillance "}
-              <span className="text-primary">{'"constat"'}</span>
-              {" a une metrologie "}
-              <span className="text-primary">{'"maitrisee"'}</span>
+              <span className="block">
+                {t("upgrade.valueProps.titleLine1")}{" "}
+                <span className="text-primary">{t("upgrade.valueProps.titleHighlight")}</span>
+              </span>
+              <span className="mt-2 inline-flex flex-wrap items-center justify-center gap-3">
+                <TypewriterEffect
+                  words={[{ text: t("upgrade.valueProps.typewriter") }]}
+                  className="inline-flex items-center justify-center text-3xl md:text-4xl lg:text-4xl font-bold text-foreground"
+                  cursorClassName="bg-primary h-5 md:h-7 lg:h-8"
+                  onComplete={() => setIsTypewriterDone(true)}
+                  hideCursorOnComplete={false}
+                />
+                {isTypewriterDone && (
+                  <LayoutTextFlip
+                    text=""
+                    words={[
+                      t("upgrade.valueProps.flip.0"),
+                      t("upgrade.valueProps.flip.1"),
+                      t("upgrade.valueProps.flip.2"),
+                    ]}
+                  />
+                )}
+              </span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              {"Six raisons de faire le pas vers Standard."}
+              {t("upgrade.valueProps.subtitle")}
             </p>
           </div>
         </BlurFade>
@@ -38,7 +67,7 @@ export function ValuePropsSection() {
               <BlurFade key={prop.title} delay={i * 100}>
                 {isStarCard ? (
                   <Card className="relative h-full overflow-hidden glass border-0 shadow-none">
-                    <ShineBorder shineColor={["#A07CFE", "#FE8FB5", "#FFBE7B"]} />
+                    <ShineBorder shineColor={theme.theme === "dark" ? "white" : "black"} />
                     <CardHeader className="p-6">
                       <div className="flex items-start gap-4">
                         <div className="shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">

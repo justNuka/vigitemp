@@ -6,7 +6,6 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { routing } from "@/i18n/routing"
 import { log } from "@/lib/logger"
 import { randomUUID } from "crypto"
-import { getAppTimezone } from "@/lib/timezone"
 import { revalidateTag } from "next/cache"
 
 const AGENT_PORT = Number.parseInt(process.env.VIGITEMP_AGENT_PORT ?? "8000", 10)
@@ -200,17 +199,14 @@ export const POST = withLogging(async (req: NextRequest) => {
   const alarmId = validated.data.alarmId
   const defaultUrl = `/${routing.defaultLocale}/alarmes`
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-  const timezone = await getAppTimezone()
   const formatDateTime = (value?: Date | null) =>
     value
       ? new Intl.DateTimeFormat("fr-FR", {
-          timeZone: timezone,
           dateStyle: "short",
           timeStyle: "medium",
         }).format(value)
       : undefined
   const dateLabel = new Intl.DateTimeFormat("fr-FR", {
-    timeZone: timezone,
     dateStyle: "short",
     timeStyle: "medium",
   }).format(new Date())

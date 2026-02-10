@@ -1,9 +1,12 @@
-import { cache } from "react";
+import { cacheTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 const DEFAULT_TIMEZONE = "Europe/Paris";
 
-export const getAppTimezone = cache(async (): Promise<string> => {
+export async function getAppTimezone(): Promise<string> {
+  "use cache";
+  cacheTag("app-timezone");
+
   try {
     const setting = await prisma.t_parametre.findFirst({
       where: {
@@ -20,4 +23,4 @@ export const getAppTimezone = cache(async (): Promise<string> => {
   } catch {
     return DEFAULT_TIMEZONE;
   }
-});
+}

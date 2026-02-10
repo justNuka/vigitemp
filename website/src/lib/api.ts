@@ -232,6 +232,10 @@ export type Location = {
   alarmDisabled?: boolean;
   alarmDisabledUntil?: Date | null;
   alarmDelayMinutes?: number | null;
+  alarmDelayHighMinutes?: number | null;
+  alarmDelayLowMinutes?: number | null;
+  noResponseDelayMinutes?: number | null;
+  comment?: string | null;
   lieuEtat?: string | null;
   surveillanceDisabled?: boolean;
   lieuType?: string | null;
@@ -355,3 +359,4 @@ export type UpdateUserInput = Partial<Omit<CreateUserInput, "password">> & {
   password?: string;
   reactivate?: boolean;
 };
+

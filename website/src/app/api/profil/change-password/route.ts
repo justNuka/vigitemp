@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { validatePassword, checkPasswordHistory } from "@/lib/password-validation"
+import { validatePassword } from "@/lib/password-validation"
+import { checkPasswordHistory } from "@/lib/password-history"
 import { getPasswordRulesFromDb } from "@/lib/password-rules"
 import bcrypt from "bcryptjs"
 import { z } from "zod"

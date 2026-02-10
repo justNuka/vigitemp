@@ -206,8 +206,8 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors }: Prop
 
       <div className="border p-4 rounded-lg space-y-4 mt-6">
         <h3 className="font-semibold">{t('sections.setpoints')}</h3>
-        <div className="space-y-4">
-          <div className="space-y-3 pb-3 border-b">
+        <div className="space-y-4 flex flex-col">
+          <div className="space-y-3 pb-3 border-b order-2">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t('labels.setpoint')}</Label>
@@ -248,7 +248,7 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors }: Prop
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 order-1">
             <div className="flex items-center gap-2">
               <Checkbox
                 checked={formData.Est_Consigne_Sup_Active || false}
@@ -306,7 +306,7 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors }: Prop
             )}
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 order-3">
             <div className="flex items-center gap-2">
               <Checkbox
                 checked={formData.Est_Consigne_Inf_Active || false}
@@ -368,3 +368,6 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors }: Prop
     </TabsContent>
   )
 }
+
+
+

@@ -1,20 +1,25 @@
 "use client";
 
-import { contactInfo } from "./upgradeContent";
+import { getContactInfo } from "./upgradeContent";
 import { BlurFade } from "./BlurFade";
 import { ShineBorder } from "@/components/ui/shine-border";
 import { Card, CardHeader } from "@/components/ui/card";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { Mail, Phone, Clock, Server } from "lucide-react";
-
-const contactItems = [
-  { icon: Mail, label: "Email", value: contactInfo.email },
-  { icon: Phone, label: "Telephone", value: contactInfo.phone },
-  { icon: Clock, label: "Temps de reponse", value: contactInfo.responseTime },
-  { icon: Server, label: "Deploiement", value: contactInfo.installation },
-];
+import { useTheme } from "next-themes";
+import { useTranslations } from "next-intl";
 
 export function FinalCTASection() {
+  const theme = useTheme();
+  const t = useTranslations();
+  const contactInfo = getContactInfo(t);
+  const contactItems = [
+    { icon: Mail, label: t("upgrade.contact.labels.email"), value: contactInfo.email },
+    { icon: Phone, label: t("upgrade.contact.labels.phone"), value: contactInfo.phone },
+    { icon: Clock, label: t("upgrade.contact.labels.response"), value: contactInfo.responseTime },
+    { icon: Server, label: t("upgrade.contact.labels.installation"), value: contactInfo.installation },
+  ];
+
   return (
     <section id="contact" className="py-24 px-4">
       <div className="max-w-4xl mx-auto">
@@ -22,14 +27,16 @@ export function FinalCTASection() {
         <BlurFade>
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 text-balance">
-              {"Pret a passer a la metrologie avancee ?"}
+              {t("upgrade.contact.title")}
             </h2>
             <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-              {"Contactez-nous pour une demonstration ou un devis personnalise."}
+              {t("upgrade.contact.subtitle")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <RainbowButton size="lg">Demander un devis</RainbowButton>
-              <RainbowButton size="lg" variant="outline">Parler a un expert</RainbowButton>
+              <RainbowButton size="lg">{t("upgrade.contact.ctaPrimary")}</RainbowButton>
+              <RainbowButton size="lg" variant="outline">
+                {t("upgrade.contact.ctaSecondary")}
+              </RainbowButton>
             </div>
           </div>
         </BlurFade>
@@ -37,7 +44,7 @@ export function FinalCTASection() {
         {/* Contact card */}
         <BlurFade delay={300}>
           <Card className="relative overflow-hidden glass border-0 shadow-none max-w-lg mx-auto">
-            <ShineBorder shineColor={["#A07CFE", "#FE8FB5", "#FFBE7B"]} />
+            <ShineBorder shineColor={theme.theme === "dark" ? "white" : "black"} />
             <CardHeader className="p-8">
               <div className="grid grid-cols-2 gap-6">
                 {contactItems.map((item) => {
@@ -66,10 +73,11 @@ export function FinalCTASection() {
           <div className="text-center mt-16 pt-8 border-t border-border/30">
             <p className="text-sm text-foreground mb-1">
               <span className="font-light">Vigi</span>
-              <span className="font-bold text-primary">Sensys</span>
+              <span className="font-bold text-primary">Sensys </span>
+              <span className="font-light">{t("upgrade.contact.footer.by")}</span>
             </p>
             <p className="text-xs text-muted-foreground">
-              {"MC2 Informatique. Metrologie. Surveillance. On-premise."}
+              {t("upgrade.contact.footer.tagline")}
             </p>
           </div>
         </BlurFade>

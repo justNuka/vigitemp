@@ -13,7 +13,17 @@ import { useSurveillanceLiveUpdates } from "./_hooks/use-surveillance-live-updat
 import { SurveillanceHeaderControls } from "./_components/monitoring-header-controls";
 import { SurveillanceLoadMore } from "./_components/monitoring-load-more";
 import { applySurveillanceFilters, computeSurveillanceStats, type FilterState } from "./_helpers/monitoring-derived";
-import { getJson } from "@/lib/http";
+import { getJson, patchJson } from "@/lib/http";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { LocationFormDialog } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-dialog";
+import { getDefaultLocationFormData } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-defaults";
+import { mapLocationToFormData } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-mappers";
+import type { LocationFormData } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-types";
+import { useAvailableSensors } from "@/hooks/useAvailableSensors";
+import { useGroups } from "@/hooks/useGroups";
+import { useLocations } from "@/hooks/useLocations";
+import { useSitesSimple } from "@/hooks/useSites";
 
 type ViewMode = "tree" | "graphs";
 
@@ -46,6 +56,23 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
   const [disabledFirst, setDisabledFirst] = useState(true);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+
+  const { data: locations = [] } = useLocations();
+  const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
+  const [isEditLocationOpen, setIsEditLocationOpen] = useState(false);
+  const [isLocationSaving, setIsLocationSaving] = useState(false);
+
+  const locationForm = useForm<LocationFormData>({
+    defaultValues: getDefaultLocationFormData(),
+  });
+  const watchedSensor = locationForm.watch("Sonde_Numero_Serie");
+  const shouldLoadLocationFormData = isEditLocationOpen;
+  const { data: formSites = [] } = useSitesSimple(shouldLoadLocationFormData);
+  const { data: formGroups = [] } = useGroups(undefined, shouldLoadLocationFormData);
+  const { data: availableSensors = [] } = useAvailableSensors(
+    watchedSensor,
+    shouldLoadLocationFormData,
+  );
 
   const { data, isFetching, fetchNextPage, hasNextPage, refetch } = usePaginatedSensors({ limit: 50 });
   useSurveillanceLiveUpdates({ enabled: true, limit: 50 });
@@ -262,6 +289,47 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
     [updateAlarmCache],
   );
 
+
+  const handleOpenLocationEdit = useCallback(
+    (idLieu: number) => {
+      const location = locations.find((item) => item.Id_Lieu === idLieu)
+      if (!location) {
+        toast.error("Lieu introuvable")
+        return
+      }
+      setSelectedLocationId(idLieu)
+      locationForm.reset(mapLocationToFormData(location))
+      setIsEditLocationOpen(true)
+    },
+    [locationForm, locations],
+  )
+
+  const handleEditLocationSubmit = useCallback(
+    async (values: LocationFormData) => {
+      if (!selectedLocationId) return
+      setIsLocationSaving(true)
+      try {
+        await patchJson(`/api/lieux/${selectedLocationId}`, {
+          ...values,
+          Sonde_Numero_Serie: values.Sonde_Numero_Serie ? values.Sonde_Numero_Serie : null,
+        })
+        await queryClient.invalidateQueries({ queryKey: ["locations"] })
+        await queryClient.invalidateQueries({ queryKey: ["capteurs", "paginated", 100] })
+        toast.success("Lieu modifié avec succès")
+        window.dispatchEvent(
+          new CustomEvent("vigitemp:lieu-updated", {
+            detail: { idLieu: selectedLocationId },
+          }),
+        )
+        setIsEditLocationOpen(false)
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Erreur lors de la modification du lieu")
+      } finally {
+        setIsLocationSaving(false)
+      }
+    },
+    [queryClient, selectedLocationId],
+  )
   // Important: do not auto-load all pages. The sentinel can be visible without any user scroll,
   // which causes the app to fetch *every* page (and therefore "all sensors").
   // We keep manual "Charger plus" only.
@@ -297,6 +365,7 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
             disabledFirst={disabledFirst}
             onSurveillanceToggle={handleSurveillanceToggle}
             onGroupSurveillanceToggle={handleGroupSurveillanceToggle}
+            onEditLocation={handleOpenLocationEdit}
             isLoading={isFetching && visibleSensors.length === 0}
           />
           <SurveillanceLoadMore
@@ -313,6 +382,7 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
             sensors={visibleSensors}
             disabledFirst={disabledFirst}
             onSurveillanceToggle={handleSurveillanceToggle}
+            onEditLocation={handleOpenLocationEdit}
             isLoading={isFetching && visibleSensors.length === 0}
           />
           <SurveillanceLoadMore
@@ -325,6 +395,18 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
         </>
       )}
 
+      <LocationFormDialog
+        open={isEditLocationOpen}
+        mode="edit"
+        form={locationForm}
+        sites={formSites}
+        groups={formGroups}
+        availableSensors={availableSensors}
+        isSubmitting={isLocationSaving}
+        onCancel={() => setIsEditLocationOpen(false)}
+        onSubmit={handleEditLocationSubmit}
+      />
+
       <div className="flex items-center justify-between text-sm text-muted-foreground pt-4">
         <p>
           {t("footer.count", { count: visibleSensors.length })}
@@ -334,3 +416,11 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
     </>
   );
 }
+
+
+
+
+
+
+
+

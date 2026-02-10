@@ -1,3 +1,5 @@
+"use client";
+
 import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import { DevModeBadge } from "@/components/dev-mode-badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,7 +67,7 @@ function AlarmsListDisplay() {
   );
 }
 
-export default async function AlarmsPerfTestPage() {
+export default function AlarmsPerfTestPage() {
   if (!FEATURE_FLAGS.enableTestPages) {
     return (
       <div className="min-h-screen p-6 text-sm text-muted-foreground">

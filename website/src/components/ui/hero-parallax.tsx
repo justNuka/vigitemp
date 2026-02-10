@@ -7,15 +7,20 @@ import {
   useSpring,
   MotionValue,
 } from "motion/react";
+import Image from "next/image";
 
 export const HeroParallax = ({
   products,
+  showHeader = true,
+  className = "",
 }: {
   products: {
     title: string;
     link: string;
     thumbnail: string;
   }[];
+  showHeader?: boolean;
+  className?: string;
 }) => {
   const firstRow = products.slice(0, 5);
   const secondRow = products.slice(5, 10);
@@ -55,9 +60,9 @@ export const HeroParallax = ({
   return (
     <div
       ref={ref}
-      className="h-[300vh] py-40 overflow-hidden  antialiased relative flex flex-col self-auto perspective-[1000px] transform-3d"
+      className={`h-[300vh] py-40 overflow-hidden antialiased relative flex flex-col self-auto perspective-[1000px] transform-3d ${className}`}
     >
-      <Header />
+      {showHeader ? <Header /> : null}
       <motion.div
         style={{
           rotateX,
@@ -140,7 +145,7 @@ export const ProductCard = ({
         href={product.link}
         className="block group-hover/product:shadow-2xl "
       >
-        <img
+        <Image
           src={product.thumbnail}
           height="600"
           width="600"

@@ -329,6 +329,33 @@ namespace Vigitemp_Serveur
             }
         }
 
+        private static double? GetOptionalDouble(MySqlDataReader reader, string column)
+        {
+            try
+            {
+                var ordinal = reader.GetOrdinal(column);
+                if (reader.IsDBNull(ordinal)) return null;
+
+                var raw = reader.GetValue(ordinal)?.ToString();
+                if (string.IsNullOrWhiteSpace(raw)) return null;
+
+                if (double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
+                {
+                    return value;
+                }
+
+                if (double.TryParse(raw, NumberStyles.Float, CultureInfo.CurrentCulture, out value))
+                {
+                    return value;
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
         private static DateTime GetNullableDateTime(MySqlDataReader reader, string column)
         {
             try
@@ -1807,7 +1834,7 @@ namespace Vigitemp_Serveur
                     var limit = Math.Max(1, maxCount);
                     var cmd = this.connection_vigitemp.CreateCommand();
                     cmd.CommandText =
-                        "SELECT DISTINCT a.Id_Lieu " +
+                        "SELECT a.Id_Lieu " +
                         "FROM t_alarme a " +
                         "INNER JOIN t_lieu l ON a.Id_Lieu = l.Id_Lieu " +
                         "INNER JOIN t_sonde s ON l.Sonde_Numero_Serie = s.Sonde_Numero_Serie " +
@@ -1816,7 +1843,8 @@ namespace Vigitemp_Serveur
                         "AND a.Date_Heure_Fin > @since " +
                         "AND m.Id_Serveur = @idServeur " +
                         "AND NOT EXISTS (SELECT 1 FROM t_alarme x WHERE x.Id_Lieu = a.Id_Lieu AND x.Date_Heure_Fin IS NULL) " +
-                        "ORDER BY a.Date_Heure_Fin ASC " +
+                        "GROUP BY a.Id_Lieu " +
+                        "ORDER BY MIN(a.Date_Heure_Fin) ASC " +
                         "LIMIT @limit;";
                     cmd.Parameters.AddWithValue("@since", sinceLocalTime.ToString("yyyy-MM-dd HH:mm:ss"));
                     cmd.Parameters.AddWithValue("@idServeur", idServeur);
@@ -1978,4 +2006,6 @@ namespace Vigitemp_Serveur
         }
     }
 }
+
+
 

@@ -1,112 +1,81 @@
 "use client";
 
-import React from "react"
+import React from "react";
 
-import { useState, useRef, useCallback } from "react";
-import { compareItems } from "./upgradeContent";
+import { getCompareItems } from "./upgradeContent";
 import { BlurFade } from "./BlurFade";
-import { cn } from "@/lib/utils";
-import { ChevronRight, Check, X as XIcon } from "lucide-react";
+import { Compare } from "@/components/ui/compare";
+import { Check, X as XIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 function CompareSlider({
   item,
+  images,
 }: {
-  item: (typeof compareItems)[0];
+  item: ReturnType<typeof getCompareItems>[0];
+  images: { first: string; second: string };
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [sliderPosition, setSliderPosition] = useState(50);
-  const [isDragging, setIsDragging] = useState(false);
-
-  const handleMove = useCallback(
-    (clientX: number) => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-      setSliderPosition((x / rect.width) * 100);
-    },
-    []
-  );
-
-  const handleMouseDown = () => setIsDragging(true);
-  const handleMouseUp = () => setIsDragging(false);
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) handleMove(e.clientX);
-  };
-  const handleTouchMove = (e: React.TouchEvent) => {
-    handleMove(e.touches[0].clientX);
-  };
+  const isMissing = (value: string) => /^(pas|aucun|aucune|non)\b/i.test(value.trim());
 
   return (
     <div className="glass rounded-2xl overflow-hidden">
-      <div className="p-6 pb-4">
+      <div className="p-6 pb-0">
         <h3 className="text-xl font-bold text-foreground mb-2">{item.title}</h3>
-        <div className="flex items-center gap-3 mb-4">
-          {item.gains.map((gain) => (
-            <span key={gain} className="flex items-center gap-1 text-xs text-primary">
-              <Check className="w-3 h-3" />
-              {gain}
-            </span>
-          ))}
+      </div>
+
+      <div className="w-full h-[50vh] px-2 md:px-8 flex items-center justify-center perspective-distant transform-3d">
+        <div
+          style={{
+            transform: "rotateX(15deg) translateZ(80px)",
+          }}
+          className="p-1 md:p-4 border rounded-3xl bg-card border-border mx-auto w-full h-2/3"
+        >
+          <Compare
+            firstImage={images.first}
+            secondImage={images.second}
+            firstImageClassName="object-cover object-left-top w-full"
+            secondImageClassname="object-cover object-left-top w-full"
+            className="w-full h-full rounded-[22px] md:rounded-lg"
+            slideMode="drag"
+            autoplay
+          />
         </div>
       </div>
 
-      <div
-        ref={containerRef}
-        className="relative h-64 cursor-col-resize select-none"
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onMouseMove={handleMouseMove}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleMouseUp}
-        role="slider"
-        aria-label={`Comparer ${item.leftLabel} et ${item.rightLabel}`}
-        aria-valuenow={Math.round(sliderPosition)}
-        tabIndex={0}
-      >
-        {/* Left side */}
-        <div
-          className="absolute inset-0 bg-secondary/30 flex flex-col justify-center px-8"
-          style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
-        >
-          <span className="text-xs uppercase tracking-widest text-muted-foreground mb-4">
-            {item.leftLabel}
-          </span>
-          {item.leftItems.map((li) => (
-            <div key={li} className="flex items-center gap-2 mb-2">
-              <XIcon className="w-3.5 h-3.5 text-destructive/60" />
-              <span className="text-sm text-muted-foreground">{li}</span>
-            </div>
-          ))}
+      <div className="grid gap-6 px-6 pb-6 md:grid-cols-2">
+        <div className="space-y-3">
+          <div className="text-xs uppercase tracking-widest text-muted-foreground">{item.leftLabel}</div>
+          <div className="space-y-2">
+            {item.leftItems.map((li) => {
+              const missing = isMissing(li);
+              return (
+                <div key={li} className="flex items-start gap-2 text-sm">
+                  {missing ? (
+                    <XIcon className="mt-0.5 h-4 w-4 text-destructive/80" />
+                  ) : (
+                    <Check className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                  )}
+                  <span className={missing ? "text-muted-foreground" : "text-foreground/80"}>{li}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Right side */}
-        <div
-          className="absolute inset-0 bg-primary/5 flex flex-col justify-center px-8"
-          style={{ clipPath: `inset(0 0 0 ${sliderPosition}%)` }}
-        >
-          <span className="text-xs uppercase tracking-widest text-primary mb-4 flex items-center gap-2">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-primary">
             {item.rightLabel}
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-primary animate-pulse-glow">
-              Standard
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary">
+              {item.rightLabel}
             </span>
-          </span>
-          {item.rightItems.map((ri) => (
-            <div key={ri} className="flex items-center gap-2 mb-2">
-              <Check className="w-3.5 h-3.5 text-primary" />
-              <span className="text-sm text-foreground font-medium">{ri}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Slider handle */}
-        <div
-          className="absolute top-0 bottom-0 w-0.5 bg-primary z-10"
-          style={{ left: `${sliderPosition}%` }}
-        >
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-            <ChevronRight className="w-4 h-4 text-primary-foreground -mr-0.5" />
-            <ChevronRight className="w-4 h-4 text-primary-foreground -ml-2.5 rotate-180" />
+          </div>
+          <div className="space-y-2">
+            {item.rightItems.map((ri) => (
+              <div key={ri} className="flex items-start gap-2 text-sm">
+                <Check className="mt-0.5 h-4 w-4 text-primary" />
+                <span className="text-foreground font-medium">{ri}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -115,29 +84,45 @@ function CompareSlider({
 }
 
 export function CompareSection() {
+  const t = useTranslations();
+  const compareItems = getCompareItems(t);
+
   return (
     <section id="comparaison" className="py-24 px-4">
       <div className="max-w-5xl mx-auto">
         <BlurFade>
           <div className="text-center mb-16">
             <p className="text-xs uppercase tracking-[0.3em] text-primary mb-4">
-              Comparaison
+              {t("upgrade.compare.eyebrow")}
             </p>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 text-balance">
-              {"Faites glisser pour comparer"}
+              {t("upgrade.compare.title")}
             </h2>
             <p className="text-muted-foreground">
-              {"Voyez la difference entre One et Standard."}
+              {t("upgrade.compare.subtitle")}
             </p>
           </div>
         </BlurFade>
 
         <div className="flex flex-col gap-8">
-          {compareItems.map((item, i) => (
-            <BlurFade key={item.id} delay={i * 200}>
-              <CompareSlider item={item} />
-            </BlurFade>
-          ))}
+          {compareItems.map((item, i) => {
+            const images =
+              i % 2 === 0
+                ? {
+                    first: "/images/upgrade_licence/dashboard.png",
+                    second: "/images/upgrade_licence/surveillance1.png",
+                  }
+                : {
+                    first: "/images/upgrade_licence/surveillance2.png",
+                    second: "/images/upgrade_licence/dashboard.png",
+                  };
+
+            return (
+              <BlurFade key={item.id} delay={i * 200}>
+                <CompareSlider item={item} images={images} />
+              </BlurFade>
+            );
+          })}
         </div>
       </div>
     </section>

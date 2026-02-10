@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
+import Image from "next/image";
 
 type Language = "fr" | "en";
 
@@ -43,7 +44,7 @@ export function LanguageSwitcher() {
           title={`Langue actuelle: ${languageNames[language]}`}
           className="h-9 w-9"
         >
-          <img
+          <Image
             src={languageFlagSrc[language]}
             alt=""
             className="h-6 w-6 rounded-full"
@@ -56,7 +57,7 @@ export function LanguageSwitcher() {
           onClick={() => handleLanguageChange("fr")}
           className="gap-2 cursor-pointer"
         >
-          <img
+          <Image
             src={languageFlagSrc.fr}
             alt=""
             className="h-5 w-5 rounded-full"
@@ -72,7 +73,7 @@ export function LanguageSwitcher() {
           onClick={() => handleLanguageChange("en")}
           className="gap-2 cursor-pointer"
         >
-          <img
+          <Image
             src={languageFlagSrc.en}
             alt=""
             className="h-5 w-5 rounded-full"

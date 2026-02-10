@@ -59,6 +59,7 @@ Tout ce qui est dans **Standard**, plus :
 * Analyse temps réel
 * Rapport statistique paramétrable
 * Gestion des non-conformités
+* Modification du retard d'alarme de non-réponse possible (minimum 1h)
 * Écosystème MC2 *(à définir)*
 
 👉 **Licence premium**, full puissance : métrologie avancée, pilotage, automatisation, IA et reporting expert.

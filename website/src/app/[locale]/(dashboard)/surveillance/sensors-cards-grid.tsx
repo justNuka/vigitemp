@@ -21,6 +21,7 @@ interface SensorsCardsGridProps {
     newState: boolean,
     durationMinutes?: number | null,
   ) => void
+  onEditLocation?: (idLieu: number) => void
 }
 
 /**
@@ -34,6 +35,7 @@ export function SensorsCardsGrid({
   disabledFirst = false,
   isLoading = false,
   onSurveillanceToggle,
+  onEditLocation,
 }: SensorsCardsGridProps) {
   const t = useTranslations("surveillance")
   const handleSurveillanceToggle =
@@ -106,6 +108,10 @@ export function SensorsCardsGrid({
                 alarmDisabled={sensor.location.alarmDisabled ?? false}
                 alarmDisabledUntil={sensor.location.alarmDisabledUntil ?? null}
                 alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
+                alarmDelayHighMinutes={sensor.location.alarmDelayHighMinutes ?? null}
+                alarmDelayLowMinutes={sensor.location.alarmDelayLowMinutes ?? null}
+                noResponseDelayMinutes={sensor.location.noResponseDelayMinutes ?? null}
+                locationComment={sensor.location.comment ?? null}
                 lieuEtat={sensor.location.lieuEtat ?? ""}
                 surveillanceDisabled={sensor.location.surveillanceDisabled ?? false}
                 sondeNumeroSerie={sensor.location.sondeNumeroSerie ?? ""}
@@ -113,6 +119,7 @@ export function SensorsCardsGrid({
                 gsoRssi={sensor.location.gsoRssi ?? null}
                 gsoTension={sensor.location.gsoTension ?? null}
                 onSurveillanceToggle={handleSurveillanceToggle}
+                onEditLocation={onEditLocation}
               />
             )
           })}

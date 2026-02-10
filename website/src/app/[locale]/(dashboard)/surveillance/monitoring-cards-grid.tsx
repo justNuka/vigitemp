@@ -38,6 +38,7 @@ interface MonitoringCardsGridProps {
     durationMinutes?: number | null,
   ) => void
   onGroupSurveillanceToggle?: (groupId: number, newState: boolean, durationMinutes?: number | null) => void
+  onEditLocation?: (idLieu: number) => void
 }
 
 function formatDisabledLabel(
@@ -66,6 +67,7 @@ export function MonitoringCardsGrid({
   isLoading = false,
   onSurveillanceToggle,
   onGroupSurveillanceToggle,
+  onEditLocation,
 }: MonitoringCardsGridProps) {
   const t = useTranslations("surveillance")
   const locale = useLocale()
@@ -257,7 +259,7 @@ export function MonitoringCardsGrid({
                       </button>
 
                       {isGroupExpanded ? (
-                        <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))] animate-fade-in">
+                        <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(260px,320px))] justify-start animate-fade-in">
                           {sortedGroupSensors.map((sensor) => (
                             <MonitoringCard
                               key={sensor.id}
@@ -272,6 +274,10 @@ export function MonitoringCardsGrid({
                               alarmDisabled={sensor.location.alarmDisabled ?? false}
                               alarmDisabledUntil={sensor.location.alarmDisabledUntil ?? null}
                               alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
+                              alarmDelayHighMinutes={sensor.location.alarmDelayHighMinutes ?? null}
+                              alarmDelayLowMinutes={sensor.location.alarmDelayLowMinutes ?? null}
+                              noResponseDelayMinutes={sensor.location.noResponseDelayMinutes ?? null}
+                              locationComment={sensor.location.comment ?? null}
                               lieuEtat={sensor.location.lieuEtat ?? ""}
                               surveillanceDisabled={sensor.location.surveillanceDisabled ?? false}
                               sondeNumeroSerie={sensor.location.sondeNumeroSerie ?? ""}
@@ -281,6 +287,7 @@ export function MonitoringCardsGrid({
                               onSurveillanceToggle={(id, action, newState, durationMinutes) =>
                                 handleSurveillanceToggle(id, action, newState, durationMinutes ?? null)
                               }
+                              onEditLocation={onEditLocation}
                             />
                           ))}
                         </div>
@@ -335,7 +342,7 @@ export function MonitoringCardsGrid({
                           <Users className="w-4 h-4" />
                           <span className="font-medium">{groupName}</span>
                         </div>
-                        <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))] animate-fade-in">
+                        <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(260px,320px))] justify-start animate-fade-in">
                           {sortSensorsByStatus(groupSensors).map((sensor) => (
                             <MonitoringCard
                               key={sensor.id}
@@ -349,6 +356,10 @@ export function MonitoringCardsGrid({
                               alarmDisabled={sensor.location.alarmDisabled ?? false}
                               alarmDisabledUntil={sensor.location.alarmDisabledUntil ?? null}
                               alarmDelayMinutes={sensor.location.alarmDelayMinutes ?? null}
+                              alarmDelayHighMinutes={sensor.location.alarmDelayHighMinutes ?? null}
+                              alarmDelayLowMinutes={sensor.location.alarmDelayLowMinutes ?? null}
+                              noResponseDelayMinutes={sensor.location.noResponseDelayMinutes ?? null}
+                              locationComment={sensor.location.comment ?? null}
                               lieuEtat={sensor.location.lieuEtat ?? ""}
                               surveillanceDisabled={sensor.location.surveillanceDisabled ?? false}
                               sondeNumeroSerie={sensor.location.sondeNumeroSerie ?? ""}
@@ -358,6 +369,7 @@ export function MonitoringCardsGrid({
                               onSurveillanceToggle={(id, action, newState, durationMinutes) =>
                                 handleSurveillanceToggle(id, action, newState, durationMinutes ?? null)
                               }
+                              onEditLocation={onEditLocation}
                             />
                           ))}
                         </div>
@@ -453,3 +465,13 @@ export function MonitoringCardsGrid({
     </div>
   )
 }
+
+
+
+
+
+
+
+
+
+

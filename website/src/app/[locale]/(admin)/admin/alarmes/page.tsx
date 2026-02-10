@@ -1,25 +1,11 @@
-import type { Metadata } from "next";
+"use client";
+
 import { PageHeader } from "@/components/page-header";
 import { AlarmsClientTanStack } from "@/components/data-table/alarms-client-tanstack";
-import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
-  const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "adminAlarmsPage" });
-
-  return {
-    title: t("meta.title"),
-    description: t("meta.description"),
-  };
-}
-
-export default async function AlarmsPage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "adminAlarmsPage" });
+export default function AlarmsPage() {
+  const t = useTranslations("adminAlarmsPage");
 
   return (
     <div className="flex flex-col min-h-full">

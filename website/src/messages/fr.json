@@ -43,10 +43,10 @@
     }
   },
   "pageHeader": {
-    "title": "Vigitemp - Surveillance de Température"
+    "title": "VigiSensys - Surveillance d'environnement"
   },
   "appMeta": {
-    "title": "Vigitemp - Surveillance temps réel",
+    "title": "VigiSensys - Surveillance temps réel",
     "description": "Système de surveillance et gestion des alarmes"
   },
   "dock": {
@@ -126,7 +126,7 @@
     "title": "Tableau de bord",
     "description": "Vue d'ensemble de la surveillance",
     "meta": {
-      "title": "Tableau de bord - Vigitemp",
+      "title": "Tableau de bord - VigiSensys",
       "description": "Vue d'ensemble de la surveillance"
     },
     "stats_section_label": "Statistiques",
@@ -179,7 +179,7 @@
     "title": "Surveillance",
     "description": "Suivi en temps réel des sondes et capteurs",
     "meta": {
-      "title": "Surveillance - Vigitemp",
+      "title": "Surveillance - VigiSensys",
       "description": "Suivi en temps réel des sondes et capteurs"
     },
     "filters": {
@@ -253,7 +253,7 @@
     "title": "Paramétrage",
     "description": "Configuration de l'application",
     "meta": {
-      "title": "Paramétrage - Vigitemp",
+      "title": "Paramétrage - VigiSensys",
       "description": "Configuration de l'application"
     }
   },
@@ -352,7 +352,7 @@
         },
         "sender": {
           "label": "Adresse d'expédition",
-          "placeholder": "noreply@vigitemp.fr",
+          "placeholder": "noreply@vigisensys.fr",
           "helper": "Adresse affichée dans le champ \"De\" des emails"
         }
       },
@@ -390,7 +390,7 @@
     "title": "Gestion des alarmes",
     "description": "Suivi et traitement des alarmes",
     "meta": {
-      "title": "Alarmes - Vigitemp",
+      "title": "Alarmes - VigiSensys",
       "description": "Gestion et suivi des alarmes"
     },
     "tabs": {
@@ -490,7 +490,7 @@
     "title": "Gestion des alarmes (admin)",
     "description": "Suivi et traitement des alarmes côté administration",
     "meta": {
-      "title": "Alarmes admin - Vigitemp",
+      "title": "Alarmes admin - VigiSensys",
       "description": "Gestion des alarmes côté administration"
     }
   },
@@ -498,7 +498,7 @@
     "title": "Journal d'audit",
     "description": "Historique des actions et événements",
     "meta": {
-      "title": "Audit - Vigitemp",
+      "title": "Audit - VigiSensys",
       "description": "Journal d'audit et historique des événements"
     }
   },
@@ -1998,6 +1998,370 @@
         "items": {
           "0": "Nouvelles pages d'erreur 403, 404 et 500 avec animations et visuels modernisés."
         }
+      },
+      "upgrade": {
+        "title": "Upgrade de licence",
+        "items": {
+          "0": "Page upgrade de licence traduite (FR/EN) avec libellés harmonisés.",
+          "1": "Palette couleur alignée sur la charte VigiSensys pour la page upgrade."
+        }
+      }
+    }
+  },
+  "upgrade": {
+    "meta": {
+      "title": "VigiSensys | Upgrade de licence",
+      "description": "Passez a une metrologie plus intelligente avec VigiSensys Standard. Surveillance, conformite et performance reunies dans une centrale 100% on-premise."
+    },
+    "nav": {
+      "pourquoi": "Pourquoi upgrader",
+      "comparaison": "Comparaison",
+      "standard": "Standard",
+      "expert": "Expert",
+      "licences": "Licences",
+      "contact": "Contact",
+      "licenseLabel": "Votre licence :",
+      "homeCta": "Accueil upgrade"
+    },
+    "toc": {
+      "title": "Sommaire",
+      "intro": "Introduction",
+      "pourquoi": "Pourquoi upgrader",
+      "comparaison": "Comparaison",
+      "architecture": "Architecture",
+      "plans": "Plans & Sondes",
+      "licences": "Licences",
+      "standard": "Standard",
+      "expert": "Expert",
+      "securite": "Sécurité",
+      "contact": "Contact"
+    },
+    "hero": {
+      "eyebrow": "Upgrade de licence",
+      "title": "VigiSensys",
+      "leadPrefix": "Passez à une",
+      "titleHighlight": "métrologie plus intelligente",
+      "subtitle": "Surveillance + métrologie réunies dans une centrale 100% on-premise.",
+      "subtitleHighlights": {
+        "0": "Sécurité.",
+        "1": "Conformité.",
+        "2": "Performance."
+      },
+      "tagline": "Vos données restent chez vous.",
+      "ctaPrimary": "Passer à Standard",
+      "ctaSecondary": "Comparer les licences",
+      "scroll": "Faites défiler pour découvrir"
+    },
+    "heroParallax": {
+      "items": {
+        "0": { "title": "Dashboard temps réel" },
+        "1": { "title": "Surveillance intelligente" },
+        "2": { "title": "Alertes et écarts" },
+        "3": { "title": "Métrologie centralisée" },
+        "4": { "title": "Suivi continu" },
+        "5": { "title": "Rapports et audit" },
+        "6": { "title": "Courbes de tendance" },
+        "7": { "title": "Analyse métrologique" },
+        "8": { "title": "Conformité étalon" },
+        "9": { "title": "Notifications Windows" },
+        "10": { "title": "Pilotage sites" },
+        "11": { "title": "Historique complet" },
+        "12": { "title": "Alertes smart" },
+        "13": { "title": "Sondes & plans" },
+        "14": { "title": "Vue globale" }
+      }
+    },
+    "proofStats": {
+      "items": {
+        "0": { "title": "100% on-premise", "description": "Aucune donnée dans le cloud" },
+        "1": { "title": "Alarmes temps réel", "description": "Détection instantanée des écarts" },
+        "2": { "title": "Traçabilité métrologique", "description": "Historique complet et auditable" },
+        "3": { "title": "Notifications Windows", "description": "Même navigateur fermé" }
+      }
+    },
+    "valueProps": {
+      "eyebrow": "Pourquoi upgrader",
+      "titleLine1": "Passez d'une surveillance",
+      "titleHighlight": "\"constat\"",
+      "typewriter": "à une métrologie",
+      "flip": {
+        "0": "sécurisée",
+        "1": "maîtrisée",
+        "2": "tracée"
+      },
+      "subtitle": "Six raisons de faire le pas vers Standard.",
+      "items": {
+        "0": {
+          "title": "Réduire les non-conformités",
+          "description": "Détectez dérive et écarts plus tôt grâce au suivi continu.",
+          "badge": "Standard"
+        },
+        "1": {
+          "title": "Accélérer le calibrage",
+          "description": "Calibrage 2 points, suivi historique, coefficients automatiques.",
+          "badge": "Standard"
+        },
+        "2": {
+          "title": "Renforcer la traçabilité",
+          "description": "Rapports, historique, paramètres : tout est enregistré.",
+          "badge": "Standard"
+        },
+        "3": {
+          "title": "Standardiser les EMT par lieu",
+          "description": "Tolérances maîtrisées site par site, zone par zone.",
+          "badge": "Standard"
+        },
+        "4": {
+          "title": "Collaborer sans perdre d'infos",
+          "description": "Messagerie interne et traçabilité des échanges.",
+          "badge": "Standard"
+        },
+        "5": {
+          "title": "Sécurité au cœur",
+          "description": "Rôles, audit, logique on-prem. Zéro compromis.",
+          "badge": "Standard"
+        }
+      }
+    },
+    "compare": {
+      "eyebrow": "Comparaison",
+      "title": "Faites glisser pour comparer",
+      "subtitle": "Ou laisser faire la magie et voyez la différence entre One et Standard.",
+      "items": {
+        "0": {
+          "title": "Surveillance",
+          "leftLabel": "One",
+          "rightLabel": "Standard",
+          "leftItems": {
+            "0": "Cards basiques",
+            "1": "Graphiques simples",
+            "2": "Alarmes simples"
+          },
+          "rightItems": {
+            "0": "Indicateurs métrologie avancés",
+            "1": "Détection de dérive en temps réel",
+            "2": "Historique complet des écarts"
+          }
+        },
+        "1": {
+          "title": "Métrologie",
+          "leftLabel": "Basique",
+          "rightLabel": "Standard",
+          "leftItems": {
+            "0": "Pas de calibrage",
+            "1": "Pas d'incertitude",
+            "2": "Pas d'ajustage"
+          },
+          "rightItems": {
+            "0": "Calibrage 2 points + historique",
+            "1": "Incertitude + justesse",
+            "2": "Derive et coefficients a/b"
+          }
+        }
+      }
+    },
+    "architecture": {
+      "eyebrow": "Architecture",
+      "title": "Écosystème 100% on-premise",
+      "nodes": {
+        "sondes": { "label": "Sondes", "sublabel": "Temp, HR, CO2..." },
+        "serveur": { "label": "Serveur C#", "sublabel": "Interrogation + Alarmes" },
+        "bdd": { "label": "Base de données", "sublabel": "Mesures / métier" },
+        "webapp": { "label": "Web App", "sublabel": "Next.js" },
+        "agent": { "label": "Agent Windows", "sublabel": "Notifications" }
+      },
+      "left": {
+        "title": "Pourquoi c'est robuste",
+        "items": {
+          "0": "Fonctionne offline / LAN",
+          "1": "Performance industrielle",
+          "2": "Centralisation des données"
+        }
+      },
+      "right": {
+        "title": "Pourquoi c'est sécurisé",
+        "items": {
+          "0": "Données chez vous uniquement",
+          "1": "Contrôle d'accès granulaire",
+          "2": "Logs et audit complets"
+        }
+      },
+      "typewriter": {
+        "words": {
+          "0": "Vos",
+          "1": "données",
+          "2": "restent",
+          "3": "chez",
+          "4": "vous.",
+          "5": "Toujours."
+        }
+      }
+    },
+    "plans": {
+      "eyebrow": "Plans & Emplacements",
+      "title": "Cartographiez vos sondes",
+      "subtitle": "Visualisez chaque capteur sur le plan de votre site.",
+      "pin": {
+        "cardTitle": "Plan du site",
+        "title": "Cartographie des sondes",
+        "description": "Visualisez vos lieux critiques en un coup d'œil.",
+        "imageAlt": "Aperçu cartographie des sondes"
+      },
+      "features": {
+        "0": "Associez chaque sonde à un lieu",
+        "1": "Visualisez les zones critiques",
+        "2": "Retrouvez rapidement l'origine d'une alarme"
+      },
+      "note": "Disponible avec la licence Standard."
+    },
+    "licenses": {
+      "eyebrow": "Licences",
+      "title": "Tableau comparatif des licences",
+      "subtitle": "Choisissez le niveau qui correspond à vos besoins.",
+      "table": {
+        "feature": "Fonctionnalité",
+        "one": "One",
+        "standard": "Standard",
+        "recommended": "Recommandé",
+        "expert": "Expert"
+      },
+      "highlight": {
+        "prefix": "La licence ",
+        "suffix": " est le meilleur rapport fonctionnalités/prix pour la métrologie."
+      },
+      "features": {
+        "0": "Surveillance (cards + graph)",
+        "1": "Alarmes & tolérances",
+        "2": "Notifications Windows agent",
+        "3": "Metrologie (calibrage 2 points)",
+        "4": "Ajustage : coeff a/b",
+        "5": "Ajustage : justesse + incertitude",
+        "6": "Gestion dérive & traçabilité",
+        "7": "Messagerie interne",
+        "8": "EMT par lieu",
+        "9": "Dashboard personnalisable",
+        "10": "IA assistant",
+        "11": "Analyse temps réel",
+        "12": "Écosystème interventions"
+      }
+    },
+    "standard": {
+      "eyebrow": "Zoom Standard",
+      "titleHighlight": "Standard",
+      "titleSuffix": " : ce que vous obtenez concrètement",
+      "subtitle": "Chaque fonctionnalité a été pensée pour des équipes métrologie exigeantes.",
+      "preview": "Aperçu {title}",
+      "blocks": {
+        "0": {
+          "title": "Calibrage 2 points + historique",
+          "bullets": {
+            "0": "Définissez vos 2 points de référence",
+            "1": "Historique de chaque opération",
+            "2": "Certificats de calibrage intégrés",
+            "3": "Traçabilité complète par sonde"
+          }
+        },
+        "1": {
+          "title": "Gestion de dérive & traçabilité",
+          "bullets": {
+            "0": "Suivi de dérive automatique",
+            "1": "Alertes sur seuil de dérive",
+            "2": "Graphiques d'évolution",
+            "3": "Export PDF pour audit"
+          }
+        },
+        "2": {
+          "title": "Ajustage (coeff a/b)",
+          "bullets": {
+            "0": "Calcul automatique des coefficients",
+            "1": "Application en temps réel sur les mesures",
+            "2": "Historique des ajustages",
+            "3": "Comparaison avant/après"
+          }
+        },
+        "3": {
+          "title": "Ajustage (justesse + incertitude)",
+          "bullets": {
+            "0": "Calcul d'incertitude type A et B",
+            "1": "Justesse mesurée et tracée",
+            "2": "Rapports conformes aux normes",
+            "3": "Intégration au workflow qualité"
+          }
+        }
+      }
+    },
+    "expert": {
+      "badge": "Bientôt disponible",
+      "titleHighlight": "Expert",
+      "titleSuffix": " : la plateforme intelligente",
+      "subtitle": "Toutes les fonctionnalités Standard + personnalisation + IA + écosystème MC2.",
+      "cards": {
+        "0": {
+          "title": "Dashboard tuiles",
+          "description": "Ajouter / retirer / redimensionner / déplacer : construisez votre vue."
+        },
+        "1": {
+          "title": "Chatbot IA",
+          "description": "Troubleshooting intelligent, contexte capteur intégré."
+        },
+        "2": {
+          "title": "Analyse temps réel",
+          "description": "Événements + mesures croisées, détection de patterns."
+        },
+        "3": {
+          "title": "Écosystème interventions",
+          "description": "Planification technicien, suivi MC2 complet."
+        }
+      },
+      "typewriter": "Anticiper. Expliquer. Guider."
+    },
+    "faq": {
+      "eyebrow": "Sécurité & On-Premise",
+      "title": "Questions fréquentes",
+      "subtitle": "Tout ce que vous devez savoir avant de passer à Standard.",
+      "items": {
+        "0": {
+          "question": "Les donnees sortent-elles de notre site ?",
+          "answer": "Non. VigiSensys fonctionne a 100% en on-premise. Aucune donnee ne transite par le cloud. Tout reste sur votre infrastructure locale."
+        },
+        "1": {
+          "question": "Fonctionne-t-il sans internet ?",
+          "answer": "Oui. Le système fonctionne en LAN complet. La connexion internet n'est pas nécessaire pour le fonctionnement quotidien."
+        },
+        "2": {
+          "question": "Comment se passe l'upgrade ?",
+          "answer": "Simple : nouvelle clé de licence, redémarrage des services si nécessaire. Aucune perte de données, migration automatique des paramètres."
+        },
+        "3": {
+          "question": "Quel support MC2 est disponible ?",
+          "answer": "Support technique, interventions sur site, formation. Options personnalisables selon vos besoins."
+        },
+        "4": {
+          "question": "Quelle est la politique de mises à jour ?",
+          "answer": "Mises à jour incluses dans la licence active. Déploiement contrôlé par vos équipes IT, à votre rythme."
+        }
+      }
+    },
+    "contact": {
+      "title": "Prêt à passer à la métrologie avancée ?",
+      "subtitle": "Contactez-nous pour une démonstration ou un devis personnalisé.",
+      "ctaPrimary": "Demander un devis",
+      "ctaSecondary": "Parler à un expert",
+      "labels": {
+        "email": "Email",
+        "phone": "Téléphone",
+        "response": "Temps de réponse",
+        "installation": "Déploiement"
+      },
+      "values": {
+        "email": "contact@mc2-info.com",
+        "phone": "+33 (0)4 XX XX XX XX",
+        "responseTime": "< 24h en moyenne",
+        "installation": "Installation 100% sur site"
+      },
+      "footer": {
+        "by": "par MC2 Lab",
+        "tagline": "MC2 Lab. Métrologie. Surveillance. On-premise."
       }
     }
   },
@@ -2088,6 +2452,12 @@
     },
     "frequency": "Fréq : {minutes} min",
     "alarm_delay": "Retard alarme : {minutes} min",
+    "alarm_delay_hover": {
+      "summary": "Retard d'alarme (survoler pour voir les details)",
+      "high": "Haut : {minutes} min",
+      "low": "Bas : {minutes} min",
+      "no_response": "Non-reponse : {minutes} min"
+    },
     "no_measurements": "Aucune mesure disponible",
     "actions": {
       "details": "Détails des mesures",
@@ -2579,3 +2949,5 @@
     "offline": "Hors ligne"
   }
 }
+
+

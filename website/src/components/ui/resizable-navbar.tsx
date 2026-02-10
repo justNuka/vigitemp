@@ -9,6 +9,7 @@ import {
 } from "motion/react";
 
 import React, { useRef, useState } from "react";
+import Image from "next/image";
 
 
 interface NavbarProps {
@@ -28,6 +29,8 @@ interface NavItemsProps {
     link: string;
   }[];
   className?: string;
+  linkClassName?: string;
+  hoverClassName?: string;
   onItemClick?: () => void;
 }
 
@@ -113,7 +116,13 @@ export const NavBody = ({ children, className, visible }: NavBodyProps) => {
   );
 };
 
-export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
+export const NavItems = ({
+  items,
+  className,
+  linkClassName,
+  hoverClassName,
+  onItemClick,
+}: NavItemsProps) => {
   const [hovered, setHovered] = useState<number | null>(null);
 
   return (
@@ -128,14 +137,20 @@ export const NavItems = ({ items, className, onItemClick }: NavItemsProps) => {
         <a
           onMouseEnter={() => setHovered(idx)}
           onClick={onItemClick}
-          className="relative px-4 py-2 text-neutral-600 dark:text-neutral-300"
+          className={cn(
+            "relative px-4 py-2 text-neutral-600 dark:text-neutral-300",
+            linkClassName,
+          )}
           key={`link-${idx}`}
           href={item.link}
         >
           {hovered === idx && (
             <motion.div
               layoutId="hovered"
-              className="absolute inset-0 h-full w-full rounded-full bg-gray-100 dark:bg-neutral-800"
+              className={cn(
+                "absolute inset-0 h-full w-full rounded-full bg-gray-100 dark:bg-neutral-800",
+                hoverClassName,
+              )}
             />
           )}
           <span className="relative z-20">{item.name}</span>
@@ -236,7 +251,7 @@ export const NavbarLogo = () => {
       href="#"
       className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black"
     >
-      <img
+      <Image
         src="https://assets.aceternity.com/logo-dark.png"
         alt="logo"
         width={30}

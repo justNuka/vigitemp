@@ -56,10 +56,12 @@ if (-not $SkipBuild) {
     Write-Log "Running pnpm build..."
     $previousSkipDb = $env:VIGITEMP_SKIP_DB_ON_BUILD
     $previousLogsDir = $env:VIGITEMP_LOGS_DIR
+    $previousDisableTurbo = $env:NEXT_DISABLE_TURBOPACK
     $buildLogsDir = Join-Path $repoRoot "..\\vigi\\build\\tmp-logs"
     $projectLogsDir = Join-Path $SourcePath "logs"
     $env:VIGITEMP_SKIP_DB_ON_BUILD = "1"
     $env:VIGITEMP_LOGS_DIR = $buildLogsDir
+    $env:NEXT_DISABLE_TURBOPACK = "1"
     try {
         if (Test-Path $projectLogsDir) {
             Write-Log "Cleaning project logs folder before build..."
@@ -72,6 +74,7 @@ if (-not $SkipBuild) {
     } finally {
         $env:VIGITEMP_SKIP_DB_ON_BUILD = $previousSkipDb
         $env:VIGITEMP_LOGS_DIR = $previousLogsDir
+        $env:NEXT_DISABLE_TURBOPACK = $previousDisableTurbo
     }
 }
 

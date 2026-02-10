@@ -1,16 +1,21 @@
 "use client";
 
-import { expertCards } from "./upgradeContent";
+import { getExpertCards } from "./upgradeContent";
 import { BlurFade } from "./BlurFade";
 import { AuroraText } from "@/components/ui/aurora-text";
+import { SparklesText } from "@/components/ui/sparkles-text";
 import { MagicCard } from "@/components/ui/magic-card";
 import { Card } from "@/components/ui/card";
-import { TypingAnimation } from "./TypingAnimation";
+import { TypewriterEffect } from "@/components/ui/typewriter-effect";
 import { Sparkles, Bot, BarChart3, Wrench } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const icons = [Sparkles, Bot, BarChart3, Wrench];
 
 export function ExpertTeaserSection() {
+  const t = useTranslations();
+  const expertCards = getExpertCards(t);
+
   return (
     <section id="expert" className="relative py-24 px-4 overflow-hidden">
       {/* Aurora background effect */}
@@ -18,7 +23,7 @@ export function ExpertTeaserSection() {
         <div
           className="absolute -top-1/2 left-0 w-full h-full opacity-10 animate-aurora"
           style={{
-            background: "linear-gradient(120deg, hsla(190,95%,45%,0.2) 0%, hsla(185,80%,40%,0.15) 25%, hsla(210,60%,50%,0.1) 50%, hsla(190,95%,45%,0.2) 100%)",
+            background: "linear-gradient(120deg, hsl(var(--primary) / 0.2) 0%, hsl(var(--accent) / 0.15) 25%, hsl(var(--primary) / 0.1) 50%, hsl(var(--primary) / 0.2) 100%)",
             backgroundSize: "300% 300%",
             filter: "blur(60px)",
           }}
@@ -30,14 +35,21 @@ export function ExpertTeaserSection() {
           <div className="text-center mb-16">
             <span className="inline-flex items-center gap-2 text-xs px-3 py-1 rounded-full bg-accent/10 text-accent border border-accent/20 mb-6">
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse-glow" />
-              Bientot disponible
+              {t("upgrade.expert.badge")}
             </span>
             <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4 text-balance">
-              <AuroraText>Expert</AuroraText>
-              {" : la plateforme intelligente"}
+              <AuroraText colors={["hsl(var(--primary))", "hsl(var(--accent))"]}>
+                <SparklesText 
+                  className="inline-flex text-inherit"
+                  sparklesCount={3}
+                >
+                  {t("upgrade.expert.titleHighlight")}
+                </SparklesText>
+              </AuroraText>
+              {t("upgrade.expert.titleSuffix")}
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              {"Toutes les fonctionnalites Standard + personnalisation + IA + ecosysteme MC2."}
+              {t("upgrade.expert.subtitle")}
             </p>
           </div>
         </BlurFade>
@@ -48,7 +60,7 @@ export function ExpertTeaserSection() {
             return (
               <BlurFade key={card.title} delay={i * 150}>
                 <Card className="border-none shadow-none p-0 h-full">
-                  <MagicCard className="p-6 h-full" gradientColor="hsla(185, 80%, 40%, 0.08)">
+                  <MagicCard className="p-6 h-full" gradientColor="hsl(var(--accent) / 0.08)">
                     <div className="flex items-start gap-4">
                       <div className="shrink-0 w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
                         <Icon className="w-5 h-5 text-accent" />
@@ -67,10 +79,10 @@ export function ExpertTeaserSection() {
 
         <BlurFade delay={600}>
           <div className="text-center">
-            <TypingAnimation
-              text="Anticiper. Expliquer. Guider."
-              className="text-2xl md:text-3xl font-bold text-accent"
-              speed={80}
+            <TypewriterEffect
+              words={[{ text: t("upgrade.expert.typewriter") }]}
+              className="inline-flex items-center justify-center text-2xl md:text-3xl font-bold text-accent"
+              cursorClassName="bg-accent h-5 md:h-7"
             />
           </div>
         </BlurFade>

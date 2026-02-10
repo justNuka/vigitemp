@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { tocItems } from "./upgradeContent";
+import { getTocItems } from "./upgradeContent";
+import { useTranslations } from "next-intl";
 
 export function UpgradeToc() {
+  const t = useTranslations();
+  const tocItems = getTocItems(t);
   const [activeId, setActiveId] = useState("");
 
   useEffect(() => {
@@ -31,7 +34,7 @@ export function UpgradeToc() {
     <nav className="hidden xl:flex fixed left-6 top-1/2 -translate-y-1/2 z-50 flex-col gap-1">
       <div className="glass rounded-xl p-3 glow-cyan">
         <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3 px-2">
-          Sommaire
+          {t("upgrade.toc.title")}
         </p>
         {tocItems.map((item) => (
           <a

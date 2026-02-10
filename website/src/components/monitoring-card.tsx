@@ -44,6 +44,7 @@ import {
 import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
 import { calculateYDomain, formatMeasureValue, getMeasureSummary } from "@/lib/measurements";
 import { useAppTimezone } from "@/components/timezone-provider";
+import { AlarmAcknowledgeDialog, type AcknowledgeDialogAlarm } from "@/components/alarm-acknowledge-dialog";
 
 ChartJS.register(
   CategoryScale,
@@ -85,11 +86,16 @@ interface MonitoringCardProps {
   alarmDisabled: boolean;
   alarmDisabledUntil: Date | string | null;
   alarmDelayMinutes: number | null;
+  alarmDelayHighMinutes?: number | null;
+  alarmDelayLowMinutes?: number | null;
+  noResponseDelayMinutes?: number | null;
+  locationComment?: string | null;
   surveillanceDisabled: boolean;
   isGso?: boolean | null;
   gsoRssi?: string | null;
   gsoTension?: string | null;
   alarmId?: number | null;
+  onEditLocation?: (idLieu: number) => void;
   onSurveillanceToggle: (
     idLieu: number,
     action: "surveillance" | "alarms",
@@ -143,11 +149,16 @@ export default function MonitoringCard({
   alarmDisabled,
   alarmDisabledUntil,
   alarmDelayMinutes,
+  alarmDelayHighMinutes,
+  alarmDelayLowMinutes,
+  noResponseDelayMinutes,
+  locationComment,
   surveillanceDisabled,
   isGso,
   gsoRssi,
   gsoTension,
   alarmId = null,
+  onEditLocation,
   onSurveillanceToggle,
 }: MonitoringCardProps) {
   const t = useTranslations("monitoringCard");
@@ -407,6 +418,30 @@ export default function MonitoringCard({
 
   const hasGsoMetrics = Boolean(isGso && (gsoRssi || gsoTension));
 
+  const acknowledgeDialogAlarm: AcknowledgeDialogAlarm | null = canAcknowledge && alarmId
+    ? {
+        id: String(alarmId),
+        locationId: String(idLieu),
+        locationName: nomLieu,
+        sensorName: sondeNumeroSerie || nomLieu,
+        type:
+          alarmType === "H"
+            ? "high"
+            : alarmType === "B"
+              ? "low"
+              : alarmType === "N"
+                ? "no-response"
+                : alarmType === "T"
+                  ? "ended"
+                  : undefined,
+        currentValue: typeof lastValue === "number" ? lastValue : null,
+        value: typeof lastValue === "number" ? lastValue : null,
+        unit: unite,
+        minThreshold: consigneInf,
+        maxThreshold: consigneSup,
+      }
+    : null;
+
   return (
     <>
       <div
@@ -464,7 +499,16 @@ export default function MonitoringCard({
               })()}
               {groupName ? <div className="truncate">{groupName}</div> : null}
               <div className="flex items-center gap-2">
-                <div className="text-base font-semibold truncate">{nomLieu}</div>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <div className="text-base font-semibold truncate cursor-help">{nomLieu}</div>
+                  </TooltipTrigger>
+                  {locationComment ? (
+                    <TooltipContent side="top" className="max-w-sm whitespace-pre-wrap break-words">
+                      <p className="text-xs">{locationComment}</p>
+                    </TooltipContent>
+                  ) : null}
+                </UITooltip>
               </div>
               {surveillanceDisabledLabel ? (
                 <div className={`inline-flex items-center w-fit gap-1 rounded-full text-[10px] px-2 py-0.5 ${alarmBadgeClassName}`}>
@@ -682,8 +726,23 @@ export default function MonitoringCard({
                     ) : null}
                     <div className={`flex items-center justify-center gap-4 text-[11px] ${contentTextClassName}`}>
                       <span>{t("frequency", { minutes: frequencyMinutes ?? "-" })}</span>
-                      {alarmDelayMinutes !== null && alarmDelayMinutes !== undefined ? (
-                        <span>{t("alarm_delay", { minutes: alarmDelayMinutes })}</span>
+                      {(alarmDelayHighMinutes !== null && alarmDelayHighMinutes !== undefined) ||
+                       (alarmDelayLowMinutes !== null && alarmDelayLowMinutes !== undefined) ||
+                       (noResponseDelayMinutes !== null && noResponseDelayMinutes !== undefined) ? (
+                        <UITooltip>
+                          <TooltipTrigger asChild>
+                            <span className="cursor-help underline decoration-dotted underline-offset-2">
+                              {t("alarm_delay_hover.summary")}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            <div className="space-y-1 text-xs">
+                              <p>{t("alarm_delay_hover.high", { minutes: alarmDelayHighMinutes ?? "-" })}</p>
+                              <p>{t("alarm_delay_hover.low", { minutes: alarmDelayLowMinutes ?? "-" })}</p>
+                              <p>{t("alarm_delay_hover.no_response", { minutes: noResponseDelayMinutes ?? "-" })}</p>
+                            </div>
+                          </TooltipContent>
+                        </UITooltip>
                       ) : null}
                     </div>
                   </>
@@ -755,7 +814,7 @@ export default function MonitoringCard({
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                      <p className="text-xs">{t("actions.location")}</p>
+                    <p className="text-xs">{t("actions.location")}</p>
                   </TooltipContent>
                 </UITooltip>
 
@@ -764,6 +823,7 @@ export default function MonitoringCard({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        onEditLocation?.(idLieu);
                       }}
                       className={`p-1.5 rounded-md transition-colors ${actionButtonClassName}`}
                     >
@@ -858,66 +918,44 @@ export default function MonitoringCard({
           />
         ) : null}
 
-        <Dialog
+        <AlarmAcknowledgeDialog
           open={showAcknowledgeModal}
+          alarm={acknowledgeDialogAlarm}
           onOpenChange={(open) => {
             setShowAcknowledgeModal(open);
             if (!open) setAckComment("");
           }}
-        >
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>{t("acknowledge.title")}</DialogTitle>
-              <DialogDescription>{t("acknowledge.description")}</DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium" htmlFor={`ack-comment-${idLieu}`}>
-                {t("acknowledge.comment_label")}
-              </label>
-              <textarea
-                id={`ack-comment-${idLieu}`}
-                className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                placeholder={t("acknowledge.comment_placeholder")}
-                value={ackComment}
-                onChange={(event) => setAckComment(event.target.value)}
-              />
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowAcknowledgeModal(false)}>
-                {t("acknowledge.cancel")}
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={async () => {
-                  if (!alarmId) return;
-                  try {
-                    const res = await fetch(`/api/alarmes/${alarmId}/acknowledge`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ comment: ackComment || undefined }),
-                    });
-
-                    if (!res.ok) {
-                      console.error("Acknowledge alarm error", await res.text());
-                      return;
-                    }
-
-                    setShowAcknowledgeModal(false);
-                    setAckComment("");
-                    reload(true);
-                  } catch (error) {
-                    console.error("Acknowledge alarm error", error);
-                  }
-                }}
-              >
-                {t("acknowledge.confirm")}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          onConfirm={async (ackAlarmId, commentValue) => {
+            try {
+              const res = await fetch(`/api/alarmes/${ackAlarmId}/acknowledge`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ comment: commentValue || ackComment || undefined }),
+              });
+              if (!res.ok) {
+                console.error("Acknowledge alarm error", await res.text());
+                return;
+              }
+              setShowAcknowledgeModal(false);
+              setAckComment("");
+              reload(true);
+            } catch (error) {
+              console.error("Acknowledge alarm error", error);
+            }
+          }}
+        />
       </div>
     </>
   );
 }
+
+
+
+
+
+
+
+
+
+
+

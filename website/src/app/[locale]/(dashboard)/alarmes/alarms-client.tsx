@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { EmptyState } from "@/components/empty-state";
@@ -16,7 +16,7 @@ import {
 import { alarmsApi, type AlarmWithDetails } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { ColumnDef } from "@tanstack/react-table";
@@ -109,10 +109,6 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
   const [showGraph, setShowGraph] = useState(false);
   const [alarmCount30, setAlarmCount30] = useState<number | null>(null);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
-  const dragOriginRef = useRef<{ x: number; y: number } | null>(null);
-
   useEffect(() => {
     setLocalAlarms(alarms);
   }, [alarms]);
@@ -142,7 +138,6 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     setShowGraph(false);
     setSelectedCommentId("");
     setAlarmCount30(null);
-    setDragOffset({ x: 0, y: 0 });
     let isActive = true;
     setIsCommentsLoading(true);
     fetch("/api/alarmes/commentaires-acquittement")
@@ -165,32 +160,6 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
       isActive = false;
     };
   }, [selectedAlarm]);
-
-  useEffect(() => {
-    if (!dragStartRef.current) return;
-    const handleMove = (event: PointerEvent) => {
-      if (!dragStartRef.current || !dragOriginRef.current) return;
-      const dx = event.clientX - dragStartRef.current.x;
-      const dy = event.clientY - dragStartRef.current.y;
-      setDragOffset({
-        x: dragOriginRef.current.x + dx,
-        y: dragOriginRef.current.y + dy,
-      });
-    };
-    const handleUp = () => {
-      dragStartRef.current = null;
-      dragOriginRef.current = null;
-      window.removeEventListener("pointermove", handleMove);
-      window.removeEventListener("pointerup", handleUp);
-    };
-    window.addEventListener("pointermove", handleMove);
-    window.addEventListener("pointerup", handleUp);
-    return () => {
-      window.removeEventListener("pointermove", handleMove);
-      window.removeEventListener("pointerup", handleUp);
-    };
-  }, [dragOffset]);
-
   useEffect(() => {
     if (!selectedAlarm) return;
     let isActive = true;
@@ -591,20 +560,8 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
       )}
 
       <Dialog open={!!selectedAlarm} onOpenChange={() => setSelectedAlarm(null)}>
-        <DialogContent
-          className="sm:max-w-3xl"
-          style={{
-            transform: `translate(-50%, -50%) translate(${dragOffset.x}px, ${dragOffset.y}px)`,
-          }}
-        >
-          <DialogHeader
-            className="cursor-move select-none"
-            onPointerDown={(event) => {
-              dragStartRef.current = { x: event.clientX, y: event.clientY };
-              dragOriginRef.current = { x: dragOffset.x, y: dragOffset.y };
-              (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
-            }}
-          >
+        <DialogContent className="sm:max-w-3xl max-h-[92dvh] overflow-y-auto">
+          <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-warning" />
               {t("dialog.title")}
@@ -801,3 +758,7 @@ function AlarmStatusBadge({ status }: { status: string }) {
     </Badge>
   );
 }
+
+
+
+

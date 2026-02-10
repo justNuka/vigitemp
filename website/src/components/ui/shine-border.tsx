@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { useTheme } from "next-themes"
 
 interface ShineBorderProps extends React.HTMLAttributes<HTMLDivElement> {
   /**

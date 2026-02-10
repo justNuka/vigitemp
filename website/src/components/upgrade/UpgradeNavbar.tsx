@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { RainbowButton } from "@/components/ui/rainbow-button";
-import { navLinks } from "./upgradeContent";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { getNavLinks } from "./upgradeContent";
 import {
   MobileNav,
   MobileNavHeader,
@@ -13,29 +16,35 @@ import {
   Navbar,
 } from "@/components/ui/resizable-navbar";
 
-const compactNavItems = [
-  { name: "Comparaison", link: "#comparaison" },
-  { name: "Licences", link: "#licences" },
-  { name: "Contact", link: "#contact" },
-];
-
-const fullNavItems = navLinks.map((link) => ({
-  name: link.label,
-  link: link.href,
-}));
-
 function UpgradeNavBody({ visible }: { visible?: boolean }) {
-  const items = visible ? compactNavItems : fullNavItems;
+  const t = useTranslations();
+  const navLinks = getNavLinks(t);
+  const items = visible
+    ? [
+        { name: t("upgrade.nav.comparaison"), link: "#comparaison" },
+        { name: t("upgrade.nav.licences"), link: "#licences" },
+        { name: t("upgrade.nav.contact"), link: "#contact" },
+      ]
+    : navLinks.map((link) => ({ name: link.label, link: link.href }));
+
+  const navClassName = visible
+    ? "!bg-white/75 !text-[hsl(var(--sidebar))] dark:!bg-[hsl(var(--sidebar))] dark:!text-white"
+    : "!bg-transparent !text-white";
+  const navLinkClassName = visible
+    ? "text-[hsl(var(--sidebar))] dark:text-white"
+    : "text-white/90 hover:text-white";
+  const navHoverClassName = visible
+    ? "bg-[hsl(var(--sidebar))]/10 dark:bg-white/10"
+    : "bg-white/10";
 
   return (
-    <NavBody
-      visible={visible}
-      className={visible ? "bg-white/90 dark:bg-neutral-900/90" : undefined}
-    >
-      <a href="#intro" className="relative z-20 flex items-center gap-2 px-2 py-1">
-        <img
+    <NavBody visible={visible} className={navClassName}>
+      <a href="/" className="relative z-20 flex items-center gap-2 px-2 py-1">
+        <Image
           src="/logos/Icone-VigiSensys.png"
           alt="VigiSensys"
+          width={24}
+          height={24}
           className="h-6 w-6 object-contain"
         />
         {!visible && (
@@ -45,18 +54,26 @@ function UpgradeNavBody({ visible }: { visible?: boolean }) {
         )}
       </a>
 
-      <NavItems items={items} />
+      <NavItems
+        items={items}
+        linkClassName={navLinkClassName}
+        hoverClassName={navHoverClassName}
+      />
 
-      {!visible && (
-        <div className="relative z-20 hidden items-center gap-3 lg:flex">
+      <div className="relative z-20 hidden items-center gap-3 lg:flex">
+        {!visible && (
           <span className="text-xs px-3 py-1 rounded-full bg-secondary text-muted-foreground border border-border">
-            Votre licence : <span className="text-foreground font-medium">One</span>
+            {t("upgrade.nav.licenseLabel")}{" "}
+            <span className="text-foreground font-medium">One</span>
           </span>
+        )}
+        {!visible && (
           <RainbowButton size="sm" className="px-5" asChild>
-            <a href="#contact">Demander un devis</a>
+            <a href="#intro">{t("upgrade.nav.homeCta")}</a>
           </RainbowButton>
-        </div>
-      )}
+        )}
+        <ThemeToggle />
+      </div>
     </NavBody>
   );
 }
@@ -72,18 +89,32 @@ function UpgradeMobileNav({
   onToggle: () => void;
   onClose: () => void;
 }) {
-  const items = visible ? compactNavItems : fullNavItems;
+  const t = useTranslations();
+  const navLinks = getNavLinks(t);
+  const items = visible
+    ? [
+        { name: t("upgrade.nav.comparaison"), link: "#comparaison" },
+        { name: t("upgrade.nav.licences"), link: "#licences" },
+        { name: t("upgrade.nav.contact"), link: "#contact" },
+      ]
+    : navLinks.map((link) => ({ name: link.label, link: link.href }));
+
+  const mobileNavClassName = visible
+    ? "!bg-white/80 !text-[hsl(var(--sidebar))] dark:!bg-[hsl(var(--sidebar))] dark:!text-white"
+    : "!bg-transparent !text-white";
+  const mobileLinkClassName = visible
+    ? "text-sm text-[hsl(var(--sidebar))]/80 hover:text-[hsl(var(--sidebar))] transition-colors dark:text-white/80 dark:hover:text-white"
+    : "text-sm text-white/80 hover:text-white transition-colors";
 
   return (
-    <MobileNav
-      visible={visible}
-      className={visible ? "bg-white/90 dark:bg-neutral-900/90" : undefined}
-    >
+    <MobileNav visible={visible} className={mobileNavClassName}>
       <MobileNavHeader>
-        <a href="#intro" className="flex items-center gap-2 px-2 py-1">
-          <img
-            src="/logos/vigisensys-logo-without-bg.png"
+        <a href="/" className="flex items-center gap-2 px-2 py-1">
+          <Image
+            src="/logos/Icone-VigiSensys.png"
             alt="VigiSensys"
+            width={24}
+            height={24}
             className="h-6 w-6 object-contain"
           />
           {!visible && (
@@ -92,7 +123,10 @@ function UpgradeMobileNav({
             </span>
           )}
         </a>
-        <MobileNavToggle isOpen={isOpen} onClick={onToggle} />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <MobileNavToggle isOpen={isOpen} onClick={onToggle} />
+        </div>
       </MobileNavHeader>
 
       <MobileNavMenu isOpen={isOpen} onClose={onClose}>
@@ -101,14 +135,14 @@ function UpgradeMobileNav({
             key={item.link}
             href={item.link}
             onClick={onClose}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className={mobileLinkClassName}
           >
             {item.name}
           </a>
         ))}
         {!visible && (
           <RainbowButton className="w-full text-sm" asChild>
-            <a href="#contact">Demander un devis</a>
+            <a href="#intro">{t("upgrade.nav.homeCta")}</a>
           </RainbowButton>
         )}
       </MobileNavMenu>

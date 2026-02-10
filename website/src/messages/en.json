@@ -46,11 +46,11 @@
     }
   },
   "pageHeader": {
-    "title": "Vigitemp - Temperature Monitoring",
+    "title": "VigiSensys - Environment Monitoring",
     "offset_invalid": "Invalid offset"
   },
   "appMeta": {
-    "title": "Vigitemp - Real-time monitoring",
+    "title": "VigiSensys - Real-time monitoring",
     "description": "Monitoring and alarm management system",
     "timezone": {
       "title": "Time zone",
@@ -136,7 +136,7 @@
     "title": "Dashboard",
     "description": "Overview of monitoring",
     "meta": {
-      "title": "Dashboard - Vigitemp",
+      "title": "Dashboard - VigiSensys",
       "description": "Overview of monitoring"
     },
     "stats_section_label": "Statistics",
@@ -189,7 +189,7 @@
     "title": "Alarm management",
     "description": "Follow-up and handling of alarms",
     "meta": {
-      "title": "Alarms - Vigitemp",
+      "title": "Alarms - VigiSensys",
       "description": "Alarm management and follow-up"
     },
     "tabs": {
@@ -307,7 +307,7 @@
     "title": "Audit log",
     "description": "History of actions and events",
     "meta": {
-      "title": "Audit - Vigitemp",
+      "title": "Audit - VigiSensys",
       "description": "Audit log and event history"
     }
   },
@@ -323,7 +323,7 @@
     "title": "Monitoring",
     "description": "Real-time monitoring of sensors and sensors",
     "meta": {
-      "title": "Monitoring - Vigitemp",
+      "title": "Monitoring - VigiSensys",
       "description": "Real-time monitoring of sensors and sensors"
     },
     "filters": {
@@ -1103,7 +1103,7 @@
     "title": "Settings",
     "description": "Application configuration",
     "meta": {
-      "title": "Settings - Vigitemp",
+      "title": "Settings - VigiSensys",
       "description": "Application configuration"
     }
   },
@@ -1196,7 +1196,7 @@
         },
         "sender": {
           "label": "Sender address",
-          "placeholder": "noreply@vigitemp.fr",
+          "placeholder": "noreply@VigiSensys.fr",
           "helper": "Address shown in the \"From\" field of emails"
         }
       },
@@ -1234,7 +1234,7 @@
     "title": "Admin alarms",
     "description": "Alarm management for administrators",
     "meta": {
-      "title": "Admin alarms - Vigitemp",
+      "title": "Admin alarms - VigiSensys",
       "description": "Alarm management for administrators"
     }
   },
@@ -1944,6 +1944,370 @@
         "items": {
           "0": "New 403, 404, and 500 error pages with animated, modern visuals."
         }
+      },
+      "upgrade": {
+        "title": "License upgrade",
+        "items": {
+          "0": "License upgrade page translated (FR/EN) with harmonized labels.",
+          "1": "Color palette aligned to VigiSensys brand on the upgrade page."
+        }
+      }
+    }
+  },
+  "upgrade": {
+    "meta": {
+      "title": "VigiSensys | License upgrade",
+      "description": "Move to smarter metrology with VigiSensys Standard. Monitoring, compliance, and performance unified in a 100% on-premise control center."
+    },
+    "nav": {
+      "pourquoi": "Why upgrade",
+      "comparaison": "Comparison",
+      "standard": "Standard",
+      "expert": "Expert",
+      "licences": "Licenses",
+      "contact": "Contact",
+      "licenseLabel": "Your license:",
+      "homeCta": "Upgrade home"
+    },
+    "toc": {
+      "title": "Contents",
+      "intro": "Introduction",
+      "pourquoi": "Why upgrade",
+      "comparaison": "Comparison",
+      "architecture": "Architecture",
+      "plans": "Plans & Sensors",
+      "licences": "Licenses",
+      "standard": "Standard",
+      "expert": "Expert",
+      "securite": "Security",
+      "contact": "Contact"
+    },
+    "hero": {
+      "eyebrow": "License upgrade",
+      "title": "VigiSensys",
+      "titleHighlight": "smarter metrology",
+      "leadPrefix": "Move to",
+      "subtitle": "Monitoring + metrology united in a 100% on-premise control center.",
+      "subtitleHighlights": {
+        "0": "security",
+        "1": "compliance",
+        "2": "performance"
+      },
+      "tagline": "Your data stays with you.",
+      "ctaPrimary": "Move to Standard",
+      "ctaSecondary": "Compare licenses",
+      "scroll": "Scroll"
+    },
+    "heroParallax": {
+      "items": {
+        "0": { "title": "Real-time dashboard" },
+        "1": { "title": "Smart monitoring" },
+        "2": { "title": "Alerts and deviations" },
+        "3": { "title": "Centralized metrology" },
+        "4": { "title": "Continuous tracking" },
+        "5": { "title": "Reports and audit" },
+        "6": { "title": "Trend curves" },
+        "7": { "title": "Metrological analysis" },
+        "8": { "title": "Standard compliance" },
+        "9": { "title": "Windows notifications" },
+        "10": { "title": "Site management" },
+        "11": { "title": "Full history" },
+        "12": { "title": "Smart alerts" },
+        "13": { "title": "Sensors & plans" },
+        "14": { "title": "Global view" }
+      }
+    },
+    "proofStats": {
+      "items": {
+        "0": { "title": "100% on-premise", "description": "No data in the cloud" },
+        "1": { "title": "Real-time alarms", "description": "Instant detection of deviations" },
+        "2": { "title": "Metrology traceability", "description": "Full and auditable history" },
+        "3": { "title": "Windows notifications", "description": "Even when the browser is closed" }
+      }
+    },
+    "valueProps": {
+      "eyebrow": "Why upgrade",
+      "titleLine1": "Move from monitoring",
+      "titleHighlight": "\"snapshot\"",
+      "typewriter": "to metrology",
+      "flip": {
+        "0": "secure",
+        "1": "controlled",
+        "2": "traceable"
+      },
+      "subtitle": "Six reasons to move to Standard.",
+      "items": {
+        "0": {
+          "title": "Reduce non-compliance",
+          "description": "Detect drift and deviations earlier with continuous tracking.",
+          "badge": "Standard"
+        },
+        "1": {
+          "title": "Speed up calibration",
+          "description": "Two-point calibration, history tracking, automatic coefficients.",
+          "badge": "Standard"
+        },
+        "2": {
+          "title": "Strengthen traceability",
+          "description": "Reports, history, settings: everything is recorded.",
+          "badge": "Standard"
+        },
+        "3": {
+          "title": "Standardize EMT per location",
+          "description": "Controlled tolerances, site by site, zone by zone.",
+          "badge": "Standard"
+        },
+        "4": {
+          "title": "Collaborate without losing context",
+          "description": "Internal messaging and traceable exchanges.",
+          "badge": "Standard"
+        },
+        "5": {
+          "title": "Security at the core",
+          "description": "Roles, audit, on-prem logic. Zero compromise.",
+          "badge": "Standard"
+        }
+      }
+    },
+    "compare": {
+      "eyebrow": "Comparison",
+      "title": "Drag to compare",
+      "subtitle": "Or let magic do its job and see the difference between One and Standard.",
+      "items": {
+        "0": {
+          "title": "Monitoring",
+          "leftLabel": "One",
+          "rightLabel": "Standard",
+          "leftItems": {
+            "0": "Basic cards",
+            "1": "Simple charts",
+            "2": "Simple alarms"
+          },
+          "rightItems": {
+            "0": "Advanced metrology indicators",
+            "1": "Real-time drift detection",
+            "2": "Full deviation history"
+          }
+        },
+        "1": {
+          "title": "Metrology",
+          "leftLabel": "Basic",
+          "rightLabel": "Standard",
+          "leftItems": {
+            "0": "No calibration",
+            "1": "No uncertainty",
+            "2": "No adjustment"
+          },
+          "rightItems": {
+            "0": "Two-point calibration + history",
+            "1": "Uncertainty + trueness",
+            "2": "Drift and a/b coefficients"
+          }
+        }
+      }
+    },
+    "architecture": {
+      "eyebrow": "Architecture",
+      "title": "100% on-premise ecosystem",
+      "nodes": {
+        "sondes": { "label": "Sensors", "sublabel": "Temp, RH, CO2..." },
+        "serveur": { "label": "C# Server", "sublabel": "Polling + Alarms" },
+        "bdd": { "label": "Database", "sublabel": "Measures / Business" },
+        "webapp": { "label": "Web App", "sublabel": "Next.js" },
+        "agent": { "label": "Windows Agent", "sublabel": "Notifications" }
+      },
+      "left": {
+        "title": "Why it is robust",
+        "items": {
+          "0": "Runs offline / LAN",
+          "1": "Industrial-grade performance",
+          "2": "Centralized data"
+        }
+      },
+      "right": {
+        "title": "Why it is secure",
+        "items": {
+          "0": "Data stays on site",
+          "1": "Granular access control",
+          "2": "Complete logs and audit"
+        }
+      },
+      "typewriter": {
+        "words": {
+          "0": "Your",
+          "1": "data",
+          "2": "stays",
+          "3": "with",
+          "4": "you.",
+          "5": "Always."
+        }
+      }
+    },
+    "plans": {
+      "eyebrow": "Plans & Locations",
+      "title": "Map your sensors",
+      "subtitle": "Visualize each sensor on your site plan.",
+      "pin": {
+        "cardTitle": "Site plan",
+        "title": "Sensor mapping",
+        "description": "See critical areas at a glance.",
+        "imageAlt": "Sensor mapping preview"
+      },
+      "features": {
+        "0": "Assign each sensor to a location",
+        "1": "Visualize critical zones",
+        "2": "Find the source of an alarm faster"
+      },
+      "note": "Available with the Standard license."
+    },
+    "licenses": {
+      "eyebrow": "Licenses",
+      "title": "License comparison table",
+      "subtitle": "Choose the level that matches your needs.",
+      "table": {
+        "feature": "Feature",
+        "one": "One",
+        "standard": "Standard",
+        "recommended": "Recommended",
+        "expert": "Expert"
+      },
+      "highlight": {
+        "prefix": "The ",
+        "suffix": " license delivers the best feature/price ratio for metrology."
+      },
+      "features": {
+        "0": "Monitoring (cards + graph)",
+        "1": "Alarms & tolerances",
+        "2": "Windows agent notifications",
+        "3": "Metrology (two-point calibration)",
+        "4": "Adjustment: a/b coefficients",
+        "5": "Adjustment: trueness + uncertainty",
+        "6": "Drift management",
+        "7": "Internal messaging",
+        "8": "EMT per location",
+        "9": "Customizable dashboard",
+        "10": "AI assistant",
+        "11": "Real-time analysis",
+        "12": "Intervention ecosystem"
+      }
+    },
+    "standard": {
+      "eyebrow": "Deep dive",
+      "titleHighlight": "Standard",
+      "titleSuffix": ": what you get in practice",
+      "subtitle": "Each feature is designed for demanding metrology teams.",
+      "preview": "Preview {title}",
+      "blocks": {
+        "0": {
+          "title": "Two-point calibration + history",
+          "bullets": {
+            "0": "Define your two reference points",
+            "1": "History of each operation",
+            "2": "Integrated calibration certificates",
+            "3": "Full traceability per sensor"
+          }
+        },
+        "1": {
+          "title": "Drift management & traceability",
+          "bullets": {
+            "0": "Automatic drift tracking",
+            "1": "Drift threshold alerts",
+            "2": "Trend charts",
+            "3": "PDF export for audits"
+          }
+        },
+        "2": {
+          "title": "Adjustment (a/b coefficients)",
+          "bullets": {
+            "0": "Automatic coefficient calculation",
+            "1": "Real-time application",
+            "2": "Adjustment history",
+            "3": "Before/after comparison"
+          }
+        },
+        "3": {
+          "title": "Adjustment (trueness + uncertainty)",
+          "bullets": {
+            "0": "Type A and B uncertainty calculation",
+            "1": "Measured and tracked trueness",
+            "2": "Standards-compliant reports",
+            "3": "Integration into the quality workflow"
+          }
+        }
+      }
+    },
+    "expert": {
+      "badge": "Coming soon",
+      "titleHighlight": "Expert",
+      "titleSuffix": ": the intelligent platform",
+      "subtitle": "All Standard features + customization + AI + MC2 ecosystem.",
+      "cards": {
+        "0": {
+          "title": "Tile dashboard",
+          "description": "Add / remove / resize / drag: build your view."
+        },
+        "1": {
+          "title": "AI chatbot",
+          "description": "Smart troubleshooting, integrated sensor context."
+        },
+        "2": {
+          "title": "Real-time analysis",
+          "description": "Events + correlated measures, pattern detection."
+        },
+        "3": {
+          "title": "Intervention ecosystem",
+          "description": "Technician planning, full MC2 follow-up."
+        }
+      },
+      "typewriter": "Anticipate. Explain. Guide."
+    },
+    "faq": {
+      "eyebrow": "Security & On-Premise",
+      "title": "Frequently asked questions",
+      "subtitle": "Everything you need to know before moving to Standard.",
+      "items": {
+        "0": {
+          "question": "Does data leave our site?",
+          "answer": "No. VigiSensys runs 100% on-premise. No data goes through the cloud. Everything stays on your local infrastructure."
+        },
+        "1": {
+          "question": "Does it work without internet?",
+          "answer": "Yes. The system runs on a full LAN. Internet is not required for daily operations."
+        },
+        "2": {
+          "question": "How does the upgrade work?",
+          "answer": "Simple: a new license key, service restart if needed. No data loss, automatic migration of settings."
+        },
+        "3": {
+          "question": "What MC2 support is available?",
+          "answer": "Technical support, on-site interventions, training. Options tailored to your needs."
+        },
+        "4": {
+          "question": "What is the update policy?",
+          "answer": "Updates are included with the active license. Deployment is controlled by your IT teams, at your pace."
+        }
+      }
+    },
+    "contact": {
+      "title": "Ready to move to advanced metrology?",
+      "subtitle": "Contact us for a demo or a tailored quote.",
+      "ctaPrimary": "Request a quote",
+      "ctaSecondary": "Talk to an expert",
+      "labels": {
+        "email": "Email",
+        "phone": "Phone",
+        "response": "Response time",
+        "installation": "Deployment"
+      },
+      "values": {
+        "email": "contact@mc2-info.com",
+        "phone": "+33 (0)4 XX XX XX XX",
+        "responseTime": "< 24h average",
+        "installation": "100% on-site installation"
+      },
+      "footer": {
+        "by": "by MC2 Lab",
+        "tagline": "MC2 Lab. Metrology. Monitoring. On-premise."
       }
     }
   },
@@ -2034,6 +2398,12 @@
     },
     "frequency": "Freq: {minutes} min",
     "alarm_delay": "Alarm delay: {minutes} min",
+    "alarm_delay_hover": {
+      "summary": "Alarm delay (hover for details)",
+      "high": "High: {minutes} min",
+      "low": "Low: {minutes} min",
+      "no_response": "No response: {minutes} min"
+    },
     "no_measurements": "No measurements available",
     "actions": {
       "details": "Measurement details",
@@ -2516,3 +2886,5 @@
     "offline": "Offline"
   }
 }
+
+
