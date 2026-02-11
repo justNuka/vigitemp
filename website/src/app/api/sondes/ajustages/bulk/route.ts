@@ -1,8 +1,14 @@
-import { NextRequest } from "next/server";
+﻿import { NextRequest } from "next/server";
 import { z } from "zod";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { apiError, apiOk } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
+import {
+  expandRelatedGsoSerials,
+  extractAddressFromSerial,
+  isGsoType,
+  normalizeImportedGsoSerial,
+} from "@/lib/sensor-naming";
 
 const rowSchema = z.object({
   id: z.string().min(1),
@@ -32,6 +38,7 @@ const rowSchema = z.object({
 });
 
 const bodySchema = z.object({
+  moduleId: z.number().int().positive().optional(),
   rows: z.array(rowSchema).min(1),
   confirmOverwrite: z.boolean().optional(),
 });
@@ -46,8 +53,19 @@ export const POST = async (req: NextRequest) => {
   try {
     const body = await req.json();
     const validated = bodySchema.parse(body);
+    const selectedModuleId = validated.moduleId ?? null;
 
-    const duplicateFiles = validated.rows
+    const normalizedRows = validated.rows.map((row) => ({
+      ...row,
+      insertData: {
+        ...row.insertData,
+        Sonde_Numero_Serie: row.insertData.Sonde_Numero_Serie
+          ? normalizeImportedGsoSerial(row.insertData.Sonde_Numero_Serie)
+          : null,
+      },
+    }));
+
+    const duplicateFiles = normalizedRows
       .map((r) => r.file.trim().toLowerCase())
       .filter((name, index, arr) => arr.indexOf(name) !== index);
 
@@ -57,13 +75,21 @@ export const POST = async (req: NextRequest) => {
 
     const serials = Array.from(
       new Set(
-        validated.rows
+        normalizedRows
           .map((row) => row.insertData.Sonde_Numero_Serie?.trim())
           .filter((serial): serial is string => !!serial),
       ),
     );
 
-    const [existingAdjustments, sensorsWithOffset] = await Promise.all([
+    const gsoSerialCandidates = Array.from(
+      new Set(
+        serials
+          .filter((serial) => isGsoType(serial))
+          .flatMap((serial) => expandRelatedGsoSerials(serial)),
+      ),
+    );
+
+    const [existingAdjustments, sensorsWithOffset, existingGsoSensors, selectedModule] = await Promise.all([
       serials.length > 0
         ? prisma.t_ajustage.groupBy({
             by: ["Sonde_Numero_Serie"],
@@ -73,10 +99,26 @@ export const POST = async (req: NextRequest) => {
       serials.length > 0
         ? prisma.t_sonde.findMany({
             where: { Sonde_Numero_Serie: { in: serials } },
-            select: { Sonde_Numero_Serie: true, Sonde_Offset: true },
+            select: { Sonde_Numero_Serie: true, Sonde_Offset: true, Id_Module: true },
           })
         : Promise.resolve([]),
+      gsoSerialCandidates.length > 0
+        ? prisma.t_sonde.findMany({
+            where: { Sonde_Numero_Serie: { in: gsoSerialCandidates } },
+            select: { Sonde_Numero_Serie: true },
+          })
+        : Promise.resolve([]),
+      selectedModuleId
+        ? prisma.t_module.findUnique({
+            where: { Id_Module: selectedModuleId },
+            select: { Id_Module: true, Port_Serie: true },
+          })
+        : Promise.resolve(null),
     ]);
+
+    if (selectedModuleId && !selectedModule) {
+      return apiError(400, "invalid_module", "Module sélectionné introuvable");
+    }
 
     const adjustmentSerials = existingAdjustments
       .map((entry) => entry.Sonde_Numero_Serie)
@@ -86,6 +128,9 @@ export const POST = async (req: NextRequest) => {
     const offsetSerials = offsetRows
       .map((sensor) => sensor.Sonde_Numero_Serie)
       .filter((serial): serial is string => !!serial);
+    const existingSensorsWithModule = sensorsWithOffset.filter(
+      (sensor) => sensor.Id_Module !== null && sensor.Id_Module !== undefined,
+    ).length;
 
     if ((adjustmentSerials.length > 0 || offsetSerials.length > 0) && !validated.confirmOverwrite) {
       return apiError(409, "confirmation_required", "Confirmation requise avant insertion", {
@@ -94,10 +139,43 @@ export const POST = async (req: NextRequest) => {
       });
     }
 
+    const existingSerialSet = new Set(
+      sensorsWithOffset
+        .map((sensor) => sensor.Sonde_Numero_Serie)
+        .filter((serial): serial is string => Boolean(serial)),
+    );
+
+    const existingGsoSet = new Set(
+      existingGsoSensors
+        .map((sensor) => sensor.Sonde_Numero_Serie)
+        .filter((serial): serial is string => Boolean(serial)),
+    );
+    const missingGsoSerials = gsoSerialCandidates.filter((serial) => !existingGsoSet.has(serial));
+    const missingSerialsFromRows = serials.filter((serial) => !existingSerialSet.has(serial));
+    const serialsToCreate = Array.from(new Set([...missingSerialsFromRows, ...missingGsoSerials]));
+
     const insertedIds: string[] = [];
     const skippedIds: string[] = [];
 
     await prisma.$transaction(async (tx) => {
+      if (serialsToCreate.length > 0) {
+        await tx.t_sonde.createMany({
+          data: serialsToCreate.map((serial) => {
+            const gso = isGsoType(serial);
+            return {
+              Sonde_Numero_Serie: serial,
+              Adresse_Sonde: gso ? extractAddressFromSerial(serial) : serial,
+              Est_Sonde_GSO: gso,
+              Surveillance_Etat: "D",
+              Sonde_Offset: 0,
+              Id_Module: selectedModule?.Id_Module ?? null,
+              Port_Serie: selectedModule?.Port_Serie ?? null,
+            };
+          }),
+          skipDuplicates: true,
+        });
+      }
+
       if (validated.confirmOverwrite && adjustmentSerials.length > 0) {
         await tx.t_ajustage.deleteMany({
           where: { Sonde_Numero_Serie: { in: adjustmentSerials } },
@@ -118,7 +196,7 @@ export const POST = async (req: NextRequest) => {
         });
       }
 
-      for (const row of validated.rows) {
+      for (const row of normalizedRows) {
         const data = row.insertData;
         const dateAjustage = data.Date_Heure_Ajustage ? new Date(data.Date_Heure_Ajustage) : null;
         const dateCertif = data.SE_Date_Certif ? new Date(data.SE_Date_Certif) : null;
@@ -176,6 +254,8 @@ export const POST = async (req: NextRequest) => {
       skippedIds,
       overwrittenAdjustments: validated.confirmOverwrite ? adjustmentSerials.length : 0,
       clearedOffsets: validated.confirmOverwrite ? offsetSerials.length : 0,
+      createdSensorsFromAdjustment: serialsToCreate.length,
+      existingSensorsWithModule,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -1041,8 +1041,8 @@
       "delete_description": "Are you sure you want to delete this measurement point?",
       "columns": {
         "point": "Point",
-        "reference": "Reference T°",
-        "value": "Measured T°",
+        "reference": "Reference TÂ°",
+        "value": "Measured TÂ°",
         "incertitude": "Uncertainty"
       }
     },
@@ -1417,7 +1417,121 @@
       "process_result": "Success: {success} ? Failed: {failed}"
     }
   },
-  "standardsPage": {
+  "sensorCalibrationImport": {
+    "page": {
+      "title": "Calibration import",
+      "description": "Import XML files to create calibrations",
+      "back_to_admin": "Back to administration"
+    },
+    "actions": {
+      "import": "Import files",
+      "save_to_db": "Insert into database",
+      "saving_to_db": "Inserting into database...",
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "apply": "Apply"
+    },
+    "table": {
+      "title": "Calibration files",
+      "columns": {
+        "file": "File",
+        "sensor": "Sensor",
+        "date": "Date",
+        "date_validity": "Validity date",
+        "operator": "Operator",
+        "unit": "Unit",
+        "uncertainty": "Uncertainty",
+        "actions": "Actions"
+      },
+      "empty": "Please import one or more calibration file(s)..."
+    },
+    "modal": {
+      "title": "Import a calibration file",
+      "description": "Upload one or more XML files to create calibrations."
+    },
+    "edit": {
+      "title": "Edit data",
+      "operator": "Operator",
+      "unit": "Unit"
+    },
+    "toast": {
+      "save_success": "{count} row(s) inserted into database.",
+      "save_error": "Failed to insert into database.",
+      "save_skipped": "{count} row(s) skipped because already existing.",
+      "no_pending": "No row to insert."
+    }
+  },
+  "sensorCalibrationUpload": {
+    "drop_browse_zone": "Drop files here or click to add",
+    "supported": "Supported format: XML",
+    "sections": {
+      "uploading": "Uploading",
+      "finished": "Finished",
+      "failed": "Failed"
+    },
+    "remove": "Remove",
+    "errors": {
+      "invalid_type": "Invalid file type (XML only).",
+      "upload_failed": "Upload failed",
+      "label": "Error"
+    },
+    "placeholders": {
+      "uploading": "No file uploading.",
+      "finished": "No file finished.",
+      "failed": "No file failed."
+    }
+  },
+  "sensorCalibrationStepper": {
+    "step_label": "Step {step}",
+    "steps": {
+      "upload": "Upload files",
+      "review": "Review data",
+      "create": "Create sensors"
+    },
+    "status": {
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "pending": "Pending"
+    },
+    "actions": {
+      "previous": "Previous step",
+      "next": "Next step",
+      "next_disabled_no_file": "Please upload at least 1 file to continue.",
+      "process": "Process",
+      "processing": "Processing...",
+      "finish": "Close"
+    },
+    "placeholders": {
+      "review": "Review step coming soon.",
+      "create": "Creation step coming soon."
+    },
+    "validation": {
+      "description": "XML format and encoding validation.",
+      "empty": "No file to validate.",
+      "encoding": "Detected encoding: {encoding}",
+      "status": {
+        "ok": "Valid format",
+        "fixed": "Encoding corrected",
+        "error": "Format error"
+      },
+      "errors": {
+        "invalid_xml": "Invalid or malformed XML.",
+        "invalid_root": "Unexpected XML root (expected ETALONNAGE).",
+        "unreadable": "Unable to read file."
+      }
+    },
+    "create": {
+      "summary_title": "Summary",
+      "summary_total": "Imported files: {count}",
+      "summary_valid": "Valid files: {count}",
+      "summary_fixed": "Fixed encodings: {count}",
+      "summary_error": "Files in error: {count}",
+      "processing": "Processing files... ({processed}/{total})",
+      "process_done": "Processing finished. {count} file(s) imported.",
+      "process_errors": "{count} file(s) could not be imported.",
+      "process_result": "Success: {success} Failed: {failed}"
+    }
+  },  "standardsPage": {
     "title": "Standard management",
     "count": "{count, plural, one {# standard} other {# standards}}",
     "actions": {
@@ -2886,5 +3000,6 @@
     "offline": "Offline"
   }
 }
+
 
 

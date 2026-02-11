@@ -28,9 +28,10 @@ type SensorsTableProps = {
   isLoading: boolean;
   selectedSensorId: number | null;
   onSelectSensor: (sensorId: number) => void;
+  onEditSensor?: (sensorId: number) => void;
 };
 
-export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSensor }: SensorsTableProps) {
+export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSensor, onEditSensor }: SensorsTableProps) {
   const t = useTranslations('sensorsPage');
 
   const statusThemes: Record<string, StatusTheme> = {
@@ -144,6 +145,7 @@ export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSen
       emptyMessage={t('table.empty')}
       selectedRowId={selectedSensorId ?? undefined}
       onRowClick={(row: SensorRow) => onSelectSensor(row.Id_Sonde)}
+      onRowDoubleClick={(row: SensorRow) => onEditSensor?.(row.Id_Sonde)}
       headerClassName="!bg-sidebar !text-sidebar-foreground"
       headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
       tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
@@ -163,4 +165,5 @@ export function toSensorRows(sensors: Sensor[]): SensorRow[] {
     Lieu: s.Lieu,
   }));
 }
+
 

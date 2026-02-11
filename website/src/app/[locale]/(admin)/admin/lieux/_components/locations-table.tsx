@@ -40,6 +40,7 @@ type LocationsTableProps = {
   isLoading: boolean;
   selectedLocationId?: number;
   onSelectLocation: (location: LocationRow) => void;
+  onEditLocation?: (location: LocationRow) => void;
 };
 
 export function LocationsTable({
@@ -47,6 +48,7 @@ export function LocationsTable({
   isLoading,
   selectedLocationId,
   onSelectLocation,
+  onEditLocation,
 }: LocationsTableProps) {
   const t = useTranslations('locationsTable');
   const typeLabels = {
@@ -171,6 +173,7 @@ export function LocationsTable({
       isLoading={isLoading}
       emptyMessage={t('empty')}
       onRowClick={(row) => onSelectLocation(row)}
+      onRowDoubleClick={(row) => onEditLocation?.(row)}
       selectedRowId={selectedLocationId}
       headerClassName="!bg-sidebar !text-sidebar-foreground"
       headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
@@ -178,4 +181,5 @@ export function LocationsTable({
     />
   );
 }
+
 

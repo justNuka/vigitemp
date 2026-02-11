@@ -1,21 +1,17 @@
-const DEFAULT_TIMEZONE = 'Europe/Paris';
-const DEFAULT_LOCALE = 'fr-FR';
+import { formatDbDateTime } from "@/lib/date-display";
+
+const DEFAULT_TIMEZONE = "Europe/Paris";
+const DEFAULT_LOCALE = "fr-FR";
 
 export function formatDateTimeFr(
   date: Date | null,
   timezone: string = DEFAULT_TIMEZONE,
   localeTag: string = DEFAULT_LOCALE,
 ) {
-  if (!date) return '-';
-  return new Date(date).toLocaleString(localeTag, {
-    timeZone: timezone,
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
+  void timezone;
+  void localeTag;
+  if (!date) return "-";
+  return formatDbDateTime(date);
 }
 
 export function formatDateFr(
@@ -23,12 +19,8 @@ export function formatDateFr(
   timezone: string = DEFAULT_TIMEZONE,
   localeTag: string = DEFAULT_LOCALE,
 ) {
-  if (!date) return '-';
-  return new Date(date).toLocaleDateString(localeTag, {
-    timeZone: timezone,
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
+  void timezone;
+  void localeTag;
+  if (!date) return "-";
+  return formatDbDateTime(date, { dateOnly: true });
 }
-

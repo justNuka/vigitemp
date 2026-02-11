@@ -10,9 +10,10 @@ type GroupsTableProps = {
   isLoading: boolean;
   selectedGroupId: number | null;
   onSelectGroup: (group: Group) => void;
+  onEditGroup?: (group: Group) => void;
 };
 
-export function GroupsTable({ groups, isLoading, selectedGroupId, onSelectGroup }: GroupsTableProps) {
+export function GroupsTable({ groups, isLoading, selectedGroupId, onSelectGroup, onEditGroup }: GroupsTableProps) {
   const t = useTranslations('groupsPage');
   const columns: ColumnDef<Group>[] = [
     {
@@ -51,9 +52,11 @@ export function GroupsTable({ groups, isLoading, selectedGroupId, onSelectGroup 
       maxHeight="calc(100dvh - 25rem)"
       selectedRowId={selectedGroupId ?? undefined}
       onRowClick={(row: Group) => onSelectGroup(row)}
+      onRowDoubleClick={(row: Group) => onEditGroup?.(row)}
       headerClassName="!bg-sidebar !text-sidebar-foreground"
       headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
       tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
     />
   );
 }
+

@@ -1,9 +1,10 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withLogging } from "@/lib/api-logger"
 import { z } from "zod"
 import { apiError, apiOk } from "@/lib/api-response"
+import { extractAddressFromSerial, isGsoType } from "@/lib/sensor-naming"
 
 const createLieuSchema = z.object({
   Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(50),
@@ -98,12 +99,16 @@ export const POST = withLogging(async (req: NextRequest) => {
     const sondeNumeroSerie = validated.Sonde_Numero_Serie?.trim() || null
 
     let estLieuGso = false
+    let adresseSondeLieu: string | null = null
     if (sondeNumeroSerie) {
       const gsoInfo = await prisma.t_sonde.findUnique({
         where: { Sonde_Numero_Serie: sondeNumeroSerie },
-        select: { Est_Sonde_GSO: true },
+        select: { Est_Sonde_GSO: true, Adresse_Sonde: true },
       })
-      estLieuGso = gsoInfo?.Est_Sonde_GSO ?? sondeNumeroSerie.toUpperCase().startsWith("GSO")
+      estLieuGso = gsoInfo?.Est_Sonde_GSO ?? isGsoType(sondeNumeroSerie)
+      if (estLieuGso) {
+        adresseSondeLieu = gsoInfo?.Adresse_Sonde ?? extractAddressFromSerial(sondeNumeroSerie)
+      }
     }
 
     const group1Id = groupIds[0] ?? validated.Id_Groupe1 ?? null
@@ -140,6 +145,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         Retard_Alarme_Bas: validated.Retard_Alarme_Bas,
         Est_Archive: false,
         Est_Lieu_GSO: estLieuGso,
+        Adresse_Sonde: adresseSondeLieu,
         Lieu_Etat: lieuEtat,
         ...(validated.Id_Site
           ? {
@@ -210,3 +216,4 @@ export const POST = withLogging(async (req: NextRequest) => {
     return apiError(500, "lieu_create_failed", "Erreur lors de la création du lieu")
   }
 })
+

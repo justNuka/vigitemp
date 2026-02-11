@@ -71,6 +71,10 @@ export function CommentsTableCard({
           searchField={["text"]}
           selectedRowId={selectedCommentId}
           onRowClick={(row: AuditComment) => onSelectCommentId(row.id)}
+          onRowDoubleClick={(row: AuditComment) => {
+            onSelectCommentId(row.id)
+            onOpenEdit()
+          }}
           headerClassName="!bg-sidebar/90 !text-sidebar-foreground backdrop-blur supports-backdrop-filter:!bg-sidebar/80"
           headerCellClassName="!bg-sidebar/90 !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar/80 backdrop-blur supports-backdrop-filter:!bg-sidebar/80"
           tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
@@ -79,3 +83,4 @@ export function CommentsTableCard({
     </Card>
   )
 }
+

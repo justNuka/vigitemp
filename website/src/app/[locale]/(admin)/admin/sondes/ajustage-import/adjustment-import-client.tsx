@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -9,10 +9,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import StepperFileUpload, {
   type AdjustmentImportResult,
   type AdjustmentInsertData,
 } from "@/components/stepper-file-upload";
+import { useModules } from "@/hooks/useModules";
+import { useSensors } from "@/hooks/useSensors";
 
 type AdjustmentImportRow = {
   id: string;
@@ -29,6 +39,16 @@ type AdjustmentImportRow = {
   persisted: boolean;
 };
 
+type ModuleAssignment = {
+  status: "existing_assigned" | "existing_unassigned" | "to_create";
+  moduleLabel: string;
+};
+
+const EXISTING_ASSIGNED_TOOLTIP =
+  "Module déjà affecté à cette sonde. Pour affecter cette sonde à un nouveau module, rendez vous sur la page de gestion des sondes et modifier celle-ci.";
+const CREATED_ON_IMPORT_TOOLTIP =
+  "Sonde créée durant l'importation de l'ajustage. Module sélectionné dans le menu déroulant affecté à celle-ci. Pour en affecter un autre, rendez vous sur la page de gestion des sondes.";
+
 export function AdjustmentImportClient() {
   const t = useTranslations("sensorAdjustmentImport");
   const [open, setOpen] = useState(false);
@@ -38,6 +58,32 @@ export function AdjustmentImportClient() {
   const [editRowId, setEditRowId] = useState<string | null>(null);
   const [editOperator, setEditOperator] = useState("");
   const [editUnit, setEditUnit] = useState("");
+  const [selectedModuleId, setSelectedModuleId] = useState<string>("");
+
+  const { data: modules = [] } = useModules(true);
+  const { data: sensors = [] } = useSensors();
+
+  const moduleById = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const module of modules) {
+      const id = module.Id_Module;
+      const label = module.Module_Numero_Serie || module.Libelle_Type_Module || `#${id}`;
+      const port = module.Port_Serie ? ` (${module.Port_Serie})` : "";
+      map.set(id, `${label}${port}`);
+    }
+    return map;
+  }, [modules]);
+
+  const sensorBySerial = useMemo(() => {
+    const map = new Map<string, (typeof sensors)[number]>();
+    for (const sensor of sensors) {
+      const serial = sensor.Sonde_Numero_Serie?.trim();
+      if (serial) map.set(serial, sensor);
+    }
+    return map;
+  }, [sensors]);
+
+  const selectedModuleNumericId = selectedModuleId ? Number(selectedModuleId) : null;
 
   const handleUploadResult = (result: AdjustmentImportResult) => {
     const dateText = result.dateText ?? (typeof result.date === "string" ? result.date : null);
@@ -67,6 +113,53 @@ export function AdjustmentImportClient() {
     if (value === null || Number.isNaN(value)) return "-";
     return value.toString();
   };
+
+  const getModuleAssignment = (row: AdjustmentImportRow): ModuleAssignment => {
+    const serial = row.sensor?.trim();
+    if (!serial) return { status: "to_create", moduleLabel: "-" };
+
+    const existing = sensorBySerial.get(serial);
+    if (existing) {
+      if (existing.Id_Module) {
+        return {
+          status: "existing_assigned",
+          moduleLabel: moduleById.get(existing.Id_Module) ?? `#${existing.Id_Module}`,
+        };
+      }
+      return { status: "existing_unassigned", moduleLabel: "Aucun module" };
+    }
+
+    const selectedLabel = selectedModuleNumericId
+      ? (moduleById.get(selectedModuleNumericId) ?? `#${selectedModuleNumericId}`)
+      : "Module non sélectionné";
+
+    return {
+      status: "to_create",
+      moduleLabel: selectedLabel,
+    };
+  };
+
+  const summaryCounts = useMemo(() => {
+    const pending = rows.filter((row) => !row.persisted);
+    let createdSensors = 0;
+    let existingAssigned = 0;
+
+    const seenSerials = new Set<string>();
+    for (const row of pending) {
+      const serial = row.sensor?.trim();
+      if (!serial || seenSerials.has(serial)) continue;
+      seenSerials.add(serial);
+
+      const existing = sensorBySerial.get(serial);
+      if (!existing) {
+        createdSensors += 1;
+      } else if (existing.Id_Module) {
+        existingAssigned += 1;
+      }
+    }
+
+    return { createdSensors, existingAssigned };
+  }, [rows, sensorBySerial]);
 
   const openEdit = (row: AdjustmentImportRow) => {
     setEditRowId(row.id);
@@ -108,12 +201,17 @@ export function AdjustmentImportClient() {
       toast.error(t("toast.no_pending"));
       return;
     }
+    if (!selectedModuleNumericId) {
+      toast.error("Veuillez sélectionner un module.");
+      return;
+    }
 
     const postBulk = async (confirmOverwrite: boolean) => {
       const response = await fetch("/api/sondes/ajustages/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          moduleId: selectedModuleNumericId,
           rows: pendingRows.map((row) => ({
             id: row.id,
             file: row.file,
@@ -163,6 +261,8 @@ export function AdjustmentImportClient() {
       const skippedCount: number = payload?.data?.skipped ?? 0;
       const overwrittenAdjustments: number = payload?.data?.overwrittenAdjustments ?? 0;
       const clearedOffsets: number = payload?.data?.clearedOffsets ?? 0;
+      const createdSensorsFromAdjustment: number = payload?.data?.createdSensorsFromAdjustment ?? 0;
+      const existingSensorsWithModule: number = payload?.data?.existingSensorsWithModule ?? 0;
 
       if (insertedCount > 0) {
         toast.success(t("toast.save_success", { count: insertedCount }));
@@ -175,6 +275,12 @@ export function AdjustmentImportClient() {
       }
       if (clearedOffsets > 0) {
         toast.success(t("toast.offsets_cleared", { count: clearedOffsets }));
+      }
+      if (createdSensorsFromAdjustment > 0) {
+        toast.success(`Sondes créées suite a l'ajustage: ${createdSensorsFromAdjustment}`);
+      }
+      if (existingSensorsWithModule > 0) {
+        toast.success(`Sondes existantes deja affectées a un module: ${existingSensorsWithModule}`);
       }
 
       setRows([]);
@@ -195,6 +301,44 @@ export function AdjustmentImportClient() {
       accessorKey: "file",
       header: t("table.columns.file"),
       cell: ({ row }) => <span className="font-medium">{row.getValue("file") || "-"}</span>,
+    },
+    {
+      id: "module_assignment",
+      header: "Module affecté",
+      cell: ({ row }) => {
+        const assignment = getModuleAssignment(row.original);
+        if (assignment.status === "existing_assigned") {
+          return (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
+                    {assignment.moduleLabel}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>{EXISTING_ASSIGNED_TOOLTIP}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+        }
+
+        if (assignment.status === "to_create") {
+          return (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex rounded-md bg-sky-100 px-2 py-1 text-xs font-medium text-sky-700">
+                    {assignment.moduleLabel}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>{CREATED_ON_IMPORT_TOOLTIP}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+        }
+
+        return <span className="text-muted-foreground">{assignment.moduleLabel}</span>;
+      },
     },
     {
       accessorKey: "sensor",
@@ -258,9 +402,25 @@ export function AdjustmentImportClient() {
         <CardHeader className="pb-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle>{t("table.title")}</CardTitle>
-            <Button size="sm" className="gap-2" onClick={() => setOpen(true)}>
-              {t("actions.import")}
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="w-[260px]">
+                <Select value={selectedModuleId} onValueChange={setSelectedModuleId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un module" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {modules.map((module) => (
+                      <SelectItem key={module.Id_Module} value={String(module.Id_Module)}>
+                        {module.Module_Numero_Serie || module.Libelle_Type_Module || `#${module.Id_Module}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button size="sm" className="gap-2" onClick={() => setOpen(true)}>
+                {t("actions.import")}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4 p-2 md:p-4 xl:p-4">
@@ -275,11 +435,16 @@ export function AdjustmentImportClient() {
             tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
           />
 
+          <div className="grid gap-1 rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+            <div>Sondes créées suite a l'ajustage : {summaryCounts.createdSensors}</div>
+            <div>Sondes existantes déjà affectées a un module : {summaryCounts.existingAssigned}</div>
+          </div>
+
           <div className="flex justify-end">
             <Button
               className="gap-2"
               onClick={handleSaveToDb}
-              disabled={pendingRows.length === 0 || isSaving}
+              disabled={pendingRows.length === 0 || isSaving || !selectedModuleNumericId}
             >
               {isSaving ? t("actions.saving_to_db") : t("actions.save_to_db")}
             </Button>
@@ -323,4 +488,3 @@ export function AdjustmentImportClient() {
     </div>
   );
 }
-

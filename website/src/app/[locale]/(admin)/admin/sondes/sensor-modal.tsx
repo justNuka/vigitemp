@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -58,7 +58,7 @@ export function SensorModal({ open, onOpenChange, sensor, isEditing }: SensorMod
 
   const sensorSchema = z.object({
     sondeType: z.string().min(1, t('validation.type_required')),
-    serieNum: z.string().regex(/^\d+(?:-?[TH])?$/i, t('validation.serial_invalid')),
+    serieNum: z.string().regex(/^(?=.*\d)[A-Z0-9-]+$/i, t('validation.serial_invalid')),
     moduleId: z.string().optional(),
     sondeOffset: z.number({ message: t('validation.offset_invalid') }).optional(),
   });
@@ -84,7 +84,7 @@ export function SensorModal({ open, onOpenChange, sensor, isEditing }: SensorMod
 
     if (isEdit && sensor) {
       form.reset({
-        sondeType: sensor.Sonde_Numero_Serie?.substring(0, 2) || "",
+        sondeType: sensor.Sonde_Numero_Serie?.split("-")[0] || "",
         serieNum: sensor.Sonde_Numero_Serie || "",
         moduleId: sensor.Id_Module?.toString() || "",
         sondeOffset: sensor.Sonde_Offset ?? 0,
@@ -184,12 +184,8 @@ export function SensorModal({ open, onOpenChange, sensor, isEditing }: SensorMod
                       value={field.value}
                       onChange={(e) => {
                         const normalized = e.target.value.toUpperCase();
-                        const cleaned = normalized.replace(/[^0-9TH]/g, "");
-                        const suffix = cleaned.endsWith("T") ? "T" : cleaned.endsWith("H") ? "H" : "";
-                        const digits = suffix
-                          ? cleaned.slice(0, -1).replace(/[^0-9]/g, "")
-                          : cleaned.replace(/[^0-9]/g, "");
-                        field.onChange(suffix ? `${digits}-${suffix}` : digits);
+                        const cleaned = normalized.replace(/[^A-Z0-9-]/g, "").replace(/-{2,}/g, "-");
+                        field.onChange(cleaned);
                       }}
                       readOnly={isEdit}
                       className={isEdit ? "bg-muted opacity-50" : ""}
@@ -273,4 +269,5 @@ export function SensorModal({ open, onOpenChange, sensor, isEditing }: SensorMod
     </Dialog>
   );
 }
+
 

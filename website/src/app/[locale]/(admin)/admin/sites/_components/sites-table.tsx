@@ -10,9 +10,10 @@ type SitesTableProps = {
   isLoading: boolean;
   selectedSiteId?: number;
   onSelectSite: (site: SiteAdmin) => void;
+  onEditSite?: (site: SiteAdmin) => void;
 };
 
-export function SitesTable({ sites, isLoading, selectedSiteId, onSelectSite }: SitesTableProps) {
+export function SitesTable({ sites, isLoading, selectedSiteId, onSelectSite, onEditSite }: SitesTableProps) {
   const t = useTranslations('sitesTable');
 
   const columns: ColumnDef<SiteAdmin>[] = [
@@ -53,6 +54,7 @@ export function SitesTable({ sites, isLoading, selectedSiteId, onSelectSite }: S
       maxHeight="calc(100dvh - 25rem)"
       emptyMessage={t('empty')}
       onRowClick={(row) => onSelectSite(row)}
+      onRowDoubleClick={(row) => onEditSite?.(row)}
       selectedRowId={selectedSiteId}
       headerClassName="!bg-sidebar !text-sidebar-foreground"
       headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
@@ -60,3 +62,4 @@ export function SitesTable({ sites, isLoading, selectedSiteId, onSelectSite }: S
     />
   );
 }
+

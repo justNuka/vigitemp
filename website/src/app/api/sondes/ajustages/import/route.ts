@@ -1,8 +1,9 @@
-import { NextRequest } from "next/server";
+﻿import { NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { apiError, apiOk } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
 import { parseAdjustmentXml } from "@/lib/adjustment-import";
+import { expandRelatedGsoSerials, extractAddressFromSerial, isGsoType } from "@/lib/sensor-naming";
 
 const isXmlFile = (file: File) => {
   const name = file.name.toLowerCase();
@@ -69,6 +70,21 @@ export const POST = async (req: NextRequest) => {
 
     const xml = await decodeXmlFile(file);
     const parsed = parseAdjustmentXml(xml, file.name);
+
+    const serial = parsed.data.Sonde_Numero_Serie?.trim() ?? null;
+    if (serial && isGsoType(serial)) {
+      const relatedSerials = expandRelatedGsoSerials(serial);
+      await prisma.t_sonde.createMany({
+        data: relatedSerials.map((value) => ({
+          Sonde_Numero_Serie: value,
+          Adresse_Sonde: extractAddressFromSerial(value),
+          Est_Sonde_GSO: true,
+          Surveillance_Etat: "D",
+          Sonde_Offset: 0,
+        })),
+        skipDuplicates: true,
+      });
+    }
 
     const created = await prisma.t_ajustage.create({
       data: parsed.data,

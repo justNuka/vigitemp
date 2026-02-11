@@ -157,6 +157,10 @@ export function ProfilesTable({
             const profile = profiles.find((p) => p.id === (row as ProfileRow).id);
             if (profile) onSelectProfile(profile);
           }}
+          onRowDoubleClick={(row) => {
+            const profile = profiles.find((p) => p.id === (row as ProfileRow).id);
+            if (profile) onEdit(profile);
+          }}
           maxHeight="calc(100dvh - 25rem)"
           headerClassName="!bg-sidebar !text-sidebar-foreground"
           headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
@@ -166,3 +170,5 @@ export function ProfilesTable({
     </Card>
   );
 }
+
+

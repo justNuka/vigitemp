@@ -161,6 +161,13 @@ export function StandardsClient() {
             onRowClick={(row: StandardRow) => {
               setSelectedStandard(standards?.find((e) => e.Id_Etalon === row.Id_Etalon) || null)
             }}
+            onRowDoubleClick={(row: StandardRow) => {
+              const standard = standards?.find((e) => e.Id_Etalon === row.Id_Etalon) || null
+              if (!standard) return
+              setSelectedStandard(standard)
+              setIsEditing(true)
+              setIsModalOpen(true)
+            }}
             maxHeight="60vh"
             headerClassName="!bg-sidebar !text-sidebar-foreground"
             headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
@@ -186,3 +193,4 @@ export function StandardsClient() {
     </main>
   )
 }
+

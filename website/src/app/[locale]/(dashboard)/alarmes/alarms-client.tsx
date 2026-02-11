@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { EmptyState } from "@/components/empty-state";
@@ -51,7 +51,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import MonitoringDetailsModal from "@/components/monitoring-details-modal";
-import { useAppTimezone } from "@/components/timezone-provider";
+import { formatDbDateTime } from "@/lib/date-display";
 
 type AlarmStatus = "active" | "acknowledged" | "resolved";
 
@@ -81,26 +81,12 @@ interface AlarmRow {
 export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Props) {
   const t = useTranslations("alarmsPage");
   const locale = useLocale();
-  const localeTag = locale === "fr" ? "fr-FR" : locale;
-  const timezone = useAppTimezone();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isRefreshing, startTransition] = useTransition();
   const [selectedAlarm, setSelectedAlarm] = useState<AlarmWithDetails | null>(null);
   const [localAlarms, setLocalAlarms] = useState<AlarmWithDetails[]>(alarms);
-  const formatTzDateTime = (value: string | Date) => {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "-";
-    return date.toLocaleString(localeTag, {
-      timeZone: timezone,
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
+  const formatTzDateTime = (value: string | Date) => formatDbDateTime(value);
   const [commentOptions, setCommentOptions] = useState<
     { id: number; type: string | null; text: string }[]
   >([]);

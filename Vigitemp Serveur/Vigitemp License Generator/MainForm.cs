@@ -29,6 +29,8 @@ namespace Vigitemp_License_Generator
 
         private readonly TextBox _txtCustomerId;
         private readonly ComboBox _cmbEdition;
+        private readonly ComboBox _cmbPackSensorLimit;
+        private readonly TextBox _txtPackSensorLimitManual;
         private readonly ComboBox _cmbConcurrent;
         private readonly CheckedListBox _clbOptions;
         private readonly TextBox _txtInstancePublicKey;
@@ -124,15 +126,37 @@ namespace Vigitemp_License_Generator
             );
 
             _cmbEdition = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240 };
-            _cmbEdition.Items.AddRange(new object[] { "one", "standard", "expert" });
+            _cmbEdition.Items.AddRange(new object[] { "pack", "one", "standard", "expert" });
             _cmbEdition.SelectedIndex = 0;
             AddRowWithInfo(
                 inputTable,
                 "Type licence",
                 _cmbEdition,
-                "One : fonctions essentielles de surveillance.\nStandard : Ajout des fonctions de m√©trologie.\nExpert : environnement complet MC2."
+                "Pack : licence de base avec limite de sondes.\nOne : fonctions essentielles + offset/ajustage.\nStandard : ajout mÈtrologie avancÈe.\nExpert : environnement complet MC2."
             );
 
+
+            var packLimitPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true };
+            _cmbPackSensorLimit = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 120 };
+            _cmbPackSensorLimit.Items.AddRange(new object[] { "5", "10", "15", "20", "25", "manuel" });
+            _cmbPackSensorLimit.SelectedIndex = 0;
+            _txtPackSensorLimitManual = new TextBox { Width = 100, Enabled = false };
+            SetCueBanner(_txtPackSensorLimitManual, "ex: 12");
+            _cmbPackSensorLimit.SelectedIndexChanged += (s, e) =>
+            {
+                _txtPackSensorLimitManual.Enabled =
+                    string.Equals(_cmbPackSensorLimit.SelectedItem?.ToString(), "manuel", StringComparison.OrdinalIgnoreCase);
+            };
+            _cmbEdition.SelectedIndexChanged += (s, e) => UpdatePackLimitControls();
+            packLimitPanel.Controls.Add(_cmbPackSensorLimit);
+            packLimitPanel.Controls.Add(_txtPackSensorLimitManual);
+            AddRowWithInfo(
+                inputTable,
+                "Limite sondes (Pack)",
+                packLimitPanel,
+                "Applicable uniquement ‡ la licence Pack.\nValeurs rapides : 5, 10, 15, 20, 25 ou saisie manuelle (>0)."
+            );
+            UpdatePackLimitControls();
             _cmbConcurrent = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240 };
             _cmbConcurrent.Items.AddRange(new object[] { "5", "10", "25", "illimit√©" });
             _cmbConcurrent.SelectedIndex = 0;
@@ -539,8 +563,31 @@ namespace Vigitemp_License_Generator
                 return;
             }
 
-            var edition = _cmbEdition.SelectedItem?.ToString() ?? "one";
+            var edition = (_cmbEdition.SelectedItem?.ToString() ?? "one").Trim().ToLowerInvariant();
             var concurrent = _cmbConcurrent.SelectedItem?.ToString() ?? "5";
+
+            int? maxSensors = null;
+            if (string.Equals(edition, "pack", StringComparison.OrdinalIgnoreCase))
+            {
+                var selectedPackLimit = (_cmbPackSensorLimit.SelectedItem?.ToString() ?? "").Trim().ToLowerInvariant();
+                string limitRaw;
+                if (selectedPackLimit == "manuel")
+                {
+                    limitRaw = _txtPackSensorLimitManual.Text.Trim();
+                }
+                else
+                {
+                    limitRaw = selectedPackLimit;
+                }
+
+                if (!int.TryParse(limitRaw, out var parsedLimit) || parsedLimit <= 0)
+                {
+                    MessageBox.Show("Limite de sondes Pack invalide (entier > 0 requis).", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                maxSensors = parsedLimit;
+            }
             var options = new List<string>();
             foreach (var item in _clbOptions.CheckedItems)
             {
@@ -579,6 +626,11 @@ namespace Vigitemp_License_Generator
                 { "options", options },
                 { "issuedAt", DateTime.UtcNow.ToString("o") },
             };
+
+            if (maxSensors.HasValue)
+            {
+                payload["maxSensors"] = maxSensors.Value;
+            }
 
             payload["agentSecret"] = agentSecret;
 
@@ -637,6 +689,14 @@ namespace Vigitemp_License_Generator
             _txtLicenseToken.Text = $"{signingInput}.{signaturePart}";
         }
 
+
+        private void UpdatePackLimitControls()
+        {
+            var isPack = string.Equals(_cmbEdition.SelectedItem?.ToString(), "pack", StringComparison.OrdinalIgnoreCase);
+            _cmbPackSensorLimit.Enabled = isPack;
+            _txtPackSensorLimitManual.Enabled =
+                isPack && string.Equals(_cmbPackSensorLimit.SelectedItem?.ToString(), "manuel", StringComparison.OrdinalIgnoreCase);
+        }
         private static byte[] SignEd25519(AsymmetricKeyParameter privateKey, byte[] data)
         {
             var signer = new Ed25519Signer();
@@ -968,3 +1028,5 @@ namespace Vigitemp_License_Generator
         }
     }
 }
+
+

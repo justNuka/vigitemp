@@ -6,6 +6,7 @@
 * Tolérance
 * Retard d’alarme
 * Notification Mail
+* Nombre de sondes limités (limites à definir dans la licence) -> 5, 10, 15, 20, 25, manuel
 
 👉 **Licence de base**, centrée sur la surveillance simple + alertes mail.
 

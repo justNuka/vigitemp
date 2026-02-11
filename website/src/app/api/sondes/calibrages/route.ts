@@ -1,4 +1,4 @@
-﻿import { NextRequest } from "next/server"
+import { NextRequest } from "next/server"
 import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { apiError, apiOk } from "@/lib/api-response"
@@ -9,8 +9,9 @@ export const GET = async (req: NextRequest) => {
 
   try {
     const searchParams = req.nextUrl.searchParams
-    const sondeSerie = searchParams.get("sonde")
-    if (!sondeSerie) return apiError(400, "missing_param", "Parametre 'sonde' requis")
+    // Backward compatible: support both ?sonde= and legacy ?serie=
+    const sondeSerie = searchParams.get("sonde") ?? searchParams.get("serie")
+    if (!sondeSerie) return apiError(400, "missing_param", "Parametre 'sonde' ou 'serie' requis")
 
     const ajustages = await prisma.t_ajustage.findMany({
       where: { Sonde_Numero_Serie: sondeSerie },

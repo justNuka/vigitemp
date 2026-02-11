@@ -3,6 +3,7 @@ import { prisma, prismaMesure } from "@/lib/prisma"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { getCachedMeasurements, setCachedMeasurements } from "@/lib/measurement-cache"
 import { apiError, apiOk } from "@/lib/api-response"
+import { formatDbDateTime } from "@/lib/date-display"
 
 export const GET = withAuthLogging(
   async (req: NextRequest, _ctx: any, { params }: { params: Promise<{ idLieu: string }> }) => {
@@ -144,18 +145,8 @@ export const GET = withAuthLogging(
       const formattedMeasurements = chronologicalMeasurements.map((m: any) => {
         const dateHeure = m.Date_Heure_Mesure ? new Date(m.Date_Heure_Mesure) : new Date()
 
-        const dateDisplay = dateHeure.toLocaleString("fr-FR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-
-        const dateXaxis = dateHeure.toLocaleString("fr-FR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
+        const dateDisplay = formatDbDateTime(dateHeure, { withSeconds: false })
+        const dateXaxis = formatDbDateTime(dateHeure, { timeOnly: true, withSeconds: false })
 
         return {
           id: (source === "mesures" ? m.Id_Mesure : m.Id_Graphique)?.toString() || "",

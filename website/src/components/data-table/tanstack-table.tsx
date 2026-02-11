@@ -49,6 +49,7 @@ export interface TanStackTableProps<TData> {
   isLoading?: boolean;
   emptyMessage?: string;
   onRowClick?: (row: TData) => void;
+  onRowDoubleClick?: (row: TData) => void;
   selectedRowId?: number | string | null;
   /**
    * Max-height du conteneur scrollable (CSS length, ex: "16rem", "384px", "60vh").
@@ -105,6 +106,7 @@ export function TanStackTable<TData extends Record<string, any>>({
   searchPlaceholder,
   emptyMessage,
   onRowClick,
+  onRowDoubleClick,
   selectedRowId,
   maxHeight,
   showSearch = true,
@@ -539,6 +541,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                   <TableRow
                     key={`row-${rowIndex}-${row.id}`}
                     onClick={() => onRowClick?.(row.original)}
+                    onDoubleClick={() => onRowDoubleClick?.(row.original)}
                     onKeyDown={(e) => {
                       if (!onRowClick) return;
                       if (e.key === 'Enter' || e.key === ' ') {
@@ -550,6 +553,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                     aria-selected={isSelected || undefined}
                     className={cn(
                       onRowClick && 'cursor-pointer hover:bg-muted/50',
+                      onRowDoubleClick && 'cursor-pointer',
                       isSelected &&
                         'bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-medium [&_td:first-child]:border-l-4 [&_td:first-child]:border-l-primary',
                       onRowClick && 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
@@ -649,3 +653,4 @@ export function TanStackTable<TData extends Record<string, any>>({
     </div>
   );
 }
+

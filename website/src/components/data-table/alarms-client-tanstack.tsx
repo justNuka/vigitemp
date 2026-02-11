@@ -8,10 +8,11 @@ import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { ArrowDown, ArrowUp, RefreshCw, WifiOff } from "lucide-react";
 import { useAppTimezone } from "@/components/timezone-provider";
 import { cn } from "@/lib/utils";
+import { formatDbDateTime } from "@/lib/date-display";
 import { alarmsApi } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -49,27 +50,14 @@ const getAlarmStatus = (
 export function AlarmsClientTanStack() {
   const t = useTranslations("alarmsTanstack");
   const tButtons = useTranslations("buttons");
-  const locale = useLocale();
-  const timezone = useAppTimezone();
   const queryClient = useQueryClient();
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 });
   const [isRefreshing, startRefresh] = useTransition();
   const page = pagination.pageIndex + 1;
   const limit = pagination.pageSize;
-
-  const localeTag = locale.toLowerCase().startsWith("fr") ? "fr-FR" : locale;
-
-  const formatDateTime = (date: string | null) => {
+const formatDateTime = (date: string | null) => {
     if (!date) return t("date.na");
-    return new Date(date).toLocaleString(localeTag, {
-      timeZone: timezone,
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
+    return formatDbDateTime(date);
   };
 
   const acknowledgeMutation = useMutation({
@@ -235,7 +223,7 @@ export function AlarmsClientTanStack() {
         },
       },
     ],
-    [acknowledgeMutation, t, tButtons, localeTag, timezone]
+    [acknowledgeMutation, t, tButtons]
   );
 
   const { data, isLoading, isFetching } = useAlarms({ page, limit });

@@ -109,6 +109,11 @@ export function GroupsClient() {
             isLoading={isLoading}
             selectedGroupId={selectedGroup?.Id_Groupe ?? null}
             onSelectGroup={setSelectedGroup}
+            onEditGroup={(group) => {
+              setSelectedGroup(group);
+              setIsEditing(true);
+              setModalOpen(true);
+            }}
           />
         </CardContent>
       </Card>
@@ -122,3 +127,4 @@ export function GroupsClient() {
     </main>
   );
 }
+

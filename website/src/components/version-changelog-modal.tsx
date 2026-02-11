@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog"
 import { useTranslations } from "next-intl"
 
-const RELEASE_VERSION = "0.2.9"
+const RELEASE_VERSION = "0.3.0"
 const COOKIE_NAME = "vigitemp_release_seen"
 
 type ChangelogItem = {
@@ -96,6 +96,10 @@ export function VersionChangelogModal() {
           t("sections.upgrade.items.0"),
           t("sections.upgrade.items.1"),
         ],
+      },
+      {
+        title: t("sections.services.title"),
+        details: [t("sections.services.items.0")],
       },
     ],
     [t]

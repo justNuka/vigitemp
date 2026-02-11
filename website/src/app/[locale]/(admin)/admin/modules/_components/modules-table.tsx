@@ -19,6 +19,7 @@ type ModulesTableProps = {
   isLoading: boolean;
   selectedModuleId: number | null;
   onSelectModule: (moduleId: number) => void;
+  onEditModule?: (moduleId: number) => void;
 };
 
 export function ModulesTable({
@@ -26,6 +27,7 @@ export function ModulesTable({
   isLoading,
   selectedModuleId,
   onSelectModule,
+  onEditModule,
 }: ModulesTableProps) {
   const t = useTranslations('modulesTable');
   const columns: ColumnDef<ModuleRow>[] = [
@@ -74,6 +76,7 @@ export function ModulesTable({
       emptyMessage={t('empty')}
       selectedRowId={selectedModuleId ?? undefined}
       onRowClick={(row) => onSelectModule(row.Id_Module)}
+      onRowDoubleClick={(row) => onEditModule?.(row.Id_Module)}
       headerClassName="!bg-sidebar !text-sidebar-foreground"
       headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
       tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
@@ -81,4 +84,5 @@ export function ModulesTable({
     />
   );
 }
+
 

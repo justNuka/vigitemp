@@ -3,6 +3,8 @@
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
+import { validateLicense } from "@/lib/license-server"
+import { buildSensorSerialsFromInput, extractAddressFromSerial } from "@/lib/sensor-naming"
 import { z } from "zod"
 
 export const GET = withAuthLogging(async (_req: NextRequest) => {
@@ -37,13 +39,13 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
     return apiOk(formatted)
   } catch (error) {
     console.error("Sondes fetch error:", error)
-    return apiError(500, "internal_error", "Erreur lors de la rÃ©cupÃ©ration des sondes")
+    return apiError(500, "internal_error", "Erreur lors de la récupération des sondes")
   }
 })
 
 const createSensorSchema = z.object({
   sondeType: z.string().min(1),
-  serieNum: z.string().regex(/^\d+(?:-?[TH])?$/i, "NumÃ©ro de sÃ©rie invalide"),
+  serieNum: z.string().regex(/^[A-Z0-9-]+$/i, "Numéro de série invalide"),
   moduleId: z.number().int().positive().nullable().optional(),
   sondeOffset: z.number().nullable().optional(),
 })
@@ -53,19 +55,51 @@ export const POST = withAuthLogging(async (req: NextRequest) => {
     const body = await req.json()
     const data = createSensorSchema.parse(body)
 
-    const normalizedType = data.sondeType.toUpperCase()
-    const serial =
-      normalizedType === "GSO"
-        ? data.serieNum
-        : `${normalizedType}${data.serieNum}`
-    const adresseSonde = data.serieNum
+    const creation = buildSensorSerialsFromInput(data.sondeType, data.serieNum)
+    const serialsToCreate = Array.from(new Set(creation.serials))
 
-    const existing = await prisma.t_sonde.findUnique({
-      where: { Sonde_Numero_Serie: serial },
+    const license = await validateLicense()
+    if (!license.ok) {
+      return apiError(403, "license_invalid", "Licence invalide, création de sonde refusée")
+    }
+
+    const edition = (license.edition || "one").trim().toLowerCase()
+    if (edition === "pack") {
+      const limit = typeof license.maxSensors === "number" ? license.maxSensors : null
+      if (!limit || limit <= 0) {
+        return apiError(403, "license_pack_limit_invalid", "Limite de sondes invalide pour la licence Pack")
+      }
+
+      const currentCount = await prisma.t_sonde.count({
+        where: {
+          Sonde_Numero_Serie: {
+            not: null,
+          },
+        },
+      })
+
+      if (currentCount + serialsToCreate.length > limit) {
+        return apiError(
+          403,
+          "license_sensor_limit_reached",
+          `Limite de sondes atteinte pour la licence Pack (${currentCount}/${limit})`,
+          { limit, currentCount, requested: serialsToCreate.length },
+        )
+      }
+    }
+
+    const existing = await prisma.t_sonde.findMany({
+      where: { Sonde_Numero_Serie: { in: serialsToCreate } },
+      select: { Sonde_Numero_Serie: true },
     })
 
-    if (existing) {
-      return apiError(409, "conflict", "Une sonde avec ce numÃ©ro de sÃ©rie existe dÃ©jÃ ")
+    if (existing.length > 0) {
+      const existingSerials = existing
+        .map((item) => item.Sonde_Numero_Serie)
+        .filter((value): value is string => Boolean(value))
+      return apiError(409, "conflict", "Une sonde avec ce numéro de série existe déjà", {
+        serials: existingSerials,
+      })
     }
 
     let portSerie: string | null = null
@@ -80,32 +114,40 @@ export const POST = withAuthLogging(async (req: NextRequest) => {
       portSerie = module.Port_Serie ?? null
     }
 
-    const created = await prisma.t_sonde.create({
-      data: {
-        Adresse_Sonde: adresseSonde,
-        Sonde_Numero_Serie: serial,
-        Id_Module: data.moduleId ?? null,
-        Port_Serie: portSerie,
-        Sonde_Offset: data.sondeOffset ?? 0,
-        Surveillance_Etat: "D",
-      },
-    })
+    const created = await prisma.$transaction(
+      serialsToCreate.map((serial) =>
+        prisma.t_sonde.create({
+          data: {
+            Adresse_Sonde: creation.isGso ? extractAddressFromSerial(serial) : data.serieNum,
+            Sonde_Numero_Serie: serial,
+            Id_Module: data.moduleId ?? null,
+            Port_Serie: portSerie,
+            Sonde_Offset: data.sondeOffset ?? 0,
+            Surveillance_Etat: "D",
+            Est_Sonde_GSO: creation.isGso,
+          },
+        }),
+      ),
+    )
 
     return apiOk(
       {
-        message: "Sonde crÃ©Ã©e avec succÃ¨s",
-        sensor: { Id_Sonde: created.Id_Sonde, Sonde_Numero_Serie: created.Sonde_Numero_Serie },
+        message: "Sonde créée avec succès",
+        sensors: created.map((item) => ({
+          Id_Sonde: item.Id_Sonde,
+          Sonde_Numero_Serie: item.Sonde_Numero_Serie,
+          Adresse_Sonde: item.Adresse_Sonde,
+          Est_Sonde_GSO: item.Est_Sonde_GSO,
+        })),
       },
       { status: 201 },
     )
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return apiError(400, "validation_error", "DonnÃ©es invalides", { details: error.issues })
+      return apiError(400, "validation_error", "Données invalides", { details: error.issues })
     }
 
     console.error("Sonde create error:", error)
-    return apiError(500, "internal_error", "Erreur lors de la crÃ©ation de la sonde")
+    return apiError(500, "internal_error", "Erreur lors de la création de la sonde")
   }
 })
-
-

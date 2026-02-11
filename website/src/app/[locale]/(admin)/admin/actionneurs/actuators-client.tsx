@@ -163,6 +163,13 @@ export function ActuatorsClient() {
             onRowClick={(row: ActuatorRow) => {
               setSelectedActuator(actuators?.find((a) => a.Id_Actionneur === row.Id_Actionneur) || null)
             }}
+            onRowDoubleClick={(row: ActuatorRow) => {
+              const actuator = actuators?.find((a) => a.Id_Actionneur === row.Id_Actionneur) || null
+              if (!actuator) return
+              setSelectedActuator(actuator)
+              setIsEditing(true)
+              setIsModalOpen(true)
+            }}
             headerClassName="!bg-sidebar !text-sidebar-foreground"
             headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
             tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
@@ -189,3 +196,4 @@ export function ActuatorsClient() {
     </main>
   )
 }
+

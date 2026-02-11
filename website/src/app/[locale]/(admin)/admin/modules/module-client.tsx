@@ -160,6 +160,12 @@ export function ModulesClient() {
               setSelectedModuleId(moduleId);
               setSelectedSondeId(null);
             }}
+            onEditModule={(moduleId) => {
+              setSelectedModuleId(moduleId);
+              setSelectedSondeId(null);
+              setIsEditMode(true);
+              setIsModalOpen(true);
+            }}
           />
         </CardContent>
       </Card>
@@ -235,5 +241,6 @@ export function ModulesClient() {
     </div>
   );
 }
+
 
 

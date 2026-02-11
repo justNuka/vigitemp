@@ -26,7 +26,8 @@ import {
   Settings,
   LogOut,
   Shield,
-  FileText
+  FileText,
+  FlaskConical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,23 +58,18 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
   const t = useTranslations("adminSidebar");
   const tCommon = useTranslations("common");
 
-  // Helper pour déterminer quel Link utiliser
   const getLinkComponent = (href: string) => {
-    // Routes définies dans routing.ts - utiliser IntlLink
     if (href === "/" || href === "/admin") {
       return IntlLink;
     }
-    // Routes nested sous /admin/* - utiliser next/link
     return IntlLink;
   };
 
-  // Section 1: Retour au dashboard classique
   const dashboardNavItems: NavItem[] = [
     { title: t("dashboards.user"), href: "/", icon: LayoutDashboard },
     { title: t("dashboards.admin"), href: "/admin", icon: Shield },
   ];
 
-  // Section 2: Gestion profils, utilisateurs, alarmes, mesures archivées
   const managementNavItems: Array<NavItem & { badge?: number; badgeVariant?: "default" | "destructive" }> = [
     { title: t("management.profiles"), href: "/admin/profils", icon: Lock },
     { title: t("management.users"), href: "/admin/utilisateurs", icon: Users },
@@ -87,10 +83,16 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
     { title: t("management.audit"), href: "/admin/audit", icon: FileText },
   ];
 
-  // Section 3: Paramètres globaux, licences, sauvegardes
+  const metrologyNavItems: NavItem[] = [
+    { title: t("metrology.calibration_import"), href: "/admin/sondes/etalonnage-import", icon: FlaskConical },
+  ];
+
   const globalSettingsNavItems: NavItem[] = [
     { title: t("system.settings"), href: "/admin/parametres", icon: Settings },
   ];
+
+  const isServicesActive =
+    normalizedPathname === getLocalizedPathname("/services", locale as any);
 
   return (
     <Sidebar>
@@ -106,7 +108,6 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
       <SidebarSeparator />
 
       <SidebarContent className="custom-scrollbar">
-        {/* Section 1: Dashboard classique */}
         <SidebarGroup>
           <SidebarGroupLabel>{t("groups.dashboards")}</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -129,7 +130,7 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
                               variant={item.badgeVariant || "default"}
                               className={cn(
                                 "ml-auto h-5 min-w-5 px-1.5 text-xs",
-                                item.badgeVariant === "destructive" && "animate-pulse-subtle"
+                                item.badgeVariant === "destructive" && "animate-pulse-subtle",
                               )}
                             >
                               {item.badge}
@@ -145,7 +146,6 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Section 2: Gestion */}
         <SidebarGroup>
           <SidebarGroupLabel>{t("groups.management")}</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -173,7 +173,33 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Section 3: Paramètres globaux */}
+        <SidebarGroup>
+          <SidebarGroupLabel>{t("groups.metrology")}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {metrologyNavItems.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={normalizedPathname === getLocalizedPathname(item.href, locale as any)}
+                    tooltip={item.title}
+                  >
+                    {(() => {
+                      const LinkComponent = getLinkComponent(item.href);
+                      return (
+                        <LinkComponent href={item.href as any} data-testid={`nav-${item.href.replace("/", "")}`}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                        </LinkComponent>
+                      );
+                    })()}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         <SidebarGroup>
           <SidebarGroupLabel>{t("groups.system")}</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -204,7 +230,21 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
 
       <SidebarSeparator />
 
-      <SidebarFooter className="p-2">
+      <SidebarFooter className="p-2 space-y-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isServicesActive}
+              tooltip={t("services")}
+            >
+              <IntlLink href="/services" data-testid="nav-services">
+                <FileText className="h-4 w-4" />
+                <span>{t("services")}</span>
+              </IntlLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
         {currentUser && (
           <div className="flex items-center gap-3 p-2 rounded-lg bg-sidebar-accent/50">
             <Avatar className="h-9 w-9">
@@ -218,12 +258,8 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">
-                {`${currentUser.Prenom || ""} ${currentUser.Nom || ""}`}
-              </p>
-              <p className="text-xs text-muted-foreground capitalize">
-                {currentUser.Profil_Utilisateur || "User"}
-              </p>
+              <p className="text-sm font-medium truncate">{`${currentUser.Prenom || ""} ${currentUser.Nom || ""}`}</p>
+              <p className="text-xs text-muted-foreground capitalize">{currentUser.Profil_Utilisateur || "User"}</p>
             </div>
             <Button
               variant="ghost"

@@ -236,9 +236,11 @@ export function UsersClient({ users }: Props) {
             selectedUserId={selectedUser?.id ?? null}
             onEditUser={handleEditUser}
             onSelectUser={setSelectedUser}
+            onDoubleClickUser={handleEditUser}
           />
         </CardContent>
       </Card>
     </main>
   );
 }
+

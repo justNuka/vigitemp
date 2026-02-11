@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getClientIp, withLogging } from "@/lib/api-logger"
@@ -6,6 +6,7 @@ import { log } from "@/lib/logger"
 import { z } from "zod"
 import { apiError, apiOk } from "@/lib/api-response"
 import { clearLocationCache } from "@/lib/measurement-cache"
+import { extractAddressFromSerial, isGsoType } from "@/lib/sensor-naming"
 
 const updateLieuSchema = z.object({
   Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(50).optional(),
@@ -78,11 +79,12 @@ export const PATCH = withLogging(
         surveillanceDurationMinutes,
         ...lieuPatch
       } = validated as any
+
       if (Object.prototype.hasOwnProperty.call(validated, "Frequence")) {
         const value = validated.Frequence
-        lieuPatch.Frequence =
-          value === null || value === undefined ? value : Math.round(value * 60)
+        lieuPatch.Frequence = value === null || value === undefined ? value : Math.round(value * 60)
       }
+
       const hasLieuEtat = Object.prototype.hasOwnProperty.call(validated, "Lieu_Etat")
       const applyLieuEtat = hasLieuEtat && !shouldArchive
       const hasSurveillanceDuration = Object.prototype.hasOwnProperty.call(
@@ -95,9 +97,11 @@ export const PATCH = withLogging(
         hasSurveillanceDuration &&
         typeof surveillanceDurationMinutes === "number" &&
         surveillanceDurationMinutes > 0
+
       const surveillanceReactivationAt = shouldScheduleSurveillanceReactivation
         ? new Date(Date.now() + surveillanceDurationMinutes * 60 * 1000)
         : null
+
       const hasIdSite = Object.prototype.hasOwnProperty.call(validated, "Id_Site")
       const hasSondeNumeroSerie = Object.prototype.hasOwnProperty.call(validated, "Sonde_Numero_Serie")
 
@@ -116,6 +120,29 @@ export const PATCH = withLogging(
 
         const group1Id = groupIds?.[0] ?? null
         const group2Id = groupIds?.[1] ?? null
+
+        let nextEstLieuGso: boolean | undefined
+        let nextAdresseSonde: string | null | undefined
+
+        if (shouldArchive) {
+          nextEstLieuGso = false
+          nextAdresseSonde = null
+        } else if (hasSondeNumeroSerie) {
+          if (Sonde_Numero_Serie) {
+            const linkedSensor = await tx.t_sonde.findUnique({
+              where: { Sonde_Numero_Serie },
+              select: { Est_Sonde_GSO: true, Adresse_Sonde: true },
+            })
+            const isGso = linkedSensor?.Est_Sonde_GSO ?? isGsoType(Sonde_Numero_Serie)
+            nextEstLieuGso = isGso
+            nextAdresseSonde = isGso
+              ? linkedSensor?.Adresse_Sonde ?? extractAddressFromSerial(Sonde_Numero_Serie)
+              : null
+          } else {
+            nextEstLieuGso = false
+            nextAdresseSonde = null
+          }
+        }
 
         const updated = await tx.t_lieu.update({
           where: { Id_Lieu: lieuId },
@@ -145,6 +172,9 @@ export const PATCH = withLogging(
                 ? { t_sonde: { connect: { Sonde_Numero_Serie } } }
                 : { t_sonde: { disconnect: true } }
               : {}),
+            ...(nextEstLieuGso !== undefined
+              ? { Est_Lieu_GSO: nextEstLieuGso, Adresse_Sonde: nextAdresseSonde ?? null }
+              : {}),
             ...(groupIds !== undefined
               ? {
                   t_groupe1: group1Id
@@ -159,9 +189,7 @@ export const PATCH = withLogging(
         })
 
         if (hasLieuEtat) {
-          const sondeNumeroSerie =
-            validated.Sonde_Numero_Serie ?? current?.Sonde_Numero_Serie ?? null
-
+          const sondeNumeroSerie = validated.Sonde_Numero_Serie ?? current?.Sonde_Numero_Serie ?? null
           if (sondeNumeroSerie) {
             await tx.t_sonde.updateMany({
               where: { Sonde_Numero_Serie: sondeNumeroSerie },
@@ -244,9 +272,9 @@ export const PATCH = withLogging(
       }
       console.error("[PATCH /api/lieux/[id]]", error)
       const errorDetail = error instanceof Error ? error.message : String(error)
-      const extra =
-        process.env.NODE_ENV === "production" ? { detail: errorDetail } : undefined
+      const extra = process.env.NODE_ENV === "production" ? { detail: errorDetail } : undefined
       return apiError(500, "lieu_update_failed", "Erreur lors de la modification du lieu", extra)
     }
   },
 )
+

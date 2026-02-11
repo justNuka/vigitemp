@@ -1,9 +1,9 @@
-﻿'use client';
+'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+
+
 import {
   Dialog,
   DialogContent,
@@ -32,6 +32,7 @@ import { useLieuMeasurementsPaged } from "@/hooks/useLieuMeasurementsPaged";
 import { calculateYDomain, getMeasureSummary } from "@/lib/measurements";
 import type { MeasureData } from "@/lib/measurements";
 import { fetchJson } from "@/lib/http";
+import { formatDbDateTime } from "@/lib/date-display";
 
 // Register Chart.js components
 ChartJS.register(
@@ -458,9 +459,7 @@ export default function MonitoringDetailsModal({
   const auditTableData = useMemo<AuditRow[]>(() => {
     return auditLogs.map((log) => {
       const dateIso = log.timestamp ?? "";
-      const dateLabel = log.timestamp
-        ? format(new Date(log.timestamp), "dd/MM/yyyy HH:mm:ss", { locale: fr })
-        : "-";
+      const dateLabel = log.timestamp ? formatDbDateTime(log.timestamp) : "-";
 
       return {
         id: log.id,

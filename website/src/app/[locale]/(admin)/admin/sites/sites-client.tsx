@@ -169,6 +169,14 @@ export function SitesClient() {
             isLoading={isLoading}
             selectedSiteId={selectedSite?.Id_Site}
             onSelectSite={setSelectedSite}
+            onEditSite={(site) => {
+              setSelectedSite(site)
+              editForm.reset({
+                Libelle_Site: site.Libelle_Site || '',
+                Commentaire: site.Commentaire,
+              })
+              setIsEditOpen(true)
+            }}
           />
         </CardContent>
       </Card>
@@ -213,3 +221,4 @@ export function SitesClient() {
       </AlertDialog>
     </main>
   )}
+

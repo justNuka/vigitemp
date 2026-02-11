@@ -1,4 +1,5 @@
-import type { Prisma } from "@/generated/@prisma-db-main/client";
+﻿import type { Prisma } from "@/generated/@prisma-db-main/client";
+import { normalizeImportedGsoSerial } from "@/lib/sensor-naming";
 
 export type AdjustmentImportSummary = {
   id?: number;
@@ -109,14 +110,17 @@ export function parseAdjustmentXml(xml: string, fileName = ""): ParsedAdjustment
   const etalonBlock = getTagBlock(xml, "ETALON");
   const etalonNumero = etalonBlock ? getTagValue(etalonBlock, "NUM_SERIE") : null;
   const etalonOrganisme = etalonBlock ? getTagValue(etalonBlock, "ORGANISME") : null;
-  const etalonDateCertif = etalonBlock ? combineDateTime(parseDateParts(getTagValue(etalonBlock, "DATE_CERTIFICAT")), null) : null;
+  const etalonDateCertif = etalonBlock
+    ? combineDateTime(parseDateParts(getTagValue(etalonBlock, "DATE_CERTIFICAT")), null)
+    : null;
   const etalonNumeroCertif = etalonBlock ? getTagValue(etalonBlock, "NUM_CERTIFICAT") : null;
   const unit = etalonBlock ? getTagValue(etalonBlock, "UNITE") : getTagValue(xml, "UNITE");
 
   const calibrationBlock = getTagValueAny(xml, TAG_SETS.calibrationBlock);
-  const sensorNumber = calibrationBlock
+  const sensorNumberRaw = calibrationBlock
     ? getTagValue(calibrationBlock, "NUM_SONDE") ?? getTagValue(calibrationBlock, "ADRESSE_SONDE")
     : null;
+  const sensorNumber = sensorNumberRaw ? normalizeImportedGsoSerial(sensorNumberRaw) : null;
 
   const coeffX = parseNumber(getTagValueAny(xml, ["COEFFX", "COEFF_X"]));
   const coeffConstant = parseNumber(getTagValueAny(xml, ["COEFFCONSTANT", "COEFF_CONSTANT"]));
@@ -125,14 +129,10 @@ export function parseAdjustmentXml(xml: string, fileName = ""): ParsedAdjustment
   const mesureEtalon2 = parseNumber(calibrationBlock ? getTagValue(calibrationBlock, "MESURE_ETALON2") : null);
 
   const valeurBrute1 = parseNumber(
-    calibrationBlock
-      ? getTagValueAny(calibrationBlock, ["VALEUR_BRUT1", "RESISTANCE_SONDE1"])
-      : null,
+    calibrationBlock ? getTagValueAny(calibrationBlock, ["VALEUR_BRUT1", "RESISTANCE_SONDE1"]) : null,
   );
   const valeurBrute2 = parseNumber(
-    calibrationBlock
-      ? getTagValueAny(calibrationBlock, ["VALEUR_BRUT2", "RESISTANCE_SONDE2"])
-      : null,
+    calibrationBlock ? getTagValueAny(calibrationBlock, ["VALEUR_BRUT2", "RESISTANCE_SONDE2"]) : null,
   );
 
   const temperatureLue1 = parseNumber(calibrationBlock ? getTagValue(calibrationBlock, "TEMPERATURELUE1") : null);

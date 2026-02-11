@@ -1,4 +1,4 @@
-﻿import fs from "fs/promises";
+import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 
@@ -8,6 +8,7 @@ export type LicenseResponse = {
   licenseId?: string;
   customerId?: string;
   edition?: string;
+  maxSensors?: number | null;
   concurrentAccess?: string;
   options?: string[];
   issuedAtRaw?: string;
@@ -18,6 +19,7 @@ type LicensePayload = {
   licenseId?: string;
   customerId?: string;
   edition?: string;
+  maxSensors?: number | string;
   concurrentAccess?: string | number;
   issuedAt?: string;
   expiresAt?: string;
@@ -32,6 +34,7 @@ const LICENSE_DIR = path.join(PROGRAM_DATA, "Vigitemp", "licenses");
 const DEFAULT_LICENSE_PATH = path.join(PROGRAM_DATA, "Vigitemp", "license.vtlic");
 const DEFAULT_PUBLIC_KEY_PATH = path.join(PROGRAM_DATA, "Vigitemp", "license_keys", "public_key.pem");
 const FALLBACK_PUBLIC_KEY_PATH = path.join(PROGRAM_DATA, "Vigitemp", "public_key.pem");
+const ALLOWED_EDITIONS = new Set(["pack", "one", "standard", "expert"]);
 
 function base64UrlToBuffer(input: string) {
   let base64 = input.replace(/-/g, "+").replace(/_/g, "/");
@@ -51,6 +54,15 @@ function base64UrlToBuffer(input: string) {
 function normalizeKey(value?: string) {
   if (!value) return "";
   return value.replace(/\s+/g, "");
+}
+
+function parsePositiveInt(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = typeof value === "number" ? value : Number(String(value));
+  if (!Number.isFinite(parsed)) return null;
+  const intVal = Math.trunc(parsed);
+  if (intVal <= 0) return null;
+  return intVal;
 }
 
 async function resolveLicensePath() {
@@ -118,11 +130,18 @@ export async function validateLicense(): Promise<LicenseResponse> {
   const signature = base64UrlToBuffer(signaturePart);
 
   let payload: LicensePayload;
+  let header: { alg?: string; typ?: string };
   try {
     const payloadJson = base64UrlToBuffer(payloadPart).toString("utf8");
+    const headerJson = base64UrlToBuffer(headerPart).toString("utf8");
     payload = JSON.parse(payloadJson) as LicensePayload;
+    header = JSON.parse(headerJson) as { alg?: string; typ?: string };
   } catch {
     return { ok: false, reason: "invalid_license_payload" };
+  }
+
+  if ((header.alg || "") !== "EdDSA") {
+    return { ok: false, reason: "invalid_license_alg" };
   }
 
   const publicKey = crypto.createPublicKey(publicKeyPem);
@@ -133,6 +152,16 @@ export async function validateLicense(): Promise<LicenseResponse> {
 
   if (!payload.licenseId || !payload.customerId) {
     return { ok: false, reason: "missing_license_fields" };
+  }
+
+  const normalizedEdition = (payload.edition || "one").trim().toLowerCase();
+  if (!ALLOWED_EDITIONS.has(normalizedEdition)) {
+    return { ok: false, reason: `invalid_license_edition:${normalizedEdition}` };
+  }
+
+  const maxSensors = parsePositiveInt(payload.maxSensors);
+  if (normalizedEdition === "pack" && !maxSensors) {
+    return { ok: false, reason: "invalid_pack_max_sensors" };
   }
 
   const expiresAtUtc = payload.expiresAt ? new Date(payload.expiresAt) : null;
@@ -152,7 +181,8 @@ export async function validateLicense(): Promise<LicenseResponse> {
     reason: "OK",
     licenseId: payload.licenseId,
     customerId: payload.customerId,
-    edition: (payload.edition || "one").trim(),
+    edition: normalizedEdition,
+    maxSensors: maxSensors ?? null,
     concurrentAccess: payload.concurrentAccess?.toString(),
     options: payload.options ?? [],
     issuedAtRaw: payload.issuedAt,

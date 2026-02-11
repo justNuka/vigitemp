@@ -124,5 +124,21 @@ export const routing = defineRouting({
       fr: '/upgrade-licence',
       en: '/upgrade-licence',
     },
+    '/services': {
+      fr: '/services',
+      en: '/services',
+    },
+    '/services/upgrade-licence': {
+      fr: '/services/upgrade-licence',
+      en: '/services/upgrade-licence',
+    },
+    '/services/achat-materiel': {
+      fr: '/services/achat-materiel',
+      en: '/services/hardware',
+    },
+    '/services/actualites-mc2': {
+      fr: '/services/actualites-mc2',
+      en: '/services/mc2-news',
+    },
   }
 });

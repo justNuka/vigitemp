@@ -43,7 +43,7 @@ import {
 } from "@/components/ui/select";
 import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
 import { calculateYDomain, formatMeasureValue, getMeasureSummary } from "@/lib/measurements";
-import { useAppTimezone } from "@/components/timezone-provider";
+import { formatDbDateTime } from "@/lib/date-display";
 import { AlarmAcknowledgeDialog, type AcknowledgeDialogAlarm } from "@/components/alarm-acknowledge-dialog";
 
 ChartJS.register(
@@ -165,7 +165,6 @@ export default function MonitoringCard({
   const tStatus = useTranslations("surveillanceStatus");
   const locale = useLocale();
   const localeTag = locale === "fr" ? "fr-FR" : locale;
-  const timezone = useAppTimezone();
   const { data, isLoading, reload, meta } = useLieuMeasurements(idLieu, { includeMeta: true });
 
   const orderedData = useMemo(() => {
@@ -335,16 +334,9 @@ export default function MonitoringCard({
     const date = new Date(alarmDisabledUntil);
     if (Number.isNaN(date.getTime())) return t("alarms.disabled");
     return t("alarms.disabled_until", {
-      date: date.toLocaleString(localeTag, {
-        timeZone: timezone,
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      date: formatDbDateTime(date, { withSeconds: false }),
     });
-  }, [alarmDisabledUntil, isAlarmActive, localeTag, t, timezone]);
+  }, [alarmDisabledUntil, isAlarmActive, t]);
 
   const alarmBadgeClassName = isSurveillanceActive
     ? "bg-red-500/30 text-red-500 dark:text-red-100"
@@ -366,7 +358,7 @@ export default function MonitoringCard({
     isSurveillanceActive &&
     alarmId !== null &&
     alarmId !== undefined &&
-    (status === "critical" || status === "technical");
+    (status === "critical" || status === "technical" || status === "ended");
 
   const frequencyMinutes = useMemo(() => {
     if (isGso) return 15
@@ -948,6 +940,8 @@ export default function MonitoringCard({
     </>
   );
 }
+
+
 
 
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -21,7 +21,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import MonitoringDetailsModal from "@/components/monitoring-details-modal";
-import { useAppTimezone } from "@/components/timezone-provider";
+import { formatDbDateTime } from "@/lib/date-display";
 
 export type AcknowledgeDialogAlarm = {
   id: string;
@@ -55,10 +55,7 @@ export function AlarmAcknowledgeDialog({
 }: Props) {
   const t = useTranslations("alarmsPage");
   const locale = useLocale();
-  const timezone = useAppTimezone();
-  const localeTag = locale === "fr" ? "fr-FR" : locale;
-
-  const [commentOptions, setCommentOptions] = useState<{ id: number; text: string }[]>([]);
+const [commentOptions, setCommentOptions] = useState<{ id: number; text: string }[]>([]);
   const [selectedCommentId, setSelectedCommentId] = useState<string>("");
   const [showGraph, setShowGraph] = useState(false);
   const [alarmCount30, setAlarmCount30] = useState<number | null>(null);
@@ -134,33 +131,13 @@ export function AlarmAcknowledgeDialog({
 
   const formattedStart = useMemo(() => {
     if (!alarm?.triggeredAt) return "-";
-    const date = new Date(alarm.triggeredAt);
-    if (Number.isNaN(date.getTime())) return "-";
-    return date.toLocaleString(localeTag, {
-      timeZone: timezone,
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  }, [alarm?.triggeredAt, localeTag, timezone]);
+    return formatDbDateTime(alarm.triggeredAt);
+  }, [alarm?.triggeredAt]);
 
   const formattedEnd = useMemo(() => {
     if (!alarm?.endedAt) return "-";
-    const date = new Date(alarm.endedAt);
-    if (Number.isNaN(date.getTime())) return "-";
-    return date.toLocaleString(localeTag, {
-      timeZone: timezone,
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  }, [alarm?.endedAt, localeTag, timezone]);
+    return formatDbDateTime(alarm.endedAt);
+  }, [alarm?.endedAt]);
 
   const formattedDuration = useMemo(() => {
     if (!alarm?.triggeredAt) return "-";

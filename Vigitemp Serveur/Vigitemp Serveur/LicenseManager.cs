@@ -15,6 +15,14 @@ namespace Vigitemp_Serveur
 {
     internal static class LicenseManager
     {
+        private static readonly HashSet<string> AllowedEditions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "pack",
+            "one",
+            "standard",
+            "expert"
+        };
+
         private static readonly string DefaultLicensePath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
             "Vigitemp",
@@ -139,6 +147,13 @@ namespace Vigitemp_Serveur
             var headerJson = DecodeBase64UrlToString(parts[0]);
             var payloadJson = DecodeBase64UrlToString(parts[1]);
             var signature = DecodeBase64Url(parts[2]);
+            var header = JObject.Parse(headerJson);
+            var alg = header.Value<string>("alg") ?? string.Empty;
+
+            if (!string.Equals(alg, "EdDSA", StringComparison.Ordinal))
+            {
+                return LicenseValidationResult.Fail("Algorithme de licence invalide.");
+            }
 
             if (!VerifySignature(parts[0], parts[1], signature, publicKeyPath))
             {
@@ -148,11 +163,30 @@ namespace Vigitemp_Serveur
             payload = JObject.Parse(payloadJson);
             var licenseId = payload.Value<string>("licenseId") ?? string.Empty;
             var customerId = payload.Value<string>("customerId") ?? string.Empty;
-            var edition = payload.Value<string>("edition") ?? string.Empty;
+            var editionRaw = payload.Value<string>("edition") ?? string.Empty;
+            var edition = editionRaw.Trim().ToLowerInvariant();
             var concurrentAccess = payload.Value<string>("concurrentAccess") ?? string.Empty;
             var issuedAtRaw = payload.Value<string>("issuedAt") ?? string.Empty;
             var expiresAtRaw = payload.Value<string>("expiresAt") ?? string.Empty;
             var bindKey = payload["bind"]?["instancePublicKey"]?.ToString() ?? string.Empty;
+            var maxSensorsToken = payload["maxSensors"];
+            int? maxSensors = null;
+
+            if (maxSensorsToken != null && maxSensorsToken.Type != JTokenType.Null)
+            {
+                if (maxSensorsToken.Type == JTokenType.Integer)
+                {
+                    maxSensors = maxSensorsToken.Value<int>();
+                }
+                else if (int.TryParse(maxSensorsToken.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedMaxSensors))
+                {
+                    maxSensors = parsedMaxSensors;
+                }
+                else
+                {
+                    return LicenseValidationResult.Fail("maxSensors invalide.");
+                }
+            }
 
             var options = new List<string>();
             if (payload["options"] is JArray arr)
@@ -169,13 +203,23 @@ namespace Vigitemp_Serveur
 
             if (string.IsNullOrWhiteSpace(licenseId) || string.IsNullOrWhiteSpace(customerId))
             {
-                return LicenseValidationResult.Fail("Licence incomplète (licenseId/customerId manquant).");
+                return LicenseValidationResult.Fail("Licence incomplete (licenseId/customerId manquant).");
+            }
+
+            if (!AllowedEditions.Contains(edition))
+            {
+                return LicenseValidationResult.Fail("Type de licence invalide.");
+            }
+
+            if (string.Equals(edition, "pack", StringComparison.OrdinalIgnoreCase) && (!maxSensors.HasValue || maxSensors.Value <= 0))
+            {
+                return LicenseValidationResult.Fail("Licence Pack invalide (maxSensors requis).");
             }
 
             var expiresAtUtc = ParseUtcDate(expiresAtRaw);
             if (expiresAtUtc.HasValue && DateTime.UtcNow > expiresAtUtc.Value)
             {
-                return LicenseValidationResult.Fail($"Licence expirée ({expiresAtUtc:yyyy-MM-dd}).");
+                return LicenseValidationResult.Fail($"Licence expiree ({expiresAtUtc:yyyy-MM-dd}).");
             }
 
             if (!string.IsNullOrWhiteSpace(bindKey))
@@ -184,7 +228,7 @@ namespace Vigitemp_Serveur
                 var normalizedInstance = NormalizeKey(instancePublicKey);
                 if (string.IsNullOrWhiteSpace(normalizedInstance) || !string.Equals(normalizedBind, normalizedInstance, StringComparison.Ordinal))
                 {
-                    return LicenseValidationResult.Fail("Licence liée à une autre instance.");
+                    return LicenseValidationResult.Fail("Licence liee a une autre instance.");
                 }
             }
 
@@ -195,7 +239,8 @@ namespace Vigitemp_Serveur
                 concurrentAccess,
                 options,
                 issuedAtRaw,
-                expiresAtUtc);
+                expiresAtUtc,
+                maxSensors);
         }
 
         private static bool VerifySignature(string headerPart, string payloadPart, byte[] signature, string publicKeyPath)
@@ -300,6 +345,7 @@ namespace Vigitemp_Serveur
         public IReadOnlyList<string> Options { get; private set; }
         public string IssuedAtRaw { get; private set; }
         public DateTime? ExpiresAtUtc { get; private set; }
+        public int? MaxSensors { get; private set; }
 
         public static LicenseValidationResult Fail(string reason)
         {
@@ -318,7 +364,8 @@ namespace Vigitemp_Serveur
             string concurrentAccess,
             IReadOnlyList<string> options,
             string issuedAtRaw,
-            DateTime? expiresAtUtc)
+            DateTime? expiresAtUtc,
+            int? maxSensors)
         {
             return new LicenseValidationResult
             {
@@ -330,7 +377,8 @@ namespace Vigitemp_Serveur
                 ConcurrentAccess = concurrentAccess,
                 Options = options ?? Array.Empty<string>(),
                 IssuedAtRaw = issuedAtRaw,
-                ExpiresAtUtc = expiresAtUtc
+                ExpiresAtUtc = expiresAtUtc,
+                MaxSensors = maxSensors
             };
         }
     }

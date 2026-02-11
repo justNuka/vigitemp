@@ -189,6 +189,11 @@ export function LocationsClient() {
             isLoading={isLoading}
             selectedLocationId={selectedLocation?.Id_Lieu}
             onSelectLocation={(location) => setSelectedLocation(location)}
+            onEditLocation={(location) => {
+              setSelectedLocation(location)
+              form.reset(mapLocationToFormData(location))
+              setIsEditOpen(true)
+            }}
           />
         </CardContent>
       </Card>
@@ -269,5 +274,6 @@ export function LocationsClient() {
     </main>
   )
 }
+
 
 

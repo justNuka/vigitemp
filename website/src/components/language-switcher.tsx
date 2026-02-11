@@ -47,6 +47,8 @@ export function LanguageSwitcher() {
           <Image
             src={languageFlagSrc[language]}
             alt=""
+            width={24}
+            height={24}
             className="h-6 w-6 rounded-full"
           />
           <span className="sr-only">S\u00e9lectionner la langue</span>
@@ -60,6 +62,8 @@ export function LanguageSwitcher() {
           <Image
             src={languageFlagSrc.fr}
             alt=""
+            width={20}
+            height={20}
             className="h-5 w-5 rounded-full"
           />
           <span className="flex-1 text-sm ml-2">{languageNames.fr}</span>
@@ -76,6 +80,8 @@ export function LanguageSwitcher() {
           <Image
             src={languageFlagSrc.en}
             alt=""
+            width={20}
+            height={20}
             className="h-5 w-5 rounded-full"
           />
           <span className="flex-1 text-sm ml-2">{languageNames.en}</span>

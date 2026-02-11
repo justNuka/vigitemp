@@ -2,7 +2,6 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDateTimeFr } from './date-format';
@@ -85,19 +84,12 @@ export function AdjustmentsPanel({
               headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
               tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
             />
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" disabled={!selectedAdjustmentId} className="flex-1">
-                {t('panels.adjustments.actions.generate_file')}
-              </Button>
-              <Button size="sm" variant="outline" disabled={!selectedAdjustmentId} className="flex-1">
-                {t('panels.adjustments.actions.print')}
-              </Button>
-            </div>
           </>
         )}
       </CardContent>
     </Card>
   );
 }
+
 
 

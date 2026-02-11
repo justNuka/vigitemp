@@ -245,7 +245,27 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
 
       <SidebarSeparator />
 
-      <SidebarFooter className="p-2">
+      <SidebarFooter className="p-2 space-y-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive("/services")}
+              tooltip={tSidebar("services")}
+            >
+              <Link
+                href="/services"
+                data-testid="nav-services"
+                onClick={() => {
+                  if (isMobile) setOpenMobile(false);
+                }}
+              >
+                <FileText className="h-4 w-4" />
+                <span>{tSidebar("services")}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
         {currentUser && (
           <div className="flex items-center gap-3 p-2 rounded-lg bg-sidebar-accent/50">
             <Avatar className="h-9 w-9">

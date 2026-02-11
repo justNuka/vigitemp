@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -14,19 +14,20 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
+import { useLicense } from "@/components/license/license-provider";
 
 const menuItems = [
-  { labelKey: "sondes", href: "/admin/sondes", icon: Antenna },
-  { labelKey: "modules", href: "/admin/modules", icon: Cpu },
-  { labelKey: "etalons", href: "/admin/etalons", icon: Wrench },
-  { labelKey: "actionneurs", href: "/admin/actionneurs", icon: Zap },
-  { labelKey: "groupes", href: "/admin/groupes", icon: Users },
-  { labelKey: "lieux", href: "/admin/lieux", icon: MapPin },
-  { labelKey: "sites", href: "/admin/sites", icon: Building2 },
-  { labelKey: "outils", href: "/admin/outils", icon: Wrench },
+  { key: "sondes", labelKey: "sondes", href: "/admin/sondes", icon: Antenna },
+  { key: "modules", labelKey: "modules", href: "/admin/modules", icon: Cpu },
+  { key: "etalons", labelKey: "etalons", href: "/admin/etalons", icon: Wrench },
+  { key: "actionneurs", labelKey: "actionneurs", href: "/admin/actionneurs", icon: Zap },
+  { key: "groupes", labelKey: "groupes", href: "/admin/groupes", icon: Users },
+  { key: "lieux", labelKey: "lieux", href: "/admin/lieux", icon: MapPin },
+  { key: "sites", labelKey: "sites", href: "/admin/sites", icon: Building2 },
+  { key: "outils", labelKey: "outils", href: "/admin/outils", icon: Wrench },
 ];
 
 export function MainNavbar() {
@@ -34,6 +35,15 @@ export function MainNavbar() {
   const [isOpen, setIsOpen] = useState(false);
   const tDock = useTranslations("dock");
   const t = useTranslations("mainNavbar");
+  const { license } = useLicense();
+
+  const edition = (license?.edition || "standard").trim().toLowerCase();
+  const hideStandards = edition === "one" || edition === "pack";
+
+  const visibleMenuItems = useMemo(
+    () => (hideStandards ? menuItems.filter((item) => item.key !== "etalons") : menuItems),
+    [hideStandards],
+  );
 
   const isActive = (href: string) => {
     return pathname === href || pathname.startsWith(href + "/");
@@ -41,10 +51,9 @@ export function MainNavbar() {
 
   return (
     <>
-      {/* Desktop Navbar */}
       <nav className="hidden md:flex sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 overflow-x-auto">
         <div className="flex items-center gap-1 px-4 py-2 w-full">
-          {menuItems.map((item) => {
+          {visibleMenuItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link
@@ -54,7 +63,7 @@ export function MainNavbar() {
                   "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors",
                   isActive(item.href)
                     ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -65,27 +74,17 @@ export function MainNavbar() {
         </div>
       </nav>
 
-      {/* Mobile Navbar */}
       <div className="md:hidden sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 px-4 py-3">
         <div className="flex items-center justify-between">
           <span className="font-medium text-sm">{t("menu")}</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsOpen(!isOpen)}
-            className="h-8 w-8 p-0"
-          >
-            {isOpen ? (
-              <X className="h-4 w-4" />
-            ) : (
-              <Menu className="h-4 w-4" />
-            )}
+          <Button variant="ghost" size="sm" onClick={() => setIsOpen(!isOpen)} className="h-8 w-8 p-0">
+            {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </Button>
         </div>
 
         {isOpen && (
           <div className="mt-3 space-y-1">
-            {menuItems.map((item) => {
+            {visibleMenuItems.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
@@ -96,7 +95,7 @@ export function MainNavbar() {
                     "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                     isActive(item.href)
                       ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/50",
                   )}
                 >
                   <Icon className="h-4 w-4" />

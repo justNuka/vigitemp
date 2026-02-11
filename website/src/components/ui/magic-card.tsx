@@ -11,6 +11,7 @@ interface MagicCardProps {
   gradientOpacity?: number
   gradientFrom?: string
   gradientTo?: string
+  surfaceClassName?: string
 }
 
 export function MagicCard({
@@ -21,6 +22,7 @@ export function MagicCard({
   gradientOpacity = 0.8,
   gradientFrom = "#9E7AFF",
   gradientTo = "#FE8BBB",
+  surfaceClassName = "bg-background",
 }: MagicCardProps) {
   const mouseX = useMotionValue(-gradientSize)
   const mouseY = useMotionValue(-gradientSize)
@@ -85,7 +87,9 @@ export function MagicCard({
           `,
         }}
       />
-      <div className="bg-background absolute inset-px rounded-[inherit]" />
+      <div
+        className={cn("absolute inset-px rounded-[inherit]", surfaceClassName)}
+      />
       <motion.div
         className="pointer-events-none absolute inset-px rounded-[inherit] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         style={{

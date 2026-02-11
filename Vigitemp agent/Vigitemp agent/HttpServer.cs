@@ -135,6 +135,15 @@ namespace VigitempAgent
             return DateTime.SpecifyKind(dt, DateTimeKind.Utc);
         }
 
+        private static void EnsureCorsHeaders(HttpListenerResponse resp)
+        {
+            resp.Headers["Access-Control-Allow-Origin"] = "*";
+            resp.Headers["Access-Control-Allow-Methods"] = "GET, POST, DELETE, OPTIONS";
+            resp.Headers["Access-Control-Allow-Headers"] = "Content-Type";
+            resp.Headers["Access-Control-Max-Age"] = "600";
+        }
+
+
         public static string GetLocalIPAddress()
         {
             var host = Dns.GetHostEntry(Dns.GetHostName());
@@ -166,10 +175,7 @@ namespace VigitempAgent
                 HttpListenerRequest req = ctx.Request;
                 HttpListenerResponse resp = ctx.Response;
 
-                resp.Headers.Add("Access-Control-Allow-Origin", "*");
-                resp.Headers.Add("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
-                resp.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
-                resp.Headers.Add("Access-Control-Max-Age", "600");
+                EnsureCorsHeaders(resp);
 
                 if (req.HttpMethod == "OPTIONS")
                 {
@@ -192,7 +198,7 @@ namespace VigitempAgent
                     var infoData = Encoding.UTF8.GetBytes(payload.ToCharArray());
                     resp.ContentType = "application/json";
                     resp.ContentEncoding = Encoding.UTF8;
-                    resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                    EnsureCorsHeaders(resp);
                     resp.ContentLength64 = infoData.LongLength;
                     await resp.OutputStream.WriteAsync(infoData, 0, infoData.Length);
                     resp.Close();
@@ -379,7 +385,7 @@ namespace VigitempAgent
                             //frm_alert.DisplayAlarm();
                             resp.ContentType = "application/json";
                             resp.ContentEncoding = Encoding.UTF8;
-                            resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                            EnsureCorsHeaders(resp);
                             resp.ContentLength64 = data.LongLength;
 
                             // Write out to the response stream (asynchronously), then close it
@@ -425,7 +431,7 @@ namespace VigitempAgent
 
                             resp.ContentType = "application/json";
                             resp.ContentEncoding = Encoding.UTF8;
-                            resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                            EnsureCorsHeaders(resp);
                             resp.ContentLength64 = 0;
                             await resp.OutputStream.WriteAsync(new byte[0], 0, 0);
                             resp.Close();
@@ -442,7 +448,7 @@ namespace VigitempAgent
                                 data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                 resp.ContentType = "application/json";
                                 resp.ContentEncoding = Encoding.UTF8;
-                                resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                EnsureCorsHeaders(resp);
                                 resp.ContentLength64 = data.LongLength;
 
                                 // Write out to the response stream (asynchronously), then close it
@@ -492,7 +498,7 @@ namespace VigitempAgent
                                     data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                     resp.ContentType = "application/json";
                                     resp.ContentEncoding = Encoding.UTF8;
-                                    resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                    EnsureCorsHeaders(resp);
                                     resp.ContentLength64 = data.LongLength;
 
                                     // Write out to the response stream (asynchronously), then close it
@@ -515,7 +521,7 @@ namespace VigitempAgent
                                 data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                 resp.ContentType = "application/json";
                                 resp.ContentEncoding = Encoding.UTF8;
-                                resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                EnsureCorsHeaders(resp);
                                 resp.ContentLength64 = data.LongLength;
 
                                 // Write out to the response stream (asynchronously), then close it
@@ -534,7 +540,7 @@ namespace VigitempAgent
                                 data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                 resp.ContentType = "application/json";
                                 resp.ContentEncoding = Encoding.UTF8;
-                                resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                EnsureCorsHeaders(resp);
                                 resp.ContentLength64 = data.LongLength;
 
                                 // Write out to the response stream (asynchronously), then close it
@@ -577,7 +583,7 @@ namespace VigitempAgent
                                 data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                 resp.ContentType = "application/json";
                                 resp.ContentEncoding = Encoding.UTF8;
-                                resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                EnsureCorsHeaders(resp);
                                 resp.ContentLength64 = data.LongLength;
 
                                 // Write out to the response stream (asynchronously), then close it
@@ -675,7 +681,7 @@ namespace VigitempAgent
                                 data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                 resp.ContentType = "application/json";
                                 resp.ContentEncoding = Encoding.UTF8;
-                                resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                EnsureCorsHeaders(resp);
                                 resp.ContentLength64 = data.LongLength;
 
                                 // Write out to the response stream (asynchronously), then close it
@@ -692,7 +698,7 @@ namespace VigitempAgent
                             data = Encoding.UTF8.GetBytes(json.ToCharArray());
                             resp.ContentType = "application/json";
                             resp.ContentEncoding = Encoding.UTF8;
-                            resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                            EnsureCorsHeaders(resp);
                             resp.ContentLength64 = data.LongLength;
 
                             // Write out to the response stream (asynchronously), then close it
@@ -735,7 +741,7 @@ namespace VigitempAgent
                     var bytes = Encoding.UTF8.GetBytes(jsonSession);
                     resp.ContentType = "application/json";
                     resp.ContentEncoding = Encoding.UTF8;
-                    resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                    EnsureCorsHeaders(resp);
                     resp.ContentLength64 = bytes.LongLength;
                     await resp.OutputStream.WriteAsync(bytes, 0, bytes.Length);
                     resp.Close();
@@ -768,7 +774,7 @@ namespace VigitempAgent
                                         data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                         resp.ContentType = "application/json";
                                         resp.ContentEncoding = Encoding.UTF8;
-                                        resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                        EnsureCorsHeaders(resp);
                                         resp.ContentLength64 = data.LongLength;
 
                                         // Write out to the response stream (asynchronously), then close it
@@ -790,7 +796,7 @@ namespace VigitempAgent
                                 //data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                 //resp.ContentType = "application/json";
                                 //resp.ContentEncoding = Encoding.UTF8;
-                                //resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                //EnsureCorsHeaders(resp);
                                 //resp.ContentLength64 = data.LongLength;
 
                                 //// Write out to the response stream (asynchronously), then close it
@@ -809,7 +815,7 @@ namespace VigitempAgent
                                     data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                     resp.ContentType = "application/json";
                                     resp.ContentEncoding = Encoding.UTF8;
-                                    resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                    EnsureCorsHeaders(resp);
                                     resp.ContentLength64 = data.LongLength;
 
                                     // Write out to the response stream (asynchronously), then close it
@@ -828,7 +834,7 @@ namespace VigitempAgent
                                     data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                     resp.ContentType = "application/json";
                                     resp.ContentEncoding = Encoding.UTF8;
-                                    resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                    EnsureCorsHeaders(resp);
                                     resp.ContentLength64 = data.LongLength;
 
                                     // Write out to the response stream (asynchronously), then close it
@@ -869,7 +875,7 @@ namespace VigitempAgent
                                     data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                     resp.ContentType = "application/json";
                                     resp.ContentEncoding = Encoding.UTF8;
-                                    resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                    EnsureCorsHeaders(resp);
                                     resp.ContentLength64 = data.LongLength;
 
                                     // Write out to the response stream (asynchronously), then close it
@@ -923,7 +929,7 @@ namespace VigitempAgent
                                 data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                 resp.ContentType = "application/json";
                                 resp.ContentEncoding = Encoding.UTF8;
-                                resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                EnsureCorsHeaders(resp);
                                 resp.ContentLength64 = data.LongLength;
 
                                 // Write out to the response stream (asynchronously), then close it
@@ -958,7 +964,7 @@ namespace VigitempAgent
                                         data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                         resp.ContentType = "application/json";
                                         resp.ContentEncoding = Encoding.UTF8;
-                                        resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                        EnsureCorsHeaders(resp);
                                         resp.ContentLength64 = data.LongLength;
 
                                         // Write out to the response stream (asynchronously), then close it
@@ -983,7 +989,7 @@ namespace VigitempAgent
                                 //data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                 //resp.ContentType = "application/json";
                                 //resp.ContentEncoding = Encoding.UTF8;
-                                //resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                //EnsureCorsHeaders(resp);
                                 //resp.ContentLength64 = data.LongLength;
 
                                 //// Write out to the response stream (asynchronously), then close it
@@ -1002,7 +1008,7 @@ namespace VigitempAgent
                                     data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                     resp.ContentType = "application/json";
                                     resp.ContentEncoding = Encoding.UTF8;
-                                    resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                    EnsureCorsHeaders(resp);
                                     resp.ContentLength64 = data.LongLength;
 
                                     // Write out to the response stream (asynchronously), then close it
@@ -1021,7 +1027,7 @@ namespace VigitempAgent
                                     data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                     resp.ContentType = "application/json";
                                     resp.ContentEncoding = Encoding.UTF8;
-                                    resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                    EnsureCorsHeaders(resp);
                                     resp.ContentLength64 = data.LongLength;
 
                                     // Write out to the response stream (asynchronously), then close it
@@ -1062,7 +1068,7 @@ namespace VigitempAgent
                                     data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                     resp.ContentType = "application/json";
                                     resp.ContentEncoding = Encoding.UTF8;
-                                    resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                    EnsureCorsHeaders(resp);
                                     resp.ContentLength64 = data.LongLength;
 
                                     // Write out to the response stream (asynchronously), then close it
@@ -1090,7 +1096,7 @@ namespace VigitempAgent
                                 data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                 resp.ContentType = "application/json";
                                 resp.ContentEncoding = Encoding.UTF8;
-                                resp.AppendHeader("Access-Control-Allow-Origin", "*");
+                                EnsureCorsHeaders(resp);
                                 resp.ContentLength64 = data.LongLength;
 
                                 // Write out to the response stream (asynchronously), then close it
@@ -1184,6 +1190,9 @@ namespace VigitempAgent
         }
     }
 }
+
+
+
 
 
 

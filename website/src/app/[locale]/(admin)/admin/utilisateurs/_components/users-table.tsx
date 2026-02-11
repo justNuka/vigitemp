@@ -14,6 +14,7 @@ interface Props {
   selectedUserId?: string | null;
   onEditUser: (user: User) => void;
   onSelectUser: (user: User) => void;
+  onDoubleClickUser?: (user: User) => void;
 }
 
 export function UsersTable({
@@ -21,6 +22,7 @@ export function UsersTable({
   selectedUserId,
   onEditUser,
   onSelectUser,
+  onDoubleClickUser,
 }: Props) {
   const t = useTranslations("usersTable");
   const locale = useLocale();
@@ -123,6 +125,7 @@ export function UsersTable({
       emptyMessage={t("empty")}
       selectedRowId={selectedUserId}
       onRowClick={(row) => onSelectUser(row as User)}
+      onRowDoubleClick={(row) => onDoubleClickUser?.(row as User)}
       containerClassName="bg-white"
       tableClassName="bg-white border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
       headerClassName="!bg-sidebar !text-sidebar-foreground"
@@ -130,3 +133,4 @@ export function UsersTable({
     />
   );
 }
+

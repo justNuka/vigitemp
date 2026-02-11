@@ -9,6 +9,7 @@ export type LicenseInfo = {
   licenseId?: string;
   customerId?: string;
   edition?: string;
+  maxSensors?: number | null;
   concurrentAccess?: string;
   options?: string[];
   issuedAtRaw?: string;
@@ -82,3 +83,4 @@ export function LicenseProvider({ children }: { children: React.ReactNode }) {
     </LicenseContext.Provider>
   );
 }
+

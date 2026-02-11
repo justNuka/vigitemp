@@ -57,7 +57,7 @@
     "groupes": "Groupes",
     "utilisateurs": "Utilisateurs",
     "profils": "Profils",
-    "etalons": "Étalons",
+    "etalons": "Ã‰talons",
     "actionneurs": "Actionneurs",
     "outils": "Outils"
   },
@@ -73,7 +73,7 @@
   "tables": {
     "address": "Adresse",
     "serialNumber": "Numéro de série",
-    "state": "État",
+    "state": "Ã‰tat",
     "location": "Lieu",
     "site": "Site",
     "group": "Groupe",
@@ -259,9 +259,9 @@
   },
   "adminSettings": {
     "toast": {
-      "update_success": "Paramètre mis à jour",
-      "update_error": "Erreur lors de la mise à jour",
-      "refresh_interval": "Intervalle de rafraîchissement : {label}"
+      "update_success": "Paramètre mis Ã  jour",
+      "update_error": "Erreur lors de la mise Ã  jour",
+      "refresh_interval": "Intervalle de rafraÃ®chissement : {label}"
     },
     "general": {
       "title": "Général",
@@ -270,7 +270,7 @@
         "notifications_email": "Notifications par email",
         "notifications_sms": "Notifications SMS",
         "alarms_sound": "Son des alarmes",
-        "dashboard_refresh": "Intervalle de rafraîchissement (s)"
+        "dashboard_refresh": "Intervalle de rafraÃ®chissement (s)"
       },
       "refresh_options": {
         "5": "5 secondes",
@@ -285,7 +285,7 @@
       "title": "Fuseau horaire",
       "description": "Définir le fuseau horaire d'affichage",
       "label": "Fuseau horaire",
-      "helper": "L'affichage des dates s'adaptera à ce fuseau horaire."
+      "helper": "L'affichage des dates s'adaptera Ã  ce fuseau horaire."
     },
     "security": {
       "title": "Sécurité",
@@ -308,13 +308,13 @@
       "toast": {
         "enabled": "Verrouillage automatique activé ({minutes} min)",
         "disabled": "Verrouillage automatique désactivé",
-        "duration": "Durée d'inactivité définie à {minutes} minutes"
+        "duration": "Durée d'inactivité définie Ã  {minutes} minutes"
       }
     },
     "notifications": {
       "title": "Notifications",
       "description": "Gérer les préférences de notifications",
-      "coming_soon": "Configuration avancée des notifications à venir"
+      "coming_soon": "Configuration avancée des notifications Ã  venir"
     },
     "password_policy": {
       "title": "Règles de mot de passe",
@@ -324,7 +324,7 @@
       "title": "Configuration Email",
       "description": "Configurer le serveur SMTP pour les notifications par email",
       "warning_label": "Attention:",
-      "warning_body": "Une mauvaise configuration SMTP peut empêcher l'envoi des notifications d'alarme par email. Vérifiez les paramètres avec soin et testez après toute modification.",
+      "warning_body": "Une mauvaise configuration SMTP peut empÃªcher l'envoi des notifications d'alarme par email. Vérifiez les paramètres avec soin et testez après toute modification.",
       "configure_button": "Configurer SMTP"
     },
     "smtp_modal": {
@@ -370,14 +370,14 @@
       },
       "toasts": {
         "fetch_error": "Erreur lors du chargement de la configuration",
-        "update_success": "Configuration SMTP mise à jour avec succès",
+        "update_success": "Configuration SMTP mise Ã  jour avec succès",
         "update_error": "Erreur serveur",
         "test_success": "Email de test envoyé",
         "test_error": "Erreur serveur"
       },
       "validation": {
         "host_required": "Le serveur SMTP est requis",
-        "port_range": "Le port doit être entre 1 et 65535",
+        "port_range": "Le port doit Ãªtre entre 1 et 65535",
         "user_required": "L'utilisateur SMTP est requis",
         "password_required": "Le mot de passe SMTP est requis",
         "sender_required": "L'adresse d'expédition est requise",
@@ -396,12 +396,12 @@
     "tabs": {
       "active": "Actives",
       "acknowledged": "Acquittées",
-      "resolved": "À acquitter"
+      "resolved": "Ã€ acquitter"
     },
     "titles": {
       "active": "Alarmes actives",
       "acknowledged": "Alarmes acquittées",
-      "resolved": "Alarmes à acquitter"
+      "resolved": "Alarmes Ã  acquitter"
     },
     "refresh": {
       "label": "Actualiser",
@@ -441,8 +441,8 @@
     "empty_state": {
       "active_title": "Aucune alarme active",
       "acknowledged_title": "Aucune alarme acquittée",
-      "resolved_title": "Aucune alarme à acquitter",
-      "active_description": "Tout est sous contrôle - Aucune alarme en cours",
+      "resolved_title": "Aucune alarme Ã  acquitter",
+      "active_description": "Tout est sous contrÃ´le - Aucune alarme en cours",
       "other_description": "Aucune alarme dans cette catégorie pour le moment"
     },
     "dialog": {
@@ -466,7 +466,7 @@
       "graph_hint": "Afficher la courbe des mesures du lieu",
       "graph_show": "Afficher",
       "graph_hide": "Masquer",
-      "comment_select_label": "Commentaire pré‑existant",
+      "comment_select_label": "Commentaire préâ€‘existant",
       "comment_select_placeholder": "Choisir un commentaire",
       "comment_select_empty": "Aucun commentaire disponible",
       "count_30_label": "Alarmes sur 30 jours",
@@ -483,15 +483,15 @@
     "status": {
       "active": "En cours",
       "acknowledged": "Acquittée",
-      "resolved": "Terminée (à acquitter)"
+      "resolved": "Terminée (Ã  acquitter)"
     }
   },
   "adminAlarmsPage": {
     "title": "Gestion des alarmes (admin)",
-    "description": "Suivi et traitement des alarmes côté administration",
+    "description": "Suivi et traitement des alarmes cÃ´té administration",
     "meta": {
       "title": "Alarmes admin - VigiSensys",
-      "description": "Gestion des alarmes côté administration"
+      "description": "Gestion des alarmes cÃ´té administration"
     }
   },
   "auditPage": {
@@ -516,7 +516,7 @@
     },
     "toast": {
       "create_success": "Lieu créé avec succès",
-      "create_no_sensor": "Lieu créé sans sonde. Pensez à l'affecter plus tard.",
+      "create_no_sensor": "Lieu créé sans sonde. Pensez Ã  l'affecter plus tard.",
       "create_error": "Erreur lors de la création du lieu",
       "update_success": "Lieu modifié avec succès",
       "update_error": "Erreur lors de la modification du lieu",
@@ -548,7 +548,7 @@
       "site": "Site",
       "groups": "Groupes",
       "sensor": "Sonde",
-      "status": "État",
+      "status": "Ã‰tat",
       "setpoint": "Consigne",
       "unit": "Unité",
       "frequency": "Fréquence",
@@ -567,7 +567,7 @@
     },
     "types": {
       "bain_marie": "Bain marie",
-      "etuve": "Étuve",
+      "etuve": "Ã‰tuve",
       "ambiance": "Ambiance",
       "frigo_congel": "Frigo / Congélateur",
       "autre": "Autre"
@@ -605,7 +605,7 @@
         "site": "Site",
         "groups": "Groupe(s)",
         "sensor_select": "Sélection de sonde",
-        "sensor_state": "État de la sonde",
+        "sensor_state": "Ã‰tat de la sonde",
         "setpoint": "Consigne",
         "frequency": "Fréquence de mesure (min)",
         "upper_enable": "Activation consigne sup",
@@ -636,7 +636,7 @@
         "delay": "5"
       },
       "type_options": {
-        "etuve": "Étuve",
+        "etuve": "Ã‰tuve",
         "bain_marie": "Bain Marie",
         "ambiance": "Ambiance",
         "frigo_congel": "Frigo/Congel",
@@ -646,7 +646,7 @@
         "no_sensor": "Aucune sonde"
       },
       "tooltips": {
-        "frequency_gso": "Fréquence fixée à 15 min pour les sondes GSO."
+        "frequency_gso": "Fréquence fixée Ã  15 min pour les sondes GSO."
       },
       "group_fallback": "Groupe {id}"
     },
@@ -657,7 +657,7 @@
       },
       "labels": {
         "serial": "Numéro de série",
-        "state": "État",
+        "state": "Ã‰tat",
         "calibration_date": "Date de calibrage",
         "calibration_check_date": "Date d'étalonnage",
         "unit": "Unité",
@@ -677,15 +677,15 @@
       },
       "emt": {
         "title": "EMT (Erreur Maximale Tolérée)",
-        "decimals_placeholder": "Nombre à 2 décimales",
+        "decimals_placeholder": "Nombre Ã  2 décimales",
         "option": {
           "quart": {
-            "title": "Les EMT obéissent à la règle du quart",
+            "title": "Les EMT obéissent Ã  la règle du quart",
             "description": "L'EMT de la sonde de surveillance est fixée par défaut au quart de l'EMT"
           },
           "manuel": {
             "title": "EMT saisie manuellement",
-            "description": "En saisie manuelle, l'EMT de la sonde de surveillance doit être inférieur ou égal au quart de l'EMT de l'équipement"
+            "description": "En saisie manuelle, l'EMT de la sonde de surveillance doit Ãªtre inférieur ou égal au quart de l'EMT de l'équipement"
           },
           "uncertainties": {
             "title": "Avec prise en compte des incertitudes d'utilisation",
@@ -712,17 +712,17 @@
     },
     "associated": {
       "title": "Matériel associé ({count})",
-      "empty": "Aucun matériel associé à ce module"
+      "empty": "Aucun matériel associé Ã  ce module"
     },
     "archive": {
       "title": "Archiver le module",
-      "description": "Êtes-vous sûr de vouloir archiver ce module ? Cette action ne peut pas être annulée.",
+      "description": "ÃŠtes-vous sÃ»r de vouloir archiver ce module ? Cette action ne peut pas Ãªtre annulée.",
       "confirm": "Archiver"
     },
     "archive_blocked": {
       "title": "Archivage impossible",
-      "default": "Ce module est encore lié à d'autres éléments.",
-      "detail": "{count, plural, one {Ce module est lié à {count} sonde.} other {Ce module est lié à {count} sondes.}}"
+      "default": "Ce module est encore lié Ã  d'autres éléments.",
+      "detail": "{count, plural, one {Ce module est lié Ã  {count} sonde.} other {Ce module est lié Ã  {count} sondes.}}"
     },
     "toast": {
       "archive_error": "Erreur lors de l'archivage"
@@ -732,7 +732,7 @@
     "title_create": "Créer un nouveau module",
     "title_edit": "Modifier le module",
     "description_create": "Remplissez les informations du module",
-    "description_edit": "Mettez à jour les informations du module",
+    "description_edit": "Mettez Ã  jour les informations du module",
     "fields": {
       "serial_label": "Numéro de série",
       "serial_placeholder": "ex: MOD-001",
@@ -787,9 +787,9 @@
       "address": "Adresse",
       "serial": "Numéro de série",
       "port": "Port série",
-      "status": "État"
+      "status": "Ã‰tat"
     },
-    "empty": "Aucun matériel associé à ce module"
+    "empty": "Aucun matériel associé Ã  ce module"
   },
   "moduleAssociatedSensors": {
     "columns": {
@@ -812,9 +812,9 @@
         "serial": "Numéro de série",
         "type": "Type",
         "comment": "Commentaire",
-        "status": "État"
+        "status": "Ã‰tat"
       },
-      "search_placeholder": "N° série, type...",
+      "search_placeholder": "NÂ° série, type...",
       "empty": "Aucun actionneur trouvé"
     },
     "status": {
@@ -823,7 +823,7 @@
     },
     "archive": {
       "title": "Confirmer l'archivage",
-      "description": "Êtes-vous sûr de vouloir archiver cet actionneur ? Cette action ne pourra pas être annulée.",
+      "description": "ÃŠtes-vous sÃ»r de vouloir archiver cet actionneur ? Cette action ne pourra pas Ãªtre annulée.",
       "confirm": "Archiver"
     },
     "toast": {
@@ -850,7 +850,7 @@
     },
     "submit": {
       "create": "Créer",
-      "update": "Mettre à jour"
+      "update": "Mettre Ã  jour"
     }
   },
   "toolsPage": {
@@ -863,8 +863,8 @@
       "monitoring": "Surveillance"
     },
     "placeholders": {
-      "config": "Onglet Config à venir...",
-      "monitoring": "Onglet Surveillance à venir..."
+      "config": "Onglet Config Ã  venir...",
+      "monitoring": "Onglet Surveillance Ã  venir..."
     }
   },
   "toolsComments": {
@@ -886,7 +886,7 @@
     "form": {
       "title": "Ajouter un commentaire",
       "labels": {
-        "type": "Type de journal d’audit",
+        "type": "Type de journal dâ€™audit",
         "comment": "Commentaire"
       },
       "placeholders": {
@@ -970,15 +970,15 @@
       "ACQ": "Acquittement alarme",
       "DES": "Surveillance désactivée",
       "ACT": "Surveillance activée",
-      "AS": "Arrêt surveillance",
+      "AS": "ArrÃªt surveillance",
       "DS": "Démarrage surveillance",
       "CC": "Modification",
       "CF": "Changement fréquence",
       "CR": "Changement retard alarme",
       "CS": "Changement sonde",
-      "AJE": "Événement manuel",
+      "AJE": "Ã‰vénement manuel",
       "CA": "Calibrage",
-      "ET": "Étalonnage",
+      "ET": "Ã‰talonnage",
       "TC": "Test connexion sonde",
       "MDP": "Mot de passe",
       "ARC": "Archivage / export",
@@ -1046,7 +1046,7 @@
     },
     "rules": {
       "loading": "Chargement des règles de mot de passe...",
-      "title": "Règles à respecter :"
+      "title": "Règles Ã  respecter :"
     },
     "match": {
       "ok": "Les mots de passe correspondent",
@@ -1073,8 +1073,8 @@
   },
   "profileCfr21": {
     "title": "Conformité CFR21 activée",
-    "description": "Votre compte est soumis à la norme CFR21. Vous devez changer votre mot de passe régulièrement.",
-    "non_reuseable": "Les anciens mots de passe ne peuvent pas être réutilisés.",
+    "description": "Votre compte est soumis Ã  la norme CFR21. Vous devez changer votre mot de passe régulièrement.",
+    "non_reuseable": "Les anciens mots de passe ne peuvent pas Ãªtre réutilisés.",
     "last_change_label": "Dernière modification du mot de passe :",
     "never": "Jamais",
     "expired": "Votre mot de passe a expiré - changement obligatoire",
@@ -1083,10 +1083,12 @@
   },
   "adminSidebar": {
     "badge": "Admin",
+    "services": "Services MC2",
     "groups": {
       "dashboards": "Tableaux de bord",
       "management": "Gestion",
-      "system": "Système"
+      "system": "Système",
+      "metrology": "Metrologie"
     },
     "dashboards": {
       "user": "Utilisateur",
@@ -1103,14 +1105,17 @@
       "settings": "Paramètres",
       "licenses": "Licences",
       "backups": "Sauvegardes"
+    },
+    "metrology": {
+      "calibration_import": "Import etalonnage"
     }
   },
   "profilesPage": {
     "toast": {
       "create_success": "Profil créé avec succès",
       "create_error": "Erreur lors de la création",
-      "update_success": "Profil mis à jour avec succès",
-      "update_error": "Erreur lors de la mise à jour",
+      "update_success": "Profil mis Ã  jour avec succès",
+      "update_error": "Erreur lors de la mise Ã  jour",
       "delete_success": "Profil supprimé avec succès",
       "delete_error": "Erreur lors de la suppression"
     }
@@ -1129,9 +1134,9 @@
     },
     "authorizations_title": "Autorisations",
     "submit_create": "Créer",
-    "submit_update": "Mettre à jour",
+    "submit_update": "Mettre Ã  jour",
     "submit_creating": "Création...",
-    "submit_updating": "Mise à jour...",
+    "submit_updating": "Mise Ã  jour...",
     "validation": {
       "name_required": "Le nom du profil est requis"
     }
@@ -1177,7 +1182,7 @@
       "offset_hint": "Laissez vide pour utiliser 0."
     },
     "submit_create": "Ajouter",
-    "submit_update": "Mettre à jour",
+    "submit_update": "Mettre Ã  jour",
     "validation": {
       "type_required": "Type de sonde requis",
       "serial_invalid": "Numéro de série invalide",
@@ -1185,7 +1190,7 @@
     },
     "toast": {
       "invalid_sensor": "Sonde invalide",
-      "update_success": "Sonde mise à jour",
+      "update_success": "Sonde mise Ã  jour",
       "create_success": "Sonde créée",
       "save_error": "Erreur serveur"
     }
@@ -1194,7 +1199,7 @@
     "title_create": "Créer un étalon",
     "title_edit": "Modifier l'étalon",
     "submit_create": "Créer",
-    "submit_update": "Mettre à jour",
+    "submit_update": "Mettre Ã  jour",
     "submit_saving": "Enregistrement...",
     "sections": {
       "info": "Informations de l'étalon",
@@ -1231,17 +1236,17 @@
       "add": "Nouveau",
       "delete": "Supprimer",
       "delete_title": "Supprimer la mesure",
-      "delete_description": "Êtes-vous sûr de vouloir supprimer ce point de mesure ?",
+      "delete_description": "ÃŠtes-vous sÃ»r de vouloir supprimer ce point de mesure ?",
       "columns": {
         "point": "Point",
-        "reference": "T° référence",
-        "value": "T° lue",
+        "reference": "TÂ° référence",
+        "value": "TÂ° lue",
         "incertitude": "Incertitude"
       }
     },
     "toast": {
-      "create_success": "Étalon créé avec succès",
-      "update_success": "Étalon mis à jour avec succès",
+      "create_success": "Ã‰talon créé avec succès",
+      "update_success": "Ã‰talon mis Ã  jour avec succès",
       "save_error": "Erreur lors de la sauvegarde"
     }
   },
@@ -1305,16 +1310,16 @@
         "serial": "Numéro de série",
         "port": "Port série",
         "module": "Module",
-        "state": "État",
+        "state": "Ã‰tat",
         "location": "Lieu"
       },
-      "search_placeholder": "Adresse, N° série, lieu...",
+      "search_placeholder": "Adresse, NÂ° série, lieu...",
       "empty": "Aucune sonde"
     },
     "status": {
       "surveillance": "Surveillance",
       "calibrage": "Calibrage",
-      "etalonnage": "Étalonnage",
+      "etalonnage": "Ã‰talonnage",
       "test": "Test",
       "disabled": "Désactivée",
       "unknown": "Inconnue"
@@ -1335,7 +1340,7 @@
         }
       },
       "calibrations": {
-        "title": "Étalonnages",
+        "title": "Ã‰talonnages",
         "empty": "Aucun étalonnage",
         "columns": {
           "date": "Date",
@@ -1392,7 +1397,7 @@
     "toast": {
       "save_success": "{count} ligne(s) insérée(s) en base.",
       "save_error": "Erreur lors de l'insertion en base.",
-      "save_skipped": "{count} ligne(s) ignorée(s) car déjà présentes.",
+      "save_skipped": "{count} ligne(s) ignorée(s) car déjÃ  présentes.",
       "no_pending": "Aucune ligne ? ins?rer.",
       "confirm_adjustment_overwrite": "Des ajustages existent d\u00e9j\u00e0 pour {count} sonde(s). Ils seront remplac\u00e9s:",
       "confirm_offset_clear": "Un offset est pr\u00e9sent sur {count} sonde(s). Il sera remis \u00e0 0:",
@@ -1402,6 +1407,121 @@
   },
   "sensorAdjustmentUpload": {
     "drop_browse_zone": "Déposez les fichiers ici ou cliquer pour ajouter",
+    "supported": "Formats supportés : XML",
+    "sections": {
+      "uploading": "En cours",
+      "finished": "Terminé",
+      "failed": "Ã‰chec"
+    },
+    "remove": "Retirer",
+    "errors": {
+      "invalid_type": "Type de fichier invalide (XML uniquement).",
+      "upload_failed": "Ã‰chec de l'import",
+      "label": "Erreur"
+    },
+    "placeholders": {
+      "uploading": "Aucun fichier en cours d'upload.",
+      "finished": "Aucun fichier terminé.",
+      "failed": "Aucun fichier en erreur."
+    }
+  },
+  "sensorAdjustmentStepper": {
+    "step_label": "Ã‰tape {step}",
+    "steps": {
+      "upload": "Importer les fichiers",
+      "review": "Vérifier les données",
+      "create": "Créer les sondes"
+    },
+    "status": {
+      "in_progress": "En cours",
+      "completed": "Terminé",
+      "pending": "En attente"
+    },
+    "actions": {
+      "previous": "Ã‰tape précédente",
+      "next": "Ã‰tape suivante",
+      "next_disabled_no_file": "Veuillez charger au moins 1 fichier pour continuer.",
+      "process": "Traiter",
+      "processing": "Traitement...",
+      "finish": "Fermer"
+    },
+    "placeholders": {
+      "review": "Ã‰tape de vérification Ã  venir.",
+      "create": "Ã‰tape de création Ã  venir."
+    },
+    "validation": {
+      "description": "Vérification du format XML et de l'encodage.",
+      "empty": "Aucun fichier Ã  vérifier.",
+      "encoding": "Encodage détecté : {encoding}",
+      "status": {
+        "ok": "Format valide",
+        "fixed": "Encodage corrigé",
+        "error": "Erreur de format"
+      },
+      "errors": {
+        "invalid_xml": "XML invalide ou mal formé.",
+        "invalid_root": "Racine XML inattendue (attendu AJUSTAGE ou CALIBRAGE).",
+        "unreadable": "Impossible de lire le fichier."
+      }
+    },
+    "create": {
+      "summary_title": "Récapitulatif",
+      "summary_total": "Fichiers importés : {count}",
+      "summary_valid": "Fichiers valides : {count}",
+      "summary_fixed": "Encodages corrigés : {count}",
+      "summary_error": "Fichiers en erreur : {count}",
+      "processing": "Traitement des fichiers... ({processed}/{total})",
+      "process_done": "Traitement terminé. {count} fichier(s) importé(s).",
+      "process_errors": "{count} fichier(s) n'ont pas pu Ãªtre importé(s).",
+      "process_result": "Réussis : {success} Ã‰checs : {failed}"
+    }
+  },
+  "sensorCalibrationImport": {
+    "page": {
+      "title": "Import d'étalonnage",
+      "description": "Importer des fichiers XML pour créer des étalonnages",
+      "back_to_admin": "Retour à l'administration"
+    },
+    "actions": {
+      "import": "Importer des fichiers",
+      "save_to_db": "Insérer en base",
+      "saving_to_db": "Insertion en base...",
+      "edit": "Modifier",
+      "cancel": "Annuler",
+      "apply": "Appliquer"
+    },
+    "table": {
+      "title": "Fichiers d'étalonnage",
+      "columns": {
+        "file": "Fichier",
+        "sensor": "Sonde",
+        "date": "Date",
+        "date_validity": "Date de validité",
+        "operator": "Opérateur",
+        "unit": "Unité",
+        "uncertainty": "Incertitude",
+        "actions": "Actions"
+      },
+      "empty": "Veuillez importer un ou plusieurs fichier(s) d'étalonnage..."
+    },
+    "modal": {
+      "title": "Importer un fichier d'étalonnage",
+      "description": "Chargez un ou plusieurs fichiers XML pour créer des étalonnages."
+    },
+    "edit": {
+      "title": "Modifier les données",
+      "operator": "Opérateur",
+      "unit": "Unité"
+    },
+    "toast": {
+      "save_success": "{count} ligne(s) insérée(s) en base.",
+      "save_error": "Erreur lors de l'insertion en base.",
+      "save_skipped": "{count} ligne(s) ignorée(s) car déjà présentes.",
+      "no_pending": "Aucune ligne à insérer."
+    }
+  },
+  "sensorCalibrationUpload": {
+    "drop_browse_zone": "Déposez les fichiers ici ou cliquez pour ajouter",
     "supported": "Formats supportés : XML",
     "sections": {
       "uploading": "En cours",
@@ -1420,7 +1540,7 @@
       "failed": "Aucun fichier en erreur."
     }
   },
-  "sensorAdjustmentStepper": {
+  "sensorCalibrationStepper": {
     "step_label": "Étape {step}",
     "steps": {
       "upload": "Importer les fichiers",
@@ -1455,7 +1575,7 @@
       },
       "errors": {
         "invalid_xml": "XML invalide ou mal formé.",
-        "invalid_root": "Racine XML inattendue (attendu AJUSTAGE ou CALIBRAGE).",
+        "invalid_root": "Racine XML inattendue (attendu ETALONNAGE).",
         "unreadable": "Impossible de lire le fichier."
       }
     },
@@ -1470,8 +1590,7 @@
       "process_errors": "{count} fichier(s) n'ont pas pu être importé(s).",
       "process_result": "Réussis : {success} Échecs : {failed}"
     }
-  },
-  "standardsPage": {
+  },  "standardsPage": {
     "title": "Gestion des étalons",
     "count": "{count, plural, one {# étalon} other {# étalons}}",
     "actions": {
@@ -1484,9 +1603,9 @@
       "columns": {
         "serial": "Numéro de série",
         "certificate_date": "Date certificat",
-        "state": "État actuel"
+        "state": "Ã‰tat actuel"
       },
-      "search_placeholder": "N° série, état...",
+      "search_placeholder": "NÂ° série, état...",
       "empty": "Aucun étalon trouvé"
     },
     "state": {
@@ -1494,12 +1613,12 @@
       "inactive": "Inactif"
     },
     "toast": {
-      "archive_success": "Étalon archivé",
+      "archive_success": "Ã‰talon archivé",
       "archive_error": "Erreur lors de l'archivage"
     },
     "archive": {
       "title": "Confirmer l'archivage",
-      "description": "Êtes-vous sûr de vouloir archiver cet étalon ? Cette action ne pourra pas être annulée.",
+      "description": "ÃŠtes-vous sÃ»r de vouloir archiver cet étalon ? Cette action ne pourra pas Ãªtre annulée.",
       "cancel": "Annuler",
       "confirm": "Archiver"
     }
@@ -1511,8 +1630,8 @@
       "archive": "Archiver"
     },
     "archive_blocked_title": "Archivage impossible",
-    "archive_blocked_fallback": "Ce site est encore lié à d'autres éléments.",
-    "archive_blocked_detail": "{count, plural, one {Ce site est lié à # lieu.} other {Ce site est lié à # lieux.}}",
+    "archive_blocked_fallback": "Ce site est encore lié Ã  d'autres éléments.",
+    "archive_blocked_detail": "{count, plural, one {Ce site est lié Ã  # lieu.} other {Ce site est lié Ã  # lieux.}}",
     "errors": {
       "no_site_selected": "Aucun site sélectionné"
     },
@@ -1531,7 +1650,7 @@
     "edit_title": "Modifier le site",
     "edit_description": "Modifiez les informations du site",
     "archive_title": "Archiver le site",
-    "archive_description": "Êtes-vous sûr de vouloir archiver le site {code} ? Cette action ne peut être annulée.",
+    "archive_description": "ÃŠtes-vous sÃ»r de vouloir archiver le site {code} ? Cette action ne peut Ãªtre annulée.",
     "submit_create": "Créer",
     "submit_creating": "Création...",
     "submit_updating": "Modification...",
@@ -1559,14 +1678,14 @@
     "not_found_badge": "Erreur 404",
     "not_found_title": "Page introuvable",
     "not_found_description": "La page que vous recherchez n'existe pas ou a été déplacée.",
-    "back_home": "Retour à l'accueil",
+    "back_home": "Retour Ã  l'accueil",
     "retry": "Réessayer",
     "system_status": "Statut système",
     "monitoring_live": "Surveillance en cours",
     "connected": "Connecté",
     "forbidden_badge": "Accès restreint",
     "forbidden_title": "Accès refusé",
-    "forbidden_description": "Vous n'avez pas l'autorisation d'accéder à cette page.",
+    "forbidden_description": "Vous n'avez pas l'autorisation d'accéder Ã  cette page.",
     "forbidden_helper": "Si vous pensez qu'il s'agit d'une erreur, contactez un administrateur.",
     "server_error_badge": "Incident détecté",
     "server_error_title": "Erreur serveur",
@@ -1575,7 +1694,7 @@
   },
   "login": {
     "title": "Connexion",
-    "subtitle": "Accédez à votre système de surveillance environnementale",
+    "subtitle": "Accédez Ã  votre système de surveillance environnementale",
     "card": {
       "title": "Authentification",
       "description": "Entrez vos identifiants pour accéder au système",
@@ -1642,12 +1761,12 @@
   "resetPassword": {
     "invalid_link": {
       "title": "Lien invalide",
-      "description": "Le lien de réinitialisation est invalide ou incomplet. Veuillez utiliser le lien complet reçu par email.",
-      "back": "Retour à la connexion"
+      "description": "Le lien de réinitialisation est invalide ou incomplet. Veuillez utiliser le lien complet reÃ§u par email.",
+      "back": "Retour Ã  la connexion"
     },
     "success": {
       "title": "Mot de passe réinitialisé !",
-      "description": "Votre mot de passe a été réinitialisé avec succès. Vous allez être redirigé vers la page de connexion...",
+      "description": "Votre mot de passe a été réinitialisé avec succès. Vous allez Ãªtre redirigé vers la page de connexion...",
       "cta": "Se connecter maintenant"
     },
     "form": {
@@ -1668,7 +1787,7 @@
       "password_mismatch": "Les mots de passe ne correspondent pas"
     },
     "errors": {
-      "missing_token": "Token manquant. Veuillez utiliser le lien complet reçu par email.",
+      "missing_token": "Token manquant. Veuillez utiliser le lien complet reÃ§u par email.",
       "rules_not_met": "Veuillez respecter toutes les règles de mot de passe.",
       "generic": "Une erreur est survenue. Veuillez réessayer."
     }
@@ -1682,7 +1801,7 @@
       "link": "Validation du lien..."
     },
     "actions": {
-      "back_to_login": "Retour à la connexion",
+      "back_to_login": "Retour Ã  la connexion",
       "submit": "Changer le mot de passe",
       "submitting": "Changement en cours..."
     },
@@ -1741,7 +1860,7 @@
     "active_alarms": {
       "title": "Alarmes actives",
       "view_all": "Toutes les alarmes",
-      "empty": "Aucune alarme active - Tout est sous contrôle"
+      "empty": "Aucune alarme active - Tout est sous contrÃ´le"
     },
     "trend": {
       "title": "Tendance des alarmes",
@@ -1794,7 +1913,7 @@
   },
   "deleteProfileDialog": {
     "title": "Supprimer le profil",
-    "description": "Êtes-vous sûr de vouloir supprimer le profil \"{name}\" ?",
+    "description": "ÃŠtes-vous sÃ»r de vouloir supprimer le profil \"{name}\" ?",
     "blocked": "Attention : {count, plural, one {# utilisateur utilise} other {# utilisateurs utilisent}} ce profil. La suppression est impossible.",
     "actions": {
       "cancel": "Annuler",
@@ -1871,7 +1990,7 @@
         "label": "COMMENTAIRE",
         "date_time": "DATE/HEURE",
         "user": "UTILISATEUR",
-        "details": "DÉTAILS"
+        "details": "DÃ‰TAILS"
       },
       "empty": "Aucun audit pour ce lieu",
       "error": "Erreur lors du chargement de l'audit",
@@ -1923,42 +2042,42 @@
       "title": "Paramètres CFR21 (conformité réglementaire)",
       "enabled": {
         "label": "Norme CFR21 activée",
-        "helper": "Active les contrôles de conformité réglementaire (expiration et historique des mots de passe)"
+        "helper": "Active les contrÃ´les de conformité réglementaire (expiration et historique des mots de passe)"
       },
       "expiry": {
         "label": "Durée de validité des mots de passe",
-        "helper": "Les mots de passe expirent après {days} jours conformément à la norme CFR21",
+        "helper": "Les mots de passe expirent après {days} jours conformément Ã  la norme CFR21",
         "value": "{days} jours"
       }
     },
     "toast": {
-      "save_success": "Règles de mot de passe mises à jour avec succès",
+      "save_success": "Règles de mot de passe mises Ã  jour avec succès",
       "save_error": "Erreur lors de la sauvegarde des règles",
-      "cfr21_success": "Paramètre CFR21 mis à jour",
-      "cfr21_error": "Erreur lors de la mise à jour CFR21"
+      "cfr21_success": "Paramètre CFR21 mis Ã  jour",
+      "cfr21_error": "Erreur lors de la mise Ã  jour CFR21"
     }
   },
   "versionChangelog": {
     "title": "Nouvelle version {version}",
-    "description": "Nouveautés principales et changements à connaître.",
+    "description": "Nouveautés principales et changements Ã  connaÃ®tre.",
     "sections": {
       "forms": {
         "title": "Formulaires",
         "items": {
-          "0": "Validation harmonisée (react-hook-form + Zod) pour Profils, Groupes, Sondes et Étalons.",
+          "0": "Validation harmonisée (react-hook-form + Zod) pour Profils, Groupes, Sondes et Ã‰talons.",
           "1": "Messages d'erreur cohérents sur les champs requis."
         }
       },
       "monitoring": {
         "title": "Surveillance",
         "items": {
-          "0": "Cartes harmonisées (boutons, icônes de type, tooltips, mode light).",
+          "0": "Cartes harmonisées (boutons, icÃ´nes de type, tooltips, mode light).",
           "1": "Filtres et actions en couleur primary, tri et vues ajustés.",
           "2": "Dernière valeur dans le tableau des mesures.",
           "3": "Ajout de l'onglet Audit dans les détails d'un lieu.",
-          "4": "Suppression de l’affichage mini/maxi sur la surveillance (cartes et détails).",
+          "4": "Suppression de lâ€™affichage mini/maxi sur la surveillance (cartes et détails).",
           "5": "Acquittement rapide des alarmes depuis la carte de surveillance.",
-          "6": "Légende des statuts avec pastilles de couleur dans l'en-tête de surveillance.",
+          "6": "Légende des statuts avec pastilles de couleur dans l'en-tÃªte de surveillance.",
           "7": "Précision décimale des mesures respectée sur les cartes et tableaux.",
           "8": "Grille des lieux désactivés alignée sur la largeur complète."
         }
@@ -1974,7 +2093,7 @@
         "title": "Tables admin",
         "items": {
           "0": "Headers fixes avec blur, hauteurs adaptées et bords plus visibles.",
-          "1": "Actions harmonisées (icônes, tailles, couleurs).",
+          "1": "Actions harmonisées (icÃ´nes, tailles, couleurs).",
           "2": "Sélection de ligne plus lisible.",
           "3": "Fuseau horaire configurable pour l'affichage des dates."
         }
@@ -1983,7 +2102,7 @@
         "title": "Création et édition",
         "items": {
           "0": "Création de lieux sans sonde avec confirmation.",
-          "1": "Type GSO : fréquence verrouillée à 15 min.",
+          "1": "Type GSO : fréquence verrouillée Ã  15 min.",
           "2": "Liste des modules simplifiée."
         }
       },
@@ -2004,6 +2123,12 @@
         "items": {
           "0": "Page upgrade de licence traduite (FR/EN) avec libellés harmonisés.",
           "1": "Palette couleur alignée sur la charte VigiSensys pour la page upgrade."
+        }
+      },
+      "services": {
+        "title": "Services MC2",
+        "items": {
+          "0": "Nouveau hub Services MC2 avec accès Ã  l'upgrade, au matériel et aux actualités."
         }
       }
     }
@@ -2039,7 +2164,7 @@
     "hero": {
       "eyebrow": "Upgrade de licence",
       "title": "VigiSensys",
-      "leadPrefix": "Passez à une",
+      "leadPrefix": "Passez Ã  une",
       "titleHighlight": "métrologie plus intelligente",
       "subtitle": "Surveillance + métrologie réunies dans une centrale 100% on-premise.",
       "subtitleHighlights": {
@@ -2048,7 +2173,7 @@
         "2": "Performance."
       },
       "tagline": "Vos données restent chez vous.",
-      "ctaPrimary": "Passer à Standard",
+      "ctaPrimary": "Passer Ã  Standard",
       "ctaSecondary": "Comparer les licences",
       "scroll": "Faites défiler pour découvrir"
     },
@@ -2075,25 +2200,25 @@
       "items": {
         "0": { "title": "100% on-premise", "description": "Aucune donnée dans le cloud" },
         "1": { "title": "Alarmes temps réel", "description": "Détection instantanée des écarts" },
-        "2": { "title": "Traçabilité métrologique", "description": "Historique complet et auditable" },
-        "3": { "title": "Notifications Windows", "description": "Même navigateur fermé" }
+        "2": { "title": "TraÃ§abilité métrologique", "description": "Historique complet et auditable" },
+        "3": { "title": "Notifications Windows", "description": "MÃªme navigateur fermé" }
       }
     },
     "valueProps": {
       "eyebrow": "Pourquoi upgrader",
       "titleLine1": "Passez d'une surveillance",
       "titleHighlight": "\"constat\"",
-      "typewriter": "à une métrologie",
+      "typewriter": "Ã  une métrologie",
       "flip": {
         "0": "sécurisée",
-        "1": "maîtrisée",
+        "1": "maÃ®trisée",
         "2": "tracée"
       },
       "subtitle": "Six raisons de faire le pas vers Standard.",
       "items": {
         "0": {
           "title": "Réduire les non-conformités",
-          "description": "Détectez dérive et écarts plus tôt grâce au suivi continu.",
+          "description": "Détectez dérive et écarts plus tÃ´t grÃ¢ce au suivi continu.",
           "badge": "Standard"
         },
         "1": {
@@ -2102,23 +2227,23 @@
           "badge": "Standard"
         },
         "2": {
-          "title": "Renforcer la traçabilité",
+          "title": "Renforcer la traÃ§abilité",
           "description": "Rapports, historique, paramètres : tout est enregistré.",
           "badge": "Standard"
         },
         "3": {
           "title": "Standardiser les EMT par lieu",
-          "description": "Tolérances maîtrisées site par site, zone par zone.",
+          "description": "Tolérances maÃ®trisées site par site, zone par zone.",
           "badge": "Standard"
         },
         "4": {
           "title": "Collaborer sans perdre d'infos",
-          "description": "Messagerie interne et traçabilité des échanges.",
+          "description": "Messagerie interne et traÃ§abilité des échanges.",
           "badge": "Standard"
         },
         "5": {
-          "title": "Sécurité au cœur",
-          "description": "Rôles, audit, logique on-prem. Zéro compromis.",
+          "title": "Sécurité au cÅ“ur",
+          "description": "RÃ´les, audit, logique on-prem. Zéro compromis.",
           "badge": "Standard"
         }
       }
@@ -2162,7 +2287,7 @@
     },
     "architecture": {
       "eyebrow": "Architecture",
-      "title": "Écosystème 100% on-premise",
+      "title": "Ã‰cosystème 100% on-premise",
       "nodes": {
         "sondes": { "label": "Sondes", "sublabel": "Temp, HR, CO2..." },
         "serveur": { "label": "Serveur C#", "sublabel": "Interrogation + Alarmes" },
@@ -2182,7 +2307,7 @@
         "title": "Pourquoi c'est sécurisé",
         "items": {
           "0": "Données chez vous uniquement",
-          "1": "Contrôle d'accès granulaire",
+          "1": "ContrÃ´le d'accès granulaire",
           "2": "Logs et audit complets"
         }
       },
@@ -2204,11 +2329,11 @@
       "pin": {
         "cardTitle": "Plan du site",
         "title": "Cartographie des sondes",
-        "description": "Visualisez vos lieux critiques en un coup d'œil.",
-        "imageAlt": "Aperçu cartographie des sondes"
+        "description": "Visualisez vos lieux critiques en un coup d'Å“il.",
+        "imageAlt": "AperÃ§u cartographie des sondes"
       },
       "features": {
-        "0": "Associez chaque sonde à un lieu",
+        "0": "Associez chaque sonde Ã  un lieu",
         "1": "Visualisez les zones critiques",
         "2": "Retrouvez rapidement l'origine d'une alarme"
       },
@@ -2217,7 +2342,7 @@
     "licenses": {
       "eyebrow": "Licences",
       "title": "Tableau comparatif des licences",
-      "subtitle": "Choisissez le niveau qui correspond à vos besoins.",
+      "subtitle": "Choisissez le niveau qui correspond Ã  vos besoins.",
       "table": {
         "feature": "Fonctionnalité",
         "one": "One",
@@ -2236,13 +2361,13 @@
         "3": "Metrologie (calibrage 2 points)",
         "4": "Ajustage : coeff a/b",
         "5": "Ajustage : justesse + incertitude",
-        "6": "Gestion dérive & traçabilité",
+        "6": "Gestion dérive & traÃ§abilité",
         "7": "Messagerie interne",
         "8": "EMT par lieu",
         "9": "Dashboard personnalisable",
         "10": "IA assistant",
         "11": "Analyse temps réel",
-        "12": "Écosystème interventions"
+        "12": "Ã‰cosystème interventions"
       }
     },
     "standard": {
@@ -2250,7 +2375,7 @@
       "titleHighlight": "Standard",
       "titleSuffix": " : ce que vous obtenez concrètement",
       "subtitle": "Chaque fonctionnalité a été pensée pour des équipes métrologie exigeantes.",
-      "preview": "Aperçu {title}",
+      "preview": "AperÃ§u {title}",
       "blocks": {
         "0": {
           "title": "Calibrage 2 points + historique",
@@ -2258,11 +2383,11 @@
             "0": "Définissez vos 2 points de référence",
             "1": "Historique de chaque opération",
             "2": "Certificats de calibrage intégrés",
-            "3": "Traçabilité complète par sonde"
+            "3": "TraÃ§abilité complète par sonde"
           }
         },
         "1": {
-          "title": "Gestion de dérive & traçabilité",
+          "title": "Gestion de dérive & traÃ§abilité",
           "bullets": {
             "0": "Suivi de dérive automatique",
             "1": "Alertes sur seuil de dérive",
@@ -2291,7 +2416,7 @@
       }
     },
     "expert": {
-      "badge": "Bientôt disponible",
+      "badge": "BientÃ´t disponible",
       "titleHighlight": "Expert",
       "titleSuffix": " : la plateforme intelligente",
       "subtitle": "Toutes les fonctionnalités Standard + personnalisation + IA + écosystème MC2.",
@@ -2306,10 +2431,10 @@
         },
         "2": {
           "title": "Analyse temps réel",
-          "description": "Événements + mesures croisées, détection de patterns."
+          "description": "Ã‰vénements + mesures croisées, détection de patterns."
         },
         "3": {
-          "title": "Écosystème interventions",
+          "title": "Ã‰cosystème interventions",
           "description": "Planification technicien, suivi MC2 complet."
         }
       },
@@ -2318,7 +2443,7 @@
     "faq": {
       "eyebrow": "Sécurité & On-Premise",
       "title": "Questions fréquentes",
-      "subtitle": "Tout ce que vous devez savoir avant de passer à Standard.",
+      "subtitle": "Tout ce que vous devez savoir avant de passer Ã  Standard.",
       "items": {
         "0": {
           "question": "Les donnees sortent-elles de notre site ?",
@@ -2337,16 +2462,16 @@
           "answer": "Support technique, interventions sur site, formation. Options personnalisables selon vos besoins."
         },
         "4": {
-          "question": "Quelle est la politique de mises à jour ?",
-          "answer": "Mises à jour incluses dans la licence active. Déploiement contrôlé par vos équipes IT, à votre rythme."
+          "question": "Quelle est la politique de mises Ã  jour ?",
+          "answer": "Mises Ã  jour incluses dans la licence active. Déploiement contrÃ´lé par vos équipes IT, Ã  votre rythme."
         }
       }
     },
     "contact": {
-      "title": "Prêt à passer à la métrologie avancée ?",
+      "title": "PrÃªt Ã  passer Ã  la métrologie avancée ?",
       "subtitle": "Contactez-nous pour une démonstration ou un devis personnalisé.",
       "ctaPrimary": "Demander un devis",
-      "ctaSecondary": "Parler à un expert",
+      "ctaSecondary": "Parler Ã  un expert",
       "labels": {
         "email": "Email",
         "phone": "Téléphone",
@@ -2542,7 +2667,7 @@
       }
     },
     "loading": "Chargement des données...",
-    "updating": "Mise à jour...",
+    "updating": "Mise Ã  jour...",
     "pagination": {
       "page": "Page {page} sur {pages}",
       "page_size_label": "Taille de page",
@@ -2575,7 +2700,7 @@
     },
     "active_alarms": {
       "title": "Alarmes en cours",
-      "description": "État actuel ({total}, max {max})",
+      "description": "Ã‰tat actuel ({total}, max {max})",
       "empty": "Aucune alarme active en cours",
       "columns": {
         "sensor": "Sonde",
@@ -2598,7 +2723,7 @@
     },
     "backup": {
       "title": "Sauvegarde système",
-      "description": "État et historique",
+      "description": "Ã‰tat et historique",
       "last": {
         "label": "Dernière sauvegarde",
         "none": "N/A"
@@ -2610,19 +2735,19 @@
     },
     "backups": {
       "columns": {
-        "status": "État",
+        "status": "Ã‰tat",
         "date_time": "Date et Heure",
         "details": "Détails"
       },
       "status": {
         "success": "Réussi",
         "in_progress": "En cours",
-        "failed": "Échoué"
+        "failed": "Ã‰choué"
       }
     },
     "unassigned": {
       "title": "Sondes sans lieu actif",
-      "description": "{count, plural, one {# sonde non affectée à un lieu actif} other {# sondes non affectées à un lieu actif}}",
+      "description": "{count, plural, one {# sonde non affectée Ã  un lieu actif} other {# sondes non affectées Ã  un lieu actif}}",
       "empty": "Aucune sonde sans lieu actif",
       "columns": {
         "sensor": "Sonde",
@@ -2633,12 +2758,12 @@
     }
   },
   "cacheControls": {
-    "title": "Contrôles cache",
+    "title": "ContrÃ´les cache",
     "last_revalidated": "Dernière invalidation : {time}",
     "status_active": "Cache actif - données ultra rapides",
     "actions": {
-      "refresh": "Rafraîchir",
-      "refresh_title": "Rafraîchir les données depuis le cache",
+      "refresh": "RafraÃ®chir",
+      "refresh_title": "RafraÃ®chir les données depuis le cache",
       "invalidate": "Invalider cache",
       "invalidate_title": "Invalider le cache et recharger depuis la base"
     }
@@ -2670,7 +2795,7 @@
       "last_value": "Dernière valeur",
       "thresholds": "Consignes sup/inf",
       "start": "Début alarme",
-      "status": "État",
+      "status": "Ã‰tat",
       "count_30": "Alarmes 30j",
       "end": "Fin alarme",
       "acknowledged": "Acquittée"
@@ -2710,7 +2835,7 @@
     },
     "push_prompt": {
       "title": "Activer les notifications Windows ?",
-      "description": "Pour recevoir les alarmes même si le site est fermé.",
+      "description": "Pour recevoir les alarmes mÃªme si le site est fermé.",
       "action": "Activer",
       "denied": "Notifications refusées",
       "enabled": "Notifications activées"
@@ -2937,7 +3062,7 @@
     "title": "Zone de danger",
     "archive": {
       "title": "Archiver ce compte",
-      "description": "Le compte sera désactivé et l'utilisateur ne pourra plus se connecter. Cette action peut être annulée en réactivant le compte.",
+      "description": "Le compte sera désactivé et l'utilisateur ne pourra plus se connecter. Cette action peut Ãªtre annulée en réactivant le compte.",
       "action": "Archiver",
       "loading": "Archivage..."
     }
@@ -2949,5 +3074,3 @@
     "offline": "Hors ligne"
   }
 }
-
-
