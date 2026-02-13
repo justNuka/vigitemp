@@ -11,7 +11,6 @@ import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
-import { getAppTimezone } from "@/lib/timezone";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -106,11 +105,10 @@ type LocaleProvidersProps = Readonly<{
 
 async function LocaleProviders({ children, locale }: LocaleProvidersProps) {
   const messages = await getMessages();
-  const timezone = await getAppTimezone();
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <Providers timezone={timezone}>
+      <Providers>
         <Toaster position="bottom-right" richColors closeButton />
         {children}
       </Providers>
@@ -136,3 +134,8 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
     </html>
   );
 }
+
+
+
+
+

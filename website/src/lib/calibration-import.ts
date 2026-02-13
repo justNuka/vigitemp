@@ -190,7 +190,7 @@ export function parseCalibrationXml(xml: string, fileName = ""): ParsedCalibrati
     Moyenne_Sonde: moyenneSonde,
     Repetabilite: repetabilite,
     Err_Justesse: errJustesse,
-    Id_Milieu: idMilieu,
+    // Id_Milieu: idMilieu,
   };
 
   return {

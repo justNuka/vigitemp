@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Line } from "react-chartjs-2";
 import {
@@ -45,6 +45,7 @@ import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
 import { calculateYDomain, formatMeasureValue, getMeasureSummary } from "@/lib/measurements";
 import { formatDbDateTime } from "@/lib/date-display";
 import { AlarmAcknowledgeDialog, type AcknowledgeDialogAlarm } from "@/components/alarm-acknowledge-dialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 ChartJS.register(
   CategoryScale,
@@ -110,29 +111,35 @@ function RssiBars({ value, label }: { value?: string | null; label: string }) {
   const levelClass =
     level >= 4
       ? "bg-emerald-500"
-      : level == 3
+      : level === 3
         ? "bg-yellow-500"
-        : level == 2
+        : level === 2
           ? "bg-orange-500"
           : "bg-red-500";
 
   return (
-    <div className="inline-flex items-center gap-2" title={label} aria-label={label}>
-      <div className="flex items-end gap-0.5">
-        {Array.from({ length: 5 }).map((_, index) => {
-          const isActive = index < level;
-          const height = 4 + index * 3;
-          return (
-            <span
-              key={index}
-              className={`w-1 rounded-sm transition-colors ${isActive ? levelClass : "bg-muted/50"}`}
-              style={{ height }}
-            />
-          );
-        })}
-      </div>
-      <span className="tabular-nums">{value ?? "-"}</span>
-    </div>
+    <UITooltip>
+      <TooltipTrigger asChild>
+        <div className="inline-flex items-end gap-0.5 cursor-help" aria-label={label}>
+          {Array.from({ length: 5 }).map((_, index) => {
+            const isActive = index < level;
+            const height = 4 + index * 3;
+            return (
+              <span
+                key={index}
+                className={`w-1 rounded-sm transition-colors ${
+                  isActive ? levelClass : "bg-slate-400/80 dark:bg-slate-500/80"
+                }`}
+                style={{ height }}
+              />
+            );
+          })}
+        </div>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p className="text-xs">{label}</p>
+      </TooltipContent>
+    </UITooltip>
   );
 }
 
@@ -204,6 +211,55 @@ export default function MonitoringCard({
     surveillanceDisabled !== undefined ? !surveillanceDisabled : lieuEtat !== "D"
   );
   const [isAlarmActive, setIsAlarmActive] = useState(!alarmDisabled);
+  const [locallyAcknowledgedAlarmId, setLocallyAcknowledgedAlarmId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
+
+  const effectiveAlarmId =
+    locallyAcknowledgedAlarmId !== null && alarmId === locallyAcknowledgedAlarmId ? null : alarmId;
+  const effectiveAlarmType =
+    locallyAcknowledgedAlarmId !== null && alarmId === locallyAcknowledgedAlarmId ? null : alarmType;
+  const effectiveStatus =
+    locallyAcknowledgedAlarmId !== null && alarmId === locallyAcknowledgedAlarmId && status === "ended"
+      ? "ok"
+      : status;
+
+  const markAlarmAcknowledgedInCache = useCallback((acknowledgedAlarmId: number) => {
+    queryClient.setQueriesData({ queryKey: ["capteurs", "paginated"] }, (cached) => {
+      const data = cached as
+        | { pages?: Array<{ sensors?: Array<Record<string, unknown>>; [key: string]: unknown }> }
+        | undefined;
+      if (!data?.pages) return cached;
+
+      let changed = false;
+      const pages = data.pages.map((page) => {
+        if (!Array.isArray(page.sensors)) return page;
+
+        const sensors = page.sensors.map((sensor) => {
+          const location = ((sensor.location as Record<string, unknown> | undefined) ?? {});
+          const sensorAlarmId = Number(sensor.alarmId ?? location.alarmId ?? NaN);
+          if (!Number.isFinite(sensorAlarmId) || sensorAlarmId !== acknowledgedAlarmId) return sensor;
+
+          changed = true;
+          const nextStatus = sensor.status === "ended" ? "ok" : sensor.status;
+
+          return {
+            ...sensor,
+            status: nextStatus,
+            alarmId: null,
+            alarmType: null,
+            location: {
+              ...location,
+              alarmId: null,
+            },
+          };
+        });
+
+        return changed ? { ...page, sensors } : page;
+      });
+
+      return changed ? { ...data, pages } : cached;
+    });
+  }, [queryClient]);
 
   useEffect(() => {
     if (surveillanceDisabled !== undefined) {
@@ -237,13 +293,13 @@ export default function MonitoringCard({
   );
 
   const headerTheme = useMemo(
-    () => getStatusTheme(status, isSurveillanceActive, statusLabels),
-    [isSurveillanceActive, status, statusLabels]
+    () => getStatusTheme(effectiveStatus, isSurveillanceActive, statusLabels),
+    [effectiveStatus, isSurveillanceActive, statusLabels]
   );
 
   const alarmTypeTheme = useMemo(() => {
-    if (!alarmType || !isSurveillanceActive) return null;
-    switch (alarmType) {
+    if (!effectiveAlarmType || !isSurveillanceActive) return null;
+    switch (effectiveAlarmType) {
       case "H":
         return {
           label: t("alarmTypes.high"),
@@ -275,7 +331,7 @@ export default function MonitoringCard({
       default:
         return null;
     }
-  }, [alarmType, isSurveillanceActive]);
+  }, [effectiveAlarmType, isSurveillanceActive, t]);
 
   const headerBgClassName = alarmTypeTheme?.headerBgClassName ?? headerTheme.headerBgClassName;
   const headerTextClassName =
@@ -356,9 +412,9 @@ export default function MonitoringCard({
 
   const canAcknowledge =
     isSurveillanceActive &&
-    alarmId !== null &&
-    alarmId !== undefined &&
-    (status === "critical" || status === "technical" || status === "ended");
+    effectiveAlarmId !== null &&
+    effectiveAlarmId !== undefined &&
+    (effectiveStatus === "critical" || effectiveStatus === "technical" || effectiveStatus === "ended");
 
   const frequencyMinutes = useMemo(() => {
     if (isGso) return 15
@@ -410,20 +466,19 @@ export default function MonitoringCard({
 
   const hasGsoMetrics = Boolean(isGso && (gsoRssi || gsoTension));
 
-  const acknowledgeDialogAlarm: AcknowledgeDialogAlarm | null = canAcknowledge && alarmId
+  const acknowledgeDialogAlarm: AcknowledgeDialogAlarm | null = canAcknowledge && effectiveAlarmId
     ? {
-        id: String(alarmId),
+        id: String(effectiveAlarmId),
         locationId: String(idLieu),
         locationName: nomLieu,
-        sensorName: sondeNumeroSerie || nomLieu,
-        type:
-          alarmType === "H"
+        sensorName: sondeNumeroSerie || nomLieu,        type:
+          effectiveAlarmType === "H"
             ? "high"
-            : alarmType === "B"
+            : effectiveAlarmType === "B"
               ? "low"
-              : alarmType === "N"
+              : effectiveAlarmType === "N"
                 ? "no-response"
-                : alarmType === "T"
+                : effectiveStatus === "ended" || effectiveAlarmType === "T"
                   ? "ended"
                   : undefined,
         currentValue: typeof lastValue === "number" ? lastValue : null,
@@ -496,7 +551,7 @@ export default function MonitoringCard({
                     <div className="text-base font-semibold truncate cursor-help">{nomLieu}</div>
                   </TooltipTrigger>
                   {locationComment ? (
-                    <TooltipContent side="top" className="max-w-sm whitespace-pre-wrap break-words">
+                    <TooltipContent side="top" className="max-w-sm whitespace-pre-wrap wrap-break-word">
                       <p className="text-xs">{locationComment}</p>
                     </TooltipContent>
                   ) : null}
@@ -528,29 +583,35 @@ export default function MonitoringCard({
                     <p className="text-xs">{headerStatusLabel}</p>
                   </TooltipContent>
                 </UITooltip>
-                {alarmType ? (
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ${
-                      alarmType === "H"
-                        ? "bg-red-700 text-white"
-                        : alarmType === "B"
-                          ? "bg-blue-700 text-white"
-                          : alarmType === "T"
-                            ? "bg-violet-600 text-white"
-                            : "bg-black text-white"
-                    }`}
-                    title={
-                      alarmType === "H"
-                        ? t("alarmTypes.high")
-                        : alarmType === "B"
-                          ? t("alarmTypes.low")
-                          : alarmType === "T"
-                            ? t("alarmTypes.ended")
-                            : t("alarmTypes.no_response")
-                    }
-                  >
-                    {alarmType}
-                  </span>
+                {effectiveAlarmType ? (
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ${
+                          effectiveAlarmType === "H"
+                            ? "bg-red-700 text-white"
+                            : effectiveAlarmType === "B"
+                              ? "bg-blue-700 text-white"
+                              : effectiveAlarmType === "T"
+                                ? "bg-violet-600 text-white"
+                                : "bg-black text-white"
+                        }`}
+                      >
+                        {effectiveAlarmType}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">
+                        {effectiveAlarmType === "H"
+                          ? t("alarmTypes.high")
+                          : effectiveAlarmType === "B"
+                            ? t("alarmTypes.low")
+                            : effectiveAlarmType === "T"
+                              ? t("alarmTypes.ended")
+                              : t("alarmTypes.no_response")}
+                      </p>
+                    </TooltipContent>
+                  </UITooltip>
                 ) : null}
                 {typeIconInfo?.icon ? (
                   <UITooltip>
@@ -928,6 +989,11 @@ export default function MonitoringCard({
                 console.error("Acknowledge alarm error", await res.text());
                 return;
               }
+              const acknowledgedId = Number(ackAlarmId);
+              if (Number.isFinite(acknowledgedId)) {
+                setLocallyAcknowledgedAlarmId(acknowledgedId);
+                markAlarmAcknowledgedInCache(acknowledgedId);
+              }
               setShowAcknowledgeModal(false);
               setAckComment("");
               reload(true);
@@ -940,6 +1006,21 @@ export default function MonitoringCard({
     </>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

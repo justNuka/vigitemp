@@ -70,13 +70,13 @@ type ParsedDetails = {
   raw?: string;
 };
 
-function formatDateSafe(value: string, localeTag: string, timezone: string): string | null {
+function formatDateSafe(value: string, localeTag: string, timezone?: string): string | null {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
     return null;
   }
   return date.toLocaleString(localeTag, {
-    timeZone: timezone,
+    ...(timezone ? { timeZone: timezone } : {}),
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -90,7 +90,7 @@ function parseAuditDetails(
   details: string | null,
   t: (key: string, values?: Record<string, string | number>) => string,
   localeTag: string,
-  timezone: string,
+  timezone?: string,
 ): ParsedDetails {
   if (!details) {
     return { title: t("table.empty_value") };
@@ -405,3 +405,5 @@ export function AuditClient({ logs }: Props) {
     </main>
   );
 }
+
+

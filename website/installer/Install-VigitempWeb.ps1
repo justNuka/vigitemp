@@ -1,4 +1,4 @@
-Param(
+﻿Param(
     [string]$SourcePath,
     [string]$InstallDir,
     [string]$ServiceName,
@@ -296,10 +296,12 @@ if ($dbProvider -eq "mssql") {
     $databaseUrl = "sqlserver://${dbUser}:${dbPassword}@${dbHost}:${dbPort};database=${dbMain};encrypt=false;trustServerCertificate=true"
     $databaseMesureUrl = "sqlserver://${dbUser}:${dbPassword}@${dbHost}:${dbPort};database=${dbMeasure};encrypt=false;trustServerCertificate=true"
 } else {
-    $databaseUrl = "mysql://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbMain}"
-    $databaseMesureUrl = "mysql://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbMeasure}"
+    $dbUserEscaped = [System.Uri]::EscapeDataString($dbUser)
+    $dbPasswordEscaped = [System.Uri]::EscapeDataString($dbPassword)
+    $mysqlQuery = "allowPublicKeyRetrieval=true"
+    $databaseUrl = "mysql://${dbUserEscaped}:${dbPasswordEscaped}@${dbHost}:${dbPort}/${dbMain}?${mysqlQuery}"
+    $databaseMesureUrl = "mysql://${dbUserEscaped}:${dbPasswordEscaped}@${dbHost}:${dbPort}/${dbMeasure}?${mysqlQuery}"
 }
-
 $envPath = Join-Path $InstallDir $EnvFileName
 $standaloneEnvPath = $null
 if ($Standalone) {
@@ -328,7 +330,7 @@ if (-not $Offline) {
     Write-Log (T "Installation des dépendances..." "Installing dependencies...")
     & $pnpmCmd.Source install | Out-Null
 
-    Write-Log (T "G?n?ration des clients Prisma..." "Generating Prisma clients...")
+    Write-Log (T "Génération des clients Prisma..." "Generating Prisma clients...")
     & $pnpmCmd.Source prisma:generate | Out-Null
 
     Write-Log (T "Build de l'app Next.js..." "Building Next.js app...")
@@ -341,7 +343,7 @@ Pop-Location
 if ($Standalone) {
     $standaloneEntry = Join-Path $InstallDir ".next\\standalone\\server.js"
     if (-not (Test-Path $standaloneEntry)) {
-        Write-Error (T "Entr?e standalone introuvable : $standaloneEntry" "Standalone entry not found: $standaloneEntry")
+        Write-Error (T "Entrée standalone introuvable : $standaloneEntry" "Standalone entry not found: $standaloneEntry")
     }
 } else {
     $nextBin = Join-Path $InstallDir "node_modules\\next\\dist\\bin\\next"
@@ -364,9 +366,9 @@ if ($Offline) {
 
 $existingService = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
 if ($null -ne $existingService) {
-    $answer = Read-InstallValue (T "Le service $ServiceName existe. Arr?ter et r?installer ? (y/n)" "Service $ServiceName exists. Stop and reinstall? (y/n)") "y"
+    $answer = Read-InstallValue (T "Le service $ServiceName existe. Arrêter et réinstaller ? (y/n)" "Service $ServiceName exists. Stop and reinstall? (y/n)") "y"
     if ($answer -ne "y") {
-        Write-Error (T "Installation annul?e par l'utilisateur." "Installation cancelled by user.")
+        Write-Error (T "Installation annulée par l'utilisateur." "Installation cancelled by user.")
     }
     try { Stop-Service -Name $ServiceName -Force -ErrorAction SilentlyContinue } catch { }
     & sc.exe delete $ServiceName | Out-Null
@@ -482,3 +484,5 @@ function Confirm-WebInstall {
 Confirm-WebInstall
 
 Stop-Transcript | Out-Null
+
+

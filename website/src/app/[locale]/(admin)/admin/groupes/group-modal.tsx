@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/select'
 import type { Group } from '@/hooks/useGroups'
 import { patchJson, postJson } from '@/lib/http'
+import { showFormValidationToast } from '@/lib/form-toast'
 import { Check, X } from "lucide-react"
 
 interface GroupModalProps {
@@ -109,7 +110,7 @@ export function GroupModal({ open, onOpenChange, group, isEditing }: GroupModalP
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
             <FormField
               control={form.control}
               name="regroupement"

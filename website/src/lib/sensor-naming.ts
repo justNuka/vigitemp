@@ -1,4 +1,4 @@
-﻿const DUAL_GSO_TYPES = new Set(["SOIH", "SOEH"]);
+const DUAL_GSO_TYPES = new Set(["SOIH", "SOEH", "SOIT"]);
 
 const normalizeType = (value: string) => value.trim().toUpperCase().replace(/-+$/g, "");
 const normalizeSerial = (value: string) => value.trim().toUpperCase();
@@ -21,20 +21,26 @@ const stripGsoSuffix = (value: string) => value.replace(/-(T|H)$/i, "");
 
 export const normalizeImportedGsoSerial = (rawSerial: string) => {
   const serial = normalizeSerial(rawSerial);
-  const match = serial.match(/^(SOIH|SOEH)-(.+)$/i);
+  const match = serial.match(/^([A-Z0-9]+)-(.+)$/i);
   if (!match) return serial;
 
   const type = normalizeType(match[1]);
   const address = match[2].trim().toUpperCase();
-  if (address.endsWith("-T") || address.endsWith("-H")) {
-    return `${type}-${address}`;
+  if (!isGsoType(type)) return serial;
+
+  if (isDualGsoType(type)) {
+    if (address.endsWith("-T") || address.endsWith("-H")) {
+      return `${type}-${address}`;
+    }
+    return `${type}-${address}-T`;
   }
-  return `${type}-${address}-T`;
+
+  return `${type}-${address}`;
 };
 
 export const expandRelatedGsoSerials = (serial: string) => {
   const normalized = normalizeSerial(serial);
-  const match = normalized.match(/^(SOIH|SOEH)-(.+)$/i);
+  const match = normalized.match(/^(SOIH|SOEH|SOIT)-(.+)$/i);
   if (!match) return [normalized];
 
   const type = normalizeType(match[1]);

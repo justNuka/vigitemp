@@ -1,4 +1,5 @@
 "use client"
+import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useEffect, useMemo, useState } from "react"
 import { z } from "zod"
@@ -12,6 +13,7 @@ import { EditCommentDialog } from "./_components/edit-comment-dialog"
 import type { AuditCode, AuditComment } from "./_components/audit-comments-types"
 import { getJson, patchJson, postJson } from "@/lib/http"
 import { useTranslations } from 'next-intl'
+import { toast } from "sonner"
 
 export function CommentsTab() {
   const t = useTranslations('toolsComments')
@@ -96,8 +98,9 @@ export function CommentsTab() {
         return [...prev, { id: nextId, type: values.type, text: values.text }]
       })
       setValue("text", "")
+      toast.success("Commentaire enregistr?")
     } catch (error) {
-      console.error("Error saving comment:", error)
+      toast.error(error instanceof Error ? error.message : "Erreur lors de l'enregistrement du commentaire")
     }
   }
 
@@ -110,8 +113,9 @@ export function CommentsTab() {
 
       setComments(comments.filter((comment) => comment.id !== id))
       setSelectedCommentId(null)
+      toast.success("Commentaire supprim?")
     } catch (error) {
-      console.error("Error deleting comment:", error)
+      toast.error(error instanceof Error ? error.message : "Erreur lors de la suppression du commentaire")
     }
   }
 
@@ -129,8 +133,9 @@ export function CommentsTab() {
       setIsEditDialogOpen(false)
       setEditingComment(null)
       setSelectedCommentId(null)
+      toast.success("Commentaire modifi?")
     } catch (error) {
-      console.error("Error updating comment:", error)
+      toast.error(error instanceof Error ? error.message : "Erreur lors de la modification du commentaire")
     }
   }
 
@@ -148,7 +153,7 @@ export function CommentsTab() {
       <CommentsFormCard
         auditCodes={auditCodes}
         isLoading={isLoading}
-        onSubmit={handleSubmit(handleSave)}
+        onSubmit={handleSubmit(handleSave, (errors) => showFormValidationToast(errors))}
         control={control}
         register={register}
         errors={errors}
@@ -181,3 +186,6 @@ export function CommentsTab() {
     </div>
   )
 }
+
+
+

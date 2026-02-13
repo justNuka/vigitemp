@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+﻿import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 
@@ -50,7 +50,6 @@ export const POST = withLogging(async (req: NextRequest) => {
     }
 
     const passwordValid = await bcrypt.compare(password, user.Mot_De_Passe as string)
-    console.log(`[LOGIN-DEBUG] ${username} - Password valid: ${passwordValid}`)
 
     if (!passwordValid) {
       log.auth.login(username, ip, false, "Invalid password")
@@ -63,7 +62,6 @@ export const POST = withLogging(async (req: NextRequest) => {
       select: { Mot_Cle: true, Valeur: true },
     })
 
-    console.log(`[LOGIN-DEBUG] ${username} - CFR21 Params:`, cfr21Params)
 
     const expiryEnabled =
       cfr21Params.find((p) => p.Mot_Cle === "ACTIVATION_EXPIRATION_MOT_DE_PASSE")?.Valeur ===
@@ -76,43 +74,25 @@ export const POST = withLogging(async (req: NextRequest) => {
       cfr21Params.find((p) => p.Mot_Cle === "VALIDITE_MOT_DE_PASSE_JOURS")?.Valeur || "90",
     )
 
-    console.log(
-      `[LOGIN-DEBUG] ${username} - Expiry enabled: ${expiryEnabled}, Expiry days: ${expiryDays}`,
-    )
-    console.log(
-      `[LOGIN-DEBUG] ${username} - Date_Derniere_Modification_MDP: ${user.Date_Derniere_Modification_MDP}`,
-    )
-    console.log(
-      `[LOGIN-DEBUG] ${username} - Est_Mot_De_Passe_Temporaire: ${user.Est_Mot_De_Passe_Temporaire}`,
-    )
-
     if (expiryEnabled && expiryDays > 0 && user.Date_Derniere_Modification_MDP) {
       const daysSinceLastChange = Math.floor(
         (Date.now() - new Date(user.Date_Derniere_Modification_MDP).getTime()) /
           (1000 * 60 * 60 * 24),
       )
 
-      console.log(
-        `[LOGIN-DEBUG] ${username} - Days since last change: ${daysSinceLastChange} (threshold: ${expiryDays})`,
-      )
-
       if (daysSinceLastChange >= expiryDays) {
-        console.log(
-          `[LOGIN-DEBUG] ${username} - PASSWORD EXPIRED: ${daysSinceLastChange} >= ${expiryDays}`,
-        )
         return apiError(
           403,
           "password_expired",
           `Votre mot de passe a expiré (dernière modification il y a ${daysSinceLastChange} jours). Veuillez le changer.`,
           {
-          requirePasswordChange: true,
+            requirePasswordChange: true,
           },
         )
       }
     }
 
     if (user.Est_Mot_De_Passe_Temporaire) {
-      console.log(`[LOGIN-DEBUG] ${username} - TEMPORARY PASSWORD DETECTED`)
       return apiError(
         403,
         "temporary_password",
@@ -255,7 +235,16 @@ export const POST = withLogging(async (req: NextRequest) => {
       return apiError(400, "invalid_input", "Invalid input")
     }
 
-    console.error("Login error:", error)
+    log.error("AUTH", "Login error", {
+      ip,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      code: (error as any)?.code,
+      meta: (error as any)?.meta,
+    })
     return apiError(500, "internal_error", "Internal server error")
   }
 })
+
+
+

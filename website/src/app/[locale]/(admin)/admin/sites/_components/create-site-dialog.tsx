@@ -2,6 +2,7 @@
 
 import type { UseFormReturn } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
+import { showFormValidationToast } from '@/lib/form-toast';
 import type { CreateSiteInput } from './site-schemas';
 import { Button } from '@/components/ui/button';
 import {
@@ -50,7 +51,7 @@ export function CreateSiteDialog({
           <DialogDescription>{t('create_description')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
             <FormField
               control={form.control}
               name="Code_Site"

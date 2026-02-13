@@ -1,4 +1,5 @@
-﻿"use client";
+"use client";
+import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -139,7 +140,7 @@ export function SensorModal({ open, onOpenChange, sensor, isEditing }: SensorMod
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit, (errors) => showFormValidationToast(errors))} className="space-y-6">
             <FormField
               control={form.control}
               name="sondeType"

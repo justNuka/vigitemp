@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { AlertTriangle, ArrowLeft, Home, RotateCcw } from "lucide-react";
+import { AlertTriangle, ArrowLeft, RotateCcw } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ErrorPageLayout } from "@/components/error/error-page-layout";
 import { useRouter } from "@/i18n/navigation";
@@ -21,6 +21,10 @@ export default function Error({
     console.error(error);
   }, [error]);
 
+  const helperText = error.digest
+    ? `${t("server_error_helper")} (ID: ${error.digest})`
+    : t("server_error_helper");
+
   return (
     <ErrorPageLayout
       code="500"
@@ -28,7 +32,7 @@ export default function Error({
       icon={<AlertTriangle className="h-6 w-6" />}
       title={t("server_error_title")}
       description={t("server_error_description")}
-      helperText={t("server_error_helper")}
+      helperText={helperText}
       primaryAction={{
         label: t("retry"),
         icon: <RotateCcw className="h-4 w-4" />,

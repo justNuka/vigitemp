@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 import { prisma, prismaMesure } from "@/lib/prisma"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { getCachedMeasurements, setCachedMeasurements } from "@/lib/measurement-cache"
@@ -71,7 +71,7 @@ export const GET = withAuthLogging(
           ? prismaMesure.tm_mesures.findMany({
               where: {
                 ...whereClause,
-                Est_Valeur_Null: false,
+                Est_Valeur_Null: 0,
               },
               take: usePagination ? pageSize : rowNumber,
               skip: usePagination ? (page - 1) * pageSize : 0,
@@ -127,7 +127,7 @@ export const GET = withAuthLogging(
           ? prismaMesure.tm_mesures.count({
               where: {
                 ...whereClause,
-                Est_Valeur_Null: false,
+                Est_Valeur_Null: 0,
               },
             })
           : Promise.resolve(0),
@@ -210,3 +210,5 @@ export const GET = withAuthLogging(
     }
   },
 )
+
+

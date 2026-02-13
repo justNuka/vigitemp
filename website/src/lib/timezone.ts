@@ -1,5 +1,4 @@
 import { cacheTag } from "next/cache";
-import { prisma } from "@/lib/prisma";
 
 const DEFAULT_TIMEZONE = "Europe/Paris";
 
@@ -8,6 +7,7 @@ export async function getAppTimezone(): Promise<string> {
   cacheTag("app-timezone");
 
   try {
+    const { prisma } = await import("@/lib/prisma");
     const setting = await prisma.t_parametre.findFirst({
       where: {
         OR: [
@@ -24,3 +24,5 @@ export async function getAppTimezone(): Promise<string> {
     return DEFAULT_TIMEZONE;
   }
 }
+
+

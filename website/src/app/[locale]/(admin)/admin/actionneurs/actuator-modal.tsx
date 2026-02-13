@@ -1,4 +1,5 @@
 "use client"
+import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useEffect, useMemo } from "react"
 import { useQueryClient } from '@tanstack/react-query'
@@ -18,6 +19,7 @@ import { useForm, Controller } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useTranslations } from 'next-intl'
+import { toast } from "sonner"
 
 type Props = {
   open: boolean
@@ -102,9 +104,10 @@ export function ActuatorModal({ open, onOpenChange, actuator, isEditing }: Props
 
       await queryClient.invalidateQueries({ queryKey: ["actionneurs"] })
       router.refresh()
+      toast.success(isEdit ? "Actionneur modifi? avec succ?s" : "Actionneur cr?? avec succ?s")
       onOpenChange(false)
     } catch (error) {
-      console.error("Error:", error)
+      toast.error(error instanceof Error ? error.message : "Erreur lors de la sauvegarde de l'actionneur")
     }
   }
 
@@ -115,7 +118,7 @@ export function ActuatorModal({ open, onOpenChange, actuator, isEditing }: Props
           <DialogTitle>{isEdit ? t('title_edit') : t('title_create')}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="type">{t('fields.type_label')}</Label>
             <Controller
@@ -186,4 +189,7 @@ export function ActuatorModal({ open, onOpenChange, actuator, isEditing }: Props
     </Dialog>
   )
 }
+
+
+
 

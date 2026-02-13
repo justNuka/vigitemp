@@ -30,6 +30,18 @@ type HotlineLogs = {
   lines: string[]
 }
 
+type HotlineRequestError = {
+  id: string
+  timestamp: string
+  method: string
+  path: string
+  statusCode: number
+  message: string
+  user?: string
+  userId?: number
+  ip?: string
+}
+
 type HotlineDashboardProps = {
   slug: string
 }
@@ -70,6 +82,10 @@ function getLogLineClass(line: string) {
   return "text-foreground"
 }
 
+function formatRequestErrorLine(item: HotlineRequestError) {
+  return `[${item.timestamp}] [${item.id}] ${item.method} ${item.path} -> ${item.statusCode} | ${item.message}`
+}
+
 export function HotlineDashboard({ slug }: HotlineDashboardProps) {
   const router = useRouter()
   const params = useParams()
@@ -91,6 +107,8 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
     status: string
     message: string
   } | null>(null)
+  const [requestErrors, setRequestErrors] = useState<HotlineRequestError[]>([])
+  const [loadingRequestErrors, setLoadingRequestErrors] = useState(false)
 
   const safeLimit = useMemo(() => {
     const parsed = Number(logLimit)
@@ -136,6 +154,22 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
     }
   }
 
+  const loadRequestErrors = async () => {
+    setLoadingRequestErrors(true)
+    try {
+      const data = await getJson<{ items: HotlineRequestError[] }>(`/api/hotline/request-errors?limit=${safeLimit}`)
+      setRequestErrors(data.items || [])
+    } catch (error) {
+      if (isUnauthorizedError(error)) {
+        router.replace(`/${locale}/hotline/${slug}/login`)
+        return
+      }
+      setRequestErrors([])
+    } finally {
+      setLoadingRequestErrors(false)
+    }
+  }
+
   const loadAgentSecretStatus = async () => {
     try {
       const payload = await getJson<
@@ -155,6 +189,7 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
   useEffect(() => {
     loadHealth()
     loadLogs()
+    loadRequestErrors()
     loadAgentSecretStatus()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -186,6 +221,7 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
         <TabsList>
           <TabsTrigger value="overview">{t("tabs.overview")}</TabsTrigger>
           <TabsTrigger value="logs">{t("tabs.logs")}</TabsTrigger>
+          <TabsTrigger value="request_errors">{t("tabs.request_errors")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">
@@ -331,6 +367,30 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
           </Card>
         </TabsContent>
 
+        <TabsContent value="request_errors" className="mt-4 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">{t("request_errors.title")}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-end">
+                <Button onClick={loadRequestErrors} disabled={loadingRequestErrors}>
+                  {loadingRequestErrors ? t("actions.loading") : t("actions.refresh")}
+                </Button>
+              </div>
+              <Terminal className="max-h-120 max-w-full" sequence={false}>
+                {requestErrors.map((item) => (
+                  <span key={item.id} className="text-red-300">
+                    {formatRequestErrorLine(item)}
+                  </span>
+                ))}
+                {!loadingRequestErrors && requestErrors.length === 0 ? (
+                  <span className="text-muted-foreground">{t("request_errors.empty")}</span>
+                ) : null}
+              </Terminal>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   )

@@ -9,6 +9,7 @@ import {
   ArrowDown,
   ArrowUp,
   Clock,
+  Filter,
   MessageSquare,
   RefreshCw,
   WifiOff,
@@ -43,6 +44,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -86,6 +95,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
   const [isRefreshing, startTransition] = useTransition();
   const [selectedAlarm, setSelectedAlarm] = useState<AlarmWithDetails | null>(null);
   const [localAlarms, setLocalAlarms] = useState<AlarmWithDetails[]>(alarms);
+  const [typeFilters, setTypeFilters] = useState<AlarmRow["type"][]>([]);
   const formatTzDateTime = (value: string | Date) => formatDbDateTime(value);
   const [commentOptions, setCommentOptions] = useState<
     { id: number; type: string | null; text: string }[]
@@ -219,6 +229,77 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     </Button>
   );
 
+
+  const toggleTypeFilter = (type: AlarmRow["type"], checked: boolean) => {
+    setTypeFilters((prev) => {
+      if (checked) {
+        return prev.includes(type) ? prev : [...prev, type];
+      }
+      return prev.filter((item) => item !== type);
+    });
+  };
+
+  const filterButton = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 border-primary/40"
+          data-testid="button-filter-type"
+        >
+          <Filter className="h-4 w-4" />
+          <span className="hidden sm:inline">{t("filters.type_label")}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>{t("filters.type_label")}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuCheckboxItem
+          checked={typeFilters.length === 0}
+          onSelect={(e) => e.preventDefault()}
+          onCheckedChange={(checked) => {
+            if (checked) setTypeFilters([]);
+          }}
+        >
+          {t("filters.all")}
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          checked={typeFilters.includes("high")}
+          onSelect={(e) => e.preventDefault()}
+          onCheckedChange={(checked) => toggleTypeFilter("high", checked === true)}
+        >
+          {t("filters.high")}
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          checked={typeFilters.includes("low")}
+          onSelect={(e) => e.preventDefault()}
+          onCheckedChange={(checked) => toggleTypeFilter("low", checked === true)}
+        >
+          {t("filters.low")}
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          checked={typeFilters.includes("no-response")}
+          onSelect={(e) => e.preventDefault()}
+          onCheckedChange={(checked) => toggleTypeFilter("no-response", checked === true)}
+        >
+          {t("filters.no_response")}
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          checked={typeFilters.includes("ended")}
+          onSelect={(e) => e.preventDefault()}
+          onCheckedChange={(checked) => toggleTypeFilter("ended", checked === true)}
+        >
+          {t("filters.ended")}
+        </DropdownMenuCheckboxItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  const activeTabDisabled = stats.active === 0 && statusFilter !== "active";
+  const resolvedTabDisabled = stats.resolved === 0 && statusFilter !== "resolved";
+  const acknowledgedTabDisabled = stats.acknowledged === 0 && statusFilter !== "acknowledged";
+
   const statusTabs = (
     <Tabs
       value={statusFilter}
@@ -226,32 +307,65 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
       className="w-full sm:w-auto"
     >
       <TabsList className="grid grid-cols-3 w-full sm:w-auto bg-primary/10 text-primary">
-        <TabsTrigger
-          value="active"
-          data-testid="tab-active"
-          className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-        >
-          <span className="flex items-center gap-1">
-            {t("tabs.active")}
-            {stats.active > 0 && (
-              <span className="">({stats.active})</span>
-            )}
-          </span>
-        </TabsTrigger>
-        <TabsTrigger
-          value="resolved"
-          data-testid="tab-resolved"
-          className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-        >
-          {t("tabs.resolved")} ({stats.resolved})
-        </TabsTrigger>
-        <TabsTrigger
-          value="acknowledged"
-          data-testid="tab-acknowledged"
-          className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-        >
-          {t("tabs.acknowledged")} ({stats.acknowledged})
-        </TabsTrigger>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <TabsTrigger
+                value="active"
+                data-testid="tab-active"
+                disabled={activeTabDisabled}
+                className={cn(
+                  "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+                  activeTabDisabled && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <span className="flex items-center gap-1">
+                  {t("tabs.active")}
+                  {stats.active > 0 && <span className="">({stats.active})</span>}
+                </span>
+              </TabsTrigger>
+            </span>
+          </TooltipTrigger>
+          {activeTabDisabled ? <TooltipContent>{t("tabs.empty_tooltip")}</TooltipContent> : null}
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <TabsTrigger
+                value="resolved"
+                data-testid="tab-resolved"
+                disabled={resolvedTabDisabled}
+                className={cn(
+                  "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+                  resolvedTabDisabled && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                {t("tabs.resolved")} ({stats.resolved})
+              </TabsTrigger>
+            </span>
+          </TooltipTrigger>
+          {resolvedTabDisabled ? <TooltipContent>{t("tabs.empty_tooltip")}</TooltipContent> : null}
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>
+              <TabsTrigger
+                value="acknowledged"
+                data-testid="tab-acknowledged"
+                disabled={acknowledgedTabDisabled}
+                className={cn(
+                  "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
+                  acknowledgedTabDisabled && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                {t("tabs.acknowledged")} ({stats.acknowledged})
+              </TabsTrigger>
+            </span>
+          </TooltipTrigger>
+          {acknowledgedTabDisabled ? <TooltipContent>{t("tabs.empty_tooltip")}</TooltipContent> : null}
+        </Tooltip>
       </TabsList>
     </Tabs>
   );
@@ -324,18 +438,17 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
         const alarm = row.original;
         const sup = alarm.sensor.maxThreshold;
         const inf = alarm.sensor.minThreshold;
+        const hasSup = sup !== null && sup !== undefined;
+        const hasInf = inf !== null && inf !== undefined;
+
+        if (!hasSup && !hasInf) {
+          return <div className="text-right font-mono text-muted-foreground">-</div>;
+        }
+
         return (
           <div className="text-right font-mono text-muted-foreground">
-            <div>
-              {sup !== null && sup !== undefined
-                ? t("thresholds.sup", { value: sup, unit: alarm.sensor.unit })
-                : t("thresholds.sup_empty")}
-            </div>
-            <div>
-              {inf !== null && inf !== undefined
-                ? t("thresholds.inf", { value: inf, unit: alarm.sensor.unit })
-                : t("thresholds.inf_empty")}
-            </div>
+            <div>{hasSup ? t("thresholds.sup", { value: sup, unit: alarm.sensor.unit }) : t("thresholds.sup_empty")}</div>
+            <div>{hasInf ? t("thresholds.inf", { value: inf, unit: alarm.sensor.unit }) : t("thresholds.inf_empty")}</div>
           </div>
         );
       },
@@ -413,7 +526,9 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     },
   ];
 
-  const tableData: AlarmRow[] = localAlarms.map((alarm) => ({
+  const tableData: AlarmRow[] = localAlarms
+    .filter((alarm) => typeFilters.length === 0 || typeFilters.includes(alarm.type))
+    .map((alarm) => ({
     id: alarm.id,
     type: alarm.type,
     location: alarm.location,
@@ -535,7 +650,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
                 const fullAlarm = localAlarms.find((item) => item.id === row.id);
                 if (fullAlarm) setSelectedAlarm(fullAlarm);
               }}
-              toolbarRight={refreshButton}
+              toolbarRight={<div className="flex items-center gap-2">{filterButton}{refreshButton}</div>}
               maxHeight="calc(100dvh - 25rem)"
               headerClassName="!bg-sidebar !text-sidebar-foreground"
               headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"

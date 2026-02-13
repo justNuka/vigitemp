@@ -13,6 +13,7 @@ export interface LocationRow {
   Id_Site: number | null;
   Sonde_Numero_Serie: string | null;
   Commentaire?: string | null;
+  Observations_Info?: string | null;
   Consigne: number | null;
   Frequence: number | null;
   Consigne_Sup: number | null;
@@ -65,3 +66,6 @@ export function useLocations(enabled = true) {
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000),
   });
 }
+
+
+

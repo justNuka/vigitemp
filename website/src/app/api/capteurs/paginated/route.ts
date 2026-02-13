@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
@@ -138,7 +138,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       },
       skip,
       take: limit,
-      // PrioritÃÂ© aux alarmes / prÃÂ©-alarmes pour charger lÃ¢ÂÂUI rapidement.
+      // Priorité aux alarmes / pré-alarmes pour charger l’UI rapidement.
       orderBy: [
         { Est_Lieu_En_Alarme: "desc" },
         { Est_Lieu_En_Pre_Alarme: "desc" },
@@ -169,11 +169,11 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       ? await prisma.t_alarme.findMany({
           where: {
             Id_Lieu: { in: locationIds },
-            Type: "T",
             Est_Acquittee: false,
             Date_Heure_Fin: { not: null },
           },
           select: {
+            Id_Alarme: true,
             Id_Lieu: true,
             Date_Heure_Fin: true,
           },
@@ -200,6 +200,9 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       if (!alarm.Id_Lieu) continue
       if (!endedAlarmByLieu.has(alarm.Id_Lieu)) {
         endedAlarmByLieu.add(alarm.Id_Lieu)
+      }
+      if (!alarmIdByLieu.has(alarm.Id_Lieu)) {
+        alarmIdByLieu.set(alarm.Id_Lieu, alarm.Id_Alarme)
       }
     }
 
@@ -310,8 +313,9 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       sensors: sensorsWithMeasurements,
     })
   } catch (error) {
-    console.error("Erreur lors de la rÃÂ©cupÃÂ©ration des capteurs paginÃÂ©s:", error)
+    console.error("Erreur lors de la récupération des capteurs paginés:", error)
     return apiError(500, "internal_error", "Erreur lors du chargement des sondes")
   }
 })
+
 

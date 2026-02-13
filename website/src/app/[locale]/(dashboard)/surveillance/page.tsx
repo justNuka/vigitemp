@@ -1,5 +1,3 @@
-"use cache";
-
 import { Suspense } from "react";
 import { ServerDashboardStats } from "./server-stats";
 import { ServerFilterOptions } from "./server-filters";
@@ -50,15 +48,15 @@ function SensorsLoadingSkeleton() {
 }
 
 export default async function SurveillancePage() {
-  // Charger UNIQUEMENT la première page (50 sondes) côté serveur
+  // Charger UNIQUEMENT la premiere page (50 sondes) cote serveur
   // Le client chargera les pages suivantes avec infinite scroll
   const [statsData, filterOptions] = await Promise.all([
     ServerDashboardStats(),
     ServerFilterOptions(),
   ]);
 
-  // Le composant client va charger les sensors paginés via l'API
-  // Cela réduit drastiquement le temps de chargement initial
+  // Le composant client va charger les sensors pagines via l'API
+  // Cela reduit drastiquement le temps de chargement initial
   return (
     <div className="flex flex-col min-h-full">
       <Suspense fallback={<SensorsLoadingSkeleton />}>
@@ -71,3 +69,4 @@ export default async function SurveillancePage() {
     </div>
   );
 }
+

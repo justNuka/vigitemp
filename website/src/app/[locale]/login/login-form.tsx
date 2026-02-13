@@ -1,4 +1,5 @@
 "use client";
+import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -246,7 +247,7 @@ export function LoginForm() {
               <LoginCredentialsForm
                 register={register}
                 errors={errors}
-                onSubmit={handleSubmit(handleFormSubmit)}
+                onSubmit={handleSubmit(handleFormSubmit, (errors) => showFormValidationToast(errors))}
                 onForgotPassword={() => setShowForgotPassword(true)}
                 isSubmitting={loginMutation.isPending}
                 translations={{

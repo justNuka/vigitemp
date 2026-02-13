@@ -1,4 +1,5 @@
 "use client";
+import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -149,7 +150,7 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
             <FormField
               control={form.control}
               name="Module_Numero_Serie"

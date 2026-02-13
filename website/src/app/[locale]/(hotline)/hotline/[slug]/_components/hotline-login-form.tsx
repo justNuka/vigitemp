@@ -1,4 +1,5 @@
 "use client"
+import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useState } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -67,7 +68,7 @@ export function HotlineLoginForm({ slug, username }: HotlineLoginFormProps) {
         <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
       <CardContent>
-        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))}>
           <div className="space-y-2">
             <Label htmlFor="hotline-user">{t("fields.username_label")}</Label>
             <Input

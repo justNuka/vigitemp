@@ -56,7 +56,7 @@ interface AlarmRow {
 
 /**
  * Composant client pour les parties interactives du dashboard
- * Affiche alarmes actives, capteurs critiques, et aperÃ§u des sondes
+ * Affiche alarmes actives, capteurs critiques, et aperçu des sondes
  */
 export function DashboardClient({
   criticalSensors,
@@ -325,7 +325,7 @@ export function DashboardClient({
           </Card>
         </section>
 
-        {/* Section tendance rÃ©cente (1 colonne) */}
+        {/* Section tendance récente (1 colonne) */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -362,52 +362,6 @@ export function DashboardClient({
         </section>
       </div>
 
-      {/* Sondes critiques (si prÃ©sentes) */}
-      {/*
-{criticalSensors.length > 0 && (
-        <section aria-label="Sondes critiques" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <Thermometer className="h-5 w-5 text-destructive" />
-              Sondes en Ã©tat critique
-              <Badge variant="destructive">{criticalSensors.length}</Badge>
-            </h2>
-            <Link href="surveillance">
-              <Button variant="ghost" size="sm" className="gap-1">
-                Toutes les sondes
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {criticalSensors.map((sensor) => (
-              <SensorCard key={sensor.id} sensor={sensor} />
-            ))}
-          </div>
-        </section>
-      */}
-
-      {/* AperÃ§u des sondes */}
-      {/*
-<section aria-label="AperÃ§u des sondes" className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">AperÃ§u des sondes</h2>
-          <Link href="surveillance">
-            <Button variant="ghost" size="sm" className="gap-1">
-              Voir tout
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {sensorOverview.map((sensor) => (
-            <SensorCard key={sensor.id} sensor={sensor} />
-          ))}
-        </div>
-      </section>
-      */}
       <AlarmAcknowledgeDialog
         open={!!selectedAlarm}
         alarm={

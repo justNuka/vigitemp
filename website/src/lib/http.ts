@@ -2,8 +2,28 @@ export type HttpErrorPayload = {
   ok?: false
   error?: string
   message?: string
+  errorId?: string
   [key: string]: unknown
 }
+
+export type ApiErrorEventDetail = {
+  message: string
+  status: number
+  errorId?: string
+  path?: string
+}
+
+export type AuthStateEventDetail = {
+  disconnected: boolean
+  reason?: string
+}
+
+export const API_ERROR_EVENT = "vigitemp:api-error"
+export const AUTH_STATE_EVENT = "vigitemp:auth-state"
+
+const DISCONNECTED_MESSAGE = "Session expirée. Reconnectez-vous pour continuer."
+
+let authDisconnected = false
 
 export class HttpError extends Error {
   readonly status: number
@@ -19,6 +39,60 @@ export class HttpError extends Error {
 
 export function isUnauthorizedError(error: unknown): error is HttpError {
   return error instanceof HttpError && error.status === 401
+}
+
+export function isAuthDisconnected() {
+  return authDisconnected
+}
+
+function dispatchAuthState(disconnected: boolean, reason?: string) {
+  if (typeof window === "undefined") return
+  const detail: AuthStateEventDetail = { disconnected, reason }
+  window.dispatchEvent(new CustomEvent(AUTH_STATE_EVENT, { detail }))
+}
+
+function dispatchApiError(detail: ApiErrorEventDetail) {
+  if (typeof window === "undefined") return
+  window.dispatchEvent(new CustomEvent(API_ERROR_EVENT, { detail }))
+}
+
+export function setAuthDisconnected(disconnected: boolean, reason?: string) {
+  const changed = authDisconnected !== disconnected
+  authDisconnected = disconnected
+  if (changed) {
+    dispatchAuthState(disconnected, reason)
+  }
+}
+
+const ALLOWED_WHEN_DISCONNECTED = new Set<string>([
+  "/api/auth/login",
+  "/api/auth/request-password-reset",
+  "/api/auth/reset-password",
+  "/api/auth/force-password-change",
+  "/api/auth/temp-password-token",
+  "/api/auth/validate-password-token",
+  "/api/hotline/login",
+])
+
+function normalizePathname(input: RequestInfo | URL): string | undefined {
+  try {
+    if (typeof input === "string") {
+      const url = input.startsWith("http")
+        ? new URL(input)
+        : typeof window !== "undefined"
+          ? new URL(input, window.location.origin)
+          : null
+      if (url) return url.pathname
+      return input.startsWith("/") ? input.split("?")[0] : undefined
+    }
+    if (input instanceof URL) return input.pathname
+    if (typeof Request !== "undefined" && input instanceof Request) {
+      return new URL(input.url).pathname
+    }
+  } catch {
+    return undefined
+  }
+  return undefined
 }
 
 function getClientTraceTag(): string | undefined {
@@ -83,6 +157,27 @@ function getBootId(): string | undefined {
 }
 
 export async function fetchJson<TResponse>(input: RequestInfo | URL, init?: RequestInit): Promise<TResponse> {
+  const pathname = normalizePathname(input)
+
+  if (
+    typeof window !== "undefined" &&
+    authDisconnected &&
+    pathname?.startsWith("/api/") &&
+    !ALLOWED_WHEN_DISCONNECTED.has(pathname)
+  ) {
+    const payload: HttpErrorPayload = {
+      ok: false,
+      error: "session_disconnected",
+      message: DISCONNECTED_MESSAGE,
+    }
+    dispatchApiError({
+      message: DISCONNECTED_MESSAGE,
+      status: 401,
+      path: pathname,
+    })
+    throw new HttpError(DISCONNECTED_MESSAGE, 401, payload)
+  }
+
   const headers = new Headers(init?.headers)
   const clientTrace = getClientTraceTag()
   if (clientTrace && !headers.has("x-vigitemp-client-trace")) {
@@ -101,8 +196,16 @@ export async function fetchJson<TResponse>(input: RequestInfo | URL, init?: Requ
 
   const res = await fetch(input, { ...init, headers })
 
+  if (pathname === "/api/auth/login" && res.ok) {
+    setAuthDisconnected(false, "login_success")
+  }
+  if ((pathname === "/api/auth/logout" || pathname === "/api/auth/logout-auto") && res.ok) {
+    setAuthDisconnected(true, pathname === "/api/auth/logout-auto" ? "auto_logout" : "manual_logout")
+  }
+
   const contentType = res.headers.get("content-type") || ""
   const isJson = contentType.includes("application/json")
+  const errorId = res.headers.get("x-vigitemp-error-id") || undefined
 
   if (!res.ok) {
     let message = `Request failed (${res.status})`
@@ -122,6 +225,23 @@ export async function fetchJson<TResponse>(input: RequestInfo | URL, init?: Requ
       } catch {
         // ignore
       }
+    }
+
+    if (errorId) {
+      payload = { ...(payload ?? {}), errorId }
+    }
+
+    if (res.status === 401) {
+      setAuthDisconnected(true, "unauthorized")
+    }
+
+    if (res.status >= 500) {
+      dispatchApiError({
+        message,
+        status: res.status,
+        errorId,
+        path: pathname,
+      })
     }
 
     throw new HttpError(message, res.status, payload)

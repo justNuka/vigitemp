@@ -1,4 +1,5 @@
 "use client"
+import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useState } from "react"
 import { useRouter } from "@/i18n/navigation"
@@ -82,7 +83,7 @@ export function ForcePasswordChangeForm({ username, rules }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />

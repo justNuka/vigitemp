@@ -1,18 +1,14 @@
-"use cache";
-
-import { cacheTag } from "next/cache";
-import { prisma } from "@/lib/prisma";
+import { unstable_noStore } from "next/cache";
 
 type AlarmStatus = "active" | "acknowledged" | "resolved";
 
 /**
- * Composant serveur pour charger les alarmes depuis la base de données
+  * Composant serveur pour charger les alarmes depuis la base de donnees
  * Utilise le cache Next.js 16 pour optimiser les performances
  */
 export async function ServerAlarms(status?: AlarmStatus) {
-  "use cache";
-  cacheTag("alarms-data");
-
+  unstable_noStore();
+  const { prisma } = await import("@/lib/prisma");
   const where: any = {};
 
   if (status === "active") {
@@ -71,7 +67,7 @@ export async function ServerAlarms(status?: AlarmStatus) {
           ? consigneInf ?? 0
           : 0;
 
-    const unit = alarm.Unite?.trim() || "Unité inconnue";
+    const unit = alarm.Unite?.trim() || "Unite inconnue";
 
     return {
     id: alarm.Id_Alarme.toString(),
@@ -81,7 +77,7 @@ export async function ServerAlarms(status?: AlarmStatus) {
     value: alarm.Valeur || 0,
     threshold: thresholdValue,
     status: statusValue,
-    triggeredAt: alarm.Date_Heure_Debut || new Date(),
+    triggeredAt: alarm.Date_Heure_Debut!,
     acknowledgedAt: alarm.Est_Acquittee ? alarm.Date_Heure_Debut : null,
     resolvedAt: alarm.Date_Heure_Fin || null,
     acknowledgedBy: null,
@@ -117,9 +113,8 @@ export async function ServerAlarms(status?: AlarmStatus) {
  * Composant serveur pour obtenir les statistiques d'alarmes
  */
 export async function ServerAlarmStats() {
-  "use cache";
-  cacheTag("alarms-stats");
-
+  unstable_noStore();
+  const { prisma } = await import("@/lib/prisma");
   const [activeCount, acknowledgedCount, resolvedCount] = await Promise.all([
     prisma.t_alarme.count({
       where: { Est_Acquittee: false, Date_Heure_Fin: null },
@@ -139,3 +134,6 @@ export async function ServerAlarmStats() {
     total: activeCount + acknowledgedCount + resolvedCount,
   };
 }
+
+
+

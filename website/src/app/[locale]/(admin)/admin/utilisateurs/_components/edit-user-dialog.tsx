@@ -1,4 +1,5 @@
 "use client";
+import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
@@ -161,7 +162,7 @@ export function EditUserDialog({
         </DialogHeader>
 
         <Form {...editForm}>
-          <form onSubmit={editForm.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={editForm.handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
             {isArchived ? (
               <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
                 {t("archived_notice")}

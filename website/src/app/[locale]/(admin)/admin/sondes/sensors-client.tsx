@@ -99,11 +99,6 @@ export function SensorsClient() {
                   {t("actions.create_from_adjustment_file")}
                 </Link>
               </Button>
-              <Button size="sm" className="gap-2" asChild>
-                <Link href="/admin/sondes/etalonnage-import">
-                  {t("actions.create_from_calibration_file")}
-                </Link>
-              </Button>
               <Button
                 size="sm"
                 className="gap-2"

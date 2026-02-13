@@ -19,6 +19,7 @@ import { useEffect } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { FormProvider, type UseFormReturn, useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
+import { showFormValidationToast } from '@/lib/form-toast';
 
 import type { LocationFormData, LocationFormMode } from './location-form-types';
 import { getDefaultLocationFormData } from "./location-form-defaults";
@@ -64,7 +65,7 @@ export function LocationFormDialog({
     defaultValues: formData ?? getDefaultLocationFormData(),
   });
   const resolvedForm = form ?? internalForm;
-  const handleSubmit = resolvedForm.handleSubmit(onSubmit);
+  const handleSubmit = resolvedForm.handleSubmit(onSubmit, (errors) => showFormValidationToast(errors));
 
   useEffect(() => {
     if (form || !formData) return;

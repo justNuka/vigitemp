@@ -1,8 +1,14 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
+
+const NO_STORE_HEADERS: HeadersInit = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  Pragma: "no-cache",
+  Expires: "0",
+}
 
 export const GET = withAuthLogging(async (_req: NextRequest) => {
   try {
@@ -18,13 +24,16 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
       }),
     ])
 
-    return apiOk({
-      activeLocations,
-      disabledLocations,
-      totalLocations: activeLocations + disabledLocations,
-      activeAlarms,
-      alertSensors,
-    })
+    return apiOk(
+      {
+        activeLocations,
+        disabledLocations,
+        totalLocations: activeLocations + disabledLocations,
+        activeAlarms,
+        alertSensors,
+      },
+      { headers: NO_STORE_HEADERS }
+    )
   } catch (error) {
     console.error("Tableau de bord stats error:", error)
     return apiError(500, "internal_error", "Failed to fetch dashboard stats")

@@ -15,6 +15,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useEffect } from "react"
 import { useTranslations } from 'next-intl'
+import { showFormValidationToast } from '@/lib/form-toast'
 
 type EditCommentDialogProps = {
   open: boolean
@@ -76,7 +77,7 @@ export function EditCommentDialog({
             {t('type_label', { type: commentType || "-" })}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="edit-textarea" className="text-sm font-medium">
               {t('labels.comment')}

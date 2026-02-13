@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import type { PasswordRules } from '@/lib/api'
 import { validatePassword } from '@/lib/password-validation'
 import { postJson } from '@/lib/http'
+import { showFormValidationToast } from '@/lib/form-toast'
 import { useToast } from '@/hooks/use-toast'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -67,7 +68,7 @@ export function ChangePasswordForm({ rules, rulesLoading }: Props) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-6">
         <FormField
           control={form.control}
           name="oldPassword"

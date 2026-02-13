@@ -119,7 +119,8 @@
     "users": "Users",
     "profile": "Profile",
     "admin_dashboard": "Admin dashboard",
-    "admin_dashboard_tooltip": "Administrator dashboard"
+    "admin_dashboard_tooltip": "Administrator dashboard",
+    "services": "Services"
   },
   "sidebarGroups": {
     "navigation": "Navigation",
@@ -195,7 +196,8 @@
     "tabs": {
       "active": "Active",
       "acknowledged": "Acknowledged",
-      "resolved": "To acknowledge"
+      "resolved": "To acknowledge",
+      "empty_tooltip": "No alarms in this category"
     },
     "titles": {
       "active": "Active alarms",
@@ -223,6 +225,7 @@
       "comment_select_empty": "No comments available",
       "loading": "Refreshing..."
     },
+        "filters": {"type_label": "Alarm type", "all": "All", "high": "High", "low": "Low", "no_response": "No response", "ended": "Ended"},
     "toast": {
       "na": "-",
       "acknowledge_success": "Alarm acknowledged successfully",
@@ -1041,8 +1044,8 @@
       "delete_description": "Are you sure you want to delete this measurement point?",
       "columns": {
         "point": "Point",
-        "reference": "Reference TÂ°",
-        "value": "Measured TÂ°",
+        "reference": "Reference T°",
+        "value": "Measured T°",
         "incertitude": "Uncertainty"
       }
     },
@@ -2707,7 +2710,8 @@
     "active_alarms": {
       "badge": "{count, plural, one {# alarm} other {# alarms}}",
       "banner": "{count, plural, one {# active alarm} other {# active alarms}}",
-      "view": "View alarms"
+      "view": "View alarms",
+      "already_here": "You are already on the alarms page"
     }
   },
   "alarmsTanstack": {
@@ -2716,6 +2720,7 @@
       "label": "Refresh",
       "loading": "Refreshing..."
     },
+        "filters": {"type_label": "Alarm type", "all": "All", "high": "High", "low": "Low", "no_response": "No response"},
     "acknowledge_success": "Alarm acknowledged successfully",
     "acknowledge_error": "Failed to acknowledge alarm",
     "search_placeholder": "Search by location...",
@@ -3000,6 +3005,10 @@
     "offline": "Offline"
   }
 }
+
+
+
+
 
 
 

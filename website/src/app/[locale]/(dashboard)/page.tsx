@@ -1,8 +1,7 @@
-﻿import { Suspense } from "react";
+import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { validateLicense } from "@/lib/license-server";
 import { DashboardClient } from "./dashboard-client";
 import { DashboardHeader } from "./dashboard-header";
 import {
@@ -85,3 +84,6 @@ function DashboardContentSkeleton() {
     </div>
   );
 }
+
+
+

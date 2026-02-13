@@ -2,12 +2,15 @@
 
 import { useEffect, useMemo, useRef } from "react"
 import { usePathname } from "next/navigation"
+import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { useTranslations } from "next-intl"
 
 import { stripLocalePrefix } from "@/i18n/pathnames"
 import { useRouter } from "@/i18n/navigation"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { API_ERROR_EVENT, AUTH_STATE_EVENT, type ApiErrorEventDetail, type AuthStateEventDetail } from "@/lib/http"
+
 function isPublicRoute(pathname: string) {
   const normalized = stripLocalePrefix(pathname)
   return normalized === "/login" || normalized === "/reset-password" || normalized === "/force-password-change"
@@ -15,9 +18,12 @@ function isPublicRoute(pathname: string) {
 
 export function GlobalAppEffects() {
   const t = useTranslations("globalAppEffects")
+  const tSessionExpired = useTranslations("login.toasts.session_expired")
   const router = useRouter()
   const pathname = usePathname()
+  const queryClient = useQueryClient()
   const seenAlarmIdsRef = useRef<Set<number>>(new Set())
+  const hasSessionToastRef = useRef(false)
   const alarmStreamUrl = useMemo(() => "/api/alarmes/stream", [])
 
   const { data: currentUser } = useCurrentUser({ enabled: !isPublicRoute(pathname) })
@@ -49,7 +55,7 @@ export function GlobalAppEffects() {
         const value =
           data.valeur === null
             ? t("alarm.value.na")
-            : `${data.valeur}${data.unite ?? "°C"}`
+            : `${data.valeur}${data.unite ?? "\u00b0C"}`
 
         toast.error(t("alarm.toast.title", { type: labelType, lieu: data.lieu }), {
           description: t("alarm.toast.description", { value }),
@@ -64,7 +70,7 @@ export function GlobalAppEffects() {
     }
 
     const onError = () => {
-      // Stop the stream on first error to avoid auto-reconnect spamming 401s when logged out.
+      // Stop the stream on first error to avoid reconnect loops when logged out.
       eventSource.close()
     }
 
@@ -77,6 +83,50 @@ export function GlobalAppEffects() {
       eventSource.close()
     }
   }, [alarmStreamUrl, currentUser, router, t])
+
+  useEffect(() => {
+    const onApiError = (event: Event) => {
+      const customEvent = event as CustomEvent<ApiErrorEventDetail>
+      const detail = customEvent.detail
+      if (!detail) return
+
+      const baseMessage = detail.message || t("errors.default")
+      const description = detail.errorId
+        ? t("errors.with_id", { message: baseMessage, id: detail.errorId })
+        : baseMessage
+
+      toast.error(t("errors.title"), {
+        description,
+      })
+    }
+
+    const onAuthState = (event: Event) => {
+      const customEvent = event as CustomEvent<AuthStateEventDetail>
+      const detail = customEvent.detail
+      if (!detail?.disconnected) return
+
+      queryClient.cancelQueries()
+      queryClient.clear()
+      seenAlarmIdsRef.current.clear()
+
+      if (!hasSessionToastRef.current) {
+        hasSessionToastRef.current = true
+        toast.warning(tSessionExpired("title"), { description: tSessionExpired("description") })
+      }
+
+      if (!isPublicRoute(pathname)) {
+        router.push("/login?reason=inactivity")
+      }
+    }
+
+    window.addEventListener(API_ERROR_EVENT, onApiError as EventListener)
+    window.addEventListener(AUTH_STATE_EVENT, onAuthState as EventListener)
+
+    return () => {
+      window.removeEventListener(API_ERROR_EVENT, onApiError as EventListener)
+      window.removeEventListener(AUTH_STATE_EVENT, onAuthState as EventListener)
+    }
+  }, [pathname, queryClient, router, t])
 
   return null
 }

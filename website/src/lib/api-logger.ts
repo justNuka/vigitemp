@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { log } from "@/lib/logger";
 import { verifyToken } from "@/lib/jwt";
+import { apiError } from "@/lib/api-response";
+import { log } from "@/lib/logger";
+import { recordRequestError } from "@/lib/request-error-store";
 
 function normalizeIp(rawIp?: string | null): string | undefined {
   if (!rawIp) return undefined;
@@ -18,8 +20,8 @@ export function getClientIp(req: NextRequest): string {
 }
 
 /**
- * Middleware pour logger toutes les requêtes API
- * À utiliser dans chaque route API
+ * Middleware pour logger toutes les requetes API.
+ * Ajoute un identifiant d'erreur (x-vigitemp-error-id) sur les reponses en erreur.
  */
 export function withLogging(
   handler: (req: NextRequest, ...args: any[]) => Promise<NextResponse>,
@@ -32,8 +34,12 @@ export function withLogging(
     const startTime = Date.now();
     const method = req.method;
     const path = req.nextUrl.pathname;
-    
-    // Extraire les infos utilisateur du token JWT si présent
+
+    const clientTrace = req.headers.get("x-vigitemp-client-trace") || undefined;
+    const queryClientId = req.headers.get("x-vigitemp-query-client-id") || undefined;
+    const bootId = req.headers.get("x-vigitemp-boot-id") || undefined;
+
+    // Extraire les infos utilisateur du token JWT si present
     let user: { username?: string; userId?: number } = {};
     try {
       const token = req.cookies.get("auth-token")?.value;
@@ -48,10 +54,9 @@ export function withLogging(
         }
       }
     } catch {
-      // Pas de token valide, c'est ok pour les routes publiques
+      // Pas de token valide, c'est OK pour les routes publiques
     }
 
-    // Extraire l'IP
     const ip = getClientIp(req);
 
     const readErrorBody = async (response: NextResponse) => {
@@ -71,19 +76,44 @@ export function withLogging(
         } catch {
           // ignore JSON parse errors
         }
-        return trimmed.length > 2000 ? `${trimmed.slice(0, 2000)}…` : trimmed;
+        return trimmed.length > 2000 ? `${trimmed.slice(0, 2000)}...` : trimmed;
       } catch {
         return undefined;
       }
     };
 
     try {
-      // Exécuter le handler
       const response = await handler(req, ...args);
       const duration = Date.now() - startTime;
       const errorBody = response.status >= 400 ? await readErrorBody(response) : undefined;
 
-      // Logger la requête réussie
+      let errorId: string | undefined;
+      if (response.status >= 400) {
+        try {
+          const recorded = await recordRequestError({
+            method,
+            path,
+            statusCode: response.status,
+            message: errorBody || `HTTP ${response.status}`,
+            user: user.username,
+            userId: user.userId,
+            ip,
+            clientTrace,
+            queryClientId,
+            bootId,
+          });
+          errorId = recorded.id;
+          response.headers.set("x-vigitemp-error-id", errorId);
+        } catch (storeError) {
+          log.warn("API", "Unable to persist request error", {
+            method,
+            path,
+            statusCode: response.status,
+            storeError: storeError instanceof Error ? storeError.message : String(storeError),
+          });
+        }
+      }
+
       if (!options?.skipLogging) {
         log.http(method, path, {
           user: user.username,
@@ -92,52 +122,82 @@ export function withLogging(
           duration,
           statusCode: response.status,
           errorBody,
+          clientTrace,
+          queryClientId,
+          bootId,
+          error: errorId,
         });
       }
 
       return response;
     } catch (error: any) {
       const duration = Date.now() - startTime;
+      const errorMessage = error?.message || "Unknown error";
 
-      // Logger l'erreur
+      let errorId: string | undefined;
+      try {
+        const recorded = await recordRequestError({
+          method,
+          path,
+          statusCode: 500,
+          message: errorMessage,
+          user: user.username,
+          userId: user.userId,
+          ip,
+          clientTrace,
+          queryClientId,
+          bootId,
+        });
+        errorId = recorded.id;
+      } catch (storeError) {
+        log.warn("API", "Unable to persist thrown request error", {
+          method,
+          path,
+          storeError: storeError instanceof Error ? storeError.message : String(storeError),
+        });
+      }
+
       log.http(method, path, {
         user: user.username,
         userId: user.userId,
         ip,
         duration,
         statusCode: 500,
-        error: error.message || "Unknown error",
+        error: errorMessage,
+        clientTrace,
+        queryClientId,
+        bootId,
       });
 
       log.error(options?.label || "API", `Error in ${method} ${path}`, {
         user: user.username,
         userId: user.userId,
         ip,
-        error: error.message,
-        stack: error.stack,
+        error: errorMessage,
+        stack: error?.stack,
+        errorId,
       });
 
-      // Re-throw pour que Next.js gère l'erreur
-      throw error;
+      return apiError(500, "internal_error", "Internal server error", errorId ? { errorId } : undefined);
     }
   };
 }
 
 /**
- * Helper pour obtenir les infos de requête (user, ip) dans les handlers
+ * Helper pour obtenir les infos de requete (user, ip) dans les handlers
  */
 export function getRequestContext(req: NextRequest): {
   user?: { username: string; userId: number; profile: string };
   ip: string;
 } {
   let user: { username: string; userId: number; profile: string } | undefined;
-  
+
   try {
     const token = req.cookies.get("auth-token")?.value;
     if (token) {
       const payload = verifyToken(token);
-      if(payload) {
-          user = {
+      if (payload) {
+        user = {
           username: payload.username,
           userId: payload.userId,
           profile: payload.profile,

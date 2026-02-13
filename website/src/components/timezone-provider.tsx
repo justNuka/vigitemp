@@ -2,9 +2,7 @@
 
 import { createContext, useContext } from "react";
 
-const DEFAULT_TIMEZONE = "Europe/Paris";
-
-const TimezoneContext = createContext<string>(DEFAULT_TIMEZONE);
+const TimezoneContext = createContext<string | undefined>(undefined);
 
 export function TimezoneProvider({
   timezone,
@@ -14,7 +12,7 @@ export function TimezoneProvider({
   children: React.ReactNode;
 }) {
   return (
-    <TimezoneContext.Provider value={timezone || DEFAULT_TIMEZONE}>
+    <TimezoneContext.Provider value={timezone ?? undefined}>
       {children}
     </TimezoneContext.Provider>
   );
@@ -23,3 +21,5 @@ export function TimezoneProvider({
 export function useAppTimezone() {
   return useContext(TimezoneContext);
 }
+
+

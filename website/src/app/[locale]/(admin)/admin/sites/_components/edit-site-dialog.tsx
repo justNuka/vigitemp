@@ -4,6 +4,7 @@ import type { SiteAdmin } from '@/hooks/useSites';
 import type { UseFormReturn } from 'react-hook-form';
 import type { EditSiteInput } from './site-schemas';
 import { useTranslations } from 'next-intl';
+import { showFormValidationToast } from '@/lib/form-toast';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -54,7 +55,7 @@ export function EditSiteDialog({
           <DialogDescription>{t('edit_description')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
             <div className="space-y-2">
               <Label>{t('fields.code_label')}</Label>
               <Input value={site?.Code_Site || ''} disabled className="bg-muted" />

@@ -1,12 +1,18 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 
+const NO_STORE_HEADERS: HeadersInit = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  Pragma: "no-cache",
+  Expires: "0",
+}
+
 /**
  * GET /api/admin/alarmes-actives?page=1&limit=10
- * Retourne les alarmes actives (non acquittées ou récemment ouvertes)
+ * Retourne les alarmes actives (non acquittees ou recemment ouvertes)
  */
 export const GET = withAdminLogging(async (req: NextRequest) => {
   try {
@@ -31,10 +37,13 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
     const total = Math.min(totalCount, 50)
 
     if (skip >= total) {
-      return apiOk({
-        data: [],
-        pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
-      })
+      return apiOk(
+        {
+          data: [],
+          pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
+        },
+        { headers: NO_STORE_HEADERS }
+      )
     }
 
     const activeAlarms = await prisma.t_alarme.findMany({
@@ -54,13 +63,16 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
       valeur: alarm.Valeur ? `${alarm.Valeur}` : "N/A",
       seuil: `${alarm.Type === "S" ? "Sup" : "Inf"}`,
       duree: formatDuration(alarm.Date_Heure_Debut),
-      statut: alarm.Est_Acquittee ? "Acquittée" : "Active",
+      statut: alarm.Est_Acquittee ? "Acquittee" : "Active",
     }))
 
-    return apiOk({
-      data: formatted,
-      pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
-    })
+    return apiOk(
+      {
+        data: formatted,
+        pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
+      },
+      { headers: NO_STORE_HEADERS }
+    )
   } catch (error) {
     console.error("Error fetching active alarms:", error)
     return apiError(500, "internal_error", "Failed to fetch active alarms")

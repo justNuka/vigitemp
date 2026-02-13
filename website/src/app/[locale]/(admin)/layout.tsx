@@ -1,12 +1,11 @@
 "use client";
-
 import { AdminSidebar } from "@/components/admin-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { alarmsApi, authApi } from "@/lib/api";
 import { useAutoLock } from "@/hooks/useAutoLock";
 import { useRouter } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { clearAgentSession } from "@/lib/agent-session";
 import PageTransitionWrapper from "@/components/animations/transitions/page-transitions/PageTransitionWrapper";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -14,7 +13,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
 import { isFeatureEnabled } from "@/lib/feature-flags";
-
 export default function AdminGroupLayout({
   children,
 }: {
@@ -22,7 +20,6 @@ export default function AdminGroupLayout({
 }) {
   // Activer le verrouillage automatique
   useAutoLock();
-
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [agentSecretStatus, setAgentSecretStatus] = useState<{
@@ -30,17 +27,12 @@ export default function AdminGroupLayout({
     message: string;
   } | null>(null);
   const t = useTranslations("agentSecretAlert");
-  const queryClient = useQueryClient();
-
   // Fetch current user
   const { data: currentUser } = useCurrentUser();
-
   const alarmsQueryKey = ["alarms", "active"] as const;
-  const hasCachedAlarms = queryClient.getQueryData(alarmsQueryKey) !== undefined;
   const { data: alarms } = useQuery({
     queryKey: alarmsQueryKey,
     queryFn: () => alarmsApi.getActive(),
-    enabled: !hasCachedAlarms,
     refetchInterval: 60_000,
     refetchOnMount: true,
     refetchOnReconnect: true,
@@ -48,14 +40,12 @@ export default function AdminGroupLayout({
     staleTime: 0,
     retry: false,
   });
-
   // NOTE: Admin check disabled for now (rights handling will be redesigned).
   useEffect(() => {
     if (currentUser) {
       setIsAuthorized(true);
     }
   }, [currentUser]);
-
   useEffect(() => {
     if (!currentUser) return;
     const loadStatus = async () => {
@@ -76,7 +66,6 @@ export default function AdminGroupLayout({
     };
     loadStatus();
   }, [currentUser, t]);
-
   const handleLogout = async () => {
     try {
       await authApi.logout();
@@ -91,15 +80,12 @@ export default function AdminGroupLayout({
       router.push("/login");
     }
   };
-
   if (isAuthorized === null) {
     return null;
   }
-
   if (!isAuthorized) {
     return null;
   }
-
   return (
     <SidebarProvider>
       <div className="flex h-dvh w-full">

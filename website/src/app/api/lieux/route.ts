@@ -10,6 +10,7 @@ const createLieuSchema = z.object({
   Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(50),
   Lieu_Etat: z.string().max(1).nullable().optional(),
   Commentaire: z.string().nullable().optional(),
+  Observations_Info: z.string().nullable().optional(),
   Id_Site: z.number().nullable().optional(),
   GroupIds: z.array(z.number()).optional(),
   Id_Groupe1: z.number().nullable().optional(),
@@ -58,6 +59,7 @@ export const GET = withLogging(async (req: NextRequest) => {
 
     const normalized = serialized.map((lieu: any) => ({
       ...lieu,
+      Commentaire: lieu?.Observations_Info ?? lieu?.Commentaire ?? null,
       Frequence:
         lieu?.Frequence === null || lieu?.Frequence === undefined
           ? lieu?.Frequence
@@ -128,7 +130,8 @@ export const POST = withLogging(async (req: NextRequest) => {
       data: ({
         Nom_Lieu: validated.Nom_Lieu,
         Date_Creation: dateCreation,
-        Commentaire: validated.Commentaire ?? null,
+        Commentaire: validated.Commentaire ?? validated.Observations_Info ?? null,
+        Observations_Info: validated.Observations_Info ?? validated.Commentaire ?? null,
         Consigne: validated.Consigne,
         Frequence: frequencySeconds,
         Consigne_Sup: validated.Consigne_Sup,

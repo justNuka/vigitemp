@@ -1,4 +1,5 @@
 "use client";
+import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -138,7 +139,7 @@ export function CreateUserDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
             <UserNameFields control={form.control} />
             <UserEmailField control={form.control} />
             <UserUsernameField control={form.control} />

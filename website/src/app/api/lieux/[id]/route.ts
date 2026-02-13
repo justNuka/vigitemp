@@ -12,6 +12,7 @@ const updateLieuSchema = z.object({
   Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(50).optional(),
   Lieu_Etat: z.string().max(1).nullable().optional(),
   Commentaire: z.string().nullable().optional(),
+  Observations_Info: z.string().nullable().optional(),
   Id_Site: z.number().nullable().optional(),
   GroupIds: z.array(z.number()).optional(),
   Id_Groupe1: z.number().nullable().optional(),
@@ -34,6 +35,14 @@ const updateLieuSchema = z.object({
   Est_Archive: z.boolean().optional(),
   surveillanceDurationMinutes: z.number().int().positive().nullable().optional(),
 })
+
+function isMissingLieuGsoColumnError(error: unknown) {
+  if (!error || typeof error !== "object") return false
+  const err = error as { code?: string; meta?: { column?: string } }
+  if (err.code !== "P2022") return false
+  const column = err.meta?.column ?? ""
+  return column.includes("Est_Lieu_GSO") || column.includes("Adresse_Sonde") || column.includes("Observations_Info")
+}
 
 export const PATCH = withLogging(
   async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
@@ -129,64 +138,89 @@ export const PATCH = withLogging(
           nextAdresseSonde = null
         } else if (hasSondeNumeroSerie) {
           if (Sonde_Numero_Serie) {
-            const linkedSensor = await tx.t_sonde.findUnique({
-              where: { Sonde_Numero_Serie },
-              select: { Est_Sonde_GSO: true, Adresse_Sonde: true },
-            })
-            const isGso = linkedSensor?.Est_Sonde_GSO ?? isGsoType(Sonde_Numero_Serie)
+            const isGso = isGsoType(Sonde_Numero_Serie)
             nextEstLieuGso = isGso
-            nextAdresseSonde = isGso
-              ? linkedSensor?.Adresse_Sonde ?? extractAddressFromSerial(Sonde_Numero_Serie)
-              : null
+            nextAdresseSonde = isGso ? extractAddressFromSerial(Sonde_Numero_Serie) : null
           } else {
             nextEstLieuGso = false
             nextAdresseSonde = null
           }
         }
 
-        const updated = await tx.t_lieu.update({
-          where: { Id_Lieu: lieuId },
-          data: {
-            ...lieuPatch,
-            ...(applyLieuEtat
-              ? {
-                  Lieu_Etat,
-                  Date_Heure_Reactivation_Surveillance:
-                    Lieu_Etat === "D" ? surveillanceReactivationAt : null,
-                }
-              : {}),
-            ...(shouldArchive
-              ? {
-                  Lieu_Etat: "D",
-                  Date_Heure_Reactivation_Surveillance: null,
-                  t_sonde: { disconnect: true },
-                }
-              : {}),
-            ...(hasIdSite
-              ? Id_Site
-                ? { t_site: { connect: { Id_Site } } }
-                : { t_site: { disconnect: true } }
-              : {}),
-            ...(hasSondeNumeroSerie
-              ? Sonde_Numero_Serie
-                ? { t_sonde: { connect: { Sonde_Numero_Serie } } }
-                : { t_sonde: { disconnect: true } }
-              : {}),
-            ...(nextEstLieuGso !== undefined
-              ? { Est_Lieu_GSO: nextEstLieuGso, Adresse_Sonde: nextAdresseSonde ?? null }
-              : {}),
-            ...(groupIds !== undefined
-              ? {
-                  t_groupe1: group1Id
-                    ? { connect: { Id_Groupe: group1Id } }
-                    : { disconnect: true },
-                  t_groupe2: group2Id
-                    ? { connect: { Id_Groupe: group2Id } }
-                    : { disconnect: true },
-                }
-              : {}),
-          },
-        })
+        const normalizedObservation =
+          Object.prototype.hasOwnProperty.call(validated, "Observations_Info")
+            ? validated.Observations_Info ?? null
+            : Object.prototype.hasOwnProperty.call(validated, "Commentaire")
+            ? validated.Commentaire ?? null
+            : undefined
+
+        if (normalizedObservation !== undefined) {
+          ;(lieuPatch as any).Commentaire = normalizedObservation
+          ;(lieuPatch as any).Observations_Info = normalizedObservation
+        }
+
+        const baseData = {
+          ...lieuPatch,
+          ...(applyLieuEtat
+            ? {
+                Lieu_Etat,
+                Date_Heure_Reactivation_Surveillance:
+                  Lieu_Etat === "D" ? surveillanceReactivationAt : null,
+              }
+            : {}),
+          ...(shouldArchive
+            ? {
+                Lieu_Etat: "D",
+                Date_Heure_Reactivation_Surveillance: null,
+                t_sonde: { disconnect: true },
+              }
+            : {}),
+          ...(hasIdSite
+            ? Id_Site
+              ? { t_site: { connect: { Id_Site } } }
+              : { t_site: { disconnect: true } }
+            : {}),
+          ...(hasSondeNumeroSerie
+            ? Sonde_Numero_Serie
+              ? { t_sonde: { connect: { Sonde_Numero_Serie } } }
+              : { t_sonde: { disconnect: true } }
+            : {}),
+          ...(groupIds !== undefined
+            ? {
+                t_groupe1: group1Id
+                  ? { connect: { Id_Groupe: group1Id } }
+                  : { disconnect: true },
+                t_groupe2: group2Id
+                  ? { connect: { Id_Groupe: group2Id } }
+                  : { disconnect: true },
+              }
+            : {}),
+        }
+
+        const gsoData =
+          nextEstLieuGso !== undefined
+            ? { Est_Lieu_GSO: nextEstLieuGso, Adresse_Sonde: nextAdresseSonde ?? null }
+            : {}
+
+        let updated
+        try {
+          updated = await tx.t_lieu.update({
+            where: { Id_Lieu: lieuId },
+            data: {
+              ...baseData,
+              ...gsoData,
+            },
+          })
+        } catch (error) {
+          if (!isMissingLieuGsoColumnError(error)) {
+            throw error
+          }
+
+          updated = await tx.t_lieu.update({
+            where: { Id_Lieu: lieuId },
+            data: baseData,
+          })
+        }
 
         if (hasLieuEtat) {
           const sondeNumeroSerie = validated.Sonde_Numero_Serie ?? current?.Sonde_Numero_Serie ?? null
@@ -239,6 +273,7 @@ export const PATCH = withLogging(
 
       const normalized = {
         ...serialized,
+        Commentaire: (serialized as any)?.Observations_Info ?? serialized?.Commentaire ?? null,
         Frequence:
           serialized?.Frequence === null || serialized?.Frequence === undefined
             ? serialized?.Frequence
@@ -277,4 +312,3 @@ export const PATCH = withLogging(
     }
   },
 )
-

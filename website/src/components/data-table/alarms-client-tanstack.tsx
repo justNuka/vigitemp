@@ -9,12 +9,20 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
-import { ArrowDown, ArrowUp, RefreshCw, WifiOff } from "lucide-react";
+import { ArrowDown, ArrowUp, Filter, RefreshCw, WifiOff } from "lucide-react";
 import { useAppTimezone } from "@/components/timezone-provider";
 import { cn } from "@/lib/utils";
 import { formatDbDateTime } from "@/lib/date-display";
 import { alarmsApi } from "@/lib/api";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface AlarmRow {
   Id_Alarme: number;
@@ -53,6 +61,7 @@ export function AlarmsClientTanStack() {
   const queryClient = useQueryClient();
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 });
   const [isRefreshing, startRefresh] = useTransition();
+  const [typeFilters, setTypeFilters] = useState<AlarmRow["Type"][]>([]);
   const page = pagination.pageIndex + 1;
   const limit = pagination.pageSize;
 const formatDateTime = (date: string | null) => {
@@ -134,18 +143,17 @@ const formatDateTime = (date: string | null) => {
           const sup = row.getValue("Max_Threshold") as number | null;
           const inf = row.getValue("Min_Threshold") as number | null;
           const unit = row.getValue("Unite") as string | null;
+          const hasSup = sup !== null && sup !== undefined;
+          const hasInf = inf !== null && inf !== undefined;
+
+          if (!hasSup && !hasInf) {
+            return <div className="text-right font-mono text-muted-foreground">-</div>;
+          }
+
           return (
             <div className="text-right font-mono text-muted-foreground">
-              <div>
-                {sup !== null && sup !== undefined
-                  ? t("thresholds.sup", { value: sup, unit: unit ?? "" })
-                  : t("thresholds.sup_empty")}
-              </div>
-              <div>
-                {inf !== null && inf !== undefined
-                  ? t("thresholds.inf", { value: inf, unit: unit ?? "" })
-                  : t("thresholds.inf_empty")}
-              </div>
+              <div>{hasSup ? t("thresholds.sup", { value: sup, unit: unit ?? "" }) : t("thresholds.sup_empty")}</div>
+              <div>{hasInf ? t("thresholds.inf", { value: inf, unit: unit ?? "" }) : t("thresholds.inf_empty")}</div>
             </div>
           );
         },
@@ -242,7 +250,9 @@ const formatDateTime = (date: string | null) => {
     });
   }, [data?.pagination, limit, queryClient]);
 
-  const tableData: AlarmRow[] = alarms.map((alarm) => ({
+  const tableData: AlarmRow[] = alarms
+    .filter((alarm) => typeFilters.length === 0 || typeFilters.includes(alarm.Type))
+    .map((alarm) => ({
     Id_Alarme: alarm.Id_Alarme,
     Type: alarm.Type,
     Libelle_Lieu: alarm.Libelle_Lieu || t("unknown_location"),
@@ -280,6 +290,65 @@ const formatDateTime = (date: string | null) => {
     </Button>
   );
 
+  const toggleTypeFilter = (type: AlarmRow["Type"], checked: boolean) => {
+    setTypeFilters((prev) => {
+      if (checked) {
+        return prev.includes(type) ? prev : [...prev, type];
+      }
+      return prev.filter((item) => item !== type);
+    });
+  };
+
+  const filterButton = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 border-primary/40"
+          data-testid="button-filter-type"
+        >
+          <Filter className="h-4 w-4" />
+          <span className="hidden sm:inline">{t("filters.type_label")}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>{t("filters.type_label")}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuCheckboxItem
+          checked={typeFilters.length === 0}
+          onSelect={(e) => e.preventDefault()}
+          onCheckedChange={(checked) => {
+            if (checked) setTypeFilters([]);
+          }}
+        >
+          {t("filters.all")}
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          checked={typeFilters.includes("high")}
+          onSelect={(e) => e.preventDefault()}
+          onCheckedChange={(checked) => toggleTypeFilter("high", checked === true)}
+        >
+          {t("filters.high")}
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          checked={typeFilters.includes("low")}
+          onSelect={(e) => e.preventDefault()}
+          onCheckedChange={(checked) => toggleTypeFilter("low", checked === true)}
+        >
+          {t("filters.low")}
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem
+          checked={typeFilters.includes("no-response")}
+          onSelect={(e) => e.preventDefault()}
+          onCheckedChange={(checked) => toggleTypeFilter("no-response", checked === true)}
+        >
+          {t("filters.no_response")}
+        </DropdownMenuCheckboxItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
     <Card>
       <CardHeader>
@@ -295,7 +364,7 @@ const formatDateTime = (date: string | null) => {
           maxHeight="60vh"
           isLoading={isLoading || isFetching}
           emptyMessage={t("empty")}
-          toolbarRight={refreshButton}
+          toolbarRight={<div className="flex items-center gap-2">{filterButton}{refreshButton}</div>}
           manualPagination
           pageCount={pageCount}
           totalRows={total}

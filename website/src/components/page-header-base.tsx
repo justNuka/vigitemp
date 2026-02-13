@@ -2,11 +2,12 @@ import { cn } from "@/lib/utils";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Bell, AlertTriangle } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
+import { stripLocalePrefix } from "@/i18n/pathnames";
 import { useTranslations } from "next-intl";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PageHeaderProps {
   title: string;
@@ -25,6 +26,10 @@ export function PageHeaderBase({
   className,
 }: PageHeaderProps) {
   const t = useTranslations("pageHeaderBase");
+  const pathname = usePathname();
+  const normalizedPath = stripLocalePrefix(pathname || "");
+  const isOnAlarmsPage = normalizedPath === "/alarmes";
+
   return (
     <header
       className={cn(
@@ -48,20 +53,43 @@ export function PageHeaderBase({
 
         <div className="flex items-center gap-2">
           {activeAlarms > 0 && (
-            <Link href="alarmes">
-              <Button
-                variant="destructive"
-                size="sm"
-                className="gap-2 animate-pulse-subtle"
-                data-testid="button-active-alarms"
-              >
-                <AlertTriangle className="h-4 w-4" />
-                <span className="hidden sm:inline">
-                  {t("active_alarms.badge", { count: activeAlarms })}
-                </span>
-                <span className="sm:hidden">{activeAlarms}</span>
-              </Button>
-            </Link>
+            isOnAlarmsPage ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="gap-2 opacity-75 cursor-not-allowed"
+                      data-testid="button-active-alarms"
+                      disabled
+                    >
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="hidden sm:inline">
+                        {t("active_alarms.badge", { count: activeAlarms })}
+                      </span>
+                      <span className="sm:hidden">{activeAlarms}</span>
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>{t("active_alarms.already_here")}</TooltipContent>
+              </Tooltip>
+            ) : (
+              <Link href="alarmes">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="gap-2 animate-pulse-subtle"
+                  data-testid="button-active-alarms"
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                  <span className="hidden sm:inline">
+                    {t("active_alarms.badge", { count: activeAlarms })}
+                  </span>
+                  <span className="sm:hidden">{activeAlarms}</span>
+                </Button>
+              </Link>
+            )
           )}
           <LanguageSwitcher />
           <ThemeToggle />

@@ -242,7 +242,7 @@ namespace LogTagNET
 
     public enum LTR_COMMS : uint
     {
-        NOERROR = 0x00000,	        // No Error � internal
+        NOERROR = 0x00000,	        // No Error internal
         INTERNALERROR = 0x00001,	// Internal General Error (unimplemented or otherwise)
         BADMSGSIZE = 0x00002,	    // Bad Message Size
         BADFCHKSUM = 0x00003,	    // Message FCHKSUM error

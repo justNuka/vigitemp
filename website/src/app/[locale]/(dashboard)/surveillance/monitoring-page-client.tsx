@@ -315,7 +315,7 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
         })
         await queryClient.invalidateQueries({ queryKey: ["locations"] })
         await queryClient.invalidateQueries({ queryKey: ["capteurs", "paginated", 100] })
-        toast.success("Lieu modifié avec succès")
+        toast.success("Lieu modifiÃ© avec succÃ¨s")
         window.dispatchEvent(
           new CustomEvent("vigitemp:lieu-updated", {
             detail: { idLieu: selectedLocationId },

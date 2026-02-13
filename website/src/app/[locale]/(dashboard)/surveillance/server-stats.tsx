@@ -1,6 +1,3 @@
-"use cache";
-
-import { cacheTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -8,9 +5,6 @@ import { prisma } from "@/lib/prisma";
  * Cache automatique avec invalidation manuelle
  */
 export async function ServerDashboardStats() {
-  "use cache";
-  cacheTag("surveillance-stats");
-
   const [totalSensors, warningSensors, criticalSensors, activeAlarms] =
     await Promise.all([
       prisma.t_lieu.count({ where: { Est_Archive: false } }),
@@ -36,3 +30,4 @@ export async function ServerDashboardStats() {
     activeAlarms,
   };
 }
+

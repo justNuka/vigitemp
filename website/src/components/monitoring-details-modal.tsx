@@ -722,7 +722,7 @@ export default function MonitoringDetailsModal({
                   }}
                 />
 
-                {/* Lignes de consigne superposÃ©es + labels */}
+                {/* Lignes de consigne superposées + labels */}
                 <div className="absolute inset-0 pointer-events-none">
                   {consigneSup !== null && guidePositions.sup !== null && (
                     <>

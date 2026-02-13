@@ -44,14 +44,14 @@ interface MonitoringCardsGridProps {
 function formatDisabledLabel(
   disabledUntil: Date | string | null,
   locale: string,
-  timezone: string,
+  timezone: string | undefined,
   t: (key: string, values?: Record<string, string>) => string,
 ) {
   if (!disabledUntil) return t("grid.disabled_badge")
   const date = new Date(disabledUntil)
   if (Number.isNaN(date.getTime())) return t("grid.disabled_badge")
   const formatted = new Intl.DateTimeFormat(locale, {
-    timeZone: timezone,
+    ...(timezone ? { timeZone: timezone } : {}),
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -465,6 +465,11 @@ export function MonitoringCardsGrid({
     </div>
   )
 }
+
+
+
+
+
 
 
 

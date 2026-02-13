@@ -157,7 +157,7 @@ namespace VigitempAgent
             throw new Exception("No network adapters with an IPv4 address in the system!");
         }
 
-        // M�thode helper pour afficher l'alerte via un `Invoke`
+        // Méthode helper pour afficher l'alerte via un `Invoke`
 
         public static async Task HandleIncomingConnections(Form_Alert frm_alert)
         {
@@ -205,7 +205,7 @@ namespace VigitempAgent
                     continue;
                 }
 
-                //reponse de la fonction renvoy�es par le HttpListener
+                //réponse de la fonction renvoyées par le HttpListener
                 string res = "false";
                 string details = "erreur";
                 string json = "";
@@ -467,7 +467,7 @@ namespace VigitempAgent
                             }
 
                             //Usage
-                            //Parametres utilis�s pour cette fonction
+                            //Paramètres utilisés pour cette fonction
                             //consigneHaute: 1 ou 0
                             bool params_consigneHaute = Convert.ToBoolean(postParams["consigneHaute"]);
                             //consigneBasse: 1 ou 0
@@ -493,7 +493,7 @@ namespace VigitempAgent
                                     Console.WriteLine("Erreur: fermeture logtag");
                                     LogTag.Close(hLogTag);
                                     res = "false";
-                                    details = "Impossible d'acc�der au logtag";
+                                    details = "Impossible d'accéder au logtag";
                                     json = "{\"res\":" + res + ", \"details\":\"" + details + "\"}";
                                     data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                     resp.ContentType = "application/json";
@@ -509,14 +509,14 @@ namespace VigitempAgent
                                 }
                             }
 
-                            //recuperation du nombre de dock logtag connect�s
+                            //récupération du nombre de dock logtag connectés
                             if (LogTag.GetPortInfo(null, ref portCount, 4) != 0) Console.WriteLine("Erreur GetPortInfo 1: fermeture logtag");
                             if (portCount > 1)
                             {
-                                Console.WriteLine("Erreur GetPortInfo: Logtag non d�t�ct�");
+                                Console.WriteLine("Erreur GetPortInfo: Logtag non détecté");
                                 LogTag.Close(hLogTag);
                                 res = "false";
-                                details = "Plusieurs docker connect�s";
+                                details = "Plusieurs docker connectés";
                                 json = "{\"res\":" + res + ", \"details\":\"" + details + "\"}";
                                 data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                 resp.ContentType = "application/json";
@@ -532,10 +532,10 @@ namespace VigitempAgent
                             }
                             else if (portCount == 0)
                             {
-                                Console.WriteLine("Erreur GetPortInfo: Logtag non d�t�ct�");
+                                Console.WriteLine("Erreur GetPortInfo: Logtag non détecté");
                                 LogTag.Close(hLogTag);
                                 res = "false";
-                                details = "Aucun docker logtag connect�";
+                                details = "Aucun docker logtag connecté";
                                 json = "{\"res\":" + res + ", \"details\":\"" + details + "\"}";
                                 data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                 resp.ContentType = "application/json";
@@ -549,8 +549,8 @@ namespace VigitempAgent
 
                                 break;
                             }
-                            //Console.WriteLine("Erreur: plusieurs interfaces vigilog connect�es");
-                            //if (portCount == 0) Console.WriteLine("Erreur: aucune interface vigilog connect�e");
+                            //Console.WriteLine("Erreur: plusieurs interfaces vigilog connectées");
+                            //if (portCount == 0) Console.WriteLine("Erreur: aucune interface vigilog connectée");
 
                             //recuperation des infos du dock logtag
                             LOGTAG_PORTINFO[] tabPortInfo = new LOGTAG_PORTINFO[portCount];
@@ -575,7 +575,7 @@ namespace VigitempAgent
                             LOGTAG_SENSOR[] ltsensor_before = new LOGTAG_SENSOR[1];
                             if (LogTag.GetInfo2(hLogTag, ltinfo, ltsensor) != 0)
                             {
-                                Console.WriteLine("Erreur GetInfo2: Logtag non d�t�ct�");
+                                Console.WriteLine("Erreur GetInfo2: Logtag non détecté");
                                 LogTag.Close(hLogTag);
                                 res = "false";
                                 details = "Pas de capteur logtag dans le dock";
@@ -604,9 +604,9 @@ namespace VigitempAgent
 
                                 ltsensor[i].wConsecutiveAlertDelay = 0;
 
-                                // Active le voyant alerte apr�s wConsecutiveAlertDelay mesures hors consignes
+                                // Active le voyant alerte après wConsecutiveAlertDelay mesures hors consignes
                                 //if (bConsigneSupActive OU bConsigneInfActive) {
-                                // Active les alertes de d�passement avec retard d'alarme
+                                // Active les alertes de dépassement avec retard d'alarme
                                 ltsensor[i].wConsecutiveAlertDelay = (1 / 1) - 1;
 
                                 // Active le voyant rouge
@@ -636,7 +636,7 @@ namespace VigitempAgent
                             ltinfo[0].nFlags = 9251;
 
 
-                            // D�marrage des mesures par bouton
+                            // Démarrage des mesures par bouton
                             ltinfo[0].wStartMethod = 1;
 
                             if (params_consigneBasse)
@@ -676,7 +676,7 @@ namespace VigitempAgent
                                 Console.WriteLine("Erreur SetInfo2: Parametrage du logtag impossible");
                                 LogTag.Close(hLogTag);
                                 res = "false";
-                                details = "Parametrage �chou�";
+                                details = "Paramétrage échoué";
                                 json = "{\"res\":" + res + ", \"details\":\"" + details + "\"}";
                                 data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                 resp.ContentType = "application/json";
@@ -693,7 +693,7 @@ namespace VigitempAgent
 
                             LogTag.Close(hLogTag);
                             res = "true";
-                            details = "Parametrages correctement appliqu�s";
+                            details = "Paramétrages correctement appliqués";
                             json = "{\"res\":" + res + ", \"details\":\"" + details + "\"}";
                             data = Encoding.UTF8.GetBytes(json.ToCharArray());
                             resp.ContentType = "application/json";
@@ -769,7 +769,7 @@ namespace VigitempAgent
                                         Console.WriteLine("Erreur: fermeture logtag");
                                         LogTag.Close(hLogTag);
                                         res = "false";
-                                        details = "Impossible d'acc�der au logtag";
+                                        details = "Impossible d'accéder au logtag";
                                         json = "{\"res\":" + res + ", \"details\":\"" + details + "\"}";
                                         data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                         resp.ContentType = "application/json";
@@ -785,10 +785,10 @@ namespace VigitempAgent
                                     }
                                 }
 
-                                //recuperation du nombre de dock logtag connect�s
+                                //recuperation du nombre de dock logtag connectés
                                 //if (LogTag.GetPortInfo(null, ref portCount, 4) != 0) Console.WriteLine("Erreur GetPortInfo 1: fermeture logtag");
                                 if (LogTag.GetPortInfo(null, ref portCount, 4) != 0) Console.WriteLine("Erreur GetPortInfo 1: fermeture logtag");
-                                //Console.WriteLine("Erreur GetInfo2: Logtag non d�t�ct�");
+                                //Console.WriteLine("Erreur GetInfo2: Logtag non détecté");
                                 //LogTag.Close(hLogTag);
                                 //res = "false";
                                 //details = "nombre de logtag";
@@ -807,10 +807,10 @@ namespace VigitempAgent
 
                                 if (portCount > 1)
                                 {
-                                    Console.WriteLine("Erreur GetInfo2: Logtag non d�t�ct�");
+                                    Console.WriteLine("Erreur GetInfo2: Logtag non détecté");
                                     LogTag.Close(hLogTag);
                                     res = "false";
-                                    details = "Plusieurs docker connect�s";
+                                    details = "Plusieurs docker connectés";
                                     json = "{\"res\":" + res + ", \"details\":\"" + details + "\"}";
                                     data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                     resp.ContentType = "application/json";
@@ -826,10 +826,10 @@ namespace VigitempAgent
                                 }
                                 else if (portCount == 0)
                                 {
-                                    Console.WriteLine("Erreur GetInfo2: Logtag non d�t�ct�");
+                                    Console.WriteLine("Erreur GetInfo2: Logtag non détecté");
                                     LogTag.Close(hLogTag);
                                     res = "false";
-                                    details = "Aucun docker logtag connect�";
+                                    details = "Aucun docker logtag connecté";
                                     json = "{\"res\":" + res + ", \"details\":\"" + details + "\"}";
                                     data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                     resp.ContentType = "application/json";
@@ -843,8 +843,8 @@ namespace VigitempAgent
 
                                     break;
                                 }
-                                //Console.WriteLine("Erreur: plusieurs interfaces vigilog connect�es");
-                                //if (portCount == 0) Console.WriteLine("Erreur: aucune interface vigilog connect�e");
+                                //Console.WriteLine("Erreur: plusieurs interfaces vigilog connectées");
+                                //if (portCount == 0) Console.WriteLine("Erreur: aucune interface vigilog connectée");
 
                                 //recuperation des infos du dock logtag
                                 LOGTAG_PORTINFO[] tabPortInfo = new LOGTAG_PORTINFO[portCount];
@@ -867,7 +867,7 @@ namespace VigitempAgent
                                 LOGTAG_SENSOR[] ltsensor = new LOGTAG_SENSOR[1];
                                 if (LogTag.GetInfo2(hLogTag, ltinfo, ltsensor) != 0)
                                 {
-                                    Console.WriteLine("Erreur GetInfo2: Logtag non d�t�ct�");
+                                    Console.WriteLine("Erreur GetInfo2: Logtag non détecté");
                                     LogTag.Close(hLogTag);
                                     res = "false";
                                     details = "Pas de capteur logtag dans le dock";
@@ -887,12 +887,12 @@ namespace VigitempAgent
                                 ltsensor[0].cbSize = (uint)Marshal.SizeOf(ltsensor[0]);
                                 ltinfo[0].wSensorCount = ltinfo[0].wNumOfSensors;
 
-                                //recupere les donn�es du logtag
+                                //recupere les données du logtag
                                 LOGTAG_READING[] ltreading = new LOGTAG_READING[ltinfo[0].dwNumOfReadings];
                                 ltinfo[0].dwReadingsCount = ltinfo[0].dwNumOfReadings;
                                 if (LogTag.GetData2(hLogTag, ltinfo, ltsensor, ltreading) != 0) Console.WriteLine("Erreur: fermeture logtag");
 
-                                // recuperation du numero de serie a partir de la r�ponse en code ASCII
+                                // recuperation du numero de serie a partir de la réponse en code ASCII
                                 string serialNumber = "";
                                 for (int i = 0; i < ltinfo[0].szChannelInfo.Length; i += 2)
                                 {
@@ -902,7 +902,7 @@ namespace VigitempAgent
                                     }
                                     serialNumber += (char)ltinfo[0].szChannelInfo[i];
                                 }
-                                //creation d'un identifiant li�e � cette collecte de mesure contenant la date de reception
+                                //creation d'un identifiant liée à cette collecte de mesure contenant la date de reception
                                 string id_recuperationMesure = DateTime.Now.ToString("yyyyMMddHHmmss");
 
                                 //enregistrement dans la bdd
@@ -920,11 +920,11 @@ namespace VigitempAgent
                                 // Fermeture de la connexion
                                 database.CloseConnexion();
 
-                                //database.AddMesure(m_sondeSerialNumber, float.Parse(String.Format("{0:0.00}", tmp_temperature)), "�C");
+                                //database.AddMesure(m_sondeSerialNumber, float.Parse(String.Format("{0:0.00}", tmp_temperature)), "°C");
 
                                 LogTag.Close(hLogTag);
                                 res = "true";
-                                details = "Valeur correctements recup�r�es";
+                                details = "Valeur correctement récupérées";
                                 json = "{\"res\":" + res + ", \"details\":\"" + details + "\", \"id_recuperationMesure\":" + id_recuperationMesure + "}";
                                 data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                 resp.ContentType = "application/json";
@@ -959,7 +959,7 @@ namespace VigitempAgent
                                         Console.WriteLine("Erreur: fermeture logtag");
                                         LogTag.Close(hLogTag);
                                         res = "false";
-                                        details = "Impossible d'acc�der au logtag";
+                                        details = "Impossible d'accéder au logtag";
                                         json = "{\"res\":" + res + ", \"details\":\"" + details + "\"}";
                                         data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                         resp.ContentType = "application/json";
@@ -975,13 +975,13 @@ namespace VigitempAgent
                                     }
                                 }
 
-                                //recuperation du nombre de dock logtag connect�s
+                                //recuperation du nombre de dock logtag connectés
                                 if (LogTag.GetPortInfo(null, ref portCount,4) != 0) Console.WriteLine("Erreur GetPortInfo 1: fermeture logtag");
                                 if(portCount == 0)
                                 {
                                     if (LogTag.GetPortInfo(null, ref portCount, 8) != 0) Console.WriteLine("Erreur GetPortInfo 1: fermeture logtag");
                                 }
-                                //Console.WriteLine("Erreur GetInfo2: Logtag non d�t�ct�");
+                                //Console.WriteLine("Erreur GetInfo2: Logtag non détecté");
                                 //LogTag.Close(hLogTag);
                                 //res = "false";
                                 //details = "nombre de logtag";
@@ -1000,10 +1000,10 @@ namespace VigitempAgent
 
                                 if (portCount > 1)
                                 {
-                                    Console.WriteLine("Erreur GetInfo2: Logtag non d�t�ct�");
+                                    Console.WriteLine("Erreur GetInfo2: Logtag non détecté");
                                     LogTag.Close(hLogTag);
                                     res = "false";
-                                    details = "Plusieurs docker connect�s";
+                                    details = "Plusieurs docker connectés";
                                     json = "{\"res\":" + res + ", \"details\":\"" + details + "\"}";
                                     data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                     resp.ContentType = "application/json";
@@ -1019,10 +1019,10 @@ namespace VigitempAgent
                                 }
                                 else if (portCount == 0)
                                 {
-                                    Console.WriteLine("Erreur GetInfo2: Logtag non d�t�ct�");
+                                    Console.WriteLine("Erreur GetInfo2: Logtag non détecté");
                                     LogTag.Close(hLogTag);
                                     res = "false";
-                                    details = "Aucun docker logtag connect�";
+                                    details = "Aucun docker logtag connecté";
                                     json = "{\"res\":" + res + ", \"details\":\"" + details + "\"}";
                                     data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                     resp.ContentType = "application/json";
@@ -1036,8 +1036,8 @@ namespace VigitempAgent
 
                                     break;
                                 }
-                                //Console.WriteLine("Erreur: plusieurs interfaces vigilog connect�es");
-                                //if (portCount == 0) Console.WriteLine("Erreur: aucune interface vigilog connect�e");
+                                //Console.WriteLine("Erreur: plusieurs interfaces vigilog connectées");
+                                //if (portCount == 0) Console.WriteLine("Erreur: aucune interface vigilog connectée");
 
                                 //recuperation des infos du dock logtag
                                 LOGTAG_PORTINFO[] tabPortInfo = new LOGTAG_PORTINFO[portCount];
@@ -1060,7 +1060,7 @@ namespace VigitempAgent
                                 LOGTAG_SENSOR[] ltsensor = new LOGTAG_SENSOR[1];
                                 if (LogTag.GetInfo2(hLogTag, ltinfo, ltsensor) != 0)
                                 {
-                                    Console.WriteLine("Erreur GetInfo2: Logtag non d�t�ct�");
+                                    Console.WriteLine("Erreur GetInfo2: Logtag non détecté");
                                     LogTag.Close(hLogTag);
                                     res = "false";
                                     details = "Pas de capteur logtag dans le dock";
@@ -1086,7 +1086,7 @@ namespace VigitempAgent
 
                                 LogTag.Close(hLogTag);
                                 res = "true";
-                                details = "Valeur correctements recup�r�es";
+                                details = "Valeur correctement récupérées";
                                 json =  "{\"res\":" + res + ", " +
                                         "\"details\":\"" + details + "\", " +
                                         "\"res_consigneBasseActive\":" + res_consigneBasseActive + ", " +
@@ -1119,7 +1119,7 @@ namespace VigitempAgent
             //}
             //catch (Exception)
             //{
-            //    Console.WriteLine("Thread termin�");
+            //    Console.WriteLine("Thread terminé");
             //}
         }
 
@@ -1137,8 +1137,8 @@ namespace VigitempAgent
                     try
                     {
                         MessageBox.Show(
-                            "Vigitemp Agent a rencontr� une erreur.\n\n" +
-                            "Un log a �t� �crit dans %LOCALAPPDATA%\\VigitempAgent\\logs\\agent.log\n\n" +
+                            "Vigitemp Agent a rencontré une erreur.\n\n" +
+                            "Un log a été écrit dans %LOCALAPPDATA%\\VigitempAgent\\logs\\agent.log\n\n" +
                             e.Exception.Message,
                             "Vigitemp Agent",
                             MessageBoxButtons.OK,
@@ -1172,8 +1172,8 @@ namespace VigitempAgent
                 try
                 {
                     MessageBox.Show(
-                        "Vigitemp Agent a rencontr� une erreur fatale.\n\n" +
-                        "Un log a �t� �crit dans %LOCALAPPDATA%\\VigitempAgent\\logs\\agent.log\n\n" +
+                        "Vigitemp Agent a rencontré une erreur fatale.\n\n" +
+                        "Un log a été écrit dans %LOCALAPPDATA%\\VigitempAgent\\logs\\agent.log\n\n" +
                         ex.Message,
                         "Vigitemp Agent",
                         MessageBoxButtons.OK,

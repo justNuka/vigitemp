@@ -54,7 +54,7 @@ cd "website\installer"
 
 ## Ce que fait le script
 - Copie le site dans le dossier dâinstallation
-- Ãcrit le fichier env avec DB + secrets
+- Écrit le fichier env avec DB + secrets
 - Crée un service Windows qui lance le serveur
 
 ## Fichiers

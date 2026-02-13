@@ -1,4 +1,5 @@
 "use client"
+import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useEffect, useMemo, useState } from "react"
 import { z } from "zod"
@@ -186,7 +187,7 @@ export function StandardModal({ open, onOpenChange, standard, isEditing }: Props
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(handleSubmit, (errors) => showFormValidationToast(errors))} className="space-y-6">
               <StandardInfoForm
                 isEditing={!!isEditing}
                 types={types}

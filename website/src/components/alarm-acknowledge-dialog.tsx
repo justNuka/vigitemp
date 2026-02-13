@@ -153,13 +153,13 @@ const [commentOptions, setCommentOptions] = useState<{ id: number; text: string 
   const alarmTypeLabel = useMemo(() => {
     switch (alarm?.type) {
       case "high":
-        return t("types.high");
+        return t("dialog.type_high");
       case "low":
-        return t("types.low");
+        return t("dialog.type_low");
       case "no-response":
-        return t("types.no_response");
+        return t("dialog.type_no_response");
       case "ended":
-        return t("types.ended");
+        return t("dialog.type_other");
       default:
         return t("dialog.na");
     }

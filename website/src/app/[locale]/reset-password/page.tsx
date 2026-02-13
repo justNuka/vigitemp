@@ -1,4 +1,5 @@
 "use client"
+import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useMemo, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
@@ -170,7 +171,7 @@ function ResetPasswordForm() {
           <CardDescription className="text-center">{t("form.description")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
             {error && (
               <Alert variant="destructive">
                 <XCircle className="h-4 w-4" />

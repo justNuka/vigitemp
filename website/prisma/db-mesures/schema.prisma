@@ -8,7 +8,7 @@ datasource db {
 }
 
 model tm_graphique {
-  Id_Graphique            Int
+  Id_Graphique            Int      @default(autoincrement())
   Date_Heure_Mesure       DateTime @default(now()) @db.DateTime(0)
   Valeur                  Float?   @db.Float
   Valeur_Brute            Float?   @db.Float
@@ -18,6 +18,7 @@ model tm_graphique {
   Consigne_Inf            Float?   @db.Float
   Unite                   String?  @db.VarChar(10)
   Sonde_Numero_Serie      String?  @db.VarChar(50)
+  Adresse_Sonde           String?  @db.VarChar(50)
   Id_Sonde                Int?
   Id_Lieu                 Int
   Est_Valeur_Null         Boolean  @default(false)
@@ -36,7 +37,7 @@ model tm_graphique {
 
 model tm_journal {
   Id_Serveur_BDD          Int
-  Id_Journal              Int
+  Id_Journal              Int       @default(autoincrement())
   Code_Journal            String?   @db.VarChar(50)
   Commentaire             String?   @db.LongText
   Nom_Utilisateur         String?   @db.VarChar(50)
@@ -51,6 +52,7 @@ model tm_journal {
   @@index([Nom_Utilisateur], map: "IDX_Nom_Utilisateur")
   @@index([Profil_Utilisateur], map: "IDX_Profil_Utilisateur")
   @@index([Id_Lieu], map: "IDX_tm_journal_Id_Lieu")
+  @@index([Id_Journal], map: "Id_Journal")
 }
 
 model tm_journal_code {
@@ -67,7 +69,7 @@ model tm_compteur_id_table {
 }
 
 model tm_datalogger_mesures {
-  Id_Datalogger_Mesures Int      @id
+  Id_Datalogger_Mesures Int      @id @default(autoincrement())
   Id_Reception          Int?
   Date_Heure_Mesure     DateTime @default(now()) @db.DateTime(0)
   Valeur                Float?   @db.Float
@@ -82,26 +84,27 @@ model tm_datalogger_mesures {
 
 model tm_mesures {
   Id_Serveur_BDD          Int      @default(0)
-  Id_Mesure               Int      @default(0)
+  Id_Mesure               Int      @default(autoincrement())
   Date_Heure_Mesure       DateTime @db.DateTime(0)
   Valeur                  Float?   @db.Float
   Valeur_Brute            Float?   @db.Float
+  Est_Valeur_Memoire      Boolean  @default(false)
   Nb_Decimal              Int?
   Consigne                Float?   @db.Float
   Consigne_Sup            Float?   @db.Float
   Consigne_Inf            Float?   @db.Float
   Unite                   String?  @default("") @db.VarChar(10)
   Sonde_Numero_Serie      String?  @default("") @db.VarChar(50)
+  Adresse_Sonde           String?  @db.VarChar(50)
   Id_Lieu                 Int      @default(0)
-  Est_Valeur_Null         Boolean  @default(false)
+  Est_Valeur_Null         Int      @default(0) @db.TinyInt
   Frequence               Int?
   Est_Etat_Alarme         Boolean  @default(false)
   Consigne_Inf_Pre_Alarme Float?   @db.Float
   Consigne_Sup_Pre_Alarme Float?   @db.Float
   Moyenne                 Float?   @db.Float
-  Rssi                    Int?
-  Tension                 Float?   @db.Float
-  Est_Valeur_Memoire      Boolean  @default(false)
+  Rssi                    String?  @db.VarChar(10)
+  Tension                 String?  @db.VarChar(10)
 
   @@id([Id_Serveur_BDD, Id_Mesure, Date_Heure_Mesure, Id_Lieu, Est_Valeur_Null])
   @@index([Date_Heure_Mesure], map: "IDX_Date_Heure_Mesure")
@@ -110,12 +113,13 @@ model tm_mesures {
   @@index([Date_Heure_Mesure, Id_Lieu], map: "IDX_Date_Heure_Mesure_Id_Lieu")
   @@index([Id_Lieu], map: "Mesure_Numero_lieu_IDX")
   @@index([Id_Lieu], map: "Mesure_lieu")
+  @@index([Id_Mesure], map: "Id_Mesure")
 }
 
 model tm_mesures_gso {
   Id_mesures_gso Int      @default(autoincrement())
   id_capteur     String   @default("") @db.VarChar(50)
-  tep            Float?
+  tep            Float?   @db.Float
   unite          String?  @default("") @db.VarChar(10)
   date_mesure    DateTime @db.DateTime(0)
   rssi           String?  @db.VarChar(10)

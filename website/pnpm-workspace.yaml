@@ -4,6 +4,7 @@ ignoredBuiltDependencies:
   - '@prisma/client'
   - '@prisma/engines'
   - '@swc/core'
+  - '@tsparticles/engine'
   - core-js
   - esbuild
   - msw

@@ -14,7 +14,7 @@ export default function HotlinePage({ params }: HotlinePageProps) {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
-          Chargementâ€¦
+          Chargement…
         </div>
       }
     >

@@ -9,9 +9,9 @@
 5	R	Sonde radio	0
 6	V	Sonde filaire	0
 9	SOIT	Gemsense One Température interne	0
-10	SOIH	Gemsense One Température & humidité interne	0
+10	SOIH	Gemsense One Température & humidité interne	0 -> double capteurs
 11	SOET	Gemsense One Température externe	0
-12	SOEH	Gemsense One Température & humidité externe	0
+12	SOEH	Gemsense One Température & humidité externe	0 -> double capteurs
 13	SPNB	Gemsense Pro Numérique blanc	0
 14	SPNG	Gemsense Pro Numérique gris	0
 15	SPPS	Gemsense Pro platine	0

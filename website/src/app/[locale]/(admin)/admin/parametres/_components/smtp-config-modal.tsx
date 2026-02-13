@@ -1,4 +1,5 @@
 "use client";
+import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useState, useEffect, useMemo } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -160,7 +161,7 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
           <div>
             <Label htmlFor="host">{t("fields.host.label")}</Label>
             <Input
