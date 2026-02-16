@@ -123,7 +123,7 @@ export function ChangePasswordForm({ rules, rulesLoading }: Props) {
                 </div>
               ) : rules ? (
                 <div className="rounded-md border p-3 text-sm">
-                  <PasswordRulesList password={newPassword} rules={rules} title={t('rules.title')} />
+                  <PasswordRulesList password={newPassword} rules={rules} title={t('rules.title')} showWhenEmpty />
                 </div>
               ) : null}
             </FormItem>

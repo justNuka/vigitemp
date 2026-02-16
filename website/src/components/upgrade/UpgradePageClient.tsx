@@ -24,7 +24,6 @@ export function UpgradePageClient() {
   const compactItems = [
     { name: t("upgrade.nav.comparaison"), link: "#comparaison" },
     { name: t("upgrade.nav.licences"), link: "#licences" },
-    { name: t("upgrade.nav.contact"), link: "#contact" },
   ];
 
   return (

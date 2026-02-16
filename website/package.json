@@ -22,7 +22,8 @@
     "prisma:studio:mesure": "prisma studio --schema=./prisma/db-mesures/schema.prisma --port 5556",
     "prisma:migrate:main": "prisma migrate dev --schema=./prisma/db-main/schema.prisma",
     "prisma:migrate:mesure": "prisma migrate dev --schema=./prisma/db-mesures/schema.prisma",
-    "email-dev": "email dev"
+    "email-dev": "email dev",
+    "smtp:encrypt-passwords": "tsx scripts/encrypt-smtp-passwords.ts"
   },
   "dependencies": {
     "@heroui/react": "^2.8.8",

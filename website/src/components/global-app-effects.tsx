@@ -9,7 +9,13 @@ import { useTranslations } from "next-intl"
 import { stripLocalePrefix } from "@/i18n/pathnames"
 import { useRouter } from "@/i18n/navigation"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { API_ERROR_EVENT, AUTH_STATE_EVENT, type ApiErrorEventDetail, type AuthStateEventDetail } from "@/lib/http"
+import {
+  API_ERROR_EVENT,
+  AUTH_STATE_EVENT,
+  setAuthDisconnected,
+  type ApiErrorEventDetail,
+  type AuthStateEventDetail,
+} from "@/lib/http"
 
 function isPublicRoute(pathname: string) {
   const normalized = stripLocalePrefix(pathname)
@@ -72,6 +78,7 @@ export function GlobalAppEffects() {
     const onError = () => {
       // Stop the stream on first error to avoid reconnect loops when logged out.
       eventSource.close()
+      setAuthDisconnected(true, "stream_unauthorized")
     }
 
     eventSource.addEventListener("alarm", onAlarm)

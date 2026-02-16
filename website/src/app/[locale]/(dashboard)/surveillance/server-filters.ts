@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma"
+﻿import { unstable_noStore } from "next/cache"
 
 export interface Site {
   id: number
@@ -8,11 +8,14 @@ export interface Site {
 export interface Group {
   id: number
   name: string
-  category?: string // "1" or "2" pour distinguer groupe1 vs groupe2
-  siteIds: number[] // sites où ce groupe est utilisé par au moins un lieu
+  category?: string
+  siteIds: number[]
 }
 
 export async function ServerFilterOptions() {
+  unstable_noStore()
+  const { prisma } = await import("@/lib/prisma")
+
   try {
     const [sitesData, groupeData, lieuxData] = await Promise.all([
       prisma.t_site.findMany({

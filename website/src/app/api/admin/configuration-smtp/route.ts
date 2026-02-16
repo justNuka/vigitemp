@@ -1,8 +1,11 @@
 import { NextRequest } from "next/server"
 
 import { withAdminLogging } from "@/lib/api-wrappers"
+import { getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
+import { decryptSmtpPassword, encryptSmtpPassword, isEncryptedSmtpPassword } from "@/lib/secret-crypto"
+import { log } from "@/lib/logger"
 
 type SMTPConfig = {
   host: string
@@ -14,10 +17,11 @@ type SMTPConfig = {
 
 /**
  * GET/PUT /api/admin/configuration-smtp
- * Paramètres SMTP (stockés dans t_parametre / SECURITE_EMAIL)
+ * Parametres SMTP (stockes dans t_parametre / SECURITE_EMAIL)
  */
-export const GET = withAdminLogging(async (_req: NextRequest) => {
+export const GET = withAdminLogging(async (req: NextRequest, ctx: any) => {
   try {
+    const { ip } = getRequestContext(req)
     const params = await prisma.t_parametre.findMany({
       where: { Section: "SECURITE_EMAIL" },
     })
@@ -42,7 +46,7 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
           config.user = param.Valeur || ""
           break
         case "SMTP_MOT_DE_PASSE":
-          config.password = param.Valeur || ""
+          config.password = decryptSmtpPassword(param.Valeur || "")
           break
         case "SMTP_EXPEDITEUR":
           config.sender = param.Valeur || "noreply@vigitemp.fr"
@@ -50,26 +54,40 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
       }
     })
 
+    log.info("SMTP_CONFIG", "SMTP configuration fetched", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      hostConfigured: !!config.host,
+      userConfigured: !!config.user,
+      passwordConfigured: !!config.password,
+    })
+
     return apiOk(config)
   } catch (error) {
-    console.error("Erreur lors de la récupération de la config SMTP:", error)
+    log.error("SMTP_CONFIG", "Failed to fetch SMTP configuration", {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return apiError(500, "internal_error", "Erreur serveur")
   }
 })
 
-export const PUT = withAdminLogging(async (req: NextRequest) => {
+export const PUT = withAdminLogging(async (req: NextRequest, ctx: any) => {
   try {
+    const { ip } = getRequestContext(req)
     const body = (await req.json()) as SMTPConfig
 
     if (!body.host || !body.port || !body.user || !body.password) {
-      return apiError(400, "invalid_input", "Paramètres SMTP incomplets")
+      return apiError(400, "invalid_input", "Parametres SMTP incomplets")
     }
+
+    const encryptedPassword = encryptSmtpPassword(body.password)
 
     const updates = [
       { Mot_Cle: "SMTP_SERVEUR", Valeur: body.host },
       { Mot_Cle: "SMTP_PORT", Valeur: body.port.toString() },
       { Mot_Cle: "SMTP_UTILISATEUR", Valeur: body.user },
-      { Mot_Cle: "SMTP_MOT_DE_PASSE", Valeur: body.password },
+      { Mot_Cle: "SMTP_MOT_DE_PASSE", Valeur: encryptedPassword },
       { Mot_Cle: "SMTP_EXPEDITEUR", Valeur: body.sender },
     ]
 
@@ -90,9 +108,35 @@ export const PUT = withAdminLogging(async (req: NextRequest) => {
       })
     }
 
-    return apiOk({ message: "Configuration SMTP mise à jour avec succès" })
+    log.info("SMTP_CONFIG", "SMTP configuration updated", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      host: body.host,
+      port: body.port,
+      sender: body.sender,
+      passwordEncrypted: isEncryptedSmtpPassword(encryptedPassword),
+    })
+
+    log.audit("CC", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      resource: "Configuration SMTP",
+      changes: {
+        host: body.host,
+        port: body.port,
+        user: body.user,
+        sender: body.sender,
+        passwordUpdated: true,
+      },
+    })
+
+    return apiOk({ message: "Configuration SMTP mise a jour avec succes" })
   } catch (error) {
-    console.error("Erreur lors de la mise à jour de la config SMTP:", error)
+    log.error("SMTP_CONFIG", "Failed to update SMTP configuration", {
+      error: error instanceof Error ? error.message : String(error),
+    })
     return apiError(500, "internal_error", "Erreur serveur")
   }
 })

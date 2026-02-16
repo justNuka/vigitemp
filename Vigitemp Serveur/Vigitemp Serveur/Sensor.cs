@@ -73,27 +73,30 @@ namespace Vigitemp_Serveur
         protected double ApplyMetrology(double rawValue)
         {
             var metrology = ths.GetSondeMetrologyCached(m_sondeSerialNumber);
-
             if (metrology == null)
             {
                 return rawValue;
             }
 
+            var value = rawValue;
+
+            // Ordre metrologie: ajustage (a*x + b) puis offset.
             if (metrology.HasAjustage)
             {
-                if (metrology.Offset.HasValue)
-                {
-                    VigitempServeur.Log($"[METROLOGY] serial={m_sondeSerialNumber} ajustage actif, offset ignore");
-                }
-                return metrology.CoeffX * rawValue + metrology.CoeffConstant;
+                value = metrology.CoeffX * value + metrology.CoeffConstant;
             }
 
             if (metrology.Offset.HasValue)
             {
-                return rawValue + metrology.Offset.Value;
+                value += metrology.Offset.Value;
             }
 
-            return rawValue;
+            if (metrology.HasEtalonnage && metrology.CorrectionJustesse.HasValue)
+            {
+                value += metrology.CorrectionJustesse.Value;
+            }
+
+            return value;
         }
 
         protected string ToInvariantRaw(double rawValue)

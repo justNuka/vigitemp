@@ -66,7 +66,7 @@ export const GET = withAuthLogging(
         }
       }
 
-      const [measurements, lieu, total] = await Promise.all([
+      const [primaryMeasurements, lieu, total] = await Promise.all([
         source === "mesures"
           ? prismaMesure.tm_mesures.findMany({
               where: {
@@ -133,6 +133,31 @@ export const GET = withAuthLogging(
           : Promise.resolve(0),
       ])
 
+      const measurements =
+        source === "graphique" && primaryMeasurements.length === 0
+          ? await prismaMesure.tm_mesures.findMany({
+              where: {
+                ...whereClause,
+                Est_Valeur_Null: 0,
+              },
+              take: rowNumber,
+              orderBy: { Date_Heure_Mesure: "desc" },
+              select: {
+                Id_Mesure: true,
+                Date_Heure_Mesure: true,
+                Valeur: true,
+                Nb_Decimal: true,
+                Unite: true,
+                Consigne: true,
+                Consigne_Sup: true,
+                Consigne_Inf: true,
+                Sonde_Numero_Serie: true,
+                Frequence: true,
+                Est_Etat_Alarme: true,
+              },
+            })
+          : primaryMeasurements
+
       const consigneSupLieu =
         lieu?.Tolerance_Surveillance_Sup ?? lieu?.Consigne_Sup ?? null
       const consigneInfLieu =
@@ -149,7 +174,7 @@ export const GET = withAuthLogging(
         const dateXaxis = formatDbDateTime(dateHeure, { timeOnly: true, withSeconds: false })
 
         return {
-          id: (source === "mesures" ? m.Id_Mesure : m.Id_Graphique)?.toString() || "",
+          id: (m.Id_Mesure ?? m.Id_Graphique)?.toString() || "",
           Valeur: m.Valeur !== null ? parseFloat(m.Valeur.toString()) : 0,
           Nb_Decimal:
             m.Nb_Decimal !== null && m.Nb_Decimal !== undefined
@@ -210,5 +235,3 @@ export const GET = withAuthLogging(
     }
   },
 )
-
-

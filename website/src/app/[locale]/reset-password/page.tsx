@@ -222,6 +222,7 @@ function ResetPasswordForm() {
               confirmPassword={confirmPassword}
               rules={effectiveRules}
               includeConfirmMatch
+              showWhenEmpty
             />
 
             <Button type="submit" className="w-full" disabled={isSubmitting || !allRulesValid}>

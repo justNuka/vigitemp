@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -74,7 +74,7 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
     shouldLoadLocationFormData,
   );
 
-  const { data, isFetching, fetchNextPage, hasNextPage, refetch } = usePaginatedSensors({ limit: 50 });
+  const { data, isFetching, fetchNextPage, hasNextPage, forceRefresh } = usePaginatedSensors({ limit: 50 });
   useSurveillanceLiveUpdates({ enabled: true, limit: 50 });
 
   const paginatedData = useMemo(() => {
@@ -106,9 +106,10 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
     // Pas besoin de reset page puisque c'est du filtrage client-side
   }, []);
 
-  const handleRefresh = useCallback(() => {
-    refetch();
-  }, [refetch]);
+  const handleRefresh = useCallback(async () => {
+    await forceRefresh();
+    toast.success(t("refresh.refreshed"));
+  }, [forceRefresh, t]);
 
   useEffect(() => {
     const pages = data?.pages ?? [];
@@ -315,7 +316,7 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
         })
         await queryClient.invalidateQueries({ queryKey: ["locations"] })
         await queryClient.invalidateQueries({ queryKey: ["capteurs", "paginated", 100] })
-        toast.success("Lieu modifié avec succès")
+        toast.success("Lieu modifiÃ© avec succÃ¨s")
         window.dispatchEvent(
           new CustomEvent("vigitemp:lieu-updated", {
             detail: { idLieu: selectedLocationId },
@@ -416,6 +417,7 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
     </>
   );
 }
+
 
 
 

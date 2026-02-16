@@ -23,6 +23,30 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
       },
     })
 
+    const serials = sondes
+      .map((sonde) => sonde.Sonde_Numero_Serie)
+      .filter((serial): serial is string => Boolean(serial))
+
+    const latestEtalonnages = serials.length
+      ? await prisma.t_etalonnage.findMany({
+          where: { Sonde_Numero_Serie: { in: serials } },
+          orderBy: [{ Sonde_Numero_Serie: "asc" }, { Date_Heure_Etalonnage: "desc" }, { Id_Etalonnage: "desc" }],
+          select: {
+            Sonde_Numero_Serie: true,
+            Date_Validite: true,
+          },
+        })
+      : []
+
+    const latestValidityBySerial = new Map<string, Date | null>()
+    for (const etal of latestEtalonnages) {
+      const serial = etal.Sonde_Numero_Serie
+      if (!serial) continue
+      if (!latestValidityBySerial.has(serial)) {
+        latestValidityBySerial.set(serial, etal.Date_Validite ?? null)
+      }
+    }
+
     const formatted = sondes.map((sonde) => ({
       Id_Sonde: sonde.Id_Sonde,
       Adresse_Sonde: sonde.Adresse_Sonde,
@@ -34,6 +58,9 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
       Id_Module: sonde.Id_Module,
       Sonde_Offset: sonde.Sonde_Offset,
       Lieu: sonde.t_lieu[0]?.Nom_Lieu || null,
+      Date_Validite_Etalonnage: sonde.Sonde_Numero_Serie
+        ? latestValidityBySerial.get(sonde.Sonde_Numero_Serie) ?? null
+        : null,
     }))
 
     return apiOk(formatted)

@@ -28,7 +28,7 @@ const TEST_ROUTES = ["/surveillance-cached", "/admin/test", "/test", "/debug"]
 
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const token = request.cookies.get("auth-token")?.value
+  const token = request.cookies.get("token")?.value ?? request.cookies.get("auth-token")?.value
 
   if (shouldLog) {
     console.log(`[Proxy] ${pathname} - Token: ${token ? "YES" : "NO"}`)

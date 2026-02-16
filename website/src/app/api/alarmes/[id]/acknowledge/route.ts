@@ -38,45 +38,46 @@ export const POST = withAuthLogging(
           },
         })
 
-        await tx.t_alarme.delete({ where: { Id_Alarme: alarmId } })
-
         if (current.t_lieu?.Id_Lieu) {
           const lieuId = current.t_lieu.Id_Lieu
 
-          const remainingActive = await tx.t_alarme.count({
-            where: {
-              Id_Lieu: lieuId,
-              Date_Heure_Fin: null,
-              Est_Alarme_Vrai: true,
-            },
-          })
-
-          const remainingEndedUnack = await tx.t_alarme.count({
-            where: {
-              Id_Lieu: lieuId,
-              Date_Heure_Fin: { not: null },
-              Est_Acquittee: false,
-            },
-          })
+          const [nextActiveAlarm, remainingEndedUnack, lieu] = await Promise.all([
+            tx.t_alarme.findFirst({
+              where: {
+                Id_Lieu: lieuId,
+                Date_Heure_Fin: null,
+                Est_Alarme_Vrai: true,
+                Est_Acquittee: false,
+              },
+              orderBy: { Date_Heure_Debut: "desc" },
+              select: { Id_Alarme: true },
+            }),
+            tx.t_alarme.count({
+              where: {
+                Id_Lieu: lieuId,
+                Date_Heure_Fin: { not: null },
+                Est_Acquittee: false,
+              },
+            }),
+            tx.t_lieu.findUnique({
+              where: { Id_Lieu: lieuId },
+              select: { Est_Lieu_En_Pre_Alarme: true },
+            }),
+          ])
 
           const updateData: {
             Est_Lieu_Alarme_Terminee_Non_Acquittee: number
-            Est_Lieu_En_Alarme?: number
+            Est_Lieu_En_Alarme: number
             Est_Lieu_En_Pre_Alarme?: number
-            Id_Alarme?: number
+            Id_Alarme: number
           } = {
             Est_Lieu_Alarme_Terminee_Non_Acquittee: remainingEndedUnack > 0 ? 1 : 0,
+            Est_Lieu_En_Alarme: nextActiveAlarm ? 1 : 0,
+            Id_Alarme: nextActiveAlarm?.Id_Alarme ?? 0,
           }
 
-          if (remainingActive === 0) {
-            const lieu = await tx.t_lieu.findUnique({
-              where: { Id_Lieu: lieuId },
-              select: { Est_Lieu_En_Pre_Alarme: true },
-            })
-
-            updateData.Est_Lieu_En_Alarme = 0
+          if (!nextActiveAlarm) {
             updateData.Est_Lieu_En_Pre_Alarme = lieu?.Est_Lieu_En_Pre_Alarme ?? 0
-            updateData.Id_Alarme = 0
           }
 
           await tx.t_lieu.update({
@@ -84,6 +85,16 @@ export const POST = withAuthLogging(
             data: updateData,
           })
         }
+
+        // Supprime d'abord les notifications liees pour eviter les conflits FK,
+        // puis supprime l'alarme (le trigger DB peut alimenter t_alarme_histo).
+        await tx.t_notification.deleteMany({
+          where: { Id_Alarme: alarmId },
+        })
+
+        await tx.t_alarme.delete({
+          where: { Id_Alarme: alarmId },
+        })
 
         return current
       })

@@ -26,6 +26,8 @@ namespace Vigitemp_License_Generator
         private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, string lParam);
 
         private const int EM_SETCUEBANNER = 0x1501;
+        private const string DefaultHotlineUsername = "mc2-hotline";
+        private const string DefaultHotlinePassword = "Vigi106*";
 
         private readonly TextBox _txtCustomerId;
         private readonly ComboBox _cmbEdition;
@@ -52,6 +54,8 @@ namespace Vigitemp_License_Generator
         private readonly TextBox _txtPublicKey;
         private readonly Label _lblKeyStatus;
         private readonly ToolTip _toolTip;
+        private string _lastGeneratedHotlineLogin;
+        private string _lastGeneratedHotlinePassword;
 
         private AsymmetricKeyParameter _privateKey;
 
@@ -187,7 +191,7 @@ namespace Vigitemp_License_Generator
             var hotlineTable = CreateTable(2);
             hotlineGroup.Controls.Add(hotlineTable);
 
-            _txtHotlineLogin = new TextBox { Width = 240 };
+            _txtHotlineLogin = new TextBox { Width = 240, Text = DefaultHotlineUsername };
             AddRowWithInfo(
                 hotlineTable,
                 "Hotline login",
@@ -196,7 +200,7 @@ namespace Vigitemp_License_Generator
             );
 
             var hotlinePasswordPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true };
-            _txtHotlinePassword = new TextBox { Width = 240, UseSystemPasswordChar = true };
+            _txtHotlinePassword = new TextBox { Width = 240, UseSystemPasswordChar = true, Text = DefaultHotlinePassword };
             _btnToggleHotlinePassword = CreateEyeButton();
             _btnToggleHotlinePassword.Click += (s, e) => ToggleHotlinePasswordVisibility();
             hotlinePasswordPanel.Controls.Add(_txtHotlinePassword);
@@ -209,7 +213,7 @@ namespace Vigitemp_License_Generator
             );
 
             var hotlineConfirmPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true };
-            _txtHotlinePasswordConfirm = new TextBox { Width = 240, UseSystemPasswordChar = true };
+            _txtHotlinePasswordConfirm = new TextBox { Width = 240, UseSystemPasswordChar = true, Text = DefaultHotlinePassword };
             _btnToggleHotlinePasswordConfirm = CreateEyeButton();
             _btnToggleHotlinePasswordConfirm.Click += (s, e) => ToggleHotlinePasswordVisibility();
             hotlineConfirmPanel.Controls.Add(_txtHotlinePasswordConfirm);
@@ -220,6 +224,15 @@ namespace Vigitemp_License_Generator
                 hotlineConfirmPanel,
                 "Confirmer le mot de passe hotline."
             );
+
+            var hotlineWarningLabel = new Label
+            {
+                AutoSize = true,
+                ForeColor = Color.Firebrick,
+                MaximumSize = new Size(650, 0),
+                Text = "Attention : si vous modifiez le mot de passe hotline, il ne pourra pas etre recupere. Notez-le dans un endroit securise."
+            };
+            AddRow(hotlineTable, "", hotlineWarningLabel);
             _txtInstancePublicKey = new TextBox { Width = 520, Multiline = true, Height = 80, ScrollBars = ScrollBars.Vertical };
             AddRowWithInfo(
                 inputTable,
@@ -359,12 +372,16 @@ namespace Vigitemp_License_Generator
             );
 
             var btnCopyToken = new Button { Text = "Copier token", AutoSize = true };
-            btnCopyToken.Click += (s, e) => CopyToClipboard(_txtLicenseToken.Text, "Token copié.");
+            btnCopyToken.Click += (s, e) => CopyToClipboard(_txtLicenseToken.Text, "Token copie.");
             AddRow(outputTable, "", btnCopyToken);
 
             var btnSave = new Button { Text = "Enregistrer .vtlic", AutoSize = true };
             btnSave.Click += (s, e) => SaveTokenToFile();
             AddRow(outputTable, "", btnSave);
+
+            var btnSaveHotline = new Button { Text = "Exporter identifiants hotline (.txt)", AutoSize = true };
+            btnSaveHotline.Click += (s, e) => SaveHotlineCredentialsToFile();
+            AddRow(outputTable, "", btnSaveHotline);
 
             TryLoadDefaultKey();
         }
@@ -611,6 +628,9 @@ namespace Vigitemp_License_Generator
                 return;
             }
 
+            _lastGeneratedHotlineLogin = hotlineLogin;
+            _lastGeneratedHotlinePassword = hotlinePassword;
+
             var hotlinePasswordHash = HashHotlinePassword(hotlinePassword);
             var licenseId = $"VT-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpperInvariant()}";
             _txtLicenseId.Text = licenseId;
@@ -822,6 +842,42 @@ namespace Vigitemp_License_Generator
 
                 File.WriteAllText(dialog.FileName, _txtLicenseToken.Text, Encoding.UTF8);
                 MessageBox.Show($"Licence enregistrée :\n{dialog.FileName}", "OK", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void SaveHotlineCredentialsToFile()
+        {
+            var login = _lastGeneratedHotlineLogin ?? _txtHotlineLogin.Text.Trim();
+            var password = _lastGeneratedHotlinePassword ?? _txtHotlinePassword.Text;
+
+            if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
+            {
+                MessageBox.Show("Identifiants hotline indisponibles.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var defaultName = string.IsNullOrWhiteSpace(_txtLicenseId.Text)
+                ? "hotline_credentials.txt"
+                : $"{_txtLicenseId.Text}_hotline_credentials.txt";
+
+            using (var dialog = new SaveFileDialog())
+            {
+                dialog.Title = "Exporter identifiants hotline";
+                dialog.Filter = "Text file|*.txt|All files|*.*";
+                dialog.FileName = defaultName;
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+
+                var content = new StringBuilder();
+                content.AppendLine("Identifiants hotline");
+                content.AppendLine("====================");
+                content.AppendLine($"Licence: {_txtLicenseId.Text}");
+                content.AppendLine($"Login: {login}");
+                content.AppendLine($"Mot de passe: {password}");
+                content.AppendLine();
+                content.AppendLine("Attention: stockez ce fichier dans un emplacement securise.");
+
+                File.WriteAllText(dialog.FileName, content.ToString(), Encoding.UTF8);
+                MessageBox.Show($"Identifiants exportes :\n{dialog.FileName}", "OK", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 

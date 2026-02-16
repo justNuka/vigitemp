@@ -14,12 +14,14 @@ export function PasswordRulesList({
   rules,
   title,
   includeConfirmMatch = false,
+  showWhenEmpty = false,
 }: {
   password: string;
   confirmPassword?: string;
   rules?: PasswordRules | null;
   title?: string;
   includeConfirmMatch?: boolean;
+  showWhenEmpty?: boolean;
 }) {
   const t = useTranslations("passwordRules");
   const resolvedTitle = title ?? t("title");
@@ -32,7 +34,7 @@ export function PasswordRulesList({
     t,
   });
 
-  if (!password) return null;
+  if (!showWhenEmpty && !password) return null;
 
   return (
     <div className="space-y-2 text-sm">

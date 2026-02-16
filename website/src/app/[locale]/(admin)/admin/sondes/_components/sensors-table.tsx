@@ -3,8 +3,9 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { Activity, FlaskConical, PowerOff, Ruler, Wrench } from "lucide-react";
 import { TanStackTable } from '@/components/data-table/tanstack-table';
+import { Badge } from '@/components/ui/badge';
 import type { Sensor } from '@/hooks/useSensors';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 type StatusTheme = {
   label: string;
@@ -21,6 +22,7 @@ export type SensorRow = {
   Surveillance_Etat: string | null;
   Surveillance_Etat_Libelle: string | null;
   Lieu: string | null;
+  Date_Validite_Etalonnage: string | Date | null;
 };
 
 type SensorsTableProps = {
@@ -33,6 +35,7 @@ type SensorsTableProps = {
 
 export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSensor, onEditSensor }: SensorsTableProps) {
   const t = useTranslations('sensorsPage');
+  const locale = useLocale();
 
   const statusThemes: Record<string, StatusTheme> = {
     surveillance: {
@@ -65,6 +68,56 @@ export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSen
       className: "border-slate-400/40 bg-slate-400/10 text-slate-600",
       Icon: PowerOff,
     },
+  };
+
+
+  const warningWindowDays = 30;
+
+  const parseDate = (value: string | Date | null | undefined): Date | null => {
+    if (!value) return null;
+    const date = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  };
+
+  const getCalibrationValidityState = (value: string | Date | null) => {
+    const date = parseDate(value);
+    if (!date) {
+      return {
+        tone: "none" as const,
+      };
+    }
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const validityDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const diffDays = Math.ceil((validityDay.getTime() - startOfToday.getTime()) / 86400000);
+
+    if (diffDays < 0) {
+      return {
+        tone: "expired" as const,
+      };
+    }
+
+    if (diffDays <= warningWindowDays) {
+      return {
+        tone: "warning" as const,
+      };
+    }
+
+    return {
+      tone: "ok" as const,
+    };
+  };
+
+
+  const formatValidityDate = (value: string | Date | null) => {
+    const date = parseDate(value);
+    if (!date) return '-';
+    return new Intl.DateTimeFormat(locale.toLowerCase().startsWith('fr') ? 'fr-FR' : locale, {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(date);
   };
 
   const getSensorStatusTheme = (status: string | null, label: string | null): StatusTheme => {
@@ -122,6 +175,41 @@ export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSen
       },
     },
     {
+      accessorKey: 'Date_Validite_Etalonnage',
+      header: t('table.columns.calibration_validity'),
+      cell: ({ row }) => {
+        const value = row.original.Date_Validite_Etalonnage;
+        const validity = getCalibrationValidityState(value);
+        const text = formatValidityDate(value);
+
+        if (validity.tone === 'none') {
+          return <span>-</span>;
+        }
+
+        if (validity.tone === 'ok') {
+          return (
+            <Badge className="border-emerald-500/40 bg-emerald-500/15 text-emerald-700" variant="outline">
+              {text}
+            </Badge>
+          );
+        }
+
+        if (validity.tone === 'warning') {
+          return (
+            <Badge className="border-amber-500/40 bg-amber-500/15 text-amber-700" variant="outline">
+              {text}
+            </Badge>
+          );
+        }
+
+        return (
+          <Badge className="border-red-500/40 bg-red-500/15 text-red-700" variant="outline">
+            {text}
+          </Badge>
+        );
+      },
+    },
+    {
       accessorKey: 'Lieu',
       header: t('table.columns.location'),
       cell: ({ row }) => row.getValue('Lieu') || '-',
@@ -163,6 +251,7 @@ export function toSensorRows(sensors: Sensor[]): SensorRow[] {
     Surveillance_Etat: s.Surveillance_Etat,
     Surveillance_Etat_Libelle: s.Surveillance_Etat_Libelle,
     Lieu: s.Lieu,
+    Date_Validite_Etalonnage: s.Date_Validite_Etalonnage ?? null,
   }));
 }
 

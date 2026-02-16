@@ -717,7 +717,7 @@ namespace Vigitemp_Serveur
                         "t_lieu.Infos_Modifiees_Depuis_Derniere_Mesure, " +
                         "t_module.Port_Serie, t_module.Module_Numero_Serie, " +
                         "t_sonde.Sonde_Numero_Serie, t_sonde.Adresse_Sonde, t_sonde.Sonde_Offset, " +
-                        "ta.Coeff_X, ta.Coeff_Constant " +
+                        "ta.Coeff_X, ta.Coeff_Constant, te.Err_Justesse, te.Incertitude, te.Date_Validite" +
                         "FROM t_lieu " +
                         "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                         "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
@@ -726,6 +726,11 @@ namespace Vigitemp_Serveur
                         "  WHERE Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                         "  ORDER BY Date_Heure_Ajustage DESC, Id_Ajustage DESC" +
                         ") ta " +
+                        "OUTER APPLY (" +
+                        "  SELECT TOP 1 Err_Justesse, Incertitude, Date_Validite FROM t_etalonnage " +
+                        "  WHERE Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
+                        "  ORDER BY Date_Heure_Etalonnage DESC, Id_Etalonnage DESC" +
+                        ") te " +
                         "WHERE t_module.Id_Serveur = @idServeur " +
                         "AND t_lieu.Lieu_Etat = 'S' " +
                         "AND t_sonde.Etat_Sonde = 'S' " +
@@ -767,7 +772,12 @@ namespace Vigitemp_Serveur
                                     SondeOffset = GetOptionalDouble(reader, "Sonde_Offset"),
                                     HasAjustage = GetOptionalDouble(reader, "Coeff_X").HasValue && GetOptionalDouble(reader, "Coeff_Constant").HasValue,
                                     CoeffX = GetOptionalDouble(reader, "Coeff_X") ?? 1d,
-                                    CoeffConstant = GetOptionalDouble(reader, "Coeff_Constant") ?? 0d
+                                    CoeffConstant = GetOptionalDouble(reader, "Coeff_Constant") ?? 0d,
+                                    HasEtalonnage = GetOptionalDouble(reader, "Err_Justesse").HasValue || GetOptionalDouble(reader, "Incertitude").HasValue || GetNullableDateTime(reader, "Date_Validite") != default(DateTime),
+                                    ErrJustesse = GetOptionalDouble(reader, "Err_Justesse"),
+                                    CorrectionJustesse = GetOptionalDouble(reader, "Err_Justesse").HasValue ? -GetOptionalDouble(reader, "Err_Justesse").Value : (double?)null,
+                                    Incertitude = GetOptionalDouble(reader, "Incertitude"),
+                                    DateValiditeEtalonnage = GetNullableDateTime(reader, "Date_Validite") != default(DateTime) ? (DateTime?)GetNullableDateTime(reader, "Date_Validite") : null
                                 });
                             }
                         }
@@ -1872,12 +1882,17 @@ namespace Vigitemp_Serveur
 
                 using (var cmd = CreateCommand(
                     _connectionMain,
-                    "SELECT t_sonde.Sonde_Offset, ta.Coeff_X, ta.Coeff_Constant FROM t_sonde " +
+                    "SELECT t_sonde.Sonde_Offset, ta.Coeff_X, ta.Coeff_Constant, te.Err_Justesse, te.Incertitude, te.Date_Validite FROM t_sonde " +
                     "OUTER APPLY (" +
                     "  SELECT TOP 1 Coeff_X, Coeff_Constant FROM t_ajustage " +
                     "  WHERE Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                     "  ORDER BY Date_Heure_Ajustage DESC, Id_Ajustage DESC" +
                     ") ta " +
+                    "OUTER APPLY (" +
+                    "  SELECT TOP 1 Err_Justesse, Incertitude, Date_Validite FROM t_etalonnage " +
+                    "  WHERE Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
+                    "  ORDER BY Date_Heure_Etalonnage DESC, Id_Etalonnage DESC" +
+                    ") te " +
                     "WHERE t_sonde.Sonde_Numero_Serie = @serial"))
                 {
                     cmd.Parameters.AddWithValue("@serial", p_serial_number);

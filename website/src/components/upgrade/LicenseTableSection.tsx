@@ -41,13 +41,16 @@ export function LicenseTableSection() {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="text-left text-xs font-medium text-muted-foreground p-4 w-[40%]">
+                  <th className="text-left text-xs font-medium text-muted-foreground p-4 w-[32%]">
                     {t("upgrade.licenses.table.feature")}
                   </th>
-                  <th className="text-center text-xs font-medium text-muted-foreground p-4 w-[20%]">
+                  <th className="text-center text-xs font-medium text-muted-foreground p-4 w-[17%]">
+                    {t("upgrade.licenses.table.pack")}
+                  </th>
+                  <th className="text-center text-xs font-medium text-muted-foreground p-4 w-[17%]">
                     {t("upgrade.licenses.table.one")}
                   </th>
-                  <th className="text-center p-4 w-[20%] relative">
+                  <th className="text-center p-4 w-[17%] relative">
                     <div className="relative inline-flex flex-col items-center">
                       <span className="text-xs font-bold text-primary">
                         {t("upgrade.licenses.table.standard")}
@@ -57,7 +60,7 @@ export function LicenseTableSection() {
                       </span>
                     </div>
                   </th>
-                  <th className="text-center text-xs font-medium text-muted-foreground p-4 w-[20%]">
+                  <th className="text-center text-xs font-medium text-muted-foreground p-4 w-[17%]">
                     <span className="flex items-center justify-center gap-1">
                       {t("upgrade.licenses.table.expert")}
                       <Clock className="w-3 h-3 text-muted-foreground" />
@@ -72,6 +75,9 @@ export function LicenseTableSection() {
                     className={`border-t border-border/30 transition-colors hover:bg-secondary/20 ${i % 2 === 0 ? "bg-transparent" : "bg-secondary/5"}`}
                   >
                     <td className="text-sm text-foreground p-4">{feature.name}</td>
+                    <td className="text-center p-4">
+                      <CellValue value={feature.pack} />
+                    </td>
                     <td className="text-center p-4">
                       <CellValue value={feature.one} />
                     </td>

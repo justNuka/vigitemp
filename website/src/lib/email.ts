@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import { render } from "@react-email/components";
 import { prisma } from "@/lib/prisma";
+import { decryptSmtpPassword } from "@/lib/secret-crypto";
 
 interface EmailConfig {
   host: string;
@@ -43,7 +44,7 @@ async function getEmailConfig(): Promise<EmailConfig> {
         config.user = param.Valeur || "eb3e24c69a3763";
         break;
       case "SMTP_MOT_DE_PASSE":
-        config.password = param.Valeur || "b2056d25397007";
+        config.password = decryptSmtpPassword(param.Valeur || "");
         break;
       case "SMTP_EXPEDITEUR":
         config.from = param.Valeur || "noreply@alwaysdata.net";

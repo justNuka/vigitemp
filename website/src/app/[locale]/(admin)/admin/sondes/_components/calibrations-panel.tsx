@@ -4,6 +4,8 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatDateFr, formatDateTimeFr } from './date-format';
 import { useLocale, useTranslations } from 'next-intl';
 import { useAppTimezone } from '@/components/timezone-provider';
@@ -33,6 +35,63 @@ export function CalibrationsPanel({
   const locale = useLocale();
   const localeTag = locale.toLowerCase().startsWith('fr') ? 'fr-FR' : locale;
   const timezone = useAppTimezone();
+  const warningWindowDays = 30;
+
+  const getDaysUntilValidity = (date: Date) => {
+    const today = new Date();
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const targetDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    return Math.ceil((targetDay.getTime() - startOfToday.getTime()) / 86400000);
+  };
+
+  const renderValidityStatus = (validityDate: Date | null) => {
+    if (!validityDate) return null;
+
+    const daysLeft = getDaysUntilValidity(validityDate);
+    if (daysLeft < 0) {
+      const days = Math.abs(daysLeft);
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="destructive" className="text-[11px]">
+                {t('panels.calibrations.validity_status.expired_days', { days })}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>{t('panels.calibrations.validity_status.expired_tooltip', { days })}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+
+    if (daysLeft <= warningWindowDays) {
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge
+                variant="outline"
+                className="border-amber-400 bg-amber-100 text-amber-900 dark:border-amber-500 dark:bg-amber-500/20 dark:text-amber-200 text-[11px]"
+              >
+                {t('panels.calibrations.validity_status.expiring_days', { days: daysLeft })}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>{t('panels.calibrations.validity_status.expiring_tooltip', { days: daysLeft })}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+
+    return (
+      <Badge
+        variant="outline"
+        className="border-emerald-400 bg-emerald-100 text-emerald-900 dark:border-emerald-500 dark:bg-emerald-500/20 dark:text-emerald-200 text-[11px]"
+      >
+        {t('panels.calibrations.validity_status.valid_days', { days: daysLeft })}
+      </Badge>
+    );
+  };
+
   const columns: ColumnDef<CalibrationRow>[] = [
     {
       accessorKey: 'Date_Heure_Etalonnage',
@@ -42,7 +101,15 @@ export function CalibrationsPanel({
     {
       accessorKey: 'Date_Validite',
       header: t('panels.calibrations.columns.validity'),
-      cell: ({ row }) => formatDateFr(row.original.Date_Validite, timezone, localeTag),
+      cell: ({ row }) => {
+        const validityDate = row.original.Date_Validite;
+        return (
+          <div className="flex flex-col gap-1">
+            <span>{formatDateFr(validityDate, timezone, localeTag)}</span>
+            {renderValidityStatus(validityDate)}
+          </div>
+        );
+      },
     },
     {
       accessorKey: 'Operateur',

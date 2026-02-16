@@ -1,8 +1,10 @@
 ﻿import { NextRequest } from "next/server";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/lib/auth";
 import { apiError, apiOk } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
+import { getRequestContext } from "@/lib/api-logger";
+import { withAuthLogging } from "@/lib/api-wrappers";
+import { log } from "@/lib/logger";
 import {
   expandRelatedGsoSerials,
   extractAddressFromSerial,
@@ -46,14 +48,21 @@ const bodySchema = z.object({
 const isMeaningfulOffset = (value: number | null | undefined) =>
   value !== null && value !== undefined && Math.abs(value) > 0.0000001;
 
-export const POST = async (req: NextRequest) => {
-  const user = getAuthenticatedUser(req);
-  if (!user) return apiError(401, "unauthenticated", "Non authentifie");
+export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
+  const { ip } = getRequestContext(req);
 
   try {
     const body = await req.json();
     const validated = bodySchema.parse(body);
     const selectedModuleId = validated.moduleId ?? null;
+
+    log.info("ADJUSTMENT_IMPORT", "Bulk adjustment import requested", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      files: validated.rows.length,
+      moduleId: selectedModuleId,
+    });
 
     const normalizedRows = validated.rows.map((row) => ({
       ...row,
@@ -70,6 +79,12 @@ export const POST = async (req: NextRequest) => {
       .filter((name, index, arr) => arr.indexOf(name) !== index);
 
     if (duplicateFiles.length > 0) {
+      log.warn("ADJUSTMENT_IMPORT", "Duplicate files in request payload", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        ip,
+        duplicates: duplicateFiles.length,
+      });
       return apiError(409, "duplicate_files", "Des fichiers en double sont presents dans la liste");
     }
 
@@ -133,6 +148,13 @@ export const POST = async (req: NextRequest) => {
     ).length;
 
     if ((adjustmentSerials.length > 0 || offsetSerials.length > 0) && !validated.confirmOverwrite) {
+      log.warn("ADJUSTMENT_IMPORT", "Confirmation required before overwrite", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        ip,
+        sensorsWithAdjustment: adjustmentSerials.length,
+        sensorsWithOffset: offsetSerials.length,
+      });
       return apiError(409, "confirmation_required", "Confirmation requise avant insertion", {
         sensorsWithAdjustment: adjustmentSerials,
         sensorsWithOffset: offsetRows,
@@ -156,6 +178,9 @@ export const POST = async (req: NextRequest) => {
 
     const insertedIds: string[] = [];
     const skippedIds: string[] = [];
+    const insertedSerials = new Set<string>();
+    let invalidatedEtalonnages = 0;
+    let invalidatedEtalonnageMeasures = 0;
 
     await prisma.$transaction(async (tx) => {
       if (serialsToCreate.length > 0) {
@@ -243,8 +268,61 @@ export const POST = async (req: NextRequest) => {
           },
         });
 
+        if (data.Sonde_Numero_Serie) {
+          insertedSerials.add(data.Sonde_Numero_Serie);
+        }
         insertedIds.push(row.id);
       }
+
+      const insertedSerialList = Array.from(insertedSerials);
+      if (insertedSerialList.length > 0) {
+        const etalonnagesToInvalidate = await tx.t_etalonnage.findMany({
+          where: { Sonde_Numero_Serie: { in: insertedSerialList } },
+          select: { Id_Etalonnage: true },
+        });
+        const etalonnageIds = etalonnagesToInvalidate.map((item) => item.Id_Etalonnage);
+
+        if (etalonnageIds.length > 0) {
+          const deletedMeasures = await tx.t_etalonnage_mesure.deleteMany({
+            where: { Id_Etalonnage: { in: etalonnageIds } },
+          });
+          const deletedEtalonnages = await tx.t_etalonnage.deleteMany({
+            where: { Id_Etalonnage: { in: etalonnageIds } },
+          });
+
+          invalidatedEtalonnageMeasures = deletedMeasures.count;
+          invalidatedEtalonnages = deletedEtalonnages.count;
+        }
+      }
+    });
+
+    log.info("ADJUSTMENT_IMPORT", "Bulk adjustment import completed", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      inserted: insertedIds.length,
+      skipped: skippedIds.length,
+      createdSensorsFromAdjustment: serialsToCreate.length,
+      invalidatedEtalonnages,
+      invalidatedEtalonnageMeasures,
+    })
+
+    log.audit("CA", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      resource: "Import ajustage",
+      changes: {
+        files: validated.rows.length,
+        inserted: insertedIds.length,
+        skipped: skippedIds.length,
+        createdSensorsFromAdjustment: serialsToCreate.length,
+        overwrittenAdjustments: validated.confirmOverwrite ? adjustmentSerials.length : 0,
+        clearedOffsets: validated.confirmOverwrite ? offsetSerials.length : 0,
+        invalidatedEtalonnages,
+        invalidatedEtalonnageMeasures,
+      },
+      success: true,
     });
 
     return apiOk({
@@ -256,13 +334,36 @@ export const POST = async (req: NextRequest) => {
       clearedOffsets: validated.confirmOverwrite ? offsetSerials.length : 0,
       createdSensorsFromAdjustment: serialsToCreate.length,
       existingSensorsWithModule,
+      invalidatedEtalonnages,
+      invalidatedEtalonnageMeasures,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      log.warn("ADJUSTMENT_IMPORT", "Validation error on bulk import", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        ip,
+        issues: error.issues.length,
+      });
       return apiError(400, "validation_error", "Donnees invalides", { issues: error.issues });
     }
-    console.error("[POST /api/sondes/ajustages/bulk]", error);
+
+    log.error("ADJUSTMENT_IMPORT", "Bulk adjustment import failed", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    log.audit("CA", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      resource: "Import ajustage",
+      success: false,
+      reason: error instanceof Error ? error.message : "Erreur inconnue",
+    });
+
     return apiError(500, "bulk_import_failed", "Erreur lors de l'insertion en base");
   }
-};
+});
 

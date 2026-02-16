@@ -1,8 +1,10 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { getAuthenticatedUser } from "@/lib/auth";
 import { apiError, apiOk } from "@/lib/api-response";
 import { prisma } from "@/lib/prisma";
+import { getRequestContext } from "@/lib/api-logger";
+import { withAuthLogging } from "@/lib/api-wrappers";
+import { log } from "@/lib/logger";
 
 const measureSchema = z.object({
   Numero_Ordre: z.number().int().min(1).max(10),
@@ -35,19 +37,31 @@ const bodySchema = z.object({
   rows: z.array(rowSchema).min(1),
 });
 
-export const POST = async (req: NextRequest) => {
-  const user = getAuthenticatedUser(req);
-  if (!user) return apiError(401, "unauthenticated", "Non authentifie");
+export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
+  const { ip } = getRequestContext(req);
 
   try {
     const body = await req.json();
     const validated = bodySchema.parse(body);
+
+    log.info("CALIBRATION_CHECK_IMPORT", "Bulk etalonnage import requested", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      files: validated.rows.length,
+    });
 
     const duplicateFiles = validated.rows
       .map((r) => r.file.trim().toLowerCase())
       .filter((name, index, arr) => arr.indexOf(name) !== index);
 
     if (duplicateFiles.length > 0) {
+      log.warn("CALIBRATION_CHECK_IMPORT", "Duplicate files in request payload", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        ip,
+        duplicates: duplicateFiles.length,
+      });
       return apiError(409, "duplicate_files", "Des fichiers en double sont presents dans la liste");
     }
 
@@ -134,6 +148,19 @@ export const POST = async (req: NextRequest) => {
       }
     });
 
+    log.audit("ET", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      resource: "Import etalonnage",
+      changes: {
+        files: validated.rows.length,
+        inserted: insertedIds.length,
+        skipped: skippedIds.length,
+      },
+      success: true,
+    });
+
     return apiOk({
       inserted: insertedIds.length,
       skipped: skippedIds.length,
@@ -142,12 +169,31 @@ export const POST = async (req: NextRequest) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      log.warn("CALIBRATION_CHECK_IMPORT", "Validation error on bulk import", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        ip,
+        issues: error.issues.length,
+      });
       return apiError(400, "validation_error", "Donnees invalides", { issues: error.issues });
     }
 
     const message = error instanceof Error ? error.message : "Erreur lors de l'insertion en base";
-    console.error("[POST /api/sondes/etalonnages/bulk]", error);
+    log.error("CALIBRATION_CHECK_IMPORT", "Bulk etalonnage import failed", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      error: message,
+    });
+    log.audit("ET", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      resource: "Import etalonnage",
+      success: false,
+      reason: message,
+    });
     return apiError(500, "bulk_import_failed", message);
   }
-};
+});
 

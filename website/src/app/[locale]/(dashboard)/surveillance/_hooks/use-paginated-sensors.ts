@@ -1,6 +1,7 @@
-"use client"
+﻿"use client"
 
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
+import { useRef } from "react"
 
 import type { SensorWithLocation } from "@/lib/api"
 import { getJson } from "@/lib/http"
@@ -22,26 +23,33 @@ export function usePaginatedSensors({
 }: { limit?: number; enabled?: boolean } = {}) {
   const queryClient = useQueryClient()
   const queryKey = ["capteurs", "paginated", limit] as const
+  const bypassCacheRef = useRef(false)
 
   // Hardening: when the page subtree is re-rendered/remounted by App Router, avoid re-fetching
   // the heavy paginated list if we already have it in React Query cache.
   const hasCachedData = queryClient.getQueryData(queryKey) !== undefined
   const effectiveEnabled = enabled && !hasCachedData
 
-  return useInfiniteQuery({
+  const query = useInfiniteQuery({
     queryKey,
     enabled: effectiveEnabled,
     queryFn: async ({ pageParam }) => {
       const page = Number(pageParam ?? 1)
-      const cached = queryClient.getQueryData<PaginatedResponse>(
-        paginatedSensorsPageKey(limit, page),
-      )
-      if (cached) return cached
+      if (!bypassCacheRef.current) {
+        const cached = queryClient.getQueryData<PaginatedResponse>(
+          paginatedSensorsPageKey(limit, page),
+        )
+        if (cached) return cached
+      }
 
       const params = new URLSearchParams({
         page: String(page),
         limit: String(limit),
       })
+      if (bypassCacheRef.current) {
+        params.set("fresh", "true")
+      }
+
       const response = await getJson<PaginatedResponse>(`/api/capteurs/paginated?${params}`)
       queryClient.setQueryData(paginatedSensorsPageKey(limit, page), response)
       return response
@@ -51,8 +59,8 @@ export function usePaginatedSensors({
       if (!lastPage?.page || !lastPage?.totalPages) return undefined
       return lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined
     },
-    // Important: éviter de refetch toutes les pages à chaque retour sur /surveillance.
-    // On privilégie le cache + des mises à jour ciblées (SSE / delta) plutôt qu'un refetch global.
+    // Important: eviter de refetch toutes les pages a chaque retour sur /surveillance.
+    // On privilegie le cache + des mises a jour ciblees (SSE / delta) plutot qu'un refetch global.
     staleTime: 30 * 60 * 1000,
     gcTime: 2 * 60 * 60 * 1000,
     refetchOnMount: true,
@@ -61,4 +69,19 @@ export function usePaginatedSensors({
     refetchInterval: false,
     retry: false,
   })
+
+  const forceRefresh = async () => {
+    bypassCacheRef.current = true
+    try {
+      await queryClient.removeQueries({ queryKey: ["capteurs", "paginated", limit, "page"] })
+      await query.refetch()
+    } finally {
+      bypassCacheRef.current = false
+    }
+  }
+
+  return {
+    ...query,
+    forceRefresh,
+  }
 }

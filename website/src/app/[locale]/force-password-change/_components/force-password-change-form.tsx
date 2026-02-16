@@ -130,7 +130,7 @@ export function ForcePasswordChangeForm({ username, rules }: Props) {
 
         {rules && (
           <div className="mt-2 rounded-lg border bg-muted/50 p-3">
-            <PasswordRulesList password={newPassword} rules={rules} title={t("rules.title")} />
+            <PasswordRulesList password={newPassword} rules={rules} title={t("rules.title")} showWhenEmpty />
           </div>
         )}
       </div>

@@ -24,7 +24,6 @@ export const getNavLinks = (t: UpgradeTranslator) => [
   { label: t("upgrade.nav.standard"), href: "#standard" },
   { label: t("upgrade.nav.expert"), href: "#expert" },
   { label: t("upgrade.nav.licences"), href: "#licences" },
-  { label: t("upgrade.nav.contact"), href: "#contact" },
 ];
 
 export const getTocItems = (t: UpgradeTranslator) => [
@@ -289,25 +288,46 @@ export const getArchitectureRight = (t: UpgradeTranslator) => ({
 
 export interface LicenseFeature {
   name: string;
+  pack: boolean | string;
   one: boolean | string;
   standard: boolean | string;
   expert: boolean | string;
 }
 
 export const getLicenseFeatures = (t: UpgradeTranslator): LicenseFeature[] => [
-  { name: t("upgrade.licenses.features.0"), one: true, standard: true, expert: true },
-  { name: t("upgrade.licenses.features.1"), one: true, standard: true, expert: true },
-  { name: t("upgrade.licenses.features.2"), one: true, standard: true, expert: true },
-  { name: t("upgrade.licenses.features.3"), one: false, standard: true, expert: true },
-  { name: t("upgrade.licenses.features.4"), one: false, standard: true, expert: true },
-  { name: t("upgrade.licenses.features.5"), one: false, standard: true, expert: true },
-  { name: t("upgrade.licenses.features.6"), one: false, standard: true, expert: true },
-  { name: t("upgrade.licenses.features.7"), one: false, standard: true, expert: true },
-  { name: t("upgrade.licenses.features.8"), one: false, standard: true, expert: true },
-  { name: t("upgrade.licenses.features.9"), one: false, standard: false, expert: true },
-  { name: t("upgrade.licenses.features.10"), one: false, standard: false, expert: true },
-  { name: t("upgrade.licenses.features.11"), one: false, standard: false, expert: true },
-  { name: t("upgrade.licenses.features.12"), one: false, standard: false, expert: true },
+  { name: t("upgrade.licenses.features.0"), pack: true, one: true, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.1"), pack: true, one: true, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.2"), pack: true, one: true, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.3"), pack: true, one: true, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.4"), pack: true, one: true, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.5"), pack: true, one: true, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.6"), pack: false, one: true, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.7"), pack: false, one: true, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.8"), pack: false, one: true, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.9"), pack: false, one: true, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.10"), pack: false, one: true, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.11"), pack: false, one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.12"), pack: false, one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.13"), pack: false, one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.14"), pack: false, one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.15"), pack: false, one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.16"), pack: false, one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.17"), pack: false, one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.18"), pack: false, one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.19"), pack: false, one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.20"), pack: false, one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.21"), pack: false, one: false, standard: true, expert: true },
+  { name: t("upgrade.licenses.features.22"), pack: false, one: false, standard: false, expert: true },
+  { name: t("upgrade.licenses.features.23"), pack: false, one: false, standard: false, expert: true },
+  { name: t("upgrade.licenses.features.24"), pack: false, one: false, standard: false, expert: true },
+  { name: t("upgrade.licenses.features.25"), pack: false, one: false, standard: false, expert: true },
+  { name: t("upgrade.licenses.features.26"), pack: false, one: false, standard: false, expert: true },
+  { name: t("upgrade.licenses.features.27"), pack: false, one: false, standard: false, expert: true },
+  { name: t("upgrade.licenses.features.28"), pack: false, one: false, standard: false, expert: true },
+  { name: t("upgrade.licenses.features.29"), pack: false, one: false, standard: false, expert: true },
+  { name: t("upgrade.licenses.features.30"), pack: false, one: false, standard: false, expert: true },
+  { name: t("upgrade.licenses.features.31"), pack: false, one: false, standard: false, expert: true },
+  { name: t("upgrade.licenses.features.32"), pack: false, one: false, standard: false, expert: true },
 ];
 
 export const getStandardBlocks = (t: UpgradeTranslator) => [

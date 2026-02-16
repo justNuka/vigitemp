@@ -12,6 +12,7 @@ export interface Sensor {
   Sonde_Offset: number | null;
   Lieu: string | null;
   Sonde_Type?: string | null;
+  Date_Validite_Etalonnage?: string | Date | null;
 }
 
 type Paginated<T> = {

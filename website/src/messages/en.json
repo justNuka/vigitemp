@@ -1255,10 +1255,16 @@
         "port": "Serial port",
         "module": "Module",
         "state": "State",
+        "calibration_validity": "Calibration validity",
         "location": "Location"
       },
       "search_placeholder": "Address, serial, location...",
       "empty": "No sensors"
+    },
+    "calibration_validity": {
+      "ok": "OK ({days} d)",
+      "expiring": "Expiring soon ({days} d)",
+      "expired": "Expired ({days} d)"
     },
     "status": {
       "surveillance": "Monitoring",
@@ -1296,6 +1302,13 @@
           "delete": "Delete",
           "generate": "Generate",
           "print": "Print"
+        },
+        "validity_status": {
+          "valid_days": "Valid ({days} days left)",
+          "expiring_days": "Expires in {days} days",
+          "expired_days": "Expired {days} days ago",
+          "expiring_tooltip": "Verification validity date is approaching (in {days} days).",
+          "expired_tooltip": "Verification validity date has passed ({days} days ago)."
         }
       }
     }
@@ -2071,10 +2084,141 @@
       }
     }
   },
+  "servicesNav": {
+    "upgrade": "License upgrade",
+    "hardware": "Hardware",
+    "news": "MC2 news"
+  },
+  "servicesHub": {
+    "meta": {
+      "title": "VigiSensys | MC2 Services",
+      "description": "Upgrade, hardware, and news from the MC2 Services hub."
+    },
+    "hero": {
+      "eyebrow": "MC2 Services",
+      "title": "Access",
+      "titleHighlight": "our services",
+      "subtitle": "Upgrade, hardware, and updates to go further with VigiSensys.",
+      "ctaPrimary": "License upgrade",
+      "ctaSecondary": "Hardware catalog"
+    },
+    "highlights": {
+      "eyebrow": "Why MC2",
+      "title": "A single hub for your needs",
+      "subtitle": "We centralize upgrade, hardware, and information to speed up your projects.",
+      "items": {
+        "0": "Licenses and options tailored to your sites",
+        "1": "Validated hardware for VigiSensys deployments",
+        "2": "News, releases, and best practices"
+      }
+    },
+    "cards": {
+      "upgrade": {
+        "title": "License upgrade",
+        "description": "Move to VigiSensys Standard and unlock advanced metrology.",
+        "tag": "Standard",
+        "cta": "Explore upgrade"
+      },
+      "hardware": {
+        "title": "Hardware procurement",
+        "description": "Sensors, modules, and accessories selected for field use.",
+        "tag": "Hardware",
+        "cta": "Browse catalog"
+      },
+      "news": {
+        "title": "MC2 news",
+        "description": "Product updates, releases, and operational tips.",
+        "tag": "Updates",
+        "cta": "Read news"
+      }
+    }
+  },
+  "servicesHardware": {
+    "meta": {
+      "title": "VigiSensys | Hardware catalog",
+      "description": "Validated hardware catalog for VigiSensys deployments."
+    },
+    "hero": {
+      "eyebrow": "MC2 Hardware",
+      "title": "Validated hardware catalog",
+      "subtitle": "A curated selection of sensors, modules, and accessories compatible with VigiSensys."
+    },
+    "items": {
+      "0": {
+        "title": "Starter kits",
+        "description": "All-in-one packs to deploy a site quickly.",
+        "tag": "Kit"
+      },
+      "1": {
+        "title": "Modules and gateways",
+        "description": "Acquisition modules and proven network gateways.",
+        "tag": "Modules"
+      },
+      "2": {
+        "title": "Sensors and probes",
+        "description": "Temperature, humidity, CO2, and specialized sensors.",
+        "tag": "Sensors"
+      },
+      "3": {
+        "title": "Installation accessories",
+        "description": "Mounts, enclosures, and site-ready cabling.",
+        "tag": "Accessories"
+      },
+      "4": {
+        "title": "Compliance and calibration",
+        "description": "Standards, certificates, and compliance options.",
+        "tag": "Quality"
+      },
+      "5": {
+        "title": "Custom services",
+        "description": "Consulting, integration, and dedicated support.",
+        "tag": "Service"
+      }
+    },
+    "note": {
+      "title": "Need something specific?",
+      "subtitle": "Email us and we will propose a tailored configuration.",
+      "cta": "Contact MC2"
+    }
+  },
+  "servicesNews": {
+    "meta": {
+      "title": "VigiSensys | MC2 news",
+      "description": "Product updates, releases, and MC2 news for VigiSensys."
+    },
+    "hero": {
+      "eyebrow": "MC2 News",
+      "title": "Stay informed",
+      "subtitle": "Product updates, VigiSensys releases, and field tips."
+    },
+    "channels": {
+      "0": {
+        "title": "Product updates",
+        "description": "Hardware releases, compatibility, and announcements.",
+        "tag": "Product"
+      },
+      "1": {
+        "title": "VigiSensys releases",
+        "description": "Release notes, fixes, and improvements.",
+        "tag": "Release"
+      },
+      "2": {
+        "title": "Community & support",
+        "description": "Guides, FAQ, and field feedback.",
+        "tag": "Support"
+      },
+      "cta": "View channel"
+    },
+    "note": {
+      "title": "Need a summary?",
+      "subtitle": "We can share a tailored monthly update.",
+      "cta": "Talk to an expert"
+    }
+  },
   "upgrade": {
     "meta": {
       "title": "VigiSensys | License upgrade",
-      "description": "Move to smarter metrology with VigiSensys Standard. Monitoring, compliance, and performance unified in a 100% on-premise control center."
+      "description": "Move to smarter metrology with VigiSensys. Compare Pack, One, Standard, and Expert to choose the right level."
     },
     "nav": {
       "pourquoi": "Why upgrade",
@@ -2104,11 +2248,11 @@
       "title": "VigiSensys",
       "titleHighlight": "smarter metrology",
       "leadPrefix": "Move to",
-      "subtitle": "Monitoring + metrology united in a 100% on-premise control center.",
+      "subtitle": "From Pack to Expert, move from monitoring to advanced metrology.",
       "subtitleHighlights": {
-        "0": "security",
-        "1": "compliance",
-        "2": "performance"
+        "0": "monitoring",
+        "1": "metrology",
+        "2": "compliance"
       },
       "tagline": "Your data stays with you.",
       "ctaPrimary": "Move to Standard",
@@ -2152,73 +2296,73 @@
         "1": "controlled",
         "2": "traceable"
       },
-      "subtitle": "Six reasons to move to Standard.",
+      "subtitle": "Four licenses, one clear path to advanced metrology.",
       "items": {
         "0": {
-          "title": "Reduce non-compliance",
-          "description": "Detect drift and deviations earlier with continuous tracking.",
-          "badge": "Standard"
+          "title": "Complete monitoring",
+          "description": "Pack covers monitoring, alarms, tolerances, alarm delay, and email alerts.",
+          "badge": "Pack"
         },
         "1": {
-          "title": "Speed up calibration",
-          "description": "Two-point calibration, history tracking, automatic coefficients.",
-          "badge": "Standard"
+          "title": "Windows agent & multi-site",
+          "description": "One adds local notifications, multi-site/groups, and unlimited sensors.",
+          "badge": "One"
         },
         "2": {
-          "title": "Strengthen traceability",
-          "description": "Reports, history, settings: everything is recorded.",
+          "title": "Advanced metrology",
+          "description": "Standard adds EMT per location, calibration, drift, and dedicated modules.",
           "badge": "Standard"
         },
         "3": {
-          "title": "Standardize EMT per location",
-          "description": "Controlled tolerances, site by site, zone by zone.",
+          "title": "Quality & compliance",
+          "description": "CFR 21 Part 11, traceability, and calibration results.",
           "badge": "Standard"
         },
         "4": {
-          "title": "Collaborate without losing context",
-          "description": "Internal messaging and traceable exchanges.",
+          "title": "Collaborative control",
+          "description": "Admin dashboard, messaging, and impact analysis.",
           "badge": "Standard"
         },
         "5": {
-          "title": "Security at the core",
-          "description": "Roles, audit, on-prem logic. Zero compromise.",
-          "badge": "Standard"
+          "title": "Augmented expertise",
+          "description": "MKT, AI, real-time analysis, and configurable reporting.",
+          "badge": "Expert"
         }
       }
     },
     "compare": {
       "eyebrow": "Comparison",
       "title": "Drag to compare",
-      "subtitle": "Or let magic do its job and see the difference between One and Standard.",
+      "subtitle": "Or let magic do its job and see the difference between tiers.",
       "items": {
         "0": {
           "title": "Monitoring",
-          "leftLabel": "One",
-          "rightLabel": "Standard",
+          "leftLabel": "Pack",
+          "rightLabel": "One",
           "leftItems": {
-            "0": "Basic cards",
-            "1": "Simple charts",
-            "2": "Simple alarms"
+            "0": "Monitoring + history",
+            "1": "Alarms, tolerances, delay",
+            "2": "Email notifications"
           },
           "rightItems": {
-            "0": "Advanced metrology indicators",
-            "1": "Real-time drift detection",
-            "2": "Full deviation history"
+            "0": "Windows agent (browser closed)",
+            "1": "Multi-site + groups",
+            "2": "Unlimited sensors + offset"
           }
         },
         "1": {
           "title": "Metrology",
-          "leftLabel": "Basic",
+          "leftLabel": "One",
           "rightLabel": "Standard",
           "leftItems": {
-            "0": "No calibration",
-            "1": "No uncertainty",
-            "2": "No adjustment"
+            "0": "Adjustment / calibration",
+            "1": "Offset and basic tracking",
+            "2": "Field metrology base"
           },
           "rightItems": {
-            "0": "Two-point calibration + history",
-            "1": "Uncertainty + trueness",
-            "2": "Drift and a/b coefficients"
+            "0": "EMT per location + CFR21",
+            "1": "Calibration, drift, impact analysis",
+            "2": "Reference probe modules + overlays"
           }
         }
       }
@@ -2283,6 +2427,7 @@
       "subtitle": "Choose the level that matches your needs.",
       "table": {
         "feature": "Feature",
+        "pack": "Pack",
         "one": "One",
         "standard": "Standard",
         "recommended": "Recommended",
@@ -2294,61 +2439,81 @@
       },
       "features": {
         "0": "Monitoring (cards + graph)",
-        "1": "Alarms & tolerances",
-        "2": "Windows agent notifications",
-        "3": "Metrology (two-point calibration)",
-        "4": "Adjustment: a/b coefficients",
-        "5": "Adjustment: trueness + uncertainty",
-        "6": "Drift management",
-        "7": "Internal messaging",
-        "8": "EMT per location",
-        "9": "Customizable dashboard",
-        "10": "AI assistant",
-        "11": "Real-time analysis",
-        "12": "Intervention ecosystem"
+        "1": "Measurement history",
+        "2": "Alarms",
+        "3": "Tolerances",
+        "4": "Alarm delay",
+        "5": "Email notifications",
+        "6": "Windows agent notifications",
+        "7": "Multi-site and groups",
+        "8": "Unlimited sensors",
+        "9": "Sensor offset",
+        "10": "Adjustment / calibration",
+        "11": "EMT per location",
+        "12": "Calibration results",
+        "13": "Drift management",
+        "14": "Calibration module",
+        "15": "Verification module",
+        "16": "Reference probe reading",
+        "17": "Curve overlays",
+        "18": "Impact analysis",
+        "19": "Admin dashboard",
+        "20": "User messaging",
+        "21": "CFR 21 Part 11",
+        "22": "Uncertainty calculation settings",
+        "23": "Customizable dashboard",
+        "24": "Multi-point calibration (X2 curve)",
+        "25": "MKT calculation",
+        "26": "Metrology planning",
+        "27": "AI assistant",
+        "28": "Real-time analysis",
+        "29": "Configurable statistical report",
+        "30": "Non-compliance management",
+        "31": "No-response delay adjustable (min 1h)",
+        "32": "MC2 ecosystem"
       }
     },
     "standard": {
       "eyebrow": "Deep dive",
       "titleHighlight": "Standard",
       "titleSuffix": ": what you get in practice",
-      "subtitle": "Each feature is designed for demanding metrology teams.",
+      "subtitle": "A complete foundation for metrology, compliance, and control.",
       "preview": "Preview {title}",
       "blocks": {
         "0": {
-          "title": "Two-point calibration + history",
+          "title": "EMT per location + compliance",
           "bullets": {
-            "0": "Define your two reference points",
-            "1": "History of each operation",
-            "2": "Integrated calibration certificates",
-            "3": "Full traceability per sensor"
+            "0": "Define EMT per location",
+            "1": "CFR 21 Part 11",
+            "2": "Full traceability",
+            "3": "Centralized quality settings"
           }
         },
         "1": {
-          "title": "Drift management & traceability",
+          "title": "Calibration & drift",
           "bullets": {
-            "0": "Automatic drift tracking",
-            "1": "Drift threshold alerts",
-            "2": "Trend charts",
-            "3": "PDF export for audits"
+            "0": "Calibration results management",
+            "1": "Drift tracking",
+            "2": "Impact analysis on measures",
+            "3": "Usable history"
           }
         },
         "2": {
-          "title": "Adjustment (a/b coefficients)",
+          "title": "Metrology modules",
           "bullets": {
-            "0": "Automatic coefficient calculation",
-            "1": "Real-time application",
-            "2": "Adjustment history",
-            "3": "Before/after comparison"
+            "0": "Integrated calibration module",
+            "1": "Dedicated verification module",
+            "2": "Reference probe reading",
+            "3": "Curve overlays"
           }
         },
         "3": {
-          "title": "Adjustment (trueness + uncertainty)",
+          "title": "Control & collaboration",
           "bullets": {
-            "0": "Type A and B uncertainty calculation",
-            "1": "Measured and tracked trueness",
-            "2": "Standards-compliant reports",
-            "3": "Integration into the quality workflow"
+            "0": "Admin dashboard",
+            "1": "User messaging",
+            "2": "Advanced notifications",
+            "3": "Operational compliance"
           }
         }
       }
@@ -2357,23 +2522,23 @@
       "badge": "Coming soon",
       "titleHighlight": "Expert",
       "titleSuffix": ": the intelligent platform",
-      "subtitle": "All Standard features + customization + AI + MC2 ecosystem.",
+      "subtitle": "All Standard features + automation, AI, and expert control.",
       "cards": {
         "0": {
-          "title": "Tile dashboard",
-          "description": "Add / remove / resize / drag: build your view."
+          "title": "Uncertainty calculation",
+          "description": "Configure calculations and keep full traceability."
         },
         "1": {
-          "title": "AI chatbot",
-          "description": "Smart troubleshooting, integrated sensor context."
+          "title": "Multi-point calibration",
+          "description": "Manage X2 curves and calibration campaigns."
         },
         "2": {
-          "title": "Real-time analysis",
-          "description": "Events + correlated measures, pattern detection."
+          "title": "MKT & planning",
+          "description": "MKT calculation and integrated metrology planning."
         },
         "3": {
-          "title": "Intervention ecosystem",
-          "description": "Technician planning, full MC2 follow-up."
+          "title": "AI & analysis",
+          "description": "AI assistant, real-time analysis, and configurable reports."
         }
       },
       "typewriter": "Anticipate. Explain. Guide."
@@ -2393,7 +2558,7 @@
         },
         "2": {
           "question": "How does the upgrade work?",
-          "answer": "Simple: a new license key, service restart if needed. No data loss, automatic migration of settings."
+          "answer": "Simple: a new license key and a service restart if needed. You can move from Pack to One, Standard, or Expert without data loss."
         },
         "3": {
           "question": "What MC2 support is available?",
@@ -2516,7 +2681,7 @@
     "frequency": "Freq: {minutes} min",
     "alarm_delay": "Alarm delay: {minutes} min",
     "alarm_delay_hover": {
-      "summary": "Alarm delay (hover for details)",
+      "summary": "Alarm delay",
       "high": "High: {minutes} min",
       "low": "Low: {minutes} min",
       "no_response": "No response: {minutes} min"
@@ -2769,6 +2934,9 @@
       "action": "Enable",
       "denied": "Notifications denied",
       "enabled": "Notifications enabled"
+    },
+    "error": {
+      "title": "You are not connected."
     }
   },
   "tanstackTable": {
