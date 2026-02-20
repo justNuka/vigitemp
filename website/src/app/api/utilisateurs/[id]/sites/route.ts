@@ -3,6 +3,8 @@ import { revalidateTag } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
+import { getRequestContext } from "@/lib/api-logger"
 
 /**
  * GET /api/utilisateurs/[id]/sites - Get all sites assigned to user
@@ -11,8 +13,9 @@ import { apiError, apiOk } from "@/lib/api-response"
  */
 
 export const GET = withAdminLogging(
-  async (req: NextRequest, _ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ id: string }> }) => {
     try {
+      const { ip } = getRequestContext(req)
       const { id } = await params
       const userId = parseInt(id)
 
@@ -54,8 +57,9 @@ export const GET = withAdminLogging(
 )
 
 export const POST = withAdminLogging(
-  async (req: NextRequest, _ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ id: string }> }) => {
     try {
+      const { ip } = getRequestContext(req)
       const { id } = await params
       const userId = parseInt(id)
       const body = await req.json()
@@ -110,6 +114,12 @@ export const POST = withAdminLogging(
             },
           },
         },
+      })
+
+      log.data.update("Utilisateur", userId, ctx.user.username, ctx.user.userId, ip, {
+        action: "assign_site",
+        siteId: id_Site,
+        siteLabel: liaison.t_site?.Libelle_Site,
       })
 
       revalidateTag("users-data", "default")

@@ -1,4 +1,4 @@
-Param(
+﻿Param(
     [string]$InstallerPath,
     [switch]$Interactive,
     [switch]$Force
@@ -7,7 +7,14 @@ Param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-function Write-Log($message) {
+
+# Force UTF-8 console encoding for correct accents/special characters in logs.
+try { cmd /c chcp 65001 > $null } catch { }
+try {
+    [Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
+    [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+    $OutputEncoding = [Console]::OutputEncoding
+} catch { }function Write-Log($message) {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     Write-Host "[$timestamp] $message"
 }
@@ -70,3 +77,4 @@ try {
         Write-Log "Node non detecte dans ce terminal. Fermez/rouvrez le terminal si besoin."
     }
 } catch { }
+

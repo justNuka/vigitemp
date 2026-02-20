@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO.Ports;
 using System.Text.RegularExpressions;
@@ -31,8 +31,8 @@ namespace Vigitemp_Serveur.sensors
                 Stopwatch tmp_sw = new Stopwatch();
                 tmp_sw.Start();
 
-                Console.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                Trace.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                Console.WriteLine("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                Trace.WriteLine("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
 
                 while (pendingResults)
                 {
@@ -99,12 +99,12 @@ namespace Vigitemp_Serveur.sensors
                 var rawValue = Convert.ToDouble(tmp_resistance, System.Globalization.CultureInfo.InvariantCulture);
                 var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
 
-                Console.WriteLine("Données corrigées: " + correctedValue);
-                Trace.WriteLine("Données corrigées: " + correctedValue);
-                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "�C", ToInvariantRaw(rawValue));
+                Console.WriteLine("Donnees corrigees: " + correctedValue);
+                Trace.WriteLine("Donnees corrigees: " + correctedValue);
+                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
                 HandleNoResponseAlarm(true);
-                compareMeasuresAndLimits(correctedValue, "�C");
-                VigitempServeur.Log($"[SONDE][DONE] type=IP serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=�C raw={ToInvariantRaw(rawValue)}");
+                compareMeasuresAndLimits(correctedValue, "°C");
+                VigitempServeur.Log($"[SONDE][DONE] type=IP serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=°C raw={ToInvariantRaw(rawValue)}");
 
                 m_port.Close();
                 pendingResults = false;
@@ -117,3 +117,4 @@ namespace Vigitemp_Serveur.sensors
         }
     }
 }
+

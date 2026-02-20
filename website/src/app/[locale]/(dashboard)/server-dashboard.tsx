@@ -117,9 +117,24 @@ export async function ServerActiveAlarms() {
       Est_Acquittee: false,
       Date_Heure_Fin: null,
     },
-    include: {
+    select: {
+      Id_Alarme: true,
+      Id_Lieu: true,
+      Type: true,
+      Est_Acquittee: true,
+      Valeur: true,
+      Unite: true,
+      Date_Heure_Debut: true,
+      Date_Heure_Fin: true,
       t_lieu: {
-        include: {
+        select: {
+          Id_Lieu: true,
+          Id_Site: true,
+          Nom_Lieu: true,
+          Derniere_Date_Heure: true,
+          Tolerance_Surveillance_Inf: true,
+          Tolerance_Surveillance_Sup: true,
+          Est_Archive: true,
           t_site: {
             select: {
               Id_Site: true,

@@ -9,6 +9,8 @@ export function getDefaultLocationFormData(): LocationFormData {
     Id_Site: null,
     GroupIds: [],
     Sonde_Numero_Serie: null,
+    Id_Module: null,
+    MailingContacts: [],
 
     Consigne: undefined,
     Frequence: undefined,
@@ -26,13 +28,14 @@ export function getDefaultLocationFormData(): LocationFormData {
     Tolerance_Surveillance_Sup: undefined,
     Tolerance_Surveillance_Inf: undefined,
 
-    Unite: '°C',
+    Unite: '\u00b0C',
     Erreur_Justesse: undefined,
     Incertitude: undefined,
     Derive: undefined,
     EMT_Mode: 'sans-objet',
     EMT_Valeur: undefined,
     Corriger_Erreur_Justesse: false,
-    Prendre_En_Compte_Derive: true,
+    Prendre_En_Compte_Derive: false,
   }
 }
+

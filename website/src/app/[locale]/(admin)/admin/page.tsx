@@ -23,11 +23,13 @@ import {
 import { PageHeader } from "@/components/page-header"
 import { DashboardLinkCard } from "@/components/dashboard-link-card"
 import { useLicense } from "@/components/license/license-provider"
+import { getLicenseEdition, isExpert, isOneOrPack } from "@/lib/license-access"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   useAcknowledgments,
   useActiveAlarms,
+  useAlarmCount,
   useBackups,
   useConnectedUsers,
   useSystemLogs,
@@ -90,13 +92,15 @@ export default function AdminDashboard() {
   const timezone = useAppTimezone()
   const { license } = useLicense()
 
-  const edition = (license?.edition || "standard").trim().toLowerCase()
-  const isOne = edition === "one"
-  const isPack = edition === "pack"
-  const hideStandards = isOne || isPack
+  const edition = getLicenseEdition(license, "standard")
+  const isBasicDashboard = isOneOrPack(edition)
+  const isExpertEdition = isExpert(edition)
+  const hideStandards = isBasicDashboard
 
   const connectedUsersQuery = useConnectedUsers(1)
   const activeAlarmsQuery = useActiveAlarms(1)
+  const alarmsActiveCountQuery = useAlarmCount("active")
+  const alarmsResolvedCountQuery = useAlarmCount("resolved")
   const acknowledgmentsQuery = useAcknowledgments(1)
   const systemLogsQuery = useSystemLogs()
   const backupsQuery = useBackups()
@@ -105,6 +109,8 @@ export default function AdminDashboard() {
   const accessLabel = locale === "fr" ? "Accéder à la page" : "Open page"
 
   const activeAlarmsTotal = activeAlarmsQuery.data?.pagination.total || 0
+  const alarmsInProgressTotal = alarmsActiveCountQuery.data?.pagination.total ?? activeAlarmsTotal
+  const alarmsPendingAckTotal = alarmsResolvedCountQuery.data?.pagination.total ?? 0
   const acknowledgmentsTotal = acknowledgmentsQuery.data?.pagination.total || 0
   const connectedUsersTotal = connectedUsersQuery.data?.pagination.total || 0
   const systemLogsTotal = systemLogsQuery.data?.pagination.total || 0
@@ -127,6 +133,8 @@ export default function AdminDashboard() {
     return (
       connectedUsersQuery.isLoading &&
       activeAlarmsQuery.isLoading &&
+      alarmsActiveCountQuery.isLoading &&
+      alarmsResolvedCountQuery.isLoading &&
       acknowledgmentsQuery.isLoading &&
       systemLogsQuery.isLoading &&
       backupsQuery.isLoading &&
@@ -135,47 +143,49 @@ export default function AdminDashboard() {
   }, [
     acknowledgmentsQuery.isLoading,
     activeAlarmsQuery.isLoading,
+    alarmsActiveCountQuery.isLoading,
+    alarmsResolvedCountQuery.isLoading,
     backupsQuery.isLoading,
     connectedUsersQuery.isLoading,
     systemLogsQuery.isLoading,
     unassignedSensorsQuery.isLoading,
   ])
 
-  if (isOne) {
+  if (isBasicDashboard) {
     const linkCards = [
       {
         key: "sondes",
-        href: `/${locale}/admin/sondes`,
+        href: `/admin/sondes`,
         icon: <Cpu className="h-5 w-5" />,
       },
       {
         key: "modules",
-        href: `/${locale}/admin/modules`,
+        href: `/admin/modules`,
         icon: <WifiCog className="h-5 w-5" />,
       },
       {
         key: "actionneurs",
-        href: `/${locale}/admin/actionneurs`,
+        href: `/admin/actionneurs`,
         icon: <Radio className="h-5 w-5" />,
       },
       {
         key: "groupes",
-        href: `/${locale}/admin/groupes`,
+        href: `/admin/groupes`,
         icon: <Users className="h-5 w-5" />,
       },
       {
         key: "lieux",
-        href: `/${locale}/admin/lieux`,
+        href: `/admin/lieux`,
         icon: <MapPin className="h-5 w-5" />,
       },
       {
         key: "sites",
-        href: `/${locale}/admin/sites`,
+        href: `/admin/sites`,
         icon: <Globe className="h-5 w-5" />,
       },
       {
         key: "outils",
-        href: `/${locale}/admin/outils`,
+        href: `/admin/outils`,
         icon: <Wrench className="h-5 w-5" />,
       },
     ]
@@ -198,6 +208,26 @@ export default function AdminDashboard() {
     )
   }
 
+
+  if (isExpertEdition) {
+    const expertTitle = locale === "fr" ? "Dashboard admin licence expert en construction" : "Expert admin dashboard under construction"
+    const expertDescription =
+      locale === "fr"
+        ? "Le dashboard admin Expert sera disponible dans une prochaine version."
+        : "The Expert admin dashboard will be available in a future release."
+
+    return (
+      <div className="flex min-h-full flex-col">
+        <PageHeader title={expertTitle} description={expertDescription} />
+        <div className="p-6">
+          <Card className="border-slate-200 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+            <CardContent className="p-6 text-sm text-muted-foreground">{expertDescription}</CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
   if (isInitialLoading) {
     return (
       <div className="flex flex-1 items-center justify-center p-6">
@@ -215,16 +245,24 @@ export default function AdminDashboard() {
 
       <div className="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
         <SummaryCard
-          title={t("active_alarms.title")}
-          description={t("active_alarms.description", { total: activeAlarmsTotal, max: 50 })}
-          value={String(activeAlarmsTotal)}
-          helper={activeAlarmsTotal > 0 ? t("updating") : undefined}
-          href={`/${locale}/admin/alarmes`}
+          title={locale === "fr" ? "Alarmes" : "Alarms"}
+          description={
+            locale === "fr"
+              ? `En cours: ${alarmsInProgressTotal} ? En attente d'acquittement: ${alarmsPendingAckTotal}`
+              : `In progress: ${alarmsInProgressTotal} ? Pending acknowledgement: ${alarmsPendingAckTotal}`
+          }
+          value={String(alarmsInProgressTotal)}
+          helper={
+            locale === "fr"
+              ? `Alarmes en attente d'acquittement: ${alarmsPendingAckTotal}`
+              : `Alarms pending acknowledgement: ${alarmsPendingAckTotal}`
+          }
+          href={`/admin/alarmes`}
           hrefLabel={accessLabel}
           icon={<AlertTriangle className="h-5 w-5 text-red-600" />}
           badge={
-            activeAlarmsTotal > 0 ? (
-              <Badge variant="destructive">{activeAlarmsTotal}</Badge>
+            alarmsPendingAckTotal > 0 ? (
+              <Badge variant="destructive">{alarmsPendingAckTotal}</Badge>
             ) : undefined
           }
         />
@@ -234,7 +272,7 @@ export default function AdminDashboard() {
           description={t("acknowledgments.description", { total: acknowledgmentsTotal, max: 50 })}
           value={String(acknowledgmentsTotal)}
           helper={`${t("acknowledgments.columns.date_time")}: ${latestAck}`}
-          href={`/${locale}/admin/alarmes`}
+          href={`/admin/alarmes`}
           hrefLabel={accessLabel}
           icon={<Clock className="h-5 w-5 text-amber-600" />}
         />
@@ -244,7 +282,7 @@ export default function AdminDashboard() {
           description={t("connected_users.description", { total: connectedUsersTotal, max: 50 })}
           value={String(connectedUsersTotal)}
           helper={`${t("connected_users.columns.full_name")}: ${latestConnectedLabel}`}
-          href={`/${locale}/admin/utilisateurs`}
+          href={`/admin/utilisateurs`}
           hrefLabel={accessLabel}
           icon={<Users className="h-5 w-5 text-sky-600" />}
         />
@@ -254,7 +292,7 @@ export default function AdminDashboard() {
           description={t("system_logs.description", { count: 50, total: systemLogsTotal })}
           value={String(systemLogsTotal)}
           helper={`${t("system_logs.columns.action")}: ${latestAuditAction}`}
-          href={`/${locale}/admin/audit`}
+          href={`/admin/audit`}
           hrefLabel={accessLabel}
           icon={<BookOpen className="h-5 w-5 text-emerald-600" />}
         />
@@ -264,7 +302,7 @@ export default function AdminDashboard() {
           description={t("backup.description")}
           value={String(backupsTotal)}
           helper={`${t("backup.last.label")}: ${lastBackupLabel}`}
-          href={`/${locale}/admin/outils`}
+          href={`/admin/outils`}
           hrefLabel={accessLabel}
           icon={<Database className="h-5 w-5 text-violet-600" />}
         />
@@ -273,7 +311,7 @@ export default function AdminDashboard() {
           title={t("unassigned.title")}
           description={t("unassigned.description", { count: unassignedTotal })}
           value={String(unassignedTotal)}
-          href={`/${locale}/admin/sondes`}
+          href={`/admin/sondes`}
           hrefLabel={accessLabel}
           icon={<Cpu className="h-5 w-5 text-slate-600" />}
         />
@@ -283,7 +321,7 @@ export default function AdminDashboard() {
             title={t("links.etalons.title")}
             description={t("links.etalons.description")}
             value="-"
-            href={`/${locale}/admin/etalons`}
+            href={`/admin/etalons`}
             hrefLabel={accessLabel}
             icon={<Ruler className="h-5 w-5 text-cyan-600" />}
           />

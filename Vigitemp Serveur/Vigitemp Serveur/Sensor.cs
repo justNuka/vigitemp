@@ -79,21 +79,51 @@ namespace Vigitemp_Serveur
             }
 
             var value = rawValue;
+            var afterAjustage = value;
+            var afterOffset = value;
+            var afterEtalonnage = value;
 
-            // Ordre metrologie: ajustage (a*x + b) puis offset.
+            // Ordre metrologie: ajustage (a*x + b) puis offset, puis correction EJ conditionnelle.
             if (metrology.HasAjustage)
             {
                 value = metrology.CoeffX * value + metrology.CoeffConstant;
+                afterAjustage = value;
             }
 
             if (metrology.Offset.HasValue)
             {
                 value += metrology.Offset.Value;
+                afterOffset = value;
+            }
+            else
+            {
+                afterOffset = value;
             }
 
-            if (metrology.HasEtalonnage && metrology.CorrectionJustesse.HasValue)
+            var appliedCorrectionEj = false;
+            if (metrology.HasEtalonnage && metrology.ApplyCorrectionEj && metrology.CorrectionJustesse.HasValue)
             {
                 value += metrology.CorrectionJustesse.Value;
+                afterEtalonnage = value;
+                appliedCorrectionEj = true;
+            }
+            else
+            {
+                afterEtalonnage = value;
+            }
+
+            if (ths != null && ths.LogMetrologyDetailed)
+            {
+                VigitempServeur.Log(
+                    $"Metrology apply serial={m_sondeSerialNumber} idLieu={m_idLieu} " +
+                    $"raw={rawValue.ToString(CultureInfo.InvariantCulture)} " +
+                    $"hasAjustage={metrology.HasAjustage} coeffX={metrology.CoeffX.ToString(CultureInfo.InvariantCulture)} coeffC={metrology.CoeffConstant.ToString(CultureInfo.InvariantCulture)} " +
+                    $"afterAjustage={afterAjustage.ToString(CultureInfo.InvariantCulture)} " +
+                    $"offset={(metrology.Offset.HasValue ? metrology.Offset.Value.ToString(CultureInfo.InvariantCulture) : "null")} afterOffset={afterOffset.ToString(CultureInfo.InvariantCulture)} " +
+                    $"hasEtalonnage={metrology.HasEtalonnage} mode={metrology.EmtChoixMode?.ToString() ?? "null"} applyCorrectionEj={metrology.ApplyCorrectionEj} " +
+                    $"errJustesse={(metrology.ErrJustesse.HasValue ? metrology.ErrJustesse.Value.ToString(CultureInfo.InvariantCulture) : "null")} " +
+                    $"correction={(metrology.CorrectionJustesse.HasValue ? metrology.CorrectionJustesse.Value.ToString(CultureInfo.InvariantCulture) : "null")} " +
+                    $"appliedCorrectionEj={appliedCorrectionEj} final={afterEtalonnage.ToString(CultureInfo.InvariantCulture)}");
             }
 
             return value;
@@ -259,6 +289,17 @@ namespace Vigitemp_Serveur
                      (policy.ShowWhileSnoozed && settings.DateHeureReactivationAlarme != default(DateTime)));
 
                 var nowUtc = DateTime.UtcNow;
+
+                if (!ok)
+                {
+                    var noResponseUnit = ths.GetDatabase().getLieuUnite(m_idLieu);
+                    var insertedNoResponse = ths.GetDatabase().AddMesureNoResponse(m_sondeSerialNumber, noResponseUnit);
+                    if (!insertedNoResponse)
+                    {
+                        VigitempServeur.Log($"HandleNoResponseAlarm: echec insertion mesure null sonde={m_sondeSerialNumber} lieu={m_idLieu}");
+                    }
+                }
+
                 var value = ok ? 0d : 1d;
                 var forceImmediate = !ok && ths.GetDatabase().hasActiveAcknowledgedAlarm(m_idLieu, "N");
                 if (forceImmediate)

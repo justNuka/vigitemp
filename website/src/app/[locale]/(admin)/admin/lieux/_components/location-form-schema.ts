@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+const mailingContactSchema = z.object({
+  Id_Tel_Num: z.number().optional(),
+  Numero_Ordre: z.number().int().min(1).default(1),
+  Id_Utilisateur: z.number().nullable(),
+  Est_Via_Telephone: z.boolean().default(false),
+  Est_Via_Email: z.boolean().default(true),
+});
+
 export const locationFormSchema = z.object({
   Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(50),
   Type_Lieu: z.string().optional().nullable(),
@@ -10,6 +18,7 @@ export const locationFormSchema = z.object({
   Id_Groupe1: z.number().optional().nullable(),
   Id_Groupe2: z.number().optional().nullable(),
   Sonde_Numero_Serie: z.string().optional().nullable(),
+  Id_Module: z.number().optional().nullable(),
   Consigne: z.number().optional().nullable(),
   Frequence: z.number().optional().nullable(),
   Consigne_Sup: z.number().optional().nullable(),
@@ -32,6 +41,7 @@ export const locationFormSchema = z.object({
   EMT_Valeur: z.number().optional().nullable(),
   Corriger_Erreur_Justesse: z.boolean().optional(),
   Prendre_En_Compte_Derive: z.boolean().optional(),
+  MailingContacts: z.array(mailingContactSchema).optional(),
 });
 
 export type LocationFormValues = z.infer<typeof locationFormSchema>;

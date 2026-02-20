@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server"
 import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { withLogging } from "@/lib/api-logger"
+import { getClientIp, withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
 
 export const PATCH = withLogging(
   async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
@@ -36,6 +37,11 @@ export const PATCH = withLogging(
           Nom_Groupe: nom || groupe.Nom_Groupe,
           Numero_Regroupement: regroupement || groupe.Numero_Regroupement,
         },
+      })
+
+      log.data.update("Groupe", id, user.username, user.userId, getClientIp(req), {
+        nom: nom || groupe.Nom_Groupe,
+        regroupement: regroupement || groupe.Numero_Regroupement,
       })
 
       const nombre_lieux = await prisma.t_lieu.count({
@@ -105,6 +111,8 @@ export const DELETE = withLogging(
         where: { Id_Groupe: id },
         data: { Est_Archive: true },
       })
+
+      log.data.delete("Groupe", id, user.username, user.userId, getClientIp(req), `Archivage groupe ${updated.Nom_Groupe}`)
 
       return apiOk({
         Id_Groupe: updated.Id_Groupe,

@@ -1,11 +1,18 @@
-param(
+﻿param(
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release"
 )
 
 $ErrorActionPreference = "Stop"
 
-function Write-Log {
+
+# Force UTF-8 console encoding for correct accents/special characters in logs.
+try { cmd /c chcp 65001 > $null } catch { }
+try {
+    [Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
+    [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+    $OutputEncoding = [Console]::OutputEncoding
+} catch { }function Write-Log {
     param([string]$Message)
     $stamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     Write-Host "[$stamp] $Message"
@@ -98,8 +105,8 @@ function Render-DirTree {
         $rel = if ([string]::IsNullOrWhiteSpace($BaseRel)) { $name } else { "$BaseRel\\$name" }
         $dirId = $dirMap[$rel]
         $lines.Add("$pad<Directory Id=`"$dirId`" Name=`"$name`">")
-        $childLines = Render-DirTree -Node $Node[$name] -BaseRel $rel -Indent ($Indent + 2)
-        if ($childLines.Count -gt 0) {
+        $childLines = @(Render-DirTree -Node $Node[$name] -BaseRel $rel -Indent ($Indent + 2))
+        if ($childLines.Length -gt 0) {
             $lines.AddRange($childLines)
         }
         $lines.Add("$pad</Directory>")
@@ -173,3 +180,4 @@ wix build "$wxsMain" "$harvestFile" `
     -o "$outMsi"
 
 Write-Log "MSI genere: $outMsi"
+

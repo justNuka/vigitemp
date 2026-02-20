@@ -31,9 +31,10 @@ type SensorsTableProps = {
   selectedSensorId: number | null;
   onSelectSensor: (sensorId: number) => void;
   onEditSensor?: (sensorId: number) => void;
+  warningWindowDays?: number;
 };
 
-export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSensor, onEditSensor }: SensorsTableProps) {
+export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSensor, onEditSensor, warningWindowDays = 30 }: SensorsTableProps) {
   const t = useTranslations('sensorsPage');
   const locale = useLocale();
 
@@ -70,8 +71,6 @@ export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSen
     },
   };
 
-
-  const warningWindowDays = 30;
 
   const parseDate = (value: string | Date | null | undefined): Date | null => {
     if (!value) return null;

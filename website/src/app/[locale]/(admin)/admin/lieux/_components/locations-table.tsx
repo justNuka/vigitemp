@@ -141,9 +141,9 @@ export function LocationsTable({
       accessorKey: 'Frequence',
       header: t('columns.frequency'),
       cell: ({ row }) =>
-        row.original.Frequence
-          ? t('frequency_value', { count: Math.round(row.original.Frequence / 60) })
-          : t('placeholders.na'),
+        row.original.Frequence === null || row.original.Frequence === undefined
+          ? t('placeholders.na')
+          : t('frequency_value', { count: Math.round(row.original.Frequence) }),
     },
     {
       accessorKey: 'Consigne_Sup',

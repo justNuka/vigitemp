@@ -43,54 +43,6 @@ export function VersionChangelogModal() {
   const changelog = useMemo<ChangelogItem[]>(
     () => [
       {
-        title: t("sections.forms.title"),
-        details: [
-          t("sections.forms.items.0"),
-          t("sections.forms.items.1"),
-        ],
-      },
-      {
-        title: t("sections.monitoring.title"),
-        details: [
-          t("sections.monitoring.items.0"),
-          t("sections.monitoring.items.1"),
-          t("sections.monitoring.items.2"),
-          t("sections.monitoring.items.3"),
-        ],
-      },
-      {
-        title: t("sections.measures.title"),
-        details: [
-          t("sections.measures.items.0"),
-          t("sections.measures.items.1"),
-        ],
-      },
-      {
-        title: t("sections.admin_tables.title"),
-        details: [
-          t("sections.admin_tables.items.0"),
-          t("sections.admin_tables.items.1"),
-          t("sections.admin_tables.items.2"),
-          t("sections.admin_tables.items.3"),
-        ],
-      },
-      {
-        title: t("sections.creation.title"),
-        details: [
-          t("sections.creation.items.0"),
-          t("sections.creation.items.1"),
-          t("sections.creation.items.2"),
-        ],
-      },
-      {
-        title: t("sections.notifications.title"),
-        details: [t("sections.notifications.items.0")],
-      },
-      {
-        title: t("sections.experience.title"),
-        details: [t("sections.experience.items.0")],
-      },
-      {
         title: t("sections.upgrade.title"),
         details: [
           t("sections.upgrade.items.0"),

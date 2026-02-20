@@ -106,7 +106,7 @@ namespace Vigitemp_Serveur
 
                 var payload =
                     "{" +
-                    "\"title\":\"" + title + "\"," +
+                    "\"title\":\"" + EscapeJson(title) + "\"," +
                     "\"body\":\"" + EscapeJson(body) + "\"," +
                     "\"url\":\"/surveillance\"" +
                     "}";
@@ -131,6 +131,53 @@ namespace Vigitemp_Serveur
             }
         }
 
+        public static async Task NotifyEndedAlarmBatchAsync(IReadOnlyList<AlarmNotificationItem> alarms)
+        {
+            try
+            {
+                if (alarms == null || alarms.Count == 0)
+                {
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
+                {
+                    VigitempServeur.Log("AlarmWebNotifier: configuration manquante (BaseUrl/Secret)");
+                    return;
+                }
+
+                var url = Combine(BaseUrl, "/api/alarmes/dispatch");
+
+                foreach (var alarm in alarms)
+                {
+                    if (alarm == null || alarm.IdAlarme <= 0)
+                    {
+                        continue;
+                    }
+
+                    var payload =
+                        "{" +
+                        "\"alarmId\":" + alarm.IdAlarme + "," +
+                        "\"eventType\":\"ended\"" +
+                        "}";
+
+                    var req = new HttpRequestMessage(HttpMethod.Post, url);
+                    req.Headers.Add("x-vigitemp-secret", Secret);
+                    req.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+                    var response = await _http.SendAsync(req);
+                    VigitempServeur.Log(
+                        "AlarmWebNotifier: notification ended envoyee (status=" + (int)response.StatusCode + ") " +
+                        "idLieu=" + alarm.IdLieu +
+                        " alarmId=" + alarm.IdAlarme);
+                }
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("AlarmWebNotifier: echec envoi notification ended batch: " + ex.Message);
+            }
+        }
+
         private static string EscapeJson(string value)
         {
             if (string.IsNullOrEmpty(value)) return "";
@@ -149,4 +196,3 @@ namespace Vigitemp_Serveur
         }
     }
 }
-

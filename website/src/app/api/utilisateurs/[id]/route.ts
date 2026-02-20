@@ -7,6 +7,7 @@ import { getRequestContext } from "@/lib/api-logger"
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { revalidateTag } from "next/cache"
 import { apiError, apiOk } from "@/lib/api-response"
+import { getUserAvatarValue, setUserAvatarValue } from "@/lib/user-avatar-db"
 
 const updateUserSchema = z.object({
   nom: z.string().optional(),
@@ -20,6 +21,7 @@ const updateUserSchema = z.object({
     .optional()
     .transform((val) => (val ? new Date(val) : undefined)),
   reactivate: z.boolean().optional(),
+  avatar: z.string().trim().max(512).nullable().optional(),
 })
 
 export const GET = withAdminLogging(
@@ -36,12 +38,15 @@ export const GET = withAdminLogging(
         return apiError(404, "not_found", "User not found")
       }
 
+      const avatarValue = await getUserAvatarValue(user.Id_Utilisateur)
+
       return apiOk({
         id: user.Id_Utilisateur,
         username: user.Login,
         displayName: `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login,
         role: user.Profil_Utilisateur || "user",
         status: !user.Est_Archive ? "active" : "inactive",
+        avatar: avatarValue,
       })
     } catch (error) {
       console.error("Get utilisateur error:", error)
@@ -81,6 +86,10 @@ export const PATCH = withAdminLogging(
         data: updateData,
       })
 
+      if (data.avatar !== undefined) {
+        await setUserAvatarValue(userId, data.avatar || null)
+      }
+
       const changes: any = {}
       if (data.nom) changes.nom = data.nom
       if (data.prenom) changes.prenom = data.prenom
@@ -88,16 +97,20 @@ export const PATCH = withAdminLogging(
       if (data.profileId) changes.profile = data.profileId
       if (data.password) changes.passwordChanged = true
       if (data.reactivate) changes.reactivated = true
+      if (data.avatar !== undefined) changes.avatar = data.avatar || null
 
       log.data.update("Utilisateur", userId, ctx.user.username, ctx.user.userId, ip, changes)
 
       revalidateTag("users-data", "default")
+
+      const avatarValue = await getUserAvatarValue(user.Id_Utilisateur)
 
       return apiOk({
         id: user.Id_Utilisateur,
         username: user.Login,
         displayName: `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login,
         role: user.Profil_Utilisateur || "user",
+        avatar: avatarValue,
       })
     } catch (error) {
       if (error instanceof z.ZodError) {

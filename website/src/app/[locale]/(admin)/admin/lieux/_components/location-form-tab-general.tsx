@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react'
 
 import type { AvailableSensor } from '@/hooks/useAvailableSensors'
 import type { Group } from '@/hooks/useGroups'
+import type { Module } from '@/hooks/useModules'
 import type { SiteSimple } from '@/hooks/useSites'
 import { MultiSelectFilter } from '@/components/multi-select-filter'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -23,9 +24,10 @@ type Props = {
   sites: SiteSimple[]
   groups: Group[]
   availableSensors: AvailableSensor[]
+  modules: Module[]
 }
 
-export function LocationFormTabGeneral({ sites, groups, availableSensors }: Props) {
+export function LocationFormTabGeneral({ sites, groups, availableSensors, modules }: Props) {
   const t = useTranslations('locationsForm.general')
   const {
     register,
@@ -41,11 +43,20 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors }: Prop
     [availableSensors, formData.Sonde_Numero_Serie],
   )
   const isGsoSensor = selectedSensor?.Sonde_Type?.toUpperCase() === 'GSO'
+  const hasSondeSelected = Boolean(formData.Sonde_Numero_Serie)
 
   useEffect(() => {
     if (!isGsoSensor) return
     setValue('Frequence', 15)
   }, [isGsoSensor, setValue])
+
+  useEffect(() => {
+    if (!formData.Sonde_Numero_Serie) {
+      setValue('Id_Module', null)
+      return
+    }
+    setValue('Id_Module', selectedSensor?.Id_Module ?? null)
+  }, [formData.Sonde_Numero_Serie, selectedSensor?.Id_Module, setValue])
 
   return (
     <TabsContent value="general" className="space-y-4">
@@ -198,8 +209,33 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors }: Prop
             />
           </div>
           <div className="space-y-2">
-            <Label>{t('labels.sensor_state')}</Label>
-            <Input disabled placeholder={t('placeholders.auto')} className="bg-muted" />
+            <Label>{t('labels.module_select')}</Label>
+            <Controller
+              control={control}
+              name="Id_Module"
+              render={({ field }) => (
+                <Combobox
+                  triggerId="module"
+                  value={field.value ? field.value.toString() : ''}
+                  onValueChange={(val) => field.onChange(val ? parseInt(val, 10) : null)}
+                  placeholder={t('placeholders.module')}
+                  searchPlaceholder={t('placeholders.module_search')}
+                  emptyMessage={t('placeholders.module_empty')}
+                  disabled={!hasSondeSelected}
+                  options={[
+                    { value: '', label: t('options.no_module'), searchText: t('options.no_module') },
+                    ...(modules ?? []).map((module) => ({
+                      value: module.Id_Module.toString(),
+                      label:
+                        module.Module_Numero_Serie ||
+                        module.Port_Serie ||
+                        `Module #${module.Id_Module}`,
+                      searchText: `${module.Module_Numero_Serie || ''} ${module.Port_Serie || ''} ${module.Id_Module}`,
+                    })),
+                  ]}
+                />
+              )}
+            />
           </div>
         </div>
       </div>
@@ -365,9 +401,8 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors }: Prop
           </div>
         </div>
       </div>
+
     </TabsContent>
   )
 }
-
-
 

@@ -1,10 +1,12 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
+import { useLicense } from "@/components/license/license-provider";
+import { isStandardOrExpert } from "@/lib/license-access";
 
 import { settingsApi } from "@/lib/api";
 import { SMTPConfigModal } from "./smtp-config-modal";
@@ -28,6 +30,8 @@ interface Props {
 export function SettingsClient({ settings: initialSettings }: Props) {
   const router = useRouter();
   const t = useTranslations("adminSettings");
+  const { license } = useLicense();
+  const canEditSurveillanceRefresh = isStandardOrExpert(license);
   const [smtpModalOpen, setSmtpModalOpen] = useState(false);
 
   const [settings, setSettings] = useState(initialSettings);
@@ -91,6 +95,8 @@ export function SettingsClient({ settings: initialSettings }: Props) {
               ? t("general.refresh_options.5")
               : newValue === "10"
               ? t("general.refresh_options.10")
+              : newValue === "15"
+              ? t("general.refresh_options.15")
               : newValue === "30"
               ? t("general.refresh_options.30")
               : newValue === "60"
@@ -148,13 +154,25 @@ export function SettingsClient({ settings: initialSettings }: Props) {
     );
   };
 
+  const generalSettings = settings.filter((setting) => {
+    const isNotificationSetting = ["notifications:email", "notifications:alarm_email_recipients"].includes(setting.key)
+    if (isNotificationSetting) return false
+    if (!canEditSurveillanceRefresh && setting.key === "dashboard:surveillance_refresh") return false
+    return true
+  });
+
+  const notificationSettings = settings.filter((setting) =>
+    ["notifications:email", "notifications:alarm_email_recipients"].includes(setting.key),
+  );
+
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       <GeneralSettingsCard
-        settings={settings}
+        settings={generalSettings}
         loadingKeys={loadingKeys}
         onToggle={handleToggle}
         onRefreshIntervalChange={handleRefreshIntervalChange}
+        onNumericSettingChange={handleSettingChange}
       />
 
       <TimezoneSettingsCard
@@ -167,7 +185,12 @@ export function SettingsClient({ settings: initialSettings }: Props) {
 
       <PasswordPolicyCard />
 
-      <NotificationsSettingsCard />
+      <NotificationsSettingsCard
+        settings={notificationSettings}
+        loadingKeys={loadingKeys}
+        onToggle={handleToggle}
+        onSaveRecipients={handleSettingChange}
+      />
 
       <SmtpSettingsCard onOpenSmtpModal={() => setSmtpModalOpen(true)} />
 
@@ -175,4 +198,5 @@ export function SettingsClient({ settings: initialSettings }: Props) {
     </main>
   );
 }
+
 

@@ -10,6 +10,7 @@ export interface AvailableSensor {
   Surveillance_Etat: string
   Lieu: string | null
   Sonde_Type?: string | null
+  Id_Module?: number | null
 }
 
 export function useAvailableSensors(selectedSondeNumeroSerie?: string | null, enabled: boolean = true) {

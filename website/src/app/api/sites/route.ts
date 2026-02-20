@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getAuthenticatedUser } from "@/lib/auth"
-import { withLogging } from "@/lib/api-logger"
+import { getClientIp, withLogging } from "@/lib/api-logger"
 import { z } from "zod"
+import { log } from "@/lib/logger"
 import { apiError, apiOk } from "@/lib/api-response"
 
 const createSiteSchema = z.object({
@@ -66,6 +67,11 @@ export const POST = withLogging(async (req: NextRequest) => {
         Commentaire: validated.Commentaire || null,
         Est_Archive: false,
       },
+    })
+
+    log.data.create("Site", site.Id_Site, user.username, user.userId, getClientIp(req), {
+      code: site.Code_Site,
+      libelle: site.Libelle_Site,
     })
 
     return apiOk(site, { status: 201 })

@@ -6,7 +6,14 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-function Write-Log($message) {
+
+# Force UTF-8 console encoding for correct accents/special characters in logs.
+try { cmd /c chcp 65001 > $null } catch { }
+try {
+    [Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
+    [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+    $OutputEncoding = [Console]::OutputEncoding
+} catch { }function Write-Log($message) {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     Write-Host "[$timestamp] $message"
 }
@@ -35,7 +42,7 @@ if ([string]::IsNullOrWhiteSpace($BuildOutput)) {
     }
 }
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
-    $OutputDir = Join-Path $repoRoot "..\\vigi\\build\\server-offline"
+    $OutputDir = Join-Path $repoRoot "..\\vigi\\2 - installation\\1 - serveur"
 }
 
 $exePath = Join-Path $BuildOutput "Vigitemp Serveur.exe"
@@ -71,7 +78,7 @@ if ($rcCode -ge 8) {
 
 $installerSrc = Join-Path $serverRoot "installer"
 if (Test-Path $installerSrc) {
-    Write-Log "Copying installer scripts..."
+    Write-Log "Copying installer files (without PowerShell/dependency installers)..."
     $installerDest = Join-Path $OutputDir "installer"
     $installerArgs = @(
         $installerSrc,
@@ -93,6 +100,12 @@ if (Test-Path $installerSrc) {
     if ($rcInstallerCode -ge 8) {
         Write-Error ("Robocopy (installer) failed with exit code {0}" -f $rcInstallerCode)
     }
+
+    # Remove local install scripts/dependency installers from 1 - serveur package.
+    Get-ChildItem -Path $installerDest -Recurse -File -Include *.ps1,*.msi,*.exe -ErrorAction SilentlyContinue |
+        ForEach-Object {
+            try { $_.Delete() } catch { }
+        }
 
     $prereqsDest = Join-Path $installerDest "prereqs"
     New-Item -ItemType Directory -Force -Path $prereqsDest | Out-Null
@@ -121,4 +134,34 @@ if (Test-Path $installerSrc) {
      }
  }
 
+
+$prereqRoot = Join-Path $repoRoot "..\\vigi\\1 - prerequis"
+$prereqInstallDir = Join-Path $prereqRoot "install"
+$prereqMySqlDir = Join-Path $prereqRoot "mysql"
+$prereqVcDir = Join-Path $prereqRoot "vcredist"
+
+Write-Log "Updating shared prerequisites folder (MySQL + VC++)..."
+New-Item -ItemType Directory -Force -Path $prereqInstallDir | Out-Null
+New-Item -ItemType Directory -Force -Path $prereqMySqlDir | Out-Null
+New-Item -ItemType Directory -Force -Path $prereqVcDir | Out-Null
+
+$installDepsScript = Join-Path $installerSrc "Install-MySQL-And-VCredist.ps1"
+if (Test-Path $installDepsScript) {
+    Copy-Item -Path $installDepsScript -Destination (Join-Path $prereqInstallDir "Install-MySQL-And-VCredist.ps1") -Force
+}
+
+$mysqlInstallerSource = Join-Path $installerSrc "mysql-8.4.7-winx64.msi"
+if (Test-Path $mysqlInstallerSource) {
+    Copy-Item -Path $mysqlInstallerSource -Destination (Join-Path $prereqMySqlDir "mysql-8.4.7-winx64.msi") -Force
+}
+
+$vcInstallerSource = Join-Path $installerSrc "VC_redist.x64.exe"
+if (Test-Path $vcInstallerSource) {
+    Copy-Item -Path $vcInstallerSource -Destination (Join-Path $prereqVcDir "VC_redist.x64.exe") -Force
+}
+
 Write-Log "Done. Package ready at: $OutputDir"
+
+
+
+

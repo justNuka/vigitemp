@@ -69,17 +69,7 @@ export const PasswordResetEmail = ({
                   fill="#3B82F6"
                   fontFamily="Arial, sans-serif"
                 >
-                  MC2
-                </text>
-                <text
-                  x="100"
-                  y="55"
-                  fontSize="10"
-                  textAnchor="middle"
-                  fill="#6C7280"
-                  fontFamily="Arial, sans-serif"
-                >
-                  Technologies
+                  MC2 Lab
                 </text>
               </svg>
             </Section>

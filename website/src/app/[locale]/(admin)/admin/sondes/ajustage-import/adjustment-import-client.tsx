@@ -361,16 +361,6 @@ export function AdjustmentImportClient() {
       cell: ({ row }) => row.getValue("unit") || "-",
     },
     {
-      accessorKey: "coeffX",
-      header: t("table.columns.coeff_x"),
-      cell: ({ row }) => formatNumber(row.original.coeffX),
-    },
-    {
-      accessorKey: "coeffConstant",
-      header: t("table.columns.coeff_constant"),
-      cell: ({ row }) => formatNumber(row.original.coeffConstant),
-    },
-    {
       accessorKey: "measureEtalon1",
       header: t("table.columns.measure_etalon_1"),
       cell: ({ row }) => formatNumber(row.original.measureEtalon1),

@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import Dock from "@/components/ui/dock";
 import { useLicense } from "@/components/license/license-provider";
+import { isOneOrPack } from "@/lib/license-access";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { getLocalizedPathname, stripLocalePrefix } from "@/i18n/pathnames";
 import { useLocale, useTranslations } from "next-intl";
@@ -23,8 +24,7 @@ export function AdminNavDock() {
   const tDock = useTranslations("dock");
   const { license } = useLicense();
 
-  const edition = (license?.edition || "standard").trim().toLowerCase();
-  const hideStandards = edition === "one" || edition === "pack";
+  const hideStandards = isOneOrPack(license);
   const normalizedPathname = stripLocalePrefix(pathname);
 
   const navItems: DockItem[] = [

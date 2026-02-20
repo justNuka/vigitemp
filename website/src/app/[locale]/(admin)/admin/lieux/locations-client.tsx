@@ -5,8 +5,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { useAvailableSensors } from '@/hooks/useAvailableSensors'
 import { useGroups } from '@/hooks/useGroups'
+import { useModules } from '@/hooks/useModules'
 import { useLocations, type LocationRow } from '@/hooks/useLocations'
 import { useSitesSimple } from '@/hooks/useSites'
+import { useUsersForMailing } from '@/hooks/useUsersForMailing'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   AlertDialog,
@@ -49,6 +51,8 @@ export function LocationsClient() {
   const { data: sites = [] } = useSitesSimple(shouldLoadFormData)
   const { data: groups = [] } = useGroups(undefined, shouldLoadFormData)
   const { data: availableSensors = [] } = useAvailableSensors(watchedSensor, shouldLoadFormData)
+  const { data: modules = [] } = useModules(shouldLoadFormData)
+  const { data: mailingUsers = [] } = useUsersForMailing(shouldLoadFormData)
 
   useEffect(() => {
     if (isLoading || didPrefetchRef.current) return
@@ -205,6 +209,8 @@ export function LocationsClient() {
         sites={sites}
         groups={groups}
         availableSensors={availableSensors}
+        modules={modules}
+        mailingUsers={mailingUsers}
         isSubmitting={createMutation.isPending}
         onCancel={() => setIsCreateOpen(false)}
         onSubmit={(values) => {
@@ -224,6 +230,8 @@ export function LocationsClient() {
         sites={sites}
         groups={groups}
         availableSensors={availableSensors}
+        modules={modules}
+        mailingUsers={mailingUsers}
         isSubmitting={updateMutation.isPending}
         onCancel={() => setIsEditOpen(false)}
         onSubmit={(values) => updateMutation.mutate(normalizePayload(values))}

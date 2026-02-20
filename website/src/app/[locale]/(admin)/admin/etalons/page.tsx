@@ -2,11 +2,10 @@
 
 import { useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
 import { useLicense } from "@/components/license/license-provider";
+import { isOneOrPack } from "@/lib/license-access";
 import { PageHeader } from "@/components/page-header";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { LicenseBlockedCard } from "@/components/license/license-blocked-card";
 import { StandardsClient } from "./standards-client";
 
 export default function EtalonsPage() {
@@ -14,8 +13,7 @@ export default function EtalonsPage() {
   const tCommon = useTranslations("common");
   const { license, loading } = useLicense();
 
-  const edition = (license?.edition || "standard").trim().toLowerCase();
-  const isBlocked = useMemo(() => edition === "one" || edition === "pack", [edition]);
+  const isBlocked = useMemo(() => isOneOrPack(license), [license]);
 
   if (loading) {
     return null;
@@ -32,14 +30,7 @@ export default function EtalonsPage() {
       <>
         <PageHeader title={blockedTitle} description={blockedDescription} />
         <div className="space-y-6 p-6">
-          <Card>
-            <CardContent className="flex items-center justify-between gap-4 p-6">
-              <p className="text-sm text-muted-foreground">{blockedDescription}</p>
-              <Button asChild variant="outline">
-                <Link href="/admin">{tCommon("back")}</Link>
-              </Button>
-            </CardContent>
-          </Card>
+          <LicenseBlockedCard message={blockedDescription} backLabel={tCommon("back")} />
         </div>
       </>
     );

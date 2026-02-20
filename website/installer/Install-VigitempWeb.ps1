@@ -6,6 +6,8 @@
     [string]$NodePath,
     [string]$PnpmPath,
     [string]$EnvFileName,
+    [string]$AlarmDispatchSecret,
+    [string]$AlarmDispatchSecretFile,
     [switch]$Silent,
     [switch]$Offline,
     [switch]$Standalone
@@ -14,7 +16,14 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$utf8 = New-Object System.Text.UTF8Encoding $false
+
+# Force UTF-8 console encoding for correct accents/special characters in logs.
+try { cmd /c chcp 65001 > $null } catch { }
+try {
+    [Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
+    [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+    $OutputEncoding = [Console]::OutputEncoding
+} catch { }$utf8 = New-Object System.Text.UTF8Encoding $false
 [Console]::OutputEncoding = $utf8
 [Console]::InputEncoding = $utf8
 
@@ -90,6 +99,58 @@ function Read-InstallSecret($label, $defaultValue = $null) {
     return $value
 }
 
+function New-RandomSecret([int]$byteLength = 32) {
+    $bytes = New-Object byte[] $byteLength
+    [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+    $base64 = [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
+    return $base64
+}
+
+function Resolve-SecretFilePath($customPath, $defaultPath) {
+    $path = $customPath
+    if ([string]::IsNullOrWhiteSpace($path)) {
+        $path = $defaultPath
+    }
+    return $path
+}
+
+function Resolve-DispatchSecret([string]$providedSecret, [string]$providedFilePath, [bool]$interactiveMode, [string]$defaultSharedSecretPath) {
+    $secret = $null
+    $secretFile = Resolve-SecretFilePath $providedFilePath $defaultSharedSecretPath
+
+    if (-not [string]::IsNullOrWhiteSpace($providedSecret)) {
+        $secret = $providedSecret.Trim()
+    }
+
+    if ([string]::IsNullOrWhiteSpace($secret) -and -not [string]::IsNullOrWhiteSpace($secretFile) -and (Test-Path $secretFile)) {
+        $secret = (Get-Content -Path $secretFile -Raw -ErrorAction SilentlyContinue).Trim()
+        if (-not [string]::IsNullOrWhiteSpace($secret)) {
+            Write-Log (T "Secret dispatch lu depuis: $secretFile" "Dispatch secret loaded from: $secretFile")
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($secret) -and $interactiveMode) {
+        $typedSecret = Read-InstallSecret (T "Secret dispatch alarmes (laisser vide pour g?n?ration auto)" "Alarm dispatch secret (leave empty for auto generation)") ""
+        if (-not [string]::IsNullOrWhiteSpace($typedSecret)) {
+            $secret = $typedSecret.Trim()
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($secret)) {
+        $secret = New-RandomSecret
+        Write-Log (T "Secret dispatch g?n?r? automatiquement." "Dispatch secret generated automatically.")
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($secretFile)) {
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $secretFile) | Out-Null
+        Set-Content -Path $secretFile -Value $secret -Encoding UTF8
+        Write-Log (T "Secret dispatch sauvegard?: $secretFile" "Dispatch secret saved: $secretFile")
+        Write-Log (T "Copiez ce fichier sur l'autre machine pour r?utiliser le m?me secret." "Copy this file to the other machine to reuse the same secret.")
+    }
+
+    return $secret
+}
+
 function Write-InstallRegistryInfo($installPath, $version) {
     try {
         $baseKey = "HKLM:\\SOFTWARE\\Vigitemp"
@@ -124,7 +185,7 @@ $defaultServiceName = "VigitempWeb"
 $defaultPort = 3000
 
 if ([string]::IsNullOrWhiteSpace($SourcePath)) {
-    $SourcePath = Read-InstallValue (T "Chemin du site (dossier contenant package.json)" "Path to website source (folder with package.json)") $defaultSource.Path
+    $SourcePath = Read-InstallValue (T "Chemin du site (code source ou build standalone)" "Path to website (source code or standalone build)") $defaultSource.Path
 }
 if ([string]::IsNullOrWhiteSpace($InstallDir)) {
     $InstallDir = Read-InstallValue (T "Dossier d'installation" "Install folder") $defaultInstallDir
@@ -152,7 +213,7 @@ if (-not $Standalone) {
 if (-not (Test-Path $SourcePath)) {
     Write-Error (T "SourcePath introuvable : $SourcePath" "SourcePath not found: $SourcePath")
 }
-if (-not (Test-Path (Join-Path $SourcePath "package.json"))) {
+if (-not $Standalone -and -not (Test-Path (Join-Path $SourcePath "package.json"))) {
     Write-Error (T "package.json introuvable dans SourcePath : $SourcePath" "package.json not found in SourcePath: $SourcePath")
 }
 
@@ -180,11 +241,6 @@ if ($Offline -and $Standalone) {
         New-Item -ItemType Directory -Force -Path $standaloneStatic | Out-Null
     }
     & robocopy (Join-Path $InstallDir ".next\\static") $standaloneStatic /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
-    Copy-Item -Path (Join-Path $SourcePath "package.json") -Destination (Join-Path $InstallDir "package.json") -Force
-    Copy-Item -Path (Join-Path $SourcePath "next.config.js") -Destination (Join-Path $InstallDir "next.config.js") -Force
-    if (Test-Path (Join-Path $SourcePath "installer")) {
-        & robocopy (Join-Path $SourcePath "installer") (Join-Path $InstallDir "installer") /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
-    }
 } else {
     if ($Offline) {
         $excludeDirs = @(".git", "logs")
@@ -287,8 +343,11 @@ $dbPassword = Read-InstallSecret (T "Mot de passe BDD" "DB password") ""
 $dbMain = Read-InstallValue (T "Nom BDD principale" "Main DB name") "vigi_main"
 $dbMeasure = Read-InstallValue (T "Nom BDD mesures" "Measure DB name") "vigi_mesures"
 $cacheTtl = Read-InstallValue (T "Cache TTL (secondes)" "Cache TTL (seconds)") "30"
-$dispatchSecret = Read-InstallValue (T "Secret dispatch surveillance (optionnel)" "Surveillance dispatch secret (optional)") ""
 $logsDir = Read-InstallValue (T "Dossier des logs" "Logs directory") (Join-Path $programData "Vigitemp\\web-logs")
+if ([string]::IsNullOrWhiteSpace($AlarmDispatchSecretFile)) {
+    $AlarmDispatchSecretFile = Join-Path $programData "Vigitemp\shared-secrets\alarm-dispatch-secret.txt"
+}
+$dispatchSecret = Resolve-DispatchSecret -providedSecret $AlarmDispatchSecret -providedFilePath $AlarmDispatchSecretFile -interactiveMode (-not $Silent) -defaultSharedSecretPath $AlarmDispatchSecretFile
 
 New-Item -ItemType Directory -Force -Path $logsDir | Out-Null
 
@@ -314,6 +373,7 @@ DATABASE_MESURES_URL="$databaseMesureUrl"
 DATABASE_PROVIDER="$dbProvider"
 NEXT_PUBLIC_API_BASE_URL="$websiteBaseUrl"
 NEXT_PUBLIC_CACHE_TTL=$cacheTtl
+VIGITEMP_ALARM_DISPATCH_SECRET="$dispatchSecret"
 VIGITEMP_SURVEILLANCE_DISPATCH_SECRET="$dispatchSecret"
 VIGITEMP_LOGS_DIR="$logsDir"
 NODE_ENV=production
@@ -484,5 +544,6 @@ function Confirm-WebInstall {
 Confirm-WebInstall
 
 Stop-Transcript | Out-Null
+
 
 

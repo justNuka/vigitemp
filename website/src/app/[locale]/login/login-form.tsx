@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useEffect, useState } from "react";
@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { getAgentInfo, setAgentSecret, setAgentSession } from "@/lib/agent-session";
 import { HttpError, postJson } from "@/lib/http";
+import { clearDisconnectReason, consumeDisconnectReason } from "@/lib/auth-disconnect-marker";
 import { LoginCredentialsForm } from "./_components/login-credentials-form";
 import { ForgotPasswordDialog } from "./_components/forgot-password-dialog";
 import { LoginInactivityAlert } from "./_components/login-inactivity-alert";
@@ -58,13 +59,21 @@ export function LoginForm() {
   const reason = searchParams.get("reason");
   const passwordChanged = searchParams.get("passwordChanged");
   const fromParam = searchParams.get("from");
-  const showInactivityMessage = reason === "inactivity";
+  const [showInactivityMessage, setShowInactivityMessage] = useState(false);
 
   useEffect(() => {
-    if (showInactivityMessage) {
-      toast.warning(t("toasts.session_expired.title"), {
-        description: t("toasts.session_expired.description"),
-      });
+    if (reason === "inactivity") {
+      const canShow = consumeDisconnectReason("inactivity");
+      setShowInactivityMessage(canShow);
+
+      if (!canShow) {
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("reason");
+        const query = params.toString();
+        router.replace(query ? `/login?${query}` : "/login");
+      }
+    } else {
+      setShowInactivityMessage(false);
     }
 
     if (passwordChanged === "true") {
@@ -72,7 +81,14 @@ export function LoginForm() {
         description: t("toasts.password_changed.description"),
       });
     }
-  }, [passwordChanged, showInactivityMessage, t]);
+  }, [passwordChanged, reason, router, searchParams, t]);
+
+  useEffect(() => {
+    if (!showInactivityMessage) return;
+    toast.warning(t("toasts.session_expired.title"), {
+      description: t("toasts.session_expired.description"),
+    });
+  }, [showInactivityMessage, t]);
 
   const loginSchema = z.object({
     username: z
@@ -146,6 +162,7 @@ export function LoginForm() {
       }
     },
     onSuccess: async (data: LoginResponse) => {
+      clearDisconnectReason();
       toast.success(t("toasts.login_success"));
 
       try {
@@ -295,3 +312,5 @@ export function LoginForm() {
     </div>
   );
 }
+
+

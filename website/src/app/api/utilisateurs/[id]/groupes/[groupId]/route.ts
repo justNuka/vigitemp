@@ -3,6 +3,8 @@ import { revalidateTag } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
+import { getRequestContext } from "@/lib/api-logger"
 
 /**
  * DELETE /api/utilisateurs/[id]/groupes/[liaisionId] - Remove group from user
@@ -11,10 +13,11 @@ import { apiError, apiOk } from "@/lib/api-response"
 export const DELETE = withAdminLogging(
   async (
     req: NextRequest,
-    _ctx: any,
+    ctx: any,
     { params }: { params: Promise<{ id: string; groupId: string }> },
   ) => {
     try {
+      const { ip } = getRequestContext(req)
       const { id, groupId } = await params
       const userId = parseInt(id)
       const parsed = parseInt(groupId)
@@ -40,6 +43,11 @@ export const DELETE = withAdminLogging(
           return apiError(404, "not_found", "Liaison not found for this user")
         }
       }
+
+      log.data.update("Utilisateur", userId, ctx.user.username, ctx.user.userId, ip, {
+        action: "remove_group",
+        groupOrLiaisonId: parsed,
+      })
 
       revalidateTag("users-data", "default")
 

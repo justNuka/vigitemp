@@ -110,22 +110,16 @@
   <File Id="fil_35" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\System.Threading.Tasks.Extensions.xml" KeyPath="yes" />
 </Component>
 <Component Id="cmp_36" Guid="*">
-  <File Id="fil_36" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.application" KeyPath="yes" />
+  <File Id="fil_36" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.exe" KeyPath="yes" />
 </Component>
 <Component Id="cmp_37" Guid="*">
-  <File Id="fil_37" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.exe" KeyPath="yes" />
+  <File Id="fil_37" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.exe.config" KeyPath="yes" />
 </Component>
 <Component Id="cmp_38" Guid="*">
-  <File Id="fil_38" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.exe.config" KeyPath="yes" />
+  <File Id="fil_38" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.pdb" KeyPath="yes" />
 </Component>
 <Component Id="cmp_39" Guid="*">
-  <File Id="fil_39" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.exe.manifest" KeyPath="yes" />
-</Component>
-<Component Id="cmp_40" Guid="*">
-  <File Id="fil_40" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\VigitempAgent.pdb" KeyPath="yes" />
-</Component>
-<Component Id="cmp_41" Guid="*">
-  <File Id="fil_41" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\ZstdSharp.dll" KeyPath="yes" />
+  <File Id="fil_39" Source="C:\VigitempProject\vigitemp\Vigitemp agent\Vigitemp agent\bin\Release\\ZstdSharp.dll" KeyPath="yes" />
 </Component>
 </DirectoryRef>
 <DirectoryRef Id="DIR_2">
@@ -180,8 +174,6 @@
 <ComponentRef Id="cmp_37" />
 <ComponentRef Id="cmp_38" />
 <ComponentRef Id="cmp_39" />
-<ComponentRef Id="cmp_40" />
-<ComponentRef Id="cmp_41" />
     </ComponentGroup>
   </Fragment>
 </Wix>

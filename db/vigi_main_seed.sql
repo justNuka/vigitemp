@@ -1044,3 +1044,196 @@ END$$
 DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 
+
+-- =====================================================================
+-- Alignement seed <-> schema Prisma (compatibilite install recente)
+-- Version safe MariaDB/MySQL (checks information_schema)
+-- =====================================================================
+
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+VALUES ('dashboard', 'surveillance_refresh', '15', 'Delai auto de rafraichissement de la surveillance (secondes)')
+ON DUPLICATE KEY UPDATE
+  `Valeur` = VALUES(`Valeur`),
+  `Commentaire` = VALUES(`Commentaire`);
+
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+VALUES ('dashboard', 'show_null_non_response', 'false', 'Afficher les mesures de non-reponse (valeur null) sur la courbe et le tableau')
+ON DUPLICATE KEY UPDATE
+  `Valeur` = VALUES(`Valeur`),
+  `Commentaire` = VALUES(`Commentaire`);
+
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+VALUES ('dashboard', 'etalonnage_warning_days', '30', 'Nombre de jours avant expiration pour avertir sur la validite des etalonnages')
+ON DUPLICATE KEY UPDATE
+  `Valeur` = VALUES(`Valeur`),
+  `Commentaire` = VALUES(`Commentaire`);
+
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+VALUES ('notifications', 'alarm_email_recipients', '', 'Liste des destinataires des emails d''alarme (separes par virgule, point-virgule ou retour ligne)')
+ON DUPLICATE KEY UPDATE
+  `Valeur` = VALUES(`Valeur`),
+  `Commentaire` = VALUES(`Commentaire`);
+
+-- Migration legacy calibrage -> ajustage (table + colonnes)
+SET @has_t_calibrage := (
+  SELECT COUNT(*) FROM information_schema.tables
+  WHERE table_schema = DATABASE() AND table_name = 't_calibrage'
+);
+SET @has_t_ajustage := (
+  SELECT COUNT(*) FROM information_schema.tables
+  WHERE table_schema = DATABASE() AND table_name = 't_ajustage'
+);
+SET @sql := IF(@has_t_calibrage = 1 AND @has_t_ajustage = 0,
+  'RENAME TABLE `t_calibrage` TO `t_ajustage`',
+  'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @has_col_old := (
+  SELECT COUNT(*) FROM information_schema.columns
+  WHERE table_schema = DATABASE() AND table_name = 't_ajustage' AND column_name = 'Id_Calibrage'
+);
+SET @has_col_new := (
+  SELECT COUNT(*) FROM information_schema.columns
+  WHERE table_schema = DATABASE() AND table_name = 't_ajustage' AND column_name = 'Id_Ajustage'
+);
+SET @sql := IF(@has_col_old = 1 AND @has_col_new = 0,
+  'ALTER TABLE `t_ajustage` CHANGE COLUMN `Id_Calibrage` `Id_Ajustage` INT NOT NULL AUTO_INCREMENT',
+  'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @has_col_old := (
+  SELECT COUNT(*) FROM information_schema.columns
+  WHERE table_schema = DATABASE() AND table_name = 't_ajustage' AND column_name = 'Date_Heure_Calibrage'
+);
+SET @has_col_new := (
+  SELECT COUNT(*) FROM information_schema.columns
+  WHERE table_schema = DATABASE() AND table_name = 't_ajustage' AND column_name = 'Date_Heure_Ajustage'
+);
+SET @sql := IF(@has_col_old = 1 AND @has_col_new = 0,
+  'ALTER TABLE `t_ajustage` CHANGE COLUMN `Date_Heure_Calibrage` `Date_Heure_Ajustage` DATETIME NULL',
+  'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @has_col_old := (
+  SELECT COUNT(*) FROM information_schema.columns
+  WHERE table_schema = DATABASE() AND table_name = 't_ajustage' AND column_name = 'Id_Bain'
+);
+SET @has_col_new := (
+  SELECT COUNT(*) FROM information_schema.columns
+  WHERE table_schema = DATABASE() AND table_name = 't_ajustage' AND column_name = 'Id_Milieu'
+);
+SET @sql := IF(@has_col_old = 1 AND @has_col_new = 0,
+  'ALTER TABLE `t_ajustage` CHANGE COLUMN `Id_Bain` `Id_Milieu` INT NULL',
+  'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @has_idx := (
+  SELECT COUNT(*) FROM information_schema.statistics
+  WHERE table_schema = DATABASE() AND table_name = 't_ajustage' AND index_name = 'idx_ajustage_sonde_date'
+);
+SET @has_tbl := (
+  SELECT COUNT(*) FROM information_schema.tables
+  WHERE table_schema = DATABASE() AND table_name = 't_ajustage'
+);
+SET @sql := IF(@has_tbl = 1 AND @has_idx = 0,
+  'CREATE INDEX `idx_ajustage_sonde_date` ON `t_ajustage` (`Sonde_Numero_Serie`, `Date_Heure_Ajustage`)',
+  'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- t_etalonnage
+SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_etalonnage');
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_etalonnage' AND column_name = 'Duree_Validite_Jours');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0,
+  'ALTER TABLE `t_etalonnage` ADD COLUMN `Duree_Validite_Jours` INT NULL AFTER `Date_Validite`',
+  'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @sql := IF(@has_tbl = 1,
+  'ALTER TABLE `t_etalonnage` MODIFY COLUMN `Incertitude` FLOAT NULL, MODIFY COLUMN `Err_Justesse` FLOAT NULL',
+  'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- t_sonde_type
+SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_sonde_type');
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde_type' AND column_name = 'Est_Double_Capteur');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0,
+  'ALTER TABLE `t_sonde_type` ADD COLUMN `Est_Double_Capteur` TINYINT(1) NOT NULL DEFAULT 0 AFTER `Est_Gestion_Relais`',
+  'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- t_sonde
+SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_sonde');
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Est_Sonde_GSO');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_sonde` ADD COLUMN `Est_Sonde_GSO` TINYINT(1) NOT NULL DEFAULT 0 AFTER `Sonde_Numero_Serie`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Etat_Sonde');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_sonde` ADD COLUMN `Etat_Sonde` VARCHAR(1) NULL DEFAULT ''D'' AFTER `Port_Serie`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Id_Sonde_Etat');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_sonde` ADD COLUMN `Id_Sonde_Etat` INT NULL AFTER `Id_Serveur`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Sonde_Offset');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_sonde` ADD COLUMN `Sonde_Offset` FLOAT NOT NULL DEFAULT 0 AFTER `Id_Sonde_Etat`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col_etat := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Etat_Sonde');
+SET @has_col_surv := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Surveillance_Etat');
+SET @sql := IF(@has_tbl = 1 AND @has_col_etat = 1 AND @has_col_surv = 1,
+  'UPDATE `t_sonde` SET `Etat_Sonde` = COALESCE(`Etat_Sonde`, `Surveillance_Etat`, ''D'') WHERE `Etat_Sonde` IS NULL OR `Etat_Sonde` = ''''',
+  'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_idx := (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND index_name = 'IDX_Etat_Sonde');
+SET @sql := IF(@has_tbl = 1 AND @has_idx = 0, 'CREATE INDEX `IDX_Etat_Sonde` ON `t_sonde` (`Etat_Sonde`)', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_idx := (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND index_name = 'IDX_Id_Sonde_Etat');
+SET @sql := IF(@has_tbl = 1 AND @has_idx = 0, 'CREATE INDEX `IDX_Id_Sonde_Etat` ON `t_sonde` (`Id_Sonde_Etat`)', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+-- t_lieu
+SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_lieu');
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Nom_Lieu');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'ALTER TABLE `t_lieu` MODIFY COLUMN `Nom_Lieu` VARCHAR(30) NULL', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Derniere_Erreur_Justesse');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'ALTER TABLE `t_lieu` MODIFY COLUMN `Derniere_Erreur_Justesse` FLOAT NULL', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Derniere_Incertitude');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'ALTER TABLE `t_lieu` MODIFY COLUMN `Derniere_Incertitude` FLOAT NULL', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Adresse_Sonde');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Adresse_Sonde` VARCHAR(50) NULL AFTER `Sonde_Numero_Serie`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Observations_Info');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Observations_Info` TINYTEXT NULL AFTER `Consigne`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Tolerance_Surveillance_Sup');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Tolerance_Surveillance_Sup` FLOAT NULL AFTER `Consigne_Sup`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Tolerance_Surveillance_Inf');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Tolerance_Surveillance_Inf` FLOAT NULL AFTER `Consigne_Inf`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Commentaire');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Commentaire` VARCHAR(200) NULL AFTER `Notification_Active`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Infos_Modifiees_Depuis_Derniere_Mesure');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Infos_Modifiees_Depuis_Derniere_Mesure` TINYINT(1) NOT NULL DEFAULT 1 AFTER `Commentaire`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Date_Heure_Reactivation_Surveillance');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Date_Heure_Reactivation_Surveillance` DATETIME NULL AFTER `Date_Heure_Reactivation_Alarme`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Derniere_Val_Rssi');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Derniere_Val_Rssi` VARCHAR(10) NULL AFTER `Date_Heure_Reactivation_Surveillance`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Derniere_Val_Tension');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Derniere_Val_Tension` VARCHAR(10) NULL AFTER `Derniere_Val_Rssi`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Est_Lieu_GSO');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Est_Lieu_GSO` TINYINT(1) NULL DEFAULT 0 AFTER `Derniere_Val_Tension`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col_adr_l := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Adresse_Sonde');
+SET @has_col_adr_s := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_sonde' AND column_name = 'Adresse_Sonde');
+SET @sql := IF(@has_tbl = 1 AND @has_col_adr_l = 1 AND @has_col_adr_s = 1,
+  'UPDATE `t_lieu` l JOIN `t_sonde` s ON s.`Sonde_Numero_Serie` = l.`Sonde_Numero_Serie` SET l.`Adresse_Sonde` = s.`Adresse_Sonde` WHERE l.`Adresse_Sonde` IS NULL OR l.`Adresse_Sonde` = ''''',
+  'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_idx := (SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND index_name = 'idx_lieu_gso_etat');
+SET @sql := IF(@has_tbl = 1 AND @has_idx = 0, 'CREATE INDEX `idx_lieu_gso_etat` ON `t_lieu` (`Est_Lieu_GSO`, `Lieu_Etat`)', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;

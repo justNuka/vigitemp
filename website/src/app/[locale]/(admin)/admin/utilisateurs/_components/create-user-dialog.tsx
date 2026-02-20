@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/form";
 
 import { createUserSchema, type CreateUserFormValues } from "./user-schemas";
+import { UserAvatarField } from "./user-avatar-field";
 import { generatePasswordFromRules } from "./password-utils";
 import type { GroupOption, ProfileOption, SiteOption } from "./user-option-types";
 import {
@@ -92,6 +93,7 @@ export function CreateUserDialog({
       groupeIds: [],
       hasExpiryDate: false,
       expiryDate: undefined,
+      avatar: "",
     } as CreateUserFormValues,
   });
 
@@ -345,6 +347,7 @@ export function CreateUserDialog({
             />
 
             <UserPhoneField control={form.control} />
+            <UserAvatarField control={form.control} />
 
             <UserSitesField control={form.control} sites={sites} isLoading={sitesLoading} />
 

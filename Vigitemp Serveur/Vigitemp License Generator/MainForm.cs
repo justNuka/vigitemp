@@ -124,9 +124,9 @@ namespace Vigitemp_License_Generator
             SetCueBanner(_txtCustomerId, "X9999999");
             AddRowWithInfo(
                 inputTable,
-                "Numéro client",
+                "NumÃ©ro client",
                 _txtCustomerId,
-                "Format requis : X9999999 (lettre X + 7 chiffres).\nExemple : X1234567.\nRemplacer l'exemple par le vrai numéro client."
+                "Format requis : X9999999 (lettre X + 7 chiffres).\nExemple : X1234567.\nRemplacer l'exemple par le vrai numÃ©ro client."
             );
 
             _cmbEdition = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240 };
@@ -136,7 +136,7 @@ namespace Vigitemp_License_Generator
                 inputTable,
                 "Type licence",
                 _cmbEdition,
-                "Pack : licence de base avec limite de sondes.\nOne : fonctions essentielles + offset/ajustage.\nStandard : ajout m�trologie avanc�e.\nExpert : environnement complet MC2."
+                "Pack : licence de base avec limite de sondes.\nOne : fonctions essentielles + offset/ajustage.\nStandard : ajout métrologie avancée.\nExpert : environnement complet MC2."
             );
 
 
@@ -149,7 +149,7 @@ namespace Vigitemp_License_Generator
             _cmbPackSensorLimit.SelectedIndexChanged += (s, e) =>
             {
                 _txtPackSensorLimitManual.Enabled =
-                    string.Equals(_cmbPackSensorLimit.SelectedItem?.ToString(), "manuel", StringComparison.OrdinalIgnoreCase);
+                    string.Equals(_cmbPackSensorLimit.SelectedItem.ToString(), "manuel", StringComparison.OrdinalIgnoreCase);
             };
             _cmbEdition.SelectedIndexChanged += (s, e) => UpdatePackLimitControls();
             packLimitPanel.Controls.Add(_cmbPackSensorLimit);
@@ -158,17 +158,17 @@ namespace Vigitemp_License_Generator
                 inputTable,
                 "Limite sondes (Pack)",
                 packLimitPanel,
-                "Applicable uniquement � la licence Pack.\nValeurs rapides : 5, 10, 15, 20, 25 ou saisie manuelle (>0)."
+                "Applicable uniquement à la licence Pack.\nValeurs rapides : 5, 10, 15, 20, 25 ou saisie manuelle (>0)."
             );
             UpdatePackLimitControls();
             _cmbConcurrent = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 240 };
-            _cmbConcurrent.Items.AddRange(new object[] { "5", "10", "25", "illimité" });
+            _cmbConcurrent.Items.AddRange(new object[] { "5", "10", "25", "illimitÃ©" });
             _cmbConcurrent.SelectedIndex = 0;
             AddRowWithInfo(
                 inputTable,
-                "Accès simultanés",
+                "AccÃ¨s simultanÃ©s",
                 _cmbConcurrent,
-                "Nombre d'utilisateurs connectés en même temps.\n\"illimité\" = pas de limite."
+                "Nombre d'utilisateurs connectÃ©s en mÃªme temps.\n\"illimitÃ©\" = pas de limite."
             );
 
             _clbOptions = new CheckedListBox
@@ -182,7 +182,7 @@ namespace Vigitemp_License_Generator
                 inputTable,
                 "Options",
                 _clbOptions,
-                "Options additionnelles activées selon contrat (téléphonie, mail, etc.)."
+                "Options additionnelles activÃ©es selon contrat (tÃ©lÃ©phonie, mail, etc.)."
             );
 
             var hotlineGroup = CreateGroup("Hotline");
@@ -236,27 +236,27 @@ namespace Vigitemp_License_Generator
             _txtInstancePublicKey = new TextBox { Width = 520, Multiline = true, Height = 80, ScrollBars = ScrollBars.Vertical };
             AddRowWithInfo(
                 inputTable,
-                "Clé publique instance (RSA)",
+                "ClÃ© publique instance (RSA)",
                 _txtInstancePublicKey,
-                "Clé publique RSA optionnelle pour lier la licence à une instance.\nLaisser vide si aucune liaison n'est requise."
+                "ClÃ© publique RSA optionnelle pour lier la licence Ã  une instance.\nLaisser vide si aucune liaison n'est requise."
             );
 
             _txtAgentSecretPublicKey = new TextBox { Width = 520, Multiline = true, Height = 80, ScrollBars = ScrollBars.Vertical };
             AddRowWithInfo(
                 inputTable,
-                "Clé publique secret agent (RSA)",
+                "ClÃ© publique secret agent (RSA)",
                 _txtAgentSecretPublicKey,
-                "Clé publique RSA du secret agent.\nGénérée via le bouton ci-dessous ou chargée depuis un fichier PEM."
+                "ClÃ© publique RSA du secret agent.\nGÃ©nÃ©rÃ©e via le bouton ci-dessous ou chargÃ©e depuis un fichier PEM."
             );
 
             var agentSecretKeyPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true };
-            _btnGenerateAgentSecretKeys = new Button { Text = "Générer paire RSA (secret agent)", AutoSize = true };
-            _btnLoadAgentSecretPublicKey = new Button { Text = "Charger clé publique RSA", AutoSize = true };
-            _btnCopyAgentSecretPublicKey = new Button { Text = "Copier clé publique RSA", AutoSize = true, Enabled = false };
+            _btnGenerateAgentSecretKeys = new Button { Text = "GÃ©nÃ©rer paire RSA (secret agent)", AutoSize = true };
+            _btnLoadAgentSecretPublicKey = new Button { Text = "Charger clÃ© publique RSA", AutoSize = true };
+            _btnCopyAgentSecretPublicKey = new Button { Text = "Copier clÃ© publique RSA", AutoSize = true, Enabled = false };
 
             _btnGenerateAgentSecretKeys.Click += (s, e) => GenerateAgentSecretKeyPair();
             _btnLoadAgentSecretPublicKey.Click += (s, e) => LoadAgentSecretPublicKeyFromDialog();
-            _btnCopyAgentSecretPublicKey.Click += (s, e) => CopyToClipboard(_txtAgentSecretPublicKey.Text, "Clé publique RSA copiée.");
+            _btnCopyAgentSecretPublicKey.Click += (s, e) => CopyToClipboard(_txtAgentSecretPublicKey.Text, "ClÃ© publique RSA copiÃ©e.");
             _txtAgentSecretPublicKey.TextChanged += (s, e) =>
             {
                 _btnCopyAgentSecretPublicKey.Enabled = !string.IsNullOrWhiteSpace(_txtAgentSecretPublicKey.Text);
@@ -270,16 +270,16 @@ namespace Vigitemp_License_Generator
                 inputTable,
                 "Secret agent (RSA)",
                 agentSecretKeyPanel,
-                "Génère une paire RSA dédiée au secret agent.\nLa clé publique est collée ci-dessus, la clé privée reste à déposer sur le serveur web."
+                "GÃ©nÃ¨re une paire RSA dÃ©diÃ©e au secret agent.\nLa clÃ© publique est collÃ©e ci-dessus, la clÃ© privÃ©e reste Ã  dÃ©poser sur le serveur web."
             );
 
             _txtAgentSecretPrivateKeyPath = new TextBox { Width = 520, ReadOnly = true };
             _txtAgentSecretPrivateKeyPath.Text = _agentSecretPrivateKeyPath;
             AddRowWithInfo(
                 inputTable,
-                "Chemin clé privée RSA",
+                "Chemin clÃ© privÃ©e RSA",
                 _txtAgentSecretPrivateKeyPath,
-                "Chemin où la clé privée RSA est enregistrée localement.\nÀ copier sur le serveur web (agent_secret_private.pem)."
+                "Chemin oÃ¹ la clÃ© privÃ©e RSA est enregistrÃ©e localement.\nÃ€ copier sur le serveur web (agent_secret_private.pem)."
             );
 
             var expiryPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true };
@@ -292,17 +292,17 @@ namespace Vigitemp_License_Generator
                 inputTable,
                 "Expiration",
                 expiryPanel,
-                "Optionnel : date de fin de validité.\nDécochez pour une licence sans expiration."
+                "Optionnel : date de fin de validitÃ©.\nDÃ©cochez pour une licence sans expiration."
             );
 
-            var keyGroup = CreateGroup("Clé privée");
+            var keyGroup = CreateGroup("ClÃ© privÃ©e");
             AddGroup(root, keyGroup);
 
             var keyPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true };
-            _lblKeyStatus = new Label { AutoSize = true, Text = "Aucune clé chargée", Margin = new Padding(0, 8, 16, 8) };
-            _toolTip.SetToolTip(_lblKeyStatus, "Aucune clé privée chargée.");
-            var btnGenerateKeys = new Button { Text = "Générer paire de clés", AutoSize = true };
-            var btnLoadKey = new Button { Text = "Charger clé privée", AutoSize = true };
+            _lblKeyStatus = new Label { AutoSize = true, Text = "Aucune clÃ© chargÃ©e", Margin = new Padding(0, 8, 16, 8) };
+            _toolTip.SetToolTip(_lblKeyStatus, "Aucune clÃ© privÃ©e chargÃ©e.");
+            var btnGenerateKeys = new Button { Text = "GÃ©nÃ©rer paire de clÃ©s", AutoSize = true };
+            var btnLoadKey = new Button { Text = "Charger clÃ© privÃ©e", AutoSize = true };
 
             btnGenerateKeys.Click += (s, e) => GenerateKeyPair();
             btnLoadKey.Click += (s, e) => LoadPrivateKeyFromDialog();
@@ -312,7 +312,7 @@ namespace Vigitemp_License_Generator
             keyPanel.Controls.Add(btnLoadKey);
             keyGroup.Controls.Add(keyPanel);
             keyGroup.Controls.Add(CreateInfoLabel(
-                "La clé privée signe les licences (Ed25519).\nElle doit rester secrète et ne jamais être envoyée au client.\nLa clé publique sert à vérifier la signature côté serveur."
+                "La clÃ© privÃ©e signe les licences (Ed25519).\nElle doit rester secrÃ¨te et ne jamais Ãªtre envoyÃ©e au client.\nLa clÃ© publique sert Ã  vÃ©rifier la signature cÃ´tÃ© serveur."
             ));
 
             var publicKeyTable = CreateTable(2);
@@ -328,13 +328,13 @@ namespace Vigitemp_License_Generator
             };
             AddRowWithInfo(
                 publicKeyTable,
-                "Clé publique (PEM)",
+                "ClÃ© publique (PEM)",
                 _txtPublicKey,
-                "Clé publique à communiquer au serveur C# pour vérifier les licences.\nFormat PEM."
+                "ClÃ© publique Ã  communiquer au serveur C# pour vÃ©rifier les licences.\nFormat PEM."
             );
 
-            var btnCopyPublicKey = new Button { Text = "Copier clé publique", AutoSize = true, Enabled = false };
-            btnCopyPublicKey.Click += (s, e) => CopyToClipboard(_txtPublicKey.Text, "Clé publique copiée.");
+            var btnCopyPublicKey = new Button { Text = "Copier clÃ© publique", AutoSize = true, Enabled = false };
+            btnCopyPublicKey.Click += (s, e) => CopyToClipboard(_txtPublicKey.Text, "ClÃ© publique copiÃ©e.");
             _txtPublicKey.TextChanged += (s, e) => btnCopyPublicKey.Enabled = !string.IsNullOrWhiteSpace(_txtPublicKey.Text);
             AddRow(publicKeyTable, "", btnCopyPublicKey);
 
@@ -347,12 +347,12 @@ namespace Vigitemp_License_Generator
             _txtLicenseId = new TextBox { Width = 320, ReadOnly = true };
             AddRowWithInfo(
                 outputTable,
-                "Numéro licence",
+                "NumÃ©ro licence",
                 _txtLicenseId,
-                "Identifiant lisible pour le client et le support (généré automatiquement)."
+                "Identifiant lisible pour le client et le support (gÃ©nÃ©rÃ© automatiquement)."
             );
 
-            var btnGenerate = new Button { Text = "Générer licence", AutoSize = true };
+            var btnGenerate = new Button { Text = "GÃ©nÃ©rer licence", AutoSize = true };
             btnGenerate.Click += (s, e) => GenerateLicense();
             AddRow(outputTable, "", btnGenerate);
 
@@ -368,7 +368,7 @@ namespace Vigitemp_License_Generator
                 outputTable,
                 "Token (license.vtlic)",
                 _txtLicenseToken,
-                "Token JWS signé (format compact).\nÀ fournir au client sous forme de fichier .vtlic.\nNe pas modifier manuellement."
+                "Token JWS signÃ© (format compact).\nÃ€ fournir au client sous forme de fichier .vtlic.\nNe pas modifier manuellement."
             );
 
             var btnCopyToken = new Button { Text = "Copier token", AutoSize = true };
@@ -473,7 +473,7 @@ namespace Vigitemp_License_Generator
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur lecture clé privée : {ex.Message}", "Key load error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"Erreur lecture clÃ© privÃ©e : {ex.Message}", "Key load error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 UpdateKeyStatus(false);
             }
         }
@@ -482,13 +482,13 @@ namespace Vigitemp_License_Generator
         {
             var resolvedPath = path ?? _privateKeyPath;
             _lblKeyStatus.Text = ok
-                ? $"Clé privée chargée\n{resolvedPath}"
-                : "Aucune clé chargée";
+                ? $"Cl? priv?e charg?e\n{resolvedPath}"
+                : "Aucune clÃ© chargÃ©e";
             _toolTip.SetToolTip(
                 _lblKeyStatus,
                 ok
-                    ? $"Clé privée chargée depuis : {resolvedPath}"
-                    : "Aucune clé privée chargée."
+                    ? $"Cl? priv?e charg?e depuis : {resolvedPath}"
+                    : "Aucune clÃ© privÃ©e chargÃ©e."
             );
         }
 
@@ -511,14 +511,14 @@ namespace Vigitemp_License_Generator
                 _txtPublicKey.Text = derived ?? string.Empty;
             }
 
-            MessageBox.Show($"Clés générées :\n{_privateKeyPath}\n{_publicKeyPath}", "OK", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show($"ClÃ©s gÃ©nÃ©rÃ©es :\n{_privateKeyPath}\n{_publicKeyPath}", "OK", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void LoadPrivateKeyFromDialog()
         {
             using (var dialog = new OpenFileDialog())
             {
-                dialog.Title = "Charger clé privée";
+                dialog.Title = "Charger clÃ© privÃ©e";
                 dialog.Filter = "PEM|*.pem|All files|*.*";
                 if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
@@ -530,7 +530,7 @@ namespace Vigitemp_License_Generator
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Erreur lecture clé privée : {ex.Message}", "Key load error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"Erreur lecture clÃ© privÃ©e : {ex.Message}", "Key load error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -543,7 +543,7 @@ namespace Vigitemp_License_Generator
                 var obj = pemReader.ReadObject();
                 if (obj is AsymmetricCipherKeyPair pair) return pair.Private;
                 if (obj is AsymmetricKeyParameter key && key.IsPrivate) return key;
-                throw new InvalidOperationException("Clé privée invalide.");
+                throw new InvalidOperationException("ClÃ© privÃ©e invalide.");
             }
         }
 
@@ -569,14 +569,14 @@ namespace Vigitemp_License_Generator
         {
             if (_privateKey == null)
             {
-                MessageBox.Show("Aucune clé privée chargée.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Aucune clÃ© privÃ©e chargÃ©e.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             var customerId = _txtCustomerId.Text.Trim();
             if (!Regex.IsMatch(customerId, "^X\\d{7}$"))
             {
-                MessageBox.Show("Format numéro client invalide (X9999999).", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Format numÃ©ro client invalide (X9999999).", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -642,7 +642,7 @@ namespace Vigitemp_License_Generator
                 { "licenseId", licenseId },
                 { "customerId", customerId },
                 { "edition", edition },
-                { "concurrentAccess", concurrent == "illimité" ? "unlimited" : concurrent },
+                { "concurrentAccess", concurrent == "illimitÃ©" ? "unlimited" : concurrent },
                 { "options", options },
                 { "issuedAt", DateTime.UtcNow.ToString("o") },
             };
@@ -677,7 +677,7 @@ namespace Vigitemp_License_Generator
             var agentSecretPublicKey = _txtAgentSecretPublicKey.Text.Trim();
             if (string.IsNullOrWhiteSpace(agentSecretPublicKey))
             {
-                MessageBox.Show("Clé publique du secret agent requise pour chiffrer le secret.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("ClÃ© publique du secret agent requise pour chiffrer le secret.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -712,10 +712,10 @@ namespace Vigitemp_License_Generator
 
         private void UpdatePackLimitControls()
         {
-            var isPack = string.Equals(_cmbEdition.SelectedItem?.ToString(), "pack", StringComparison.OrdinalIgnoreCase);
+            var isPack = string.Equals(_cmbEdition.SelectedItem.ToString(), "pack", StringComparison.OrdinalIgnoreCase);
             _cmbPackSensorLimit.Enabled = isPack;
             _txtPackSensorLimitManual.Enabled =
-                isPack && string.Equals(_cmbPackSensorLimit.SelectedItem?.ToString(), "manuel", StringComparison.OrdinalIgnoreCase);
+                isPack && string.Equals(_cmbPackSensorLimit.SelectedItem.ToString(), "manuel", StringComparison.OrdinalIgnoreCase);
         }
         private static byte[] SignEd25519(AsymmetricKeyParameter privateKey, byte[] data)
         {
@@ -760,7 +760,7 @@ namespace Vigitemp_License_Generator
                 }
             }
 
-            throw new InvalidOperationException("Clé publique instance invalide (PEM attendu).");
+            throw new InvalidOperationException("ClÃ© publique instance invalide (PEM attendu).");
         }
 
         private static string EncryptAgentSecret(string secret, string publicKeyPem)
@@ -790,7 +790,7 @@ namespace Vigitemp_License_Generator
                 _txtAgentSecretPrivateKeyPath.Text = _agentSecretPrivateKeyPath;
 
                 MessageBox.Show(
-                    "Paire RSA générée.\n- Clé publique copiée dans le champ.\n- Clé privée enregistrée sur disque.",
+                    "Paire RSA gÃ©nÃ©rÃ©e.\n- ClÃ© publique copiÃ©e dans le champ.\n- ClÃ© privÃ©e enregistrÃ©e sur disque.",
                     "OK",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information
@@ -798,7 +798,7 @@ namespace Vigitemp_License_Generator
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erreur génération RSA : {ex.Message}", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Erreur gÃ©nÃ©ration RSA : {ex.Message}", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -806,7 +806,7 @@ namespace Vigitemp_License_Generator
         {
             using (var dialog = new OpenFileDialog())
             {
-                dialog.Title = "Charger clé publique RSA";
+                dialog.Title = "Charger clÃ© publique RSA";
                 dialog.Filter = "PEM|*.pem|All files|*.*";
                 if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
@@ -816,7 +816,7 @@ namespace Vigitemp_License_Generator
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Erreur lecture clé publique : {ex.Message}", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"Erreur lecture clÃ© publique : {ex.Message}", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -825,7 +825,7 @@ namespace Vigitemp_License_Generator
         {
             if (string.IsNullOrWhiteSpace(_txtLicenseToken.Text))
             {
-                MessageBox.Show("Aucun token généré.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Aucun token gÃ©nÃ©rÃ©.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -841,7 +841,7 @@ namespace Vigitemp_License_Generator
                 if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
                 File.WriteAllText(dialog.FileName, _txtLicenseToken.Text, Encoding.UTF8);
-                MessageBox.Show($"Licence enregistrée :\n{dialog.FileName}", "OK", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show($"Licence enregistrÃ©e :\n{dialog.FileName}", "OK", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
@@ -940,7 +940,7 @@ namespace Vigitemp_License_Generator
         {
             if (string.IsNullOrWhiteSpace(text))
             {
-                MessageBox.Show("Aucune donnée à copier.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Aucune donnÃ©e Ã  copier.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 

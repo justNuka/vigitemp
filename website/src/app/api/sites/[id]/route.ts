@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server"
 import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { withLogging } from "@/lib/api-logger"
+import { getClientIp, withLogging } from "@/lib/api-logger"
 import { z } from "zod"
+import { log } from "@/lib/logger"
 import { apiError, apiOk } from "@/lib/api-response"
 
 const updateSiteSchema = z.object({
@@ -46,6 +47,8 @@ export const PATCH = withLogging(
         where: { Id_Site: id },
         data: validated,
       })
+
+      log.data.update("Site", id, user.username, user.userId, getClientIp(req), validated as Record<string, unknown>)
 
       return apiOk(site)
     } catch (error) {

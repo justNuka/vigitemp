@@ -25,6 +25,7 @@ import { enUS, fr } from "date-fns/locale";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { useLocale, useTranslations } from "next-intl";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Tooltip,
   TooltipContent,
@@ -33,6 +34,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useAppTimezone } from "@/components/timezone-provider";
 import { AlarmAcknowledgeDialog } from "@/components/alarm-acknowledge-dialog";
+import { markAlarmAcknowledgedInPaginatedSensorsCache } from "@/lib/surveillance-cache";
 
 interface DashboardClientProps {
   criticalSensors: SensorWithLocation[];
@@ -84,6 +86,7 @@ export function DashboardClient({
     });
   };
 
+  const queryClient = useQueryClient();
   const [localAlarms, setLocalAlarms] = useState(activeAlarms);
   const [activeCount, setActiveCount] = useState(totalActiveAlarms);
   const [selectedAlarm, setSelectedAlarm] = useState<AlarmWithDetails | null>(null);
@@ -97,6 +100,10 @@ export function DashboardClient({
     try {
       await alarmsApi.acknowledge(alarmId, commentValue);
       setLocalAlarms((prev) => prev.filter((alarm) => alarm.id !== alarmId));
+      const acknowledgedId = Number(alarmId);
+      if (Number.isFinite(acknowledgedId)) {
+        markAlarmAcknowledgedInPaginatedSensorsCache(queryClient, acknowledgedId);
+      }
       setActiveCount((prev) => {
         const next = Math.max(prev - 1, 0);
         if (typeof window !== "undefined") {

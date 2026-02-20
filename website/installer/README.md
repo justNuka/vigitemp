@@ -3,7 +3,7 @@
 Ce script installe le site Next.js, écrit le fichier env, puis crée un service Windows.
 
 ## Prérequis
-- Lancer PowerShell en tant quâadministrateur.
+- Lancer PowerShell en tant qu'administrateur.
 - Node.js LTS installé (node dans PATH ou `-NodePath`).
 - pnpm disponible si mode online (le script tente Corepack sinon `-PnpmPath`).
 
@@ -53,20 +53,20 @@ cd "website\installer"
 ```
 
 ## Ce que fait le script
-- Copie le site dans le dossier dâinstallation
+- Copie le site dans le dossier d'installation
 - Écrit le fichier env avec DB + secrets
 - Crée un service Windows qui lance le serveur
 
 ## Fichiers
 - Logs install : `C:\ProgramData\Vigitemp\install-logs\install-web-*.log`
-- Logs app : (demandé pendant lâinstall, défaut `C:\ProgramData\Vigitemp\web-logs`)
+- Logs app : (demandé pendant l'install, défaut `C:\ProgramData\Vigitemp\web-logs`)
 
 ## Rollback
 ```
 sc.exe stop VigitempWeb
 sc.exe delete VigitempWeb
 ```
-Supprimer le dossier dâinstallation si besoin.
+Supprimer le dossier d'installation si besoin.
 
 ## Desinstallation
 ```

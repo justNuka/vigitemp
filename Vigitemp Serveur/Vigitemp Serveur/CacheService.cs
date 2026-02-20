@@ -71,14 +71,15 @@ namespace Vigitemp_Serveur
             int idSonde,
             int idLieu,
             string sondeNumeroSerie,
-            double valeur,
+            double? valeur,
             string unite,
-            double resistance,
+            double? resistance,
             float consigne,
             float consigneSup,
             float consigneInf,
             int frequence,
-            int etatAlarme)
+            int etatAlarme,
+            int estValeurNull = 0)
         {
             lock (_lock)
             {
@@ -99,8 +100,8 @@ namespace Vigitemp_Serveur
                         (NOW(), @valeur, @valeurBrute, @consigne, @consigneSup, @consigneInf, 
                          @unite, @sondeNumeroSerie, @idSonde, @idLieu, @frequence, @etatAlarme, 0)";
 
-                    cmd.Parameters.AddWithValue("@valeur", valeur);
-                    cmd.Parameters.AddWithValue("@valeurBrute", resistance);
+                    cmd.Parameters.AddWithValue("@valeur", valeur.HasValue ? (object)valeur.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("@valeurBrute", resistance.HasValue ? (object)resistance.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("@consigne", consigne);
                     cmd.Parameters.AddWithValue("@consigneSup", consigneSup);
                     cmd.Parameters.AddWithValue("@consigneInf", consigneInf);
@@ -110,6 +111,7 @@ namespace Vigitemp_Serveur
                     cmd.Parameters.AddWithValue("@idLieu", idLieu);
                     cmd.Parameters.AddWithValue("@frequence", frequence);
                     cmd.Parameters.AddWithValue("@etatAlarme", etatAlarme);
+                    cmd.Parameters.AddWithValue("@estValeurNull", estValeurNull);
 
                     cmd.ExecuteNonQuery();
 

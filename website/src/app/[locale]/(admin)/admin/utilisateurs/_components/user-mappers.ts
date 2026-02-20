@@ -11,6 +11,7 @@ export function getEditUserDefaults(user: User): EditUserFormValues {
     expiryDate: undefined,
     password: "",
     passwordConfirm: "",
+    avatar: user.avatar || "",
   }
 }
 

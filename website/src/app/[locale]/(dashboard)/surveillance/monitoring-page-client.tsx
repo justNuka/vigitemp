@@ -12,6 +12,7 @@ import { paginatedSensorsPageKey, type PaginatedResponse, usePaginatedSensors } 
 import { useSurveillanceLiveUpdates } from "./_hooks/use-surveillance-live-updates";
 import { SurveillanceHeaderControls } from "./_components/monitoring-header-controls";
 import { SurveillanceLoadMore } from "./_components/monitoring-load-more";
+import { CurvesOverlayModal } from "./_components/curves-overlay-modal";
 import { applySurveillanceFilters, computeSurveillanceStats, type FilterState } from "./_helpers/monitoring-derived";
 import { getJson, patchJson } from "@/lib/http";
 import { toast } from "sonner";
@@ -22,8 +23,10 @@ import { mapLocationToFormData } from "@/app/[locale]/(admin)/admin/lieux/_compo
 import type { LocationFormData } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-types";
 import { useAvailableSensors } from "@/hooks/useAvailableSensors";
 import { useGroups } from "@/hooks/useGroups";
+import { useModules } from "@/hooks/useModules";
 import { useLocations } from "@/hooks/useLocations";
 import { useSitesSimple } from "@/hooks/useSites";
+import { useUsersForMailing } from "@/hooks/useUsersForMailing";
 
 type ViewMode = "tree" | "graphs";
 
@@ -39,6 +42,7 @@ interface Props {
   initialStats: Stats;
   sites: Site[];
   groups: Group[];
+  refreshIntervalSeconds: number;
 }
 
 type PaginatedSensorsData = {
@@ -49,11 +53,14 @@ type PaginatedSensorsData = {
   pageParams: unknown[];
 };
 
-export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
+export function SurveillancePageClient({ initialStats, sites, groups, refreshIntervalSeconds }: Props) {
   const t = useTranslations("surveillance");
   const [viewMode, setViewMode] = useState<ViewMode>("graphs");
   const [filters, setFilters] = useState<FilterState>({ siteIds: [], groupIds: [] });
   const [disabledFirst, setDisabledFirst] = useState(true);
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  const [showNullNonResponse, setShowNullNonResponse] = useState(false);
+  const [nonResponsePreferencesLoading, setNonResponsePreferencesLoading] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
@@ -73,6 +80,8 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
     watchedSensor,
     shouldLoadLocationFormData,
   );
+  const { data: modules = [] } = useModules(shouldLoadLocationFormData);
+  const { data: mailingUsers = [] } = useUsersForMailing(shouldLoadLocationFormData);
 
   const { data, isFetching, fetchNextPage, hasNextPage, forceRefresh } = usePaginatedSensors({ limit: 50 });
   useSurveillanceLiveUpdates({ enabled: true, limit: 50 });
@@ -95,21 +104,116 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
   const visibleSensors = applySurveillanceFilters(allSensors, filters);
   const filtersActive = filters.siteIds.length > 0 || filters.groupIds.length > 0;
 
+  const activeAlarmsCount = useMemo(() => {
+    if (allSensors.length === 0) {
+      return initialStats?.activeAlarms ?? 0;
+    }
+
+    const ids = new Set<number>();
+    for (const sensor of allSensors) {
+      const rawId = sensor.alarmId ?? sensor.location.alarmId ?? null;
+      if (typeof rawId === "number" && Number.isFinite(rawId)) {
+        ids.add(rawId);
+      }
+    }
+    return ids.size;
+  }, [allSensors, initialStats?.activeAlarms]);
+
   const visibleStats = computeSurveillanceStats({
     sensors: visibleSensors,
     total: paginatedData.total,
-    activeAlarms: initialStats?.activeAlarms ?? 0,
+    activeAlarms: activeAlarmsCount,
   });
+
+  const overlayLocations = useMemo(() => {
+    const map = new Map<number, { id: number; name: string; site?: string | null }>();
+
+    for (const sensor of allSensors) {
+      const idLieu = Number(sensor.location.id);
+      if (!Number.isFinite(idLieu)) continue;
+      if (map.has(idLieu)) continue;
+
+      map.set(idLieu, {
+        id: idLieu,
+        name: sensor.location.name || sensor.name,
+        site: sensor.location.site || null,
+      });
+    }
+
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [allSensors]);
+
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);
     // Pas besoin de reset page puisque c'est du filtrage client-side
   }, []);
 
+  const performRefresh = useCallback(
+    async (silent = false) => {
+      await forceRefresh();
+      if (!silent) {
+        toast.success(t("refresh.refreshed"));
+      }
+    },
+    [forceRefresh, t],
+  );
+
   const handleRefresh = useCallback(async () => {
-    await forceRefresh();
-    toast.success(t("refresh.refreshed"));
-  }, [forceRefresh, t]);
+    await performRefresh(false);
+  }, [performRefresh]);
+
+  useEffect(() => {
+    let isActive = true;
+    setNonResponsePreferencesLoading(true);
+
+    void getJson<{ enabled: boolean }>("/api/preferences/non-response")
+      .then((payload) => {
+        if (!isActive) return;
+        setShowNullNonResponse(Boolean(payload?.enabled));
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setShowNullNonResponse(false);
+      })
+      .finally(() => {
+        if (isActive) {
+          setNonResponsePreferencesLoading(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const handleShowNullNonResponseChange = useCallback(
+    async (enabled: boolean) => {
+      const previous = showNullNonResponse;
+      setShowNullNonResponse(enabled);
+      setNonResponsePreferencesLoading(true);
+      try {
+        await patchJson("/api/preferences/non-response", { enabled });
+      } catch (error) {
+        setShowNullNonResponse(previous);
+        throw error;
+      } finally {
+        setNonResponsePreferencesLoading(false);
+      }
+    },
+    [showNullNonResponse],
+  );
+
+  useEffect(() => {
+    const interval = Number.isFinite(refreshIntervalSeconds) ? refreshIntervalSeconds : 15;
+    if (interval <= 0) return;
+
+    const timer = window.setInterval(() => {
+      void performRefresh(true);
+    }, interval * 1000);
+
+    return () => window.clearInterval(timer);
+  }, [performRefresh, refreshIntervalSeconds]);
 
   useEffect(() => {
     const pages = data?.pages ?? [];
@@ -316,7 +420,7 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
         })
         await queryClient.invalidateQueries({ queryKey: ["locations"] })
         await queryClient.invalidateQueries({ queryKey: ["capteurs", "paginated", 100] })
-        toast.success("Lieu modifiÃ© avec succÃ¨s")
+        toast.success("Lieu modifié avec succès")
         window.dispatchEvent(
           new CustomEvent("vigitemp:lieu-updated", {
             detail: { idLieu: selectedLocationId },
@@ -356,6 +460,12 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
           treeLabel={t("tabs.tree")}
           orderToggleLabel={disabledFirst ? t("grid.toggle_active_first") : t("grid.toggle_disabled_first")}
           onToggleOrder={handleToggleOrder}
+          onOpenOverlay={() => setIsOverlayOpen(true)}
+          showNullNonResponse={showNullNonResponse}
+          onShowNullNonResponseChange={(enabled) => {
+            void handleShowNullNonResponseChange(enabled);
+          }}
+          nonResponsePreferencesLoading={nonResponsePreferencesLoading}
         />
       </div>
 
@@ -368,6 +478,9 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
             onGroupSurveillanceToggle={handleGroupSurveillanceToggle}
             onEditLocation={handleOpenLocationEdit}
             isLoading={isFetching && visibleSensors.length === 0}
+            showNullNonResponse={showNullNonResponse}
+            onShowNullNonResponseChange={handleShowNullNonResponseChange}
+            nonResponsePreferencesLoading={nonResponsePreferencesLoading}
           />
           <SurveillanceLoadMore
             sentinelRef={loadMoreRef}
@@ -385,6 +498,9 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
             onSurveillanceToggle={handleSurveillanceToggle}
             onEditLocation={handleOpenLocationEdit}
             isLoading={isFetching && visibleSensors.length === 0}
+            showNullNonResponse={showNullNonResponse}
+            onShowNullNonResponseChange={handleShowNullNonResponseChange}
+            nonResponsePreferencesLoading={nonResponsePreferencesLoading}
           />
           <SurveillanceLoadMore
             sentinelRef={loadMoreRef}
@@ -396,6 +512,12 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
         </>
       )}
 
+      <CurvesOverlayModal
+        open={isOverlayOpen}
+        onOpenChange={setIsOverlayOpen}
+        locations={overlayLocations}
+      />
+
       <LocationFormDialog
         open={isEditLocationOpen}
         mode="edit"
@@ -403,6 +525,8 @@ export function SurveillancePageClient({ initialStats, sites, groups }: Props) {
         sites={formSites}
         groups={formGroups}
         availableSensors={availableSensors}
+        modules={modules}
+        mailingUsers={mailingUsers}
         isSubmitting={isLocationSaving}
         onCancel={() => setIsEditLocationOpen(false)}
         onSubmit={handleEditLocationSubmit}

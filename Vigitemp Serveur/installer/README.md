@@ -22,7 +22,7 @@ cd "Vigitemp Serveur\\installer"
 ```
 
 ## Ce que fait le script
-- Copie le build dans le dossier dâinstallation
+- Copie le build dans le dossier d'installation
 - Demande les paramétres DB + URL web
 - Charge la licence et affiche ses options
 - Copie la licence et la clé publique dans ProgramData
@@ -40,7 +40,7 @@ cd "Vigitemp Serveur\\installer"
 sc.exe stop VigitempServeur
 sc.exe delete VigitempServeur
 ```
-- Supprimer le dossier dâinstallation et ProgramData si besoin.
+- Supprimer le dossier d'installation et ProgramData si besoin.
 
 ## Desinstallation
 ```

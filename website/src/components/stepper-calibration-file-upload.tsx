@@ -10,6 +10,7 @@ export type CalibrationInsertData = {
   Date_Heure_Etalonnage: string | null;
   Sonde_Numero_Serie: string | null;
   Date_Validite: string | null;
+  Duree_Validite_Jours: number | null;
   Operateur: string | null;
   Etalon_Numero_Serie: string | null;
   Date_Certif: string | null;

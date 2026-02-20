@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   LayoutDashboard,
   Activity,
@@ -40,6 +40,7 @@ import { useLocale } from "next-intl";
 import { getLocalizedPathname, stripLocalePrefix } from "@/i18n/pathnames";
 import { useLicense } from "@/components/license/license-provider";
 import { formatLicenseLabel } from "@/lib/license-label";
+import { getInitialsForAvatar, resolveAvatarSrc } from "@/lib/avatar-library";
 
 interface NavItem {
   href: "/" | "/surveillance" | "/alarmes" | "/profil" | "/admin";
@@ -269,13 +270,13 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
         {currentUser && (
           <div className="flex items-center gap-3 p-2 rounded-lg bg-sidebar-accent/50">
             <Avatar className="h-9 w-9">
+              {(() => {
+                const initials = getInitialsForAvatar(currentUser.Prenom, currentUser.Nom, currentUser.Login)
+                const avatarSrc = resolveAvatarSrc(currentUser.Avatar_Utilisateur, initials)
+                return avatarSrc ? <AvatarImage src={avatarSrc} alt={initials} /> : null
+              })()}
               <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                {`${currentUser.Prenom || ""} ${currentUser.Nom || ""}`
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .toUpperCase()
-                  .slice(0, 2)}
+                {getInitialsForAvatar(currentUser.Prenom, currentUser.Nom, currentUser.Login)}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">

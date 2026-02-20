@@ -104,6 +104,7 @@ export function MultiSelectFilter({
       }}
     >
       <Button
+        type="button"
         variant="outline"
         className={`w-full justify-between ${buttonClasses}`}
         onClick={() => setIsOpen(!isOpen)}
@@ -200,10 +201,10 @@ export function MultiSelectFilter({
 
           {selectedIds.length > 0 && (
             <div className="mt-3 pt-3 border-t flex gap-2">
-              <Button size="sm" variant="ghost" className="flex-1" onClick={handleClear}>
+              <Button type="button" size="sm" variant="ghost" className="flex-1" onClick={handleClear}>
                 {t('actions.clear')}
               </Button>
-              <Button size="sm" className="flex-1" onClick={() => setIsOpen(false)}>
+              <Button type="button" size="sm" className="flex-1" onClick={() => setIsOpen(false)}>
                 {t('actions.apply')}
               </Button>
             </div>

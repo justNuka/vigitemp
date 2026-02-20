@@ -1,6 +1,6 @@
 ﻿export type MeasureData = {
   id: string
-  Valeur: number
+  Valeur: number | null
   Unite: string
   Nb_Decimal?: number | null
   DateHeureMesure: string
@@ -55,8 +55,9 @@ export function getMeasureSummary(
   const frequence = last?.Frequence || first?.Frequence || fallback?.frequence || 15
   const decimals = last?.Nb_Decimal ?? first?.Nb_Decimal ?? null
 
-  const formattedValue = last ? formatMeasureValue(last.Valeur, decimals) : ""
-  const lastMeasureText = last ? `${formattedValue}${last.Unite || unite}` : ""
+  const lastWithValue = [...measures].reverse().find((item) => item.Valeur !== null)
+  const formattedValue = lastWithValue ? formatMeasureValue(lastWithValue.Valeur, decimals) : ""
+  const lastMeasureText = lastWithValue ? `${formattedValue}${lastWithValue.Unite || unite}` : ""
   const lastDateTime = last?.DateHeureMesure || ""
 
   return {
@@ -66,7 +67,7 @@ export function getMeasureSummary(
     unite,
     frequence,
     lastMeasureText,
-    lastValue: last?.Valeur ?? null,
+    lastValue: lastWithValue?.Valeur ?? null,
     lastDateTime,
     decimals,
   }
@@ -86,7 +87,12 @@ export function calculateYDomain(
 ): [number, number] {
   if (measures.length === 0) return [0, 30]
 
-  const values = measures.map((d) => d.Valeur)
+  const values = measures.map((d) => d.Valeur).filter((v): v is number => typeof v === "number")
+  if (values.length === 0) {
+    const minFallback = consigneInf ?? consigne ?? 0
+    const maxFallback = consigneSup ?? consigne ?? 30
+    return [Math.floor(minFallback - 1), Math.ceil(maxFallback + 1)]
+  }
   const min = Math.min(...values, consigneInf ?? 0, consigne ?? 0)
   const max = Math.max(...values, consigneSup ?? 30, consigne ?? 30)
   const padding = (max - min) * 0.1
@@ -97,7 +103,8 @@ export function calculateYDomain(
 export function calculateYDomainFromMeasures(measures: MeasureData[]): [number, number] {
   if (measures.length === 0) return [0, 30]
 
-  const values = measures.map((d) => d.Valeur)
+  const values = measures.map((d) => d.Valeur).filter((v): v is number => typeof v === "number")
+  if (values.length === 0) return [0, 30]
   const min = Math.min(...values)
   const max = Math.max(...values)
   const padding = (max - min) * 0.1

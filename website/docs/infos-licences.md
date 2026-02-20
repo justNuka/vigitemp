@@ -6,9 +6,7 @@
 * Tolérance
 * Retard d’alarme
 * Notification Mail
-* Nombre de sondes limités (limites à definir dans la licence) -> 5, 10, 15, 20, 25, manuel
-
-👉 **Licence de base**, centrée sur la surveillance simple + alertes mail.
+* Nombre de sondes limité (limites à definir dans la licence) -> 5, 10, 15, 20, 25, manuel
 
 ---
 
@@ -22,13 +20,11 @@ Tout ce qui est dans **Pack**, plus :
 * Offset
 * Ajustage / Calibrage
 
-👉 Pensée pour une **exploitation terrain plus avancée**, avec agent local et métrologie simple.
-
 ---
 
 ## 🟨 Licence **Standard**
 
-Tout ce qui est dans **One**, plus :
+Tout ce qui est dans **Pack et One**, plus :
 
 * EMT par lieu
 * Gestion des résultats d’étalonnage
@@ -42,11 +38,10 @@ Tout ce qui est dans **One**, plus :
 * Messagerie inter-utilisateurs
 * Fonctionnement CFR 21 part 11
 
-👉 **Cœur métrologie / qualité**, orienté conformité, analyse et exploitation avancée.
-
 ---
 
 ## 🟥 Licence **Expert**
+*(Sortira plus tard)*
 
 Tout ce qui est dans **Standard**, plus :
 
@@ -62,5 +57,3 @@ Tout ce qui est dans **Standard**, plus :
 * Gestion des non-conformités
 * Modification du retard d'alarme de non-réponse possible (minimum 1h)
 * Écosystème MC2 *(à définir)*
-
-👉 **Licence premium**, full puissance : métrologie avancée, pilotage, automatisation, IA et reporting expert.

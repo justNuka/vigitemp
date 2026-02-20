@@ -1,7 +1,9 @@
 Param(
     [string]$SourcePath,
     [string]$InstallDir,
-    [string]$ServiceName
+    [string]$ServiceName,
+    [string]$AlarmDispatchSecret,
+    [string]$AlarmDispatchSecretFile
 )
 
 Set-StrictMode -Version Latest
@@ -127,6 +129,58 @@ function Set-AppSetting($configPath, $key, $value) {
     $xml.Save($configPath)
 }
 
+function New-RandomSecret([int]$byteLength = 32) {
+    $bytes = New-Object byte[] $byteLength
+    [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+    $base64 = [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
+    return $base64
+}
+
+function Resolve-SecretFilePath($customPath, $defaultPath) {
+    $path = $customPath
+    if ([string]::IsNullOrWhiteSpace($path)) {
+        $path = $defaultPath
+    }
+    return $path
+}
+
+function Resolve-DispatchSecret([string]$providedSecret, [string]$providedFilePath, [string]$defaultSharedSecretPath) {
+    $secret = $null
+    $secretFile = Resolve-SecretFilePath $providedFilePath $defaultSharedSecretPath
+
+    if (-not [string]::IsNullOrWhiteSpace($providedSecret)) {
+        $secret = $providedSecret.Trim()
+    }
+
+    if ([string]::IsNullOrWhiteSpace($secret) -and -not [string]::IsNullOrWhiteSpace($secretFile) -and (Test-Path $secretFile)) {
+        $secret = (Get-Content -Path $secretFile -Raw -ErrorAction SilentlyContinue).Trim()
+        if (-not [string]::IsNullOrWhiteSpace($secret)) {
+            Write-Log (T "Secret dispatch lu depuis: $secretFile" "Dispatch secret loaded from: $secretFile")
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($secret)) {
+        $typedSecret = Read-InstallSecret (T "Secret dispatch alarmes (laisser vide pour g?n?ration auto)" "Alarm dispatch secret (leave empty for auto generation)") ""
+        if (-not [string]::IsNullOrWhiteSpace($typedSecret)) {
+            $secret = $typedSecret.Trim()
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($secret)) {
+        $secret = New-RandomSecret
+        Write-Log (T "Secret dispatch g?n?r? automatiquement." "Dispatch secret generated automatically.")
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($secretFile)) {
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $secretFile) | Out-Null
+        Set-Content -Path $secretFile -Value $secret -Encoding UTF8
+        Write-Log (T "Secret dispatch sauvegard?: $secretFile" "Dispatch secret saved: $secretFile")
+        Write-Log (T "Copiez ce fichier sur l'autre machine pour r?utiliser le m?me secret." "Copy this file to the other machine to reuse the same secret.")
+    }
+
+    return $secret
+}
+
 function Write-InstallRegistryInfo($installPath, $version) {
     try {
         $baseKey = "HKLM:\\SOFTWARE\\Vigitemp"
@@ -197,7 +251,10 @@ $dbUser = Read-InstallValue (T "Utilisateur BDD" "DB user") $dbDefaultUser
 $dbPassword = Read-InstallSecret (T "Mot de passe BDD" "DB password") ""
 $dbMain = Read-InstallValue (T "Nom BDD principale" "Main DB name") "vigi_main"
 $dbMeasure = Read-InstallValue (T "Nom BDD mesures" "Measure DB name") "vigi_mesures"
-$alarmSecret = Read-InstallValue (T "Secret dispatch alarmes (optionnel)" "Alarm dispatch secret (optional)") ""
+if ([string]::IsNullOrWhiteSpace($AlarmDispatchSecretFile)) {
+    $AlarmDispatchSecretFile = Join-Path $programData "Vigitemp\shared-secrets\alarm-dispatch-secret.txt"
+}
+$alarmSecret = Resolve-DispatchSecret -providedSecret $AlarmDispatchSecret -providedFilePath $AlarmDispatchSecretFile -defaultSharedSecretPath $AlarmDispatchSecretFile
 
 $licenseDefault = $null
 $publicKeyDefault = $null

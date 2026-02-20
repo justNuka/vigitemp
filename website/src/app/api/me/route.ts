@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import type { Authorization, CurrentUser } from "@/lib/types";
 import { withAuthLogging } from "@/lib/api-wrappers";
+import { getUserAvatarValue } from "@/lib/user-avatar-db";
 import { apiError, apiOk } from "@/lib/api-response";
 
 export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
@@ -61,6 +62,8 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
       (p) => p.Mot_Cle === "MOT_DE_PASSE_REUTILISABLE"
     )?.Valeur === "0";
 
+    const avatarValue = await getUserAvatarValue(fullUser.Id_Utilisateur);
+
     const response: CurrentUser = {
       id: fullUser.Id_Utilisateur,
       Login: fullUser.Login || "",
@@ -71,6 +74,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
       Date_Creation: fullUser.Date_Creation,
       profil: fullUser.Profil_Utilisateur || null,
       Date_Derniere_Modification_MDP: fullUser.Date_Derniere_Modification_MDP,
+      Avatar_Utilisateur: avatarValue,
       authorizations,
       cfr21: {
         enabled: cfr21Enabled,

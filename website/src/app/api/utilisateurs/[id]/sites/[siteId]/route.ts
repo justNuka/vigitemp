@@ -3,6 +3,8 @@ import { revalidateTag } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
+import { getRequestContext } from "@/lib/api-logger"
 
 /**
  * DELETE /api/utilisateurs/[id]/sites/[siteId] - Remove site from user
@@ -11,10 +13,11 @@ import { apiError, apiOk } from "@/lib/api-response"
 export const DELETE = withAdminLogging(
   async (
     req: NextRequest,
-    _ctx: any,
+    ctx: any,
     { params }: { params: Promise<{ id: string; siteId: string }> },
   ) => {
     try {
+      const { ip } = getRequestContext(req)
       const { id, siteId } = await params
       const userId = parseInt(id)
       const id_Site = parseInt(siteId)
@@ -36,6 +39,11 @@ export const DELETE = withAdminLogging(
 
       await prisma.t_liaison_utilisateur_site.delete({
         where: { Id_Liaison: liaison.Id_Liaison },
+      })
+
+      log.data.update("Utilisateur", userId, ctx.user.username, ctx.user.userId, ip, {
+        action: "remove_site",
+        siteId: id_Site,
       })
 
       revalidateTag("users-data", "default")

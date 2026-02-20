@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { ServerAlarms, ServerAlarmStats } from "./server-alarms";
 import { AlarmsPageClient } from "./alarms-page-client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -45,6 +46,7 @@ export default async function AlarmsPage({
 }: {
   searchParams: { status?: "active" | "acknowledged" | "resolved" };
 }) {
+  await connection();
   const status = searchParams.status || "active";
 
   // Chargement parallèle des données côté serveur avec cache

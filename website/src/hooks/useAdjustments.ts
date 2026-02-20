@@ -3,7 +3,7 @@ import { fetchJson, HttpError, isUnauthorizedError } from "@/lib/http";
 
 export interface Adjustment {
   Id_Ajustage: number;
-  Date_Heure_Ajustage: Date | null;
+  Date_Heure_Ajustage: string | null;
   Sonde_Numero_Serie: string | null;
   Operateur: string | null;
   Unite: string | null;

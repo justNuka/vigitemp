@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useMemo, useRef } from "react"
 import { usePathname } from "next/navigation"
@@ -16,6 +16,7 @@ import {
   type ApiErrorEventDetail,
   type AuthStateEventDetail,
 } from "@/lib/http"
+import { markDisconnectReason } from "@/lib/auth-disconnect-marker"
 
 function isPublicRoute(pathname: string) {
   const normalized = stripLocalePrefix(pathname)
@@ -111,18 +112,26 @@ export function GlobalAppEffects() {
       const customEvent = event as CustomEvent<AuthStateEventDetail>
       const detail = customEvent.detail
       if (!detail?.disconnected) return
+      const reason = detail.reason ?? "unauthorized"
 
       queryClient.cancelQueries()
       queryClient.clear()
       seenAlarmIdsRef.current.clear()
 
-      if (!hasSessionToastRef.current) {
+      const shouldShowSessionExpiredToast =
+        reason === "auto_logout" || reason === "unauthorized" || reason === "stream_unauthorized"
+
+      if (shouldShowSessionExpiredToast && !hasSessionToastRef.current) {
         hasSessionToastRef.current = true
         toast.warning(tSessionExpired("title"), { description: tSessionExpired("description") })
       }
 
       if (!isPublicRoute(pathname)) {
-        router.push("/login?reason=inactivity")
+        if (shouldShowSessionExpiredToast) {
+          markDisconnectReason("inactivity")
+        }
+        const loginTarget = shouldShowSessionExpiredToast ? "/login?reason=inactivity" : "/login"
+        router.push(loginTarget)
       }
     }
 

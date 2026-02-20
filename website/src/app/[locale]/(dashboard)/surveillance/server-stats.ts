@@ -32,7 +32,7 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
     const ok = total - warning - critical
 
     const activeAlarms = await prisma.t_alarme.count({
-      where: { Est_Alarme_Vrai: true },
+      where: { Est_Acquittee: false },
     })
 
     return {
@@ -51,5 +51,44 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
       critical: 0,
       activeAlarms: 0,
     }
+  }
+}
+
+
+export async function ServerSurveillanceRefreshIntervalSeconds(): Promise<number> {
+  unstable_noStore()
+  const DEFAULT_SECONDS = 15
+
+  try {
+    const [{ prisma }, { validateLicense }, { isStandardOrExpert }] = await Promise.all([
+      import("@/lib/prisma"),
+      import("@/lib/license-server"),
+      import("@/lib/license-access"),
+    ])
+
+    const license = await validateLicense()
+    if (!license.ok || !isStandardOrExpert(license)) {
+      return DEFAULT_SECONDS
+    }
+
+    const setting = await prisma.t_parametre.findFirst({
+      where: {
+        OR: [
+          { Section: "dashboard", Mot_Cle: "surveillance_refresh" },
+          { Section: "DASHBOARD", Mot_Cle: "SURVEILLANCE_REFRESH" },
+        ],
+      },
+      select: { Valeur: true },
+    })
+
+    const parsed = Number.parseInt(setting?.Valeur ?? "", 10)
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return DEFAULT_SECONDS
+    }
+
+    return parsed
+  } catch (error) {
+    console.error("Error loading surveillance refresh interval:", error)
+    return DEFAULT_SECONDS
   }
 }

@@ -363,3 +363,32 @@ DO
 SET FOREIGN_KEY_CHECKS=0;
 INSERT INTO `tm_journal_code` VALUES ('AACT','Association d\'un module d\'alarme %1'),('ACQ','Acquitter les alarmes'),('ACT','Activer la surveillance'),('ACTU','Réactivation de l\'utilisateur %1'),('AJE','Ajoute évènement manuel'),('ARC','Archivage des données %1 %2'),('AS','Arrêt de la surveillance'),('AT','Activation de la surveillance téléphonique %1'),('CA','Démarrage d\'un calibrage pour la sonde'),('CC','Changement sur un élement %1'),('CDA','Changement d\'état du datalogger %1'),('CF','Changement de fréquence %1'),('CONNEXION','Connexion de l\'utilisateur %1'),('CR','Changement de retard d\'alarme %1'),('CS','Changement de sonde %1'),('DECONNEXION','Déconnexion de l\'utilisateur %1'),('DES','Désactiver la surveillance'),('DS','Démarrage de la surveillance'),('DT','Désactivation de la surveillance téléphonique %1'),('ET','Démarrage d\'un étalonnage pour la sonde'),('FERMSURV','Fermeture de la fenêtre de surveillance'),('MDP','Changement fiche utilisateur %1'),('PS','Le gestionnaire de port série virtuel à été relancé'),('SACT','Suppression du module d\'alarme associé %1'),('TC','Test de connexion de la sonde'),('TEL','Système'),('UT','');
 SET FOREIGN_KEY_CHECKS=1;
+
+-- =====================================================================
+-- Alignement seed <-> schema Prisma (compatibilite install recente)
+-- Version safe MariaDB/MySQL (checks information_schema)
+-- =====================================================================
+SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tm_graphique');
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'tm_graphique' AND column_name = 'Adresse_Sonde');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0,
+  'ALTER TABLE `tm_graphique` ADD COLUMN `Adresse_Sonde` VARCHAR(50) NULL AFTER `Sonde_Numero_Serie`',
+  'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'tm_mesures');
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'tm_mesures' AND column_name = 'Adresse_Sonde');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0,
+  'ALTER TABLE `tm_mesures` ADD COLUMN `Adresse_Sonde` VARCHAR(50) NULL AFTER `Sonde_Numero_Serie`',
+  'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @has_col_rssi := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'tm_mesures' AND column_name = 'Rssi');
+SET @has_col_tension := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'tm_mesures' AND column_name = 'Tension');
+SET @sql := IF(@has_tbl = 1 AND @has_col_rssi = 1,
+  'ALTER TABLE `tm_mesures` MODIFY COLUMN `Rssi` VARCHAR(10) NULL',
+  'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @sql := IF(@has_tbl = 1 AND @has_col_tension = 1,
+  'ALTER TABLE `tm_mesures` MODIFY COLUMN `Tension` VARCHAR(10) NULL',
+  'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;

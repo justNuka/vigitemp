@@ -1,18 +1,163 @@
-'use client'
+"use client";
 
-import { TabsContent } from '@/components/ui/tabs'
-import { useTranslations } from 'next-intl'
+import { Plus, Trash2 } from "lucide-react";
+import { Controller, useFieldArray, useFormContext } from "react-hook-form";
+import { useMemo } from "react";
+import { TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useTranslations } from "next-intl";
+import type { LocationFormData } from "./location-form-types";
+import type { MailingUser } from "@/hooks/useUsersForMailing";
 
-export function LocationFormTabTelephony() {
-  const t = useTranslations('locationsForm.telephony')
+type Props = {
+  users: MailingUser[];
+};
+
+export function LocationFormTabTelephony({ users }: Props) {
+  const t = useTranslations("locationsForm.telephony");
+  const { control, setValue, watch } = useFormContext<LocationFormData>();
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "MailingContacts",
+  });
+
+  const contacts = watch("MailingContacts") ?? [];
+
+  const usersById = useMemo(() => {
+    const map = new Map<number, MailingUser>();
+    for (const user of users) map.set(user.id, user);
+    return map;
+  }, [users]);
+
   return (
     <TabsContent value="telephonie" className="space-y-6">
-      <div className="border p-12 rounded-lg text-center">
-        <p className="text-muted-foreground">
-          {t('unavailable_one')}
-        </p>
+      <div className="rounded-lg border p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold">{t("title")}</h3>
+            <p className="text-sm text-muted-foreground">{t("description")}</p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() =>
+              append({
+                Numero_Ordre: fields.length + 1,
+                Id_Utilisateur: null,
+                Est_Via_Email: true,
+                Est_Via_Telephone: false,
+              })
+            }
+          >
+            <Plus className="h-4 w-4" />
+            {t("add")}
+          </Button>
+        </div>
+
+        {fields.length === 0 ? (
+          <p className="text-sm text-muted-foreground">{t("empty")}</p>
+        ) : (
+          <div className="space-y-3">
+            {fields.map((field, index) => {
+              const current = contacts[index];
+              const user = current?.Id_Utilisateur ? usersById.get(current.Id_Utilisateur) : undefined;
+
+              return (
+                <div key={field.id} className="grid grid-cols-12 gap-3 rounded-md border p-3 items-end">
+                  <div className="col-span-2 space-y-2">
+                    <Label>{t("labels.order")}</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={current?.Numero_Ordre ?? index + 1}
+                      onChange={(event) =>
+                        setValue(
+                          `MailingContacts.${index}.Numero_Ordre`,
+                          Math.max(1, Number(event.target.value) || 1),
+                        )
+                      }
+                    />
+                  </div>
+
+                  <div className="col-span-5 space-y-2">
+                    <Label>{t("labels.user")}</Label>
+                    <Controller
+                      control={control}
+                      name={`MailingContacts.${index}.Id_Utilisateur`}
+                      render={({ field: userField }) => (
+                        <Select
+                          value={userField.value != null ? String(userField.value) : ""}
+                          onValueChange={(value) => userField.onChange(value ? Number(value) : null)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={t("placeholders.user")} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {users.map((u) => (
+                              <SelectItem key={u.id} value={String(u.id)}>
+                                {u.displayName}
+                                {u.email ? ` (${u.email})` : ""}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
+
+                  <div className="col-span-4 grid grid-cols-2 gap-2">
+                    <label className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={!!current?.Est_Via_Email}
+                        onCheckedChange={(checked) =>
+                          setValue(`MailingContacts.${index}.Est_Via_Email`, !!checked)
+                        }
+                      />
+                      {t("labels.via_mail")}
+                    </label>
+                    <label className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={!!current?.Est_Via_Telephone}
+                        onCheckedChange={(checked) =>
+                          setValue(`MailingContacts.${index}.Est_Via_Telephone`, !!checked)
+                        }
+                      />
+                      {t("labels.via_phone")}
+                    </label>
+                    {user?.email ? (
+                      <p className="text-xs text-muted-foreground col-span-2 truncate">{user.email}</p>
+                    ) : null}
+                  </div>
+
+                  <div className="col-span-1 flex justify-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => remove(index)}
+                      aria-label={t("remove")}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </TabsContent>
-  )
+  );
 }
-

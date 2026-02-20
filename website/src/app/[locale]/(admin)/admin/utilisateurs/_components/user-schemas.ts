@@ -14,6 +14,7 @@ export const createUserSchema = z
     groupeIds: z.array(z.number()).optional(),
     hasExpiryDate: z.boolean(),
     expiryDate: z.date().optional(),
+    avatar: z.string().optional(),
   })
   .refine((data) => data.password === data.passwordConfirm, {
     message: "Les mots de passe ne correspondent pas",
@@ -37,6 +38,7 @@ export const editUserSchema = z
     expiryDate: z.date().optional(),
     password: z.string().optional(),
     passwordConfirm: z.string().optional(),
+    avatar: z.string().optional(),
   })
   .refine((data) => !data.password || data.password === data.passwordConfirm, {
     message: "Les mots de passe ne correspondent pas",

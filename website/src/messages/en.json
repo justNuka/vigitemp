@@ -225,7 +225,14 @@
       "comment_select_empty": "No comments available",
       "loading": "Refreshing..."
     },
-        "filters": {"type_label": "Alarm type", "all": "All", "high": "High", "low": "Low", "no_response": "No response", "ended": "Ended"},
+    "filters": {
+      "type_label": "Alarm type",
+      "all": "All",
+      "high": "High",
+      "low": "Low",
+      "no_response": "No response",
+      "ended": "Ended"
+    },
     "toast": {
       "na": "-",
       "acknowledge_success": "Alarm acknowledged successfully",
@@ -347,6 +354,16 @@
       "label": "Refresh",
       "loading": "Refreshing..."
     },
+    "overlay": {
+      "button": "Overlay curves",
+      "title": "Curves overlay",
+      "locations": "Locations to compare",
+      "range": "Date range",
+      "load": "Display overlay",
+      "hint": "Select at least 2 locations",
+      "hint_range": "Select a date range first",
+      "empty": "Select 2 locations and click display"
+    },
     "load_more": "Load more",
     "footer": {
       "count": "{count, plural, one {# sensor} other {# sensors}}",
@@ -398,7 +415,7 @@
       "tabs": {
         "general": "General",
         "metrology": "Metrology",
-        "telephony": "Telephony/Planning"
+        "mailing": "Mailing/Planning"
       },
       "submit": {
         "saving": "Saving..."
@@ -430,7 +447,8 @@
         "lower_enable": "Enable lower setpoint",
         "lower_min": "Minimum",
         "lower_pre_enable": "Enable lower pre-alarm",
-        "lower_pre_label": "Lower pre-alarm"
+        "lower_pre_label": "Lower pre-alarm",
+        "module_select": "Module"
       },
       "placeholders": {
         "name": "e.g. Storage A",
@@ -447,7 +465,10 @@
         "auto": "Automatic",
         "numeric": "0.0",
         "frequency": "15",
-        "delay": "5"
+        "delay": "5",
+        "module": "Select a module",
+        "module_search": "Search a module...",
+        "module_empty": "No module"
       },
       "type_options": {
         "etuve": "Incubator",
@@ -457,7 +478,8 @@
         "autre": "Other"
       },
       "options": {
-        "no_sensor": "No sensor"
+        "no_sensor": "No sensor",
+        "no_module": "No module"
       },
       "tooltips": {
         "frequency_gso": "Frequency is fixed to 15 minutes for GSO sensors."
@@ -514,7 +536,7 @@
       }
     },
     "telephony": {
-      "unavailable_one": "This section is not available for One licenses. Please contact MC2 sales to upgrade your current license to standard or expert."
+      "unavailable_now": "This section is not yet available."
     }
   },
   "modulesPage": {
@@ -837,6 +859,23 @@
       "first_name": "First name",
       "profile": "Profile",
       "created_at": "Account created on"
+    },
+    "avatar": {
+      "upload": "Upload image",
+      "uploading": "Uploading...",
+      "clear": "Remove",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Avatar updated",
+      "save_error": "Failed to update avatar",
+      "upload_error": "Failed to upload avatar",
+      "crop_title": "Crop avatar",
+      "crop_cancel": "Cancel",
+      "crop_apply": "Apply",
+      "crop_zoom": "Zoom",
+      "crop_reset": "Reset",
+      "crop_opened": "Image loaded. Crop then apply.",
+      "upload_success": "Image ready. Save to apply the avatar."
     }
   },
   "profileSecurity": {
@@ -1123,7 +1162,10 @@
         "notifications_email": "Email notifications",
         "notifications_sms": "SMS notifications",
         "alarms_sound": "Alarm sound",
-        "dashboard_refresh": "Refresh interval (s)"
+        "dashboard_refresh": "Refresh interval (s)",
+        "surveillance_refresh": "Surveillance refresh interval (s)",
+        "show_null_non_response": "Show no-response values (null)",
+        "etalonnage_warning_days": "Calibration validity alert (days)"
       },
       "refresh_options": {
         "5": "5 seconds",
@@ -1131,7 +1173,17 @@
         "30": "30 seconds",
         "60": "1 minute",
         "manual": "Manual (disabled)",
-        "custom": "{seconds} seconds"
+        "custom": "{seconds} seconds",
+        "15": "Every 15 seconds"
+      },
+      "warning_days_options": {
+        "7": "7 days",
+        "15": "15 days",
+        "30": "30 days",
+        "45": "45 days",
+        "60": "60 days",
+        "90": "90 days",
+        "custom": "Manual"
       }
     },
     "security": {
@@ -1161,7 +1213,11 @@
     "notifications": {
       "title": "Notifications",
       "description": "Manage notification preferences",
-      "coming_soon": "Advanced notification configuration coming soon"
+      "email_toggle": "Enable alarm emails",
+      "recipients_label": "Alarm email recipients",
+      "recipients_placeholder": "e.g. support@mc2-info.com\nadmin@client.com",
+      "recipients_helper": "One email per line, or separated by comma/semicolon.",
+      "save_button": "Save"
     },
     "password_policy": {
       "title": "Password rules",
@@ -1296,12 +1352,27 @@
           "date": "Date",
           "validity": "Validity",
           "operator": "Operator",
-          "incertitude": "Uncertainty"
+          "incertitude": "Uncertainty",
+          "validity_days": "Validity (days)",
+          "actions": "Actions"
         },
         "actions": {
           "delete": "Delete",
           "generate": "Generate",
-          "print": "Print"
+          "print": "Print",
+          "edit_validity_days": "Validity duration"
+        },
+        "edit": {
+          "title": "Validity duration",
+          "validity_days": "Validity duration (days)",
+          "placeholder": "Ex: 365",
+          "helper": "Leave empty to disable duration.",
+          "cancel": "Cancel",
+          "save": "Save",
+          "saving": "Saving...",
+          "saved": "Validity duration updated.",
+          "save_error": "Failed to update validity duration.",
+          "invalid_days": "Please enter a valid number of days."
         },
         "validity_status": {
           "valid_days": "Valid ({days} days left)",
@@ -1349,7 +1420,8 @@
     "edit": {
       "title": "Edit data",
       "operator": "Operator",
-      "unit": "Unit"
+      "unit": "Unit",
+      "validity_days": "Validity (days)"
     },
     "toast": {
       "save_success": "{count} row(s) inserted into database.",
@@ -1455,9 +1527,11 @@
         "date": "Date",
         "date_validity": "Validity date",
         "operator": "Operator",
+        "validity_days": "Validity (days)",
         "unit": "Unit",
         "uncertainty": "Uncertainty",
-        "actions": "Actions"
+        "actions": "Actions",
+        "err_justesse": "Accuracy error"
       },
       "empty": "Please import one or more calibration file(s)..."
     },
@@ -1468,7 +1542,8 @@
     "edit": {
       "title": "Edit data",
       "operator": "Operator",
-      "unit": "Unit"
+      "unit": "Unit",
+      "validity_days": "Validity (days)"
     },
     "toast": {
       "save_success": "{count} row(s) inserted into database.",
@@ -1547,7 +1622,8 @@
       "process_errors": "{count} file(s) could not be imported.",
       "process_result": "Success: {success} Failed: {failed}"
     }
-  },  "standardsPage": {
+  },
+  "standardsPage": {
     "title": "Standard management",
     "count": "{count, plural, one {# standard} other {# standards}}",
     "actions": {
@@ -1927,7 +2003,8 @@
       },
       "status": {
         "out_of_range": "Out of range",
-        "ok": "OK"
+        "ok": "OK",
+        "no_response": "No response"
       },
       "empty": "No measurements",
       "empty_with_range": "Please select two dates to view measurements"
@@ -1935,7 +2012,8 @@
     "chart": {
       "over_high": "Upper exceedance zone",
       "over_low": "Lower exceedance zone",
-      "measures": "Measurements ({unit})"
+      "measures": "Measurements ({unit})",
+      "show_no_response": "Show no-response values"
     },
     "tooltip": {
       "value": "Value: {value}{unit}",
@@ -2018,68 +2096,17 @@
     "title": "New version {version}",
     "description": "Key updates and changes to know.",
     "sections": {
-      "forms": {
-        "title": "Forms",
-        "items": {
-          "0": "Harmonized validation (react-hook-form + Zod) for Profiles, Groups, Sensors and Standards.",
-          "1": "Consistent error messages on required fields."
-        }
-      },
-      "monitoring": {
-        "title": "Monitoring",
-        "items": {
-          "0": "Unified cards (buttons, type icons, tooltips, light mode).",
-          "1": "Primary-colored filters/actions, improved sorting and views.",
-          "2": "Latest value in the measurements table.",
-          "3": "Added the Audit tab in location details.",
-          "4": "Removed min/max display from monitoring (cards and details).",
-          "5": "Quick alarm acknowledgment from the monitoring card.",
-          "6": "Status legend with colored dots in the monitoring header.",
-          "7": "Decimal precision applied on cards and tables.",
-          "8": "Disabled locations grid now uses full width."
-        }
-      },
-      "measures": {
-        "title": "Measurements and charts",
-        "items": {
-          "0": "Date range picker to filter measurements.",
-          "1": "Measurements tab adapted for locations with monitoring disabled."
-        }
-      },
-      "admin_tables": {
-        "title": "Admin tables",
-        "items": {
-          "0": "Sticky headers with blur, adjusted heights and clearer borders.",
-          "1": "Harmonized actions (icons, sizes, colors).",
-          "2": "More readable row selection.",
-          "3": "Configurable time zone for date displays."
-        }
-      },
-      "creation": {
-        "title": "Creation and editing",
-        "items": {
-          "0": "Create locations without a sensor with confirmation.",
-          "1": "GSO type: frequency locked to 15 min.",
-          "2": "Simplified module list."
-        }
-      },
-      "notifications": {
-        "title": "Notifications",
-        "items": {
-          "0": "Agent secret alert enabled by default in production (opt-in in dev via flag)."
-        }
-      },
-      "experience": {
-        "title": "Experience",
-        "items": {
-          "0": "New 403, 404, and 500 error pages with animated, modern visuals."
-        }
-      },
       "upgrade": {
         "title": "License upgrade",
         "items": {
           "0": "License upgrade page translated (FR/EN) with harmonized labels.",
           "1": "Color palette aligned to VigiSensys brand on the upgrade page."
+        }
+      },
+      "services": {
+        "title": "MC2 Services",
+        "items": {
+          "0": "New MC2 Services hub with direct access to upgrade, hardware, and news."
         }
       }
     }
@@ -2261,29 +2288,71 @@
     },
     "heroParallax": {
       "items": {
-        "0": { "title": "Real-time dashboard" },
-        "1": { "title": "Smart monitoring" },
-        "2": { "title": "Alerts and deviations" },
-        "3": { "title": "Centralized metrology" },
-        "4": { "title": "Continuous tracking" },
-        "5": { "title": "Reports and audit" },
-        "6": { "title": "Trend curves" },
-        "7": { "title": "Metrological analysis" },
-        "8": { "title": "Standard compliance" },
-        "9": { "title": "Windows notifications" },
-        "10": { "title": "Site management" },
-        "11": { "title": "Full history" },
-        "12": { "title": "Smart alerts" },
-        "13": { "title": "Sensors & plans" },
-        "14": { "title": "Global view" }
+        "0": {
+          "title": "Real-time dashboard"
+        },
+        "1": {
+          "title": "Smart monitoring"
+        },
+        "2": {
+          "title": "Alerts and deviations"
+        },
+        "3": {
+          "title": "Centralized metrology"
+        },
+        "4": {
+          "title": "Continuous tracking"
+        },
+        "5": {
+          "title": "Reports and audit"
+        },
+        "6": {
+          "title": "Trend curves"
+        },
+        "7": {
+          "title": "Metrological analysis"
+        },
+        "8": {
+          "title": "Standard compliance"
+        },
+        "9": {
+          "title": "Windows notifications"
+        },
+        "10": {
+          "title": "Site management"
+        },
+        "11": {
+          "title": "Full history"
+        },
+        "12": {
+          "title": "Smart alerts"
+        },
+        "13": {
+          "title": "Sensors & plans"
+        },
+        "14": {
+          "title": "Global view"
+        }
       }
     },
     "proofStats": {
       "items": {
-        "0": { "title": "100% on-premise", "description": "No data in the cloud" },
-        "1": { "title": "Real-time alarms", "description": "Instant detection of deviations" },
-        "2": { "title": "Metrology traceability", "description": "Full and auditable history" },
-        "3": { "title": "Windows notifications", "description": "Even when the browser is closed" }
+        "0": {
+          "title": "100% on-premise",
+          "description": "No data in the cloud"
+        },
+        "1": {
+          "title": "Real-time alarms",
+          "description": "Instant detection of deviations"
+        },
+        "2": {
+          "title": "Metrology traceability",
+          "description": "Full and auditable history"
+        },
+        "3": {
+          "title": "Windows notifications",
+          "description": "Even when the browser is closed"
+        }
       }
     },
     "valueProps": {
@@ -2371,11 +2440,26 @@
       "eyebrow": "Architecture",
       "title": "100% on-premise ecosystem",
       "nodes": {
-        "sondes": { "label": "Sensors", "sublabel": "Temp, RH, CO2..." },
-        "serveur": { "label": "C# Server", "sublabel": "Polling + Alarms" },
-        "bdd": { "label": "Database", "sublabel": "Measures / Business" },
-        "webapp": { "label": "Web App", "sublabel": "Next.js" },
-        "agent": { "label": "Windows Agent", "sublabel": "Notifications" }
+        "sondes": {
+          "label": "Sensors",
+          "sublabel": "Temp, RH, CO2..."
+        },
+        "serveur": {
+          "label": "C# Server",
+          "sublabel": "Polling + Alarms"
+        },
+        "bdd": {
+          "label": "Database",
+          "sublabel": "Measures / Business"
+        },
+        "webapp": {
+          "label": "Web App",
+          "sublabel": "Next.js"
+        },
+        "agent": {
+          "label": "Windows Agent",
+          "sublabel": "Notifications"
+        }
       },
       "left": {
         "title": "Why it is robust",
@@ -2885,7 +2969,13 @@
       "label": "Refresh",
       "loading": "Refreshing..."
     },
-        "filters": {"type_label": "Alarm type", "all": "All", "high": "High", "low": "Low", "no_response": "No response"},
+    "filters": {
+      "type_label": "Alarm type",
+      "all": "All",
+      "high": "High",
+      "low": "Low",
+      "no_response": "No response"
+    },
     "acknowledge_success": "Alarm acknowledged successfully",
     "acknowledge_error": "Failed to acknowledge alarm",
     "search_placeholder": "Search by location...",
@@ -2935,8 +3025,10 @@
       "denied": "Notifications denied",
       "enabled": "Notifications enabled"
     },
-    "error": {
-      "title": "You are not connected."
+    "errors": {
+      "title": "You are not connected.",
+      "default": "An error occurred.",
+      "with_id": "{message} (ID: {id})"
     }
   },
   "tanstackTable": {
@@ -3084,6 +3176,20 @@
       "description": "Set an expiration date",
       "date_label": "Expiry date *",
       "select_date": "Select a date"
+    },
+    "avatar": {
+      "label": "Avatar",
+      "upload": "Upload image",
+      "uploading": "Uploading...",
+      "clear": "Remove",
+      "crop_title": "Crop avatar",
+      "crop_cancel": "Cancel",
+      "crop_apply": "Apply",
+      "crop_zoom": "Zoom",
+      "crop_reset": "Reset",
+      "crop_opened": "Image loaded. Crop then apply.",
+      "upload_success": "Image ready. Save to apply the avatar.",
+      "upload_error": "Failed to upload avatar"
     }
   },
   "editUserDialog": {
@@ -3173,10 +3279,3 @@
     "offline": "Offline"
   }
 }
-
-
-
-
-
-
-

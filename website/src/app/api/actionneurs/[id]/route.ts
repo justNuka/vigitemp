@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server"
 import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { withLogging } from "@/lib/api-logger"
+import { withLogging, getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
 
 export const PATCH = withLogging(
   async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
@@ -21,6 +22,7 @@ export const PATCH = withLogging(
 
       const body = await req.json()
       const { type, serie, commentaire, lieuId } = body
+      const { ip } = getRequestContext(req)
 
       const actionneur = await prisma.t_actionneur.findUnique({
         where: { Id_Actionneur: id },
@@ -75,6 +77,13 @@ export const PATCH = withLogging(
         select: { Id_Lieu: true },
       })
 
+      log.data.update("Actionneur", id, user.username, user.userId, ip, {
+        type: updated.Type,
+        serie: updated.Num_Serie,
+        commentaire: updated.Commentaire,
+        lieuId: lieu?.Id_Lieu || null,
+      })
+
       return apiOk({
         ...updated,
         Id_Lieu: lieu?.Id_Lieu || null,
@@ -96,6 +105,7 @@ export const DELETE = withLogging(
 
       const { id: idParam } = await params
       const id = parseInt(idParam, 10)
+      const { ip } = getRequestContext(req)
 
       if (!id) {
         return apiError(400, "invalid_id", "ID actionneur invalide")
@@ -118,6 +128,8 @@ export const DELETE = withLogging(
         where: { Id_Actionneur: id },
         data: { Est_Archive: true },
       })
+
+      log.data.delete("Actionneur", id, user.username, user.userId, ip, "Archivage actionneur")
 
       return apiOk({ Id_Actionneur: updated.Id_Actionneur, Est_Archive: updated.Est_Archive })
     } catch (error) {

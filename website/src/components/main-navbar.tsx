@@ -18,6 +18,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { useLicense } from "@/components/license/license-provider";
+import { isOneOrPack } from "@/lib/license-access";
 
 const menuItems = [
   { key: "sondes", labelKey: "sondes", href: "/admin/sondes", icon: Antenna },
@@ -37,8 +38,7 @@ export function MainNavbar() {
   const t = useTranslations("mainNavbar");
   const { license } = useLicense();
 
-  const edition = (license?.edition || "standard").trim().toLowerCase();
-  const hideStandards = edition === "one" || edition === "pack";
+  const hideStandards = isOneOrPack(license);
 
   const visibleMenuItems = useMemo(
     () => (hideStandards ? menuItems.filter((item) => item.key !== "etalons") : menuItems),

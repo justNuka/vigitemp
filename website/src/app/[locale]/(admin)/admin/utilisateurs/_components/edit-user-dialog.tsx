@@ -32,6 +32,7 @@ import { useTranslations } from "next-intl";
 import { editUserSchema, type EditUserFormValues } from "./user-schemas";
 import type { GroupOption, ProfileOption, SiteOption } from "./user-option-types";
 import { getEditUserDefaults } from "./user-mappers";
+import { UserAvatarField } from "./user-avatar-field";
 import { UserDangerZone } from "./user-danger-zone";
 import {
   UserEmailField,
@@ -91,6 +92,7 @@ export function EditUserDialog({
       expiryDate: undefined,
       password: "",
       passwordConfirm: "",
+      avatar: "",
     } as EditUserFormValues,
   });
 
@@ -173,6 +175,7 @@ export function EditUserDialog({
             <UserEmailField control={editForm.control} />
 
             <UserProfileField control={editForm.control} profiles={profiles} isLoading={profilesLoading} />
+            <UserAvatarField control={editForm.control} />
 
             <div className="grid gap-4 md:grid-cols-2">
               <UserSitesField control={editForm.control} sites={sites} isLoading={sitesLoading} />

@@ -294,6 +294,33 @@ namespace Vigitemp_Serveur
             }
         }
 
+        private void SyncWorkersWithDatabase()
+        {
+            IDatabaseProvider db = DatabaseFactory.Create();
+            List<int> arr_serveurs = db.getDistinctIdServeur();
+
+            // ajout de potentiel nouveau serveur cr?? depuis le lancement du service
+            foreach (int idServeur in arr_serveurs)
+            {
+                StartWorker(idServeur);
+            }
+
+            // suppression des serveurs qui ne sont plus utilis?s par les sondes
+            int[] currentIds;
+            lock (_workersLock)
+            {
+                currentIds = _workers.Keys.ToArray();
+            }
+
+            foreach (var idServeur in currentIds)
+            {
+                if (!arr_serveurs.Contains(idServeur))
+                {
+                    StopWorker(idServeur);
+                }
+            }
+        }
+
         protected override void OnStart(string[] args)
         {
             // Rediriger console/trace vers le logger fichier pour tout capturer.
@@ -329,15 +356,8 @@ namespace Vigitemp_Serveur
                 $"concurrent={licenseResult.ConcurrentAccess} " +
                 $"expires={licenseResult.ExpiresAtUtc?.ToString("yyyy-MM-dd") ?? "none"}");
 
-            IDatabaseProvider db = DatabaseFactory.Create();
-
             Thread.Sleep(2000);
-
-            List<int> arr_serveurs = db.getDistinctIdServeur();
-            foreach (int IdServeur in arr_serveurs)
-            {
-                StartWorker(IdServeur);
-            }
+            SyncWorkersWithDatabase();
 
             _timer = new System.Timers.Timer(60000);//timer de 1 minutes
                                                     //Set action associated to each tick

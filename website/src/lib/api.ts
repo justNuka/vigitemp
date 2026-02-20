@@ -235,6 +235,10 @@ export type Location = {
   alarmDelayHighMinutes?: number | null;
   alarmDelayLowMinutes?: number | null;
   noResponseDelayMinutes?: number | null;
+  consigneSupPreAlarme?: number | null;
+  estConsigneSupPreAlarmeActive?: boolean | null;
+  consigneInfPreAlarme?: number | null;
+  estConsigneInfPreAlarmeActive?: boolean | null;
   comment?: string | null;
   lieuEtat?: string | null;
   surveillanceDisabled?: boolean;
@@ -294,6 +298,7 @@ export type User = {
   role: string;
   isActive: boolean;
   createdAt: Date;
+  avatar?: string | null;
 };
 
 export type AuditLog = {
@@ -354,6 +359,7 @@ export type CreateUserInput = {
   profileId: string;
   telephone?: string;
   expiryDate?: Date;
+  avatar?: string | null;
 };
 export type UpdateUserInput = Partial<Omit<CreateUserInput, "password">> & {
   password?: string;

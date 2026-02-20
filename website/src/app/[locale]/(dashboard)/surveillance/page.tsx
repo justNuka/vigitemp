@@ -1,5 +1,6 @@
 import { Suspense } from "react";
-import { ServerDashboardStats } from "./server-stats";
+import { connection } from "next/server";
+import { ServerDashboardStats, ServerSurveillanceRefreshIntervalSeconds } from "./server-stats";
 import { ServerFilterOptions } from "./server-filters";
 import { SurveillancePageClient } from "./monitoring-page-client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -48,11 +49,14 @@ function SensorsLoadingSkeleton() {
 }
 
 export default async function SurveillancePage() {
+  await connection();
+
   // Charger UNIQUEMENT la premiere page (50 sondes) cote serveur
   // Le client chargera les pages suivantes avec infinite scroll
-  const [statsData, filterOptions] = await Promise.all([
+  const [statsData, filterOptions, refreshIntervalSeconds] = await Promise.all([
     ServerDashboardStats(),
     ServerFilterOptions(),
+    ServerSurveillanceRefreshIntervalSeconds(),
   ]);
 
   // Le composant client va charger les sensors pagines via l'API
@@ -64,6 +68,7 @@ export default async function SurveillancePage() {
           initialStats={statsData}
           sites={filterOptions.sites}
           groups={filterOptions.groups}
+          refreshIntervalSeconds={refreshIntervalSeconds}
         />
       </Suspense>
     </div>

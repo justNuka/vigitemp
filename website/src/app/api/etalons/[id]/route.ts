@@ -2,7 +2,10 @@ import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { withAuthLogging } from "@/lib/api-wrappers"
+import { log } from "@/lib/logger"
+import { getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
+import { requireStandardOrExpertLicense } from "@/lib/license-guards"
 
 const updateEtalonSchema = z.object({
   Etalon_Numero_Serie: z.string().min(1, "Numéro de série requis"),
@@ -31,8 +34,12 @@ const updateEtalonSchema = z.object({
 })
 
 export const PATCH = withAuthLogging(
-  async (req: NextRequest, _ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ id: string }> }) => {
     try {
+      const { ip } = getRequestContext(req)
+      const guard = await requireStandardOrExpertLicense()
+      if (guard) return guard
+
       const body = await req.json()
       const data = updateEtalonSchema.parse(body)
       const resolvedParams = await params
@@ -61,6 +68,11 @@ export const PATCH = withAuthLogging(
           Id_Serveur: data.Id_Serveur,
           Id_Module: data.Id_Module,
         },
+      })
+
+      log.data.update("Etalon", etalonId, ctx.user.username, ctx.user.userId, ip, {
+        serie: data.Etalon_Numero_Serie,
+        etat: data.Etat_Etalon,
       })
 
       if (data.Numero || data.Organisme || data.Date || data.Unite) {
@@ -137,8 +149,12 @@ export const PATCH = withAuthLogging(
 )
 
 export const DELETE = withAuthLogging(
-  async (_req: NextRequest, _ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ id: string }> }) => {
     try {
+      const { ip } = getRequestContext(req)
+      const guard = await requireStandardOrExpertLicense()
+      if (guard) return guard
+
       const resolvedParams = await params
       const etalonId = parseInt(resolvedParams.id, 10)
 
@@ -158,6 +174,8 @@ export const DELETE = withAuthLogging(
         where: { Id_Etalon: etalonId },
         data: { Est_Archive: true },
       })
+
+      log.data.delete("Etalon", etalonId, ctx.user.username, ctx.user.userId, ip, `Archivage etalon ${existingEtalon.Etalon_Numero_Serie}`)
 
       return apiOk({ Id_Etalon: updated.Id_Etalon, Est_Archive: updated.Est_Archive })
     } catch (error) {

@@ -1,9 +1,11 @@
 ﻿import { NextRequest } from "next/server"
 
 import { withAuthLogging } from "@/lib/api-wrappers"
+import { getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { validateLicense } from "@/lib/license-server"
+import { log } from "@/lib/logger"
 import { buildSensorSerialsFromInput, extractAddressFromSerial } from "@/lib/sensor-naming"
 import { z } from "zod"
 
@@ -77,10 +79,11 @@ const createSensorSchema = z.object({
   sondeOffset: z.number().nullable().optional(),
 })
 
-export const POST = withAuthLogging(async (req: NextRequest) => {
+export const POST = withAuthLogging(async (req: NextRequest, ctx: any) => {
   try {
     const body = await req.json()
     const data = createSensorSchema.parse(body)
+    const { ip } = getRequestContext(req)
 
     const creation = buildSensorSerialsFromInput(data.sondeType, data.serieNum)
     const serialsToCreate = Array.from(new Set(creation.serials))
@@ -156,6 +159,16 @@ export const POST = withAuthLogging(async (req: NextRequest) => {
         }),
       ),
     )
+
+    for (const item of created) {
+      log.data.create("Sonde", item.Id_Sonde, ctx.user.username, ctx.user.userId, ip, {
+        serial: item.Sonde_Numero_Serie,
+        adresse: item.Adresse_Sonde,
+        moduleId: item.Id_Module,
+        offset: item.Sonde_Offset,
+        estGso: item.Est_Sonde_GSO,
+      })
+    }
 
     return apiOk(
       {

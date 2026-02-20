@@ -12,7 +12,7 @@ const FALLBACK_CODE_LABELS: Record<string, string> = {
 	ARC: "Archivage des données %1 %2",
 	AS: "Arret de la surveillance",
 	AT: "Activation de la surveillance telephonique %1",
-	CA: "Demarrage d'un calibrage pour la sonde",
+	CA: "Demarrage d'un ajustage pour la sonde",
 	CC: "Changement sur un element %1",
 	CDA: "Changement d'etat du datalogger %1",
 	CF: "Changement de frequence %1",

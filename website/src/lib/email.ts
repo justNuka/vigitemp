@@ -12,6 +12,15 @@ interface EmailConfig {
   enabled: boolean;
 }
 
+export type EmailAttachment = {
+  filename: string;
+  content: Buffer | string;
+  contentType?: string;
+  cid?: string;
+  encoding?: string;
+  disposition?: string;
+};
+
 /**
  * Get email configuration from database parameters
  * Uses the new parameter structure with section: SECURITE_EMAIL
@@ -64,10 +73,12 @@ export async function sendEmail({
   to,
   subject,
   react,
+  attachments,
 }: {
   to: string;
   subject: string;
   react: React.ReactElement;
+  attachments?: EmailAttachment[];
 }): Promise<{ success: boolean; error?: string }> {
   try {
     const config = await getEmailConfig();
@@ -102,6 +113,7 @@ export async function sendEmail({
       to,
       subject,
       html,
+      attachments,
     });
 
     console.log(`[Email] Successfully sent email to ${to}`);

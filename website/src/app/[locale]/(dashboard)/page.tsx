@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,6 +35,7 @@ export default async function DashboardPage({
 }: {
   params: Promise<{ locale: string }>;
 }) {
+  await connection();
   const { locale } = await params;
 
   // Chargement parallele des donnees avec cache

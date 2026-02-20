@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Ports;
@@ -31,23 +31,23 @@ namespace Vigitemp_Serveur.sensors
                 Stopwatch tmp_sw = new Stopwatch();
                 tmp_sw.Start();
 
-                //Console.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                //Trace.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                VigitempServeur.Log("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                //Console.WriteLine("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                //Trace.WriteLine("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                VigitempServeur.Log("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
 
                 while (pendingResults)
                 {
                     await Task.Delay(25);
                     if (tmp_sw.Elapsed.TotalMilliseconds > 5000)
                     {
-                        //Console.WriteLine("Délai de 5 secondes dépassé");
-                        //Trace.WriteLine("Délai de 5 secondes dépassé");
-                        VigitempServeur.Log("Délai de 5 secondes dépassé");
+                        //Console.WriteLine("Delai de 5 secondes depasse");
+                        //Trace.WriteLine("Delai de 5 secondes depasse");
+                        VigitempServeur.Log("Delai de 5 secondes depasse");
                         //Trace.WriteLine("Fermeture du port " + m_comPort);
                         VigitempServeur.Log("Fermeture du port " + m_comPort);
                         VigitempServeur.Log($"[SONDE][DONE] type=IN serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
-                        //Trace.WriteLine("Taux de réponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
-                        VigitempServeur.Log("Taux de réponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
+                        //Trace.WriteLine("Taux de reponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
+                        VigitempServeur.Log("Taux de reponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
                         //Trace.WriteLine("-----------------------------------");
                         VigitempServeur.Log("-----------------------------------");
                         m_port.Close();
@@ -102,7 +102,7 @@ namespace Vigitemp_Serveur.sensors
                     return;
                 }
 
-                // Console.WriteLine("Données recues dans le port COM: " + regex_res);
+                // Console.WriteLine("Donnees recues dans le port COM: " + regex_res);
                 tmp_valeur = regex_res.Split(new string[] { "TEMP" }, StringSplitOptions.None)[1];
                 tmp_numeroSerie = regex_res.Split(new string[] { "TEMP" }, StringSplitOptions.None)[0];
 
@@ -110,25 +110,25 @@ namespace Vigitemp_Serveur.sensors
                 // (double coeffX, double coeffConstant) = ThreadServeur.GetDatabase().getCoeffCalibrageBySerialNumber(m_serialNumber);
                 var rawValue = Convert.ToDouble(float.Parse(tmp_valeur.Remove(tmp_valeur.Length - 2, 2), CultureInfo.InvariantCulture.NumberFormat));
                 var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
-                //Console.WriteLine("Données corrigées: " + float.Parse(String.Format("{0:0.00}", tmp_valeur)));
-                //Trace.WriteLine("Données corrigées: " + float.Parse(String.Format("{0:0.00}", tmp_valeur)));
-                VigitempServeur.Log("Données corrigées: " + correctedValue);
-                //Service1.Log("Données corrigées: " + float.Parse(String.Format("{0:0.00}", tmp_valeur)));
+                //Console.WriteLine("Donnees corrigees: " + float.Parse(String.Format("{0:0.00}", tmp_valeur)));
+                //Trace.WriteLine("Donnees corrigees: " + float.Parse(String.Format("{0:0.00}", tmp_valeur)));
+                VigitempServeur.Log("Donnees corrigees: " + correctedValue);
+                //Service1.Log("Donnees corrigees: " + float.Parse(String.Format("{0:0.00}", tmp_valeur)));
 
 
-                // ThreadServeur.GetDatabase().AddMesure(m_serialNumber, float.Parse(String.Format("{0:0.00}", tmp_temperature)), "éC");
-                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "�C", ToInvariantRaw(rawValue));
-                VigitempServeur.Log($"[SONDE][DONE] type=IN serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=�C raw={ToInvariantRaw(rawValue)}");
+                // ThreadServeur.GetDatabase().AddMesure(m_serialNumber, float.Parse(String.Format("{0:0.00}", tmp_temperature)), "°C");
+                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
+                VigitempServeur.Log($"[SONDE][DONE] type=IN serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=°C raw={ToInvariantRaw(rawValue)}");
                 HandleNoResponseAlarm(true);
-                compareMeasuresAndLimits(correctedValue, "�C");
+                compareMeasuresAndLimits(correctedValue, "°C");
                 //checkAlarmespourConsignes(float.Parse(String.Format("{0:0.00}", tmp_valeur)));
 
                 m_port.Close();
                 pendingResults = false;
                 //Trace.WriteLine("Fermeture du port " + m_comPort);
                 VigitempServeur.Log("Fermeture du port " + m_comPort);
-                //Trace.WriteLine("Taux de réponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
-                VigitempServeur.Log("Taux de réponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
+                //Trace.WriteLine("Taux de reponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
+                VigitempServeur.Log("Taux de reponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
                 //Trace.WriteLine("-----------------------------------");
                 VigitempServeur.Log("-----------------------------------");
             } catch (Exception error)
@@ -139,6 +139,8 @@ namespace Vigitemp_Serveur.sensors
         }
     }
 }
+
+
 
 
 

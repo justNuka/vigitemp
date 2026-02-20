@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Ports;
@@ -42,14 +42,14 @@ namespace Vigitemp_Serveur.sensors
                 Stopwatch tmp_sw = new Stopwatch();
                 tmp_sw.Start();
 
-                VigitempServeur.Log("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                VigitempServeur.Log("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
 
                 while (pendingResults)
                 {
                     await Task.Delay(25);
                     if (tmp_sw.Elapsed.TotalMilliseconds > 5000)
                     {
-                        VigitempServeur.Log("Délai de 5 secondes dépassé");
+                        VigitempServeur.Log("Delai de 5 secondes depasse");
                         VigitempServeur.Log("Fermeture du port " + m_comPort);
                         VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
                         m_port.Close();
@@ -107,12 +107,12 @@ namespace Vigitemp_Serveur.sensors
 
                 var rawValue = Convert.ToDouble(float.Parse(tmp_valeur.Remove(tmp_valeur.Length - 2, 2), CultureInfo.InvariantCulture.NumberFormat));
                 var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
-                VigitempServeur.Log("Données corrigées: " + correctedValue);
+                VigitempServeur.Log("Donnees corrigees: " + correctedValue);
 
-                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "�C", ToInvariantRaw(rawValue));
-                VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=�C raw={ToInvariantRaw(rawValue)}");
+                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
+                VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=°C raw={ToInvariantRaw(rawValue)}");
                 HandleNoResponseAlarm(true);
-                compareMeasuresAndLimits(correctedValue, "�C");
+                compareMeasuresAndLimits(correctedValue, "°C");
                 m_port.Close();
                 pendingResults = false;
                 Trace.WriteLine("Fermeture du port " + m_comPort);
@@ -124,4 +124,5 @@ namespace Vigitemp_Serveur.sensors
         }
     }
 }
+
 

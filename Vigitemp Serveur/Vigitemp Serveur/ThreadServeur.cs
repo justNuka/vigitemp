@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -38,6 +39,7 @@ namespace Vigitemp_Serveur
         private readonly bool _logSettingsCache = GetSettingBool("Vigitemp.Alarms.LogSettingsCache", true);
         private readonly int _schedulerTickMs = GetSettingInt("Vigitemp.Scheduler.TickMs", 5000);
         private readonly bool _logScheduler = GetSettingBool("Vigitemp.Scheduler.Log", true);
+        private readonly bool _logMetrologyDetailed = GetSettingBool("Vigitemp.Metrology.LogDetailed", false);
         private readonly int _alarmPollSeconds = GetSettingInt("Vigitemp.Alarms.PollSeconds", 15);
         private readonly int _alarmPollMaxBatch = GetSettingInt("Vigitemp.Alarms.PollMaxBatch", 50);
         private readonly object _alarmPollLock = new object();
@@ -75,6 +77,8 @@ namespace Vigitemp_Serveur
             this.m_cts = obj;
             this._idServer = p_idServer;
         }
+
+        public bool LogMetrologyDetailed => _logMetrologyDetailed;
 
         public IDatabaseProvider GetDatabase()
         { // singleton
@@ -178,11 +182,31 @@ namespace Vigitemp_Serveur
 
             _sondeMetrologyCache[row.SondeNumeroSerie] = new SondeMetrologySettings
             {
+                IdLieu = row.IdLieu,
                 Offset = row.SondeOffset,
                 HasAjustage = row.HasAjustage,
                 CoeffX = row.CoeffX,
                 CoeffConstant = row.CoeffConstant,
+                HasEtalonnage = row.HasEtalonnage,
+                EmtChoixMode = row.EmtChoixMode,
+                ApplyCorrectionEj = row.ApplyCorrectionEj,
+                ErrJustesse = row.ErrJustesse,
+                CorrectionJustesse = row.CorrectionJustesse,
+                Incertitude = row.Incertitude,
+                DateValiditeEtalonnage = row.DateValiditeEtalonnage,
             };
+
+            if (_logMetrologyDetailed)
+            {
+                VigitempServeur.Log(
+                    $"Metrology cache update serial={row.SondeNumeroSerie} idLieu={row.IdLieu} " +
+                    $"mode={row.EmtChoixMode?.ToString() ?? "null"} corrEJ={row.ApplyCorrectionEj} " +
+                    $"hasAjustage={row.HasAjustage} coeffX={row.CoeffX} coeffC={row.CoeffConstant} " +
+                    $"offset={(row.SondeOffset.HasValue ? row.SondeOffset.Value.ToString(CultureInfo.InvariantCulture) : "null")} " +
+                    $"hasEtalonnage={row.HasEtalonnage} errJustesse={(row.ErrJustesse.HasValue ? row.ErrJustesse.Value.ToString(CultureInfo.InvariantCulture) : "null")} " +
+                    $"corrJustesse={(row.CorrectionJustesse.HasValue ? row.CorrectionJustesse.Value.ToString(CultureInfo.InvariantCulture) : "null")} " +
+                    $"incertitude={(row.Incertitude.HasValue ? row.Incertitude.Value.ToString(CultureInfo.InvariantCulture) : "null")}");
+            }
         }
         private static int GetSettingInt(string key, int defaultValue)
         {
@@ -323,7 +347,7 @@ namespace Vigitemp_Serveur
 
             EnsureAlarmEndCursorInitialized();
 
-            var ended = GetDatabase().getEndedAlarmLieuxSince(_idServer, _lastAlarmEndPollLocal, _alarmPollMaxBatch);
+            var ended = GetDatabase().getEndedAlarmsSince(_idServer, _lastAlarmEndPollLocal, _alarmPollMaxBatch);
             _lastAlarmEndPollLocal = DateTime.Now;
 
             if (ended == null || ended.Count == 0)
@@ -332,13 +356,15 @@ namespace Vigitemp_Serveur
             }
 
             var ips_clients = GetDatabase().getPCsClients();
-            foreach (var idLieu in ended.Distinct())
+            foreach (var alarm in ended.GroupBy(a => a.IdLieu).Select(g => g.First()))
             {
                 for (int i = 0; i < ips_clients.Count; i++)
                 {
-                    _ = _http.PostAsync("http://" + ips_clients[i] + ":8000/alarm?action=hide&idLieu=" + idLieu, null);
+                    _ = _http.PostAsync("http://" + ips_clients[i] + ":8000/alarm?action=hide&idLieu=" + alarm.IdLieu, null);
                 }
             }
+
+            _ = AlarmWebNotifier.NotifyEndedAlarmBatchAsync(ended);
         }
 
         public void Start()

@@ -11,6 +11,23 @@ const updateSettingSchema = z.object({
   value: z.string(),
 })
 
+
+function getCaseCandidates(section: string, motCle: string) {
+  const sectionLower = section.toLowerCase()
+  const sectionUpper = section.toUpperCase()
+  const motCleLower = motCle.toLowerCase()
+  const motCleUpper = motCle.toUpperCase()
+
+  return [
+    { Section: section, Mot_Cle: motCle },
+    { Section: sectionLower, Mot_Cle: motCleLower },
+    { Section: sectionUpper, Mot_Cle: motCleUpper },
+    { Section: sectionLower, Mot_Cle: motCleUpper },
+    { Section: sectionUpper, Mot_Cle: motCleLower },
+  ]
+}
+
+
 export const GET = withAuthorizationLogging(
   "GERER_PROFIL",
   async (_req: NextRequest, _ctx: any, { params }: { params: Promise<{ key: string }> }) => {
@@ -18,14 +35,26 @@ export const GET = withAuthorizationLogging(
       const { key } = await params
       const [section, motCle] = key.split(":")
 
-      const setting = await prisma.t_parametre.findUnique({
+      const sectionVal = section || ""
+      const motCleVal = motCle || key
+      const candidates = getCaseCandidates(sectionVal, motCleVal)
+
+      let setting = await prisma.t_parametre.findUnique({
         where: {
           Section_Mot_Cle: {
-            Section: section || "",
-            Mot_Cle: motCle || key,
+            Section: sectionVal,
+            Mot_Cle: motCleVal,
           },
         },
       })
+
+      if (!setting) {
+        setting = await prisma.t_parametre.findFirst({
+          where: {
+            OR: candidates,
+          },
+        })
+      }
 
       if (!setting) {
         return apiError(404, "not_found", "Setting not found")
@@ -59,26 +88,27 @@ export const PATCH = withAuthorizationLogging(
       const sectionVal = section || ""
       const motCleVal = motCle || key
 
-      const oldSetting = await prisma.t_parametre.findUnique({
+      const candidates = getCaseCandidates(sectionVal, motCleVal)
+      const oldSetting = await prisma.t_parametre.findFirst({
         where: {
-          Section_Mot_Cle: {
-            Section: sectionVal,
-            Mot_Cle: motCleVal,
-          },
+          OR: candidates,
         },
       })
+
+      const targetSection = oldSetting?.Section || sectionVal.toUpperCase()
+      const targetMotCle = oldSetting?.Mot_Cle || motCleVal.toUpperCase()
 
       const setting = await prisma.t_parametre.upsert({
         where: {
           Section_Mot_Cle: {
-            Section: sectionVal,
-            Mot_Cle: motCleVal,
+            Section: targetSection,
+            Mot_Cle: targetMotCle,
           },
         },
         update: { Valeur: value },
         create: {
-          Section: sectionVal,
-          Mot_Cle: motCleVal,
+          Section: targetSection,
+          Mot_Cle: targetMotCle,
           Valeur: value,
         },
       })

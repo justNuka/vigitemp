@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getAuthenticatedUser } from "@/lib/auth"
-import { withLogging } from "@/lib/api-logger"
+import { withLogging, getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
 
 export const GET = withLogging(async (req: NextRequest) => {
   try {
@@ -57,6 +58,7 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     const body = await req.json()
     const { type, serie, commentaire, lieuId } = body
+    const { ip } = getRequestContext(req)
 
     const actionneur = await prisma.t_actionneur.create({
       data: {
@@ -72,6 +74,13 @@ export const POST = withLogging(async (req: NextRequest) => {
         data: { Id_Actionneur: actionneur.Id_Actionneur },
       })
     }
+
+    log.data.create("Actionneur", actionneur.Id_Actionneur, user.username, user.userId, ip, {
+      type: actionneur.Type,
+      serie: actionneur.Num_Serie,
+      commentaire: actionneur.Commentaire,
+      lieuId: lieuId ? parseInt(lieuId) : null,
+    })
 
     return apiOk(actionneur, { status: 201 })
   } catch (error) {

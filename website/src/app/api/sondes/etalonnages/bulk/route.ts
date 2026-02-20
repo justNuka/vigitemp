@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getRequestContext } from "@/lib/api-logger";
 import { withAuthLogging } from "@/lib/api-wrappers";
 import { log } from "@/lib/logger";
+import { requireStandardOrExpertLicense } from "@/lib/license-guards";
 
 const measureSchema = z.object({
   Numero_Ordre: z.number().int().min(1).max(10),
@@ -19,6 +20,7 @@ const rowSchema = z.object({
     Date_Heure_Etalonnage: z.string().nullable(),
     Sonde_Numero_Serie: z.string().nullable(),
     Date_Validite: z.string().nullable(),
+    Duree_Validite_Jours: z.number().int().positive().nullable().optional(),
     Operateur: z.string().nullable(),
     Etalon_Numero_Serie: z.string().nullable(),
     Date_Certif: z.string().nullable(),
@@ -29,9 +31,28 @@ const rowSchema = z.object({
     Moyenne_Etalon: z.number().nullable(),
     Moyenne_Sonde: z.number().nullable(),
     Repetabilite: z.string().nullable(),
-    Err_Justesse: z.string().nullable(),    Mesures: z.array(measureSchema).optional().default([]),
+    Err_Justesse: z.string().nullable(),
+    Mesures: z.array(measureSchema).optional().default([]),
   }),
 });
+
+const parseNullableNumber = (value: string | number | null | undefined): number | null => {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  const normalized = value.replace(",", ".").trim();
+  if (!normalized) return null;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const computeDateValidite = (dateEtalonnage: Date | null, dateValidite: Date | null, dureeValiditeJours: number | null) => {
+  if (dureeValiditeJours !== null && dateEtalonnage) {
+    const computed = new Date(dateEtalonnage);
+    computed.setDate(computed.getDate() + dureeValiditeJours);
+    return computed;
+  }
+  return dateValidite;
+};
 
 const bodySchema = z.object({
   rows: z.array(rowSchema).min(1),
@@ -41,6 +62,9 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
   const { ip } = getRequestContext(req);
 
   try {
+    const guard = await requireStandardOrExpertLicense();
+    if (guard) return guard;
+
     const body = await req.json();
     const validated = bodySchema.parse(body);
 
@@ -89,6 +113,8 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
         const dateEtalonnage = data.Date_Heure_Etalonnage ? new Date(data.Date_Heure_Etalonnage) : null;
         const dateValidite = data.Date_Validite ? new Date(data.Date_Validite) : null;
         const dateCertif = data.Date_Certif ? new Date(data.Date_Certif) : null;
+        const dureeValiditeJours = data.Duree_Validite_Jours ?? null;
+        const dateValiditeFinale = computeDateValidite(dateEtalonnage, dateValidite, dureeValiditeJours);
 
         const existing = await tx.t_etalonnage.findFirst({
           where: {
@@ -108,18 +134,20 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
           data: {
             Date_Heure_Etalonnage: dateEtalonnage,
             Sonde_Numero_Serie: data.Sonde_Numero_Serie,
-            Date_Validite: dateValidite,
+            Date_Validite: dateValiditeFinale,
+            Duree_Validite_Jours: dureeValiditeJours,
             Operateur: data.Operateur,
             Etalon_Numero_Serie: data.Etalon_Numero_Serie,
             Date_Certif: dateCertif,
             Organisme: data.Organisme,
             Num_Certif: data.Num_Certif,
             Unite: data.Unite,
-            Incertitude: data.Incertitude,
+            Incertitude: parseNullableNumber(data.Incertitude),
             Moyenne_Etalon: data.Moyenne_Etalon,
             Moyenne_Sonde: data.Moyenne_Sonde,
             Repetabilite: data.Repetabilite,
-            Err_Justesse: data.Err_Justesse,          },
+            Err_Justesse: parseNullableNumber(data.Err_Justesse),
+          },
           select: { Id_Etalonnage: true },
         });
 

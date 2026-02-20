@@ -1,4 +1,4 @@
-Param(
+﻿Param(
     [string]$AgentBuildOutput,
     [string]$MsiPath,
     [string]$OutputDir
@@ -7,7 +7,14 @@ Param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-function Write-Log($message) {
+
+# Force UTF-8 console encoding for correct accents/special characters in logs.
+try { cmd /c chcp 65001 > $null } catch { }
+try {
+    [Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
+    [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+    $OutputEncoding = [Console]::OutputEncoding
+} catch { }function Write-Log($message) {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     Write-Host "[$timestamp] $message"
 }
@@ -37,7 +44,7 @@ if ([string]::IsNullOrWhiteSpace($AgentBuildOutput)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
-    $OutputDir = Join-Path $repoRoot "..\\vigi\\build\\agent-offline"
+    $OutputDir = Join-Path $repoRoot "..\\vigi\\2 - installation\\3 - agent"
 }
 
 $agentExe = Join-Path $AgentBuildOutput "VigitempAgent.exe"
@@ -60,20 +67,26 @@ $pdbPath = Join-Path $msiDir "VigitempAgent.wixpdb"
 Write-Log "Preparing agent package: $OutputDir"
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 
-$installerDest = Join-Path $OutputDir "installer"
-New-Item -ItemType Directory -Force -Path $installerDest | Out-Null
+$legacyInstallerDir = Join-Path $OutputDir "installer"
+if (Test-Path $legacyInstallerDir) {
+    Write-Log "Removing legacy installer folder..."
+    Remove-Item -Path $legacyInstallerDir -Recurse -Force
+}
 
 Write-Log "Copying MSI installer..."
-Copy-Item -Path $MsiPath -Destination $installerDest -Force
+Copy-Item -Path $MsiPath -Destination $OutputDir -Force
 
 if (Test-Path $cabPath) {
     Write-Log "Copying cab1.cab..."
-    Copy-Item -Path $cabPath -Destination $installerDest -Force
+    Copy-Item -Path $cabPath -Destination $OutputDir -Force
 }
 
 if (Test-Path $pdbPath) {
     Write-Log "Copying wixpdb..."
-    Copy-Item -Path $pdbPath -Destination $installerDest -Force
+    Copy-Item -Path $pdbPath -Destination $OutputDir -Force
 }
 
 Write-Log "Done. Package ready at: $OutputDir"
+
+
+

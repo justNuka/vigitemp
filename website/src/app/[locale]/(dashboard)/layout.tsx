@@ -5,10 +5,12 @@ import PageTransitionWrapper from "@/components/animations/transitions/page-tran
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { useAutoLock } from "@/hooks/useAutoLock"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
+import { useRouter } from "@/i18n/navigation"
 import { clearAgentSession } from "@/lib/agent-session"
 import { alarmsApi, authApi } from "@/lib/api"
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   useAutoLock()
+  const router = useRouter()
   // Sidebar badge should stay reasonably fresh without stressing heavy pages.
   const alarmsQueryKey = ["alarms", "active"] as const
   const { data: alarms } = useQuery({
@@ -34,7 +36,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       } catch {
         // Agent not installed/running: ignore
       }
-      window.location.href = "/login"
+      router.push("/login")
     }
   }
   return (

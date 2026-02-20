@@ -16,7 +16,7 @@ export async function ServerSettings() {
     const dbSettings = await prisma.t_parametre.findMany({
       where: {
         Section: {
-          in: ["general", "notifications", "alarms", "dashboard"],
+          in: ["general", "notifications", "alarms", "dashboard", "GENERAL", "NOTIFICATIONS", "ALARMS", "DASHBOARD"],
         },
       },
       select: {
@@ -35,15 +35,19 @@ export async function ServerSettings() {
     const defaultSettings = [
       { key: "general:timezone", value: "Europe/Paris", label: "Fuseau horaire" },
       { key: "notifications:email", value: "true", label: "Notifications par email" },
+      { key: "notifications:alarm_email_recipients", value: "", label: "Destinataires email alarmes" },
       { key: "notifications:sms", value: "false", label: "Notifications SMS" },
       { key: "alarms:sound", value: "true", label: "Son des alarmes" },
       { key: "dashboard:refresh", value: "30", label: "Intervalle de rafraîchissement (s)" },
+      { key: "dashboard:surveillance_refresh", value: "15", label: "Rafraichissement surveillance (s)" },
+      { key: "dashboard:show_null_non_response", value: "false", label: "Afficher les non-reponses" },
+      { key: "dashboard:etalonnage_warning_days", value: "30", label: "Alerte validite etalonnage (jours)" },
     ];
 
     // Créer un Map des valeurs de la DB pour un accès rapide
     const dbSettingsMap = new Map(
       dbSettings.map((setting) => [
-        `${setting.Section}:${setting.Mot_Cle}`,
+        `${(setting.Section || "").toLowerCase()}:${(setting.Mot_Cle || "").toLowerCase()}`,
         setting.Valeur || "false",
       ])
     );
@@ -62,9 +66,13 @@ export async function ServerSettings() {
     return [
       { key: "general:timezone", value: "Europe/Paris", label: "Fuseau horaire" },
       { key: "notifications:email", value: "true", label: "Notifications par email" },
+      { key: "notifications:alarm_email_recipients", value: "", label: "Destinataires email alarmes" },
       { key: "notifications:sms", value: "false", label: "Notifications SMS" },
       { key: "alarms:sound", value: "true", label: "Son des alarmes" },
       { key: "dashboard:refresh", value: "30", label: "Intervalle de rafraîchissement (s)" },
+      { key: "dashboard:surveillance_refresh", value: "15", label: "Rafraichissement surveillance (s)" },
+      { key: "dashboard:show_null_non_response", value: "false", label: "Afficher les non-reponses" },
+      { key: "dashboard:etalonnage_warning_days", value: "30", label: "Alerte validite etalonnage (jours)" },
     ];
   }
 }

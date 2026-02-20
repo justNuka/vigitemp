@@ -46,6 +46,7 @@ import { calculateYDomain, formatMeasureValue, getMeasureSummary } from "@/lib/m
 import { formatDbDateTime } from "@/lib/date-display";
 import { AlarmAcknowledgeDialog, type AcknowledgeDialogAlarm } from "@/components/alarm-acknowledge-dialog";
 import { useQueryClient } from "@tanstack/react-query";
+import { markAlarmAcknowledgedInPaginatedSensorsCache } from "@/lib/surveillance-cache";
 
 ChartJS.register(
   CategoryScale,
@@ -90,6 +91,10 @@ interface MonitoringCardProps {
   alarmDelayHighMinutes?: number | null;
   alarmDelayLowMinutes?: number | null;
   noResponseDelayMinutes?: number | null;
+  consigneSupPreAlarme?: number | null;
+  estConsigneSupPreAlarmeActive?: boolean | null;
+  consigneInfPreAlarme?: number | null;
+  estConsigneInfPreAlarmeActive?: boolean | null;
   locationComment?: string | null;
   surveillanceDisabled: boolean;
   isGso?: boolean | null;
@@ -103,6 +108,9 @@ interface MonitoringCardProps {
     newState: boolean,
     durationMinutes: number | null,
   ) => void;
+  showNullNonResponse?: boolean;
+  onShowNullNonResponseChange?: (enabled: boolean) => Promise<void> | void;
+  nonResponsePreferencesLoading?: boolean;
 }
 
 function RssiBars({ value, label }: { value?: string | null; label: string }) {
@@ -159,6 +167,10 @@ export default function MonitoringCard({
   alarmDelayHighMinutes,
   alarmDelayLowMinutes,
   noResponseDelayMinutes,
+  consigneSupPreAlarme,
+  estConsigneSupPreAlarmeActive,
+  consigneInfPreAlarme,
+  estConsigneInfPreAlarmeActive,
   locationComment,
   surveillanceDisabled,
   isGso,
@@ -167,12 +179,18 @@ export default function MonitoringCard({
   alarmId = null,
   onEditLocation,
   onSurveillanceToggle,
+  showNullNonResponse = false,
+  onShowNullNonResponseChange,
+  nonResponsePreferencesLoading = false,
 }: MonitoringCardProps) {
   const t = useTranslations("monitoringCard");
   const tStatus = useTranslations("surveillanceStatus");
   const locale = useLocale();
   const localeTag = locale === "fr" ? "fr-FR" : locale;
-  const { data, isLoading, reload, meta } = useLieuMeasurements(idLieu, { includeMeta: true });
+  const { data, isLoading, reload, meta } = useLieuMeasurements(idLieu, {
+    includeMeta: true,
+    includeNullNonResponse: showNullNonResponse,
+  });
 
   const orderedData = useMemo(() => {
     if (!data.length) return data;
@@ -223,43 +241,6 @@ export default function MonitoringCard({
       ? "ok"
       : status;
 
-  const markAlarmAcknowledgedInCache = useCallback((acknowledgedAlarmId: number) => {
-    queryClient.setQueriesData({ queryKey: ["capteurs", "paginated"] }, (cached) => {
-      const data = cached as
-        | { pages?: Array<{ sensors?: Array<Record<string, unknown>>; [key: string]: unknown }> }
-        | undefined;
-      if (!data?.pages) return cached;
-
-      let changed = false;
-      const pages = data.pages.map((page) => {
-        if (!Array.isArray(page.sensors)) return page;
-
-        const sensors = page.sensors.map((sensor) => {
-          const location = ((sensor.location as Record<string, unknown> | undefined) ?? {});
-          const sensorAlarmId = Number(sensor.alarmId ?? location.alarmId ?? NaN);
-          if (!Number.isFinite(sensorAlarmId) || sensorAlarmId !== acknowledgedAlarmId) return sensor;
-
-          changed = true;
-          const nextStatus = sensor.status === "ended" ? "ok" : sensor.status;
-
-          return {
-            ...sensor,
-            status: nextStatus,
-            alarmId: null,
-            alarmType: null,
-            location: {
-              ...location,
-              alarmId: null,
-            },
-          };
-        });
-
-        return changed ? { ...page, sensors } : page;
-      });
-
-      return changed ? { ...data, pages } : cached;
-    });
-  }, [queryClient]);
 
   useEffect(() => {
     if (surveillanceDisabled !== undefined) {
@@ -965,9 +946,16 @@ export default function MonitoringCard({
             consigneSup={consigneSup}
             consigneInf={consigneInf}
             consigne={consigne}
+            consigneSupPreAlarme={consigneSupPreAlarme ?? null}
+            estConsigneSupPreAlarmeActive={estConsigneSupPreAlarmeActive ?? false}
+            consigneInfPreAlarme={consigneInfPreAlarme ?? null}
+            estConsigneInfPreAlarmeActive={estConsigneInfPreAlarmeActive ?? false}
             unite={unite}
             isSurveillanceActive={isSurveillanceActive}
             measurements={isSurveillanceActive ? orderedData : []}
+            showNullNonResponse={showNullNonResponse}
+            onShowNullNonResponseChange={onShowNullNonResponseChange}
+            preferencesLoading={nonResponsePreferencesLoading}
           />
         ) : null}
 
@@ -992,7 +980,7 @@ export default function MonitoringCard({
               const acknowledgedId = Number(ackAlarmId);
               if (Number.isFinite(acknowledgedId)) {
                 setLocallyAcknowledgedAlarmId(acknowledgedId);
-                markAlarmAcknowledgedInCache(acknowledgedId);
+                markAlarmAcknowledgedInPaginatedSensorsCache(queryClient, acknowledgedId);
               }
               setShowAcknowledgeModal(false);
               setAckComment("");

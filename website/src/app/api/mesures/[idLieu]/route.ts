@@ -4,6 +4,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { getCachedMeasurements, setCachedMeasurements } from "@/lib/measurement-cache"
 import { apiError, apiOk } from "@/lib/api-response"
 import { formatDbDateTime } from "@/lib/date-display"
+import { resolveNonResponsePreference } from "@/lib/non-response-preference"
 
 export const GET = withAuthLogging(
   async (req: NextRequest, _ctx: any, { params }: { params: Promise<{ idLieu: string }> }) => {
@@ -22,13 +23,16 @@ export const GET = withAuthLogging(
       const includeMeta = searchParams.get("includeMeta") === "true"
       const source = searchParams.get("source") === "mesures" ? "mesures" : "graphique"
       const usePagination = source === "mesures" && (searchParams.has("page") || searchParams.has("pageSize"))
+      const includeNullNonResponse = await resolveNonResponsePreference(req)
 
       const idLieuInt = parseInt(idLieu)
       if (isNaN(idLieuInt)) {
         return apiError(400, "invalid_id", "Invalid idLieu parameter")
       }
 
-      if (source === "graphique" && !forceFresh && !startDate && !endDate && !includeMeta) {
+      const canUseCache = source === "graphique" && !includeNullNonResponse
+
+      if (canUseCache && !forceFresh && !startDate && !endDate && !includeMeta) {
         const cached = getCachedMeasurements(idLieuInt)
         if (cached) {
           const response = apiOk(cached)
@@ -38,7 +42,7 @@ export const GET = withAuthLogging(
         }
       }
 
-      if (source === "graphique" && !forceFresh && !startDate && !endDate && includeMeta) {
+      if (canUseCache && !forceFresh && !startDate && !endDate && includeMeta) {
         const cached = getCachedMeasurements(idLieuInt)
         if (cached) {
           const lieuMeta = await prisma.t_lieu.findUnique({
@@ -71,7 +75,7 @@ export const GET = withAuthLogging(
           ? prismaMesure.tm_mesures.findMany({
               where: {
                 ...whereClause,
-                Est_Valeur_Null: 0,
+                ...(includeNullNonResponse ? {} : { Est_Valeur_Null: 0 }),
               },
               take: usePagination ? pageSize : rowNumber,
               skip: usePagination ? (page - 1) * pageSize : 0,
@@ -88,12 +92,13 @@ export const GET = withAuthLogging(
                 Sonde_Numero_Serie: true,
                 Frequence: true,
                 Est_Etat_Alarme: true,
+                Est_Valeur_Null: true,
               },
             })
           : prismaMesure.tm_graphique.findMany({
               where: {
                 ...whereClause,
-                Est_Valeur_Null: false,
+                ...(includeNullNonResponse ? {} : { Est_Valeur_Null: false }),
               },
               take: rowNumber,
               orderBy: { Date_Heure_Mesure: "desc" },
@@ -109,6 +114,7 @@ export const GET = withAuthLogging(
                 Sonde_Numero_Serie: true,
                 Frequence: true,
                 Est_Etat_Alarme: true,
+                Est_Valeur_Null: true,
               },
             }),
         prisma.t_lieu.findUnique({
@@ -127,7 +133,7 @@ export const GET = withAuthLogging(
           ? prismaMesure.tm_mesures.count({
               where: {
                 ...whereClause,
-                Est_Valeur_Null: 0,
+                ...(includeNullNonResponse ? {} : { Est_Valeur_Null: 0 }),
               },
             })
           : Promise.resolve(0),
@@ -138,7 +144,7 @@ export const GET = withAuthLogging(
           ? await prismaMesure.tm_mesures.findMany({
               where: {
                 ...whereClause,
-                Est_Valeur_Null: 0,
+                ...(includeNullNonResponse ? {} : { Est_Valeur_Null: 0 }),
               },
               take: rowNumber,
               orderBy: { Date_Heure_Mesure: "desc" },
@@ -154,6 +160,7 @@ export const GET = withAuthLogging(
                 Sonde_Numero_Serie: true,
                 Frequence: true,
                 Est_Etat_Alarme: true,
+                Est_Valeur_Null: true,
               },
             })
           : primaryMeasurements
@@ -169,13 +176,15 @@ export const GET = withAuthLogging(
 
       const formattedMeasurements = chronologicalMeasurements.map((m: any) => {
         const dateHeure = m.Date_Heure_Mesure ? new Date(m.Date_Heure_Mesure) : new Date()
+        const isNullMeasurement =
+          typeof m.Est_Valeur_Null === "number" ? m.Est_Valeur_Null !== 0 : Boolean(m.Est_Valeur_Null)
 
         const dateDisplay = formatDbDateTime(dateHeure, { withSeconds: false })
         const dateXaxis = formatDbDateTime(dateHeure, { timeOnly: true, withSeconds: false })
 
         return {
           id: (m.Id_Mesure ?? m.Id_Graphique)?.toString() || "",
-          Valeur: m.Valeur !== null ? parseFloat(m.Valeur.toString()) : 0,
+          Valeur: isNullMeasurement || m.Valeur === null ? null : parseFloat(m.Valeur.toString()),
           Nb_Decimal:
             m.Nb_Decimal !== null && m.Nb_Decimal !== undefined
               ? Number(m.Nb_Decimal)
@@ -206,6 +215,7 @@ export const GET = withAuthLogging(
                 : null,
           SondeNumeroSerie: m.Sonde_Numero_Serie || "",
           Frequence: m.Frequence || 15,
+          Est_Valeur_Null: isNullMeasurement,
           Etat_Alarme:
             typeof m.Est_Etat_Alarme === "number"
               ? m.Est_Etat_Alarme
@@ -215,7 +225,7 @@ export const GET = withAuthLogging(
         }
       })
 
-      if (source === "graphique" && !startDate && !endDate) {
+      if (canUseCache && !startDate && !endDate) {
         setCachedMeasurements(idLieuInt, formattedMeasurements)
       }
 

@@ -3,11 +3,14 @@ import { fetchJson, HttpError, isUnauthorizedError } from "@/lib/http";
 
 export interface Calibration {
   Id_Etalonnage: number;
-  Date_Heure_Etalonnage: Date | null;
-  Date_Validite: Date | null;
+  Date_Heure_Etalonnage: string | null;
+  Date_Validite: string | null;
+  Duree_Validite_Jours: number | null;
   Sonde_Numero_Serie: string | null;
   Operateur: string | null;
-  Incertitude: string | null;
+  Incertitude: number | null;
+  Err_Justesse: number | null;
+  Unite: string | null;
 }
 
 async function fetchCalibrations(serieNum: string): Promise<Calibration[]> {

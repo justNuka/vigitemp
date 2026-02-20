@@ -2,6 +2,7 @@
 
 import { cacheTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { getUserAvatarMap } from "@/lib/user-avatar-db";
 
 /**
  * Composant serveur pour charger les utilisateurs depuis la base de données
@@ -25,6 +26,8 @@ export async function ServerUsers() {
     orderBy: { Login: "asc" },
   });
 
+  const avatarMap = await getUserAvatarMap(users.map((user) => user.Id_Utilisateur));
+
   // Transform to User format
   const formatted = users.map((user) => ({
     id: user.Id_Utilisateur.toString(),
@@ -36,6 +39,7 @@ export async function ServerUsers() {
     role: user.Profil_Utilisateur || "user",
     isActive: !user.Est_Archive,
     createdAt: user.Date_Creation || new Date(),
+    avatar: avatarMap.get(user.Id_Utilisateur) ?? null,
   }));
 
   return formatted;

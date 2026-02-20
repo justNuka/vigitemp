@@ -1,4 +1,4 @@
-# Installation A a Z (serveur C# + web)
+﻿# Installation A a Z (serveur C# + web)
 
 Ce guide couvre la preparation offline, l'installation chez le client et les verifications de services.
 
@@ -12,6 +12,20 @@ Ce guide couvre la preparation offline, l'installation chez le client et les ver
 
 ## 1) Preparation offline (machine connectee)
 
+### Option rapide (tout en une commande)
+Depuis la racine du repo :
+```powershell
+.\Prepare-All.ps1
+```
+
+Le script affiche l'avancement en temps reel et prepare :
+- `vigi\\2 - installation\1 - serveur`
+- `vigi\\2 - installation\2 - site web`
+- `vigi\\2 - installation\3 - agent`
+- `vigi\\1 - prerequis\...`
+
+### Option detaillee
+
 ### 1.1 Build du site web (standalone)
 Dans `website/installer/` :
 ```powershell
@@ -20,13 +34,12 @@ Dans `website/installer/` :
 
 Le package est genere dans :
 ```
-website\build\website-standalone\
+vigi\\2 - installation\2 - site web\
 ```
 
 Contient :
 - `.next/standalone`
 - `.next/static`
-- `public/`
 - `installer/` (Install-VigitempWeb.ps1 + winsw.exe)
 
 ### 1.2 Build du serveur C#
@@ -36,17 +49,29 @@ Copier ensuite le dossier de build qui contient :
 - `Vigitemp Serveur.exe.config`
 
 ### 1.3 Preparer la cle USB
+
+En plus des dossiers d'installation, les scripts de preparation remplissent aussi :
+```
+vigi\\1 - prerequis\
+```
+
+Contenu :
+- `install\Install-Node.ps1`
+- `install\Install-MySQL-And-VCredist.ps1`
+- `node\node-v24.12.0-x64.msi`
+- `mysql\mysql-8.4.7-winx64.msi`
+- `vcredist\VC_redist.x64.exe`
+
 Copier sur une cle USB :
 ```
-website\build\website-standalone\
-Vigitemp Serveur\installer\
-<dossier build serveur C#>
-licence\.vtlic
-licence\public_key.pem
+vigi\2 - installation\1 - serveur\
+vigi\2 - installation\2 - site web\
+vigi\2 - installation\3 - agent\
+vigi\1 - prerequis\
 ```
 
 ## 2) Installation serveur C# (client)
-Dans le dossier `Vigitemp Serveur\installer` :
+Dans le dossier `vigi\2 - installation\1 - serveur\installer` :
 ```powershell
 .\Install-VigitempServer.ps1
 ```
@@ -57,6 +82,7 @@ Le script demande :
 - URL publique du site
 - choix du provider BDD (mysql ou mssql)
 - fichier de licence + cle publique
+- secret de dispatch alarmes (partage avec le web)
 
 Chemins utiles apres install :
 - `C:\ProgramData\Vigitemp\server`
@@ -65,7 +91,7 @@ Chemins utiles apres install :
 - logs : `C:\ProgramData\Vigitemp\logs\vigitemp-serveur.log`
 
 ## 3) Installation web (client)
-Dans le dossier `website-standalone\installer` :
+Dans le dossier `vigi\\2 - installation\2 - site web\installer` :
 ```powershell
 .\Install-VigitempWeb.ps1
 ```
@@ -76,10 +102,32 @@ Le script demande :
 - URL publique du site
 - infos BDD (host, port, user, password, nom des bases)
 - choix du provider BDD (mysql ou mssql)
-- cache TTL + secret surveillance (optionnel)
+- cache TTL
+- secret de dispatch alarmes (partage avec le serveur C#)
 
 Note : en mode offline complet, le script a besoin de `node.exe`. Assurez-vous que Node.js est
 dans le PATH ou utilisez l'option `-NodePath` pour indiquer le chemin complet.
+
+## 3.1 Secret commun serveur/web (obligatoire)
+Le serveur C# et le site web doivent utiliser le meme secret pour l'appel `POST /api/alarmes/dispatch`.
+
+Par defaut, les 2 scripts utilisent ce fichier partage :
+`C:\ProgramData\Vigitemp\shared-secrets\alarm-dispatch-secret.txt`
+
+Comportement des installateurs :
+- si `-AlarmDispatchSecret` est fourni : ce secret est utilise.
+- sinon si `-AlarmDispatchSecretFile` existe : le secret est lu depuis ce fichier.
+- sinon : le script peut demander la saisie (mode interactif), ou generer un secret automatiquement.
+- dans tous les cas : le secret est sauvegarde dans le fichier partage.
+
+Sur 2 machines differentes :
+1. lancer le 1er installateur avec `-AlarmDispatchSecretFile "C:\Temp\alarm-dispatch-secret.txt"`
+2. copier ce fichier sur l'autre machine
+3. lancer l'autre installateur avec le meme parametre `-AlarmDispatchSecretFile`
+
+Variables/elements ecrits :
+- web `.env` : `VIGITEMP_ALARM_DISPATCH_SECRET` (et compat `VIGITEMP_SURVEILLANCE_DISPATCH_SECRET`)
+- serveur C# `.config` : `Vigi.AlarmDispatchSecret`
 
 Chemins utiles apres install :
 - `C:\ProgramData\Vigitemp\website`
@@ -139,3 +187,4 @@ Si vous voulez un nom lisible pour toutes les machines du reseau :
 ### Notes
 - Sans DNS, un reverse proxy ne suffit pas : les postes doivent resoudre le nom.
 - L'acces par IP reste la solution la plus simple si aucune infra DNS n'existe.
+

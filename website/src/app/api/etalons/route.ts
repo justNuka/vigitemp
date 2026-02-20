@@ -1,9 +1,11 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getAuthenticatedUser } from "@/lib/auth"
-import { withLogging } from "@/lib/api-logger"
+import { getClientIp, withLogging } from "@/lib/api-logger"
 import { z } from "zod"
+import { log } from "@/lib/logger"
 import { apiError, apiOk } from "@/lib/api-response"
+import { requireStandardOrExpertLicense } from "@/lib/license-guards"
 
 const createEtalonSchema = z.object({
   Etalon_Numero_Serie: z.string().min(1, "Numéro de série requis"),
@@ -37,6 +39,9 @@ export const GET = withLogging(async (req: NextRequest) => {
     if (!user) {
       return apiError(401, "unauthenticated", "Non authentifié")
     }
+
+    const guard = await requireStandardOrExpertLicense()
+    if (guard) return guard
 
     const etalons = await prisma.t_etalon.findMany({
       select: {
@@ -100,6 +105,9 @@ export const POST = withLogging(async (req: NextRequest) => {
   }
 
   try {
+    const guard = await requireStandardOrExpertLicense()
+    if (guard) return guard
+
     const body = await req.json()
     const data = createEtalonSchema.parse(body)
 
@@ -123,6 +131,11 @@ export const POST = withLogging(async (req: NextRequest) => {
         Id_Serveur: data.Id_Serveur,
         Id_Module: data.Id_Module,
       },
+    })
+
+    log.data.create("Etalon", newEtalon.Id_Etalon, user.username, user.userId, getClientIp(req), {
+      serie: data.Etalon_Numero_Serie,
+      etat: data.Etat_Etalon,
     })
 
     if (data.Numero || data.Organisme || data.Date || data.Unite) {

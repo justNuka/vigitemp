@@ -13,6 +13,7 @@ type Options = {
   listenForUpdates?: boolean
   includeMeta?: boolean
   source?: "graphique" | "mesures"
+  includeNullNonResponse?: boolean
 }
 
 export function useLieuMeasurements(
@@ -25,6 +26,7 @@ export function useLieuMeasurements(
     listenForUpdates = true,
     includeMeta = false,
     source = "graphique",
+    includeNullNonResponse,
   }: Options = {},
 ) {
   const [data, setData] = useState<MeasureData[]>([])
@@ -49,6 +51,9 @@ export function useLieuMeasurements(
         if (source !== "graphique") {
           params.set("source", source)
         }
+        if (typeof includeNullNonResponse === "boolean") {
+          params.set("includeNullNonResponse", includeNullNonResponse ? "1" : "0")
+        }
         const payload = await fetchJson<
           MeasureData[] | { measurements?: MeasureData[]; lieuType?: string | null }
         >(`/api/mesures/${idLieu}?${params}`)
@@ -67,7 +72,7 @@ export function useLieuMeasurements(
       setIsLoading(false)
     }
     },
-    [idLieu, rowNumber, includeMeta, startDate, endDate, source],
+    [idLieu, rowNumber, includeMeta, startDate, endDate, source, includeNullNonResponse],
   )
 
   useEffect(() => {

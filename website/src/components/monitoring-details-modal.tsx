@@ -13,6 +13,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Line } from "react-chartjs-2";
@@ -46,6 +48,8 @@ ChartJS.register(
   Filler
 );
 
+let isChartZoomPluginRegistered = false;
+
 type DateRangeValue = { from: Date; to?: Date };
 
 interface MonitoringDetailsModalProps {
@@ -60,10 +64,17 @@ interface MonitoringDetailsModalProps {
   consigneSup: number | null;
   consigneInf: number | null;
   consigne: number | null;
+  consigneSupPreAlarme?: number | null;
+  estConsigneSupPreAlarmeActive?: boolean | null;
+  consigneInfPreAlarme?: number | null;
+  estConsigneInfPreAlarmeActive?: boolean | null;
   unite: string;
   isSurveillanceActive: boolean;
   measurements?: MeasureData[];
   initialRange?: DateRangeValue;
+  showNullNonResponse?: boolean;
+  onShowNullNonResponseChange?: (enabled: boolean) => Promise<void> | void;
+  preferencesLoading?: boolean;
 }
 
 type AuditLog = {
@@ -87,14 +98,45 @@ export default function MonitoringDetailsModal({
   consigneSup: initialConsigneSup,
   consigneInf: initialConsigneInf,
   consigne: initialConsigne,
+  consigneSupPreAlarme: initialConsigneSupPreAlarme,
+  estConsigneSupPreAlarmeActive,
+  consigneInfPreAlarme: initialConsigneInfPreAlarme,
+  estConsigneInfPreAlarmeActive,
   unite: initialUnite,
   isSurveillanceActive,
   measurements: initialMeasurements,
   initialRange,
+  showNullNonResponse: controlledShowNullNonResponse,
+  onShowNullNonResponseChange,
+  preferencesLoading: controlledPreferencesLoading,
 }: MonitoringDetailsModalProps) {
   const locale = useLocale();
   const localeTag = locale === "fr" ? "fr-FR" : locale;
   const t = useTranslations("monitoringDetailsModal");
+  useEffect(() => {
+    if (isChartZoomPluginRegistered) {
+      return;
+    }
+
+    let cancelled = false;
+
+    import("chartjs-plugin-zoom")
+      .then((mod) => {
+        if (cancelled || isChartZoomPluginRegistered) {
+          return;
+        }
+        ChartJS.register(mod.default);
+        isChartZoomPluginRegistered = true;
+      })
+      .catch((error) => {
+        console.error("Failed to load chartjs-plugin-zoom", error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const [dateRange, setDateRange] = useState<DateRangeValue | null>(initialRange ?? null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
   const chartRef = useRef<ChartJS<"line"> | null>(null);
@@ -102,20 +144,56 @@ export default function MonitoringDetailsModal({
     sup: number | null;
     inf: number | null;
     consigne: number | null;
-  }>({ sup: null, inf: null, consigne: null });
+    preSup: number | null;
+    preInf: number | null;
+  }>({ sup: null, inf: null, consigne: null, preSup: null, preInf: null });
   const [activeTab, setActiveTab] = useState<"graph" | "table" | "audit">("graph");
+  const [zoomMode, setZoomMode] = useState<"x" | "xy">("x");
   const [rangeGraphData, setRangeGraphData] = useState<MeasureData[]>([]);
   const [rangeGraphLoading, setRangeGraphLoading] = useState(false);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError] = useState<string | null>(null);
   const [auditLoaded, setAuditLoaded] = useState(false);
+  const [internalShowNullNonResponse, setInternalShowNullNonResponse] = useState(false);
+  const [internalPreferencesLoading, setInternalPreferencesLoading] = useState(false);
+  const isShowNullControlled = typeof controlledShowNullNonResponse === "boolean";
+  const showNullNonResponse = isShowNullControlled
+    ? Boolean(controlledShowNullNonResponse)
+    : internalShowNullNonResponse;
+  const preferencesLoading = isShowNullControlled
+    ? Boolean(controlledPreferencesLoading)
+    : internalPreferencesLoading;
 
   useEffect(() => {
     if (initialRange) {
       setDateRange(initialRange);
     }
   }, [initialRange]);
+
+  useEffect(() => {
+    if (!isOpen || isShowNullControlled) return;
+
+    let isActive = true;
+    setInternalPreferencesLoading(true);
+
+    fetchJson<{ enabled: boolean }>("/api/preferences/non-response")
+      .then((res) => {
+        if (!isActive) return;
+        setInternalShowNullNonResponse(Boolean(res?.enabled));
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setInternalShowNullNonResponse(false);
+      })
+      .finally(() => {
+        if (isActive) setInternalPreferencesLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [isOpen, isShowNullControlled]);
 
   const effectiveRange = useMemo(() => {
     if (!dateRange?.from) return null;
@@ -162,6 +240,7 @@ export default function MonitoringDetailsModal({
             source: "mesures",
             startDate: rangeStart.toISOString(),
             endDate: rangeEnd.toISOString(),
+            includeNullNonResponse: showNullNonResponse ? "1" : "0",
           });
 
           const payload = await fetchJson<{
@@ -208,13 +287,38 @@ export default function MonitoringDetailsModal({
       isActive = false;
       controller.abort();
     };
-  }, [idLieu, isOpen, rangeEnabled, rangeEnd, rangeStart]);
+  }, [idLieu, isOpen, rangeEnabled, rangeEnd, rangeStart, showNullNonResponse]);
 
   const hasLocalMeasurements = Boolean(initialMeasurements?.length);
   const shouldLoadBase = isOpen && isSurveillanceActive && !hasLocalMeasurements;
-  const { data: fetchedData, isLoading } = useLieuMeasurements(idLieu, {
+  const { data: fetchedData, isLoading, reload: reloadMeasurements } = useLieuMeasurements(idLieu, {
     enabled: shouldLoadBase,
+    includeNullNonResponse: showNullNonResponse,
   });
+  const handleToggleNullNonResponse = useCallback(async (checked: boolean) => {
+    if (onShowNullNonResponseChange) {
+      await onShowNullNonResponseChange(checked);
+      if (isSurveillanceActive) {
+        await reloadMeasurements(true);
+      }
+      return;
+    }
+
+    setInternalShowNullNonResponse(checked);
+    try {
+      await fetchJson("/api/preferences/non-response", {
+        method: "PUT",
+        body: JSON.stringify({ enabled: checked }),
+      });
+      if (isSurveillanceActive) {
+        await reloadMeasurements(true);
+      }
+    } catch (error) {
+      setInternalShowNullNonResponse((prev) => !prev);
+      console.error("Erreur mise a jour preference non-reponse:", error);
+    }
+  }, [isSurveillanceActive, onShowNullNonResponseChange, reloadMeasurements]);
+
   const baseLoading = isSurveillanceActive && shouldLoadBase && isLoading;
   const baseData = isSurveillanceActive
     ? hasLocalMeasurements
@@ -234,6 +338,7 @@ export default function MonitoringDetailsModal({
     pageSize: pagination.pageSize,
     startDate: rangeEnabled ? rangeStart : null,
     endDate: rangeEnabled ? rangeEnd : null,
+    includeNullNonResponse: showNullNonResponse,
   });
   const rangeLoading = isHistoryLoading;
 
@@ -258,6 +363,14 @@ export default function MonitoringDetailsModal({
   );
 
   const { consigneSup, consigneInf, consigne, unite } = summary;
+  const preAlarmSup =
+    estConsigneSupPreAlarmeActive && initialConsigneSupPreAlarme !== null && initialConsigneSupPreAlarme !== undefined
+      ? Number(initialConsigneSupPreAlarme)
+      : null;
+  const preAlarmInf =
+    estConsigneInfPreAlarmeActive && initialConsigneInfPreAlarme !== null && initialConsigneInfPreAlarme !== undefined
+      ? Number(initialConsigneInfPreAlarme)
+      : null;
   const measuresLabel = useMemo(
     () => t("chart.measures", { unit: unite }),
     [t, unite],
@@ -285,8 +398,10 @@ export default function MonitoringDetailsModal({
       sup: toPos(consigneSup),
       inf: toPos(consigneInf),
       consigne: toPos(consigne),
+      preSup: toPos(preAlarmSup),
+      preInf: toPos(preAlarmInf),
     });
-  }, [consigne, consigneInf, consigneSup]);
+  }, [consigne, consigneInf, consigneSup, preAlarmInf, preAlarmSup]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -359,6 +474,13 @@ export default function MonitoringDetailsModal({
     return () => controller.abort();
   }, [activeTab, auditLoaded, idLieu, isOpen, t]);
 
+  const resetChartZoom = useCallback(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    chart.resetZoom();
+    chart.update("none");
+  }, []);
+
   const orderedHistoryData = useMemo(() => {
     if (!historyData.length) return historyData;
     return [...historyData].sort((a, b) => {
@@ -383,7 +505,7 @@ export default function MonitoringDetailsModal({
     id: number | string;
     dateIso: string;
     dateLabel: string;
-    value: number;
+    value: number | null;
     unit: string;
   }>[] = [
     {
@@ -402,7 +524,10 @@ export default function MonitoringDetailsModal({
       accessorKey: "value",
       header: t("table.columns.value"),
       cell: ({ row }) => {
-        const value = row.getValue("value") as number;
+        const value = row.getValue("value") as number | null;
+        if (value === null) {
+          return <span className="text-muted-foreground">{t("table.status.no_response")}</span>;
+        }
         const isOutOfRange =
           (consigneInf !== null && value < consigneInf) ||
           (consigneSup !== null && value > consigneSup);
@@ -432,7 +557,10 @@ export default function MonitoringDetailsModal({
       id: "statut",
       header: t("table.columns.status"),
       cell: ({ row }) => {
-        const value = row.getValue("value") as number;
+        const value = row.getValue("value") as number | null;
+        if (value === null) {
+          return <span className="text-muted-foreground">{t("table.status.no_response")}</span>;
+        }
         const isOutOfRange =
           (consigneInf !== null && value < consigneInf) ||
           (consigneSup !== null && value > consigneSup);
@@ -508,7 +636,7 @@ export default function MonitoringDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
+      <DialogContent className="w-[95vw] max-w-7xl max-h-[95vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>{nomLieu}</DialogTitle>
           <p className="text-sm text-muted-foreground">
@@ -523,20 +651,31 @@ export default function MonitoringDetailsModal({
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="w-full">
-              <DateRangePicker
-                allowEmpty
-                onUpdate={({ range }) => {
-                  if (!range.from) {
-                    setDateRange(null)
-                    return
-                  }
-                  setDateRange({ from: range.from, to: range.to ?? range.from })
-                }}
-                align="start"
-                locale={localeTag}
-                showCompare={false}
-              />
+            <div className="flex w-full flex-wrap items-center justify-between gap-3">
+              <div className="min-w-65 flex-1">
+                <DateRangePicker
+                  allowEmpty
+                  onUpdate={({ range }) => {
+                    if (!range.from) {
+                      setDateRange(null)
+                      return
+                    }
+                    setDateRange({ from: range.from, to: range.to ?? range.from })
+                  }}
+                  align="start"
+                  locale={localeTag}
+                  showCompare={false}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">{t("chart.show_no_response")}</span>
+                <Switch
+                  checked={showNullNonResponse}
+                  onCheckedChange={handleToggleNullNonResponse}
+                  disabled={preferencesLoading}
+                  aria-label={t("chart.show_no_response")}
+                />
+              </div>
             </div>
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "graph" | "table" | "audit")} className="w-full">
             <TabsList className="grid w-full grid-cols-3 bg-primary/10 text-primary">
@@ -561,8 +700,30 @@ export default function MonitoringDetailsModal({
             </TabsList>
 
             {/* Graph Tab */}
-            <TabsContent value="graph" className="space-y-4 pt-4 h-140">
-              <div className="relative h-125">
+            <TabsContent value="graph" className="space-y-4 pt-4 h-[68vh]">
+              <div className="flex items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  variant={zoomMode === "x" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setZoomMode("x")}
+                >
+                  Zoom X
+                </Button>
+                <Button
+                  type="button"
+                  variant={zoomMode === "xy" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setZoomMode("xy")}
+                >
+                  Zoom XY
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={resetChartZoom}>
+                  {locale === "fr" ? "Reinitialiser zoom" : "Reset zoom"}
+                </Button>
+              </div>
+
+              <div className="relative h-[60vh]">
                 <Line
                   ref={chartRef}
                   data={{
@@ -604,7 +765,7 @@ export default function MonitoringDetailsModal({
                         : []),
                       {
                         label: measuresLabel,
-                        data: orderedData.map(d => d.Valeur),
+                        data: orderedData.map(d => (typeof d.Valeur === "number" ? d.Valeur : null)),
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.2)',
                         borderWidth: 2,
@@ -646,6 +807,7 @@ export default function MonitoringDetailsModal({
                         mode: 'nearest',
                         intersect: false,
                         position: 'nearest',
+                        displayColors: false,
                         backgroundColor: 'rgba(0, 0, 0, 0.8)',
                         padding: 12,
                         titleFont: {
@@ -662,19 +824,54 @@ export default function MonitoringDetailsModal({
                           if (!aIsMeasure && bIsMeasure) return 1;
                           return 0;
                         },
-                        filter: (context) => context.dataset.label === measuresLabel,
+                        filter: (context) =>
+                          context?.dataset?.label === measuresLabel &&
+                          typeof context.dataIndex === "number",
                         callbacks: {
                           title: (context) => {
-                            const index = context[0].dataIndex;
+                            const index = context?.[0]?.dataIndex;
+                            if (typeof index !== "number") {
+                              return "";
+                            }
                             return orderedData[index]?.DateHeureMesure || '';
                           },
                           label: (context) => {
-                            const index = context.dataIndex;
+                            const index = context?.dataIndex;
+                            if (typeof index !== "number") {
+                              return "";
+                            }
                             const measure = orderedData[index];
+                            if (!measure || measure.Valeur === null) {
+                              return t("table.status.no_response");
+                            }
                             return t("tooltip.value", { value: measure.Valeur, unit: unite });
                           },
                         },
                       },
+                      zoom: {
+                        limits: {
+                          x: { minRange: 10 },
+                        },
+                        pan: {
+                          enabled: true,
+                          mode: zoomMode,
+                        },
+                        zoom: {
+                          drag: {
+                            enabled: true,
+                            borderColor: "rgba(37, 99, 235, 0.7)",
+                            borderWidth: 1,
+                            backgroundColor: "rgba(37, 99, 235, 0.15)",
+                          },
+                          wheel: {
+                            enabled: true,
+                          },
+                          pinch: {
+                            enabled: true,
+                          },
+                          mode: zoomMode,
+                        },
+                      } as any,
                     },
                     scales: {
                       x: {
@@ -684,7 +881,8 @@ export default function MonitoringDetailsModal({
                           color: 'rgba(0, 0, 0, 0.05)',
                         },
                         ticks: {
-                          maxTicksLimit: 10,
+                          autoSkip: true,
+                          maxTicksLimit: 8,
                           font: {
                             size: 11,
                           },
@@ -724,6 +922,27 @@ export default function MonitoringDetailsModal({
 
                 {/* Lignes de consigne superposées + labels */}
                 <div className="absolute inset-0 pointer-events-none">
+                  {preAlarmSup !== null && guidePositions.preSup !== null && (
+                    <>
+                      <div
+                        className="absolute w-full border-t border-red-500/70 border-dotted"
+                        style={{
+                          top: `${guidePositions.preSup}px`,
+                        }}
+                      />
+                      <div
+                        className="absolute right-4 text-[11px] font-medium text-red-500 bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-sm"
+                        style={{
+                          top: `${guidePositions.preSup}px`,
+                          transform: 'translateY(-50%)',
+                        }}
+                      >
+                        {locale === "fr"
+                          ? `Pre-sup: ${preAlarmSup}${unite}`
+                          : `Pre-high: ${preAlarmSup}${unite}`}
+                      </div>
+                    </>
+                  )}
                   {consigneSup !== null && guidePositions.sup !== null && (
                     <>
                       <div
@@ -759,6 +978,27 @@ export default function MonitoringDetailsModal({
                         }}
                       >
                         {t("guides.target", { value: consigne, unit: unite })}
+                      </div>
+                    </>
+                  )}
+                  {preAlarmInf !== null && guidePositions.preInf !== null && (
+                    <>
+                      <div
+                        className="absolute w-full border-t border-blue-500/70 border-dotted"
+                        style={{
+                          top: `${guidePositions.preInf}px`,
+                        }}
+                      />
+                      <div
+                        className="absolute right-4 text-[11px] font-medium text-blue-600 dark:text-blue-300 bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-sm"
+                        style={{
+                          top: `${guidePositions.preInf}px`,
+                          transform: 'translateY(-50%)',
+                        }}
+                      >
+                        {locale === "fr"
+                          ? `Pre-inf: ${preAlarmInf}${unite}`
+                          : `Pre-low: ${preAlarmInf}${unite}`}
                       </div>
                     </>
                   )}

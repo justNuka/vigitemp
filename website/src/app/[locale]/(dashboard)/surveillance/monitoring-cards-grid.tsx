@@ -39,6 +39,9 @@ interface MonitoringCardsGridProps {
   ) => void
   onGroupSurveillanceToggle?: (groupId: number, newState: boolean, durationMinutes?: number | null) => void
   onEditLocation?: (idLieu: number) => void
+  showNullNonResponse?: boolean
+  onShowNullNonResponseChange?: (enabled: boolean) => Promise<void> | void
+  nonResponsePreferencesLoading?: boolean
 }
 
 function formatDisabledLabel(
@@ -68,6 +71,9 @@ export function MonitoringCardsGrid({
   onSurveillanceToggle,
   onGroupSurveillanceToggle,
   onEditLocation,
+  showNullNonResponse = false,
+  onShowNullNonResponseChange,
+  nonResponsePreferencesLoading = false,
 }: MonitoringCardsGridProps) {
   const t = useTranslations("surveillance")
   const locale = useLocale()
@@ -277,6 +283,10 @@ export function MonitoringCardsGrid({
                               alarmDelayHighMinutes={sensor.location.alarmDelayHighMinutes ?? null}
                               alarmDelayLowMinutes={sensor.location.alarmDelayLowMinutes ?? null}
                               noResponseDelayMinutes={sensor.location.noResponseDelayMinutes ?? null}
+                consigneSupPreAlarme={sensor.location.consigneSupPreAlarme ?? null}
+                estConsigneSupPreAlarmeActive={sensor.location.estConsigneSupPreAlarmeActive ?? false}
+                consigneInfPreAlarme={sensor.location.consigneInfPreAlarme ?? null}
+                estConsigneInfPreAlarmeActive={sensor.location.estConsigneInfPreAlarmeActive ?? false}
                               locationComment={sensor.location.comment ?? null}
                               lieuEtat={sensor.location.lieuEtat ?? ""}
                               surveillanceDisabled={sensor.location.surveillanceDisabled ?? false}
@@ -288,6 +298,9 @@ export function MonitoringCardsGrid({
                                 handleSurveillanceToggle(id, action, newState, durationMinutes ?? null)
                               }
                               onEditLocation={onEditLocation}
+                              showNullNonResponse={showNullNonResponse}
+                              onShowNullNonResponseChange={onShowNullNonResponseChange}
+                              nonResponsePreferencesLoading={nonResponsePreferencesLoading}
                             />
                           ))}
                         </div>
@@ -359,6 +372,10 @@ export function MonitoringCardsGrid({
                               alarmDelayHighMinutes={sensor.location.alarmDelayHighMinutes ?? null}
                               alarmDelayLowMinutes={sensor.location.alarmDelayLowMinutes ?? null}
                               noResponseDelayMinutes={sensor.location.noResponseDelayMinutes ?? null}
+                consigneSupPreAlarme={sensor.location.consigneSupPreAlarme ?? null}
+                estConsigneSupPreAlarmeActive={sensor.location.estConsigneSupPreAlarmeActive ?? false}
+                consigneInfPreAlarme={sensor.location.consigneInfPreAlarme ?? null}
+                estConsigneInfPreAlarmeActive={sensor.location.estConsigneInfPreAlarmeActive ?? false}
                               locationComment={sensor.location.comment ?? null}
                               lieuEtat={sensor.location.lieuEtat ?? ""}
                               surveillanceDisabled={sensor.location.surveillanceDisabled ?? false}
@@ -370,6 +387,9 @@ export function MonitoringCardsGrid({
                                 handleSurveillanceToggle(id, action, newState, durationMinutes ?? null)
                               }
                               onEditLocation={onEditLocation}
+                              showNullNonResponse={showNullNonResponse}
+                              onShowNullNonResponseChange={onShowNullNonResponseChange}
+                              nonResponsePreferencesLoading={nonResponsePreferencesLoading}
                             />
                           ))}
                         </div>

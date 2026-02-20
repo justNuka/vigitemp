@@ -9,6 +9,7 @@ import { getRequestContext } from "@/lib/api-logger"
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { revalidateTag } from "next/cache"
 import { apiError, apiOk } from "@/lib/api-response"
+import { getUserAvatarMap, setUserAvatarValue } from "@/lib/user-avatar-db"
 
 const createUserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -22,6 +23,7 @@ const createUserSchema = z.object({
     .string()
     .optional()
     .transform((val) => (val ? new Date(val) : undefined)),
+  avatar: z.string().trim().max(512).nullable().optional(),
 })
 
 export const GET = withAdminLogging(async (_req: NextRequest) => {
@@ -31,6 +33,8 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
       orderBy: { Login: "asc" },
     })
 
+    const avatarMap = await getUserAvatarMap(users.map((user) => user.Id_Utilisateur))
+
     const formatted = users.map((user: any) => ({
       id: user.Id_Utilisateur,
       username: user.Login,
@@ -38,6 +42,8 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
       role: user.Profil_Utilisateur || "user",
       status: !user.Est_Archive ? "active" : "inactive",
       createdAt: user.Date_Creation?.toISOString() || null,
+      email: user.Adresse_Email || null,
+      avatar: avatarMap.get(user.Id_Utilisateur) ?? null,
     }))
 
     return apiOk(formatted)
@@ -82,10 +88,15 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: any) => {
       },
     })
 
+    if (data.avatar !== undefined) {
+      await setUserAvatarValue(user.Id_Utilisateur, data.avatar || null)
+    }
+
     log.data.create("Utilisateur", user.Id_Utilisateur, ctx.user.username, ctx.user.userId, ip, {
       username: user.Login,
       email: user.Adresse_Email,
       profile: user.Profil_Utilisateur,
+      avatar: data.avatar ?? null,
     })
 
     if (data.email && (await isEmailEnabled())) {
@@ -118,6 +129,7 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: any) => {
         displayName: `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login,
         role: user.Profil_Utilisateur || "user",
         status: "active",
+        avatar: data.avatar ?? null,
       },
       { status: 201 },
     )

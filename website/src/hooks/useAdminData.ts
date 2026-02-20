@@ -11,6 +11,15 @@ type Paginated<T> = {
   pagination: { page: number; limit: number; total: number; pages: number };
 };
 
+type AlarmApiItem = {
+  id: number;
+};
+
+type AlarmApiResponse = {
+  data: AlarmApiItem[];
+  pagination: { page: number; limit: number; total: number; pages: number };
+};
+
 export function useConnectedUsers(page: number = 1) {
   return useQuery({
     queryKey: ["admin", "utilisateurs-connectes", page],
@@ -66,5 +75,17 @@ export function useBackups() {
     },
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 30_000), // 30 seconds
     staleTime: 15_000, // 15 seconds
+  });
+}
+
+
+export function useAlarmCount(status: "active" | "resolved") {
+  return useQuery({
+    queryKey: ["admin", "alarms-count", status],
+    queryFn: async () => {
+      return getJson<AlarmApiResponse>(`/api/alarmes?status=${status}&page=1&limit=1`);
+    },
+    refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 15 * 60_000),
+    staleTime: 10 * 60_000,
   });
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Ports;
@@ -34,9 +34,9 @@ namespace Vigitemp_Serveur.sensors
                 VigitempServeur.Log($"[SONDE][TX] type=IE serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} cmd={command} (repeat)");
                 m_port.Write(command);
 
-                //Console.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                //Trace.WriteLine("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                VigitempServeur.Log("Données ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                //Console.WriteLine("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                //Trace.WriteLine("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
+                VigitempServeur.Log("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
 
                 while (pendingResults)
                 {
@@ -95,7 +95,7 @@ namespace Vigitemp_Serveur.sensors
                     return;
                 }
 
-                // Console.WriteLine("Données recues dans le port COM: " + regex_res);
+                // Console.WriteLine("Donnees recues dans le port COM: " + regex_res);
                 tmp_valeur = regex_res.Split(new string[] { "TEMP" }, StringSplitOptions.None)[1];
                 tmp_numeroSerie = regex_res.Split(new string[] { "TEMP" }, StringSplitOptions.None)[0];
                 VigitempServeur.Log($"[SONDE][RX] type=IE serial={m_sondeSerialNumber} parsedSerial={tmp_numeroSerie} rawValue={tmp_valeur}");
@@ -105,15 +105,15 @@ namespace Vigitemp_Serveur.sensors
                 var rawValue = Convert.ToDouble(float.Parse(tmp_valeur.Remove(tmp_valeur.Length - 2, 2), CultureInfo.InvariantCulture.NumberFormat));
                 var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
                 // tmp_temperature = (-19.5262).ToString();
-                Console.WriteLine("Données corrigées: " + correctedValue);
-                Trace.WriteLine("Données corrigées: " + correctedValue);
+                Console.WriteLine("Donnees corrigees: " + correctedValue);
+                Trace.WriteLine("Donnees corrigees: " + correctedValue);
 
 
-                // ThreadServeur.GetDatabase().AddMesure(m_serialNumber, float.Parse(String.Format("{0:0.00}", tmp_temperature)), "éC");
-                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "�C", ToInvariantRaw(rawValue));
-                VigitempServeur.Log($"[SONDE][DONE] type=IE serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=�C raw={ToInvariantRaw(rawValue)}");
+                // ThreadServeur.GetDatabase().AddMesure(m_serialNumber, float.Parse(String.Format("{0:0.00}", tmp_temperature)), "°C");
+                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
+                VigitempServeur.Log($"[SONDE][DONE] type=IE serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=°C raw={ToInvariantRaw(rawValue)}");
                 HandleNoResponseAlarm(true);
-                compareMeasuresAndLimits(correctedValue, "�C");
+                compareMeasuresAndLimits(correctedValue, "°C");
                 m_port.Close();
                 pendingResults = false;
                 System.Diagnostics.Trace.WriteLine("Fermeture du port " + m_comPort);
@@ -126,6 +126,8 @@ namespace Vigitemp_Serveur.sensors
 
     }
 }
+
+
 
 
 

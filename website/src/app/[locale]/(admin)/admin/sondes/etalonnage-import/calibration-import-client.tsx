@@ -45,9 +45,8 @@ type CalibrationImportRow = {
   sensor: string | null;
   dateText: string | null;
   dateValidityText: string | null;
-  operator: string | null;
   uncertainty: string | null;
-  unit: string | null;
+  errJustesse: string | null;
   insertData: CalibrationInsertData;
   persisted: boolean;
 };
@@ -59,8 +58,7 @@ export function CalibrationImportClient() {
   const [isSaving, setIsSaving] = useState(false);
   const [stepperSessionKey, setStepperSessionKey] = useState(0);
   const [editRowId, setEditRowId] = useState<string | null>(null);
-  const [editOperator, setEditOperator] = useState("");
-  const [editUnit, setEditUnit] = useState("");
+  const [editValidityDays, setEditValidityDays] = useState<string>("");
 
   const handleUploadResult = (result: CalibrationImportResult) => {
     const dateText =
@@ -82,9 +80,8 @@ export function CalibrationImportClient() {
           sensor: result.sensor,
           dateText,
           dateValidityText,
-          operator: result.operator,
           uncertainty: result.uncertainty,
-          unit: result.unit,
+          errJustesse: result.insertData.Err_Justesse ?? null,
           insertData: result.insertData,
           persisted: false,
         },
@@ -95,14 +92,12 @@ export function CalibrationImportClient() {
 
   const openEdit = (row: CalibrationImportRow) => {
     setEditRowId(row.id);
-    setEditOperator(row.operator ?? "");
-    setEditUnit(row.unit ?? "");
+    setEditValidityDays(row.insertData.Duree_Validite_Jours?.toString() ?? "");
   };
 
   const closeEdit = () => {
     setEditRowId(null);
-    setEditOperator("");
-    setEditUnit("");
+    setEditValidityDays("");
   };
 
   const applyEdit = () => {
@@ -112,12 +107,14 @@ export function CalibrationImportClient() {
         if (row.id !== editRowId) return row;
         return {
           ...row,
-          operator: editOperator.trim() || null,
-          unit: editUnit.trim() || null,
           insertData: {
             ...row.insertData,
-            Operateur: editOperator.trim() || null,
-            Unite: editUnit.trim() || null,
+            Duree_Validite_Jours:
+              editValidityDays.trim() === ""
+                ? null
+                : Number.isFinite(Number(editValidityDays))
+                  ? Math.max(1, Math.trunc(Number(editValidityDays)))
+                  : null,
           },
         };
       }),
@@ -150,7 +147,7 @@ export function CalibrationImportClient() {
 
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        const message = payload?.error?.message || t("toast.save_error");
+        const message = payload?.message || payload?.error || t("toast.save_error");
         throw new Error(message);
       }
 
@@ -199,19 +196,19 @@ export function CalibrationImportClient() {
       cell: ({ row }) => row.getValue("dateValidityText") || "-",
     },
     {
-      accessorKey: "operator",
-      header: t("table.columns.operator"),
-      cell: ({ row }) => row.getValue("operator") || "-",
-    },
-    {
-      accessorKey: "unit",
-      header: t("table.columns.unit"),
-      cell: ({ row }) => row.getValue("unit") || "-",
+      id: "validityDays",
+      header: t("table.columns.validity_days"),
+      cell: ({ row }) => row.original.insertData.Duree_Validite_Jours ?? "-",
     },
     {
       accessorKey: "uncertainty",
       header: t("table.columns.uncertainty"),
       cell: ({ row }) => row.getValue("uncertainty") || "-",
+    },
+    {
+      accessorKey: "errJustesse",
+      header: t("table.columns.err_justesse"),
+      cell: ({ row }) => row.getValue("errJustesse") || "-",
     },
     {
       id: "actions",
@@ -278,12 +275,14 @@ export function CalibrationImportClient() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">{t("edit.operator")}</label>
-              <Input value={editOperator} onChange={(event) => setEditOperator(event.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t("edit.unit")}</label>
-              <Input value={editUnit} onChange={(event) => setEditUnit(event.target.value)} />
+              <label className="text-sm font-medium">{t("edit.validity_days")}</label>
+              <Input
+                type="number"
+                min={1}
+                step={1}
+                value={editValidityDays}
+                onChange={(event) => setEditValidityDays(event.target.value)}
+              />
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={closeEdit}>{t("actions.cancel")}</Button>

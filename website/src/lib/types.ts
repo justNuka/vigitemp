@@ -28,6 +28,7 @@ export interface CurrentUser {
   Date_Creation: Date | null;
   profil: string | null;
   Date_Derniere_Modification_MDP: Date | null;
+  Avatar_Utilisateur?: string | null;
   authorizations: Authorization[];
   cfr21: CFR21Config;
 }

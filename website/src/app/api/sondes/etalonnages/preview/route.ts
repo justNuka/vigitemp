@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { apiError, apiOk } from "@/lib/api-response";
 import { parseCalibrationXml } from "@/lib/calibration-import";
+import { requireStandardOrExpertLicense } from "@/lib/license-guards";
 
 const isXmlFile = (file: File) => {
   const name = file.name.toLowerCase();
@@ -61,6 +62,9 @@ export const POST = async (req: NextRequest) => {
   if (!user) return apiError(401, "unauthenticated", "Non authentifie");
 
   try {
+    const guard = await requireStandardOrExpertLicense();
+    if (guard) return guard;
+
     const formData = await req.formData();
     const file = formData.get("file");
 
@@ -91,6 +95,7 @@ export const POST = async (req: NextRequest) => {
         Date_Heure_Etalonnage: toIso(parsed.data.Date_Heure_Etalonnage ?? null),
         Sonde_Numero_Serie: parsed.data.Sonde_Numero_Serie ?? null,
         Date_Validite: toIso(parsed.data.Date_Validite ?? null),
+        Duree_Validite_Jours: parsed.data.Duree_Validite_Jours ?? null,
         Operateur: parsed.data.Operateur ?? null,
         Etalon_Numero_Serie: parsed.data.Etalon_Numero_Serie ?? null,
         Date_Certif: toIso(parsed.data.Date_Certif ?? null),

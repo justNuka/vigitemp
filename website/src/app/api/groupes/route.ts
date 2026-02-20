@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getAuthenticatedUser } from "@/lib/auth"
-import { withLogging } from "@/lib/api-logger"
+import { getClientIp, withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
 
 export const GET = withLogging(async (req: NextRequest) => {
   try {
@@ -73,6 +74,11 @@ export const POST = withLogging(async (req: NextRequest) => {
         Nom_Groupe: nom,
         Numero_Regroupement: regroupement,
       },
+    })
+
+    log.data.create("Groupe", groupe.Id_Groupe, user.username, user.userId, getClientIp(req), {
+      nom,
+      regroupement,
     })
 
     return apiOk({

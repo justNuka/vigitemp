@@ -5,6 +5,8 @@ namespace Vigitemp_Serveur
     internal sealed class SondeScheduleInfo
     {
         public int IdLieu { get; set; }
+        public int? EmtChoixMode { get; set; }
+        public bool ApplyCorrectionEj { get; set; }
         public string PortSerie { get; set; }
         public string ModuleNumeroSerie { get; set; }
         public string SondeNumeroSerie { get; set; }

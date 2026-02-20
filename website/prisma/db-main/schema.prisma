@@ -221,18 +221,19 @@ model t_etalonnage {
   Date_Heure_Etalonnage DateTime? @db.DateTime(0)
   Sonde_Numero_Serie    String?   @db.VarChar(50)
   Date_Validite         DateTime? @db.Date
+  Duree_Validite_Jours  Int?
   Operateur             String?   @db.VarChar(255)
   Etalon_Numero_Serie   String?   @db.VarChar(50)
   Date_Certif           DateTime? @db.Date
   Organisme             String?   @db.VarChar(50)
   Num_Certif            String?   @db.VarChar(50)
   Unite                 String?   @db.VarChar(10)
-  Incertitude           String?   @db.VarChar(50)
+  Incertitude           Float?    @db.Float
   Moyenne_Etalon        Float?    @db.Float
   Moyenne_Sonde         Float?    @db.Float
   Repetabilite          String?   @db.VarChar(50)
   Id_Bain               Int?
-  Err_Justesse          String?   @db.VarChar(50)
+  Err_Justesse          Float?    @db.Float
 
   @@index([Date_Certif], map: "IDX_Date_Certif")
   @@index([Date_Heure_Etalonnage], map: "IDX_Date_Heure_Etalonnage")
@@ -334,6 +335,7 @@ model t_lieu {
   Sonde_Numero_Serie                        String?                    @db.VarChar(50)
   Adresse_Sonde                             String?                    @db.VarChar(50)
   Consigne                                  Float?                     @db.Float
+  Observations_Info                         String?                    @db.TinyText
   Consigne_Sup                              Float?                     @db.Float
   Tolerance_Surveillance_Sup                Float?                     @db.Float
   Est_Consigne_Sup_Active                   Boolean?                   @default(false)
@@ -362,7 +364,7 @@ model t_lieu {
   Id_PDF                                    Int?
   Est_DataLogger                            Boolean?                   @default(false)
   EMT                                       Float?                     @db.Float
-  EMT_Choix_Mode                            Int?                       @default(1)
+  EMT_Choix_Mode                            Int?                       @default(4)
   EMT_Sonde                                 Float?                     @db.Float
   Retard_Alarme_Changement_Consigne         Int?
   Derniere_Date_Heure                       DateTime?                  @db.DateTime(0)
@@ -376,8 +378,8 @@ model t_lieu {
   Id_Alarme                                 Int?                       @default(0)
   Lieu_Etat_N1                              String?                    @db.VarChar(50)
   Derniere_Date_Etalonnage                  DateTime?                  @db.Date
-  Derniere_Erreur_Justesse                  String?                    @db.VarChar(50)
-  Derniere_Incertitude                      String?                    @db.VarChar(50)
+  Derniere_Erreur_Justesse                  Float?                     @db.Float
+  Derniere_Incertitude                      Float?                     @db.Float
   Retard_Non_Reponse                        Int?                       @default(60)
   Date_Heure_Derniere_Reponse               DateTime?                  @db.DateTime(0)
   Date_Heure_Derniere_Reponse_Recue_OK      DateTime?                  @db.DateTime(0)
@@ -391,7 +393,6 @@ model t_lieu {
   Date_Heure_Reactivation_Alarme            DateTime?                  @db.DateTime(0)
   Notification_Active                       Boolean                    @default(true)
   Commentaire                               String?                    @db.VarChar(200)
-  Observations_Info                          String?                    @db.TinyText
   Infos_Modifiees_Depuis_Derniere_Mesure    Boolean                    @default(true)
   Date_Heure_Reactivation_Surveillance      DateTime?                  @db.DateTime(0)
   Derniere_Val_Rssi                         String?                    @db.VarChar(10)
@@ -407,8 +408,8 @@ model t_lieu {
   t_site                                    t_site?                    @relation(fields: [Id_Site], references: [Id_Site], onDelete: NoAction, onUpdate: NoAction, map: "FK_SITE_LIEU")
   t_sonde                                   t_sonde?                   @relation(fields: [Sonde_Numero_Serie], references: [Sonde_Numero_Serie], onDelete: NoAction, onUpdate: NoAction, map: "FK_SONDE_LIEU")
   t_lieu_groupe                             t_lieu_groupe[]
+  t_lieu_mail_tel                           t_lieu_mail_tel[]
   t_lieu_planning                           t_lieu_planning[]
-  t_lieu_tel_num                            t_lieu_tel_num[]
   t_planning_alarme                         t_planning_alarme[]
   t_planning_consigne                       t_planning_consigne[]
   t_planning_heure_bascule                  t_planning_heure_bascule[]
@@ -445,19 +446,6 @@ model t_lieu_planning {
   @@index([Id_Lieu], map: "IDX_Id_Lieu")
 }
 
-model t_lieu_tel_num {
-  Id_Tel_Num        Int      @id @default(autoincrement())
-  Id_Lieu           Int?
-  Numero_Ordre      Int?
-  Id_Utilisateur    Int?
-  Est_Via_Telephone Boolean?
-  Est_Via_Email     Boolean?
-  t_lieu            t_lieu?  @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_TEL_NUM")
-
-  @@index([Id_Utilisateur], map: "IDX_Id_Utilisateur")
-  @@index([Id_Lieu], map: "IDX_Id_Lieu")
-}
-
 model t_module {
   Id_Module           Int     @id @default(autoincrement())
   Module_Numero_Serie String? @db.VarChar(50)
@@ -472,6 +460,7 @@ model t_module {
   Archive             Int?    @default(0) @db.TinyInt
   Id_Serveur          Int?
   Est_Module_GSO      Boolean @default(false)
+  Port_Serie_Send_GSO String? @db.VarChar(10)
 
   @@unique([Type_Module, Module_Numero_Serie], map: "Identifiant_Module")
   @@index([Id_Plan], map: "IDX_Id_Plan")
@@ -611,6 +600,7 @@ model t_utilisateur {
   Reset_Password_Token           String?                        @db.VarChar(255)
   Reset_Password_Expires         DateTime?                      @db.DateTime(0)
   Est_Mot_De_Passe_Temporaire    Boolean?                       @default(false)
+  Avatar_Utilisateur             String?                        @db.VarChar(512)
   t_ancien_mot_de_passe          t_ancien_mot_de_passe[]
   t_liaison_utilisateur_groupe   t_liaison_utilisateur_groupe[]
   t_liaison_utilisateur_site     t_liaison_utilisateur_site[]
@@ -917,4 +907,26 @@ model t_sonde_etat {
   Etat_Sonde    String?   @unique(map: "Etat_Sonde") @db.VarChar(1)
   Etat_Libelle  String?   @db.VarChar(50)
   t_sonde       t_sonde[]
+}
+
+model t_mem_gso_2 {
+  com_port_send       Int       @id
+  last_sonde          String?   @db.VarChar(20)
+  last_sonde_datetime DateTime? @db.DateTime(0)
+  cycle_MEM           Int?
+  cycle_start         DateTime? @db.DateTime(0)
+  last_update         DateTime? @db.DateTime(0)
+}
+
+model t_lieu_mail_tel {
+  Id_Mail_Tel       Int      @id @default(autoincrement())
+  Id_Lieu           Int?
+  Ordre_Contact     Int?
+  Id_Utilisateur    Int?
+  Est_Via_Telephone Boolean?
+  Est_Via_Email     Boolean?
+  t_lieu            t_lieu?  @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_TEL_NUM")
+
+  @@index([Id_Lieu], map: "IDX_Id_Lieu")
+  @@index([Id_Utilisateur], map: "IDX_Id_Utilisateur")
 }

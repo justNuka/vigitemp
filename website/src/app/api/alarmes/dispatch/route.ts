@@ -7,6 +7,7 @@ import { routing } from "@/i18n/routing"
 import { log } from "@/lib/logger"
 import { randomUUID } from "crypto"
 import { revalidateTag } from "next/cache"
+import { sendAlarmEventEmails } from "@/lib/alarm-email"
 
 const AGENT_PORT = Number.parseInt(process.env.VIGITEMP_AGENT_PORT ?? "8000", 10)
 const AGENT_TIMEOUT_MS = Number.parseInt(process.env.VIGITEMP_AGENT_TIMEOUT_MS ?? "1500", 10)
@@ -172,6 +173,7 @@ const dispatchSchema = z.object({
   title: z.string().min(1).optional(),
   body: z.string().min(1).optional(),
   url: z.string().min(1).optional(),
+  eventType: z.enum(["triggered", "ended"]).optional(),
 })
 
 function isAuthorized(req: NextRequest) {
@@ -213,7 +215,17 @@ export const POST = withLogging(async (req: NextRequest) => {
   let lieuId: number | undefined
   let locationLabel = "Lieu inconnu"
   let alarmTypeLabel: string | undefined
+  let alarmTypeCode: string | undefined
   let triggeredAtLabel: string | undefined
+  let triggeredAtDate: Date | null = null
+  let endedAtDate: Date | null = null
+  let siteLabel: string | undefined
+  let lieuLabel = "Lieu inconnu"
+  let sondeLabel: string | undefined
+  let consigneSupValue: number | null = null
+  let consigneInfValue: number | null = null
+  let consigneValue: number | null = null
+  let uniteLabel: string | undefined
   let lastValueLabel: string | undefined
   let lastMeasureAtLabel: string | undefined
 
@@ -246,8 +258,11 @@ export const POST = withLogging(async (req: NextRequest) => {
     if (alarm) {
       lieuId = alarm.Id_Lieu ?? undefined
       const lieuName = alarm.t_lieu?.Nom_Lieu ?? "Lieu inconnu"
+      lieuLabel = lieuName
       const siteName = alarm.t_lieu?.t_site?.Libelle_Site ?? ""
+      siteLabel = siteName || undefined
       const sensorSerial = alarm.t_lieu?.Sonde_Numero_Serie ?? ""
+      sondeLabel = sensorSerial || undefined
       const groupNames = [
         alarm.t_lieu?.t_groupe1?.Nom_Groupe,
         alarm.t_lieu?.t_groupe2?.Nom_Groupe,
@@ -259,16 +274,23 @@ export const POST = withLogging(async (req: NextRequest) => {
       locationLabel = [siteName, lieuName].filter(Boolean).join(" / ")
       title ??= "Alarme Vigitemp"
       const alarmType =
-        alarm.Type === "H" ? "Alarme haute" : alarm.Type === "B" ? "Alarme basse" : "Alarme"
+        alarm.Type === "H" ? "Alarme haute" : alarm.Type === "B" ? "Alarme basse" : alarm.Type === "N" ? "Non reponse" : "Alarme"
+      alarmTypeCode = alarm.Type ?? undefined
       const valueLabel = `${alarm.Valeur ?? "N/A"}${alarm.Unite ?? "°C"}`
       alarmTypeLabel = alarmType
       lastValueLabel = valueLabel
-      triggeredAtLabel = formatDateTime(alarm.Date_Heure_Debut_Alarme_Vrai ?? alarm.Date_Heure_Debut)
+      triggeredAtDate = alarm.Date_Heure_Debut_Alarme_Vrai ?? alarm.Date_Heure_Debut ?? null
+      endedAtDate = alarm.Date_Heure_Fin ?? null
+      triggeredAtLabel = formatDateTime(triggeredAtDate)
       lastMeasureAtLabel = formatDateTime(alarm.Date_Heure_Derniere_Mesure)
       const supTolerance =
         alarm.t_lieu?.Tolerance_Surveillance_Sup ?? alarm.t_lieu?.Consigne_Sup ?? null
+      consigneValue = alarm.t_lieu?.Consigne != null ? Number(alarm.t_lieu.Consigne) : null
+      uniteLabel = alarm.Unite ?? undefined
+      consigneSupValue = supTolerance != null ? Number(supTolerance) : null
       const infTolerance =
         alarm.t_lieu?.Tolerance_Surveillance_Inf ?? alarm.t_lieu?.Consigne_Inf ?? null
+      consigneInfValue = infTolerance != null ? Number(infTolerance) : null
       const thresholds = [
         supTolerance != null ? `Sup ${supTolerance}${alarm.Unite ?? "°C"}` : null,
         infTolerance != null ? `Inf ${infTolerance}${alarm.Unite ?? "°C"}` : null,
@@ -310,6 +332,7 @@ export const POST = withLogging(async (req: NextRequest) => {
   const alarmUrl = url.startsWith("http")
     ? url
     : `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`
+  const eventType = validated.data.eventType ?? (endedAtDate ? "ended" : "triggered")
 
   const safeTitle = title.slice(0, 128)
   const safeMessage = messageBody.slice(0, 512)
@@ -383,6 +406,32 @@ export const POST = withLogging(async (req: NextRequest) => {
     agentFailed: agentResult.failed,
   })
 
+  const emailResult = await sendAlarmEventEmails({
+    eventType,
+    alarmId,
+    site: siteLabel,
+    lieu: lieuLabel,
+    sonde: sondeLabel,
+    alarmTypeCode: alarmTypeCode ?? alarmTypeLabel,
+    triggeredAt: triggeredAtDate,
+    endedAt: endedAtDate,
+    lastValue: lastValueLabel,
+    details: safeMessage,
+    alarmUrl,
+    idLieu: lieuId,
+    unite: uniteLabel,
+    consigneSup: consigneSupValue,
+    consigneInf: consigneInfValue,
+    consigne: consigneValue,
+  })
+
+  log.info("ALARM_EMAIL", "Alarm email dispatch result", {
+    alarmId,
+    attempted: emailResult.attempted,
+    sent: emailResult.sent,
+    skipped: emailResult.skipped,
+  })
+
   revalidateTag("dashboard-active-alarms", "default")
   revalidateTag("dashboard-stats", "default")
   revalidateTag("dashboard-critical-sensors", "default")
@@ -392,5 +441,8 @@ export const POST = withLogging(async (req: NextRequest) => {
   return apiOk({
     agentTargets: agentResult.attempted,
     agentFailed: agentResult.failed,
+    emailAttempted: emailResult.attempted,
+    emailSent: emailResult.sent,
+    emailSkipped: emailResult.skipped,
   })
 })

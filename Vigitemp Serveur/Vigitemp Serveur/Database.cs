@@ -717,6 +717,104 @@ namespace Vigitemp_Serveur
             }
         }
 
+        public bool AddMesureNoResponse(string p_numeroSerie, string p_unite)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!InitConnexion())
+                    {
+                        return false;
+                    }
+
+                    MySqlCommand cmd_vigitemp = this.connection_vigitemp.CreateCommand();
+                    cmd_vigitemp.CommandText = "SELECT Frequence, Consigne, " +
+                                                "Tolerance_Surveillance_Sup as Consigne_Sup, " +
+                                                "Tolerance_Surveillance_Inf as Consigne_Inf, " +
+                                                "t_module.Id_Serveur, Id_Lieu, t_sonde.Id_Sonde FROM t_lieu " +
+                                                "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
+                                                "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
+                                                "WHERE t_lieu.Sonde_Numero_Serie = @serial " +
+                                                "AND t_sonde.Etat_Sonde = 'S' " +
+                                                "AND IFNULL(t_sonde.Est_Sonde_GSO, 0) = 0;";
+                    cmd_vigitemp.Parameters.AddWithValue("@serial", p_numeroSerie);
+
+                    int idSonde;
+                    int idLieu;
+                    float consigne;
+                    float consigneSup;
+                    float consigneInf;
+                    int frequence;
+                    object idServeur;
+
+                    using (var dr_lieux = cmd_vigitemp.ExecuteReader())
+                    {
+                        if (!dr_lieux.Read())
+                        {
+                            CloseConnexion();
+                            VigitempServeur.Log("(AddMesureNoResponse) Aucune ligne t_lieu pour la sonde: " + p_numeroSerie);
+                            return false;
+                        }
+
+                        idSonde = (int)dr_lieux["Id_Sonde"];
+                        idLieu = (int)dr_lieux["Id_Lieu"];
+                        consigne = GetFloatOrDefault(dr_lieux["Consigne"]);
+                        consigneSup = GetFloatOrDefault(dr_lieux["Consigne_Sup"]);
+                        consigneInf = GetFloatOrDefault(dr_lieux["Consigne_Inf"]);
+                        frequence = (int)dr_lieux["Frequence"];
+                        idServeur = dr_lieux["Id_Serveur"];
+                    }
+
+                    var unit = string.IsNullOrWhiteSpace(p_unite) ? getLieuUnite(idLieu) : p_unite;
+                    var now = DateTime.Now;
+                    MySqlCommand cmd_vigitemp_mesure = this.connection_vigitemp_mesure.CreateCommand();
+                    cmd_vigitemp_mesure.CommandText = "INSERT INTO tm_mesures " +
+                                                        "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Valeur_Null) " +
+                                                        "VALUES " +
+                                                        "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, 1)";
+
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@idserveurbdd", idServeur);
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@dateheuremesure", now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@valeur", DBNull.Value);
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@resistance", DBNull.Value);
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@unite", unit);
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@consigne", consigne);
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@consignesup", consigneSup);
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@consigneinf", consigneInf);
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@frequence", frequence);
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@sondenumeroserie", p_numeroSerie);
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@idlieu", idLieu);
+                    cmd_vigitemp_mesure.ExecuteNonQuery();
+
+                    CacheService.InsertMeasureToGraphique(
+                        idSonde,
+                        idLieu,
+                        p_numeroSerie,
+                        null,
+                        unit,
+                        null,
+                        consigne,
+                        consigneSup,
+                        consigneInf,
+                        frequence,
+                        0,
+                        1);
+
+                    CloseConnexion();
+                    VigitempServeur.Log($"(AddMesureNoResponse) Mesure null inseree pour non-reponse sonde={p_numeroSerie} lieu={idLieu}");
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    CloseConnexion();
+                    VigitempServeur.Log("(AddMesureNoResponse) SQL Erreur: " + ex);
+                    return false;
+                }
+            }
+        }
+
+
         public (List<string>, List<string>, List<string>, List<string>, List<int>, List<DateTime?>) getInfosByIdServeurAndFrequencies(int p_idServer, int p_frequence)
         {
             lock (_lock)
@@ -802,7 +900,7 @@ namespace Vigitemp_Serveur
 
                     var cmd = connection_vigitemp.CreateCommand();
                     cmd.CommandText = "SELECT t_lieu.Id_Lieu, t_lieu.Frequence, t_lieu.Derniere_Date_Heure, " +
-                                      "t_lieu.Infos_Modifiees_Depuis_Derniere_Mesure, " +
+                                      "t_lieu.Infos_Modifiees_Depuis_Derniere_Mesure, t_lieu.EMT_Choix_Mode, t_lieu.Est_Correction_Ej, " +
                                       "t_module.Port_Serie, t_module.Module_Numero_Serie, " +
                                       "t_sonde.Sonde_Numero_Serie, t_sonde.Adresse_Sonde, t_sonde.Sonde_Offset, " +
                                       "ta.Coeff_X, ta.Coeff_Constant, te.Err_Justesse, te.Incertitude, te.Date_Validite " +
@@ -868,6 +966,8 @@ namespace Vigitemp_Serveur
                                 CoeffX = coeffX ?? 1d,
                                 CoeffConstant = coeffConstant ?? 0d,
                                 HasEtalonnage = errJustesse.HasValue || incertitude.HasValue || dateValidite != default(DateTime),
+                                EmtChoixMode = GetNullableInt(reader, "EMT_Choix_Mode", 0),
+                                ApplyCorrectionEj = GetOptionalBool(reader, "Est_Correction_Ej", false),
                                 ErrJustesse = errJustesse,
                                 CorrectionJustesse = errJustesse.HasValue ? -errJustesse.Value : (double?)null,
                                 Incertitude = incertitude,
@@ -1835,11 +1935,11 @@ namespace Vigitemp_Serveur
             }
         }
 
-        public List<int> getEndedAlarmLieuxSince(int idServeur, DateTime sinceLocalTime, int maxCount)
+        public List<AlarmNotificationItem> getEndedAlarmsSince(int idServeur, DateTime sinceLocalTime, int maxCount)
         {
             lock (_lock)
             {
-                var list = new List<int>();
+                var list = new List<AlarmNotificationItem>();
                 try
                 {
                     if (!InitConnexion())
@@ -1850,9 +1950,9 @@ namespace Vigitemp_Serveur
                     var limit = Math.Max(1, maxCount);
                     var cmd = this.connection_vigitemp.CreateCommand();
                     cmd.CommandText =
-                        "SELECT ended.Id_Lieu " +
+                        "SELECT ended.Id_Lieu, ended.First_Alarm_Id " +
                         "FROM (" +
-                        "  SELECT a.Id_Lieu, MIN(a.Date_Heure_Fin) AS First_End " +
+                        "  SELECT a.Id_Lieu, MIN(a.Id_Alarme) AS First_Alarm_Id, MIN(a.Date_Heure_Fin) AS First_End " +
                         "  FROM t_alarme a " +
                         "  INNER JOIN t_lieu l ON a.Id_Lieu = l.Id_Lieu " +
                         "  INNER JOIN t_sonde s ON l.Sonde_Numero_Serie = s.Sonde_Numero_Serie " +
@@ -1874,7 +1974,8 @@ namespace Vigitemp_Serveur
                         while (reader.Read())
                         {
                             var idLieu = Convert.ToInt32(reader["Id_Lieu"]);
-                            list.Add(idLieu);
+                            var idAlarme = Convert.ToInt32(reader["First_Alarm_Id"]);
+                            list.Add(new AlarmNotificationItem(idAlarme, idLieu, "T", null, null, null));
                         }
                     }
 
@@ -1884,7 +1985,7 @@ namespace Vigitemp_Serveur
                 catch (Exception ex)
                 {
                     CloseConnexion();
-                    VigitempServeur.Log("(getEndedAlarmLieuxSince) SQL Erreur: " + ex.Message + " | idServeur=" + idServeur + " | since=" + sinceLocalTime.ToString("yyyy-MM-dd HH:mm:ss") + " | maxCount=" + maxCount);
+                    VigitempServeur.Log("(getEndedAlarmsSince) SQL Erreur: " + ex.Message + " | idServeur=" + idServeur + " | since=" + sinceLocalTime.ToString("yyyy-MM-dd HH:mm:ss") + " | maxCount=" + maxCount);
                     return list;
                 }
             }
@@ -1979,8 +2080,10 @@ namespace Vigitemp_Serveur
                 }
 
                 var cmd = this.connection_vigitemp.CreateCommand();
-                cmd.CommandText = "SELECT t_sonde.Sonde_Offset, ta.Coeff_X, ta.Coeff_Constant, te.Err_Justesse, te.Incertitude, te.Date_Validite " +
+                cmd.CommandText = "SELECT t_lieu.Id_Lieu, t_lieu.EMT_Choix_Mode, t_lieu.Est_Correction_Ej, " +
+                                  "t_sonde.Sonde_Offset, ta.Coeff_X, ta.Coeff_Constant, te.Err_Justesse, te.Incertitude, te.Date_Validite " +
                                   "FROM t_sonde " +
+                                  "LEFT JOIN t_lieu ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie AND t_lieu.Lieu_Etat = 'S' " +
                                   "LEFT JOIN t_ajustage ta ON ta.Id_Ajustage = (" +
                                   "  SELECT ta2.Id_Ajustage FROM t_ajustage ta2 " +
                                   "  WHERE ta2.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
@@ -2020,6 +2123,11 @@ namespace Vigitemp_Serveur
                             var errJustesse = GetOptionalDouble(reader, "Err_Justesse");
                             var incertitude = GetOptionalDouble(reader, "Incertitude");
                             var dateValidite = GetNullableDateTime(reader, "Date_Validite");
+                            var applyCorrectionEj = GetOptionalBool(reader, "Est_Correction_Ej", false);
+
+                            settings.IdLieu = GetNullableInt(reader, "Id_Lieu", 0);
+                            settings.EmtChoixMode = GetNullableInt(reader, "EMT_Choix_Mode", 0);
+                            settings.ApplyCorrectionEj = applyCorrectionEj;
 
                             if (errJustesse.HasValue)
                             {

@@ -1,4 +1,4 @@
-Param(
+﻿Param(
     [string]$VcRedistPath,
     [string]$MySqlMsiPath,
     [string]$MainSeedPath,
@@ -12,7 +12,14 @@ Param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-function Write-Log($message) {
+
+# Force UTF-8 console encoding for correct accents/special characters in logs.
+try { cmd /c chcp 65001 > $null } catch { }
+try {
+    [Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
+    [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+    $OutputEncoding = [Console]::OutputEncoding
+} catch { }function Write-Log($message) {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     Write-Host "[$timestamp] $message"
 }
@@ -148,7 +155,7 @@ if (-not (Test-Path $MySqlMsiPath)) {
  }
 
 Write-Log "Lancer le configurateur MySQL et terminer la configuration (port, mot de passe root, service...)."
-$null = Read-Host "Appuyez sur Entrée quand la configuration MySQL est terminée"
+$null = Read-Host "Appuyez sur EntrÃ©e quand la configuration MySQL est terminÃ©e"
 
 if (-not (Test-Path $MainSeedPath)) {
     Write-Error "Seed principal introuvable : $MainSeedPath"
@@ -175,3 +182,4 @@ Write-Log "Import des bases (vigi_main, vigi_mesures)..."
 Get-Content -Path $MainSeedPath -Raw | & $mysqlExe @mysqlArgs
 Get-Content -Path $MesuresSeedPath -Raw | & $mysqlExe @mysqlArgs
 Write-Log "Import termine."
+

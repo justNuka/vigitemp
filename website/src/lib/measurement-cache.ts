@@ -9,7 +9,7 @@
 
 interface MeasureData {
   id: string;
-  Valeur: number;
+  Valeur: number | null;
   Unite: string;
   Nb_Decimal?: number | null;
   DateHeureMesure: string;

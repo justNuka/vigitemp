@@ -2,6 +2,7 @@ import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 import path from "path";
 import fs from "fs";
+import util from "util";
 import { writeAuditToDatabase } from "./audit-db";
 
 // Créer le dossier logs s'il n'existe pas
@@ -59,6 +60,65 @@ const logger = winston.createLogger({
     }),
   ],
 });
+
+function normalizeConsoleArg(arg: unknown): unknown {
+  if (arg instanceof Error) {
+    return {
+      name: arg.name,
+      message: arg.message,
+      stack: arg.stack,
+      cause: (() => {
+        const cause = (arg as any).cause;
+        if (cause instanceof Error) {
+          return {
+            name: cause.name,
+            message: cause.message,
+            stack: cause.stack,
+          };
+        }
+        return cause;
+      })(),
+    };
+  }
+
+  if (typeof arg === "object" && arg !== null) {
+    try {
+      return JSON.parse(JSON.stringify(arg));
+    } catch {
+      return util.inspect(arg, { depth: 6, breakLength: 120 });
+    }
+  }
+
+  return arg;
+}
+
+const mirrorConsoleErrorsToFile = (process.env.MIRROR_CONSOLE_ERROR_TO_FILE ?? "1") !== "0";
+const globalKey = "__vigitemp_console_error_patched__";
+
+if (mirrorConsoleErrorsToFile && !(globalThis as any)[globalKey]) {
+  const originalConsoleError = console.error.bind(console);
+
+  console.error = (...args: unknown[]) => {
+    try {
+      const first = args[0];
+      const message =
+        typeof first === "string" && first.trim().length > 0
+          ? first
+          : "console.error called";
+
+      logger.error(message, {
+        label: "STDERR",
+        stderrArgs: args.map(normalizeConsoleArg),
+      });
+    } catch {
+      // Never block runtime behavior because of logging.
+    }
+
+    originalConsoleError(...args);
+  };
+
+  (globalThis as any)[globalKey] = true;
+}
 
 // Ajouter console avec filtre selon l'environnement
 const isDev = process.env.NODE_ENV !== "production";

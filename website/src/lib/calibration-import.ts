@@ -160,7 +160,8 @@ export function parseCalibrationXml(xml: string, fileName = ""): ParsedCalibrati
   const unit = etalonBlock ? getTagValue(etalonBlock, "UNITE") : getTagValue(xml, "UNITE");
 
   const calibrationBlock = getTagValueAny(xml, TAG_SETS.block);
-  const uncertainty = (calibrationBlock ? getTagValue(calibrationBlock, "INCERTITUDE") : null) ?? (etalonBlock ? getTagValue(etalonBlock, "INCERTITUDE") : null) ?? getTagValue(xml, "INCERTITUDE");
+  const uncertaintyRaw = (calibrationBlock ? getTagValue(calibrationBlock, "INCERTITUDE") : null) ?? (etalonBlock ? getTagValue(etalonBlock, "INCERTITUDE") : null) ?? getTagValue(xml, "INCERTITUDE");
+  const uncertainty = parseNumber(uncertaintyRaw);
   const sensorNumber = calibrationBlock
     ? getTagValueAny(calibrationBlock, TAG_SETS.sensor)
     : getTagValueAny(xml, TAG_SETS.sensor);
@@ -168,7 +169,7 @@ export function parseCalibrationXml(xml: string, fileName = ""): ParsedCalibrati
   const moyenneEtalon = parseNumber(getTagValueAny(xml, ["MOYENNE_ETALON", "MOY_ETALON"]));
   const moyenneSonde = parseNumber(getTagValueAny(xml, ["MOYENNE_SONDE", "MOY_SONDE"]));
   const repetabilite = getTagValueAny(xml, ["REPETABILITE", "RPTBL"]);
-  const errJustesse = getTagValueAny(xml, ["ERREUR_JUSTESSE", "ERR_JUSTESSE", "ERRJUSTESSE"]);
+  const errJustesse = parseNumber(getTagValueAny(xml, ["ERREUR_JUSTESSE", "ERR_JUSTESSE", "ERRJUSTESSE"]));
   const idMilieu = parseNumber(getTagValueAny(xml, ["ID_MILIEU", "ID_BAIN"]));
   const measures = parseMeasureSeries(calibrationBlock);
 
@@ -204,7 +205,7 @@ export function parseCalibrationXml(xml: string, fileName = ""): ParsedCalibrati
       operator,
       dateValidity,
       dateValidityText,
-      uncertainty,
+      uncertainty: uncertaintyRaw,
       unit,
     },
     warnings,

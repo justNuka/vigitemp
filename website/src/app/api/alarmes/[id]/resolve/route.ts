@@ -4,6 +4,7 @@ import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { sendAlarmEventEmails } from "@/lib/alarm-email"
 
 export const POST = withAuthLogging(
   async (req: NextRequest, ctx: any, { params }: { params: Promise<{ id: string }> }) => {
@@ -16,7 +17,20 @@ export const POST = withAuthLogging(
       const alarm = await prisma.t_alarme.update({
         where: { Id_Alarme: alarmId },
         data: { Date_Heure_Fin: new Date() },
-        include: { t_lieu: { select: { Id_Lieu: true, Nom_Lieu: true } } },
+        include: {
+          t_lieu: {
+            select: {
+              Id_Lieu: true,
+              Nom_Lieu: true,
+              Sonde_Numero_Serie: true,
+              Tolerance_Surveillance_Sup: true,
+              Tolerance_Surveillance_Inf: true,
+              Consigne_Sup: true,
+              Consigne_Inf: true,
+              t_site: { select: { Libelle_Site: true } },
+            },
+          },
+        },
       })
 
       log.audit("ALARM_RESOLVED", {
@@ -27,6 +41,33 @@ export const POST = withAuthLogging(
         resourceId: alarmId,
         changes: { resolvedAt: alarm.Date_Heure_Fin },
       })
+
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+        const alarmUrl = `${baseUrl}/fr/alarmes`
+        await sendAlarmEventEmails({
+          eventType: "ended",
+          alarmId: alarm.Id_Alarme,
+          site: alarm.t_lieu?.t_site?.Libelle_Site,
+          lieu: alarm.t_lieu?.Nom_Lieu || "Lieu inconnu",
+          sonde: alarm.t_lieu?.Sonde_Numero_Serie,
+          alarmTypeCode: alarm.Type,
+          triggeredAt: alarm.Date_Heure_Debut_Alarme_Vrai ?? alarm.Date_Heure_Debut,
+          endedAt: alarm.Date_Heure_Fin,
+          lastValue: alarm.Valeur != null ? `${alarm.Valeur}${alarm.Unite ?? "?C"}` : undefined,
+          details: "Alarme terminee",
+          alarmUrl,
+          idLieu: alarm.t_lieu?.Id_Lieu,
+          unite: alarm.Unite,
+          consigneSup: alarm.t_lieu?.Tolerance_Surveillance_Sup ?? alarm.t_lieu?.Consigne_Sup ?? null,
+          consigneInf: alarm.t_lieu?.Tolerance_Surveillance_Inf ?? alarm.t_lieu?.Consigne_Inf ?? null,
+        })
+      } catch (mailError) {
+        log.warn("ALARM_EMAIL", "Ended alarm email dispatch failed", {
+          alarmId,
+          error: mailError instanceof Error ? mailError.message : String(mailError),
+        })
+      }
 
       return apiOk({
         id: alarm.Id_Alarme,

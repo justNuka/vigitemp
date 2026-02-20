@@ -2,6 +2,8 @@ import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { withAuthorizationLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
+import { getRequestContext } from "@/lib/api-logger"
 
 export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextRequest) => {
   try {
@@ -28,7 +30,7 @@ export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextReq
  * PUT /api/parametres
  * Upsert d'un paramètre (admin: GERER_PROFIL).
  */
-export const PUT = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest) => {
+export const PUT = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest, ctx: any) => {
   try {
     const body = await req.json()
     const section = body?.section as string | undefined
@@ -38,6 +40,16 @@ export const PUT = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequ
     if (!section || !motCle) {
       return apiError(400, "missing_fields", "Section et motCle sont requis")
     }
+
+    const { ip } = getRequestContext(req)
+    const oldSetting = await prisma.t_parametre.findUnique({
+      where: {
+        Section_Mot_Cle: {
+          Section: section,
+          Mot_Cle: motCle,
+        },
+      },
+    })
 
     const param = await prisma.t_parametre.upsert({
       where: {

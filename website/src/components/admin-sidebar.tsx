@@ -17,7 +17,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   LayoutDashboard,
   Users,
@@ -32,6 +32,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useLicense } from "@/components/license/license-provider";
+import { isStandardOrExpert } from "@/lib/license-access";
+import { getInitialsForAvatar, resolveAvatarSrc } from "@/lib/avatar-library";
 
 import { CurrentUser } from "@/lib/types";
 import { useLocale } from "next-intl";
@@ -57,6 +60,7 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
   const normalizedPathname = stripLocalePrefix(pathname);
   const t = useTranslations("adminSidebar");
   const tCommon = useTranslations("common");
+  const { license } = useLicense();
 
   const getLinkComponent = (href: string) => {
     if (href === "/" || href === "/admin") {
@@ -83,9 +87,9 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
     { title: t("management.audit"), href: "/admin/audit", icon: FileText },
   ];
 
-  const metrologyNavItems: NavItem[] = [
-    { title: t("metrology.calibration_import"), href: "/admin/sondes/etalonnage-import", icon: FlaskConical },
-  ];
+  const metrologyNavItems: NavItem[] = isStandardOrExpert(license)
+    ? [{ title: t("metrology.calibration_import"), href: "/admin/sondes/etalonnage-import", icon: FlaskConical }]
+    : [];
 
   const globalSettingsNavItems: NavItem[] = [
     { title: t("system.settings"), href: "/admin/parametres", icon: Settings },
@@ -173,32 +177,34 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>{t("groups.metrology")}</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {metrologyNavItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={normalizedPathname === getLocalizedPathname(item.href, locale as any)}
-                    tooltip={item.title}
-                  >
-                    {(() => {
-                      const LinkComponent = getLinkComponent(item.href);
-                      return (
-                        <LinkComponent href={item.href as any} data-testid={`nav-${item.href.replace("/", "")}`}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </LinkComponent>
-                      );
-                    })()}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {metrologyNavItems.length > 0 ? (
+          <SidebarGroup>
+            <SidebarGroupLabel>{t("groups.metrology")}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {metrologyNavItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={normalizedPathname === getLocalizedPathname(item.href, locale as any)}
+                      tooltip={item.title}
+                    >
+                      {(() => {
+                        const LinkComponent = getLinkComponent(item.href);
+                        return (
+                          <LinkComponent href={item.href as any} data-testid={`nav-${item.href.replace("/", "")}`}>
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.title}</span>
+                          </LinkComponent>
+                        );
+                      })()}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ) : null}
 
         <SidebarGroup>
           <SidebarGroupLabel>{t("groups.system")}</SidebarGroupLabel>
@@ -248,13 +254,13 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
         {currentUser && (
           <div className="flex items-center gap-3 p-2 rounded-lg bg-sidebar-accent/50">
             <Avatar className="h-9 w-9">
+              {(() => {
+                const initials = getInitialsForAvatar(currentUser.Prenom, currentUser.Nom, currentUser.Login)
+                const avatarSrc = resolveAvatarSrc(currentUser.Avatar_Utilisateur, initials)
+                return avatarSrc ? <AvatarImage src={avatarSrc} alt={initials} /> : null
+              })()}
               <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                {`${currentUser.Prenom || ""} ${currentUser.Nom || ""}`
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .toUpperCase()
-                  .slice(0, 2)}
+                {getInitialsForAvatar(currentUser.Prenom, currentUser.Nom, currentUser.Login)}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">

@@ -1,14 +1,14 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { Plus, Pencil } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import { useSensors } from "@/hooks/useSensors";
 import { useAdjustments } from "@/hooks/useAdjustments";
 import { useCalibrations } from "@/hooks/useCalibrations";
-import { getJson } from "@/lib/http";
+import { fetchJson, getJson } from "@/lib/http";
 
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -51,15 +51,26 @@ export function SensorsClient() {
   const { data: adjustments, isLoading: adjustmentsLoading } = useAdjustments(
     selectedSensor?.Sonde_Numero_Serie || null
   );
-  const { data: calibrations, isLoading: calibrationsLoading } = useCalibrations(
+  const { data: calibrations, isLoading: calibrationsLoading, refetch: refetchCalibrations } = useCalibrations(
     selectedSensor?.Sonde_Numero_Serie || null
   );
+
+  const { data: etalonnageWarningDays = 30 } = useQuery({
+    queryKey: ["settings", "dashboard:etalonnage_warning_days"],
+    queryFn: async () => {
+      const payload = await fetchJson<{ value?: string }>("/api/parametres/dashboard:etalonnage_warning_days");
+      const parsed = Number(payload?.value ?? "30");
+      return Number.isFinite(parsed) && parsed > 0 ? Math.trunc(parsed) : 30;
+    },
+    staleTime: 60_000,
+    retry: false,
+  });
 
   const sensorsTableData = toSensorRows(sensors || []);
 
   const adjustmentsTableData: AdjustmentRow[] = (adjustments || []).map((calib) => ({
     Id_Ajustage: calib.Id_Ajustage,
-    Date_Heure_Ajustage: calib.Date_Heure_Ajustage,
+    Date_Heure_Ajustage: calib.Date_Heure_Ajustage ? new Date(calib.Date_Heure_Ajustage) : null,
     Operateur: calib.Operateur,
     Unite: calib.Unite,
     Nb_Decimale: calib.Nb_Decimale,
@@ -67,10 +78,11 @@ export function SensorsClient() {
 
   const calibrationsTableData: CalibrationRow[] = (calibrations || []).map((etal) => ({
     Id_Etalonnage: etal.Id_Etalonnage,
-    Date_Heure_Etalonnage: etal.Date_Heure_Etalonnage,
-    Date_Validite: etal.Date_Validite,
+    Date_Heure_Etalonnage: etal.Date_Heure_Etalonnage ? new Date(etal.Date_Heure_Etalonnage) : null,
+    Date_Validite: etal.Date_Validite ? new Date(etal.Date_Validite) : null,
     Operateur: etal.Operateur,
-    Incertitude: etal.Incertitude,
+    Incertitude: etal.Incertitude === null || etal.Incertitude === undefined ? null : String(etal.Incertitude),
+    Duree_Validite_Jours: etal.Duree_Validite_Jours ?? null,
   }));
 
   if (sensorsLoading) {
@@ -136,6 +148,7 @@ export function SensorsClient() {
               setSelectedAdjustmentId(null);
               setSelectedCalibrationId(null);
             }}
+            warningWindowDays={etalonnageWarningDays}
             onEditSensor={(id) => {
               setSelectedSensorId(id);
               setSelectedAdjustmentId(null);
@@ -159,6 +172,11 @@ export function SensorsClient() {
           isLoading={calibrationsLoading}
           selectedCalibrationId={selectedCalibrationId}
           onSelectCalibration={setSelectedCalibrationId}
+          warningWindowDays={etalonnageWarningDays}
+          onCalibrationUpdated={() => {
+            void refetchCalibrations();
+            void queryClient.invalidateQueries({ queryKey: ["sensors"] });
+          }}
         />
       </div>
 

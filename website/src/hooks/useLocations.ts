@@ -3,6 +3,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { getJson, isUnauthorizedError } from "@/lib/http";
 
+export interface LocationMailingContactRow {
+  Id_Tel_Num?: number;
+  Numero_Ordre: number;
+  Id_Utilisateur: number | null;
+  Est_Via_Telephone: boolean;
+  Est_Via_Email: boolean;
+}
+
 export interface LocationRow {
   Id_Lieu: number;
   Nom_Lieu: string | null;
@@ -12,6 +20,7 @@ export interface LocationRow {
   GroupIds?: number[];
   Id_Site: number | null;
   Sonde_Numero_Serie: string | null;
+  Id_Module?: number | null;
   Commentaire?: string | null;
   Observations_Info?: string | null;
   Consigne: number | null;
@@ -40,6 +49,7 @@ export interface LocationRow {
   EMT_Valeur: number | null;
   Corriger_Erreur_Justesse: boolean | null;
   Prendre_En_Compte_Derive: boolean | null;
+  MailingContacts?: LocationMailingContactRow[];
   t_groupe1?: { Nom_Groupe: string | null } | null;
   t_groupe2?: { Nom_Groupe: string | null } | null;
   t_lieu_groupe?: {

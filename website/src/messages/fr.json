@@ -201,6 +201,16 @@
       "label": "Actualiser",
       "loading": "Actualisation..."
     },
+    "overlay": {
+      "button": "Superposer courbes",
+      "title": "Superposition des courbes",
+      "locations": "Lieux a comparer",
+      "range": "Plage de dates",
+      "load": "Afficher la superposition",
+      "hint": "Selectionnez au moins 2 lieux",
+      "hint_range": "Selectionnez d'abord une plage de dates",
+      "empty": "Selectionnez 2 lieux puis cliquez sur afficher"
+    },
     "load_more": "Charger plus",
     "footer": {
       "count": "{count, plural, one {# sonde} other {# sondes}}",
@@ -271,7 +281,10 @@
         "notifications_email": "Notifications par email",
         "notifications_sms": "Notifications SMS",
         "alarms_sound": "Son des alarmes",
-        "dashboard_refresh": "Intervalle de rafraîchissement (s)"
+        "dashboard_refresh": "Intervalle de rafraîchissement (s)",
+        "surveillance_refresh": "Rafraichissement surveillance (s)",
+        "show_null_non_response": "Afficher les non-reponses (valeur null)",
+        "etalonnage_warning_days": "Alerte validite etalonnage (jours)"
       },
       "refresh_options": {
         "5": "5 secondes",
@@ -279,7 +292,8 @@
         "30": "30 secondes",
         "60": "1 minute",
         "manual": "Manuel (désactivé)",
-        "custom": "{seconds} secondes"
+        "custom": "{seconds} secondes",
+        "15": "Toutes les 15 secondes"
       }
     },
     "timezone": {
@@ -314,8 +328,12 @@
     },
     "notifications": {
       "title": "Notifications",
-      "description": "Gérer les préférences de notifications",
-      "coming_soon": "Configuration avancée des notifications à venir"
+      "description": "Gerer les preferences de notifications",
+      "email_toggle": "Activer les emails d'alarme",
+      "recipients_label": "Destinataires des emails d'alarme",
+      "recipients_placeholder": "ex: support@mc2-info.com\nadmin@client.fr",
+      "recipients_helper": "Un email par ligne, ou separes par virgule/point-virgule.",
+      "save_button": "Enregistrer"
     },
     "password_policy": {
       "title": "Règles de mot de passe",
@@ -409,7 +427,14 @@
       "label": "Actualiser",
       "loading": "Actualisation..."
     },
-        "filters": {"type_label": "Type d'alarme", "all": "Tous", "high": "Haut", "low": "Bas", "no_response": "Non réponse", "ended": "Terminée"},
+    "filters": {
+      "type_label": "Type d'alarme",
+      "all": "Tous",
+      "high": "Haut",
+      "low": "Bas",
+      "no_response": "Non réponse",
+      "ended": "Terminée"
+    },
     "toast": {
       "acknowledge_success": "Alarme acquittée avec succès",
       "acknowledge_error": "Erreur lors de l'acquittement de l'alarme",
@@ -587,6 +612,7 @@
       "tabs": {
         "general": "Général",
         "metrology": "Métrologie",
+        "mailing": "Mailing/Planning",
         "telephony": "Téléphonie/Planning"
       },
       "submit": {
@@ -619,7 +645,8 @@
         "lower_enable": "Activation consigne inf",
         "lower_min": "Minimum",
         "lower_pre_enable": "Activation consigne inf pré-alarme",
-        "lower_pre_label": "Pré-alarme inf."
+        "lower_pre_label": "Pré-alarme inf.",
+        "module_select": "Module"
       },
       "placeholders": {
         "name": "Ex: Stockage A",
@@ -636,7 +663,10 @@
         "auto": "Automatique",
         "numeric": "0.0",
         "frequency": "15",
-        "delay": "5"
+        "delay": "5",
+        "module": "Choisir un module",
+        "module_search": "Rechercher un module...",
+        "module_empty": "Aucun module"
       },
       "type_options": {
         "etuve": "Étuve",
@@ -646,7 +676,8 @@
         "autre": "Autre"
       },
       "options": {
-        "no_sensor": "Aucune sonde"
+        "no_sensor": "Aucune sonde",
+        "no_module": "Aucun module"
       },
       "tooltips": {
         "frequency_gso": "Fréquence fixée à 15 min pour les sondes GSO."
@@ -661,7 +692,7 @@
       "labels": {
         "serial": "Numéro de série",
         "state": "État",
-        "calibration_date": "Date de calibrage",
+        "calibration_date": "Date d'ajustage",
         "calibration_check_date": "Date d'étalonnage",
         "unit": "Unité",
         "accuracy_error": "Erreur de justesse",
@@ -703,7 +734,20 @@
       }
     },
     "telephony": {
-      "unavailable_one": "Cette section n'est pas disponible pour les licences One. Veuillez contacter le service commercial MC2 pour faire une upgrade de votre licence actuelle vers une licence standard ou expert."
+      "title": "Destinataires par lieu",
+      "description": "Configurez l'ordre et le canal de contact pour ce lieu.",
+      "add": "Ajouter un contact",
+      "remove": "Supprimer la ligne",
+      "empty": "Aucun destinataire configur? pour ce lieu.",
+      "labels": {
+        "order": "Ordre",
+        "user": "Utilisateur",
+        "via_mail": "Via mail",
+        "via_phone": "Via t?l?phone"
+      },
+      "placeholders": {
+        "user": "S?lectionner un utilisateur"
+      }
     }
   },
   "modulesPage": {
@@ -980,7 +1024,7 @@
       "CR": "Changement retard alarme",
       "CS": "Changement sonde",
       "AJE": "Événement manuel",
-      "CA": "Calibrage",
+      "CA": "Ajustage",
       "ET": "Étalonnage",
       "TC": "Test connexion sonde",
       "MDP": "Mot de passe",
@@ -1026,6 +1070,23 @@
       "first_name": "Prénom",
       "profile": "Profil",
       "created_at": "Compte créé le"
+    },
+    "avatar": {
+      "upload": "Importer une image",
+      "uploading": "Import en cours...",
+      "clear": "Retirer",
+      "save": "Enregistrer",
+      "saving": "Enregistrement...",
+      "saved": "Avatar mis a jour",
+      "save_error": "Erreur lors de la mise a jour de l'avatar",
+      "upload_error": "Erreur lors de l'import de l'avatar",
+      "crop_title": "Recadrer l'avatar",
+      "crop_cancel": "Annuler",
+      "crop_apply": "Appliquer",
+      "crop_zoom": "Zoom",
+      "crop_reset": "Réinitialiser",
+      "crop_opened": "Image charg?e. Recadrez puis appliquez.",
+      "upload_success": "Image pr?te. Enregistrez pour appliquer l'avatar."
     }
   },
   "profileSecurity": {
@@ -1305,7 +1366,7 @@
     "actions": {
       "add": "Ajouter",
       "edit": "Modifier",
-      "create_from_adjustment_file": "Ajouter sonde avec fichier d'ajustage/calibrage"
+      "create_from_adjustment_file": "Ajouter sonde avec fichier d'ajustage/ajustage"
     },
     "table": {
       "columns": {
@@ -1314,7 +1375,8 @@
         "port": "Port série",
         "module": "Module",
         "state": "État",
-        "location": "Lieu"
+        "location": "Lieu",
+        "calibration_validity": "Validité ajustage"
       },
       "search_placeholder": "Adresse, N° série, lieu...",
       "empty": "Aucune sonde"
@@ -1326,7 +1388,7 @@
     },
     "status": {
       "surveillance": "Surveillance",
-      "calibrage": "Calibrage",
+      "calibrage": "Ajustage",
       "etalonnage": "Étalonnage",
       "test": "Test",
       "disabled": "Désactivée",
@@ -1334,8 +1396,8 @@
     },
     "panels": {
       "adjustments": {
-        "title": "Calibrages",
-        "empty": "Aucun calibrage",
+        "title": "Ajustages",
+        "empty": "Aucun ajustage",
         "columns": {
           "date": "Date",
           "operator": "Opérateur",
@@ -1373,8 +1435,8 @@
   },
   "sensorAdjustmentImport": {
     "page": {
-      "title": "Import ajustage/calibrage",
-      "description": "Importer des fichiers XML d'ajustage (anciennement calibrage)"
+      "title": "Import ajustage/ajustage",
+      "description": "Importer des fichiers XML d'ajustage (anciennement ajustage)"
     },
     "actions": {
       "import": "Importer des fichiers",
@@ -1385,7 +1447,7 @@
       "apply": "Appliquer"
     },
     "table": {
-      "title": "Fichiers d'ajustage/calibrage",
+      "title": "Fichiers d'ajustage/ajustage",
       "columns": {
         "file": "Fichier",
         "sensor": "Sonde",
@@ -1398,10 +1460,10 @@
         "unit": "Unité",
         "actions": "Actions"
       },
-      "empty": "Veuillez importer un ou plusieurs fichier(s) d'ajustage/calibrage..."
+      "empty": "Veuillez importer un ou plusieurs fichier(s) d'ajustage/ajustage..."
     },
     "modal": {
-      "title": "Importer un fichier d'ajustage/calibrage",
+      "title": "Importer un fichier d'ajustage/ajustage",
       "description": "Chargez un ou plusieurs fichiers XML pour créer des sondes."
     },
     "edit": {
@@ -1515,7 +1577,9 @@
         "operator": "Opérateur",
         "unit": "Unité",
         "uncertainty": "Incertitude",
-        "actions": "Actions"
+        "actions": "Actions",
+        "validity_days": "Validite (jours)",
+        "err_justesse": "Erreur de justesse"
       },
       "empty": "Veuillez importer un ou plusieurs fichier(s) d'étalonnage..."
     },
@@ -1526,7 +1590,8 @@
     "edit": {
       "title": "Modifier les données",
       "operator": "Opérateur",
-      "unit": "Unité"
+      "unit": "Unité",
+      "validity_days": "Validite (jours)"
     },
     "toast": {
       "save_success": "{count} ligne(s) insérée(s) en base.",
@@ -1605,7 +1670,8 @@
       "process_errors": "{count} fichier(s) n'ont pas pu être importé(s).",
       "process_result": "Réussis : {success} Échecs : {failed}"
     }
-  },  "standardsPage": {
+  },
+  "standardsPage": {
     "title": "Gestion des étalons",
     "count": "{count, plural, one {# étalon} other {# étalons}}",
     "actions": {
@@ -1985,7 +2051,8 @@
       },
       "status": {
         "out_of_range": "Hors limites",
-        "ok": "OK"
+        "ok": "OK",
+        "no_response": "Non reponse"
       },
       "empty": "Aucune mesure",
       "empty_with_range": "Veuillez sélectionner 2 dates pour voir les mesures"
@@ -1993,7 +2060,8 @@
     "chart": {
       "over_high": "Zone dépassement haut",
       "over_low": "Zone dépassement bas",
-      "measures": "Mesures ({unit})"
+      "measures": "Mesures ({unit})",
+      "show_no_response": "Afficher les non-reponses"
     },
     "tooltip": {
       "value": "Valeur: {value}{unit}",
@@ -2076,63 +2144,6 @@
     "title": "Nouvelle version {version}",
     "description": "Nouveautés principales et changements à connaître.",
     "sections": {
-      "forms": {
-        "title": "Formulaires",
-        "items": {
-          "0": "Validation harmonisée (react-hook-form + Zod) pour Profils, Groupes, Sondes et Étalons.",
-          "1": "Messages d'erreur cohérents sur les champs requis."
-        }
-      },
-      "monitoring": {
-        "title": "Surveillance",
-        "items": {
-          "0": "Cartes harmonisées (boutons, icônes de type, tooltips, mode light).",
-          "1": "Filtres et actions en couleur primary, tri et vues ajustés.",
-          "2": "Dernière valeur dans le tableau des mesures.",
-          "3": "Ajout de l'onglet Audit dans les détails d'un lieu.",
-          "4": "Suppression de l’affichage mini/maxi sur la surveillance (cartes et détails).",
-          "5": "Acquittement rapide des alarmes depuis la carte de surveillance.",
-          "6": "Légende des statuts avec pastilles de couleur dans l'en-tête de surveillance.",
-          "7": "Précision décimale des mesures respectée sur les cartes et tableaux.",
-          "8": "Grille des lieux désactivés alignée sur la largeur complète."
-        }
-      },
-      "measures": {
-        "title": "Mesures et graphiques",
-        "items": {
-          "0": "Date range picker pour filtrer les mesures.",
-          "1": "Onglet mesures adapté pour les lieux en surveillance désactivée."
-        }
-      },
-      "admin_tables": {
-        "title": "Tables admin",
-        "items": {
-          "0": "Headers fixes avec blur, hauteurs adaptées et bords plus visibles.",
-          "1": "Actions harmonisées (icônes, tailles, couleurs).",
-          "2": "Sélection de ligne plus lisible.",
-          "3": "Fuseau horaire configurable pour l'affichage des dates."
-        }
-      },
-      "creation": {
-        "title": "Création et édition",
-        "items": {
-          "0": "Création de lieux sans sonde avec confirmation.",
-          "1": "Type GSO : fréquence verrouillée à 15 min.",
-          "2": "Liste des modules simplifiée."
-        }
-      },
-      "notifications": {
-        "title": "Notifications",
-        "items": {
-          "0": "Alerte secret agent activée par défaut en production (activable en dev via flag)."
-        }
-      },
-      "experience": {
-        "title": "Expérience",
-        "items": {
-          "0": "Nouvelles pages d'erreur 403, 404 et 500 avec animations et visuels modernisés."
-        }
-      },
       "upgrade": {
         "title": "Upgrade de licence",
         "items": {
@@ -2325,29 +2336,71 @@
     },
     "heroParallax": {
       "items": {
-        "0": { "title": "Dashboard temps réel" },
-        "1": { "title": "Surveillance intelligente" },
-        "2": { "title": "Alertes et écarts" },
-        "3": { "title": "Métrologie centralisée" },
-        "4": { "title": "Suivi continu" },
-        "5": { "title": "Rapports et audit" },
-        "6": { "title": "Courbes de tendance" },
-        "7": { "title": "Analyse métrologique" },
-        "8": { "title": "Conformité étalon" },
-        "9": { "title": "Notifications Windows" },
-        "10": { "title": "Pilotage sites" },
-        "11": { "title": "Historique complet" },
-        "12": { "title": "Alertes smart" },
-        "13": { "title": "Sondes & plans" },
-        "14": { "title": "Vue globale" }
+        "0": {
+          "title": "Dashboard temps réel"
+        },
+        "1": {
+          "title": "Surveillance intelligente"
+        },
+        "2": {
+          "title": "Alertes et écarts"
+        },
+        "3": {
+          "title": "Métrologie centralisée"
+        },
+        "4": {
+          "title": "Suivi continu"
+        },
+        "5": {
+          "title": "Rapports et audit"
+        },
+        "6": {
+          "title": "Courbes de tendance"
+        },
+        "7": {
+          "title": "Analyse métrologique"
+        },
+        "8": {
+          "title": "Conformité étalon"
+        },
+        "9": {
+          "title": "Notifications Windows"
+        },
+        "10": {
+          "title": "Pilotage sites"
+        },
+        "11": {
+          "title": "Historique complet"
+        },
+        "12": {
+          "title": "Alertes smart"
+        },
+        "13": {
+          "title": "Sondes & plans"
+        },
+        "14": {
+          "title": "Vue globale"
+        }
       }
     },
     "proofStats": {
       "items": {
-        "0": { "title": "100% on-premise", "description": "Aucune donnée dans le cloud" },
-        "1": { "title": "Alarmes temps réel", "description": "Détection instantanée des écarts" },
-        "2": { "title": "Traçabilité métrologique", "description": "Historique complet et auditable" },
-        "3": { "title": "Notifications Windows", "description": "Même navigateur fermé" }
+        "0": {
+          "title": "100% on-premise",
+          "description": "Aucune donnée dans le cloud"
+        },
+        "1": {
+          "title": "Alarmes temps réel",
+          "description": "Détection instantanée des écarts"
+        },
+        "2": {
+          "title": "Traçabilité métrologique",
+          "description": "Historique complet et auditable"
+        },
+        "3": {
+          "title": "Notifications Windows",
+          "description": "Même navigateur fermé"
+        }
       }
     },
     "valueProps": {
@@ -2419,7 +2472,7 @@
           "leftLabel": "One",
           "rightLabel": "Standard",
           "leftItems": {
-            "0": "Ajustage / calibrage",
+            "0": "Ajustage / ajustage",
             "1": "Offset et suivi simple",
             "2": "Base métrologie terrain"
           },
@@ -2435,11 +2488,26 @@
       "eyebrow": "Architecture",
       "title": "Écosystème 100% on-premise",
       "nodes": {
-        "sondes": { "label": "Sondes", "sublabel": "Temp, HR, CO2..." },
-        "serveur": { "label": "Serveur C#", "sublabel": "Interrogation + Alarmes" },
-        "bdd": { "label": "Base de données", "sublabel": "Mesures / métier" },
-        "webapp": { "label": "Web App", "sublabel": "Next.js" },
-        "agent": { "label": "Agent Windows", "sublabel": "Notifications" }
+        "sondes": {
+          "label": "Sondes",
+          "sublabel": "Temp, HR, CO2..."
+        },
+        "serveur": {
+          "label": "Serveur C#",
+          "sublabel": "Interrogation + Alarmes"
+        },
+        "bdd": {
+          "label": "Base de données",
+          "sublabel": "Mesures / métier"
+        },
+        "webapp": {
+          "label": "Web App",
+          "sublabel": "Next.js"
+        },
+        "agent": {
+          "label": "Agent Windows",
+          "sublabel": "Notifications"
+        }
       },
       "left": {
         "title": "Pourquoi c'est robuste",
@@ -2512,11 +2580,11 @@
         "7": "Gestion multi-sites et groupes",
         "8": "Sondes illimitées",
         "9": "Offset sonde",
-        "10": "Ajustage / calibrage",
+        "10": "Ajustage / ajustage",
         "11": "EMT par lieu",
         "12": "Résultats d'étalonnage",
         "13": "Gestion de la dérive",
-        "14": "Module de calibrage",
+        "14": "Module de ajustage",
         "15": "Module d'étalonnage",
         "16": "Lecture de la sonde étalon",
         "17": "Superposition des courbes",
@@ -2565,7 +2633,7 @@
         "2": {
           "title": "Modules métrologie",
           "bullets": {
-            "0": "Module de calibrage intégré",
+            "0": "Module de ajustage intégré",
             "1": "Module d'étalonnage dédié",
             "2": "Lecture de la sonde étalon",
             "3": "Superposition des courbes"
@@ -2810,7 +2878,7 @@
       },
       "etalons": {
         "title": "Etalons",
-        "description": "Administrer les etalons de calibration."
+        "description": "Administrer les etalons de ajustage."
       },
       "actionneurs": {
         "title": "Actionneurs",
@@ -2949,12 +3017,12 @@
       "label": "Actualiser",
       "loading": "Actualisation..."
     },
-      "filters": {
-        "type_label": "Type d'alarme", 
-        "all": "Tous", 
-        "high": "Haut", 
-        "low": "Bas", 
-        "no_response": "Non réponse"
+    "filters": {
+      "type_label": "Type d'alarme",
+      "all": "Tous",
+      "high": "Haut",
+      "low": "Bas",
+      "no_response": "Non réponse"
     },
     "acknowledge_success": "Alarme acquittée avec succès",
     "acknowledge_error": "Erreur lors de l'acquittement",
@@ -3016,7 +3084,9 @@
       "enabled": "Notifications activées"
     },
     "errors": {
-      "title": "Vous n'êtes pas connecté."
+      "title": "Vous n'?tes pas connect?.",
+      "default": "Une erreur est survenue.",
+      "with_id": "{message} (ID: {id})"
     }
   },
   "tanstackTable": {
@@ -3163,6 +3233,20 @@
       "description": "Définir une date d'expiration",
       "date_label": "Date d'expiration *",
       "select_date": "Sélectionner une date"
+    },
+    "avatar": {
+      "label": "Avatar",
+      "upload": "Importer une image",
+      "uploading": "Import en cours...",
+      "clear": "Retirer",
+      "crop_title": "Recadrer l'avatar",
+      "crop_cancel": "Annuler",
+      "crop_apply": "Appliquer",
+      "crop_zoom": "Zoom",
+      "crop_reset": "Réinitialiser",
+      "crop_opened": "Image charg?e. Recadrez puis appliquez.",
+      "upload_success": "Image pr?te. Enregistrez pour appliquer l'avatar.",
+      "upload_error": "Erreur lors de l'import de l'avatar"
     }
   },
   "editUserDialog": {
@@ -3252,7 +3336,3 @@
     "offline": "Hors ligne"
   }
 }
-
-
-
-

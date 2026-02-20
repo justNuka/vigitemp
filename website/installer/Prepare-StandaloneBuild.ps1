@@ -10,7 +10,14 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-function Write-Log($message) {
+
+# Force UTF-8 console encoding for correct accents/special characters in logs.
+try { cmd /c chcp 65001 > $null } catch { }
+try {
+    [Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
+    [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+    $OutputEncoding = [Console]::OutputEncoding
+} catch { }function Write-Log($message) {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     Write-Host "[$timestamp] $message"
 }
@@ -23,7 +30,7 @@ if ([string]::IsNullOrWhiteSpace($SourcePath)) {
     $SourcePath = $websiteRoot.Path
 }
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
-    $OutputDir = Join-Path $repoRoot "..\\vigi\\build\\website-standalone"
+    $OutputDir = Join-Path $repoRoot "..\\vigi\\2 - installation\\2 - site web"
 }
 
 if (-not (Test-Path (Join-Path $SourcePath "package.json"))) {
@@ -57,7 +64,7 @@ if (-not $SkipBuild) {
     $previousSkipDb = $env:VIGITEMP_SKIP_DB_ON_BUILD
     $previousLogsDir = $env:VIGITEMP_LOGS_DIR
     $previousDisableTurbo = $env:NEXT_DISABLE_TURBOPACK
-    $buildLogsDir = Join-Path $repoRoot "..\\vigi\\build\\tmp-logs"
+    $buildLogsDir = Join-Path $repoRoot "..\\vigi\\2 - installation\\tmp-logs"
     $projectLogsDir = Join-Path $SourcePath "logs"
     $env:VIGITEMP_SKIP_DB_ON_BUILD = "1"
     $env:VIGITEMP_LOGS_DIR = $buildLogsDir
@@ -152,27 +159,40 @@ if (Test-Path $standaloneEnv) {
     Remove-Item -Path $standaloneEnv -Force
 }
 
-if (Test-Path $publicDir) {
-    Write-Log "Copying public assets..."
-    & robocopy $publicDir (Join-Path $OutputDir "public") /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
-}
+# public/ is already included in .next/standalone; do not copy it separately.
 
-Copy-Item -Path (Join-Path $SourcePath "package.json") -Destination (Join-Path $OutputDir "package.json") -Force
-Copy-Item -Path (Join-Path $SourcePath "next.config.js") -Destination (Join-Path $OutputDir "next.config.js") -Force
-
-$installerSrc = Join-Path $SourcePath "installer"
-if (Test-Path $installerSrc) {
-    Write-Log "Copying installer files..."
-    $installerDest = Join-Path $OutputDir "installer"
-    New-Item -ItemType Directory -Force -Path $installerDest | Out-Null
-    & robocopy $installerSrc $installerDest /MIR /NFL /NDL /NJH /NJS /NC /NS /XF "README.md" "Prepare-StandaloneBuild.ps1" | Out-Null
-
-    $prereqsDest = Join-Path $installerDest "prereqs"
-    New-Item -ItemType Directory -Force -Path $prereqsDest | Out-Null
-    $nodeMsi = Join-Path $installerDest "node-v24.12.0-x64.msi"
-    if (Test-Path $nodeMsi) {
-        Move-Item -Path $nodeMsi -Destination (Join-Path $prereqsDest "node-v24.12.0-x64.msi") -Force
+# Installer scripts/dependency installers are centralized in vigi/1 - prerequis.
+foreach ($dirToDrop in @((Join-Path $OutputDir "installer"), (Join-Path $targetNext "standalone\installer"))) {
+    if (Test-Path $dirToDrop) {
+        try { [System.IO.Directory]::Delete($dirToDrop, $true) } catch { }
     }
 }
 
+$installerSrc = Join-Path $SourcePath "installer"
+
+
+$prereqRoot = Join-Path $repoRoot "..\\vigi\\1 - prerequis"
+$prereqInstallDir = Join-Path $prereqRoot "install"
+$prereqNodeDir = Join-Path $prereqRoot "node"
+
+Write-Log "Updating shared prerequisites folder (Node)..."
+New-Item -ItemType Directory -Force -Path $prereqInstallDir | Out-Null
+New-Item -ItemType Directory -Force -Path $prereqNodeDir | Out-Null
+
+$installNodeScript = Join-Path $installerSrc "Install-Node.ps1"
+if (Test-Path $installNodeScript) {
+    Copy-Item -Path $installNodeScript -Destination (Join-Path $prereqInstallDir "Install-Node.ps1") -Force
+}
+
+$nodeMsiSource = Join-Path $installerSrc "node-v24.12.0-x64.msi"
+if (Test-Path $nodeMsiSource) {
+    Copy-Item -Path $nodeMsiSource -Destination (Join-Path $prereqNodeDir "node-v24.12.0-x64.msi") -Force
+}
+
 Write-Log "Done. Standalone package ready at: $OutputDir"
+
+
+
+
+
+

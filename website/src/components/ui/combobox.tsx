@@ -73,6 +73,7 @@ export function Combobox({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           id={triggerId}
           variant="outline"
           role="combobox"

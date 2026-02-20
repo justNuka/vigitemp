@@ -11,6 +11,7 @@ type Options = {
   pageSize?: number
   startDate?: string | Date | null
   endDate?: string | Date | null
+  includeNullNonResponse?: boolean
 }
 
 type PaginatedResponse = {
@@ -36,11 +37,12 @@ function buildKey(
   pageSize: number,
   startDate?: string | Date | null,
   endDate?: string | Date | null,
+  includeNullNonResponse?: boolean,
 ) {
   const start =
     startDate instanceof Date ? startDate.toISOString() : startDate ?? ""
   const end = endDate instanceof Date ? endDate.toISOString() : endDate ?? ""
-  return `${idLieu}|${pageIndex}|${pageSize}|${start}|${end}`
+  return `${idLieu}|${pageIndex}|${pageSize}|${start}|${end}|${includeNullNonResponse ? "1" : "0"}`
 }
 
 export function useLieuMeasurementsPaged(
@@ -51,6 +53,7 @@ export function useLieuMeasurementsPaged(
     pageSize = 20,
     startDate,
     endDate,
+    includeNullNonResponse,
   }: Options = {},
 ) {
   const [data, setData] = useState<MeasureData[]>([])
@@ -59,8 +62,8 @@ export function useLieuMeasurementsPaged(
   const lastKeyRef = useRef<string | null>(null)
 
   const key = useMemo(
-    () => buildKey(idLieu, pageIndex, pageSize, startDate, endDate),
-    [idLieu, pageIndex, pageSize, startDate, endDate],
+    () => buildKey(idLieu, pageIndex, pageSize, startDate, endDate, includeNullNonResponse),
+    [idLieu, pageIndex, pageSize, startDate, endDate, includeNullNonResponse],
   )
 
   const pageCount = useMemo(() => {
@@ -76,6 +79,7 @@ export function useLieuMeasurementsPaged(
         pageSize,
         startDate,
         endDate,
+        includeNullNonResponse,
       )
       if (useCache) {
         const cached = pageCache.get(cacheKey)
@@ -102,6 +106,9 @@ export function useLieuMeasurementsPaged(
           endDate instanceof Date ? endDate.toISOString() : endDate,
         )
       }
+      if (typeof includeNullNonResponse === "boolean") {
+        params.set("includeNullNonResponse", includeNullNonResponse ? "1" : "0")
+      }
       const payload = await fetchJson<PaginatedResponse>(
         `/api/mesures/${idLieu}?${params}`,
       )
@@ -118,7 +125,7 @@ export function useLieuMeasurementsPaged(
       pageCache.set(cacheKey, entry)
       return entry
     },
-    [endDate, idLieu, pageSize, startDate],
+    [endDate, idLieu, pageSize, startDate, includeNullNonResponse],
   )
 
   useEffect(() => {
