@@ -327,92 +327,97 @@ model t_lieu_groupe {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model t_lieu {
-  Id_Lieu                                   Int                        @id @default(autoincrement())
+  Id_Lieu                                   Int                     @id @default(autoincrement())
   Id_Groupe1                                Int?
   Id_Groupe2                                Int?
   Id_Site                                   Int?
-  Nom_Lieu                                  String?                    @db.VarChar(30)
-  Sonde_Numero_Serie                        String?                    @db.VarChar(50)
-  Adresse_Sonde                             String?                    @db.VarChar(50)
-  Consigne                                  Float?                     @db.Float
-  Observations_Info                         String?                    @db.TinyText
-  Consigne_Sup                              Float?                     @db.Float
-  Tolerance_Surveillance_Sup                Float?                     @db.Float
-  Est_Consigne_Sup_Active                   Boolean?                   @default(false)
-  Consigne_Sup_Pre_Alarme                   Float?                     @db.Float
-  Est_Consigne_Sup_Pre_Alarme_Active        Boolean?                   @default(false)
-  Consigne_Inf                              Float?                     @db.Float
-  Tolerance_Surveillance_Inf                Float?                     @db.Float
-  Est_Consigne_Inf_Active                   Boolean?                   @default(false)
-  Consigne_Inf_Pre_Alarme                   Float?                     @db.Float
-  Est_Consigne_Inf_Pre_Alarme_Active        Boolean?                   @default(false)
+  Nom_Lieu                                  String?                 @db.VarChar(30)
+  Sonde_Numero_Serie                        String?                 @db.VarChar(50)
+  Adresse_Sonde                             String?                 @db.VarChar(50)
+  Consigne                                  Float?                  @db.Float
+  Consigne_Base                             Float?
+  Observations_Info                         String?                 @db.TinyText
+  Consigne_Sup                              Float?                  @db.Float
+  Consigne_Sup_Base                         Float?
+  Tolerance_Surveillance_Sup                Float?                  @db.Float
+  Tolerance_Surveillance_Sup_Base           Float?
+  Est_Consigne_Sup_Active                   Boolean?                @default(false)
+  Consigne_Sup_Pre_Alarme                   Float?                  @db.Float
+  Est_Consigne_Sup_Pre_Alarme_Active        Boolean?                @default(false)
+  Consigne_Inf                              Float?                  @db.Float
+  Consigne_Inf_Base                         Float?
+  Tolerance_Surveillance_Inf                Float?                  @db.Float
+  Tolerance_Surveillance_Inf_Base           Float?
+  Est_Consigne_Inf_Active                   Boolean?                @default(false)
+  Consigne_Inf_Pre_Alarme                   Float?                  @db.Float
+  Est_Consigne_Inf_Pre_Alarme_Active        Boolean?                @default(false)
   Frequence                                 Int?
-  Lieu_Etat                                 String?                    @default("D") @db.VarChar(1)
+  Lieu_Etat                                 String?                 @default("D") @db.VarChar(1)
   Retard_Alarme_Haut                        Int?
   Retard_Alarme_Bas                         Int?
   Id_Plan                                   Int?
   Position_Plan_X                           BigInt?
   Position_Plan_Y                           BigInt?
-  Date_Creation                             DateTime?                  @default(dbgenerated("(now())")) @db.Date
-  Est_Archive                               Boolean?                   @default(false)
-  Est_Tel_Actif                             Boolean?                   @default(false)
-  Tel_Code                                  String?                    @db.VarChar(4)
-  Tel_Son_Lieu                              String?                    @db.VarChar(260)
+  Date_Creation                             DateTime?               @default(dbgenerated("(now())")) @db.Date
+  Est_Archive                               Boolean?                @default(false)
+  Est_Tel_Actif                             Boolean?                @default(false)
+  Tel_Code                                  String?                 @db.VarChar(4)
+  Tel_Son_Lieu                              String?                 @db.VarChar(260)
   Id_Actionneur                             Int?
-  Est_Mode_Serotheque                       Boolean?                   @default(false)
+  Est_Mode_Serotheque                       Boolean?                @default(false)
   Coef_Sensibilite                          Int?
   Id_PDF                                    Int?
-  Est_DataLogger                            Boolean?                   @default(false)
-  EMT                                       Float?                     @db.Float
-  EMT_Choix_Mode                            Int?                       @default(4)
-  EMT_Sonde                                 Float?                     @db.Float
+  Est_DataLogger                            Boolean?                @default(false)
+  EMT                                       Float?                  @db.Float
+  EMT_Choix_Mode                            Int?                    @default(4)
+  EMT_Sonde                                 Float?                  @db.Float
   Retard_Alarme_Changement_Consigne         Int?
-  Derniere_Date_Heure                       DateTime?                  @db.DateTime(0)
-  Derniere_Valeur                           Float?                     @db.Float
-  Derniere_Unite                            String?                    @db.VarChar(10)
-  Derniere_Nb_Decimal                       Int?                       @default(2)
-  Est_Lieu_En_Alarme                        Int?                       @default(0) @db.TinyInt
-  Est_Lieu_Alarme_Terminee_Non_Acquittee    Int?                       @default(0) @db.TinyInt
-  Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 Int?                       @default(0) @db.TinyInt
-  Est_Lieu_En_Pre_Alarme                    Int?                       @default(0) @db.TinyInt
-  Id_Alarme                                 Int?                       @default(0)
-  Lieu_Etat_N1                              String?                    @db.VarChar(50)
-  Derniere_Date_Etalonnage                  DateTime?                  @db.Date
-  Derniere_Erreur_Justesse                  Float?                     @db.Float
-  Derniere_Incertitude                      Float?                     @db.Float
-  Retard_Non_Reponse                        Int?                       @default(60)
-  Date_Heure_Derniere_Reponse               DateTime?                  @db.DateTime(0)
-  Date_Heure_Derniere_Reponse_Recue_OK      DateTime?                  @db.DateTime(0)
-  Est_Correction_Ej                         Int?                       @default(0) @db.TinyInt
-  Derive                                    Float?                     @default(0) @db.Float
-  Est_Correction_derive                     Boolean?                   @default(false)
-  Derniere_Valeur_Null                      Int?                       @default(0)
-  Type_Lieu                                 String?                    @db.VarChar(20)
-  Date_Heure_Dernier_Acquittement_En_Cours  DateTime?                  @db.DateTime(0)
-  Date_Heure_Last_Update_EVT_GSO            DateTime?                  @db.DateTime(0)
-  Date_Heure_Reactivation_Alarme            DateTime?                  @db.DateTime(0)
-  Notification_Active                       Boolean                    @default(true)
-  Commentaire                               String?                    @db.VarChar(200)
-  Infos_Modifiees_Depuis_Derniere_Mesure    Boolean                    @default(true)
-  Date_Heure_Reactivation_Surveillance      DateTime?                  @db.DateTime(0)
-  Derniere_Val_Rssi                         String?                    @db.VarChar(10)
-  Derniere_Val_Tension                      String?                    @db.VarChar(10)
-  Est_Lieu_GSO                              Boolean?                   @default(false)
-  t_alarme                                  t_alarme[]                 @relation("lieu_alarme")
-  t_alarme_histo                            t_alarme_histo[]           @relation("lieu_alarme_histo")
-  t_groupe1                                 t_groupe?                  @relation("groupe1", fields: [Id_Groupe1], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE1_LIEU")
-  t_groupe2                                 t_groupe?                  @relation("groupe2", fields: [Id_Groupe2], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE2_LIEU")
-  t_etat_surveillance                       t_etat_surveillance?       @relation(fields: [Lieu_Etat], references: [Surveillance_Etat], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ETAT_SURVEILLANCE")
-  t_pdf                                     t_pdf?                     @relation(fields: [Id_PDF], references: [Id_PDF], onDelete: NoAction, onUpdate: NoAction, map: "FK_PDF_LIEU")
-  t_plan                                    t_plan?                    @relation(fields: [Id_Plan], references: [Id_Plan], onDelete: NoAction, onUpdate: NoAction, map: "FK_PLAN_LIEU")
-  t_site                                    t_site?                    @relation(fields: [Id_Site], references: [Id_Site], onDelete: NoAction, onUpdate: NoAction, map: "FK_SITE_LIEU")
-  t_sonde                                   t_sonde?                   @relation(fields: [Sonde_Numero_Serie], references: [Sonde_Numero_Serie], onDelete: NoAction, onUpdate: NoAction, map: "FK_SONDE_LIEU")
+  Derniere_Date_Heure                       DateTime?               @db.DateTime(0)
+  Derniere_Valeur                           Float?                  @db.Float
+  Derniere_Unite                            String?                 @db.VarChar(10)
+  Derniere_Nb_Decimal                       Int?                    @default(2)
+  Est_Lieu_En_Alarme                        Int?                    @default(0) @db.TinyInt
+  Est_Lieu_Alarme_Terminee_Non_Acquittee    Int?                    @default(0) @db.TinyInt
+  Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 Int?                    @default(0) @db.TinyInt
+  Est_Lieu_En_Pre_Alarme                    Int?                    @default(0) @db.TinyInt
+  Id_Alarme                                 Int?                    @default(0)
+  Lieu_Etat_N1                              String?                 @db.VarChar(50)
+  Derniere_Date_Etalonnage                  DateTime?               @db.Date
+  Derniere_Erreur_Justesse                  Float?                  @db.Float
+  Derniere_Incertitude                      Float?                  @db.Float
+  Retard_Non_Reponse                        Int?                    @default(60)
+  Date_Heure_Derniere_Reponse               DateTime?               @db.DateTime(0)
+  Date_Heure_Derniere_Reponse_Recue_OK      DateTime?               @db.DateTime(0)
+  Est_Correction_Ej                         Int?                    @default(0) @db.TinyInt
+  Derive                                    Float?                  @default(0) @db.Float
+  Est_Correction_derive                     Boolean?                @default(false)
+  Derniere_Valeur_Null                      Int?                    @default(0)
+  Type_Lieu                                 String?                 @db.VarChar(20)
+  Date_Heure_Dernier_Acquittement_En_Cours  DateTime?               @db.DateTime(0)
+  Date_Heure_Last_Update_EVT_GSO            DateTime?               @db.DateTime(0)
+  Date_Heure_Reactivation_Alarme            DateTime?               @db.DateTime(0)
+  Notification_Active                       Boolean                 @default(true)
+  Commentaire                               String?                 @db.VarChar(200)
+  Infos_Modifiees_Depuis_Derniere_Mesure    Boolean                 @default(true)
+  Date_Heure_Reactivation_Surveillance      DateTime?               @db.DateTime(0)
+  Derniere_Val_Rssi                         String?                 @db.VarChar(10)
+  Derniere_Val_Tension                      String?                 @db.VarChar(10)
+  Est_Lieu_GSO                              Boolean?                @default(false)
+  Planning_Actif                            Boolean                 @default(false)
+  Planning_Source_Regle_Id                  Int?
+  Planning_Derniere_Maj                     DateTime?               @db.DateTime(0)
+  t_alarme                                  t_alarme[]              @relation("lieu_alarme")
+  t_alarme_histo                            t_alarme_histo[]        @relation("lieu_alarme_histo")
+  t_groupe1                                 t_groupe?               @relation("groupe1", fields: [Id_Groupe1], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE1_LIEU")
+  t_groupe2                                 t_groupe?               @relation("groupe2", fields: [Id_Groupe2], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE2_LIEU")
+  t_etat_surveillance                       t_etat_surveillance?    @relation(fields: [Lieu_Etat], references: [Surveillance_Etat], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ETAT_SURVEILLANCE")
+  t_pdf                                     t_pdf?                  @relation(fields: [Id_PDF], references: [Id_PDF], onDelete: NoAction, onUpdate: NoAction, map: "FK_PDF_LIEU")
+  t_plan                                    t_plan?                 @relation(fields: [Id_Plan], references: [Id_Plan], onDelete: NoAction, onUpdate: NoAction, map: "FK_PLAN_LIEU")
+  t_site                                    t_site?                 @relation(fields: [Id_Site], references: [Id_Site], onDelete: NoAction, onUpdate: NoAction, map: "FK_SITE_LIEU")
+  t_sonde                                   t_sonde?                @relation(fields: [Sonde_Numero_Serie], references: [Sonde_Numero_Serie], onDelete: NoAction, onUpdate: NoAction, map: "FK_SONDE_LIEU")
   t_lieu_groupe                             t_lieu_groupe[]
   t_lieu_mail_tel                           t_lieu_mail_tel[]
-  t_lieu_planning                           t_lieu_planning[]
-  t_planning_alarme                         t_planning_alarme[]
-  t_planning_consigne                       t_planning_consigne[]
-  t_planning_heure_bascule                  t_planning_heure_bascule[]
+  t_lieu_planning_regle                     t_lieu_planning_regle[]
 
   @@index([Id_Groupe1], map: "IDX_Id_Groupe1")
   @@index([Id_Groupe2], map: "IDX_Id_Groupe2")
@@ -429,21 +434,6 @@ model t_lieu {
   @@index([Tel_Code], map: "IDX_Tel_Code")
   @@index([Tel_Son_Lieu], map: "IDX_Tel_Son_Lieu")
   @@index([Est_Lieu_GSO, Lieu_Etat], map: "idx_lieu_gso_etat")
-}
-
-model t_lieu_planning {
-  Id_Lieu_Planning     Int      @id @default(autoincrement())
-  Id_Lieu              Int?
-  Est_Id_Jour          Boolean?
-  Est_Actif            Boolean? @default(true)
-  Heure_Debut_Periode1 String?  @default("0000") @db.VarChar(4)
-  Heure_Fin_Periode1   String?  @default("0000") @db.VarChar(4)
-  Heure_Debut_Periode2 String?  @default("0000") @db.VarChar(4)
-  Heure_Fin_Periode2   String?  @default("0000") @db.VarChar(4)
-  t_lieu               t_lieu?  @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_PLANNING")
-
-  @@unique([Id_Lieu, Est_Id_Jour], map: "IdLieuJour")
-  @@index([Id_Lieu], map: "IDX_Id_Lieu")
 }
 
 model t_module {
@@ -836,53 +826,6 @@ model t_etalon_type {
   Resolution        Float?   @db.Float
 }
 
-model t_planning_alarme {
-  Id_Planning_Alarme Int     @id @default(autoincrement())
-  Id_Lieu            Int?
-  Code_Activation    String? @default("11111111") @db.VarChar(8)
-  t_lieu             t_lieu? @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_PLANNING_ALARME")
-
-  @@index([Id_Lieu], map: "IDX_Id_Lieu")
-}
-
-model t_planning_consigne {
-  Id_Planning_Consigne   Int     @id @default(autoincrement())
-  Id_Lieu                Int?
-  Code_Consigne          String? @db.VarChar(3)
-  Valeur_Consigne_Jour1  Float?  @db.Float
-  Valeur_Consigne_Jour1b Float?  @db.Float
-  Valeur_Consigne_Jour2  Float?  @db.Float
-  Valeur_Consigne_Jour2b Float?  @db.Float
-  Valeur_Consigne_Jour3  Float?  @db.Float
-  Valeur_Consigne_Jour3b Float?  @db.Float
-  Valeur_Consigne_Jour4  Float?  @db.Float
-  Valeur_Consigne_Jour4b Float?  @db.Float
-  Valeur_Consigne_Jour5  Float?  @db.Float
-  Valeur_Consigne_Jour5b Float?  @db.Float
-  Valeur_Consigne_Jour6  Float?  @db.Float
-  Valeur_Consigne_Jour6b Float?  @db.Float
-  Valeur_Consigne_Jour7  Float?  @db.Float
-  Valeur_Consigne_Jour7b Float?  @db.Float
-  t_lieu                 t_lieu? @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_PLANNING_CONSIGNE")
-
-  @@index([Id_Lieu], map: "IdLieu")
-}
-
-model t_planning_heure_bascule {
-  Id_Planning_Heure_Bascule Int       @id @default(autoincrement())
-  Id_Lieu                   Int?
-  Heure_Jour1               DateTime? @db.Time(0)
-  Heure_Jour2               DateTime? @db.Time(0)
-  Heure_Jour3               DateTime? @db.Time(0)
-  Heure_Jour4               DateTime? @db.Time(0)
-  Heure_Jour5               DateTime? @db.Time(0)
-  Heure_Jour6               DateTime? @db.Time(0)
-  Heure_Jour7               DateTime? @db.Time(0)
-  t_lieu                    t_lieu?   @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_PLANNING_HEURE_BASCULE")
-
-  @@index([Id_Lieu], map: "IdLieu")
-}
-
 model t_sonde_type_mesure {
   Id_Sonde_Type_Mesure         Int      @id @default(autoincrement())
   Sonde_Type_Mesure            String?  @unique(map: "Sonde_Type_Mesure") @db.VarChar(50)
@@ -929,4 +872,48 @@ model t_lieu_mail_tel {
 
   @@index([Id_Lieu], map: "IDX_Id_Lieu")
   @@index([Id_Utilisateur], map: "IDX_Id_Utilisateur")
+}
+
+model t_lieu_planning_audit {
+  Id_Audit           Int                        @id @default(autoincrement())
+  Id_Lieu            Int
+  Timestamp          DateTime                   @default(now()) @db.DateTime(0)
+  Type               t_lieu_planning_audit_Type
+  Planning_Regle_Id  Int?
+  Consigne_Avant     Float?
+  Consigne_Sup_Avant Float?
+  Consigne_Inf_Avant Float?
+  Consigne_Apres     Float?
+  Consigne_Sup_Apres Float?
+  Consigne_Inf_Apres Float?
+
+  @@index([Id_Lieu, Timestamp], map: "IDX_Id_Lieu_Timestamp")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_lieu_planning_regle {
+  Id_Regle           Int       @id @default(autoincrement())
+  Id_Lieu            Int
+  Actif              Boolean   @default(true)
+  Jour_Debut         Int       @db.TinyInt
+  Heure_Debut        DateTime  @db.Time(0)
+  Jour_Fin           Int       @db.TinyInt
+  Heure_Fin          DateTime  @db.Time(0)
+  Consigne           Float?
+  Consigne_Sup       Float?
+  Consigne_Inf       Float?
+  Priorite           Int       @default(0)
+  Tolerance_Sup_Calc Float?
+  Tolerance_Inf_Calc Float?
+  Date_Creation      DateTime  @default(now()) @db.DateTime(0)
+  Date_Maj           DateTime? @db.DateTime(0)
+  t_lieu             t_lieu    @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: Cascade, onUpdate: NoAction, map: "FK_PLANNING_REGLE_LIEU")
+
+  @@index([Actif, Id_Lieu], map: "IDX_Actif_Lieu")
+  @@index([Id_Lieu], map: "IDX_Id_Lieu")
+}
+
+enum t_lieu_planning_audit_Type {
+  ACTIVATION
+  RETOUR_BASE
 }
