@@ -4,7 +4,7 @@
       "type": "http",
       "url": "https://mcp.notion.com/mcp",
       "headers": {
-        "Authorization": "Bearer YOUR_NOTION_API_KEY_HERE"
+        "Authorization": "Bearer ntn_YOUR_NOTION_API_KEY_HERE"
       }
     }
   }
