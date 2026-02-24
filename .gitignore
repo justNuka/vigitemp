@@ -784,3 +784,6 @@ sketch
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/csharp,nextjs,visualstudiocode,visualstudio,node,react
+# MCP config (contains API keys)
+.claude/mcp.json
+.claude/settings.local.json
