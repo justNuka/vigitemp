@@ -114,13 +114,3 @@ Dans la modal lieu:
 5. Recalcul tolerances dans le flux event
 6. Audit trail complet
 7. Tests de recette (changement d'heure, week-end, chevauchement, reprise serveur)
-
-## Points De Vigilance
-- Fuseau horaire DB (TIMESTAMP/DATE/TIME coherents)
-- Gestion DST (changement heure ete/hiver)
-- Eviter boucles de MAJ inutiles
-- Priorites en cas de regles concurrentes
-- Verrouillage transactionnel si plusieurs jobs/eventuels workers
-
-## Decision Cle
-L'utilisation d'un EVENT SQL pour appliquer les consignes planifiees est validee comme approche principale pour la robustesse operationnelle.

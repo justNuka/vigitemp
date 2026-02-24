@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import type { Measurement } from "@/lib/api";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 interface MiniChartProps {
   measurements: Measurement[];
@@ -21,6 +21,7 @@ export function MiniChart({
   height = 60,
 }: MiniChartProps) {
   const t = useTranslations("miniChart");
+  const locale = useLocale();
   const chartData = useMemo(() => {
     if (measurements.length === 0) return null;
 
@@ -55,6 +56,26 @@ export function MiniChart({
     };
   }, [measurements, minThreshold, maxThreshold]);
 
+  const xLabels = useMemo(() => {
+    if (measurements.length < 2) return [] as string[];
+    if (measurements.length > 10) {
+      return [
+        new Date(measurements[0].timestamp).toLocaleDateString(locale, { day: "2-digit", month: "2-digit" }),
+        new Date(measurements[measurements.length - 1].timestamp).toLocaleDateString(locale, {
+          day: "2-digit",
+          month: "2-digit",
+        }),
+      ];
+    }
+
+    return measurements.map((m) =>
+      new Date(m.timestamp).toLocaleDateString(locale, {
+        day: "2-digit",
+        month: "2-digit",
+      }),
+    );
+  }, [locale, measurements]);
+
   if (!chartData || measurements.length < 2) {
     return (
       <div
@@ -69,7 +90,10 @@ export function MiniChart({
     );
   }
 
-  const { points, pathData, areaPath, displayMin, displayMax, displayRange } = chartData;
+  const { points, pathData, areaPath, displayMin, displayRange } = chartData;
+  const showDenseLabels = xLabels.length > 2;
+  const hasXLabels = xLabels.length > 0;
+  const chartHeight = hasXLabels ? Math.max(height - 20, 40) : height;
 
   const minThresholdY = minThreshold
     ? 100 - ((minThreshold - displayMin) / displayRange) * 100
@@ -85,7 +109,8 @@ export function MiniChart({
 
   return (
     <div className={cn("relative", className)} style={{ height }}>
-      <svg
+      <div style={{ height: chartHeight }}>
+        <svg
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
         className="w-full h-full"
@@ -160,7 +185,23 @@ export function MiniChart({
           fill={isOutOfRange ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
           className={isOutOfRange ? "animate-pulse" : ""}
         />
-      </svg>
+        </svg>
+      </div>
+      {hasXLabels ? (
+        <div className="mt-1 grid text-muted-foreground" style={{ gridTemplateColumns: `repeat(${xLabels.length}, minmax(0, 1fr))` }}>
+          {xLabels.map((label, index) => (
+            <span
+              key={`${label}-${index}`}
+              className={cn(
+                "text-[10px]",
+                showDenseLabels ? "text-center" : index === 0 ? "text-left" : "text-right",
+              )}
+            >
+              {label}
+            </span>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

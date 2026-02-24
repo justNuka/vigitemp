@@ -115,10 +115,15 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
               ? `Alarme basse - ${alarm.Valeur} C`
               : `Alarme temperature - ${alarm.Valeur} C`
 
-      const consigneSup =
-        alarm.t_lieu?.Tolerance_Surveillance_Sup ?? alarm.t_lieu?.Consigne_Sup ?? null
-      const consigneInf =
-        alarm.t_lieu?.Tolerance_Surveillance_Inf ?? alarm.t_lieu?.Consigne_Inf ?? null
+      const hasConfiguredThresholds =
+        alarm.t_lieu?.Consigne_Sup !== null || alarm.t_lieu?.Consigne_Inf !== null
+
+      const consigneSup = hasConfiguredThresholds
+        ? alarm.t_lieu?.Tolerance_Surveillance_Sup ?? alarm.t_lieu?.Consigne_Sup ?? null
+        : null
+      const consigneInf = hasConfiguredThresholds
+        ? alarm.t_lieu?.Tolerance_Surveillance_Inf ?? alarm.t_lieu?.Consigne_Inf ?? null
+        : null
 
       return {
         id: alarm.Id_Alarme,

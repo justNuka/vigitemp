@@ -13,6 +13,8 @@ const measureSchema = z.object({
   Mesure_Etalon: z.number().nullable(),
 });
 
+const nullableNumericTextSchema = z.union([z.string(), z.number()]).nullable();
+
 const rowSchema = z.object({
   id: z.string().min(1),
   file: z.string().min(1),
@@ -27,11 +29,11 @@ const rowSchema = z.object({
     Organisme: z.string().nullable(),
     Num_Certif: z.string().nullable(),
     Unite: z.string().nullable(),
-    Incertitude: z.string().nullable(),
+    Incertitude: nullableNumericTextSchema,
     Moyenne_Etalon: z.number().nullable(),
     Moyenne_Sonde: z.number().nullable(),
-    Repetabilite: z.string().nullable(),
-    Err_Justesse: z.string().nullable(),
+    Repetabilite: nullableNumericTextSchema,
+    Err_Justesse: nullableNumericTextSchema,
     Mesures: z.array(measureSchema).optional().default([]),
   }),
 });
@@ -44,6 +46,13 @@ const parseNullableNumber = (value: string | number | null | undefined): number 
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : null;
 };
+
+const toNullableText = (value: string | number | null | undefined): string | null => {
+  if (value === null || value === undefined) return null;
+  const normalized = String(value).trim();
+  return normalized.length > 0 ? normalized : null;
+};
+
 
 const computeDateValidite = (dateEtalonnage: Date | null, dateValidite: Date | null, dureeValiditeJours: number | null) => {
   if (dureeValiditeJours !== null && dateEtalonnage) {
@@ -145,7 +154,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
             Incertitude: parseNullableNumber(data.Incertitude),
             Moyenne_Etalon: data.Moyenne_Etalon,
             Moyenne_Sonde: data.Moyenne_Sonde,
-            Repetabilite: data.Repetabilite,
+            Repetabilite: toNullableText(data.Repetabilite),
             Err_Justesse: parseNullableNumber(data.Err_Justesse),
           },
           select: { Id_Etalonnage: true },
@@ -202,6 +211,10 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
         userId: ctx.user.userId,
         ip,
         issues: error.issues.length,
+        firstIssues: error.issues.slice(0, 5).map((issue) => ({
+          path: issue.path.join('.'),
+          message: issue.message,
+        })),
       });
       return apiError(400, "validation_error", "Donnees invalides", { issues: error.issues });
     }

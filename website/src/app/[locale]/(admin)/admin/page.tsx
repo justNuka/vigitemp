@@ -35,6 +35,7 @@ import {
   useSystemLogs,
 } from "@/hooks/useAdminData"
 import { useUnassignedSensors } from "@/hooks/useSensors"
+import { ExpertAdminDashboard } from "./_components/expert-admin-dashboard"
 
 type SummaryCardProps = {
   title: string
@@ -210,20 +211,25 @@ export default function AdminDashboard() {
 
 
   if (isExpertEdition) {
-    const expertTitle = locale === "fr" ? "Dashboard admin licence expert en construction" : "Expert admin dashboard under construction"
-    const expertDescription =
-      locale === "fr"
-        ? "Le dashboard admin Expert sera disponible dans une prochaine version."
-        : "The Expert admin dashboard will be available in a future release."
-
     return (
       <div className="flex min-h-full flex-col">
-        <PageHeader title={expertTitle} description={expertDescription} />
-        <div className="p-6">
-          <Card className="border-slate-200 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-            <CardContent className="p-6 text-sm text-muted-foreground">{expertDescription}</CardContent>
-          </Card>
-        </div>
+        <PageHeader title={t("title")} />
+        <ExpertAdminDashboard
+          metrics={{
+            alarmsInProgressTotal,
+            alarmsPendingAckTotal,
+            acknowledgmentsTotal,
+            connectedUsersTotal,
+            systemLogsTotal,
+            backupsTotal,
+            unassignedTotal,
+            latestAck,
+            latestAuditAction,
+            latestConnectedLabel,
+            lastBackupLabel,
+            hideStandards,
+          }}
+        />
       </div>
     )
   }

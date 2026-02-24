@@ -117,8 +117,14 @@ export function parseAdjustmentXml(xml: string, fileName = ""): ParsedAdjustment
   const unit = etalonBlock ? getTagValue(etalonBlock, "UNITE") : getTagValue(xml, "UNITE");
 
   const calibrationBlock = getTagValueAny(xml, TAG_SETS.calibrationBlock);
+  // For GSO imports, ADRESSE_SONDE from file must be ignored.
+  // Example:
+  //   serial expected: SOIT-10007297
+  //   logical sensor address: 10007297
+  // If we trust ADRESSE_SONDE from XML, we may break naming conventions used by acquisition.
+  // We only trust NUM_SONDE for import normalization.
   const sensorNumberRaw = calibrationBlock
-    ? getTagValue(calibrationBlock, "NUM_SONDE") ?? getTagValue(calibrationBlock, "ADRESSE_SONDE")
+    ? getTagValue(calibrationBlock, "NUM_SONDE")
     : null;
   const sensorNumber = sensorNumberRaw ? normalizeImportedGsoSerial(sensorNumberRaw) : null;
 

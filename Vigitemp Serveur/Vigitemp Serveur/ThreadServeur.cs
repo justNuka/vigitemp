@@ -331,11 +331,8 @@ namespace Vigitemp_Serveur
 
             await AlarmWebNotifier.NotifyAlarmBatchAsync(newAlarms);
 
-            var ips_clients = GetDatabase().getPCsClients();
-            for (int i = 0; i < ips_clients.Count; i++)
-            {
-                _ = _http.PostAsync("http://" + ips_clients[i] + ":8000/alarm?action=show", null);
-            }
+            // Legacy agent endpoint (/alarm?action=show) is deprecated.
+            // Agent notifications now go through web dispatch (/api/alarmes/dispatch -> /notify).
         }
 
         private void PollEndedAlarms()
@@ -355,14 +352,8 @@ namespace Vigitemp_Serveur
                 return;
             }
 
-            var ips_clients = GetDatabase().getPCsClients();
-            foreach (var alarm in ended.GroupBy(a => a.IdLieu).Select(g => g.First()))
-            {
-                for (int i = 0; i < ips_clients.Count; i++)
-                {
-                    _ = _http.PostAsync("http://" + ips_clients[i] + ":8000/alarm?action=hide&idLieu=" + alarm.IdLieu, null);
-                }
-            }
+            // Legacy agent endpoint (/alarm?action=hide) is deprecated.
+            // End-of-alarm handling is now done by web dispatch and email flow.
 
             _ = AlarmWebNotifier.NotifyEndedAlarmBatchAsync(ended);
         }

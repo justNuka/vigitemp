@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -58,6 +59,64 @@ namespace VigitempAgent
             {
                 return false;
             }
+        }
+
+
+        private static string ResolveNotifySecret()
+        {
+            try
+            {
+                var env = Environment.GetEnvironmentVariable("VIGITEMP_AGENT_SECRET");
+                if (!string.IsNullOrWhiteSpace(env)) return env.Trim();
+            }
+            catch
+            {
+                // ignore
+            }
+
+            try
+            {
+                var cfg =
+                    ConfigurationManager.AppSettings["VigitempAgentSecret"] ??
+                    ConfigurationManager.AppSettings["VIGITEMP_AGENT_SECRET"];
+                if (!string.IsNullOrWhiteSpace(cfg)) return cfg.Trim();
+            }
+            catch
+            {
+                // ignore
+            }
+
+            try
+            {
+                var inMemory = MyCustomApplicationContext.Instance?.AGENT_SECRET;
+                if (!string.IsNullOrWhiteSpace(inMemory)) return inMemory.Trim();
+            }
+            catch
+            {
+                // ignore
+            }
+
+            try
+            {
+                var stored = AgentSecretStore.Get();
+                if (!string.IsNullOrWhiteSpace(stored)) return stored.Trim();
+            }
+            catch
+            {
+                // ignore
+            }
+
+            return null;
+        }
+
+        private static bool IsNotifyAuthorized(HttpListenerRequest req)
+        {
+            var expected = ResolveNotifySecret();
+            if (string.IsNullOrWhiteSpace(expected)) return false;
+
+            var provided = req.Headers["x-vigitemp-agent-secret"];
+            return !string.IsNullOrWhiteSpace(provided) &&
+                   string.Equals(provided.Trim(), expected, StringComparison.Ordinal);
         }
 
         private static string JsonEscape(string value)
@@ -233,6 +292,13 @@ namespace VigitempAgent
                             break;
                         case "/notify":
                             {
+                                if (!IsNotifyAuthorized(req))
+                                {
+                                    resp.StatusCode = 401;
+                                    resp.Close();
+                                    break;
+                                }
+
                                 string payload;
                                 using (var reader = new StreamReader(req.InputStream, req.ContentEncoding))
                                 {

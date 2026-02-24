@@ -52,6 +52,7 @@ export const GET = withAuthLogging(
           const response = apiOk({
             measurements: cached,
             lieuType: lieuMeta?.Type_Lieu ?? null,
+            graphMeasureCount: cached.length,
           })
           response.headers.set("Cache-Control", "public, s-maxage=30, stale-while-revalidate=900")
           response.headers.set("X-Cache", "HIT")
@@ -139,31 +140,7 @@ export const GET = withAuthLogging(
           : Promise.resolve(0),
       ])
 
-      const measurements =
-        source === "graphique" && primaryMeasurements.length === 0
-          ? await prismaMesure.tm_mesures.findMany({
-              where: {
-                ...whereClause,
-                ...(includeNullNonResponse ? {} : { Est_Valeur_Null: 0 }),
-              },
-              take: rowNumber,
-              orderBy: { Date_Heure_Mesure: "desc" },
-              select: {
-                Id_Mesure: true,
-                Date_Heure_Mesure: true,
-                Valeur: true,
-                Nb_Decimal: true,
-                Unite: true,
-                Consigne: true,
-                Consigne_Sup: true,
-                Consigne_Inf: true,
-                Sonde_Numero_Serie: true,
-                Frequence: true,
-                Est_Etat_Alarme: true,
-                Est_Valeur_Null: true,
-              },
-            })
-          : primaryMeasurements
+      const measurements = primaryMeasurements
 
       const consigneSupLieu =
         lieu?.Tolerance_Surveillance_Sup ?? lieu?.Consigne_Sup ?? null
@@ -233,7 +210,11 @@ export const GET = withAuthLogging(
         usePagination
           ? { measurements: formattedMeasurements, total, page, pageSize }
           : includeMeta
-            ? { measurements: formattedMeasurements, lieuType: lieu?.Type_Lieu ?? null }
+            ? {
+              measurements: formattedMeasurements,
+              lieuType: lieu?.Type_Lieu ?? null,
+              graphMeasureCount: source === "graphique" ? formattedMeasurements.length : undefined,
+            }
             : formattedMeasurements,
       )
       response.headers.set("Cache-Control", "public, s-maxage=900, stale-while-revalidate=900")

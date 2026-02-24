@@ -25,13 +25,18 @@ type Props = {
 
 export function LocationFormTabTelephony({ users }: Props) {
   const t = useTranslations("locationsForm.telephony");
-  const { control, setValue, watch } = useFormContext<LocationFormData>();
+  const { control, getValues, setValue, watch } = useFormContext<LocationFormData>();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "MailingContacts",
   });
 
   const contacts = watch("MailingContacts") ?? [];
+
+  const markMailingDirty = () => {
+    const current = getValues("MailingContacts") ?? [];
+    setValue("MailingContacts", current, { shouldDirty: true, shouldTouch: true });
+  };
 
   const usersById = useMemo(() => {
     const map = new Map<number, MailingUser>();
@@ -52,14 +57,15 @@ export function LocationFormTabTelephony({ users }: Props) {
             variant="outline"
             size="sm"
             className="gap-2"
-            onClick={() =>
+            onClick={() => {
               append({
                 Numero_Ordre: fields.length + 1,
                 Id_Utilisateur: null,
                 Est_Via_Email: true,
                 Est_Via_Telephone: false,
-              })
-            }
+              });
+              markMailingDirty();
+            }}
           >
             <Plus className="h-4 w-4" />
             {t("add")}
@@ -86,6 +92,7 @@ export function LocationFormTabTelephony({ users }: Props) {
                         setValue(
                           `MailingContacts.${index}.Numero_Ordre`,
                           Math.max(1, Number(event.target.value) || 1),
+                          { shouldDirty: true, shouldTouch: true },
                         )
                       }
                     />
@@ -99,7 +106,10 @@ export function LocationFormTabTelephony({ users }: Props) {
                       render={({ field: userField }) => (
                         <Select
                           value={userField.value != null ? String(userField.value) : ""}
-                          onValueChange={(value) => userField.onChange(value ? Number(value) : null)}
+                          onValueChange={(value) => {
+                            userField.onChange(value ? Number(value) : null);
+                            markMailingDirty();
+                          }}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder={t("placeholders.user")} />
@@ -122,7 +132,7 @@ export function LocationFormTabTelephony({ users }: Props) {
                       <Checkbox
                         checked={!!current?.Est_Via_Email}
                         onCheckedChange={(checked) =>
-                          setValue(`MailingContacts.${index}.Est_Via_Email`, !!checked)
+                          setValue(`MailingContacts.${index}.Est_Via_Email`, !!checked, { shouldDirty: true, shouldTouch: true })
                         }
                       />
                       {t("labels.via_mail")}
@@ -131,7 +141,7 @@ export function LocationFormTabTelephony({ users }: Props) {
                       <Checkbox
                         checked={!!current?.Est_Via_Telephone}
                         onCheckedChange={(checked) =>
-                          setValue(`MailingContacts.${index}.Est_Via_Telephone`, !!checked)
+                          setValue(`MailingContacts.${index}.Est_Via_Telephone`, !!checked, { shouldDirty: true, shouldTouch: true })
                         }
                       />
                       {t("labels.via_phone")}
@@ -146,7 +156,10 @@ export function LocationFormTabTelephony({ users }: Props) {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() => remove(index)}
+                      onClick={() => {
+                        remove(index);
+                        markMailingDirty();
+                      }}
                       aria-label={t("remove")}
                     >
                       <Trash2 className="h-4 w-4" />

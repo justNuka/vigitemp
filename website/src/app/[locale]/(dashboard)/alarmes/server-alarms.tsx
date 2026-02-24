@@ -43,10 +43,15 @@ export async function ServerAlarms(status?: AlarmStatus) {
 
   // Transform to API format (AlarmWithDetails)
   const formatted = alarms.map((alarm) => {
-    const consigneSup =
-      alarm.t_lieu?.Tolerance_Surveillance_Sup ?? alarm.t_lieu?.Consigne_Sup ?? null;
-    const consigneInf =
-      alarm.t_lieu?.Tolerance_Surveillance_Inf ?? alarm.t_lieu?.Consigne_Inf ?? null;
+    const hasConfiguredThresholds =
+      alarm.t_lieu?.Consigne_Sup !== null || alarm.t_lieu?.Consigne_Inf !== null;
+
+    const consigneSup = hasConfiguredThresholds
+      ? alarm.t_lieu?.Tolerance_Surveillance_Sup ?? alarm.t_lieu?.Consigne_Sup ?? null
+      : null;
+    const consigneInf = hasConfiguredThresholds
+      ? alarm.t_lieu?.Tolerance_Surveillance_Inf ?? alarm.t_lieu?.Consigne_Inf ?? null
+      : null;
 
     const statusValue = alarm.Est_Acquittee
       ? ("acknowledged" as const)
@@ -62,9 +67,9 @@ export async function ServerAlarms(status?: AlarmStatus) {
 
     const thresholdValue =
       alarmType === "high"
-        ? consigneSup ?? 0
+        ? (consigneSup ?? 0)
         : alarmType === "low"
-          ? consigneInf ?? 0
+          ? (consigneInf ?? 0)
           : 0;
 
     const unit = alarm.Unite?.trim() || "Unite inconnue";
@@ -91,6 +96,7 @@ export async function ServerAlarms(status?: AlarmStatus) {
       currentValue: alarm.t_lieu?.Derniere_Valeur ?? alarm.Valeur ?? null,
       minThreshold: consigneInf ?? 0,
       maxThreshold: consigneSup ?? 0,
+      hasThresholds: hasConfiguredThresholds,
       measurementFrequency: 60,
       alarmDelay: 0,
       lastMeasurement: alarm.Date_Heure_Derniere_Mesure || null,

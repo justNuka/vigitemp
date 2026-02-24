@@ -1,7 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { Loader2, Layers3 } from "lucide-react"
+import { useMemo, useRef, useState } from "react"
+import { Loader2, Layers3, Download, Printer } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { Line } from "react-chartjs-2"
 import {
@@ -56,6 +56,8 @@ const COLORS = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#06b6d4"
 
 export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
   const t = useTranslations("surveillance")
+  const tCommon = useTranslations("common")
+  const tButtons = useTranslations("buttons")
   const locale = useLocale()
   const localeTag = locale === "fr" ? "fr-FR" : locale
 
@@ -63,6 +65,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
   const [dateRange, setDateRange] = useState<DateRangeValue | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [dataByLocation, setDataByLocation] = useState<Record<number, OverlayMeasurement[]>>({})
+  const chartRef = useRef<ChartJS<"line"> | null>(null)
 
   const selectedLocations = useMemo(
     () => locations.filter((item) => selectedIds.includes(item.id)),
@@ -178,9 +181,77 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
     }
   }
 
+  const canExport = chartPayload.datasets.length >= 2 && chartPayload.labels.length > 0
+
+  const downloadBlob = (content: string, mimeType: string, filename: string) => {
+    const blob = new Blob([content], { type: mimeType })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement("a")
+    anchor.href = url
+    anchor.download = filename
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleExportCsv = () => {
+    if (!canExport) return
+
+    const headers = ["Date", ...chartPayload.datasets.map((dataset) => dataset.label)]
+    const rows = chartPayload.labels.map((label, rowIndex) => {
+      const values = chartPayload.datasets.map((dataset) => {
+        const value = dataset.data[rowIndex]
+        return value === null || value === undefined ? "" : String(value)
+      })
+      return [label, ...values]
+    })
+
+    const escapeCell = (value: string) => {
+      const normalized = value.replace(/"/g, '""')
+      return /[";\n]/.test(normalized) ? `"${normalized}"` : normalized
+    }
+
+    const csv = [headers, ...rows]
+      .map((line) => line.map((cell) => escapeCell(String(cell))).join(";"))
+      .join("\n")
+
+    downloadBlob(csv, "text/csv;charset=utf-8", "superposition-courbes.csv")
+  }
+
+  const handlePrintChart = () => {
+    if (!canExport) return
+    const chart = chartRef.current
+    if (!chart) return
+
+    const imageDataUrl = chart.toBase64Image("image/png", 1)
+    const popup = window.open("", "_blank", "width=1100,height=760")
+    if (!popup) return
+
+    popup.document.write(`
+      <html>
+        <head>
+          <title>${t("overlay.title")}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 16px; }
+            .meta { margin-bottom: 12px; color: #475569; font-size: 12px; }
+            img { width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+          </style>
+        </head>
+        <body>
+          <h2>${t("overlay.title")}</h2>
+          <div class="meta">${new Date().toLocaleString(localeTag)}</div>
+          <img src="${imageDataUrl}" alt="overlay" />
+        </body>
+      </html>
+    `)
+    popup.document.close()
+    popup.focus()
+    popup.print()
+  }
+
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Layers3 className="h-4 w-4" />
@@ -191,7 +262,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
         <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
           <div className="rounded-md border p-3">
             <p className="text-sm font-medium mb-2">{t("overlay.locations")}</p>
-            <ScrollArea className="h-[320px] pr-2">
+            <ScrollArea className="h-80 pr-2">
               <div className="space-y-2">
                 {locations.map((location) => {
                   const checked = selectedIds.includes(location.id)
@@ -222,6 +293,8 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
                 showCompare={false}
                 align="start"
                 locale={localeTag}
+                matchTriggerWidth={false}
+                popoverClassName="w-[760px]"
                 onUpdate={({ range }) => {
                   if (!range.from) {
                     setDateRange(null)
@@ -245,9 +318,20 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
             </p>
           </div>
 
-          <div className="rounded-md border p-3 min-h-[360px]">
+          <div className="rounded-md border p-3 min-h-90">
+            <div className="mb-3 flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={handleExportCsv} disabled={!canExport}>
+                <Download className="mr-2 h-4 w-4" />
+                {tCommon("export")}
+              </Button>
+              <Button variant="outline" size="sm" onClick={handlePrintChart} disabled={!canExport}>
+                <Printer className="mr-2 h-4 w-4" />
+                {tButtons("print")}
+              </Button>
+            </div>
             {chartPayload.datasets.length >= 2 && chartPayload.labels.length > 0 ? (
               <Line
+                ref={chartRef}
                 data={chartPayload}
                 options={{
                   responsive: true,
@@ -268,7 +352,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
                 height={340}
               />
             ) : (
-              <div className="h-[340px] flex items-center justify-center text-sm text-muted-foreground">
+              <div className="h-85 flex items-center justify-center text-sm text-muted-foreground">
                 {t("overlay.empty")}
               </div>
             )}

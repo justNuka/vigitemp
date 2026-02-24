@@ -44,14 +44,6 @@ export const POST = withAuthLogging(
 
         if (!current) return null
 
-        await tx.t_alarme.update({
-          where: { Id_Alarme: alarmId },
-          data: {
-            Est_Acquittee: true,
-            Est_Tel_Acquittee: true,
-          },
-        })
-
         if (current.t_lieu?.Id_Lieu) {
           const lieuId = current.t_lieu.Id_Lieu
 
@@ -108,6 +100,17 @@ export const POST = withAuthLogging(
 
         await tx.t_alarme.delete({
           where: { Id_Alarme: alarmId },
+        })
+
+        // Certains clients ont des triggers/procedures qui bloquent les UPDATE directs
+        // sur t_alarme (MySQL 1442). On force donc l'etat acquitte dans l'historique.
+        await tx.t_alarme_histo.updateMany({
+          where: { Id_Alarme: alarmId },
+          data: {
+            Est_Acquittee: true,
+            Est_Tel_Acquittee: true,
+            Date_Heure_Acquittement: acknowledgedAt,
+          },
         })
 
         return current

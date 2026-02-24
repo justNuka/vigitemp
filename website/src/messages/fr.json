@@ -738,15 +738,15 @@
       "description": "Configurez l'ordre et le canal de contact pour ce lieu.",
       "add": "Ajouter un contact",
       "remove": "Supprimer la ligne",
-      "empty": "Aucun destinataire configur? pour ce lieu.",
+      "empty": "Aucun destinataire configuré pour ce lieu.",
       "labels": {
         "order": "Ordre",
         "user": "Utilisateur",
         "via_mail": "Via mail",
-        "via_phone": "Via t?l?phone"
+        "via_phone": "Via téléphone"
       },
       "placeholders": {
-        "user": "S?lectionner un utilisateur"
+        "user": "Sélectionner un utilisateur"
       }
     }
   },
@@ -2061,7 +2061,8 @@
       "over_high": "Zone dépassement haut",
       "over_low": "Zone dépassement bas",
       "measures": "Mesures ({unit})",
-      "show_no_response": "Afficher les non-reponses"
+      "show_no_response": "Afficher les non-reponses",
+      "measure_count": "Mesures dans le graphique: {count}"
     },
     "tooltip": {
       "value": "Valeur: {value}{unit}",
@@ -2989,6 +2990,23 @@
         "type": "Type",
         "address": "Adresse",
         "module": "Module"
+      }
+    },
+    "expert": {
+      "description": "Mode edition: deplacez, redimensionnez, ajoutez ou retirez des blocs.",
+      "edit": "Modifier le dashboard",
+      "done": "Terminer",
+      "toolbox_title": "Blocs disponibles",
+      "toolbox_description": "Cliquez ou glissez-deposez un bloc dans la grille.",
+      "remove": "Retirer le bloc",
+      "widgets": {
+        "alarms": "Alarmes",
+        "acknowledgments": "Acquittements",
+        "connectedUsers": "Utilisateurs connectes",
+        "systemLogs": "Journal d'audit",
+        "backups": "Sauvegardes",
+        "unassigned": "Sondes non affectees",
+        "etalons": "Etalons"
       }
     }
   },

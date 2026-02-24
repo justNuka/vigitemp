@@ -28,6 +28,39 @@ const STANDARD_METROLOGY_FIELDS = [
   "Derive",
 ] as const
 
+
+function addConsigneGuards(data: any, ctx: z.RefinementCtx) {
+  const hasConsigne = data.Consigne !== null && data.Consigne !== undefined
+  const hasSup = data.Consigne_Sup !== null && data.Consigne_Sup !== undefined
+  const hasInf = data.Consigne_Inf !== null && data.Consigne_Inf !== undefined
+  const supActive = data.Est_Consigne_Sup_Active ?? hasSup
+  const infActive = data.Est_Consigne_Inf_Active ?? hasInf
+
+  if (hasConsigne && supActive && hasSup && Number(data.Consigne_Sup) <= Number(data.Consigne)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Consigne_Sup"],
+      message: "La consigne sup doit etre strictement superieure a la consigne.",
+    })
+  }
+
+  if (hasConsigne && infActive && hasInf && Number(data.Consigne_Inf) >= Number(data.Consigne)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Consigne_Inf"],
+      message: "La consigne inf doit etre strictement inferieure a la consigne.",
+    })
+  }
+
+  if (supActive && infActive && hasSup && hasInf && Number(data.Consigne_Inf) >= Number(data.Consigne_Sup)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Consigne_Inf"],
+      message: "La consigne inf doit etre strictement inferieure a la consigne sup.",
+    })
+  }
+}
+
 const updateLieuSchema = z.object({
   Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(50).optional(),
   Lieu_Etat: z.string().max(1).nullable().optional(),
@@ -63,7 +96,7 @@ const updateLieuSchema = z.object({
   Incertitude: z.number().nullable().optional(),
   Derive: z.number().nullable().optional(),
   MailingContacts: z.array(mailingContactSchema).optional(),
-})
+}).superRefine(addConsigneGuards)
 
 
 function normalizeMailingContacts(contacts: Array<{
@@ -189,8 +222,8 @@ export const PATCH = withLogging(
         lieuPatch.Tolerance_Surveillance_Sup = emt.toleranceSup
         lieuPatch.Tolerance_Surveillance_Inf = emt.toleranceInf
       } else if (validated.EMT_Mode === "sans-objet") {
-        lieuPatch.Tolerance_Surveillance_Sup = validated.Consigne_Sup
-        lieuPatch.Tolerance_Surveillance_Inf = validated.Consigne_Inf
+        lieuPatch.Tolerance_Surveillance_Sup = (validated.Est_Consigne_Sup_Active ?? false) ? validated.Consigne_Sup : null
+        lieuPatch.Tolerance_Surveillance_Inf = (validated.Est_Consigne_Inf_Active ?? false) ? validated.Consigne_Inf : null
       }
 
       if (Object.prototype.hasOwnProperty.call(validated, "EMT_Mode") || Object.prototype.hasOwnProperty.call(validated, "EMT_Valeur")) {

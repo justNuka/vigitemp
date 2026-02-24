@@ -8,6 +8,39 @@ const mailingContactSchema = z.object({
   Est_Via_Email: z.boolean().default(true),
 });
 
+
+function addConsigneGuards(data: any, ctx: z.RefinementCtx) {
+  const hasConsigne = data.Consigne !== null && data.Consigne !== undefined
+  const hasSup = data.Consigne_Sup !== null && data.Consigne_Sup !== undefined
+  const hasInf = data.Consigne_Inf !== null && data.Consigne_Inf !== undefined
+  const supActive = data.Est_Consigne_Sup_Active ?? hasSup
+  const infActive = data.Est_Consigne_Inf_Active ?? hasInf
+
+  if (hasConsigne && supActive && hasSup && Number(data.Consigne_Sup) <= Number(data.Consigne)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Consigne_Sup"],
+      message: "La consigne sup doit etre strictement superieure a la consigne.",
+    })
+  }
+
+  if (hasConsigne && infActive && hasInf && Number(data.Consigne_Inf) >= Number(data.Consigne)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Consigne_Inf"],
+      message: "La consigne inf doit etre strictement inferieure a la consigne.",
+    })
+  }
+
+  if (supActive && infActive && hasSup && hasInf && Number(data.Consigne_Inf) >= Number(data.Consigne_Sup)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Consigne_Inf"],
+      message: "La consigne inf doit etre strictement inferieure a la consigne sup.",
+    })
+  }
+}
+
 export const locationFormSchema = z.object({
   Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(50),
   Type_Lieu: z.string().optional().nullable(),
@@ -42,6 +75,6 @@ export const locationFormSchema = z.object({
   Corriger_Erreur_Justesse: z.boolean().optional(),
   Prendre_En_Compte_Derive: z.boolean().optional(),
   MailingContacts: z.array(mailingContactSchema).optional(),
-});
+}).superRefine(addConsigneGuards);
 
 export type LocationFormValues = z.infer<typeof locationFormSchema>;

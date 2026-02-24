@@ -15,6 +15,7 @@ const AGENT_ACTIVE_WINDOW_MINUTES = Number.parseInt(
   process.env.VIGITEMP_AGENT_ACTIVE_WINDOW_MINUTES ?? "15",
   10,
 )
+const AGENT_SHARED_SECRET = process.env.VIGITEMP_AGENT_SECRET?.trim() ?? ""
 
 type AgentTarget = {
   idPoste: number
@@ -26,18 +27,18 @@ type AgentTarget = {
 
 async function dispatchAgentNotifications(
   payload: {
-  title: string
-  messageBody: string
-  locationLabel: string
-  dateLabel: string
-  alarmUrl: string
-  alarmId?: number
-  lieuId?: number
-  alarmType?: string
-  triggeredAt?: string
-  lastValue?: string
-  lastMeasureAt?: string
-},
+    title: string
+    messageBody: string
+    locationLabel: string
+    dateLabel: string
+    alarmUrl: string
+    alarmId?: number
+    lieuId?: number
+    alarmType?: string
+    triggeredAt?: string
+    lastValue?: string
+    lastMeasureAt?: string
+  },
   targets: AgentTarget[],
 ) {
   if (targets.length === 0) {
@@ -53,9 +54,14 @@ async function dispatchAgentNotifications(
     const timeout = setTimeout(() => controller.abort(), AGENT_TIMEOUT_MS)
 
     try {
-      await fetch(url, {
+      const headers: Record<string, string> = { "content-type": "application/json" }
+      if (AGENT_SHARED_SECRET) {
+        headers["x-vigitemp-agent-secret"] = AGENT_SHARED_SECRET
+      }
+
+      const response = await fetch(url, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers,
         body: JSON.stringify({
           title: payload.title,
           message: payload.messageBody,
@@ -73,6 +79,10 @@ async function dispatchAgentNotifications(
         }),
         signal: controller.signal,
       })
+      if (!response.ok) {
+        const responseBody = (await response.text().catch(() => "")).slice(0, 200)
+        throw new Error(`agent_http_${response.status}${responseBody ? `: ${responseBody}` : ""}`)
+      }
 
       const now = new Date()
       await prisma.$transaction([
@@ -361,44 +371,50 @@ export const POST = withLogging(async (req: NextRequest) => {
     },
   })
 
-  const targets = await getActiveAgentTargets()
-  const deliveries = await Promise.all(
-    targets.map(async (target) => {
-      const correlationId = randomUUID()
-      const delivery = await prisma.t_notification_delivery.create({
-        data: {
-          Id_Notification: notification.Id_Notification,
-          Id_Poste: target.idPoste,
-          Id_Utilisateur: null,
-          Statut: "queued",
-          Nb_Tentatives: 0,
-          Date_Queue: new Date(),
-          Correlation_Id: correlationId,
-        },
-        select: { Id_Delivery: true },
-      })
+  let agentResult = { attempted: 0, failed: 0 }
+  if (eventType !== "ended") {
+    const targets = await getActiveAgentTargets()
+    const deliveries = await Promise.all(
+      targets.map(async (target) => {
+        const correlationId = randomUUID()
+        const delivery = await prisma.t_notification_delivery.create({
+          data: {
+            Id_Notification: notification.Id_Notification,
+            Id_Poste: target.idPoste,
+            Id_Utilisateur: null,
+            Statut: "queued",
+            Nb_Tentatives: 0,
+            Date_Queue: new Date(),
+            Correlation_Id: correlationId,
+          },
+          select: { Id_Delivery: true },
+        })
 
-      return {
-        ...target,
-        deliveryId: delivery.Id_Delivery,
-        correlationId,
-      }
-    })
-  )
+        return {
+          ...target,
+          deliveryId: delivery.Id_Delivery,
+          correlationId,
+        }
+      }),
+    )
 
-  const agentResult = await dispatchAgentNotifications({
-    title: safeTitle,
-    messageBody: safeMessage,
-    locationLabel,
-    dateLabel,
-    alarmUrl,
-    alarmId,
-    lieuId,
-    alarmType: alarmTypeLabel,
-    triggeredAt: triggeredAtLabel,
-    lastValue: lastValueLabel,
-    lastMeasureAt: lastMeasureAtLabel,
-  }, deliveries)
+    agentResult = await dispatchAgentNotifications(
+      {
+        title: safeTitle,
+        messageBody: safeMessage,
+        locationLabel,
+        dateLabel,
+        alarmUrl,
+        alarmId,
+        lieuId,
+        alarmType: alarmTypeLabel,
+        triggeredAt: triggeredAtLabel,
+        lastValue: lastValueLabel,
+        lastMeasureAt: lastMeasureAtLabel,
+      },
+      deliveries,
+    )
+  }
 
   log.info("ALARM_DISPATCH", "Alarm dispatched to agents", {
     alarmId,

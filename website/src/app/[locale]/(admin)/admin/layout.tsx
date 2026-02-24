@@ -1,5 +1,8 @@
 "use client";
 
+import "react-grid-layout/css/styles.css";
+import "react-resizable/css/styles.css";
+
 import { AdminNavDock } from "@/components/admin-nav-dock";
 import { useAutoLock } from "@/hooks/useAutoLock";
 import PageTransitionWrapper from "@/components/animations/transitions/page-transitions/PageTransitionWrapper";

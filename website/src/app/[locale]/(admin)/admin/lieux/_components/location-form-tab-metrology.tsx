@@ -29,6 +29,10 @@ export function LocationFormTabMetrology() {
   const t = useTranslations('locationsForm.metrology')
   const tGeneral = useTranslations('locationsForm.general')
   const { register, watch, setValue } = useFormContext<LocationFormData>()
+
+  const setUserValue = (name: keyof LocationFormData, value: any) => {
+    setValue(name as any, value, { shouldDirty: true, shouldTouch: true })
+  }
   const formData = watch()
   const selectedSerial = formData.Sonde_Numero_Serie ?? null
   const { data: adjustments = [] } = useAdjustments(selectedSerial)
@@ -135,8 +139,8 @@ export function LocationFormTabMetrology() {
   useEffect(() => {
     if (formData.EMT_Mode !== 'sans-objet') return
 
-    const nextSup = formData.Consigne_Sup ?? undefined
-    const nextInf = formData.Consigne_Inf ?? undefined
+    const nextSup = formData.Est_Consigne_Sup_Active ? (formData.Consigne_Sup ?? undefined) : undefined
+    const nextInf = formData.Est_Consigne_Inf_Active ? (formData.Consigne_Inf ?? undefined) : undefined
 
     if ((formData.Tolerance_Surveillance_Sup ?? undefined) !== nextSup) {
       setValue('Tolerance_Surveillance_Sup', nextSup)
@@ -147,6 +151,8 @@ export function LocationFormTabMetrology() {
   }, [
     formData.Consigne_Inf,
     formData.Consigne_Sup,
+    formData.Est_Consigne_Inf_Active,
+    formData.Est_Consigne_Sup_Active,
     formData.EMT_Mode,
     formData.Tolerance_Surveillance_Inf,
     formData.Tolerance_Surveillance_Sup,
@@ -253,7 +259,7 @@ export function LocationFormTabMetrology() {
               name="emt_mode"
               value="quart"
               checked={formData.EMT_Mode === 'quart'}
-              onChange={(e) => setValue('EMT_Mode', e.target.value)}
+              onChange={(e) => setUserValue('EMT_Mode', e.target.value)}
               className="mt-1"
             />
             <div>
@@ -280,7 +286,7 @@ export function LocationFormTabMetrology() {
               name="emt_mode"
               value="manuel"
               checked={formData.EMT_Mode === 'manuel'}
-              onChange={(e) => setValue('EMT_Mode', e.target.value)}
+              onChange={(e) => setUserValue('EMT_Mode', e.target.value)}
               className="mt-1"
             />
             <div>
@@ -308,7 +314,7 @@ export function LocationFormTabMetrology() {
               name="emt_mode"
               value="uncertainties"
               checked={formData.EMT_Mode === 'uncertainties'}
-              onChange={(e) => setValue('EMT_Mode', e.target.value)}
+              onChange={(e) => setUserValue('EMT_Mode', e.target.value)}
               className="mt-1"
             />
             <div>
@@ -369,7 +375,7 @@ export function LocationFormTabMetrology() {
               name="emt_mode"
               value="sans-objet"
               checked={formData.EMT_Mode === 'sans-objet'}
-              onChange={(e) => setValue('EMT_Mode', e.target.value)}
+              onChange={(e) => setUserValue('EMT_Mode', e.target.value)}
               className="mt-1"
             />
             <div className="font-medium">{t('emt.option.na')}</div>
@@ -381,14 +387,14 @@ export function LocationFormTabMetrology() {
         <label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
             checked={formData.Corriger_Erreur_Justesse || false}
-            onCheckedChange={(checked) => setValue('Corriger_Erreur_Justesse', !!checked)}
+            onCheckedChange={(checked) => setUserValue('Corriger_Erreur_Justesse', !!checked)}
           />
           <span>{t('checkboxes.correct_accuracy')}</span>
         </label>
         <label className="flex items-center gap-2 cursor-pointer">
           <Checkbox
             checked={formData.Prendre_En_Compte_Derive ?? false}
-            onCheckedChange={(checked) => setValue('Prendre_En_Compte_Derive', !!checked)}
+            onCheckedChange={(checked) => setUserValue('Prendre_En_Compte_Derive', !!checked)}
             disabled={isDeriveForced}
           />
           <span>{t('checkboxes.include_drift')}</span>

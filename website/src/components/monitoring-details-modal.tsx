@@ -491,6 +491,8 @@ export default function MonitoringDetailsModal({
   }, [historyData]);
   const tableMeasurements = orderedHistoryData;
 
+  const graphMeasureCount = orderedData.length;
+
   const tableData = useMemo(() => {
     return tableMeasurements.map((measure) => ({
       id: measure.id,
@@ -701,26 +703,31 @@ export default function MonitoringDetailsModal({
 
             {/* Graph Tab */}
             <TabsContent value="graph" className="space-y-4 pt-4 h-[68vh]">
-              <div className="flex items-center justify-end gap-2">
-                <Button
-                  type="button"
-                  variant={zoomMode === "x" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setZoomMode("x")}
-                >
-                  Zoom X
-                </Button>
-                <Button
-                  type="button"
-                  variant={zoomMode === "xy" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setZoomMode("xy")}
-                >
-                  Zoom XY
-                </Button>
-                <Button type="button" variant="outline" size="sm" onClick={resetChartZoom}>
-                  {locale === "fr" ? "Reinitialiser zoom" : "Reset zoom"}
-                </Button>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {t("chart.measure_count", { count: graphMeasureCount })}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant={zoomMode === "x" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setZoomMode("x")}
+                  >
+                    Zoom X
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={zoomMode === "xy" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setZoomMode("xy")}
+                  >
+                    Zoom XY
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={resetChartZoom}>
+                    {locale === "fr" ? "Reinitialiser zoom" : "Reset zoom"}
+                  </Button>
+                </div>
               </div>
 
               <div className="relative h-[60vh]">

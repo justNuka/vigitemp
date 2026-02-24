@@ -59,7 +59,8 @@ export default async function DashboardPage({
           activeAlarms={activeAlarms}
           sensorOverview={sensorOverview}
           totalActiveAlarms={stats.activeAlarms}
-          trendCountLast24h={trendStats.countLast24h}
+          trendCountLast7d={trendStats.countLast7d}
+          trendMeasurements={trendStats.measurements}
         />
       </Suspense>
     </div>

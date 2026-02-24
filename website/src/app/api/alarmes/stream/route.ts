@@ -39,11 +39,26 @@ export async function GET(req: NextRequest) {
 
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
+      let isClosed = false
+
+      const enqueue = (chunk: Uint8Array) => {
+        if (isClosed) return false
+        try {
+          controller.enqueue(chunk)
+          return true
+        } catch {
+          isClosed = true
+          return false
+        }
+      }
+
       const send = (event: string, data: unknown) => {
-        controller.enqueue(encoder.encode(sse(event, data)))
+        enqueue(encoder.encode(sse(event, data)))
       }
 
       const safeClose = () => {
+        if (isClosed) return
+        isClosed = true
         try {
           controller.close()
         } catch {
@@ -85,7 +100,7 @@ export async function GET(req: NextRequest) {
       }
 
       const keepAlive = setInterval(() => {
-        controller.enqueue(encoder.encode(": ping\n\n"))
+        enqueue(encoder.encode(": ping\n\n"))
       }, 25000)
 
       const interval = setInterval(() => {

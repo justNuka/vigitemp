@@ -17,7 +17,7 @@ import {
   Thermometer,
   TrendingUp,
 } from "lucide-react";
-import { alarmsApi, type AlarmWithDetails, type SensorWithLocation } from "@/lib/api";
+import { alarmsApi, type AlarmWithDetails, type Measurement, type SensorWithLocation } from "@/lib/api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -41,7 +41,8 @@ interface DashboardClientProps {
   activeAlarms: AlarmWithDetails[];
   sensorOverview: SensorWithLocation[];
   totalActiveAlarms: number;
-  trendCountLast24h: number;
+  trendCountLast7d: number;
+  trendMeasurements: Measurement[];
 }
 
 interface AlarmRow {
@@ -56,6 +57,11 @@ interface AlarmRow {
   comment: string | null;
 }
 
+const hasConfiguredThresholds = (alarm: { sensor: AlarmWithDetails["sensor"] }): boolean => {
+  const sensorWithMeta = alarm.sensor as AlarmWithDetails["sensor"] & { hasThresholds?: boolean };
+  return sensorWithMeta.hasThresholds !== false;
+};
+
 /**
  * Composant client pour les parties interactives du dashboard
  * Affiche alarmes actives, capteurs critiques, et aperçu des sondes
@@ -65,7 +71,8 @@ export function DashboardClient({
   activeAlarms,
   sensorOverview,
   totalActiveAlarms,
-  trendCountLast24h,
+  trendCountLast7d,
+  trendMeasurements,
 }: DashboardClientProps) {
   const t = useTranslations("dashboardClient");
   const locale = useLocale();
@@ -182,15 +189,16 @@ export function DashboardClient({
         const alarm = row.original;
         const sup = alarm.sensor.maxThreshold;
         const inf = alarm.sensor.minThreshold;
+        const showThresholds = hasConfiguredThresholds(alarm);
         return (
           <div className="text-right font-mono text-muted-foreground">
             <div>
-              {sup !== null && sup !== undefined
+              {showThresholds && sup !== null && sup !== undefined
                 ? t("table.thresholds.upper", { value: sup, unit: alarm.sensor.unit })
                 : t("table.thresholds.upper_na")}
             </div>
             <div>
-              {inf !== null && inf !== undefined
+              {showThresholds && inf !== null && inf !== undefined
                 ? t("table.thresholds.lower", { value: inf, unit: alarm.sensor.unit })
                 : t("table.thresholds.lower_na")}
             </div>
@@ -349,13 +357,13 @@ export function DashboardClient({
             </CardHeader>
             <CardContent>
               <MiniChart
-                measurements={[]}
+                measurements={trendMeasurements}
                 height={120}
                 className="rounded-lg overflow-hidden"
               />
               <div className="mt-4 flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">
-                  {t("trend.count", { count: trendCountLast24h })}
+                  {t("trend.count", { count: trendCountLast7d })}
                 </span>
                 <Link href="surveillance">
                   <Button variant="ghost" size="sm" className="gap-1 -mr-2">

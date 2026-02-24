@@ -1897,7 +1897,7 @@
     },
     "trend": {
       "title": "Alarm trend",
-      "subtitle": "Last 24h",
+      "subtitle": "Last 7 days",
       "count": "{count} alarm(s)",
       "details": "Details"
     },
@@ -2013,7 +2013,8 @@
       "over_high": "Upper exceedance zone",
       "over_low": "Lower exceedance zone",
       "measures": "Measurements ({unit})",
-      "show_no_response": "Show no-response values"
+      "show_no_response": "Show no-response values",
+      "measure_count": "Points in chart: {count}"
     },
     "tooltip": {
       "value": "Value: {value}{unit}",
@@ -2941,6 +2942,23 @@
         "type": "Type",
         "address": "Address",
         "module": "Module"
+      }
+    },
+    "expert": {
+      "description": "Edit mode: move, resize, add, or remove widgets.",
+      "edit": "Edit dashboard",
+      "done": "Done",
+      "toolbox_title": "Available widgets",
+      "toolbox_description": "Click or drag and drop a widget into the grid.",
+      "remove": "Remove widget",
+      "widgets": {
+        "alarms": "Alarms",
+        "acknowledgments": "Acknowledgments",
+        "connectedUsers": "Connected users",
+        "systemLogs": "Audit log",
+        "backups": "Backups",
+        "unassigned": "Unassigned sensors",
+        "etalons": "Standards"
       }
     }
   },

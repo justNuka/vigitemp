@@ -41,6 +41,10 @@ export interface DateRangePickerProps {
   showCompare?: boolean
   /** Allow empty selection */
   allowEmpty?: boolean
+  /** Keep popover width equal to trigger width */
+  matchTriggerWidth?: boolean
+  /** Extra classes for popover content */
+  popoverClassName?: string
 }
 
 const formatDate = (date: Date, locale: string = 'en-us'): string => {
@@ -96,7 +100,9 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
   align = 'end',
   locale,
   showCompare = true,
-  allowEmpty = false
+  allowEmpty = false,
+  matchTriggerWidth = true,
+  popoverClassName
 }) => {
   const intlLocale = useLocale()
   const t = useTranslations('dateRangePicker')
@@ -433,7 +439,14 @@ export const DateRangePicker: FC<DateRangePickerProps> & {
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent align={align} className="w-(--radix-popover-trigger-width) max-w-none p-4 max-h-[75vh] overflow-auto">
+      <PopoverContent
+        align={align}
+        className={cn(
+          matchTriggerWidth ? "w-(--radix-popover-trigger-width)" : "w-auto min-w-[22rem]",
+          "max-w-[95vw] p-4 max-h-[75vh] overflow-auto",
+          popoverClassName,
+        )}
+      >
         <div data-daterangepicker="true" className="flex py-2">
           <div className="flex">
             <div className="flex flex-col flex-1 min-w-0">

@@ -87,6 +87,11 @@ interface AlarmRow {
   comment: string | null;
 }
 
+const hasConfiguredThresholds = (alarm: { sensor: AlarmWithDetails["sensor"] }): boolean => {
+  const sensorWithMeta = alarm.sensor as AlarmWithDetails["sensor"] & { hasThresholds?: boolean };
+  return sensorWithMeta.hasThresholds !== false;
+};
+
 export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Props) {
   const t = useTranslations("alarmsPage");
   const locale = useLocale();
@@ -438,8 +443,9 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
         const alarm = row.original;
         const sup = alarm.sensor.maxThreshold;
         const inf = alarm.sensor.minThreshold;
-        const hasSup = sup !== null && sup !== undefined;
-        const hasInf = inf !== null && inf !== undefined;
+        const showThresholds = hasConfiguredThresholds(alarm);
+        const hasSup = showThresholds && sup !== null && sup !== undefined;
+        const hasInf = showThresholds && inf !== null && inf !== undefined;
 
         if (!hasSup && !hasInf) {
           return <div className="text-right font-mono text-muted-foreground">-</div>;
@@ -715,16 +721,20 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
               <div>
                 <p className="text-xs uppercase text-muted-foreground">{t("dialog.thresholds_label")}</p>
                 <p className="text-sm font-mono text-muted-foreground">
-                  {t("dialog.sup_value", {
-                    value: selectedAlarm?.sensor.maxThreshold ?? "-",
-                    unit: selectedAlarm?.sensor.unit ?? "",
-                  })}
+                  {selectedAlarm && hasConfiguredThresholds(selectedAlarm)
+                    ? t("dialog.sup_value", {
+                        value: selectedAlarm.sensor.maxThreshold ?? "-",
+                        unit: selectedAlarm.sensor.unit ?? "",
+                      })
+                    : "-"}
                 </p>
                 <p className="text-sm font-mono text-muted-foreground">
-                  {t("dialog.inf_value", {
-                    value: selectedAlarm?.sensor.minThreshold ?? "-",
-                    unit: selectedAlarm?.sensor.unit ?? "",
-                  })}
+                  {selectedAlarm && hasConfiguredThresholds(selectedAlarm)
+                    ? t("dialog.inf_value", {
+                        value: selectedAlarm.sensor.minThreshold ?? "-",
+                        unit: selectedAlarm.sensor.unit ?? "",
+                      })
+                    : "-"}
                 </p>
               </div>
             </div>

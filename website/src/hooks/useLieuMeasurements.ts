@@ -31,7 +31,7 @@ export function useLieuMeasurements(
 ) {
   const [data, setData] = useState<MeasureData[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [meta, setMeta] = useState<{ lieuType?: string | null } | null>(null)
+  const [meta, setMeta] = useState<{ lieuType?: string | null; graphMeasureCount?: number } | null>(null)
 
   const load = useCallback(
     async (forceFresh = false) => {
@@ -55,14 +55,18 @@ export function useLieuMeasurements(
           params.set("includeNullNonResponse", includeNullNonResponse ? "1" : "0")
         }
         const payload = await fetchJson<
-          MeasureData[] | { measurements?: MeasureData[]; lieuType?: string | null }
+          MeasureData[] | { measurements?: MeasureData[]; lieuType?: string | null; graphMeasureCount?: number }
         >(`/api/mesures/${idLieu}?${params}`)
         if (Array.isArray(payload)) {
           setData(payload)
           setMeta(null)
         } else {
           setData(payload.measurements ?? [])
-          setMeta({ lieuType: payload.lieuType ?? null })
+          setMeta({
+            lieuType: payload.lieuType ?? null,
+            graphMeasureCount:
+              typeof payload.graphMeasureCount === "number" ? payload.graphMeasureCount : undefined,
+          })
         }
     } catch (error) {
       console.error("Error loading measurements:", error)

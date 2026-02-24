@@ -134,6 +134,8 @@ export async function ServerActiveAlarms() {
           Derniere_Date_Heure: true,
           Tolerance_Surveillance_Inf: true,
           Tolerance_Surveillance_Sup: true,
+          Consigne_Inf: true,
+          Consigne_Sup: true,
           Est_Archive: true,
           t_site: {
             select: {
@@ -151,7 +153,11 @@ export async function ServerActiveAlarms() {
     take: 5, // Top 5 pour le dashboard
   });
 
-  return alarms.map((alarm) => ({
+  return alarms.map((alarm) => {
+    const hasConfiguredThresholds =
+      alarm.t_lieu?.Consigne_Sup !== null || alarm.t_lieu?.Consigne_Inf !== null;
+
+    return ({
     id: alarm.Id_Alarme.toString(),
     sensorId: alarm.Id_Lieu?.toString() || "0",
     locationId: alarm.t_lieu?.Id_Site?.toString() || "0",
@@ -179,6 +185,7 @@ export async function ServerActiveAlarms() {
       locationId: alarm.t_lieu?.Id_Site?.toString() || "0",
       minThreshold: alarm.t_lieu?.Tolerance_Surveillance_Inf ?? 0,
       maxThreshold: alarm.t_lieu?.Tolerance_Surveillance_Sup ?? 30,
+      hasThresholds: hasConfiguredThresholds,
       measurementFrequency: 60,
       alarmDelay: 0,
       lastMeasurement: alarm.t_lieu?.Derniere_Date_Heure || null,
@@ -195,7 +202,8 @@ export async function ServerActiveAlarms() {
         : alarm.t_lieu?.t_site?.Code_Site || alarm.t_lieu?.t_site?.Libelle_Site || null,
       isActive: true,
     },
-  }));
+  });
+  });
 }
 
 /**
@@ -289,31 +297,55 @@ export async function ServerSensorOverview() {
 }
 
 /**
- * Compteur d'alarmes sur les dernières 24h (t_alarme + t_alarme_histo)
+ * Tendance des alarmes sur 7 jours glissants (t_alarme + t_alarme_histo)
  */
 export async function ServerAlarmTrendCount() {
   unstable_noStore();
   const { prisma } = await import("@/lib/prisma");
   if (shouldSkipDbOnBuild) {
-    return { countLast24h: 0 };
+    return { countLast7d: 0, measurements: [] as Array<{ timestamp: string; value: number; sensorId: string }> };
   }
 
-  const [activeRows, histoRows] = await Promise.all([
-    prisma.$queryRaw<Array<{ count: bigint | number }>>`
-      SELECT COUNT(*) AS count
+  const trendRows = await prisma.$queryRaw<Array<{ dayKey: string | Date; total: bigint | number }>>`
+    SELECT
+      d.day_key AS dayKey,
+      COALESCE(a.cnt, 0) + COALESCE(h.cnt, 0) AS total
+    FROM (
+      SELECT DATE_SUB(CURDATE(), INTERVAL 6 DAY) AS day_key
+      UNION ALL SELECT DATE_SUB(CURDATE(), INTERVAL 5 DAY)
+      UNION ALL SELECT DATE_SUB(CURDATE(), INTERVAL 4 DAY)
+      UNION ALL SELECT DATE_SUB(CURDATE(), INTERVAL 3 DAY)
+      UNION ALL SELECT DATE_SUB(CURDATE(), INTERVAL 2 DAY)
+      UNION ALL SELECT DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+      UNION ALL SELECT CURDATE()
+    ) d
+    LEFT JOIN (
+      SELECT DATE(Date_Heure_Debut) AS day_key, COUNT(*) AS cnt
       FROM t_alarme
-      WHERE Date_Heure_Debut >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
-    `,
-    prisma.$queryRaw<Array<{ count: bigint | number }>>`
-      SELECT COUNT(*) AS count
+      WHERE Date_Heure_Debut >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+      GROUP BY DATE(Date_Heure_Debut)
+    ) a ON a.day_key = d.day_key
+    LEFT JOIN (
+      SELECT DATE(Date_Heure_Debut) AS day_key, COUNT(*) AS cnt
       FROM t_alarme_histo
-      WHERE Date_Heure_Debut >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
-    `,
-  ]);
+      WHERE Date_Heure_Debut >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+      GROUP BY DATE(Date_Heure_Debut)
+    ) h ON h.day_key = d.day_key
+    ORDER BY d.day_key ASC
+  `;
 
-  const activeCount = Number(activeRows[0]?.count ?? 0);
-  const histoCount = Number(histoRows[0]?.count ?? 0);
-  return { countLast24h: activeCount + histoCount };
+  const measurements = trendRows.map((row) => {
+    const day = row.dayKey instanceof Date ? row.dayKey.toISOString().slice(0, 10) : String(row.dayKey).slice(0, 10);
+    return {
+      timestamp: `${day}T00:00:00`,
+      value: Number(row.total ?? 0),
+      sensorId: "alarm-trend",
+    };
+  });
+
+  const countLast7d = measurements.reduce((sum, point) => sum + point.value, 0);
+
+  return { countLast7d, measurements };
 }
 
 function mapSensorStatus({
