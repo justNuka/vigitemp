@@ -12,6 +12,17 @@ import type { PlanningRegleResponse } from "@/lib/planning-regle-schema"
 import { WeeklyPlanningView } from "./planning-weekly-view"
 import { PlanningRuleFormDialog } from "./planning-rule-form-dialog"
 
+interface PlanningPreviewResponse {
+  regleActive: { Id_Regle: number } | null
+  consignesAttendues: {
+    consigne: number | null
+    consigneSup: number | null
+    consigneInf: number | null
+    toleranceSup: number | null
+    toleranceInf: number | null
+  }
+}
+
 const JOUR_LABELS: Record<number, string> = {
   1: "Lun",
   2: "Mar",
@@ -46,6 +57,17 @@ export function LocationFormTabPlanning({
     queryFn: () =>
       fetchJson<PlanningRegleResponse[]>(`/api/lieux/${idLieu}/planning`),
     enabled: !!idLieu,
+  })
+
+  const { data: preview } = useQuery<PlanningPreviewResponse | null>({
+    queryKey: ["planning-preview", idLieu],
+    queryFn: async () => {
+      const res = await fetch(`/api/lieux/${idLieu}/planning/preview`)
+      if (!res.ok) return null
+      return res.json() as Promise<PlanningPreviewResponse>
+    },
+    enabled: !!idLieu,
+    refetchInterval: 60_000,
   })
 
   const handleDelete = useCallback(
@@ -90,6 +112,21 @@ export function LocationFormTabPlanning({
           {t("addRule")}
         </Button>
       </div>
+
+      {/* Current status badge */}
+      {preview !== undefined && (
+        <div className="flex items-center gap-2">
+          {preview?.regleActive ? (
+            <Badge variant="default" className="bg-green-600">
+              {t("activeStatus")} #{preview.regleActive.Id_Regle}
+            </Badge>
+          ) : (
+            <Badge variant="secondary">
+              {t("baseStatus")}
+            </Badge>
+          )}
+        </div>
+      )}
 
       {/* Weekly grid view */}
       {isLoading ? (
