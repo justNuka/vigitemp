@@ -613,7 +613,8 @@
         "general": "Général",
         "metrology": "Métrologie",
         "mailing": "Mailing/Planning",
-        "telephony": "Téléphonie/Planning"
+        "telephony": "Téléphonie/Planning",
+        "planning": "Planning"
       },
       "submit": {
         "saving": "Enregistrement..."
@@ -748,6 +749,18 @@
       "placeholders": {
         "user": "Sélectionner un utilisateur"
       }
+    }
+  },
+  "lieux": {
+    "planning": {
+      "title": "Planning",
+      "saveFirst": "Sauvegardez le lieu avant de configurer le planning.",
+      "noRules": "Aucune règle de planning configurée.",
+      "addRule": "Ajouter une règle",
+      "editRule": "Modifier la règle",
+      "deleteRule": "Supprimer",
+      "activeStatus": "Planning actif — Règle",
+      "baseStatus": "Consignes de base"
     }
   },
   "modulesPage": {

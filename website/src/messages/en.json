@@ -415,7 +415,8 @@
       "tabs": {
         "general": "General",
         "metrology": "Metrology",
-        "mailing": "Mailing/Planning"
+        "mailing": "Mailing/Planning",
+        "planning": "Planning"
       },
       "submit": {
         "saving": "Saving..."
@@ -537,6 +538,18 @@
     },
     "telephony": {
       "unavailable_now": "This section is not yet available."
+    }
+  },
+  "lieux": {
+    "planning": {
+      "title": "Planning",
+      "saveFirst": "Save the location before configuring the planning.",
+      "noRules": "No planning rules configured.",
+      "addRule": "Add a rule",
+      "editRule": "Edit rule",
+      "deleteRule": "Delete",
+      "activeStatus": "Active planning — Rule",
+      "baseStatus": "Base setpoints"
     }
   },
   "modulesPage": {
