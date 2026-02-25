@@ -220,10 +220,33 @@ export const PATCH = withLogging(
 
       if (validated.EMT_Mode === "quart" || validated.EMT_Mode === "manuel") {
         lieuPatch.Tolerance_Surveillance_Sup = emt.toleranceSup
+        lieuPatch.Tolerance_Surveillance_Sup_Base = emt.toleranceSup ?? null
         lieuPatch.Tolerance_Surveillance_Inf = emt.toleranceInf
+        lieuPatch.Tolerance_Surveillance_Inf_Base = emt.toleranceInf ?? null
       } else if (validated.EMT_Mode === "sans-objet") {
         lieuPatch.Tolerance_Surveillance_Sup = (validated.Est_Consigne_Sup_Active ?? false) ? validated.Consigne_Sup : null
+        lieuPatch.Tolerance_Surveillance_Sup_Base = (validated.Est_Consigne_Sup_Active ?? false) ? (validated.Consigne_Sup ?? null) : null
         lieuPatch.Tolerance_Surveillance_Inf = (validated.Est_Consigne_Inf_Active ?? false) ? validated.Consigne_Inf : null
+        lieuPatch.Tolerance_Surveillance_Inf_Base = (validated.Est_Consigne_Inf_Active ?? false) ? (validated.Consigne_Inf ?? null) : null
+      } else {
+        // For non-EMT modes, mirror Tolerance_Surveillance_Sup/Inf to Base if they were explicitly sent
+        if (Object.prototype.hasOwnProperty.call(validated, "Tolerance_Surveillance_Sup")) {
+          lieuPatch.Tolerance_Surveillance_Sup_Base = validated.Tolerance_Surveillance_Sup ?? null
+        }
+        if (Object.prototype.hasOwnProperty.call(validated, "Tolerance_Surveillance_Inf")) {
+          lieuPatch.Tolerance_Surveillance_Inf_Base = validated.Tolerance_Surveillance_Inf ?? null
+        }
+      }
+
+      // Mirror consigne changes to Base columns
+      if (Object.prototype.hasOwnProperty.call(validated, "Consigne")) {
+        lieuPatch.Consigne_Base = validated.Consigne ?? null
+      }
+      if (Object.prototype.hasOwnProperty.call(validated, "Consigne_Sup")) {
+        lieuPatch.Consigne_Sup_Base = validated.Consigne_Sup ?? null
+      }
+      if (Object.prototype.hasOwnProperty.call(validated, "Consigne_Inf")) {
+        lieuPatch.Consigne_Inf_Base = validated.Consigne_Inf ?? null
       }
 
       if (Object.prototype.hasOwnProperty.call(validated, "EMT_Mode") || Object.prototype.hasOwnProperty.call(validated, "EMT_Valeur")) {
