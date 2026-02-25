@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { withLogging } from "@/lib/api-logger"
 import { getAuthenticatedUser } from "@/lib/auth"
 import type { JWTPayload } from "@/lib/jwt"
-import { hasUserAuthorizationCode, isAdminUser } from "@/lib/authz"
+import { hasUserAnyAuthorizationCode, hasUserAuthorizationCode, isAdminUser } from "@/lib/authz"
 import { apiError } from "@/lib/api-response"
 
 type HandlerContext = {
@@ -56,6 +56,25 @@ export function withAuthorizationLogging(
       const ok = await hasUserAuthorizationCode(ctx.user.userId, requiredCode)
       if (!ok) {
         return apiError(403, "forbidden", "Accès interdit")
+      }
+
+      return handler(req, ctx, ...args)
+    },
+    options,
+  )
+}
+
+
+export function withAnyAuthorizationLogging(
+  requiredCodes: readonly string[],
+  handler: ApiHandler,
+  options?: { skipLogging?: boolean; label?: string },
+) {
+  return withAuthLogging(
+    async (req: NextRequest, ctx: HandlerContext, ...args: any[]) => {
+      const ok = await hasUserAnyAuthorizationCode(ctx.user.userId, requiredCodes)
+      if (!ok) {
+        return apiError(403, "forbidden", "Acc?s interdit")
       }
 
       return handler(req, ctx, ...args)

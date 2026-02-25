@@ -13,8 +13,11 @@ import {
   Text,
 } from "@react-email/components";
 
+type Locale = "fr" | "en";
+
 type AlarmEventEmailProps = {
   eventType: "triggered" | "ended" | "acknowledged";
+  locale?: Locale;
   site?: string;
   lieu: string;
   sonde?: string;
@@ -29,10 +32,17 @@ type AlarmEventEmailProps = {
   chartSrc?: string;
 };
 
-const EVENT_LABEL: Record<AlarmEventEmailProps["eventType"], string> = {
-  triggered: "ALARME DÉCLENCHÉE",
-  ended: "ALARME TERMINÉE",
-  acknowledged: "ALARME ACQUITTÉE",
+const EVENT_LABEL: Record<Locale, Record<AlarmEventEmailProps["eventType"], string>> = {
+  fr: {
+    triggered: "ALARME DECLENCHEE",
+    ended: "ALARME TERMINEE",
+    acknowledged: "ALARME ACQUITTEE",
+  },
+  en: {
+    triggered: "ALARM TRIGGERED",
+    ended: "ALARM ENDED",
+    acknowledged: "ALARM ACKNOWLEDGED",
+  },
 };
 
 const EVENT_COLOR: Record<AlarmEventEmailProps["eventType"], string> = {
@@ -41,8 +51,50 @@ const EVENT_COLOR: Record<AlarmEventEmailProps["eventType"], string> = {
   acknowledged: "#0284c7",
 };
 
+const COPY: Record<Locale, Record<string, string>> = {
+  fr: {
+    subjectPrefix: "[VIGITEMP]",
+    title: "Notification d'alarme Vigitemp",
+    site: "Site",
+    lieu: "Lieu",
+    sonde: "Sonde",
+    type: "Type",
+    triggeredAt: "Date declenchement",
+    endedAt: "Date fin",
+    acknowledgedAt: "Date acquittement",
+    acknowledgedBy: "Acquittee par",
+    lastValue: "Derniere valeur",
+    details: "Details",
+    chart: "Courbe (extrait)",
+    openAlarmPage: "Ouvrir la page des alarmes",
+    fallbackLink: "Si le bouton ne fonctionne pas, utilisez ce lien:",
+    noReply: "Email automatique - merci de ne pas y repondre.",
+    brand: "Systeme de surveillance environnementale",
+  },
+  en: {
+    subjectPrefix: "[VIGITEMP]",
+    title: "Vigitemp alarm notification",
+    site: "Site",
+    lieu: "Location",
+    sonde: "Sensor",
+    type: "Type",
+    triggeredAt: "Triggered at",
+    endedAt: "Ended at",
+    acknowledgedAt: "Acknowledged at",
+    acknowledgedBy: "Acknowledged by",
+    lastValue: "Last value",
+    details: "Details",
+    chart: "Chart (snapshot)",
+    openAlarmPage: "Open alarms page",
+    fallbackLink: "If the button does not work, use this link:",
+    noReply: "Automatic email - please do not reply.",
+    brand: "Environmental monitoring system",
+  },
+};
+
 export default function AlarmEventNotificationEmail({
   eventType,
+  locale = "fr",
   site,
   lieu,
   sonde,
@@ -56,52 +108,54 @@ export default function AlarmEventNotificationEmail({
   alarmUrl,
   chartSrc,
 }: AlarmEventEmailProps) {
-  const eventLabel = EVENT_LABEL[eventType];
+  const lang: Locale = locale === "en" ? "en" : "fr";
+  const copy = COPY[lang];
+  const eventLabel = EVENT_LABEL[lang][eventType];
   const accent = EVENT_COLOR[eventType];
 
   return (
     <Html>
       <Head />
-      <Preview>{`[VIGITEMP] ${eventLabel} - ${lieu}`}</Preview>
+      <Preview>{`${copy.subjectPrefix} ${eventLabel} - ${lieu}`}</Preview>
       <Body style={styles.body}>
         <Container style={styles.container}>
           <Section style={{ ...styles.header, borderTop: `4px solid ${accent}` }}>
             <Text style={styles.kicker}>VIGITEMP</Text>
-            <Heading style={styles.headerTitle}>Notification d'alarme Vigitemp</Heading>
+            <Heading style={styles.headerTitle}>{copy.title}</Heading>
             <Text style={{ ...styles.headerSubtitle, color: accent }}>{eventLabel}</Text>
           </Section>
 
           <Section style={styles.content}>
             <Section style={styles.infoCard}>
-              <Text style={styles.infoRow}><strong>Site:</strong> {site || "-"}</Text>
-              <Text style={styles.infoRow}><strong>Lieu:</strong> {lieu}</Text>
-              <Text style={styles.infoRow}><strong>Sonde:</strong> {sonde || "-"}</Text>
-              <Text style={styles.infoRow}><strong>Type:</strong> {alarmType}</Text>
-              {triggeredAt ? <Text style={styles.infoRow}><strong>Date déclenchement:</strong> {triggeredAt}</Text> : null}
-              {endedAt ? <Text style={styles.infoRow}><strong>Date fin:</strong> {endedAt}</Text> : null}
-              {acknowledgedAt ? <Text style={styles.infoRow}><strong>Date acquittement:</strong> {acknowledgedAt}</Text> : null}
-              {acknowledgedBy ? <Text style={styles.infoRow}><strong>Acquittée par:</strong> {acknowledgedBy}</Text> : null}
-              {lastValue ? <Text style={{ ...styles.infoRow, marginBottom: 0 }}><strong>Dernière valeur:</strong> {lastValue}</Text> : null}
+              <Text style={styles.infoRow}><strong>{copy.site}:</strong> {site || "-"}</Text>
+              <Text style={styles.infoRow}><strong>{copy.lieu}:</strong> {lieu}</Text>
+              <Text style={styles.infoRow}><strong>{copy.sonde}:</strong> {sonde || "-"}</Text>
+              <Text style={styles.infoRow}><strong>{copy.type}:</strong> {alarmType}</Text>
+              {triggeredAt ? <Text style={styles.infoRow}><strong>{copy.triggeredAt}:</strong> {triggeredAt}</Text> : null}
+              {endedAt ? <Text style={styles.infoRow}><strong>{copy.endedAt}:</strong> {endedAt}</Text> : null}
+              {acknowledgedAt ? <Text style={styles.infoRow}><strong>{copy.acknowledgedAt}:</strong> {acknowledgedAt}</Text> : null}
+              {acknowledgedBy ? <Text style={styles.infoRow}><strong>{copy.acknowledgedBy}:</strong> {acknowledgedBy}</Text> : null}
+              {lastValue ? <Text style={{ ...styles.infoRow, marginBottom: 0 }}><strong>{copy.lastValue}:</strong> {lastValue}</Text> : null}
             </Section>
 
             {details ? (
               <Section style={styles.detailsCard}>
-                <Text style={styles.detailsTitle}>Détails</Text>
+                <Text style={styles.detailsTitle}>{copy.details}</Text>
                 <Text style={styles.detailsText}>{details}</Text>
               </Section>
             ) : null}
 
             {chartSrc ? (
               <Section style={styles.chartCard}>
-                <Text style={styles.detailsTitle}>Courbe (extrait)</Text>
-                <Img src={chartSrc} alt="Extrait courbe alarme" width="560" style={styles.chartImg} />
+                <Text style={styles.detailsTitle}>{copy.chart}</Text>
+                <Img src={chartSrc} alt="Alarm chart" width="560" style={styles.chartImg} />
               </Section>
             ) : null}
 
             {alarmUrl ? (
               <Section style={{ textAlign: "center", marginTop: "16px" }}>
                 <Button href={alarmUrl} style={{ ...styles.button, backgroundColor: accent }}>
-                  Ouvrir la page des alarmes
+                  {copy.openAlarmPage}
                 </Button>
               </Section>
             ) : null}
@@ -109,7 +163,7 @@ export default function AlarmEventNotificationEmail({
             {alarmUrl ? (
               <Section style={styles.linkBlock}>
                 <Text style={styles.linkHint}>
-                  Si le bouton ne fonctionne pas, utilisez ce lien:
+                  {copy.fallbackLink}
                 </Text>
                 <Link href={alarmUrl} style={styles.link}>
                   {alarmUrl}
@@ -118,12 +172,12 @@ export default function AlarmEventNotificationEmail({
             ) : null}
 
             <Hr style={styles.hr} />
-            <Text style={styles.footerText}>Email automatique - merci de ne pas y repondre.</Text>
+            <Text style={styles.footerText}>{copy.noReply}</Text>
           </Section>
 
           <Section style={styles.footerBand}>
             <Text style={styles.footerBrand}>
-              <strong>Vigitemp</strong> - Systeme de surveillance environnementale
+              <strong>Vigitemp</strong> - {copy.brand}
               <br />
               <Link href="https://www.mc2lab.fr" style={styles.footerLink}>
                 MC2 Lab
@@ -276,13 +330,14 @@ const styles = {
 
 AlarmEventNotificationEmail.PreviewProps = {
   eventType: "triggered",
-  site: "AUBIÈRE",
+  locale: "fr",
+  site: "AUBIERE",
   lieu: "TEST_GSO-RDC",
   sonde: "10007203",
   alarmType: "ALARME HAUTE",
   triggeredAt: "20/02/2026 11:30:00",
   lastValue: "23.4C",
-  details: "Seuil maximal depassé. Tolérance sup: 22C / Consigne: 20C / Tolérance inf: 18C",
+  details: "Seuil maximal depasse. Tolerance sup: 22C / Consigne: 20C / Tolerance inf: 18C",
   alarmUrl: "http://127.0.0.1:3000/fr/alarmes",
   chartSrc: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPSc2NDAnIGhlaWdodD0nMjQwJyB2aWV3Qm94PScwIDAgNjQwIDI0MCc+PHJlY3Qgd2lkdGg9JzY0MCcgaGVpZ2h0PScyNDAnIGZpbGw9JyNmZmZmZmYnLz48cmVjdCB4PScyNCcgeT0nMTYnIHdpZHRoPSc1OTInIGhlaWdodD0nMTk2JyBmaWxsPScjZjhmYWZjJyBzdHJva2U9JyNjYmQ1ZTEnLz48bGluZSB4MT0nMjQnIHkxPSc3MCcgeDI9JzYxNicgeTI9JzcwJyBzdHJva2U9JyNkYzI2MjYnIHN0cm9rZS1kYXNoYXJyYXk9JzYgNCcvPjxsaW5lIHgxPScyNCcgeTE9JzEyMCcgeDI9JzYxNicgeTI9JzEyMCcgc3Ryb2tlPScjMTExODI3Jy8+PGxpbmUgeDE9JzI0JyB5MT0nMTcwJyB4Mj0nNjE2JyB5Mj0nMTcwJyBzdHJva2U9JyNkYzI2MjYnIHN0cm9rZS1kYXNoYXJyYXk9JzYgNCcvPjxwYXRoIGQ9J00zMCAxNTAgTDkwIDE0NSBMMTUwIDEzNSBMMjEwIDk1IEwyNzAgODAgTDMzMCA4OCBMMzkwIDExMCBMNDUwIDEzMCBMNTEwIDE2MCBMNTcwIDE0MCBMNjEwIDEwMCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjM2I4MmY2JyBzdHJva2Utd2lkdGg9JzIuNScvPjx0ZXh0IHg9JzYxMCcgeT0nNjYnIHRleHQtYW5jaG9yPSdlbmQnIGZvbnQtc2l6ZT0nMTEnIGZpbGw9JyNkYzI2MjYnPk1heDogMjJDPC90ZXh0Pjx0ZXh0IHg9JzYxMCcgeT0nMTE2JyB0ZXh0LWFuY2hvcj0nZW5kJyBmb250LXNpemU9JzExJyBmaWxsPScjMTExODI3Jz5Db25zaWduZTogMjBDPC90ZXh0Pjx0ZXh0IHg9JzYxMCcgeT0nMTY2JyB0ZXh0LWFuY2hvcj0nZW5kJyBmb250LXNpemU9JzExJyBmaWxsPScjZGMyNjI2Jz5NaW46IDE4QzwvdGV4dD48L3N2Zz4=",
 } as AlarmEventEmailProps;

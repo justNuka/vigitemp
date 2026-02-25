@@ -5,9 +5,8 @@ import type { Group, Site } from "../server-filters"
 import { SurveillanceFilters } from "../monitoring-filters"
 import { SurveillanceViewTabs } from "./monitoring-view-tabs"
 import { Button } from "@/components/ui/button"
-import { ArrowUpDown, Layers3, Loader2, RefreshCw } from "lucide-react"
+import { ArrowUpDown, Layers3, RefreshCw } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { Switch } from "@/components/ui/switch"
 
 type ViewMode = "tree" | "graphs"
 
@@ -29,9 +28,6 @@ type Props = {
   orderToggleLabel?: string
   onToggleOrder?: () => void
   onOpenOverlay?: () => void
-  showNullNonResponse?: boolean
-  onShowNullNonResponseChange?: (enabled: boolean) => void
-  nonResponsePreferencesLoading?: boolean
 }
 
 export function SurveillanceHeaderControls({
@@ -47,14 +43,10 @@ export function SurveillanceHeaderControls({
   orderToggleLabel,
   onToggleOrder,
   onOpenOverlay,
-  showNullNonResponse = false,
-  onShowNullNonResponseChange,
-  nonResponsePreferencesLoading = false,
 }: Props) {
   const t = useTranslations("surveillance")
   const tStatus = useTranslations("surveillanceStatus")
   const tCard = useTranslations("monitoringCard")
-  const tDetails = useTranslations("monitoringDetailsModal")
 
   const legendItems = [
     { key: "alarm_high", label: tCard("alarmTypes.high"), dotClassName: "bg-red-600" },
@@ -72,18 +64,6 @@ export function SurveillanceHeaderControls({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <SurveillanceViewTabs value={viewMode} onChange={onViewModeChange} graphsLabel={graphsLabel} treeLabel={treeLabel} />
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          {onShowNullNonResponseChange ? (
-            <div className="flex items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-1.5">
-              <Switch
-                checked={showNullNonResponse}
-                onCheckedChange={onShowNullNonResponseChange}
-                disabled={nonResponsePreferencesLoading}
-                aria-label={tDetails("chart.show_no_response")}
-              />
-              <span className="text-xs text-primary">{tDetails("chart.show_no_response")}</span>
-              {nonResponsePreferencesLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" /> : null}
-            </div>
-          ) : null}
           {orderToggleLabel && onToggleOrder ? (
             <Button
               variant="secondary"

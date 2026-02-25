@@ -37,6 +37,7 @@ export function GeneralSettingsCard({
     'dashboard:surveillance_refresh': t('general.labels.surveillance_refresh'),
     'dashboard:show_null_non_response': t('general.labels.show_null_non_response'),
     'dashboard:etalonnage_warning_days': t('general.labels.etalonnage_warning_days'),
+    'general:global_language': t('general.labels.global_language'),
   };
 
   return (
@@ -70,6 +71,20 @@ export function GeneralSettingsCard({
                   {setting.key === "dashboard:refresh" ? (
                     <SelectItem value="0">{t('general.refresh_options.manual')}</SelectItem>
                   ) : null}
+                </SelectContent>
+              </Select>
+            ) : setting.key === 'general:global_language' ? (
+              <Select
+                value={setting.value || 'fr'}
+                onValueChange={(value) => onNumericSettingChange(setting.key, value)}
+                disabled={loadingKeys.has(setting.key)}
+              >
+                <SelectTrigger className="w-45">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fr">{t('general.language_options.fr')}</SelectItem>
+                  <SelectItem value="en">{t('general.language_options.en')}</SelectItem>
                 </SelectContent>
               </Select>
             ) : setting.key === 'dashboard:etalonnage_warning_days' ? (

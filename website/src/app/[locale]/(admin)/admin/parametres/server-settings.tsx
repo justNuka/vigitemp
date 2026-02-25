@@ -34,8 +34,11 @@ export async function ServerSettings() {
     // Définir les paramètres par défaut (toujours affichés)
     const defaultSettings = [
       { key: "general:timezone", value: "Europe/Paris", label: "Fuseau horaire" },
+      { key: "general:global_language", value: "fr", label: "Langue globale (emails)" },
       { key: "notifications:email", value: "true", label: "Notifications par email" },
-      { key: "notifications:alarm_email_recipients", value: "", label: "Destinataires email alarmes" },
+      { key: "notifications:alarm_email_recipients", value: "", label: "Emails en copie (tous les emails systeme)" },
+      { key: "notifications:alarm_email_acknowledged", value: "true", label: "Recevoir les emails d'acquittement" },
+      { key: "notifications:alarm_email_ended", value: "true", label: "Recevoir les emails d'alarme terminee" },
       { key: "notifications:sms", value: "false", label: "Notifications SMS" },
       { key: "alarms:sound", value: "true", label: "Son des alarmes" },
       { key: "dashboard:refresh", value: "30", label: "Intervalle de rafraîchissement (s)" },
@@ -65,8 +68,11 @@ export async function ServerSettings() {
     // Fallback sur les valeurs par défaut en cas d'erreur
     return [
       { key: "general:timezone", value: "Europe/Paris", label: "Fuseau horaire" },
+      { key: "general:global_language", value: "fr", label: "Langue globale (emails)" },
       { key: "notifications:email", value: "true", label: "Notifications par email" },
-      { key: "notifications:alarm_email_recipients", value: "", label: "Destinataires email alarmes" },
+      { key: "notifications:alarm_email_recipients", value: "", label: "Emails en copie (tous les emails systeme)" },
+      { key: "notifications:alarm_email_acknowledged", value: "true", label: "Recevoir les emails d'acquittement" },
+      { key: "notifications:alarm_email_ended", value: "true", label: "Recevoir les emails d'alarme terminee" },
       { key: "notifications:sms", value: "false", label: "Notifications SMS" },
       { key: "alarms:sound", value: "true", label: "Son des alarmes" },
       { key: "dashboard:refresh", value: "30", label: "Intervalle de rafraîchissement (s)" },

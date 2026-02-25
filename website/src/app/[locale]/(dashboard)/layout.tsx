@@ -1,18 +1,35 @@
 "use client"
+import { useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { AppSidebar } from "@/components/app-sidebar"
 import PageTransitionWrapper from "@/components/animations/transitions/page-transitions/PageTransitionWrapper"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { useAutoLock } from "@/hooks/useAutoLock"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
-import { useRouter } from "@/i18n/navigation"
+import { usePathname, useRouter } from "@/i18n/navigation"
+import { stripLocalePrefix } from "@/i18n/pathnames"
+import { useAppAccess } from "@/components/access/app-access-provider"
 import { clearAgentSession } from "@/lib/agent-session"
 import { alarmsApi, authApi } from "@/lib/api"
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   useAutoLock()
   const router = useRouter()
+  const pathname = usePathname()
+  const normalizedPathname = stripLocalePrefix(pathname)
+  const { hasPermission, loading: accessLoading } = useAppAccess()
+  const hasUserDashboardAccess = hasPermission("DASHBOARD_USER_ACCESS")
+
+  useEffect(() => {
+    if (accessLoading) return
+    if (normalizedPathname === "/" && !hasUserDashboardAccess) {
+      router.replace("/surveillance")
+    }
+  }, [accessLoading, hasUserDashboardAccess, normalizedPathname, router])
+
   // Sidebar badge should stay reasonably fresh without stressing heavy pages.
   const alarmsQueryKey = ["alarms", "active"] as const
+  const canRenderDashboardShell = !(normalizedPathname === "/" && !hasUserDashboardAccess)
+
   const { data: alarms } = useQuery({
     queryKey: alarmsQueryKey,
     queryFn: () => alarmsApi.getActive(),
@@ -22,9 +39,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     refetchOnWindowFocus: true,
     staleTime: 0,
     retry: false,
+    enabled: canRenderDashboardShell,
   })
-  const { data: currentUser } = useCurrentUser()
+  const { data: currentUser } = useCurrentUser({ enabled: canRenderDashboardShell })
   const activeAlarmsCount = alarms?.length ?? 0
+
+  if (!canRenderDashboardShell) {
+    return null
+  }
+
   const handleLogout = async () => {
     try {
       await authApi.logout()

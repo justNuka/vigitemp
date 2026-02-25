@@ -3,6 +3,7 @@ import { isEmailEnabled, sendEmail } from "@/lib/email"
 import { withAuthorizationLogging } from "@/lib/api-wrappers"
 import PasswordResetEmail from "../../../../../emails/password-reset"
 import { apiError, apiOk } from "@/lib/api-response"
+import { getGlobalAppLanguage } from "@/lib/app-language"
 
 /**
  * POST /api/email/test
@@ -24,13 +25,16 @@ export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextReq
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 
+    const mailLocale = await getGlobalAppLanguage()
+
     const result = await sendEmail({
       to: toEmail,
-      subject: "Vigitemp - Test Email Configuration",
+      subject: mailLocale === "en" ? "Vigitemp - Email configuration test" : "Vigitemp - Test configuration email",
       react: PasswordResetEmail({
         resetUrl: `${baseUrl}/reset-password?token=test-token-12345`,
         firstName: "Admin",
-        expiresIn: "1 heure",
+        expiresIn: mailLocale === "en" ? "1 hour" : "1 heure",
+        locale: mailLocale,
       }),
     })
 

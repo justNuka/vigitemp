@@ -7,7 +7,7 @@ import { formatDbDateTime } from "@/lib/date-display"
 import { resolveNonResponsePreference } from "@/lib/non-response-preference"
 
 export const GET = withAuthLogging(
-  async (req: NextRequest, _ctx: any, { params }: { params: Promise<{ idLieu: string }> }) => {
+  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ idLieu: string }> }) => {
     try {
       const { idLieu } = await params
       const searchParams = req.nextUrl.searchParams
@@ -23,7 +23,7 @@ export const GET = withAuthLogging(
       const includeMeta = searchParams.get("includeMeta") === "true"
       const source = searchParams.get("source") === "mesures" ? "mesures" : "graphique"
       const usePagination = source === "mesures" && (searchParams.has("page") || searchParams.has("pageSize"))
-      const includeNullNonResponse = await resolveNonResponsePreference(req)
+      const includeNullNonResponse = await resolveNonResponsePreference(req, ctx.user.userId)
 
       const idLieuInt = parseInt(idLieu)
       if (isNaN(idLieuInt)) {

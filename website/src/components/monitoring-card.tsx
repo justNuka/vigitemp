@@ -47,6 +47,7 @@ import { formatDbDateTime } from "@/lib/date-display";
 import { AlarmAcknowledgeDialog, type AcknowledgeDialogAlarm } from "@/components/alarm-acknowledge-dialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { markAlarmAcknowledgedInPaginatedSensorsCache } from "@/lib/surveillance-cache";
+import { useAppAccess } from "@/components/access/app-access-provider";
 
 ChartJS.register(
   CategoryScale,
@@ -184,6 +185,7 @@ export default function MonitoringCard({
   nonResponsePreferencesLoading = false,
 }: MonitoringCardProps) {
   const t = useTranslations("monitoringCard");
+  const { hasPermission } = useAppAccess();
   const tStatus = useTranslations("surveillanceStatus");
   const locale = useLocale();
   const localeTag = locale === "fr" ? "fr-FR" : locale;
@@ -237,7 +239,7 @@ export default function MonitoringCard({
   const effectiveAlarmType =
     locallyAcknowledgedAlarmId !== null && alarmId === locallyAcknowledgedAlarmId ? null : alarmType;
   const effectiveStatus =
-    locallyAcknowledgedAlarmId !== null && alarmId === locallyAcknowledgedAlarmId && status === "ended"
+    locallyAcknowledgedAlarmId !== null && alarmId === locallyAcknowledgedAlarmId
       ? "ok"
       : status;
 
@@ -392,6 +394,7 @@ export default function MonitoringCard({
     : "text-white";
 
   const canAcknowledge =
+    hasPermission("ALARM_ACK_ACCESS") &&
     isSurveillanceActive &&
     effectiveAlarmId !== null &&
     effectiveAlarmId !== undefined &&

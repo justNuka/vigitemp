@@ -7,6 +7,7 @@ import { GlobalAppEffects } from "@/components/global-app-effects";
 import { VersionChangelogModal } from "@/components/version-changelog-modal";
 import { LicenseProvider } from "@/components/license/license-provider";
 import { TimezoneProvider } from "@/components/timezone-provider";
+import { AppAccessProvider } from "@/components/access/app-access-provider";
 
 declare global {
   interface Window {
@@ -156,7 +157,7 @@ export function Providers({
         <TimezoneProvider timezone={timezone}>
           <GlobalAppEffects />
           <VersionChangelogModal />
-          <LicenseProvider>{children}</LicenseProvider>
+          <LicenseProvider><AppAccessProvider>{children}</AppAccessProvider></LicenseProvider>
         </TimezoneProvider>
       </ThemeProvider>
     </QueryClientProvider>

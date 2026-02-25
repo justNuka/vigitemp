@@ -77,9 +77,9 @@ export function GlobalAppEffects() {
     }
 
     const onError = () => {
-      // Stop the stream on first error to avoid reconnect loops when logged out.
+      // Close the stream on error; do not force global disconnect here because
+      // EventSource does not expose HTTP status (can be transient network/server hiccup).
       eventSource.close()
-      setAuthDisconnected(true, "stream_unauthorized")
     }
 
     eventSource.addEventListener("alarm", onAlarm)

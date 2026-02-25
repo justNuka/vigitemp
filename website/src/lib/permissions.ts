@@ -1,0 +1,86 @@
+import type { Authorization, CurrentUser } from "@/lib/types";
+
+export type AppPermission =
+  | "DASHBOARD_USER_ACCESS"
+  | "DASHBOARD_ADMIN_ACCESS"
+  | "GENERAL_SETTINGS_ACCESS"
+  | "ALARM_ACK_ACCESS"
+  | "LOCATION_DISABLE_ACCESS"
+  | "LOCATION_CONFIG_ACCESS"
+  | "HARDWARE_CONFIG_ACCESS"
+  | "CONVERSATION_ACCESS"
+  | "METROLOGY_WORK_ACCESS";
+
+type PermissionRule = {
+  aliases: string[];
+};
+
+const ADMIN_PROFILES = new Set(["administrateurs", "administrateur", "admin"]);
+
+const RULES: Record<AppPermission, PermissionRule> = {
+  DASHBOARD_USER_ACCESS: {
+    aliases: ["ACCES_DASHBOARD_UTILISATEUR", "ACCES_TABLEAU_BORD_UTILISATEUR", "ACCES_DASHBOARD_USER", "ACCES_SURVEILLANCE"],
+  },
+  DASHBOARD_ADMIN_ACCESS: {
+    aliases: ["ACCES_DASHBOARD_ADMIN", "ACCES_TABLEAU_BORD_ADMIN", "ACCES_ADMIN"],
+  },
+  GENERAL_SETTINGS_ACCESS: {
+    aliases: ["ACCES_PARAMETRAGE_GENERAL", "PARAMETRAGE_GENERAL", "GERER_PROFIL", "ACCES_ADMIN"],
+  },
+  ALARM_ACK_ACCESS: {
+    aliases: ["ACQUITTER_ALARME", "ACCES_ACQUITTEMENT_ALARME", "ACCES_SURVEILLANCE"],
+  },
+  LOCATION_DISABLE_ACCESS: {
+    aliases: ["DESACTIVER_LIEU", "ACCES_DESACTIVATION_LIEU", "ACCES_SURVEILLANCE"],
+  },
+  LOCATION_CONFIG_ACCESS: {
+    aliases: ["PARAMETRER_LIEU", "ACCES_PARAMETRAGE_LIEU", "ACCES_SURVEILLANCE"],
+  },
+  HARDWARE_CONFIG_ACCESS: {
+    aliases: ["PARAMETRAGE_MATERIEL", "ACCES_PARAMETRAGE_MATERIEL", "ACCES_METROLOGIE", "ACCES_ADMIN"],
+  },
+  CONVERSATION_ACCESS: {
+    aliases: ["ACCES_CONVERSATION", "MODULE_CONVERSATION", "ACCES_SURVEILLANCE"],
+  },
+  METROLOGY_WORK_ACCESS: {
+    aliases: ["REALISER_AJUSTAGE_ETALONNAGE", "ACCES_AJUSTAGE_ETALONNAGE", "ACCES_METROLOGIE", "ACCES_ADMIN"],
+  },
+};
+
+function normalizeCode(code: string | null | undefined): string {
+  return (code ?? "").trim().toUpperCase();
+}
+
+function isAdminProfile(profile: string | null | undefined): boolean {
+  return ADMIN_PROFILES.has((profile ?? "").trim().toLowerCase());
+}
+
+export function hasAuthorizationCode(
+  user: Pick<CurrentUser, "authorizations" | "Profil_Utilisateur" | "profil"> | null | undefined,
+  codes: readonly string[],
+): boolean {
+  if (!user) return false;
+  if (isAdminProfile(user.profil ?? user.Profil_Utilisateur)) return true;
+
+  const normalizedRequested = new Set(codes.map((c) => normalizeCode(c)).filter(Boolean));
+  if (normalizedRequested.size === 0) return false;
+
+  return (user.authorizations ?? []).some((a) => normalizedRequested.has(normalizeCode(a.code)));
+}
+
+export function hasPermission(
+  user: Pick<CurrentUser, "authorizations" | "Profil_Utilisateur" | "profil"> | null | undefined,
+  permission: AppPermission,
+): boolean {
+  if (!user) return false;
+  if (isAdminProfile(user.profil ?? user.Profil_Utilisateur)) return true;
+
+  const rule = RULES[permission];
+  if (!rule) return false;
+
+  return hasAuthorizationCode(user, rule.aliases);
+}
+
+export function getPermissionAliases(permission: AppPermission): readonly string[] {
+  return RULES[permission]?.aliases ?? [];
+}

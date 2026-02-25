@@ -131,6 +131,8 @@ export async function ServerActiveAlarms() {
           Id_Lieu: true,
           Id_Site: true,
           Nom_Lieu: true,
+          Derniere_Valeur: true,
+          Derniere_Unite: true,
           Derniere_Date_Heure: true,
           Tolerance_Surveillance_Inf: true,
           Tolerance_Surveillance_Sup: true,

@@ -6,17 +6,21 @@ import { log } from "@/lib/logger";
 import {
   NON_RESPONSE_COOKIE,
   getGlobalNonResponseDefault,
+  getUserNonResponsePreference,
   resolveNonResponsePreference,
+  setUserNonResponsePreference,
 } from "@/lib/non-response-preference";
 import { withAuthLogging } from "@/lib/api-wrappers";
 
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365 * 20;
 
-export const GET = withAuthLogging(async (req: NextRequest) => {
+export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
   try {
-    const [enabled, globalDefault] = await Promise.all([
-      resolveNonResponsePreference(req),
+    const userId = ctx.user.userId;
+    const [enabled, globalDefault, userValue] = await Promise.all([
+      resolveNonResponsePreference(req, userId),
       getGlobalNonResponseDefault(),
+      getUserNonResponsePreference(userId),
     ]);
 
     const cookieRaw = req.cookies.get(NON_RESPONSE_COOKIE)?.value;
@@ -24,6 +28,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
     return apiOk({
       enabled,
       globalDefault,
+      userValue,
       cookieValue: cookieRaw ?? null,
     });
   } catch (error) {
@@ -32,7 +37,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
   }
 });
 
-export const PUT = withAuthLogging(async (req: NextRequest, ctx: any) => {
+async function updatePreference(req: NextRequest, ctx: any) {
   try {
     const { enabled } = (await req.json()) as { enabled?: unknown };
     if (typeof enabled !== "boolean") {
@@ -40,7 +45,10 @@ export const PUT = withAuthLogging(async (req: NextRequest, ctx: any) => {
     }
 
     const { ip } = getRequestContext(req);
-    const previous = await resolveNonResponsePreference(req);
+    const userId = ctx.user.userId;
+    const previous = await resolveNonResponsePreference(req, userId);
+
+    await setUserNonResponsePreference(userId, enabled);
 
     const response = apiOk({ enabled });
     response.cookies.set({
@@ -56,7 +64,7 @@ export const PUT = withAuthLogging(async (req: NextRequest, ctx: any) => {
     log.config.change(
       "Preference utilisateur: afficher non-reponses null",
       ctx.user.username,
-      ctx.user.userId,
+      userId,
       ip,
       previous ? "1" : "0",
       enabled ? "1" : "0",
@@ -64,7 +72,10 @@ export const PUT = withAuthLogging(async (req: NextRequest, ctx: any) => {
 
     return response;
   } catch (error) {
-    console.error("[PUT /api/preferences/non-response]", error);
+    console.error("[PUT/PATCH /api/preferences/non-response]", error);
     return apiError(500, "preference_update_failed", "Impossible de sauvegarder la preference utilisateur.");
   }
-});
+}
+
+export const PUT = withAuthLogging(updatePreference);
+export const PATCH = withAuthLogging(updatePreference);

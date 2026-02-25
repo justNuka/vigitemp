@@ -10,6 +10,7 @@ import { withAdminLogging } from "@/lib/api-wrappers"
 import { revalidateTag } from "next/cache"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getUserAvatarMap, setUserAvatarValue } from "@/lib/user-avatar-db"
+import { getGlobalAppLanguage } from "@/lib/app-language"
 
 const createUserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -98,20 +99,24 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: any) => {
       profile: user.Profil_Utilisateur,
       avatar: data.avatar ?? null,
     })
-
     if (data.email && (await isEmailEnabled())) {
       const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/login`
+      const mailLocale = await getGlobalAppLanguage()
 
       try {
         await sendEmail({
           to: data.email,
-          subject: "Votre compte Vigitemp a été créé",
+          subject:
+            mailLocale === "en"
+              ? "Your Vigitemp account has been created"
+              : "Votre compte Vigitemp a ete cree",
           react: AccountCreationEmail({
             username: data.username,
             temporaryPassword,
             loginUrl,
             firstName: data.prenom,
             lastName: data.nom,
+            locale: mailLocale,
           }),
         })
         console.log(`[Utilisateurs API] Account creation email sent to ${data.email}`)

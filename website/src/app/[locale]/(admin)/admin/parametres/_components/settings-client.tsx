@@ -155,14 +155,14 @@ export function SettingsClient({ settings: initialSettings }: Props) {
   };
 
   const generalSettings = settings.filter((setting) => {
-    const isNotificationSetting = ["notifications:email", "notifications:alarm_email_recipients"].includes(setting.key)
+    const isNotificationSetting = ["notifications:email", "notifications:alarm_email_recipients", "notifications:alarm_email_acknowledged", "notifications:alarm_email_ended"].includes(setting.key)
     if (isNotificationSetting) return false
     if (!canEditSurveillanceRefresh && setting.key === "dashboard:surveillance_refresh") return false
     return true
   });
 
   const notificationSettings = settings.filter((setting) =>
-    ["notifications:email", "notifications:alarm_email_recipients"].includes(setting.key),
+    ["notifications:email", "notifications:alarm_email_recipients", "notifications:alarm_email_acknowledged", "notifications:alarm_email_ended"].includes(setting.key),
   );
 
   return (

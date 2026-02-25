@@ -2,6 +2,12 @@ import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { withAuthorizationLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import {
+  isAdminDomainCode,
+  isMetrologieDomainCode,
+  isSurveillanceDomainCode,
+  isVigiLogDomainCode,
+} from "@/lib/authorization-domain"
 
 /**
  * GET /api/autorisations
@@ -18,10 +24,10 @@ export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextReq
       code: auth.Code_Autorisation,
       label: auth.Libelle_Autorisation,
       description: auth.Commentaire,
-      fenAdmin: auth.A_Acces_Admin,
-      fenMetrologie: auth.A_Acces_Metrologie,
-      fenSurveillance: auth.A_Acces_Surveillance,
-      fenVigiLog: auth.A_Acces_VigiLog,
+      fenAdmin: isAdminDomainCode(auth.Code_Autorisation),
+      fenMetrologie: isMetrologieDomainCode(auth.Code_Autorisation),
+      fenSurveillance: isSurveillanceDomainCode(auth.Code_Autorisation),
+      fenVigiLog: isVigiLogDomainCode(auth.Code_Autorisation),
     }))
 
     return apiOk(formatted)

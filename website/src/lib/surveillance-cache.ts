@@ -36,7 +36,7 @@ export function markAlarmAcknowledgedInPaginatedSensorsCache(
 
         return {
           ...sensor,
-          status: sensor.status === "ended" ? "ok" : sensor.status,
+          status: "ok",
           alarmId: null,
           alarmType: null,
           location: {

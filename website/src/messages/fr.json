@@ -284,16 +284,30 @@
         "dashboard_refresh": "Intervalle de rafraîchissement (s)",
         "surveillance_refresh": "Rafraichissement surveillance (s)",
         "show_null_non_response": "Afficher les non-reponses (valeur null)",
-        "etalonnage_warning_days": "Alerte validite etalonnage (jours)"
+        "etalonnage_warning_days": "Alerte validite etalonnage (jours)",
+        "global_language": "Langue globale des emails"
       },
       "refresh_options": {
         "5": "5 secondes",
         "10": "10 secondes",
+        "15": "15 secondes",
         "30": "30 secondes",
         "60": "1 minute",
         "manual": "Manuel (désactivé)",
-        "custom": "{seconds} secondes",
-        "15": "Toutes les 15 secondes"
+        "custom": "{seconds} secondes"
+      },
+      "language_options": {
+        "fr": "Francais",
+        "en": "English"
+      },
+      "warning_days_options": {
+        "7": "7 jours",
+        "15": "15 jours",
+        "30": "30 jours",
+        "45": "45 jours",
+        "60": "60 jours",
+        "90": "90 jours",
+        "custom": "Manuel"
       }
     },
     "timezone": {
@@ -330,9 +344,11 @@
       "title": "Notifications",
       "description": "Gerer les preferences de notifications",
       "email_toggle": "Activer les emails d'alarme",
-      "recipients_label": "Destinataires des emails d'alarme",
-      "recipients_placeholder": "ex: support@mc2-info.com\nadmin@client.fr",
-      "recipients_helper": "Un email par ligne, ou separes par virgule/point-virgule.",
+      "acknowledged_toggle": "Recevoir les emails d'acquittement",
+      "ended_toggle": "Recevoir les emails d'alarme terminee",
+      "cc_recipients_label": "Emails en copie (tous les emails systeme)",
+      "cc_recipients_placeholder": "ex: support@mc2-info.com\nadmin@client.fr",
+      "cc_recipients_helper": "Un email par ligne, ou separes par virgule/point-virgule.",
       "save_button": "Enregistrer"
     },
     "password_policy": {
@@ -2052,7 +2068,7 @@
       "status": {
         "out_of_range": "Hors limites",
         "ok": "OK",
-        "no_response": "Non reponse"
+        "no_response": "Non réponse"
       },
       "empty": "Aucune mesure",
       "empty_with_range": "Veuillez sélectionner 2 dates pour voir les mesures"
@@ -2061,7 +2077,7 @@
       "over_high": "Zone dépassement haut",
       "over_low": "Zone dépassement bas",
       "measures": "Mesures ({unit})",
-      "show_no_response": "Afficher les non-reponses",
+      "show_no_response": "Afficher les non-réponses",
       "measure_count": "Mesures dans le graphique: {count}"
     },
     "tooltip": {
@@ -3102,7 +3118,7 @@
       "enabled": "Notifications activées"
     },
     "errors": {
-      "title": "Vous n'?tes pas connect?.",
+      "title": "Vous n'êtes pas connecté.",
       "default": "Une erreur est survenue.",
       "with_id": "{message} (ID: {id})"
     }

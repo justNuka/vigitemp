@@ -461,11 +461,6 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
           orderToggleLabel={disabledFirst ? t("grid.toggle_active_first") : t("grid.toggle_disabled_first")}
           onToggleOrder={handleToggleOrder}
           onOpenOverlay={() => setIsOverlayOpen(true)}
-          showNullNonResponse={showNullNonResponse}
-          onShowNullNonResponseChange={(enabled) => {
-            void handleShowNullNonResponseChange(enabled);
-          }}
-          nonResponsePreferencesLoading={nonResponsePreferencesLoading}
         />
       </div>
 

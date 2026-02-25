@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +29,7 @@ function normalizeRecipients(raw: string) {
     .join("\n");
 }
 
+
 export function NotificationsSettingsCard({
   settings,
   loadingKeys,
@@ -45,14 +46,22 @@ export function NotificationsSettingsCard({
     () => settings.find((setting) => setting.key === "notifications:alarm_email_recipients"),
     [settings],
   );
+  const acknowledgedToggle = useMemo(
+    () => settings.find((setting) => setting.key === "notifications:alarm_email_acknowledged"),
+    [settings],
+  );
+  const endedToggle = useMemo(
+    () => settings.find((setting) => setting.key === "notifications:alarm_email_ended"),
+    [settings],
+  );
 
   const [recipients, setRecipients] = useState(() => normalizeRecipients(recipientsSetting?.value ?? ""));
-
 
   useEffect(() => {
     setRecipients(normalizeRecipients(recipientsSetting?.value ?? ""));
   }, [recipientsSetting?.value]);
-  const isSaving = recipientsSetting ? loadingKeys.has(recipientsSetting.key) : false;
+
+  const isSavingRecipients = recipientsSetting ? loadingKeys.has(recipientsSetting.key) : false;
 
   return (
     <Card className="bg-white/50 dark:bg-card">
@@ -75,21 +84,49 @@ export function NotificationsSettingsCard({
           </div>
         ) : null}
 
+        {acknowledgedToggle ? (
+          <div className="flex items-center justify-between">
+            <Label htmlFor={acknowledgedToggle.key} className="flex-1">
+              {t("notifications.acknowledged_toggle")}
+            </Label>
+            <SwitchWithLoading
+              id={acknowledgedToggle.key}
+              checked={acknowledgedToggle.value === "true"}
+              onCheckedChange={() => onToggle(acknowledgedToggle.key, acknowledgedToggle.value)}
+              isLoading={loadingKeys.has(acknowledgedToggle.key)}
+            />
+          </div>
+        ) : null}
+
+        {endedToggle ? (
+          <div className="flex items-center justify-between">
+            <Label htmlFor={endedToggle.key} className="flex-1">
+              {t("notifications.ended_toggle")}
+            </Label>
+            <SwitchWithLoading
+              id={endedToggle.key}
+              checked={endedToggle.value === "true"}
+              onCheckedChange={() => onToggle(endedToggle.key, endedToggle.value)}
+              isLoading={loadingKeys.has(endedToggle.key)}
+            />
+          </div>
+        ) : null}
+
         {recipientsSetting ? (
           <div className="space-y-2">
-            <Label htmlFor="alarm-email-recipients">{t("notifications.recipients_label")}</Label>
+            <Label htmlFor="alarm-email-recipients">{t("notifications.cc_recipients_label")}</Label>
             <Textarea
               id="alarm-email-recipients"
               value={recipients}
               onChange={(event) => setRecipients(event.target.value)}
               rows={5}
-              placeholder={t("notifications.recipients_placeholder")}
+              placeholder={t("notifications.cc_recipients_placeholder")}
             />
-            <p className="text-xs text-muted-foreground">{t("notifications.recipients_helper")}</p>
+            <p className="text-xs text-muted-foreground">{t("notifications.cc_recipients_helper")}</p>
             <div className="flex justify-end">
               <Button
                 type="button"
-                disabled={isSaving}
+                disabled={isSavingRecipients}
                 onClick={() => onSaveRecipients(recipientsSetting.key, normalizeRecipients(recipients))}
               >
                 {t("notifications.save_button")}
@@ -101,4 +138,3 @@ export function NotificationsSettingsCard({
     </Card>
   );
 }
-
