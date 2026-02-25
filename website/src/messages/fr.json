@@ -760,7 +760,21 @@
       "editRule": "Modifier la règle",
       "deleteRule": "Supprimer",
       "activeStatus": "Planning actif — Règle",
-      "baseStatus": "Consignes de base"
+      "baseStatus": "Consignes de base",
+      "loading": "Chargement...",
+      "priority": "Priorité",
+      "consigne": "Consigne",
+      "consigneSup": "Consigne sup.",
+      "consigneInf": "Consigne inf.",
+      "weekdays": {
+        "mon": "Lun",
+        "tue": "Mar",
+        "wed": "Mer",
+        "thu": "Jeu",
+        "fri": "Ven",
+        "sat": "Sam",
+        "sun": "Dim"
+      }
     }
   },
   "modulesPage": {

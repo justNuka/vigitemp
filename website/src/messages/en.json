@@ -549,7 +549,21 @@
       "editRule": "Edit rule",
       "deleteRule": "Delete",
       "activeStatus": "Active planning — Rule",
-      "baseStatus": "Base setpoints"
+      "baseStatus": "Base setpoints",
+      "loading": "Loading...",
+      "priority": "Priority",
+      "consigne": "Setpoint",
+      "consigneSup": "Upper setpoint",
+      "consigneInf": "Lower setpoint",
+      "weekdays": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      }
     }
   },
   "modulesPage": {
