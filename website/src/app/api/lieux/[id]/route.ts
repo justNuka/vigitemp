@@ -574,7 +574,7 @@ export const PATCH = withLogging(
                   erreurJustesse: updatedLieu.Derniere_Erreur_Justesse,
                   derive: updatedLieu.Derive,
                   includeDeriveInUncertainty: updatedLieu.Est_Correction_derive ?? false,
-                  correctAccuracyError: !!updatedLieu.Est_Correction_Ej,
+                  correctAccuracyError: updatedLieu.Est_Correction_Ej === 1,
                 })
                 return prisma.t_lieu_planning_regle.update({
                   where: { Id_Regle: regle.Id_Regle },

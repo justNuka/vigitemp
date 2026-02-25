@@ -23,15 +23,16 @@ interface PlanningPreviewResponse {
   }
 }
 
-const JOUR_LABELS: Record<number, string> = {
-  1: "Lun",
-  2: "Mar",
-  3: "Mer",
-  4: "Jeu",
-  5: "Ven",
-  6: "Sam",
-  7: "Dim",
-}
+// Explicit key map avoids dynamic template literal key access, required by next-intl static analysis
+const DAY_KEYS = {
+  1: "dialog.days.1",
+  2: "dialog.days.2",
+  3: "dialog.days.3",
+  4: "dialog.days.4",
+  5: "dialog.days.5",
+  6: "dialog.days.6",
+  7: "dialog.days.7",
+} as const
 
 interface LocationFormTabPlanningProps {
   idLieu: number | null // null when creating a new lieu (not yet saved)
@@ -62,9 +63,11 @@ export function LocationFormTabPlanning({
   const { data: preview } = useQuery<PlanningPreviewResponse | null>({
     queryKey: ["planning-preview", idLieu],
     queryFn: async () => {
-      const res = await fetch(`/api/lieux/${idLieu}/planning/preview`)
-      if (!res.ok) return null
-      return res.json() as Promise<PlanningPreviewResponse>
+      try {
+        return await fetchJson<PlanningPreviewResponse>(`/api/lieux/${idLieu}/planning/preview`)
+      } catch {
+        return null
+      }
     },
     enabled: !!idLieu,
     refetchInterval: 60_000,
@@ -77,6 +80,7 @@ export function LocationFormTabPlanning({
       try {
         await deleteJson<void>(`/api/lieux/${idLieu}/planning/${regle.Id_Regle}`)
         await queryClient.invalidateQueries({ queryKey })
+        void queryClient.invalidateQueries({ queryKey: ["planning-preview", idLieu] })
       } finally {
         setDeletingId(null)
       }
@@ -165,9 +169,13 @@ export function LocationFormTabPlanning({
               <div className="flex flex-col gap-0.5 min-w-0">
                 {/* Day range */}
                 <span className="text-sm font-medium">
-                  {JOUR_LABELS[regle.Jour_Debut] ?? regle.Jour_Debut}
+                  {regle.Jour_Debut in DAY_KEYS
+                    ? t(DAY_KEYS[regle.Jour_Debut as keyof typeof DAY_KEYS])
+                    : regle.Jour_Debut}
                   {" — "}
-                  {JOUR_LABELS[regle.Jour_Fin] ?? regle.Jour_Fin}
+                  {regle.Jour_Fin in DAY_KEYS
+                    ? t(DAY_KEYS[regle.Jour_Fin as keyof typeof DAY_KEYS])
+                    : regle.Jour_Fin}
                 </span>
                 {/* Time range */}
                 <span className="text-xs text-muted-foreground">
@@ -238,6 +246,7 @@ export function LocationFormTabPlanning({
           onClose={() => setDialogOpen(false)}
           onSuccess={() => {
             void queryClient.invalidateQueries({ queryKey })
+            void queryClient.invalidateQueries({ queryKey: ["planning-preview", idLieu] })
           }}
           idLieu={idLieu}
           editRegle={editRegle}
