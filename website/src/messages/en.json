@@ -563,6 +563,32 @@
         "fri": "Fri",
         "sat": "Sat",
         "sun": "Sun"
+      },
+      "dialog": {
+        "titleCreate": "Add a planning rule",
+        "titleEdit": "Edit planning rule",
+        "labelJourDebut": "Start day",
+        "labelHeureDebut": "Start time",
+        "labelJourFin": "End day",
+        "labelHeureFin": "End time",
+        "labelConsigne": "Setpoint (optional)",
+        "labelConsigneSup": "Upper setpoint (optional)",
+        "labelConsigneInf": "Lower setpoint (optional)",
+        "labelPriorite": "Priority",
+        "labelActif": "Rule active",
+        "placeholderJour": "Select a day",
+        "placeholderNumeric": "Numeric value",
+        "saving": "Saving...",
+        "errorSave": "Error saving the rule.",
+        "days": {
+          "1": "Monday",
+          "2": "Tuesday",
+          "3": "Wednesday",
+          "4": "Thursday",
+          "5": "Friday",
+          "6": "Saturday",
+          "7": "Sunday"
+        }
       }
     }
   },

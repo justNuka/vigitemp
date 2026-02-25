@@ -774,6 +774,32 @@
         "fri": "Ven",
         "sat": "Sam",
         "sun": "Dim"
+      },
+      "dialog": {
+        "titleCreate": "Ajouter une règle de planning",
+        "titleEdit": "Modifier la règle de planning",
+        "labelJourDebut": "Jour de début",
+        "labelHeureDebut": "Heure de début",
+        "labelJourFin": "Jour de fin",
+        "labelHeureFin": "Heure de fin",
+        "labelConsigne": "Consigne (optionnel)",
+        "labelConsigneSup": "Consigne sup. (optionnel)",
+        "labelConsigneInf": "Consigne inf. (optionnel)",
+        "labelPriorite": "Priorité",
+        "labelActif": "Règle active",
+        "placeholderJour": "Sélectionner un jour",
+        "placeholderNumeric": "Valeur numérique",
+        "saving": "Enregistrement...",
+        "errorSave": "Erreur lors de l'enregistrement de la règle.",
+        "days": {
+          "1": "Lundi",
+          "2": "Mardi",
+          "3": "Mercredi",
+          "4": "Jeudi",
+          "5": "Vendredi",
+          "6": "Samedi",
+          "7": "Dimanche"
+        }
       }
     }
   },

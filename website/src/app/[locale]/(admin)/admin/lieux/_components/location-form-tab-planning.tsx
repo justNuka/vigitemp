@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { fetchJson, deleteJson } from "@/lib/http"
 import type { PlanningRegleResponse } from "@/lib/planning-regle-schema"
 import { WeeklyPlanningView } from "./planning-weekly-view"
+import { PlanningRuleFormDialog } from "./planning-rule-form-dialog"
 
 const JOUR_LABELS: Record<number, string> = {
   1: "Lun",
@@ -35,6 +36,8 @@ export function LocationFormTabPlanning({
   const t = useTranslations("lieux.planning")
   const queryClient = useQueryClient()
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editRegle, setEditRegle] = useState<PlanningRegleResponse | null>(null)
 
   const queryKey = ["planning-regles", idLieu]
 
@@ -77,7 +80,11 @@ export function LocationFormTabPlanning({
           size="sm"
           variant="outline"
           className="gap-1"
-          onClick={() => onAddRule?.()}
+          onClick={() => {
+            setEditRegle(null)
+            setDialogOpen(true)
+            onAddRule?.()
+          }}
         >
           <Plus className="h-3.5 w-3.5" />
           {t("addRule")}
@@ -94,7 +101,11 @@ export function LocationFormTabPlanning({
       ) : (
         <WeeklyPlanningView
           regles={regles}
-          onSelectRegle={(regle) => onEditRule?.(regle)}
+          onSelectRegle={(regle) => {
+            setEditRegle(regle)
+            setDialogOpen(true)
+            onEditRule?.(regle)
+          }}
         />
       )}
 
@@ -157,7 +168,11 @@ export function LocationFormTabPlanning({
                   size="icon"
                   variant="ghost"
                   className="h-7 w-7"
-                  onClick={() => onEditRule?.(regle)}
+                  onClick={() => {
+                    setEditRegle(regle)
+                    setDialogOpen(true)
+                    onEditRule?.(regle)
+                  }}
                   title={t("editRule")}
                 >
                   <Pencil className="h-3.5 w-3.5" />
@@ -177,6 +192,19 @@ export function LocationFormTabPlanning({
             </div>
           ))}
         </div>
+      )}
+
+      {/* Rule form dialog — create or edit */}
+      {idLieu !== null && (
+        <PlanningRuleFormDialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          onSuccess={() => {
+            void queryClient.invalidateQueries({ queryKey })
+          }}
+          idLieu={idLieu}
+          editRegle={editRegle}
+        />
       )}
     </div>
   )
