@@ -37,6 +37,7 @@ import {
   planningRegleCreateSchema,
   type PlanningRegleCreate,
   type PlanningRegleResponse,
+  type LieuEmtParams,
 } from "@/lib/planning-regle-schema"
 
 // Form field values type — uses z.input so that fields with .default() are optional
@@ -53,6 +54,7 @@ export interface PlanningRuleFormDialogProps {
   onSuccess: () => void
   idLieu: number
   editRegle?: PlanningRegleResponse | null
+  emtParams: LieuEmtParams
 }
 
 // -------------------------------------------------------------------------
@@ -74,6 +76,7 @@ export function PlanningRuleFormDialog({
   onSuccess,
   idLieu,
   editRegle,
+  emtParams,
 }: PlanningRuleFormDialogProps) {
   const tCommon = useTranslations("common")
   const tDialog = useTranslations("lieux.planning.dialog")

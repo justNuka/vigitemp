@@ -23,6 +23,8 @@ import { FormProvider, type UseFormReturn, useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { showFormValidationToast } from '@/lib/form-toast';
 
+import type { EmtMode } from "@/lib/emt"
+import type { LieuEmtParams } from "@/lib/planning-regle-schema"
 import type { LocationFormData, LocationFormMode } from './location-form-types';
 import { getDefaultLocationFormData } from "./location-form-defaults";
 import { LocationFormTabGeneral } from './location-form-tab-general';
@@ -88,6 +90,18 @@ export function LocationFormDialog({
   }, [open, form, internalForm, setFormData]);
 
 
+  const emtParamsForPlanning: LieuEmtParams = {
+    mode: ((resolvedForm.watch('EMT_Mode') ?? 'sans-objet') as EmtMode),
+    emtValue: resolvedForm.watch('EMT_Valeur') ?? null,
+    incertitude: resolvedForm.watch('Incertitude') ?? null,
+    erreurJustesse: resolvedForm.watch('Erreur_Justesse') ?? null,
+    derive: resolvedForm.watch('Derive') ?? null,
+    includeDeriveInUncertainty: resolvedForm.watch('Prendre_En_Compte_Derive') ?? false,
+    correctAccuracyError: resolvedForm.watch('Corriger_Erreur_Justesse') ?? false,
+    isConsigneSupActive: resolvedForm.watch('Est_Consigne_Sup_Active') ?? false,
+    isConsigneInfActive: resolvedForm.watch('Est_Consigne_Inf_Active') ?? false,
+  }
+
   if (!open) {
     return null;
   }
@@ -151,6 +165,7 @@ export function LocationFormDialog({
               <TabsContent value="planning">
                 <LocationFormTabPlanning
                   idLieu={resolvedForm.watch('Id_Lieu') ?? null}
+                  emtParams={emtParamsForPlanning}
                 />
               </TabsContent>
             </Tabs>

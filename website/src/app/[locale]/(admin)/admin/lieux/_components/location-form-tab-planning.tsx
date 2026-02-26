@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { fetchJson, deleteJson } from "@/lib/http"
-import type { PlanningRegleResponse } from "@/lib/planning-regle-schema"
+import type { PlanningRegleResponse, LieuEmtParams } from "@/lib/planning-regle-schema"
 import { WeeklyPlanningView } from "./planning-weekly-view"
 import { PlanningRuleFormDialog } from "./planning-rule-form-dialog"
 
@@ -36,12 +36,14 @@ const DAY_KEYS = {
 
 interface LocationFormTabPlanningProps {
   idLieu: number | null // null when creating a new lieu (not yet saved)
+  emtParams: LieuEmtParams
   onAddRule?: () => void
   onEditRule?: (regle: PlanningRegleResponse) => void
 }
 
 export function LocationFormTabPlanning({
   idLieu,
+  emtParams,
   onAddRule,
   onEditRule,
 }: LocationFormTabPlanningProps) {
@@ -250,6 +252,7 @@ export function LocationFormTabPlanning({
           }}
           idLieu={idLieu}
           editRegle={editRegle}
+          emtParams={emtParams}
         />
       )}
     </div>
