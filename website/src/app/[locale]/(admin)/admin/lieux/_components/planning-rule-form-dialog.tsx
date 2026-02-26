@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useTranslations } from "next-intl"
@@ -31,6 +31,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { computeEmt } from "@/lib/emt"
 import { showFormValidationToast } from "@/lib/form-toast"
 import { z } from "zod"
 import {
@@ -179,6 +180,28 @@ export function PlanningRuleFormDialog({
   }
 
   const isSubmitting = form.formState.isSubmitting
+
+  const watchedConsigne = form.watch("Consigne")
+  const watchedConsigneSup = form.watch("Consigne_Sup")
+  const watchedConsigneInf = form.watch("Consigne_Inf")
+
+  const emtPreview = useMemo(
+    () =>
+      computeEmt({
+        ...emtParams,
+        consigne: watchedConsigne ?? null,
+        consigneSup: watchedConsigneSup ?? null,
+        consigneInf: watchedConsigneInf ?? null,
+      }),
+    [emtParams, watchedConsigne, watchedConsigneSup, watchedConsigneInf],
+  )
+
+  const EMT_MODE_LABEL: Record<string, string> = {
+    quart: tDialog("emtModeQuart"),
+    manuel: tDialog("emtModeManuel"),
+    uncertainties: tDialog("emtModeUncertainties"),
+    "sans-objet": tDialog("emtModeSansObjet"),
+  }
 
   return (
     <Dialog
@@ -400,6 +423,51 @@ export function PlanningRuleFormDialog({
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* EMT summary block */}
+            <div className="rounded-md border bg-muted/40 p-3 space-y-2 text-sm">
+              <p className="font-medium">{tDialog("emtTitle")}</p>
+              <div className="flex flex-wrap gap-x-6 gap-y-1 text-muted-foreground">
+                <span>
+                  {tDialog("emtMode")}:{" "}
+                  <span className="text-foreground font-medium">
+                    {EMT_MODE_LABEL[emtParams.mode] ?? emtParams.mode}
+                  </span>
+                </span>
+                {emtPreview.emtSonde !== null && (
+                  <span>
+                    {tDialog("emtSonde")}:{" "}
+                    <span className="text-foreground font-medium">
+                      {emtPreview.emtSonde.toFixed(4)}
+                    </span>
+                  </span>
+                )}
+                <span>
+                  {emtParams.correctAccuracyError ? "✓" : "✗"} {tDialog("emtCorrectEj")}
+                </span>
+                <span>
+                  {emtParams.includeDeriveInUncertainty ? "✓" : "✗"} {tDialog("emtDerive")}
+                </span>
+              </div>
+              <div className="border-t pt-2 flex flex-wrap gap-x-6 gap-y-1">
+                <span className="text-muted-foreground">
+                  {tDialog("emtToleranceSup")}:{" "}
+                  <span className="text-foreground font-medium">
+                    {emtPreview.toleranceSup !== null
+                      ? emtPreview.toleranceSup.toFixed(4)
+                      : tDialog("emtNotCalculable")}
+                  </span>
+                </span>
+                <span className="text-muted-foreground">
+                  {tDialog("emtToleranceInf")}:{" "}
+                  <span className="text-foreground font-medium">
+                    {emtPreview.toleranceInf !== null
+                      ? emtPreview.toleranceInf.toFixed(4)
+                      : tDialog("emtNotCalculable")}
+                  </span>
+                </span>
+              </div>
             </div>
 
             {/* Checkbox: Actif */}
