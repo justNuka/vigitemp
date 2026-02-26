@@ -444,10 +444,16 @@ export function PlanningRuleFormDialog({
                   </span>
                 )}
                 <span>
-                  {emtParams.correctAccuracyError ? "✓" : "✗"} {tDialog("emtCorrectEj")}
+                  {emtParams.correctAccuracyError
+                    ? <Check className="inline h-3 w-3 text-green-600" />
+                    : <X className="inline h-3 w-3 text-muted-foreground" />
+                  }{" "}{tDialog("emtCorrectEj")}
                 </span>
                 <span>
-                  {emtParams.includeDeriveInUncertainty ? "✓" : "✗"} {tDialog("emtDerive")}
+                  {emtParams.includeDeriveInUncertainty
+                    ? <Check className="inline h-3 w-3 text-green-600" />
+                    : <X className="inline h-3 w-3 text-muted-foreground" />
+                  }{" "}{tDialog("emtDerive")}
                 </span>
               </div>
               <div className="border-t pt-2 flex flex-wrap gap-x-6 gap-y-1">

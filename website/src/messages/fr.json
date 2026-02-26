@@ -39,15 +39,26 @@
       "thisWeek": "Cette semaine",
       "lastWeek": "Semaine précédente",
       "thisMonth": "Ce mois-ci",
-      "lastMonth": "Mois précédent"
+      "lastMonth": "Mois précédent",
+      "module_empty": "Aucun module",
+      "offset_label": "Offset sonde",
+      "offset_placeholder": "0",
+      "offset_hint": "Laissez vide pour utiliser 0."
     }
   },
   "pageHeader": {
-    "title": "VigiSensys - Surveillance d'environnement"
+    "title": "VigiSensys - Surveillance d'environnement",
+    "offset_invalid": "Offset invalide"
   },
   "appMeta": {
     "title": "VigiSensys - Surveillance temps réel",
-    "description": "Système de surveillance et gestion des alarmes"
+    "description": "Système de surveillance et gestion des alarmes",
+    "timezone": {
+      "title": "Fuseau horaire",
+      "description": "Définir le fuseau horaire d'affichage",
+      "label": "Fuseau horaire",
+      "helper": "L'affichage des dates s'adaptera à ce fuseau horaire."
+    }
   },
   "dock": {
     "sondes": "Sondes",
@@ -134,7 +145,7 @@
     "stats": {
       "locations_monitored": "Lieux en surveillance",
       "active_alarms": "Alarmes actives",
-      "sensors_ok": "Surveillance desactivee",
+      "sensors_ok": "Sondes OK",
       "locations_disabled": "Surveillance désactivée",
       "sensors_alert": "Sondes en alerte"
     },
@@ -222,12 +233,37 @@
       "disabled_empty": "Aucun lieu en surveillance désactivée",
       "toggle_disabled_first": "Afficher d'abord les lieux désactivés",
       "toggle_active_first": "Afficher d'abord les lieux en surveillance",
-      "disabled_badge": "Surveillance desactivee",
-      "disabled_until": "Surveillance desactivee jusqu'au {date}",
+      "disabled_badge": "Surveillance désactivée",
+      "disabled_until": "Surveillance désactivée jusqu'au {date}",
       "empty_title": "Aucune sonde",
       "unknown_site": "Site inconnu",
       "no_group": "Sans groupe"
     },
+    "stats_descriptions": {
+      "active_locations": "Lieux actifs",
+      "disabled_locations": "Surveillance coupée",
+      "active_alarms_warning": "Attention requise",
+      "active_alarms_ok": "Tout est normal",
+      "alert_sensors": "Pré-alarmes + alarmes"
+    },
+    "status": {
+      "active": "Surveillance active",
+      "disabled": "Surveillance désactivée"
+    },
+    "placeholders": {
+      "na": "N/A",
+      "no_sensor": "Sans sonde"
+    },
+    "types": {
+      "bain_marie": "Bain marie",
+      "etuve": "Étuve",
+      "ambiance": "Ambiance",
+      "frigo_congel": "Frigo / Congélateur",
+      "autre": "Autre"
+    },
+    "frequency_value": "Toutes les {count} min",
+    "search_placeholder": "Rechercher un lieu...",
+    "empty": "Aucun lieu trouvé",
     "empty_state": {
       "title": "Aucune sonde",
       "description": "Aucune donnée disponible pour le moment."
@@ -437,11 +473,29 @@
     "titles": {
       "active": "Alarmes actives",
       "acknowledged": "Alarmes acquittées",
-      "resolved": "Alarmes à acquitter"
+      "resolved": "Alarmes à acquitter",
+      "location_label": "Lieu",
+      "sensor_label": "Sonde",
+      "type_label": "Type d'alarme",
+      "type_high": "Dépassement haut",
+      "type_low": "Dépassement bas",
+      "type_no_response": "Non réponse",
+      "type_other": "Autre",
+      "start_label": "Début alarme",
+      "end_label": "Fin alarme",
+      "end_in_progress": "Non terminée",
+      "duration_label": "Durée"
     },
     "refresh": {
       "label": "Actualiser",
-      "loading": "Actualisation..."
+      "loading": "Actualisation...",
+      "graph_label": "Graphique du lieu",
+      "graph_hint": "Afficher la courbe des mesures du lieu",
+      "graph_show": "Afficher",
+      "graph_hide": "Masquer",
+      "comment_select_label": "Commentaire pré-existant",
+      "comment_select_placeholder": "Choisir un commentaire",
+      "comment_select_empty": "Aucun commentaire disponible"
     },
     "filters": {
       "type_label": "Type d'alarme",
@@ -452,6 +506,7 @@
       "ended": "Terminée"
     },
     "toast": {
+      "na": "-",
       "acknowledge_success": "Alarme acquittée avec succès",
       "acknowledge_error": "Erreur lors de l'acquittement de l'alarme",
       "refreshed": "Données actualisées"
@@ -628,7 +683,7 @@
       "tabs": {
         "general": "Général",
         "metrology": "Métrologie",
-        "mailing": "Mailing/Planning",
+        "mailing": "Mailing",
         "telephony": "Téléphonie/Planning",
         "planning": "Planning"
       },
@@ -815,7 +870,19 @@
           "5": "Vendredi",
           "6": "Samedi",
           "7": "Dimanche"
-        }
+        },
+        "emtTitle": "EMT du lieu",
+        "emtMode": "Mode",
+        "emtSonde": "EMT sonde",
+        "emtCorrectEj": "Correction EJ",
+        "emtDerive": "Dérive incluse",
+        "emtToleranceSup": "Tolérance sup calculée",
+        "emtToleranceInf": "Tolérance inf calculée",
+        "emtNotCalculable": "—",
+        "emtModeQuart": "Règle du quart",
+        "emtModeManuel": "Manuel",
+        "emtModeUncertainties": "Incertitudes",
+        "emtModeSansObjet": "Sans objet"
       }
     }
   },
@@ -1146,16 +1213,16 @@
       "clear": "Retirer",
       "save": "Enregistrer",
       "saving": "Enregistrement...",
-      "saved": "Avatar mis a jour",
-      "save_error": "Erreur lors de la mise a jour de l'avatar",
+      "saved": "Avatar mis à jour",
+      "save_error": "Erreur lors de la mise à jour de l'avatar",
       "upload_error": "Erreur lors de l'import de l'avatar",
       "crop_title": "Recadrer l'avatar",
       "crop_cancel": "Annuler",
       "crop_apply": "Appliquer",
       "crop_zoom": "Zoom",
       "crop_reset": "Réinitialiser",
-      "crop_opened": "Image charg?e. Recadrez puis appliquez.",
-      "upload_success": "Image pr?te. Enregistrez pour appliquer l'avatar."
+      "crop_opened": "Image chargée. Recadrez puis appliquez.",
+      "upload_success": "Image prête. Enregistrez pour appliquer l'avatar."
     }
   },
   "profileSecurity": {
@@ -1435,7 +1502,7 @@
     "actions": {
       "add": "Ajouter",
       "edit": "Modifier",
-      "create_from_adjustment_file": "Ajouter sonde avec fichier d'ajustage/ajustage"
+      "create_from_adjustment_file": "Ajouter sonde avec fichier d'ajustage/calibrage"
     },
     "table": {
       "columns": {
@@ -1452,8 +1519,8 @@
     },
     "calibration_validity": {
       "ok": "OK ({days} j)",
-      "expiring": "Bient??t expir?? ({days} j)",
-      "expired": "Expir?? ({days} j)"
+      "expiring": "Bientôt expiré ({days} j)",
+      "expired": "Expiré ({days} j)"
     },
     "status": {
       "surveillance": "Surveillance",
@@ -1490,22 +1557,43 @@
         "actions": {
           "delete": "Supprimer",
           "generate": "Générer",
-          "print": "Imprimer"
+          "print": "Imprimer",
+          "edit_validity_days": "Durée de validité"
+        },
+        "edit": {
+          "title": "Durée de validité",
+          "validity_days": "Durée de validité (jours)",
+          "placeholder": "Ex: 365",
+          "helper": "Laisser vide pour désactiver la durée.",
+          "cancel": "Annuler",
+          "save": "Enregistrer",
+          "saving": "Enregistrement...",
+          "saved": "Durée de validité mise à jour.",
+          "save_error": "Erreur lors de la mise à jour de la durée de validité.",
+          "invalid_days": "Veuillez entrer un nombre de jours valide."
+        },
+        "columns": {
+          "date": "Date",
+          "validity": "Validité",
+          "operator": "Opérateur",
+          "incertitude": "Incertitude",
+          "validity_days": "Validité (jours)",
+          "actions": "Actions"
         },
         "validity_status": {
           "valid_days": "Valide (encore {days} jours)",
           "expiring_days": "Expire dans {days} jours",
-          "expired_days": "Expir? depuis {days} jours",
-          "expiring_tooltip": "La date de validit? de l'?talonnage approche (dans {days} jours).",
-          "expired_tooltip": "La date de validit? de l'?talonnage est d?pass?e (depuis {days} jours)."
+          "expired_days": "Expiré depuis {days} jours",
+          "expiring_tooltip": "La date de validité de l'étalonnage approche (dans {days} jours).",
+          "expired_tooltip": "La date de validité de l'étalonnage est dépassée (depuis {days} jours)."
         }
       }
     }
   },
   "sensorAdjustmentImport": {
     "page": {
-      "title": "Import ajustage/ajustage",
-      "description": "Importer des fichiers XML d'ajustage (anciennement ajustage)"
+      "title": "Import ajustage/calibrage",
+      "description": "Importer des fichiers XML d'ajustage (anciennement calibrage)"
     },
     "actions": {
       "import": "Importer des fichiers",
@@ -1516,7 +1604,7 @@
       "apply": "Appliquer"
     },
     "table": {
-      "title": "Fichiers d'ajustage/ajustage",
+      "title": "Fichiers d'ajustage/calibrage",
       "columns": {
         "file": "Fichier",
         "sensor": "Sonde",
@@ -1532,7 +1620,7 @@
       "empty": "Veuillez importer un ou plusieurs fichier(s) d'ajustage/ajustage..."
     },
     "modal": {
-      "title": "Importer un fichier d'ajustage/ajustage",
+      "title": "Importer un fichier d'ajustage/calibrage",
       "description": "Chargez un ou plusieurs fichiers XML pour créer des sondes."
     },
     "edit": {
@@ -3331,8 +3419,8 @@
       "crop_apply": "Appliquer",
       "crop_zoom": "Zoom",
       "crop_reset": "Réinitialiser",
-      "crop_opened": "Image charg?e. Recadrez puis appliquez.",
-      "upload_success": "Image pr?te. Enregistrez pour appliquer l'avatar.",
+      "crop_opened": "Image chargée. Recadrez puis appliquez.",
+      "upload_success": "Image prête. Enregistrez pour appliquer l'avatar.",
       "upload_error": "Erreur lors de l'import de l'avatar"
     }
   },

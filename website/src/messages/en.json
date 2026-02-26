@@ -39,6 +39,7 @@
       "thisWeek": "This week",
       "lastWeek": "Last week",
       "thisMonth": "This month",
+      "lastMonth": "Last month",
       "module_empty": "No module",
       "offset_label": "Sensor offset",
       "offset_placeholder": "0",
@@ -144,7 +145,7 @@
     "stats": {
       "locations_monitored": "Locations in monitoring",
       "active_alarms": "Active alarms",
-      "sensors_ok": "Monitoring disabled",
+      "sensors_ok": "Sensors OK",
       "locations_disabled": "Monitoring disabled",
       "sensors_alert": "Sensors in alert"
     },
@@ -201,6 +202,7 @@
     },
     "titles": {
       "active": "Active alarms",
+      "acknowledged": "Acknowledged alarms",
       "location_label": "Location",
       "sensor_label": "Sensor",
       "type_label": "Alarm type",
@@ -405,7 +407,30 @@
     },
     "frequency_value": "Every {count} min",
     "search_placeholder": "Search locations...",
-    "empty": "No locations found"
+    "empty": "No locations found",
+    "empty_state": {
+      "title": "No sensors",
+      "description": "No data available at the moment."
+    },
+    "group_modal": {
+      "title": "Confirmation",
+      "description": "Do you want to {action} monitoring for group {group}?",
+      "action_disable": "disable",
+      "action_enable": "enable",
+      "toggle_disable": "Disable group monitoring",
+      "toggle_enable": "Re-enable group monitoring",
+      "duration_label": "Disable duration",
+      "duration_placeholder": "Choose a duration",
+      "duration_options": {
+        "15": "15 minutes",
+        "60": "1 hour",
+        "240": "4 hours",
+        "720": "12 hours",
+        "manual": "Unlimited (manual)"
+      },
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    }
   },
   "locationsForm": {
     "dialog": {
@@ -415,7 +440,8 @@
       "tabs": {
         "general": "General",
         "metrology": "Metrology",
-        "mailing": "Mailing/Planning",
+        "mailing": "Mailing",
+        "telephony": "Telephony/Planning",
         "planning": "Planning"
       },
       "submit": {
@@ -588,7 +614,19 @@
           "5": "Friday",
           "6": "Saturday",
           "7": "Sunday"
-        }
+        },
+        "emtTitle": "Location EMT",
+        "emtMode": "Mode",
+        "emtSonde": "Probe EMT",
+        "emtCorrectEj": "EJ correction",
+        "emtDerive": "Drift included",
+        "emtToleranceSup": "Calculated upper tolerance",
+        "emtToleranceInf": "Calculated lower tolerance",
+        "emtNotCalculable": "—",
+        "emtModeQuart": "Quarter rule",
+        "emtModeManuel": "Manual",
+        "emtModeUncertainties": "Uncertainties",
+        "emtModeSansObjet": "Not applicable"
       }
     }
   },
@@ -989,10 +1027,12 @@
   },
   "adminSidebar": {
     "badge": "Admin",
+    "services": "MC2 Services",
     "groups": {
       "dashboards": "Dashboards",
       "management": "Management",
-      "system": "System"
+      "system": "System",
+      "metrology": "Metrology"
     },
     "dashboards": {
       "user": "User",
@@ -1009,6 +1049,9 @@
       "settings": "Settings",
       "licenses": "Licenses",
       "backups": "Backups"
+    },
+    "metrology": {
+      "calibration_import": "Calibration import"
     }
   },
   "profilesPage": {
@@ -1077,13 +1120,17 @@
       "module_label": "Module",
       "module_placeholder": "Select a module",
       "module_search_placeholder": "Search a module...",
-      "module_empty": "No module"
+      "module_empty": "No module",
+      "offset_label": "Sensor offset",
+      "offset_placeholder": "0",
+      "offset_hint": "Leave empty to use 0."
     },
     "submit_create": "Add",
     "submit_update": "Update",
     "validation": {
       "type_required": "Sensor type is required",
-      "serial_invalid": "Invalid serial number"
+      "serial_invalid": "Invalid serial number",
+      "offset_invalid": "Invalid offset"
     },
     "toast": {
       "invalid_sensor": "Invalid sensor",
@@ -1957,7 +2004,7 @@
     },
     "trend": {
       "title": "Alarm trend",
-      "subtitle": "Last 7 days",
+      "subtitle": "Last 24 hours",
       "count": "{count} alarm(s)",
       "details": "Details"
     },
