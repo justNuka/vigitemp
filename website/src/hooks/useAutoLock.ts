@@ -40,7 +40,7 @@ export function useAutoLock() {
     try {
       await fetchJson<{ success: true }>("/api/auth/logout-auto", { method: "POST", credentials: "include" });
       markDisconnectReason("inactivity");
-      router.push("/login?reason=inactivity");
+      router.push({ pathname: "/login", query: { reason: "inactivity" } } as any);
     } catch (error) {
       console.error("Erreur lors du logout automatique:", error);
       router.push("/login");

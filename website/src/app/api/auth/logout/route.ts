@@ -19,6 +19,14 @@ export const POST = withLogging(async (req: NextRequest) => {
     path: "/",
   })
 
+  response.cookies.set("refresh-token", "", {
+    httpOnly: true,
+    secure: shouldUseSecureCookies(req),
+    sameSite: "lax",
+    maxAge: 0,
+    path: "/",
+  })
+
   if (user) {
     log.auth.logout(user.username, user.userId, ip, "Manual logout", {
       userProfile: user.profile,

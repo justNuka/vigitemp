@@ -21,7 +21,7 @@ export type AuthStateEventDetail = {
 export const API_ERROR_EVENT = "vigitemp:api-error"
 export const AUTH_STATE_EVENT = "vigitemp:auth-state"
 
-const DISCONNECTED_MESSAGE = "Session expirée. Reconnectez-vous pour continuer."
+const DISCONNECTED_MESSAGE = "Session expir?e. Reconnectez-vous pour continuer."
 
 let authDisconnected = false
 
@@ -66,6 +66,7 @@ export function setAuthDisconnected(disconnected: boolean, reason?: string) {
 
 const ALLOWED_WHEN_DISCONNECTED = new Set<string>([
   "/api/auth/login",
+  "/api/auth/refresh",
   "/api/auth/request-password-reset",
   "/api/auth/reset-password",
   "/api/auth/force-password-change",
@@ -156,6 +157,16 @@ function getBootId(): string | undefined {
   }
 }
 
+function shouldAttemptRefresh(pathname: string | undefined) {
+  if (typeof window === "undefined") return false
+  if (!pathname?.startsWith("/api/")) return false
+  if (pathname === "/api/auth/refresh") return false
+  if (pathname === "/api/auth/login") return false
+  if (pathname === "/api/auth/logout") return false
+  if (pathname === "/api/auth/logout-auto") return false
+  return true
+}
+
 export async function fetchJson<TResponse>(input: RequestInfo | URL, init?: RequestInit): Promise<TResponse> {
   const pathname = normalizePathname(input)
 
@@ -178,29 +189,61 @@ export async function fetchJson<TResponse>(input: RequestInfo | URL, init?: Requ
     throw new HttpError(DISCONNECTED_MESSAGE, 401, payload)
   }
 
-  const headers = new Headers(init?.headers)
-  const clientTrace = getClientTraceTag()
-  if (clientTrace && !headers.has("x-vigitemp-client-trace")) {
-    headers.set("x-vigitemp-client-trace", clientTrace)
+  const buildHeaders = () => {
+    const headers = new Headers(init?.headers)
+
+    const clientTrace = getClientTraceTag()
+    if (clientTrace && !headers.has("x-vigitemp-client-trace")) {
+      headers.set("x-vigitemp-client-trace", clientTrace)
+    }
+
+    const queryClientId = getQueryClientId()
+    if (queryClientId && !headers.has("x-vigitemp-query-client-id")) {
+      headers.set("x-vigitemp-query-client-id", queryClientId)
+    }
+
+    const bootId = getBootId()
+    if (bootId && !headers.has("x-vigitemp-boot-id")) {
+      headers.set("x-vigitemp-boot-id", bootId)
+    }
+
+    return headers
   }
 
-  const queryClientId = getQueryClientId()
-  if (queryClientId && !headers.has("x-vigitemp-query-client-id")) {
-    headers.set("x-vigitemp-query-client-id", queryClientId)
+  const doRequest = async () => {
+    const headers = buildHeaders()
+    return fetch(input, { ...init, headers })
   }
 
-  const bootId = getBootId()
-  if (bootId && !headers.has("x-vigitemp-boot-id")) {
-    headers.set("x-vigitemp-boot-id", bootId)
-  }
+  let res = await doRequest()
 
-  const res = await fetch(input, { ...init, headers })
+  if (res.status === 401 && shouldAttemptRefresh(pathname)) {
+    try {
+      const refreshRes = await fetch("/api/auth/refresh", {
+        method: "POST",
+        credentials: "include",
+      })
+
+      if (refreshRes.ok) {
+        setAuthDisconnected(false, "refresh_success")
+        res = await doRequest()
+      } else {
+        setAuthDisconnected(true, "unauthorized")
+      }
+    } catch {
+      setAuthDisconnected(true, "unauthorized")
+    }
+  }
 
   if (pathname === "/api/auth/login" && res.ok) {
     setAuthDisconnected(false, "login_success")
   }
   if ((pathname === "/api/auth/logout" || pathname === "/api/auth/logout-auto") && res.ok) {
     setAuthDisconnected(true, pathname === "/api/auth/logout-auto" ? "auto_logout" : "manual_logout")
+  }
+
+  if (res.ok && pathname?.startsWith("/api/") && authDisconnected) {
+    setAuthDisconnected(false, "api_ok")
   }
 
   const contentType = res.headers.get("content-type") || ""

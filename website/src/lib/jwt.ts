@@ -1,41 +1,68 @@
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "NsYXb<=^MA*CK[crZ_S=mXn|)5uLF]Tqn_*Q#15%7,D";
-const JWT_EXPIRES_IN = "7d"; // 7 jours
+
+export const ACCESS_TOKEN_EXPIRES_IN = "1h";
+export const REFRESH_TOKEN_EXPIRES_IN = "7d";
+export const ACCESS_COOKIE_MAX_AGE_SECONDS = 60 * 60; // 1h
+export const REFRESH_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 7; // 7j
 
 export interface JWTPayload {
   userId: number;
   username: string;
   profile: string;
   authorizations?: string[];
+  tokenType?: "access" | "refresh";
   iat?: number;
   exp?: number;
 }
 
-/**
- * Génère un token JWT pour l'utilisateur
- */
-export function generateToken(payload: Omit<JWTPayload, "iat" | "exp">): string {
-  return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
+export function generateAccessToken(payload: Omit<JWTPayload, "iat" | "exp" | "tokenType">): string {
+  return jwt.sign({ ...payload, tokenType: "access" }, JWT_SECRET, {
+    expiresIn: ACCESS_TOKEN_EXPIRES_IN,
   });
 }
 
-/**
- * Vérifie et décode un token JWT
- */
-export function verifyToken(token: string): JWTPayload | null {
+export function generateRefreshToken(payload: Omit<JWTPayload, "iat" | "exp" | "authorizations" | "tokenType">): string {
+  return jwt.sign({ ...payload, tokenType: "refresh" }, JWT_SECRET, {
+    expiresIn: REFRESH_TOKEN_EXPIRES_IN,
+  });
+}
+
+// Compat legacy
+export function generateToken(payload: Omit<JWTPayload, "iat" | "exp" | "tokenType">): string {
+  return generateAccessToken(payload);
+}
+
+export function verifyAccessToken(token: string): JWTPayload | null {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    if (decoded.tokenType && decoded.tokenType !== "access") return null;
     return decoded;
   } catch (error) {
-    console.error("JWT verification failed:", error);
+    return null;
+  }
+}
+
+export function verifyRefreshToken(token: string): JWTPayload | null {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    if (decoded.tokenType !== "refresh") return null;
+    return decoded;
+  } catch {
     return null;
   }
 }
 
 /**
- * Décode un token sans vérification (utile pour debug)
+ * V?rifie et d?code un token JWT (compat: access token)
+ */
+export function verifyToken(token: string): JWTPayload | null {
+  return verifyAccessToken(token);
+}
+
+/**
+ * D?code un token sans v?rification (utile debug)
  */
 export function decodeToken(token: string): JWTPayload | null {
   try {

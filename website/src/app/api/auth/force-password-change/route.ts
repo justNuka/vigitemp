@@ -8,7 +8,12 @@ import { prisma } from "@/lib/prisma"
 import { getPasswordRulesFromDb } from "@/lib/password-rules"
 import { validatePassword } from "@/lib/password-validation"
 import { checkPasswordHistory } from "@/lib/password-history"
-import { generateToken } from "@/lib/jwt"
+import {
+  ACCESS_COOKIE_MAX_AGE_SECONDS,
+  REFRESH_COOKIE_MAX_AGE_SECONDS,
+  generateAccessToken,
+  generateRefreshToken,
+} from "@/lib/jwt"
 import { log } from "@/lib/logger"
 import { shouldUseSecureCookies } from "@/lib/cookie-security"
 
@@ -137,7 +142,7 @@ export const POST = withLogging(
       })
 
       const authorizations: string[] = []
-      const authToken = generateToken({
+      const authToken = generateAccessToken({
         userId: user.Id_Utilisateur,
         username: user.Login || "user",
         profile: user.Profil_Utilisateur || "user",
@@ -153,7 +158,20 @@ export const POST = withLogging(
         httpOnly: true,
         secure: shouldUseSecureCookies(req),
         sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 7,
+        maxAge: ACCESS_COOKIE_MAX_AGE_SECONDS,
+        path: "/",
+      })
+
+      const refreshToken = generateRefreshToken({
+        userId: user.Id_Utilisateur,
+        username: user.Login || "user",
+        profile: user.Profil_Utilisateur || "user",
+      })
+      response.cookies.set("refresh-token", refreshToken, {
+        httpOnly: true,
+        secure: shouldUseSecureCookies(req),
+        sameSite: "lax",
+        maxAge: REFRESH_COOKIE_MAX_AGE_SECONDS,
         path: "/",
       })
 

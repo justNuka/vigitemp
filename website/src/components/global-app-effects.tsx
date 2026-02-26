@@ -20,7 +20,7 @@ import { markDisconnectReason } from "@/lib/auth-disconnect-marker"
 
 function isPublicRoute(pathname: string) {
   const normalized = stripLocalePrefix(pathname)
-  return normalized === "/login" || normalized === "/reset-password" || normalized === "/force-password-change"
+  return normalized === "/login" || normalized === "/connexion" || normalized === "/reset-password" || normalized === "/reinitialisation-mot-de-passe" || normalized === "/force-password-change" || normalized === "/changement-mot-de-passe-obligatoire"
 }
 
 export function GlobalAppEffects() {
@@ -130,8 +130,11 @@ export function GlobalAppEffects() {
         if (shouldShowSessionExpiredToast) {
           markDisconnectReason("inactivity")
         }
-        const loginTarget = shouldShowSessionExpiredToast ? "/login?reason=inactivity" : "/login"
-        router.push(loginTarget)
+        if (shouldShowSessionExpiredToast) {
+          router.push({ pathname: "/login", query: { reason: "inactivity" } } as any)
+        } else {
+          router.push("/login")
+        }
       }
     }
 

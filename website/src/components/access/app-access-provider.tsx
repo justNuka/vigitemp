@@ -11,7 +11,7 @@ import { hasAuthorizationCode, hasPermission, type AppPermission } from "@/lib/p
 
 function isPublicRoute(pathname: string) {
   const normalized = stripLocalePrefix(pathname || "");
-  return normalized === "/login" || normalized === "/reset-password" || normalized === "/force-password-change";
+  return normalized === "/login" || normalized === "/connexion" || normalized === "/reset-password" || normalized === "/reinitialisation-mot-de-passe" || normalized === "/force-password-change" || normalized === "/changement-mot-de-passe-obligatoire";
 }
 
 type AppAccessContextValue = {

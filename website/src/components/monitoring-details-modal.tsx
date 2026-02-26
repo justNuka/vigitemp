@@ -150,6 +150,7 @@ export default function MonitoringDetailsModal({
   const [activeTab, setActiveTab] = useState<"graph" | "table" | "audit">("graph");
   const [zoomMode, setZoomMode] = useState<"x" | "xy">("x");
   const [rangeGraphData, setRangeGraphData] = useState<MeasureData[]>([]);
+  const [zoomBounds, setZoomBounds] = useState<{ xMin?: number; xMax?: number; yMin?: number; yMax?: number } | null>(null);
   const [rangeGraphLoading, setRangeGraphLoading] = useState(false);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
@@ -474,12 +475,42 @@ export default function MonitoringDetailsModal({
     return () => controller.abort();
   }, [activeTab, auditLoaded, idLieu, isOpen, t]);
 
+  const captureZoomBounds = useCallback((chart: ChartJS<"line">) => {
+    const xScale = chart.scales?.x;
+    const yScale = chart.scales?.y;
+
+    const next = {
+      xMin: typeof xScale?.min === "number" ? xScale.min : undefined,
+      xMax: typeof xScale?.max === "number" ? xScale.max : undefined,
+      yMin: typeof yScale?.min === "number" ? yScale.min : undefined,
+      yMax: typeof yScale?.max === "number" ? yScale.max : undefined,
+    };
+
+    setZoomBounds((prev) => {
+      if (
+        prev?.xMin === next.xMin &&
+        prev?.xMax === next.xMax &&
+        prev?.yMin === next.yMin &&
+        prev?.yMax === next.yMax
+      ) {
+        return prev;
+      }
+      return next;
+    });
+  }, []);
+
   const resetChartZoom = useCallback(() => {
     const chart = chartRef.current;
     if (!chart) return;
     chart.resetZoom();
+    setZoomBounds(null);
     chart.update("none");
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setZoomBounds(null);
+  }, [idLieu, isOpen, rangeEnabled, rangeStart, rangeEnd]);
 
   const orderedHistoryData = useMemo(() => {
     if (!historyData.length) return historyData;
@@ -862,6 +893,7 @@ export default function MonitoringDetailsModal({
                         pan: {
                           enabled: true,
                           mode: zoomMode,
+                          onPanComplete: ({ chart }: { chart: ChartJS<"line"> }) => captureZoomBounds(chart),
                         },
                         zoom: {
                           drag: {
@@ -877,12 +909,15 @@ export default function MonitoringDetailsModal({
                             enabled: true,
                           },
                           mode: zoomMode,
+                          onZoomComplete: ({ chart }: { chart: ChartJS<"line"> }) => captureZoomBounds(chart),
                         },
                       } as any,
                     },
                     scales: {
                       x: {
                         display: true,
+                        min: zoomBounds?.xMin,
+                        max: zoomBounds?.xMax,
                         grid: {
                           display: true,
                           color: 'rgba(0, 0, 0, 0.05)',
@@ -897,8 +932,8 @@ export default function MonitoringDetailsModal({
                       },
                       y: {
                         display: true,
-                        min: yMin,
-                        max: yMax,
+                        min: zoomBounds?.yMin ?? yMin,
+                        max: zoomBounds?.yMax ?? yMax,
                         grid: {
                           display: true,
                           color: 'rgba(0, 0, 0, 0.1)',

@@ -4,7 +4,12 @@ import { z } from "zod"
 
 import { getRequestContext, withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
-import { generateToken } from "@/lib/jwt"
+import {
+  ACCESS_COOKIE_MAX_AGE_SECONDS,
+  REFRESH_COOKIE_MAX_AGE_SECONDS,
+  generateAccessToken,
+  generateRefreshToken,
+} from "@/lib/jwt"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { shouldUseSecureCookies } from "@/lib/cookie-security"
@@ -108,7 +113,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     // so default to an empty array here.
     const authorizations: string[] = []
 
-    const token = generateToken({
+    const token = generateAccessToken({
       userId: user.Id_Utilisateur,
       username: user.Login || "user",
       profile: user.Profil_Utilisateur || "user",
@@ -131,7 +136,19 @@ export const POST = withLogging(async (req: NextRequest) => {
       httpOnly: true,
       secure: shouldUseSecureCookies(req),
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: ACCESS_COOKIE_MAX_AGE_SECONDS,
+      path: "/",
+    })
+    const refreshToken = generateRefreshToken({
+      userId: user.Id_Utilisateur,
+      username: user.Login || "user",
+      profile: user.Profil_Utilisateur || "user",
+    })
+    response.cookies.set("refresh-token", refreshToken, {
+      httpOnly: true,
+      secure: shouldUseSecureCookies(req),
+      sameSite: "lax",
+      maxAge: REFRESH_COOKIE_MAX_AGE_SECONDS,
       path: "/",
     })
 

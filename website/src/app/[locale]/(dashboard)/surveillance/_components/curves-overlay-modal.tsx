@@ -251,7 +251,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
+      <DialogContent className="max-w-6xl h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Layers3 className="h-4 w-4" />
@@ -259,8 +259,8 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
-          <div className="rounded-md border p-3">
+        <div className="grid h-[calc(90vh-84px)] gap-4 lg:grid-cols-[280px_1fr] overflow-hidden">
+          <div className="rounded-md border p-3 overflow-hidden">
             <p className="text-sm font-medium mb-2">{t("overlay.locations")}</p>
             <ScrollArea className="h-80 pr-2">
               <div className="space-y-2">
@@ -294,7 +294,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
                 align="start"
                 locale={localeTag}
                 matchTriggerWidth={false}
-                popoverClassName="w-[760px]"
+                popoverClassName="w-[min(760px,calc(100vw-2rem))]"
                 onUpdate={({ range }) => {
                   if (!range.from) {
                     setDateRange(null)
@@ -318,7 +318,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
             </p>
           </div>
 
-          <div className="rounded-md border p-3 min-h-90">
+          <div className="rounded-md border p-3 h-full overflow-hidden flex flex-col">
             <div className="mb-3 flex justify-end gap-2">
               <Button variant="outline" size="sm" onClick={handleExportCsv} disabled={!canExport}>
                 <Download className="mr-2 h-4 w-4" />
@@ -330,7 +330,8 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
               </Button>
             </div>
             {chartPayload.datasets.length >= 2 && chartPayload.labels.length > 0 ? (
-              <Line
+              <div className="min-h-0 flex-1">
+                <Line
                 ref={chartRef}
                 data={chartPayload}
                 options={{
@@ -351,8 +352,9 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
                 }}
                 height={340}
               />
+              </div>
             ) : (
-              <div className="h-85 flex items-center justify-center text-sm text-muted-foreground">
+              <div className="min-h-0 flex-1 flex items-center justify-center text-sm text-muted-foreground">
                 {t("overlay.empty")}
               </div>
             )}
