@@ -415,7 +415,8 @@
       "tabs": {
         "general": "General",
         "metrology": "Metrology",
-        "mailing": "Mailing/Planning"
+        "mailing": "Mailing/Planning",
+        "planning": "Planning"
       },
       "submit": {
         "saving": "Saving..."
@@ -537,6 +538,58 @@
     },
     "telephony": {
       "unavailable_now": "This section is not yet available."
+    }
+  },
+  "lieux": {
+    "planning": {
+      "title": "Planning",
+      "saveFirst": "Save the location before configuring the planning.",
+      "noRules": "No planning rules configured.",
+      "addRule": "Add a rule",
+      "editRule": "Edit rule",
+      "deleteRule": "Delete",
+      "activeStatus": "Active planning — Rule",
+      "baseStatus": "Base setpoints",
+      "loading": "Loading...",
+      "priority": "Priority",
+      "consigne": "Setpoint",
+      "consigneSup": "Upper setpoint",
+      "consigneInf": "Lower setpoint",
+      "weekdays": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      },
+      "dialog": {
+        "titleCreate": "Add a planning rule",
+        "titleEdit": "Edit planning rule",
+        "labelJourDebut": "Start day",
+        "labelHeureDebut": "Start time",
+        "labelJourFin": "End day",
+        "labelHeureFin": "End time",
+        "labelConsigne": "Setpoint (optional)",
+        "labelConsigneSup": "Upper setpoint (optional)",
+        "labelConsigneInf": "Lower setpoint (optional)",
+        "labelPriorite": "Priority",
+        "labelActif": "Rule active",
+        "placeholderJour": "Select a day",
+        "placeholderNumeric": "Numeric value",
+        "saving": "Saving...",
+        "errorSave": "Error saving the rule.",
+        "days": {
+          "1": "Monday",
+          "2": "Tuesday",
+          "3": "Wednesday",
+          "4": "Thursday",
+          "5": "Friday",
+          "6": "Saturday",
+          "7": "Sunday"
+        }
+      }
     }
   },
   "modulesPage": {

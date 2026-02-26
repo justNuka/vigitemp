@@ -220,10 +220,33 @@ export const PATCH = withLogging(
 
       if (validated.EMT_Mode === "quart" || validated.EMT_Mode === "manuel") {
         lieuPatch.Tolerance_Surveillance_Sup = emt.toleranceSup
+        lieuPatch.Tolerance_Surveillance_Sup_Base = emt.toleranceSup ?? null
         lieuPatch.Tolerance_Surveillance_Inf = emt.toleranceInf
+        lieuPatch.Tolerance_Surveillance_Inf_Base = emt.toleranceInf ?? null
       } else if (validated.EMT_Mode === "sans-objet") {
         lieuPatch.Tolerance_Surveillance_Sup = (validated.Est_Consigne_Sup_Active ?? false) ? validated.Consigne_Sup : null
+        lieuPatch.Tolerance_Surveillance_Sup_Base = (validated.Est_Consigne_Sup_Active ?? false) ? (validated.Consigne_Sup ?? null) : null
         lieuPatch.Tolerance_Surveillance_Inf = (validated.Est_Consigne_Inf_Active ?? false) ? validated.Consigne_Inf : null
+        lieuPatch.Tolerance_Surveillance_Inf_Base = (validated.Est_Consigne_Inf_Active ?? false) ? (validated.Consigne_Inf ?? null) : null
+      } else {
+        // For non-EMT modes, mirror Tolerance_Surveillance_Sup/Inf to Base if they were explicitly sent
+        if (Object.prototype.hasOwnProperty.call(validated, "Tolerance_Surveillance_Sup")) {
+          lieuPatch.Tolerance_Surveillance_Sup_Base = validated.Tolerance_Surveillance_Sup ?? null
+        }
+        if (Object.prototype.hasOwnProperty.call(validated, "Tolerance_Surveillance_Inf")) {
+          lieuPatch.Tolerance_Surveillance_Inf_Base = validated.Tolerance_Surveillance_Inf ?? null
+        }
+      }
+
+      // Mirror consigne changes to Base columns
+      if (Object.prototype.hasOwnProperty.call(validated, "Consigne")) {
+        lieuPatch.Consigne_Base = validated.Consigne ?? null
+      }
+      if (Object.prototype.hasOwnProperty.call(validated, "Consigne_Sup")) {
+        lieuPatch.Consigne_Sup_Base = validated.Consigne_Sup ?? null
+      }
+      if (Object.prototype.hasOwnProperty.call(validated, "Consigne_Inf")) {
+        lieuPatch.Consigne_Inf_Base = validated.Consigne_Inf ?? null
       }
 
       if (Object.prototype.hasOwnProperty.call(validated, "EMT_Mode") || Object.prototype.hasOwnProperty.call(validated, "EMT_Valeur")) {
@@ -502,6 +525,68 @@ export const PATCH = withLogging(
           resourceId: lieuId,
           reason,
         })
+      }
+
+      // EMT cascade: recalculate tolerances for all active planning rules if EMT params changed
+      const emtFieldsChanged =
+        Object.prototype.hasOwnProperty.call(validated, "EMT_Mode") ||
+        Object.prototype.hasOwnProperty.call(validated, "EMT_Valeur") ||
+        Object.prototype.hasOwnProperty.call(validated, "Erreur_Justesse") ||
+        Object.prototype.hasOwnProperty.call(validated, "Incertitude") ||
+        Object.prototype.hasOwnProperty.call(validated, "Derive") ||
+        Object.prototype.hasOwnProperty.call(validated, "Corriger_Erreur_Justesse") ||
+        Object.prototype.hasOwnProperty.call(validated, "Prendre_En_Compte_Derive") ||
+        Object.prototype.hasOwnProperty.call(validated, "Est_Consigne_Sup_Active") ||
+        Object.prototype.hasOwnProperty.call(validated, "Est_Consigne_Inf_Active")
+
+      if (emtFieldsChanged) {
+        const planningRegles = await prisma.t_lieu_planning_regle.findMany({
+          where: { Id_Lieu: lieuId, Actif: true },
+        })
+        if (planningRegles.length > 0) {
+          // Reload updated lieu for current EMT params
+          const updatedLieu = await prisma.t_lieu.findUnique({
+            where: { Id_Lieu: lieuId },
+            select: {
+              EMT_Choix_Mode: true,
+              EMT: true,
+              Derniere_Erreur_Justesse: true,
+              Derniere_Incertitude: true,
+              Derive: true,
+              Est_Correction_Ej: true,
+              Est_Correction_derive: true,
+              Est_Consigne_Sup_Active: true,
+              Est_Consigne_Inf_Active: true,
+            },
+          })
+          if (updatedLieu) {
+            const emtMode = emtModeFromDb(updatedLieu.EMT_Choix_Mode)
+            await Promise.all(
+              planningRegles.map((regle) => {
+                const emt = computeEmt({
+                  mode: emtMode,
+                  emtValue: updatedLieu.EMT,
+                  consigneSup: regle.Consigne_Sup,
+                  consigneInf: regle.Consigne_Inf,
+                  isConsigneSupActive: updatedLieu.Est_Consigne_Sup_Active ?? false,
+                  isConsigneInfActive: updatedLieu.Est_Consigne_Inf_Active ?? false,
+                  incertitude: updatedLieu.Derniere_Incertitude,
+                  erreurJustesse: updatedLieu.Derniere_Erreur_Justesse,
+                  derive: updatedLieu.Derive,
+                  includeDeriveInUncertainty: updatedLieu.Est_Correction_derive ?? false,
+                  correctAccuracyError: updatedLieu.Est_Correction_Ej === 1,
+                })
+                return prisma.t_lieu_planning_regle.update({
+                  where: { Id_Regle: regle.Id_Regle },
+                  data: {
+                    Tolerance_Sup_Calc: emt.toleranceSup,
+                    Tolerance_Inf_Calc: emt.toleranceInf,
+                  },
+                })
+              }),
+            )
+          }
+        }
       }
 
       clearLocationCache(lieuId)

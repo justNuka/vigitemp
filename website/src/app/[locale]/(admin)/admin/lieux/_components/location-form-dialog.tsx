@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLicense } from "@/components/license/license-provider";
 import { isStandardOrExpert } from "@/lib/license-access";
 import { Check, X } from "lucide-react";
@@ -28,6 +28,7 @@ import { getDefaultLocationFormData } from "./location-form-defaults";
 import { LocationFormTabGeneral } from './location-form-tab-general';
 import { LocationFormTabMetrology } from './location-form-tab-metrology';
 import { LocationFormTabTelephony } from './location-form-tab-telephony';
+import { LocationFormTabPlanning } from './location-form-tab-planning';
 
 type LocationFormDialogProps = {
   open: boolean;
@@ -107,7 +108,7 @@ export function LocationFormDialog({
           <form onSubmit={handleSubmit} className="space-y-6 px-6 pb-6">
             <Tabs defaultValue="general" className="w-full">
               <TabsList
-                className={`grid w-full ${hasMetrologyTabs ? "grid-cols-3" : "grid-cols-1"} bg-[#26A5DA]/10 text-[#26A5DA] border border-[#26A5DA]/30`}
+                className={`grid w-full ${hasMetrologyTabs ? "grid-cols-4" : "grid-cols-2"} bg-[#26A5DA]/10 text-[#26A5DA] border border-[#26A5DA]/30`}
               >
                 <TabsTrigger
                   value="general"
@@ -131,6 +132,12 @@ export function LocationFormDialog({
                     {t('tabs.mailing')}
                   </TabsTrigger>
                 )}
+                <TabsTrigger
+                  value="planning"
+                  className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-sidebar-foreground hover:bg-[#26A5DA]/15"
+                >
+                  {t('tabs.planning')}
+                </TabsTrigger>
               </TabsList>
 
               <LocationFormTabGeneral
@@ -141,6 +148,11 @@ export function LocationFormDialog({
               />
               {hasMetrologyTabs && <LocationFormTabMetrology />}
               {hasMetrologyTabs && <LocationFormTabTelephony users={mailingUsers} />}
+              <TabsContent value="planning">
+                <LocationFormTabPlanning
+                  idLieu={resolvedForm.watch('Id_Lieu') ?? null}
+                />
+              </TabsContent>
             </Tabs>
 
             {hasChanges && (
