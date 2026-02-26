@@ -883,6 +883,13 @@
         "emtModeManuel": "Manuel",
         "emtModeUncertainties": "Incertitudes",
         "emtModeSansObjet": "Sans objet"
+      },
+      "deleteConfirm": {
+        "title": "Supprimer la règle",
+        "description": "Que faire des consignes après suppression ?",
+        "optionBase": "Restaurer les consignes de base",
+        "optionRegle": "Appliquer les consignes de cette règle comme nouvelles valeurs de base",
+        "ruleValues": "Consigne : {consigne}  |  Sup : {sup}  |  Inf : {inf}"
       }
     }
   },

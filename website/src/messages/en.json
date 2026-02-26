@@ -627,6 +627,13 @@
         "emtModeManuel": "Manual",
         "emtModeUncertainties": "Uncertainties",
         "emtModeSansObjet": "Not applicable"
+      },
+      "deleteConfirm": {
+        "title": "Delete rule",
+        "description": "What to do with the setpoints after deletion?",
+        "optionBase": "Restore base setpoints",
+        "optionRegle": "Apply this rule's setpoints as new permanent base values",
+        "ruleValues": "Setpoint: {consigne}  |  Sup: {sup}  |  Inf: {inf}"
       }
     }
   },
