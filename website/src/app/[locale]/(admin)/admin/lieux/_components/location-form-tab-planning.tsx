@@ -1,13 +1,25 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslations } from "next-intl"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { fetchJson, deleteJson } from "@/lib/http"
+import { fetchJson } from "@/lib/http"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
 import type { PlanningRegleResponse, LieuEmtParams } from "@/lib/planning-regle-schema"
 import { WeeklyPlanningView } from "./planning-weekly-view"
 import { PlanningRuleFormDialog } from "./planning-rule-form-dialog"
@@ -48,8 +60,11 @@ export function LocationFormTabPlanning({
   onEditRule,
 }: LocationFormTabPlanningProps) {
   const t = useTranslations("lieux.planning")
+  const tCommon = useTranslations("common")
   const queryClient = useQueryClient()
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [deleteConfirmRegle, setDeleteConfirmRegle] = useState<PlanningRegleResponse | null>(null)
+  const [retainMode, setRetainMode] = useState<'base' | 'regle'>('base')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editRegle, setEditRegle] = useState<PlanningRegleResponse | null>(null)
 
@@ -75,20 +90,22 @@ export function LocationFormTabPlanning({
     refetchInterval: 60_000,
   })
 
-  const handleDelete = useCallback(
-    async (regle: PlanningRegleResponse) => {
-      if (!idLieu) return
-      setDeletingId(regle.Id_Regle)
-      try {
-        await deleteJson<void>(`/api/lieux/${idLieu}/planning/${regle.Id_Regle}`)
-        await queryClient.invalidateQueries({ queryKey })
-        void queryClient.invalidateQueries({ queryKey: ["planning-preview", idLieu] })
-      } finally {
-        setDeletingId(null)
-      }
-    },
-    [idLieu, queryClient, queryKey],
-  )
+  const confirmDelete = async () => {
+    if (!deleteConfirmRegle || !idLieu) return
+    setDeletingId(deleteConfirmRegle.Id_Regle)
+    try {
+      await fetch(
+        `/api/lieux/${idLieu}/planning/${deleteConfirmRegle.Id_Regle}?retainMode=${retainMode}`,
+        { method: "DELETE" },
+      )
+      await queryClient.invalidateQueries({ queryKey })
+      void queryClient.invalidateQueries({ queryKey: ["planning-preview", idLieu] })
+    } finally {
+      setDeletingId(null)
+      setDeleteConfirmRegle(null)
+      setRetainMode("base")
+    }
+  }
 
   if (!idLieu) {
     return (
@@ -229,7 +246,7 @@ export function LocationFormTabPlanning({
                   size="icon"
                   variant="ghost"
                   className="h-7 w-7 text-destructive hover:text-destructive"
-                  onClick={() => void handleDelete(regle)}
+                  onClick={() => setDeleteConfirmRegle(regle)}
                   disabled={deletingId === regle.Id_Regle}
                   title={t("deleteRule")}
                 >
@@ -255,6 +272,60 @@ export function LocationFormTabPlanning({
           emtParams={emtParams}
         />
       )}
+
+      {/* Delete confirm dialog */}
+      <AlertDialog
+        open={deleteConfirmRegle !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteConfirmRegle(null)
+            setRetainMode("base")
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("deleteConfirm.title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("deleteConfirm.description")}</AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <RadioGroup
+            value={retainMode}
+            onValueChange={(v) => setRetainMode(v as "base" | "regle")}
+            className="space-y-3 py-2"
+          >
+            <div className="flex items-center gap-2">
+              <RadioGroupItem value="base" id="retain-base" />
+              <Label htmlFor="retain-base">{t("deleteConfirm.optionBase")}</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <RadioGroupItem value="regle" id="retain-regle" />
+              <div className="flex flex-col gap-0.5">
+                <Label htmlFor="retain-regle">{t("deleteConfirm.optionRegle")}</Label>
+                {deleteConfirmRegle && (
+                  <span className="text-xs text-muted-foreground">
+                    {t("deleteConfirm.ruleValues", {
+                      consigne: deleteConfirmRegle.Consigne ?? "—",
+                      sup: deleteConfirmRegle.Consigne_Sup ?? "—",
+                      inf: deleteConfirmRegle.Consigne_Inf ?? "—",
+                    })}
+                  </span>
+                )}
+              </div>
+            </div>
+          </RadioGroup>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void confirmDelete()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t("deleteRule")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
