@@ -322,6 +322,7 @@ export function LocationFormTabPlanning({
             <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => void confirmDelete()}
+              disabled={deletingId !== null}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {t("deleteRule")}
