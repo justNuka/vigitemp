@@ -296,7 +296,13 @@ export const PATCH = withLogging(
       const lieu = await prisma.$transaction(async (tx) => {
         const current = await tx.t_lieu.findUnique({
           where: { Id_Lieu: lieuId },
-          select: { Sonde_Numero_Serie: true, Lieu_Etat: true, Nom_Lieu: true },
+          select: {
+            Sonde_Numero_Serie: true,
+            Lieu_Etat: true,
+            Nom_Lieu: true,
+            Adresse_Sonde: true,
+            Est_Lieu_GSO: true,
+          },
         })
 
         previousLieuEtat = current?.Lieu_Etat ?? null
@@ -313,9 +319,16 @@ export const PATCH = withLogging(
           nextAdresseSonde = null
         } else if (hasSondeNumeroSerie) {
           if (Sonde_Numero_Serie) {
-            const isGso = isGsoType(Sonde_Numero_Serie)
+            const sondeInfo = await tx.t_sonde.findUnique({
+              where: { Sonde_Numero_Serie },
+              select: { Est_Sonde_GSO: true, Adresse_Sonde: true },
+            })
+
+            const isGso = sondeInfo?.Est_Sonde_GSO ?? isGsoType(Sonde_Numero_Serie)
             nextEstLieuGso = isGso
-            nextAdresseSonde = isGso ? extractAddressFromSerial(Sonde_Numero_Serie) : null
+            nextAdresseSonde = isGso
+              ? (sondeInfo?.Adresse_Sonde?.trim() || current?.Adresse_Sonde || extractAddressFromSerial(Sonde_Numero_Serie))
+              : null
           } else {
             nextEstLieuGso = false
             nextAdresseSonde = null
@@ -566,6 +579,7 @@ export const PATCH = withLogging(
                 const emt = computeEmt({
                   mode: emtMode,
                   emtValue: updatedLieu.EMT,
+                  consigne: regle.Consigne ?? null,
                   consigneSup: regle.Consigne_Sup,
                   consigneInf: regle.Consigne_Inf,
                   isConsigneSupActive: updatedLieu.Est_Consigne_Sup_Active ?? false,
