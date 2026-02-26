@@ -176,6 +176,8 @@ export const DELETE = withLogging(
       if (isNaN(idLieu)) return apiError(400, "invalid_id", "ID lieu invalide")
       if (isNaN(idRegle)) return apiError(400, "invalid_regle_id", "ID regle invalide")
 
+      const retainMode = req.nextUrl.searchParams.get("retainMode") ?? "base"
+
       // Load existing rule to verify ownership
       const existing = await prisma.t_lieu_planning_regle.findUnique({
         where: { Id_Regle: idRegle },
@@ -184,6 +186,28 @@ export const DELETE = withLogging(
       if (!existing) return apiError(404, "regle_not_found", "Regle introuvable")
       if ((existing as PrismaRegle).Id_Lieu !== idLieu) {
         return apiError(403, "regle_not_owned", "Cette regle n'appartient pas a ce lieu")
+      }
+
+      if (retainMode === "regle") {
+        const regle = existing as PrismaRegle
+        await prisma.t_lieu.update({
+          where: { Id_Lieu: idLieu },
+          data: {
+            Consigne: regle.Consigne,
+            Consigne_Sup: regle.Consigne_Sup,
+            Consigne_Inf: regle.Consigne_Inf,
+            Tolerance_Surveillance_Sup: regle.Tolerance_Sup_Calc,
+            Tolerance_Surveillance_Inf: regle.Tolerance_Inf_Calc,
+            Consigne_Base: regle.Consigne,
+            Consigne_Sup_Base: regle.Consigne_Sup,
+            Consigne_Inf_Base: regle.Consigne_Inf,
+            Tolerance_Surveillance_Sup_Base: regle.Tolerance_Sup_Calc,
+            Tolerance_Surveillance_Inf_Base: regle.Tolerance_Inf_Calc,
+            Planning_Actif: false,
+            Planning_Source_Regle_Id: null,
+            Planning_Derniere_Maj: new Date(),
+          },
+        })
       }
 
       await prisma.t_lieu_planning_regle.delete({
