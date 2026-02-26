@@ -60,6 +60,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import MonitoringDetailsModal from "@/components/monitoring-details-modal";
+import { useAppAccess } from "@/components/access/app-access-provider";
 import { formatDbDateTime } from "@/lib/date-display";
 
 type AlarmStatus = "active" | "acknowledged" | "resolved";
@@ -97,6 +98,8 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
   const locale = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { hasPermission } = useAppAccess();
+  const canAcknowledgeAlarm = hasPermission("ALARM_ACK_ACCESS");
   const [isRefreshing, startTransition] = useTransition();
   const [selectedAlarm, setSelectedAlarm] = useState<AlarmWithDetails | null>(null);
   const [localAlarms, setLocalAlarms] = useState<AlarmWithDetails[]>(alarms);
@@ -512,13 +515,13 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
                 <span className="sr-only">{alarm.comment}</span>
               </Button>
             )}
-            {alarm.status === "active" && (
+            {canAcknowledgeAlarm && alarm.status === "active" && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => {
                   const fullAlarm = alarms.find((item) => item.id === alarm.id);
-                  if (fullAlarm) setSelectedAlarm(fullAlarm);
+                  if (fullAlarm && canAcknowledgeAlarm) setSelectedAlarm(fullAlarm);
                 }}
                 data-testid={`button-acknowledge-${alarm.id}`}
                 className="border-amber-300 bg-amber-300 text-slate-900 hover:bg-amber-200 hover:text-slate-900 dark:border-warning dark:bg-warning/20 dark:text-warning-foreground dark:hover:bg-warning/30"
@@ -654,7 +657,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
               selectedRowId={selectedAlarm?.id}
               onRowClick={(row: AlarmRow) => {
                 const fullAlarm = localAlarms.find((item) => item.id === row.id);
-                if (fullAlarm) setSelectedAlarm(fullAlarm);
+                if (fullAlarm && canAcknowledgeAlarm) setSelectedAlarm(fullAlarm);
               }}
               toolbarRight={<div className="flex items-center gap-2">{filterButton}{refreshButton}</div>}
               maxHeight="calc(100dvh - 25rem)"
@@ -820,13 +823,15 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
             >
               {t("dialog.cancel")}
             </Button>
-            <Button
-              onClick={handleSubmit(handleDialogAcknowledge)}
-              disabled={acknowledgeMutation.isPending || isSubmitting}
-              data-testid="button-confirm-acknowledge"
-            >
-              {acknowledgeMutation.isPending ? t("dialog.confirming") : t("dialog.confirm")}
-            </Button>
+            {canAcknowledgeAlarm ? (
+              <Button
+                onClick={handleSubmit(handleDialogAcknowledge)}
+                disabled={acknowledgeMutation.isPending || isSubmitting}
+                data-testid="button-confirm-acknowledge"
+              >
+                {acknowledgeMutation.isPending ? t("dialog.confirming") : t("dialog.confirm")}
+              </Button>
+            ) : null}
           </DialogFooter>
         </DialogContent>
       </Dialog>

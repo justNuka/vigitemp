@@ -161,7 +161,9 @@ namespace Vigitemp_Serveur
 
                 var nowUtc = DateTime.UtcNow;
 
-                var forceLowImmediate = hasLow && ths.GetDatabase().hasActiveAcknowledgedAlarm(m_idLieu, "B");
+                var forceImmediateRetrigger = ths.GetDatabase().getLieuImmediateRetriggerFlag(m_idLieu);
+
+                var forceLowImmediate = hasLow && forceImmediateRetrigger;
                 if (forceLowImmediate)
                 {
                     AlarmStateEvaluator.ResetState("alarm-low", m_idLieu);
@@ -169,7 +171,7 @@ namespace Vigitemp_Serveur
                     _alarmStateByLieu[m_idLieu] = false;
                 }
 
-                var forceHighImmediate = hasHigh && ths.GetDatabase().hasActiveAcknowledgedAlarm(m_idLieu, "H");
+                var forceHighImmediate = hasHigh && forceImmediateRetrigger;
                 if (forceHighImmediate)
                 {
                     AlarmStateEvaluator.ResetState("alarm-high", m_idLieu);
@@ -238,6 +240,11 @@ namespace Vigitemp_Serveur
                 var noResponseActive = _noResponseStateByLieu.TryGetValue(m_idLieu, out var nrActive) && nrActive;
                 var overallAlarmActive = lowEval.IsActive || highEval.IsActive || noResponseActive;
 
+                if (forceImmediateRetrigger)
+                {
+                    ths.GetDatabase().setLieuImmediateRetriggerFlag(m_idLieu, false);
+                }
+
                 AlarmEvaluation preEvaluation;
                 var hasPreLow = settings.ConsigneInfPreAlarmeActive && settings.ConsigneInfPreAlarme.HasValue;
                 var hasPreHigh = settings.ConsigneSupPreAlarmeActive && settings.ConsigneSupPreAlarme.HasValue;
@@ -301,7 +308,7 @@ namespace Vigitemp_Serveur
                 }
 
                 var value = ok ? 0d : 1d;
-                var forceImmediate = !ok && ths.GetDatabase().hasActiveAcknowledgedAlarm(m_idLieu, "N");
+                var forceImmediate = !ok && ths.GetDatabase().getLieuImmediateRetriggerFlag(m_idLieu);
                 if (forceImmediate)
                 {
                     AlarmStateEvaluator.ResetState("alarm-nr", m_idLieu);
@@ -342,6 +349,11 @@ namespace Vigitemp_Serveur
                     (_lowAlarmStateByLieu.TryGetValue(m_idLieu, out var low) && low) ||
                     (_highAlarmStateByLieu.TryGetValue(m_idLieu, out var high) && high) ||
                     eval.IsActive;
+
+                if (ths.GetDatabase().getLieuImmediateRetriggerFlag(m_idLieu) && (overallAlarmActive || ok))
+                {
+                    ths.GetDatabase().setLieuImmediateRetriggerFlag(m_idLieu, false);
+                }
 
                 ApplyAlarmState(overallAlarmActive, preAlarmActive: false, valueForNotify: ok ? (double?)null : 0d);
 

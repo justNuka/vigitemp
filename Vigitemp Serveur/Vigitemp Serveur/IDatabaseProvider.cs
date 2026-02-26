@@ -24,6 +24,8 @@ namespace Vigitemp_Serveur
         bool setThresholdAlarmEnded(int idLieu);
         bool setThresholdAlarm(int idLieu, string sondeNumeroSerie, string type, double value, string unite, bool isActive);
         bool setLieuAlarmFlags(int idLieu, bool isPreAlarm, bool isAlarm);
+        bool getLieuImmediateRetriggerFlag(int idLieu);
+        bool setLieuImmediateRetriggerFlag(int idLieu, bool enabled);
         bool setLieuInfosModifiees(int idLieu, bool value);
         bool setNonResponseAlarm(int idLieu, string sondeNumeroSerie, bool isActive);
         AlarmSummary getActiveAlarmSummary(int idLieu);

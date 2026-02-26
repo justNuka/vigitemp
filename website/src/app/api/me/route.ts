@@ -4,6 +4,12 @@ import type { Authorization, CurrentUser } from "@/lib/types";
 import { withAuthLogging } from "@/lib/api-wrappers";
 import { getUserAvatarValue } from "@/lib/user-avatar-db";
 import { apiError, apiOk } from "@/lib/api-response";
+import {
+  isAdminDomainCode,
+  isMetrologieDomainCode,
+  isSurveillanceDomainCode,
+  isVigiLogDomainCode,
+} from "@/lib/authorization-domain";
 
 export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
   try {
@@ -31,17 +37,18 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
       });
 
       if (profil) {
-        authorizations = profil.t_liaison_profil_autorisation.map(
-          (liaison) => ({
+        authorizations = profil.t_liaison_profil_autorisation.map((liaison) => {
+          const code = liaison.t_autorisation.Code_Autorisation || "";
+          return {
             id: liaison.t_autorisation.Id_Autorisation,
-            code: liaison.t_autorisation.Code_Autorisation || "",
+            code,
             libelle: liaison.t_autorisation.Libelle_Autorisation || "",
-            admin: liaison.t_autorisation.A_Acces_Admin || false,
-            metrologie: liaison.t_autorisation.A_Acces_Metrologie || false,
-            surveillance: liaison.t_autorisation.A_Acces_Surveillance || false,
-            vigilog: liaison.t_autorisation.A_Acces_VigiLog || false,
-          })
-        );
+            admin: isAdminDomainCode(code),
+            metrologie: isMetrologieDomainCode(code),
+            surveillance: isSurveillanceDomainCode(code),
+            vigilog: isVigiLogDomainCode(code),
+          };
+        });
       }
     }
 
@@ -64,6 +71,38 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
 
     const avatarValue = await getUserAvatarValue(fullUser.Id_Utilisateur);
 
+    const [groupLinks, siteLinks, userSite] = await Promise.all([
+      prisma.t_liaison_utilisateur_groupe.findMany({
+        where: { Id_Utilisateur: fullUser.Id_Utilisateur },
+        include: { t_groupe: { select: { Id_Groupe: true, Nom_Groupe: true } } },
+        orderBy: { Id_Liaison_u_g: "asc" },
+      }),
+      prisma.t_liaison_utilisateur_site.findMany({
+        where: { Id_Utilisateur: fullUser.Id_Utilisateur },
+        include: { t_site: { select: { Id_Site: true, Libelle_Site: true } } },
+        orderBy: { Id_Liaison: "asc" },
+      }),
+      fullUser.Id_Site
+        ? prisma.t_site.findUnique({
+            where: { Id_Site: fullUser.Id_Site },
+            select: { Id_Site: true, Libelle_Site: true },
+          })
+        : Promise.resolve(null),
+    ]);
+
+    const linkedSites = siteLinks
+      .map((link) => link.t_site)
+      .filter((site): site is { Id_Site: number; Libelle_Site: string | null } => Boolean(site))
+      .map((site) => ({
+        id: site.Id_Site,
+        name: site.Libelle_Site || "",
+      }));
+
+    const mergedSites = [...linkedSites];
+    if (userSite && !mergedSites.some((site) => site.id === userSite.Id_Site)) {
+      mergedSites.unshift({ id: userSite.Id_Site, name: userSite.Libelle_Site || "" });
+    }
+
     const response: CurrentUser = {
       id: fullUser.Id_Utilisateur,
       Login: fullUser.Login || "",
@@ -81,6 +120,11 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
         passwordMaxAgeDays: cfr21PasswordMaxAge ? parseInt(cfr21PasswordMaxAge) : 90,
         nonReuseable: cfr21NonReuseablePasswords,
       },
+      groups: groupLinks
+        .map((link) => link.t_groupe)
+        .filter((group): group is { Id_Groupe: number; Nom_Groupe: string | null } => Boolean(group))
+        .map((group) => ({ id: group.Id_Groupe, name: group.Nom_Groupe || "" })),
+      sites: mergedSites,
     };
 
     return apiOk(response);

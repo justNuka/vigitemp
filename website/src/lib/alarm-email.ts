@@ -3,6 +3,7 @@ import { isEmailEnabled, sendEmail, type EmailAttachment } from "@/lib/email";
 import { log } from "@/lib/logger";
 import AlarmEventNotificationEmail from "../../emails/alarm-event-notification";
 import { PNG } from "pngjs";
+import { getGlobalAppLanguage, type AppLanguage } from "@/lib/app-language";
 
 export type AlarmEmailEventType = "triggered" | "ended" | "acknowledged";
 
@@ -40,6 +41,32 @@ async function isAlarmEmailNotificationEnabled() {
 
   if (!setting?.Valeur) return true;
   return setting.Valeur.toLowerCase() !== "false" && setting.Valeur !== "0";
+}
+
+
+function parseBooleanSetting(value: string | null | undefined, fallback = true) {
+  if (value == null || value === "") return fallback;
+  const normalized = value.trim().toLowerCase();
+  if (["false", "0", "off", "no"].includes(normalized)) return false;
+  if (["true", "1", "on", "yes"].includes(normalized)) return true;
+  return fallback;
+}
+
+async function isAlarmEventTypeEnabled(eventType: AlarmEmailEventType) {
+  if (eventType === "triggered") return true;
+
+  const motCle = eventType === "acknowledged" ? "alarm_email_acknowledged" : "alarm_email_ended";
+  const setting = await prisma.t_parametre.findFirst({
+    where: {
+      OR: [
+        { Section: "notifications", Mot_Cle: motCle },
+        { Section: "NOTIFICATIONS", Mot_Cle: motCle.toUpperCase() },
+      ],
+    },
+    select: { Valeur: true },
+  });
+
+  return parseBooleanSetting(setting?.Valeur, true);
 }
 
 async function getAlarmEmailRecipients(idLieu?: number | null) {
@@ -107,26 +134,26 @@ async function getAlarmEmailRecipients(idLieu?: number | null) {
   };
 }
 
-function formatDateTime(value?: Date | null): string | undefined {
+function formatDateTime(value: Date | null | undefined, locale: AppLanguage): string | undefined {
   if (!value) return undefined;
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "fr-FR", {
     dateStyle: "short",
     timeStyle: "medium",
   }).format(value);
 }
 
-export function mapAlarmTypeLabel(type?: string | null): string {
+export function mapAlarmTypeLabel(type: string | null | undefined, locale: AppLanguage): string {
   switch ((type ?? "").toUpperCase()) {
     case "H":
-      return "ALARME HAUTE";
+      return locale === "en" ? "HIGH ALARM" : "ALARME HAUTE";
     case "B":
-      return "ALARME BASSE";
+      return locale === "en" ? "LOW ALARM" : "ALARME BASSE";
     case "N":
-      return "NON REPONSE";
+      return locale === "en" ? "NO RESPONSE" : "NON REPONSE";
     case "T":
-      return "ALARME TERMINEE";
+      return locale === "en" ? "ENDED ALARM" : "ALARME TERMINEE";
     default:
-      return "AUTRE";
+      return locale === "en" ? "OTHER" : "AUTRE";
   }
 }
 
@@ -296,7 +323,7 @@ async function buildAlarmChartInlineAttachment(input: {
   });
 
   const points = rows.map((row) => ({
-    xLabel: formatDateTime(row.Date_Heure_Mesure) ?? "",
+    xLabel: formatDateTime(row.Date_Heure_Mesure, "fr") ?? "",
     value: row.Valeur != null ? Number(row.Valeur) : null,
   }));
 
@@ -333,14 +360,20 @@ async function buildAlarmChartInlineAttachment(input: {
   }
 }
 
-function buildSubject(eventType: AlarmEmailEventType, lieu: string) {
+function buildSubject(eventType: AlarmEmailEventType, lieu: string, locale: AppLanguage) {
   switch (eventType) {
     case "triggered":
-      return `[VIGITEMP] ALARME DECLENCHEE - ${lieu}`;
+      return locale === "en"
+        ? `[VIGITEMP] ALARM TRIGGERED - ${lieu}`
+        : `[VIGITEMP] ALARME DECLENCHEE - ${lieu}`;
     case "ended":
-      return `[VIGITEMP] ALARME TERMINEE - ${lieu}`;
+      return locale === "en"
+        ? `[VIGITEMP] ALARM ENDED - ${lieu}`
+        : `[VIGITEMP] ALARME TERMINEE - ${lieu}`;
     case "acknowledged":
-      return `[VIGITEMP] ALARME ACQUITTEE - ${lieu}`;
+      return locale === "en"
+        ? `[VIGITEMP] ALARM ACKNOWLEDGED - ${lieu}`
+        : `[VIGITEMP] ALARME ACQUITTEE - ${lieu}`;
   }
 }
 
@@ -348,6 +381,11 @@ export async function sendAlarmEventEmails(input: SendAlarmEventEmailInput) {
   const alarmEmailEnabled = await isAlarmEmailNotificationEnabled();
   if (!alarmEmailEnabled) {
     return { attempted: 0, sent: 0, skipped: "notifications_disabled" as const };
+  }
+
+  const eventEnabled = await isAlarmEventTypeEnabled(input.eventType);
+  if (!eventEnabled) {
+    return { attempted: 0, sent: 0, skipped: "event_type_disabled" as const };
   }
 
   const recipientsState = await getAlarmEmailRecipients(input.idLieu);
@@ -374,8 +412,9 @@ export async function sendAlarmEventEmails(input: SendAlarmEventEmailInput) {
         })
       : undefined;
 
-  const alarmTypeLabel = mapAlarmTypeLabel(input.alarmTypeCode);
-  const subject = buildSubject(input.eventType, input.lieu);
+  const locale = await getGlobalAppLanguage();
+  const alarmTypeLabel = mapAlarmTypeLabel(input.alarmTypeCode, locale);
+  const subject = buildSubject(input.eventType, input.lieu, locale);
 
   const results = await Promise.all(
     recipients.map(async (to) => {
@@ -390,9 +429,10 @@ export async function sendAlarmEventEmails(input: SendAlarmEventEmailInput) {
             lieu: input.lieu,
             sonde: input.sonde ?? undefined,
             alarmType: alarmTypeLabel,
-            triggeredAt: formatDateTime(input.triggeredAt),
-            endedAt: formatDateTime(input.endedAt),
-            acknowledgedAt: formatDateTime(input.acknowledgedAt),
+            locale,
+            triggeredAt: formatDateTime(input.triggeredAt, locale),
+            endedAt: formatDateTime(input.endedAt, locale),
+            acknowledgedAt: formatDateTime(input.acknowledgedAt, locale),
             acknowledgedBy: input.acknowledgedBy ?? undefined,
             lastValue: input.lastValue ?? undefined,
             details: input.details ?? undefined,

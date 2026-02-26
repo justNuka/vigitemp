@@ -254,8 +254,8 @@ export default function AdminDashboard() {
           title={locale === "fr" ? "Alarmes" : "Alarms"}
           description={
             locale === "fr"
-              ? `En cours: ${alarmsInProgressTotal} ? En attente d'acquittement: ${alarmsPendingAckTotal}`
-              : `In progress: ${alarmsInProgressTotal} ? Pending acknowledgement: ${alarmsPendingAckTotal}`
+              ? `En cours: ${alarmsInProgressTotal} • En attente d'acquittement: ${alarmsPendingAckTotal}`
+              : `In progress: ${alarmsInProgressTotal} • Pending acknowledgement: ${alarmsPendingAckTotal}`
           }
           value={String(alarmsInProgressTotal)}
           helper={

@@ -35,6 +35,7 @@ import {
 import { useAppTimezone } from "@/components/timezone-provider";
 import { AlarmAcknowledgeDialog } from "@/components/alarm-acknowledge-dialog";
 import { markAlarmAcknowledgedInPaginatedSensorsCache } from "@/lib/surveillance-cache";
+import { useAppAccess } from "@/components/access/app-access-provider";
 
 interface DashboardClientProps {
   criticalSensors: SensorWithLocation[];
@@ -94,6 +95,8 @@ export function DashboardClient({
   };
 
   const queryClient = useQueryClient();
+  const { hasPermission } = useAppAccess();
+  const canAcknowledgeAlarm = hasPermission("ALARM_ACK_ACCESS");
   const [localAlarms, setLocalAlarms] = useState(activeAlarms);
   const [activeCount, setActiveCount] = useState(totalActiveAlarms);
   const [selectedAlarm, setSelectedAlarm] = useState<AlarmWithDetails | null>(null);
@@ -259,14 +262,14 @@ export function DashboardClient({
                 <span className="sr-only">{alarm.comment}</span>
               </Button>
             )}
-            {alarm.status === "active" && (
+            {canAcknowledgeAlarm && alarm.status === "active" && (
               <Button
                 variant="outline"
                 size="sm"
                 className="border-amber-300 bg-amber-300 text-slate-900 hover:bg-amber-200 hover:text-slate-900 dark:border-warning dark:bg-warning/20 dark:text-warning-foreground dark:hover:bg-warning/30"
                 onClick={() => {
                   const fullAlarm = displayedAlarms.find((item) => item.id === alarm.id);
-                  if (fullAlarm) setSelectedAlarm(fullAlarm);
+                  if (fullAlarm && canAcknowledgeAlarm) setSelectedAlarm(fullAlarm);
                 }}
                 data-testid={`button-acknowledge-${alarm.id}`}
               >
@@ -325,7 +328,7 @@ export function DashboardClient({
                 selectedRowId={selectedAlarm?.id}
                 onRowClick={(row: AlarmRow) => {
                   const fullAlarm = displayedAlarms.find((item) => item.id === row.id);
-                  if (fullAlarm) setSelectedAlarm(fullAlarm);
+                  if (fullAlarm && canAcknowledgeAlarm) setSelectedAlarm(fullAlarm);
                 }}
                 showSearch={false}
                 showPagination={false}
@@ -378,7 +381,7 @@ export function DashboardClient({
       </div>
 
       <AlarmAcknowledgeDialog
-        open={!!selectedAlarm}
+        open={canAcknowledgeAlarm && !!selectedAlarm}
         alarm={
           selectedAlarm
             ? {

@@ -118,10 +118,6 @@ model t_autorisation {
   Code_Autorisation             String?                         @db.VarChar(50)
   Libelle_Autorisation          String?                         @db.VarChar(50)
   Commentaire                   String?                         @db.VarChar(200)
-  A_Acces_Admin                 Boolean?                        @default(false)
-  A_Acces_Metrologie            Boolean?                        @default(false)
-  A_Acces_Surveillance          Boolean?                        @default(false)
-  A_Acces_VigiLog               Boolean?                        @default(false)
   t_liaison_profil_autorisation t_liaison_profil_autorisation[]
 
   @@index([Code_Autorisation], map: "IDX_Code_Autorisation")
@@ -406,6 +402,7 @@ model t_lieu {
   Planning_Actif                            Boolean                 @default(false)
   Planning_Source_Regle_Id                  Int?
   Planning_Derniere_Maj                     DateTime?               @db.DateTime(0)
+  Est_Redeclenchement_Immediat              Boolean                 @default(false)
   t_alarme                                  t_alarme[]              @relation("lieu_alarme")
   t_alarme_histo                            t_alarme_histo[]        @relation("lieu_alarme_histo")
   t_groupe1                                 t_groupe?               @relation("groupe1", fields: [Id_Groupe1], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE1_LIEU")

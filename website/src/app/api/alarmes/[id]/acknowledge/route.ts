@@ -3,27 +3,34 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withAnyAuthorizationLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { revalidateTag } from "next/cache"
 import { sendAlarmEventEmails } from "@/lib/alarm-email"
+import { getPermissionAliases } from "@/lib/permissions"
 
 const acknowledgeSchema = z.object({
   comment: z.string().optional(),
 })
 
-export const POST = withAuthLogging(
+export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_ACCESS"),
   async (req: NextRequest, ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+    let alarmId = 0
+    let ackStep = "init"
     try {
       const { ip } = getRequestContext(req)
 
+      ackStep = "parse_params"
       const { id } = await params
-      const alarmId = parseInt(id, 10)
+      alarmId = parseInt(id, 10)
+      ackStep = "parse_body"
       const body = await req.json()
       const { comment } = acknowledgeSchema.parse(body)
       const acknowledgedAt = new Date()
 
+      ackStep = "transaction"
       const alarm = await prisma.$transaction(async (tx) => {
+        ackStep = "tx_find_alarm"
         const current = await tx.t_alarme.findUnique({
           where: { Id_Alarme: alarmId },
           include: {
@@ -44,74 +51,88 @@ export const POST = withAuthLogging(
 
         if (!current) return null
 
-        if (current.t_lieu?.Id_Lieu) {
-          const lieuId = current.t_lieu.Id_Lieu
-
-          const [nextActiveAlarm, remainingEndedUnack, lieu] = await Promise.all([
-            tx.t_alarme.findFirst({
-              where: {
-                Id_Lieu: lieuId,
-                Date_Heure_Fin: null,
-                Est_Alarme_Vrai: true,
-                Est_Acquittee: false,
-              },
-              orderBy: { Date_Heure_Debut: "desc" },
-              select: { Id_Alarme: true },
-            }),
-            tx.t_alarme.count({
-              where: {
-                Id_Lieu: lieuId,
-                Date_Heure_Fin: { not: null },
-                Est_Acquittee: false,
-              },
-            }),
-            tx.t_lieu.findUnique({
-              where: { Id_Lieu: lieuId },
-              select: { Est_Lieu_En_Pre_Alarme: true },
-            }),
-          ])
-
-          const updateData: {
-            Est_Lieu_Alarme_Terminee_Non_Acquittee: number
-            Est_Lieu_En_Alarme: number
-            Est_Lieu_En_Pre_Alarme?: number
-            Id_Alarme: number
-          } = {
-            Est_Lieu_Alarme_Terminee_Non_Acquittee: remainingEndedUnack > 0 ? 1 : 0,
-            Est_Lieu_En_Alarme: nextActiveAlarm ? 1 : 0,
-            Id_Alarme: nextActiveAlarm?.Id_Alarme ?? 0,
-          }
-
-          if (!nextActiveAlarm) {
-            updateData.Est_Lieu_En_Pre_Alarme = lieu?.Est_Lieu_En_Pre_Alarme ?? 0
-          }
-
-          await tx.t_lieu.update({
-            where: { Id_Lieu: lieuId },
-            data: updateData,
-          })
-        }
+        const lieuId = current.t_lieu?.Id_Lieu ?? null
 
         // Supprime d'abord les notifications liees pour eviter les conflits FK,
         // puis supprime l'alarme (le trigger DB peut alimenter t_alarme_histo).
+        ackStep = "tx_delete_notifications"
         await tx.t_notification.deleteMany({
           where: { Id_Alarme: alarmId },
         })
 
+        ackStep = "tx_delete_alarm"
         await tx.t_alarme.delete({
           where: { Id_Alarme: alarmId },
         })
 
-        // Certains clients ont des triggers/procedures qui bloquent les UPDATE directs
-        // sur t_alarme (MySQL 1442). On force donc l'etat acquitte dans l'historique.
-        await tx.t_alarme_histo.updateMany({
-          where: { Id_Alarme: alarmId },
-          data: {
-            Est_Acquittee: true,
-            Est_Tel_Acquittee: true,
-            Date_Heure_Acquittement: acknowledgedAt,
-          },
-        })
+        if (lieuId) {
+          ackStep = "tx_set_skip_lieu_alarm_on"
+          await tx.$executeRawUnsafe("SET @SKIP_LIEU_ALARM_LOGIC = 1")
+          try {
+            ackStep = "tx_recompute_lieu_state"
+            const [nextActiveAlarm, remainingEndedUnack, lieu] = await Promise.all([
+              tx.t_alarme.findFirst({
+                where: {
+                  Id_Lieu: lieuId,
+                  Date_Heure_Fin: null,
+                  Est_Alarme_Vrai: true,
+                  Est_Acquittee: false,
+                },
+                orderBy: { Date_Heure_Debut: "desc" },
+                select: { Id_Alarme: true },
+              }),
+              tx.t_alarme.count({
+                where: {
+                  Id_Lieu: lieuId,
+                  Date_Heure_Fin: { not: null },
+                  Est_Acquittee: false,
+                },
+              }),
+              tx.t_lieu.findUnique({
+                where: { Id_Lieu: lieuId },
+                select: { Est_Lieu_En_Pre_Alarme: true },
+              }),
+            ])
+
+            const updateData: {
+              Est_Lieu_Alarme_Terminee_Non_Acquittee: number
+              Est_Lieu_En_Alarme: number
+              Est_Lieu_En_Pre_Alarme?: number
+              Est_Lieu_Alarme_Terminee_Non_Acquittee_T1?: number
+              Date_Heure_Dernier_Acquittement_En_Cours?: Date
+              Id_Alarme: number
+            } = {
+              Est_Lieu_Alarme_Terminee_Non_Acquittee: remainingEndedUnack > 0 ? 1 : 0,
+              Est_Lieu_En_Alarme: nextActiveAlarm ? 1 : 0,
+              Id_Alarme: nextActiveAlarm?.Id_Alarme ?? 0,
+            }
+
+            if (current.Date_Heure_Fin === null) {
+              updateData.Date_Heure_Dernier_Acquittement_En_Cours = acknowledgedAt
+            } else if (lieu?.Est_Lieu_En_Pre_Alarme === 1) {
+              updateData.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 = 0
+            }
+
+            if (!nextActiveAlarm) {
+              updateData.Est_Lieu_En_Pre_Alarme = lieu?.Est_Lieu_En_Pre_Alarme ?? 0
+            }
+
+            ackStep = "tx_update_lieu"
+            await tx.t_lieu.update({
+              where: { Id_Lieu: lieuId },
+              data: updateData,
+            })
+
+            ackStep = "tx_set_immediate_retrigger_flag"
+            await tx.$executeRawUnsafe(
+              "UPDATE t_lieu SET Est_Redeclenchement_Immediat = 1 WHERE Id_Lieu = ?",
+              lieuId,
+            )
+          } finally {
+            ackStep = "tx_set_skip_lieu_alarm_off"
+            await tx.$executeRawUnsafe("SET @SKIP_LIEU_ALARM_LOGIC = NULL")
+          }
+        }
 
         return current
       })
@@ -120,6 +141,24 @@ export const POST = withAuthLogging(
         return apiError(404, "alarm_not_found", "Alarm not found")
       }
 
+      ackStep = "post_update_histo"
+      try {
+        await prisma.t_alarme_histo.updateMany({
+          where: { Id_Alarme: alarmId },
+          data: {
+            Est_Acquittee: true,
+            Est_Tel_Acquittee: true,
+            Date_Heure_Acquittement: acknowledgedAt,
+          },
+        })
+      } catch (histoError) {
+        log.warn("ALARM_ACK", "Post-delete history acknowledge update failed", {
+          alarmId,
+          error: histoError instanceof Error ? histoError.message : String(histoError),
+        })
+      }
+
+      ackStep = "audit_ack"
       log.alarm.acknowledge(
         alarm.Id_Alarme,
         alarm.t_lieu?.Nom_Lieu || "Unknown",
@@ -131,6 +170,7 @@ export const POST = withAuthLogging(
         comment || "Alarme acquittee",
       )
 
+      ackStep = "send_mail"
       try {
         const defaultUrl = `/${"fr"}/alarmes`
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
@@ -164,6 +204,7 @@ export const POST = withAuthLogging(
         })
       }
 
+      ackStep = "revalidate"
       revalidateTag("alarms-data", "default")
       revalidateTag("alarms-stats", "default")
       revalidateTag("dashboard-active-alarms", "default")
@@ -181,7 +222,15 @@ export const POST = withAuthLogging(
         return apiError(400, "invalid_input", "Invalid input")
       }
 
-      console.error("Acknowledge alarm error:", error)
+      const err = error as any
+      const errCode = err?.code || err?.cause?.code || err?.cause?.originalCode || "unknown"
+      const errMessage = err?.message || err?.cause?.message || "unknown"
+      log.error("ALARM_ACK", "Acknowledge alarm failed", {
+        alarmId,
+        errorCode: String(errCode),
+        errorMessage: String(errMessage),
+        step: ackStep,
+      })
       return apiError(500, "alarm_ack_failed", "Failed to acknowledge alarm")
     }
   },

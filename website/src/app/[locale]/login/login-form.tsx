@@ -18,7 +18,9 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import { getAgentInfo, setAgentSecret, setAgentSession } from "@/lib/agent-session";
-import { HttpError, postJson } from "@/lib/http";
+import { getJson, HttpError, postJson } from "@/lib/http";
+import type { CurrentUser } from "@/lib/types";
+import { hasPermission } from "@/lib/permissions";
 import { clearDisconnectReason, consumeDisconnectReason } from "@/lib/auth-disconnect-marker";
 import { LoginCredentialsForm } from "./_components/login-credentials-form";
 import { ForgotPasswordDialog } from "./_components/forgot-password-dialog";
@@ -66,12 +68,6 @@ export function LoginForm() {
       const canShow = consumeDisconnectReason("inactivity");
       setShowInactivityMessage(canShow);
 
-      if (!canShow) {
-        const params = new URLSearchParams(searchParams.toString());
-        params.delete("reason");
-        const query = params.toString();
-        router.replace(query ? `/login?${query}` : "/login");
-      }
     } else {
       setShowInactivityMessage(false);
     }
@@ -81,7 +77,7 @@ export function LoginForm() {
         description: t("toasts.password_changed.description"),
       });
     }
-  }, [passwordChanged, reason, router, searchParams, t]);
+  }, [passwordChanged, reason, t]);
 
   useEffect(() => {
     if (!showInactivityMessage) return;
@@ -182,7 +178,8 @@ export function LoginForm() {
         // Agent not installed/running: ignore
       }
 
-      const getRedirectTarget = () => {
+      const getRedirectTarget = (userCanAccessDashboard: boolean) => {
+        if (!userCanAccessDashboard) return "/surveillance";
         if (!fromParam) return "/";
         const trimmed = fromParam.trim();
         if (!trimmed.startsWith("/")) return "/";
@@ -190,7 +187,15 @@ export function LoginForm() {
         return trimmed;
       };
 
-      router.push(getRedirectTarget());
+      let canAccessDashboard = true;
+      try {
+        const me = await getJson<CurrentUser>("/api/me");
+        canAccessDashboard = hasPermission(me, "DASHBOARD_USER_ACCESS");
+      } catch {
+        // fallback on default redirect
+      }
+
+      router.push(getRedirectTarget(canAccessDashboard));
     },
     onError: (error: Error) => {
       if (error.message !== "password_change_required") {

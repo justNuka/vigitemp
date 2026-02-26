@@ -5,6 +5,12 @@ import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
 import { withAuthorizationLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import {
+  isAdminDomainCode,
+  isMetrologieDomainCode,
+  isSurveillanceDomainCode,
+  isVigiLogDomainCode,
+} from "@/lib/authorization-domain"
 
 const updateProfileSchema = z.object({
   name: z.string().min(1, "Le nom du profil est requis").optional(),
@@ -56,10 +62,10 @@ export const GET = withAuthorizationLogging(
           code: liaison.t_autorisation.Code_Autorisation,
           label: liaison.t_autorisation.Libelle_Autorisation,
           description: liaison.t_autorisation.Commentaire,
-          fenAdmin: liaison.t_autorisation.A_Acces_Admin,
-          fenMetrologie: liaison.t_autorisation.A_Acces_Metrologie,
-          fenSurveillance: liaison.t_autorisation.A_Acces_Surveillance,
-          fenVigiLog: liaison.t_autorisation.A_Acces_VigiLog,
+          fenAdmin: isAdminDomainCode(liaison.t_autorisation.Code_Autorisation),
+          fenMetrologie: isMetrologieDomainCode(liaison.t_autorisation.Code_Autorisation),
+          fenSurveillance: isSurveillanceDomainCode(liaison.t_autorisation.Code_Autorisation),
+          fenVigiLog: isVigiLogDomainCode(liaison.t_autorisation.Code_Autorisation),
         })),
       })
     } catch (error) {

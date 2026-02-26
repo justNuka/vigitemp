@@ -2,6 +2,16 @@
  * Types pour l'authentification et les autorisations
  */
 
+export interface UserGroupInfo {
+  id: number;
+  name: string;
+}
+
+export interface UserSiteInfo {
+  id: number;
+  name: string;
+}
+
 export interface Authorization {
   id: number;
   code: string;
@@ -31,5 +41,7 @@ export interface CurrentUser {
   Avatar_Utilisateur?: string | null;
   authorizations: Authorization[];
   cfr21: CFR21Config;
+  groups?: UserGroupInfo[];
+  sites?: UserSiteInfo[];
 }
 

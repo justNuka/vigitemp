@@ -1218,7 +1218,8 @@
         "dashboard_refresh": "Refresh interval (s)",
         "surveillance_refresh": "Surveillance refresh interval (s)",
         "show_null_non_response": "Show no-response values (null)",
-        "etalonnage_warning_days": "Calibration validity alert (days)"
+        "etalonnage_warning_days": "Calibration validity alert (days)",
+        "global_language": "Global email language"
       },
       "refresh_options": {
         "5": "5 seconds",
@@ -1228,6 +1229,10 @@
         "manual": "Manual (disabled)",
         "custom": "{seconds} seconds",
         "15": "Every 15 seconds"
+      },
+      "language_options": {
+        "fr": "French",
+        "en": "English"
       },
       "warning_days_options": {
         "7": "7 days",
@@ -1267,9 +1272,11 @@
       "title": "Notifications",
       "description": "Manage notification preferences",
       "email_toggle": "Enable alarm emails",
-      "recipients_label": "Alarm email recipients",
-      "recipients_placeholder": "e.g. support@mc2-info.com\nadmin@client.com",
-      "recipients_helper": "One email per line, or separated by comma/semicolon.",
+      "acknowledged_toggle": "Receive alarm acknowledgement emails",
+      "ended_toggle": "Receive ended alarm emails",
+      "cc_recipients_label": "CC emails (all system emails)",
+      "cc_recipients_placeholder": "e.g. support@mc2-info.com\nadmin@client.com",
+      "cc_recipients_helper": "One email per line, or separated by comma/semicolon.",
       "save_button": "Save"
     },
     "password_policy": {

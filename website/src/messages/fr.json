@@ -151,7 +151,7 @@
       "links": {
         "surveillance": {
           "title": "Surveillance",
-          "description": "Consulter les lieux, les mesures et l'etat en temps reel."
+          "description": "Consulter les lieux, les mesures et l'état en temps reel."
         },
         "alarmes": {
           "title": "Alarmes",
@@ -159,7 +159,7 @@
         },
         "lieux": {
           "title": "Lieux",
-          "description": "Gerer les lieux surveilles et leurs parametres."
+          "description": "Gérer les lieux surveillés et leurs parametres."
         },
         "sondes": {
           "title": "Sondes",
@@ -167,7 +167,7 @@
         },
         "utilisateurs": {
           "title": "Utilisateurs",
-          "description": "Gerer les comptes et les profils."
+          "description": "Gérer les comptes et les profils."
         },
         "parametres": {
           "title": "Parametres",
@@ -284,16 +284,30 @@
         "dashboard_refresh": "Intervalle de rafraîchissement (s)",
         "surveillance_refresh": "Rafraichissement surveillance (s)",
         "show_null_non_response": "Afficher les non-reponses (valeur null)",
-        "etalonnage_warning_days": "Alerte validite etalonnage (jours)"
+        "etalonnage_warning_days": "Alerte validite etalonnage (jours)",
+        "global_language": "Langue globale des emails"
       },
       "refresh_options": {
         "5": "5 secondes",
         "10": "10 secondes",
+        "15": "15 secondes",
         "30": "30 secondes",
         "60": "1 minute",
         "manual": "Manuel (désactivé)",
-        "custom": "{seconds} secondes",
-        "15": "Toutes les 15 secondes"
+        "custom": "{seconds} secondes"
+      },
+      "language_options": {
+        "fr": "Francais",
+        "en": "English"
+      },
+      "warning_days_options": {
+        "7": "7 jours",
+        "15": "15 jours",
+        "30": "30 jours",
+        "45": "45 jours",
+        "60": "60 jours",
+        "90": "90 jours",
+        "custom": "Manuel"
       }
     },
     "timezone": {
@@ -328,11 +342,13 @@
     },
     "notifications": {
       "title": "Notifications",
-      "description": "Gerer les preferences de notifications",
+      "description": "Gérer les preferences de notifications",
       "email_toggle": "Activer les emails d'alarme",
-      "recipients_label": "Destinataires des emails d'alarme",
-      "recipients_placeholder": "ex: support@mc2-info.com\nadmin@client.fr",
-      "recipients_helper": "Un email par ligne, ou separes par virgule/point-virgule.",
+      "acknowledged_toggle": "Recevoir les emails d'acquittement",
+      "ended_toggle": "Recevoir les emails d'alarme terminee",
+      "cc_recipients_label": "Emails en copie (tous les emails systeme)",
+      "cc_recipients_placeholder": "ex: support@mc2-info.com\nadmin@client.fr",
+      "cc_recipients_helper": "Un email par ligne, ou separes par virgule/point-virgule.",
       "save_button": "Enregistrer"
     },
     "password_policy": {
@@ -2105,7 +2121,7 @@
       "status": {
         "out_of_range": "Hors limites",
         "ok": "OK",
-        "no_response": "Non reponse"
+        "no_response": "Non réponse"
       },
       "empty": "Aucune mesure",
       "empty_with_range": "Veuillez sélectionner 2 dates pour voir les mesures"
@@ -2114,7 +2130,7 @@
       "over_high": "Zone dépassement haut",
       "over_low": "Zone dépassement bas",
       "measures": "Mesures ({unit})",
-      "show_no_response": "Afficher les non-reponses",
+      "show_no_response": "Afficher les non-réponses",
       "measure_count": "Mesures dans le graphique: {count}"
     },
     "tooltip": {
@@ -2928,7 +2944,7 @@
       },
       "modules": {
         "title": "Modules",
-        "description": "Gerer les modules et leurs parametres."
+        "description": "Gérer les modules et leurs parametres."
       },
       "etalons": {
         "title": "Etalons",
@@ -2944,11 +2960,11 @@
       },
       "lieux": {
         "title": "Lieux",
-        "description": "Gerer les lieux surveilles."
+        "description": "Gérer les lieux surveilles."
       },
       "sites": {
         "title": "Sites",
-        "description": "Gerer les sites et les rattachements."
+        "description": "Gérer les sites et les rattachements."
       },
       "outils": {
         "title": "Outils",
@@ -3155,7 +3171,7 @@
       "enabled": "Notifications activées"
     },
     "errors": {
-      "title": "Vous n'?tes pas connect?.",
+      "title": "Vous n'êtes pas connecté.",
       "default": "Une erreur est survenue.",
       "with_id": "{message} (ID: {id})"
     }

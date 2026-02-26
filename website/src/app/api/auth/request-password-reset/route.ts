@@ -5,6 +5,7 @@ import PasswordResetEmail from "../../../../../emails/password-reset"
 import crypto from "crypto"
 import { z } from "zod"
 import { withLogging } from "@/lib/api-logger"
+import { getGlobalAppLanguage } from "@/lib/app-language"
 import { apiError, apiOk } from "@/lib/api-response"
 
 const requestResetSchema = z.object({
@@ -46,15 +47,20 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
     const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`
+    const mailLocale = await getGlobalAppLanguage()
 
     await sendEmail({
       to: email,
-      subject: "Réinitialisation de votre mot de passe Vigitemp",
+      subject:
+        mailLocale === "en"
+          ? "Reset your Vigitemp password"
+          : "Reinitialisation de votre mot de passe Vigitemp",
       react: PasswordResetEmail({
         resetUrl,
         firstName: user.Prenom || undefined,
         lastName: user.Nom || undefined,
-        expiresIn: "1 heure",
+        expiresIn: mailLocale === "en" ? "1 hour" : "1 heure",
+        locale: mailLocale,
       }),
     })
 

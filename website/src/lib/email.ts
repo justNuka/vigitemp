@@ -21,6 +21,15 @@ export type EmailAttachment = {
   disposition?: string;
 };
 
+function parseRecipients(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  return raw
+    .split(/[;,\n\r]+/)
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+
 /**
  * Get email configuration from database parameters
  * Uses the new parameter structure with section: SECURITE_EMAIL
@@ -66,16 +75,32 @@ async function getEmailConfig(): Promise<EmailConfig> {
   return config;
 }
 
+async function getSystemEmailCcRecipients(): Promise<string[]> {
+  const setting = await prisma.t_parametre.findFirst({
+    where: {
+      OR: [
+        { Section: "notifications", Mot_Cle: "alarm_email_recipients" },
+        { Section: "NOTIFICATIONS", Mot_Cle: "ALARM_EMAIL_RECIPIENTS" },
+      ],
+    },
+    select: { Valeur: true },
+  });
+
+  return Array.from(new Set(parseRecipients(setting?.Valeur)));
+}
+
 /**
  * Send an email using the configured SMTP server
  */
 export async function sendEmail({
   to,
+  cc,
   subject,
   react,
   attachments,
 }: {
   to: string;
+  cc?: string | string[];
   subject: string;
   react: React.ReactElement;
   attachments?: EmailAttachment[];
@@ -92,6 +117,13 @@ export async function sendEmail({
       console.error("[Email] SMTP configuration is incomplete");
       return { success: false, error: "SMTP configuration is incomplete" };
     }
+
+    const toNormalized = parseRecipients(to);
+    const explicitCc = Array.isArray(cc) ? cc.flatMap((item) => parseRecipients(item)) : parseRecipients(cc);
+    const systemCc = await getSystemEmailCcRecipients();
+
+    const toSet = new Set(toNormalized);
+    const ccRecipients = Array.from(new Set([...explicitCc, ...systemCc])).filter((email) => !toSet.has(email));
 
     // Create transporter
     const transporter = nodemailer.createTransport({
@@ -111,6 +143,7 @@ export async function sendEmail({
     await transporter.sendMail({
       from: config.from,
       to,
+      cc: ccRecipients.length > 0 ? ccRecipients : undefined,
       subject,
       html,
       attachments,
