@@ -889,7 +889,8 @@
         "description": "Que faire des consignes après suppression ?",
         "optionBase": "Restaurer les consignes de base",
         "optionRegle": "Appliquer les consignes de cette règle comme nouvelles valeurs de base",
-        "ruleValues": "Consigne\u00a0: {consigne}  |  Sup\u00a0: {sup}  |  Inf\u00a0: {inf}"
+        "ruleValues": "Consigne\u00a0: {consigne}  |  Sup\u00a0: {sup}  |  Inf\u00a0: {inf}",
+        "errorDelete": "Erreur lors de la suppression de la règle."
       }
     }
   },

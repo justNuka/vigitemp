@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslations } from "next-intl"
 import { Plus, Pencil, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -64,7 +65,7 @@ export function LocationFormTabPlanning({
   const queryClient = useQueryClient()
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [deleteConfirmRegle, setDeleteConfirmRegle] = useState<PlanningRegleResponse | null>(null)
-  const [retainMode, setRetainMode] = useState<'base' | 'regle'>('base')
+  const [retainMode, setRetainMode] = useState<"base" | "regle">("base")
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editRegle, setEditRegle] = useState<PlanningRegleResponse | null>(null)
 
@@ -94,16 +95,18 @@ export function LocationFormTabPlanning({
     if (!deleteConfirmRegle || !idLieu) return
     setDeletingId(deleteConfirmRegle.Id_Regle)
     try {
-      await fetch(
+      await fetchJson<void>(
         `/api/lieux/${idLieu}/planning/${deleteConfirmRegle.Id_Regle}?retainMode=${retainMode}`,
-        { method: "DELETE" },
+        { method: "DELETE", credentials: "include" },
       )
       await queryClient.invalidateQueries({ queryKey })
       void queryClient.invalidateQueries({ queryKey: ["planning-preview", idLieu] })
-    } finally {
-      setDeletingId(null)
       setDeleteConfirmRegle(null)
       setRetainMode("base")
+    } catch {
+      toast.error(t("deleteConfirm.errorDelete"))
+    } finally {
+      setDeletingId(null)
     }
   }
 

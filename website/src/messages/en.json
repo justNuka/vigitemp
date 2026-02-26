@@ -633,7 +633,8 @@
         "description": "What to do with the setpoints after deletion?",
         "optionBase": "Restore base setpoints",
         "optionRegle": "Apply this rule's setpoints as new permanent base values",
-        "ruleValues": "Setpoint: {consigne}  |  Sup: {sup}  |  Inf: {inf}"
+        "ruleValues": "Setpoint: {consigne}  |  Sup: {sup}  |  Inf: {inf}",
+        "errorDelete": "Error deleting the rule."
       }
     }
   },
