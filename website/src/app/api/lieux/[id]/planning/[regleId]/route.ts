@@ -108,6 +108,8 @@ export const PATCH = withLogging(
         const existingRegle = existing as PrismaRegle
 
         // Merge: use patch value if provided, otherwise fall back to existing rule value
+        const mergedConsigne =
+          validated.Consigne !== undefined ? validated.Consigne : (existingRegle.Consigne ?? null)
         const mergedConsigneSup =
           validated.Consigne_Sup !== undefined ? validated.Consigne_Sup : existingRegle.Consigne_Sup
         const mergedConsigneInf =
@@ -118,6 +120,7 @@ export const PATCH = withLogging(
         const emt = computeEmt({
           mode: emtMode,
           emtValue: lieu.EMT,
+          consigne: mergedConsigne,
           consigneSup: mergedConsigneSup ?? null,
           consigneInf: mergedConsigneInf ?? null,
           isConsigneSupActive: lieu.Est_Consigne_Sup_Active ?? false,
@@ -139,10 +142,10 @@ export const PATCH = withLogging(
       const updateData = {
         ...validated,
         ...(validated.Heure_Debut !== undefined && {
-          Heure_Debut: new Date(`1970-01-01T${validated.Heure_Debut}:00`),
+          Heure_Debut: new Date(`1970-01-01T${validated.Heure_Debut}:00Z`),
         }),
         ...(validated.Heure_Fin !== undefined && {
-          Heure_Fin: new Date(`1970-01-01T${validated.Heure_Fin}:00`),
+          Heure_Fin: new Date(`1970-01-01T${validated.Heure_Fin}:00Z`),
         }),
         ...tolerancePatch,
       }
