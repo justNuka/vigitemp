@@ -122,6 +122,12 @@ export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_
               where: { Id_Lieu: lieuId },
               data: updateData,
             })
+
+            ackStep = "tx_set_immediate_retrigger_flag"
+            await tx.$executeRawUnsafe(
+              "UPDATE t_lieu SET Est_Redeclenchement_Immediat = 1 WHERE Id_Lieu = ?",
+              lieuId,
+            )
           } finally {
             ackStep = "tx_set_skip_lieu_alarm_off"
             await tx.$executeRawUnsafe("SET @SKIP_LIEU_ALARM_LOGIC = NULL")

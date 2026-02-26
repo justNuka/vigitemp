@@ -151,7 +151,7 @@
       "links": {
         "surveillance": {
           "title": "Surveillance",
-          "description": "Consulter les lieux, les mesures et l'etat en temps reel."
+          "description": "Consulter les lieux, les mesures et l'état en temps reel."
         },
         "alarmes": {
           "title": "Alarmes",
@@ -159,7 +159,7 @@
         },
         "lieux": {
           "title": "Lieux",
-          "description": "Gerer les lieux surveilles et leurs parametres."
+          "description": "Gérer les lieux surveillés et leurs parametres."
         },
         "sondes": {
           "title": "Sondes",
@@ -167,7 +167,7 @@
         },
         "utilisateurs": {
           "title": "Utilisateurs",
-          "description": "Gerer les comptes et les profils."
+          "description": "Gérer les comptes et les profils."
         },
         "parametres": {
           "title": "Parametres",
@@ -342,7 +342,7 @@
     },
     "notifications": {
       "title": "Notifications",
-      "description": "Gerer les preferences de notifications",
+      "description": "Gérer les preferences de notifications",
       "email_toggle": "Activer les emails d'alarme",
       "acknowledged_toggle": "Recevoir les emails d'acquittement",
       "ended_toggle": "Recevoir les emails d'alarme terminee",
@@ -2891,7 +2891,7 @@
       },
       "modules": {
         "title": "Modules",
-        "description": "Gerer les modules et leurs parametres."
+        "description": "Gérer les modules et leurs parametres."
       },
       "etalons": {
         "title": "Etalons",
@@ -2907,11 +2907,11 @@
       },
       "lieux": {
         "title": "Lieux",
-        "description": "Gerer les lieux surveilles."
+        "description": "Gérer les lieux surveilles."
       },
       "sites": {
         "title": "Sites",
-        "description": "Gerer les sites et les rattachements."
+        "description": "Gérer les sites et les rattachements."
       },
       "outils": {
         "title": "Outils",

@@ -1563,6 +1563,7 @@ namespace Vigitemp_Serveur
                         if (alarmId.HasValue)
                         {
                             UpdateLieuAlarmReference(idLieu, alarmId.Value);
+                            setLieuImmediateRetriggerFlag(idLieu, false);
                         }
                     }
                     else
@@ -1713,6 +1714,7 @@ namespace Vigitemp_Serveur
                         if (alarmId.HasValue)
                         {
                             UpdateLieuAlarmReference(idLieu, alarmId.Value);
+                            setLieuImmediateRetriggerFlag(idLieu, false);
                         }
                     }
                     else
@@ -1804,7 +1806,7 @@ namespace Vigitemp_Serveur
             return true;
         }
 
-        public bool hasActiveAcknowledgedAlarm(int idLieu, string type)
+        public bool getLieuImmediateRetriggerFlag(int idLieu)
         {
             lock (_lock)
             {
@@ -1817,23 +1819,60 @@ namespace Vigitemp_Serveur
 
                     var cmd = this.connection_vigitemp.CreateCommand();
                     cmd.CommandText =
-                        "SELECT COUNT(*) FROM t_alarme " +
-                        "WHERE Id_Lieu = @idLieu AND Type = @type AND Date_Heure_Fin IS NULL " +
-                        "AND IFNULL(Est_Acquittee, 0) = 1;";
+                        "SELECT IFNULL(Est_Redeclenchement_Immediat, 0) FROM t_lieu WHERE Id_Lieu = @idLieu LIMIT 1;";
                     cmd.Parameters.AddWithValue("@idLieu", idLieu);
-                    cmd.Parameters.AddWithValue("@type", type ?? string.Empty);
 
-                    var count = Convert.ToInt32(cmd.ExecuteScalar());
+                    var raw = cmd.ExecuteScalar();
                     CloseConnexion();
-                    return count > 0;
+                    if (raw == null || raw == DBNull.Value)
+                    {
+                        return false;
+                    }
+
+                    return Convert.ToInt32(raw) == 1;
                 }
                 catch (Exception ex)
                 {
                     CloseConnexion();
-                    VigitempServeur.Log("(hasActiveAcknowledgedAlarm) SQL Erreur: " + ex.Message);
+                    VigitempServeur.Log("(getLieuImmediateRetriggerFlag) SQL Erreur: " + ex.Message);
                     return false;
                 }
             }
+        }
+
+        public bool setLieuImmediateRetriggerFlag(int idLieu, bool enabled)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!InitConnexion())
+                    {
+                        return false;
+                    }
+
+                    var cmd = this.connection_vigitemp.CreateCommand();
+                    cmd.CommandText =
+                        "UPDATE t_lieu SET Est_Redeclenchement_Immediat = @value WHERE Id_Lieu = @idLieu;";
+                    cmd.Parameters.AddWithValue("@value", enabled ? 1 : 0);
+                    cmd.Parameters.AddWithValue("@idLieu", idLieu);
+                    cmd.ExecuteNonQuery();
+
+                    CloseConnexion();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    CloseConnexion();
+                    VigitempServeur.Log("(setLieuImmediateRetriggerFlag) SQL Erreur: " + ex.Message);
+                    return false;
+                }
+            }
+        }
+        public bool hasActiveAcknowledgedAlarm(int idLieu, string type)
+        {
+            // Backward-compat wrapper: immediate retrigger is now driven by t_lieu flag.
+            return getLieuImmediateRetriggerFlag(idLieu);
         }
 
         public int getLastAlarmIdByServeur(int idServeur)

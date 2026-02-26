@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { showFormValidationToast } from '@/lib/form-toast';
+import { getAuthorizationDomain } from '@/lib/authorization-domain';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -21,6 +22,21 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import {
+  Bell,
+  ChartSpline,
+  FlaskConical,
+  LayoutDashboard,
+  MapPinOff,
+  MessageSquareText,
+  MonitorCog,
+  Settings,
+  ShieldCheck,
+  ShieldEllipsis,
+  Thermometer,
+  Wrench,
+  type LucideIcon,
+} from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -51,21 +67,44 @@ type ProfileDialogProps = {
 function groupAuthorizationsByModule(auths: Authorization[]) {
   const groups: Record<string, Authorization[]> = {
     Administration: [],
-    Métrologie: [],
+    Metrologie: [],
     Surveillance: [],
     VigiLog: [],
     Autres: [],
   };
 
   auths.forEach((auth) => {
-    if (auth.fenAdmin) groups.Administration.push(auth);
-    else if (auth.fenMetrologie) groups.Métrologie.push(auth);
-    else if (auth.fenSurveillance) groups.Surveillance.push(auth);
-    else if (auth.fenVigiLog) groups.VigiLog.push(auth);
+    const domain = getAuthorizationDomain(auth.code);
+    if (domain === 'admin') groups.Administration.push(auth);
+    else if (domain === 'metrologie') groups.Metrologie.push(auth);
+    else if (domain === 'surveillance') groups.Surveillance.push(auth);
+    else if (domain === 'vigilog') groups.VigiLog.push(auth);
     else groups.Autres.push(auth);
   });
 
+  Object.values(groups).forEach((items) =>
+    items.sort((a, b) => (a.label || a.code || '').localeCompare(b.label || b.code || ''))
+  );
+
   return Object.entries(groups).filter(([_, items]) => items.length > 0);
+}
+
+
+function getAuthorizationIcon(code: string | null | undefined): LucideIcon {
+  const normalized = (code || '').trim().toUpperCase();
+  if (normalized.includes('DASHBOARD_ADMIN')) return LayoutDashboard;
+  if (normalized.includes('DASHBOARD_UTILISATEUR')) return ChartSpline;
+  if (normalized.includes('ACQUITTER_ALARME')) return Bell;
+  if (normalized.includes('DESACTIVATION_LIEU')) return MapPinOff;
+  if (normalized.includes('PARAMETRAGE_LIEU')) return Thermometer;
+  if (normalized.includes('PARAMETRAGE_MATERIEL')) return MonitorCog;
+  if (normalized.includes('PARAMETRAGE_GENERAL')) return Settings;
+  if (normalized.includes('AJUSTAGE') || normalized.includes('ETALONNAGE') || normalized.includes('METROLOGIE')) return FlaskConical;
+  if (normalized.includes('CONVERSATION')) return MessageSquareText;
+  if (normalized.includes('ACCES_ADMIN') || normalized.includes('GERER_PROFIL')) return ShieldCheck;
+  if (normalized.includes('ACCES_SURVEILLANCE')) return ShieldEllipsis;
+  if (normalized.includes('ACCES_VIGILOG')) return Wrench;
+  return ShieldEllipsis;
 }
 
 export function ProfileDialog({
@@ -117,7 +156,7 @@ export function ProfileDialog({
         if (!nextOpen) onCancel();
       }}
     >
-      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl bg-white/50 dark:bg-card">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto bg-background">
         <DialogHeader>
           <DialogTitle>{isEdit ? t('title_edit') : t('title_create')}</DialogTitle>
           <DialogDescription>
@@ -161,21 +200,6 @@ export function ProfileDialog({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="mc2"
-              render={({ field }) => (
-                <FormItem className="flex items-center space-x-2">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={(checked) => field.onChange(Boolean(checked))}
-                    />
-                  </FormControl>
-                  <FormLabel className="text-sm font-medium">{t('fields.mc2_label')}</FormLabel>
-                </FormItem>
-              )}
-            />
 
             <div>
               <Label className="mb-3 block">{t('authorizations_title')}</Label>
@@ -187,16 +211,30 @@ export function ProfileDialog({
                     </CardHeader>
                     <CardContent className="space-y-2">
                       {auths.map((auth) => (
-                        <div key={auth.id} className="flex items-start space-x-2">
+                        <div key={auth.id} className="group flex items-start space-x-2">
                           <Checkbox
                             id={`${mode}-auth-${auth.id}`}
                             checked={selectedAuthorizations.includes(auth.id)}
                             onCheckedChange={() => toggleAuthorization(auth.id)}
                           />
                           <div className="flex-1">
-                            <label htmlFor={`${mode}-auth-${auth.id}`} className="text-sm font-medium cursor-pointer">
-                              {auth.label || auth.code}
-                            </label>
+                            <div className="flex items-center gap-1.5">
+                              <label htmlFor={`${mode}-auth-${auth.id}`} className="cursor-pointer text-sm font-medium">
+                                {auth.label || auth.code}
+                              </label>
+                              {(() => {
+                                const Icon = getAuthorizationIcon(auth.code);
+                                return (
+                                  <span
+                                    className="inline-flex opacity-0 transition-opacity group-hover:opacity-100"
+                                    title={auth.description || auth.code || ''}
+                                    aria-label={auth.description || auth.code || ''}
+                                  >
+                                    <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                                  </span>
+                                );
+                              })()}
+                            </div>
                             {auth.description && (
                               <p className="text-xs text-muted-foreground">{auth.description}</p>
                             )}

@@ -17,7 +17,7 @@
     "test:api": "tsx scripts/test-api.ts",
     "test:db": "tsx scripts/test-db-connection.ts",
     "hash:passwords": "tsx scripts/hash-passwords.ts",
-    "prisma:pull": "prisma db pull --schema=./prisma/db-main/schema.prisma && prisma db pull --schema=./prisma/db-mesures/schema.prisma",
+    "prisma:pull": "prisma db pull --config prisma-main.config.ts && prisma db pull --config prisma-mesures.config.ts",
     "prisma:generate": "prisma generate --schema=./prisma/db-main/schema.prisma && prisma generate --schema=./prisma/db-mesures/schema.prisma",
     "prisma:studio": "prisma studio --schema=./prisma/db-main/schema.prisma",
     "prisma:studio:mesure": "prisma studio --schema=./prisma/db-mesures/schema.prisma --port 5556",
