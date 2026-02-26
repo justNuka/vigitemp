@@ -1,4 +1,5 @@
 import { z } from "zod"
+import type { EmtMode } from "@/lib/emt"
 
 export const planningRegleCreateSchema = z.object({
   Actif: z.boolean().default(true),
@@ -33,6 +34,18 @@ export type PlanningRegleResponse = {
   Tolerance_Inf_Calc: number | null
   Date_Creation: string
   Date_Maj: string | null
+}
+
+export type LieuEmtParams = {
+  mode: EmtMode
+  emtValue: number | null
+  incertitude: number | null
+  erreurJustesse: number | null
+  derive: number | null
+  includeDeriveInUncertainty: boolean
+  correctAccuracyError: boolean
+  isConsigneSupActive: boolean
+  isConsigneInfActive: boolean
 }
 
 // Helper: checks if a time slot (day, time) falls within the rule's range
