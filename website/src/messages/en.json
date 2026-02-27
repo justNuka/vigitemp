@@ -121,7 +121,8 @@
     "profile": "Profile",
     "admin_dashboard": "Admin dashboard",
     "admin_dashboard_tooltip": "Administrator dashboard",
-    "services": "Services"
+    "services": "Services",
+    "messaging": "Messaging"
   },
   "sidebarGroups": {
     "navigation": "Navigation",
@@ -1050,6 +1051,7 @@
       "profiles": "Profiles",
       "users": "Users",
       "alarms": "Alarms",
+      "messaging": "Messaging",
       "archived_measures": "Archived measurements",
       "audit": "Audit log"
     },
@@ -1402,6 +1404,11 @@
         "email_invalid": "Invalid email address",
         "test_email_required": "Recipient email is required"
       }
+    },
+    "messaging": {
+      "title": "Internal messaging",
+      "description": "Enable internal messaging between users (Standard/Expert only)",
+      "toggle_label": "Enable messaging"
     }
   },
   "adminAlarmsPage": {
@@ -3410,5 +3417,56 @@
     "temperature_low": "Low Temperature",
     "sensor_error": "Sensor Error",
     "offline": "Offline"
+  },
+  "messaging": {
+    "page": {
+      "title": "Messaging",
+      "description": "Internal messages",
+      "meta": {
+        "title": "Messaging - VigiSensys",
+        "description": "Internal messages between users"
+      }
+    },
+    "conversations": {
+      "new": "New conversation",
+      "search_placeholder": "Search conversations...",
+      "empty_list": "No conversations",
+      "group_badge": "Group",
+      "deleted_message": "Message deleted",
+      "edited_label": "(edited)"
+    },
+    "thread": {
+      "empty_state": "Select a conversation or start a new one",
+      "participants_count": "{count, plural, one {{count} participant} other {{count} participants}}",
+      "input_placeholder": "Write a message… (Enter to send, Shift+Enter for new line)",
+      "send": "Send",
+      "load_more": "Load previous messages"
+    },
+    "new_conversation": {
+      "title": "New conversation",
+      "tab_direct": "Direct message",
+      "tab_group": "Group",
+      "direct_search": "Search a user...",
+      "group_title_label": "Group title",
+      "group_title_placeholder": "E.g.: Quality team",
+      "group_members_label": "Members",
+      "group_members_search": "Add members...",
+      "create": "Create",
+      "no_users": "No users found"
+    },
+    "bell": {
+      "tooltip": "Messages",
+      "title": "Messages",
+      "mark_all_read": "Mark all as read",
+      "empty": "No new messages",
+      "view_all": "View all messages"
+    },
+    "time": {
+      "just_now": "Just now",
+      "minutes_ago": "{count} min ago",
+      "yesterday": "Yesterday",
+      "date_separator_today": "Today",
+      "date_separator_yesterday": "Yesterday"
+    }
   }
 }

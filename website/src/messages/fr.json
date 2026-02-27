@@ -121,7 +121,8 @@
     "profile": "Profil",
     "admin_dashboard": "Dashboard Admin",
     "admin_dashboard_tooltip": "Tableau de bord administrateur",
-    "services": "Services"
+    "services": "Services",
+    "messaging": "Messagerie"
   },
   "sidebarGroups": {
     "navigation": "Navigation",
@@ -455,6 +456,11 @@
         "email_invalid": "Adresse email invalide",
         "test_email_required": "Email destinataire requis"
       }
+    },
+    "messaging": {
+      "title": "Messagerie interne",
+      "description": "Activer la messagerie interne entre utilisateurs (Standard/Expert uniquement)",
+      "toggle_label": "Activer la messagerie"
     }
   },
   "alarmsPage": {
@@ -1306,6 +1312,7 @@
       "profiles": "Profils",
       "users": "Utilisateurs",
       "alarms": "Alarmes",
+      "messaging": "Messagerie",
       "archived_measures": "Mesures archivées",
       "audit": "Journal d'audit"
     },
@@ -3517,5 +3524,56 @@
     "temperature_low": "Température basse",
     "sensor_error": "Erreur de sonde",
     "offline": "Hors ligne"
+  },
+  "messaging": {
+    "page": {
+      "title": "Messagerie",
+      "description": "Messages internes",
+      "meta": {
+        "title": "Messagerie - VigiSensys",
+        "description": "Messages internes entre utilisateurs"
+      }
+    },
+    "conversations": {
+      "new": "Nouvelle conversation",
+      "search_placeholder": "Rechercher une conversation...",
+      "empty_list": "Aucune conversation",
+      "group_badge": "Groupe",
+      "deleted_message": "Message supprimé",
+      "edited_label": "(modifié)"
+    },
+    "thread": {
+      "empty_state": "Sélectionnez une conversation ou démarrez-en une nouvelle",
+      "participants_count": "{count, plural, one {{count} participant} other {{count} participants}}",
+      "input_placeholder": "Écrivez un message… (Entrée pour envoyer, Maj+Entrée pour saut de ligne)",
+      "send": "Envoyer",
+      "load_more": "Charger les messages précédents"
+    },
+    "new_conversation": {
+      "title": "Nouvelle conversation",
+      "tab_direct": "Message direct",
+      "tab_group": "Groupe",
+      "direct_search": "Rechercher un utilisateur...",
+      "group_title_label": "Titre du groupe",
+      "group_title_placeholder": "Ex. : Équipe qualité",
+      "group_members_label": "Membres",
+      "group_members_search": "Ajouter des membres...",
+      "create": "Créer",
+      "no_users": "Aucun utilisateur trouvé"
+    },
+    "bell": {
+      "tooltip": "Messages",
+      "title": "Messages",
+      "mark_all_read": "Tout marquer comme lu",
+      "empty": "Aucun nouveau message",
+      "view_all": "Voir tous les messages"
+    },
+    "time": {
+      "just_now": "À l'instant",
+      "minutes_ago": "Il y a {count} min",
+      "yesterday": "Hier",
+      "date_separator_today": "Aujourd'hui",
+      "date_separator_yesterday": "Hier"
+    }
   }
 }
