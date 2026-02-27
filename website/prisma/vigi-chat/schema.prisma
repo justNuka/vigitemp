@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../src/generated/@prisma-vigi-chat"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model t_conversation {
+  Id_Conversation Int      @id @default(autoincrement())
+  Type            String   @db.VarChar(10)
+  Titre           String?  @db.VarChar(128)
+  DM_Key          String?  @unique @db.VarChar(64)
+  Date_Creation   DateTime @default(now()) @db.DateTime(0)
+
+  participants t_conversation_participant[]
+  messages     t_message[]
+
+  @@index([Type])
+  @@index([Date_Creation])
+}
+
+model t_conversation_participant {
+  Id_Participant   Int      @id @default(autoincrement())
+  Id_Conversation  Int
+  Id_Utilisateur   Int
+  Last_Read_Msg_Id Int?
+  Date_Ajout       DateTime @default(now()) @db.DateTime(0)
+
+  conversation t_conversation @relation(fields: [Id_Conversation], references: [Id_Conversation], onDelete: Cascade)
+
+  @@unique([Id_Conversation, Id_Utilisateur])
+  @@index([Id_Utilisateur])
+}
+
+model t_message {
+  Id_Message        Int       @id @default(autoincrement())
+  Id_Conversation   Int
+  Sender_Id         Int
+  Contenu           String    @db.Text
+  Date_Creation     DateTime  @default(now()) @db.DateTime(0)
+  Date_Modification DateTime? @db.DateTime(0)
+  Date_Suppression  DateTime? @db.DateTime(0)
+
+  conversation t_conversation @relation(fields: [Id_Conversation], references: [Id_Conversation], onDelete: Cascade)
+
+  @@index([Id_Conversation, Id_Message])
+  @@index([Date_Creation])
+}
