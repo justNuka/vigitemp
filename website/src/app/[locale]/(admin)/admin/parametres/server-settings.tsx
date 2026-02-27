@@ -16,7 +16,7 @@ export async function ServerSettings() {
     const dbSettings = await prisma.t_parametre.findMany({
       where: {
         Section: {
-          in: ["general", "notifications", "alarms", "dashboard", "GENERAL", "NOTIFICATIONS", "ALARMS", "DASHBOARD"],
+          in: ["general", "notifications", "alarms", "dashboard", "messaging", "GENERAL", "NOTIFICATIONS", "ALARMS", "DASHBOARD", "MESSAGING"],
         },
       },
       select: {
@@ -45,6 +45,7 @@ export async function ServerSettings() {
       { key: "dashboard:surveillance_refresh", value: "15", label: "Rafraichissement surveillance (s)" },
       { key: "dashboard:show_null_non_response", value: "false", label: "Afficher les non-reponses" },
       { key: "dashboard:etalonnage_warning_days", value: "30", label: "Alerte validite etalonnage (jours)" },
+      { key: "messaging:enabled", value: "true", label: "Messagerie interne" },
     ];
 
     // Créer un Map des valeurs de la DB pour un accès rapide
@@ -79,6 +80,7 @@ export async function ServerSettings() {
       { key: "dashboard:surveillance_refresh", value: "15", label: "Rafraichissement surveillance (s)" },
       { key: "dashboard:show_null_non_response", value: "false", label: "Afficher les non-reponses" },
       { key: "dashboard:etalonnage_warning_days", value: "30", label: "Alerte validite etalonnage (jours)" },
+      { key: "messaging:enabled", value: "true", label: "Messagerie interne" },
     ];
   }
 }

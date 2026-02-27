@@ -12,6 +12,7 @@ import { settingsApi } from "@/lib/api";
 import { SMTPConfigModal } from "./smtp-config-modal";
 import { AutoLockSettingsCard } from "./auto-lock-settings-card";
 import { GeneralSettingsCard } from "./general-settings-card";
+import { MessagingSettingsCard } from "./messaging-settings-card";
 import { NotificationsSettingsCard } from "./notifications-settings-card";
 import { PasswordPolicyCard } from "./password-policy-card";
 import { SmtpSettingsCard } from "./smtp-settings-card";
@@ -157,6 +158,7 @@ export function SettingsClient({ settings: initialSettings }: Props) {
   const generalSettings = settings.filter((setting) => {
     const isNotificationSetting = ["notifications:email", "notifications:alarm_email_recipients", "notifications:alarm_email_acknowledged", "notifications:alarm_email_ended"].includes(setting.key)
     if (isNotificationSetting) return false
+    if (setting.key === "messaging:enabled") return false
     if (!canEditSurveillanceRefresh && setting.key === "dashboard:surveillance_refresh") return false
     return true
   });
@@ -191,6 +193,14 @@ export function SettingsClient({ settings: initialSettings }: Props) {
         onToggle={handleToggle}
         onSaveRecipients={handleSettingChange}
       />
+
+      {isStandardOrExpert(license) && (
+        <MessagingSettingsCard
+          settings={settings.filter((s) => s.key === "messaging:enabled")}
+          loadingKeys={loadingKeys}
+          onToggle={handleToggle}
+        />
+      )}
 
       <SmtpSettingsCard onOpenSmtpModal={() => setSmtpModalOpen(true)} />
 
