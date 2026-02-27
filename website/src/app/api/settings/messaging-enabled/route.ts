@@ -13,7 +13,8 @@ export const GET = withAuthLogging(
       })
       const enabled = setting ? setting.Valeur === "true" : true
       return apiOk({ enabled })
-    } catch {
+    } catch (error) {
+      console.error("[GET /api/settings/messaging-enabled] Failed to fetch setting", error)
       return apiOk({ enabled: true })
     }
   },

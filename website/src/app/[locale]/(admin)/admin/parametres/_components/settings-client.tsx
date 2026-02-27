@@ -167,6 +167,8 @@ export function SettingsClient({ settings: initialSettings }: Props) {
     ["notifications:email", "notifications:alarm_email_recipients", "notifications:alarm_email_acknowledged", "notifications:alarm_email_ended"].includes(setting.key),
   );
 
+  const messagingSettings = settings.filter((s) => s.key === "messaging:enabled")
+
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       <GeneralSettingsCard
@@ -196,7 +198,7 @@ export function SettingsClient({ settings: initialSettings }: Props) {
 
       {isStandardOrExpert(license) && (
         <MessagingSettingsCard
-          settings={settings.filter((s) => s.key === "messaging:enabled")}
+          settings={messagingSettings}
           loadingKeys={loadingKeys}
           onToggle={handleToggle}
         />
