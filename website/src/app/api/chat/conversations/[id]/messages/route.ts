@@ -1,0 +1,172 @@
+import { NextRequest } from "next/server"
+import { prisma } from "@/lib/prisma"
+import { prismaChat } from "@/lib/prisma-chat"
+import { withAuthLogging } from "@/lib/api-wrappers"
+import { apiError, apiOk } from "@/lib/api-response"
+import { checkChatAccess, verifyParticipant } from "@/lib/chat-guard"
+import { getInitialsForAvatar, resolveAvatarSrc } from "@/lib/avatar-library"
+import { getUserAvatarMap } from "@/lib/user-avatar-db"
+import { z } from "zod"
+import type { JWTPayload } from "@/lib/jwt"
+
+const TAKE = 50
+
+const postBodySchema = z.object({
+  contenu: z.string().min(1).max(10000),
+})
+
+type RouteParams = { params: Promise<{ id: string }> }
+
+export const GET = withAuthLogging(
+  async (req: NextRequest, ctx: { user: JWTPayload }, { params }: RouteParams) => {
+    try {
+      const guard = await checkChatAccess(ctx.user)
+      if (!guard.ok) return guard.response
+
+      const { id: idParam } = await params
+      const convId = parseInt(idParam, 10)
+
+      if (isNaN(convId) || convId <= 0) {
+        return apiError(400, "invalid_id", "ID de conversation invalide")
+      }
+
+      const userId = ctx.user.userId
+      const isMember = await verifyParticipant(convId, userId)
+      if (!isMember) {
+        return apiError(403, "not_participant", "Vous n'etes pas membre de cette conversation")
+      }
+
+      const cursorParam = req.nextUrl.searchParams.get("cursor")
+      const cursor = cursorParam ? parseInt(cursorParam, 10) : 0
+
+      const messages = await prismaChat.t_message.findMany({
+        where: {
+          Id_Conversation: convId,
+          Date_Suppression: null,
+          ...(cursor > 0 ? { Id_Message: { lt: cursor } } : {}),
+        },
+        orderBy: { Id_Message: "desc" },
+        take: TAKE,
+        select: {
+          Id_Message: true,
+          Id_Conversation: true,
+          Sender_Id: true,
+          Contenu: true,
+          Date_Creation: true,
+          Date_Modification: true,
+        },
+      })
+
+      const senderIds = Array.from(new Set(messages.map((m) => m.Sender_Id)))
+
+      const dbUsers = await prisma.t_utilisateur.findMany({
+        where: { Id_Utilisateur: { in: senderIds } },
+        select: {
+          Id_Utilisateur: true,
+          Login: true,
+          Prenom: true,
+          Nom: true,
+        },
+      })
+
+      const avatarMap = await getUserAvatarMap(senderIds)
+
+      const userMap = new Map<number, { name: string; initials: string; avatarSrc: string | null }>()
+      for (const u of dbUsers) {
+        const initials = getInitialsForAvatar(u.Prenom, u.Nom, u.Login)
+        const avatarValue = avatarMap.get(u.Id_Utilisateur) ?? null
+        const avatarSrc = resolveAvatarSrc(avatarValue, initials)
+        userMap.set(u.Id_Utilisateur, {
+          name: (`${u.Prenom ?? ""} ${u.Nom ?? ""}`.trim()) || (u.Login ?? `User ${u.Id_Utilisateur}`),
+          initials,
+          avatarSrc,
+        })
+      }
+
+      const enriched = messages
+        .slice()
+        .reverse()
+        .map((msg) => {
+          const sender = userMap.get(msg.Sender_Id)
+          return {
+            id: msg.Id_Message,
+            conversationId: msg.Id_Conversation,
+            senderId: msg.Sender_Id,
+            senderName: sender?.name ?? `User ${msg.Sender_Id}`,
+            senderInitials: sender?.initials ?? "??",
+            senderAvatarSrc: sender?.avatarSrc ?? null,
+            content: msg.Contenu,
+            createdAt: msg.Date_Creation.toISOString(),
+            updatedAt: msg.Date_Modification?.toISOString() ?? null,
+          }
+        })
+
+      const nextCursor =
+        messages.length === TAKE ? messages[messages.length - 1].Id_Message : undefined
+
+      return apiOk({ messages: enriched, nextCursor })
+    } catch (error) {
+      console.error("[GET /api/chat/conversations/[id]/messages]", error)
+      return apiError(500, "messages_fetch_failed", "Erreur lors de la recuperation des messages")
+    }
+  },
+)
+
+export const POST = withAuthLogging(
+  async (req: NextRequest, ctx: { user: JWTPayload }, { params }: RouteParams) => {
+    try {
+      const guard = await checkChatAccess(ctx.user)
+      if (!guard.ok) return guard.response
+
+      const { id: idParam } = await params
+      const convId = parseInt(idParam, 10)
+
+      if (isNaN(convId) || convId <= 0) {
+        return apiError(400, "invalid_id", "ID de conversation invalide")
+      }
+
+      const userId = ctx.user.userId
+      const isMember = await verifyParticipant(convId, userId)
+      if (!isMember) {
+        return apiError(403, "not_participant", "Vous n'etes pas membre de cette conversation")
+      }
+
+      const body: unknown = await req.json()
+      const parsed = postBodySchema.safeParse(body)
+
+      if (!parsed.success) {
+        return apiError(400, "validation_error", "Donnees invalides", { issues: parsed.error.issues })
+      }
+
+      const { contenu } = parsed.data
+
+      const created = await prismaChat.t_message.create({
+        data: {
+          Id_Conversation: convId,
+          Sender_Id: userId,
+          Contenu: contenu,
+        },
+        select: {
+          Id_Message: true,
+          Id_Conversation: true,
+          Sender_Id: true,
+          Contenu: true,
+          Date_Creation: true,
+          Date_Modification: true,
+        },
+      })
+
+      return apiOk({
+        id: created.Id_Message,
+        conversationId: created.Id_Conversation,
+        senderId: created.Sender_Id,
+        content: created.Contenu,
+        createdAt: created.Date_Creation.toISOString(),
+        updatedAt: created.Date_Modification?.toISOString() ?? null,
+      })
+    } catch (error) {
+      console.error("[POST /api/chat/conversations/[id]/messages]", error)
+      return apiError(500, "message_send_failed", "Erreur lors de l'envoi du message")
+    }
+  },
+)
