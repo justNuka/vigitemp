@@ -12,7 +12,7 @@ const globalForPrismaChat = globalThis as unknown as GlobalPrismaChatState
 function requireEnv(name: "DATABASE_CHAT_URL"): string {
   const value = process.env[name]?.trim()
   if (!value) {
-    throw new Error(`[prisma] Missing required environment variable: ${name}`)
+    throw new Error(`[prisma-chat] Missing required environment variable: ${name}`)
   }
   return value
 }

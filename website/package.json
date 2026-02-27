@@ -25,6 +25,7 @@
     "prisma:studio:chat": "prisma studio --schema=./prisma/vigi-chat/schema.prisma --port 5557",
     "prisma:migrate:main": "prisma migrate dev --schema=./prisma/db-main/schema.prisma",
     "prisma:migrate:mesure": "prisma migrate dev --schema=./prisma/db-mesures/schema.prisma",
+    "prisma:migrate:chat": "prisma migrate dev --config prisma-chat.config.ts",
     "email-dev": "email dev",
     "smtp:encrypt-passwords": "tsx scripts/encrypt-smtp-passwords.ts",
     "test:license-smoke": "tsx scripts/smoke-license-matrix.ts"
