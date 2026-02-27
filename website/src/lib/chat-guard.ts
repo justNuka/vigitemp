@@ -9,7 +9,7 @@ export type ChatGuardResult =
   | { ok: true }
   | { ok: false; response: NextResponse }
 
-export async function checkChatAccess(_user: { userId: number }): Promise<ChatGuardResult> {
+export async function checkChatAccess(): Promise<ChatGuardResult> {
   const license = await validateLicense()
 
   if (!license.ok || !isStandardOrExpert(license)) {

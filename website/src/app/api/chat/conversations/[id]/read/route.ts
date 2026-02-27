@@ -10,7 +10,7 @@ type RouteParams = { params: Promise<{ id: string }> }
 export const POST = withAuthLogging(
   async (_req: NextRequest, ctx: { user: JWTPayload }, { params }: RouteParams) => {
     try {
-      const guard = await checkChatAccess(ctx.user)
+      const guard = await checkChatAccess()
       if (!guard.ok) return guard.response
 
       const { id: idParam } = await params

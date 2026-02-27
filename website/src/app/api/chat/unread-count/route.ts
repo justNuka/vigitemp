@@ -8,7 +8,7 @@ import type { JWTPayload } from "@/lib/jwt"
 export const GET = withAuthLogging(
   async (_req: NextRequest, ctx: { user: JWTPayload }) => {
     try {
-      const guard = await checkChatAccess(ctx.user)
+      const guard = await checkChatAccess()
       if (!guard.ok) return guard.response
 
       const userId = ctx.user.userId
@@ -21,13 +21,10 @@ export const GET = withAuthLogging(
         },
       })
 
-      let unreadCount = 0
-
-      await Promise.all(
-        participants.map(async (participant) => {
+      const results = await Promise.all(
+        participants.map((participant) => {
           const lastReadId = participant.Last_Read_Msg_Id ?? 0
-
-          const unreadMessage = await prismaChat.t_message.findFirst({
+          return prismaChat.t_message.findFirst({
             where: {
               Id_Conversation: participant.Id_Conversation,
               Sender_Id: { not: userId },
@@ -36,12 +33,9 @@ export const GET = withAuthLogging(
             },
             select: { Id_Message: true },
           })
-
-          if (unreadMessage !== null) {
-            unreadCount += 1
-          }
         }),
       )
+      const unreadCount = results.filter((r) => r !== null).length
 
       return apiOk({ count: unreadCount })
     } catch (error) {

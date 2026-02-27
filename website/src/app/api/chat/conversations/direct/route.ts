@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server"
 import { prismaChat } from "@/lib/prisma-chat"
+import { Prisma } from "@/generated/@prisma-vigi-chat/client"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { checkChatAccess } from "@/lib/chat-guard"
@@ -13,7 +14,7 @@ const directBodySchema = z.object({
 export const POST = withAuthLogging(
   async (req: NextRequest, ctx: { user: JWTPayload }) => {
     try {
-      const guard = await checkChatAccess(ctx.user)
+      const guard = await checkChatAccess()
       if (!guard.ok) return guard.response
 
       const userId = ctx.user.userId
@@ -50,29 +51,54 @@ export const POST = withAuthLogging(
         })
       }
 
-      const created = await prismaChat.t_conversation.create({
-        data: {
-          Type: "dm",
-          DM_Key: dmKey,
-          participants: {
-            create: [
-              { Id_Utilisateur: userId },
-              { Id_Utilisateur: targetUserId },
-            ],
+      try {
+        const created = await prismaChat.t_conversation.create({
+          data: {
+            Type: "dm",
+            DM_Key: dmKey,
+            participants: {
+              create: [
+                { Id_Utilisateur: userId },
+                { Id_Utilisateur: targetUserId },
+              ],
+            },
           },
-        },
-        select: {
-          Id_Conversation: true,
-          Type: true,
-          DM_Key: true,
-        },
-      })
+          select: {
+            Id_Conversation: true,
+            Type: true,
+            DM_Key: true,
+          },
+        })
 
-      return apiOk({
-        id: created.Id_Conversation,
-        type: created.Type,
-        dmKey: created.DM_Key,
-      })
+        return apiOk({
+          id: created.Id_Conversation,
+          type: created.Type,
+          dmKey: created.DM_Key,
+        })
+      } catch (createError) {
+        if (
+          createError instanceof Prisma.PrismaClientKnownRequestError &&
+          createError.code === "P2002"
+        ) {
+          // Race condition: another request created the DM simultaneously — retry with findUnique
+          const raceExisting = await prismaChat.t_conversation.findUnique({
+            where: { DM_Key: dmKey },
+            select: {
+              Id_Conversation: true,
+              Type: true,
+              DM_Key: true,
+            },
+          })
+          if (raceExisting !== null) {
+            return apiOk({
+              id: raceExisting.Id_Conversation,
+              type: raceExisting.Type,
+              dmKey: raceExisting.DM_Key,
+            })
+          }
+        }
+        throw createError
+      }
     } catch (error) {
       console.error("[POST /api/chat/conversations/direct]", error)
       return apiError(500, "direct_conversation_failed", "Erreur lors de la creation de la conversation directe")

@@ -14,7 +14,7 @@ const groupBodySchema = z.object({
 export const POST = withAuthLogging(
   async (req: NextRequest, ctx: { user: JWTPayload }) => {
     try {
-      const guard = await checkChatAccess(ctx.user)
+      const guard = await checkChatAccess()
       if (!guard.ok) return guard.response
 
       const userId = ctx.user.userId

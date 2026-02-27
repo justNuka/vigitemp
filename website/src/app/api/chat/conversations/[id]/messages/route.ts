@@ -6,6 +6,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { checkChatAccess, verifyParticipant } from "@/lib/chat-guard"
 import { getInitialsForAvatar, resolveAvatarSrc } from "@/lib/avatar-library"
 import { getUserAvatarMap } from "@/lib/user-avatar-db"
+import type { UserInfo } from "@/lib/chat-types"
 import { z } from "zod"
 import type { JWTPayload } from "@/lib/jwt"
 
@@ -20,7 +21,7 @@ type RouteParams = { params: Promise<{ id: string }> }
 export const GET = withAuthLogging(
   async (req: NextRequest, ctx: { user: JWTPayload }, { params }: RouteParams) => {
     try {
-      const guard = await checkChatAccess(ctx.user)
+      const guard = await checkChatAccess()
       if (!guard.ok) return guard.response
 
       const { id: idParam } = await params
@@ -71,7 +72,7 @@ export const GET = withAuthLogging(
 
       const avatarMap = await getUserAvatarMap(senderIds)
 
-      const userMap = new Map<number, { name: string; initials: string; avatarSrc: string | null }>()
+      const userMap = new Map<number, UserInfo>()
       for (const u of dbUsers) {
         const initials = getInitialsForAvatar(u.Prenom, u.Nom, u.Login)
         const avatarValue = avatarMap.get(u.Id_Utilisateur) ?? null
@@ -115,7 +116,7 @@ export const GET = withAuthLogging(
 export const POST = withAuthLogging(
   async (req: NextRequest, ctx: { user: JWTPayload }, { params }: RouteParams) => {
     try {
-      const guard = await checkChatAccess(ctx.user)
+      const guard = await checkChatAccess()
       if (!guard.ok) return guard.response
 
       const { id: idParam } = await params

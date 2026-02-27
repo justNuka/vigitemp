@@ -6,14 +6,8 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { checkChatAccess } from "@/lib/chat-guard"
 import { getInitialsForAvatar, resolveAvatarSrc } from "@/lib/avatar-library"
 import { getUserAvatarMap } from "@/lib/user-avatar-db"
+import type { UserInfo } from "@/lib/chat-types"
 import type { JWTPayload } from "@/lib/jwt"
-
-type UserInfo = {
-  id: number
-  name: string
-  initials: string
-  avatarSrc: string | null
-}
 
 type ConversationItem = {
   id: number
@@ -33,7 +27,7 @@ type ConversationItem = {
 export const GET = withAuthLogging(
   async (_req: NextRequest, ctx: { user: JWTPayload }) => {
     try {
-      const guard = await checkChatAccess(ctx.user)
+      const guard = await checkChatAccess()
       if (!guard.ok) return guard.response
 
       const userId = ctx.user.userId
@@ -91,7 +85,6 @@ export const GET = withAuthLogging(
         const avatarValue = avatarMap.get(u.Id_Utilisateur) ?? null
         const avatarSrc = resolveAvatarSrc(avatarValue, initials)
         userMap.set(u.Id_Utilisateur, {
-          id: u.Id_Utilisateur,
           name: (`${u.Prenom ?? ""} ${u.Nom ?? ""}`.trim()) || (u.Login ?? `User ${u.Id_Utilisateur}`),
           initials,
           avatarSrc,
@@ -127,6 +120,7 @@ export const GET = withAuthLogging(
                 createdAt: lastMsg.Date_Creation.toISOString(),
               }
             : null,
+          // V1: client uses /api/chat/unread-count for badge, this is a per-conversation placeholder
           unreadCount: 0,
         }
       })
@@ -134,7 +128,7 @@ export const GET = withAuthLogging(
       conversations.sort((a, b) => {
         const aTime = a.lastMessage?.createdAt ?? ""
         const bTime = b.lastMessage?.createdAt ?? ""
-        return bTime.localeCompare(aTime)
+        return bTime.localeCompare(aTime, "en")
       })
 
       return apiOk(conversations)
