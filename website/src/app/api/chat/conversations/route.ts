@@ -11,7 +11,7 @@ import type { JWTPayload } from "@/lib/jwt"
 
 type ConversationItem = {
   id: number
-  type: string
+  type: "dm" | "group"
   name: string
   dmKey: string | null
   lastMessage: {
@@ -108,7 +108,7 @@ export const GET = withAuthLogging(
 
         return {
           id: conv.Id_Conversation,
-          type: conv.Type,
+          type: conv.Type as "dm" | "group",
           name,
           dmKey: conv.DM_Key,
           lastMessage: lastMsg

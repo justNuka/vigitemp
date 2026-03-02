@@ -8,7 +8,7 @@ import { Link } from "@/i18n/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useUnreadCount } from "@/hooks/useUnreadCount"
@@ -16,24 +16,26 @@ import { getJson, postJson } from "@/lib/http"
 
 type ConversationSummary = {
   id: number
-  type: string
+  type: "dm" | "group"
   name: string
-  avatar: { initials: string; avatarSrc: string | null } | null
+  dmKey: string | null
   lastMessage: {
     id: number
+    content: string
     senderId: number
-    contenu: string | null
-    deleted: boolean
+    senderName: string
     createdAt: string
   } | null
-  lastReadMsgId: number | null
+  unreadCount: number
 }
 
-function isUnread(conv: ConversationSummary, currentUserId?: number): boolean {
+function isUnread(conv: ConversationSummary, currentUserId: number | undefined): boolean {
   if (!conv.lastMessage) return false
+  if (currentUserId === undefined) return false
   if (conv.lastMessage.senderId === currentUserId) return false
-  if (!conv.lastReadMsgId) return true
-  return conv.lastMessage.id > conv.lastReadMsgId
+  // V1: server always returns unreadCount: 0 as a placeholder.
+  // We treat any conversation whose last message was sent by someone else as unread.
+  return true
 }
 
 function useFormatTime() {
@@ -48,14 +50,28 @@ function useFormatTime() {
     if (diffMin < 60) return t("minutes_ago", { count: diffMin })
     const diffH = Math.floor(diffMin / 60)
     if (diffH < 24) return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    return t("yesterday")
+
+    const isYesterday =
+      date.getFullYear() === now.getFullYear() &&
+      date.getMonth() === now.getMonth() &&
+      now.getDate() - date.getDate() === 1
+
+    if (isYesterday) return t("yesterday")
+    return date.toLocaleDateString([], { day: "numeric", month: "short" })
   }
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length === 1) return (parts[0]?.[0] ?? "?").toUpperCase()
+  return ((parts[0]?.[0] ?? "") + (parts[parts.length - 1]?.[0] ?? "")).toUpperCase()
 }
 
 export function BellButton({ currentUserId }: { currentUserId?: number }) {
   const t = useTranslations("messaging")
   const unreadCount = useUnreadCount()
   const [open, setOpen] = useState(false)
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false)
   const formatTime = useFormatTime()
   const queryClient = useQueryClient()
 
@@ -71,19 +87,26 @@ export function BellButton({ currentUserId }: { currentUserId?: number }) {
     .slice(0, 5)
 
   const markAllRead = async (): Promise<void> => {
-    if (!conversations) return
-    const unreadIds = conversations
-      .filter((c) => isUnread(c, currentUserId))
-      .map((c) => c.id)
+    if (!conversations || isMarkingAllRead) return
+    setIsMarkingAllRead(true)
+    try {
+      const unreadIds = conversations
+        .filter((c) => isUnread(c, currentUserId))
+        .map((c) => c.id)
 
-    await Promise.all(
-      unreadIds.map((id) =>
-        postJson<void>(`/api/chat/conversations/${id}/read`, {})
+      await Promise.all(
+        unreadIds.map((id) =>
+          postJson<void>(`/api/chat/conversations/${id}/read`, {})
+        )
       )
-    )
 
-    await queryClient.invalidateQueries({ queryKey: ["chat", "unread-count"] })
-    await queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] })
+      await queryClient.invalidateQueries({ queryKey: ["chat", "unread-count"] })
+      await queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] })
+    } catch {
+      // Silently fail — the user can retry by reopening the popover
+    } finally {
+      setIsMarkingAllRead(false)
+    }
   }
 
   return (
@@ -116,6 +139,7 @@ export function BellButton({ currentUserId }: { currentUserId?: number }) {
               size="sm"
               className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
               onClick={markAllRead}
+              disabled={isMarkingAllRead}
             >
               {t("bell.mark_all_read")}
             </Button>
@@ -128,7 +152,7 @@ export function BellButton({ currentUserId }: { currentUserId?: number }) {
             <p className="text-sm">{t("bell.empty")}</p>
           </div>
         ) : (
-          <ScrollArea className="max-h-72">
+          <ScrollArea className="h-72">
             <div className="py-1">
               {unreadConvs.map((conv, index) => (
                 <div key={conv.id}>
@@ -139,11 +163,8 @@ export function BellButton({ currentUserId }: { currentUserId?: number }) {
                     className="flex items-start gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer"
                   >
                     <Avatar className="h-9 w-9 shrink-0 mt-0.5">
-                      {conv.avatar?.avatarSrc && (
-                        <AvatarImage src={conv.avatar.avatarSrc} />
-                      )}
                       <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                        {conv.avatar?.initials ?? "?"}
+                        {getInitials(conv.name)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
@@ -155,9 +176,9 @@ export function BellButton({ currentUserId }: { currentUserId?: number }) {
                           </span>
                         )}
                       </div>
-                      {conv.lastMessage?.contenu && !conv.lastMessage.deleted && (
+                      {conv.lastMessage?.content && (
                         <p className="text-xs text-muted-foreground truncate mt-0.5">
-                          {conv.lastMessage.contenu}
+                          {conv.lastMessage.content}
                         </p>
                       )}
                     </div>
