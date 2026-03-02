@@ -11,12 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 import type { ConversationSummary } from "./_types"
-
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/)
-  if (parts.length === 1) return (parts[0]?.[0] ?? "?").toUpperCase()
-  return ((parts[0]?.[0] ?? "") + (parts[parts.length - 1]?.[0] ?? "")).toUpperCase()
-}
+import { getInitials } from "../_utils"
 
 function formatTime(dateStr: string, t: ReturnType<typeof useTranslations<"messaging.time">>): string {
   const date = new Date(dateStr)
@@ -27,10 +22,11 @@ function formatTime(dateStr: string, t: ReturnType<typeof useTranslations<"messa
   if (diffMin < 60) return t("minutes_ago", { count: diffMin })
   const diffH = Math.floor(diffMin / 60)
   if (diffH < 24) return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  const isYesterday =
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    now.getDate() - date.getDate() === 1
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const yesterday = new Date(today)
+  yesterday.setDate(today.getDate() - 1)
+  const msgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const isYesterday = msgDay.getTime() === yesterday.getTime()
   if (isYesterday) return t("yesterday")
   return date.toLocaleDateString([], { day: "numeric", month: "short" })
 }

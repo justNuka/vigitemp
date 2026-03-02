@@ -21,12 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getJson, postJson } from "@/lib/http"
 import { cn } from "@/lib/utils"
 import type { ApiUser, ConversationRef, GroupConversationRef } from "./_types"
-
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/)
-  if (parts.length === 1) return (parts[0]?.[0] ?? "?").toUpperCase()
-  return ((parts[0]?.[0] ?? "") + (parts[parts.length - 1]?.[0] ?? "")).toUpperCase()
-}
+import { getInitials } from "../_utils"
 
 type NewConversationModalProps = {
   open: boolean
@@ -202,9 +197,9 @@ export function NewConversationModal({
             <Button
               className="w-full"
               onClick={() => void handleCreateDirect()}
-              disabled={!canCreateDirect}
+              disabled={!canCreateDirect || isCreating}
             >
-              {isCreating ? "..." : t("create")}
+              {t("create")}
             </Button>
           </TabsContent>
 
@@ -296,9 +291,9 @@ export function NewConversationModal({
             <Button
               className="w-full"
               onClick={() => void handleCreateGroup()}
-              disabled={!canCreateGroup}
+              disabled={!canCreateGroup || isCreating}
             >
-              {isCreating ? "..." : t("create")}
+              {t("create")}
             </Button>
           </TabsContent>
         </Tabs>

@@ -11,6 +11,7 @@ import { getJson, postJson } from "@/lib/http"
 import { cn } from "@/lib/utils"
 import { MessageInput } from "./message-input"
 import type { ConversationSummary, MessageItem, MessagesResponse } from "./_types"
+import { getInitials } from "../_utils"
 
 type DateLabel = {
   type: "date"
@@ -178,14 +179,7 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
       <div className="flex items-center gap-3 px-5 py-3.5 border-b shrink-0 bg-background/80 backdrop-blur-sm">
         <Avatar className="h-8 w-8 shrink-0">
           <AvatarFallback className="text-xs font-medium bg-primary/10 text-primary">
-            {(
-              conversation.name
-                .trim()
-                .split(/\s+/)
-                .map((p) => p[0])
-                .join("")
-                .slice(0, 2) || "?"
-            ).toUpperCase()}
+            {getInitials(conversation.name)}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
