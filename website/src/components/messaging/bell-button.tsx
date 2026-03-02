@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Bell } from "lucide-react"
 import { useTranslations } from "next-intl"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@/i18n/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useUnreadCount } from "@/hooks/useUnreadCount"
-import { getJson } from "@/lib/http"
+import { getJson, postJson } from "@/lib/http"
 
 type ConversationSummary = {
   id: number
@@ -57,6 +57,7 @@ export function BellButton({ currentUserId }: { currentUserId?: number }) {
   const unreadCount = useUnreadCount()
   const [open, setOpen] = useState(false)
   const formatTime = useFormatTime()
+  const queryClient = useQueryClient()
 
   const { data: conversations } = useQuery<ConversationSummary[]>({
     queryKey: ["chat", "conversations"],
@@ -68,6 +69,22 @@ export function BellButton({ currentUserId }: { currentUserId?: number }) {
   const unreadConvs = (conversations ?? [])
     .filter((c) => isUnread(c, currentUserId))
     .slice(0, 5)
+
+  const markAllRead = async (): Promise<void> => {
+    if (!conversations) return
+    const unreadIds = conversations
+      .filter((c) => isUnread(c, currentUserId))
+      .map((c) => c.id)
+
+    await Promise.all(
+      unreadIds.map((id) =>
+        postJson<void>(`/api/chat/conversations/${id}/read`, {})
+      )
+    )
+
+    await queryClient.invalidateQueries({ queryKey: ["chat", "unread-count"] })
+    await queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] })
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -93,6 +110,16 @@ export function BellButton({ currentUserId }: { currentUserId?: number }) {
       <PopoverContent className="w-80 p-0" align="end">
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <span className="font-semibold text-sm">{t("bell.title")}</span>
+          {unreadConvs.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+              onClick={markAllRead}
+            >
+              {t("bell.mark_all_read")}
+            </Button>
+          )}
         </div>
 
         {unreadConvs.length === 0 ? (
@@ -106,6 +133,7 @@ export function BellButton({ currentUserId }: { currentUserId?: number }) {
               {unreadConvs.map((conv, index) => (
                 <div key={conv.id}>
                   <Link
+                    // next-intl's typed Link doesn't support query params natively; cast is safe here
                     href={`/messages?conv=${conv.id}` as never}
                     onClick={() => setOpen(false)}
                     className="flex items-start gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer"
@@ -133,7 +161,7 @@ export function BellButton({ currentUserId }: { currentUserId?: number }) {
                         </p>
                       )}
                     </div>
-                    <div className="h-2 w-2 rounded-full bg-primary shrink-0 mt-2" aria-hidden />
+                    <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0 mt-2" aria-hidden />
                   </Link>
                   {index < unreadConvs.length - 1 && <Separator />}
                 </div>
