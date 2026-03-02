@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -8,6 +10,9 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { stripLocalePrefix } from "@/i18n/pathnames";
 import { useTranslations } from "next-intl";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useMessagingEnabled } from "@/hooks/useMessagingEnabled";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { BellButton } from "@/components/messaging/bell-button";
 
 interface PageHeaderProps {
   title: string;
@@ -29,6 +34,8 @@ export function PageHeaderBase({
   const pathname = usePathname();
   const normalizedPath = stripLocalePrefix(pathname || "");
   const isOnAlarmsPage = normalizedPath === "/alarmes";
+  const messagingEnabled = useMessagingEnabled();
+  const { data: currentUser } = useCurrentUser();
 
   return (
     <header
@@ -92,6 +99,9 @@ export function PageHeaderBase({
             )
           )}
           <LanguageSwitcher />
+          {messagingEnabled && (
+            <BellButton currentUserId={currentUser?.id} />
+          )}
           <ThemeToggle />
         </div>
       </div>
