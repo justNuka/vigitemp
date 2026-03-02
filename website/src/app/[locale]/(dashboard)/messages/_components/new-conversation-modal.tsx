@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { toast } from "sonner"
 import { getJson, postJson } from "@/lib/http"
 import { cn } from "@/lib/utils"
 import type { ApiUser, ConversationRef, GroupConversationRef } from "./_types"
@@ -92,6 +93,8 @@ export function NewConversationModal({
       })
       onCreated(result.id)
       handleClose()
+    } catch {
+      toast.error(t("create_error"))
     } finally {
       setIsCreating(false)
     }
@@ -107,6 +110,8 @@ export function NewConversationModal({
       })
       onCreated(result.id)
       handleClose()
+    } catch {
+      toast.error(t("create_error"))
     } finally {
       setIsCreating(false)
     }
@@ -229,6 +234,7 @@ export function NewConversationModal({
                       {member.displayName || member.username}
                       <button
                         onClick={() => toggleGroupMember(member)}
+                        aria-label={member.displayName || member.username}
                         className="rounded-full hover:bg-muted-foreground/20 p-0.5 transition-colors"
                       >
                         <X className="h-2.5 w-2.5" />

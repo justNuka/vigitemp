@@ -211,7 +211,13 @@
     },
     "refresh": {
       "label": "Actualiser",
-      "loading": "Actualisation..."
+      "loading": "Actualisation...",
+      "refreshed": "Données actualisées"
+    },
+    "toast": {
+      "location_not_found": "Lieu introuvable",
+      "location_updated": "Lieu modifié avec succès",
+      "location_update_error": "Erreur lors de la modification du lieu"
     },
     "overlay": {
       "button": "Superposer courbes",
@@ -724,6 +730,7 @@
         "lower_min": "Minimum",
         "lower_pre_enable": "Activation consigne inf pré-alarme",
         "lower_pre_label": "Pré-alarme inf.",
+        "retrigger_delay_measures": "Temporisation redeclenchement (mesures)",
         "module_select": "Module"
       },
       "placeholders": {
@@ -742,6 +749,7 @@
         "numeric": "0.0",
         "frequency": "15",
         "delay": "5",
+        "retrigger_delay_measures": "0",
         "module": "Choisir un module",
         "module_search": "Rechercher un module...",
         "module_empty": "Aucun module"
@@ -758,7 +766,8 @@
         "no_module": "Aucun module"
       },
       "tooltips": {
-        "frequency_gso": "Fréquence fixée à 15 min pour les sondes GSO."
+        "frequency_gso": "Fréquence fixée à 15 min pour les sondes GSO.",
+        "retrigger_delay_measures": "Nombre de mesures hors tolerances a ignorer avant un nouveau declenchement apres acquittement ou alarme terminee."
       },
       "group_fallback": "Groupe {id}"
     },
@@ -895,7 +904,7 @@
         "description": "Que faire des consignes après suppression ?",
         "optionBase": "Restaurer les consignes de base",
         "optionRegle": "Appliquer les consignes de cette règle comme nouvelles valeurs de base",
-        "ruleValues": "Consigne\u00a0: {consigne}  |  Sup\u00a0: {sup}  |  Inf\u00a0: {inf}",
+        "ruleValues": "Consigne : {consigne}  |  Sup : {sup}  |  Inf : {inf}",
         "errorDelete": "Erreur lors de la suppression de la règle."
       }
     }
@@ -922,6 +931,7 @@
       "detail": "{count, plural, one {Ce module est lié à {count} sonde.} other {Ce module est lié à {count} sondes.}}"
     },
     "toast": {
+      "archive_success": "Module archivé avec succès",
       "archive_error": "Erreur lors de l'archivage"
     }
   },
@@ -1105,6 +1115,14 @@
         "required": "Le commentaire est requis",
         "max": "{max} caractères maximum"
       }
+    },
+    "toast": {
+      "save_success": "Commentaire enregistré",
+      "save_error": "Erreur lors de l'enregistrement du commentaire",
+      "delete_success": "Commentaire supprimé",
+      "delete_error": "Erreur lors de la suppression du commentaire",
+      "update_success": "Commentaire modifié",
+      "update_error": "Erreur lors de la modification du commentaire"
     }
   },
   "toolsTestConnection": {
@@ -1145,16 +1163,18 @@
       "global_response_rate": "Taux de réponse global",
       "sensor_count": "{count, plural, one {{count} sonde} other {{count} sondes}}",
       "measurement_count": "Nombre de mesures",
-      "last_24h": "dernières 24h",
+      "last_7days": "Derniers 7 jours",
       "selected_sensors": "Sondes sélectionnées",
       "selected_over_total": "sur {total}"
     }
   },
   "audit": {
+    "title": "Journal d'audit",
     "latest_activity": "Dernières activités",
     "events_summary": "{count, plural, one {{count} événement} other {{count} événements}}",
     "events_summary_filtered": "{count, plural, one {{count} événement} other {{count} événements}} sur {total}",
     "all_codes": "Tous les codes",
+    "search": "Rechercher...",
     "search_placeholder": "Rechercher...",
     "empty": "Aucun log d'audit trouvé",
     "refresh": "Actualiser",
@@ -1204,6 +1224,10 @@
       "to": "Vers : {value}",
       "action": "Action : {action}",
       "ip": "IP : {ip}"
+    },
+    "filters": {
+      "code_all": "Tous les codes",
+      "code_placeholder": "Code action"
     }
   },
   "profilePage": {
@@ -1563,12 +1587,6 @@
       "calibrations": {
         "title": "Étalonnages",
         "empty": "Aucun étalonnage",
-        "columns": {
-          "date": "Date",
-          "validity": "Validité",
-          "operator": "Opérateur",
-          "incertitude": "Incertitude"
-        },
         "actions": {
           "delete": "Supprimer",
           "generate": "Générer",
@@ -1608,7 +1626,8 @@
   "sensorAdjustmentImport": {
     "page": {
       "title": "Import ajustage/calibrage",
-      "description": "Importer des fichiers XML d'ajustage (anciennement calibrage)"
+      "description": "Importer des fichiers XML d'ajustage (anciennement calibrage)",
+      "back_to_sensors": "Retour aux sondes"
     },
     "actions": {
       "import": "Importer des fichiers",
@@ -1622,6 +1641,7 @@
       "title": "Fichiers d'ajustage/calibrage",
       "columns": {
         "file": "Fichier",
+        "module_assignment": "Module affecté",
         "sensor": "Sonde",
         "date": "Date",
         "operator": "Opérateur",
@@ -1633,6 +1653,14 @@
         "actions": "Actions"
       },
       "empty": "Veuillez importer un ou plusieurs fichier(s) d'ajustage/ajustage..."
+    },
+    "labels": {
+      "no_module": "Aucun module",
+      "module_not_selected": "Module non sélectionné"
+    },
+    "tooltips": {
+      "existing_assigned": "Module déjà affecté à cette sonde. Pour affecter cette sonde à un nouveau module, rendez-vous sur la page de gestion des sondes et modifiez celle-ci.",
+      "created_on_import": "Sonde créée durant l'import d'ajustage. Le module sélectionné dans le menu déroulant est affecté automatiquement. Pour en affecter un autre, rendez-vous sur la page de gestion des sondes."
     },
     "modal": {
       "title": "Importer un fichier d'ajustage/calibrage",
@@ -1651,7 +1679,10 @@
       "confirm_adjustment_overwrite": "Des ajustages existent déjà pour {count} sonde(s). Ils seront remplacés:",
       "confirm_offset_clear": "Un offset est présent sur {count} sonde(s). Il sera remis à 0:",
       "overwrite_done": "Ajustages remplacés pour {count} sonde(s).",
-      "offsets_cleared": "Offsets remis à 0 pour {count} sonde(s)."
+      "offsets_cleared": "Offsets remis à 0 pour {count} sonde(s).",
+      "module_required": "Veuillez sélectionner un module.",
+      "created_sensors_from_adjustment": "Sondes créées suite à l'ajustage : {count}",
+      "existing_sensors_with_module": "Sondes existantes déjà affectées à un module : {count}"
     }
   },
   "sensorAdjustmentUpload": {
@@ -3310,6 +3341,10 @@
     "actions": {
       "submit": "Se connecter",
       "submit_loading": "Connexion..."
+    },
+    "security": {
+      "title": "Sécurité",
+      "description": "À la fin d'une opération hotline, déconnectez-vous de la session."
     }
   },
   "hotlineDashboard": {
@@ -3317,7 +3352,8 @@
     "subtitle": "Accès réservé aux opérations de support.",
     "tabs": {
       "overview": "Vue globale",
-      "logs": "Logs"
+      "logs": "Logs",
+      "request_errors": "Erreurs API"
     },
     "actions": {
       "logout": "Déconnexion",
@@ -3334,7 +3370,9 @@
     "health": {
       "server": "Serveur C#",
       "db_main": "Base principale",
-      "db_mesure": "Base mesures"
+      "db_mesure": "Base mesures",
+      "db_chat": "Base messagerie",
+      "banner": "Statuts en temps reel des services hotline"
     },
     "logs": {
       "filter_title": "Filtrer les logs",
@@ -3354,6 +3392,10 @@
         "web_service_wrapper": "Service web (wrapper)",
         "web_service_output": "Service web (out)"
       }
+    },
+    "request_errors": {
+      "title": "Erreurs des requêtes API",
+      "empty": "Aucune erreur API récente"
     }
   },
   "usersTable": {
@@ -3380,7 +3422,11 @@
     "empty": "Aucun utilisateur trouvé"
   },
   "sitesTable": {
-    "columns": {},
+    "columns": {
+      "site": "Site",
+      "description": "Description",
+      "comments": "Commentaires"
+    },
     "placeholders": {
       "na": "-"
     },
@@ -3547,7 +3593,8 @@
       "participants_count": "{count, plural, one {{count} participant} other {{count} participants}}",
       "input_placeholder": "Écrivez un message… (Entrée pour envoyer, Maj+Entrée pour saut de ligne)",
       "send": "Envoyer",
-      "load_more": "Charger les messages précédents"
+      "load_more": "Charger les messages précédents",
+      "send_error": "Échec de l'envoi du message"
     },
     "new_conversation": {
       "title": "Nouvelle conversation",
@@ -3559,7 +3606,8 @@
       "group_members_label": "Membres",
       "group_members_search": "Ajouter des membres...",
       "create": "Créer",
-      "no_users": "Aucun utilisateur trouvé"
+      "no_users": "Aucun utilisateur trouvé",
+      "create_error": "Échec de la création de la conversation"
     },
     "bell": {
       "tooltip": "Messages",

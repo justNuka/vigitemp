@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { ChevronUp } from "lucide-react"
+import { toast } from "sonner"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -82,7 +83,8 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false)
   const [allMessages, setAllMessages] = useState<MessageItem[]>([])
   const [isLoadingMore, setIsLoadingMore] = useState(false)
-  const [loadMoreCursor, setLoadMoreCursor] = useState<number | undefined>(undefined)
+  // undefined = not yet loaded older messages, null = exhausted (no more), number = cursor to next page
+  const [loadMoreCursor, setLoadMoreCursor] = useState<number | null | undefined>(undefined)
 
   const convId = conversation.id
 
@@ -142,7 +144,15 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
   }, [allMessages.length, hasScrolledToBottom])
 
   const nextCursor = data?.nextCursor
-  const effectiveNextCursor = loadMoreCursor !== undefined ? loadMoreCursor : nextCursor
+  // loadMoreCursor=undefined means no older messages fetched yet (use nextCursor from initial fetch)
+  // loadMoreCursor=null means exhausted (no more older messages — do not show button)
+  // loadMoreCursor=number means cursor for the next older page
+  const effectiveNextCursor: number | undefined =
+    loadMoreCursor === null
+      ? undefined
+      : loadMoreCursor !== undefined
+        ? loadMoreCursor
+        : nextCursor
 
   async function handleLoadMore() {
     if (!effectiveNextCursor || isLoadingMore) return
@@ -159,16 +169,21 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
         ].sort((a, b) => a.id - b.id)
         return merged
       })
-      setLoadMoreCursor(older.nextCursor)
+      // null = exhausted when API returns no nextCursor
+      setLoadMoreCursor(older.nextCursor ?? null)
     } finally {
       setIsLoadingMore(false)
     }
   }
 
   async function handleSend(content: string) {
-    await postJson(`/api/chat/conversations/${convId}/messages`, { contenu: content })
-    await queryClient.invalidateQueries({ queryKey: ["chat", "messages", convId] })
-    await queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] })
+    try {
+      await postJson(`/api/chat/conversations/${convId}/messages`, { contenu: content })
+      await queryClient.invalidateQueries({ queryKey: ["chat", "messages", convId] })
+      await queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] })
+    } catch {
+      toast.error(t("thread.send_error"))
+    }
   }
 
   const rows = buildRows(allMessages, tTime)

@@ -355,7 +355,13 @@
     },
     "refresh": {
       "label": "Refresh",
-      "loading": "Refreshing..."
+      "loading": "Refreshing...",
+      "refreshed": "Data refreshed"
+    },
+    "toast": {
+      "location_not_found": "Location not found",
+      "location_updated": "Location updated successfully",
+      "location_update_error": "Error while updating location"
     },
     "overlay": {
       "button": "Overlay curves",
@@ -476,6 +482,7 @@
         "lower_min": "Minimum",
         "lower_pre_enable": "Enable lower pre-alarm",
         "lower_pre_label": "Lower pre-alarm",
+        "retrigger_delay_measures": "Retrigger delay (measures)",
         "module_select": "Module"
       },
       "placeholders": {
@@ -494,6 +501,7 @@
         "numeric": "0.0",
         "frequency": "15",
         "delay": "5",
+        "retrigger_delay_measures": "0",
         "module": "Select a module",
         "module_search": "Search a module...",
         "module_empty": "No module"
@@ -510,7 +518,8 @@
         "no_module": "No module"
       },
       "tooltips": {
-        "frequency_gso": "Frequency is fixed to 15 minutes for GSO sensors."
+        "frequency_gso": "Frequency is fixed to 15 minutes for GSO sensors.",
+        "retrigger_delay_measures": "Number of out-of-tolerance measures to ignore before triggering a new alarm after acknowledge or alarm end."
       },
       "group_fallback": "Group {id}"
     },
@@ -564,7 +573,20 @@
       }
     },
     "telephony": {
-      "unavailable_now": "This section is not yet available."
+      "title": "Recipients per location",
+      "description": "Configure contact order and channel for this location.",
+      "add": "Add contact",
+      "remove": "Remove row",
+      "empty": "No recipient configured for this location.",
+      "labels": {
+        "order": "Order",
+        "user": "User",
+        "via_mail": "By email",
+        "via_phone": "By phone"
+      },
+      "placeholders": {
+        "user": "Select a user"
+      }
     }
   },
   "lieux": {
@@ -661,6 +683,7 @@
       "detail": "{count, plural, one {This module is linked to {count} sensor.} other {This module is linked to {count} sensors.}}"
     },
     "toast": {
+      "archive_success": "Module archived successfully",
       "archive_error": "Error while archiving"
     }
   },
@@ -844,6 +867,14 @@
         "required": "Comment is required",
         "max": "{max} characters maximum"
       }
+    },
+    "toast": {
+      "save_success": "Comment saved",
+      "save_error": "Error while saving comment",
+      "delete_success": "Comment deleted",
+      "delete_error": "Error while deleting comment",
+      "update_success": "Comment updated",
+      "update_error": "Error while updating comment"
     }
   },
   "toolsTestConnection": {
@@ -884,16 +915,18 @@
       "global_response_rate": "Global response rate",
       "sensor_count": "{count, plural, one {{count} sensor} other {{count} sensors}}",
       "measurement_count": "Measurement count",
-      "last_24h": "last 24h",
+      "last_7days": "Last 7 days",
       "selected_sensors": "Selected sensors",
       "selected_over_total": "out of {total}"
     }
   },
   "audit": {
+    "title": "Audit log",
     "latest_activity": "Latest activity",
     "events_summary": "{count, plural, one {{count} event} other {{count} events}}",
     "events_summary_filtered": "{count, plural, one {{count} event} other {{count} events}} out of {total}",
     "all_codes": "All codes",
+    "search": "Search...",
     "search_placeholder": "Search...",
     "empty": "No audit logs found",
     "refresh": "Refresh",
@@ -943,6 +976,10 @@
       "to": "To: {value}",
       "action": "Action: {action}",
       "ip": "IP: {ip}"
+    },
+    "filters": {
+      "code_all": "All codes",
+      "code_placeholder": "Action code"
     }
   },
   "profilePage": {
@@ -1301,6 +1338,12 @@
         "custom": "Manual"
       }
     },
+    "timezone": {
+      "title": "Time zone",
+      "description": "Set the display time zone",
+      "label": "Time zone",
+      "helper": "Date displays will adapt to this time zone."
+    },
     "security": {
       "title": "Security",
       "description": "Security and session settings",
@@ -1419,6 +1462,76 @@
       "description": "Alarm management for administrators"
     }
   },
+  "locationsPage": {
+    "title": "Location management",
+    "count": "{count, plural, one {{count} location} other {{count} locations}}",
+    "tabs": {
+      "all": "All ({count})",
+      "unassigned": "Without sensor ({count})"
+    },
+    "actions": {
+      "new": "New",
+      "edit": "Edit",
+      "archive": "Archive"
+    },
+    "toast": {
+      "create_success": "Location created successfully",
+      "create_no_sensor": "Location created without sensor. You can assign one later.",
+      "create_error": "Error while creating location",
+      "update_success": "Location updated successfully",
+      "update_error": "Error while updating location",
+      "archive_success": "Location archived successfully",
+      "archive_error": "Error while archiving location"
+    },
+    "errors": {
+      "no_location_selected": "No location selected"
+    },
+    "dialogs": {
+      "archive": {
+        "title": "Archive location",
+        "description": "This location will switch to disabled monitoring and its sensor will be unassigned. Do you want to continue?",
+        "submitting": "Archiving...",
+        "confirm": "Archive"
+      },
+      "create_no_sensor": {
+        "title": "Create location without sensor?",
+        "description": "This location will be created without an associated sensor. You can assign one later in location management. Do you want to continue?",
+        "submitting": "Creating...",
+        "confirm": "Continue"
+      }
+    }
+  },
+  "locationsTable": {
+    "columns": {
+      "location": "Location",
+      "type": "Type",
+      "site": "Site",
+      "groups": "Groups",
+      "sensor": "Sensor",
+      "status": "Status",
+      "setpoint": "Setpoint",
+      "unit": "Unit",
+      "frequency": "Frequency",
+      "max": "Max",
+      "min": "Min",
+      "alarm_delay_high": "High alarm delay",
+      "alarm_delay_low": "Low alarm delay"
+    },
+    "placeholders": {
+      "na": "N/A",
+      "no_sensor": "No sensor"
+    },
+    "types": {
+      "bain_marie": "Water bath",
+      "etuve": "Incubator",
+      "ambiance": "Ambient",
+      "frigo_congel": "Fridge / Freezer",
+      "autre": "Other"
+    },
+    "frequency_value": "Every {count} min",
+    "search_placeholder": "Search locations...",
+    "empty": "No locations found"
+  },
   "sensorsPage": {
     "title": "Sensor management ({count, plural, one {# sensor} other {# sensors}})",
     "actions": {
@@ -1509,7 +1622,8 @@
   "sensorAdjustmentImport": {
     "page": {
       "title": "Adjustment/Calibration import",
-      "description": "Import XML adjustment (formerly calibration files)"
+      "description": "Import XML adjustment (formerly calibration files)",
+      "back_to_sensors": "Back to sensors"
     },
     "actions": {
       "import": "Import files",
@@ -1523,6 +1637,7 @@
       "title": "Adjustment/Calibration files",
       "columns": {
         "file": "File",
+        "module_assignment": "Assigned module",
         "sensor": "Sensor",
         "date": "Date",
         "operator": "Operator",
@@ -1534,6 +1649,14 @@
         "actions": "Actions"
       },
       "empty": "Please import one or more adjustment/calibration file(s)..."
+    },
+    "labels": {
+      "no_module": "No module",
+      "module_not_selected": "No module selected"
+    },
+    "tooltips": {
+      "existing_assigned": "A module is already assigned to this sensor. To assign this sensor to another module, go to the sensors management page and edit it.",
+      "created_on_import": "Sensor created during adjustment import. The module selected in the dropdown is assigned automatically. To assign another module, go to the sensors management page."
     },
     "modal": {
       "title": "Import an adjustment/calibration file",
@@ -1553,7 +1676,10 @@
       "confirm_adjustment_overwrite": "Adjustments already exist for {count} sensor(s). They will be replaced:",
       "confirm_offset_clear": "An offset exists on {count} sensor(s). It will be reset to 0:",
       "overwrite_done": "Adjustments replaced for {count} sensor(s).",
-      "offsets_cleared": "Offsets reset to 0 for {count} sensor(s)."
+      "offsets_cleared": "Offsets reset to 0 for {count} sensor(s).",
+      "module_required": "Please select a module.",
+      "created_sensors_from_adjustment": "Sensors created from adjustment import: {count}",
+      "existing_sensors_with_module": "Existing sensors already assigned to a module: {count}"
     }
   },
   "sensorAdjustmentUpload": {
@@ -3125,7 +3251,10 @@
       "na": "-"
     },
     "columns": {
+      "type": "Type",
       "location": "Location",
+      "last_value": "Last value",
+      "thresholds": "Upper/lower thresholds",
       "start": "Alarm start",
       "status": "Status",
       "count_30": "Alarms 30d",
@@ -3134,7 +3263,14 @@
     },
     "status": {
       "awaiting_ack": "Awaiting acknowledgment",
-      "active": "Alarm active"
+      "active": "Alarm active",
+      "acknowledged": "Acknowledged"
+    },
+    "thresholds": {
+      "sup": "High: {value} {unit}",
+      "inf": "Low: {value} {unit}",
+      "sup_empty": "High: -",
+      "inf_empty": "Low: -"
     },
     "ack_status": {
       "na": "-",
@@ -3202,6 +3338,10 @@
     "actions": {
       "submit": "Sign in",
       "submit_loading": "Signing in..."
+    },
+    "security": {
+      "title": "Security",
+      "description": "After a hotline operation, sign out from the session."
     }
   },
   "hotlineDashboard": {
@@ -3209,7 +3349,8 @@
     "subtitle": "Access reserved for support operations.",
     "tabs": {
       "overview": "Overview",
-      "logs": "Logs"
+      "logs": "Logs",
+      "request_errors": "API errors"
     },
     "actions": {
       "logout": "Sign out",
@@ -3226,7 +3367,9 @@
     "health": {
       "server": "C# server",
       "db_main": "Main database",
-      "db_mesure": "Measurements database"
+      "db_mesure": "Measurements database",
+      "db_chat": "Messaging database",
+      "banner": "Real-time hotline service status"
     },
     "logs": {
       "filter_title": "Filter logs",
@@ -3246,6 +3389,10 @@
         "web_service_wrapper": "Web service (wrapper)",
         "web_service_output": "Web service (out)"
       }
+    },
+    "request_errors": {
+      "title": "API request errors",
+      "empty": "No recent API errors"
     }
   },
   "usersTable": {
@@ -3440,7 +3587,8 @@
       "participants_count": "{count, plural, one {{count} participant} other {{count} participants}}",
       "input_placeholder": "Write a message… (Enter to send, Shift+Enter for new line)",
       "send": "Send",
-      "load_more": "Load previous messages"
+      "load_more": "Load previous messages",
+      "send_error": "Failed to send message"
     },
     "new_conversation": {
       "title": "New conversation",
@@ -3452,7 +3600,8 @@
       "group_members_label": "Members",
       "group_members_search": "Add members...",
       "create": "Create",
-      "no_users": "No users found"
+      "no_users": "No users found",
+      "create_error": "Failed to create conversation"
     },
     "bell": {
       "tooltip": "Messages",

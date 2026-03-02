@@ -36,6 +36,7 @@ type ConversationListProps = {
   isLoading: boolean
   selectedId: number | null
   currentUserId: number | undefined
+  viewedConvIds: Set<number>
   onSelect: (conv: ConversationSummary) => void
   onNewConversation: () => void
 }
@@ -45,6 +46,7 @@ export function ConversationList({
   isLoading,
   selectedId,
   currentUserId,
+  viewedConvIds,
   onSelect,
   onNewConversation,
 }: ConversationListProps) {
@@ -60,6 +62,8 @@ export function ConversationList({
     if (!conv.lastMessage) return false
     if (currentUserId === undefined) return false
     if (conv.lastMessage.senderId === currentUserId) return false
+    // If the conversation was viewed in this session, treat it as read
+    if (viewedConvIds.has(conv.id)) return false
     return true
   }
 
@@ -73,6 +77,7 @@ export function ConversationList({
           size="icon"
           onClick={onNewConversation}
           title={t("conversations.new")}
+          aria-label={t("conversations.new")}
           className="h-8 w-8 shrink-0 hover:bg-muted rounded-full transition-colors"
         >
           <MessageSquarePlus className="h-4 w-4" />

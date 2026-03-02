@@ -26,6 +26,7 @@ export default function MessagesPage() {
     return param ? parseInt(param, 10) : null
   })
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [viewedConvIds, setViewedConvIds] = useState<Set<number>>(new Set())
 
   // Redirect if messaging is not enabled (fail-closed once we know)
   useEffect(() => {
@@ -47,6 +48,7 @@ export default function MessagesPage() {
   const handleSelectConversation = useCallback(
     async (conv: ConversationSummary) => {
       setSelectedConvId(conv.id)
+      setViewedConvIds((prev) => new Set([...prev, conv.id]))
 
       // Update URL query param without full navigation
       const params = new URLSearchParams(searchParams.toString())
@@ -91,6 +93,7 @@ export default function MessagesPage() {
           isLoading={isLoadingConvs}
           selectedId={selectedConvId}
           currentUserId={currentUser?.id}
+          viewedConvIds={viewedConvIds}
           onSelect={(conv) => void handleSelectConversation(conv)}
           onNewConversation={() => setIsModalOpen(true)}
         />
