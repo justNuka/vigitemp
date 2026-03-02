@@ -19,6 +19,7 @@ export function useMessagingEnabled(): boolean {
   });
 
   if (!hasLicense) return false;
-  // Optimistic default: true while the response has not yet arrived
+  // Fail-open: defaults to true while loading or on fetch error,
+  // consistent with the server-side fallback in /api/settings/messaging-enabled.
   return data?.enabled ?? true;
 }
