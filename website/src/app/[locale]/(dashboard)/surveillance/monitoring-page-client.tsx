@@ -60,7 +60,6 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const [disabledFirst, setDisabledFirst] = useState(true);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [showNullNonResponse, setShowNullNonResponse] = useState(false);
-  const [nonResponsePreferencesLoading, setNonResponsePreferencesLoading] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
@@ -165,7 +164,6 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
 
   useEffect(() => {
     let isActive = true;
-    setNonResponsePreferencesLoading(true);
 
     void getJson<{ enabled: boolean }>("/api/preferences/non-response")
       .then((payload) => {
@@ -175,34 +173,12 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       .catch(() => {
         if (!isActive) return;
         setShowNullNonResponse(false);
-      })
-      .finally(() => {
-        if (isActive) {
-          setNonResponsePreferencesLoading(false);
-        }
       });
 
     return () => {
       isActive = false;
     };
   }, []);
-
-  const handleShowNullNonResponseChange = useCallback(
-    async (enabled: boolean) => {
-      const previous = showNullNonResponse;
-      setShowNullNonResponse(enabled);
-      setNonResponsePreferencesLoading(true);
-      try {
-        await patchJson("/api/preferences/non-response", { enabled });
-      } catch (error) {
-        setShowNullNonResponse(previous);
-        throw error;
-      } finally {
-        setNonResponsePreferencesLoading(false);
-      }
-    },
-    [showNullNonResponse],
-  );
 
   useEffect(() => {
     const interval = Number.isFinite(refreshIntervalSeconds) ? refreshIntervalSeconds : 15;
@@ -399,14 +375,14 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     (idLieu: number) => {
       const location = locations.find((item) => item.Id_Lieu === idLieu)
       if (!location) {
-        toast.error("Lieu introuvable")
+        toast.error(t("toast.location_not_found"))
         return
       }
       setSelectedLocationId(idLieu)
       locationForm.reset(mapLocationToFormData(location))
       setIsEditLocationOpen(true)
     },
-    [locationForm, locations],
+    [locationForm, locations, t],
   )
 
   const handleEditLocationSubmit = useCallback(
@@ -420,7 +396,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
         })
         await queryClient.invalidateQueries({ queryKey: ["locations"] })
         await queryClient.invalidateQueries({ queryKey: ["capteurs", "paginated", 100] })
-        toast.success("Lieu modifié avec succès")
+        toast.success(t("toast.location_updated"))
         window.dispatchEvent(
           new CustomEvent("vigitemp:lieu-updated", {
             detail: { idLieu: selectedLocationId },
@@ -428,12 +404,12 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
         )
         setIsEditLocationOpen(false)
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erreur lors de la modification du lieu")
+        toast.error(error instanceof Error ? error.message : t("toast.location_update_error"))
       } finally {
         setIsLocationSaving(false)
       }
     },
-    [queryClient, selectedLocationId],
+    [queryClient, selectedLocationId, t],
   )
   // Important: do not auto-load all pages. The sentinel can be visible without any user scroll,
   // which causes the app to fetch *every* page (and therefore "all sensors").
@@ -474,8 +450,6 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
             onEditLocation={handleOpenLocationEdit}
             isLoading={isFetching && visibleSensors.length === 0}
             showNullNonResponse={showNullNonResponse}
-            onShowNullNonResponseChange={handleShowNullNonResponseChange}
-            nonResponsePreferencesLoading={nonResponsePreferencesLoading}
           />
           <SurveillanceLoadMore
             sentinelRef={loadMoreRef}
@@ -494,8 +468,6 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
             onEditLocation={handleOpenLocationEdit}
             isLoading={isFetching && visibleSensors.length === 0}
             showNullNonResponse={showNullNonResponse}
-            onShowNullNonResponseChange={handleShowNullNonResponseChange}
-            nonResponsePreferencesLoading={nonResponsePreferencesLoading}
           />
           <SurveillanceLoadMore
             sentinelRef={loadMoreRef}

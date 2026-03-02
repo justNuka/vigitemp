@@ -158,7 +158,7 @@ export function CalibrationImportClient() {
         toast.success(t("toast.save_success", { count: insertedCount }));
       }
       if (skippedCount > 0) {
-        toast.error(t("toast.save_skipped", { count: skippedCount }));
+        toast.warning(t("toast.save_skipped", { count: skippedCount }));
       }
 
       setRows([]);

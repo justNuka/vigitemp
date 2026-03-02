@@ -44,11 +44,6 @@ type ModuleAssignment = {
   moduleLabel: string;
 };
 
-const EXISTING_ASSIGNED_TOOLTIP =
-  "Module déjà affecté à cette sonde. Pour affecter cette sonde à un nouveau module, rendez vous sur la page de gestion des sondes et modifier celle-ci.";
-const CREATED_ON_IMPORT_TOOLTIP =
-  "Sonde créée durant l'importation de l'ajustage. Module sélectionné dans le menu déroulant affecté à celle-ci. Pour en affecter un autre, rendez vous sur la page de gestion des sondes.";
-
 export function AdjustmentImportClient() {
   const t = useTranslations("sensorAdjustmentImport");
   const [open, setOpen] = useState(false);
@@ -126,12 +121,12 @@ export function AdjustmentImportClient() {
           moduleLabel: moduleById.get(existing.Id_Module) ?? `#${existing.Id_Module}`,
         };
       }
-      return { status: "existing_unassigned", moduleLabel: "Aucun module" };
+      return { status: "existing_unassigned", moduleLabel: t("labels.no_module") };
     }
 
     const selectedLabel = selectedModuleNumericId
       ? (moduleById.get(selectedModuleNumericId) ?? `#${selectedModuleNumericId}`)
-      : "Module non sélectionné";
+      : t("labels.module_not_selected");
 
     return {
       status: "to_create",
@@ -202,7 +197,7 @@ export function AdjustmentImportClient() {
       return;
     }
     if (!selectedModuleNumericId) {
-      toast.error("Veuillez sélectionner un module.");
+      toast.error(t("toast.module_required"));
       return;
     }
 
@@ -268,7 +263,7 @@ export function AdjustmentImportClient() {
         toast.success(t("toast.save_success", { count: insertedCount }));
       }
       if (skippedCount > 0) {
-        toast.error(t("toast.save_skipped", { count: skippedCount }));
+        toast.warning(t("toast.save_skipped", { count: skippedCount }));
       }
       if (overwrittenAdjustments > 0) {
         toast.success(t("toast.overwrite_done", { count: overwrittenAdjustments }));
@@ -277,10 +272,10 @@ export function AdjustmentImportClient() {
         toast.success(t("toast.offsets_cleared", { count: clearedOffsets }));
       }
       if (createdSensorsFromAdjustment > 0) {
-        toast.success(`Sondes créées suite a l'ajustage: ${createdSensorsFromAdjustment}`);
+        toast.success(t("toast.created_sensors_from_adjustment", { count: createdSensorsFromAdjustment }));
       }
       if (existingSensorsWithModule > 0) {
-        toast.success(`Sondes existantes deja affectées a un module: ${existingSensorsWithModule}`);
+        toast.success(t("toast.existing_sensors_with_module", { count: existingSensorsWithModule }));
       }
 
       setRows([]);
@@ -304,7 +299,7 @@ export function AdjustmentImportClient() {
     },
     {
       id: "module_assignment",
-      header: "Module affecté",
+      header: t("table.columns.module_assignment"),
       cell: ({ row }) => {
         const assignment = getModuleAssignment(row.original);
         if (assignment.status === "existing_assigned") {
@@ -316,7 +311,7 @@ export function AdjustmentImportClient() {
                     {assignment.moduleLabel}
                   </span>
                 </TooltipTrigger>
-                <TooltipContent>{EXISTING_ASSIGNED_TOOLTIP}</TooltipContent>
+                <TooltipContent>{t("tooltips.existing_assigned")}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           );
@@ -331,7 +326,7 @@ export function AdjustmentImportClient() {
                     {assignment.moduleLabel}
                   </span>
                 </TooltipTrigger>
-                <TooltipContent>{CREATED_ON_IMPORT_TOOLTIP}</TooltipContent>
+                <TooltipContent>{t("tooltips.created_on_import")}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           );
@@ -393,7 +388,7 @@ export function AdjustmentImportClient() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle>{t("table.title")}</CardTitle>
             <div className="flex flex-wrap items-center gap-2">
-              <div className="w-[260px]">
+              <div className="w-65">
                 <Select value={selectedModuleId} onValueChange={setSelectedModuleId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un module" />

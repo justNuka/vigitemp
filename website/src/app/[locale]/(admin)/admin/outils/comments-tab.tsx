@@ -98,9 +98,9 @@ export function CommentsTab() {
         return [...prev, { id: nextId, type: values.type, text: values.text }]
       })
       setValue("text", "")
-      toast.success("Commentaire enregistr?")
+      toast.success(t('toast.save_success'))
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erreur lors de l'enregistrement du commentaire")
+      toast.error(error instanceof Error ? error.message : t('toast.save_error'))
     }
   }
 
@@ -113,9 +113,9 @@ export function CommentsTab() {
 
       setComments(comments.filter((comment) => comment.id !== id))
       setSelectedCommentId(null)
-      toast.success("Commentaire supprim?")
+      toast.success(t('toast.delete_success'))
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erreur lors de la suppression du commentaire")
+      toast.error(error instanceof Error ? error.message : t('toast.delete_error'))
     }
   }
 
@@ -133,9 +133,9 @@ export function CommentsTab() {
       setIsEditDialogOpen(false)
       setEditingComment(null)
       setSelectedCommentId(null)
-      toast.success("Commentaire modifi?")
+      toast.success(t('toast.update_success'))
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erreur lors de la modification du commentaire")
+      toast.error(error instanceof Error ? error.message : t('toast.update_error'))
     }
   }
 

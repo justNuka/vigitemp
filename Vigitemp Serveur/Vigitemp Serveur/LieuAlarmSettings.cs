@@ -20,6 +20,7 @@ namespace Vigitemp_Serveur
         public int RetardAlarmeBasMinutes { get; }
         public int RetardAlarmeHautMinutes { get; }
         public int RetardNonReponseMinutes { get; }
+        public int NbMesuresTemporisationRedeclenchement { get; }
 
         // Legacy fields (if present in schema)
         public bool NotificationActive { get; }
@@ -38,6 +39,7 @@ namespace Vigitemp_Serveur
             int retardAlarmeBasMinutes,
             int retardAlarmeHautMinutes,
             int retardNonReponseMinutes,
+            int nbMesuresTemporisationRedeclenchement,
             bool notificationActive,
             DateTime dateHeureReactivationAlarme)
         {
@@ -53,6 +55,7 @@ namespace Vigitemp_Serveur
             RetardAlarmeBasMinutes = retardAlarmeBasMinutes;
             RetardAlarmeHautMinutes = retardAlarmeHautMinutes;
             RetardNonReponseMinutes = retardNonReponseMinutes;
+            NbMesuresTemporisationRedeclenchement = Math.Max(0, nbMesuresTemporisationRedeclenchement);
             NotificationActive = notificationActive;
             DateHeureReactivationAlarme = dateHeureReactivationAlarme;
         }

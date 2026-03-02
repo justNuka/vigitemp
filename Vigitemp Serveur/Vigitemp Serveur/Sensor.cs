@@ -39,6 +39,10 @@ namespace Vigitemp_Serveur
             new ConcurrentDictionary<int, bool>();
         private static readonly ConcurrentDictionary<int, bool> _noResponseStateByLieu =
             new ConcurrentDictionary<int, bool>();
+        private static readonly ConcurrentDictionary<int, int> _retriggerThresholdWaitCountByLieu =
+            new ConcurrentDictionary<int, int>();
+        private static readonly ConcurrentDictionary<int, int> _retriggerNoResponseWaitCountByLieu =
+            new ConcurrentDictionary<int, int>();
 
         // Constructeur
         public Sensor(ThreadServeur p_ths, string p_comPort, string p_sondeSerialNumber, string p_sondeAdresse)
@@ -161,9 +165,39 @@ namespace Vigitemp_Serveur
 
                 var nowUtc = DateTime.UtcNow;
 
+                var retriggerDelayMeasures = Math.Max(0, settings.NbMesuresTemporisationRedeclenchement);
                 var forceImmediateRetrigger = ths.GetDatabase().getLieuImmediateRetriggerFlag(m_idLieu);
 
-                var forceLowImmediate = hasLow && forceImmediateRetrigger;
+                var outLowNow = hasLow && p_valeur < settings.ConsigneInf.Value;
+                var outHighNow = hasHigh && p_valeur > settings.ConsigneSup.Value;
+                var outOfToleranceNow = outLowNow || outHighNow;
+
+                var suppressRetriggerThisMeasure = false;
+                var forceLowImmediate = false;
+                var forceHighImmediate = false;
+
+                if (forceImmediateRetrigger)
+                {
+                    if (outOfToleranceNow)
+                    {
+                        var waitCount = _retriggerThresholdWaitCountByLieu.AddOrUpdate(m_idLieu, 1, (_, previous) => previous + 1);
+                        suppressRetriggerThisMeasure = waitCount <= retriggerDelayMeasures;
+                        if (!suppressRetriggerThisMeasure)
+                        {
+                            forceLowImmediate = outLowNow;
+                            forceHighImmediate = outHighNow;
+                        }
+                    }
+                    else
+                    {
+                        _retriggerThresholdWaitCountByLieu[m_idLieu] = 0;
+                    }
+                }
+                else
+                {
+                    _retriggerThresholdWaitCountByLieu[m_idLieu] = 0;
+                }
+
                 if (forceLowImmediate)
                 {
                     AlarmStateEvaluator.ResetState("alarm-low", m_idLieu);
@@ -171,7 +205,6 @@ namespace Vigitemp_Serveur
                     _alarmStateByLieu[m_idLieu] = false;
                 }
 
-                var forceHighImmediate = hasHigh && forceImmediateRetrigger;
                 if (forceHighImmediate)
                 {
                     AlarmStateEvaluator.ResetState("alarm-high", m_idLieu);
@@ -185,7 +218,7 @@ namespace Vigitemp_Serveur
                     value: p_valeur,
                     low: hasLow ? settings.ConsigneInf.Value : 0d,
                     high: hasLow ? 1_000_000_000d : 0d,
-                    eligible: eligible,
+                    eligible: suppressRetriggerThisMeasure ? false : eligible,
                     debounceSeconds: forceLowImmediate ? 0 : Math.Max(0, settings.RetardAlarmeBasMinutes * 60),
                     ignorePolicyDebounce: forceLowImmediate,
                     nowUtc: nowUtc);
@@ -196,7 +229,7 @@ namespace Vigitemp_Serveur
                     value: p_valeur,
                     low: hasHigh ? -1_000_000_000d : 0d,
                     high: hasHigh ? settings.ConsigneSup.Value : 0d,
-                    eligible: eligible,
+                    eligible: suppressRetriggerThisMeasure ? false : eligible,
                     debounceSeconds: forceHighImmediate ? 0 : Math.Max(0, settings.RetardAlarmeHautMinutes * 60),
                     ignorePolicyDebounce: forceHighImmediate,
                     nowUtc: nowUtc);
@@ -240,9 +273,10 @@ namespace Vigitemp_Serveur
                 var noResponseActive = _noResponseStateByLieu.TryGetValue(m_idLieu, out var nrActive) && nrActive;
                 var overallAlarmActive = lowEval.IsActive || highEval.IsActive || noResponseActive;
 
-                if (forceImmediateRetrigger)
+                if (forceImmediateRetrigger && overallAlarmActive)
                 {
                     ths.GetDatabase().setLieuImmediateRetriggerFlag(m_idLieu, false);
+                    _retriggerThresholdWaitCountByLieu[m_idLieu] = 0;
                 }
 
                 AlarmEvaluation preEvaluation;
@@ -308,7 +342,23 @@ namespace Vigitemp_Serveur
                 }
 
                 var value = ok ? 0d : 1d;
-                var forceImmediate = !ok && ths.GetDatabase().getLieuImmediateRetriggerFlag(m_idLieu);
+                var retriggerDelayMeasures = Math.Max(0, settings.NbMesuresTemporisationRedeclenchement);
+                var forceRetriggerFlag = ths.GetDatabase().getLieuImmediateRetriggerFlag(m_idLieu);
+
+                var suppressRetriggerThisMeasure = false;
+                var forceImmediate = false;
+
+                if (forceRetriggerFlag && !ok)
+                {
+                    var waitCount = _retriggerNoResponseWaitCountByLieu.AddOrUpdate(m_idLieu, 1, (_, previous) => previous + 1);
+                    suppressRetriggerThisMeasure = waitCount <= retriggerDelayMeasures;
+                    forceImmediate = !suppressRetriggerThisMeasure;
+                }
+                else if (ok)
+                {
+                    _retriggerNoResponseWaitCountByLieu[m_idLieu] = 0;
+                }
+
                 if (forceImmediate)
                 {
                     AlarmStateEvaluator.ResetState("alarm-nr", m_idLieu);
@@ -322,7 +372,7 @@ namespace Vigitemp_Serveur
                     value: value,
                     low: -0.1d,
                     high: 0.1d,
-                    eligible: eligible,
+                    eligible: suppressRetriggerThisMeasure ? false : eligible,
                     debounceSeconds: forceImmediate ? 0 : Math.Max(0, settings.RetardNonReponseMinutes * 60),
                     ignorePolicyDebounce: forceImmediate,
                     nowUtc: nowUtc);
@@ -340,6 +390,8 @@ namespace Vigitemp_Serveur
                 else if (eval.TransitionToInactive)
                 {
                     ths.GetDatabase().setNonResponseAlarm(m_idLieu, m_sondeSerialNumber, false);
+                    ths.GetDatabase().setLieuImmediateRetriggerFlag(m_idLieu, true);
+                    _retriggerNoResponseWaitCountByLieu[m_idLieu] = 0;
                     VigitempServeur.Log($"Alarme non-reponse terminee pour le lieu {m_idLieu} - sonde {m_sondeSerialNumber}");
                 }
 
@@ -350,9 +402,10 @@ namespace Vigitemp_Serveur
                     (_highAlarmStateByLieu.TryGetValue(m_idLieu, out var high) && high) ||
                     eval.IsActive;
 
-                if (ths.GetDatabase().getLieuImmediateRetriggerFlag(m_idLieu) && (overallAlarmActive || ok))
+                if (forceRetriggerFlag && overallAlarmActive)
                 {
                     ths.GetDatabase().setLieuImmediateRetriggerFlag(m_idLieu, false);
+                    _retriggerNoResponseWaitCountByLieu[m_idLieu] = 0;
                 }
 
                 ApplyAlarmState(overallAlarmActive, preAlarmActive: false, valueForNotify: ok ? (double?)null : 0d);
@@ -424,6 +477,8 @@ namespace Vigitemp_Serveur
             else if (prevAlarm && !alarmActive)
             {
                 ths.GetDatabase().setThresholdAlarmEnded(m_idLieu);
+                ths.GetDatabase().setLieuImmediateRetriggerFlag(m_idLieu, true);
+                _retriggerThresholdWaitCountByLieu[m_idLieu] = 0;
                 VigitempServeur.Log($"Alarme terminee (H/B) pour le lieu {m_idLieu} - sonde {m_sondeSerialNumber}");
                 var ips_clients = ths.GetDatabase().getPCsClients();
                 for (int i = 0; i < ips_clients.Count; i++)

@@ -8,6 +8,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { revalidateTag } from "next/cache"
 import { sendAlarmEventEmails } from "@/lib/alarm-email"
 import { getPermissionAliases } from "@/lib/permissions"
+import { buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 
 const acknowledgeSchema = z.object({
   comment: z.string().optional(),
@@ -28,11 +29,17 @@ export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_
       const { comment } = acknowledgeSchema.parse(body)
       const acknowledgedAt = new Date()
 
+      const userScope = await getUserLocationScope(ctx.user.userId)
+      const lieuAccessFilter = buildLieuAccessFilter(userScope)
+
       ackStep = "transaction"
       const alarm = await prisma.$transaction(async (tx) => {
         ackStep = "tx_find_alarm"
-        const current = await tx.t_alarme.findUnique({
-          where: { Id_Alarme: alarmId },
+        const current = await tx.t_alarme.findFirst({
+          where: {
+            Id_Alarme: alarmId,
+            ...(lieuAccessFilter ? { t_lieu: lieuAccessFilter } : {}),
+          },
           include: {
             t_lieu: {
               select: {

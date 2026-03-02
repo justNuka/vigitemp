@@ -2027,7 +2027,7 @@ export function MessageInput({ onSend, isSending }: Props) {
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder={t("thread.input_placeholder")}
-        className="resize-none min-h-[40px] max-h-24 text-sm"
+        className="resize-none min-h-10 max-h-24 text-sm"
         rows={1}
         disabled={isSending}
       />

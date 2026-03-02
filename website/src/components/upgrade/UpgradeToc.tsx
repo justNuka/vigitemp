@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 import { getTocItems } from "./upgradeContent";
 import { useTranslations } from "next-intl";
 
-export function UpgradeToc() {
+export function UpgradeToc({ includeComparison = true }: { includeComparison?: boolean }) {
   const t = useTranslations();
-  const tocItems = getTocItems(t);
+  const tocItems = getTocItems(t).filter((item) => includeComparison || item.id !== "comparaison");
   const [activeId, setActiveId] = useState("");
 
   useEffect(() => {

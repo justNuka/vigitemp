@@ -297,16 +297,12 @@ export function AuditClient({ logs }: Props) {
         const parsed = parseAuditDetails(details, t, localeTag, timezone);
         return (
           <div className="flex flex-col gap-1 max-w-90">
-            <p className="text-sm font-medium truncate" title={parsed.subtitle}>
-              {parsed.subtitle}
+            <p className="text-sm font-medium truncate" title={parsed.title}>
+              {parsed.title}
             </p>
-            {parsed.raw ? (
-              <p className="text-xs text-muted-foreground truncate" title={parsed.raw}>
-                {parsed.raw}
-              </p>
-            ) : (
-              <p className="text-xs text-muted-foreground">{t("table.empty_value")}</p>
-            )}
+            <p className="text-xs text-muted-foreground truncate" title={parsed.subtitle || parsed.raw}>
+              {parsed.subtitle || parsed.raw || t("table.empty_value")}
+            </p>
           </div>
         );
       },
@@ -321,7 +317,7 @@ export function AuditClient({ logs }: Props) {
           return (
             <span className="text-sm">
               <span className="text-muted-foreground capitalize">{targetType}:</span>{" "}
-              <span className="font-mono text-xs">{targetId.slice(0, 8)}...</span>
+              <span className="font-mono text-xs">{targetId}</span>
             </span>
           );
         }

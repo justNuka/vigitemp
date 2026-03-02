@@ -716,6 +716,8 @@
         "monitoring_enable": "Activer la surveillance",
         "monitoring_disable": "Désactiver la surveillance",
         "site": "Site",
+        "alarm_sound": "Son d\u0027alarme",
+        "alarm_sound_enable": "Jouer le son lors du declenchement d\u0027une alarme sur ce lieu",
         "groups": "Groupe(s)",
         "sensor_select": "Sélection de sonde",
         "sensor_state": "État de la sonde",

@@ -2,17 +2,18 @@
 
 import React from "react";
 
-import { getCompareItems } from "./upgradeContent";
+import { getCompareItemsForEdition } from "./upgradeContent";
 import { BlurFade } from "./BlurFade";
 import { Compare } from "@/components/ui/compare";
 import { Check, X as XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import type { LicenseEdition } from "@/lib/license-access";
 
 function CompareSlider({
   item,
   images,
 }: {
-  item: ReturnType<typeof getCompareItems>[0];
+  item: ReturnType<typeof getCompareItemsForEdition>[number];
   images: { first: string; second: string };
 }) {
   const isMissing = (value: string) => /^(pas|aucun|aucune|non)\b/i.test(value.trim());
@@ -83,9 +84,13 @@ function CompareSlider({
   );
 }
 
-export function CompareSection() {
+export function CompareSection({ edition }: { edition: LicenseEdition }) {
   const t = useTranslations();
-  const compareItems = getCompareItems(t);
+  const compareItems = getCompareItemsForEdition(t, edition);
+
+  if (compareItems.length === 0) {
+    return null;
+  }
 
   return (
     <section id="comparaison" className="py-24 px-4">

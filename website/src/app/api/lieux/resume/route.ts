@@ -5,6 +5,7 @@ import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 
 const createLocationSchema = z.object({
   name: z.string().min(1, "Name required"),
@@ -12,16 +13,20 @@ const createLocationSchema = z.object({
   description: z.string().optional(),
 })
 
-export const GET = withAuthLogging(async (req: NextRequest) => {
+export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
   try {
     const searchParams = req.nextUrl.searchParams
     const site = searchParams.get("site")
 
-    const where: any = { Est_Archive: false }
+    const baseWhere: any = { Est_Archive: false }
 
     if (site) {
-      where.Id_Site = parseInt(site)
+      baseWhere.Id_Site = parseInt(site)
     }
+
+    const scope = await getUserLocationScope(ctx.user.userId)
+    const lieuAccessFilter = buildLieuAccessFilter(scope)
+    const where = applyAccessFilter(baseWhere, lieuAccessFilter)
 
     const locations = await prisma.t_lieu.findMany({
       where,

@@ -8,6 +8,7 @@ import { log } from "@/lib/logger"
 import { extractAddressFromSerial, isGsoType } from "@/lib/sensor-naming"
 import { computeEmt, emtModeToDb, emtModeFromDb } from "@/lib/emt"
 import { requireStandardOrExpertIfFieldsUsed } from "@/lib/license-guards"
+import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -85,6 +86,7 @@ const createLieuSchema = z.object({
   Consigne_Inf_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Inf_Pre_Alarme_Active: z.boolean().optional(),
   Retard_Alarme_Bas: z.number().nullable().optional(),
+  Nb_Mesures_Temporisation_Redeclenchement: z.number().int().min(0).nullable().optional(),
   EMT_Mode: z.string().nullable().optional(),
   EMT_Valeur: z.number().nullable().optional(),
   Corriger_Erreur_Justesse: z.boolean().optional(),
@@ -93,6 +95,7 @@ const createLieuSchema = z.object({
   Incertitude: z.number().nullable().optional(),
   Derive: z.number().nullable().optional(),
   MailingContacts: z.array(mailingContactSchema).optional(),
+  Est_Son_Alarme_Active: z.boolean().optional(),
 }).superRefine(addConsigneGuards)
 
 function normalizeMailingContacts(contacts: Array<{
@@ -129,8 +132,11 @@ export const GET = withLogging(async (req: NextRequest) => {
   if (!user) return apiError(401, "unauthenticated", "Non authentifié")
 
   try {
+    const scope = await getUserLocationScope(user.userId)
+    const lieuAccessFilter = buildLieuAccessFilter(scope)
+
     const lieux = await prisma.t_lieu.findMany({
-      where: { Est_Archive: false },
+      where: applyAccessFilter({ Est_Archive: false }, lieuAccessFilter),
       include: {
         t_lieu_groupe: {
           include: {
@@ -297,12 +303,14 @@ export const POST = withLogging(async (req: NextRequest) => {
         Consigne_Inf_Pre_Alarme: validated.Consigne_Inf_Pre_Alarme,
         Est_Consigne_Inf_Pre_Alarme_Active: validated.Est_Consigne_Inf_Pre_Alarme_Active ?? false,
         Retard_Alarme_Bas: validated.Retard_Alarme_Bas,
+        Nb_Mesures_Temporisation_Redeclenchement: validated.Nb_Mesures_Temporisation_Redeclenchement ?? 0,
         EMT_Choix_Mode: emtModeToDb(validated.EMT_Mode),
         EMT_Sonde: emt.emtSonde,
         Est_Correction_Ej: validated.Corriger_Erreur_Justesse ? 1 : 0,
         Est_Correction_derive: includeDeriveInUncertainty,
         Est_Archive: false,
         Est_Lieu_GSO: estLieuGso,
+        Est_Son_Alarme_Active: validated.Est_Son_Alarme_Active ?? true,
         Adresse_Sonde: adresseSondeLieu,
         t_etat_surveillance: {
           connect: { Surveillance_Etat: lieuEtat },

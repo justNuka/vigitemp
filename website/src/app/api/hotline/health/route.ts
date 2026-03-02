@@ -2,7 +2,7 @@ import net from "net"
 import { NextRequest } from "next/server"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma, prismaMesure } from "@/lib/prisma"
-import { getHotlineConfig } from "@/lib/hotline-config"
+import { getHotlineServerConfig } from "@/lib/hotline-config"
 import { getHotlineSession } from "@/lib/hotline-auth"
 
 type HealthState = "ok" | "error" | "unknown"
@@ -41,20 +41,35 @@ async function checkMesureDb() {
   }
 }
 
+
+async function checkChatDb(): Promise<HealthState> {
+  const chatDbUrl = process.env.DATABASE_CHAT_URL?.trim()
+  if (!chatDbUrl) return "unknown"
+
+  try {
+    const { prismaChat } = await import("@/lib/prisma-chat")
+    await prismaChat.$queryRaw`SELECT 1`
+    return "ok"
+  } catch {
+    return "error"
+  }
+}
+
 export async function GET(req: NextRequest) {
   const session = getHotlineSession(req)
   if (!session) {
     return apiError(401, "unauthenticated", "Non authentifie")
   }
 
-  const config = await getHotlineConfig()
+  const config = await getHotlineServerConfig()
   const timeoutMs = process.env.HOTLINE_SERVER_TIMEOUT_MS
     ? Number(process.env.HOTLINE_SERVER_TIMEOUT_MS)
     : 2000
 
-  const [dbMain, dbMesure] = await Promise.all([
+  const [dbMain, dbMesure, dbChat] = await Promise.all([
     checkMainDb(),
     checkMesureDb(),
+    checkChatDb(),
   ])
 
   let server: HealthState = "unknown"
@@ -66,5 +81,6 @@ export async function GET(req: NextRequest) {
     server,
     dbMain,
     dbMesure,
+    dbChat,
   })
 }

@@ -6,6 +6,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
+import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 
 const createSensorSchema = z.object({
   name: z.string().min(1, "Name required"),
@@ -15,29 +16,33 @@ const createSensorSchema = z.object({
   unit: z.string().optional(),
 })
 
-export const GET = withAuthLogging(async (req: NextRequest) => {
+export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
   try {
     const searchParams = req.nextUrl.searchParams
     const locationId = searchParams.get("locationId")
     const status = searchParams.get("status")
 
-    const where: any = { Est_Archive: false }
+    const baseWhere: any = { Est_Archive: false }
 
     if (locationId) {
-      where.Id_Site = parseInt(locationId, 10)
+      baseWhere.Id_Site = parseInt(locationId, 10)
     }
 
     if (status && status !== "all") {
       if (status === "ok") {
-        where.Est_Lieu_En_Alarme = 0
-        where.Est_Lieu_En_Pre_Alarme = 0
+        baseWhere.Est_Lieu_En_Alarme = 0
+        baseWhere.Est_Lieu_En_Pre_Alarme = 0
       } else if (status === "warning") {
-        where.Est_Lieu_En_Alarme = 0
-        where.Est_Lieu_En_Pre_Alarme = 1
+        baseWhere.Est_Lieu_En_Alarme = 0
+        baseWhere.Est_Lieu_En_Pre_Alarme = 1
       } else if (status === "critical") {
-        where.Est_Lieu_En_Alarme = 1
+        baseWhere.Est_Lieu_En_Alarme = 1
       }
     }
+
+    const scope = await getUserLocationScope(ctx.user.userId)
+    const lieuAccessFilter = buildLieuAccessFilter(scope)
+    const where = applyAccessFilter(baseWhere, lieuAccessFilter)
 
     const locations = await prisma.t_lieu.findMany({
       where,

@@ -17,6 +17,7 @@ import {
   type AuthStateEventDetail,
 } from "@/lib/http"
 import { markDisconnectReason } from "@/lib/auth-disconnect-marker"
+import { ALARM_AUDIO_STATE_EVENT, getAlarmAudioMuted } from "@/lib/alarm-audio"
 
 function isPublicRoute(pathname: string) {
   const normalized = stripLocalePrefix(pathname)
@@ -31,9 +32,49 @@ export function GlobalAppEffects() {
   const queryClient = useQueryClient()
   const seenAlarmIdsRef = useRef<Set<number>>(new Set())
   const hasSessionToastRef = useRef(false)
+  const alarmAudioRef = useRef<HTMLAudioElement | null>(null)
+  const alarmAudioMutedRef = useRef(false)
   const alarmStreamUrl = useMemo(() => "/api/alarmes/stream", [])
 
   const { data: currentUser } = useCurrentUser({ enabled: !isPublicRoute(pathname) })
+
+  useEffect(() => {
+    alarmAudioMutedRef.current = getAlarmAudioMuted()
+
+    if (typeof window !== "undefined") {
+      const audio = new Audio("/sounds/alarms/alarme.wav")
+      audio.preload = "auto"
+      audio.loop = true
+      alarmAudioRef.current = audio
+    }
+
+    const syncMuted = () => {
+      alarmAudioMutedRef.current = getAlarmAudioMuted()
+      if (alarmAudioMutedRef.current && alarmAudioRef.current) {
+        alarmAudioRef.current.pause()
+        alarmAudioRef.current.currentTime = 0
+      }
+    }
+
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === null || event.key === "vigitemp:alarm-audio-muted") {
+        syncMuted()
+      }
+    }
+
+    window.addEventListener(ALARM_AUDIO_STATE_EVENT, syncMuted as EventListener)
+    window.addEventListener("storage", onStorage)
+
+    return () => {
+      window.removeEventListener(ALARM_AUDIO_STATE_EVENT, syncMuted as EventListener)
+      window.removeEventListener("storage", onStorage)
+      if (alarmAudioRef.current) {
+        alarmAudioRef.current.pause()
+        alarmAudioRef.current.currentTime = 0
+      }
+      alarmAudioRef.current = null
+    }
+  }, [])
 
   useEffect(() => {
     if (!currentUser) return
@@ -48,6 +89,7 @@ export function GlobalAppEffects() {
           type: string
           valeur: number | null
           unite: string | null
+          soundEnabled?: boolean
         }
 
         if (seenAlarmIdsRef.current.has(data.id)) return
@@ -66,11 +108,23 @@ export function GlobalAppEffects() {
 
         toast.error(t("alarm.toast.title", { type: labelType, lieu: data.lieu }), {
           description: t("alarm.toast.description", { value }),
+          duration: Infinity,
+          dismissible: true,
           action: {
             label: t("alarm.toast.action"),
             onClick: () => router.push("/surveillance"),
           },
         })
+
+        if (data.soundEnabled !== false && !alarmAudioMutedRef.current) {
+          const audio = alarmAudioRef.current ?? new Audio("/sounds/alarms/alarme.wav")
+          audio.loop = true
+          alarmAudioRef.current = audio
+          audio.currentTime = 0
+          void audio.play().catch(() => {
+            // Ignore autoplay/user gesture restrictions.
+          })
+        }
       } catch {
         // ignore
       }

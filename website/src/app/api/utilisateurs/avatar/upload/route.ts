@@ -5,6 +5,8 @@ import { NextRequest } from "next/server"
 
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { getRequestContext } from "@/lib/api-logger"
+import { log } from "@/lib/logger"
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024
 const ALLOWED_MIME = new Map<string, string>([
@@ -15,19 +17,23 @@ const ALLOWED_MIME = new Map<string, string>([
 ])
 
 export const POST = withAdminLogging(async (req: NextRequest, ctx: any) => {
+  const { ip } = getRequestContext(req)
   try {
     const formData = await req.formData()
     const file = formData.get("file")
 
     if (!(file instanceof File)) {
+      log.warn("AVATAR_UPLOAD", "Admin avatar upload rejected: missing file", { user: ctx.user.username, userId: ctx.user.userId, ip })
       return apiError(400, "missing_file", "Aucun fichier image fourni")
     }
 
     if (!ALLOWED_MIME.has(file.type)) {
+      log.warn("AVATAR_UPLOAD", "Admin avatar upload rejected: invalid type", { user: ctx.user.username, userId: ctx.user.userId, ip, fileName: file.name, mimeType: file.type })
       return apiError(400, "invalid_type", "Type de fichier non supporte")
     }
 
     if (file.size > MAX_FILE_SIZE) {
+      log.warn("AVATAR_UPLOAD", "Admin avatar upload rejected: file too large", { user: ctx.user.username, userId: ctx.user.userId, ip, fileName: file.name, size: file.size })
       return apiError(400, "file_too_large", "Fichier trop volumineux (max 2 Mo)")
     }
 
@@ -44,8 +50,11 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: any) => {
 
     const publicUrl = `/${relativeDir}/${filename}`
 
+    log.info("AVATAR_UPLOAD", "Admin avatar upload completed", { user: ctx.user.username, userId: ctx.user.userId, ip, fileName: file.name, size: file.size, url: publicUrl })
+
     return apiOk({ url: publicUrl })
   } catch (error) {
+    log.error("AVATAR_UPLOAD", "Admin avatar upload failed", { user: ctx.user.username, userId: ctx.user.userId, ip, error: error instanceof Error ? error.message : String(error) })
     console.error("Avatar upload error:", error)
     return apiError(500, "avatar_upload_failed", "Erreur lors de l'envoi de l'avatar")
   }

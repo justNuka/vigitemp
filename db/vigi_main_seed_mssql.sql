@@ -29,6 +29,7 @@ IF COL_LENGTH('dbo.t_lieu', 'Planning_Actif') IS NULL ALTER TABLE dbo.t_lieu ADD
 IF COL_LENGTH('dbo.t_lieu', 'Planning_Source_Regle_Id') IS NULL ALTER TABLE dbo.t_lieu ADD Planning_Source_Regle_Id INT NULL;
 IF COL_LENGTH('dbo.t_lieu', 'Planning_Derniere_Maj') IS NULL ALTER TABLE dbo.t_lieu ADD Planning_Derniere_Maj DATETIME NULL;
 IF COL_LENGTH('dbo.t_lieu', 'Est_Redeclenchement_Immediat') IS NULL ALTER TABLE dbo.t_lieu ADD Est_Redeclenchement_Immediat BIT NOT NULL CONSTRAINT DF_t_lieu_Est_Redeclenchement_Immediat DEFAULT(0);
+IF COL_LENGTH('dbo.t_lieu', 'Nb_Mesures_Temporisation_Redeclenchement') IS NULL ALTER TABLE dbo.t_lieu ADD Nb_Mesures_Temporisation_Redeclenchement INT NULL CONSTRAINT DF_t_lieu_Nb_Mesures_Temporisation_Redeclenchement DEFAULT(0);
 IF COL_LENGTH('dbo.t_lieu', 'Surveillance_Etat') IS NOT NULL ALTER TABLE dbo.t_lieu DROP COLUMN Surveillance_Etat;
 IF COL_LENGTH('dbo.t_lieu', 'Consigne_Sup_Corrigee') IS NOT NULL ALTER TABLE dbo.t_lieu DROP COLUMN Consigne_Sup_Corrigee;
 IF COL_LENGTH('dbo.t_lieu', 'Consigne_Inf_Corrigee') IS NOT NULL ALTER TABLE dbo.t_lieu DROP COLUMN Consigne_Inf_Corrigee;
@@ -219,6 +220,7 @@ BEGIN
     Id_Lieu INT NOT NULL,
     [Timestamp] DATETIME NOT NULL CONSTRAINT DF_t_lieu_planning_audit_Timestamp DEFAULT(GETDATE()),
     [Type] VARCHAR(32) NOT NULL,
+    CONSTRAINT CK_t_lieu_planning_audit_Type CHECK ([Type] IN ('ACTIVATION', 'RETOUR_BASE')),
     Planning_Regle_Id INT NULL,
     Consigne_Avant FLOAT NULL,
     Consigne_Sup_Avant FLOAT NULL,
@@ -231,6 +233,9 @@ BEGIN
 END;
 GO
 
+
+-- NOTE MSSQL: le scheduling planning consignes doit etre implemente via SQL Server Agent job
+-- equivalent a EVT_PLANNING_CONSIGNE (MySQL), cadence recommandee: 1 minute.
 -- tables techniques
 IF OBJECT_ID('dbo.liste_clients', 'U') IS NULL
 BEGIN

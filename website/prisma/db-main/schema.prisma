@@ -399,10 +399,12 @@ model t_lieu {
   Derniere_Val_Rssi                         String?                 @db.VarChar(10)
   Derniere_Val_Tension                      String?                 @db.VarChar(10)
   Est_Lieu_GSO                              Boolean?                @default(false)
+  Est_Son_Alarme_Active                     Boolean                 @default(true)
   Planning_Actif                            Boolean                 @default(false)
   Planning_Source_Regle_Id                  Int?
   Planning_Derniere_Maj                     DateTime?               @db.DateTime(0)
   Est_Redeclenchement_Immediat              Boolean                 @default(false)
+  Nb_Mesures_Temporisation_Redeclenchement  Int?                    @default(0)
   t_alarme                                  t_alarme[]              @relation("lieu_alarme")
   t_alarme_histo                            t_alarme_histo[]        @relation("lieu_alarme_histo")
   t_groupe1                                 t_groupe?               @relation("groupe1", fields: [Id_Groupe1], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE1_LIEU")
@@ -847,15 +849,6 @@ model t_sonde_etat {
   Etat_Sonde    String?   @unique(map: "Etat_Sonde") @db.VarChar(1)
   Etat_Libelle  String?   @db.VarChar(50)
   t_sonde       t_sonde[]
-}
-
-model t_mem_gso_2 {
-  com_port_send       Int       @id
-  last_sonde          String?   @db.VarChar(20)
-  last_sonde_datetime DateTime? @db.DateTime(0)
-  cycle_MEM           Int?
-  cycle_start         DateTime? @db.DateTime(0)
-  last_update         DateTime? @db.DateTime(0)
 }
 
 model t_lieu_mail_tel {

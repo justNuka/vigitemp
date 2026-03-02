@@ -468,6 +468,8 @@
         "monitoring_enable": "Enable monitoring",
         "monitoring_disable": "Disable monitoring",
         "site": "Site",
+        "alarm_sound": "Alarm sound",
+        "alarm_sound_enable": "Play the sound when an alarm is triggered for this location",
         "groups": "Group(s)",
         "sensor_select": "Sensor selection",
         "sensor_state": "Sensor status",

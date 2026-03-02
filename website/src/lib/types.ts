@@ -16,10 +16,6 @@ export interface Authorization {
   id: number;
   code: string;
   libelle: string;
-  admin: boolean;
-  metrologie: boolean;
-  surveillance: boolean;
-  vigilog: boolean;
 }
 
 export interface CFR21Config {

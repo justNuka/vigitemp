@@ -178,6 +178,66 @@ namespace Vigitemp_Serveur
             }
         }
 
+        public static async Task NotifyRealtimeAlarmAsync(int? alarmId, int? idLieu, string eventType)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
+                {
+                    VigitempServeur.Log("AlarmWebNotifier: configuration manquante (BaseUrl/Secret)");
+                    return;
+                }
+
+                var url = Combine(BaseUrl, "/api/alarmes/dispatch-realtime");
+                var normalizedEventType = string.Equals(eventType, "ended", StringComparison.OrdinalIgnoreCase)
+                    ? "ended"
+                    : "triggered";
+
+                var payloadBuilder = new StringBuilder();
+                payloadBuilder.Append("{");
+                var hasField = false;
+
+                if (alarmId.HasValue)
+                {
+                    payloadBuilder.Append("\"alarmId\":").Append(alarmId.Value);
+                    hasField = true;
+                }
+
+                if (idLieu.HasValue)
+                {
+                    if (hasField) payloadBuilder.Append(",");
+                    payloadBuilder.Append("\"idLieu\":").Append(idLieu.Value);
+                    hasField = true;
+                }
+
+                if (hasField) payloadBuilder.Append(",");
+                payloadBuilder.Append("\"eventType\":\"").Append(normalizedEventType).Append("\"");
+                payloadBuilder.Append("}");
+
+                var req = new HttpRequestMessage(HttpMethod.Post, url);
+                req.Headers.Add("x-vigitemp-secret", Secret);
+                req.Content = new StringContent(payloadBuilder.ToString(), Encoding.UTF8, "application/json");
+
+                VigitempServeur.Log(
+                    "AlarmWebNotifier: envoi realtime web " +
+                    "eventType=" + normalizedEventType +
+                    (idLieu.HasValue ? (" idLieu=" + idLieu.Value) : "") +
+                    (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : "") +
+                    " url=" + url);
+
+                var response = await _http.SendAsync(req);
+                VigitempServeur.Log(
+                    "AlarmWebNotifier: realtime web envoye (status=" + (int)response.StatusCode + ") " +
+                    "eventType=" + normalizedEventType +
+                    (idLieu.HasValue ? (" idLieu=" + idLieu.Value) : "") +
+                    (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : ""));
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("AlarmWebNotifier: echec envoi realtime: " + ex.Message);
+            }
+        }
+
         private static string EscapeJson(string value)
         {
             if (string.IsNullOrEmpty(value)) return "";
@@ -196,3 +256,4 @@ namespace Vigitemp_Serveur
         }
     }
 }
+

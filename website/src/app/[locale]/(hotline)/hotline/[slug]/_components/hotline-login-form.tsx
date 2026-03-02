@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -68,6 +69,10 @@ export function HotlineLoginForm({ slug, username }: HotlineLoginFormProps) {
         <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
       <CardContent>
+        <Alert className="mb-4 border-yellow-300 bg-yellow-50 text-yellow-900 dark:border-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-100">
+          <AlertTitle>{t("security.title")}</AlertTitle>
+          <AlertDescription>{t("security.description")}</AlertDescription>
+        </Alert>
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))}>
           <div className="space-y-2">
             <Label htmlFor="hotline-user">{t("fields.username_label")}</Label>

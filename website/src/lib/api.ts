@@ -230,6 +230,7 @@ export type Location = {
   siteGroup?: string | null;
   isActive?: boolean;
   alarmDisabled?: boolean;
+  estSonAlarmeActive?: boolean | null;
   alarmDisabledUntil?: Date | null;
   alarmDelayMinutes?: number | null;
   alarmDelayHighMinutes?: number | null;

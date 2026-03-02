@@ -12,6 +12,7 @@ import {
   Bell,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import type { LicenseEdition } from "@/lib/license-access";
 
 type UpgradeTranslator = (
   key: string,
@@ -203,6 +204,8 @@ export const getValueProps = (t: UpgradeTranslator): ValueProp[] => [
 export const getCompareItems = (t: UpgradeTranslator) => [
   {
     id: "surveillance",
+    leftEdition: "pack" as LicenseEdition,
+    rightEdition: "one" as LicenseEdition,
     title: t("upgrade.compare.items.0.title"),
     leftLabel: t("upgrade.compare.items.0.leftLabel"),
     rightLabel: t("upgrade.compare.items.0.rightLabel"),
@@ -219,6 +222,8 @@ export const getCompareItems = (t: UpgradeTranslator) => [
   },
   {
     id: "metrologie",
+    leftEdition: "one" as LicenseEdition,
+    rightEdition: "standard" as LicenseEdition,
     title: t("upgrade.compare.items.1.title"),
     leftLabel: t("upgrade.compare.items.1.leftLabel"),
     rightLabel: t("upgrade.compare.items.1.rightLabel"),
@@ -234,6 +239,22 @@ export const getCompareItems = (t: UpgradeTranslator) => [
     ],
   },
 ];
+
+const EDITION_ORDER: readonly LicenseEdition[] = ["pack", "one", "standard", "expert"];
+
+function getEditionRank(edition: LicenseEdition): number {
+  return EDITION_ORDER.indexOf(edition);
+}
+
+export function getCompareItemsForEdition(t: UpgradeTranslator, edition: LicenseEdition) {
+  const currentRank = getEditionRank(edition);
+  return getCompareItems(t).filter((item) => getEditionRank(item.rightEdition) > currentRank);
+}
+
+export function getVisibleLicenseColumns(edition: LicenseEdition): LicenseEdition[] {
+  const currentRank = getEditionRank(edition);
+  return EDITION_ORDER.filter((candidate) => getEditionRank(candidate) >= currentRank);
+}
 
 export const getArchitectureNodes = (t: UpgradeTranslator) => [
   {

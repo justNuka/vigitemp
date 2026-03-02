@@ -274,7 +274,7 @@ if (-not (Test-Path $licenseSourcePath)) {
     Write-Error (T "Fichier licence introuvable : $licenseSourcePath" "License file not found: $licenseSourcePath")
 }
 
-$publicKeySourcePath = Read-InstallValue (T "Chemin de la cl??? publique licence (.pem)" "License public key path (.pem)") $publicKeyDefault
+$publicKeySourcePath = Read-InstallValue (T "Chemin de la cle publique licence (.pem)" "License public key path (.pem)") $publicKeyDefault
 $publicKeySourcePath = Resolve-PathInput $publicKeySourcePath
 if ([string]::IsNullOrWhiteSpace($publicKeySourcePath) -and -not [string]::IsNullOrWhiteSpace($publicKeyDefault)) {
     $publicKeySourcePath = $publicKeyDefault

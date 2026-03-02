@@ -4,12 +4,6 @@ import type { Authorization, CurrentUser } from "@/lib/types";
 import { withAuthLogging } from "@/lib/api-wrappers";
 import { getUserAvatarValue } from "@/lib/user-avatar-db";
 import { apiError, apiOk } from "@/lib/api-response";
-import {
-  isAdminDomainCode,
-  isMetrologieDomainCode,
-  isSurveillanceDomainCode,
-  isVigiLogDomainCode,
-} from "@/lib/authorization-domain";
 
 export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
   try {
@@ -37,18 +31,11 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
       });
 
       if (profil) {
-        authorizations = profil.t_liaison_profil_autorisation.map((liaison) => {
-          const code = liaison.t_autorisation.Code_Autorisation || "";
-          return {
-            id: liaison.t_autorisation.Id_Autorisation,
-            code,
-            libelle: liaison.t_autorisation.Libelle_Autorisation || "",
-            admin: isAdminDomainCode(code),
-            metrologie: isMetrologieDomainCode(code),
-            surveillance: isSurveillanceDomainCode(code),
-            vigilog: isVigiLogDomainCode(code),
-          };
-        });
+        authorizations = profil.t_liaison_profil_autorisation.map((liaison) => ({
+          id: liaison.t_autorisation.Id_Autorisation,
+          code: liaison.t_autorisation.Code_Autorisation || "",
+          libelle: liaison.t_autorisation.Libelle_Autorisation || "",
+        }));
       }
     }
 

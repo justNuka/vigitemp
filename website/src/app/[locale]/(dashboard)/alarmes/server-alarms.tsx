@@ -1,3 +1,5 @@
+import { applyAccessFilter, buildAlarmAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
+import { getServerAuthenticatedUserId } from "@/lib/server-auth"
 import { unstable_noStore } from "next/cache";
 
 type AlarmStatus = "active" | "acknowledged" | "resolved";
@@ -9,6 +11,9 @@ type AlarmStatus = "active" | "acknowledged" | "resolved";
 export async function ServerAlarms(status?: AlarmStatus) {
   unstable_noStore();
   const { prisma } = await import("@/lib/prisma");
+  const userId = await getServerAuthenticatedUserId()
+  if (!userId) return []
+
   const where: any = {};
 
   if (status === "active") {
@@ -21,8 +26,11 @@ export async function ServerAlarms(status?: AlarmStatus) {
     where.Date_Heure_Fin = { not: null };
   }
 
+  const scope = await getUserLocationScope(userId)
+  const alarmAccessFilter = buildAlarmAccessFilter(scope)
+
   const alarms = await prisma.t_alarme.findMany({
-    where,
+    where: applyAccessFilter(where, alarmAccessFilter),
     include: {
       t_lieu: {
         select: {
@@ -121,15 +129,23 @@ export async function ServerAlarms(status?: AlarmStatus) {
 export async function ServerAlarmStats() {
   unstable_noStore();
   const { prisma } = await import("@/lib/prisma");
+  const userId = await getServerAuthenticatedUserId()
+  if (!userId) {
+    return { active: 0, acknowledged: 0, resolved: 0, total: 0 }
+  }
+
+  const scope = await getUserLocationScope(userId)
+  const alarmAccessFilter = buildAlarmAccessFilter(scope)
+
   const [activeCount, acknowledgedCount, resolvedCount] = await Promise.all([
     prisma.t_alarme.count({
-      where: { Est_Acquittee: false, Date_Heure_Fin: null },
+      where: applyAccessFilter({ Est_Acquittee: false, Date_Heure_Fin: null }, alarmAccessFilter),
     }),
     prisma.t_alarme.count({
-      where: { Est_Acquittee: true },
+      where: applyAccessFilter({ Est_Acquittee: true }, alarmAccessFilter),
     }),
     prisma.t_alarme.count({
-      where: { Est_Acquittee: false, Date_Heure_Fin: { not: null } },
+      where: applyAccessFilter({ Est_Acquittee: false, Date_Heure_Fin: { not: null } }, alarmAccessFilter),
     }),
   ]);
 

@@ -64,6 +64,7 @@ export const locationFormSchema = z.object({
   Consigne_Inf_Pre_Alarme: z.number().optional().nullable(),
   Est_Consigne_Inf_Pre_Alarme_Active: z.boolean().optional(),
   Retard_Alarme_Bas: z.number().optional().nullable(),
+  Nb_Mesures_Temporisation_Redeclenchement: z.number().int().min(0).optional().nullable(),
   Tolerance_Surveillance_Sup: z.number().optional().nullable(),
   Tolerance_Surveillance_Inf: z.number().optional().nullable(),
   Unite: z.string().optional().nullable(),

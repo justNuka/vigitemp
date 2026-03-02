@@ -23,8 +23,6 @@ interface SensorsCardsGridProps {
   ) => void
   onEditLocation?: (idLieu: number) => void
   showNullNonResponse?: boolean
-  onShowNullNonResponseChange?: (enabled: boolean) => Promise<void> | void
-  nonResponsePreferencesLoading?: boolean
 }
 
 /**
@@ -40,8 +38,6 @@ export function SensorsCardsGrid({
   onSurveillanceToggle,
   onEditLocation,
   showNullNonResponse = false,
-  onShowNullNonResponseChange,
-  nonResponsePreferencesLoading = false,
 }: SensorsCardsGridProps) {
   const t = useTranslations("surveillance")
   const handleSurveillanceToggle =
@@ -131,8 +127,6 @@ export function SensorsCardsGrid({
                 onSurveillanceToggle={handleSurveillanceToggle}
                 onEditLocation={onEditLocation}
                 showNullNonResponse={showNullNonResponse}
-                onShowNullNonResponseChange={onShowNullNonResponseChange}
-                nonResponsePreferencesLoading={nonResponsePreferencesLoading}
               />
             )
           })}

@@ -3,10 +3,11 @@ import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import crypto from "crypto"
 import { z } from "zod"
-import { withLogging } from "@/lib/api-logger"
+import { getRequestContext, withLogging } from "@/lib/api-logger"
 import { getPasswordRulesFromDb } from "@/lib/password-rules"
 import { validatePassword } from "@/lib/password-validation"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1, "Token requis"),
@@ -18,9 +19,12 @@ const resetPasswordSchema = z.object({
  * Réinitialise le mot de passe avec un token valide.
  */
 export const POST = withLogging(async (req: NextRequest) => {
+  const { ip } = getRequestContext(req)
   try {
     const body = await req.json()
     const { token, newPassword } = resetPasswordSchema.parse(body)
+
+    log.info("AUTH_RESET_PASSWORD", "Password reset attempt", { ip, tokenLength: token.length })
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex")
 
@@ -98,6 +102,8 @@ export const POST = withLogging(async (req: NextRequest) => {
       return apiError(400, "validation_error", "Données invalides", { details: error.issues })
     }
 
+    log.error("AUTH_RESET_PASSWORD", "Password reset failed", { ip, error: error instanceof Error ? error.message : String(error) })
+    log.audit("MDP", { user: "ANONYMOUS", userId: 0, ip, resource: "Reset password", success: false, reason: error instanceof Error ? error.message : String(error) })
     console.error("Reset password error:", error)
     return apiError(500, "reset_password_failed", "Une erreur est survenue lors de la réinitialisation.")
   }

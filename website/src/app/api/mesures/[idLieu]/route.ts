@@ -4,7 +4,8 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { getCachedMeasurements, setCachedMeasurements } from "@/lib/measurement-cache"
 import { apiError, apiOk } from "@/lib/api-response"
 import { formatDbDateTime } from "@/lib/date-display"
-import { resolveNonResponsePreference } from "@/lib/non-response-preference"
+import { getGlobalNonResponseDefault } from "@/lib/non-response-preference"
+import { canUserAccessLieu } from "@/lib/location-access-scope"
 
 export const GET = withAuthLogging(
   async (req: NextRequest, ctx: any, { params }: { params: Promise<{ idLieu: string }> }) => {
@@ -23,11 +24,16 @@ export const GET = withAuthLogging(
       const includeMeta = searchParams.get("includeMeta") === "true"
       const source = searchParams.get("source") === "mesures" ? "mesures" : "graphique"
       const usePagination = source === "mesures" && (searchParams.has("page") || searchParams.has("pageSize"))
-      const includeNullNonResponse = await resolveNonResponsePreference(req, ctx.user.userId)
+      const includeNullNonResponse = await getGlobalNonResponseDefault()
 
       const idLieuInt = parseInt(idLieu)
       if (isNaN(idLieuInt)) {
         return apiError(400, "invalid_id", "Invalid idLieu parameter")
+      }
+
+      const canAccessLieu = await canUserAccessLieu(ctx.user.userId, idLieuInt)
+      if (!canAccessLieu) {
+        return apiError(403, "forbidden", "Acces interdit")
       }
 
       const canUseCache = source === "graphique" && !includeNullNonResponse

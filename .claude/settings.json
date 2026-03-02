@@ -4,7 +4,12 @@
       "mcp__claude_ai_Notion__notion-fetch",
       "mcp__claude_ai_Notion__notion-search",
       "Bash(grep -n \"EMT_Mode\\\\|EMT_Valeur\\\\|Prendre_En_Compte\\\\|Corriger_Erreur\\\\|Est_Consigne\\\\|Incertitude\\\\|Erreur_Justesse\\\\|Derive\" /c/VigitempProject/vigitemp/website/src/app/[locale]/\\\\\\(admin\\\\\\)/admin/lieux/_components/location-form-schema.ts)",
-      "Bash(npx tsc --noEmit)"
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx tsc --noEmit --skipLibCheck)",
+      "Bash(git add \"website/src/app/[locale]/\\(dashboard\\)/messages/page.tsx\" \"website/src/app/[locale]/\\(dashboard\\)/messages/_components/_types.ts\" \"website/src/app/[locale]/\\(dashboard\\)/messages/_components/conversation-list.tsx\" \"website/src/app/[locale]/\\(dashboard\\)/messages/_components/message-thread.tsx\" \"website/src/app/[locale]/\\(dashboard\\)/messages/_components/message-input.tsx\" \"website/src/app/[locale]/\\(dashboard\\)/messages/_components/new-conversation-modal.tsx\")"
+    ],
+    "additionalDirectories": [
+      "C:\\VigitempProject\\vigitemp\\website\\src\\app\\[locale]\\(dashboard)\\messages"
     ]
   },
   "enabledPlugins": {

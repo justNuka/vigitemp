@@ -2,10 +2,12 @@ import { NextRequest } from "next/server"
 import { withAuthorizationLogging } from "@/lib/api-wrappers"
 import { prismaMesure } from "@/lib/prisma"
 import { apiError, apiOk } from "@/lib/api-response"
+import { getRequestContext } from "@/lib/api-logger"
+import { log } from "@/lib/logger"
 
 /**
  * GET /api/audit/comments
- * Récupère les commentaires des codes d'audit (tm_journal_code).
+ * Recupere les commentaires des codes d'audit (tm_journal_code).
  */
 export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextRequest) => {
   try {
@@ -22,15 +24,16 @@ export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextReq
     return apiOk(formattedComments)
   } catch (error) {
     console.error("Error fetching audit comments:", error)
-    return apiError(500, "audit_comments_fetch_failed", "Erreur lors de la récupération des commentaires")
+    return apiError(500, "audit_comments_fetch_failed", "Erreur lors de la recuperation des commentaires")
   }
 })
 
 /**
  * POST /api/audit/comments
- * Crée ou met à jour un commentaire (tm_journal_code).
+ * Cree ou met a jour un commentaire (tm_journal_code).
  */
-export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest) => {
+export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest, ctx: any) => {
+  const { ip } = getRequestContext(req)
   try {
     const { type, text } = await req.json()
 
@@ -47,21 +50,52 @@ export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextReq
       },
     })
 
+    log.info("AUDIT_COMMENTS", "Audit code comment upserted", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      code: comment.Code_Journal,
+    })
+    log.audit("CC", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      resource: "Audit code comment",
+      resourceId: comment.Code_Journal,
+      changes: { text: comment.Commentaire ?? "" },
+      success: true,
+    })
+
     return apiOk({
       type: comment.Code_Journal,
       text: comment.Commentaire,
     })
   } catch (error) {
+    log.error("AUDIT_COMMENTS", "Audit code comment upsert failed", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    log.audit("CC", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      resource: "Audit code comment",
+      success: false,
+      reason: error instanceof Error ? error.message : String(error),
+    })
     console.error("Error creating/updating audit comment:", error)
-    return apiError(500, "audit_comment_upsert_failed", "Erreur lors de la création/mise à jour du commentaire")
+    return apiError(500, "audit_comment_upsert_failed", "Erreur lors de la creation/mise a jour du commentaire")
   }
 })
 
 /**
  * PATCH /api/audit/comments
- * Met à jour un commentaire (tm_journal_code).
+ * Met a jour un commentaire (tm_journal_code).
  */
-export const PATCH = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest) => {
+export const PATCH = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest, ctx: any) => {
+  const { ip } = getRequestContext(req)
   try {
     const { type, text } = await req.json()
 
@@ -74,12 +108,42 @@ export const PATCH = withAuthorizationLogging("GERER_PROFIL", async (req: NextRe
       data: { Commentaire: text },
     })
 
+    log.info("AUDIT_COMMENTS", "Audit code comment updated", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      code: comment.Code_Journal,
+    })
+    log.audit("CC", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      resource: "Audit code comment",
+      resourceId: comment.Code_Journal,
+      changes: { text: comment.Commentaire ?? "" },
+      success: true,
+    })
+
     return apiOk({
       type: comment.Code_Journal,
       text: comment.Commentaire,
     })
   } catch (error) {
+    log.error("AUDIT_COMMENTS", "Audit code comment update failed", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    log.audit("CC", {
+      user: ctx.user.username,
+      userId: ctx.user.userId,
+      ip,
+      resource: "Audit code comment",
+      success: false,
+      reason: error instanceof Error ? error.message : String(error),
+    })
     console.error("Error updating audit comment:", error)
-    return apiError(500, "audit_comment_update_failed", "Erreur lors de la mise à jour du commentaire")
+    return apiError(500, "audit_comment_update_failed", "Erreur lors de la mise a jour du commentaire")
   }
 })

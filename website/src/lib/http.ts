@@ -73,6 +73,7 @@ const ALLOWED_WHEN_DISCONNECTED = new Set<string>([
   "/api/auth/temp-password-token",
   "/api/auth/validate-password-token",
   "/api/hotline/login",
+  "/api/hotline/refresh",
 ])
 
 function normalizePathname(input: RequestInfo | URL): string | undefined {
@@ -157,14 +158,16 @@ function getBootId(): string | undefined {
   }
 }
 
-function shouldAttemptRefresh(pathname: string | undefined) {
-  if (typeof window === "undefined") return false
-  if (!pathname?.startsWith("/api/")) return false
-  if (pathname === "/api/auth/refresh") return false
-  if (pathname === "/api/auth/login") return false
-  if (pathname === "/api/auth/logout") return false
-  if (pathname === "/api/auth/logout-auto") return false
-  return true
+function getRefreshEndpoint(pathname: string | undefined): string | null {
+  if (typeof window === "undefined") return null
+  if (!pathname?.startsWith("/api/")) return null
+  if (pathname === "/api/auth/refresh" || pathname === "/api/hotline/refresh") return null
+  if (pathname === "/api/auth/login" || pathname === "/api/hotline/login") return null
+  if (pathname === "/api/auth/logout" || pathname === "/api/auth/logout-auto") return null
+  if (pathname === "/api/hotline/logout") return null
+
+  if (pathname.startsWith("/api/hotline/")) return "/api/hotline/refresh"
+  return "/api/auth/refresh"
 }
 
 export async function fetchJson<TResponse>(input: RequestInfo | URL, init?: RequestInit): Promise<TResponse> {
@@ -174,6 +177,7 @@ export async function fetchJson<TResponse>(input: RequestInfo | URL, init?: Requ
     typeof window !== "undefined" &&
     authDisconnected &&
     pathname?.startsWith("/api/") &&
+    !pathname.startsWith("/api/hotline/") &&
     !ALLOWED_WHEN_DISCONNECTED.has(pathname)
   ) {
     const payload: HttpErrorPayload = {
@@ -217,21 +221,24 @@ export async function fetchJson<TResponse>(input: RequestInfo | URL, init?: Requ
 
   let res = await doRequest()
 
-  if (res.status === 401 && shouldAttemptRefresh(pathname)) {
+  const refreshEndpoint = getRefreshEndpoint(pathname)
+  const isHotlineApi = Boolean(pathname?.startsWith("/api/hotline/"))
+
+  if (res.status === 401 && refreshEndpoint) {
     try {
-      const refreshRes = await fetch("/api/auth/refresh", {
+      const refreshRes = await fetch(refreshEndpoint, {
         method: "POST",
         credentials: "include",
       })
 
       if (refreshRes.ok) {
-        setAuthDisconnected(false, "refresh_success")
+        if (!isHotlineApi) setAuthDisconnected(false, "refresh_success")
         res = await doRequest()
-      } else {
+      } else if (!isHotlineApi) {
         setAuthDisconnected(true, "unauthorized")
       }
     } catch {
-      setAuthDisconnected(true, "unauthorized")
+      if (!isHotlineApi) setAuthDisconnected(true, "unauthorized")
     }
   }
 
@@ -242,7 +249,7 @@ export async function fetchJson<TResponse>(input: RequestInfo | URL, init?: Requ
     setAuthDisconnected(true, pathname === "/api/auth/logout-auto" ? "auto_logout" : "manual_logout")
   }
 
-  if (res.ok && pathname?.startsWith("/api/") && authDisconnected) {
+  if (res.ok && pathname?.startsWith("/api/") && !pathname.startsWith("/api/hotline/") && authDisconnected) {
     setAuthDisconnected(false, "api_ok")
   }
 
@@ -274,7 +281,7 @@ export async function fetchJson<TResponse>(input: RequestInfo | URL, init?: Requ
       payload = { ...(payload ?? {}), errorId }
     }
 
-    if (res.status === 401) {
+    if (res.status === 401 && !isHotlineApi) {
       setAuthDisconnected(true, "unauthorized")
     }
 

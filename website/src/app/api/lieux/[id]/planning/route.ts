@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server"
 import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { withLogging } from "@/lib/api-logger"
+import { getClientIp, withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { planningRegleCreateSchema, type PlanningRegleResponse } from "@/lib/planning-regle-schema"
 import { computeEmt, emtModeFromDb } from "@/lib/emt"
+import { log } from "@/lib/logger"
 
 // Helper to format a Prisma TIME field (Date with date 1970-01-01) to "HH:MM"
 function formatTime(d: Date | null | undefined): string {
@@ -142,6 +143,19 @@ export const POST = withLogging(
           Tolerance_Sup_Calc: emt.toleranceSup,
           Tolerance_Inf_Calc: emt.toleranceInf,
         },
+      })
+
+      log.data.create("Planning consigne", regle.Id_Regle, user.username, user.userId, getClientIp(req), {
+        lieuId: idLieu,
+        actif: regle.Actif,
+        priorite: regle.Priorite,
+        jourDebut: regle.Jour_Debut,
+        heureDebut: formatTime(regle.Heure_Debut),
+        jourFin: regle.Jour_Fin,
+        heureFin: formatTime(regle.Heure_Fin),
+        consigne: regle.Consigne,
+        consigneSup: regle.Consigne_Sup,
+        consigneInf: regle.Consigne_Inf,
       })
 
       return apiOk(toRegleResponse(regle as PrismaRegle), { status: 201 })

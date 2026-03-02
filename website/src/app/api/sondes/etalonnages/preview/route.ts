@@ -2,7 +2,9 @@ import { randomUUID } from "crypto";
 import { NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { apiError, apiOk } from "@/lib/api-response";
+import { getRequestContext } from "@/lib/api-logger";
 import { parseCalibrationXml } from "@/lib/calibration-import";
+import { log } from "@/lib/logger";
 import { requireStandardOrExpertLicense } from "@/lib/license-guards";
 
 const isXmlFile = (file: File) => {
@@ -61,6 +63,8 @@ export const POST = async (req: NextRequest) => {
   const user = getAuthenticatedUser(req);
   if (!user) return apiError(401, "unauthenticated", "Non authentifie");
 
+  const { ip } = getRequestContext(req)
+
   try {
     const guard = await requireStandardOrExpertLicense();
     if (guard) return guard;
@@ -68,16 +72,45 @@ export const POST = async (req: NextRequest) => {
     const formData = await req.formData();
     const file = formData.get("file");
 
+    log.info("CALIBRATION_PREVIEW", "Etalonnage preview requested", {
+      user: user.username,
+      userId: user.userId,
+      ip,
+      hasFile: file instanceof File,
+    })
+
     if (!file || !(file instanceof File)) {
+      log.warn("CALIBRATION_PREVIEW", "Etalonnage preview rejected: missing file", {
+        user: user.username,
+        userId: user.userId,
+        ip,
+      })
       return apiError(400, "missing_file", "Fichier requis");
     }
 
     if (!isXmlFile(file)) {
+      log.warn("CALIBRATION_PREVIEW", "Etalonnage preview rejected: invalid file type", {
+        user: user.username,
+        userId: user.userId,
+        ip,
+        fileName: file.name,
+        mimeType: file.type,
+      })
       return apiError(415, "invalid_file", "Fichier XML requis");
     }
 
     const xml = await decodeXmlFile(file);
     const parsed = parseCalibrationXml(xml, file.name);
+
+    log.info("CALIBRATION_PREVIEW", "Etalonnage preview parsed", {
+      user: user.username,
+      userId: user.userId,
+      ip,
+      fileName: file.name,
+      sonde: parsed.summary.sensor,
+      date: parsed.summary.date,
+      warnings: parsed.warnings.length,
+    })
 
     return apiOk({
       id: randomUUID(),
@@ -110,6 +143,13 @@ export const POST = async (req: NextRequest) => {
       },
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    log.error("CALIBRATION_PREVIEW", "Etalonnage preview failed", {
+      user: user.username,
+      userId: user.userId,
+      ip,
+      error: message,
+    })
     console.error("[POST /api/sondes/etalonnages/preview]", error);
     return apiError(500, "preview_failed", "Erreur lors de la preparation");
   }

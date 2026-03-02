@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { withLogging } from "@/lib/api-logger"
+import { getClientIp, withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { planningRegleUpdateSchema, type PlanningRegleResponse } from "@/lib/planning-regle-schema"
 import { computeEmt, emtModeFromDb } from "@/lib/emt"
+import { log } from "@/lib/logger"
 
 // Helper to format a Prisma TIME field (Date with date 1970-01-01) to "HH:MM"
 function formatTime(d: Date | null | undefined): string {
@@ -155,6 +156,12 @@ export const PATCH = withLogging(
         data: updateData,
       })
 
+      log.data.update("Planning consigne", idRegle, user.username, user.userId, getClientIp(req), {
+        lieuId: idLieu,
+        patch: validated,
+        tolerancePatch: tolerancePatch,
+      })
+
       return apiOk(toRegleResponse(updated as PrismaRegle))
     } catch (error) {
       console.error("[PATCH /api/lieux/[id]/planning/[regleId]]", error)
@@ -222,6 +229,9 @@ export const DELETE = withLogging(
           where: { Id_Regle: idRegle },
         })
       }
+
+      log.data.delete("Planning consigne", idRegle, user.username, user.userId, getClientIp(req),
+        retainMode === "regle" ? "Suppression avec conservation des valeurs de la regle" : "Suppression simple")
 
       return new NextResponse(null, { status: 204 })
     } catch (error) {

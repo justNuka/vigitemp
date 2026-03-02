@@ -3,14 +3,21 @@ import { NextRequest } from "next/server"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
+import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 
-export const GET = withAuthLogging(async (_req: NextRequest) => {
+export const GET = withAuthLogging(async (_req: NextRequest, ctx) => {
   try {
+    const scope = await getUserLocationScope(ctx.user.userId)
+    const lieuAccessFilter = buildLieuAccessFilter(scope)
+
     const locations = await prisma.t_lieu.findMany({
-      where: {
-        Est_Archive: false,
-        OR: [{ Est_Lieu_En_Alarme: 1 }, { Est_Lieu_En_Pre_Alarme: 1 }],
-      },
+      where: applyAccessFilter(
+        {
+          Est_Archive: false,
+          OR: [{ Est_Lieu_En_Alarme: 1 }, { Est_Lieu_En_Pre_Alarme: 1 }],
+        },
+        lieuAccessFilter,
+      ),
       orderBy: { Derniere_Date_Heure: "desc" },
       take: 10,
       include: {

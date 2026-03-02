@@ -49,7 +49,7 @@ export function TestConnectionStats({
             <Zap className="h-6 w-6 text-blue-600" />
             <div>
               <p className="text-2xl font-bold">{lastMeasurementCount.toLocaleString()}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{t('last_24h')}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t('last_7days')}</p>
             </div>
           </div>
         </CardContent>

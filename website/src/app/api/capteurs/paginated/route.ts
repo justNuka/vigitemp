@@ -4,6 +4,12 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma, prismaMesure } from "@/lib/prisma"
 
+const NO_STORE_HEADERS = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  Pragma: "no-cache",
+  Expires: "0",
+} as const
+
 export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
   try {
     const searchParams = request.nextUrl.searchParams
@@ -41,7 +47,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
         ? siteIds.filter((id) => assignedSiteIds.includes(id))
         : siteIds
       if (allowedSiteIds.length === 0) {
-        return apiOk({ total: 0, page, limit, totalPages: 0, sensors: [] })
+        return apiOk({ total: 0, page, limit, totalPages: 0, sensors: [] }, { headers: NO_STORE_HEADERS })
       }
       where.Id_Site = { in: allowedSiteIds }
     }
@@ -51,7 +57,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
         ? groupIds.filter((id) => assignedGroupIds.includes(id))
         : groupIds
       if (allowedGroupIds.length === 0) {
-        return apiOk({ total: 0, page, limit, totalPages: 0, sensors: [] })
+        return apiOk({ total: 0, page, limit, totalPages: 0, sensors: [] }, { headers: NO_STORE_HEADERS })
       }
       where.OR = [
         { t_lieu_groupe: { some: { Id_Groupe: { in: allowedGroupIds } } } },
@@ -279,6 +285,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
             siteGroup: null,
             isActive: !location.Est_Archive,
             alarmDisabled,
+            estSonAlarmeActive: location.Est_Son_Alarme_Active ?? true,
             alarmDisabledUntil: location.Date_Heure_Reactivation_Alarme ?? null,
             lieuEtat: location.Lieu_Etat ?? null,
             surveillanceDisabled,
@@ -315,7 +322,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       limit,
       totalPages: Math.ceil(total / limit),
       sensors: sensorsWithMeasurements,
-    })
+    }, { headers: NO_STORE_HEADERS })
   } catch (error) {
     console.error("Erreur lors de la récupération des capteurs paginés:", error)
     return apiError(500, "internal_error", "Erreur lors du chargement des sondes")

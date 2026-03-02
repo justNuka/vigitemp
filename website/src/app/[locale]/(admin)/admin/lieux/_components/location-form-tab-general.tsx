@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo } from 'react'
+import { CircleHelp } from 'lucide-react'
 
 import type { AvailableSensor } from '@/hooks/useAvailableSensors'
 import type { Group } from '@/hooks/useGroups'
@@ -132,6 +133,16 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
       </div>
 
       <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>{t('labels.alarm_sound')}</Label>
+          <div className="flex items-center gap-2 rounded-md border px-3 py-2">
+            <Checkbox
+              checked={formData.Est_Son_Alarme_Active ?? true}
+              onCheckedChange={(checked) => setValue('Est_Son_Alarme_Active', !!checked, { shouldDirty: true })}
+            />
+            <Label className="font-normal">{t('labels.alarm_sound_enable')}</Label>
+          </div>
+        </div>
         <div className="space-y-2">
           <Label>{t('labels.site')}</Label>
           <Controller
@@ -280,6 +291,38 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
                     ) : null}
                   </Tooltip>
                 </TooltipProvider>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-1">
+                  <Label>{t('labels.retrigger_delay_measures')}</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex h-4 w-4 items-center justify-center text-muted-foreground"
+                          aria-label={t('labels.retrigger_delay_measures')}
+                        >
+                          <CircleHelp className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{t('tooltips.retrigger_delay_measures')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Input
+                  type="number"
+                  min={0}
+                  {...register('Nb_Mesures_Temporisation_Redeclenchement', {
+                    setValueAs: (value) =>
+                      value === '' || Number.isNaN(Number(value)) ? undefined : Math.max(0, Math.trunc(Number(value))),
+                  })}
+                  placeholder={t('placeholders.retrigger_delay_measures')}
+                />
               </div>
             </div>
           </div>

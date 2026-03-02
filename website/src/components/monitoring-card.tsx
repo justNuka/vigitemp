@@ -110,8 +110,6 @@ interface MonitoringCardProps {
     durationMinutes: number | null,
   ) => void;
   showNullNonResponse?: boolean;
-  onShowNullNonResponseChange?: (enabled: boolean) => Promise<void> | void;
-  nonResponsePreferencesLoading?: boolean;
 }
 
 function RssiBars({ value, label }: { value?: string | null; label: string }) {
@@ -181,8 +179,6 @@ export default function MonitoringCard({
   onEditLocation,
   onSurveillanceToggle,
   showNullNonResponse = false,
-  onShowNullNonResponseChange,
-  nonResponsePreferencesLoading = false,
 }: MonitoringCardProps) {
   const t = useTranslations("monitoringCard");
   const { hasPermission } = useAppAccess();
@@ -957,8 +953,6 @@ export default function MonitoringCard({
             isSurveillanceActive={isSurveillanceActive}
             measurements={isSurveillanceActive ? orderedData : []}
             showNullNonResponse={showNullNonResponse}
-            onShowNullNonResponseChange={onShowNullNonResponseChange}
-            preferencesLoading={nonResponsePreferencesLoading}
           />
         ) : null}
 

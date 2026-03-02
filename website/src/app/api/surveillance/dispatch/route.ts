@@ -2,7 +2,8 @@ import { NextRequest } from "next/server"
 import { z } from "zod"
 
 import { apiError, apiOk } from "@/lib/api-response"
-import { withLogging } from "@/lib/api-logger"
+import { getRequestContext, withLogging } from "@/lib/api-logger"
+import { log } from "@/lib/logger"
 
 import { broadcastSurveillanceEvent, getSurveillanceClientCount } from "../_stream"
 
@@ -20,23 +21,59 @@ function isAuthorized(req: NextRequest) {
 }
 
 export const POST = withLogging(async (req: NextRequest) => {
+  const { ip } = getRequestContext(req)
+
   if (!isAuthorized(req)) {
+    log.warn("SURVEILLANCE_DISPATCH", "Rejected surveillance dispatch: invalid secret", { ip })
     return apiError(401, "unauthorized", "Non autorisé")
   }
 
   const body = await req.json().catch(() => null)
   const validated = dispatchSchema.safeParse(body)
   if (!validated.success) {
+    log.warn("SURVEILLANCE_DISPATCH", "Rejected surveillance dispatch: invalid payload", {
+      ip,
+      issues: validated.error.issues.length,
+      firstIssues: validated.error.issues.slice(0, 5).map((issue) => ({
+        path: issue.path.join("."),
+        message: issue.message,
+      })),
+    })
     return apiError(400, "invalid_payload", "Payload invalide", {
       details: validated.error.flatten(),
     })
   }
+
+  log.info("SURVEILLANCE_DISPATCH", "Dispatching surveillance measurement event", {
+    ip,
+    idLieu: validated.data.idLieu,
+    status: validated.data.status ?? null,
+    hasValue: validated.data.currentValue !== undefined,
+    lastMeasurement: validated.data.lastMeasurement ?? null,
+    subscribers: getSurveillanceClientCount(),
+  })
 
   broadcastSurveillanceEvent("measurement", {
     ...validated.data,
     lastMeasurement: validated.data.lastMeasurement ?? new Date().toISOString(),
   })
 
-  return apiOk({ delivered: getSurveillanceClientCount() })
+  const delivered = getSurveillanceClientCount()
+
+  log.audit("CC", {
+    user: "DISPATCH_SERVICE",
+    userId: 0,
+    ip,
+    resource: "Dispatch surveillance",
+    resourceId: validated.data.idLieu,
+    changes: {
+      status: validated.data.status ?? null,
+      currentValue: validated.data.currentValue ?? null,
+      delivered,
+    },
+    success: true,
+  })
+
+  return apiOk({ delivered })
 })
 

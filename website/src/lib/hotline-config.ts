@@ -1,33 +1,20 @@
 import { prisma } from "@/lib/prisma"
 
-export type HotlineConfig = {
-  slug: string
-  username: string
-  passwordHash: string
+export type HotlineServerConfig = {
   serverHost?: string
   serverPort?: number
   teamviewerId?: string
   teamviewerLink?: string
 }
 
-export type HotlinePublicConfig = {
-  slug: string
-  username: string
-  teamviewerId?: string
-  teamviewerLink?: string
-}
-
 const SECTION = "SECURITE_HOTLINE"
 
-export async function getHotlineConfig(): Promise<HotlineConfig> {
+export async function getHotlineServerConfig(): Promise<HotlineServerConfig> {
   const params = await prisma.t_parametre.findMany({
     where: { Section: SECTION },
   })
 
-  const config: HotlineConfig = {
-    slug: process.env.HOTLINE_SLUG || "",
-    username: process.env.HOTLINE_USER || "",
-    passwordHash: process.env.HOTLINE_PASSWORD_HASH || "",
+  const config: HotlineServerConfig = {
     serverHost: process.env.HOTLINE_SERVER_HOST || "",
     serverPort: process.env.HOTLINE_SERVER_PORT
       ? Number(process.env.HOTLINE_SERVER_PORT)
@@ -42,15 +29,6 @@ export async function getHotlineConfig(): Promise<HotlineConfig> {
 
   params.forEach((param) => {
     switch (param.Mot_Cle) {
-      case "HOTLINE_SLUG":
-        config.slug = param.Valeur || ""
-        break
-      case "HOTLINE_USER":
-        config.username = param.Valeur || ""
-        break
-      case "HOTLINE_PASSWORD_HASH":
-        config.passwordHash = param.Valeur || ""
-        break
       case "HOTLINE_SERVER_HOST":
         config.serverHost = param.Valeur || ""
         break
@@ -70,14 +48,4 @@ export async function getHotlineConfig(): Promise<HotlineConfig> {
   })
 
   return config
-}
-
-export async function getHotlinePublicConfig(): Promise<HotlinePublicConfig> {
-  const config = await getHotlineConfig()
-  return {
-    slug: config.slug,
-    username: config.username,
-    teamviewerId: config.teamviewerId || "",
-    teamviewerLink: config.teamviewerLink || "",
-  }
 }

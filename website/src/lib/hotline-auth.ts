@@ -5,47 +5,89 @@ import { shouldUseSecureCookies } from "@/lib/cookie-security"
 
 export type HotlineSession = {
   username: string
+  tokenType?: "access" | "refresh"
 }
 
-const HOTLINE_COOKIE_NAME = "hotline-token"
+const HOTLINE_ACCESS_COOKIE_NAME = "hotline-auth-token"
+const HOTLINE_REFRESH_COOKIE_NAME = "hotline-refresh-token"
 
 function getHotlineSecret() {
   return process.env.HOTLINE_JWT_SECRET || process.env.JWT_SECRET || "hotline-secret-change-this"
 }
 
-function getTokenTtlHours() {
-  const raw = process.env.HOTLINE_TOKEN_TTL_HOURS
+function getAccessTokenTtlMinutes() {
+  const raw = process.env.HOTLINE_ACCESS_TOKEN_TTL_MINUTES
   const parsed = raw ? Number(raw) : NaN
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 8
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 15
 }
 
-export function createHotlineToken(payload: HotlineSession) {
+function getRefreshTokenTtlMinutes() {
+  const raw = process.env.HOTLINE_REFRESH_TOKEN_TTL_MINUTES
+  const parsed = raw ? Number(raw) : NaN
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 120
+}
+
+export function createHotlineAccessToken(payload: HotlineSession) {
   return jwt.sign(payload, getHotlineSecret(), {
-    expiresIn: `${getTokenTtlHours()}h`,
+    expiresIn: `${getAccessTokenTtlMinutes()}m`,
   })
 }
 
-export function verifyHotlineToken(token: string): HotlineSession | null {
+export function createHotlineRefreshToken(payload: HotlineSession) {
+  return jwt.sign({ ...payload, tokenType: "refresh" as const }, getHotlineSecret(), {
+    expiresIn: `${getRefreshTokenTtlMinutes()}m`,
+  })
+}
+
+export function verifyHotlineAccessToken(token: string): HotlineSession | null {
   try {
-    return jwt.verify(token, getHotlineSecret()) as HotlineSession
+    const decoded = jwt.verify(token, getHotlineSecret()) as HotlineSession
+    if (decoded?.tokenType === "refresh") return null
+    return decoded
+  } catch {
+    return null
+  }
+}
+
+export function verifyHotlineRefreshToken(token: string): HotlineSession | null {
+  try {
+    const decoded = jwt.verify(token, getHotlineSecret()) as HotlineSession
+    if (decoded?.tokenType !== "refresh") return null
+    return decoded
   } catch {
     return null
   }
 }
 
 export function getHotlineSession(req: NextRequest): HotlineSession | null {
-  const token = req.cookies.get(HOTLINE_COOKIE_NAME)?.value
+  const token = req.cookies.get(HOTLINE_ACCESS_COOKIE_NAME)?.value
   if (!token) return null
-  return verifyHotlineToken(token)
+  return verifyHotlineAccessToken(token)
 }
 
-export function getHotlineCookieOptions(req: NextRequest) {
+export function getHotlineRefreshSession(req: NextRequest): HotlineSession | null {
+  const token = req.cookies.get(HOTLINE_REFRESH_COOKIE_NAME)?.value
+  if (!token) return null
+  return verifyHotlineRefreshToken(token)
+}
+
+export function getHotlineAccessCookieOptions(req: NextRequest) {
   return {
     httpOnly: true,
     secure: shouldUseSecureCookies(req),
     sameSite: "lax" as const,
     path: "/",
-    maxAge: getTokenTtlHours() * 60 * 60,
+    maxAge: getAccessTokenTtlMinutes() * 60,
+  }
+}
+
+export function getHotlineRefreshCookieOptions(req: NextRequest) {
+  return {
+    httpOnly: true,
+    secure: shouldUseSecureCookies(req),
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: getRefreshTokenTtlMinutes() * 60,
   }
 }
 
@@ -67,6 +109,10 @@ export async function verifyHotlinePassword(
   return bcrypt.compare(password, passwordHash)
 }
 
-export function getHotlineCookieName() {
-  return HOTLINE_COOKIE_NAME
+export function getHotlineAccessCookieName() {
+  return HOTLINE_ACCESS_COOKIE_NAME
+}
+
+export function getHotlineRefreshCookieName() {
+  return HOTLINE_REFRESH_COOKIE_NAME
 }

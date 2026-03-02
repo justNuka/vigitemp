@@ -1,3 +1,5 @@
+import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
+import { getServerAuthenticatedUserId } from "@/lib/server-auth"
 ﻿import { unstable_noStore } from "next/cache"
 
 export interface Site {
@@ -17,15 +19,21 @@ export async function ServerFilterOptions() {
   const { prisma } = await import("@/lib/prisma")
 
   try {
+    const userId = await getServerAuthenticatedUserId()
+    if (!userId) return { sites: [], groups: [] }
+
+    const scope = await getUserLocationScope(userId)
+    const lieuAccessFilter = buildLieuAccessFilter(scope)
     const [sitesData, groupeData, lieuxData] = await Promise.all([
       prisma.t_site.findMany({
+        where: scope.siteIds.length > 0 ? { Id_Site: { in: scope.siteIds } } : undefined,
         select: { Id_Site: true, Libelle_Site: true },
         orderBy: { Libelle_Site: "asc" },
       }),
       prisma.t_groupe.findMany({
         select: { Id_Groupe: true, Nom_Groupe: true, Numero_Regroupement: true },
         orderBy: { Nom_Groupe: "asc" },
-        where: { Est_Archive: false },
+        where: applyAccessFilter({ Est_Archive: false }, lieuAccessFilter),
       }),
       prisma.t_lieu.findMany({
         select: {
@@ -35,7 +43,7 @@ export async function ServerFilterOptions() {
           Est_Archive: true,
           t_lieu_groupe: { select: { Id_Groupe: true } },
         },
-        where: { Est_Archive: false },
+        where: applyAccessFilter({ Est_Archive: false }, lieuAccessFilter),
       }),
     ])
 

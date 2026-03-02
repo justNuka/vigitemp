@@ -14,7 +14,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Line } from "react-chartjs-2";
@@ -73,8 +72,6 @@ interface MonitoringDetailsModalProps {
   measurements?: MeasureData[];
   initialRange?: DateRangeValue;
   showNullNonResponse?: boolean;
-  onShowNullNonResponseChange?: (enabled: boolean) => Promise<void> | void;
-  preferencesLoading?: boolean;
 }
 
 type AuditLog = {
@@ -107,8 +104,6 @@ export default function MonitoringDetailsModal({
   measurements: initialMeasurements,
   initialRange,
   showNullNonResponse: controlledShowNullNonResponse,
-  onShowNullNonResponseChange,
-  preferencesLoading: controlledPreferencesLoading,
 }: MonitoringDetailsModalProps) {
   const locale = useLocale();
   const localeTag = locale === "fr" ? "fr-FR" : locale;
@@ -156,45 +151,13 @@ export default function MonitoringDetailsModal({
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError] = useState<string | null>(null);
   const [auditLoaded, setAuditLoaded] = useState(false);
-  const [internalShowNullNonResponse, setInternalShowNullNonResponse] = useState(false);
-  const [internalPreferencesLoading, setInternalPreferencesLoading] = useState(false);
-  const isShowNullControlled = typeof controlledShowNullNonResponse === "boolean";
-  const showNullNonResponse = isShowNullControlled
-    ? Boolean(controlledShowNullNonResponse)
-    : internalShowNullNonResponse;
-  const preferencesLoading = isShowNullControlled
-    ? Boolean(controlledPreferencesLoading)
-    : internalPreferencesLoading;
+  const showNullNonResponse = Boolean(controlledShowNullNonResponse);
 
   useEffect(() => {
     if (initialRange) {
       setDateRange(initialRange);
     }
   }, [initialRange]);
-
-  useEffect(() => {
-    if (!isOpen || isShowNullControlled) return;
-
-    let isActive = true;
-    setInternalPreferencesLoading(true);
-
-    fetchJson<{ enabled: boolean }>("/api/preferences/non-response")
-      .then((res) => {
-        if (!isActive) return;
-        setInternalShowNullNonResponse(Boolean(res?.enabled));
-      })
-      .catch(() => {
-        if (!isActive) return;
-        setInternalShowNullNonResponse(false);
-      })
-      .finally(() => {
-        if (isActive) setInternalPreferencesLoading(false);
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [isOpen, isShowNullControlled]);
 
   const effectiveRange = useMemo(() => {
     if (!dateRange?.from) return null;
@@ -296,30 +259,6 @@ export default function MonitoringDetailsModal({
     enabled: shouldLoadBase,
     includeNullNonResponse: showNullNonResponse,
   });
-  const handleToggleNullNonResponse = useCallback(async (checked: boolean) => {
-    if (onShowNullNonResponseChange) {
-      await onShowNullNonResponseChange(checked);
-      if (isSurveillanceActive) {
-        await reloadMeasurements(true);
-      }
-      return;
-    }
-
-    setInternalShowNullNonResponse(checked);
-    try {
-      await fetchJson("/api/preferences/non-response", {
-        method: "PUT",
-        body: JSON.stringify({ enabled: checked }),
-      });
-      if (isSurveillanceActive) {
-        await reloadMeasurements(true);
-      }
-    } catch (error) {
-      setInternalShowNullNonResponse((prev) => !prev);
-      console.error("Erreur mise a jour preference non-reponse:", error);
-    }
-  }, [isSurveillanceActive, onShowNullNonResponseChange, reloadMeasurements]);
-
   const baseLoading = isSurveillanceActive && shouldLoadBase && isLoading;
   const baseData = isSurveillanceActive
     ? hasLocalMeasurements
@@ -698,15 +637,6 @@ export default function MonitoringDetailsModal({
                   align="start"
                   locale={localeTag}
                   showCompare={false}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">{t("chart.show_no_response")}</span>
-                <Switch
-                  checked={showNullNonResponse}
-                  onCheckedChange={handleToggleNullNonResponse}
-                  disabled={preferencesLoading}
-                  aria-label={t("chart.show_no_response")}
                 />
               </div>
             </div>

@@ -1,5 +1,6 @@
 ﻿import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { applyAccessFilter, buildAlarmAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 
@@ -11,23 +12,27 @@ const NO_STORE_HEADERS: HeadersInit = {
   Expires: "0",
 }
 
-export const GET = withAuthLogging(async (req: NextRequest) => {
+export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
   try {
     const searchParams = req.nextUrl.searchParams
     const status = searchParams.get("status") as AlarmStatus | null
     const page = Math.max(1, Number(searchParams.get("page") ?? "1"))
     const limit = Math.max(1, Number(searchParams.get("limit") ?? "15"))
 
-    const where: any = {}
+    const baseWhere: any = {}
     if (status === "active") {
-      where.Est_Acquittee = false
-      where.Date_Heure_Fin = null
+      baseWhere.Est_Acquittee = false
+      baseWhere.Date_Heure_Fin = null
     }
-    if (status === "acknowledged") where.Est_Acquittee = true
+    if (status === "acknowledged") baseWhere.Est_Acquittee = true
     if (status === "resolved") {
-      where.Est_Acquittee = false
-      where.Date_Heure_Fin = { not: null }
+      baseWhere.Est_Acquittee = false
+      baseWhere.Date_Heure_Fin = { not: null }
     }
+
+    const scope = await getUserLocationScope(ctx.user.userId)
+    const accessFilter = buildAlarmAccessFilter(scope)
+    const where = applyAccessFilter(baseWhere, accessFilter)
 
     const [total, alarms] = await Promise.all([
       prisma.t_alarme.count({ where }),

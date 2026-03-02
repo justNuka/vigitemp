@@ -40,8 +40,6 @@ interface MonitoringCardsGridProps {
   onGroupSurveillanceToggle?: (groupId: number, newState: boolean, durationMinutes?: number | null) => void
   onEditLocation?: (idLieu: number) => void
   showNullNonResponse?: boolean
-  onShowNullNonResponseChange?: (enabled: boolean) => Promise<void> | void
-  nonResponsePreferencesLoading?: boolean
 }
 
 function formatDisabledLabel(
@@ -72,8 +70,6 @@ export function MonitoringCardsGrid({
   onGroupSurveillanceToggle,
   onEditLocation,
   showNullNonResponse = false,
-  onShowNullNonResponseChange,
-  nonResponsePreferencesLoading = false,
 }: MonitoringCardsGridProps) {
   const t = useTranslations("surveillance")
   const locale = useLocale()
@@ -299,8 +295,6 @@ export function MonitoringCardsGrid({
                               }
                               onEditLocation={onEditLocation}
                               showNullNonResponse={showNullNonResponse}
-                              onShowNullNonResponseChange={onShowNullNonResponseChange}
-                              nonResponsePreferencesLoading={nonResponsePreferencesLoading}
                             />
                           ))}
                         </div>
@@ -388,8 +382,6 @@ export function MonitoringCardsGrid({
                               }
                               onEditLocation={onEditLocation}
                               showNullNonResponse={showNullNonResponse}
-                              onShowNullNonResponseChange={onShowNullNonResponseChange}
-                              nonResponsePreferencesLoading={nonResponsePreferencesLoading}
                             />
                           ))}
                         </div>

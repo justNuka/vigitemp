@@ -84,7 +84,7 @@ export function ModulesClient() {
       refetchModules();
       router.refresh();
       setArchiveConfirmOpen(false);
-      toast.success('Module archiv? avec succ?s');
+      toast.success(t('toast.archive_success'));
     } catch (error) {
       if (error instanceof HttpError && error.status === 409) {
         const linked = (error.payload as any)?.linkedSensorsCount;

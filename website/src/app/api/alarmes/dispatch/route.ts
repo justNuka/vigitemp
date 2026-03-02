@@ -1,7 +1,7 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
-import { withLogging } from "@/lib/api-logger"
+import { getRequestContext, withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { routing } from "@/i18n/routing"
 import { log } from "@/lib/logger"
@@ -193,13 +193,24 @@ function isAuthorized(req: NextRequest) {
 }
 
 export const POST = withLogging(async (req: NextRequest) => {
+  const { ip } = getRequestContext(req)
+
   if (!isAuthorized(req)) {
-    return apiError(401, "unauthorized", "Non autorisé")
+    log.warn("ALARM_DISPATCH", "Rejected alarm dispatch: invalid secret", { ip })
+    return apiError(401, "unauthorized", "Non autorisÃ©")
   }
 
   const body = await req.json().catch(() => null)
   const validated = dispatchSchema.safeParse(body)
   if (!validated.success) {
+    log.warn("ALARM_DISPATCH", "Rejected alarm dispatch: invalid payload", {
+      ip,
+      issues: validated.error.issues.length,
+      firstIssues: validated.error.issues.slice(0, 5).map((issue) => ({
+        path: issue.path.join("."),
+        message: issue.message,
+      })),
+    })
     return apiError(400, "invalid_payload", "Payload invalide", {
       details: validated.error.flatten(),
     })
@@ -247,6 +258,7 @@ export const POST = withLogging(async (req: NextRequest) => {
           select: {
             Nom_Lieu: true,
             Sonde_Numero_Serie: true,
+            Est_Son_Alarme_Active: true,
             Consigne: true,
             Consigne_Sup: true,
             Consigne_Inf: true,
@@ -286,7 +298,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       const alarmType =
         alarm.Type === "H" ? "Alarme haute" : alarm.Type === "B" ? "Alarme basse" : alarm.Type === "N" ? "Non reponse" : "Alarme"
       alarmTypeCode = alarm.Type ?? undefined
-      const valueLabel = `${alarm.Valeur ?? "N/A"}${alarm.Unite ?? "°C"}`
+      const valueLabel = `${alarm.Valeur ?? "N/A"}${alarm.Unite ?? "Â°C"}`
       alarmTypeLabel = alarmType
       lastValueLabel = valueLabel
       triggeredAtDate = alarm.Date_Heure_Debut_Alarme_Vrai ?? alarm.Date_Heure_Debut ?? null
@@ -302,15 +314,15 @@ export const POST = withLogging(async (req: NextRequest) => {
         alarm.t_lieu?.Tolerance_Surveillance_Inf ?? alarm.t_lieu?.Consigne_Inf ?? null
       consigneInfValue = infTolerance != null ? Number(infTolerance) : null
       const thresholds = [
-        supTolerance != null ? `Sup ${supTolerance}${alarm.Unite ?? "°C"}` : null,
-        infTolerance != null ? `Inf ${infTolerance}${alarm.Unite ?? "°C"}` : null,
+        supTolerance != null ? `Sup ${supTolerance}${alarm.Unite ?? "Â°C"}` : null,
+        infTolerance != null ? `Inf ${infTolerance}${alarm.Unite ?? "Â°C"}` : null,
       ].filter(Boolean).join(" / ")
       const preAlarms = [
         alarm.t_lieu?.Consigne_Sup_Pre_Alarme != null
-          ? `Pré sup ${alarm.t_lieu?.Consigne_Sup_Pre_Alarme}${alarm.Unite ?? "°C"}`
+          ? `PrÃ© sup ${alarm.t_lieu?.Consigne_Sup_Pre_Alarme}${alarm.Unite ?? "Â°C"}`
           : null,
         alarm.t_lieu?.Consigne_Inf_Pre_Alarme != null
-          ? `Pré inf ${alarm.t_lieu?.Consigne_Inf_Pre_Alarme}${alarm.Unite ?? "°C"}`
+          ? `PrÃ© inf ${alarm.t_lieu?.Consigne_Inf_Pre_Alarme}${alarm.Unite ?? "Â°C"}`
           : null,
       ].filter(Boolean).join(" / ")
       const delays = [
@@ -326,7 +338,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         `Type: ${alarmType}`,
         `Valeur: ${valueLabel}`,
         thresholds ? `Seuils: ${thresholds}` : null,
-        preAlarms ? `Pré-alarmes: ${preAlarms}` : null,
+        preAlarms ? `PrÃ©-alarmes: ${preAlarms}` : null,
         delays ? `Retards: ${delays}` : null,
       ].filter(Boolean)
 
@@ -336,7 +348,7 @@ export const POST = withLogging(async (req: NextRequest) => {
   }
 
   title ??= "Alarme Vigitemp"
-  messageBody ??= "Une alarme a été déclenchée."
+  messageBody ??= "Une alarme a Ã©tÃ© dÃ©clenchÃ©e."
   url ??= defaultUrl
 
   const alarmUrl = url.startsWith("http")
@@ -417,7 +429,11 @@ export const POST = withLogging(async (req: NextRequest) => {
   }
 
   log.info("ALARM_DISPATCH", "Alarm dispatched to agents", {
+    ip,
     alarmId,
+    eventType,
+    lieuId,
+    alarmTypeCode,
     agentTargets: agentResult.attempted,
     agentFailed: agentResult.failed,
   })
@@ -442,10 +458,31 @@ export const POST = withLogging(async (req: NextRequest) => {
   })
 
   log.info("ALARM_EMAIL", "Alarm email dispatch result", {
+    ip,
     alarmId,
+    eventType,
     attempted: emailResult.attempted,
     sent: emailResult.sent,
     skipped: emailResult.skipped,
+  })
+
+  log.audit("CC", {
+    user: "DISPATCH_SERVICE",
+    userId: 0,
+    ip,
+    resource: "Dispatch alarme",
+    resourceId: alarmId ?? undefined,
+    changes: {
+      eventType,
+      lieuId: lieuId ?? null,
+      typeAlarme: alarmTypeCode ?? alarmTypeLabel ?? null,
+      agentTargets: agentResult.attempted,
+      agentFailed: agentResult.failed,
+      emailAttempted: emailResult.attempted,
+      emailSent: emailResult.sent,
+      emailSkipped: emailResult.skipped,
+    },
+    success: true,
   })
 
   revalidateTag("dashboard-active-alarms", "default")
@@ -462,3 +499,5 @@ export const POST = withLogging(async (req: NextRequest) => {
     emailSkipped: emailResult.skipped,
   })
 })
+
+

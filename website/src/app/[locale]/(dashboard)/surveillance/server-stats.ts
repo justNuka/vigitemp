@@ -1,3 +1,5 @@
+import { applyAccessFilter, buildAlarmAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
+import { getServerAuthenticatedUserId } from "@/lib/server-auth"
 ﻿import { unstable_noStore } from "next/cache"
 
 export interface DashboardStats {
@@ -18,8 +20,22 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
   const { prisma } = await import("@/lib/prisma")
 
   try {
+    const userId = await getServerAuthenticatedUserId()
+    if (!userId) {
+      return {
+        total: 0,
+        ok: 0,
+        warning: 0,
+        critical: 0,
+        activeAlarms: 0,
+      }
+    }
+
+    const scope = await getUserLocationScope(userId)
+    const lieuAccessFilter = buildLieuAccessFilter(scope)
+    const alarmAccessFilter = buildAlarmAccessFilter(scope)
     const locations = await prisma.t_lieu.findMany({
-      where: { Est_Archive: false },
+      where: applyAccessFilter({ Est_Archive: false }, lieuAccessFilter),
       select: {
         Est_Lieu_En_Alarme: true,
         Est_Lieu_En_Pre_Alarme: true,
@@ -32,7 +48,7 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
     const ok = total - warning - critical
 
     const activeAlarms = await prisma.t_alarme.count({
-      where: { Est_Acquittee: false },
+      where: applyAccessFilter({ Est_Acquittee: false }, alarmAccessFilter),
     })
 
     return {

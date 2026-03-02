@@ -35,6 +35,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ALARM_AUDIO_STATE_EVENT, getAlarmAudioMuted, setAlarmAudioMuted } from "@/lib/alarm-audio";
 import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useState } from "react";
 import { useLocale } from "next-intl";
@@ -86,6 +87,25 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
   const licenseLabel = useMemo(() => formatLicenseLabel(license, tCommon), [license, tCommon]);
   const messagingEnabled = useMessagingEnabled();
   const messagingUnread = useUnreadCount();
+
+  useEffect(() => {
+    setIsMuted(getAlarmAudioMuted());
+
+    const syncMuted = () => setIsMuted(getAlarmAudioMuted());
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === null || event.key === "vigitemp:alarm-audio-muted") {
+        syncMuted();
+      }
+    };
+
+    window.addEventListener(ALARM_AUDIO_STATE_EVENT, syncMuted as EventListener);
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      window.removeEventListener(ALARM_AUDIO_STATE_EVENT, syncMuted as EventListener);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
 
   // On mobile, close the sidebar after navigation (better UX).
   useEffect(() => {
@@ -235,7 +255,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
               <Button
                 variant={isMuted ? "destructive" : "outline"}
                 className="w-full justify-start gap-2"
-                onClick={() => setIsMuted(!isMuted)}
+                onClick={() => setAlarmAudioMuted(!isMuted)}
                 data-testid="button-toggle-mute"
               >
                 {isMuted ? (

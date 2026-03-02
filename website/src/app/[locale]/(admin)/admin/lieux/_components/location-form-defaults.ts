@@ -11,6 +11,7 @@ export function getDefaultLocationFormData(): LocationFormData {
     Sonde_Numero_Serie: null,
     Id_Module: null,
     MailingContacts: [],
+    Est_Son_Alarme_Active: true,
 
     Consigne: undefined,
     Frequence: undefined,
@@ -24,6 +25,7 @@ export function getDefaultLocationFormData(): LocationFormData {
     Consigne_Inf_Pre_Alarme: undefined,
     Est_Consigne_Inf_Pre_Alarme_Active: false,
     Retard_Alarme_Bas: undefined,
+    Nb_Mesures_Temporisation_Redeclenchement: 0,
 
     Tolerance_Surveillance_Sup: undefined,
     Tolerance_Surveillance_Inf: undefined,

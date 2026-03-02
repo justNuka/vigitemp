@@ -9,6 +9,7 @@ using System.Drawing.Drawing2D;
 using System.Security.Cryptography;
 using System.Windows.Forms;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Encodings;
 using Org.BouncyCastle.Crypto.Engines;
@@ -28,6 +29,7 @@ namespace Vigitemp_License_Generator
         private const int EM_SETCUEBANNER = 0x1501;
         private const string DefaultHotlineUsername = "mc2-hotline";
         private const string DefaultHotlinePassword = "Vigi106*";
+        private const string DefaultHotlineSlug = "mc2-hotline";
 
         private readonly TextBox _txtCustomerId;
         private readonly ComboBox _cmbEdition;
@@ -41,6 +43,7 @@ namespace Vigitemp_License_Generator
         private readonly Button _btnGenerateAgentSecretKeys;
         private readonly Button _btnLoadAgentSecretPublicKey;
         private readonly Button _btnCopyAgentSecretPublicKey;
+        private readonly TextBox _txtHotlineSlug;
         private readonly TextBox _txtHotlineLogin;
         private readonly TextBox _txtHotlinePassword;
         private readonly TextBox _txtHotlinePasswordConfirm;
@@ -56,6 +59,9 @@ namespace Vigitemp_License_Generator
         private readonly ToolTip _toolTip;
         private string _lastGeneratedHotlineLogin;
         private string _lastGeneratedHotlinePassword;
+        private string _lastGeneratedLicensePayloadJson;
+        private string _lastGeneratedLicenseToken;
+        private bool _licenseRecapPendingDownload;
 
         private AsymmetricKeyParameter _privateKey;
 
@@ -84,6 +90,8 @@ namespace Vigitemp_License_Generator
                 ReshowDelay = 200,
                 ShowAlways = true
             };
+
+            FormClosing += MainForm_FormClosing;
 
             var scrollPanel = new Panel
             {
@@ -166,9 +174,9 @@ namespace Vigitemp_License_Generator
             _cmbConcurrent.SelectedIndex = 0;
             AddRowWithInfo(
                 inputTable,
-                "AccÃ¨s simultanÃ©s",
+                "Accès simultanés",
                 _cmbConcurrent,
-                "Nombre d'utilisateurs connectÃ©s en mÃªme temps.\n\"illimitÃ©\" = pas de limite."
+                "Nombre d'utilisateurs connectés en même temps.\n\"illimité\" = pas de limite."
             );
 
             _clbOptions = new CheckedListBox
@@ -182,7 +190,7 @@ namespace Vigitemp_License_Generator
                 inputTable,
                 "Options",
                 _clbOptions,
-                "Options additionnelles activÃ©es selon contrat (tÃ©lÃ©phonie, mail, etc.)."
+                "Options additionnelles activées selon contrat (téléphonie, mail, etc.)."
             );
 
             var hotlineGroup = CreateGroup("Hotline");
@@ -190,6 +198,14 @@ namespace Vigitemp_License_Generator
 
             var hotlineTable = CreateTable(2);
             hotlineGroup.Controls.Add(hotlineTable);
+
+            _txtHotlineSlug = new TextBox { Width = 240, Text = DefaultHotlineSlug };
+            AddRowWithInfo(
+                hotlineTable,
+                "Hotline slug",
+                _txtHotlineSlug,
+                "Segment URL du portail hotline (ex: /fr/hotline/<slug>/login)."
+            );
 
             _txtHotlineLogin = new TextBox { Width = 240, Text = DefaultHotlineUsername };
             AddRowWithInfo(
@@ -299,10 +315,10 @@ namespace Vigitemp_License_Generator
             AddGroup(root, keyGroup);
 
             var keyPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.LeftToRight, AutoSize = true };
-            _lblKeyStatus = new Label { AutoSize = true, Text = "Aucune clÃ© chargÃ©e", Margin = new Padding(0, 8, 16, 8) };
-            _toolTip.SetToolTip(_lblKeyStatus, "Aucune clÃ© privÃ©e chargÃ©e.");
-            var btnGenerateKeys = new Button { Text = "GÃ©nÃ©rer paire de clÃ©s", AutoSize = true };
-            var btnLoadKey = new Button { Text = "Charger clÃ© privÃ©e", AutoSize = true };
+            _lblKeyStatus = new Label { AutoSize = true, Text = "Aucune clé chargée", Margin = new Padding(0, 8, 16, 8) };
+            _toolTip.SetToolTip(_lblKeyStatus, "Aucune clé privée chargée.");
+            var btnGenerateKeys = new Button { Text = "Générer paire de clés", AutoSize = true };
+            var btnLoadKey = new Button { Text = "Charger clé privée", AutoSize = true };
 
             btnGenerateKeys.Click += (s, e) => GenerateKeyPair();
             btnLoadKey.Click += (s, e) => LoadPrivateKeyFromDialog();
@@ -312,7 +328,7 @@ namespace Vigitemp_License_Generator
             keyPanel.Controls.Add(btnLoadKey);
             keyGroup.Controls.Add(keyPanel);
             keyGroup.Controls.Add(CreateInfoLabel(
-                "La clÃ© privÃ©e signe les licences (Ed25519).\nElle doit rester secrÃ¨te et ne jamais Ãªtre envoyÃ©e au client.\nLa clÃ© publique sert Ã  vÃ©rifier la signature cÃ´tÃ© serveur."
+                "La clé privée signe les licences (Ed25519).\nElle doit rester secrète et ne jamais être envoyée au client.\nLa clé publique sert à vérifier la signature côté serveur."
             ));
 
             var publicKeyTable = CreateTable(2);
@@ -328,13 +344,13 @@ namespace Vigitemp_License_Generator
             };
             AddRowWithInfo(
                 publicKeyTable,
-                "ClÃ© publique (PEM)",
+                "Clé publique (PEM)",
                 _txtPublicKey,
-                "ClÃ© publique Ã  communiquer au serveur C# pour vÃ©rifier les licences.\nFormat PEM."
+                "Clé publique à communiquer au serveur C# pour vérifier les licences.\nFormat PEM."
             );
 
-            var btnCopyPublicKey = new Button { Text = "Copier clÃ© publique", AutoSize = true, Enabled = false };
-            btnCopyPublicKey.Click += (s, e) => CopyToClipboard(_txtPublicKey.Text, "ClÃ© publique copiÃ©e.");
+            var btnCopyPublicKey = new Button { Text = "Copier clé publique", AutoSize = true, Enabled = false };
+            btnCopyPublicKey.Click += (s, e) => CopyToClipboard(_txtPublicKey.Text, "Clé publique copiée.");
             _txtPublicKey.TextChanged += (s, e) => btnCopyPublicKey.Enabled = !string.IsNullOrWhiteSpace(_txtPublicKey.Text);
             AddRow(publicKeyTable, "", btnCopyPublicKey);
 
@@ -347,12 +363,12 @@ namespace Vigitemp_License_Generator
             _txtLicenseId = new TextBox { Width = 320, ReadOnly = true };
             AddRowWithInfo(
                 outputTable,
-                "NumÃ©ro licence",
+                "Numéro licence",
                 _txtLicenseId,
-                "Identifiant lisible pour le client et le support (gÃ©nÃ©rÃ© automatiquement)."
+                "Identifiant lisible pour le client et le support (généré automatiquement)."
             );
 
-            var btnGenerate = new Button { Text = "GÃ©nÃ©rer licence", AutoSize = true };
+            var btnGenerate = new Button { Text = "Générer licence", AutoSize = true };
             btnGenerate.Click += (s, e) => GenerateLicense();
             AddRow(outputTable, "", btnGenerate);
 
@@ -368,11 +384,11 @@ namespace Vigitemp_License_Generator
                 outputTable,
                 "Token (license.vtlic)",
                 _txtLicenseToken,
-                "Token JWS signÃ© (format compact).\nÃ€ fournir au client sous forme de fichier .vtlic.\nNe pas modifier manuellement."
+                "Token JWS signé (format compact).\nÀ fournir au client sous forme de fichier .vtlic.\nNe pas modifier manuellement."
             );
 
             var btnCopyToken = new Button { Text = "Copier token", AutoSize = true };
-            btnCopyToken.Click += (s, e) => CopyToClipboard(_txtLicenseToken.Text, "Token copie.");
+            btnCopyToken.Click += (s, e) => CopyToClipboard(_txtLicenseToken.Text, "Token copié.");
             AddRow(outputTable, "", btnCopyToken);
 
             var btnSave = new Button { Text = "Enregistrer .vtlic", AutoSize = true };
@@ -382,6 +398,10 @@ namespace Vigitemp_License_Generator
             var btnSaveHotline = new Button { Text = "Exporter identifiants hotline (.txt)", AutoSize = true };
             btnSaveHotline.Click += (s, e) => SaveHotlineCredentialsToFile();
             AddRow(outputTable, "", btnSaveHotline);
+
+            var btnSaveRecap = new Button { Text = "Exporter recap licence (.txt)", AutoSize = true };
+            btnSaveRecap.Click += (s, e) => SaveLicenseRecapToFile();
+            AddRow(outputTable, "", btnSaveRecap);
 
             TryLoadDefaultKey();
         }
@@ -482,13 +502,13 @@ namespace Vigitemp_License_Generator
         {
             var resolvedPath = path ?? _privateKeyPath;
             _lblKeyStatus.Text = ok
-                ? $"Cl? priv?e charg?e\n{resolvedPath}"
-                : "Aucune clÃ© chargÃ©e";
+                ? $"Clé privée chargée\n{resolvedPath}"
+                : "Aucune clé chargée";
             _toolTip.SetToolTip(
                 _lblKeyStatus,
                 ok
-                    ? $"Cl? priv?e charg?e depuis : {resolvedPath}"
-                    : "Aucune clÃ© privÃ©e chargÃ©e."
+                    ? $"Clé privée chargée depuis : {resolvedPath}"
+                    : "Aucune clé privée chargée."
             );
         }
 
@@ -511,14 +531,14 @@ namespace Vigitemp_License_Generator
                 _txtPublicKey.Text = derived ?? string.Empty;
             }
 
-            MessageBox.Show($"ClÃ©s gÃ©nÃ©rÃ©es :\n{_privateKeyPath}\n{_publicKeyPath}", "OK", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show($"Clés générées :\n{_privateKeyPath}\n{_publicKeyPath}", "OK", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void LoadPrivateKeyFromDialog()
         {
             using (var dialog = new OpenFileDialog())
             {
-                dialog.Title = "Charger clÃ© privÃ©e";
+                dialog.Title = "Charger clé privée";
                 dialog.Filter = "PEM|*.pem|All files|*.*";
                 if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
@@ -611,14 +631,22 @@ namespace Vigitemp_License_Generator
                 options.Add(item.ToString());
             }
 
+            var hotlineSlug = (_txtHotlineSlug.Text ?? string.Empty).Trim().ToLowerInvariant();
             var hotlineLogin = _txtHotlineLogin.Text.Trim();
             var hotlinePassword = _txtHotlinePassword.Text;
             var hotlineConfirm = _txtHotlinePasswordConfirm.Text;
-            if (string.IsNullOrWhiteSpace(hotlineLogin) ||
+            if (string.IsNullOrWhiteSpace(hotlineSlug) ||
+                string.IsNullOrWhiteSpace(hotlineLogin) ||
                 string.IsNullOrWhiteSpace(hotlinePassword) ||
                 string.IsNullOrWhiteSpace(hotlineConfirm))
             {
-                MessageBox.Show("Renseignez les identifiants hotline.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Renseignez les identifiants hotline (slug/login/mot de passe).", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!Regex.IsMatch(hotlineSlug, "^[a-z0-9][a-z0-9-]{2,63}$"))
+            {
+                MessageBox.Show("Slug hotline invalide (a-z, 0-9, tiret, 3 a 64 caracteres).", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -657,6 +685,7 @@ namespace Vigitemp_License_Generator
             payload["hotline"] = new Dictionary<string, object>
             {
                 { "enabled", true },
+                { "slug", hotlineSlug },
                 { "username", hotlineLogin },
                 { "passwordHash", hotlinePasswordHash }
             };
@@ -707,6 +736,19 @@ namespace Vigitemp_License_Generator
             var signaturePart = Base64UrlEncode(signature);
 
             _txtLicenseToken.Text = $"{signingInput}.{signaturePart}";
+            _lastGeneratedLicenseToken = _txtLicenseToken.Text;
+            _lastGeneratedLicensePayloadJson = JsonConvert.SerializeObject(payload, Formatting.Indented, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            });
+            _licenseRecapPendingDownload = true;
+
+            MessageBox.Show(
+                "Licence generee. Un recapitulatif va maintenant etre exporte.\nConservez-le dans un emplacement securise.",
+                "Recapitulatif licence",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+            SaveLicenseRecapToFile(true);
         }
 
 
@@ -871,6 +913,7 @@ namespace Vigitemp_License_Generator
                 content.AppendLine("Identifiants hotline");
                 content.AppendLine("====================");
                 content.AppendLine($"Licence: {_txtLicenseId.Text}");
+                content.AppendLine($"Slug: {_txtHotlineSlug.Text.Trim().ToLowerInvariant()}");
                 content.AppendLine($"Login: {login}");
                 content.AppendLine($"Mot de passe: {password}");
                 content.AppendLine();
@@ -878,6 +921,108 @@ namespace Vigitemp_License_Generator
 
                 File.WriteAllText(dialog.FileName, content.ToString(), Encoding.UTF8);
                 MessageBox.Show($"Identifiants exportes :\n{dialog.FileName}", "OK", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (!_licenseRecapPendingDownload)
+            {
+                return;
+            }
+
+            MessageBox.Show(
+                "Le recapitulatif licence n'a pas encore ete exporte.\nExportez-le avant de fermer l'application.",
+                "Export recapitulatif requis",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+
+            SaveLicenseRecapToFile(true);
+            if (_licenseRecapPendingDownload)
+            {
+                e.Cancel = true;
+            }
+        }
+
+        private void SaveLicenseRecapToFile(bool required = false)
+        {
+            if (string.IsNullOrWhiteSpace(_lastGeneratedLicensePayloadJson))
+            {
+                MessageBox.Show("Aucune licence generee.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var defaultName = string.IsNullOrWhiteSpace(_txtLicenseId.Text)
+                ? "license_recap.txt"
+                : $"{_txtLicenseId.Text}_recap.txt";
+
+            using (var dialog = new SaveFileDialog())
+            {
+                dialog.Title = "Exporter recapitulatif licence";
+                dialog.Filter = "Text file|*.txt|All files|*.*";
+                dialog.FileName = defaultName;
+
+                if (dialog.ShowDialog(this) != DialogResult.OK)
+                {
+                    if (required)
+                    {
+                        MessageBox.Show(
+                            "Export annule. La fermeture restera bloquee tant que le recapitulatif n'est pas enregistre.",
+                            "Export obligatoire",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+                    }
+                    return;
+                }
+
+                var payload = JObject.Parse(_lastGeneratedLicensePayloadJson);
+                var hotline = payload["hotline"] as JObject;
+                var options = payload["options"] as JArray;
+
+                var content = new StringBuilder();
+                content.AppendLine("Recapitulatif licence Vigitemp");
+                content.AppendLine("============================");
+                content.AppendLine($"Date generation UTC: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
+                content.AppendLine($"Licence ID: {payload.Value<string>("licenseId") ?? _txtLicenseId.Text}");
+                content.AppendLine($"Client: {payload.Value<string>("customerId") ?? string.Empty}");
+                content.AppendLine($"Edition: {payload.Value<string>("edition") ?? string.Empty}");
+                content.AppendLine($"Concurrent access: {payload.Value<string>("concurrentAccess") ?? string.Empty}");
+                content.AppendLine($"IssuedAt: {payload.Value<string>("issuedAt") ?? string.Empty}");
+                content.AppendLine($"ExpiresAt: {payload.Value<string>("expiresAt") ?? "(none)"}");
+                content.AppendLine($"Max sensors: {(payload["maxSensors"] != null ? payload["maxSensors"].ToString() : "(none)")}");
+                content.AppendLine();
+
+                content.AppendLine("Options:");
+                if (options == null || options.Count == 0)
+                {
+                    content.AppendLine("- (none)");
+                }
+                else
+                {
+                    foreach (var option in options)
+                    {
+                        content.AppendLine("- " + option.ToString());
+                    }
+                }
+                content.AppendLine();
+
+                content.AppendLine("Hotline:");
+                content.AppendLine($"- Username: {hotline?.Value<string>("username") ?? _lastGeneratedHotlineLogin ?? string.Empty}");
+                content.AppendLine($"- Password (plain): {_lastGeneratedHotlinePassword ?? string.Empty}");
+                content.AppendLine($"- Password hash: {hotline?.Value<string>("passwordHash") ?? string.Empty}");
+                content.AppendLine($"- Slug: {hotline?.Value<string>("slug") ?? "(not set in license)"}");
+                content.AppendLine();
+
+                content.AppendLine("Technical:");
+                content.AppendLine($"- Token generated: {!string.IsNullOrWhiteSpace(_lastGeneratedLicenseToken)}");
+                content.AppendLine($"- Bind instance key present: {payload["bind"] != null}");
+                content.AppendLine($"- Agent secret encrypted present: {payload["agentSecretEnc"] != null}");
+                content.AppendLine();
+                content.AppendLine("WARNING: keep this file in a secure storage.");
+
+                File.WriteAllText(dialog.FileName, content.ToString(), Encoding.UTF8);
+                _licenseRecapPendingDownload = false;
+                MessageBox.Show($"Recapitulatif exporte :\n{dialog.FileName}", "OK", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 

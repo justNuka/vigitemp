@@ -159,6 +159,7 @@ namespace Vigitemp_Serveur
                         retardAlarmeBasMinutes: 0,
                         retardAlarmeHautMinutes: 0,
                         retardNonReponseMinutes: 0,
+                        nbMesuresTemporisationRedeclenchement: 0,
                         notificationActive: false,
                         dateHeureReactivationAlarme: default(DateTime));
                 }
@@ -189,6 +190,7 @@ namespace Vigitemp_Serveur
                                 retardAlarmeBasMinutes: 0,
                                 retardAlarmeHautMinutes: 0,
                             retardNonReponseMinutes: 0,
+                            nbMesuresTemporisationRedeclenchement: 0,
                             notificationActive: false,
                             dateHeureReactivationAlarme: default(DateTime));
                     }
@@ -347,7 +349,7 @@ namespace Vigitemp_Serveur
                 "Id_Lieu, " +
                 "Tolerance_Surveillance_Inf as Consigne_Inf, Est_Consigne_Inf_Active, Retard_Alarme_Bas, Consigne_Inf_Pre_Alarme, Est_Consigne_Inf_Pre_Alarme_Active, " +
                 "Tolerance_Surveillance_Sup as Consigne_Sup, Est_Consigne_Sup_Active, Retard_Alarme_Haut, Consigne_Sup_Pre_Alarme, Est_Consigne_Sup_Pre_Alarme_Active, " +
-                "Retard_Non_Reponse " +
+                "Retard_Non_Reponse, Nb_Mesures_Temporisation_Redeclenchement " +
                 "FROM t_lieu WHERE Id_Lieu = @idLieu;");
             cmd.Parameters.AddWithValue("@idLieu", idLieu);
 
@@ -369,6 +371,7 @@ namespace Vigitemp_Serveur
                             retardAlarmeBasMinutes: 0,
                             retardAlarmeHautMinutes: 0,
                         retardNonReponseMinutes: 0,
+                        nbMesuresTemporisationRedeclenchement: 0,
                         notificationActive: false,
                         dateHeureReactivationAlarme: default(DateTime));
                 }
@@ -386,6 +389,7 @@ namespace Vigitemp_Serveur
                     retardAlarmeBasMinutes: GetNullableInt(reader, "Retard_Alarme_Bas", 0),
                     retardAlarmeHautMinutes: GetNullableInt(reader, "Retard_Alarme_Haut", 0),
                     retardNonReponseMinutes: Math.Max(0, GetNullableInt(reader, "Retard_Non_Reponse", 0)),
+                    nbMesuresTemporisationRedeclenchement: Math.Max(0, GetNullableInt(reader, "Nb_Mesures_Temporisation_Redeclenchement", 0)),
                     notificationActive: true,
                     dateHeureReactivationAlarme: default(DateTime));
             }
@@ -423,6 +427,7 @@ namespace Vigitemp_Serveur
                             retardAlarmeBasMinutes: 0,
                             retardAlarmeHautMinutes: 0,
                         retardNonReponseMinutes: 0,
+                        nbMesuresTemporisationRedeclenchement: 0,
                         notificationActive: false,
                         dateHeureReactivationAlarme: default(DateTime));
                 }
@@ -443,6 +448,7 @@ namespace Vigitemp_Serveur
                     retardAlarmeBasMinutes: GetNullableInt(reader, "Retard_Alarme_Bas", 0),
                     retardAlarmeHautMinutes: GetNullableInt(reader, "Retard_Alarme_Haut", 0),
                     retardNonReponseMinutes: Math.Max(0, GetNullableInt(reader, "Retard_Non_Reponse", 0)),
+                    nbMesuresTemporisationRedeclenchement: 0,
                     notificationActive: notificationActive,
                     dateHeureReactivationAlarme: reactivationAt);
             }
@@ -1436,6 +1442,10 @@ namespace Vigitemp_Serveur
                                     alarmId = Convert.ToInt32(cmdId.ExecuteScalar());
                                 }
                             }
+                            if (existing == null || existing == DBNull.Value)
+                            {
+                                _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(alarmId, idLieu, "triggered");
+                            }
                             else
                             {
                                 using (var cmdUpdate = CreateCommand(
@@ -1459,6 +1469,7 @@ namespace Vigitemp_Serveur
                     }
                     else
                     {
+                        int updated;
                         using (var cmdResolve = CreateCommand(
                             _connectionMain,
                             "UPDATE t_alarme " +
@@ -1466,10 +1477,14 @@ namespace Vigitemp_Serveur
                             "WHERE Id_Lieu = @idLieu AND Type = 'N' AND Date_Heure_Fin IS NULL;"))
                         {
                             cmdResolve.Parameters.AddWithValue("@idLieu", idLieu);
-                            cmdResolve.ExecuteNonQuery();
+                            updated = cmdResolve.ExecuteNonQuery();
                         }
 
                         UpdateLieuEndedFlag(idLieu);
+                        if (updated > 0)
+                        {
+                            _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(null, idLieu, "ended");
+                        }
                     }
 
                     CloseConnexion();
@@ -1534,6 +1549,10 @@ namespace Vigitemp_Serveur
                                     alarmId = Convert.ToInt32(cmdId.ExecuteScalar());
                                 }
                             }
+                            if (existing == null || existing == DBNull.Value)
+                            {
+                                _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(alarmId, idLieu, "triggered");
+                            }
                             else
                             {
                                 using (var cmdUpdate = CreateCommand(
@@ -1559,6 +1578,7 @@ namespace Vigitemp_Serveur
                     }
                     else
                     {
+                        int updated;
                         using (var cmdResolve = CreateCommand(
                             _connectionMain,
                             "UPDATE t_alarme " +
@@ -1567,10 +1587,14 @@ namespace Vigitemp_Serveur
                         {
                             cmdResolve.Parameters.AddWithValue("@idLieu", idLieu);
                             cmdResolve.Parameters.AddWithValue("@type", type);
-                            cmdResolve.ExecuteNonQuery();
+                            updated = cmdResolve.ExecuteNonQuery();
                         }
 
                         UpdateLieuEndedFlag(idLieu);
+                        if (updated > 0)
+                        {
+                            _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(null, idLieu, "ended");
+                        }
                     }
 
                     CloseConnexion();
@@ -1659,6 +1683,7 @@ namespace Vigitemp_Serveur
                         return false;
                     }
 
+                    int updated;
                     using (var cmdResolve = CreateCommand(
                         _connectionMain,
                         "UPDATE t_alarme " +
@@ -1666,10 +1691,14 @@ namespace Vigitemp_Serveur
                         "WHERE Id_Lieu = @idLieu AND Type IN ('H','B') AND Date_Heure_Fin IS NULL;"))
                     {
                         cmdResolve.Parameters.AddWithValue("@idLieu", idLieu);
-                        cmdResolve.ExecuteNonQuery();
+                        updated = cmdResolve.ExecuteNonQuery();
                     }
 
                     UpdateLieuEndedFlag(idLieu);
+                    if (updated > 0)
+                    {
+                        _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(null, idLieu, "ended");
+                    }
 
                     CloseConnexion();
                     return true;

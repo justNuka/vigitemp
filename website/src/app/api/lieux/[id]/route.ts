@@ -86,6 +86,7 @@ const updateLieuSchema = z.object({
   Consigne_Inf_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Inf_Pre_Alarme_Active: z.boolean().optional(),
   Retard_Alarme_Bas: z.number().nullable().optional(),
+  Nb_Mesures_Temporisation_Redeclenchement: z.number().int().min(0).nullable().optional(),
   Est_Archive: z.boolean().optional(),
   surveillanceDurationMinutes: z.number().int().positive().nullable().optional(),
   EMT_Mode: z.string().nullable().optional(),
@@ -96,6 +97,7 @@ const updateLieuSchema = z.object({
   Incertitude: z.number().nullable().optional(),
   Derive: z.number().nullable().optional(),
   MailingContacts: z.array(mailingContactSchema).optional(),
+  Est_Son_Alarme_Active: z.boolean().optional(),
 }).superRefine(addConsigneGuards)
 
 
@@ -196,6 +198,11 @@ export const PATCH = withLogging(
       if (Object.prototype.hasOwnProperty.call(validated, "Frequence")) {
         const value = validated.Frequence
         lieuPatch.Frequence = value === null || value === undefined ? value : Math.round(value * 60)
+      }
+
+      if (Object.prototype.hasOwnProperty.call(validated, "Nb_Mesures_Temporisation_Redeclenchement")) {
+        const value = validated.Nb_Mesures_Temporisation_Redeclenchement
+        lieuPatch.Nb_Mesures_Temporisation_Redeclenchement = value == null ? 0 : Math.max(0, Math.trunc(value))
       }
 
       const includeDeriveInUncertainty =

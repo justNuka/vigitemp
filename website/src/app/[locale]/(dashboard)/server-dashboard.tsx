@@ -1,5 +1,13 @@
 import { unstable_noStore } from "next/cache";
 
+import {
+  applyAccessFilter,
+  buildAlarmAccessFilter,
+  buildLieuAccessFilter,
+  getUserLocationScope,
+} from "@/lib/location-access-scope"
+import { getServerAuthenticatedUserId } from "@/lib/server-auth"
+
 const shouldSkipDbOnBuild = process.env.VIGITEMP_SKIP_DB_ON_BUILD === "1";
 
 /**
@@ -13,7 +21,8 @@ const shouldSkipDbOnBuild = process.env.VIGITEMP_SKIP_DB_ON_BUILD === "1";
 export async function ServerDashboardStats() {
   unstable_noStore();
   const { prisma } = await import("@/lib/prisma");
-  if (shouldSkipDbOnBuild) {
+  const userId = await getServerAuthenticatedUserId()
+  if (shouldSkipDbOnBuild || !userId) {
     return {
       activeLocations: 0,
       disabledLocations: 0,
@@ -22,20 +31,30 @@ export async function ServerDashboardStats() {
     };
   }
 
+  const scope = await getUserLocationScope(userId)
+  const lieuAccessFilter = buildLieuAccessFilter(scope)
+  const alarmAccessFilter = buildAlarmAccessFilter(scope)
+
   const [activeLocations, disabledLocations, activeAlarms, alertSensors] = await Promise.all([
-    prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "S" } }),
-    prisma.t_lieu.count({ where: { Est_Archive: false, Lieu_Etat: "D" } }),
+    prisma.t_lieu.count({ where: applyAccessFilter({ Est_Archive: false, Lieu_Etat: "S" }, lieuAccessFilter) }),
+    prisma.t_lieu.count({ where: applyAccessFilter({ Est_Archive: false, Lieu_Etat: "D" }, lieuAccessFilter) }),
     prisma.t_alarme.count({
-      where: {
-        Est_Acquittee: false,
-        Date_Heure_Fin: null,
-      },
+      where: applyAccessFilter(
+        {
+          Est_Acquittee: false,
+          Date_Heure_Fin: null,
+        },
+        alarmAccessFilter,
+      ),
     }),
     prisma.t_lieu.count({
-      where: {
-        Est_Archive: false,
-        OR: [{ Est_Lieu_En_Alarme: 1 }, { Est_Lieu_En_Pre_Alarme: 1 }],
-      },
+      where: applyAccessFilter(
+        {
+          Est_Archive: false,
+          OR: [{ Est_Lieu_En_Alarme: 1 }, { Est_Lieu_En_Pre_Alarme: 1 }],
+        },
+        lieuAccessFilter,
+      ),
     }),
   ]);
 
@@ -53,15 +72,19 @@ export async function ServerDashboardStats() {
 export async function ServerCriticalSensors() {
   unstable_noStore();
   const { prisma } = await import("@/lib/prisma");
-  if (shouldSkipDbOnBuild) {
+  const userId = await getServerAuthenticatedUserId()
+  if (shouldSkipDbOnBuild || !userId) {
     return [];
   }
 
+  const scope = await getUserLocationScope(userId)
+  const lieuAccessFilter = buildLieuAccessFilter(scope)
+
   const criticalLocations = await prisma.t_lieu.findMany({
-    where: {
+    where: applyAccessFilter({
       Est_Archive: false,
       Est_Lieu_En_Alarme: 1,
-    },
+    }, lieuAccessFilter),
     include: {
       t_site: {
         select: {
@@ -108,15 +131,19 @@ export async function ServerCriticalSensors() {
 export async function ServerActiveAlarms() {
   unstable_noStore();
   const { prisma } = await import("@/lib/prisma");
-  if (shouldSkipDbOnBuild) {
+  const userId = await getServerAuthenticatedUserId()
+  if (shouldSkipDbOnBuild || !userId) {
     return [];
   }
 
+  const scope = await getUserLocationScope(userId)
+  const alarmAccessFilter = buildAlarmAccessFilter(scope)
+
   const alarms = await prisma.t_alarme.findMany({
-    where: {
+    where: applyAccessFilter({
       Est_Acquittee: false,
       Date_Heure_Fin: null,
-    },
+    }, alarmAccessFilter),
     select: {
       Id_Alarme: true,
       Id_Lieu: true,
@@ -214,14 +241,18 @@ export async function ServerActiveAlarms() {
 export async function ServerSensorOverview() {
   unstable_noStore();
   const { prisma } = await import("@/lib/prisma");
-  if (shouldSkipDbOnBuild) {
+  const userId = await getServerAuthenticatedUserId()
+  if (shouldSkipDbOnBuild || !userId) {
     return [];
   }
 
+  const scope = await getUserLocationScope(userId)
+  const lieuAccessFilter = buildLieuAccessFilter(scope)
+
   const locations = await prisma.t_lieu.findMany({
-    where: {
+    where: applyAccessFilter({
       Est_Archive: false,
-    },
+    }, lieuAccessFilter),
     include: {
       t_site: {
         select: {
@@ -304,11 +335,24 @@ export async function ServerSensorOverview() {
 export async function ServerAlarmTrendCount() {
   unstable_noStore();
   const { prisma } = await import("@/lib/prisma");
-  if (shouldSkipDbOnBuild) {
+  const userId = await getServerAuthenticatedUserId()
+  if (shouldSkipDbOnBuild || !userId) {
     return { countLast7d: 0, measurements: [] as Array<{ timestamp: string; value: number; sensorId: string }> };
   }
 
-  const trendRows = await prisma.$queryRaw<Array<{ dayKey: string | Date; total: bigint | number }>>`
+  const scope = await getUserLocationScope(userId)
+  const lieuAccessFilter = buildLieuAccessFilter(scope)
+  const allowedLieux = await prisma.t_lieu.findMany({
+    where: applyAccessFilter({ Est_Archive: false }, lieuAccessFilter),
+    select: { Id_Lieu: true },
+  })
+  const allowedLieuIds = allowedLieux.map((l) => l.Id_Lieu)
+  if (allowedLieuIds.length === 0) {
+    return { countLast7d: 0, measurements: [] as Array<{ timestamp: string; value: number; sensorId: string }> }
+  }
+
+  const idsList = allowedLieuIds.join(",")
+  const trendRows = await prisma.$queryRawUnsafe<Array<{ dayKey: string | Date; total: bigint | number }>>(`
     SELECT
       d.day_key AS dayKey,
       COALESCE(a.cnt, 0) + COALESCE(h.cnt, 0) AS total
@@ -325,16 +369,18 @@ export async function ServerAlarmTrendCount() {
       SELECT DATE(Date_Heure_Debut) AS day_key, COUNT(*) AS cnt
       FROM t_alarme
       WHERE Date_Heure_Debut >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        AND Id_Lieu IN (${idsList})
       GROUP BY DATE(Date_Heure_Debut)
     ) a ON a.day_key = d.day_key
     LEFT JOIN (
       SELECT DATE(Date_Heure_Debut) AS day_key, COUNT(*) AS cnt
       FROM t_alarme_histo
       WHERE Date_Heure_Debut >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        AND Id_Lieu IN (${idsList})
       GROUP BY DATE(Date_Heure_Debut)
     ) h ON h.day_key = d.day_key
     ORDER BY d.day_key ASC
-  `;
+  `);
 
   const measurements = trendRows.map((row) => {
     const day = row.dayKey instanceof Date ? row.dayKey.toISOString().slice(0, 10) : String(row.dayKey).slice(0, 10);

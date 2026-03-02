@@ -1,8 +1,10 @@
 ﻿import { NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { apiError, apiOk } from "@/lib/api-response";
+import { getRequestContext } from "@/lib/api-logger";
 import { prisma } from "@/lib/prisma";
 import { parseAdjustmentXml } from "@/lib/adjustment-import";
+import { log } from "@/lib/logger";
 import { expandRelatedGsoSerials, extractAddressFromSerial, isGsoType } from "@/lib/sensor-naming";
 
 const isXmlFile = (file: File) => {
@@ -56,15 +58,36 @@ export const POST = async (req: NextRequest) => {
   const user = getAuthenticatedUser(req);
   if (!user) return apiError(401, "unauthenticated", "Non authentifie");
 
+  const { ip } = getRequestContext(req)
+
   try {
     const formData = await req.formData();
     const file = formData.get("file");
 
+    log.info("ADJUSTMENT_IMPORT_SINGLE", "Ajustage import request received", {
+      user: user.username,
+      userId: user.userId,
+      ip,
+      hasFile: file instanceof File,
+    })
+
     if (!file || !(file instanceof File)) {
+      log.warn("ADJUSTMENT_IMPORT_SINGLE", "Ajustage import rejected: missing file", {
+        user: user.username,
+        userId: user.userId,
+        ip,
+      })
       return apiError(400, "missing_file", "Fichier requis");
     }
 
     if (!isXmlFile(file)) {
+      log.warn("ADJUSTMENT_IMPORT_SINGLE", "Ajustage import rejected: invalid file type", {
+        user: user.username,
+        userId: user.userId,
+        ip,
+        fileName: file.name,
+        mimeType: file.type,
+      })
       return apiError(415, "invalid_file", "Fichier XML requis");
     }
 
@@ -90,6 +113,32 @@ export const POST = async (req: NextRequest) => {
       data: parsed.data,
     });
 
+    log.info("ADJUSTMENT_IMPORT_SINGLE", "Ajustage import inserted", {
+      user: user.username,
+      userId: user.userId,
+      ip,
+      fileName: file.name,
+      idAjustage: created.Id_Ajustage,
+      sonde: parsed.summary.sensor,
+      date: parsed.summary.date,
+      warnings: parsed.warnings.length,
+    })
+
+    log.audit("CA", {
+      user: user.username,
+      userId: user.userId,
+      ip,
+      resource: "Import ajustage (unitaire)",
+      resourceId: created.Id_Ajustage,
+      changes: {
+        fileName: file.name,
+        sonde: parsed.summary.sensor,
+        date: parsed.summary.date,
+        warnings: parsed.warnings,
+      },
+      success: true,
+    })
+
     return apiOk({
       id: created.Id_Ajustage,
       file: file.name,
@@ -105,6 +154,21 @@ export const POST = async (req: NextRequest) => {
       warnings: parsed.warnings,
     });
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    log.error("ADJUSTMENT_IMPORT_SINGLE", "Ajustage import failed", {
+      user: user.username,
+      userId: user.userId,
+      ip,
+      error: message,
+    })
+    log.audit("CA", {
+      user: user.username,
+      userId: user.userId,
+      ip,
+      resource: "Import ajustage (unitaire)",
+      success: false,
+      reason: message,
+    })
     console.error("[POST /api/sondes/ajustages/import]", error);
     return apiError(500, "upload_failed", "Erreur lors de l'import");
   }

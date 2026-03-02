@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 import { isFeatureEnabled } from "@/lib/feature-flags"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertTriangle } from "lucide-react"
+import { AlertTriangle, Database, MessageSquareText, Server } from "lucide-react"
 
 type HealthStatus = "ok" | "error" | "unknown"
 
@@ -21,6 +21,7 @@ type HotlineHealth = {
   server: HealthStatus
   dbMain: HealthStatus
   dbMesure: HealthStatus
+  dbChat: HealthStatus
 }
 
 type HotlineLogs = {
@@ -65,6 +66,18 @@ function statusClass(status: HealthStatus) {
       return "text-red-500"
     default:
       return "text-muted-foreground"
+  }
+}
+
+
+function statusBadgeClass(status: HealthStatus) {
+  switch (status) {
+    case "ok":
+      return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30"
+    case "error":
+      return "bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/30"
+    default:
+      return "bg-slate-500/10 text-slate-600 dark:text-slate-300 border-slate-500/30"
   }
 }
 
@@ -117,7 +130,7 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
 
   const handleLogout = async () => {
     await postJson("/api/hotline/logout", {})
-    router.replace(`/${locale}/hotline/${slug}/login`)
+    router.replace(`/${locale}/login`)
   }
 
   const loadHealth = async () => {
@@ -195,7 +208,7 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
   }, [])
 
   return (
-    <div className="flex w-full flex-1 flex-col gap-6">
+    <div className="flex w-full flex-1 flex-col gap-6 rounded-xl border border-border/60 bg-gradient-to-b from-[#26A5DA]/5 via-transparent to-transparent p-4 md:p-6">
       {isFeatureEnabled("enableAgentSecretAlert") && agentSecretStatus && agentSecretStatus.status !== "ok" && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
@@ -211,6 +224,9 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
           <p className="text-sm text-muted-foreground">
             {t("subtitle")}
           </p>
+          <div className="mt-2 inline-flex items-center rounded-md border border-[#26A5DA]/30 bg-[#26A5DA]/10 px-2 py-1 text-xs text-[#0E7490] dark:text-[#67E8F9]">
+            {t("health.banner")}
+          </div>
         </div>
         <Button variant="outline" onClick={handleLogout}>
           {t("actions.logout")}
@@ -218,62 +234,70 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList>
-          <TabsTrigger value="overview">{t("tabs.overview")}</TabsTrigger>
-          <TabsTrigger value="logs">{t("tabs.logs")}</TabsTrigger>
-          <TabsTrigger value="request_errors">{t("tabs.request_errors")}</TabsTrigger>
+        <TabsList className="bg-[#26A5DA]/15 p-1">
+          <TabsTrigger
+            value="overview"
+            className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-white hover:bg-[#26A5DA]/20"
+          >
+            {t("tabs.overview")}
+          </TabsTrigger>
+          <TabsTrigger
+            value="logs"
+            className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-white hover:bg-[#26A5DA]/20"
+          >
+            {t("tabs.logs")}
+          </TabsTrigger>
+          <TabsTrigger
+            value="request_errors"
+            className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-white hover:bg-[#26A5DA]/20"
+          >
+            {t("tabs.request_errors")}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card>
-              <CardHeader>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Card className="border-[#26A5DA]/25">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-base">{t("health.server")}</CardTitle>
+                <Server className="h-4 w-4 text-[#26A5DA]" />
               </CardHeader>
               <CardContent>
-                <div
-                  className={cn(
-                    "text-lg font-semibold",
-                    statusClass(health?.server || "unknown")
-                  )}
-                >
-                  {loadingHealth
-                    ? t("actions.loading")
-                    : formatStatus(t, health?.server || "unknown")}
+                <div className={cn("inline-flex rounded-md border px-2 py-1 text-xs font-medium", statusBadgeClass(health?.server || "unknown"))}>
+                  {loadingHealth ? t("actions.loading") : formatStatus(t, health?.server || "unknown")}
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader>
+            <Card className="border-[#26A5DA]/25">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-base">{t("health.db_main")}</CardTitle>
+                <Database className="h-4 w-4 text-[#26A5DA]" />
               </CardHeader>
               <CardContent>
-                <div
-                  className={cn(
-                    "text-lg font-semibold",
-                    statusClass(health?.dbMain || "unknown")
-                  )}
-                >
-                  {loadingHealth
-                    ? t("actions.loading")
-                    : formatStatus(t, health?.dbMain || "unknown")}
+                <div className={cn("inline-flex rounded-md border px-2 py-1 text-xs font-medium", statusBadgeClass(health?.dbMain || "unknown"))}>
+                  {loadingHealth ? t("actions.loading") : formatStatus(t, health?.dbMain || "unknown")}
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader>
+            <Card className="border-[#26A5DA]/25">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-base">{t("health.db_mesure")}</CardTitle>
+                <Database className="h-4 w-4 text-[#26A5DA]" />
               </CardHeader>
               <CardContent>
-                <div
-                  className={cn(
-                    "text-lg font-semibold",
-                    statusClass(health?.dbMesure || "unknown")
-                  )}
-                >
-                  {loadingHealth
-                    ? t("actions.loading")
-                    : formatStatus(t, health?.dbMesure || "unknown")}
+                <div className={cn("inline-flex rounded-md border px-2 py-1 text-xs font-medium", statusBadgeClass(health?.dbMesure || "unknown"))}>
+                  {loadingHealth ? t("actions.loading") : formatStatus(t, health?.dbMesure || "unknown")}
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-[#26A5DA]/25">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-base">{t("health.db_chat")}</CardTitle>
+                <MessageSquareText className="h-4 w-4 text-[#26A5DA]" />
+              </CardHeader>
+              <CardContent>
+                <div className={cn("inline-flex rounded-md border px-2 py-1 text-xs font-medium", statusBadgeClass(health?.dbChat || "unknown"))}>
+                  {loadingHealth ? t("actions.loading") : formatStatus(t, health?.dbChat || "unknown")}
                 </div>
               </CardContent>
             </Card>
@@ -353,9 +377,9 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
               {logsError ? (
                 <p className="text-sm text-destructive">{logsError}</p>
               ) : null}
-              <Terminal className="max-h-120 max-w-full" sequence={false}>
+              <Terminal className="max-h-120 max-w-full overflow-x-hidden" sequence={false}>
                 {(logs?.lines || []).map((line, index) => (
-                  <span key={`${line}-${index}`} className={getLogLineClass(line)}>
+                  <span key={`${line}-${index}`} className={cn("block break-words whitespace-pre-wrap", getLogLineClass(line))}>
                     {line}
                   </span>
                 ))}
@@ -378,7 +402,7 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
                   {loadingRequestErrors ? t("actions.loading") : t("actions.refresh")}
                 </Button>
               </div>
-              <Terminal className="max-h-120 max-w-full" sequence={false}>
+              <Terminal className="max-h-120 max-w-full overflow-x-hidden" sequence={false}>
                 {requestErrors.map((item) => (
                   <span key={item.id} className="text-red-300">
                     {formatRequestErrorLine(item)}
@@ -395,3 +419,4 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
     </div>
   )
 }
+

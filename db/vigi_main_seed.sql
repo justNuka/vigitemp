@@ -596,6 +596,7 @@ CREATE TABLE `t_lieu` (
   `Surveillance_Etat` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `Retard_Alarme_Haut` int DEFAULT NULL,
   `Retard_Alarme_Bas` int DEFAULT NULL,
+  `Nb_Mesures_Temporisation_Redeclenchement` int DEFAULT '0',
   `Id_Plan` int DEFAULT NULL,
   `Position_Plan_X` bigint DEFAULT NULL,
   `Position_Plan_Y` bigint DEFAULT NULL,
@@ -1287,6 +1288,9 @@ PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Est_Redeclenchement_Immediat');
 SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Est_Redeclenchement_Immediat` TINYINT(1) NOT NULL DEFAULT 0 AFTER `Planning_Derniere_Maj`', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Nb_Mesures_Temporisation_Redeclenchement');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Nb_Mesures_Temporisation_Redeclenchement` INT NULL DEFAULT 0 AFTER `Est_Redeclenchement_Immediat`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Surveillance_Etat');
 SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'ALTER TABLE `t_lieu` DROP COLUMN `Surveillance_Etat`', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
@@ -1525,7 +1529,7 @@ SET @sql := IF(@has_tbl = 0,
     `Id_Audit` INT NOT NULL AUTO_INCREMENT,\
     `Id_Lieu` INT NOT NULL,\
     `Timestamp` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\
-    `Type` ENUM(''PLAN_APPLY'',''PLAN_RESTORE'',''MANUAL_EDIT'',''MIGRATION'') NOT NULL,\
+    `Type` ENUM(''ACTIVATION'',''RETOUR_BASE'') NOT NULL,\
     `Planning_Regle_Id` INT NULL,\
     `Consigne_Avant` FLOAT NULL,\
     `Consigne_Sup_Avant` FLOAT NULL,\
@@ -1538,6 +1542,150 @@ SET @sql := IF(@has_tbl = 0,
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
   'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+
+
+-- event planning consignes
+DROP EVENT IF EXISTS `EVT_PLANNING_CONSIGNE`;
+DELIMITER $$
+CREATE DEFINER=`root`@`%` EVENT `EVT_PLANNING_CONSIGNE`
+ON SCHEDULE EVERY 1 MINUTE
+STARTS CURRENT_TIMESTAMP
+ON COMPLETION NOT PRESERVE ENABLE
+COMMENT 'Applique les regles de planning de consignes chaque minute'
+DO
+BEGIN
+  DECLARE v_now_day TINYINT;
+  DECLARE v_now_time TIME;
+
+  SET v_now_day = IF(DAYOFWEEK(NOW()) = 1, 7, DAYOFWEEK(NOW()) - 1);
+  SET v_now_time = TIME(NOW());
+
+  UPDATE t_lieu l
+  INNER JOIN (
+    SELECT r.Id_Lieu, r.Id_Regle, r.Consigne, r.Consigne_Sup, r.Consigne_Inf,
+           r.Tolerance_Sup_Calc, r.Tolerance_Inf_Calc
+    FROM t_lieu_planning_regle r
+    INNER JOIN (
+      SELECT Id_Lieu, MAX(Priorite) AS max_prio
+      FROM t_lieu_planning_regle
+      WHERE Actif = 1
+        AND (
+          (Jour_Debut = Jour_Fin AND
+            v_now_day = Jour_Debut AND
+            v_now_time >= Heure_Debut AND
+            v_now_time <  Heure_Fin)
+          OR
+          (Jour_Debut < Jour_Fin AND (
+            (v_now_day > Jour_Debut AND v_now_day < Jour_Fin)
+            OR (v_now_day = Jour_Debut AND v_now_time >= Heure_Debut)
+            OR (v_now_day = Jour_Fin   AND v_now_time <  Heure_Fin)
+          ))
+          OR
+          (Jour_Debut > Jour_Fin AND (
+            (v_now_day = Jour_Debut AND v_now_time >= Heure_Debut)
+            OR (v_now_day = Jour_Fin   AND v_now_time <  Heure_Fin)
+            OR (v_now_day > Jour_Debut)
+            OR (v_now_day < Jour_Fin)
+          ))
+        )
+      GROUP BY Id_Lieu
+    ) best_prio ON best_prio.Id_Lieu = r.Id_Lieu AND best_prio.max_prio = r.Priorite
+    WHERE r.Actif = 1
+      AND (
+        (r.Jour_Debut = r.Jour_Fin AND
+          v_now_day = r.Jour_Debut AND
+          v_now_time >= r.Heure_Debut AND
+          v_now_time <  r.Heure_Fin)
+        OR
+        (r.Jour_Debut < r.Jour_Fin AND (
+          (v_now_day > r.Jour_Debut AND v_now_day < r.Jour_Fin)
+          OR (v_now_day = r.Jour_Debut AND v_now_time >= r.Heure_Debut)
+          OR (v_now_day = r.Jour_Fin   AND v_now_time <  r.Heure_Fin)
+        ))
+        OR
+        (r.Jour_Debut > r.Jour_Fin AND (
+          (v_now_day = r.Jour_Debut AND v_now_time >= r.Heure_Debut)
+          OR (v_now_day = r.Jour_Fin   AND v_now_time <  r.Heure_Fin)
+          OR (v_now_day > r.Jour_Debut)
+          OR (v_now_day < r.Jour_Fin)
+        ))
+      )
+  ) best ON best.Id_Lieu = l.Id_Lieu
+  SET
+    l.Consigne                       = best.Consigne,
+    l.Consigne_Sup                   = best.Consigne_Sup,
+    l.Consigne_Inf                   = best.Consigne_Inf,
+    l.Tolerance_Surveillance_Sup     = best.Tolerance_Sup_Calc,
+    l.Tolerance_Surveillance_Inf     = best.Tolerance_Inf_Calc,
+    l.Planning_Actif                 = 1,
+    l.Planning_Source_Regle_Id       = best.Id_Regle,
+    l.Planning_Derniere_Maj          = NOW()
+  WHERE
+    l.Planning_Source_Regle_Id != best.Id_Regle
+    OR l.Planning_Source_Regle_Id IS NULL
+    OR l.Planning_Actif = 0;
+
+  INSERT INTO t_lieu_planning_audit
+    (Id_Lieu, Timestamp, Type, Planning_Regle_Id,
+     Consigne_Avant, Consigne_Sup_Avant, Consigne_Inf_Avant,
+     Consigne_Apres, Consigne_Sup_Apres, Consigne_Inf_Apres)
+  SELECT l.Id_Lieu, NOW(), 'ACTIVATION', l.Planning_Source_Regle_Id,
+    l.Consigne_Base, l.Consigne_Sup_Base, l.Consigne_Inf_Base,
+    l.Consigne, l.Consigne_Sup, l.Consigne_Inf
+  FROM t_lieu l
+  WHERE l.Planning_Actif = 1
+    AND l.Planning_Derniere_Maj >= NOW() - INTERVAL 1 MINUTE;
+
+  UPDATE t_lieu l
+  SET
+    l.Consigne                       = l.Consigne_Base,
+    l.Consigne_Sup                   = l.Consigne_Sup_Base,
+    l.Consigne_Inf                   = l.Consigne_Inf_Base,
+    l.Tolerance_Surveillance_Sup     = l.Tolerance_Surveillance_Sup_Base,
+    l.Tolerance_Surveillance_Inf     = l.Tolerance_Surveillance_Inf_Base,
+    l.Planning_Actif                 = 0,
+    l.Planning_Source_Regle_Id       = NULL,
+    l.Planning_Derniere_Maj          = NOW()
+  WHERE l.Planning_Actif = 1
+    AND NOT EXISTS (
+      SELECT 1
+      FROM t_lieu_planning_regle r2
+      WHERE r2.Id_Lieu = l.Id_Lieu
+        AND r2.Actif = 1
+        AND (
+          (r2.Jour_Debut = r2.Jour_Fin AND
+            v_now_day = r2.Jour_Debut AND
+            v_now_time >= r2.Heure_Debut AND
+            v_now_time <  r2.Heure_Fin)
+          OR
+          (r2.Jour_Debut < r2.Jour_Fin AND (
+            (v_now_day > r2.Jour_Debut AND v_now_day < r2.Jour_Fin)
+            OR (v_now_day = r2.Jour_Debut AND v_now_time >= r2.Heure_Debut)
+            OR (v_now_day = r2.Jour_Fin   AND v_now_time <  r2.Heure_Fin)
+          ))
+          OR
+          (r2.Jour_Debut > r2.Jour_Fin AND (
+            (v_now_day = r2.Jour_Debut AND v_now_time >= r2.Heure_Debut)
+            OR (v_now_day = r2.Jour_Fin   AND v_now_time <  r2.Heure_Fin)
+            OR (v_now_day > r2.Jour_Debut)
+            OR (v_now_day < r2.Jour_Fin)
+          ))
+        )
+    );
+
+  INSERT INTO t_lieu_planning_audit
+    (Id_Lieu, Timestamp, Type, Planning_Regle_Id,
+     Consigne_Avant, Consigne_Sup_Avant, Consigne_Inf_Avant,
+     Consigne_Apres, Consigne_Sup_Apres, Consigne_Inf_Apres)
+  SELECT l.Id_Lieu, NOW(), 'RETOUR_BASE', NULL,
+    NULL, NULL, NULL,
+    l.Consigne_Base, l.Consigne_Sup_Base, l.Consigne_Inf_Base
+  FROM t_lieu l
+  WHERE l.Planning_Actif = 0
+    AND l.Planning_Derniere_Maj >= NOW() - INTERVAL 1 MINUTE;
+END$$
+DELIMITER ;
 
 -- tables memoires GSO + liste clients
 CREATE TABLE IF NOT EXISTS `liste_clients` (
