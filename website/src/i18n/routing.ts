@@ -140,5 +140,9 @@ export const routing = defineRouting({
       fr: '/services/actualites-mc2',
       en: '/services/mc2-news',
     },
+    '/messages': {
+      fr: '/messages',
+      en: '/messages',
+    },
   }
 });

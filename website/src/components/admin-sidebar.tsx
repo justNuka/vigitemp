@@ -28,6 +28,7 @@ import {
   Shield,
   FileText,
   FlaskConical,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +36,8 @@ import { cn } from "@/lib/utils";
 import { useLicense } from "@/components/license/license-provider";
 import { isStandardOrExpert } from "@/lib/license-access";
 import { getInitialsForAvatar, resolveAvatarSrc } from "@/lib/avatar-library";
+import { useMessagingEnabled } from "@/hooks/useMessagingEnabled";
+import { useUnreadCount } from "@/hooks/useUnreadCount";
 
 import { CurrentUser } from "@/lib/types";
 import { useLocale } from "next-intl";
@@ -61,6 +64,8 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
   const t = useTranslations("adminSidebar");
   const tCommon = useTranslations("common");
   const { license } = useLicense();
+  const messagingEnabled = useMessagingEnabled();
+  const messagingUnread = useUnreadCount();
 
   const getLinkComponent = (href: string) => {
     if (href === "/" || href === "/admin") {
@@ -84,6 +89,17 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
       badge: activeAlarms > 0 ? activeAlarms : undefined,
       badgeVariant: "destructive",
     },
+    ...(messagingEnabled
+      ? [
+          {
+            title: t("management.messaging"),
+            href: "/messages",
+            icon: MessageSquare,
+            badge: messagingUnread > 0 ? messagingUnread : undefined,
+            badgeVariant: "destructive" as const,
+          },
+        ]
+      : []),
     { title: t("management.audit"), href: "/admin/audit", icon: FileText },
   ];
 
@@ -166,7 +182,18 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
                       return (
                         <LinkComponent href={item.href as any} data-testid={`nav-${item.href.replace("/", "")}`}>
                           <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
+                          <span className="flex-1">{item.title}</span>
+                          {item.badge !== undefined && item.badge > 0 && (
+                            <Badge
+                              variant={item.badgeVariant || "default"}
+                              className={cn(
+                                "ml-auto h-5 min-w-5 px-1.5 text-xs",
+                                item.badgeVariant === "destructive" && "animate-pulse-subtle",
+                              )}
+                            >
+                              {item.badge}
+                            </Badge>
+                          )}
                         </LinkComponent>
                       );
                     })()}

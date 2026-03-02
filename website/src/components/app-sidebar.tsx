@@ -32,6 +32,7 @@ import {
   VolumeX,
   User,
   Shield,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -41,9 +42,11 @@ import { getLocalizedPathname, stripLocalePrefix } from "@/i18n/pathnames";
 import { useLicense } from "@/components/license/license-provider";
 import { formatLicenseLabel } from "@/lib/license-label";
 import { getInitialsForAvatar, resolveAvatarSrc } from "@/lib/avatar-library";
+import { useMessagingEnabled } from "@/hooks/useMessagingEnabled";
+import { useUnreadCount } from "@/hooks/useUnreadCount";
 
 interface NavItem {
-  href: "/" | "/surveillance" | "/alarmes" | "/profil" | "/admin";
+  href: "/" | "/surveillance" | "/alarmes" | "/messages" | "/profil" | "/admin";
   icon: typeof LayoutDashboard;
   badge?: number;
   badgeVariant?: "default" | "destructive";
@@ -54,6 +57,7 @@ const mainNavItems: NavItem[] = [
   { titleKey: "dashboard", href: "/", icon: LayoutDashboard },
   { titleKey: "monitoring", href: "/surveillance", icon: Activity },
   { titleKey: "alarms", href: "/alarmes", icon: Bell },
+  { titleKey: "messaging", href: "/messages", icon: MessageSquare },
 ];
 
 import { CurrentUser } from "@/lib/types";
@@ -80,6 +84,8 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
   const tAudio = useTranslations("audio");
   const { license } = useLicense();
   const licenseLabel = useMemo(() => formatLicenseLabel(license, tCommon), [license, tCommon]);
+  const messagingEnabled = useMessagingEnabled();
+  const messagingUnread = useUnreadCount();
 
   // On mobile, close the sidebar after navigation (better UX).
   useEffect(() => {
@@ -100,12 +106,17 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
     return normalizedPathname === localized || normalizedPathname.startsWith(`${localized}/`);
   };
 
-  const navItemsWithBadges = mainNavItems.map((item) => {
-    if (item.href === "/alarmes" && activeAlarms > 0) {
-      return { ...item, badge: activeAlarms, badgeVariant: "destructive" as const };
-    }
-    return item;
-  });
+  const navItemsWithBadges = mainNavItems
+    .filter((item) => item.href !== "/messages" || messagingEnabled)
+    .map((item) => {
+      if (item.href === "/alarmes" && activeAlarms > 0) {
+        return { ...item, badge: activeAlarms, badgeVariant: "destructive" as const };
+      }
+      if (item.href === "/messages" && messagingUnread > 0) {
+        return { ...item, badge: messagingUnread, badgeVariant: "destructive" as const };
+      }
+      return item;
+    });
 
   return (
     <Sidebar>
