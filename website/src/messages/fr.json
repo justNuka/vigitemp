@@ -3596,7 +3596,8 @@
       "input_placeholder": "Écrivez un message… (Entrée pour envoyer, Maj+Entrée pour saut de ligne)",
       "send": "Envoyer",
       "load_more": "Charger les messages précédents",
-      "send_error": "Échec de l'envoi du message"
+      "send_error": "Échec de l'envoi du message",
+      "load_more_error": "Impossible de charger les messages précédents"
     },
     "new_conversation": {
       "title": "Nouvelle conversation",

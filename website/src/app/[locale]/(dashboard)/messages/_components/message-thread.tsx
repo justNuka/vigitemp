@@ -171,6 +171,8 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
       })
       // null = exhausted when API returns no nextCursor
       setLoadMoreCursor(older.nextCursor ?? null)
+    } catch {
+      toast.error(t("thread.load_more_error"))
     } finally {
       setIsLoadingMore(false)
     }

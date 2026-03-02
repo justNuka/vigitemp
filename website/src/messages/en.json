@@ -3590,7 +3590,8 @@
       "input_placeholder": "Write a message… (Enter to send, Shift+Enter for new line)",
       "send": "Send",
       "load_more": "Load previous messages",
-      "send_error": "Failed to send message"
+      "send_error": "Failed to send message",
+      "load_more_error": "Failed to load previous messages"
     },
     "new_conversation": {
       "title": "New conversation",

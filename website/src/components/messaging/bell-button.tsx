@@ -51,10 +51,11 @@ function useFormatTime() {
     const diffH = Math.floor(diffMin / 60)
     if (diffH < 24) return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 
-    const isYesterday =
-      date.getFullYear() === now.getFullYear() &&
-      date.getMonth() === now.getMonth() &&
-      now.getDate() - date.getDate() === 1
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const yesterday = new Date(today)
+    yesterday.setDate(today.getDate() - 1)
+    const msgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    const isYesterday = msgDay.getTime() === yesterday.getTime()
 
     if (isYesterday) return t("yesterday")
     return date.toLocaleDateString([], { day: "numeric", month: "short" })
