@@ -32,6 +32,7 @@ export const GET = withLogging(async (req: NextRequest) => {
         Port_Serie: true,
         Emplacement: true,
         Id_Serveur: true,
+        Est_Module_GSO: true,
       } as any,
       where: { Archive: 0 } as any,
       orderBy: { Module_Numero_Serie: "asc" },
