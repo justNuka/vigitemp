@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server"
-import { prisma } from "@/lib/prisma"
 import { getAuthenticatedUser } from "@/lib/auth"
 import { getClientIp, withLogging } from "@/lib/api-logger"
 import { log } from "@/lib/logger"
 import { z } from "zod"
 import { apiError, apiOk } from "@/lib/api-response"
+import { ModuleRepository } from "@/lib/repositories/module.repository"
 
 const createModuleSchema = z.object({
   Module_Numero_Serie: z.string().min(1).max(50),
@@ -24,59 +24,7 @@ export const GET = withLogging(async (req: NextRequest) => {
       return apiError(401, "unauthenticated", "Non authentifié")
     }
 
-    const modulesRaw = await prisma.t_module.findMany({
-      select: {
-        Id_Module: true,
-        Module_Numero_Serie: true,
-        Type_Module: true,
-        Port_Serie: true,
-        Emplacement: true,
-        Id_Serveur: true,
-        Est_Module_GSO: true,
-      } as any,
-      where: { Archive: 0 } as any,
-      orderBy: { Module_Numero_Serie: "asc" },
-    })
-
-    const moduleIds = modulesRaw.map((m: any) => m.Id_Module)
-    const typeIds = modulesRaw
-      .map((m: any) => m.Type_Module)
-      .filter((t: unknown): t is number => t !== null && t !== undefined)
-
-    // Batch queries: one groupBy for counts + one findMany for types
-    const [sondeCounts, moduleTypes] = await Promise.all([
-      prisma.t_sonde.groupBy({
-        by: ["Id_Module"],
-        where: { Id_Module: { in: moduleIds } },
-        _count: { _all: true },
-      }),
-      prisma.t_module_type.findMany({
-        where: { Id_Module_Type: { in: typeIds } },
-        select: { Id_Module_Type: true, Libelle_Type_Module: true },
-      }),
-    ])
-
-    const countByModule = new Map(
-      sondeCounts.map((g) => [g.Id_Module, g._count._all])
-    )
-    const typeById = new Map(
-      moduleTypes.map((t) => [t.Id_Module_Type, t.Libelle_Type_Module])
-    )
-
-    const modulesWithDetails = modulesRaw.map((module: any) => ({
-      Id_Module: module.Id_Module,
-      Module_Numero_Serie: module.Module_Numero_Serie,
-      Type_Module: module.Type_Module,
-      Libelle_Type_Module: module.Type_Module
-        ? (typeById.get(module.Type_Module) ?? null)
-        : null,
-      Port_Serie: module.Port_Serie,
-      Emplacement: module.Emplacement,
-      Id_Serveur: module.Id_Serveur,
-      sondes_count: countByModule.get(module.Id_Module) ?? 0,
-      Est_Module_GSO: module.Est_Module_GSO ?? false,
-    }))
-
+    const modulesWithDetails = await ModuleRepository.findAllWithDetails()
     return apiOk(modulesWithDetails)
   } catch (error) {
     console.error("Modules fetch error:", error)
@@ -94,29 +42,12 @@ export const POST = withLogging(async (req: NextRequest) => {
     const body = await req.json()
     const validData = createModuleSchema.parse(body)
 
-    const existing = await prisma.t_module.findFirst({
-      where: {
-        Module_Numero_Serie: validData.Module_Numero_Serie,
-      },
-    })
-
-    if (existing) {
+    const isDuplicate = await ModuleRepository.isDuplicateSerialNumber(validData.Module_Numero_Serie)
+    if (isDuplicate) {
       return apiError(400, "duplicate", "Ce numéro de série existe déjà")
     }
 
-    const newModule = await prisma.t_module.create({
-      data: {
-        Module_Numero_Serie: validData.Module_Numero_Serie,
-        Type_Module: validData.Type_Module,
-        Port_Serie: validData.Port_Serie,
-        Emplacement: validData.Emplacement,
-        Adresse_IP: validData.Adresse_IP,
-        Id_Serveur: validData.Id_Serveur,
-        Delai_Reseau: validData.Delai_Reseau,
-        Est_Module_GSO: validData.Est_Module_GSO ?? false,
-        Archive: 0,
-      } as any,
-    })
+    const newModule = await ModuleRepository.create(validData)
 
     log.data.create(
       "Module",
