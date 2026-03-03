@@ -24,7 +24,7 @@ export const GET = withLogging(async (req: NextRequest) => {
       return apiError(401, "unauthenticated", "Non authentifié")
     }
 
-    const modules = await prisma.t_module.findMany({
+    const modulesRaw = await prisma.t_module.findMany({
       select: {
         Id_Module: true,
         Module_Numero_Serie: true,
@@ -32,47 +32,49 @@ export const GET = withLogging(async (req: NextRequest) => {
         Port_Serie: true,
         Emplacement: true,
         Id_Serveur: true,
-        Archive: true,
-        Est_Module_GSO: true,
       } as any,
-      where: {
-        Archive: 0,
-      },
-      orderBy: {
-        Module_Numero_Serie: "asc",
-      },
+      where: { Archive: 0 } as any,
+      orderBy: { Module_Numero_Serie: "asc" },
     })
 
-    const modulesWithDetails = await Promise.all(
-      modules.map(async (module) => {
-        const sondesCount = await prisma.t_sonde.count({
-          where: {
-            Id_Module: module.Id_Module,
-          },
-        })
+    const moduleIds = modulesRaw.map((m: any) => m.Id_Module)
+    const typeIds = modulesRaw
+      .map((m: any) => m.Type_Module)
+      .filter((t: unknown): t is number => t !== null && t !== undefined)
 
-        let typeLabel = null
-        if (module.Type_Module) {
-          const moduleType = await prisma.t_module_type.findUnique({
-            where: { Id_Module_Type: module.Type_Module },
-            select: { Libelle_Type_Module: true },
-          })
-          typeLabel = moduleType?.Libelle_Type_Module || null
-        }
-
-        return {
-          Id_Module: module.Id_Module,
-          Module_Numero_Serie: module.Module_Numero_Serie,
-          Type_Module: module.Type_Module,
-          Libelle_Type_Module: typeLabel,
-          Port_Serie: module.Port_Serie,
-          Emplacement: module.Emplacement,
-          Id_Serveur: module.Id_Serveur,
-          sondes_count: sondesCount,
-          Est_Module_GSO: (module as any).Est_Module_GSO ?? false,
-        }
+    // Batch queries: one groupBy for counts + one findMany for types
+    const [sondeCounts, moduleTypes] = await Promise.all([
+      prisma.t_sonde.groupBy({
+        by: ["Id_Module"],
+        where: { Id_Module: { in: moduleIds } },
+        _count: { _all: true },
       }),
+      prisma.t_module_type.findMany({
+        where: { Id_Module_Type: { in: typeIds } },
+        select: { Id_Module_Type: true, Libelle_Type_Module: true },
+      }),
+    ])
+
+    const countByModule = new Map(
+      sondeCounts.map((g) => [g.Id_Module, g._count._all])
     )
+    const typeById = new Map(
+      moduleTypes.map((t) => [t.Id_Module_Type, t.Libelle_Type_Module])
+    )
+
+    const modulesWithDetails = modulesRaw.map((module: any) => ({
+      Id_Module: module.Id_Module,
+      Module_Numero_Serie: module.Module_Numero_Serie,
+      Type_Module: module.Type_Module,
+      Libelle_Type_Module: module.Type_Module
+        ? (typeById.get(module.Type_Module) ?? null)
+        : null,
+      Port_Serie: module.Port_Serie,
+      Emplacement: module.Emplacement,
+      Id_Serveur: module.Id_Serveur,
+      sondes_count: countByModule.get(module.Id_Module) ?? 0,
+      Est_Module_GSO: module.Est_Module_GSO ?? false,
+    }))
 
     return apiOk(modulesWithDetails)
   } catch (error) {

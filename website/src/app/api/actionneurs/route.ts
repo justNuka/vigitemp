@@ -29,18 +29,21 @@ export const GET = withLogging(async (req: NextRequest) => {
       },
     })
 
-    const actionneursWithLieu = await Promise.all(
-      actionneurs.map(async (actionneur) => {
-        const lieu = await prisma.t_lieu.findFirst({
-          where: { Id_Actionneur: actionneur.Id_Actionneur },
-          select: { Id_Lieu: true },
-        })
-        return {
-          ...actionneur,
-          Id_Lieu: lieu?.Id_Lieu || null,
-        }
-      }),
+    // Batch lookup: one query instead of one per actionneur
+    const lieux = await prisma.t_lieu.findMany({
+      where: {
+        Id_Actionneur: { in: actionneurs.map((a) => a.Id_Actionneur) },
+      },
+      select: { Id_Actionneur: true, Id_Lieu: true },
+    })
+    const lieuByActionneur = new Map(
+      lieux.map((l) => [l.Id_Actionneur, l.Id_Lieu])
     )
+
+    const actionneursWithLieu = actionneurs.map((a) => ({
+      ...a,
+      Id_Lieu: lieuByActionneur.get(a.Id_Actionneur) ?? null,
+    }))
 
     return apiOk(actionneursWithLieu)
   } catch (error) {
