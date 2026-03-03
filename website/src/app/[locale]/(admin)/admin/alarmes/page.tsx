@@ -1,11 +1,14 @@
-"use client";
-
 import { PageHeader } from "@/components/page-header";
 import { AlarmsClientTanStack } from "@/components/data-table/alarms-client-tanstack";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 
-export default function AlarmsPage() {
-  const t = useTranslations("adminAlarmsPage");
+export default async function AlarmsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "adminAlarmsPage" });
 
   return (
     <div className="flex flex-col min-h-full">
