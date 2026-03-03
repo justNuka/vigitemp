@@ -142,7 +142,7 @@ function getQueryClientId(): string | undefined {
   if (typeof window === "undefined") return undefined
   if (process.env.NODE_ENV === "production") return undefined
   try {
-    return (window as any).__vigitempQueryClientId
+    return window.__vigitempQueryClientId
   } catch {
     return undefined
   }
@@ -152,7 +152,7 @@ function getBootId(): string | undefined {
   if (typeof window === "undefined") return undefined
   if (process.env.NODE_ENV === "production") return undefined
   try {
-    return (window as any).__vigitempBootId
+    return window.__vigitempBootId
   } catch {
     return undefined
   }
@@ -304,7 +304,7 @@ export async function fetchJson<TResponse>(input: RequestInfo | URL, init?: Requ
     return (text as unknown) as TResponse
   }
 
-  const payload = (await res.json()) as any
+  const payload = (await res.json()) as Record<string, unknown>
 
   if (payload && typeof payload === "object" && payload.ok === true && "data" in payload) {
     return payload.data as TResponse

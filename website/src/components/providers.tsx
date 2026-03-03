@@ -9,13 +9,6 @@ import { LicenseProvider } from "@/components/license/license-provider";
 import { TimezoneProvider } from "@/components/timezone-provider";
 import { AppAccessProvider } from "@/components/access/app-access-provider";
 
-declare global {
-  interface Window {
-    __vigitempQueryClientId?: string
-    __vigitempBootId?: string
-  }
-}
-
 let queryClientInstanceCounter = 0
 
 const RQ_PERSIST_KEY = "vigitemp_rq_cache_v1"
