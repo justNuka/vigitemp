@@ -24,13 +24,14 @@ export function getClientIp(req: NextRequest): string {
  * Ajoute un identifiant d'erreur (x-vigitemp-error-id) sur les reponses en erreur.
  */
 export function withLogging(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handler: (req: NextRequest, ...args: any[]) => Promise<NextResponse>,
   options?: {
     skipLogging?: boolean;
     label?: string;
   }
 ) {
-  return async (req: NextRequest, ...args: any[]) => {
+  return async (req: NextRequest, ...args: unknown[]) => {
     const startTime = Date.now();
     const method = req.method;
     const path = req.nextUrl.pathname;
@@ -130,9 +131,9 @@ export function withLogging(
       }
 
       return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
       const duration = Date.now() - startTime;
-      const errorMessage = error?.message || "Unknown error";
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
       let errorId: string | undefined;
       try {
@@ -174,7 +175,7 @@ export function withLogging(
         userId: user.userId,
         ip,
         error: errorMessage,
-        stack: error?.stack,
+        stack: error instanceof Error ? error.stack : undefined,
         errorId,
       });
 
