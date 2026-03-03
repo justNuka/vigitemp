@@ -80,8 +80,8 @@ export const POST = withLogging(async (req: NextRequest) => {
     const actionneur = await prisma.t_actionneur.create({
       data: {
         Type: type ?? undefined,
-        Num_Serie: serie || null,
-        Commentaire: commentaire || null,
+        Num_Serie: serie ?? null,
+        Commentaire: commentaire ?? null,
       },
     })
 

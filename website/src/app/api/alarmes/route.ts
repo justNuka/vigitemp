@@ -39,7 +39,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
       limit: req.nextUrl.searchParams.get("limit") ?? undefined,
     })
     if (!queryParsed.success) {
-      return apiError(400, "invalid_params", "Paramètres invalides", {
+      return apiError(400, "validation_error", "Paramètres invalides", {
         details: queryParsed.error.issues,
       })
     }
