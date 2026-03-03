@@ -1,9 +1,17 @@
 import { NextRequest } from "next/server"
+import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getAuthenticatedUser } from "@/lib/auth"
 import { withLogging, getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
+
+const createActionneurSchema = z.object({
+  type: z.coerce.number().int().positive().optional(),
+  serie: z.string().min(1).max(50).optional().nullable(),
+  commentaire: z.string().max(255).optional().nullable(),
+  lieuId: z.coerce.number().int().positive().optional().nullable(),
+})
 
 export const GET = withLogging(async (req: NextRequest) => {
   try {
@@ -60,12 +68,18 @@ export const POST = withLogging(async (req: NextRequest) => {
     }
 
     const body = await req.json()
-    const { type, serie, commentaire, lieuId } = body
+    const parsed = createActionneurSchema.safeParse(body)
+    if (!parsed.success) {
+      return apiError(400, "validation_error", "Données invalides", {
+        details: parsed.error.issues,
+      })
+    }
+    const { type, serie, commentaire, lieuId } = parsed.data
     const { ip } = getRequestContext(req)
 
     const actionneur = await prisma.t_actionneur.create({
       data: {
-        Type: type ? parseInt(type) : undefined,
+        Type: type ?? undefined,
         Num_Serie: serie || null,
         Commentaire: commentaire || null,
       },
@@ -73,7 +87,7 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     if (lieuId) {
       await prisma.t_lieu.update({
-        where: { Id_Lieu: parseInt(lieuId) },
+        where: { Id_Lieu: lieuId },
         data: { Id_Actionneur: actionneur.Id_Actionneur },
       })
     }
@@ -82,7 +96,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       type: actionneur.Type,
       serie: actionneur.Num_Serie,
       commentaire: actionneur.Commentaire,
-      lieuId: lieuId ? parseInt(lieuId) : null,
+      lieuId: lieuId ?? null,
     })
 
     return apiOk(actionneur, { status: 201 })
