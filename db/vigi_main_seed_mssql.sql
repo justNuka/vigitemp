@@ -206,6 +206,7 @@ BEGIN
     Priorite INT NOT NULL CONSTRAINT DF_t_lieu_planning_regle_Priorite DEFAULT(0),
     Tolerance_Sup_Calc FLOAT NULL,
     Tolerance_Inf_Calc FLOAT NULL,
+    Retard_Alarme_Changement_Consigne INT NULL,
     Date_Creation DATETIME NOT NULL CONSTRAINT DF_t_lieu_planning_regle_DateCreation DEFAULT(GETDATE()),
     Date_Maj DATETIME NULL
   );

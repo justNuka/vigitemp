@@ -651,7 +651,9 @@
         "emtModeQuart": "Quarter rule",
         "emtModeManuel": "Manual",
         "emtModeUncertainties": "Uncertainties",
-        "emtModeSansObjet": "Not applicable"
+        "emtModeSansObjet": "Not applicable",
+        "labelRetardChangementConsigne": "Setpoint change delay (min)",
+        "placeholderRetardChangementConsigne": "0"
       },
       "deleteConfirm": {
         "title": "Delete rule",
@@ -660,7 +662,8 @@
         "optionRegle": "Apply this rule's setpoints as new permanent base values",
         "ruleValues": "Setpoint: {consigne}  |  Sup: {sup}  |  Inf: {inf}",
         "errorDelete": "Error deleting the rule."
-      }
+      },
+      "retardChangementConsigne": "Setpoint change delay"
     }
   },
   "modulesPage": {
@@ -821,11 +824,45 @@
       "test_connection": "Connection test",
       "comments": "Comments",
       "config": "Config",
-      "monitoring": "Monitoring"
+      "monitoring": "Monitoring",
+      "standard_reader": "Standard reader"
     },
     "placeholders": {
       "config": "Config tab coming soon...",
       "monitoring": "Monitoring tab coming soon..."
+    },
+    "standard_reader": {
+      "title": "Standard probe reader",
+      "description": "Assign a certified standard probe for tool measurements.",
+      "helper": "Only standards created with certificate information are available for assignment.",
+      "select_label": "Assignable standard probe",
+      "select_placeholder": "Select a standard probe",
+      "eligible_count": "{count, plural, one {{count} eligible standard} other {{count} eligible standards}}",
+      "actions": {
+        "assign": "Assign for readings",
+        "create_standard": "Create a standard probe",
+        "clear": "Clear assignment",
+        "refresh": "Refresh"
+      },
+      "assigned_title": "Currently assigned standard",
+      "assigned_badge": "Assigned",
+      "unassigned_badge": "None",
+      "fields": {
+        "serial": "Serial number",
+        "type": "Type",
+        "certificate": "Certificate",
+        "organization": "Organization",
+        "date": "Certificate date",
+        "unit": "Unit",
+        "resolution": "Resolution",
+        "incertitude": "Uncertainty"
+      },
+      "empty": "No standard probe is currently assigned.",
+      "toasts": {
+        "assign_success": "Standard probe assigned.",
+        "assign_error": "Failed to update assignment.",
+        "clear_success": "Assignment cleared."
+      }
     }
   },
   "toolsComments": {

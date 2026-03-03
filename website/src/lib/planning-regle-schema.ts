@@ -11,6 +11,7 @@ export const planningRegleCreateSchema = z.object({
   Consigne_Sup: z.number().nullable().optional(),
   Consigne_Inf: z.number().nullable().optional(),
   Priorite: z.number().int().default(0),
+  Retard_Alarme_Changement_Consigne: z.number().int().min(0).nullable().optional(),
 })
 
 export const planningRegleUpdateSchema = planningRegleCreateSchema.partial()
@@ -32,6 +33,7 @@ export type PlanningRegleResponse = {
   Priorite: number
   Tolerance_Sup_Calc: number | null
   Tolerance_Inf_Calc: number | null
+  Retard_Alarme_Changement_Consigne: number | null
   Date_Creation: string
   Date_Maj: string | null
 }

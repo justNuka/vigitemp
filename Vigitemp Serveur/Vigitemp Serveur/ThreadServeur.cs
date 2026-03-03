@@ -254,6 +254,8 @@ namespace Vigitemp_Serveur
                 $"retardBasMin={settings.RetardAlarmeBasMinutes} " +
                 $"retardHautMin={settings.RetardAlarmeHautMinutes} " +
                 $"retardNonReponseMin={settings.RetardNonReponseMinutes} " +
+                $"retardChangementConsigneMin={settings.RetardAlarmeChangementConsigneMinutes} " +
+                $"planningDerniereMaj={settings.PlanningDerniereMaj:O} " +
                 $"temporisationRedeclenchementMesures={settings.NbMesuresTemporisationRedeclenchement} " +
                 $"notificationActive={settings.NotificationActive} " +
                 $"reactivationUtc={settings.DateHeureReactivationAlarme:O}"

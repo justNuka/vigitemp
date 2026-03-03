@@ -895,6 +895,7 @@ model t_lieu_planning_regle {
   Priorite           Int       @default(0)
   Tolerance_Sup_Calc Float?
   Tolerance_Inf_Calc Float?
+  Retard_Alarme_Changement_Consigne Int?
   Date_Creation      DateTime  @default(now()) @db.DateTime(0)
   Date_Maj           DateTime? @db.DateTime(0)
   t_lieu             t_lieu    @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: Cascade, onUpdate: NoAction, map: "FK_PLANNING_REGLE_LIEU")

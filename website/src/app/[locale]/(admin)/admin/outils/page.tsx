@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl'
 
 const CommentsTab = dynamic(() => import("./comments-tab").then((mod) => mod.CommentsTab))
 const TestConnectionTab = dynamic(() => import("./test-connection-tab").then((mod) => mod.TestConnectionTab))
+const StandardReaderTab = dynamic(() => import("./standard-reader-tab").then((mod) => mod.StandardReaderTab))
 
 export default function OutilsPage() {
   const t = useTranslations('toolsPage')
@@ -20,6 +21,9 @@ export default function OutilsPage() {
       }
       if (activeTab !== "test-connexion") {
         void import("./test-connection-tab")
+      }
+      if (activeTab !== "lecture-etalon") {
+        void import("./standard-reader-tab")
       }
     }, 0)
 
@@ -36,7 +40,7 @@ export default function OutilsPage() {
           defaultValue="test-connexion"
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-4 bg-primary/10 text-primary">
+          <TabsList className="grid w-full grid-cols-5 bg-primary/10 text-primary">
             <TabsTrigger
               value="test-connexion"
               className="hover:text-primary hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
@@ -48,6 +52,12 @@ export default function OutilsPage() {
               className="hover:text-primary hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               {t('tabs.comments')}
+            </TabsTrigger>
+            <TabsTrigger
+              value="lecture-etalon"
+              className="hover:text-primary hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              {t('tabs.standard_reader')}
             </TabsTrigger>
             <TabsTrigger
               value="config"
@@ -69,6 +79,10 @@ export default function OutilsPage() {
 
           <TabsContent value="commentaires" className="mt-6">
             {activeTab === "commentaires" ? <CommentsTab /> : null}
+          </TabsContent>
+
+          <TabsContent value="lecture-etalon" className="mt-6">
+            {activeTab === "lecture-etalon" ? <StandardReaderTab /> : null}
           </TabsContent>
 
           <TabsContent value="config" className="mt-6">

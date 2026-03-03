@@ -14,12 +14,11 @@ import { SurveillanceHeaderControls } from "./_components/monitoring-header-cont
 import { SurveillanceLoadMore } from "./_components/monitoring-load-more";
 import { CurvesOverlayModal } from "./_components/curves-overlay-modal";
 import { applySurveillanceFilters, computeSurveillanceStats, type FilterState } from "./_helpers/monitoring-derived";
-import { getJson, patchJson } from "@/lib/http";
+import { getJson } from "@/lib/http";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { LocationFormDialog } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-dialog";
 import { getDefaultLocationFormData } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-defaults";
-import { mapLocationToFormData } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-mappers";
 import type { LocationFormData } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-types";
 import { useAvailableSensors } from "@/hooks/useAvailableSensors";
 import { useGroups } from "@/hooks/useGroups";
@@ -27,6 +26,8 @@ import { useModules } from "@/hooks/useModules";
 import { useLocations } from "@/hooks/useLocations";
 import { useSitesSimple } from "@/hooks/useSites";
 import { useUsersForMailing } from "@/hooks/useUsersForMailing";
+import { prefetchNextSensorsPage, updateSurveillanceStateInCache, type PaginatedSensorsData } from "./_components/page-client/surveillance-page-helpers";
+import { useSurveillanceLocationEditor } from "./_components/page-client/use-surveillance-location-editor";
 
 type ViewMode = "tree" | "graphs";
 
@@ -45,13 +46,6 @@ interface Props {
   refreshIntervalSeconds: number;
 }
 
-type PaginatedSensorsData = {
-  pages: Array<{
-    sensors: SensorWithLocation[];
-    [key: string]: unknown;
-  }>;
-  pageParams: unknown[];
-};
 
 export function SurveillancePageClient({ initialStats, sites, groups, refreshIntervalSeconds }: Props) {
   const t = useTranslations("surveillance");
@@ -64,13 +58,24 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const queryClient = useQueryClient();
 
   const { data: locations = [] } = useLocations();
-  const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
-  const [isEditLocationOpen, setIsEditLocationOpen] = useState(false);
-  const [isLocationSaving, setIsLocationSaving] = useState(false);
 
   const locationForm = useForm<LocationFormData>({
     defaultValues: getDefaultLocationFormData(),
   });
+
+  const {
+    isEditLocationOpen,
+    isLocationSaving,
+    handleOpenLocationEdit,
+    handleEditLocationSubmit,
+    closeEditor,
+  } = useSurveillanceLocationEditor({
+    locations,
+    form: locationForm,
+    queryClient,
+    t,
+  });
+
   const watchedSensor = locationForm.watch("Sonde_Numero_Serie");
   const shouldLoadLocationFormData = isEditLocationOpen;
   const { data: formSites = [] } = useSitesSimple(shouldLoadLocationFormData);
@@ -195,21 +200,9 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     const pages = data?.pages ?? [];
     if (pages.length === 0) return;
     const last = pages[pages.length - 1];
-    if (!last?.page || !last?.totalPages) return;
-    if (last.page >= last.totalPages) return;
+    if (!last?.page || !last?.totalPages || last.page >= last.totalPages) return;
 
-    const nextPage = last.page + 1;
-    queryClient.prefetchQuery({
-      queryKey: paginatedSensorsPageKey(paginatedData.limit, nextPage),
-      queryFn: async () => {
-        const params = new URLSearchParams({
-          page: String(nextPage),
-          limit: String(paginatedData.limit),
-        });
-        return getJson<PaginatedResponse>(`/api/capteurs/paginated?${params}`);
-      },
-      staleTime: 30 * 60 * 1000,
-    });
+    void prefetchNextSensorsPage(queryClient, last.page + 1, paginatedData.limit, paginatedSensorsPageKey);
   }, [data?.pages, paginatedData.limit, queryClient]);
 
   useEffect(() => {
@@ -237,26 +230,16 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       surveillanceDisabled: boolean,
     ) => {
       const idSet = new Set(ids.map(String));
-      queryClient.setQueryData<PaginatedSensorsData>(["capteurs", "paginated", 100], (data) => {
-        if (!data) return data;
-        return {
-          ...data,
-          pages: data.pages.map((page) => ({
-            ...page,
-            sensors: (page.sensors ?? []).map((sensor) => {
-              if (!idSet.has(sensor.id)) return sensor;
-              return {
-                ...sensor,
-                location: {
-                  ...sensor.location,
-                  lieuEtat: lieuEtat ?? sensor.location.lieuEtat,
-                  surveillanceDisabled,
-                },
-              };
-            }),
-          })),
-        };
-      });
+      queryClient.setQueryData<PaginatedSensorsData>(["capteurs", "paginated", 100], (data) =>
+        updateSurveillanceStateInCache(data, ids, (sensor) => ({
+          ...sensor,
+          location: {
+            ...sensor.location,
+            lieuEtat: lieuEtat ?? sensor.location.lieuEtat,
+            surveillanceDisabled,
+          },
+        })),
+      );
     },
     [queryClient],
   );
@@ -264,26 +247,16 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const updateAlarmCache = useCallback(
     (ids: number[], alarmDisabled: boolean, alarmDisabledUntil: Date | null) => {
       const idSet = new Set(ids.map(String));
-      queryClient.setQueryData<PaginatedSensorsData>(["capteurs", "paginated", 100], (data) => {
-        if (!data) return data;
-        return {
-          ...data,
-          pages: data.pages.map((page) => ({
-            ...page,
-            sensors: (page.sensors ?? []).map((sensor) => {
-              if (!idSet.has(sensor.id)) return sensor;
-              return {
-                ...sensor,
-                location: {
-                  ...sensor.location,
-                  alarmDisabled,
-                  alarmDisabledUntil,
-                },
-              };
-            }),
-          })),
-        };
-      });
+      queryClient.setQueryData<PaginatedSensorsData>(["capteurs", "paginated", 100], (data) =>
+        updateSurveillanceStateInCache(data, ids, (sensor) => ({
+          ...sensor,
+          location: {
+            ...sensor.location,
+            alarmDisabled,
+            alarmDisabledUntil,
+          },
+        })),
+      );
     },
     [queryClient],
   );
@@ -371,46 +344,6 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   );
 
 
-  const handleOpenLocationEdit = useCallback(
-    (idLieu: number) => {
-      const location = locations.find((item) => item.Id_Lieu === idLieu)
-      if (!location) {
-        toast.error(t("toast.location_not_found"))
-        return
-      }
-      setSelectedLocationId(idLieu)
-      locationForm.reset(mapLocationToFormData(location))
-      setIsEditLocationOpen(true)
-    },
-    [locationForm, locations, t],
-  )
-
-  const handleEditLocationSubmit = useCallback(
-    async (values: LocationFormData) => {
-      if (!selectedLocationId) return
-      setIsLocationSaving(true)
-      try {
-        await patchJson(`/api/lieux/${selectedLocationId}`, {
-          ...values,
-          Sonde_Numero_Serie: values.Sonde_Numero_Serie ? values.Sonde_Numero_Serie : null,
-        })
-        await queryClient.invalidateQueries({ queryKey: ["locations"] })
-        await queryClient.invalidateQueries({ queryKey: ["capteurs", "paginated", 100] })
-        toast.success(t("toast.location_updated"))
-        window.dispatchEvent(
-          new CustomEvent("vigitemp:lieu-updated", {
-            detail: { idLieu: selectedLocationId },
-          }),
-        )
-        setIsEditLocationOpen(false)
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : t("toast.location_update_error"))
-      } finally {
-        setIsLocationSaving(false)
-      }
-    },
-    [queryClient, selectedLocationId, t],
-  )
   // Important: do not auto-load all pages. The sentinel can be visible without any user scroll,
   // which causes the app to fetch *every* page (and therefore "all sensors").
   // We keep manual "Charger plus" only.
@@ -495,7 +428,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
         modules={modules}
         mailingUsers={mailingUsers}
         isSubmitting={isLocationSaving}
-        onCancel={() => setIsEditLocationOpen(false)}
+        onCancel={closeEditor}
         onSubmit={handleEditLocationSubmit}
       />
 

@@ -1564,7 +1564,8 @@ BEGIN
   UPDATE t_lieu l
   INNER JOIN (
     SELECT r.Id_Lieu, r.Id_Regle, r.Consigne, r.Consigne_Sup, r.Consigne_Inf,
-           r.Tolerance_Sup_Calc, r.Tolerance_Inf_Calc
+           r.Tolerance_Sup_Calc, r.Tolerance_Inf_Calc,
+           r.Retard_Alarme_Changement_Consigne
     FROM t_lieu_planning_regle r
     INNER JOIN (
       SELECT Id_Lieu, MAX(Priorite) AS max_prio
@@ -1618,6 +1619,7 @@ BEGIN
     l.Consigne_Inf                   = best.Consigne_Inf,
     l.Tolerance_Surveillance_Sup     = best.Tolerance_Sup_Calc,
     l.Tolerance_Surveillance_Inf     = best.Tolerance_Inf_Calc,
+    l.Retard_Alarme_Changement_Consigne = best.Retard_Alarme_Changement_Consigne,
     l.Planning_Actif                 = 1,
     l.Planning_Source_Regle_Id       = best.Id_Regle,
     l.Planning_Derniere_Maj          = NOW()
@@ -1644,6 +1646,7 @@ BEGIN
     l.Consigne_Inf                   = l.Consigne_Inf_Base,
     l.Tolerance_Surveillance_Sup     = l.Tolerance_Surveillance_Sup_Base,
     l.Tolerance_Surveillance_Inf     = l.Tolerance_Surveillance_Inf_Base,
+    l.Retard_Alarme_Changement_Consigne = NULL,
     l.Planning_Actif                 = 0,
     l.Planning_Source_Regle_Id       = NULL,
     l.Planning_Derniere_Maj          = NOW()

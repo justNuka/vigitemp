@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Vigitemp_Serveur
 {
@@ -20,11 +20,13 @@ namespace Vigitemp_Serveur
         public int RetardAlarmeBasMinutes { get; }
         public int RetardAlarmeHautMinutes { get; }
         public int RetardNonReponseMinutes { get; }
+        public int RetardAlarmeChangementConsigneMinutes { get; }
         public int NbMesuresTemporisationRedeclenchement { get; }
 
         // Legacy fields (if present in schema)
         public bool NotificationActive { get; }
         public DateTime DateHeureReactivationAlarme { get; }
+        public DateTime PlanningDerniereMaj { get; }
 
         public LieuAlarmSettings(
             int idLieu,
@@ -39,9 +41,11 @@ namespace Vigitemp_Serveur
             int retardAlarmeBasMinutes,
             int retardAlarmeHautMinutes,
             int retardNonReponseMinutes,
+            int retardAlarmeChangementConsigneMinutes,
             int nbMesuresTemporisationRedeclenchement,
             bool notificationActive,
-            DateTime dateHeureReactivationAlarme)
+            DateTime dateHeureReactivationAlarme,
+            DateTime planningDerniereMaj)
         {
             IdLieu = idLieu;
             ConsigneInf = consigneInf;
@@ -55,9 +59,11 @@ namespace Vigitemp_Serveur
             RetardAlarmeBasMinutes = retardAlarmeBasMinutes;
             RetardAlarmeHautMinutes = retardAlarmeHautMinutes;
             RetardNonReponseMinutes = retardNonReponseMinutes;
+            RetardAlarmeChangementConsigneMinutes = Math.Max(0, retardAlarmeChangementConsigneMinutes);
             NbMesuresTemporisationRedeclenchement = Math.Max(0, nbMesuresTemporisationRedeclenchement);
             NotificationActive = notificationActive;
             DateHeureReactivationAlarme = dateHeureReactivationAlarme;
+            PlanningDerniereMaj = planningDerniereMaj;
         }
     }
 }

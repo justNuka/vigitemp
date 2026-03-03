@@ -13,12 +13,12 @@ import {
 export async function POST(req: NextRequest) {
   const refreshToken = req.cookies.get("refresh-token")?.value
   if (!refreshToken) {
-    return apiError(401, "refresh_missing", "Session expir?e")
+    return apiError(401, "refresh_missing", "Session expirée")
   }
 
   const payload = verifyRefreshToken(refreshToken)
   if (!payload) {
-    const response = apiError(401, "refresh_invalid", "Session expir?e")
+    const response = apiError(401, "refresh_invalid", "Session expirée")
     response.cookies.set("auth-token", "", {
       httpOnly: true,
       secure: shouldUseSecureCookies(req),

@@ -33,6 +33,7 @@ interface PlanningPreviewResponse {
     consigneInf: number | null
     toleranceSup: number | null
     toleranceInf: number | null
+    retardChangementConsigne: number | null
   }
 }
 
@@ -218,6 +219,11 @@ export function LocationFormTabPlanning({
                   {regle.Consigne_Inf !== null && (
                     <span className="text-xs text-muted-foreground">
                       {t("consigneInf")}: {regle.Consigne_Inf}
+                    </span>
+                  )}
+                  {regle.Retard_Alarme_Changement_Consigne !== null && (
+                    <span className="text-xs text-muted-foreground">
+                      {t("retardChangementConsigne")}: {regle.Retard_Alarme_Changement_Consigne} min
                     </span>
                   )}
                 </div>

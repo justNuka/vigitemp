@@ -4,10 +4,10 @@ import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Upload, FileText, X, CheckCircle, Loader2, AlertTriangle } from "lucide-react";
+import { UploadStatusSection } from "@/components/file-upload-shared/upload-status-section";
+import { Upload, CheckCircle, Loader2, AlertTriangle } from "lucide-react";
 
 export type UploadStatus = "uploading" | "completed" | "error";
 
@@ -327,112 +327,36 @@ export default function SharedFileUpload({
 
         {uploads.length > 0 && (
           <div className="flex flex-col gap-y-4 overflow-hidden">
-            <div className="flex flex-col gap-3 overflow-hidden">
-              <h2 className="text-balance text-foreground text-sm flex items-center font-semibold uppercase">
-                <Loader2 className={cn("size-4 mr-2", activeUploads.length > 0 ? "animate-spin" : "opacity-70")} />
-                {t("sections.uploading")}
-              </h2>
-              <div className="max-h-60 overflow-y-auto rounded-md border">
-                {activeUploads.length === 0 ? (
-                  <div className="px-3 py-3 text-sm text-muted-foreground bg-card">{t("placeholders.uploading")}</div>
-                ) : (
-                  <div className="divide-y">
-                    {activeUploads.map((file) => (
-                      <div key={file.id} className="group flex items-center px-3 py-3 bg-card">
-                        <div className="mr-3 grid size-10 shrink-0 place-content-center rounded border bg-muted">
-                          <FileText className="inline size-4" />
-                        </div>
-                        <div className="flex flex-col w-full mb-1">
-                          <div className="flex justify-between gap-2">
-                            <span className="select-none text-sm text-foreground">{file.name}</span>
-                            <span className="text-muted-foreground text-sm tabular-nums">{file.progress}%</span>
-                          </div>
-                          <Progress value={file.progress} className="mt-1 h-2 min-w-64" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            <UploadStatusSection
+              title={t("sections.uploading")}
+              icon={<Loader2 className={cn("size-4 mr-2", activeUploads.length > 0 ? "animate-spin" : "opacity-70")} />}
+              items={activeUploads}
+              emptyMessage={t("placeholders.uploading")}
+              removeLabel={t("remove")}
+              maxHeightClassName="max-h-60"
+            />
 
-            <div className="flex flex-col gap-3 overflow-hidden">
-              <h2 className="text-balance text-foreground text-sm flex items-center font-semibold uppercase">
-                <CheckCircle className="mr-2 size-4 text-primary" />
-                {t("sections.finished")}
-              </h2>
-              <div className="max-h-60 overflow-y-auto rounded-md border">
-                {completedUploads.length === 0 ? (
-                  <div className="px-3 py-3 text-sm text-muted-foreground bg-card">{t("placeholders.finished")}</div>
-                ) : (
-                  <div className="divide-y">
-                    {completedUploads.map((file) => (
-                      <div key={file.id} className="group flex items-center px-3 py-3 bg-card">
-                        <div className="mr-3 grid size-10 shrink-0 place-content-center rounded border bg-muted">
-                          <FileText className="inline size-4 group-hover:hidden" />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="hidden size-4 group-hover:inline p-0 h-auto"
-                            onClick={() => removeUploadById(file.id)}
-                            aria-label={t("remove")}
-                            type="button"
-                          >
-                            <X className="size-4" />
-                          </Button>
-                        </div>
-                        <div className="flex flex-col w-full mb-1">
-                          <div className="flex justify-between gap-2">
-                            <span className="select-none text-sm text-foreground">{file.name}</span>
-                            <span className="text-muted-foreground text-sm tabular-nums">{file.progress}%</span>
-                          </div>
-                          <Progress value={file.progress} className="mt-1 h-2 min-w-64" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            <UploadStatusSection
+              title={t("sections.finished")}
+              icon={<CheckCircle className="mr-2 size-4 text-primary" />}
+              items={completedUploads}
+              emptyMessage={t("placeholders.finished")}
+              removeLabel={t("remove")}
+              maxHeightClassName="max-h-60"
+              onRemove={removeUploadById}
+            />
 
-            <div className="flex flex-col gap-3 overflow-hidden">
-              <h2 className="text-balance text-foreground text-sm flex items-center font-semibold uppercase">
-                <AlertTriangle className="mr-2 size-4 text-destructive" />
-                {t("sections.failed")}
-              </h2>
-              <div className="max-h-40 min-h-12 overflow-y-auto rounded-md border">
-                {erroredUploads.length === 0 ? (
-                  <div className="px-3 py-3 text-sm text-muted-foreground bg-card">{t("placeholders.failed")}</div>
-                ) : (
-                  <div className="divide-y">
-                    {erroredUploads.map((file) => (
-                      <div key={file.id} className="group flex items-center px-3 py-3 bg-card">
-                        <div className="mr-3 grid size-10 shrink-0 place-content-center rounded border bg-muted">
-                          <FileText className="inline size-4 group-hover:hidden" />
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="hidden size-4 group-hover:inline p-0 h-auto"
-                            onClick={() => removeUploadById(file.id)}
-                            aria-label={t("remove")}
-                            type="button"
-                          >
-                            <X className="size-4" />
-                          </Button>
-                        </div>
-                        <div className="flex flex-col w-full mb-1">
-                          <div className="flex justify-between gap-2">
-                            <span className="select-none text-sm text-foreground">{file.name}</span>
-                            <span className="text-destructive text-sm">{t("errors.label")}</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground">{file.error}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            <UploadStatusSection
+              title={t("sections.failed")}
+              icon={<AlertTriangle className="mr-2 size-4 text-destructive" />}
+              items={erroredUploads}
+              emptyMessage={t("placeholders.failed")}
+              removeLabel={t("remove")}
+              maxHeightClassName="max-h-40 min-h-12"
+              showProgress={false}
+              showErrorLabel={t("errors.label")}
+              onRemove={removeUploadById}
+            />
           </div>
         )}
       </div>

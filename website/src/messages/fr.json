@@ -388,8 +388,8 @@
       "description": "Gérer les preferences de notifications",
       "email_toggle": "Activer les emails d'alarme",
       "acknowledged_toggle": "Recevoir les emails d'acquittement",
-      "ended_toggle": "Recevoir les emails d'alarme terminee",
-      "cc_recipients_label": "Emails en copie (tous les emails systeme)",
+      "ended_toggle": "Recevoir les emails d'alarme terminée",
+      "cc_recipients_label": "Emails en copie (tous les emails système)",
       "cc_recipients_placeholder": "ex: support@mc2-info.com\nadmin@client.fr",
       "cc_recipients_helper": "Un email par ligne, ou separes par virgule/point-virgule.",
       "save_button": "Enregistrer"
@@ -716,8 +716,8 @@
         "monitoring_enable": "Activer la surveillance",
         "monitoring_disable": "Désactiver la surveillance",
         "site": "Site",
-        "alarm_sound": "Son d\u0027alarme",
-        "alarm_sound_enable": "Jouer le son lors du declenchement d\u0027une alarme sur ce lieu",
+        "alarm_sound": "Son d'alarme",
+        "alarm_sound_enable": "Jouer le son lors du declenchement d'une alarme sur ce lieu",
         "groups": "Groupe(s)",
         "sensor_select": "Sélection de sonde",
         "sensor_state": "État de la sonde",
@@ -769,7 +769,7 @@
       },
       "tooltips": {
         "frequency_gso": "Fréquence fixée à 15 min pour les sondes GSO.",
-        "retrigger_delay_measures": "Nombre de mesures hors tolerances a ignorer avant un nouveau declenchement apres acquittement ou alarme terminee."
+        "retrigger_delay_measures": "Nombre de mesures hors tolérances à ignorer avant un nouveau déclenchement apres acquittement ou alarme terminée."
       },
       "group_fallback": "Groupe {id}"
     },
@@ -899,7 +899,9 @@
         "emtModeQuart": "Règle du quart",
         "emtModeManuel": "Manuel",
         "emtModeUncertainties": "Incertitudes",
-        "emtModeSansObjet": "Sans objet"
+        "emtModeSansObjet": "Sans objet",
+        "labelRetardChangementConsigne": "Retard changement consigne (min)",
+        "placeholderRetardChangementConsigne": "0"
       },
       "deleteConfirm": {
         "title": "Supprimer la règle",
@@ -908,7 +910,8 @@
         "optionRegle": "Appliquer les consignes de cette règle comme nouvelles valeurs de base",
         "ruleValues": "Consigne : {consigne}  |  Sup : {sup}  |  Inf : {inf}",
         "errorDelete": "Erreur lors de la suppression de la règle."
-      }
+      },
+      "retardChangementConsigne": "Retard changement consigne"
     }
   },
   "modulesPage": {
@@ -1069,11 +1072,45 @@
       "test_connection": "Test de connexion",
       "comments": "Commentaires",
       "config": "Config",
-      "monitoring": "Surveillance"
+      "monitoring": "Surveillance",
+      "standard_reader": "Lecture étalon"
     },
     "placeholders": {
       "config": "Onglet Config à venir...",
       "monitoring": "Onglet Surveillance à venir..."
+    },
+    "standard_reader": {
+      "title": "Lecture sonde étalon",
+      "description": "Assigner une sonde étalon avec certificat pour les relevés de l'outil.",
+      "helper": "Seuls les étalons créés avec des informations de certificat sont proposés à l'assignation.",
+      "select_label": "Sonde étalon assignable",
+      "select_placeholder": "Sélectionner une sonde étalon",
+      "eligible_count": "{count, plural, one {{count} étalon éligible} other {{count} étalons éligibles}}",
+      "actions": {
+        "assign": "Assigner pour les relevés",
+        "create_standard": "Créer une sonde étalon",
+        "clear": "Retirer l'assignation",
+        "refresh": "Actualiser"
+      },
+      "assigned_title": "Étalon actuellement assigné",
+      "assigned_badge": "Assigné",
+      "unassigned_badge": "Aucun",
+      "fields": {
+        "serial": "Numéro de série",
+        "type": "Type",
+        "certificate": "Certificat",
+        "organization": "Organisme",
+        "date": "Date certificat",
+        "unit": "Unité",
+        "resolution": "Résolution",
+        "incertitude": "Incertitude"
+      },
+      "empty": "Aucune sonde étalon n'est assignée pour le moment.",
+      "toasts": {
+        "assign_success": "Sonde étalon assignée.",
+        "assign_error": "Erreur lors de la mise à jour de l'assignation.",
+        "clear_success": "Assignation retirée."
+      }
     }
   },
   "toolsComments": {

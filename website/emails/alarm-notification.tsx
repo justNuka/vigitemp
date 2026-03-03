@@ -80,7 +80,7 @@ export default function AlarmNotificationEmail({
 
           <Section style={styles.footerBand}>
             <Text style={styles.footerBrand}>
-              <strong>Vigitemp</strong> - Systeme de surveillance environnementale
+              <strong>VigiSensys</strong> - Système de surveillance environnementale
               <br />
               <Link href="https://www.mc2lab.fr" style={styles.footerLink}>
                 MC2 Lab

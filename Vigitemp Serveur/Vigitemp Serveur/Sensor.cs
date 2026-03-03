@@ -164,6 +164,10 @@ namespace Vigitemp_Serveur
                      (policy.ShowWhileSnoozed && settings.DateHeureReactivationAlarme != default(DateTime)));
 
                 var nowUtc = DateTime.UtcNow;
+                var planningDelayActive =
+                    settings.RetardAlarmeChangementConsigneMinutes > 0 &&
+                    settings.PlanningDerniereMaj != default(DateTime) &&
+                    DateTime.Now < settings.PlanningDerniereMaj.AddMinutes(settings.RetardAlarmeChangementConsigneMinutes);
 
                 var retriggerDelayMeasures = Math.Max(0, settings.NbMesuresTemporisationRedeclenchement);
                 var forceImmediateRetrigger = ths.GetDatabase().getLieuImmediateRetriggerFlag(m_idLieu);
@@ -218,7 +222,7 @@ namespace Vigitemp_Serveur
                     value: p_valeur,
                     low: hasLow ? settings.ConsigneInf.Value : 0d,
                     high: hasLow ? 1_000_000_000d : 0d,
-                    eligible: suppressRetriggerThisMeasure ? false : eligible,
+                    eligible: suppressRetriggerThisMeasure ? false : (eligible && !planningDelayActive),
                     debounceSeconds: forceLowImmediate ? 0 : Math.Max(0, settings.RetardAlarmeBasMinutes * 60),
                     ignorePolicyDebounce: forceLowImmediate,
                     nowUtc: nowUtc);
@@ -229,10 +233,15 @@ namespace Vigitemp_Serveur
                     value: p_valeur,
                     low: hasHigh ? -1_000_000_000d : 0d,
                     high: hasHigh ? settings.ConsigneSup.Value : 0d,
-                    eligible: suppressRetriggerThisMeasure ? false : eligible,
+                    eligible: suppressRetriggerThisMeasure ? false : (eligible && !planningDelayActive),
                     debounceSeconds: forceHighImmediate ? 0 : Math.Max(0, settings.RetardAlarmeHautMinutes * 60),
                     ignorePolicyDebounce: forceHighImmediate,
                     nowUtc: nowUtc);
+
+                if (planningDelayActive && outOfToleranceNow)
+                {
+                    VigitempServeur.Log($"Retard changement consigne actif lieu {m_idLieu} - sonde {m_sondeSerialNumber} jusqu'a {settings.PlanningDerniereMaj.AddMinutes(settings.RetardAlarmeChangementConsigneMinutes):O}");
+                }
 
                 var unit = string.IsNullOrWhiteSpace(p_unite)
                     ? ths.GetDatabase().getLieuUnite(m_idLieu)
@@ -472,14 +481,14 @@ namespace Vigitemp_Serveur
 
             if (!prevAlarm && alarmActive)
             {
-                // Notifications dispatchées via le poll d'alarme (évite les doublons et couvre les sondes GSO).
+                // Notifications dispatchï¿½es via le poll d'alarme (ï¿½vite les doublons et couvre les sondes GSO).
             }
             else if (prevAlarm && !alarmActive)
             {
                 ths.GetDatabase().setThresholdAlarmEnded(m_idLieu);
                 ths.GetDatabase().setLieuImmediateRetriggerFlag(m_idLieu, true);
                 _retriggerThresholdWaitCountByLieu[m_idLieu] = 0;
-                VigitempServeur.Log($"Alarme terminee (H/B) pour le lieu {m_idLieu} - sonde {m_sondeSerialNumber}");
+                VigitempServeur.Log($"Alarme terminÃ©e (H/B) pour le lieu {m_idLieu} - sonde {m_sondeSerialNumber}");
                 var ips_clients = ths.GetDatabase().getPCsClients();
                 for (int i = 0; i < ips_clients.Count; i++)
                 {
@@ -490,6 +499,8 @@ namespace Vigitemp_Serveur
 
     }
 }
+
+
 
 
 

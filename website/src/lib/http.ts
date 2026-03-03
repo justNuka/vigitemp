@@ -21,7 +21,7 @@ export type AuthStateEventDetail = {
 export const API_ERROR_EVENT = "vigitemp:api-error"
 export const AUTH_STATE_EVENT = "vigitemp:auth-state"
 
-const DISCONNECTED_MESSAGE = "Session expir?e. Reconnectez-vous pour continuer."
+const DISCONNECTED_MESSAGE = "Session expirée. Reconnectez-vous pour continuer."
 
 let authDisconnected = false
 

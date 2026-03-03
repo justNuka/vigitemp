@@ -5,6 +5,7 @@ import { getClientIp, withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { planningRegleCreateSchema, type PlanningRegleResponse } from "@/lib/planning-regle-schema"
 import { computeEmt, emtModeFromDb } from "@/lib/emt"
+import type { Prisma } from "@/generated/@prisma-db-main/client"
 import { log } from "@/lib/logger"
 
 // Helper to format a Prisma TIME field (Date with date 1970-01-01) to "HH:MM"
@@ -28,6 +29,7 @@ type PrismaRegle = {
   Priorite: number
   Tolerance_Sup_Calc: number | null
   Tolerance_Inf_Calc: number | null
+  Retard_Alarme_Changement_Consigne: number | null
   Date_Creation: Date
   Date_Maj: Date | null
 }
@@ -47,6 +49,7 @@ function toRegleResponse(r: PrismaRegle): PlanningRegleResponse {
     Priorite: r.Priorite,
     Tolerance_Sup_Calc: r.Tolerance_Sup_Calc,
     Tolerance_Inf_Calc: r.Tolerance_Inf_Calc,
+    Retard_Alarme_Changement_Consigne: r.Retard_Alarme_Changement_Consigne,
     Date_Creation: r.Date_Creation.toISOString(),
     Date_Maj: r.Date_Maj?.toISOString() ?? null,
   }
@@ -128,21 +131,24 @@ export const POST = withLogging(
         correctAccuracyError: lieu.Est_Correction_Ej === 1,
       })
 
+      const regleData: Prisma.t_lieu_planning_regleUncheckedCreateInput = {
+        Id_Lieu: idLieu,
+        Actif: validated.Actif,
+        Jour_Debut: validated.Jour_Debut,
+        Heure_Debut: new Date(`1970-01-01T${validated.Heure_Debut}:00Z`),
+        Jour_Fin: validated.Jour_Fin,
+        Heure_Fin: new Date(`1970-01-01T${validated.Heure_Fin}:00Z`),
+        Consigne: validated.Consigne ?? null,
+        Consigne_Sup: validated.Consigne_Sup ?? null,
+        Consigne_Inf: validated.Consigne_Inf ?? null,
+        Priorite: validated.Priorite,
+        Tolerance_Sup_Calc: emt.toleranceSup,
+        Tolerance_Inf_Calc: emt.toleranceInf,
+        Retard_Alarme_Changement_Consigne: validated.Retard_Alarme_Changement_Consigne ?? null,
+      }
+
       const regle = await prisma.t_lieu_planning_regle.create({
-        data: {
-          Id_Lieu: idLieu,
-          Actif: validated.Actif,
-          Jour_Debut: validated.Jour_Debut,
-          Heure_Debut: new Date(`1970-01-01T${validated.Heure_Debut}:00Z`),
-          Jour_Fin: validated.Jour_Fin,
-          Heure_Fin: new Date(`1970-01-01T${validated.Heure_Fin}:00Z`),
-          Consigne: validated.Consigne ?? null,
-          Consigne_Sup: validated.Consigne_Sup ?? null,
-          Consigne_Inf: validated.Consigne_Inf ?? null,
-          Priorite: validated.Priorite,
-          Tolerance_Sup_Calc: emt.toleranceSup,
-          Tolerance_Inf_Calc: emt.toleranceInf,
-        },
+        data: regleData,
       })
 
       log.data.create("Planning consigne", regle.Id_Regle, user.username, user.userId, getClientIp(req), {
@@ -156,6 +162,7 @@ export const POST = withLogging(
         consigne: regle.Consigne,
         consigneSup: regle.Consigne_Sup,
         consigneInf: regle.Consigne_Inf,
+        retardChangementConsigne: regle.Retard_Alarme_Changement_Consigne,
       })
 
       return apiOk(toRegleResponse(regle as PrismaRegle), { status: 201 })

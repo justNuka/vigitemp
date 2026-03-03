@@ -1,28 +1,19 @@
-Ôªø"use client";
+"use client";
 
 import { useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TanStackTable } from "@/components/data-table/tanstack-table";
-import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import StepperFileUpload, {
-  type AdjustmentImportResult,
-  type AdjustmentInsertData,
-} from "@/components/stepper-file-upload";
+import type { AdjustmentImportResult, AdjustmentInsertData } from "@/components/stepper-file-upload";
 import { useModules } from "@/hooks/useModules";
 import { useSensors } from "@/hooks/useSensors";
+
+import { AdjustmentImportEditDialog } from "./_components/adjustment-import-edit-dialog";
+import { saveAdjustmentsBulk, notifyBulkSaveResult } from "./_components/adjustment-import-save";
+import { AdjustmentImportTableCard } from "./_components/adjustment-import-table-card";
+import { AdjustmentImportUploadDialog } from "./_components/adjustment-import-upload-dialog";
 
 type AdjustmentImportRow = {
   id: string;
@@ -79,6 +70,7 @@ export function AdjustmentImportClient() {
   }, [sensors]);
 
   const selectedModuleNumericId = selectedModuleId ? Number(selectedModuleId) : null;
+  const pendingRows = useMemo(() => rows.filter((row) => !row.persisted), [rows]);
 
   const handleUploadResult = (result: AdjustmentImportResult) => {
     const dateText = result.dateText ?? (typeof result.date === "string" ? result.date : null);
@@ -104,10 +96,7 @@ export function AdjustmentImportClient() {
     });
   };
 
-  const formatNumber = (value: number | null) => {
-    if (value === null || Number.isNaN(value)) return "-";
-    return value.toString();
-  };
+  const formatNumber = (value: number | null) => (value === null || Number.isNaN(value) ? "-" : value.toString());
 
   const getModuleAssignment = (row: AdjustmentImportRow): ModuleAssignment => {
     const serial = row.sensor?.trim();
@@ -125,22 +114,18 @@ export function AdjustmentImportClient() {
     }
 
     const selectedLabel = selectedModuleNumericId
-      ? (moduleById.get(selectedModuleNumericId) ?? `#${selectedModuleNumericId}`)
+      ? moduleById.get(selectedModuleNumericId) ?? `#${selectedModuleNumericId}`
       : t("labels.module_not_selected");
 
-    return {
-      status: "to_create",
-      moduleLabel: selectedLabel,
-    };
+    return { status: "to_create", moduleLabel: selectedLabel };
   };
 
   const summaryCounts = useMemo(() => {
-    const pending = rows.filter((row) => !row.persisted);
+    const seenSerials = new Set<string>();
     let createdSensors = 0;
     let existingAssigned = 0;
 
-    const seenSerials = new Set<string>();
-    for (const row of pending) {
+    for (const row of pendingRows) {
       const serial = row.sensor?.trim();
       if (!serial || seenSerials.has(serial)) continue;
       seenSerials.add(serial);
@@ -154,7 +139,7 @@ export function AdjustmentImportClient() {
     }
 
     return { createdSensors, existingAssigned };
-  }, [rows, sensorBySerial]);
+  }, [pendingRows, sensorBySerial]);
 
   const openEdit = (row: AdjustmentImportRow) => {
     setEditRowId(row.id);
@@ -171,24 +156,23 @@ export function AdjustmentImportClient() {
   const applyEdit = () => {
     if (!editRowId) return;
     setRows((prev) =>
-      prev.map((row) => {
-        if (row.id !== editRowId) return row;
-        return {
-          ...row,
-          operator: editOperator.trim() || null,
-          unit: editUnit.trim() || null,
-          insertData: {
-            ...row.insertData,
-            Operateur: editOperator.trim() || null,
-            Unite: editUnit.trim() || null,
-          },
-        };
-      }),
+      prev.map((row) =>
+        row.id !== editRowId
+          ? row
+          : {
+              ...row,
+              operator: editOperator.trim() || null,
+              unit: editUnit.trim() || null,
+              insertData: {
+                ...row.insertData,
+                Operateur: editOperator.trim() || null,
+                Unite: editUnit.trim() || null,
+              },
+            },
+      ),
     );
     closeEdit();
   };
-
-  const pendingRows = useMemo(() => rows.filter((row) => !row.persisted), [rows]);
 
   const handleSaveToDb = async () => {
     if (isSaving) return;
@@ -201,83 +185,20 @@ export function AdjustmentImportClient() {
       return;
     }
 
-    const postBulk = async (confirmOverwrite: boolean) => {
-      const response = await fetch("/api/sondes/ajustages/bulk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          moduleId: selectedModuleNumericId,
-          rows: pendingRows.map((row) => ({
-            id: row.id,
-            file: row.file,
-            insertData: row.insertData,
-          })),
-          confirmOverwrite,
-        }),
-      });
-
-      const payload = await response.json().catch(() => null);
-      return { response, payload };
-    };
-
     setIsSaving(true);
     try {
-      let { response, payload } = await postBulk(false);
+      const result = await saveAdjustmentsBulk(
+        selectedModuleNumericId,
+        pendingRows.map((row) => ({ id: row.id, file: row.file, insertData: row.insertData })),
+        t,
+      );
 
-      if (!response.ok && payload?.error?.code === "confirmation_required") {
-        const adjustmentList = (payload?.error?.details?.sensorsWithAdjustment as string[] | undefined) ?? [];
-        const offsetList = ((payload?.error?.details?.sensorsWithOffset as { Sonde_Numero_Serie?: string | null }[] | undefined) ?? [])
-          .map((item) => item?.Sonde_Numero_Serie)
-          .filter((item): item is string => !!item);
-
-        const parts: string[] = [];
-        if (adjustmentList.length > 0) {
-          parts.push(`${t("toast.confirm_adjustment_overwrite", { count: adjustmentList.length })} ${adjustmentList.join(", ")}`);
-        }
-        if (offsetList.length > 0) {
-          parts.push(`${t("toast.confirm_offset_clear", { count: offsetList.length })} ${offsetList.join(", ")}`);
-        }
-
-        const confirmed = window.confirm(parts.join("\n\n"));
-        if (!confirmed) {
-          setIsSaving(false);
-          return;
-        }
-
-        ({ response, payload } = await postBulk(true));
+      if (result.cancelled) {
+        setIsSaving(false);
+        return;
       }
 
-      if (!response.ok) {
-        const message = payload?.error?.message || t("toast.save_error");
-        throw new Error(message);
-      }
-
-      const insertedCount: number = payload?.data?.inserted ?? 0;
-      const skippedCount: number = payload?.data?.skipped ?? 0;
-      const overwrittenAdjustments: number = payload?.data?.overwrittenAdjustments ?? 0;
-      const clearedOffsets: number = payload?.data?.clearedOffsets ?? 0;
-      const createdSensorsFromAdjustment: number = payload?.data?.createdSensorsFromAdjustment ?? 0;
-      const existingSensorsWithModule: number = payload?.data?.existingSensorsWithModule ?? 0;
-
-      if (insertedCount > 0) {
-        toast.success(t("toast.save_success", { count: insertedCount }));
-      }
-      if (skippedCount > 0) {
-        toast.warning(t("toast.save_skipped", { count: skippedCount }));
-      }
-      if (overwrittenAdjustments > 0) {
-        toast.success(t("toast.overwrite_done", { count: overwrittenAdjustments }));
-      }
-      if (clearedOffsets > 0) {
-        toast.success(t("toast.offsets_cleared", { count: clearedOffsets }));
-      }
-      if (createdSensorsFromAdjustment > 0) {
-        toast.success(t("toast.created_sensors_from_adjustment", { count: createdSensorsFromAdjustment }));
-      }
-      if (existingSensorsWithModule > 0) {
-        toast.success(t("toast.existing_sensors_with_module", { count: existingSensorsWithModule }));
-      }
-
+      notifyBulkSaveResult(result.payload, t);
       setRows([]);
       setOpen(false);
       setStepperSessionKey((prev) => prev + 1);
@@ -307,9 +228,7 @@ export function AdjustmentImportClient() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="inline-flex rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
-                    {assignment.moduleLabel}
-                  </span>
+                  <span className="inline-flex rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700">{assignment.moduleLabel}</span>
                 </TooltipTrigger>
                 <TooltipContent>{t("tooltips.existing_assigned")}</TooltipContent>
               </Tooltip>
@@ -322,9 +241,7 @@ export function AdjustmentImportClient() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="inline-flex rounded-md bg-sky-100 px-2 py-1 text-xs font-medium text-sky-700">
-                    {assignment.moduleLabel}
-                  </span>
+                  <span className="inline-flex rounded-md bg-sky-100 px-2 py-1 text-xs font-medium text-sky-700">{assignment.moduleLabel}</span>
                 </TooltipTrigger>
                 <TooltipContent>{t("tooltips.created_on_import")}</TooltipContent>
               </Tooltip>
@@ -335,46 +252,17 @@ export function AdjustmentImportClient() {
         return <span className="text-muted-foreground">{assignment.moduleLabel}</span>;
       },
     },
-    {
-      accessorKey: "sensor",
-      header: t("table.columns.sensor"),
-      cell: ({ row }) => row.getValue("sensor") || "-",
-    },
-    {
-      accessorKey: "dateText",
-      header: t("table.columns.date"),
-      cell: ({ row }) => row.getValue("dateText") || "-",
-    },
-    {
-      accessorKey: "operator",
-      header: t("table.columns.operator"),
-      cell: ({ row }) => row.getValue("operator") || "-",
-    },
-    {
-      accessorKey: "unit",
-      header: t("table.columns.unit"),
-      cell: ({ row }) => row.getValue("unit") || "-",
-    },
-    {
-      accessorKey: "measureEtalon1",
-      header: t("table.columns.measure_etalon_1"),
-      cell: ({ row }) => formatNumber(row.original.measureEtalon1),
-    },
-    {
-      accessorKey: "measureEtalon2",
-      header: t("table.columns.measure_etalon_2"),
-      cell: ({ row }) => formatNumber(row.original.measureEtalon2),
-    },
+    { accessorKey: "sensor", header: t("table.columns.sensor"), cell: ({ row }) => row.getValue("sensor") || "-" },
+    { accessorKey: "dateText", header: t("table.columns.date"), cell: ({ row }) => row.getValue("dateText") || "-" },
+    { accessorKey: "operator", header: t("table.columns.operator"), cell: ({ row }) => row.getValue("operator") || "-" },
+    { accessorKey: "unit", header: t("table.columns.unit"), cell: ({ row }) => row.getValue("unit") || "-" },
+    { accessorKey: "measureEtalon1", header: t("table.columns.measure_etalon_1"), cell: ({ row }) => formatNumber(row.original.measureEtalon1) },
+    { accessorKey: "measureEtalon2", header: t("table.columns.measure_etalon_2"), cell: ({ row }) => formatNumber(row.original.measureEtalon2) },
     {
       id: "actions",
       header: t("table.columns.actions"),
       cell: ({ row }) => (
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => openEdit(row.original)}
-          disabled={row.original.persisted}
-        >
+        <Button size="sm" variant="outline" onClick={() => openEdit(row.original)} disabled={row.original.persisted}>
           {t("actions.edit")}
         </Button>
       ),
@@ -383,93 +271,48 @@ export function AdjustmentImportClient() {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <CardTitle>{t("table.title")}</CardTitle>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="w-65">
-                <Select value={selectedModuleId} onValueChange={setSelectedModuleId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="S√©lectionner un module" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {modules.map((module) => (
-                      <SelectItem key={module.Id_Module} value={String(module.Id_Module)}>
-                        {module.Module_Numero_Serie || module.Libelle_Type_Module || `#${module.Id_Module}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button size="sm" className="gap-2" onClick={() => setOpen(true)}>
-                {t("actions.import")}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4 p-2 md:p-4 xl:p-4">
-          <TanStackTable
-            columns={columns}
-            data={rows}
-            showSearch={false}
-            showPagination={false}
-            emptyMessage={t("table.empty")}
-            headerClassName="!bg-sidebar !text-sidebar-foreground"
-            headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
-            tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
-          />
+      <AdjustmentImportTableCard
+        title={t("table.title")}
+        modules={modules}
+        selectedModuleId={selectedModuleId}
+        onModuleChange={setSelectedModuleId}
+        onOpenImport={() => setOpen(true)}
+        importLabel={t("actions.import")}
+        columns={columns}
+        rows={rows}
+        emptyMessage={t("table.empty")}
+        createdSensors={summaryCounts.createdSensors}
+        existingAssigned={summaryCounts.existingAssigned}
+        summaryCreatedLabel="Sondes crÈÈes suite a l'ajustage"
+        summaryExistingLabel="Sondes existantes dÈj‡ affectÈes a un module"
+        onSave={handleSaveToDb}
+        saveLabel={isSaving ? t("actions.saving_to_db") : t("actions.save_to_db")}
+        disabled={pendingRows.length === 0 || isSaving || !selectedModuleNumericId}
+      />
 
-          <div className="grid gap-1 rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-            <div>Sondes cr√©√©es suite a l'ajustage : {summaryCounts.createdSensors}</div>
-            <div>Sondes existantes d√©j√† affect√©es a un module : {summaryCounts.existingAssigned}</div>
-          </div>
+      <AdjustmentImportUploadDialog
+        open={open}
+        onOpenChange={setOpen}
+        title={t("modal.title")}
+        description={t("modal.description")}
+        stepperSessionKey={stepperSessionKey}
+        onUploadResult={handleUploadResult}
+      />
 
-          <div className="flex justify-end">
-            <Button
-              className="gap-2"
-              onClick={handleSaveToDb}
-              disabled={pendingRows.length === 0 || isSaving || !selectedModuleNumericId}
-            >
-              {isSaving ? t("actions.saving_to_db") : t("actions.save_to_db")}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-4xl h-[88vh] max-h-[88vh] overflow-hidden outline-none focus:outline-none focus:ring-0 ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 flex flex-col">
-          <DialogHeader>
-            <DialogTitle>{t("modal.title")}</DialogTitle>
-            <p className="text-sm text-muted-foreground">{t("modal.description")}</p>
-          </DialogHeader>
-          <div className="flex-1 min-h-0 flex flex-col">
-            <StepperFileUpload key={stepperSessionKey} onUploadResult={handleUploadResult} onFinish={() => setOpen(false)} />
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!editRowId} onOpenChange={(openState) => (!openState ? closeEdit() : null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t("edit.title")}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t("edit.operator")}</label>
-              <Input value={editOperator} onChange={(event) => setEditOperator(event.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">{t("edit.unit")}</label>
-              <Input value={editUnit} onChange={(event) => setEditUnit(event.target.value)} />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={closeEdit}>{t("actions.cancel")}</Button>
-              <Button onClick={applyEdit}>{t("actions.apply")}</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AdjustmentImportEditDialog
+        open={!!editRowId}
+        title={t("edit.title")}
+        operatorLabel={t("edit.operator")}
+        unitLabel={t("edit.unit")}
+        operator={editOperator}
+        unit={editUnit}
+        onOperatorChange={setEditOperator}
+        onUnitChange={setEditUnit}
+        onClose={closeEdit}
+        onApply={applyEdit}
+        cancelLabel={t("actions.cancel")}
+        applyLabel={t("actions.apply")}
+      />
     </div>
   );
 }

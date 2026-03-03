@@ -24,19 +24,19 @@ interface PasswordResetEmailProps {
 
 const COPY: Record<Locale, Record<string, string>> = {
   fr: {
-    preview: 'Reinitialisation de votre mot de passe Vigitemp',
-    title: 'Reinitialisation de mot de passe',
+    preview: 'Réinitialisation de votre mot de passe Vigitemp',
+    title: 'Réinitialisation de mot de passe',
     hello: 'Bonjour',
     fallbackUser: 'utilisateur',
     intro:
       'Vous avez demande la reinitialisation de votre mot de passe Vigitemp. Cliquez sur le bouton ci-dessous pour creer un nouveau mot de passe :',
-    cta: 'Reinitialiser mon mot de passe',
+    cta: 'Réinitialiser mon mot de passe',
     fallbackLink: 'Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :',
     warning:
       'Important : Ce lien est valide pendant {expiresIn}. Si vous n\'avez pas demande cette reinitialisation, ignorez cet email - votre mot de passe reste inchange.',
-    security: 'Pour votre securite, ne partagez jamais ce lien avec quiconque.',
-    noreply: 'Cet email a ete envoye automatiquement, merci de ne pas y repondre.',
-    brand: 'Systeme de surveillance environnementale',
+    security: 'Pour votre sécurité, ne partagez jamais ce lien avec quiconque.',
+    noreply: 'Cet email à été envoyé automatiquement, merci de ne pas y répondre.',
+    brand: 'Système de surveillance environnementale',
   },
   en: {
     preview: 'Reset your Vigitemp password',

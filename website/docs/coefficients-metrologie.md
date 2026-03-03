@@ -18,8 +18,8 @@ Formule:
 
 `temperature_ajustee = a * temperature_lue + b`
 
-### Erreur de justesse et incertitude sonde (?talonnage)
-Ces valeurs proviennent de l'?talonnage.
+### Erreur de justesse et incertitude sonde (étalonnage)
+Ces valeurs proviennent de l'étalonnage.
 
 - Correction de justesse:
 
@@ -32,7 +32,7 @@ Elle s'utilise pour ajuster les tol?rances activ?es d'un lieu,
 selon les r?gles EMT (?cart Maximum Tol?r?).
 
 ### D?rive
-La d?rive est calcul?e entre deux ?talonnages successifs.
+La d?rive est calcul?e entre deux étalonnages successifs.
 
 Formule:
 
@@ -46,17 +46,17 @@ selon le param?trage EMT du lieu.
 ## 2) R?gles de validit?
 
 - L'ajustage corrige la mesure.
-- L'?talonnage constate la qualit? m?trologique (valeur l?gale/audit).
-- Seul l'?talonnage est sous certification (Cofrac).
+- L'étalonnage constate la qualit? m?trologique (valeur l?gale/audit).
+- Seul l'étalonnage est sous certification (Cofrac).
 
 Cons?quences m?tier:
 
-1. Tout nouvel ajustage invalide les ?talonnages pr?c?dents.
-2. Toute modification d'offset invalide les ?talonnages pr?c?dents.
-3. Un ?talonnage a une date de validit?.
-4. Un ?talonnage expir? doit g?n?rer un warning.
-5. Si un r?sultat ?talonnage est utilis? dans un lieu,
-   il reste inchang? tant qu'aucun nouvel ?talonnage ne le remplace.
+1. Tout nouvel ajustage invalide les étalonnages pr?c?dents.
+2. Toute modification d'offset invalide les étalonnages pr?c?dents.
+3. Un étalonnage a une date de validit?.
+4. Un étalonnage expir? doit g?n?rer un warning.
+5. Si un r?sultat étalonnage est utilis? dans un lieu,
+   il reste inchang? tant qu'aucun nouvel étalonnage ne le remplace.
 
 ---
 
@@ -74,22 +74,22 @@ Lors de la lecture d'une sonde:
 Objectif: red?finir `a` et `b`.
 
 - Temp?rature prise en compte pour l'ajustage: la lecture brute sonde.
-- Un ajustage invalide les ?talonnages de la sonde.
-- Une modification d'offset invalide aussi les ?talonnages de la sonde.
+- Un ajustage invalide les étalonnages de la sonde.
+- Une modification d'offset invalide aussi les étalonnages de la sonde.
 
-### 3.2 Cas ?talonnage
+### 3.2 Cas étalonnage
 
 Objectif: qualifier le r?sultat de la sonde.
 
-Temp?rature prise en compte pour l'?talonnage:
+Temp?rature prise en compte pour l'étalonnage:
 
 1. Lecture brute sonde
 2. Ajustage
 3. Offset
 
 => c'est cette temp?rature corrig?e par ajustage + offset
-qui sert aux calculs d'?talonnage (erreur de justesse, incertitude).
+qui sert aux calculs d'étalonnage (erreur de justesse, incertitude).
 
 Note:
 - L'ajustage est valable sur toute la plage de mesure.
-- L'?talonnage n'est valable qu'? proximit? de la temp?rature d'?talonnage.
+- L'étalonnage n'est valable qu'? proximit? de la temp?rature d'étalonnage.

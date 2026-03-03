@@ -27,6 +27,7 @@ type PrismaRegle = {
   Priorite: number
   Tolerance_Sup_Calc: number | null
   Tolerance_Inf_Calc: number | null
+  Retard_Alarme_Changement_Consigne: number | null
   Date_Creation: Date
   Date_Maj: Date | null
 }
@@ -46,6 +47,7 @@ function toRegleResponse(r: PrismaRegle): PlanningRegleResponse {
     Priorite: r.Priorite,
     Tolerance_Sup_Calc: r.Tolerance_Sup_Calc,
     Tolerance_Inf_Calc: r.Tolerance_Inf_Calc,
+    Retard_Alarme_Changement_Consigne: r.Retard_Alarme_Changement_Consigne,
     Date_Creation: r.Date_Creation.toISOString(),
     Date_Maj: r.Date_Maj?.toISOString() ?? null,
   }
@@ -215,6 +217,7 @@ export const DELETE = withLogging(
               Consigne_Inf_Base: regle.Consigne_Inf,
               Tolerance_Surveillance_Sup_Base: regle.Tolerance_Sup_Calc,
               Tolerance_Surveillance_Inf_Base: regle.Tolerance_Inf_Calc,
+              Retard_Alarme_Changement_Consigne: regle.Retard_Alarme_Changement_Consigne,
               Planning_Actif: false,
               Planning_Source_Regle_Id: null,
               Planning_Derniere_Maj: new Date(),

@@ -1,22 +1,21 @@
-﻿"use client";
+"use client";
 
-import { useEffect, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { useRouter } from "@/i18n/navigation";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
+
 import { useLicense } from "@/components/license/license-provider";
 import { isStandardOrExpert } from "@/lib/license-access";
 
-import { settingsApi } from "@/lib/api";
-import { SMTPConfigModal } from "./smtp-config-modal";
 import { AutoLockSettingsCard } from "./auto-lock-settings-card";
 import { GeneralSettingsCard } from "./general-settings-card";
 import { MessagingSettingsCard } from "./messaging-settings-card";
 import { NotificationsSettingsCard } from "./notifications-settings-card";
 import { PasswordPolicyCard } from "./password-policy-card";
+import { SMTPConfigModal } from "./smtp-config-modal";
 import { SmtpSettingsCard } from "./smtp-settings-card";
+import { TelephonySettingsCard } from "./telephony-settings-card";
 import { TimezoneSettingsCard } from "./timezone-settings-card";
+import { useSettingsEditor } from "./use-settings-editor";
 
 interface Setting {
   key: string;
@@ -28,187 +27,95 @@ interface Props {
   settings: Setting[];
 }
 
+const NOTIFICATION_SETTING_KEYS = new Set([
+  "notifications:email",
+  "notifications:alarm_email_recipients",
+  "notifications:alarm_email_acknowledged",
+  "notifications:alarm_email_ended",
+]);
+
+const MESSAGING_SETTING_KEY = "messaging:enabled";
+const SURVEILLANCE_REFRESH_KEY = "dashboard:surveillance_refresh";
+
+function getRefreshIntervalLabel(t: ReturnType<typeof useTranslations>, value: string) {
+  switch (value) {
+    case "0":
+      return t("general.refresh_options.manual");
+    case "5":
+      return t("general.refresh_options.5");
+    case "10":
+      return t("general.refresh_options.10");
+    case "15":
+      return t("general.refresh_options.15");
+    case "30":
+      return t("general.refresh_options.30");
+    case "60":
+      return t("general.refresh_options.60");
+    default:
+      return t("general.refresh_options.custom", { seconds: value });
+  }
+}
+
 export function SettingsClient({ settings: initialSettings }: Props) {
-  const router = useRouter();
   const t = useTranslations("adminSettings");
   const { license } = useLicense();
   const canEditSurveillanceRefresh = isStandardOrExpert(license);
   const [smtpModalOpen, setSmtpModalOpen] = useState(false);
-
-  const [settings, setSettings] = useState(initialSettings);
-
-  useEffect(() => {
-    setSettings(initialSettings);
-  }, [initialSettings]);
-
-  const updateMutation = useMutation({
-    mutationFn: ({ key, value }: { key: string; value: string }) => settingsApi.update(key, value),
-  });
-
-  const [loadingKeys, setLoadingKeys] = useState<Set<string>>(new Set());
-
-  const handleToggle = (key: string, currentValue: string) => {
-    const newValue = currentValue === "true" ? "false" : "true";
-
-    setSettings((prev) => prev.map((setting) => (setting.key === key ? { ...setting, value: newValue } : setting)));
-    setLoadingKeys((prev) => new Set(prev).add(key));
-
-    updateMutation.mutate(
-      { key, value: newValue },
-      {
-        onSuccess: () => {
-          setTimeout(() => {
-            router.refresh();
-          }, 100);
-          toast.success(t("toast.update_success"));
-        },
-        onError: () => {
-          setSettings((prev) => prev.map((setting) => (setting.key === key ? { ...setting, value: currentValue } : setting)));
-          toast.error(t("toast.update_error"));
-        },
-        onSettled: () => {
-          setLoadingKeys((prev) => {
-            const next = new Set(prev);
-            next.delete(key);
-            return next;
-          });
-        },
-      }
-    );
-  };
-
-  const handleRefreshIntervalChange = (key: string, newValue: string) => {
-    setSettings((prev) => prev.map((setting) => (setting.key === key ? { ...setting, value: newValue } : setting)));
-    setLoadingKeys((prev) => new Set(prev).add(key));
-
-    updateMutation.mutate(
-      { key, value: newValue },
-      {
-        onSuccess: () => {
-          setTimeout(() => {
-            router.refresh();
-          }, 100);
-
-          const intervalLabel =
-            newValue === "0"
-              ? t("general.refresh_options.manual")
-              : newValue === "5"
-              ? t("general.refresh_options.5")
-              : newValue === "10"
-              ? t("general.refresh_options.10")
-              : newValue === "15"
-              ? t("general.refresh_options.15")
-              : newValue === "30"
-              ? t("general.refresh_options.30")
-              : newValue === "60"
-              ? t("general.refresh_options.60")
-              : t("general.refresh_options.custom", { seconds: newValue });
-
-          toast.success(t("toast.refresh_interval", { label: intervalLabel }));
-          window.dispatchEvent(new Event("storage"));
-        },
-        onError: () => {
-          const currentSetting = settings.find((s) => s.key === key);
-          const currentValue = currentSetting?.value || "30";
-
-          setSettings((prev) => prev.map((setting) => (setting.key === key ? { ...setting, value: currentValue } : setting)));
-          toast.error(t("toast.update_error"));
-        },
-        onSettled: () => {
-          setLoadingKeys((prev) => {
-            const next = new Set(prev);
-            next.delete(key);
-            return next;
-          });
-        },
-      }
-    );
-  };
-
-  const handleSettingChange = (key: string, newValue: string) => {
-    setSettings((prev) => prev.map((setting) => (setting.key === key ? { ...setting, value: newValue } : setting)));
-    setLoadingKeys((prev) => new Set(prev).add(key));
-
-    updateMutation.mutate(
-      { key, value: newValue },
-      {
-        onSuccess: () => {
-          setTimeout(() => {
-            router.refresh();
-          }, 100);
-          toast.success(t("toast.update_success"));
-        },
-        onError: () => {
-          const currentSetting = settings.find((s) => s.key === key);
-          const currentValue = currentSetting?.value || "";
-          setSettings((prev) => prev.map((setting) => (setting.key === key ? { ...setting, value: currentValue } : setting)));
-          toast.error(t("toast.update_error"));
-        },
-        onSettled: () => {
-          setLoadingKeys((prev) => {
-            const next = new Set(prev);
-            next.delete(key);
-            return next;
-          });
-        },
-      }
-    );
-  };
+  const { settings, loadingKeys, persist, toggle } = useSettingsEditor(initialSettings);
 
   const generalSettings = settings.filter((setting) => {
-    const isNotificationSetting = ["notifications:email", "notifications:alarm_email_recipients", "notifications:alarm_email_acknowledged", "notifications:alarm_email_ended"].includes(setting.key)
-    if (isNotificationSetting) return false
-    if (setting.key === "messaging:enabled") return false
-    if (!canEditSurveillanceRefresh && setting.key === "dashboard:surveillance_refresh") return false
-    return true
+    if (NOTIFICATION_SETTING_KEYS.has(setting.key)) return false;
+    if (setting.key === MESSAGING_SETTING_KEY) return false;
+    if (!canEditSurveillanceRefresh && setting.key === SURVEILLANCE_REFRESH_KEY) return false;
+    return true;
   });
 
-  const notificationSettings = settings.filter((setting) =>
-    ["notifications:email", "notifications:alarm_email_recipients", "notifications:alarm_email_acknowledged", "notifications:alarm_email_ended"].includes(setting.key),
-  );
-
-  const messagingSettings = settings.filter((s) => s.key === "messaging:enabled")
+  const notificationSettings = settings.filter((setting) => NOTIFICATION_SETTING_KEYS.has(setting.key));
+  const messagingSettings = settings.filter((setting) => setting.key === MESSAGING_SETTING_KEY);
 
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       <GeneralSettingsCard
         settings={generalSettings}
         loadingKeys={loadingKeys}
-        onToggle={handleToggle}
-        onRefreshIntervalChange={handleRefreshIntervalChange}
-        onNumericSettingChange={handleSettingChange}
+        onToggle={(key) => toggle(key)}
+        onRefreshIntervalChange={(key, value) =>
+          persist(key, value, {
+            successMessage: t("toast.refresh_interval", { label: getRefreshIntervalLabel(t, value) }),
+            fallbackValue: "30",
+            notifyStorage: true,
+          })
+        }
+        onNumericSettingChange={(key, value) => persist(key, value)}
       />
 
       <TimezoneSettingsCard
         settings={settings}
         loadingKeys={loadingKeys}
-        onTimezoneChange={handleSettingChange}
+        onTimezoneChange={(key, value) => persist(key, value)}
       />
 
       <AutoLockSettingsCard />
-
       <PasswordPolicyCard />
 
       <NotificationsSettingsCard
         settings={notificationSettings}
         loadingKeys={loadingKeys}
-        onToggle={handleToggle}
-        onSaveRecipients={handleSettingChange}
+        onToggle={(key) => toggle(key)}
+        onSaveRecipients={(key, value) => persist(key, value)}
       />
 
       {isStandardOrExpert(license) && (
         <MessagingSettingsCard
           settings={messagingSettings}
           loadingKeys={loadingKeys}
-          onToggle={handleToggle}
+          onToggle={(key) => toggle(key)}
         />
       )}
 
       <SmtpSettingsCard onOpenSmtpModal={() => setSmtpModalOpen(true)} />
-
+      <TelephonySettingsCard />
       <SMTPConfigModal open={smtpModalOpen} onOpenChange={setSmtpModalOpen} />
     </main>
   );
 }
-
-

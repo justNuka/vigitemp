@@ -153,7 +153,7 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg bg-white/50 dark:bg-card">
+      <DialogContent className="max-w-lg border bg-background shadow-xl sm:rounded-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>
@@ -266,7 +266,7 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
             </p>
           </div>
 
-          <div className="rounded-lg border p-3 space-y-2">
+          <div className="rounded-lg border bg-muted/20 p-4 space-y-3">
             <div className="flex items-center gap-2 text-sm font-medium">
               <Mail className="h-4 w-4" />
               {t("test.title")}
@@ -274,24 +274,27 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
             <p className="text-xs text-muted-foreground">
               {t("test.description")}
             </p>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <Input
-                id="test-email"
-                type="email"
-                placeholder={t("test.placeholder")}
-                {...registerTest("testEmail")}
-                disabled={isLoading || updateMutation.isPending || testMutation.isPending}
-                aria-invalid={!!testErrors.testEmail}
-                aria-describedby={testErrors.testEmail ? "smtp-test-email-error" : undefined}
-              />
-              {testErrors.testEmail?.message && (
-                <p id="smtp-test-email-error" className="text-sm text-destructive">
-                  {String(testErrors.testEmail.message)}
-                </p>
-              )}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+              <div className="flex-1 space-y-1">
+                <Input
+                  id="test-email"
+                  type="email"
+                  placeholder={t("test.placeholder")}
+                  {...registerTest("testEmail")}
+                  disabled={isLoading || updateMutation.isPending || testMutation.isPending}
+                  aria-invalid={!!testErrors.testEmail}
+                  aria-describedby={testErrors.testEmail ? "smtp-test-email-error" : undefined}
+                />
+                {testErrors.testEmail?.message && (
+                  <p id="smtp-test-email-error" className="text-sm text-destructive">
+                    {String(testErrors.testEmail.message)}
+                  </p>
+                )}
+              </div>
               <Button
                 type="button"
                 variant="secondary"
+                className="sm:mt-0 sm:self-start"
                 onClick={handleTestSubmit(onTest)}
                 disabled={isLoading || updateMutation.isPending || testMutation.isPending}
               >

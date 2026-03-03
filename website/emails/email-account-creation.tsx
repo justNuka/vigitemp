@@ -34,11 +34,11 @@ const COPY: Record<Locale, Record<string, string>> = {
     login: 'Login',
     password: 'Mot de passe (temporaire)',
     warning:
-      'Important : Ce mot de passe est temporaire. Pour des raisons de securite, vous devrez le changer lors de votre premiere connexion.',
+      'Important : Ce mot de passe est temporaire. Pour des raisons de securite, vous devrez le changer lors de votre première connexion.',
     cta: 'Se connecter maintenant',
-    contact: 'Si vous n\'avez pas demande la creation de ce compte, contactez votre administrateur systeme.',
-    noreply: 'Cet email a ete envoye automatiquement, merci de ne pas y repondre.',
-    brand: 'Systeme de surveillance environnementale',
+    contact: 'Si vous n\'avez pas démandé la création de ce compte, contactez votre administrateur système.',
+    noreply: 'Cet email à été envoyé automatiquement, merci de ne pas y répondre.',
+    brand: 'Système de surveillance environnementale',
   },
   en: {
     preview: 'Your Vigitemp account has been created',

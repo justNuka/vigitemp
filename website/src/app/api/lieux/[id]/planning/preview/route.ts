@@ -11,6 +11,7 @@ type ConsignesAttendues = {
   consigneInf: number | null
   toleranceSup: number | null
   toleranceInf: number | null
+  retardChangementConsigne: number | null
 }
 
 type PreviewResponse = {
@@ -28,6 +29,7 @@ type PreviewResponse = {
     Priorite: number
     Tolerance_Sup_Calc: number | null
     Tolerance_Inf_Calc: number | null
+    Retard_Alarme_Changement_Consigne: number | null
     Date_Creation: string
     Date_Maj: string | null
   } | null
@@ -64,6 +66,24 @@ export const GET = withLogging(
       const regles = await prisma.t_lieu_planning_regle.findMany({
         where: { Id_Lieu: idLieu, Actif: true },
         orderBy: { Priorite: "desc" },
+        select: {
+          Id_Regle: true,
+          Id_Lieu: true,
+          Actif: true,
+          Jour_Debut: true,
+          Heure_Debut: true,
+          Jour_Fin: true,
+          Heure_Fin: true,
+          Consigne: true,
+          Consigne_Sup: true,
+          Consigne_Inf: true,
+          Priorite: true,
+          Tolerance_Sup_Calc: true,
+          Tolerance_Inf_Calc: true,
+          Retard_Alarme_Changement_Consigne: true,
+          Date_Creation: true,
+          Date_Maj: true,
+        },
       })
 
       // Find first matching rule
@@ -91,6 +111,7 @@ export const GET = withLogging(
           Tolerance_Surveillance_Sup_Base: true,
           Consigne_Inf_Base: true,
           Tolerance_Surveillance_Inf_Base: true,
+          Retard_Alarme_Changement_Consigne: true,
         },
       })
       if (!lieu) return apiError(404, "lieu_not_found", "Lieu introuvable")
@@ -104,6 +125,7 @@ export const GET = withLogging(
           consigneInf: matchedRegle.Consigne_Inf,
           toleranceSup: matchedRegle.Tolerance_Sup_Calc,
           toleranceInf: matchedRegle.Tolerance_Inf_Calc,
+          retardChangementConsigne: matchedRegle.Retard_Alarme_Changement_Consigne,
         }
       } else {
         consignesAttendues = {
@@ -112,6 +134,7 @@ export const GET = withLogging(
           consigneInf: lieu.Consigne_Inf_Base,
           toleranceSup: lieu.Tolerance_Surveillance_Sup_Base,
           toleranceInf: lieu.Tolerance_Surveillance_Inf_Base,
+          retardChangementConsigne: lieu.Retard_Alarme_Changement_Consigne ?? null,
         }
       }
 
@@ -131,6 +154,7 @@ export const GET = withLogging(
               Priorite: matchedRegle.Priorite,
               Tolerance_Sup_Calc: matchedRegle.Tolerance_Sup_Calc,
               Tolerance_Inf_Calc: matchedRegle.Tolerance_Inf_Calc,
+              Retard_Alarme_Changement_Consigne: matchedRegle.Retard_Alarme_Changement_Consigne,
               Date_Creation: matchedRegle.Date_Creation.toISOString(),
               Date_Maj: matchedRegle.Date_Maj?.toISOString() ?? null,
             }

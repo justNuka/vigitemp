@@ -26,6 +26,19 @@ export type MeasureSummary = {
   decimals: number | null
 }
 
+export function getMeasureTimestamp(
+  measure: Pick<MeasureData, "DateHeureMesureIso" | "DateHeureMesure">,
+): number {
+  return Date.parse(measure.DateHeureMesureIso ?? measure.DateHeureMesure)
+}
+
+export function sortMeasuresChronologically<T extends Pick<MeasureData, "DateHeureMesureIso" | "DateHeureMesure">>(
+  measures: T[],
+): T[] {
+  if (measures.length <= 1) return measures
+  return [...measures].sort((a, b) => getMeasureTimestamp(a) - getMeasureTimestamp(b))
+}
+
 export function formatMeasureValue(
   value: number | null | undefined,
   decimals?: number | null,

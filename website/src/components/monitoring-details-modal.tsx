@@ -2,54 +2,38 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-
-
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { TanStackTable } from "@/components/data-table/tanstack-table";
-import type { ColumnDef } from "@tanstack/react-table";
-import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
+  Filler,
+  Legend,
+  LineElement,
   LinearScale,
   PointElement,
-  LineElement,
   Title,
   Tooltip as ChartTooltip,
-  Legend,
-  Filler,
-} from 'chart.js';
+} from "chart.js";
+
+import { TanStackTable } from "@/components/data-table/tanstack-table";
+import { MonitoringAuditTab } from "@/components/monitoring-details/monitoring-audit-tab";
+import { MonitoringGraphTab } from "@/components/monitoring-details/monitoring-graph-tab";
+import { MonitoringTableTab } from "@/components/monitoring-details/monitoring-table-tab";
+import type { DateRangeValue, ZoomBounds } from "@/components/monitoring-details/types";
+import { useMonitoringAuditLogs } from "@/components/monitoring-details/use-monitoring-audit-logs";
+import { useMonitoringRangeMeasurements } from "@/components/monitoring-details/use-monitoring-range-measurements";
+import { Button } from "@/components/ui/button";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
 import { useLieuMeasurementsPaged } from "@/hooks/useLieuMeasurementsPaged";
-import { calculateYDomain, getMeasureSummary } from "@/lib/measurements";
+import { calculateYDomain, getMeasureSummary, sortMeasuresChronologically } from "@/lib/measurements";
 import type { MeasureData } from "@/lib/measurements";
-import { fetchJson } from "@/lib/http";
-import { formatDbDateTime } from "@/lib/date-display";
 
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  ChartTooltip,
-  Legend,
-  Filler
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend, Filler);
 
 let isChartZoomPluginRegistered = false;
-
-type DateRangeValue = { from: Date; to?: Date };
 
 interface MonitoringDetailsModalProps {
   isOpen: boolean;
@@ -74,16 +58,12 @@ interface MonitoringDetailsModalProps {
   showNullNonResponse?: boolean;
 }
 
-type AuditLog = {
-  id: number;
-  timestamp: string | null;
-  code: string;
-  label: string;
-  commentaire: string | null;
-  commentaireUtilisateur: string | null;
-  user: string | null;
-  profile: string | null;
-  lieuId: number;
+type GuidePositions = {
+  sup: number | null;
+  inf: number | null;
+  consigne: number | null;
+  preSup: number | null;
+  preInf: number | null;
 };
 
 export default function MonitoringDetailsModal({
@@ -108,18 +88,14 @@ export default function MonitoringDetailsModal({
   const locale = useLocale();
   const localeTag = locale === "fr" ? "fr-FR" : locale;
   const t = useTranslations("monitoringDetailsModal");
+
   useEffect(() => {
-    if (isChartZoomPluginRegistered) {
-      return;
-    }
+    if (isChartZoomPluginRegistered) return;
 
     let cancelled = false;
-
     import("chartjs-plugin-zoom")
       .then((mod) => {
-        if (cancelled || isChartZoomPluginRegistered) {
-          return;
-        }
+        if (cancelled || isChartZoomPluginRegistered) return;
         ChartJS.register(mod.default);
         isChartZoomPluginRegistered = true;
       })
@@ -134,23 +110,17 @@ export default function MonitoringDetailsModal({
 
   const [dateRange, setDateRange] = useState<DateRangeValue | null>(initialRange ?? null);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
-  const chartRef = useRef<ChartJS<"line"> | null>(null);
-  const [guidePositions, setGuidePositions] = useState<{
-    sup: number | null;
-    inf: number | null;
-    consigne: number | null;
-    preSup: number | null;
-    preInf: number | null;
-  }>({ sup: null, inf: null, consigne: null, preSup: null, preInf: null });
+  const [guidePositions, setGuidePositions] = useState<GuidePositions>({
+    sup: null,
+    inf: null,
+    consigne: null,
+    preSup: null,
+    preInf: null,
+  });
   const [activeTab, setActiveTab] = useState<"graph" | "table" | "audit">("graph");
   const [zoomMode, setZoomMode] = useState<"x" | "xy">("x");
-  const [rangeGraphData, setRangeGraphData] = useState<MeasureData[]>([]);
-  const [zoomBounds, setZoomBounds] = useState<{ xMin?: number; xMax?: number; yMin?: number; yMax?: number } | null>(null);
-  const [rangeGraphLoading, setRangeGraphLoading] = useState(false);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-  const [auditLoading, setAuditLoading] = useState(false);
-  const [auditError, setAuditError] = useState<string | null>(null);
-  const [auditLoaded, setAuditLoaded] = useState(false);
+  const [zoomBounds, setZoomBounds] = useState<ZoomBounds | null>(null);
+  const chartRef = useRef<ChartJS<"line"> | null>(null);
   const showNullNonResponse = Boolean(controlledShowNullNonResponse);
 
   useEffect(() => {
@@ -161,16 +131,14 @@ export default function MonitoringDetailsModal({
 
   const effectiveRange = useMemo(() => {
     if (!dateRange?.from) return null;
-    return {
-      from: dateRange.from,
-      to: dateRange.to ?? dateRange.from,
-    };
+    return { from: dateRange.from, to: dateRange.to ?? dateRange.from };
   }, [dateRange]);
-  const rangeEnabled = Boolean(effectiveRange?.from && effectiveRange?.to);
+
   const rangeStart = useMemo(() => {
     if (!effectiveRange?.from) return null;
     return new Date(effectiveRange.from);
   }, [effectiveRange]);
+
   const rangeEnd = useMemo(() => {
     if (!effectiveRange?.to) return null;
     const end = new Date(effectiveRange.to);
@@ -178,87 +146,22 @@ export default function MonitoringDetailsModal({
     return end;
   }, [effectiveRange]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    if (!rangeEnabled || !rangeStart || !rangeEnd) {
-      setRangeGraphData([]);
-      setRangeGraphLoading(false);
-      return;
-    }
+  const rangeEnabled = Boolean(rangeStart && rangeEnd);
 
-    let isActive = true;
-    const controller = new AbortController();
-
-    const loadAllMeasures = async () => {
-      setRangeGraphLoading(true);
-      try {
-        const all: MeasureData[] = [];
-        const pageSize = 500;
-        let page = 1;
-        let total = 0;
-
-        do {
-          const params = new URLSearchParams({
-            page: String(page),
-            pageSize: String(pageSize),
-            source: "mesures",
-            startDate: rangeStart.toISOString(),
-            endDate: rangeEnd.toISOString(),
-            includeNullNonResponse: showNullNonResponse ? "1" : "0",
-          });
-
-          const payload = await fetchJson<{
-            measurements: MeasureData[];
-            total: number;
-            page: number;
-            pageSize: number;
-          }>(`/api/mesures/${idLieu}?${params}`, { signal: controller.signal });
-
-          if (!isActive) return;
-
-          if (Array.isArray(payload?.measurements)) {
-            all.push(...payload.measurements);
-          }
-
-          total = payload?.total ?? all.length;
-          page += 1;
-        } while (all.length < total);
-
-        const ordered = all.sort((a, b) => {
-          const dateA = a.DateHeureMesureIso
-            ? Date.parse(a.DateHeureMesureIso)
-            : Date.parse(a.DateHeureMesure);
-          const dateB = b.DateHeureMesureIso
-            ? Date.parse(b.DateHeureMesureIso)
-            : Date.parse(b.DateHeureMesure);
-          return dateA - dateB;
-        });
-
-        if (!isActive) return;
-        setRangeGraphData(ordered);
-      } catch (error) {
-        if ((error as Error)?.name === "AbortError") return;
-        console.error("Erreur chargement mesures (range):", error);
-        if (!isActive) return;
-        setRangeGraphData([]);
-      } finally {
-        if (isActive) setRangeGraphLoading(false);
-      }
-    };
-
-    void loadAllMeasures();
-    return () => {
-      isActive = false;
-      controller.abort();
-    };
-  }, [idLieu, isOpen, rangeEnabled, rangeEnd, rangeStart, showNullNonResponse]);
+  const { data: rangeGraphData, isLoading: rangeGraphLoading } = useMonitoringRangeMeasurements(idLieu, {
+    enabled: isOpen && rangeEnabled,
+    rangeStart,
+    rangeEnd,
+    includeNullNonResponse: showNullNonResponse,
+  });
 
   const hasLocalMeasurements = Boolean(initialMeasurements?.length);
   const shouldLoadBase = isOpen && isSurveillanceActive && !hasLocalMeasurements;
-  const { data: fetchedData, isLoading, reload: reloadMeasurements } = useLieuMeasurements(idLieu, {
+  const { data: fetchedData, isLoading } = useLieuMeasurements(idLieu, {
     enabled: shouldLoadBase,
     includeNullNonResponse: showNullNonResponse,
   });
+
   const baseLoading = isSurveillanceActive && shouldLoadBase && isLoading;
   const baseData = isSurveillanceActive
     ? hasLocalMeasurements
@@ -267,12 +170,7 @@ export default function MonitoringDetailsModal({
     : rangeGraphData;
   const data = rangeEnabled ? rangeGraphData : baseData;
 
-  const {
-    data: historyData,
-    isLoading: isHistoryLoading,
-    totalRows,
-    pageCount,
-  } = useLieuMeasurementsPaged(idLieu, {
+  const { data: historyData, isLoading: isHistoryLoading, totalRows, pageCount } = useLieuMeasurementsPaged(idLieu, {
     enabled: isOpen && !baseLoading && (isSurveillanceActive || rangeEnabled),
     pageIndex: pagination.pageIndex,
     pageSize: pagination.pageSize,
@@ -280,16 +178,9 @@ export default function MonitoringDetailsModal({
     endDate: rangeEnabled ? rangeEnd : null,
     includeNullNonResponse: showNullNonResponse,
   });
-  const rangeLoading = isHistoryLoading;
 
-  const orderedData = useMemo(() => {
-    if (!data.length) return data;
-    return [...data].sort((a, b) => {
-      const dateA = a.DateHeureMesureIso ? Date.parse(a.DateHeureMesureIso) : Date.parse(a.DateHeureMesure);
-      const dateB = b.DateHeureMesureIso ? Date.parse(b.DateHeureMesureIso) : Date.parse(b.DateHeureMesure);
-      return dateA - dateB;
-    });
-  }, [data]);
+  const orderedData = useMemo(() => sortMeasuresChronologically(data), [data]);
+  const orderedHistoryData = useMemo(() => sortMeasuresChronologically(historyData), [historyData]);
 
   const summary = useMemo(
     () =>
@@ -299,7 +190,7 @@ export default function MonitoringDetailsModal({
         consigne: initialConsigne,
         unite: initialUnite,
       }),
-    [orderedData, initialConsigneInf, initialConsigne, initialConsigneSup, initialUnite],
+    [initialConsigne, initialConsigneInf, initialConsigneSup, initialUnite, orderedData],
   );
 
   const { consigneSup, consigneInf, consigne, unite } = summary;
@@ -311,11 +202,8 @@ export default function MonitoringDetailsModal({
     estConsigneInfPreAlarmeActive && initialConsigneInfPreAlarme !== null && initialConsigneInfPreAlarme !== undefined
       ? Number(initialConsigneInfPreAlarme)
       : null;
-  const measuresLabel = useMemo(
-    () => t("chart.measures", { unit: unite }),
-    [t, unite],
-  );
 
+  const measuresLabel = useMemo(() => t("chart.measures", { unit: unite }), [t, unite]);
   const [yMin, yMax] = useMemo(
     () => calculateYDomain(orderedData, { consigneSup, consigneInf, consigne }),
     [consigne, consigneInf, consigneSup, orderedData],
@@ -325,21 +213,17 @@ export default function MonitoringDetailsModal({
     const chart = chartRef.current;
     const yScale = chart?.scales?.y;
     if (!yScale) return;
-    const chartArea = chart.chartArea;
-    const clamp = (value: number) => {
-      if (!chartArea) return value;
-      return Math.max(chartArea.top, Math.min(chartArea.bottom, value));
-    };
 
-    const toPos = (value: number | null) =>
-      value === null ? null : clamp(yScale.getPixelForValue(value));
+    const chartArea = chart.chartArea;
+    const clamp = (value: number) => (chartArea ? Math.max(chartArea.top, Math.min(chartArea.bottom, value)) : value);
+    const toPosition = (value: number | null) => (value === null ? null : clamp(yScale.getPixelForValue(value)));
 
     setGuidePositions({
-      sup: toPos(consigneSup),
-      inf: toPos(consigneInf),
-      consigne: toPos(consigne),
-      preSup: toPos(preAlarmSup),
-      preInf: toPos(preAlarmInf),
+      sup: toPosition(consigneSup),
+      inf: toPosition(consigneInf),
+      consigne: toPosition(consigne),
+      preSup: toPosition(preAlarmSup),
+      preInf: toPosition(preAlarmInf),
     });
   }, [consigne, consigneInf, consigneSup, preAlarmInf, preAlarmSup]);
 
@@ -361,63 +245,25 @@ export default function MonitoringDetailsModal({
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, [idLieu, isOpen, rangeEnabled]);
 
+  const { logs: auditLogs, isLoading: auditLoading, error: auditError, reset: resetAuditState } = useMonitoringAuditLogs(idLieu, {
+    enabled: isOpen && activeTab === "audit" && (isSurveillanceActive || rangeEnabled),
+    errorMessage: t("audit.error"),
+  });
+
   useEffect(() => {
     if (!isOpen) return;
     setActiveTab("graph");
-    setAuditLogs([]);
-    setAuditError(null);
-    setAuditLoaded(false);
-  }, [idLieu, isOpen, isSurveillanceActive]);
+    resetAuditState();
+  }, [idLieu, isOpen, isSurveillanceActive, resetAuditState]);
 
   useEffect(() => {
     if (!isOpen) return;
-    setAuditLogs([]);
-    setAuditError(null);
-    setAuditLoaded(false);
-  }, [isOpen, isSurveillanceActive, rangeEnabled, rangeStart, rangeEnd]);
-
-  useEffect(() => {
-    if (!isOpen || activeTab !== "audit" || auditLoaded) return;
-    if (!isSurveillanceActive && !rangeEnabled) return;
-
-    const controller = new AbortController();
-    const loadAudit = async () => {
-      try {
-        setAuditLoading(true);
-        setAuditError(null);
-
-        const response = await fetch(`/api/lieux/${idLieu}/audit?limit=200`, {
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(t("audit.error"));
-        }
-
-        const payload = await response.json();
-        if (!payload?.ok) {
-          throw new Error(payload?.message || t("audit.error"));
-        }
-
-        const nextLogs = Array.isArray(payload?.data?.logs) ? (payload.data.logs as AuditLog[]) : [];
-        setAuditLogs(nextLogs);
-        setAuditLoaded(true);
-      } catch (error) {
-        if ((error as Error)?.name === "AbortError") return;
-        setAuditError(t("audit.error"));
-      } finally {
-        setAuditLoading(false);
-      }
-    };
-
-    void loadAudit();
-    return () => controller.abort();
-  }, [activeTab, auditLoaded, idLieu, isOpen, t]);
+    resetAuditState();
+  }, [isOpen, isSurveillanceActive, rangeEnabled, rangeStart, rangeEnd, resetAuditState]);
 
   const captureZoomBounds = useCallback((chart: ChartJS<"line">) => {
     const xScale = chart.scales?.x;
     const yScale = chart.scales?.y;
-
     const next = {
       xMin: typeof xScale?.min === "number" ? xScale.min : undefined,
       xMax: typeof xScale?.max === "number" ? xScale.max : undefined,
@@ -451,172 +297,17 @@ export default function MonitoringDetailsModal({
     setZoomBounds(null);
   }, [idLieu, isOpen, rangeEnabled, rangeStart, rangeEnd]);
 
-  const orderedHistoryData = useMemo(() => {
-    if (!historyData.length) return historyData;
-    return [...historyData].sort((a, b) => {
-      const dateA = a.DateHeureMesureIso ? Date.parse(a.DateHeureMesureIso) : Date.parse(a.DateHeureMesure);
-      const dateB = b.DateHeureMesureIso ? Date.parse(b.DateHeureMesureIso) : Date.parse(b.DateHeureMesure);
-      return dateA - dateB;
-    });
-  }, [historyData]);
-  const tableMeasurements = orderedHistoryData;
-
-  const graphMeasureCount = orderedData.length;
-
-  const tableData = useMemo(() => {
-    return tableMeasurements.map((measure) => ({
-      id: measure.id,
-      dateIso: measure.DateHeureMesureIso ?? measure.DateHeureMesure,
-      dateLabel: measure.DateHeureMesure,
-      value: measure.Valeur,
-      unit: unite,
-    }));
-  }, [tableMeasurements, unite]);
-
-  const columns: ColumnDef<{
-    id: number | string;
-    dateIso: string;
-    dateLabel: string;
-    value: number | null;
-    unit: string;
-  }>[] = [
-    {
-      accessorKey: "dateIso",
-      header: t("table.columns.date_time"),
-      sortingFn: (rowA, rowB, columnId) => {
-        const a = Date.parse(rowA.getValue(columnId) as string);
-        const b = Date.parse(rowB.getValue(columnId) as string);
-        return a - b;
-      },
-      cell: ({ row }) => (
-        <span className="font-medium">{row.original.dateLabel}</span>
-      ),
-    },
-    {
-      accessorKey: "value",
-      header: t("table.columns.value"),
-      cell: ({ row }) => {
-        const value = row.getValue("value") as number | null;
-        if (value === null) {
-          return <span className="text-muted-foreground">{t("table.status.no_response")}</span>;
-        }
-        const isOutOfRange =
-          (consigneInf !== null && value < consigneInf) ||
-          (consigneSup !== null && value > consigneSup);
-
-        return (
-          <span className={isOutOfRange ? "text-red-600 dark:text-red-400 font-bold" : ""}>
-            {value}{row.original.unit}
-          </span>
-        );
-      },
-    },
-    {
-      id: "consigneInf",
-      header: t("table.columns.lower_threshold"),
-      cell: () => (
-        <span>{consigneInf !== null ? `${consigneInf}${unite}` : "-"}</span>
-      ),
-    },
-    {
-      id: "consigneSup",
-      header: t("table.columns.upper_threshold"),
-      cell: () => (
-        <span>{consigneSup !== null ? `${consigneSup}${unite}` : "-"}</span>
-      ),
-    },
-    {
-      id: "statut",
-      header: t("table.columns.status"),
-      cell: ({ row }) => {
-        const value = row.getValue("value") as number | null;
-        if (value === null) {
-          return <span className="text-muted-foreground">{t("table.status.no_response")}</span>;
-        }
-        const isOutOfRange =
-          (consigneInf !== null && value < consigneInf) ||
-          (consigneSup !== null && value > consigneSup);
-
-        return isOutOfRange ? (
-          <span className="text-red-600 dark:text-red-400 font-semibold">{t("table.status.out_of_range")}</span>
-        ) : (
-          <span className="text-green-600 dark:text-green-400">{t("table.status.ok")}</span>
-        );
-      },
-    },
-  ];
-
-  type AuditRow = {
-    id: number | string;
-    code: string;
-    label: string;
-    dateIso: string;
-    dateLabel: string;
-    user: string;
-    details: string;
-  };
-
-  const auditTableData = useMemo<AuditRow[]>(() => {
-    return auditLogs.map((log) => {
-      const dateIso = log.timestamp ?? "";
-      const dateLabel = log.timestamp ? formatDbDateTime(log.timestamp) : "-";
-
-      return {
-        id: log.id,
-        code: log.code || "-",
-        label: log.label || "-",
-        dateIso,
-        dateLabel,
-        user: log.user || "-",
-        details: log.commentaireUtilisateur || log.commentaire || "-",
-      };
-    });
-  }, [auditLogs]);
-
-  const auditColumns: ColumnDef<AuditRow>[] = [
-    {
-      accessorKey: "code",
-      header: t("audit.columns.code"),
-      cell: ({ row }) => <span className="font-medium">{row.original.code}</span>,
-    },
-    {
-      accessorKey: "label",
-      header: t("audit.columns.label"),
-      cell: ({ row }) => <span>{row.original.label}</span>,
-    },
-    {
-      accessorKey: "dateIso",
-      header: t("audit.columns.date_time"),
-      sortingFn: (rowA, rowB, columnId) => {
-        const a = Date.parse(rowA.getValue(columnId) as string);
-        const b = Date.parse(rowB.getValue(columnId) as string);
-        return a - b;
-      },
-      cell: ({ row }) => <span>{row.original.dateLabel}</span>,
-    },
-    {
-      accessorKey: "user",
-      header: t("audit.columns.user"),
-      cell: ({ row }) => <span>{row.original.user}</span>,
-    },
-    {
-      accessorKey: "details",
-      header: t("audit.columns.details"),
-      cell: ({ row }) => <span className="text-muted-foreground">{row.original.details}</span>,
-    },
-  ];
+  const isDialogLoading = rangeEnabled ? rangeGraphLoading : baseLoading;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-7xl max-h-[95vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>{nomLieu}</DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            {t("sensor", { serial: sondeNumeroSerie })}
-          </p>
+          <p className="text-sm text-muted-foreground">{t("sensor", { serial: sondeNumeroSerie })}</p>
         </DialogHeader>
 
-        {(rangeEnabled ? rangeGraphLoading : baseLoading) ? (
+        {isDialogLoading ? (
           <div className="space-y-4 pt-4">
             <Skeleton className="h-10 w-64" />
             <Skeleton className="h-100 w-full" />
@@ -629,10 +320,10 @@ export default function MonitoringDetailsModal({
                   allowEmpty
                   onUpdate={({ range }) => {
                     if (!range.from) {
-                      setDateRange(null)
-                      return
+                      setDateRange(null);
+                      return;
                     }
-                    setDateRange({ from: range.from, to: range.to ?? range.from })
+                    setDateRange({ from: range.from, to: range.to ?? range.from });
                   }}
                   align="start"
                   locale={localeTag}
@@ -640,418 +331,69 @@ export default function MonitoringDetailsModal({
                 />
               </div>
             </div>
+
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "graph" | "table" | "audit")} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-primary/10 text-primary">
-              <TabsTrigger
-                value="graph"
-                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-              >
-                {t("tabs.graph")}
-              </TabsTrigger>
-              <TabsTrigger
-                value="table"
-                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-              >
-                {t("tabs.table")}
-              </TabsTrigger>
-              <TabsTrigger
-                value="audit"
-                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-              >
-                {t("tabs.audit")}
-              </TabsTrigger>
-            </TabsList>
+              <TabsList className="grid w-full grid-cols-3 bg-primary/10 text-primary">
+                <TabsTrigger value="graph" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  {t("tabs.graph")}
+                </TabsTrigger>
+                <TabsTrigger value="table" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  {t("tabs.table")}
+                </TabsTrigger>
+                <TabsTrigger value="audit" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  {t("tabs.audit")}
+                </TabsTrigger>
+              </TabsList>
 
-            {/* Graph Tab */}
-            <TabsContent value="graph" className="space-y-4 pt-4 h-[68vh]">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-sm text-muted-foreground">
-                  {t("chart.measure_count", { count: graphMeasureCount })}
-                </span>
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant={zoomMode === "x" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setZoomMode("x")}
-                  >
-                    Zoom X
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={zoomMode === "xy" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setZoomMode("xy")}
-                  >
-                    Zoom XY
-                  </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={resetChartZoom}>
-                    {locale === "fr" ? "Reinitialiser zoom" : "Reset zoom"}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="relative h-[60vh]">
-                <Line
-                  ref={chartRef}
-                  data={{
-                    labels: orderedData.map(d => d.DateHeureMesureXaxis),
-                    datasets: [
-                      ...(consigneSup !== null
-                        ? [
-                            {
-                              label: t("chart.over_high"),
-                              data: orderedData.map(() => consigneSup),
-                              borderColor: "transparent",
-                              borderWidth: 0,
-                              pointRadius: 0,
-                              pointHoverRadius: 0,
-                              pointHitRadius: 0,
-                              hoverBorderWidth: 0,
-                              fill: "end",
-                              backgroundColor: "rgba(220, 38, 38, 0.2)",
-                              order: 0,
-                            },
-                          ]
-                        : []),
-                      ...(consigneInf !== null
-                        ? [
-                            {
-                              label: t("chart.over_low"),
-                              data: orderedData.map(() => consigneInf),
-                              borderColor: "transparent",
-                              borderWidth: 0,
-                              pointRadius: 0,
-                              pointHoverRadius: 0,
-                              pointHitRadius: 0,
-                              hoverBorderWidth: 0,
-                              fill: "start",
-                              backgroundColor: "rgba(30, 64, 175, 0.2)",
-                              order: 0,
-                            },
-                          ]
-                        : []),
-                      {
-                        label: measuresLabel,
-                        data: orderedData.map(d => (typeof d.Valeur === "number" ? d.Valeur : null)),
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                        borderWidth: 2,
-                        fill: false,
-                        tension: 0.4,
-                        pointRadius: 1,
-                        pointHoverRadius: 6,
-        pointHitRadius: 12,
-        pointStyle: "circle",
-        hoverBorderWidth: 2,
-        pointBackgroundColor: '#3b82f6',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2,
-        order: 1,
-      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        display: true,
-                        position: 'top',
-                        labels: {
-                          usePointStyle: true,
-                          padding: 20,
-                          font: {
-                            size: 12,
-                          },
-                          filter: (legendItem) =>
-                            ![t("chart.over_high"), t("chart.over_low")].includes(
-                              legendItem.text ?? "",
-                            ),
-                        },
-                      },
-                      tooltip: {
-                        enabled: true,
-                        mode: 'nearest',
-                        intersect: false,
-                        position: 'nearest',
-                        displayColors: false,
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        padding: 12,
-                        titleFont: {
-                          size: 13,
-                          weight: 'bold',
-                        },
-                        bodyFont: {
-                          size: 12,
-                        },
-                        itemSort: (a, b) => {
-                          const aIsMeasure = a.dataset.label === measuresLabel;
-                          const bIsMeasure = b.dataset.label === measuresLabel;
-                          if (aIsMeasure && !bIsMeasure) return -1;
-                          if (!aIsMeasure && bIsMeasure) return 1;
-                          return 0;
-                        },
-                        filter: (context) =>
-                          context?.dataset?.label === measuresLabel &&
-                          typeof context.dataIndex === "number",
-                        callbacks: {
-                          title: (context) => {
-                            const index = context?.[0]?.dataIndex;
-                            if (typeof index !== "number") {
-                              return "";
-                            }
-                            return orderedData[index]?.DateHeureMesure || '';
-                          },
-                          label: (context) => {
-                            const index = context?.dataIndex;
-                            if (typeof index !== "number") {
-                              return "";
-                            }
-                            const measure = orderedData[index];
-                            if (!measure || measure.Valeur === null) {
-                              return t("table.status.no_response");
-                            }
-                            return t("tooltip.value", { value: measure.Valeur, unit: unite });
-                          },
-                        },
-                      },
-                      zoom: {
-                        limits: {
-                          x: { minRange: 10 },
-                        },
-                        pan: {
-                          enabled: true,
-                          mode: zoomMode,
-                          onPanComplete: ({ chart }: { chart: ChartJS<"line"> }) => captureZoomBounds(chart),
-                        },
-                        zoom: {
-                          drag: {
-                            enabled: true,
-                            borderColor: "rgba(37, 99, 235, 0.7)",
-                            borderWidth: 1,
-                            backgroundColor: "rgba(37, 99, 235, 0.15)",
-                          },
-                          wheel: {
-                            enabled: true,
-                          },
-                          pinch: {
-                            enabled: true,
-                          },
-                          mode: zoomMode,
-                          onZoomComplete: ({ chart }: { chart: ChartJS<"line"> }) => captureZoomBounds(chart),
-                        },
-                      } as any,
-                    },
-                    scales: {
-                      x: {
-                        display: true,
-                        min: zoomBounds?.xMin,
-                        max: zoomBounds?.xMax,
-                        grid: {
-                          display: true,
-                          color: 'rgba(0, 0, 0, 0.05)',
-                        },
-                        ticks: {
-                          autoSkip: true,
-                          maxTicksLimit: 8,
-                          font: {
-                            size: 11,
-                          },
-                        },
-                      },
-                      y: {
-                        display: true,
-                        min: zoomBounds?.yMin ?? yMin,
-                        max: zoomBounds?.yMax ?? yMax,
-                        grid: {
-                          display: true,
-                          color: 'rgba(0, 0, 0, 0.1)',
-                        },
-                        ticks: {
-                          font: {
-                            size: 11,
-                          },
-                          callback: (value) => `${value}${unite}`,
-                        },
-                        title: {
-                          display: true,
-                          text: unite,
-                          font: {
-                            size: 12,
-                            weight: 'bold',
-                          },
-                        },
-                      },
-                    },
-                    interaction: {
-                      mode: 'nearest',
-                      axis: 'x',
-                      intersect: false,
-                    },
-                  }}
+              <TabsContent value="graph">
+                <MonitoringGraphTab
+                  chartRef={chartRef}
+                  orderedData={orderedData}
+                  graphMeasureCount={orderedData.length}
+                  measuresLabel={measuresLabel}
+                  locale={locale}
+                  unite={unite}
+                  consigneSup={consigneSup}
+                  consigneInf={consigneInf}
+                  consigne={consigne}
+                  preAlarmSup={preAlarmSup}
+                  preAlarmInf={preAlarmInf}
+                  guidePositions={guidePositions}
+                  yMin={yMin}
+                  yMax={yMax}
+                  zoomMode={zoomMode}
+                  zoomBounds={zoomBounds}
+                  setZoomMode={setZoomMode}
+                  resetChartZoom={resetChartZoom}
+                  captureZoomBounds={captureZoomBounds}
+                  t={t}
                 />
+              </TabsContent>
 
-                {/* Lignes de consigne superposées + labels */}
-                <div className="absolute inset-0 pointer-events-none">
-                  {preAlarmSup !== null && guidePositions.preSup !== null && (
-                    <>
-                      <div
-                        className="absolute w-full border-t border-red-500/70 border-dotted"
-                        style={{
-                          top: `${guidePositions.preSup}px`,
-                        }}
-                      />
-                      <div
-                        className="absolute right-4 text-[11px] font-medium text-red-500 bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-sm"
-                        style={{
-                          top: `${guidePositions.preSup}px`,
-                          transform: 'translateY(-50%)',
-                        }}
-                      >
-                        {locale === "fr"
-                          ? `Pre-sup: ${preAlarmSup}${unite}`
-                          : `Pre-high: ${preAlarmSup}${unite}`}
-                      </div>
-                    </>
-                  )}
-                  {consigneSup !== null && guidePositions.sup !== null && (
-                    <>
-                      <div
-                        className="absolute w-full border-t-2 border-red-500 border-dashed"
-                        style={{
-                          top: `${guidePositions.sup}px`,
-                        }}
-                      />
-                      <div
-                        className="absolute right-4 text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-md"
-                        style={{
-                          top: `${guidePositions.sup}px`,
-                          transform: 'translateY(-50%)',
-                        }}
-                      >
-                        {t("guides.max", { value: consigneSup, unit: unite })}
-                      </div>
-                    </>
-                  )}
-                  {consigne !== null && guidePositions.consigne !== null && (
-                    <>
-                      <div
-                        className="absolute w-full border-t-2 border-gray-900 dark:border-white"
-                        style={{
-                          top: `${guidePositions.consigne}px`,
-                        }}
-                      />
-                      <div
-                        className="absolute right-4 text-xs font-medium text-gray-900 dark:text-white bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-md"
-                        style={{
-                          top: `${guidePositions.consigne}px`,
-                          transform: 'translateY(-50%)',
-                        }}
-                      >
-                        {t("guides.target", { value: consigne, unit: unite })}
-                      </div>
-                    </>
-                  )}
-                  {preAlarmInf !== null && guidePositions.preInf !== null && (
-                    <>
-                      <div
-                        className="absolute w-full border-t border-blue-500/70 border-dotted"
-                        style={{
-                          top: `${guidePositions.preInf}px`,
-                        }}
-                      />
-                      <div
-                        className="absolute right-4 text-[11px] font-medium text-blue-600 dark:text-blue-300 bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-sm"
-                        style={{
-                          top: `${guidePositions.preInf}px`,
-                          transform: 'translateY(-50%)',
-                        }}
-                      >
-                        {locale === "fr"
-                          ? `Pre-inf: ${preAlarmInf}${unite}`
-                          : `Pre-low: ${preAlarmInf}${unite}`}
-                      </div>
-                    </>
-                  )}
-                  {consigneInf !== null && guidePositions.inf !== null && (
-                    <>
-                      <div
-                        className="absolute w-full border-t-2 border-red-500 border-dashed"
-                        style={{
-                          top: `${guidePositions.inf}px`,
-                        }}
-                      />
-                      <div
-                        className="absolute right-4 text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-md"
-                        style={{
-                          top: `${guidePositions.inf}px`,
-                          transform: 'translateY(-50%)',
-                        }}
-                      >
-                        {t("guides.min", { value: consigneInf, unit: unite })}
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </TabsContent>
-
-            {/* Table Tab */}
-            <TabsContent value="table" className="space-y-4 pt-4 h-140">
-              <TanStackTable
-                columns={columns}
-                data={tableData}
-                showSearch={false}
-                pageSize={pagination.pageSize}
-                emptyMessage={
-                  isSurveillanceActive
-                    ? t("table.empty")
-                    : rangeEnabled
-                      ? t("table.empty")
-                      : t("table.empty_with_range")
-                }
-                isLoading={rangeLoading}
-                manualPagination
-                pageCount={pageCount}
-                totalRows={totalRows}
-                paginationState={pagination}
-                onPaginationChange={setPagination}
-                headerClassName="!bg-sidebar !text-sidebar-foreground"
-                headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
-                tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"
-              />
-            </TabsContent>
-
-            {/* Audit Tab */}
-            <TabsContent value="audit" className="space-y-4 pt-4 h-140">
-              {auditError ? (
-                <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                  {auditError}
-                </div>
-              ) : (
-                <TanStackTable
-                  columns={auditColumns}
-                  data={auditTableData}
-                  searchField={['code', 'label', 'user', 'details']}
-                  searchPlaceholder={t("audit.search_placeholder")}
-                  pageSize={20}
-                  emptyMessage={t("audit.empty")}
-                  isLoading={auditLoading}
-                  headerClassName="!bg-sidebar !text-sidebar-foreground"
-                  headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
-                  tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"
+              <TabsContent value="table">
+                <MonitoringTableTab
+                  tableMeasurements={orderedHistoryData}
+                  unite={unite}
+                  consigneSup={consigneSup}
+                  consigneInf={consigneInf}
+                  rangeLoading={isHistoryLoading}
+                  pagination={pagination}
+                  pageCount={pageCount}
+                  totalRows={totalRows}
+                  onPaginationChange={setPagination}
+                  isSurveillanceActive={isSurveillanceActive}
+                  rangeEnabled={rangeEnabled}
+                  t={t}
                 />
-              )}
-            </TabsContent>
-          </Tabs>
+              </TabsContent>
+
+              <TabsContent value="audit">
+                <MonitoringAuditTab logs={auditLogs} isLoading={auditLoading} error={auditError} t={t} />
+              </TabsContent>
+            </Tabs>
           </div>
         )}
       </DialogContent>
     </Dialog>
   );
 }
-
-
-
-

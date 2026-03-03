@@ -159,9 +159,11 @@ namespace Vigitemp_Serveur
                         retardAlarmeBasMinutes: 0,
                         retardAlarmeHautMinutes: 0,
                         retardNonReponseMinutes: 0,
+                        retardAlarmeChangementConsigneMinutes: 0,
                         nbMesuresTemporisationRedeclenchement: 0,
                         notificationActive: false,
-                        dateHeureReactivationAlarme: default(DateTime));
+                        dateHeureReactivationAlarme: default(DateTime),
+                        planningDerniereMaj: default(DateTime));
                 }
 
                 try
@@ -190,9 +192,11 @@ namespace Vigitemp_Serveur
                                 retardAlarmeBasMinutes: 0,
                                 retardAlarmeHautMinutes: 0,
                             retardNonReponseMinutes: 0,
+                            retardAlarmeChangementConsigneMinutes: 0,
                             nbMesuresTemporisationRedeclenchement: 0,
                             notificationActive: false,
-                            dateHeureReactivationAlarme: default(DateTime));
+                            dateHeureReactivationAlarme: default(DateTime),
+                            planningDerniereMaj: default(DateTime));
                     }
                 }
                 finally
@@ -349,7 +353,7 @@ namespace Vigitemp_Serveur
                 "Id_Lieu, " +
                 "Tolerance_Surveillance_Inf as Consigne_Inf, Est_Consigne_Inf_Active, Retard_Alarme_Bas, Consigne_Inf_Pre_Alarme, Est_Consigne_Inf_Pre_Alarme_Active, " +
                 "Tolerance_Surveillance_Sup as Consigne_Sup, Est_Consigne_Sup_Active, Retard_Alarme_Haut, Consigne_Sup_Pre_Alarme, Est_Consigne_Sup_Pre_Alarme_Active, " +
-                "Retard_Non_Reponse, Nb_Mesures_Temporisation_Redeclenchement " +
+                "Retard_Non_Reponse, Retard_Alarme_Changement_Consigne, Nb_Mesures_Temporisation_Redeclenchement, Planning_Derniere_Maj " +
                 "FROM t_lieu WHERE Id_Lieu = @idLieu;");
             cmd.Parameters.AddWithValue("@idLieu", idLieu);
 
@@ -371,9 +375,11 @@ namespace Vigitemp_Serveur
                             retardAlarmeBasMinutes: 0,
                             retardAlarmeHautMinutes: 0,
                         retardNonReponseMinutes: 0,
+                        retardAlarmeChangementConsigneMinutes: 0,
                         nbMesuresTemporisationRedeclenchement: 0,
                         notificationActive: false,
-                        dateHeureReactivationAlarme: default(DateTime));
+                        dateHeureReactivationAlarme: default(DateTime),
+                        planningDerniereMaj: default(DateTime));
                 }
 
                 return new LieuAlarmSettings(
@@ -389,9 +395,11 @@ namespace Vigitemp_Serveur
                     retardAlarmeBasMinutes: GetNullableInt(reader, "Retard_Alarme_Bas", 0),
                     retardAlarmeHautMinutes: GetNullableInt(reader, "Retard_Alarme_Haut", 0),
                     retardNonReponseMinutes: Math.Max(0, GetNullableInt(reader, "Retard_Non_Reponse", 0)),
+                    retardAlarmeChangementConsigneMinutes: Math.Max(0, GetNullableInt(reader, "Retard_Alarme_Changement_Consigne", 0)),
                     nbMesuresTemporisationRedeclenchement: Math.Max(0, GetNullableInt(reader, "Nb_Mesures_Temporisation_Redeclenchement", 0)),
                     notificationActive: true,
-                    dateHeureReactivationAlarme: default(DateTime));
+                    dateHeureReactivationAlarme: default(DateTime),
+                    planningDerniereMaj: GetNullableDateTime(reader, "Planning_Derniere_Maj"));
             }
         }
 
@@ -427,9 +435,11 @@ namespace Vigitemp_Serveur
                             retardAlarmeBasMinutes: 0,
                             retardAlarmeHautMinutes: 0,
                         retardNonReponseMinutes: 0,
+                        retardAlarmeChangementConsigneMinutes: 0,
                         nbMesuresTemporisationRedeclenchement: 0,
                         notificationActive: false,
-                        dateHeureReactivationAlarme: default(DateTime));
+                        dateHeureReactivationAlarme: default(DateTime),
+                        planningDerniereMaj: default(DateTime));
                 }
 
                 var notificationActive = GetNullableBool(reader, "Notification_Active", false);
@@ -448,9 +458,11 @@ namespace Vigitemp_Serveur
                     retardAlarmeBasMinutes: GetNullableInt(reader, "Retard_Alarme_Bas", 0),
                     retardAlarmeHautMinutes: GetNullableInt(reader, "Retard_Alarme_Haut", 0),
                     retardNonReponseMinutes: Math.Max(0, GetNullableInt(reader, "Retard_Non_Reponse", 0)),
+                    retardAlarmeChangementConsigneMinutes: 0,
                     nbMesuresTemporisationRedeclenchement: 0,
                     notificationActive: notificationActive,
-                    dateHeureReactivationAlarme: reactivationAt);
+                    dateHeureReactivationAlarme: reactivationAt,
+                    planningDerniereMaj: default(DateTime));
             }
         }
 
@@ -2139,5 +2151,6 @@ namespace Vigitemp_Serveur
         }
     }
 }
+
 
 
