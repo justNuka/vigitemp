@@ -1,5 +1,6 @@
 import { applyAccessFilter, buildAlarmAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { getServerAuthenticatedUserId } from "@/lib/server-auth"
+import { log } from "@/lib/logger"
 ﻿import { unstable_noStore } from "next/cache"
 
 export interface DashboardStats {
@@ -59,7 +60,7 @@ export async function ServerDashboardStats(): Promise<DashboardStats> {
       activeAlarms,
     }
   } catch (error) {
-    console.error("Error loading dashboard stats:", error)
+    log.error("surveillance/stats", "failed_to_load_dashboard_stats", { error })
     return {
       total: 0,
       ok: 0,
@@ -104,7 +105,7 @@ export async function ServerSurveillanceRefreshIntervalSeconds(): Promise<number
 
     return parsed
   } catch (error) {
-    console.error("Error loading surveillance refresh interval:", error)
+    log.error("surveillance/stats", "failed_to_load_refresh_interval", { error })
     return DEFAULT_SECONDS
   }
 }

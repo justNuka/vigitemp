@@ -27,13 +27,17 @@ export const ModuleRepository = {
         Emplacement: true,
         Id_Serveur: true,
         Est_Module_GSO: true,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma schema mismatch: Est_Module_GSO not yet in generated types
       } as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma schema mismatch: Archive is numeric (0/1), not boolean in generated types
       where: { Archive: 0 } as any,
       orderBy: { Module_Numero_Serie: "asc" },
     })
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma schema mismatch: raw result type not inferred due to select+where cast above
     const moduleIds = modulesRaw.map((m: any) => m.Id_Module)
     const typeIds = modulesRaw
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma schema mismatch: same cast propagation from findMany above
       .map((m: any) => m.Type_Module)
       .filter((t: unknown): t is number => t !== null && t !== undefined)
 
@@ -56,6 +60,7 @@ export const ModuleRepository = {
       moduleTypes.map((t) => [t.Id_Module_Type, t.Libelle_Type_Module])
     )
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma schema mismatch: same cast propagation from findMany above
     return modulesRaw.map((module: any) => ({
       Id_Module: module.Id_Module,
       Module_Numero_Serie: module.Module_Numero_Serie,
@@ -99,6 +104,7 @@ export const ModuleRepository = {
         Delai_Reseau: data.Delai_Reseau,
         Est_Module_GSO: data.Est_Module_GSO ?? false,
         Archive: 0,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma schema mismatch: Archive is numeric (0/1) and Est_Module_GSO not in generated types
       } as any,
     })
   },

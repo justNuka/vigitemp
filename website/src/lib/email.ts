@@ -2,6 +2,7 @@ import nodemailer from "nodemailer";
 import { render } from "@react-email/components";
 import { prisma } from "@/lib/prisma";
 import { decryptSmtpPassword } from "@/lib/secret-crypto";
+import { log } from "@/lib/logger";
 
 interface EmailConfig {
   host: string;
@@ -114,7 +115,7 @@ export async function sendEmail({
     }
 
     if (!config.host || !config.user || !config.password) {
-      console.error("[Email] SMTP configuration is incomplete");
+      log.error("email", "smtp_configuration_incomplete");
       return { success: false, error: "SMTP configuration is incomplete" };
     }
 
@@ -152,7 +153,7 @@ export async function sendEmail({
     console.log(`[Email] Successfully sent email to ${to}`);
     return { success: true };
   } catch (error) {
-    console.error("[Email] Failed to send email:", error);
+    log.error("email", "failed_to_send_email", { error });
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",

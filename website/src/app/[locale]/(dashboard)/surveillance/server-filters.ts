@@ -1,5 +1,6 @@
 import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { getServerAuthenticatedUserId } from "@/lib/server-auth"
+import { log } from "@/lib/logger"
 ﻿import { unstable_noStore } from "next/cache"
 
 export interface Site {
@@ -86,7 +87,7 @@ export async function ServerFilterOptions() {
 
     return { sites, groups }
   } catch (error) {
-    console.error("Error loading filter options:", error)
+    log.error("surveillance/filters", "failed_to_load_filter_options", { error })
     return { sites: [], groups: [] }
   }
 }
