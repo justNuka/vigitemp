@@ -1,4 +1,5 @@
 import { prismaMesure } from "@/lib/prisma";
+import { log } from "@/lib/logger";
 
 /**
  * Écrit un événement d'audit dans la base de données mesure (table tm_journal)
@@ -67,6 +68,6 @@ export async function writeAuditToDatabase(params: {
     });
   } catch (error) {
     // Ne pas bloquer l'application si l'écriture en BDD échoue
-    console.error("[AUDIT DB ERROR]", error);
+    log.error("audit-db", "audit_write_failed", { error });
   }
 }

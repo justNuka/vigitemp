@@ -2,6 +2,7 @@ import "server-only";
 
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import { log } from "@/lib/logger";
 
 /**
  * Verifie si un mot de passe a deja ete utilise par l'utilisateur
@@ -55,7 +56,7 @@ export async function checkPasswordHistory(
 
     return { isReused: false };
   } catch (error) {
-    console.error("Error checking password history:", error);
+    log.error("password-history", "password_history_check_failed", { error });
     return { isReused: false };
   }
 }

@@ -1,18 +1,35 @@
 "use cache";
 
 import { cacheTag } from "next/cache";
+
+import { log } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
+const DEFAULT_SETTINGS = [
+  { key: "general:timezone", value: "Europe/Paris", label: "Timezone" },
+  { key: "general:global_language", value: "fr", label: "Global language" },
+  { key: "notifications:email", value: "true", label: "Email notifications" },
+  { key: "notifications:alarm_email_recipients", value: "", label: "CC recipients" },
+  { key: "notifications:alarm_email_acknowledged", value: "true", label: "Acknowledgement emails" },
+  { key: "notifications:alarm_email_ended", value: "true", label: "Ended alarm emails" },
+  { key: "notifications:sms", value: "false", label: "SMS notifications" },
+  { key: "alarms:sound", value: "true", label: "Alarm sound" },
+  { key: "dashboard:refresh", value: "30", label: "Dashboard refresh interval" },
+  { key: "dashboard:surveillance_refresh", value: "15", label: "Surveillance refresh interval" },
+  { key: "dashboard:show_null_non_response", value: "false", label: "Show null non-response" },
+  { key: "dashboard:etalonnage_warning_days", value: "30", label: "Calibration warning days" },
+  { key: "messaging:enabled", value: "true", label: "Internal messaging" },
+];
+
 /**
- * Composant serveur pour charger les paramètres depuis la base de données
- * Utilise le cache Next.js 16 pour optimiser les performances
+ * Server component that loads settings from the database.
+ * Uses Next.js cache tags for performance.
  */
 export async function ServerSettings() {
   "use cache";
   cacheTag("parametres-data");
 
   try {
-    // Charger TOUS les paramètres depuis la base de données
     const dbSettings = await prisma.t_parametre.findMany({
       where: {
         Section: {
@@ -25,62 +42,22 @@ export async function ServerSettings() {
         Valeur: true,
         Commentaire: true,
       },
-      orderBy: [
-        { Section: "asc" },
-        { Mot_Cle: "asc" },
-      ],
+      orderBy: [{ Section: "asc" }, { Mot_Cle: "asc" }],
     });
 
-    // Définir les paramètres par défaut (toujours affichés)
-    const defaultSettings = [
-      { key: "general:timezone", value: "Europe/Paris", label: "Fuseau horaire" },
-      { key: "general:global_language", value: "fr", label: "Langue globale (emails)" },
-      { key: "notifications:email", value: "true", label: "Notifications par email" },
-      { key: "notifications:alarm_email_recipients", value: "", label: "Emails en copie (tous les emails système)" },
-      { key: "notifications:alarm_email_acknowledged", value: "true", label: "Recevoir les emails d'acquittement" },
-      { key: "notifications:alarm_email_ended", value: "true", label: "Recevoir les emails d'alarme terminée" },
-      { key: "notifications:sms", value: "false", label: "Notifications SMS" },
-      { key: "alarms:sound", value: "true", label: "Son des alarmes" },
-      { key: "dashboard:refresh", value: "30", label: "Intervalle de rafraîchissement (s)" },
-      { key: "dashboard:surveillance_refresh", value: "15", label: "Rafraichissement surveillance (s)" },
-      { key: "dashboard:show_null_non_response", value: "false", label: "Afficher les non-reponses" },
-      { key: "dashboard:etalonnage_warning_days", value: "30", label: "Alerte validite etalonnage (jours)" },
-      { key: "messaging:enabled", value: "true", label: "Messagerie interne" },
-    ];
-
-    // Créer un Map des valeurs de la DB pour un accès rapide
     const dbSettingsMap = new Map(
       dbSettings.map((setting) => [
         `${(setting.Section || "").toLowerCase()}:${(setting.Mot_Cle || "").toLowerCase()}`,
         setting.Valeur || "false",
-      ])
+      ]),
     );
 
-    // Fusionner les valeurs par défaut avec celles de la DB
-    const settings = defaultSettings.map((defaultSetting) => ({
+    return DEFAULT_SETTINGS.map((defaultSetting) => ({
       ...defaultSetting,
-      // Remplacer par la valeur DB si elle existe, sinon garder la valeur par défaut
       value: dbSettingsMap.get(defaultSetting.key) || defaultSetting.value,
     }));
-
-    return settings;
   } catch (error) {
-    console.error("Erreur lors du chargement des paramètres:", error);
-    // Fallback sur les valeurs par défaut en cas d'erreur
-    return [
-      { key: "general:timezone", value: "Europe/Paris", label: "Fuseau horaire" },
-      { key: "general:global_language", value: "fr", label: "Langue globale (emails)" },
-      { key: "notifications:email", value: "true", label: "Notifications par email" },
-      { key: "notifications:alarm_email_recipients", value: "", label: "Emails en copie (tous les emails système)" },
-      { key: "notifications:alarm_email_acknowledged", value: "true", label: "Recevoir les emails d'acquittement" },
-      { key: "notifications:alarm_email_ended", value: "true", label: "Recevoir les emails d'alarme terminée" },
-      { key: "notifications:sms", value: "false", label: "Notifications SMS" },
-      { key: "alarms:sound", value: "true", label: "Son des alarmes" },
-      { key: "dashboard:refresh", value: "30", label: "Intervalle de rafraîchissement (s)" },
-      { key: "dashboard:surveillance_refresh", value: "15", label: "Rafraichissement surveillance (s)" },
-      { key: "dashboard:show_null_non_response", value: "false", label: "Afficher les non-reponses" },
-      { key: "dashboard:etalonnage_warning_days", value: "30", label: "Alerte validite etalonnage (jours)" },
-      { key: "messaging:enabled", value: "true", label: "Messagerie interne" },
-    ];
+    log.error("settings/server", "settings_load_failed", { error });
+    return DEFAULT_SETTINGS;
   }
 }
