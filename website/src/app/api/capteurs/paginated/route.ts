@@ -325,7 +325,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       sensors: sensorsWithMeasurements,
     }, { headers: NO_STORE_HEADERS })
   } catch (error) {
-    log.error("capteurs/paginated", "erreur_lors_de_la_r_cup_ration_des_capteurs_pagin_s", { error: error });
+    log.error("capteurs/paginated", "paginated_sensors_fetch_error", { error: error });
     return apiError(500, "internal_error", "Erreur lors du chargement des sondes")
   }
 })

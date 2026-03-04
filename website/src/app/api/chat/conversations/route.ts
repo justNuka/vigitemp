@@ -134,7 +134,7 @@ export const GET = withAuthLogging(
 
       return apiOk(conversations)
     } catch (error) {
-      log.error("chat/conversations", "get_api_chat_conversations", { error: error });
+      log.error("chat/conversations", "conversations_fetch_error", { error: error });
       return apiError(500, "conversations_fetch_failed", "Erreur lors de la recuperation des conversations")
     }
   },

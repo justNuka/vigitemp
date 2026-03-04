@@ -55,7 +55,6 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: any) => {
     return apiOk({ url: publicUrl })
   } catch (error) {
     log.error("AVATAR_UPLOAD", "Admin avatar upload failed", { user: ctx.user.username, userId: ctx.user.userId, ip, error: error instanceof Error ? error.message : String(error) })
-    log.error("utilisateurs/avatar/upload", "avatar_upload_error", { error: error });
     return apiError(500, "avatar_upload_failed", "Erreur lors de l'envoi de l'avatar")
   }
 })

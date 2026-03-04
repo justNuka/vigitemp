@@ -108,7 +108,7 @@ export const GET = withAuthLogging(
 
       return apiOk({ messages: enriched, nextCursor })
     } catch (error) {
-      log.error("chat/conversations/messages", "get_api_chat_conversations_id_messages", { error: error });
+      log.error("chat/conversations/messages", "messages_fetch_error", { error: error });
       return apiError(500, "messages_fetch_failed", "Erreur lors de la recuperation des messages")
     }
   },
@@ -167,7 +167,7 @@ export const POST = withAuthLogging(
         updatedAt: created.Date_Modification?.toISOString() ?? null,
       })
     } catch (error) {
-      log.error("chat/conversations/messages", "post_api_chat_conversations_id_messages", { error: error });
+      log.error("chat/conversations/messages", "message_send_error", { error: error });
       return apiError(500, "message_send_failed", "Erreur lors de l'envoi du message")
     }
   },

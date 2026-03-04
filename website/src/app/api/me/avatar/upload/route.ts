@@ -56,7 +56,6 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: any) => {
     return apiOk({ url: publicUrl })
   } catch (error) {
     log.error("AVATAR_UPLOAD", "Self avatar upload failed", { user: ctx.user.username, userId: ctx.user.userId, ip, error: error instanceof Error ? error.message : String(error) })
-    log.error("me/avatar/upload", "self_avatar_upload_error", { error: error });
     return apiError(500, "avatar_upload_failed", "Erreur lors de l'envoi de l'avatar")
   }
 })

@@ -169,7 +169,6 @@ export const POST = async (req: NextRequest) => {
       success: false,
       reason: message,
     })
-    log.error("sondes/ajustages/import", "post_api_sondes_ajustages_import", { error: error });
     return apiError(500, "upload_failed", "Erreur lors de l'import");
   }
 };

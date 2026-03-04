@@ -104,7 +104,6 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     log.error("AUTH_RESET_PASSWORD", "Password reset failed", { ip, error: error instanceof Error ? error.message : String(error) })
     log.audit("MDP", { user: "ANONYMOUS", userId: 0, ip, resource: "Reset password", success: false, reason: error instanceof Error ? error.message : String(error) })
-    log.error("auth/reset-password", "reset_password_error", { error: error });
     return apiError(500, "reset_password_failed", "Une erreur est survenue lors de la réinitialisation.")
   }
 })

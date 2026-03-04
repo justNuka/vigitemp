@@ -52,7 +52,7 @@ export const POST = withAuthLogging(
         titre: created.Titre,
       })
     } catch (error) {
-      log.error("chat/conversations/group", "post_api_chat_conversations_group", { error: error });
+      log.error("chat/conversations/group", "group_conversation_create_error", { error: error });
       return apiError(500, "group_conversation_failed", "Erreur lors de la creation du groupe de conversation")
     }
   },

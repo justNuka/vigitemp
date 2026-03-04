@@ -85,7 +85,6 @@ export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextReq
       success: false,
       reason: error instanceof Error ? error.message : String(error),
     })
-    log.error("audit/comments", "error_creating_updating_audit_comment", { error: error });
     return apiError(500, "audit_comment_upsert_failed", "Erreur lors de la creation/mise a jour du commentaire")
   }
 })
@@ -143,7 +142,6 @@ export const PATCH = withAuthorizationLogging("GERER_PROFIL", async (req: NextRe
       success: false,
       reason: error instanceof Error ? error.message : String(error),
     })
-    log.error("audit/comments", "error_updating_audit_comment", { error: error });
     return apiError(500, "audit_comment_update_failed", "Erreur lors de la mise a jour du commentaire")
   }
 })

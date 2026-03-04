@@ -52,7 +52,7 @@ export const POST = withAuthLogging(
 
       return new NextResponse(null, { status: 204 })
     } catch (error) {
-      log.error("chat/conversations/read", "post_api_chat_conversations_id_read", { error: error });
+      log.error("chat/conversations/read", "conversation_read_update_error", { error: error });
       return apiError(500, "read_update_failed", "Erreur lors de la mise a jour de la lecture")
     }
   },

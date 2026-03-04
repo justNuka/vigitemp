@@ -26,7 +26,7 @@ export const GET = async (req: NextRequest) => {
 
     return apiOk(serialized)
   } catch (error) {
-    log.error("sondes/calibrages", "get_api_sondes_calibrages", { error: error });
+    log.error("sondes/calibrages", "calibrages_fetch_error", { error: error });
     return apiError(500, "ajustages_fetch_failed", "Erreur lors de la recuperation des ajustages")
   }
 }

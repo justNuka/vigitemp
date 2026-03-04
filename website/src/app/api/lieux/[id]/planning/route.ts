@@ -72,7 +72,7 @@ export const GET = withLogging(
 
       return apiOk(regles.map((r) => toRegleResponse(r as PrismaRegle)))
     } catch (error) {
-      log.error("lieux/planning", "get_api_lieux_id_planning", { error: error });
+      log.error("lieux/planning", "planning_fetch_error", { error: error });
       return apiError(500, "planning_fetch_failed", "Erreur lors de la recuperation des regles de planning")
     }
   },
@@ -167,7 +167,7 @@ export const POST = withLogging(
 
       return apiOk(toRegleResponse(regle as PrismaRegle), { status: 201 })
     } catch (error) {
-      log.error("lieux/planning", "post_api_lieux_id_planning", { error: error });
+      log.error("lieux/planning", "planning_create_error", { error: error });
       return apiError(500, "planning_create_failed", "Erreur lors de la creation de la regle de planning")
     }
   },

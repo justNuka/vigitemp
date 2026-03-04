@@ -101,7 +101,7 @@ export const POST = withAuthLogging(
         throw createError
       }
     } catch (error) {
-      log.error("chat/conversations/direct", "post_api_chat_conversations_direct", { error: error });
+      log.error("chat/conversations/direct", "direct_conversation_create_error", { error: error });
       return apiError(500, "direct_conversation_failed", "Erreur lors de la creation de la conversation directe")
     }
   },

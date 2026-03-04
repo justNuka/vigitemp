@@ -55,7 +55,7 @@ export const PATCH = withLogging(
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Invalid input", { issues: error.issues })
       }
-      log.error("sites", "patch_api_sites_id", { error: error });
+      log.error("sites", "site_update_error", { error: error });
       return apiError(500, "site_update_failed", "Erreur lors de la modification du site")
     }
   },

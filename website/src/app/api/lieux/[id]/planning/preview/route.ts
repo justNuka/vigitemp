@@ -168,7 +168,7 @@ export const GET = withLogging(
 
       return apiOk(response)
     } catch (error) {
-      log.error("lieux/planning/preview", "get_api_lieux_id_planning_preview", { error: error });
+      log.error("lieux/planning/preview", "planning_preview_fetch_error", { error: error });
       return apiError(500, "planning_preview_failed", "Erreur lors du calcul du preview de planning")
     }
   },

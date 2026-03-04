@@ -112,7 +112,7 @@ export const GET = withAuthLogging(
 				logs: formatted,
 			})
 		} catch (error) {
-			log.error("lieux/audit", "get_api_lieux_id_audit", { error: error });
+			log.error("lieux/audit", "audit_fetch_error", { error: error });
 			return apiError(500, "audit_fetch_failed", "Erreur lors du chargement de l'audit")
 		}
 	},

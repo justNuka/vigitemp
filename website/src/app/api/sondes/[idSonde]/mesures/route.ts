@@ -50,7 +50,7 @@ export const GET = withAuthLogging(
       response.headers.set("Cache-Control", "public, max-age=30")
       return response
     } catch (error) {
-      log.error("sondes/mesures", "get_api_sondes_idsonde_mesures_error", { error: error });
+      log.error("sondes/mesures", "sonde_mesures_fetch_error", { error: error });
       return apiError(500, "internal_error", "Internal server error")
     }
   },

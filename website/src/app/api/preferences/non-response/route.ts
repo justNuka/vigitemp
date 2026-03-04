@@ -14,7 +14,7 @@ export const GET = withAuthLogging(async () => {
       scope: "global",
     });
   } catch (error) {
-    log.error("preferences/non-response", "get_api_preferences_non_response", { error: error });
+    log.error("preferences/non-response", "non_response_preference_fetch_error", { error: error });
     return apiError(500, "preference_fetch_failed", "Impossible de charger le param?tre global.");
   }
 });

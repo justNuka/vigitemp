@@ -71,7 +71,6 @@ export const PUT = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequ
   } catch (error) {
     const { ip } = getRequestContext(req)
     log.error("SETTINGS", "Settings upsert failed", { user: ctx.user.username, userId: ctx.user.userId, ip, error: error instanceof Error ? error.message : String(error) })
-    log.error("parametres", "update_settings_error", { error: error });
     return apiError(500, "settings_update_failed", "Erreur lors de la mise à jour")
   }
 })

@@ -40,7 +40,7 @@ export const GET = withAuthLogging(
 
       return apiOk({ count: unreadCount })
     } catch (error) {
-      log.error("chat/unread-count", "get_api_chat_unread_count", { error: error });
+      log.error("chat/unread-count", "unread_count_fetch_error", { error: error });
       return apiError(500, "unread_count_failed", "Erreur lors du comptage des messages non lus")
     }
   },
