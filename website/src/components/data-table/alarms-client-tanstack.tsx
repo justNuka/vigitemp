@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { fetchAlarmsPage, useAlarms } from "@/hooks/useAlarms";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
@@ -9,20 +9,11 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
-import { ArrowDown, ArrowUp, Filter, RefreshCw, WifiOff } from "lucide-react";
-import { useAppTimezone } from "@/components/timezone-provider";
+import { ArrowDown, ArrowUp, RefreshCw, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDbDateTime } from "@/lib/date-display";
-import { alarmsApi } from "@/lib/api";
-import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useAlarmMutations } from "@/components/data-table/alarms-mutations";
+import { AlarmsFilters } from "@/components/data-table/alarms-filters";
 
 interface AlarmRow {
   Id_Alarme: number;
@@ -64,23 +55,13 @@ export function AlarmsClientTanStack() {
   const [typeFilters, setTypeFilters] = useState<AlarmRow["Type"][]>([]);
   const page = pagination.pageIndex + 1;
   const limit = pagination.pageSize;
-const formatDateTime = (date: string | null) => {
+
+  const { acknowledgeMutation } = useAlarmMutations();
+
+  const formatDateTime = (date: string | null) => {
     if (!date) return t("date.na");
     return formatDbDateTime(date);
   };
-
-  const acknowledgeMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return alarmsApi.acknowledge(String(id), "");
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["alarms"] });
-      toast.success(t("acknowledge_success"));
-    },
-    onError: () => {
-      toast.error(t("acknowledge_error"));
-    },
-  });
 
   const columns = useMemo<ColumnDef<AlarmRow>[]>(
     () => [
@@ -253,24 +234,33 @@ const formatDateTime = (date: string | null) => {
   const tableData: AlarmRow[] = alarms
     .filter((alarm) => typeFilters.length === 0 || typeFilters.includes(alarm.Type))
     .map((alarm) => ({
-    Id_Alarme: alarm.Id_Alarme,
-    Type: alarm.Type,
-    Libelle_Lieu: alarm.Libelle_Lieu || t("unknown_location"),
-    Date_Heure_Debut: String(alarm.Date_Heure_Debut) || "",
-    Est_Alarme_Vrai: alarm.Est_Alarme_Vrai,
-    Date_Heure_Fin: alarm.Date_Heure_Fin ? String(alarm.Date_Heure_Fin) : null,
-    Est_Acquittee: alarm.Est_Acquittee,
-    Min_Threshold: alarm.Min_Threshold ?? null,
-    Max_Threshold: alarm.Max_Threshold ?? null,
-    Unite: alarm.Unite ?? null,
-    Derniere_Valeur: alarm.Derniere_Valeur ?? null,
-    Status: alarm.Status,
-    Count_30_Days: alarm.Count_30_Days ?? null,
-  }));
+      Id_Alarme: alarm.Id_Alarme,
+      Type: alarm.Type,
+      Libelle_Lieu: alarm.Libelle_Lieu || t("unknown_location"),
+      Date_Heure_Debut: String(alarm.Date_Heure_Debut) || "",
+      Est_Alarme_Vrai: alarm.Est_Alarme_Vrai,
+      Date_Heure_Fin: alarm.Date_Heure_Fin ? String(alarm.Date_Heure_Fin) : null,
+      Est_Acquittee: alarm.Est_Acquittee,
+      Min_Threshold: alarm.Min_Threshold ?? null,
+      Max_Threshold: alarm.Max_Threshold ?? null,
+      Unite: alarm.Unite ?? null,
+      Derniere_Valeur: alarm.Derniere_Valeur ?? null,
+      Status: alarm.Status,
+      Count_30_Days: alarm.Count_30_Days ?? null,
+    }));
 
   const handleRefresh = () => {
     startRefresh(() => {
       queryClient.invalidateQueries({ queryKey: ["alarms"] });
+    });
+  };
+
+  const toggleTypeFilter = (type: AlarmRow["Type"], checked: boolean) => {
+    setTypeFilters((prev) => {
+      if (checked) {
+        return prev.includes(type) ? prev : [...prev, type];
+      }
+      return prev.filter((item) => item !== type);
     });
   };
 
@@ -290,65 +280,6 @@ const formatDateTime = (date: string | null) => {
     </Button>
   );
 
-  const toggleTypeFilter = (type: AlarmRow["Type"], checked: boolean) => {
-    setTypeFilters((prev) => {
-      if (checked) {
-        return prev.includes(type) ? prev : [...prev, type];
-      }
-      return prev.filter((item) => item !== type);
-    });
-  };
-
-  const filterButton = (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 border-primary/40"
-          data-testid="button-filter-type"
-        >
-          <Filter className="h-4 w-4" />
-          <span className="hidden sm:inline">{t("filters.type_label")}</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>{t("filters.type_label")}</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuCheckboxItem
-          checked={typeFilters.length === 0}
-          onSelect={(e) => e.preventDefault()}
-          onCheckedChange={(checked) => {
-            if (checked) setTypeFilters([]);
-          }}
-        >
-          {t("filters.all")}
-        </DropdownMenuCheckboxItem>
-        <DropdownMenuCheckboxItem
-          checked={typeFilters.includes("high")}
-          onSelect={(e) => e.preventDefault()}
-          onCheckedChange={(checked) => toggleTypeFilter("high", checked === true)}
-        >
-          {t("filters.high")}
-        </DropdownMenuCheckboxItem>
-        <DropdownMenuCheckboxItem
-          checked={typeFilters.includes("low")}
-          onSelect={(e) => e.preventDefault()}
-          onCheckedChange={(checked) => toggleTypeFilter("low", checked === true)}
-        >
-          {t("filters.low")}
-        </DropdownMenuCheckboxItem>
-        <DropdownMenuCheckboxItem
-          checked={typeFilters.includes("no-response")}
-          onSelect={(e) => e.preventDefault()}
-          onCheckedChange={(checked) => toggleTypeFilter("no-response", checked === true)}
-        >
-          {t("filters.no_response")}
-        </DropdownMenuCheckboxItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-
   return (
     <Card>
       <CardHeader>
@@ -364,7 +295,16 @@ const formatDateTime = (date: string | null) => {
           maxHeight="60vh"
           isLoading={isLoading || isFetching}
           emptyMessage={t("empty")}
-          toolbarRight={<div className="flex items-center gap-2">{filterButton}{refreshButton}</div>}
+          toolbarRight={
+            <div className="flex items-center gap-2">
+              <AlarmsFilters
+                typeFilters={typeFilters}
+                onToggleTypeFilter={toggleTypeFilter}
+                onClearTypeFilters={() => setTypeFilters([])}
+              />
+              {refreshButton}
+            </div>
+          }
           manualPagination
           pageCount={pageCount}
           totalRows={total}
