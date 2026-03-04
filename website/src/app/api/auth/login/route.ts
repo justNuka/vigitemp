@@ -2,7 +2,8 @@
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 
-import { getRequestContext, withLogging } from "@/lib/api-logger"
+import { getClientIp, getRequestContext, withLogging } from "@/lib/api-logger"
+import { checkRateLimit } from "@/lib/rate-limiter"
 import { apiError, apiOk } from "@/lib/api-response"
 import {
   ACCESS_COOKIE_MAX_AGE_SECONDS,
@@ -32,6 +33,11 @@ function normalizeIpForDb(value: string): string {
 export const POST = withLogging(async (req: NextRequest) => {
   const { ip } = getRequestContext(req)
   const ipForDb = normalizeIpForDb(ip)
+
+  const rateLimit = checkRateLimit(`login:${getClientIp(req)}`, 10, 15 * 60_000)
+  if (!rateLimit.allowed) {
+    return apiError(429, "too_many_requests", "Trop de tentatives. Réessayez plus tard.")
+  }
 
   try {
     const body = await req.json()

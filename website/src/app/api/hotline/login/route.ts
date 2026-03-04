@@ -2,6 +2,8 @@ import { NextRequest } from "next/server"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getHotlineServerConfig } from "@/lib/hotline-config"
 import { log } from "@/lib/logger"
+import { getClientIp } from "@/lib/api-logger"
+import { checkRateLimit } from "@/lib/rate-limiter"
 import {
   createHotlineAccessToken,
   createHotlineRefreshToken,
@@ -17,9 +19,6 @@ type HotlineServerLoginResponse = {
   message?: string
 }
 
-const DEV_BYPASS_ENABLED =
-  process.env.NODE_ENV !== "production" && process.env.HOTLINE_DEV_BYPASS !== "0"
-
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as {
@@ -28,47 +27,44 @@ export async function POST(req: NextRequest) {
       password?: string
     }
 
+    const rateLimit = checkRateLimit(`hotline_login:${getClientIp(req)}`, 10, 15 * 60_000)
+    if (!rateLimit.allowed) {
+      return apiError(429, "too_many_requests", "Trop de tentatives. Réessayez plus tard.")
+    }
+
     const config = await getHotlineServerConfig()
     if (!body?.slug) {
       return apiError(400, "missing_hotline_slug", "Slug hotline manquant")
     }
 
     if (!config.serverHost || !config.serverPort) {
-      if (!DEV_BYPASS_ENABLED) {
-        return apiError(503, "hotline_server_missing", "Serveur hotline non configure")
-      }
-      console.warn("[HOTLINE] Dev bypass enabled: skipping C# hotline auth (server host/port missing)")
+      return apiError(503, "hotline_server_missing", "Serveur hotline non configure")
     }
 
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 4000)
 
     try {
-      if (config.serverHost && config.serverPort) {
-        const response = await fetch(
-          `http://${config.serverHost}:${config.serverPort}/api/hotline/login`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              slug: body.slug,
-              username: body.username,
-              password: body.password,
-            }),
-            signal: controller.signal,
-          },
-        )
-        const serverResponse = (await response.json()) as HotlineServerLoginResponse
-        if (!response.ok || !serverResponse?.ok) {
-          return apiError(401, "invalid_credentials", "Identifiants invalides")
-        }
+      const response = await fetch(
+        `http://${config.serverHost}:${config.serverPort}/api/hotline/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            slug: body.slug,
+            username: body.username,
+            password: body.password,
+          }),
+          signal: controller.signal,
+        },
+      )
+      const serverResponse = (await response.json()) as HotlineServerLoginResponse
+      if (!response.ok || !serverResponse?.ok) {
+        return apiError(401, "invalid_credentials", "Identifiants invalides")
       }
     } catch (error) {
-      if (!DEV_BYPASS_ENABLED) {
-        log.error("hotline/login", "hotline_server_login_error", { error: error });
-        return apiError(503, "hotline_server_unavailable", "Serveur hotline indisponible")
-      }
-      console.warn("[HOTLINE] Dev bypass enabled: C# hotline auth unavailable, login accepted")
+      log.warn("hotline/login", "hotline_server_unavailable", { error })
+      return apiError(503, "hotline_server_unavailable", "Serveur hotline indisponible")
     } finally {
       clearTimeout(timeout)
     }
@@ -82,7 +78,7 @@ export async function POST(req: NextRequest) {
     response.cookies.set(getHotlineRefreshCookieName(), refreshToken, getHotlineRefreshCookieOptions(req))
     return response
   } catch (error) {
-    log.error("hotline/login", "hotline_login_error", { error: error });
+    log.error("hotline/login", "hotline_login_error", { error })
     return apiError(500, "hotline_login_failed", "Erreur serveur")
   }
 }

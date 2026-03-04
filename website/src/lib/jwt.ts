@@ -1,6 +1,13 @@
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "NsYXb<=^MA*CK[crZ_S=mXn|)5uLF]Tqn_*Q#15%7,D";
+const jwtSecretEnv = process.env.JWT_SECRET
+if (!jwtSecretEnv) {
+  throw new Error(
+    "[SECURITY] JWT_SECRET environment variable is not set. " +
+    "Set it to a strong random string (min 32 chars) before starting the server."
+  )
+}
+const JWT_SECRET: string = jwtSecretEnv
 
 export const ACCESS_TOKEN_EXPIRES_IN = "1h";
 export const REFRESH_TOKEN_EXPIRES_IN = "7d";

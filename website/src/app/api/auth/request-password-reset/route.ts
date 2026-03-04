@@ -4,10 +4,11 @@ import { isEmailEnabled, sendEmail } from "@/lib/email"
 import PasswordResetEmail from "../../../../../emails/password-reset"
 import crypto from "crypto"
 import { z } from "zod"
-import { getRequestContext, withLogging } from "@/lib/api-logger"
+import { getClientIp, getRequestContext, withLogging } from "@/lib/api-logger"
 import { getGlobalAppLanguage } from "@/lib/app-language"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
+import { checkRateLimit } from "@/lib/rate-limiter"
 
 const requestResetSchema = z.object({
   email: z.string().email("Email invalide"),
@@ -20,6 +21,11 @@ const requestResetSchema = z.object({
 export const POST = withLogging(async (req: NextRequest) => {
   const { ip } = getRequestContext(req)
   let requestedEmail: string | undefined
+
+  const rateLimit = checkRateLimit(`pwd_reset:${getClientIp(req)}`, 5, 60 * 60_000)
+  if (!rateLimit.allowed) {
+    return apiError(429, "too_many_requests", "Trop de tentatives. Réessayez plus tard.")
+  }
 
   try {
     const body = await req.json()
@@ -58,8 +64,11 @@ export const POST = withLogging(async (req: NextRequest) => {
       data: { Reset_Password_Token: hashedToken, Reset_Password_Expires: expiresAt },
     })
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-    const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (!baseUrl) {
+      log.warn("AUTH_RESET_REQUEST", "NEXT_PUBLIC_APP_URL not set, password reset links will use localhost", { ip })
+    }
+    const resetUrl = `${baseUrl ?? "http://localhost:3000"}/reset-password?token=${resetToken}`
     const mailLocale = await getGlobalAppLanguage()
 
     await sendEmail({

@@ -119,7 +119,7 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: any) => {
             locale: mailLocale,
           }),
         })
-        console.log(`[Utilisateurs API] Account creation email sent to ${data.email}`)
+        log.info("UTILISATEURS", "account_creation_email_sent", { email: data.email })
       } catch (emailError) {
         log.error("utilisateurs", "utilisateurs_api_failed_to_send_account_creation_email", { error: emailError });
       }

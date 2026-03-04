@@ -74,7 +74,7 @@ export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_
 
         if (lieuId) {
           ackStep = "tx_set_skip_lieu_alarm_on"
-          await tx.$executeRawUnsafe("SET @SKIP_LIEU_ALARM_LOGIC = 1")
+          await tx.$executeRaw`SET @SKIP_LIEU_ALARM_LOGIC = 1`
           try {
             ackStep = "tx_recompute_lieu_state"
             const [nextActiveAlarm, remainingEndedUnack, lieu] = await Promise.all([
@@ -131,13 +131,10 @@ export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_
             })
 
             ackStep = "tx_set_immediate_retrigger_flag"
-            await tx.$executeRawUnsafe(
-              "UPDATE t_lieu SET Est_Redeclenchement_Immediat = 1 WHERE Id_Lieu = ?",
-              lieuId,
-            )
+            await tx.$executeRaw`UPDATE t_lieu SET Est_Redeclenchement_Immediat = 1 WHERE Id_Lieu = ${lieuId}`
           } finally {
             ackStep = "tx_set_skip_lieu_alarm_off"
-            await tx.$executeRawUnsafe("SET @SKIP_LIEU_ALARM_LOGIC = NULL")
+            await tx.$executeRaw`SET @SKIP_LIEU_ALARM_LOGIC = NULL`
           }
         }
 

@@ -110,7 +110,7 @@ export async function sendEmail({
     const config = await getEmailConfig();
 
     if (!config.enabled) {
-      console.log("[Email] Email sending is disabled");
+      log.info("EMAIL", "email_sending_disabled");
       return { success: false, error: "Email sending is disabled" };
     }
 
@@ -150,7 +150,7 @@ export async function sendEmail({
       attachments,
     });
 
-    console.log(`[Email] Successfully sent email to ${to}`);
+    log.info("EMAIL", "email_sent", { to });
     return { success: true };
   } catch (error) {
     log.error("email", "failed_to_send_email", { error });

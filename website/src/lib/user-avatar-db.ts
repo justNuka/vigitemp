@@ -73,11 +73,7 @@ export async function setUserAvatarValue(userId: number, avatarValue: string | n
   if (!(await hasUserAvatarColumn())) return false
 
   try {
-    await prisma.$executeRawUnsafe(
-      "UPDATE t_utilisateur SET Avatar_Utilisateur = ? WHERE Id_Utilisateur = ?",
-      avatarValue,
-      userId,
-    )
+    await prisma.$executeRaw`UPDATE t_utilisateur SET Avatar_Utilisateur = ${avatarValue} WHERE Id_Utilisateur = ${userId}`
     return true
   } catch {
     return false
