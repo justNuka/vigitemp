@@ -2,6 +2,19 @@ import { PageHeader } from "@/components/page-header";
 import { AlarmsClientTanStack } from "@/components/data-table/alarms-client-tanstack";
 import { getTranslations } from "next-intl/server";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "adminAlarmsPage" });
+  return {
+    title: t("meta.title"),
+    description: t("meta.description"),
+  };
+}
+
 export default async function AlarmsPage({
   params,
 }: {

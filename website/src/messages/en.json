@@ -186,6 +186,10 @@
           "description": "Open the general configuration."
         }
       }
+    },
+    "fallback": {
+      "unnamed_sensor": "Unnamed sensor",
+      "unassigned_site": "Unassigned"
     }
   },
   "alarmsPage": {
@@ -314,6 +318,17 @@
       "active": "Active",
       "acknowledged": "Acknowledged",
       "resolved": "To acknowledge"
+    },
+    "fallback": {
+      "unknown_unit": "Unknown unit",
+      "unknown_name": "Unknown",
+      "unknown_site": "Unassigned"
+    },
+    "messages": {
+      "no_response": "No-response alarm",
+      "high": "High alarm - {value} C",
+      "low": "Low alarm - {value} C",
+      "temperature": "Temperature alarm - {value} C"
     }
   },
   "auditPage": {
@@ -388,7 +403,8 @@
       "disabled_until": "Monitoring disabled until {date}",
       "empty_title": "No sensors",
       "unknown_site": "Unknown site",
-      "no_group": "No group"
+      "no_group": "No group",
+      "no_site": "No site"
     },
     "stats_descriptions": {
       "active_locations": "Active locations",
@@ -690,7 +706,8 @@
     "toast": {
       "archive_success": "Module archived successfully",
       "archive_error": "Error while archiving"
-    }
+    },
+    "description": "Module management"
   },
   "modulesForm": {
     "title_create": "Create a new module",
@@ -793,6 +810,11 @@
     "toast": {
       "archive_success": "Actuator archived",
       "archive_error": "Error while archiving"
+    },
+    "description": "Manage system actuators",
+    "meta": {
+      "title": "Actuators - VigiSensys",
+      "description": "Actuator management"
     }
   },
   "actuatorsForm": {
@@ -815,6 +837,11 @@
     "submit": {
       "create": "Create",
       "update": "Update"
+    },
+    "toast": {
+      "save_success": "Actuator updated successfully",
+      "create_success": "Actuator created successfully",
+      "save_error": "Error while saving actuator"
     }
   },
   "toolsPage": {
@@ -1148,7 +1175,9 @@
       "update_error": "Error while updating profile",
       "delete_success": "Profile deleted successfully",
       "delete_error": "Error while deleting profile"
-    }
+    },
+    "title": "Profile management",
+    "description": "Manage profiles and authorizations"
   },
   "profilesDialog": {
     "title_create": "Create profile",
@@ -1169,6 +1198,13 @@
     "submit_updating": "Updating...",
     "validation": {
       "name_required": "Profile name is required"
+    },
+    "domains": {
+      "administration": "Administration",
+      "metrology": "Metrology",
+      "monitoring": "Monitoring",
+      "vigilog": "VigiLog",
+      "other": "Other"
     }
   },
   "groupsDialog": {
@@ -1278,6 +1314,9 @@
       "create_success": "Standard created successfully",
       "update_success": "Standard updated successfully",
       "save_error": "Error while saving"
+    },
+    "validation": {
+      "serial_required": "Serial number is required"
     }
   },
   "groupsPage": {
@@ -1325,6 +1364,11 @@
     "toast": {
       "archive_success": "Group archived successfully",
       "archive_error": "Error while archiving"
+    },
+    "description": "Manage location groups",
+    "meta": {
+      "title": "Groups - VigiSensys",
+      "description": "Location group management"
     }
   },
   "adminSettingsPage": {
@@ -1538,6 +1582,11 @@
         "submitting": "Creating...",
         "confirm": "Continue"
       }
+    },
+    "description": "Create and manage monitored locations and their setpoints",
+    "meta": {
+      "title": "Locations - VigiSensys",
+      "description": "Monitored location management"
     }
   },
   "locationsTable": {
@@ -1569,7 +1618,11 @@
     },
     "frequency_value": "Every {count} min",
     "search_placeholder": "Search locations...",
-    "empty": "No locations found"
+    "empty": "No locations found",
+    "status": {
+      "active": "Monitoring active",
+      "disabled": "Monitoring disabled"
+    }
   },
   "sensorsPage": {
     "title": "Sensor management ({count, plural, one {# sensor} other {# sensors}})",
@@ -1656,7 +1709,9 @@
           "expired_tooltip": "Verification validity date has passed ({days} days ago)."
         }
       }
-    }
+    },
+    "description": "Manage sensors, calibrations and verifications",
+    "loading": "Loading..."
   },
   "sensorAdjustmentImport": {
     "page": {
@@ -1691,7 +1746,8 @@
     },
     "labels": {
       "no_module": "No module",
-      "module_not_selected": "No module selected"
+      "module_not_selected": "No module selected",
+      "select_module": "Select a module"
     },
     "tooltips": {
       "existing_assigned": "A module is already assigned to this sensor. To assign this sensor to another module, go to the sensors management page and edit it.",
@@ -1789,14 +1845,16 @@
       "processing": "Processing files... ({processed}/{total})",
       "process_done": "Processing finished. {count} file(s) imported.",
       "process_errors": "{count} file(s) could not be imported.",
-      "process_result": "Success: {success} ? Failed: {failed}"
+      "process_result": "Success: {success} • Failed: {failed}"
     }
   },
   "sensorCalibrationImport": {
     "page": {
       "title": "Calibration import",
       "description": "Import XML files to create calibrations",
-      "back_to_admin": "Back to administration"
+      "back_to_admin": "Back to administration",
+      "blocked_title": "Calibration import unavailable",
+      "blocked_description": "This page is not available with your current license."
     },
     "actions": {
       "import": "Import files",
@@ -1941,6 +1999,11 @@
       "description": "Are you sure you want to archive this standard? This action cannot be undone.",
       "cancel": "Cancel",
       "confirm": "Archive"
+    },
+    "description": "Manage calibration standards",
+    "blocked": {
+      "title": "Standards management unavailable",
+      "description": "This page is not available with your current license."
     }
   },
   "sitesPage": {
@@ -1962,7 +2025,8 @@
       "update_error": "Error while updating site",
       "archive_success": "Site archived successfully",
       "archive_error": "Error while archiving site"
-    }
+    },
+    "description": "Create, edit and archive sites in your infrastructure"
   },
   "sitesDialog": {
     "create_title": "Create a new site",
@@ -3247,6 +3311,14 @@
         "unassigned": "Unassigned sensors",
         "etalons": "Standards"
       }
+    },
+    "actions": {
+      "open_page": "Open page"
+    },
+    "summary": {
+      "alarms_title": "Alarms",
+      "alarms_description": "In progress: {inProgress} • Pending acknowledgement: {pending}",
+      "alarms_helper": "Alarms pending acknowledgement: {pending}"
     }
   },
   "cacheControls": {
@@ -3467,7 +3539,10 @@
       "na": "-"
     },
     "search_placeholder": "Search sites...",
-    "empty": "No sites found"
+    "empty": "No sites found",
+    "errors": {
+      "no_site_selected": "No site selected"
+    }
   },
   "userForm": {
     "fields": {
@@ -3556,6 +3631,15 @@
       "archive_error": "Error while archiving account",
       "reactivate_success": "Account reactivated successfully",
       "reactivate_error": "Error while reactivating account"
+    },
+    "description": "Manage user accounts",
+    "password_rules_checklist": {
+      "title": "Security rules:",
+      "min_length": "At least {count} character{count, plural, one {} other {s}}",
+      "min_uppercase": "At least {count} uppercase letter{count, plural, one {} other {s}}",
+      "min_lowercase": "At least {count} lowercase letter{count, plural, one {} other {s}}",
+      "min_numbers": "At least {count} digit{count, plural, one {} other {s}}",
+      "min_special": "At least {count} special character{count, plural, one {} other {s}}"
     }
   },
   "createUserDialog": {
@@ -3656,6 +3740,212 @@
       "yesterday": "Yesterday",
       "date_separator_today": "Today",
       "date_separator_yesterday": "Yesterday"
+    }
+  },
+  "testPages": {
+    "index": {
+      "title": "Test pages",
+      "description": "Development tools and performance tests - automatically disabled in production",
+      "performance": {
+        "title": "Performance tests",
+        "description": "Test pages to measure the impact of Next.js 16 cache on each section. Compare timings before/after optimization (~20-50ms vs ~1000-2000ms)."
+      },
+      "cards": {
+        "monitoring": {
+          "title": "Monitoring",
+          "description": "Sensors and statistics"
+        },
+        "alarms": {
+          "title": "Alarms",
+          "description": "Alarm list and statistics"
+        },
+        "audit": {
+          "title": "Audit",
+          "description": "Log and events"
+        },
+        "settings": {
+          "title": "Settings",
+          "description": "System configuration"
+        },
+        "users": {
+          "title": "Users",
+          "description": "User management"
+        }
+      },
+      "api_tools": {
+        "title": "API tools"
+      },
+      "api_revalidate": {
+        "title": "API Revalidate",
+        "description": "Endpoint to invalidate cache manually",
+        "features": {
+          "get": "GET: invalidates all dashboard caches",
+          "post": "POST: invalidates a specific tag",
+          "dev_only": "Available in dev only"
+        }
+      },
+      "actions": {
+        "test": "Test",
+        "open_tool": "Open {title}"
+      },
+      "guide": {
+        "title": "How to use performance tests?",
+        "step1_title": "1. Measure cold cache (first load)",
+        "step1_description": "Open DevTools > Network, clear cache (Ctrl+Shift+Del), reload. Note the timing (~1000-2000ms without cache).",
+        "step2_title": "2. Measure warm cache (active cache)",
+        "step2_description": "Reload several times (F5). Next.js 16 cache serves data instantly (~20-50ms). Improvement of 50x to 100x.",
+        "step3_title": "3. Compare with the previous version",
+        "step3_description": "In each page folder, rename `page.tsx` and `page-old.tsx` to test the client-only version (without optimization).",
+        "build_title": "Full test build",
+        "build_description": "Measure real production timings (~5-15ms with cache)."
+      }
+    },
+    "monitoring": {
+      "title": "Monitoring",
+      "description": "Overview of monitored sensors and locations",
+      "stats_title": "Real-time statistics",
+      "locations_title": "Locations",
+      "how_to_test_title": "How to test?",
+      "how_to_test": {
+        "refresh": "1. Refresh: reloads from cache (instant ~10ms)",
+        "invalidate": "2. Invalidate cache: forces reload from MySQL (~200ms)",
+        "compare": "3. Compare timings in the Network tab (F12)"
+      }
+    },
+    "alarms": {
+      "disabled": "Test page disabled.",
+      "title": "Performance test - Alarms",
+      "description": "Test page using Cache Components to measure /alarms page performance",
+      "instructions": {
+        "title": "Test instructions",
+        "description": "How to test performance with Cache Components",
+        "step1_title": "1. First load (cold cache)",
+        "step1_description": "Open DevTools Network, clear cache (Ctrl+Shift+Del), reload the page. Note the load time.",
+        "step2_title": "2. Subsequent reloads (warm cache)",
+        "step2_description": "Reload the page several times (F5). Data is served from the Next.js 16 cache. It should be 50x to 100x faster (~20-60ms).",
+        "step3_title": "3. Compare with the previous version",
+        "step3_description": "Temporarily rename `page.tsx` and `page-old.tsx` to test the client-only version and compare performance."
+      },
+      "stats": {
+        "active": "Active",
+        "acknowledged": "Acknowledged",
+        "resolved": "Resolved",
+        "total": "Total"
+      },
+      "loaded_in": "Loaded in <strong>{duration}ms</strong>",
+      "list": {
+        "count": "{count} alarm{count, plural, one {} other {s}} loaded",
+        "more": "+ {count} more"
+      },
+      "cards": {
+        "stats_title": "Statistics (cached)",
+        "stats_cache": "Cache tag: \"alarms-stats\"",
+        "list_title": "Alarm list (cached)",
+        "list_cache": "Cache tag: \"alarms-data\""
+      },
+      "cache_tags": {
+        "title": "Used cache tags",
+        "alarms_data": "Complete alarm list",
+        "alarms_stats": "Aggregated statistics (counters)"
+      }
+    },
+    "audit": {
+      "title": "Performance test - Audit",
+      "description": "Test page using Cache Components to measure /audit page performance",
+      "instructions": {
+        "title": "Test instructions",
+        "description": "How to test performance with Cache Components",
+        "step1_title": "1. First load (cold cache)",
+        "step1_description": "Open DevTools Network, clear cache (Ctrl+Shift+Del), reload the page. Note the load time.",
+        "step2_title": "2. Subsequent reloads (warm cache)",
+        "step2_description": "Reload the page several times (F5). Data is served from the Next.js 16 cache. It should be 50x to 100x faster (~20-60ms).",
+        "step3_title": "3. Compare with the previous version",
+        "step3_description": "Temporarily rename `page.tsx` and `page-old.tsx` to test the client-only version and compare performance."
+      },
+      "cards": {
+        "stats_title": "Statistics (cached)",
+        "stats_cache": "Cache tag: \"audit-stats\"",
+        "logs_title": "Recent logs (cached)",
+        "logs_cache": "Cache tag: \"audit-logs\""
+      },
+      "cache_tags": {
+        "title": "Used cache tags",
+        "audit_logs": "Full audit log (last 100 events)",
+        "audit_stats": "Statistics (total, last 24h)"
+      },
+      "stats": {
+        "total_events": "Total events",
+        "last_24h": "Last 24h"
+      },
+      "logs": {
+        "count": "{count} recent event{count, plural, one {} other {s}}",
+        "system": "System"
+      },
+      "loaded_in": "Loaded in <strong>{duration}ms</strong>"
+    },
+    "settings": {
+      "title": "Performance test - Settings",
+      "description": "Test page using Cache Components to measure /settings page performance",
+      "instructions": {
+        "title": "Test instructions",
+        "description": "How to test performance with Cache Components",
+        "step1_title": "1. First load (cold cache)",
+        "step1_description": "Open DevTools Network, clear cache (Ctrl+Shift+Del), reload the page. Note the load time.",
+        "step2_title": "2. Subsequent reloads (warm cache)",
+        "step2_description": "Reload the page several times (F5). Data is served from the Next.js 16 cache. It should be 50x to 100x faster (~20-60ms).",
+        "step3_title": "3. Compare with the previous version",
+        "step3_description": "Temporarily rename `page.tsx` and `page-old.tsx` to test the client-only version and compare performance."
+      },
+      "cards": {
+        "settings_title": "Settings (cached)",
+        "settings_cache": "Cache tag: \"parametres-data\""
+      },
+      "cache_tags": {
+        "title": "Used cache tags",
+        "settings": "Complete application configuration"
+      },
+      "values": {
+        "enabled": "Enabled",
+        "disabled": "Disabled"
+      },
+      "loaded_count": "{count} setting{count, plural, one {} other {s}} loaded in <strong>{duration}ms</strong>"
+    },
+    "users": {
+      "title": "Performance test - Users",
+      "description": "Test page using Cache Components to measure /users page performance",
+      "instructions": {
+        "title": "Test instructions",
+        "description": "How to test performance with Cache Components",
+        "step1_title": "1. First load (cold cache)",
+        "step1_description": "Open DevTools Network, clear cache (Ctrl+Shift+Del), reload the page. Note the load time.",
+        "step2_title": "2. Subsequent reloads (warm cache)",
+        "step2_description": "Reload the page several times (F5). Data is served from the Next.js 16 cache. It should be 50x to 100x faster (~20-60ms).",
+        "step3_title": "3. Compare with the previous version",
+        "step3_description": "Temporarily rename `page.tsx` and `page-old.tsx` to test the client-only version and compare performance."
+      },
+      "cards": {
+        "users_title": "Users (cached)",
+        "users_cache": "Cache tag: \"users-data\""
+      },
+      "cache_tags": {
+        "title": "Used cache tags",
+        "users": "Complete list of users with their roles"
+      },
+      "stats": {
+        "total": "Total",
+        "admins": "Admins",
+        "active": "Active"
+      },
+      "roles": {
+        "admin": "Admin",
+        "user": "User"
+      },
+      "statuses": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "more": "+ {count} more",
+      "loaded_count": "{count} user{count, plural, one {} other {s}} loaded in <strong>{duration}ms</strong>"
     }
   }
 }

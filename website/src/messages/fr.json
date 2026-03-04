@@ -159,7 +159,7 @@
     },
     "one": {
       "title": "Tableau de bord",
-      "subtitle": "Acces rapide aux sections principales",
+      "subtitle": "Accès rapide aux sections principales",
       "links": {
         "surveillance": {
           "title": "Surveillance",
@@ -186,6 +186,10 @@
           "description": "Acceder aux reglages generaux."
         }
       }
+    },
+    "fallback": {
+      "unnamed_sensor": "Capteur sans nom",
+      "unassigned_site": "Non assigné"
     }
   },
   "surveillance": {
@@ -244,7 +248,8 @@
       "disabled_until": "Surveillance désactivée jusqu'au {date}",
       "empty_title": "Aucune sonde",
       "unknown_site": "Site inconnu",
-      "no_group": "Sans groupe"
+      "no_group": "Sans groupe",
+      "no_site": "Sans site"
     },
     "stats_descriptions": {
       "active_locations": "Lieux actifs",
@@ -325,8 +330,8 @@
         "notifications_sms": "Notifications SMS",
         "alarms_sound": "Son des alarmes",
         "dashboard_refresh": "Intervalle de rafraîchissement (s)",
-        "surveillance_refresh": "Rafraichissement surveillance (s)",
-        "show_null_non_response": "Afficher les non-reponses (valeur null)",
+        "surveillance_refresh": "Rafraîchissement surveillance (s)",
+        "show_null_non_response": "Afficher les non-réponses (valeur nulle)",
         "etalonnage_warning_days": "Alerte validite etalonnage (jours)",
         "global_language": "Langue globale des emails"
       },
@@ -340,7 +345,7 @@
         "custom": "{seconds} secondes"
       },
       "language_options": {
-        "fr": "Francais",
+        "fr": "Français",
         "en": "English"
       },
       "warning_days_options": {
@@ -385,13 +390,13 @@
     },
     "notifications": {
       "title": "Notifications",
-      "description": "Gérer les preferences de notifications",
+      "description": "Gérer les préférences de notifications",
       "email_toggle": "Activer les emails d'alarme",
       "acknowledged_toggle": "Recevoir les emails d'acquittement",
       "ended_toggle": "Recevoir les emails d'alarme terminée",
       "cc_recipients_label": "Emails en copie (tous les emails système)",
       "cc_recipients_placeholder": "ex: support@mc2-info.com\nadmin@client.fr",
-      "cc_recipients_helper": "Un email par ligne, ou separes par virgule/point-virgule.",
+      "cc_recipients_helper": "Un email par ligne, ou séparés par virgule/point-virgule.",
       "save_button": "Enregistrer"
     },
     "password_policy": {
@@ -595,6 +600,17 @@
       "active": "En cours",
       "acknowledged": "Acquittée",
       "resolved": "Terminée (à acquitter)"
+    },
+    "fallback": {
+      "unknown_unit": "Unité inconnue",
+      "unknown_name": "Inconnu",
+      "unknown_site": "Non assigné"
+    },
+    "messages": {
+      "no_response": "Alarme non réponse",
+      "high": "Alarme haute - {value} C",
+      "low": "Alarme basse - {value} C",
+      "temperature": "Alarme température - {value} C"
     }
   },
   "adminAlarmsPage": {
@@ -650,6 +666,11 @@
         "submitting": "Création...",
         "confirm": "Continuer"
       }
+    },
+    "description": "Créez et gérez les lieux de surveillance avec leurs consignes",
+    "meta": {
+      "title": "Lieux - VigiSensys",
+      "description": "Gestion des lieux de surveillance"
     }
   },
   "locationsTable": {
@@ -938,7 +959,8 @@
     "toast": {
       "archive_success": "Module archivé avec succès",
       "archive_error": "Erreur lors de l'archivage"
-    }
+    },
+    "description": "Gestion des modules"
   },
   "modulesForm": {
     "title_create": "Créer un nouveau module",
@@ -1041,6 +1063,11 @@
     "toast": {
       "archive_success": "Actionneur archivé",
       "archive_error": "Erreur lors de l'archivage"
+    },
+    "description": "Gérer les actionneurs du système",
+    "meta": {
+      "title": "Actionneurs - VigiSensys",
+      "description": "Gestion des actionneurs du système"
     }
   },
   "actuatorsForm": {
@@ -1063,6 +1090,11 @@
     "submit": {
       "create": "Créer",
       "update": "Mettre à jour"
+    },
+    "toast": {
+      "save_success": "Actionneur modifié avec succès",
+      "create_success": "Actionneur créé avec succès",
+      "save_error": "Erreur lors de la sauvegarde de l'actionneur"
     }
   },
   "toolsPage": {
@@ -1365,7 +1397,7 @@
       "dashboards": "Tableaux de bord",
       "management": "Gestion",
       "system": "Système",
-      "metrology": "Metrologie"
+      "metrology": "Métrologie"
     },
     "dashboards": {
       "user": "Utilisateur",
@@ -1396,7 +1428,9 @@
       "update_error": "Erreur lors de la mise à jour",
       "delete_success": "Profil supprimé avec succès",
       "delete_error": "Erreur lors de la suppression"
-    }
+    },
+    "title": "Gestion des profils",
+    "description": "Administration des profils et autorisations"
   },
   "profilesDialog": {
     "title_create": "Créer un profil",
@@ -1417,6 +1451,13 @@
     "submit_updating": "Mise à jour...",
     "validation": {
       "name_required": "Le nom du profil est requis"
+    },
+    "domains": {
+      "administration": "Administration",
+      "metrology": "Métrologie",
+      "monitoring": "Surveillance",
+      "vigilog": "VigiLog",
+      "other": "Autres"
     }
   },
   "groupsDialog": {
@@ -1526,6 +1567,9 @@
       "create_success": "Étalon créé avec succès",
       "update_success": "Étalon mis à jour avec succès",
       "save_error": "Erreur lors de la sauvegarde"
+    },
+    "validation": {
+      "serial_required": "Numéro de série requis"
     }
   },
   "groupsPage": {
@@ -1573,6 +1617,11 @@
     "toast": {
       "archive_success": "Groupe archivé avec succès",
       "archive_error": "Erreur lors de l'archivage"
+    },
+    "description": "Gestion des groupes de lieux",
+    "meta": {
+      "title": "Groupes - VigiSensys",
+      "description": "Gestion des groupes de lieux"
     }
   },
   "sensorsPage": {
@@ -1660,7 +1709,9 @@
           "expired_tooltip": "La date de validité de l'étalonnage est dépassée (depuis {days} jours)."
         }
       }
-    }
+    },
+    "description": "Gestion des sondes, calibrages et étalonnages",
+    "loading": "Chargement..."
   },
   "sensorAdjustmentImport": {
     "page": {
@@ -1695,7 +1746,8 @@
     },
     "labels": {
       "no_module": "Aucun module",
-      "module_not_selected": "Module non sélectionné"
+      "module_not_selected": "Module non sélectionné",
+      "select_module": "Sélectionner un module"
     },
     "tooltips": {
       "existing_assigned": "Module déjà affecté à cette sonde. Pour affecter cette sonde à un nouveau module, rendez-vous sur la page de gestion des sondes et modifiez celle-ci.",
@@ -1708,7 +1760,8 @@
     "edit": {
       "title": "Modifier les données",
       "operator": "Opérateur",
-      "unit": "Unité"
+      "unit": "Unité",
+      "validity_days": "Validité (jours)"
     },
     "toast": {
       "save_success": "{count} ligne(s) insérée(s) en base.",
@@ -1799,7 +1852,9 @@
     "page": {
       "title": "Import d'étalonnage",
       "description": "Importer des fichiers XML pour créer des étalonnages",
-      "back_to_admin": "Retour à l'administration"
+      "back_to_admin": "Retour à l'administration",
+      "blocked_title": "Import d'étalonnage indisponible",
+      "blocked_description": "Cette page n'est pas disponible avec votre licence actuelle."
     },
     "actions": {
       "import": "Importer des fichiers",
@@ -1944,6 +1999,11 @@
       "description": "Êtes-vous sûr de vouloir archiver cet étalon ? Cette action ne pourra pas être annulée.",
       "cancel": "Annuler",
       "confirm": "Archiver"
+    },
+    "description": "Gérez les étalons de calibration",
+    "blocked": {
+      "title": "Gestion des étalons indisponible",
+      "description": "Cette page n'est pas disponible avec votre licence actuelle."
     }
   },
   "sitesPage": {
@@ -1965,7 +2025,8 @@
       "update_error": "Erreur lors de la modification du site",
       "archive_success": "Site archivé avec succès",
       "archive_error": "Erreur lors de l'archivage du site"
-    }
+    },
+    "description": "Créez, modifiez et archivez les sites de votre infrastructure"
   },
   "sitesDialog": {
     "create_title": "Créer un nouveau site",
@@ -2924,7 +2985,7 @@
       "subtitle": "Tout ce que vous devez savoir avant de passer à Standard.",
       "items": {
         "0": {
-          "question": "Les donnees sortent-elles de notre site ?",
+          "question": "Les données sortent-elles de notre site ?",
           "answer": "Non. VigiSensys fonctionne a 100% en on-premise. Aucune donnee ne transite par le cloud. Tout reste sur votre infrastructure locale."
         },
         "1": {
@@ -3250,6 +3311,14 @@
         "unassigned": "Sondes non affectees",
         "etalons": "Etalons"
       }
+    },
+    "actions": {
+      "open_page": "Accéder à la page"
+    },
+    "summary": {
+      "alarms_title": "Alarmes",
+      "alarms_description": "En cours: {inProgress} • En attente d'acquittement: {pending}",
+      "alarms_helper": "Alarmes en attente d'acquittement: {pending}"
     }
   },
   "cacheControls": {
@@ -3344,7 +3413,7 @@
       "enabled": "Notifications activées"
     },
     "errors": {
-      "title": "Vous n'êtes pas connecté.",
+      "title": "Une erreur est survenue.",
       "default": "Une erreur est survenue.",
       "with_id": "{message} (ID: {id})"
     }
@@ -3562,6 +3631,15 @@
       "archive_error": "Erreur lors de l'archivage",
       "reactivate_success": "Compte réactivé avec succès",
       "reactivate_error": "Erreur lors de la réactivation"
+    },
+    "description": "Administration des comptes utilisateurs",
+    "password_rules_checklist": {
+      "title": "Règles de sécurité :",
+      "min_length": "Au moins {count} caractère{count, plural, one {} other {s}}",
+      "min_uppercase": "Au moins {count} majuscule{count, plural, one {} other {s}}",
+      "min_lowercase": "Au moins {count} minuscule{count, plural, one {} other {s}}",
+      "min_numbers": "Au moins {count} chiffre{count, plural, one {} other {s}}",
+      "min_special": "Au moins {count} caractère spécial{count, plural, one {} other {ux}}"
     }
   },
   "createUserDialog": {
@@ -3662,6 +3740,212 @@
       "yesterday": "Hier",
       "date_separator_today": "Aujourd'hui",
       "date_separator_yesterday": "Hier"
+    }
+  },
+  "testPages": {
+    "index": {
+      "title": "Pages de test",
+      "description": "Outils de développement et tests de performance - désactivés automatiquement en production",
+      "performance": {
+        "title": "Tests de performance",
+        "description": "Pages de test pour mesurer l'impact du cache Next.js 16 sur chaque section. Comparez les temps avant/après optimisation (~20-50ms vs ~1000-2000ms)."
+      },
+      "cards": {
+        "monitoring": {
+          "title": "Surveillance",
+          "description": "Capteurs et statistiques"
+        },
+        "alarms": {
+          "title": "Alarmes",
+          "description": "Liste et statistiques d'alarmes"
+        },
+        "audit": {
+          "title": "Audit",
+          "description": "Journal et événements"
+        },
+        "settings": {
+          "title": "Paramètres",
+          "description": "Configuration système"
+        },
+        "users": {
+          "title": "Utilisateurs",
+          "description": "Gestion des utilisateurs"
+        }
+      },
+      "api_tools": {
+        "title": "Outils API"
+      },
+      "api_revalidate": {
+        "title": "API Revalidate",
+        "description": "Endpoint pour invalider manuellement le cache",
+        "features": {
+          "get": "GET : invalide tous les caches dashboard",
+          "post": "POST : invalide un tag spécifique",
+          "dev_only": "Disponible uniquement en dev"
+        }
+      },
+      "actions": {
+        "test": "Tester",
+        "open_tool": "Accéder à {title}"
+      },
+      "guide": {
+        "title": "Comment utiliser les tests de performance ?",
+        "step1_title": "1. Mesurer le cold cache (première charge)",
+        "step1_description": "Ouvrir DevTools > Network, vider le cache (Ctrl+Shift+Del), recharger. Noter le temps (~1000-2000ms sans cache).",
+        "step2_title": "2. Mesurer le warm cache (cache actif)",
+        "step2_description": "Recharger plusieurs fois (F5). Le cache Next.js 16 sert les données instantanément (~20-50ms). Amélioration de 50x ? 100x.",
+        "step3_title": "3. Comparer avec l'ancienne version",
+        "step3_description": "Dans chaque dossier de page, renommer `page.tsx` et `page-old.tsx` pour tester la version client-only (sans optimisation).",
+        "build_title": "Build de test complet",
+        "build_description": "Mesurer les temps réels de production (~5-15ms avec cache)."
+      }
+    },
+    "monitoring": {
+      "title": "Surveillance",
+      "description": "Vue d'ensemble des capteurs et emplacements surveillés",
+      "stats_title": "Statistiques en temps réel",
+      "locations_title": "Emplacements",
+      "how_to_test_title": "Comment tester ?",
+      "how_to_test": {
+        "refresh": "1. Refresh : recharge depuis le cache (instantané ~10ms)",
+        "invalidate": "2. Invalider cache : force le rechargement depuis MySQL (~200ms)",
+        "compare": "3. Comparer les temps dans l'onglet Network (F12)"
+      }
+    },
+    "alarms": {
+      "disabled": "Page de test désactivée.",
+      "title": "Test de performance - Alarmes",
+      "description": "Page de test avec Cache Components pour mesurer les performances de la page /alarms",
+      "instructions": {
+        "title": "Instructions de test",
+        "description": "Comment tester les performances avec Cache Components",
+        "step1_title": "1. Première charge (cold cache)",
+        "step1_description": "Ouvrir DevTools Network, vider le cache (Ctrl+Shift+Del), recharger la page. Noter le temps de chargement.",
+        "step2_title": "2. Rechargements suivants (warm cache)",
+        "step2_description": "Recharger la page plusieurs fois (F5). Les données sont servies depuis le cache Next.js 16. Le temps devrait être 50x ? 100x plus rapide (~20-60ms).",
+        "step3_title": "3. Comparer avec l'ancienne version",
+        "step3_description": "Renommer temporairement `page.tsx` et `page-old.tsx` pour tester la version client-only et comparer les performances."
+      },
+      "stats": {
+        "active": "Actives",
+        "acknowledged": "Acquittées",
+        "resolved": "Résolues",
+        "total": "Total"
+      },
+      "loaded_in": "Chargé en <strong>{duration}ms</strong>",
+      "list": {
+        "count": "{count} alarme{count, plural, one {} other {s}} chargée{count, plural, one {} other {s}}",
+        "more": "+ {count} autres"
+      },
+      "cards": {
+        "stats_title": "Statistiques (cached)",
+        "stats_cache": "Cache tag: \"alarms-stats\"",
+        "list_title": "Liste d'alarmes (cached)",
+        "list_cache": "Cache tag: \"alarms-data\""
+      },
+      "cache_tags": {
+        "title": "Cache tags utilisés",
+        "alarms_data": "Liste complète des alarmes",
+        "alarms_stats": "Statistiques agrégées (compteurs)"
+      }
+    },
+    "audit": {
+      "title": "Test de performance - Audit",
+      "description": "Page de test avec Cache Components pour mesurer les performances de la page /audit",
+      "instructions": {
+        "title": "Instructions de test",
+        "description": "Comment tester les performances avec Cache Components",
+        "step1_title": "1. Première charge (cold cache)",
+        "step1_description": "Ouvrir DevTools Network, vider le cache (Ctrl+Shift+Del), recharger la page. Noter le temps de chargement.",
+        "step2_title": "2. Rechargements suivants (warm cache)",
+        "step2_description": "Recharger la page plusieurs fois (F5). Les données sont servies depuis le cache Next.js 16. Le temps devrait être 50x ? 100x plus rapide (~20-60ms).",
+        "step3_title": "3. Comparer avec l'ancienne version",
+        "step3_description": "Renommer temporairement `page.tsx` et `page-old.tsx` pour tester la version client-only et comparer les performances."
+      },
+      "cards": {
+        "stats_title": "Statistiques (cached)",
+        "stats_cache": "Cache tag: \"audit-stats\"",
+        "logs_title": "Logs récents (cached)",
+        "logs_cache": "Cache tag: \"audit-logs\""
+      },
+      "cache_tags": {
+        "title": "Cache tags utilisés",
+        "audit_logs": "Journal d'audit complet (100 derniers événements)",
+        "audit_stats": "Statistiques (total, dernières 24h)"
+      },
+      "stats": {
+        "total_events": "Total événements",
+        "last_24h": "Dernières 24h"
+      },
+      "logs": {
+        "count": "{count} événement{count, plural, one {} other {s}} récent{count, plural, one {} other {s}}",
+        "system": "Système"
+      },
+      "loaded_in": "Chargé en <strong>{duration}ms</strong>"
+    },
+    "settings": {
+      "title": "Test de performance - Paramètres",
+      "description": "Page de test avec Cache Components pour mesurer les performances de la page /settings",
+      "instructions": {
+        "title": "Instructions de test",
+        "description": "Comment tester les performances avec Cache Components",
+        "step1_title": "1. Première charge (cold cache)",
+        "step1_description": "Ouvrir DevTools Network, vider le cache (Ctrl+Shift+Del), recharger la page. Noter le temps de chargement.",
+        "step2_title": "2. Rechargements suivants (warm cache)",
+        "step2_description": "Recharger la page plusieurs fois (F5). Les données sont servies depuis le cache Next.js 16. Le temps devrait être 50x ? 100x plus rapide (~20-60ms).",
+        "step3_title": "3. Comparer avec l'ancienne version",
+        "step3_description": "Renommer temporairement `page.tsx` et `page-old.tsx` pour tester la version client-only et comparer les performances."
+      },
+      "cards": {
+        "settings_title": "Paramètres (cached)",
+        "settings_cache": "Cache tag: \"parametres-data\""
+      },
+      "cache_tags": {
+        "title": "Cache tags utilisés",
+        "settings": "Configuration complète de l'application"
+      },
+      "values": {
+        "enabled": "Activé",
+        "disabled": "Désactivé"
+      },
+      "loaded_count": "{count} paramètre{count, plural, one {} other {s}} chargé{count, plural, one {} other {s}} en <strong>{duration}ms</strong>"
+    },
+    "users": {
+      "title": "Test de performance - Utilisateurs",
+      "description": "Page de test avec Cache Components pour mesurer les performances de la page /users",
+      "instructions": {
+        "title": "Instructions de test",
+        "description": "Comment tester les performances avec Cache Components",
+        "step1_title": "1. Première charge (cold cache)",
+        "step1_description": "Ouvrir DevTools Network, vider le cache (Ctrl+Shift+Del), recharger la page. Noter le temps de chargement.",
+        "step2_title": "2. Rechargements suivants (warm cache)",
+        "step2_description": "Recharger la page plusieurs fois (F5). Les données sont servies depuis le cache Next.js 16. Le temps devrait être 50x ? 100x plus rapide (~20-60ms).",
+        "step3_title": "3. Comparer avec l'ancienne version",
+        "step3_description": "Renommer temporairement `page.tsx` et `page-old.tsx` pour tester la version client-only et comparer les performances."
+      },
+      "cards": {
+        "users_title": "Utilisateurs (cached)",
+        "users_cache": "Cache tag: \"users-data\""
+      },
+      "cache_tags": {
+        "title": "Cache tags utilisés",
+        "users": "Liste complète des utilisateurs avec leurs rôles"
+      },
+      "stats": {
+        "total": "Total",
+        "admins": "Admins",
+        "active": "Actifs"
+      },
+      "roles": {
+        "admin": "Admin",
+        "user": "Utilisateur"
+      },
+      "statuses": {
+        "active": "Actif",
+        "inactive": "Inactif"
+      },
+      "more": "+ {count} autre{count, plural, one {} other {s}}",
+      "loaded_count": "{count} utilisateur{count, plural, one {} other {s}} chargé{count, plural, one {} other {s}} en <strong>{duration}ms</strong>"
     }
   }
 }
