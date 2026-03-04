@@ -1,4 +1,4 @@
-﻿import { NextRequest } from "next/server"
+import { NextRequest } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
 import { getRequestContext, withLogging } from "@/lib/api-logger"
@@ -197,7 +197,7 @@ export const POST = withLogging(async (req: NextRequest) => {
 
   if (!isAuthorized(req)) {
     log.warn("ALARM_DISPATCH", "Rejected alarm dispatch: invalid secret", { ip })
-    return apiError(401, "unauthorized", "Non autorisÃ©")
+    return apiError(401, "unauthorized", "Non autorisé")
   }
 
   const body = await req.json().catch(() => null)
@@ -296,9 +296,9 @@ export const POST = withLogging(async (req: NextRequest) => {
       locationLabel = [siteName, lieuName].filter(Boolean).join(" / ")
       title ??= "Alarme Vigitemp"
       const alarmType =
-        alarm.Type === "H" ? "Alarme haute" : alarm.Type === "B" ? "Alarme basse" : alarm.Type === "N" ? "Non reponse" : "Alarme"
+        alarm.Type === "H" ? "Alarme haute" : alarm.Type === "B" ? "Alarme basse" : alarm.Type === "N" ? "Non r?ponse" : "Alarme"
       alarmTypeCode = alarm.Type ?? undefined
-      const valueLabel = `${alarm.Valeur ?? "N/A"}${alarm.Unite ?? "Â°C"}`
+      const valueLabel = `${alarm.Valeur ?? "N/A"}${alarm.Unite ?? "°C"}`
       alarmTypeLabel = alarmType
       lastValueLabel = valueLabel
       triggeredAtDate = alarm.Date_Heure_Debut_Alarme_Vrai ?? alarm.Date_Heure_Debut ?? null
@@ -314,15 +314,15 @@ export const POST = withLogging(async (req: NextRequest) => {
         alarm.t_lieu?.Tolerance_Surveillance_Inf ?? alarm.t_lieu?.Consigne_Inf ?? null
       consigneInfValue = infTolerance != null ? Number(infTolerance) : null
       const thresholds = [
-        supTolerance != null ? `Sup ${supTolerance}${alarm.Unite ?? "Â°C"}` : null,
-        infTolerance != null ? `Inf ${infTolerance}${alarm.Unite ?? "Â°C"}` : null,
+        supTolerance != null ? `Sup ${supTolerance}${alarm.Unite ?? "°C"}` : null,
+        infTolerance != null ? `Inf ${infTolerance}${alarm.Unite ?? "°C"}` : null,
       ].filter(Boolean).join(" / ")
       const preAlarms = [
         alarm.t_lieu?.Consigne_Sup_Pre_Alarme != null
-          ? `PrÃ© sup ${alarm.t_lieu?.Consigne_Sup_Pre_Alarme}${alarm.Unite ?? "Â°C"}`
+          ? `Pré sup ${alarm.t_lieu?.Consigne_Sup_Pre_Alarme}${alarm.Unite ?? "°C"}`
           : null,
         alarm.t_lieu?.Consigne_Inf_Pre_Alarme != null
-          ? `PrÃ© inf ${alarm.t_lieu?.Consigne_Inf_Pre_Alarme}${alarm.Unite ?? "Â°C"}`
+          ? `Pré inf ${alarm.t_lieu?.Consigne_Inf_Pre_Alarme}${alarm.Unite ?? "°C"}`
           : null,
       ].filter(Boolean).join(" / ")
       const delays = [
@@ -338,7 +338,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         `Type: ${alarmType}`,
         `Valeur: ${valueLabel}`,
         thresholds ? `Seuils: ${thresholds}` : null,
-        preAlarms ? `PrÃ©-alarmes: ${preAlarms}` : null,
+        preAlarms ? `Pré-alarmes: ${preAlarms}` : null,
         delays ? `Retards: ${delays}` : null,
       ].filter(Boolean)
 
@@ -348,7 +348,7 @@ export const POST = withLogging(async (req: NextRequest) => {
   }
 
   title ??= "Alarme Vigitemp"
-  messageBody ??= "Une alarme a Ã©tÃ© dÃ©clenchÃ©e."
+  messageBody ??= "Une alarme a été déclenchée."
   url ??= defaultUrl
 
   const alarmUrl = url.startsWith("http")

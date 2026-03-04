@@ -150,7 +150,7 @@ export const POST = async (req: NextRequest) => {
       ip,
       error: message,
     })
-    console.error("[POST /api/sondes/etalonnages/preview]", error);
+    log.error("sondes/etalonnages/preview", "post_api_sondes_etalonnages_preview", { error: error });
     return apiError(500, "preview_failed", "Erreur lors de la preparation");
   }
 };

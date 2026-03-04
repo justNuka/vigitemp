@@ -92,7 +92,7 @@ export const PATCH = withAuthLogging(
       }
 
       const message = error instanceof Error ? error.message : "Erreur lors de la mise a jour";
-      console.error("[PATCH /api/sondes/etalonnages/[id]]", error);
+      log.error("sondes/etalonnages", "patch_api_sondes_etalonnages_id", { error: error });
       return apiError(500, "update_failed", message);
     }
   },

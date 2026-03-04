@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { prismaMesure } from "@/lib/prisma"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
 
 const FALLBACK_CODE_LABELS: Record<string, string> = {
 	AACT: "Association d'un module d'alarme %1",
@@ -111,7 +112,7 @@ export const GET = withAuthLogging(
 				logs: formatted,
 			})
 		} catch (error) {
-			console.error("[GET /api/lieux/[id]/audit]", error)
+			log.error("lieux/audit", "get_api_lieux_id_audit", { error: error });
 			return apiError(500, "audit_fetch_failed", "Erreur lors du chargement de l'audit")
 		}
 	},

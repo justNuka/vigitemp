@@ -43,7 +43,7 @@ export const GET = withLogging(async (req: NextRequest) => {
 
     return apiOk(formattedSites)
   } catch (error) {
-    console.error("[GET /api/sites]", error)
+    log.error("sites", "get_api_sites", { error: error });
     return apiError(500, "sites_fetch_failed", "Erreur lors de la récupération des sites")
   }
 })
@@ -79,7 +79,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     if (error instanceof z.ZodError) {
       return apiError(400, "validation_error", "Invalid input", { issues: error.issues })
     }
-    console.error("[POST /api/sites]", error)
+    log.error("sites", "post_api_sites", { error: error });
     return apiError(500, "site_create_failed", "Erreur lors de la création du site")
   }
 })

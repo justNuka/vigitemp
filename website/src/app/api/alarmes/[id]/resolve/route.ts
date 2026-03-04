@@ -75,7 +75,7 @@ export const POST = withAuthLogging(
         resolvedAt: alarm.Date_Heure_Fin?.toISOString() || null,
       })
     } catch (error) {
-      console.error("Resolve alarm error:", error)
+      log.error("alarmes/resolve", "resolve_alarm_error", { error: error });
       return apiError(500, "alarm_resolve_failed", "Failed to resolve alarm")
     }
   },

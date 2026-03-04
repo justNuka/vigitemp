@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getHotlineServerConfig } from "@/lib/hotline-config"
+import { log } from "@/lib/logger"
 import {
   createHotlineAccessToken,
   createHotlineRefreshToken,
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
       }
     } catch (error) {
       if (!DEV_BYPASS_ENABLED) {
-        console.error("[HOTLINE] Server login error:", error)
+        log.error("hotline/login", "hotline_server_login_error", { error: error });
         return apiError(503, "hotline_server_unavailable", "Serveur hotline indisponible")
       }
       console.warn("[HOTLINE] Dev bypass enabled: C# hotline auth unavailable, login accepted")
@@ -81,7 +82,7 @@ export async function POST(req: NextRequest) {
     response.cookies.set(getHotlineRefreshCookieName(), refreshToken, getHotlineRefreshCookieOptions(req))
     return response
   } catch (error) {
-    console.error("[HOTLINE] Login error:", error)
+    log.error("hotline/login", "hotline_login_error", { error: error });
     return apiError(500, "hotline_login_failed", "Erreur serveur")
   }
 }

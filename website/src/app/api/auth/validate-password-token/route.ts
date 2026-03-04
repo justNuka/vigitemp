@@ -48,7 +48,7 @@ export const POST = withLogging(
     } catch (error) {
       const { ip } = getRequestContext(req)
       log.error("AUTH_FORCE_PASSWORD", "Temp token validation error", { ip, error: error instanceof Error ? error.message : String(error) })
-      console.error("[AUTH] Token validation error:", error)
+      log.error("auth/validate-password-token", "auth_token_validation_error", { error: error });
       return apiError(500, "token_validation_failed", "Erreur serveur")
     }
   },

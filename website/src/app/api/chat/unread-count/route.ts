@@ -4,6 +4,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { checkChatAccess } from "@/lib/chat-guard"
 import type { JWTPayload } from "@/lib/jwt"
+import { log } from "@/lib/logger"
 
 export const GET = withAuthLogging(
   async (_req: NextRequest, ctx: { user: JWTPayload }) => {
@@ -39,7 +40,7 @@ export const GET = withAuthLogging(
 
       return apiOk({ count: unreadCount })
     } catch (error) {
-      console.error("[GET /api/chat/unread-count]", error)
+      log.error("chat/unread-count", "get_api_chat_unread_count", { error: error });
       return apiError(500, "unread_count_failed", "Erreur lors du comptage des messages non lus")
     }
   },

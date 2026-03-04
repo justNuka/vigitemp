@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server";
 
-import { apiOk, apiError } from "@/lib/api-response";
-import { getGlobalNonResponseDefault } from "@/lib/non-response-preference";
+import { apiError, apiOk } from "@/lib/api-response";
 import { withAuthLogging } from "@/lib/api-wrappers";
+import { getGlobalNonResponseDefault } from "@/lib/non-response-preference";
+import { log } from "@/lib/logger"
 
 export const GET = withAuthLogging(async () => {
   try {
@@ -13,13 +14,13 @@ export const GET = withAuthLogging(async () => {
       scope: "global",
     });
   } catch (error) {
-    console.error("[GET /api/preferences/non-response]", error);
-    return apiError(500, "preference_fetch_failed", "Impossible de charger le parametre global.");
+    log.error("preferences/non-response", "get_api_preferences_non_response", { error: error });
+    return apiError(500, "preference_fetch_failed", "Impossible de charger le param?tre global.");
   }
 });
 
 async function methodNotAllowed(_req: NextRequest) {
-  return apiError(405, "method_not_allowed", "La preference est desormais globale et en lecture seule ici.");
+  return apiError(405, "method_not_allowed", "La pr?f?rence est d?sormais globale et en lecture seule ici.");
 }
 
 export const PUT = withAuthLogging(methodNotAllowed);

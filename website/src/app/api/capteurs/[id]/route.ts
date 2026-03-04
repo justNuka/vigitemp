@@ -82,7 +82,7 @@ export const GET = withAuthLogging(
         maxThreshold: lieu.Tolerance_Surveillance_Sup ?? lieu.Consigne_Sup,
       })
     } catch (error) {
-      console.error("Get sensor error:", error)
+      log.error("capteurs", "get_sensor_error", { error: error });
       return apiError(500, "internal_error", "Failed to fetch sensor")
     }
   },
@@ -170,7 +170,7 @@ export const PATCH = withAuthLogging(
         return apiError(400, "invalid_input", "Invalid input")
       }
 
-      console.error("Update sensor error:", error)
+      log.error("capteurs", "update_sensor_error", { error: error });
       return apiError(500, "internal_error", "Failed to update sensor")
     }
   },
@@ -205,7 +205,7 @@ export const DELETE = withAuthLogging(
 
       return apiOk({ success: true })
     } catch (error) {
-      console.error("Delete sensor error:", error)
+      log.error("capteurs", "delete_sensor_error", { error: error });
       return apiError(500, "internal_error", "Failed to delete sensor")
     }
   },

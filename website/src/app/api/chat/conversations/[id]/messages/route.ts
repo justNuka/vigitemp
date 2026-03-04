@@ -9,6 +9,7 @@ import { getUserAvatarMap } from "@/lib/user-avatar-db"
 import type { UserInfo } from "@/lib/chat-types"
 import { z } from "zod"
 import type { JWTPayload } from "@/lib/jwt"
+import { log } from "@/lib/logger"
 
 const TAKE = 50
 
@@ -107,7 +108,7 @@ export const GET = withAuthLogging(
 
       return apiOk({ messages: enriched, nextCursor })
     } catch (error) {
-      console.error("[GET /api/chat/conversations/[id]/messages]", error)
+      log.error("chat/conversations/messages", "get_api_chat_conversations_id_messages", { error: error });
       return apiError(500, "messages_fetch_failed", "Erreur lors de la recuperation des messages")
     }
   },
@@ -166,7 +167,7 @@ export const POST = withAuthLogging(
         updatedAt: created.Date_Modification?.toISOString() ?? null,
       })
     } catch (error) {
-      console.error("[POST /api/chat/conversations/[id]/messages]", error)
+      log.error("chat/conversations/messages", "post_api_chat_conversations_id_messages", { error: error });
       return apiError(500, "message_send_failed", "Erreur lors de l'envoi du message")
     }
   },

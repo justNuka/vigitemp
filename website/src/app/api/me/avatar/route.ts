@@ -19,7 +19,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
     return apiOk({ avatar })
   } catch (error) {
     log.error("AVATAR", "Self avatar fetch failed", { user: ctx.user.username, userId: ctx.user.userId, ip, error: error instanceof Error ? error.message : String(error) })
-    console.error("Get self avatar error:", error)
+    log.error("me/avatar", "get_self_avatar_error", { error: error });
     return apiError(500, "avatar_fetch_failed", "Erreur lors de la lecture de l'avatar")
   }
 })
@@ -41,7 +41,7 @@ export const PATCH = withAuthLogging(async (req: NextRequest, ctx: any) => {
     }
 
     log.error("AVATAR", "Self avatar update failed", { user: ctx.user.username, userId: ctx.user.userId, ip, error: error instanceof Error ? error.message : String(error) })
-    console.error("Update self avatar error:", error)
+    log.error("me/avatar", "update_self_avatar_error", { error: error });
     return apiError(500, "avatar_update_failed", "Erreur lors de la mise a jour de l'avatar")
   }
 })

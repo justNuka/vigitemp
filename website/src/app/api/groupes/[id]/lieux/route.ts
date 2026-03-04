@@ -3,6 +3,7 @@ import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
 
 export const GET = withLogging(
   async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
@@ -39,7 +40,7 @@ export const GET = withLogging(
 
       return apiOk(lieux)
     } catch (error) {
-      console.error("Lieux fetch error:", error)
+      log.error("groupes/lieux", "lieux_fetch_error", { error: error });
       return apiError(500, "lieux_fetch_failed", "Erreur lors de la récupération des lieux")
     }
   },

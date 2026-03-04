@@ -78,7 +78,7 @@ export const PATCH = withAuthLogging(
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Invalid input", { issues: error.issues })
       }
-      console.error("[PATCH /api/groupes/[id]/alarm]", error)
+      log.error("groupes/alarm", "patch_api_groupes_id_alarm", { error: error });
       return apiError(500, "alarm_toggle_failed", "Erreur lors de la mise à jour des alarmes")
     }
   },

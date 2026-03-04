@@ -5,6 +5,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { checkChatAccess } from "@/lib/chat-guard"
 import { z } from "zod"
 import type { JWTPayload } from "@/lib/jwt"
+import { log } from "@/lib/logger"
 
 const groupBodySchema = z.object({
   titre: z.string().min(1).max(128),
@@ -51,7 +52,7 @@ export const POST = withAuthLogging(
         titre: created.Titre,
       })
     } catch (error) {
-      console.error("[POST /api/chat/conversations/group]", error)
+      log.error("chat/conversations/group", "post_api_chat_conversations_group", { error: error });
       return apiError(500, "group_conversation_failed", "Erreur lors de la creation du groupe de conversation")
     }
   },

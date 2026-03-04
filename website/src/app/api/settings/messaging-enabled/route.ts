@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiOk } from "@/lib/api-response"
 import type { JWTPayload } from "@/lib/jwt"
+import { log } from "@/lib/logger"
 
 export const GET = withAuthLogging(
   async (_req: NextRequest, _ctx: { user: JWTPayload }) => {
@@ -14,7 +15,7 @@ export const GET = withAuthLogging(
       const enabled = setting ? setting.Valeur === "true" : true
       return apiOk({ enabled })
     } catch (error) {
-      console.error("[GET /api/settings/messaging-enabled] Failed to fetch setting", error)
+      log.error("settings/messaging-enabled", "get_api_settings_messaging_enabled_failed_to_fetch_setting", { error: error });
       return apiOk({ enabled: true })
     }
   },

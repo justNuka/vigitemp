@@ -105,7 +105,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       success: false,
       reason: error instanceof Error ? error.message : String(error),
     })
-    console.error("Request password reset error:", error)
+    log.error("auth/request-password-reset", "request_password_reset_error", { error: error });
     return apiError(500, "request_password_reset_failed", "Une erreur est survenue lors de la demande de reinitialisation.")
   }
 })

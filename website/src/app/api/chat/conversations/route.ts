@@ -8,6 +8,7 @@ import { getInitialsForAvatar, resolveAvatarSrc } from "@/lib/avatar-library"
 import { getUserAvatarMap } from "@/lib/user-avatar-db"
 import type { UserInfo } from "@/lib/chat-types"
 import type { JWTPayload } from "@/lib/jwt"
+import { log } from "@/lib/logger"
 
 type ConversationItem = {
   id: number
@@ -133,7 +134,7 @@ export const GET = withAuthLogging(
 
       return apiOk(conversations)
     } catch (error) {
-      console.error("[GET /api/chat/conversations]", error)
+      log.error("chat/conversations", "get_api_chat_conversations", { error: error });
       return apiError(500, "conversations_fetch_failed", "Erreur lors de la recuperation des conversations")
     }
   },

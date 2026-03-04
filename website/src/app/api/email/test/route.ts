@@ -4,6 +4,7 @@ import { withAuthorizationLogging } from "@/lib/api-wrappers"
 import PasswordResetEmail from "../../../../../emails/password-reset"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getGlobalAppLanguage } from "@/lib/app-language"
+import { log } from "@/lib/logger"
 
 /**
  * POST /api/email/test
@@ -47,7 +48,7 @@ export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextReq
       email: toEmail,
     })
   } catch (error) {
-    console.error("Test email error:", error)
+    log.error("email/test", "test_email_error", { error: error });
     return apiError(500, "email_send_failed", error instanceof Error ? error.message : "Failed to send test email")
   }
 })

@@ -50,7 +50,7 @@ export const GET = withAdminLogging(
 
       return apiOk(formattedSites)
     } catch (error) {
-      console.error("Get user sites error:", error)
+      log.error("utilisateurs/sites", "get_user_sites_error", { error: error });
       return apiError(500, "user_sites_fetch_failed", "Failed to fetch user sites")
     }
   },
@@ -134,7 +134,7 @@ export const POST = withAdminLogging(
         },
       })
     } catch (error) {
-      console.error("Add site to user error:", error)
+      log.error("utilisateurs/sites", "add_site_to_user_error", { error: error });
       return apiError(500, "user_site_assign_failed", "Failed to assign site to user")
     }
   },

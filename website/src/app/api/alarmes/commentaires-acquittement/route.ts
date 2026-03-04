@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
 
 export const GET = withAuthLogging(async (_req: NextRequest) => {
   try {
@@ -24,7 +25,7 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
       }))
     )
   } catch (error) {
-    console.error("Get alarm acknowledgment comments error:", error)
+    log.error("alarmes/commentaires-acquittement", "get_alarm_acknowledgment_comments_error", { error: error });
     return apiError(500, "comments_fetch_failed", "Failed to fetch comments")
   }
 })

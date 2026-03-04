@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
 
 export const GET = withAuthLogging(
   async (_req: NextRequest, _ctx: any, { params }: { params: Promise<{ id: string }> }) => {
@@ -48,7 +49,7 @@ export const GET = withAuthLogging(
         count: activeCount + histoCount,
       })
     } catch (error) {
-      console.error("Get alarm stats error:", error)
+      log.error("alarmes/stats", "get_alarm_stats_error", { error: error });
       return apiError(500, "alarm_stats_failed", "Failed to fetch alarm stats")
     }
   }

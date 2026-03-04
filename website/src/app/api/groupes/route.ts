@@ -50,7 +50,7 @@ export const GET = withLogging(async (req: NextRequest) => {
 
     return apiOk(groupesWithCounts)
   } catch (error) {
-    console.error("Groupes fetch error:", error)
+    log.error("groupes", "groupes_fetch_error", { error: error });
     return apiError(500, "groupes_fetch_failed", "Erreur lors de la récupération des groupes")
   }
 })
@@ -89,7 +89,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       nombre_lieux: 0,
     })
   } catch (error) {
-    console.error("Groupe creation error:", error)
+    log.error("groupes", "groupe_creation_error", { error: error });
     return apiError(500, "groupe_create_failed", "Erreur lors de la création du groupe")
   }
 })

@@ -42,7 +42,7 @@ export const GET = withAdminLogging(
 
       return apiOk(formattedGroups)
     } catch (error) {
-      console.error("Get user groups error:", error)
+      log.error("utilisateurs/groupes", "get_user_groups_error", { error: error });
       return apiError(500, "user_groups_fetch_failed", "Failed to fetch user groups")
     }
   },
@@ -113,7 +113,7 @@ export const POST = withAdminLogging(
         },
       })
     } catch (error) {
-      console.error("Add group to user error:", error)
+      log.error("utilisateurs/groupes", "add_group_to_user_error", { error: error });
       return apiError(500, "user_group_assign_failed", "Failed to assign group to user")
     }
   },

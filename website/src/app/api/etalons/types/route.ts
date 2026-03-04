@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from "@/lib/auth"
 import { withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { requireStandardOrExpertLicense } from "@/lib/license-guards"
+import { log } from "@/lib/logger"
 
 export const GET = withLogging(async (req: NextRequest) => {
   try {
@@ -29,7 +30,7 @@ export const GET = withLogging(async (req: NextRequest) => {
 
     return apiOk(types)
   } catch (error) {
-    console.error("Etalon types fetch error:", error)
+    log.error("etalons/types", "etalon_types_fetch_error", { error: error });
     return apiError(500, "etalon_types_fetch_failed", "Erreur lors de la récupération des types d'étalons")
   }
 })

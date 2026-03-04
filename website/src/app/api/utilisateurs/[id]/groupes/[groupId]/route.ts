@@ -55,7 +55,7 @@ export const DELETE = withAdminLogging(
         message: "Group removed from user successfully",
       })
     } catch (error) {
-      console.error("Remove group from user error:", error)
+      log.error("utilisateurs/groupes", "remove_group_from_user_error", { error: error });
       return apiError(500, "user_group_remove_failed", "Failed to remove group from user")
     }
   },

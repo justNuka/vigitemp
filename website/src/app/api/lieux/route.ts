@@ -190,7 +190,7 @@ export const GET = withLogging(async (req: NextRequest) => {
 
     return apiOk(normalized)
   } catch (error) {
-    console.error("[GET /api/lieux]", error)
+    log.error("lieux", "get_api_lieux", { error: error });
     return apiError(500, "lieux_fetch_failed", "Erreur lors de la récupération des lieux")
   }
 })
@@ -432,7 +432,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     if (error instanceof z.ZodError) {
       return apiError(400, "validation_error", "Invalid input", { issues: error.issues })
     }
-    console.error("[POST /api/lieux]", error)
+    log.error("lieux", "post_api_lieux", { error: error });
     return apiError(500, "lieu_create_failed", "Erreur lors de la création du lieu")
   }
 })

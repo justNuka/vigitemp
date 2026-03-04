@@ -59,7 +59,7 @@ export const PATCH = withLogging(
         nombre_lieux,
       })
     } catch (error) {
-      console.error("Groupe update error:", error)
+      log.error("groupes", "groupe_update_error", { error: error });
       return apiError(500, "groupe_update_failed", "Erreur lors de la mise à jour du groupe")
     }
   },
@@ -121,7 +121,7 @@ export const DELETE = withLogging(
         Est_Archive: updated.Est_Archive,
       })
     } catch (error) {
-      console.error("Groupe archive error:", error)
+      log.error("groupes", "groupe_archive_error", { error: error });
       return apiError(500, "groupe_archive_failed", "Erreur lors de l'archivage du groupe")
     }
   },

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
 
 export const GET = async (req: NextRequest) => {
   const user = getAuthenticatedUser(req)
@@ -25,7 +26,7 @@ export const GET = async (req: NextRequest) => {
 
     return apiOk(serialized)
   } catch (error) {
-    console.error("[GET /api/sondes/calibrages]", error)
+    log.error("sondes/calibrages", "get_api_sondes_calibrages", { error: error });
     return apiError(500, "ajustages_fetch_failed", "Erreur lors de la recuperation des ajustages")
   }
 }

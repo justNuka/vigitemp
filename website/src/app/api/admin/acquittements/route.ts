@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
+import { log } from "@/lib/logger"
 
 /**
  * GET /api/admin/acquittements?page=1&limit=10
@@ -55,7 +56,7 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
       pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
     })
   } catch (error) {
-    console.error("Error fetching acknowledgments:", error)
+    log.error("admin/acquittements", "error_fetching_acknowledgments", { error: error });
     return apiError(500, "internal_error", "Failed to fetch acknowledgments")
   }
 })

@@ -68,7 +68,7 @@ export const GET = withAuthorizationLogging(
         description: setting.Commentaire || null,
       })
     } catch (error) {
-      console.error("Get setting error:", error)
+      log.error("parametres", "get_setting_error", { error: error });
       return apiError(500, "setting_fetch_failed", "Failed to fetch setting")
     }
   },
@@ -130,7 +130,7 @@ export const PATCH = withAuthorizationLogging(
         return apiError(400, "validation_error", "Invalid input")
       }
 
-      console.error("Update setting error:", error)
+      log.error("parametres", "update_setting_error", { error: error });
       return apiError(500, "setting_update_failed", "Failed to update setting")
     }
   },

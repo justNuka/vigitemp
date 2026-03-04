@@ -4,6 +4,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError } from "@/lib/api-response"
 import { checkChatAccess, verifyParticipant } from "@/lib/chat-guard"
 import type { JWTPayload } from "@/lib/jwt"
+import { log } from "@/lib/logger"
 
 type RouteParams = { params: Promise<{ id: string }> }
 
@@ -51,7 +52,7 @@ export const POST = withAuthLogging(
 
       return new NextResponse(null, { status: 204 })
     } catch (error) {
-      console.error("[POST /api/chat/conversations/[id]/read]", error)
+      log.error("chat/conversations/read", "post_api_chat_conversations_id_read", { error: error });
       return apiError(500, "read_update_failed", "Erreur lors de la mise a jour de la lecture")
     }
   },

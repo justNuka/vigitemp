@@ -52,7 +52,7 @@ export const DELETE = withAdminLogging(
         message: "Site removed from user successfully",
       })
     } catch (error) {
-      console.error("Remove site from user error:", error)
+      log.error("utilisateurs/sites", "remove_site_from_user_error", { error: error });
       return apiError(500, "user_site_remove_failed", "Failed to remove site from user")
     }
   },

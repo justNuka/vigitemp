@@ -8,6 +8,7 @@ import { applyAccessFilter, buildAlarmAccessFilter, getUserLocationScope } from 
 import { withAuthLogging } from "@/lib/api-wrappers"
 
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
 
 const alarmsQuerySchema = z.object({
   status: z.enum(["active", "acknowledged", "resolved"]).optional(),
@@ -359,7 +360,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
   } catch (error) {
 
-    console.error("Get alarms error:", error)
+    log.error("alarmes", "get_alarms_error", { error: error });
 
     return apiError(500, "alarms_fetch_failed", "Failed to fetch alarms")
 

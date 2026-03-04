@@ -49,7 +49,7 @@ export const GET = withAdminLogging(
         avatar: avatarValue,
       })
     } catch (error) {
-      console.error("Get utilisateur error:", error)
+      log.error("utilisateurs", "get_utilisateur_error", { error: error });
       return apiError(500, "user_fetch_failed", "Failed to fetch user")
     }
   },
@@ -117,7 +117,7 @@ export const PATCH = withAdminLogging(
         return apiError(400, "validation_error", "Invalid input")
       }
 
-      console.error("Update user error:", error)
+      log.error("utilisateurs", "update_user_error", { error: error });
       return apiError(500, "user_update_failed", "Failed to update user")
     }
   },
@@ -154,7 +154,7 @@ export const DELETE = withAdminLogging(
 
       return apiOk({ success: true })
     } catch (error) {
-      console.error("Delete user error:", error)
+      log.error("utilisateurs", "delete_user_error", { error: error });
       return apiError(500, "user_delete_failed", "Failed to delete user")
     }
   },

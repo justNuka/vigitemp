@@ -69,7 +69,7 @@ export const GET = withAuthorizationLogging(
         })),
       })
     } catch (error) {
-      console.error("Get profile error:", error)
+      log.error("profils", "get_profile_error", { error: error });
       return apiError(500, "profile_fetch_failed", "Echec de récupération du profil")
     }
   },
@@ -157,7 +157,7 @@ export const PATCH = withAuthorizationLogging(
         return apiError(400, "validation_error", "Données invalides", { details: error.issues })
       }
 
-      console.error("Update profile error:", error)
+      log.error("profils", "update_profile_error", { error: error });
       return apiError(500, "profile_update_failed", "Echec de mise à jour du profil")
     }
   },
@@ -208,7 +208,7 @@ export const DELETE = withAuthorizationLogging(
 
       return apiOk({ success: true })
     } catch (error) {
-      console.error("Delete profile error:", error)
+      log.error("profils", "delete_profile_error", { error: error });
       return apiError(500, "profile_delete_failed", "Echec de suppression du profil")
     }
   },

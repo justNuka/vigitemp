@@ -4,6 +4,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
+import { log } from "@/lib/logger"
 
 export const GET = withAuthLogging(async (_req: NextRequest, ctx) => {
   try {
@@ -57,7 +58,7 @@ export const GET = withAuthLogging(async (_req: NextRequest, ctx) => {
 
     return apiOk(formatted)
   } catch (error) {
-    console.error("Get tableau de bord critical sensors error:", error)
+    log.error("tableau-de-bord/critical-sensors", "get_tableau_de_bord_critical_sensors_error", { error: error });
     return apiError(500, "internal_error", "Failed to fetch critical sensors")
   }
 })

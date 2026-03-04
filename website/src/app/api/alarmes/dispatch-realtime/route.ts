@@ -25,7 +25,7 @@ export const POST = withLogging(async (req: NextRequest) => {
 
   if (!isAuthorized(req)) {
     log.warn("ALARM_REALTIME", "Rejected realtime alarm dispatch: invalid secret", { ip })
-    return apiError(401, "unauthorized", "Non autoris??")
+    return apiError(401, "unauthorized", "Non autorisé")
   }
 
   const body = await req.json().catch(() => null)

@@ -6,6 +6,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { formatDbDateTime } from "@/lib/date-display"
 import { getGlobalNonResponseDefault } from "@/lib/non-response-preference"
 import { canUserAccessLieu } from "@/lib/location-access-scope"
+import { log } from "@/lib/logger"
 
 export const GET = withAuthLogging(
   async (req: NextRequest, ctx: any, { params }: { params: Promise<{ idLieu: string }> }) => {
@@ -227,7 +228,7 @@ export const GET = withAuthLogging(
       response.headers.set("X-Cache", "MISS")
       return response
     } catch (error) {
-      console.error("Get measurements error:", error)
+      log.error("mesures", "get_measurements_error", { error: error });
       return apiError(500, "measurements_fetch_failed", "Failed to fetch measurements")
     }
   },

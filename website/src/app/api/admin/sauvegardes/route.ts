@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
 
 /**
  * GET /api/admin/sauvegardes
@@ -32,7 +33,7 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
 
     return apiOk(backups)
   } catch (error) {
-    console.error("Error fetching backups:", error)
+    log.error("admin/sauvegardes", "error_fetching_backups", { error: error });
     return apiError(500, "internal_error", "Failed to fetch backups")
   }
 })

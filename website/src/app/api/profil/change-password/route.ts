@@ -93,7 +93,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: any) => {
       return apiError(400, "validation_error", "Données invalides", { details: error.issues })
     }
 
-    console.error("Error changing password:", error)
+    log.error("profil/change-password", "error_changing_password", { error: error });
     return apiError(500, "password_change_failed", "Erreur lors du changement de mot de passe")
   }
 })

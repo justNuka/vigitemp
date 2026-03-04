@@ -61,7 +61,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
     return apiOk(formatted)
   } catch (error) {
-    console.error("Get locations summary error:", error)
+    log.error("lieux/resume", "get_locations_summary_error", { error: error });
     return apiError(500, "locations_fetch_failed", "Failed to fetch locations")
   }
 })
@@ -101,7 +101,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: any) => {
       return apiError(400, "validation_error", "Invalid input")
     }
 
-    console.error("Create location summary error:", error)
+    log.error("lieux/resume", "create_location_summary_error", { error: error });
     return apiError(500, "location_create_failed", "Failed to create location")
   }
 })

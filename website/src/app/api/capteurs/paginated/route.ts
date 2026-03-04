@@ -3,6 +3,7 @@
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma, prismaMesure } from "@/lib/prisma"
+import { log } from "@/lib/logger"
 
 const NO_STORE_HEADERS = {
   "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
@@ -324,7 +325,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       sensors: sensorsWithMeasurements,
     }, { headers: NO_STORE_HEADERS })
   } catch (error) {
-    console.error("Erreur lors de la récupération des capteurs paginés:", error)
+    log.error("capteurs/paginated", "erreur_lors_de_la_r_cup_ration_des_capteurs_pagin_s", { error: error });
     return apiError(500, "internal_error", "Erreur lors du chargement des sondes")
   }
 })

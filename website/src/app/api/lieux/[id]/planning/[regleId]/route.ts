@@ -166,7 +166,7 @@ export const PATCH = withLogging(
 
       return apiOk(toRegleResponse(updated as PrismaRegle))
     } catch (error) {
-      console.error("[PATCH /api/lieux/[id]/planning/[regleId]]", error)
+      log.error("lieux/planning", "patch_api_lieux_id_planning_regleid", { error: error });
       return apiError(500, "planning_update_failed", "Erreur lors de la mise a jour de la regle de planning")
     }
   },
@@ -238,7 +238,7 @@ export const DELETE = withLogging(
 
       return new NextResponse(null, { status: 204 })
     } catch (error) {
-      console.error("[DELETE /api/lieux/[id]/planning/[regleId]]", error)
+      log.error("lieux/planning", "delete_api_lieux_id_planning_regleid", { error: error });
       return apiError(500, "planning_delete_failed", "Erreur lors de la suppression de la regle de planning")
     }
   },

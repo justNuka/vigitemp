@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prismaMesure } from "@/lib/prisma"
+import { log } from "@/lib/logger"
 
 /**
  * GET /api/sondes/[idSonde]/mesures
@@ -49,7 +50,7 @@ export const GET = withAuthLogging(
       response.headers.set("Cache-Control", "public, max-age=30")
       return response
     } catch (error) {
-      console.error("(GET /api/sondes/[idSonde]/mesures) Error:", error)
+      log.error("sondes/mesures", "get_api_sondes_idsonde_mesures_error", { error: error });
       return apiError(500, "internal_error", "Internal server error")
     }
   },

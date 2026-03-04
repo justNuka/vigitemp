@@ -27,7 +27,7 @@ export const GET = withLogging(async (req: NextRequest) => {
     const modulesWithDetails = await ModuleRepository.findAllWithDetails()
     return apiOk(modulesWithDetails)
   } catch (error) {
-    console.error("Modules fetch error:", error)
+    log.error("modules", "modules_fetch_error", { error: error });
     return apiError(500, "modules_fetch_failed", "Erreur lors de la récupération des modules")
   }
 })
@@ -64,7 +64,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       return apiError(400, "validation_error", "Données invalides", { details: error.issues })
     }
 
-    console.error("Module creation error:", error)
+    log.error("modules", "module_creation_error", { error: error });
     return apiError(500, "module_create_failed", "Erreur lors de la création du module")
   }
 })

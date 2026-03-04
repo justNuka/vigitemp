@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
+import { log } from "@/lib/logger"
 
 /**
  * GET /api/sondes/unassigned?page=1&limit=20
@@ -64,7 +65,7 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
       pagination: { page, limit, total, pages },
     })
   } catch (error) {
-    console.error("Sondes unassigned fetch error:", error)
+    log.error("sondes/unassigned", "sondes_unassigned_fetch_error", { error: error });
     return apiError(500, "internal_error", "Erreur lors de la récupération des sondes sans lieu")
   }
 })

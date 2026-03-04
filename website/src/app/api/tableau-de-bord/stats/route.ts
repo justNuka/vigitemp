@@ -4,6 +4,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { applyAccessFilter, buildAlarmAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
+import { log } from "@/lib/logger"
 
 const NO_STORE_HEADERS: HeadersInit = {
   "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
@@ -43,7 +44,7 @@ export const GET = withAuthLogging(async (_req: NextRequest, ctx) => {
       { headers: NO_STORE_HEADERS }
     )
   } catch (error) {
-    console.error("Tableau de bord stats error:", error)
+    log.error("tableau-de-bord/stats", "tableau_de_bord_stats_error", { error: error });
     return apiError(500, "internal_error", "Failed to fetch dashboard stats")
   }
 })

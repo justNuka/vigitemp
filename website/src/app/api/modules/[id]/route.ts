@@ -110,7 +110,7 @@ export const PATCH = withLogging(
         return apiError(400, "validation_error", "Données invalides", { issues: error.issues })
       }
 
-      console.error("[PATCH /api/modules/[id]] Error:", error)
+      log.error("modules", "patch_api_modules_id_error", { error: error });
       return apiError(500, "module_update_failed", "Erreur lors de la modification du module")
     }
   },
@@ -163,7 +163,7 @@ export const DELETE = withLogging(
 
       return apiOk({ success: true, message: "Module supprimé avec succès" }, { status: 200 })
     } catch (error) {
-      console.error("[DELETE /api/modules/[id]] Error:", error)
+      log.error("modules", "delete_api_modules_id_error", { error: error });
       return apiError(500, "module_delete_failed", "Erreur lors de la suppression du module")
     }
   },

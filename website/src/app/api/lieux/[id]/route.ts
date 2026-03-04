@@ -619,7 +619,7 @@ export const PATCH = withLogging(
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Invalid input", { issues: error.issues })
       }
-      console.error("[PATCH /api/lieux/[id]]", error)
+      log.error("lieux", "patch_api_lieux_id", { error: error });
       const errorDetail = error instanceof Error ? error.message : String(error)
       const extra = process.env.NODE_ENV === "production" ? { detail: errorDetail } : undefined
       return apiError(500, "lieu_update_failed", "Erreur lors de la modification du lieu", extra)

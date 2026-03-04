@@ -49,7 +49,7 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
 
     return apiOk(formatted)
   } catch (error) {
-    console.error("Get users error:", error)
+    log.error("utilisateurs", "get_users_error", { error: error });
     return apiError(500, "users_fetch_failed", "Failed to fetch users")
   }
 })
@@ -121,7 +121,7 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: any) => {
         })
         console.log(`[Utilisateurs API] Account creation email sent to ${data.email}`)
       } catch (emailError) {
-        console.error("[Utilisateurs API] Failed to send account creation email:", emailError)
+        log.error("utilisateurs", "utilisateurs_api_failed_to_send_account_creation_email", { error: emailError });
       }
     }
 
@@ -143,7 +143,7 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: any) => {
       return apiError(400, "validation_error", "Invalid input")
     }
 
-    console.error("Create user error:", error)
+    log.error("utilisateurs", "create_user_error", { error: error });
     return apiError(500, "user_create_failed", "Failed to create user")
   }
 })

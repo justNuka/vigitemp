@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { withAuthorizationLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
 import {
   isAdminDomainCode,
   isMetrologieDomainCode,
@@ -32,7 +33,7 @@ export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextReq
 
     return apiOk(formatted)
   } catch (error) {
-    console.error("Get authorizations error:", error)
+    log.error("autorisations", "get_authorizations_error", { error: error });
     return apiError(500, "authorizations_fetch_failed", "Echec de recuperation des autorisations")
   }
 })

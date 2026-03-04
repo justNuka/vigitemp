@@ -61,7 +61,7 @@ export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextReq
 
     return apiOk(formatted)
   } catch (error) {
-    console.error("Get profiles error:", error)
+    log.error("profils", "get_profiles_error", { error: error });
     return apiError(500, "profiles_fetch_failed", "Echec de récupération des profils")
   }
 })
@@ -128,7 +128,7 @@ export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextReq
       return apiError(400, "validation_error", "Données invalides", { details: error.issues })
     }
 
-    console.error("Create profile error:", error)
+    log.error("profils", "create_profile_error", { error: error });
     return apiError(500, "profile_create_failed", "Echec de création du profil")
   }
 })

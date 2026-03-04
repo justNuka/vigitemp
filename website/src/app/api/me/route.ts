@@ -4,6 +4,7 @@ import type { Authorization, CurrentUser } from "@/lib/types";
 import { withAuthLogging } from "@/lib/api-wrappers";
 import { getUserAvatarValue } from "@/lib/user-avatar-db";
 import { apiError, apiOk } from "@/lib/api-response";
+import { log } from "@/lib/logger"
 
 export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
   try {
@@ -116,7 +117,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
 
     return apiOk(response);
   } catch (error) {
-    console.error("Get current user error:", error);
+    log.error("me", "get_current_user_error", { error: error });
     return apiError(500, "internal_error", "Internal server error");
   }
 });

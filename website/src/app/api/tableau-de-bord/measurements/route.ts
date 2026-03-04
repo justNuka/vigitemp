@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prismaMesure } from "@/lib/prisma"
+import { log } from "@/lib/logger"
 
 export const GET = withAuthLogging(async (req: NextRequest) => {
   try {
@@ -32,7 +33,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
     response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300")
     return response
   } catch (error) {
-    console.error("Get tableau de bord measurements error:", error)
+    log.error("tableau-de-bord/measurements", "get_tableau_de_bord_measurements_error", { error: error });
     return apiError(500, "internal_error", "Failed to fetch measurements")
   }
 })

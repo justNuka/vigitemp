@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { prismaMesure } from "@/lib/prisma"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
 
 /**
  * GET /api/audit/codes
@@ -15,7 +16,7 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
 
     return apiOk(codes)
   } catch (error) {
-    console.error("Get audit codes error:", error)
+    log.error("audit/codes", "get_audit_codes_error", { error: error });
     return apiError(500, "audit_codes_fetch_failed", "Failed to fetch audit codes")
   }
 })

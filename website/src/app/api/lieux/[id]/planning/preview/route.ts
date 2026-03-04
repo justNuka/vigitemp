@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { isRegleActive } from "@/lib/planning-regle-schema"
+import { log } from "@/lib/logger"
 
 type ConsignesAttendues = {
   consigne: number | null
@@ -167,7 +168,7 @@ export const GET = withLogging(
 
       return apiOk(response)
     } catch (error) {
-      console.error("[GET /api/lieux/[id]/planning/preview]", error)
+      log.error("lieux/planning/preview", "get_api_lieux_id_planning_preview", { error: error });
       return apiError(500, "planning_preview_failed", "Erreur lors du calcul du preview de planning")
     }
   },

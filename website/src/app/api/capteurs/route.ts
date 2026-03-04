@@ -82,7 +82,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
 
     return apiOk(formatted)
   } catch (error) {
-    console.error("Get sensors error:", error)
+    log.error("capteurs", "get_sensors_error", { error: error });
     return apiError(500, "internal_error", "Failed to fetch sensors")
   }
 })
@@ -143,7 +143,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: any) => {
       return apiError(400, "invalid_input", "Invalid input")
     }
 
-    console.error("Create sensor error:", error)
+    log.error("capteurs", "create_sensor_error", { error: error });
     return apiError(500, "internal_error", "Failed to create sensor")
   }
 })

@@ -89,7 +89,7 @@ export const PATCH = withLogging(
         Id_Lieu: lieu?.Id_Lieu || null,
       })
     } catch (error) {
-      console.error("Actionneur update error:", error)
+      log.error("actionneurs", "actionneur_update_error", { error: error });
       return apiError(500, "actionneur_update_failed", "Erreur lors de la mise à jour de l'actionneur")
     }
   },
@@ -133,7 +133,7 @@ export const DELETE = withLogging(
 
       return apiOk({ Id_Actionneur: updated.Id_Actionneur, Est_Archive: updated.Est_Archive })
     } catch (error) {
-      console.error("Actionneur archive error:", error)
+      log.error("actionneurs", "actionneur_archive_error", { error: error });
       return apiError(500, "actionneur_archive_failed", "Erreur lors de l'archivage de l'actionneur")
     }
   },

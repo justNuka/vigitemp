@@ -67,7 +67,7 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
 
     return apiOk(formatted)
   } catch (error) {
-    console.error("Sondes fetch error:", error)
+    log.error("sondes", "sondes_fetch_error", { error: error });
     return apiError(500, "internal_error", "Erreur lors de la récupération des sondes")
   }
 })
@@ -187,7 +187,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: any) => {
       return apiError(400, "validation_error", "Données invalides", { details: error.issues })
     }
 
-    console.error("Sonde create error:", error)
+    log.error("sondes", "sonde_create_error", { error: error });
     return apiError(500, "internal_error", "Erreur lors de la création de la sonde")
   }
 })

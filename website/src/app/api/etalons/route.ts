@@ -93,7 +93,7 @@ export const GET = withLogging(async (req: NextRequest) => {
 
     return apiOk(etalonsWithDetails)
   } catch (error) {
-    console.error("Etalons fetch error:", error)
+    log.error("etalons", "etalons_fetch_error", { error: error });
     return apiError(500, "etalons_fetch_failed", "Erreur lors de la récupération des étalons")
   }
 })
@@ -176,7 +176,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       return apiError(400, "validation_error", "Données invalides", { details: error.issues })
     }
 
-    console.error("Etalon creation error:", error)
+    log.error("etalons", "etalon_creation_error", { error: error });
     return apiError(500, "etalon_create_failed", "Erreur lors de la création de l'étalon")
   }
 })

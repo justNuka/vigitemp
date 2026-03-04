@@ -52,7 +52,7 @@ export const POST = withLogging(async (req: NextRequest) => {
   } catch (error) {
     log.error("AUTH_FORCE_PASSWORD", "Temp token generation failed", { ip, error: error instanceof Error ? error.message : String(error) })
     log.audit("MDP", { user: "ANONYMOUS", userId: 0, ip, resource: "Force password token generated", success: false, reason: error instanceof Error ? error.message : String(error) })
-    console.error("[AUTH] Token generation error:", error)
+    log.error("auth/temp-password-token", "auth_token_generation_error", { error: error });
     return apiError(500, "token_generation_failed", "Erreur serveur")
   }
 })

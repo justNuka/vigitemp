@@ -186,7 +186,7 @@ export const POST = withLogging(
         return apiError(400, "validation_error", "Données invalides", { details: error.issues })
       }
 
-      console.error("[AUTH] Force password change error:", error)
+      log.error("auth/force-password-change", "auth_force_password_change_error", { error: error });
       return apiError(500, "force_password_change_failed", "Erreur serveur")
     }
   },

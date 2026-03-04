@@ -142,7 +142,7 @@ export const PATCH = withAuthLogging(
         return apiError(400, "validation_error", "Données invalides", { details: error.issues })
       }
 
-      console.error("Etalon update error:", error)
+      log.error("etalons", "etalon_update_error", { error: error });
       return apiError(500, "etalon_update_failed", "Erreur lors de la mise à jour de l'étalon")
     }
   },
@@ -179,7 +179,7 @@ export const DELETE = withAuthLogging(
 
       return apiOk({ Id_Etalon: updated.Id_Etalon, Est_Archive: updated.Est_Archive })
     } catch (error) {
-      console.error("Etalon archive error:", error)
+      log.error("etalons", "etalon_archive_error", { error: error });
       return apiError(500, "etalon_archive_failed", "Erreur lors de l'archivage de l'étalon")
     }
   },

@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { FEATURE_FLAGS } from "@/lib/feature-flags"
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
 
 export const POST = withAdminLogging(async (request: NextRequest) => {
   if (!FEATURE_FLAGS.enableRevalidateAPI) {
@@ -25,7 +26,7 @@ export const POST = withAdminLogging(async (request: NextRequest) => {
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error("Error revalidating cache:", error)
+    log.error("revalidate", "error_revalidating_cache", { error: error });
     return apiError(500, "revalidate_failed", "Failed to revalidate cache")
   }
 })
@@ -46,7 +47,7 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
-    console.error("Error revalidating caches:", error)
+    log.error("revalidate", "error_revalidating_caches", { error: error });
     return apiError(500, "revalidate_failed", "Failed to revalidate caches")
   }
 })

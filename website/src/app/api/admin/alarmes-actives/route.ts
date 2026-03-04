@@ -3,6 +3,7 @@
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
+import { log } from "@/lib/logger"
 
 const NO_STORE_HEADERS: HeadersInit = {
   "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
@@ -74,7 +75,7 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
       { headers: NO_STORE_HEADERS }
     )
   } catch (error) {
-    console.error("Error fetching active alarms:", error)
+    log.error("admin/alarmes-actives", "error_fetching_active_alarms", { error: error });
     return apiError(500, "internal_error", "Failed to fetch active alarms")
   }
 })

@@ -23,7 +23,7 @@ export const GET = withLogging(async (req: NextRequest) => {
     const actionneursWithLieu = await ActionneurRepository.findAllWithLieu()
     return apiOk(actionneursWithLieu)
   } catch (error) {
-    console.error("Actionneurs fetch error:", error)
+    log.error("actionneurs", "actionneurs_fetch_error", { error: error });
     return apiError(500, "actionneurs_fetch_failed", "Erreur lors de la récupération des actionneurs")
   }
 })
@@ -61,7 +61,7 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     return apiOk(actionneur, { status: 201 })
   } catch (error) {
-    console.error("Actionneur creation error:", error)
+    log.error("actionneurs", "actionneur_creation_error", { error: error });
     return apiError(500, "actionneur_create_failed", "Erreur lors de la création de l'actionneur")
   }
 })

@@ -6,6 +6,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { checkChatAccess } from "@/lib/chat-guard"
 import { z } from "zod"
 import type { JWTPayload } from "@/lib/jwt"
+import { log } from "@/lib/logger"
 
 const directBodySchema = z.object({
   targetUserId: z.number().int().positive(),
@@ -100,7 +101,7 @@ export const POST = withAuthLogging(
         throw createError
       }
     } catch (error) {
-      console.error("[POST /api/chat/conversations/direct]", error)
+      log.error("chat/conversations/direct", "post_api_chat_conversations_direct", { error: error });
       return apiError(500, "direct_conversation_failed", "Erreur lors de la creation de la conversation directe")
     }
   },

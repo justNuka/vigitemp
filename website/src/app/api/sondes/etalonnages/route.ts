@@ -4,6 +4,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { requireStandardOrExpertLicense } from "@/lib/license-guards"
+import { log } from "@/lib/logger"
 
 export const GET = withAuthLogging(async (req: NextRequest) => {
   try {
@@ -35,7 +36,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
 
     return apiOk(etalonnages)
   } catch (error) {
-    console.error("Etalonnages fetch error:", error)
+    log.error("sondes/etalonnages", "etalonnages_fetch_error", { error: error });
     return apiError(500, "internal_error", "Erreur lors de la recuperation des etalonnages")
   }
 })

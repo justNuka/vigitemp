@@ -13,7 +13,7 @@ data: ${JSON.stringify(data)}\n\n`
 export async function GET(req: NextRequest) {
   const user = getAuthenticatedUser(req)
   if (!user) {
-    return apiError(401, "unauthenticated", "Non authentifi??")
+    return apiError(401, "unauthenticated", "Non authentifié")
   }
 
   const accessibleLieuIds = await getAccessibleLieuIds(user.userId)

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { getAuthenticatedUser } from "@/lib/auth"
 import { withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
+import { log } from "@/lib/logger"
 
 export const GET = withLogging(async (req: NextRequest) => {
   try {
@@ -24,7 +25,7 @@ export const GET = withLogging(async (req: NextRequest) => {
 
     return apiOk(types)
   } catch (error) {
-    console.error("Actionneur types fetch error:", error)
+    log.error("actionneurs/types", "actionneur_types_fetch_error", { error: error });
     return apiError(
       500,
       "actionneur_types_fetch_failed",
