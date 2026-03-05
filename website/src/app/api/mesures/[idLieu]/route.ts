@@ -1,6 +1,6 @@
 ﻿import { NextRequest } from "next/server"
 import { prisma, prismaMesure } from "@/lib/prisma"
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { getCachedMeasurements, setCachedMeasurements } from "@/lib/measurement-cache"
 import { apiError, apiOk } from "@/lib/api-response"
 import { formatDbDateTime } from "@/lib/date-display"
@@ -9,7 +9,7 @@ import { canUserAccessLieu } from "@/lib/location-access-scope"
 import { log } from "@/lib/logger"
 
 export const GET = withAuthLogging(
-  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ idLieu: string }> }) => {
+  async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ idLieu: string }> }) => {
     try {
       const { idLieu } = await params
       const searchParams = req.nextUrl.searchParams
@@ -67,7 +67,7 @@ export const GET = withAuthLogging(
         }
       }
 
-      const whereClause: any = {
+      const whereClause: Record<string, unknown> = {
         Id_Lieu: idLieuInt,
       }
 
@@ -158,7 +158,7 @@ export const GET = withAuthLogging(
 
       const chronologicalMeasurements = measurements.reverse()
 
-      const formattedMeasurements = chronologicalMeasurements.map((m: any) => {
+      const formattedMeasurements = chronologicalMeasurements.map((m) => {
         const dateHeure = m.Date_Heure_Mesure ? new Date(m.Date_Heure_Mesure) : new Date()
         const isNullMeasurement =
           typeof m.Est_Valeur_Null === "number" ? m.Est_Valeur_Null !== 0 : Boolean(m.Est_Valeur_Null)
@@ -167,7 +167,7 @@ export const GET = withAuthLogging(
         const dateXaxis = formatDbDateTime(dateHeure, { timeOnly: true, withSeconds: false })
 
         return {
-          id: (m.Id_Mesure ?? m.Id_Graphique)?.toString() || "",
+          id: ("Id_Mesure" in m ? m.Id_Mesure : m.Id_Graphique)?.toString() || "",
           Valeur: isNullMeasurement || m.Valeur === null ? null : parseFloat(m.Valeur.toString()),
           Nb_Decimal:
             m.Nb_Decimal !== null && m.Nb_Decimal !== undefined

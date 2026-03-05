@@ -2,7 +2,7 @@ import { NextRequest } from "next/server"
 import { z } from "zod"
 
 import { getRequestContext } from "@/lib/api-logger"
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
@@ -15,7 +15,7 @@ const updateSensorSchema = z.object({
 })
 
 export const GET = withAuthLogging(
-  async (req: NextRequest, _ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, _ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { id } = await params
       const sensorId = parseInt(id, 10)
@@ -89,7 +89,7 @@ export const GET = withAuthLogging(
 )
 
 export const PATCH = withAuthLogging(
-  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { ip } = getRequestContext(req)
 
@@ -98,7 +98,7 @@ export const PATCH = withAuthLogging(
       const body = await req.json()
       const data = updateSensorSchema.parse(body)
 
-      const updateData: any = {}
+      const updateData: Record<string, unknown> = {}
       if (data.name) updateData.Nom_Lieu = data.name
       if (data.minThreshold !== undefined) updateData.Consigne_Inf = data.minThreshold
       if (data.maxThreshold !== undefined) updateData.Consigne_Sup = data.maxThreshold
@@ -118,7 +118,7 @@ export const PATCH = withAuthLogging(
         },
       })
 
-      const changes: any = {}
+      const changes: Record<string, unknown> = {}
       if (data.name) changes.name = data.name
       if (data.minThreshold !== undefined) changes.minThreshold = data.minThreshold
       if (data.maxThreshold !== undefined) changes.maxThreshold = data.maxThreshold
@@ -177,7 +177,7 @@ export const PATCH = withAuthLogging(
 )
 
 export const DELETE = withAuthLogging(
-  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { ip } = getRequestContext(req)
 

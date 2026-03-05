@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { withAuthorizationLogging } from "@/lib/api-wrappers"
+import { withAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
@@ -11,7 +11,7 @@ export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextReq
       orderBy: { Mot_Cle: "asc" },
     })
 
-    const formatted = settings.map((setting: any) => ({
+    const formatted = settings.map((setting) => ({
       key: `${setting.Section}:${setting.Mot_Cle}`,
       section: setting.Section,
       motCle: setting.Mot_Cle,
@@ -30,7 +30,7 @@ export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextReq
  * PUT /api/parametres
  * Upsert d'un paramètre (admin: GERER_PROFIL).
  */
-export const PUT = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest, ctx: any) => {
+export const PUT = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest, ctx: HandlerContext) => {
   try {
     const body = await req.json()
     const section = body?.section as string | undefined

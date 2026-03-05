@@ -1,6 +1,6 @@
 ﻿import { NextRequest } from "next/server"
 
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
@@ -54,7 +54,8 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
       Adresse_Sonde: sonde.Adresse_Sonde,
       Sonde_Numero_Serie: sonde.Sonde_Numero_Serie,
       Port_Serie: sonde.Port_Serie,
-      Sonde_Type: (sonde as any).Sonde_Type ?? null,
+      // Sonde_Type may not be in the generated Prisma type for t_sonde; access via type assertion.
+      Sonde_Type: (sonde as { Sonde_Type?: string | null }).Sonde_Type ?? null,
       Surveillance_Etat: sonde.Surveillance_Etat,
       Surveillance_Etat_Libelle: sonde.Surveillance_Etat,
       Id_Module: sonde.Id_Module,
@@ -79,7 +80,7 @@ const createSensorSchema = z.object({
   sondeOffset: z.number().nullable().optional(),
 })
 
-export const POST = withAuthLogging(async (req: NextRequest, ctx: any) => {
+export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext) => {
   try {
     const body = await req.json()
     const data = createSensorSchema.parse(body)

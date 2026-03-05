@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server"
 import { revalidateTag } from "next/cache"
 import { prisma } from "@/lib/prisma"
-import { withAdminLogging } from "@/lib/api-wrappers"
+import { withAdminLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
@@ -13,7 +13,7 @@ import { getRequestContext } from "@/lib/api-logger"
 export const DELETE = withAdminLogging(
   async (
     req: NextRequest,
-    ctx: any,
+    ctx: HandlerContext,
     { params }: { params: Promise<{ id: string; groupId: string }> },
   ) => {
     try {

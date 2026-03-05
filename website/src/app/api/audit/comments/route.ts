@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { withAuthorizationLogging } from "@/lib/api-wrappers"
+import { withAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { prismaMesure } from "@/lib/prisma"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getRequestContext } from "@/lib/api-logger"
@@ -32,7 +32,7 @@ export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextReq
  * POST /api/audit/comments
  * Cree ou met a jour un commentaire (tm_journal_code).
  */
-export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest, ctx: any) => {
+export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest, ctx: HandlerContext) => {
   const { ip } = getRequestContext(req)
   try {
     const { type, text } = await req.json()
@@ -93,7 +93,7 @@ export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextReq
  * PATCH /api/audit/comments
  * Met a jour un commentaire (tm_journal_code).
  */
-export const PATCH = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest, ctx: any) => {
+export const PATCH = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest, ctx: HandlerContext) => {
   const { ip } = getRequestContext(req)
   try {
     const { type, text } = await req.json()

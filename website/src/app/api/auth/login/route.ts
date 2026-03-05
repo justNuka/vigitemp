@@ -262,8 +262,8 @@ export const POST = withLogging(async (req: NextRequest) => {
       ip,
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
-      code: (error as any)?.code,
-      meta: (error as any)?.meta,
+      code: (error as { code?: string; meta?: unknown })?.code,
+      meta: (error as { code?: string; meta?: unknown })?.meta,
     })
     return apiError(500, "internal_error", "Internal server error")
   }

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
-import { withAuthorizationLogging } from "@/lib/api-wrappers"
+import { withAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import {
   isAdminDomainCode,
@@ -21,7 +21,7 @@ const updateProfileSchema = z.object({
 
 export const GET = withAuthorizationLogging(
   "GERER_PROFIL",
-  async (_req: NextRequest, _ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (_req: NextRequest, _ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { id } = await params
       const profileId = parseInt(id, 10)
@@ -77,7 +77,7 @@ export const GET = withAuthorizationLogging(
 
 export const PATCH = withAuthorizationLogging(
   "GERER_PROFIL",
-  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { ip } = getRequestContext(req)
 
@@ -97,7 +97,7 @@ export const PATCH = withAuthorizationLogging(
         return apiError(404, "not_found", "Profil non trouvé")
       }
 
-      const updateData: any = {}
+      const updateData: Record<string, unknown> = {}
       if (data.name !== undefined) updateData.Profil_Utilisateur = data.name
       if (data.description !== undefined) updateData.Commentaire = data.description
       if (data.mc2 !== undefined) updateData.Est_MC2 = data.mc2
@@ -131,7 +131,7 @@ export const PATCH = withAuthorizationLogging(
         },
       })
 
-      const changes: any = {}
+      const changes: Record<string, unknown> = {}
       if (data.name) changes.name = data.name
       if (data.description !== undefined) changes.description = data.description
       if (data.mc2 !== undefined) changes.mc2 = data.mc2
@@ -165,7 +165,7 @@ export const PATCH = withAuthorizationLogging(
 
 export const DELETE = withAuthorizationLogging(
   "GERER_PROFIL",
-  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { ip } = getRequestContext(req)
 

@@ -6,7 +6,7 @@ import { sendEmail, isEmailEnabled } from "@/lib/email"
 import AccountCreationEmail from "../../../../emails/email-account-creation"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
-import { withAdminLogging } from "@/lib/api-wrappers"
+import { withAdminLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { revalidateTag } from "next/cache"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getUserAvatarMap, setUserAvatarValue } from "@/lib/user-avatar-db"
@@ -36,7 +36,7 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
 
     const avatarMap = await getUserAvatarMap(users.map((user) => user.Id_Utilisateur))
 
-    const formatted = users.map((user: any) => ({
+    const formatted = users.map((user) => ({
       id: user.Id_Utilisateur,
       username: user.Login,
       displayName: `${user.Prenom || ""} ${user.Nom || ""}`.trim() || user.Login,
@@ -54,7 +54,7 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
   }
 })
 
-export const POST = withAdminLogging(async (req: NextRequest, ctx: any) => {
+export const POST = withAdminLogging(async (req: NextRequest, ctx: HandlerContext) => {
   try {
     const { ip } = getRequestContext(req)
 

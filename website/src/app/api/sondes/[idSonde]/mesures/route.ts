@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server"
 
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prismaMesure } from "@/lib/prisma"
 import { log } from "@/lib/logger"
@@ -13,7 +13,7 @@ import { log } from "@/lib/logger"
 export const GET = withAuthLogging(
   async (
     request: NextRequest,
-    _ctx: any,
+    _ctx: HandlerContext,
     { params }: { params: Promise<{ idSonde: string }> },
   ) => {
     try {

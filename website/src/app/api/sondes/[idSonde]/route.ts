@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server"
 import { z } from "zod"
 
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
@@ -13,7 +13,7 @@ const updateSensorSchema = z.object({
 })
 
 export const PATCH = withAuthLogging(
-  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ idSonde: string }> }) => {
+  async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ idSonde: string }> }) => {
     const { ip } = getRequestContext(req)
 
     try {

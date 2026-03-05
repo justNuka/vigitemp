@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
-import { withAuthorizationLogging } from "@/lib/api-wrappers"
+import { withAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import {
   isAdminDomainCode,
@@ -70,7 +70,7 @@ export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextReq
  * POST /api/profils
  * Crée un nouveau profil (GERER_PROFIL).
  */
-export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest, ctx: any) => {
+export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequest, ctx: HandlerContext) => {
   try {
     const { ip } = getRequestContext(req)
 

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 
@@ -18,7 +18,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
     const searchParams = req.nextUrl.searchParams
     const site = searchParams.get("site")
 
-    const baseWhere: any = { Est_Archive: false }
+    const baseWhere: Record<string, unknown> = { Est_Archive: false }
 
     if (site) {
       baseWhere.Id_Site = parseInt(site)
@@ -41,7 +41,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
       orderBy: { Nom_Lieu: "asc" },
     })
 
-    const formatted = locations.map((loc: any) => {
+    const formatted = locations.map((loc) => {
       const sensors = Array.isArray(loc.t_sonde) ? loc.t_sonde : []
       const isCritical = loc.Est_Lieu_En_Alarme === 1
       const isWarning = !isCritical && loc.Est_Lieu_En_Pre_Alarme === 1
@@ -66,7 +66,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
   }
 })
 
-export const POST = withAuthLogging(async (req: NextRequest, ctx: any) => {
+export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext) => {
   try {
     const { ip } = getRequestContext(req)
 

@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 
 export const GET = withAuthLogging(
-  async (_req: NextRequest, _ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (_req: NextRequest, _ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { id } = await params
       const alarmId = parseInt(id, 10)

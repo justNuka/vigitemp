@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
-import { withAuthorizationLogging } from "@/lib/api-wrappers"
+import { withAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 
 const updateSettingSchema = z.object({
@@ -30,7 +30,7 @@ function getCaseCandidates(section: string, motCle: string) {
 
 export const GET = withAuthorizationLogging(
   "GERER_PROFIL",
-  async (_req: NextRequest, _ctx: any, { params }: { params: Promise<{ key: string }> }) => {
+  async (_req: NextRequest, _ctx: HandlerContext, { params }: { params: Promise<{ key: string }> }) => {
     try {
       const { key } = await params
       const [section, motCle] = key.split(":")
@@ -76,7 +76,7 @@ export const GET = withAuthorizationLogging(
 
 export const PATCH = withAuthorizationLogging(
   "GERER_PROFIL",
-  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ key: string }> }) => {
+  async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ key: string }> }) => {
     try {
       const { ip } = getRequestContext(req)
 

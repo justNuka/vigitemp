@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
@@ -34,7 +34,7 @@ const updateEtalonSchema = z.object({
 })
 
 export const PATCH = withAuthLogging(
-  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { ip } = getRequestContext(req)
       const guard = await requireStandardOrExpertLicense()
@@ -149,7 +149,7 @@ export const PATCH = withAuthLogging(
 )
 
 export const DELETE = withAuthLogging(
-  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { ip } = getRequestContext(req)
       const guard = await requireStandardOrExpertLicense()

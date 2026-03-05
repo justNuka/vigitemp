@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server"
 
-import { withAdminLogging } from "@/lib/api-wrappers"
+import { withAdminLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
@@ -19,7 +19,7 @@ type SMTPConfig = {
  * GET/PUT /api/admin/configuration-smtp
  * Parametres SMTP (stockes dans t_parametre / SECURITE_EMAIL)
  */
-export const GET = withAdminLogging(async (req: NextRequest, ctx: any) => {
+export const GET = withAdminLogging(async (req: NextRequest, ctx: HandlerContext) => {
   try {
     const { ip } = getRequestContext(req)
     const params = await prisma.t_parametre.findMany({
@@ -72,7 +72,7 @@ export const GET = withAdminLogging(async (req: NextRequest, ctx: any) => {
   }
 })
 
-export const PUT = withAdminLogging(async (req: NextRequest, ctx: any) => {
+export const PUT = withAdminLogging(async (req: NextRequest, ctx: HandlerContext) => {
   try {
     const { ip } = getRequestContext(req)
     const body = (await req.json()) as SMTPConfig

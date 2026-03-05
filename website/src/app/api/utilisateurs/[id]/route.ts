@@ -4,7 +4,7 @@ import { z } from "zod"
 import bcrypt from "bcryptjs"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
-import { withAdminLogging } from "@/lib/api-wrappers"
+import { withAdminLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { revalidateTag } from "next/cache"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getUserAvatarValue, setUserAvatarValue } from "@/lib/user-avatar-db"
@@ -25,7 +25,7 @@ const updateUserSchema = z.object({
 })
 
 export const GET = withAdminLogging(
-  async (req: NextRequest, _ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, _ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { id } = await params
       const userId = parseInt(id)
@@ -56,7 +56,7 @@ export const GET = withAdminLogging(
 )
 
 export const PATCH = withAdminLogging(
-  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { ip } = getRequestContext(req)
 
@@ -65,7 +65,7 @@ export const PATCH = withAdminLogging(
       const body = await req.json()
       const data = updateUserSchema.parse(body)
 
-      const updateData: any = {}
+      const updateData: Record<string, unknown> = {}
 
       if (data.password) {
         updateData.Mot_De_Passe = await bcrypt.hash(data.password, 10)
@@ -90,7 +90,7 @@ export const PATCH = withAdminLogging(
         await setUserAvatarValue(userId, data.avatar || null)
       }
 
-      const changes: any = {}
+      const changes: Record<string, unknown> = {}
       if (data.nom) changes.nom = data.nom
       if (data.prenom) changes.prenom = data.prenom
       if (data.email) changes.email = data.email
@@ -124,7 +124,7 @@ export const PATCH = withAdminLogging(
 )
 
 export const DELETE = withAdminLogging(
-  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { ip } = getRequestContext(req)
 

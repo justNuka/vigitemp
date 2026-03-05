@@ -18,7 +18,7 @@ export type NextRouteContext = {
   params: Record<string, string | string[]> | Promise<Record<string, string | string[]>>
 }
 
-type HandlerContext = {
+export type HandlerContext = {
   user: JWTPayload
 }
 

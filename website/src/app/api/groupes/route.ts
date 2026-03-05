@@ -15,7 +15,7 @@ export const GET = withLogging(async (req: NextRequest) => {
     const { searchParams } = new URL(req.url)
     const regroupement = searchParams.get("regroupement")
 
-    const where: any = {
+    const where: Record<string, unknown> = {
       Est_Archive: false,
     }
 

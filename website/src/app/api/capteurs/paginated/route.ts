@@ -23,7 +23,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
 
     const skip = (page - 1) * limit
 
-    const where: any = { Est_Archive: false }
+    const where: Record<string, unknown> = { Est_Archive: false }
 
     const [assignedSites, assignedGroups] = await Promise.all([
       prisma.t_liaison_utilisateur_site.findMany({
@@ -70,7 +70,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
     }
 
     if (!hasFilters && (hasAssignedSites || hasAssignedGroups)) {
-      const accessOr: any[] = []
+      const accessOr: Record<string, unknown>[] = []
       if (hasAssignedSites) {
         accessOr.push({ Id_Site: { in: assignedSiteIds } })
       }

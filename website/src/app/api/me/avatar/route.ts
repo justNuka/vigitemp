@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server"
 import { z } from "zod"
 
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getRequestContext } from "@/lib/api-logger"
 import { log } from "@/lib/logger"
@@ -11,7 +11,7 @@ const schema = z.object({
   avatar: z.string().trim().max(512).nullable(),
 })
 
-export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
+export const GET = withAuthLogging(async (req: NextRequest, ctx: HandlerContext) => {
   const { ip } = getRequestContext(req)
   try {
     const avatar = await getUserAvatarValue(ctx.user.userId)
@@ -23,7 +23,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
   }
 })
 
-export const PATCH = withAuthLogging(async (req: NextRequest, ctx: any) => {
+export const PATCH = withAuthLogging(async (req: NextRequest, ctx: HandlerContext) => {
   const { ip } = getRequestContext(req)
   try {
     const body = await req.json()

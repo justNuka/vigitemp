@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
-import { withAnyAuthorizationLogging } from "@/lib/api-wrappers"
+import { withAnyAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { revalidateTag } from "next/cache"
 import { sendAlarmEventEmails } from "@/lib/alarm-email"
@@ -15,7 +15,7 @@ const acknowledgeSchema = z.object({
 })
 
 export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_ACCESS"),
-  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     let alarmId = 0
     let ackStep = "init"
     try {
@@ -27,7 +27,8 @@ export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_
       ackStep = "parse_body"
       const body = await req.json()
       const { comment } = acknowledgeSchema.parse(body)
-      const acknowledgedAt = new Date()
+      const [dbNowRow] = await prisma.$queryRaw<Array<{ acknowledgedAt: Date }>>`SELECT NOW() AS acknowledgedAt`
+      const acknowledgedAt = dbNowRow?.acknowledgedAt ?? new Date()
 
       const userScope = await getUserLocationScope(ctx.user.userId)
       const lieuAccessFilter = buildLieuAccessFilter(userScope)
@@ -226,7 +227,7 @@ export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_
         return apiError(400, "invalid_input", "Invalid input")
       }
 
-      const err = error as any
+      const err = error as { code?: string; message?: string; cause?: { code?: string; originalCode?: string; message?: string } }
       const errCode = err?.code || err?.cause?.code || err?.cause?.originalCode || "unknown"
       const errMessage = err?.message || err?.cause?.message || "unknown"
       log.error("ALARM_ACK", "Acknowledge alarm failed", {

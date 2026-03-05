@@ -2,7 +2,7 @@ import { NextRequest } from "next/server"
 import { z } from "zod"
 
 import { getRequestContext } from "@/lib/api-logger"
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
@@ -16,13 +16,13 @@ const createSensorSchema = z.object({
   unit: z.string().optional(),
 })
 
-export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
+export const GET = withAuthLogging(async (req: NextRequest, ctx: HandlerContext) => {
   try {
     const searchParams = req.nextUrl.searchParams
     const locationId = searchParams.get("locationId")
     const status = searchParams.get("status")
 
-    const baseWhere: any = { Est_Archive: false }
+    const baseWhere: Record<string, unknown> = { Est_Archive: false }
 
     if (locationId) {
       baseWhere.Id_Site = parseInt(locationId, 10)
@@ -58,7 +58,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
       orderBy: { Nom_Lieu: "asc" },
     })
 
-    const formatted = locations.map((lieu: any) => ({
+    const formatted = locations.map((lieu) => ({
       id: lieu.Id_Lieu.toString(),
       name: lieu.Nom_Lieu || "Lieu sans nom",
       status: lieu.Est_Lieu_En_Alarme === 1 ? "critical" : lieu.Est_Lieu_En_Pre_Alarme === 1 ? "warning" : "ok",
@@ -87,7 +87,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
   }
 })
 
-export const POST = withAuthLogging(async (req: NextRequest, ctx: any) => {
+export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext) => {
   try {
     const { ip } = getRequestContext(req)
 

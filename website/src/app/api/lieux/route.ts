@@ -29,7 +29,7 @@ const STANDARD_METROLOGY_FIELDS = [
 ] as const
 
 
-function addConsigneGuards(data: any, ctx: z.RefinementCtx) {
+function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) {
   const hasConsigne = data.Consigne !== null && data.Consigne !== undefined
   const hasSup = data.Consigne_Sup !== null && data.Consigne_Sup !== undefined
   const hasInf = data.Consigne_Inf !== null && data.Consigne_Inf !== undefined
@@ -161,11 +161,22 @@ export const GET = withLogging(async (req: NextRequest) => {
       orderBy: { Nom_Lieu: "asc" },
     })
 
+    type SerializedLieu = typeof lieux[number] & {
+      t_sonde?: { Sonde_Numero_Serie?: string | null; Id_Module?: number | null } | null
+      t_lieu_mail_tel?: Array<{
+        Id_Mail_Tel?: number | null
+        Ordre_Contact?: number | null
+        Id_Utilisateur?: number | null
+        Est_Via_Telephone?: boolean | null
+        Est_Via_Email?: boolean | null
+      }>
+    }
+
     const serialized = JSON.parse(
       JSON.stringify(lieux, (_, value) => (typeof value === "bigint" ? value.toString() : value)),
-    )
+    ) as SerializedLieu[]
 
-    const normalized = serialized.map((lieu: any) => ({
+    const normalized = serialized.map((lieu) => ({
       ...lieu,
       Commentaire: lieu?.Observations_Info ?? lieu?.Commentaire ?? null,
       EMT_Mode: emtModeFromDb(lieu?.EMT_Choix_Mode),
@@ -174,12 +185,12 @@ export const GET = withLogging(async (req: NextRequest) => {
       Prendre_En_Compte_Derive: lieu?.Est_Correction_derive ?? false,
       Erreur_Justesse: lieu?.Derniere_Erreur_Justesse ?? null,
       Incertitude: lieu?.Derniere_Incertitude ?? null,
-      Id_Module: (lieu as any)?.t_sonde?.Id_Module ?? null,
+      Id_Module: lieu?.t_sonde?.Id_Module ?? null,
       Frequence:
         lieu?.Frequence === null || lieu?.Frequence === undefined
           ? lieu?.Frequence
           : Number(lieu.Frequence) / 60,
-      MailingContacts: (lieu?.t_lieu_mail_tel ?? []).map((contact: any, index: number) => ({
+      MailingContacts: (lieu?.t_lieu_mail_tel ?? []).map((contact, index) => ({
         Id_Tel_Num: contact.Id_Mail_Tel,
         Numero_Ordre: contact.Ordre_Contact ?? index + 1,
         Id_Utilisateur: contact.Id_Utilisateur ?? null,
@@ -420,7 +431,8 @@ export const POST = withLogging(async (req: NextRequest) => {
       Prendre_En_Compte_Derive: serialized?.Est_Correction_derive ?? false,
       Erreur_Justesse: serialized?.Derniere_Erreur_Justesse ?? null,
       Incertitude: serialized?.Derniere_Incertitude ?? null,
-      Id_Module: (lieu as any)?.t_sonde?.Id_Module ?? null,
+      // The lieu was just created without including t_sonde, so use the validated input value.
+      Id_Module: validated.Id_Module ?? null,
       Frequence:
         serialized?.Frequence === null || serialized?.Frequence === undefined
           ? serialized?.Frequence

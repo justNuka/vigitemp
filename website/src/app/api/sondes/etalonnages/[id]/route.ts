@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 
-import { withAuthLogging } from "@/lib/api-wrappers";
+import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers";
 import { apiError, apiOk } from "@/lib/api-response";
 import { getRequestContext } from "@/lib/api-logger";
 import { prisma } from "@/lib/prisma";
@@ -20,7 +20,7 @@ const computeDateValidite = (dateEtalonnage: Date | null, dureeValiditeJours: nu
 };
 
 export const PATCH = withAuthLogging(
-  async (req: NextRequest, ctx: any, { params }: { params: Promise<{ id: string }> }) => {
+  async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const guard = await requireStandardOrExpertLicense();
       if (guard) return guard;

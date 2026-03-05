@@ -4,7 +4,7 @@ import path from "node:path"
 
 import { NextRequest } from "next/server"
 
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getRequestContext } from "@/lib/api-logger"
 import { log } from "@/lib/logger"
@@ -17,7 +17,7 @@ const ALLOWED_MIME = new Map<string, string>([
   ["image/svg+xml", ".svg"],
 ])
 
-export const POST = withAuthLogging(async (req: NextRequest, ctx: any) => {
+export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext) => {
   const { ip } = getRequestContext(req)
   try {
     const formData = await req.formData()

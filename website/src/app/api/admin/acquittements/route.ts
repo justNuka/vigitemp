@@ -19,7 +19,7 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
 
     const where = {
       Est_Acquittee: true,
-      Date_Heure_Fin: { not: null as any },
+      Date_Heure_Fin: { not: null },
     }
 
     const totalCount = await prisma.t_alarme.count({ where })

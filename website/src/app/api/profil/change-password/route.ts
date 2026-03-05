@@ -7,7 +7,7 @@ import bcrypt from "bcryptjs"
 import { z } from "zod"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 
 const changePasswordSchema = z.object({
@@ -20,7 +20,7 @@ const changePasswordSchema = z.object({
  * POST /api/profil/change-password
  * Change le mot de passe de l'utilisateur authentifié.
  */
-export const POST = withAuthLogging(async (req: NextRequest, ctx: any) => {
+export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext) => {
   try {
     const body = await req.json()
     const { oldPassword, newPassword, confirmPassword } = changePasswordSchema.parse(body)

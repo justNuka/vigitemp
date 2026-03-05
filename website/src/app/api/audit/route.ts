@@ -26,7 +26,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
       },
     })
 
-    const formatted = logs.map((log: any) => ({
+    const formatted = logs.map((log) => ({
       id: log.Id_Journal,
       timestamp: log.Date_Heure_Journal?.toISOString() || new Date().toISOString(),
       userId: log.Nom_Utilisateur || null,

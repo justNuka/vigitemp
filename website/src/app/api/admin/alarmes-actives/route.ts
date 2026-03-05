@@ -25,7 +25,7 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
 
     const where = {
       OR: [
-        { Est_Acquittee: false, Date_Heure_Fin: null as any },
+        { Est_Acquittee: false, Date_Heure_Fin: null },
         {
           Date_Heure_Debut: {
             gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),

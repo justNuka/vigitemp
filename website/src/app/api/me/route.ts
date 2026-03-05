@@ -1,12 +1,12 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import type { Authorization, CurrentUser } from "@/lib/types";
-import { withAuthLogging } from "@/lib/api-wrappers";
+import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers";
 import { getUserAvatarValue } from "@/lib/user-avatar-db";
 import { apiError, apiOk } from "@/lib/api-response";
 import { log } from "@/lib/logger"
 
-export const GET = withAuthLogging(async (req: NextRequest, ctx: any) => {
+export const GET = withAuthLogging(async (req: NextRequest, ctx: HandlerContext) => {
   try {
     // Get full user data from database
     const fullUser = await prisma.t_utilisateur.findUnique({

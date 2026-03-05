@@ -27,8 +27,8 @@ async function pingMainDb(): Promise<PingResult> {
       ok: false,
       elapsedMs: Date.now() - start,
       error: error instanceof Error ? error.message : String(error),
-      code: (error as any)?.code,
-      meta: (error as any)?.meta,
+      code: (error as { code?: string; meta?: unknown })?.code,
+      meta: (error as { code?: string; meta?: unknown })?.meta,
     }
   }
 }
@@ -47,8 +47,8 @@ async function pingMesuresDb(): Promise<PingResult> {
       ok: false,
       elapsedMs: Date.now() - start,
       error: error instanceof Error ? error.message : String(error),
-      code: (error as any)?.code,
-      meta: (error as any)?.meta,
+      code: (error as { code?: string; meta?: unknown })?.code,
+      meta: (error as { code?: string; meta?: unknown })?.meta,
     }
   }
 }

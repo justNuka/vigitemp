@@ -133,9 +133,11 @@ export const settingsApi = {
 };
 
 // Groups
+type RawGroup = { Id_Groupe: number; Nom_Groupe?: string | null }
+
 export const groupsApi = {
   getAll: async () => {
-    const groups = await fetcher<any[]>("/groupes");
+    const groups = await fetcher<RawGroup[]>("/groupes");
     return (groups ?? [])
       .filter((g) => g && typeof g.Id_Groupe === "number")
       .map((g) => ({

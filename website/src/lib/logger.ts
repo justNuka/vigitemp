@@ -95,7 +95,7 @@ function normalizeConsoleArg(arg: unknown): unknown {
 const mirrorConsoleErrorsToFile = (process.env.MIRROR_CONSOLE_ERROR_TO_FILE ?? "1") !== "0";
 const globalKey = "__vigitemp_console_error_patched__";
 
-if (mirrorConsoleErrorsToFile && !(globalThis as any)[globalKey]) {
+if (mirrorConsoleErrorsToFile && !(globalThis as Record<string, unknown>)[globalKey]) {
   const originalConsoleError = console.error.bind(console);
 
   console.error = (...args: unknown[]) => {
@@ -117,7 +117,7 @@ if (mirrorConsoleErrorsToFile && !(globalThis as any)[globalKey]) {
     originalConsoleError(...args);
   };
 
-  (globalThis as any)[globalKey] = true;
+  (globalThis as Record<string, unknown>)[globalKey] = true;
 }
 
 // Ajouter console avec filtre selon l'environnement
@@ -164,16 +164,16 @@ logger.levels = customLevels.levels;
 // Fonctions utilitaires avec contexte
 export const log = {
   // Logs généraux
-  info: (label: string, message: string, meta?: Record<string, any>) =>
+  info: (label: string, message: string, meta?: Record<string, unknown>) =>
     logger.info(message, { label, ...meta }),
-  
-  warn: (label: string, message: string, meta?: Record<string, any>) =>
+
+  warn: (label: string, message: string, meta?: Record<string, unknown>) =>
     logger.warn(message, { label, ...meta }),
-  
-  error: (label: string, message: string, meta?: Record<string, any>) =>
+
+  error: (label: string, message: string, meta?: Record<string, unknown>) =>
     logger.error(message, { label, ...meta }),
-  
-  debug: (label: string, message: string, meta?: Record<string, any>) =>
+
+  debug: (label: string, message: string, meta?: Record<string, unknown>) =>
     logger.debug(message, { label, ...meta }),
 
   // Logs d'audit (actions critiques)
@@ -183,7 +183,7 @@ export const log = {
     ip?: string;
     resource?: string;
     resourceId?: number | string;
-    changes?: Record<string, any>;
+    changes?: Record<string, unknown>;
     success?: boolean;
     reason?: string;
     userProfile?: string;
@@ -259,7 +259,7 @@ export const log = {
       ip: string,
       success: boolean,
       reason?: string,
-      context?: { userId?: number; userProfile?: string; changes?: Record<string, any> },
+      context?: { userId?: number; userProfile?: string; changes?: Record<string, unknown> },
     ) => {
       if (success) {
         log.audit("CONNEXION", {
@@ -377,7 +377,7 @@ export const log = {
   // Logs de données (utilisation de codes génériques pour CRUD)
   data: {
     // CC - Changement sur un élément (création)
-    create: (resource: string, resourceId: number | string, user: string, userId: number, ip: string, data?: Record<string, any>) =>
+    create: (resource: string, resourceId: number | string, user: string, userId: number, ip: string, data?: Record<string, unknown>) =>
       log.audit("CC", {
         user,
         userId,
@@ -388,7 +388,7 @@ export const log = {
       }),
     
     // CC - Changement sur un élément (modification)
-    update: (resource: string, resourceId: number | string, user: string, userId: number, ip: string, changes?: Record<string, any>) =>
+    update: (resource: string, resourceId: number | string, user: string, userId: number, ip: string, changes?: Record<string, unknown>) =>
       log.audit("CC", {
         user,
         userId,
@@ -411,7 +411,7 @@ export const log = {
       }),
     
     // ARC - Export de données
-    export: (resource: string, user: string, userId: number, ip: string, format?: string, filters?: Record<string, any>) =>
+    export: (resource: string, user: string, userId: number, ip: string, format?: string, filters?: Record<string, unknown>) =>
       log.audit("ARC", {
         user,
         userId,
@@ -491,7 +491,7 @@ export const log = {
   // Logs d'événements et calibrage
   events: {
     // AJE - Ajoute événement manuel
-    addManualEvent: (description: string, user: string, userId: number, ip: string, eventData?: Record<string, any>) =>
+    addManualEvent: (description: string, user: string, userId: number, ip: string, eventData?: Record<string, unknown>) =>
       log.audit("AJE", {
         user,
         userId,

@@ -29,7 +29,7 @@ const STANDARD_METROLOGY_FIELDS = [
 ] as const
 
 
-function addConsigneGuards(data: any, ctx: z.RefinementCtx) {
+function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) {
   const hasConsigne = data.Consigne !== null && data.Consigne !== undefined
   const hasSup = data.Consigne_Sup !== null && data.Consigne_Sup !== undefined
   const hasInf = data.Consigne_Inf !== null && data.Consigne_Inf !== undefined
@@ -192,8 +192,11 @@ export const PATCH = withLogging(
         Erreur_Justesse,
         Incertitude,
         Derive,
-        ...lieuPatch
-      } = validated as any
+        ...lieuPatchRest
+      } = validated
+      // Cast to Record<string, unknown> so derived DB columns (_Base, EMT_*, Est_Correction_*)
+      // can be added without TypeScript narrowing to the Zod schema type.
+      const lieuPatch: Record<string, unknown> = { ...lieuPatchRest }
 
       if (Object.prototype.hasOwnProperty.call(validated, "Frequence")) {
         const value = validated.Frequence
@@ -285,9 +288,10 @@ export const PATCH = withLogging(
         typeof surveillanceDurationMinutes === "number" &&
         surveillanceDurationMinutes > 0
 
-      const surveillanceReactivationAt = shouldScheduleSurveillanceReactivation
-        ? new Date(Date.now() + surveillanceDurationMinutes * 60 * 1000)
-        : null
+      const [surveillanceReactivationRow] = shouldScheduleSurveillanceReactivation
+        ? await prisma.$queryRaw<Array<{ reactivationAt: Date }>>`SELECT DATE_ADD(NOW(), INTERVAL ${surveillanceDurationMinutes} MINUTE) AS reactivationAt`
+        : [null]
+      const surveillanceReactivationAt = surveillanceReactivationRow?.reactivationAt ?? null
 
       const shouldUpdateMailingContacts = Object.prototype.hasOwnProperty.call(body, "MailingContacts")
       const mailingContacts = shouldUpdateMailingContacts ? normalizeMailingContacts(MailingContacts) : []
@@ -350,8 +354,8 @@ export const PATCH = withLogging(
             : undefined
 
         if (normalizedObservation !== undefined) {
-          ;(lieuPatch as any).Commentaire = normalizedObservation
-          ;(lieuPatch as any).Observations_Info = normalizedObservation
+          lieuPatch.Commentaire = normalizedObservation
+          lieuPatch.Observations_Info = normalizedObservation
         }
 
         const baseData = {
@@ -510,17 +514,17 @@ export const PATCH = withLogging(
 
       const serialized = JSON.parse(
         JSON.stringify(lieu, (_, value) => (typeof value === "bigint" ? value.toString() : value)),
-      )
+      ) as typeof lieu
 
       const normalized = {
         ...serialized,
-        Commentaire: (serialized as any)?.Observations_Info ?? serialized?.Commentaire ?? null,
-        EMT_Mode: emtModeFromDb((serialized as any)?.EMT_Choix_Mode),
-        EMT_Valeur: (serialized as any)?.EMT_Sonde ?? null,
-        Corriger_Erreur_Justesse: (serialized as any)?.Est_Correction_Ej === 1,
-        Prendre_En_Compte_Derive: (serialized as any)?.Est_Correction_derive ?? false,
-        Erreur_Justesse: (serialized as any)?.Derniere_Erreur_Justesse ?? null,
-        Incertitude: (serialized as any)?.Derniere_Incertitude ?? null,
+        Commentaire: serialized?.Observations_Info ?? serialized?.Commentaire ?? null,
+        EMT_Mode: emtModeFromDb(serialized?.EMT_Choix_Mode),
+        EMT_Valeur: serialized?.EMT_Sonde ?? null,
+        Corriger_Erreur_Justesse: serialized?.Est_Correction_Ej === 1,
+        Prendre_En_Compte_Derive: serialized?.Est_Correction_derive ?? false,
+        Erreur_Justesse: serialized?.Derniere_Erreur_Justesse ?? null,
+        Incertitude: serialized?.Derniere_Incertitude ?? null,
         Frequence:
           serialized?.Frequence === null || serialized?.Frequence === undefined
             ? serialized?.Frequence
