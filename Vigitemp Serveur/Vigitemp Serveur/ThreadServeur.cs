@@ -16,7 +16,7 @@ namespace Vigitemp_Serveur
 {
     class ThreadServeur
     {
-        private static readonly HttpClient _http = new HttpClient();
+        private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
         private static readonly object _lock = new object();
         private CancellationToken m_cts;

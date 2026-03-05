@@ -28,7 +28,7 @@ namespace Vigitemp_Serveur
         protected string tmp_numeroSerie = "";
         protected Stopwatch sw;
 
-        private static readonly HttpClient client = new HttpClient();
+        private static readonly HttpClient client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
         private static readonly ConcurrentDictionary<int, bool> _alarmStateByLieu =
             new ConcurrentDictionary<int, bool>();
         private static readonly ConcurrentDictionary<int, bool> _preAlarmStateByLieu =

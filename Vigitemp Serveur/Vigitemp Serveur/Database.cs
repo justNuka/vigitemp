@@ -943,16 +943,26 @@ namespace Vigitemp_Serveur
                                       "FROM t_lieu " +
                                       "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                                       "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
-                                      "LEFT JOIN t_ajustage ta ON ta.Id_Ajustage = (" +
-                                      "  SELECT ta2.Id_Ajustage FROM t_ajustage ta2 " +
-                                      "  WHERE ta2.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
-                                      "  ORDER BY ta2.Date_Heure_Ajustage DESC, ta2.Id_Ajustage DESC LIMIT 1" +
-                                      ") " +
-                                      "LEFT JOIN t_etalonnage te ON te.Id_Etalonnage = (" +
-                                      "  SELECT te2.Id_Etalonnage FROM t_etalonnage te2 " +
-                                      "  WHERE te2.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
-                                      "  ORDER BY te2.Date_Heure_Etalonnage DESC, te2.Id_Etalonnage DESC LIMIT 1" +
-                                      ") " +
+                                      "LEFT JOIN (" +
+                                      "  SELECT ta_inner.Sonde_Numero_Serie, ta_inner.Coeff_X, ta_inner.Coeff_Constant " +
+                                      "  FROM t_ajustage ta_inner " +
+                                      "  INNER JOIN (" +
+                                      "    SELECT Sonde_Numero_Serie, MAX(Id_Ajustage) AS MaxId " +
+                                      "    FROM t_ajustage " +
+                                      "    GROUP BY Sonde_Numero_Serie" +
+                                      "  ) ta_max ON ta_inner.Sonde_Numero_Serie = ta_max.Sonde_Numero_Serie " +
+                                      "          AND ta_inner.Id_Ajustage = ta_max.MaxId" +
+                                      ") ta ON ta.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
+                                      "LEFT JOIN (" +
+                                      "  SELECT te_inner.Sonde_Numero_Serie, te_inner.Err_Justesse, te_inner.Incertitude, te_inner.Date_Validite " +
+                                      "  FROM t_etalonnage te_inner " +
+                                      "  INNER JOIN (" +
+                                      "    SELECT Sonde_Numero_Serie, MAX(Id_Etalonnage) AS MaxId " +
+                                      "    FROM t_etalonnage " +
+                                      "    GROUP BY Sonde_Numero_Serie" +
+                                      "  ) te_max ON te_inner.Sonde_Numero_Serie = te_max.Sonde_Numero_Serie " +
+                                      "          AND te_inner.Id_Etalonnage = te_max.MaxId" +
+                                      ") te ON te.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                                       "WHERE t_module.Id_Serveur = @idServeur " +
                                       "AND t_lieu.Lieu_Etat = 'S' " +
                                       "AND t_sonde.Etat_Sonde = 'S' " +
