@@ -42,6 +42,12 @@ export function usePaginatedSensors({
         if (cached) return cached
       }
 
+      // Fire-and-forget: trigger snooze reactivation on first page load only.
+      // This replaces the side-effect that was previously embedded in the GET handler.
+      if (page === 1) {
+        fetch("/api/capteurs/reactivate", { method: "POST" }).catch(() => undefined)
+      }
+
       const params = new URLSearchParams({
         page: String(page),
         limit: String(limit),

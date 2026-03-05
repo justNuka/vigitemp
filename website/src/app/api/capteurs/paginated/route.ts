@@ -90,52 +90,6 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       }
     }
 
-    await prisma.t_lieu.updateMany({
-      where: {
-        Est_Archive: false,
-        Notification_Active: false,
-        Date_Heure_Reactivation_Alarme: { lt: new Date() },
-      },
-      data: {
-        Notification_Active: true,
-        Date_Heure_Reactivation_Alarme: null,
-      },
-    })
-
-    const lieuxToReactivate = await prisma.t_lieu.findMany({
-      where: {
-        Est_Archive: false,
-        Lieu_Etat: "D",
-        Date_Heure_Reactivation_Surveillance: { lt: new Date() },
-      },
-      select: {
-        Id_Lieu: true,
-        Sonde_Numero_Serie: true,
-      },
-    })
-
-    if (lieuxToReactivate.length > 0) {
-      const ids = lieuxToReactivate.map((lieu) => lieu.Id_Lieu)
-      await prisma.t_lieu.updateMany({
-        where: { Id_Lieu: { in: ids } },
-        data: {
-          Lieu_Etat: "S",
-          Date_Heure_Reactivation_Surveillance: null,
-        },
-      })
-
-      const sondes = lieuxToReactivate
-        .map((lieu) => lieu.Sonde_Numero_Serie)
-        .filter((serie): serie is string => typeof serie === "string" && serie.length > 0)
-
-      if (sondes.length > 0) {
-        await prisma.t_sonde.updateMany({
-          where: { Sonde_Numero_Serie: { in: sondes } },
-          data: { Surveillance_Etat: "S" },
-        })
-      }
-    }
-
     const total = await prisma.t_lieu.count({ where })
 
     const locations = await prisma.t_lieu.findMany({
