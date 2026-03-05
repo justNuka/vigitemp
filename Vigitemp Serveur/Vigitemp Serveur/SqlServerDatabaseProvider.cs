@@ -6,7 +6,7 @@ using System.Globalization;
 
 namespace Vigitemp_Serveur
 {
-    internal sealed class SqlServerDatabaseProvider : IDatabaseProvider
+    internal sealed class SqlServerDatabaseProvider : IDatabaseProvider, IDisposable
     {
         private static readonly object _lock = new object();
         private SqlConnection _connectionMain;
@@ -112,6 +112,45 @@ namespace Vigitemp_Serveur
             _connectionMeasure = null;
         }
 
+        private bool EnsureConnected()
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (_connectionMain != null && _connectionMain.State == System.Data.ConnectionState.Open &&
+                        _connectionMeasure != null && _connectionMeasure.State == System.Data.ConnectionState.Open)
+                    {
+                        return true;
+                    }
+
+                    CloseConnexion();
+
+                    var mainDb = GetSetting("Vigi.Db.MainDatabase", "vigitemp");
+                    var mesureDb = GetSetting("Vigi.Db.MeasureDatabase", "vigitemp_mesure");
+
+                    _connectionMain = CreateConnection(mainDb);
+                    _connectionMain.Open();
+
+                    _connectionMeasure = CreateConnection(mesureDb);
+                    _connectionMeasure.Open();
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("EnsureConnected (MSSQL): connexion echouee: " + ex.Message);
+                    CloseConnexion();
+                    return false;
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            CloseConnexion();
+        }
+
         private SqlCommand CreateCommand(SqlConnection connection, string sql)
         {
             var cmd = connection.CreateCommand();
@@ -126,7 +165,7 @@ namespace Vigitemp_Serveur
             {
                 var idLieu = 0;
 
-                if (!InitConnexion())
+                if (!EnsureConnected())
                 {
                     return idLieu;
                 }
@@ -143,7 +182,6 @@ namespace Vigitemp_Serveur
                     }
                 }
 
-                CloseConnexion();
                 return idLieu;
             }
         }
@@ -152,7 +190,7 @@ namespace Vigitemp_Serveur
         {
             lock (_lock)
             {
-                if (!InitConnexion())
+                if (!EnsureConnected())
                 {
                     return new LieuAlarmSettings(
                         idLieu,
@@ -206,10 +244,6 @@ namespace Vigitemp_Serveur
                             dateHeureReactivationAlarme: default(DateTime),
                             planningDerniereMaj: default(DateTime));
                     }
-                }
-                finally
-                {
-                    CloseConnexion();
                 }
             }
         }
@@ -481,7 +515,7 @@ namespace Vigitemp_Serveur
                 var arrayIp = new List<string>();
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return arrayIp;
                     }
@@ -495,12 +529,10 @@ namespace Vigitemp_Serveur
                         }
                     }
 
-                    CloseConnexion();
                     return arrayIp;
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("erreur getPCsClients: " + ex);
                     return arrayIp;
                 }
@@ -512,7 +544,7 @@ namespace Vigitemp_Serveur
             {
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return false;
                     }
@@ -542,7 +574,6 @@ namespace Vigitemp_Serveur
                         {
                             if (!reader.Read())
                             {
-                                CloseConnexion();
                                 VigitempServeur.Log("(AddMesure) Aucune ligne t_lieu pour la sonde: " + p_numeroSerie);
                                 return false;
                             }
@@ -597,13 +628,11 @@ namespace Vigitemp_Serveur
                         frequence,
                         0);
 
-                    CloseConnexion();
                     VigitempServeur.nombres_reponses++;
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(AddMesure MSSQL) SQL Erreur: " + ex);
                     return false;
                 }
@@ -616,7 +645,7 @@ namespace Vigitemp_Serveur
             {
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return false;
                     }
@@ -646,7 +675,6 @@ namespace Vigitemp_Serveur
                         {
                             if (!reader.Read())
                             {
-                                CloseConnexion();
                                 VigitempServeur.Log("(AddMesureNoResponse MSSQL) Aucune ligne t_lieu pour la sonde: " + p_numeroSerie);
                                 return false;
                             }
@@ -698,13 +726,11 @@ namespace Vigitemp_Serveur
                         0,
                         1);
 
-                    CloseConnexion();
                     VigitempServeur.Log($"(AddMesureNoResponse MSSQL) Mesure null inseree pour non-reponse sonde={p_numeroSerie} lieu={idLieu}");
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(AddMesureNoResponse MSSQL) SQL Erreur: " + ex);
                     return false;
                 }
@@ -776,9 +802,8 @@ namespace Vigitemp_Serveur
                     var tmpIdLieu = new List<int>();
                     var tmpLastMeasure = new List<DateTime?>();
 
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
-                        CloseConnexion();
                         return (tmpPort, tmpSerial, tmpAdresse, tmpModule, tmpIdLieu, tmpLastMeasure);
                     }
 
@@ -816,12 +841,10 @@ namespace Vigitemp_Serveur
                         }
                     }
 
-                    CloseConnexion();
                     return (tmpPort, tmpSerial, tmpAdresse, tmpModule, tmpIdLieu, tmpLastMeasure);
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(getInfosByIdServeurAndFrequencies MSSQL) SQL Erreur: " + ex);
                     return (new List<string>(), new List<string>(), new List<string>(), new List<string>(), new List<int>(), new List<DateTime?>());
                 }
@@ -836,7 +859,7 @@ namespace Vigitemp_Serveur
 
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return list;
                     }
@@ -915,12 +938,10 @@ namespace Vigitemp_Serveur
                         }
                     }
 
-                    CloseConnexion();
                     return list;
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(getSondesActivesByServeur MSSQL) SQL Erreur: " + ex);
                     return list;
                 }
@@ -938,9 +959,8 @@ namespace Vigitemp_Serveur
                     string sondeAdresse = "";
                     string moduleNumeroSerie = "";
 
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
-                        CloseConnexion();
                         return (portSerie, sondeNumeroSerie, sondeAdresse, moduleNumeroSerie);
                     }
 
@@ -964,12 +984,10 @@ namespace Vigitemp_Serveur
                         }
                     }
 
-                    CloseConnexion();
                     return (portSerie, sondeNumeroSerie, sondeAdresse, moduleNumeroSerie);
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(getInfosByIdLieu MSSQL) SQL Erreur: " + ex);
                     return ("", "", "", "");
                 }
@@ -982,7 +1000,7 @@ namespace Vigitemp_Serveur
             {
                 var arrayTmp = new List<int>();
 
-                if (!InitConnexion())
+                if (!EnsureConnected())
                 {
                     return arrayTmp;
                 }
@@ -996,7 +1014,6 @@ namespace Vigitemp_Serveur
                     }
                 }
 
-                CloseConnexion();
                 return arrayTmp;
             }
         }
@@ -1007,7 +1024,7 @@ namespace Vigitemp_Serveur
             {
                 var arrayTmp = new List<int>();
 
-                if (!InitConnexion())
+                if (!EnsureConnected())
                 {
                     return arrayTmp;
                 }
@@ -1032,7 +1049,6 @@ namespace Vigitemp_Serveur
                     }
                 }
 
-                CloseConnexion();
                 return arrayTmp;
             }
         }
@@ -1044,7 +1060,7 @@ namespace Vigitemp_Serveur
                 var ids = new List<int>();
                 var dates = new List<DateTime>();
 
-                if (!InitConnexion())
+                if (!EnsureConnected())
                 {
                     return (ids, dates);
                 }
@@ -1059,7 +1075,6 @@ namespace Vigitemp_Serveur
                     }
                 }
 
-                CloseConnexion();
                 return (ids, dates);
             }
         }
@@ -1071,7 +1086,7 @@ namespace Vigitemp_Serveur
                 var ids = new List<int>();
                 var dates = new List<DateTime>();
 
-                if (!InitConnexion())
+                if (!EnsureConnected())
                 {
                     return (ids, dates);
                 }
@@ -1098,7 +1113,6 @@ namespace Vigitemp_Serveur
                     }
                 }
 
-                CloseConnexion();
                 return (ids, dates);
             }
         }
@@ -1109,7 +1123,7 @@ namespace Vigitemp_Serveur
             {
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return "";
                     }
@@ -1118,13 +1132,11 @@ namespace Vigitemp_Serveur
                     {
                         cmd.Parameters.AddWithValue("@idLieu", idLieu);
                         var result = cmd.ExecuteScalar();
-                        CloseConnexion();
                         return result == null || result == DBNull.Value ? "" : result.ToString();
                     }
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(getLieuUnite MSSQL) SQL Erreur: " + ex.Message);
                     return "";
                 }
@@ -1137,7 +1149,7 @@ namespace Vigitemp_Serveur
             {
                 double value = 0.0;
 
-                if (!InitConnexion())
+                if (!EnsureConnected())
                 {
                     return value;
                 }
@@ -1156,7 +1168,6 @@ namespace Vigitemp_Serveur
                     }
                 }
 
-                CloseConnexion();
                 return value;
             }
         }
@@ -1168,7 +1179,7 @@ namespace Vigitemp_Serveur
                 double value = 0.0;
                 string unit = "";
 
-                if (!InitConnexion())
+                if (!EnsureConnected())
                 {
                     return (value, unit);
                 }
@@ -1201,7 +1212,6 @@ namespace Vigitemp_Serveur
                     }
                 }
 
-                CloseConnexion();
                 return (value, unit);
             }
         }
@@ -1211,7 +1221,7 @@ namespace Vigitemp_Serveur
             {
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return false;
                     }
@@ -1225,13 +1235,11 @@ namespace Vigitemp_Serveur
                         cmd.ExecuteNonQuery();
                     }
 
-                    CloseConnexion();
                     return true;
                 }
                 catch
                 {
                     VigitempServeur.Log("ERREUR : IMPOSSIBLE DE CHANGER LE REGLAGE DE NOTIFICATION POUR LE LIEU IdLieu: " + p_idLieu);
-                    CloseConnexion();
                     return false;
                 }
             }
@@ -1243,7 +1251,7 @@ namespace Vigitemp_Serveur
             {
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return false;
                     }
@@ -1267,12 +1275,10 @@ namespace Vigitemp_Serveur
                         cmdSonde.ExecuteNonQuery();
                     }
 
-                    CloseConnexion();
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(setSurveillanceByIdLieu MSSQL) SQL Erreur: " + ex.Message);
                     return false;
                 }
@@ -1285,7 +1291,7 @@ namespace Vigitemp_Serveur
             {
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return false;
                     }
@@ -1340,12 +1346,10 @@ namespace Vigitemp_Serveur
                         insertCmd.ExecuteNonQuery();
                     }
 
-                    CloseConnexion();
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(writeAuditJournal MSSQL) SQL Erreur: " + ex.Message);
                     return false;
                 }
@@ -1356,7 +1360,7 @@ namespace Vigitemp_Serveur
         {
             lock (_lock)
             {
-                if (!InitConnexion())
+                if (!EnsureConnected())
                 {
                     return false;
                 }
@@ -1377,10 +1381,6 @@ namespace Vigitemp_Serveur
                     VigitempServeur.Log("setLieuAlarmFlags MSSQL error: " + ex);
                     return false;
                 }
-                finally
-                {
-                    CloseConnexion();
-                }
             }
         }
 
@@ -1390,7 +1390,7 @@ namespace Vigitemp_Serveur
             {
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return false;
                     }
@@ -1404,12 +1404,10 @@ namespace Vigitemp_Serveur
                         cmd.ExecuteNonQuery();
                     }
 
-                    CloseConnexion();
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(setLieuInfosModifiees MSSQL) SQL Erreur: " + ex.Message);
                     return false;
                 }
@@ -1422,7 +1420,7 @@ namespace Vigitemp_Serveur
             {
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return false;
                     }
@@ -1507,12 +1505,10 @@ namespace Vigitemp_Serveur
                         }
                     }
 
-                    CloseConnexion();
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(setNonResponseAlarm MSSQL) SQL Erreur: " + ex.Message);
                     return false;
                 }
@@ -1525,7 +1521,7 @@ namespace Vigitemp_Serveur
             {
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return false;
                     }
@@ -1617,12 +1613,10 @@ namespace Vigitemp_Serveur
                         }
                     }
 
-                    CloseConnexion();
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(setThresholdAlarm MSSQL) SQL Erreur: " + ex.Message);
                     return false;
                 }
@@ -1635,7 +1629,7 @@ namespace Vigitemp_Serveur
             {
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return null;
                     }
@@ -1667,7 +1661,6 @@ namespace Vigitemp_Serveur
                                 var valeur = GetNullableDouble(reader, "Valeur");
                                 var unite = reader["Unite"] == DBNull.Value ? null : reader["Unite"].ToString();
 
-                                CloseConnexion();
                                 return new AlarmSummary(
                                     id,
                                     type,
@@ -1680,12 +1673,10 @@ namespace Vigitemp_Serveur
                         }
                     }
 
-                    CloseConnexion();
                     return null;
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(getActiveAlarmSummary MSSQL) SQL Erreur: " + ex.Message);
                     return null;
                 }
@@ -1698,7 +1689,7 @@ namespace Vigitemp_Serveur
             {
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return false;
                     }
@@ -1720,12 +1711,10 @@ namespace Vigitemp_Serveur
                         _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(null, idLieu, "ended");
                     }
 
-                    CloseConnexion();
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(setThresholdAlarmEnded MSSQL) SQL Erreur: " + ex.Message);
                     return false;
                 }
@@ -1766,7 +1755,7 @@ namespace Vigitemp_Serveur
             {
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return false;
                     }
@@ -1776,7 +1765,6 @@ namespace Vigitemp_Serveur
                     {
                         cmd.Parameters.AddWithValue("@idLieu", idLieu);
                         var raw = cmd.ExecuteScalar();
-                        CloseConnexion();
                         if (raw == null || raw == DBNull.Value)
                         {
                             return false;
@@ -1787,7 +1775,6 @@ namespace Vigitemp_Serveur
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(getLieuImmediateRetriggerFlag MSSQL) SQL Erreur: " + ex.Message);
                     return false;
                 }
@@ -1800,7 +1787,7 @@ namespace Vigitemp_Serveur
             {
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return false;
                     }
@@ -1812,12 +1799,10 @@ namespace Vigitemp_Serveur
                         cmd.Parameters.AddWithValue("@idLieu", idLieu);
                         cmd.ExecuteNonQuery();
                     }
-                    CloseConnexion();
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(setLieuImmediateRetriggerFlag MSSQL) SQL Erreur: " + ex.Message);
                     return false;
                 }
@@ -1837,7 +1822,7 @@ namespace Vigitemp_Serveur
             {
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return 0;
                     }
@@ -1853,14 +1838,12 @@ namespace Vigitemp_Serveur
                     {
                         cmd.Parameters.AddWithValue("@idServeur", idServeur);
                         var result = cmd.ExecuteScalar();
-                        CloseConnexion();
                         if (result == null || result == DBNull.Value) return 0;
                         return Convert.ToInt32(result);
                     }
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(getLastAlarmIdByServeur MSSQL) SQL Erreur: " + ex.Message);
                     return 0;
                 }
@@ -1874,7 +1857,7 @@ namespace Vigitemp_Serveur
                 var list = new List<AlarmNotificationItem>();
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return list;
                     }
@@ -1920,12 +1903,10 @@ namespace Vigitemp_Serveur
                         }
                     }
 
-                    CloseConnexion();
                     return list;
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(getNewAlarmsSince MSSQL) SQL Erreur: " + ex.Message);
                     return list;
                 }
@@ -1939,7 +1920,7 @@ namespace Vigitemp_Serveur
                 var list = new List<AlarmNotificationItem>();
                 try
                 {
-                    if (!InitConnexion())
+                    if (!EnsureConnected())
                     {
                         return list;
                     }
@@ -1977,12 +1958,10 @@ namespace Vigitemp_Serveur
                         }
                     }
 
-                    CloseConnexion();
                     return list;
                 }
                 catch (Exception ex)
                 {
-                    CloseConnexion();
                     VigitempServeur.Log("(getEndedAlarmsSince MSSQL) SQL Erreur: " + ex.Message);
                     return list;
                 }
@@ -2030,7 +2009,7 @@ namespace Vigitemp_Serveur
                 double coeffX;
                 double coeffConstant;
 
-                if (!InitConnexion())
+                if (!EnsureConnected())
                 {
                     return (1, 0);
                 }
@@ -2052,12 +2031,10 @@ namespace Vigitemp_Serveur
                     catch
                     {
                         VigitempServeur.Log("ERREUR : PAS DE CALIBRAGE POUR LA SONDE " + p_serial_number);
-                        CloseConnexion();
                         return (1, 0);
                     }
                 }
 
-                CloseConnexion();
                 return (coeffX, coeffConstant);
             }
         }
@@ -2073,7 +2050,7 @@ namespace Vigitemp_Serveur
                     HasAjustage = false,
                 };
 
-                if (!InitConnexion())
+                if (!EnsureConnected())
                 {
                     return settings;
                 }
@@ -2153,7 +2130,6 @@ namespace Vigitemp_Serveur
                     }
                 }
 
-                CloseConnexion();
                 return settings;
             }
         }

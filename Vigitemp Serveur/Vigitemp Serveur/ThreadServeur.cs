@@ -425,6 +425,17 @@ namespace Vigitemp_Serveur
                 }
                 sp.Dispose();
             }
+
+            try
+            {
+                m_database?.Dispose();
+                m_database = null;
+            }
+            catch
+            {
+                // ignore
+            }
+
             //Stop timer
             //Console.WriteLine("Thread#" + _idServer + " stopped!");
             //Trace.WriteLine("Thread#" + _idServer + " stopped!");
@@ -619,14 +630,14 @@ namespace Vigitemp_Serveur
 
                 RefreshSchedule();
 
-                //cherche les lieux avec une dateReactivationAlarme passé pour réactiver les alarmes
+                //cherche les lieux avec une dateReactivationAlarme passï¿½ pour rï¿½activer les alarmes
                 //VigitempServeur.Log("process 1 minute");
                 (List<int> arr_lieuxAvecAlarmeSnooze, List<DateTime> arr_dateDeRemiseEnAlarme) = GetDatabase().getLieuxAvecAlarmesEnSnooze();
                 for (int i = 0; i < arr_lieuxAvecAlarmeSnooze.Count(); i++)
                 {
                     if (arr_dateDeRemiseEnAlarme[i].CompareTo(DateTime.Now) <= 0 )
                     {
-                        VigitempServeur.Log("Le lieu " + arr_lieuxAvecAlarmeSnooze[i] + " doit etre reactivé.");
+                        VigitempServeur.Log("Le lieu " + arr_lieuxAvecAlarmeSnooze[i] + " doit etre reactivï¿½.");
 
                         GetDatabase().setAlarmeByIdLieu(arr_lieuxAvecAlarmeSnooze[i], true);
 
@@ -721,20 +732,20 @@ namespace Vigitemp_Serveur
                     }
                 }
 
-                // Réactivation automatique de la surveillance (Lieu_Etat)
+                // Rï¿½activation automatique de la surveillance (Lieu_Etat)
                 (List<int> arr_lieuxSurveillanceSnooze, List<DateTime> arr_dateSurveillance) = GetDatabase().getLieuxAvecSurveillanceEnSnooze();
                 for (int i = 0; i < arr_lieuxSurveillanceSnooze.Count(); i++)
                 {
                     if (arr_dateSurveillance[i].CompareTo(DateTime.Now) <= 0)
                     {
-                        VigitempServeur.Log("Surveillance réactivée pour le lieu " + arr_lieuxSurveillanceSnooze[i] + ".");
+                        VigitempServeur.Log("Surveillance rï¿½activï¿½e pour le lieu " + arr_lieuxSurveillanceSnooze[i] + ".");
                         GetDatabase().setSurveillanceByIdLieu(arr_lieuxSurveillanceSnooze[i], true);
                         GetDatabase().writeAuditJournal(
                             "ACT",
                             "SERVEUR",
                             "SYSTEME",
                             arr_lieuxSurveillanceSnooze[i],
-                            "Réactivation automatique de la surveillance",
+                            "Rï¿½activation automatique de la surveillance",
                             null);
                     }
                 }

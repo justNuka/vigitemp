@@ -296,8 +296,11 @@ namespace Vigitemp_Serveur
 
         private void SyncWorkersWithDatabase()
         {
-            IDatabaseProvider db = DatabaseFactory.Create();
-            List<int> arr_serveurs = db.getDistinctIdServeur();
+            List<int> arr_serveurs;
+            using (IDatabaseProvider db = DatabaseFactory.Create())
+            {
+                arr_serveurs = db.getDistinctIdServeur();
+            }
 
             // ajout de potentiel nouveau serveur cr?? depuis le lancement du service
             foreach (int idServeur in arr_serveurs)
@@ -412,8 +415,11 @@ namespace Vigitemp_Serveur
             try
             {
             // Console.WriteLine("Guid: "+systemi());
-            IDatabaseProvider db = DatabaseFactory.Create();
-            List<int> arr_serveurs = db.getDistinctIdServeur();
+            List<int> arr_serveurs;
+            using (IDatabaseProvider db = DatabaseFactory.Create())
+            {
+                arr_serveurs = db.getDistinctIdServeur();
+            }
             //ajout de potentiel nouveau serveur créé depuis le lancement du service
             foreach (int idServeur in arr_serveurs)
             {

@@ -10,7 +10,7 @@ namespace Vigitemp_Serveur
 {
     internal static class AlarmWebNotifier
     {
-        private static readonly HttpClient _http = new HttpClient();
+        private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
 
         private static string BaseUrl => ConfigurationManager.AppSettings["Vigi.WebsiteBaseUrl"];
         private static string Secret => ConfigurationManager.AppSettings["Vigi.AlarmDispatchSecret"];
@@ -135,10 +135,7 @@ namespace Vigitemp_Serveur
         {
             try
             {
-                if (alarms == null || alarms.Count == 0)
-                {
-                    return;
-                }
+                if (alarms == null || alarms.Count == 0) return;
 
                 if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
                 {
@@ -148,29 +145,40 @@ namespace Vigitemp_Serveur
 
                 var url = Combine(BaseUrl, "/api/alarmes/dispatch");
 
+                var tasks = new List<Task>();
                 foreach (var alarm in alarms)
                 {
-                    if (alarm == null || alarm.IdAlarme <= 0)
+                    if (alarm == null || alarm.IdAlarme <= 0) continue;
+
+                    var capturedAlarm = alarm; // capture for closure
+                    tasks.Add(Task.Run(async () =>
                     {
-                        continue;
-                    }
+                        try
+                        {
+                            var payload =
+                                "{" +
+                                "\"alarmId\":" + capturedAlarm.IdAlarme + "," +
+                                "\"eventType\":\"ended\"" +
+                                "}";
 
-                    var payload =
-                        "{" +
-                        "\"alarmId\":" + alarm.IdAlarme + "," +
-                        "\"eventType\":\"ended\"" +
-                        "}";
+                            var req = new HttpRequestMessage(HttpMethod.Post, url);
+                            req.Headers.Add("x-vigitemp-secret", Secret);
+                            req.Content = new StringContent(payload, Encoding.UTF8, "application/json");
 
-                    var req = new HttpRequestMessage(HttpMethod.Post, url);
-                    req.Headers.Add("x-vigitemp-secret", Secret);
-                    req.Content = new StringContent(payload, Encoding.UTF8, "application/json");
-
-                    var response = await _http.SendAsync(req);
-                    VigitempServeur.Log(
-                        "AlarmWebNotifier: notification ended envoyee (status=" + (int)response.StatusCode + ") " +
-                        "idLieu=" + alarm.IdLieu +
-                        " alarmId=" + alarm.IdAlarme);
+                            var response = await _http.SendAsync(req);
+                            VigitempServeur.Log(
+                                "AlarmWebNotifier: notification ended envoyee (status=" + (int)response.StatusCode + ") " +
+                                "idLieu=" + capturedAlarm.IdLieu +
+                                " alarmId=" + capturedAlarm.IdAlarme);
+                        }
+                        catch (Exception ex)
+                        {
+                            VigitempServeur.Log("AlarmWebNotifier: echec ended alarm " + capturedAlarm.IdAlarme + ": " + ex.Message);
+                        }
+                    }));
                 }
+
+                await Task.WhenAll(tasks);
             }
             catch (Exception ex)
             {

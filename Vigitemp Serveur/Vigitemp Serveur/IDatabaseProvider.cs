@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Vigitemp_Serveur
 {
-    internal interface IDatabaseProvider
+    internal interface IDatabaseProvider : IDisposable
     {
         int getIDLieuBySerialNumber(string p_sondSerialNumber);
         LieuAlarmSettings getLieuAlarmSettings(int idLieu);
