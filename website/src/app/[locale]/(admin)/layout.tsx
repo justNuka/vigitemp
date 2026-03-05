@@ -36,8 +36,8 @@ export default function AdminGroupLayout({
     refetchInterval: 60_000,
     refetchOnMount: true,
     refetchOnReconnect: true,
-    refetchOnWindowFocus: true,
-    staleTime: 0,
+    refetchOnWindowFocus: false,
+    staleTime: 30_000, // 30s — fresh enough, prevents focus-triggered refetches
     retry: false,
   });
   // NOTE: Admin check disabled for now (rights handling will be redesigned).

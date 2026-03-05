@@ -25,14 +25,16 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
 
     const where: any = { Est_Archive: false }
 
-    const assignedSites = await prisma.t_liaison_utilisateur_site.findMany({
-      where: { Id_Utilisateur: ctx.user.userId },
-      select: { Id_Site: true },
-    })
-    const assignedGroups = await prisma.t_liaison_utilisateur_groupe.findMany({
-      where: { Id_Utilisateur: ctx.user.userId },
-      select: { Id_Groupe: true },
-    })
+    const [assignedSites, assignedGroups] = await Promise.all([
+      prisma.t_liaison_utilisateur_site.findMany({
+        where: { Id_Utilisateur: ctx.user.userId },
+        select: { Id_Site: true },
+      }),
+      prisma.t_liaison_utilisateur_groupe.findMany({
+        where: { Id_Utilisateur: ctx.user.userId },
+        select: { Id_Groupe: true },
+      }),
+    ])
 
     const assignedSiteIds = assignedSites.map((site) => site.Id_Site).filter((id): id is number => !!id)
     const assignedGroupIds = assignedGroups

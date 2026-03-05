@@ -1,3 +1,5 @@
+import { cache } from "react"
+
 import { prisma } from "@/lib/prisma"
 
 type WhereInput = Record<string, unknown>
@@ -12,7 +14,7 @@ function uniq(ids: Array<number | null | undefined>) {
   return Array.from(new Set(ids.filter((id): id is number => typeof id === "number" && id > 0)))
 }
 
-export async function getUserLocationScope(userId: number): Promise<UserLocationScope> {
+export const getUserLocationScope = cache(async (userId: number): Promise<UserLocationScope> => {
   const [user, siteLinks, groupLinks] = await Promise.all([
     prisma.t_utilisateur.findUnique({
       where: { Id_Utilisateur: userId },
@@ -36,7 +38,7 @@ export async function getUserLocationScope(userId: number): Promise<UserLocation
     groupIds,
     hasRestrictions: siteIds.length > 0 || groupIds.length > 0,
   }
-}
+})
 
 export function buildLieuAccessFilter(scope: UserLocationScope): WhereInput | null {
   if (!scope.hasRestrictions) return null
