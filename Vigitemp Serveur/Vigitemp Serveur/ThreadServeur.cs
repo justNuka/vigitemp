@@ -32,8 +32,8 @@ namespace Vigitemp_Serveur
         private int _idServer;
         private readonly ConcurrentDictionary<int, CachedLieuSettings> _lieuSettingsCache =
             new ConcurrentDictionary<int, CachedLieuSettings>();
-        private readonly ConcurrentDictionary<string, SondeMetrologySettings> _sondeMetrologyCache =
-            new ConcurrentDictionary<string, SondeMetrologySettings>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, CachedMetrology> _sondeMetrologyCache =
+            new ConcurrentDictionary<string, CachedMetrology>(StringComparer.OrdinalIgnoreCase);
         private readonly object _lieuSettingsLock = new object();
         private readonly int _settingsCacheSeconds = GetSettingInt("Vigi.License.SettingsCacheSeconds", 60);
         private readonly bool _logSettingsCache = GetSettingBool("Vigitemp.Alarms.LogSettingsCache", true);
@@ -56,6 +56,18 @@ namespace Vigitemp_Serveur
             }
 
             public LieuAlarmSettings Settings { get; }
+            public DateTime FetchedAtUtc { get; }
+        }
+
+        private sealed class CachedMetrology
+        {
+            public CachedMetrology(SondeMetrologySettings settings, DateTime fetchedAtUtc)
+            {
+                Settings = settings;
+                FetchedAtUtc = fetchedAtUtc;
+            }
+
+            public SondeMetrologySettings Settings { get; }
             public DateTime FetchedAtUtc { get; }
         }
 
@@ -165,11 +177,15 @@ namespace Vigitemp_Serveur
 
             if (_sondeMetrologyCache.TryGetValue(serialNumber, out var cached) && cached != null)
             {
-                return cached;
+                var ageSeconds = (DateTime.UtcNow - cached.FetchedAtUtc).TotalSeconds;
+                if (ageSeconds < _settingsCacheSeconds)
+                {
+                    return cached.Settings;
+                }
             }
 
             var fromDb = GetDatabase().getSondeMetrologyBySerialNumber(serialNumber) ?? new SondeMetrologySettings();
-            _sondeMetrologyCache[serialNumber] = fromDb;
+            _sondeMetrologyCache[serialNumber] = new CachedMetrology(fromDb, DateTime.UtcNow);
             return fromDb;
         }
 
@@ -180,7 +196,7 @@ namespace Vigitemp_Serveur
                 return;
             }
 
-            _sondeMetrologyCache[row.SondeNumeroSerie] = new SondeMetrologySettings
+            _sondeMetrologyCache[row.SondeNumeroSerie] = new CachedMetrology(new SondeMetrologySettings
             {
                 IdLieu = row.IdLieu,
                 Offset = row.SondeOffset,
@@ -194,7 +210,7 @@ namespace Vigitemp_Serveur
                 CorrectionJustesse = row.CorrectionJustesse,
                 Incertitude = row.Incertitude,
                 DateValiditeEtalonnage = row.DateValiditeEtalonnage,
-            };
+            }, DateTime.UtcNow);
 
             if (_logMetrologyDetailed)
             {
@@ -632,122 +648,93 @@ namespace Vigitemp_Serveur
 
                 //cherche les lieux avec une dateReactivationAlarme pass� pour r�activer les alarmes
                 //VigitempServeur.Log("process 1 minute");
-                (List<int> arr_lieuxAvecAlarmeSnooze, List<DateTime> arr_dateDeRemiseEnAlarme) = GetDatabase().getLieuxAvecAlarmesEnSnooze();
+                (List<int> arr_lieuxAvecAlarmeSnooze, _) = GetDatabase().getLieuxAvecAlarmesEnSnooze();
                 for (int i = 0; i < arr_lieuxAvecAlarmeSnooze.Count(); i++)
                 {
-                    if (arr_dateDeRemiseEnAlarme[i].CompareTo(DateTime.Now) <= 0 )
+                    VigitempServeur.Log("Le lieu " + arr_lieuxAvecAlarmeSnooze[i] + " doit etre reactiv�.");
+
+                    GetDatabase().setAlarmeByIdLieu(arr_lieuxAvecAlarmeSnooze[i], true);
+
+                    var derniereMesure = GetDatabase().getLastMeasureWithUnit(arr_lieuxAvecAlarmeSnooze[i]);
+
+                    //recuperer infos du lieu
+                    (string arr_portSerie, string arr_sondeNumeroSerie, string arr_sondeAdresse, string arr_moduleNumeroSerie) = GetDatabase().getInfosByIdLieu(arr_lieuxAvecAlarmeSnooze[i]);
+
+                    if (string.IsNullOrEmpty(arr_sondeNumeroSerie) || arr_sondeNumeroSerie.Length < 2)
                     {
-                        VigitempServeur.Log("Le lieu " + arr_lieuxAvecAlarmeSnooze[i] + " doit etre reactiv�.");
-
-                        GetDatabase().setAlarmeByIdLieu(arr_lieuxAvecAlarmeSnooze[i], true);
-
-                        var derniereMesure = GetDatabase().getLastMeasureWithUnit(arr_lieuxAvecAlarmeSnooze[i]);
-
-
-                        //recuperer infos du lieu
-                        (string arr_portSerie, string arr_sondeNumeroSerie, string arr_sondeAdresse, string arr_moduleNumeroSerie) = GetDatabase().getInfosByIdLieu(arr_lieuxAvecAlarmeSnooze[i]);
-                        //if (arr_sondeNumeroSerie != "")
-                        //{
-                            //for (int i = 0; i < arr_sondeNumeroSerie.Count; i++)
-                            //{
-                        if (string.IsNullOrEmpty(arr_sondeNumeroSerie) || arr_sondeNumeroSerie.Length < 2)
-                        {
-                            VigitempServeur.Log("Numero de serie invalide pour le lieu " + arr_lieuxAvecAlarmeSnooze[i] + ".");
-                            continue;
-                        }
-                        VigitempServeur.Log("Ouverture du port " + arr_portSerie + " pour la sonde " + arr_sondeNumeroSerie);
-                                sensorType = arr_sondeNumeroSerie.StartsWith("GSP", StringComparison.OrdinalIgnoreCase)
-                                    ? "GSP"
-                                    : arr_sondeNumeroSerie.Substring(0, 2);
-
-                                switch (sensorType)
-                                {
-                                    case "IN":
-                                        sensor = new SensorIN(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
-                                        //await sensor.read();
-                                        break;
-                                    case "IE":
-                                        //VigitempServeur.nombres_interrogations++;
-                                        sensor = new SensorIE(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
-                                        //await sensor.read();
-                                        break;
-                                    case "IQ":
-
-                                        break;
-                                    case "IP":
-                                        //VigitempServeur.nombres_interrogations++;
-                                        sensor = new SensorIP(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
-                                        //await sensor.read();
-                                        break;
-                                    case "IC":
-                                        //VigitempServeur.nombres_interrogations++;
-                                        sensor = new SensorIC(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
-                                        //await sensor.read();
-                                        break;
-                                    case "IH":
-                                        //VigitempServeur.nombres_interrogations++;
-                                        sensor = new SensorIH(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
-                                        //await sensor.read();
-                                        break;
-                                    case "EN":
-                                        //VigitempServeur.nombres_interrogations++;
-                                        sensor = new SensorEN(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
-                                        //await sensor.read();
-                                        break;
-
-                                    case "HN":
-                                        //VigitempServeur.nombres_interrogations++;
-                                        sensor = new SensorHN(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse, arr_moduleNumeroSerie);
-                                        //await sensor.read();
-                                        break;
-                                    case "GSP":
-                                        sensor = new SensorGSP(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
-                                        break;
-                                    default: break;
-                                }
-                        //}
-
-                        //}
-
-                        
-                        if (sensor == null)
-                        {
-                            VigitempServeur.Log("Aucun capteur cree pour le lieu " + arr_lieuxAvecAlarmeSnooze[i] + ".");
-                            continue;
-                        }
-                        string unit;
-                        if (string.IsNullOrWhiteSpace(derniereMesure.unit))
-                        {
-                            var fallbackUnit = GetDatabase().getLieuUnite(arr_lieuxAvecAlarmeSnooze[i]);
-                            VigitempServeur.Log(
-                                $"Unite mesure absente en maintenance (lieu {arr_lieuxAvecAlarmeSnooze[i]}). Fallback Derniere_Unite={fallbackUnit}");
-                            unit = fallbackUnit;
-                        }
-                        else
-                        {
-                            unit = derniereMesure.unit;
-                        }
-
-                        sensor.compareMeasuresAndLimits(derniereMesure.value, unit);
+                        VigitempServeur.Log("Numero de serie invalide pour le lieu " + arr_lieuxAvecAlarmeSnooze[i] + ".");
+                        continue;
                     }
+                    VigitempServeur.Log("Ouverture du port " + arr_portSerie + " pour la sonde " + arr_sondeNumeroSerie);
+                    sensorType = arr_sondeNumeroSerie.StartsWith("GSP", StringComparison.OrdinalIgnoreCase)
+                        ? "GSP"
+                        : arr_sondeNumeroSerie.Substring(0, 2);
+
+                    switch (sensorType)
+                    {
+                        case "IN":
+                            sensor = new SensorIN(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
+                            break;
+                        case "IE":
+                            sensor = new SensorIE(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
+                            break;
+                        case "IQ":
+                            break;
+                        case "IP":
+                            sensor = new SensorIP(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
+                            break;
+                        case "IC":
+                            sensor = new SensorIC(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
+                            break;
+                        case "IH":
+                            sensor = new SensorIH(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
+                            break;
+                        case "EN":
+                            sensor = new SensorEN(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
+                            break;
+                        case "HN":
+                            sensor = new SensorHN(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse, arr_moduleNumeroSerie);
+                            break;
+                        case "GSP":
+                            sensor = new SensorGSP(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
+                            break;
+                        default: break;
+                    }
+
+                    if (sensor == null)
+                    {
+                        VigitempServeur.Log("Aucun capteur cree pour le lieu " + arr_lieuxAvecAlarmeSnooze[i] + ".");
+                        continue;
+                    }
+                    string unit;
+                    if (string.IsNullOrWhiteSpace(derniereMesure.unit))
+                    {
+                        var fallbackUnit = GetDatabase().getLieuUnite(arr_lieuxAvecAlarmeSnooze[i]);
+                        VigitempServeur.Log(
+                            $"Unite mesure absente en maintenance (lieu {arr_lieuxAvecAlarmeSnooze[i]}). Fallback Derniere_Unite={fallbackUnit}");
+                        unit = fallbackUnit;
+                    }
+                    else
+                    {
+                        unit = derniereMesure.unit;
+                    }
+
+                    sensor.compareMeasuresAndLimits(derniereMesure.value, unit);
                 }
 
                 // R�activation automatique de la surveillance (Lieu_Etat)
-                (List<int> arr_lieuxSurveillanceSnooze, List<DateTime> arr_dateSurveillance) = GetDatabase().getLieuxAvecSurveillanceEnSnooze();
+                (List<int> arr_lieuxSurveillanceSnooze, _) = GetDatabase().getLieuxAvecSurveillanceEnSnooze();
                 for (int i = 0; i < arr_lieuxSurveillanceSnooze.Count(); i++)
                 {
-                    if (arr_dateSurveillance[i].CompareTo(DateTime.Now) <= 0)
-                    {
-                        VigitempServeur.Log("Surveillance r�activ�e pour le lieu " + arr_lieuxSurveillanceSnooze[i] + ".");
-                        GetDatabase().setSurveillanceByIdLieu(arr_lieuxSurveillanceSnooze[i], true);
-                        GetDatabase().writeAuditJournal(
-                            "ACT",
-                            "SERVEUR",
-                            "SYSTEME",
-                            arr_lieuxSurveillanceSnooze[i],
-                            "R�activation automatique de la surveillance",
-                            null);
-                    }
+                    VigitempServeur.Log("Surveillance r�activ�e pour le lieu " + arr_lieuxSurveillanceSnooze[i] + ".");
+                    GetDatabase().setSurveillanceByIdLieu(arr_lieuxSurveillanceSnooze[i], true);
+                    GetDatabase().writeAuditJournal(
+                        "ACT",
+                        "SERVEUR",
+                        "SYSTEME",
+                        arr_lieuxSurveillanceSnooze[i],
+                        "R�activation automatique de la surveillance",
+                        null);
                 }
             }
             catch (Exception ex)
@@ -829,6 +816,7 @@ namespace Vigitemp_Serveur
                 if (_schedules.TryRemove(idLieu, out var removed) && removed != null && !string.IsNullOrWhiteSpace(removed.Serial))
                 {
                     _sondeMetrologyCache.TryRemove(removed.Serial, out _);
+                    Sensor.ClearAlarmState(idLieu);
                 }
                 if (_logScheduler)
                 {

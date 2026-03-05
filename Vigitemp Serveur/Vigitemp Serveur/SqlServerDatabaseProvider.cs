@@ -1065,7 +1065,7 @@ namespace Vigitemp_Serveur
                     return (ids, dates);
                 }
 
-                using (var cmd = CreateCommand(_connectionMain, "SELECT distinct Id_Lieu, Date_Heure_Reactivation_Alarme FROM t_lieu where Date_Heure_Reactivation_Alarme is not null;"))
+                using (var cmd = CreateCommand(_connectionMain, "SELECT distinct Id_Lieu, Date_Heure_Reactivation_Alarme FROM t_lieu where Date_Heure_Reactivation_Alarme is not null AND Date_Heure_Reactivation_Alarme <= GETDATE();"))
                 using (var reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
@@ -1094,7 +1094,7 @@ namespace Vigitemp_Serveur
                 using (var cmd = CreateCommand(
                     _connectionMain,
                     "SELECT distinct Id_Lieu, Date_Heure_Reactivation_Surveillance FROM t_lieu " +
-                    "where Date_Heure_Reactivation_Surveillance is not null AND Lieu_Etat = 'D';"))
+                    "where Date_Heure_Reactivation_Surveillance is not null AND Lieu_Etat = 'D' AND Date_Heure_Reactivation_Surveillance <= GETDATE();"))
                 {
                     try
                     {

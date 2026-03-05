@@ -497,6 +497,17 @@ namespace Vigitemp_Serveur
             }
         }
 
+        public static void ClearAlarmState(int idLieu)
+        {
+            _alarmStateByLieu.TryRemove(idLieu, out _);
+            _preAlarmStateByLieu.TryRemove(idLieu, out _);
+            _lowAlarmStateByLieu.TryRemove(idLieu, out _);
+            _highAlarmStateByLieu.TryRemove(idLieu, out _);
+            _noResponseStateByLieu.TryRemove(idLieu, out _);
+            _retriggerThresholdWaitCountByLieu.TryRemove(idLieu, out _);
+            _retriggerNoResponseWaitCountByLieu.TryRemove(idLieu, out _);
+        }
+
     }
 }
 
