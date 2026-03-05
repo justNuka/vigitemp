@@ -139,11 +139,11 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
     const locations = await prisma.t_lieu.findMany({
       where,
       include: {
-        t_sonde: true,
-        t_site: true,
-        t_groupe1: true,
-        t_groupe2: true,
-        t_lieu_groupe: { include: { t_groupe: true } },
+        t_sonde: { select: { Est_Sonde_GSO: true } },
+        t_site: { select: { Libelle_Site: true } },
+        t_groupe1: { select: { Nom_Groupe: true } },
+        t_groupe2: { select: { Nom_Groupe: true } },
+        t_lieu_groupe: { include: { t_groupe: { select: { Id_Groupe: true, Nom_Groupe: true } } } },
       },
       skip,
       take: limit,
