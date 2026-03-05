@@ -3,9 +3,10 @@ import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import crypto from "crypto"
 import { z } from "zod"
-import { getRequestContext, withLogging } from "@/lib/api-logger"
+import { getClientIp, getRequestContext, withLogging } from "@/lib/api-logger"
 import { getPasswordRulesFromDb } from "@/lib/password-rules"
 import { validatePassword } from "@/lib/password-validation"
+import { checkRateLimit } from "@/lib/rate-limiter"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 
@@ -20,6 +21,12 @@ const resetPasswordSchema = z.object({
  */
 export const POST = withLogging(async (req: NextRequest) => {
   const { ip } = getRequestContext(req)
+
+  const rateLimit = checkRateLimit(`reset_pwd:${getClientIp(req)}`, 5, 60 * 60_000)
+  if (!rateLimit.allowed) {
+    return apiError(429, "too_many_requests", "Trop de tentatives. Réessayez plus tard.")
+  }
+
   try {
     const body = await req.json()
     const { token, newPassword } = resetPasswordSchema.parse(body)

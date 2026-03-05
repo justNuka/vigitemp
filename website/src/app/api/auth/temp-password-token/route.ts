@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getRequestContext, withLogging } from "@/lib/api-logger"
+import { getClientIp, getRequestContext, withLogging } from "@/lib/api-logger"
+import { checkRateLimit } from "@/lib/rate-limiter"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 
@@ -10,6 +11,12 @@ import { log } from "@/lib/logger"
  */
 export const POST = withLogging(async (req: NextRequest) => {
   const { ip } = getRequestContext(req)
+
+  const rateLimit = checkRateLimit(`temp_token:${getClientIp(req)}`, 10, 15 * 60_000)
+  if (!rateLimit.allowed) {
+    return apiError(429, "too_many_requests", "Trop de tentatives. Réessayez plus tard.")
+  }
+
   try {
     const { username } = await req.json()
 
