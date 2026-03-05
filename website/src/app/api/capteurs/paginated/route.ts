@@ -1,5 +1,7 @@
 ﻿import { NextRequest } from "next/server"
 
+import { Prisma } from "../../../../generated/@prisma-db-mesures"
+
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma, prismaMesure } from "@/lib/prisma"
@@ -215,8 +217,31 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       }
     }
 
-    const sensorsWithMeasurements = await Promise.all(
-      locations.map(async (location) => {
+    type LastMeasurementRow = {
+      Id_Lieu: number
+      Valeur: number | null
+      Date_Heure_Mesure: Date | null
+    }
+
+    const lastMeasurementRows =
+      locationIds.length > 0
+        ? await prismaMesure.$queryRaw<LastMeasurementRow[]>`
+            SELECT m1.Id_Lieu, m1.Valeur, m1.Date_Heure_Mesure
+            FROM tm_mesures m1
+            INNER JOIN (
+              SELECT Id_Lieu, MAX(Date_Heure_Mesure) AS max_time
+              FROM tm_mesures
+              WHERE Id_Lieu IN (${Prisma.join(locationIds)})
+              GROUP BY Id_Lieu
+            ) m2 ON m1.Id_Lieu = m2.Id_Lieu AND m1.Date_Heure_Mesure = m2.max_time
+          `
+        : []
+
+    const lastMeasurementByLieu = new Map(
+      lastMeasurementRows.map((row) => [row.Id_Lieu, row]),
+    )
+
+    const sensorsWithMeasurements = locations.map((location) => {
         const groups = (location.t_lieu_groupe || [])
           .map((lg) => lg.t_groupe)
           .filter((g): g is NonNullable<typeof g> => !!g)
@@ -224,11 +249,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
         const locationGroupIds = groups.map((g) => g.Id_Groupe)
         const groupNames = groups.map((g) => g.Nom_Groupe).filter((n): n is string => !!n)
 
-        const lastMeasurement = await prismaMesure.tm_mesures.findFirst({
-          where: { Id_Lieu: location.Id_Lieu },
-          orderBy: { Date_Heure_Mesure: "desc" },
-          select: { Valeur: true, Date_Heure_Mesure: true },
-        })
+        const lastMeasurement = lastMeasurementByLieu.get(location.Id_Lieu) ?? null
 
         const hasEndedFlag =
           location.Est_Lieu_Alarme_Terminee_Non_Acquittee === 1 ||
@@ -316,8 +337,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
             groupName2: location.t_groupe2?.Nom_Groupe ?? null,
           },
         }
-      }),
-    )
+      })
 
     return apiOk({
       total,
