@@ -35,6 +35,14 @@ namespace Vigitemp_Serveur
             return defaultValue;
         }
 
+        private static bool GetSettingBool(string key, bool defaultValue)
+        {
+            var value = GetSetting(key, null);
+            if (string.IsNullOrWhiteSpace(value)) return defaultValue;
+            bool result;
+            return bool.TryParse(value, out result) ? result : defaultValue;
+        }
+
         private static SqlConnection CreateConnection(string databaseName)
         {
             var host = GetSetting("Vigi.Db.Host", "127.0.0.1");
@@ -56,8 +64,8 @@ namespace Vigitemp_Serveur
                 UserID = user,
                 Password = password,
                 ConnectTimeout = connectionTimeout,
-                Encrypt = false,
-                TrustServerCertificate = true,
+                Encrypt = GetSettingBool("Vigi.Db.SqlServer.Encrypt", false),
+                TrustServerCertificate = GetSettingBool("Vigi.Db.SqlServer.TrustServerCertificate", true),
                 Pooling = true
             };
 
