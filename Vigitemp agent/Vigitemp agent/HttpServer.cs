@@ -11,6 +11,7 @@ using System.Web;
 using System.Windows.Forms;
 //using LogTagNET;
 using LogTagNETV2;
+using Newtonsoft.Json.Linq;
 using VigitempAgent;
 
 namespace VigitempAgent
@@ -125,78 +126,10 @@ namespace VigitempAgent
             return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
         }
 
-        private static string ExtractJsonString(string json, string key)
-        {
-            try
-            {
-                var token = "\"" + key + "\"";
-                var idx = json.IndexOf(token, StringComparison.OrdinalIgnoreCase);
-                if (idx < 0) return null;
-                idx = json.IndexOf(':', idx);
-                if (idx < 0) return null;
-                idx++;
-                while (idx < json.Length && char.IsWhiteSpace(json[idx])) idx++;
-                if (idx >= json.Length) return null;
-                if (json[idx] != '"') return null;
-                idx++;
-                var end = json.IndexOf('"', idx);
-                if (end < 0) return null;
-                return json.Substring(idx, end - idx);
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private static int? ExtractJsonInt(string json, string key)
-        {
-            try
-            {
-                var token = "\"" + key + "\"";
-                var idx = json.IndexOf(token, StringComparison.OrdinalIgnoreCase);
-                if (idx < 0) return null;
-                idx = json.IndexOf(':', idx);
-                if (idx < 0) return null;
-                idx++;
-                while (idx < json.Length && char.IsWhiteSpace(json[idx])) idx++;
-                if (idx >= json.Length) return null;
-                string raw;
-                if (json[idx] == '"')
-                {
-                    idx++;
-                    var end = json.IndexOf('"', idx);
-                    if (end < 0) return null;
-                    raw = json.Substring(idx, end - idx);
-                }
-                else
-                {
-                    var end2 = idx;
-                    while (end2 < json.Length && json[end2] != ',' && json[end2] != '}') end2++;
-                    raw = json.Substring(idx, end2 - idx).Trim();
-                }
-
-                int value;
-                return int.TryParse(raw, out value) ? (int?)value : null;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private static DateTime? ParseJsonDate(string json, string key)
-        {
-            var val = ExtractJsonString(json, key);
-            if (string.IsNullOrWhiteSpace(val)) return null;
-            DateTime dt;
-            if (!DateTime.TryParse(val, out dt)) return null;
-            return DateTime.SpecifyKind(dt, DateTimeKind.Utc);
-        }
-
         private static void EnsureCorsHeaders(HttpListenerResponse resp)
         {
-            resp.Headers["Access-Control-Allow-Origin"] = "*";
+            var allowedOrigin = System.Configuration.ConfigurationManager.AppSettings["VigitempSiteWebUrl"] ?? "http://127.0.0.1:3000";
+            resp.Headers["Access-Control-Allow-Origin"] = allowedOrigin;
             resp.Headers["Access-Control-Allow-Methods"] = "GET, POST, DELETE, OPTIONS";
             resp.Headers["Access-Control-Allow-Headers"] = "Content-Type";
             resp.Headers["Access-Control-Max-Age"] = "600";
@@ -305,19 +238,23 @@ namespace VigitempAgent
                                     payload = await reader.ReadToEndAsync();
                                 }
 
-                                var title = ExtractJsonString(payload, "title") ?? "Alarme Vigitemp";
-                                var message = ExtractJsonString(payload, "message");
-                                var location = ExtractJsonString(payload, "location");
-                                var date = ExtractJsonString(payload, "date");
-                                var url = ExtractJsonString(payload, "url");
-                                var deliveryId = ExtractJsonInt(payload, "deliveryId");
-                                var correlationId = ExtractJsonString(payload, "correlationId");
-                                var alarmId = ExtractJsonInt(payload, "alarmId");
-                                var lieuId = ExtractJsonInt(payload, "lieuId");
-                                var alarmType = ExtractJsonString(payload, "alarmType");
-                                var triggeredAt = ExtractJsonString(payload, "triggeredAt");
-                                var lastValue = ExtractJsonString(payload, "lastValue");
-                                var lastMeasureAt = ExtractJsonString(payload, "lastMeasureAt");
+                                JObject jPayload;
+                                try { jPayload = JObject.Parse(payload); }
+                                catch { jPayload = new JObject(); }
+
+                                var title        = jPayload.Value<string>("title") ?? "Alarme Vigitemp";
+                                var message      = jPayload.Value<string>("message");
+                                var location     = jPayload.Value<string>("location");
+                                var date         = jPayload.Value<string>("date");
+                                var url          = jPayload.Value<string>("url");
+                                var deliveryId   = jPayload.Value<int?>("deliveryId");
+                                var correlationId= jPayload.Value<string>("correlationId");
+                                var alarmId      = jPayload.Value<int?>("alarmId");
+                                var lieuId       = jPayload.Value<int?>("lieuId");
+                                var alarmType    = jPayload.Value<string>("alarmType");
+                                var triggeredAt  = jPayload.Value<string>("triggeredAt");
+                                var lastValue    = jPayload.Value<string>("lastValue");
+                                var lastMeasureAt= jPayload.Value<string>("lastMeasureAt");
 
                                 var combined = message;
                                 if (!string.IsNullOrWhiteSpace(location) || !string.IsNullOrWhiteSpace(date))
@@ -390,7 +327,9 @@ namespace VigitempAgent
                                     payload = await reader.ReadToEndAsync();
                                 }
 
-                                var secret = ExtractJsonString(payload, "secret");
+                                JObject jSecret;
+                                try { jSecret = JObject.Parse(payload); } catch { jSecret = new JObject(); }
+                                var secret = jSecret.Value<string>("secret");
                                 if (!string.IsNullOrWhiteSpace(secret))
                                 {
                                     try
@@ -409,44 +348,50 @@ namespace VigitempAgent
                                 break;
                             }
                         case "/alarm":
-                            
-                            if (req.RawUrl.Split('?').Length > 0)
+                        {
+                            if (!IsLoopback(req))
                             {
-                                rawParams = req.RawUrl.Split('?')[1].Split('&');
+                                resp.StatusCode = 403;
+                                resp.Close();
+                                break;
+                            }
+
+                            var queryParts = req.RawUrl.Split('?');
+                            if (queryParts.Length > 1)
+                            {
+                                rawParams = queryParts[1].Split('&');
                                 foreach (string param in rawParams)
                                 {
                                     string[] kvPair = param.Split('=');
-                                    string key = kvPair[0];
-                                    string value = HttpUtility.UrlDecode(kvPair[1]);
-                                    postParams.Add(key, value);
-                                }
-
-                                if (postParams["action"] == "show")
-                                {
-                                    if (!idLieuxEnAlarmes.Contains(Int32.Parse(postParams["idLieu"])))
-                                    {
-                                        idLieuxEnAlarmes.Add(Int32.Parse(postParams["idLieu"]));
-                                    }
-                                    if (SessionStore.HasValidSession())
-                                    {
-                                        frm_alert.Invoke((Action)(() => frm_alert.DisplayAlarm()));
-                                    }
-                                    else
-                                    {
-                                        frm_alert.Invoke((Action)(() => frm_alert.HideAlarm()));
-                                    }
-                                }
-                                if (postParams["action"] == "hide")
-                                {
-                                    
-                                    idLieuxEnAlarmes.Remove(Int32.Parse(postParams["idLieu"]));
-                                    Console.WriteLine("alamres en cours: " + idLieuxEnAlarmes.Count);
-                                    if(idLieuxEnAlarmes.Count == 0)
-                                    {
-                                        frm_alert.Invoke((Action)(() => frm_alert.HideAlarm()));
-                                    }                                    
+                                    if (kvPair.Length < 2 || string.IsNullOrEmpty(kvPair[0])) continue;
+                                    postParams[kvPair[0]] = HttpUtility.UrlDecode(kvPair[1]);
                                 }
                             }
+
+                            string action;
+                            postParams.TryGetValue("action", out action);
+                            string idLieuStr;
+                            int idLieuVal = 0;
+                            if (postParams.TryGetValue("idLieu", out idLieuStr))
+                                int.TryParse(idLieuStr, out idLieuVal);
+
+                            if (action == "show" && idLieuVal > 0)
+                            {
+                                if (!idLieuxEnAlarmes.Contains(idLieuVal))
+                                    idLieuxEnAlarmes.Add(idLieuVal);
+                                if (SessionStore.HasValidSession())
+                                    frm_alert.Invoke((Action)(() => frm_alert.DisplayAlarm()));
+                                else
+                                    frm_alert.Invoke((Action)(() => frm_alert.HideAlarm()));
+                            }
+                            if (action == "hide" && idLieuVal > 0)
+                            {
+                                idLieuxEnAlarmes.Remove(idLieuVal);
+                                Console.WriteLine("alamres en cours: " + idLieuxEnAlarmes.Count);
+                                if (idLieuxEnAlarmes.Count == 0)
+                                    frm_alert.Invoke((Action)(() => frm_alert.HideAlarm()));
+                            }
+                        }
 
                             //frm_alert.DisplayAlarm();
                             resp.ContentType = "application/json";
@@ -478,13 +423,22 @@ namespace VigitempAgent
                             var session = new SessionInfo();
                             if (!string.IsNullOrWhiteSpace(body))
                             {
-                                // Very small JSON parsing for known keys
+                                JObject jSession;
+                                try { jSession = JObject.Parse(body); } catch { jSession = new JObject(); }
+                                var expiresAtRaw = jSession.Value<string>("expiresAtUtc") ?? jSession.Value<string>("expiresAt");
+                                DateTime? expiresAt = null;
+                                if (!string.IsNullOrWhiteSpace(expiresAtRaw))
+                                {
+                                    DateTime dt;
+                                    if (DateTime.TryParse(expiresAtRaw, out dt))
+                                        expiresAt = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                                }
                                 session = new SessionInfo
                                 {
-                                    Token = ExtractJsonString(body, "token"),
-                                    UserId = ExtractJsonString(body, "userId"),
-                                    Username = ExtractJsonString(body, "username"),
-                                    ExpiresAtUtc = ParseJsonDate(body, "expiresAtUtc") ?? ParseJsonDate(body, "expiresAt"),
+                                    Token = jSession.Value<string>("token"),
+                                    UserId = jSession.Value<string>("userId"),
+                                    Username = jSession.Value<string>("username"),
+                                    ExpiresAtUtc = expiresAt,
                                 };
                             }
 

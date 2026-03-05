@@ -1,16 +1,19 @@
 ﻿using System;
 using MySql.Data.MySqlClient;
+using VigitempAgent;
 
 
 public class Database
 {
     private static readonly object _lock = new object();
-    private static readonly string IP_ADDRESS = "192.168.63.121";
-    private static readonly string PORT = "3306";
-    private static readonly string UID = "root";
-    private static readonly string PASSWORD = "pass";
     private MySqlConnection connection_vigitemp;
     private MySqlConnection connection_vigitemp_mesure;
+
+    private static string GetSetting(string key, string defaultValue)
+    {
+        var value = System.Configuration.ConfigurationManager.AppSettings[key];
+        return string.IsNullOrWhiteSpace(value) ? defaultValue : value;
+    }
 
     // Constructeur
     public Database()
@@ -21,11 +24,18 @@ public class Database
     // Méthode pour ouvrir les connexions
     public void InitConnexion()
     {
-        string connectionString = "SERVER=" + IP_ADDRESS + "; Port=" + PORT + "; DATABASE=vigitemp; UID=" + UID + "; PASSWORD=" + PASSWORD + ";";
+        var host      = GetSetting("Vigi.Db.Host",            "127.0.0.1");
+        var port      = GetSetting("Vigi.Db.Port",            "3306");
+        var user      = GetSetting("Vigi.Db.User",            "root");
+        var password  = GetSetting("Vigi.Db.Password",        "");
+        var mainDb    = GetSetting("Vigi.Db.MainDatabase",    "vigitemp");
+        var measureDb = GetSetting("Vigi.Db.MeasureDatabase", "vigitemp_mesure");
+
+        string connectionString = "SERVER=" + host + "; Port=" + port + "; DATABASE=" + mainDb + "; UID=" + user + "; PASSWORD=" + password + ";";
         this.connection_vigitemp = new MySqlConnection(connectionString);
         this.connection_vigitemp.Open();
 
-        connectionString = "SERVER=" + IP_ADDRESS + "; Port=" + PORT + "; DATABASE=vigitemp_mesure; UID=" + UID + "; PASSWORD=" + PASSWORD + ";";
+        connectionString = "SERVER=" + host + "; Port=" + port + "; DATABASE=" + measureDb + "; UID=" + user + "; PASSWORD=" + password + ";";
         this.connection_vigitemp_mesure = new MySqlConnection(connectionString);
         this.connection_vigitemp_mesure.Open();
     }
@@ -46,7 +56,8 @@ public class Database
 
                 MySqlCommand cmd_vigitemp = this.connection_vigitemp.CreateCommand();
                 String res;
-                cmd_vigitemp.CommandText = "SELECT 1 as res from t_postes_clients where AdresseIpConnexion = '"+ adresseIP + "';";
+                cmd_vigitemp.CommandText = "SELECT 1 AS res FROM t_postes_clients WHERE AdresseIpConnexion = @adresseIP";
+                cmd_vigitemp.Parameters.AddWithValue("@adresseIP", adresseIP);
 
                 // Exécution de la commande SQL 
                 MySqlDataReader dr_lieux = cmd_vigitemp.ExecuteReader();
@@ -57,9 +68,9 @@ public class Database
                     dr_lieux.Close();
                     res = "1";
                     
-                    cmd_vigitemp_mesure.CommandText =   "UPDATE t_postes_clients "+
-                                                        "SET NomMachineConnexion = '"+ nomMachine + "' "+
-                                                        "WHERE AdresseIpConnexion = '" + adresseIP + "'";
+                    cmd_vigitemp_mesure.CommandText = "UPDATE t_postes_clients SET NomMachineConnexion = @nomMachine WHERE AdresseIpConnexion = @adresseIP";
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@nomMachine", nomMachine);
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@adresseIP", adresseIP);
 
                     cmd_vigitemp_mesure.ExecuteNonQuery();
                     CloseConnexion();
@@ -68,8 +79,9 @@ public class Database
                 {
                     dr_lieux.Close();
                     res = "0";
-                    cmd_vigitemp_mesure.CommandText = "INSERT INTO t_postes_clients (NomMachineConnexion, AdresseIpConnexion)" +
-                                                        "VALUES ('"+nomMachine+"', '"+adresseIP+"')";
+                    cmd_vigitemp_mesure.CommandText = "INSERT INTO t_postes_clients (NomMachineConnexion, AdresseIpConnexion) VALUES (@nomMachine, @adresseIP)";
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@nomMachine", nomMachine);
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@adresseIP", adresseIP);
 
                     cmd_vigitemp_mesure.ExecuteNonQuery();
                     CloseConnexion();
@@ -84,7 +96,7 @@ public class Database
             catch (Exception ex)
             {
                 CloseConnexion();
-                Console.WriteLine(ex.StackTrace + ex.Message);
+                AgentLog.Error("Database operation failed.", ex);
                 return null;
             }
         }
@@ -120,7 +132,7 @@ public class Database
             catch (Exception ex)
             {
                 CloseConnexion();
-                Console.WriteLine(ex.StackTrace + ex.Message);
+                AgentLog.Error("Database operation failed.", ex);
                 return false;
             }
         }
@@ -151,7 +163,7 @@ public class Database
             catch (Exception ex)
             {
                 CloseConnexion();
-                Console.WriteLine(ex.StackTrace + ex.Message);
+                AgentLog.Error("Database operation failed.", ex);
                 return null;
             }
         }
@@ -182,7 +194,7 @@ public class Database
             catch (Exception ex)
             {
                 CloseConnexion();
-                Console.WriteLine(ex.StackTrace + ex.Message);
+                AgentLog.Error("Database operation failed.", ex);
                 return null;
             }
         }
