@@ -89,6 +89,7 @@ export function PlanningRuleFormDialog({
   }
 
   const isSubmitting = form.formState.isSubmitting
+  const submitForm = form.handleSubmit(handleSubmit, (errors) => showFormValidationToast(errors))
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
@@ -98,7 +99,14 @@ export function PlanningRuleFormDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
+          <form
+            onSubmit={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              void submitForm(event)
+            }}
+            className="space-y-4"
+          >
             <PlanningRuleScheduleFields form={form} tDialog={tDialog} joursOptions={joursOptions} />
             <PlanningRuleThresholdFields form={form} tDialog={tDialog} />
 
@@ -120,7 +128,16 @@ export function PlanningRuleFormDialog({
                 <X className="h-4 w-4" />
                 {tCommon("cancel")}
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="gap-2">
+              <Button
+                type="button"
+                disabled={isSubmitting}
+                className="gap-2"
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  void submitForm()
+                }}
+              >
                 <Check className="h-4 w-4" />
                 {isSubmitting ? tDialog("saving") : tCommon("save")}
               </Button>

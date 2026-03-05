@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
+@import "../styles/galaxy-button.css";
+@import "../styles/more-menu.css";
 
 :root {
   --foreground-rgb: 0, 0, 0;

@@ -28,7 +28,7 @@ export async function generateMetadata({
 
 /**
  * Dashboard principal - Server Component avec Cache Components
- * Architecture optimisee: donnees cached cote serveur + interactivite cote client
+ * Architecture optimis?e: donn?es cached c?t? serveur + interactivit? c?t? client
  */
 export default async function DashboardPage({
   params,
@@ -38,7 +38,7 @@ export default async function DashboardPage({
   await connection();
   const { locale } = await params;
 
-  // Chargement parallele des donnees avec cache
+  // Chargement parall?le des donn?es avec cache
   const [stats, criticalSensors, activeAlarms, sensorOverview, trendStats] =
     await Promise.all([
       ServerDashboardStats(),

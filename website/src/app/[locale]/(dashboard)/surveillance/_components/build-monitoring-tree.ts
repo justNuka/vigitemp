@@ -1,6 +1,11 @@
 import type { SensorWithLocation } from "@/lib/api";
 import type { TreeNode, TreeStats } from "./monitoring-tree-types";
 
+type TreeLabels = {
+  noGroup: string;
+  noSite: string;
+};
+
 function emptyStats(): TreeStats {
   return { total: 0, ok: 0, warning: 0, critical: 0, inactive: 0 };
 }
@@ -31,8 +36,13 @@ function getGroupNameMap(sensor: SensorWithLocation) {
   return map;
 }
 
-function resolveGroupName(sensor: SensorWithLocation, groupId: number | null, nameById: Map<number, string>) {
-  if (groupId === null) return "Sans groupe";
+function resolveGroupName(
+  sensor: SensorWithLocation,
+  groupId: number | null,
+  nameById: Map<number, string>,
+  labels: TreeLabels,
+) {
+  if (groupId === null) return labels.noGroup;
 
   const name = nameById.get(groupId);
   if (name) return name;
@@ -47,19 +57,22 @@ function compareLabels(a: string, b: string) {
   return a.localeCompare(b, "fr", { sensitivity: "base" });
 }
 
-export function buildSurveillanceTree(sensors: SensorWithLocation[]) {
+export function buildSurveillanceTree(
+  sensors: SensorWithLocation[],
+  labels: TreeLabels = { noGroup: "Sans groupe", noSite: "Sans site" },
+) {
   const sitesMap = new Map<number, TreeNode>();
 
   sensors.forEach((sensor) => {
     const siteId = sensor.location?.siteId || 0;
-    const siteName = sensor.location?.site?.trim() || (siteId ? `Site ${siteId}` : "Sans site");
+    const siteName = sensor.location?.site?.trim() || (siteId ? `Site ${siteId}` : labels.noSite);
     const groupNameMap = getGroupNameMap(sensor);
 
     const groupIds =
       sensor.location?.groupIds && sensor.location.groupIds.length > 0
         ? sensor.location.groupIds
         : [sensor.location?.groupId1 ?? null, sensor.location?.groupId2 ?? null].filter(
-            (id): id is number => typeof id === "number" && !Number.isNaN(id)
+            (id): id is number => typeof id === "number" && !Number.isNaN(id),
           );
 
     if (!sitesMap.has(siteId)) {
@@ -72,11 +85,10 @@ export function buildSurveillanceTree(sensors: SensorWithLocation[]) {
     }
 
     const siteNode = sitesMap.get(siteId)!;
-
     const effectiveGroupIds = groupIds.length > 0 ? groupIds : [null];
-    effectiveGroupIds.forEach((groupId) => {
-      const groupName = resolveGroupName(sensor, groupId, groupNameMap);
 
+    effectiveGroupIds.forEach((groupId) => {
+      const groupName = resolveGroupName(sensor, groupId, groupNameMap, labels);
       let groupNode = siteNode.groups.find((g) => g.groupId === groupId);
 
       if (!groupNode) {
@@ -99,14 +111,15 @@ export function buildSurveillanceTree(sensors: SensorWithLocation[]) {
   const tree = Array.from(sitesMap.values());
   tree.forEach((site) => {
     site.groups.sort((a, b) => {
-      if (a.groupName === "Sans groupe" && b.groupName !== "Sans groupe") return 1;
-      if (b.groupName === "Sans groupe" && a.groupName !== "Sans groupe") return -1;
+      if (a.groupName === labels.noGroup && b.groupName !== labels.noGroup) return 1;
+      if (b.groupName === labels.noGroup && a.groupName !== labels.noGroup) return -1;
       return compareLabels(a.groupName, b.groupName);
     });
   });
+
   tree.sort((a, b) => {
-    if (a.siteName === "Sans site" && b.siteName !== "Sans site") return 1;
-    if (b.siteName === "Sans site" && a.siteName !== "Sans site") return -1;
+    if (a.siteName === labels.noSite && b.siteName !== labels.noSite) return 1;
+    if (b.siteName === labels.noSite && a.siteName !== labels.noSite) return -1;
     return compareLabels(a.siteName, b.siteName);
   });
 

@@ -48,9 +48,9 @@ const measurementSchema = z.object({
   incertitude: z.string().default(""),
 })
 
-const standardSchema = z.object({
+const buildStandardSchema = (serialRequired: string) => z.object({
   type: z.string().optional(),
-  serie: z.string().min(1, "Numéro de série requis"),
+  serie: z.string().min(1, serialRequired),
   moduleId: z.string().optional(),
   portSerie: z.string().optional(),
   idServeur: z.string().optional(),
@@ -64,7 +64,7 @@ const standardSchema = z.object({
   mesures: z.array(measurementSchema).default([]),
 })
 
-type StandardFormValues = z.input<typeof standardSchema>
+type StandardFormValues = z.input<ReturnType<typeof buildStandardSchema>>
 
 export function StandardModal({ open, onOpenChange, standard, isEditing }: Props) {
   const queryClient = useQueryClient()
@@ -91,6 +91,8 @@ export function StandardModal({ open, onOpenChange, standard, isEditing }: Props
     }),
     [isEditing, standard],
   )
+
+  const standardSchema = useMemo(() => buildStandardSchema(t("validation.serial_required")), [t])
 
   const form = useForm<StandardFormValues>({
     resolver: zodResolver(standardSchema),

@@ -3,14 +3,11 @@
 import { useEffect, useMemo, useState } from "react"
 
 import { MultiSelectFilter } from "@/components/multi-select-filter"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslations } from 'next-intl'
 
+import type { FilterState, SurveillanceSortMode } from "./_helpers/monitoring-derived"
 import type { Group, Site } from "./server-filters"
-
-type FilterState = {
-  siteIds: number[]
-  groupIds: number[]
-}
 
 type Props = {
   onFilterChange: (filters: FilterState) => void
@@ -35,18 +32,19 @@ function buildAllowedGroupIdSet(groups: Group[], selectedSiteIds: number[]) {
 export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
   const t = useTranslations('surveillance.filters')
   const [filters, setFilters] = useState<FilterState>(() => {
-    if (typeof window === "undefined") return { siteIds: [], groupIds: [] }
+    if (typeof window === "undefined") return { siteIds: [], groupIds: [], sortMode: "status" }
     const saved = localStorage.getItem(STORAGE_KEY)
-    if (!saved) return { siteIds: [], groupIds: [] }
+    if (!saved) return { siteIds: [], groupIds: [], sortMode: "status" }
 
     try {
       const parsed = JSON.parse(saved)
       return {
         siteIds: Array.isArray(parsed.siteIds) ? parsed.siteIds : [],
         groupIds: Array.isArray(parsed.groupIds) ? parsed.groupIds : [],
+        sortMode: parsed.sortMode === "alphabetical" ? "alphabetical" : "status",
       }
     } catch {
-      return { siteIds: [], groupIds: [] }
+      return { siteIds: [], groupIds: [], sortMode: "status" }
     }
   })
 
@@ -90,7 +88,7 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
   }
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4">
+    <div className="flex flex-col gap-4 lg:flex-row">
       <MultiSelectFilter
         label={t('sites.label')}
         options={sites?.map((site) => ({ id: site.id, label: site.name })) || []}
@@ -123,6 +121,29 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
         placeholder={t('groups.placeholder')}
         tone="default"
       />
+
+      <div className="w-full lg:max-w-xs">
+        <div className="space-y-2">
+          <div className="text-sm font-medium">{t('sort.label')}</div>
+          <Select
+            value={filters.sortMode}
+            onValueChange={(value) => {
+              setFilters((prev) => ({
+                ...prev,
+                sortMode: (value === 'alphabetical' ? 'alphabetical' : 'status') as SurveillanceSortMode,
+              }))
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={t('sort.placeholder')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="status">{t('sort.options.status')}</SelectItem>
+              <SelectItem value="alphabetical">{t('sort.options.alphabetical')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
     </div>
   )
 }

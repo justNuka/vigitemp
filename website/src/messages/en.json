@@ -642,6 +642,7 @@
         "labelConsigneSup": "Upper setpoint (optional)",
         "labelConsigneInf": "Lower setpoint (optional)",
         "labelPriorite": "Priority",
+          "hintPriorite": "The higher the priority, the more this rule overrides the others when their time ranges overlap.",
         "labelActif": "Rule active",
         "placeholderJour": "Select a day",
         "placeholderNumeric": "Numeric value",
@@ -1922,7 +1923,7 @@
     "steps": {
       "upload": "Upload files",
       "review": "Review data",
-      "create": "Create sensors"
+      "create": "Prepare calibrations"
     },
     "status": {
       "in_progress": "In progress",
@@ -1965,7 +1966,8 @@
       "processing": "Processing files... ({processed}/{total})",
       "process_done": "Processing finished. {count} file(s) imported.",
       "process_errors": "{count} file(s) could not be imported.",
-      "process_result": "Success: {success} Failed: {failed}"
+      "process_result": "Success: {success} Failed: {failed}",
+      "processing_hint": "The window will close automatically once processing is complete."
     }
   },
   "standardsPage": {

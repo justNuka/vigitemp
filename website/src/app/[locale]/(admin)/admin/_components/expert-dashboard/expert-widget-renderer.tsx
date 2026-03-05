@@ -22,18 +22,13 @@ export function renderExpertWidget({
   if (id === "alarms") {
     return (
       <ExpertWidgetCard
-        title={locale === "fr" ? "Alarmes" : "Alarms"}
-        description={
-          locale === "fr"
-            ? `En cours: ${metrics.alarmsInProgressTotal} ? En attente d'acquittement: ${metrics.alarmsPendingAckTotal}`
-            : `In progress: ${metrics.alarmsInProgressTotal} ? Pending acknowledgement: ${metrics.alarmsPendingAckTotal}`
-        }
+        title={t("summary.alarms_title")}
+        description={t("summary.alarms_description", {
+          inProgress: metrics.alarmsInProgressTotal,
+          pending: metrics.alarmsPendingAckTotal,
+        })}
         value={String(metrics.alarmsInProgressTotal)}
-        helper={
-          locale === "fr"
-            ? `Alarmes en attente d'acquittement: ${metrics.alarmsPendingAckTotal}`
-            : `Alarms pending acknowledgement: ${metrics.alarmsPendingAckTotal}`
-        }
+        helper={t("summary.alarms_helper", { pending: metrics.alarmsPendingAckTotal })}
         href="/admin/alarmes"
         hrefLabel={accessLabel}
         icon={<AlertTriangle className="h-5 w-5 text-red-600" />}

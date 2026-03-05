@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
-import type { ProviderId, TelephonyCopy, TelephonyDraft, TwilioAuthMode } from "./telephony-settings-types"
+import type { TelephonyCopy, TelephonyDraft, TwilioAuthMode } from "./telephony-settings-types"
 
 type SetField = <K extends keyof TelephonyDraft>(key: K, value: TelephonyDraft[K]) => void
 
@@ -37,7 +37,7 @@ export function TelephonyProviderFields({
         <div className="rounded-lg border bg-muted/30 p-4">
           <div className="mb-3 text-sm font-medium">{copy.summary}</div>
           <div className="space-y-2 text-sm text-muted-foreground">
-            {summary.length > 0 ? summary.map((line) => <p key={line}>{line}</p>) : <p>?</p>}
+            {summary.length > 0 ? summary.map((line) => <p key={line}>{line}</p>) : <p>{copy.emptySummary}</p>}
           </div>
         </div>
       </div>
@@ -66,11 +66,11 @@ function TwilioFields({ draft, copy, setField }: { draft: TelephonyDraft; copy: 
         {draft.twilioAuthMode === "api_key" ? (
           <>
             <Field label={copy.twilio.apiKeySid} value={draft.twilioApiKeySid} onChange={(value) => setField("twilioApiKeySid", value)} placeholder="SKxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
-            <Field label={copy.twilio.apiKeySecret} value={draft.twilioApiKeySecret} onChange={(value) => setField("twilioApiKeySecret", value)} placeholder="secret" type="password" />
+            <Field label={copy.twilio.apiKeySecret} value={draft.twilioApiKeySecret} onChange={(value) => setField("twilioApiKeySecret", value)} placeholder={copy.placeholders.secret} type="password" />
           </>
         ) : (
           <div className="space-y-2 md:col-span-2">
-            <Field label={copy.twilio.authTokenField} value={draft.twilioAuthToken} onChange={(value) => setField("twilioAuthToken", value)} placeholder="auth token" type="password" />
+            <Field label={copy.twilio.authTokenField} value={draft.twilioAuthToken} onChange={(value) => setField("twilioAuthToken", value)} placeholder={copy.placeholders.authToken} type="password" />
           </div>
         )}
       </div>
@@ -96,9 +96,9 @@ function OvhFields({ draft, copy, setField }: { draft: TelephonyDraft; copy: Tel
       <Field label={copy.ovh.applicationKey} value={draft.ovhApplicationKey} onChange={(value) => setField("ovhApplicationKey", value)} placeholder="AK..." />
       <Field label={copy.ovh.applicationSecret} value={draft.ovhApplicationSecret} onChange={(value) => setField("ovhApplicationSecret", value)} placeholder="AS..." type="password" />
       <Field label={copy.ovh.consumerKey} value={draft.ovhConsumerKey} onChange={(value) => setField("ovhConsumerKey", value)} placeholder="CK..." type="password" />
-      <Field label={copy.ovh.billingAccount} value={draft.ovhBillingAccount} onChange={(value) => setField("ovhBillingAccount", value)} placeholder="billing account" />
+      <Field label={copy.ovh.billingAccount} value={draft.ovhBillingAccount} onChange={(value) => setField("ovhBillingAccount", value)} placeholder={copy.placeholders.billingAccount} />
       <div className="space-y-2 md:col-span-2">
-        <Field label={copy.ovh.serviceName} value={draft.ovhServiceName} onChange={(value) => setField("ovhServiceName", value)} placeholder="serviceName" />
+        <Field label={copy.ovh.serviceName} value={draft.ovhServiceName} onChange={(value) => setField("ovhServiceName", value)} placeholder={copy.placeholders.serviceName} />
       </div>
     </div>
   )
@@ -109,10 +109,10 @@ function KeyyoFields({ draft, copy, setField }: { draft: TelephonyDraft; copy: T
     <div className="grid gap-4 md:grid-cols-2">
       <Field label={copy.keyyo.clientId} value={draft.keyyoClientId} onChange={(value) => setField("keyyoClientId", value)} placeholder="client_id" />
       <Field label={copy.keyyo.clientSecret} value={draft.keyyoClientSecret} onChange={(value) => setField("keyyoClientSecret", value)} placeholder="client_secret" type="password" />
-      <Field label={copy.keyyo.accessToken} value={draft.keyyoAccessToken} onChange={(value) => setField("keyyoAccessToken", value)} placeholder="access token" type="password" />
-      <Field label={copy.keyyo.refreshToken} value={draft.keyyoRefreshToken} onChange={(value) => setField("keyyoRefreshToken", value)} placeholder="refresh token" type="password" />
+      <Field label={copy.keyyo.accessToken} value={draft.keyyoAccessToken} onChange={(value) => setField("keyyoAccessToken", value)} placeholder={copy.placeholders.accessToken} type="password" />
+      <Field label={copy.keyyo.refreshToken} value={draft.keyyoRefreshToken} onChange={(value) => setField("keyyoRefreshToken", value)} placeholder={copy.placeholders.refreshToken} type="password" />
       <div className="space-y-2 md:col-span-2">
-        <Field label={copy.keyyo.lineId} value={draft.keyyoLineId} onChange={(value) => setField("keyyoLineId", value)} placeholder="CSI / line identifier" />
+        <Field label={copy.keyyo.lineId} value={draft.keyyoLineId} onChange={(value) => setField("keyyoLineId", value)} placeholder={copy.placeholders.lineIdentifier} />
       </div>
     </div>
   )
@@ -125,7 +125,7 @@ function AsteriskFields({ draft, copy, setField }: { draft: TelephonyDraft; copy
         <Field label={copy.asterisk.baseUrl} value={draft.asteriskBaseUrl} onChange={(value) => setField("asteriskBaseUrl", value)} placeholder="http://127.0.0.1:8088/ari" />
       </div>
       <Field label={copy.asterisk.username} value={draft.asteriskUsername} onChange={(value) => setField("asteriskUsername", value)} placeholder="ari-user" />
-      <Field label={copy.asterisk.password} value={draft.asteriskPassword} onChange={(value) => setField("asteriskPassword", value)} placeholder="password" type="password" />
+      <Field label={copy.asterisk.password} value={draft.asteriskPassword} onChange={(value) => setField("asteriskPassword", value)} placeholder={copy.placeholders.password} type="password" />
       <div className="space-y-2 md:col-span-2">
         <Field label={copy.asterisk.appName} value={draft.asteriskAppName} onChange={(value) => setField("asteriskAppName", value)} placeholder="vigitemp" />
       </div>

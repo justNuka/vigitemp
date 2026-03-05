@@ -21,9 +21,10 @@ export type AuthStateEventDetail = {
 export const API_ERROR_EVENT = "vigitemp:api-error"
 export const AUTH_STATE_EVENT = "vigitemp:auth-state"
 
-const DISCONNECTED_MESSAGE = "Session expirée. Reconnectez-vous pour continuer."
+const DISCONNECTED_MESSAGE = "Session expir?e. Reconnectez-vous pour continuer."
 
 let authDisconnected = false
+let authRedirectInProgress = false
 
 export class HttpError extends Error {
   readonly status: number
@@ -56,11 +57,49 @@ function dispatchApiError(detail: ApiErrorEventDetail) {
   window.dispatchEvent(new CustomEvent(API_ERROR_EVENT, { detail }))
 }
 
+function getLocaleAwareLoginPath(reason: "session-expired" | "inactivity") {
+  if (typeof window === "undefined") return null
+
+  const pathname = window.location.pathname || "/"
+  const match = pathname.match(/^\/([a-z]{2})(?=\/|$)/i)
+  const localePrefix = match ? `/${match[1]}` : ""
+  return `${localePrefix}/login?reason=${reason}`
+}
+
+function isPublicAppPath(pathname: string) {
+  const normalized = pathname.replace(/^\/([a-z]{2})(?=\/|$)/i, "") || "/"
+  return normalized === "/login" || normalized === "/connexion" || normalized === "/reset-password" || normalized === "/reinitialisation-mot-de-passe" || normalized === "/force-password-change" || normalized === "/changement-mot-de-passe-obligatoire"
+}
+
+function triggerAuthRedirect(reason: string) {
+  if (typeof window === "undefined") return
+  if (authRedirectInProgress) return
+
+  const pathname = window.location.pathname || "/"
+  if (pathname.includes("/hotline/")) return
+  if (isPublicAppPath(pathname)) return
+
+  const targetReason = reason === "auto_logout" ? "inactivity" : "session-expired"
+  const target = getLocaleAwareLoginPath(targetReason)
+  if (!target) return
+
+  authRedirectInProgress = true
+  window.setTimeout(() => {
+    window.location.assign(target)
+  }, 0)
+}
+
 export function setAuthDisconnected(disconnected: boolean, reason?: string) {
   const changed = authDisconnected !== disconnected
   authDisconnected = disconnected
+  if (!disconnected) {
+    authRedirectInProgress = false
+  }
   if (changed) {
     dispatchAuthState(disconnected, reason)
+  }
+  if (disconnected) {
+    triggerAuthRedirect(reason ?? "unauthorized")
   }
 }
 

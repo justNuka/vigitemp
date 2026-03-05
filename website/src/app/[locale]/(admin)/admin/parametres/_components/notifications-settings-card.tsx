@@ -64,7 +64,7 @@ export function NotificationsSettingsCard({
   const isSavingRecipients = recipientsSetting ? loadingKeys.has(recipientsSetting.key) : false;
 
   return (
-    <Card className="bg-white/50 dark:bg-card">
+    <Card className="border-sky-200 bg-[linear-gradient(180deg,rgba(14,165,233,0.08),rgba(255,255,255,0.92))] dark:bg-card">
       <CardHeader>
         <CardTitle>{t("notifications.title")}</CardTitle>
         <CardDescription>{t("notifications.description")}</CardDescription>

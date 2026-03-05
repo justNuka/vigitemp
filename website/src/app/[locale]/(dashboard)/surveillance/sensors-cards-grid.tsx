@@ -9,7 +9,7 @@ import { MonitoringCardSkeleton } from "@/components/monitoring-card-skeleton"
 import type { SensorWithLocation } from "@/lib/api"
 
 import { SurveillanceEmptyState } from "./_components/monitoring-empty-state"
-import { sortSensorsByStatus } from "./_helpers/monitoring-derived"
+import { sortSensors, type SurveillanceSortMode } from "./_helpers/monitoring-derived"
 
 interface SensorsCardsGridProps {
   sensors: SensorWithLocation[]
@@ -23,6 +23,7 @@ interface SensorsCardsGridProps {
   ) => void
   onEditLocation?: (idLieu: number) => void
   showNullNonResponse?: boolean
+  sortMode?: SurveillanceSortMode
 }
 
 /**
@@ -38,6 +39,7 @@ export function SensorsCardsGrid({
   onSurveillanceToggle,
   onEditLocation,
   showNullNonResponse = false,
+  sortMode = "status",
 }: SensorsCardsGridProps) {
   const t = useTranslations("surveillance")
   const handleSurveillanceToggle =
@@ -69,7 +71,7 @@ export function SensorsCardsGrid({
     return <SurveillanceEmptyState title={t("grid.empty_title")} />
   }
 
-  const sortedSensors = sortSensorsByStatus(sensors)
+  const sortedSensors = sortSensors(sensors, sortMode)
   const disabledSensors = sortedSensors.filter((sensor) => sensor.location.surveillanceDisabled)
   const activeSensors = sortedSensors.filter((sensor) => !sensor.location.surveillanceDisabled)
 

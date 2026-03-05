@@ -54,6 +54,7 @@ export default function StepperCalibrationFileUpload({ onUploadResult, onFinish 
       invalidRootError="Racine XML inattendue (attendu ETALONNAGE)."
       onUploadResult={onUploadResult}
       onFinish={onFinish}
+      closeOnProcessSuccess
     />
   );
 }

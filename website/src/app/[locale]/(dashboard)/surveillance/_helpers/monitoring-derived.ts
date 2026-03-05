@@ -1,8 +1,11 @@
 import type { SensorWithLocation } from "@/lib/api"
 
+export type SurveillanceSortMode = "status" | "alphabetical"
+
 export type FilterState = {
   siteIds: number[]
   groupIds: number[]
+  sortMode: SurveillanceSortMode
 }
 
 export type Stats = {
@@ -11,6 +14,12 @@ export type Stats = {
   warning: number
   critical: number
   activeAlarms: number
+}
+
+function compareByLocationName(a: SensorWithLocation, b: SensorWithLocation) {
+  const nameA = (a.location.name || a.name || "").trim()
+  const nameB = (b.location.name || b.name || "").trim()
+  return nameA.localeCompare(nameB, "fr", { sensitivity: "base", numeric: true })
 }
 
 export function applySurveillanceFilters(sensors: SensorWithLocation[], filters: FilterState) {
@@ -31,6 +40,10 @@ export function applySurveillanceFilters(sensors: SensorWithLocation[], filters:
 
       return locationGroupIds.some((id) => filters.groupIds.includes(id))
     })
+  }
+
+  if (filters.sortMode === "alphabetical") {
+    return [...result].sort(compareByLocationName)
   }
 
   return result
@@ -61,4 +74,8 @@ export function sortSensorsByStatus(sensors: SensorWithLocation[]) {
     ok: 4,
   }
   return [...sensors].sort((a, b) => statusPriority[a.status] - statusPriority[b.status])
+}
+
+export function sortSensors(sensors: SensorWithLocation[], sortMode: SurveillanceSortMode) {
+  return sortMode === "alphabetical" ? [...sensors].sort(compareByLocationName) : sortSensorsByStatus(sensors)
 }

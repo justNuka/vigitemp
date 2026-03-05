@@ -1922,7 +1922,7 @@
     "steps": {
       "upload": "Importer les fichiers",
       "review": "Vérifier les données",
-      "create": "Créer les sondes"
+      "create": "Pr?parer les ?talonnages"
     },
     "status": {
       "in_progress": "En cours",
@@ -1965,7 +1965,8 @@
       "processing": "Traitement des fichiers... ({processed}/{total})",
       "process_done": "Traitement terminé. {count} fichier(s) importé(s).",
       "process_errors": "{count} fichier(s) n'ont pas pu être importé(s).",
-      "process_result": "Réussis : {success} Échecs : {failed}"
+      "process_result": "Réussis : {success} Échecs : {failed}",
+      "processing_hint": "La fen?tre se fermera automatiquement quand le traitement sera termin?."
     }
   },
   "standardsPage": {

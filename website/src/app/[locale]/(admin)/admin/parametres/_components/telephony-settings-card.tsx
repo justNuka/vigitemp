@@ -69,7 +69,7 @@ export function TelephonySettingsCard() {
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <span className="font-medium">Front only.</span> {copy.warning}
+          <span className="font-medium">{copy.frontOnly}.</span> {copy.warning}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">

@@ -21,9 +21,14 @@ type ParsedDetails = {
   raw?: string
 }
 
+function joinParts(parts: string[], separator = ' - ') {
+  return parts.filter(Boolean).join(separator)
+}
+
 export function formatDateSafe(value: string, localeTag: string, timezone?: string): string | null {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return null
+
   return date.toLocaleString(localeTag, {
     ...(timezone ? { timeZone: timezone } : {}),
     day: '2-digit',
@@ -44,12 +49,19 @@ export function parseAuditDetails(
   if (!details) return { title: t('table.empty_value') }
 
   const normalizedDetails = details.replace(/::ffff:/g, '')
-  const parts = normalizedDetails.split('|').map((part) => part.trim()).filter(Boolean)
+  const parts = normalizedDetails
+    .split('|')
+    .map((part) => part.trim())
+    .filter(Boolean)
+
   const resource = parts[0] || ''
   const idPart = parts.find((part) => part.startsWith('#')) || ''
   const ipPart = parts.find((part) => part.toLowerCase().startsWith('ip:'))
   let ip = ipPart ? ipPart.replace(/^IP:\s*/i, '').trim() : ''
-  if (ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '')
+
+  if (ip.startsWith('::ffff:')) {
+    ip = ip.replace('::ffff:', '')
+  }
 
   let changes: Record<string, unknown> | null = null
   const jsonPart = parts.find((part) => part.startsWith('{') && part.endsWith('}'))
@@ -61,7 +73,7 @@ export function parseAuditDetails(
     }
   }
 
-  const rawTitle = [resource, idPart].filter(Boolean).join(' ').trim()
+  const rawTitle = joinParts([resource, idPart], ' ').trim()
   const title = rawTitle || normalizedDetails
   const subtitleParts: string[] = []
 
@@ -76,17 +88,22 @@ export function parseAuditDetails(
     if (machineName || address) {
       const machine = machineName ? t('details.machine', { name: machineName }) : ''
       const addressText = address ? t('details.address', { address }) : ''
-      subtitleParts.push([machine, addressText].filter(Boolean).join(' • '))
+      subtitleParts.push(joinParts([machine, addressText]))
     }
+
     if (connectedAt) {
       const formatted = formatDateSafe(connectedAt, localeTag, timezone)
-      if (formatted) subtitleParts.push(t('details.connection', { date: formatted }))
+      if (formatted) {
+        subtitleParts.push(t('details.connection', { date: formatted }))
+      }
     }
+
     if (from !== undefined || to !== undefined) {
       const fromText = from !== undefined ? t('details.from', { value: String(from) }) : ''
       const toText = to !== undefined ? t('details.to', { value: String(to) }) : ''
-      subtitleParts.push([fromText, toText].filter(Boolean).join(' ? '))
+      subtitleParts.push(joinParts([fromText, toText]))
     }
+
     if (action && subtitleParts.length === 0) {
       subtitleParts.push(t('details.action', { action }))
     }
@@ -102,13 +119,18 @@ export function parseAuditDetails(
     }
   }
 
-  return { title, subtitle: subtitleParts.join(' • '), raw: normalizedDetails }
+  return {
+    title,
+    subtitle: joinParts(subtitleParts),
+    raw: normalizedDetails,
+  }
 }
 
 export function filterAuditLogs(logs: AuditLog[], codeFilter: string, searchQuery: string) {
   return logs.filter((log) => {
     if (codeFilter !== 'all' && log.action !== codeFilter) return false
     if (!searchQuery) return true
+
     const query = searchQuery.toLowerCase()
     return (
       log.action.toLowerCase().includes(query) ||

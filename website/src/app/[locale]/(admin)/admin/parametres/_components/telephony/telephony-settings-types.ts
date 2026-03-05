@@ -33,6 +33,7 @@ export type TelephonyCopy = {
   title: string
   description: string
   warning: string
+  frontOnly: string
   enabled: string
   provider: string
   callerId: string
@@ -43,8 +44,19 @@ export type TelephonyCopy = {
   reset: string
   localSaved: string
   summary: string
+  emptySummary: string
   providerLabel: Record<ProviderId, string>
   providerDesc: Record<ProviderId, string>
+  placeholders: {
+    secret: string
+    password: string
+    authToken: string
+    billingAccount: string
+    serviceName: string
+    accessToken: string
+    refreshToken: string
+    lineIdentifier: string
+  }
   twilio: Record<"apiKey" | "authToken" | "accountSid" | "apiKeySid" | "apiKeySecret" | "authTokenField" | "fromNumber", string>
   ovh: Record<"endpoint" | "applicationKey" | "applicationSecret" | "consumerKey" | "billingAccount" | "serviceName", string>
   keyyo: Record<"clientId" | "clientSecret" | "accessToken" | "refreshToken" | "lineId", string>

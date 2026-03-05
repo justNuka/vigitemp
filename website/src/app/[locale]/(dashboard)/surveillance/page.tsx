@@ -1,11 +1,13 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { ServerDashboardStats, ServerSurveillanceRefreshIntervalSeconds } from "./server-stats";
-import { ServerFilterOptions } from "./server-filters";
-import { SurveillancePageClient } from "./monitoring-page-client";
-import { Skeleton } from "@/components/ui/skeleton";
+import { getTranslations } from "next-intl/server";
+
 import { MonitoringCardSkeleton } from "@/components/monitoring-card-skeleton";
-import { getTranslations } from 'next-intl/server';
+import { getGlobalNonResponseDefault } from "@/lib/non-response-preference";
+
+import { SurveillancePageClient } from "./monitoring-page-client";
+import { ServerFilterOptions } from "./server-filters";
+import { ServerDashboardStats, ServerSurveillanceRefreshIntervalSeconds } from "./server-stats";
 
 export async function generateMetadata({
   params,
@@ -13,33 +15,21 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'surveillance' });
+  const t = await getTranslations({ locale, namespace: "surveillance" });
   return {
-    title: t('meta.title'),
-    description: t('meta.description'),
+    title: t("meta.title"),
+    description: t("meta.description"),
   };
 }
 
-// Skeleton pour les stats
-function StatsLoadingSkeleton() {
-  return (
-    <div className="flex items-center gap-4 px-4">
-      {[...Array(4)].map((_, i) => (
-        <Skeleton key={i} className="h-8 w-24" />
-      ))}
-    </div>
-  );
-}
-
-// Skeleton pour la grille de capteurs
 function SensorsLoadingSkeleton() {
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="space-y-6 p-4 md:p-6">
       <div className="flex justify-between">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-10 w-32" />
+        <div className="h-10 w-64 animate-pulse rounded-md bg-muted" />
+        <div className="h-10 w-32 animate-pulse rounded-md bg-muted" />
       </div>
-      <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4">
         {Array.from({ length: 12 }).map((_, i) => (
           <MonitoringCardSkeleton key={i} />
         ))}
@@ -51,27 +41,24 @@ function SensorsLoadingSkeleton() {
 export default async function SurveillancePage() {
   await connection();
 
-  // Charger UNIQUEMENT la premiere page (50 sondes) cote serveur
-  // Le client chargera les pages suivantes avec infinite scroll
-  const [statsData, filterOptions, refreshIntervalSeconds] = await Promise.all([
+  const [statsData, filterOptions, refreshIntervalSeconds, showNullNonResponse] = await Promise.all([
     ServerDashboardStats(),
     ServerFilterOptions(),
     ServerSurveillanceRefreshIntervalSeconds(),
+    getGlobalNonResponseDefault(),
   ]);
 
-  // Le composant client va charger les sensors pagines via l'API
-  // Cela reduit drastiquement le temps de chargement initial
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex min-h-full flex-col">
       <Suspense fallback={<SensorsLoadingSkeleton />}>
         <SurveillancePageClient
           initialStats={statsData}
           sites={filterOptions.sites}
           groups={filterOptions.groups}
           refreshIntervalSeconds={refreshIntervalSeconds}
+          showNullNonResponse={showNullNonResponse}
         />
       </Suspense>
     </div>
   );
 }
-

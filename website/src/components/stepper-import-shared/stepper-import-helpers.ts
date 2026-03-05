@@ -1,4 +1,5 @@
 import type { UploadItem } from "@/components/file-upload-shared"
+import { decodeXmlArrayBuffer } from "@/lib/xml-decoding"
 import type { ValidationResult, ValidationStatus } from "./stepper-import-types"
 
 export function buildNameCounts(items: UploadItem[]) {
@@ -36,33 +37,14 @@ export function filterValidationByUploadNames(results: ValidationResult[], count
 }
 
 export function decodeXmlContent(buffer: ArrayBuffer) {
-  const utf8Decoder = new TextDecoder("utf-8", { fatal: false })
-  let utf8Text = utf8Decoder.decode(buffer)
-  let corrected = false
-
-  const declaredEncodingMatch = utf8Text.match(/encoding="([^"]+)"/i)
-  const declaredEncoding = declaredEncodingMatch?.[1] ?? null
-
-  const replacementChar = String.fromCharCode(0xfffd)
-  const mojibakeE = String.fromCharCode(0x00ef, 0x00bf, 0x00bd)
-  const mojibakeDeg = String.fromCharCode(0x00c2, 0x00b0)
-  const uppercaseE = String.fromCharCode(0x00c9)
-  const degree = String.fromCharCode(0x00b0)
-
-  const fixTagContent = (tagName: string, fixer: (value: string) => string) => {
-    const pattern = new RegExp(`<${tagName}>([\s\S]*?)</${tagName}>`, "gi")
-    utf8Text = utf8Text.replace(pattern, (_match, content) => {
-      const next = fixer(content)
-      if (next !== content) corrected = true
-      return `<${tagName}>${next}</${tagName}>`
-    })
+  const decoded = decodeXmlArrayBuffer(buffer)
+  return {
+    text: decoded.text,
+    encoding: decoded.detectedEncoding,
+    corrected: decoded.corrected,
   }
-
-  fixTagContent("OPERATEUR", (value) => value.replaceAll(replacementChar, uppercaseE).replaceAll(mojibakeE, uppercaseE))
-  fixTagContent("UNITE", (value) => value.replaceAll(replacementChar, degree).replaceAll(mojibakeDeg, degree))
-
-  return { text: utf8Text, encoding: declaredEncoding ?? "utf-8", corrected }
 }
+
 
 export function validateXml(
   xmlText: string,

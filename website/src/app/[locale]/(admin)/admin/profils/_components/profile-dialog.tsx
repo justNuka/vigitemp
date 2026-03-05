@@ -63,33 +63,6 @@ type ProfileDialogProps = {
   onSubmit: (data: ProfileFormData) => void;
 };
 
-
-function groupAuthorizationsByModule(auths: Authorization[]) {
-  const groups: Record<string, Authorization[]> = {
-    Administration: [],
-    Metrologie: [],
-    Surveillance: [],
-    VigiLog: [],
-    Autres: [],
-  };
-
-  auths.forEach((auth) => {
-    const domain = getAuthorizationDomain(auth.code);
-    if (domain === 'admin') groups.Administration.push(auth);
-    else if (domain === 'metrologie') groups.Metrologie.push(auth);
-    else if (domain === 'surveillance') groups.Surveillance.push(auth);
-    else if (domain === 'vigilog') groups.VigiLog.push(auth);
-    else groups.Autres.push(auth);
-  });
-
-  Object.values(groups).forEach((items) =>
-    items.sort((a, b) => (a.label || a.code || '').localeCompare(b.label || b.code || ''))
-  );
-
-  return Object.entries(groups).filter(([_, items]) => items.length > 0);
-}
-
-
 function getAuthorizationIcon(code: string | null | undefined): LucideIcon {
   const normalized = (code || '').trim().toUpperCase();
   if (normalized.includes('DASHBOARD_ADMIN')) return LayoutDashboard;
@@ -105,6 +78,34 @@ function getAuthorizationIcon(code: string | null | undefined): LucideIcon {
   if (normalized.includes('ACCES_SURVEILLANCE')) return ShieldEllipsis;
   if (normalized.includes('ACCES_VIGILOG')) return Wrench;
   return ShieldEllipsis;
+}
+
+function groupAuthorizationsByModule(
+  auths: Authorization[],
+  labels: Record<'administration' | 'metrology' | 'monitoring' | 'vigilog' | 'other', string>,
+) {
+  const groups: Record<string, Authorization[]> = {
+    [labels.administration]: [],
+    [labels.metrology]: [],
+    [labels.monitoring]: [],
+    [labels.vigilog]: [],
+    [labels.other]: [],
+  };
+
+  auths.forEach((auth) => {
+    const domain = getAuthorizationDomain(auth.code);
+    if (domain === 'admin') groups[labels.administration].push(auth);
+    else if (domain === 'metrologie') groups[labels.metrology].push(auth);
+    else if (domain === 'surveillance') groups[labels.monitoring].push(auth);
+    else if (domain === 'vigilog') groups[labels.vigilog].push(auth);
+    else groups[labels.other].push(auth);
+  });
+
+  Object.values(groups).forEach((items) =>
+    items.sort((a, b) => (a.label || a.code || '').localeCompare(b.label || b.code || ''))
+  );
+
+  return Object.entries(groups).filter(([_, items]) => items.length > 0);
 }
 
 export function ProfileDialog({
@@ -148,6 +149,13 @@ export function ProfileDialog({
 
   const selectedAuthorizations = form.watch('authorizations') || [];
   const profileName = form.watch('name');
+  const domainLabels = {
+    administration: t('domains.administration'),
+    metrology: t('domains.metrology'),
+    monitoring: t('domains.monitoring'),
+    vigilog: t('domains.vigilog'),
+    other: t('domains.other'),
+  } as const;
 
   return (
     <Dialog
@@ -200,11 +208,10 @@ export function ProfileDialog({
               )}
             />
 
-
             <div>
               <Label className="mb-3 block">{t('authorizations_title')}</Label>
               <div className="space-y-4">
-                {groupAuthorizationsByModule(authorizations).map(([module, auths]) => (
+                {groupAuthorizationsByModule(authorizations, domainLabels).map(([module, auths]) => (
                   <Card key={module}>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm font-medium">{module}</CardTitle>
@@ -267,4 +274,3 @@ export function ProfileDialog({
     </Dialog>
   );
 }
-

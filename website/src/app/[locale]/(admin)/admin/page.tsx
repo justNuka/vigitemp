@@ -107,7 +107,7 @@ export default function AdminDashboard() {
   const backupsQuery = useBackups()
   const unassignedSensorsQuery = useUnassignedSensors({ page: 1, limit: 20 })
 
-  const accessLabel = locale === "fr" ? "Accéder à la page" : "Open page"
+  const accessLabel = t("actions.open_page")
 
   const activeAlarmsTotal = activeAlarmsQuery.data?.pagination.total || 0
   const alarmsInProgressTotal = alarmsActiveCountQuery.data?.pagination.total ?? activeAlarmsTotal
@@ -251,17 +251,14 @@ export default function AdminDashboard() {
 
       <div className="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
         <SummaryCard
-          title={locale === "fr" ? "Alarmes" : "Alarms"}
-          description={
-            locale === "fr"
-              ? `En cours: ${alarmsInProgressTotal} • En attente d'acquittement: ${alarmsPendingAckTotal}`
-              : `In progress: ${alarmsInProgressTotal} • Pending acknowledgement: ${alarmsPendingAckTotal}`
-          }
+          title={t("summary.alarms_title")}
+          description={t("summary.alarms_description", {
+            inProgress: alarmsInProgressTotal,
+            pending: alarmsPendingAckTotal,
+          })}
           value={String(alarmsInProgressTotal)}
           helper={
-            locale === "fr"
-              ? `Alarmes en attente d'acquittement: ${alarmsPendingAckTotal}`
-              : `Alarms pending acknowledgement: ${alarmsPendingAckTotal}`
+            t("summary.alarms_helper", { pending: alarmsPendingAckTotal })
           }
           href={`/admin/alarmes`}
           hrefLabel={accessLabel}

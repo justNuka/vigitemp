@@ -36,7 +36,7 @@ export function DashboardTrendSection({
           <MiniChart measurements={trendMeasurements} height={120} className="rounded-lg overflow-hidden" />
           <div className="mt-4 flex items-center justify-between text-sm">
             <span className="text-muted-foreground">{t("trend.count", { count: trendCountLast7d })}</span>
-            <Link href="surveillance">
+            <Link href="/surveillance">
               <Button variant="ghost" size="sm" className="gap-1 -mr-2">
                 {t("trend.details")}
                 <ArrowRight className="h-4 w-4" />

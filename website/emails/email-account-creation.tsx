@@ -26,15 +26,15 @@ interface AccountCreationEmailProps {
 
 const COPY: Record<Locale, Record<string, string>> = {
   fr: {
-    preview: 'Votre compte Vigitemp a ete cree',
+    preview: 'Votre compte Vigitemp a ete créé',
     title: 'Bienvenue sur Vigitemp',
     hello: 'Bonjour',
     intro:
-      'Votre compte Vigitemp a ete cree avec succes. Vous pouvez maintenant vous connecter avec les identifiants suivants :',
+      'Votre compte Vigitemp a ete créé avec succes. Vous pouvez maintenant vous connecter avec les identifiants suivants :',
     login: 'Login',
     password: 'Mot de passe (temporaire)',
     warning:
-      'Important : Ce mot de passe est temporaire. Pour des raisons de securite, vous devrez le changer lors de votre première connexion.',
+      'Important : Ce mot de passe est temporaire. Pour des raisons de sécurité, vous devrez le changer lors de votre première connexion.',
     cta: 'Se connecter maintenant',
     contact: 'Si vous n\'avez pas démandé la création de ce compte, contactez votre administrateur système.',
     noreply: 'Cet email à été envoyé automatiquement, merci de ne pas y répondre.',
@@ -126,7 +126,7 @@ export const AccountCreationEmail = ({
 
             <Section className="bg-[#f8f9fa] rounded-b-lg px-10 py-6 text-center border-t border-solid border-[#e9ecef]">
               <Text className="text-[#6c757d] text-[12px] m-0">
-                <strong>Vigitemp</strong> - {c.brand}
+                <strong>VigiSensys</strong> - {c.brand}
                 <br />
                 <Link href="https://www.mc2lab.fr" className="text-[#007bff] no-underline">
                   MC2 Lab

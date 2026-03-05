@@ -29,6 +29,7 @@ export default function SharedImportStepper<TImportResult>({
   invalidRootError,
   onUploadResult,
   onFinish,
+  closeOnProcessSuccess = false,
 }: SharedImportStepperProps<TImportResult>) {
   const t = useTranslations(stepperNamespace)
   const [currentStep, setCurrentStep] = useState(1)
@@ -153,7 +154,13 @@ export default function SharedImportStepper<TImportResult>({
 
     if (failed > 0) setProcessError(t("create.process_errors", { count: failed }))
     setProcessState("done")
-  }, [onUploadResult, previewEndpoint, t, validResults])
+
+    if (closeOnProcessSuccess && failed === 0) {
+      window.setTimeout(() => {
+        onFinish?.()
+      }, 100)
+    }
+  }, [closeOnProcessSuccess, onFinish, onUploadResult, previewEndpoint, t, validResults])
 
   const steps = useMemo(
     () => [
@@ -221,6 +228,7 @@ export default function SharedImportStepper<TImportResult>({
                 processState={processState}
                 processStats={processStats}
                 processError={processError}
+                closeOnProcessSuccess={closeOnProcessSuccess}
               />
             </m.div>
           </AnimatePresence>

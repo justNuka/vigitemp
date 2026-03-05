@@ -1,10 +1,11 @@
-import { Check, X } from "lucide-react"
+import { Check, CircleHelp, X } from "lucide-react"
 import type { UseFormReturn } from "react-hook-form"
 
 import { Checkbox } from "@/components/ui/checkbox"
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 import type { JourOption, PlanningRegleFormValues } from "./planning-rule-form-helpers"
 
@@ -15,6 +16,7 @@ function NumberInputField({
   placeholder,
   integer = false,
   minZero = false,
+  labelAddon,
 }: {
   form: UseFormReturn<PlanningRegleFormValues, unknown, any>
   name: keyof PlanningRegleFormValues
@@ -22,6 +24,7 @@ function NumberInputField({
   placeholder?: string
   integer?: boolean
   minZero?: boolean
+  labelAddon?: React.ReactNode
 }) {
   return (
     <FormField
@@ -29,7 +32,10 @@ function NumberInputField({
       name={name as any}
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{label}</FormLabel>
+          <div className="flex items-center gap-1">
+            <FormLabel>{label}</FormLabel>
+            {labelAddon ?? null}
+          </div>
           <FormControl>
             <Input
               type="number"
@@ -163,7 +169,30 @@ export function PlanningRuleThresholdFields({
     <>
       <div className="grid grid-cols-2 gap-4">
         <NumberInputField form={form} name="Consigne" label={tDialog("labelConsigne")} placeholder={tDialog("placeholderNumeric")} />
-        <NumberInputField form={form} name="Priorite" label={tDialog("labelPriorite")} integer />
+        <NumberInputField
+          form={form}
+          name="Priorite"
+          label={tDialog("labelPriorite")}
+          integer
+          labelAddon={
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex h-4 w-4 items-center justify-center text-muted-foreground"
+                    aria-label={tDialog("labelPriorite")}
+                  >
+                    <CircleHelp className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{tDialog("hintPriorite")}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          }
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">

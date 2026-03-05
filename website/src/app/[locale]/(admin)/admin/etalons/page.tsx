@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useLicense } from "@/components/license/license-provider";
 import { isOneOrPack } from "@/lib/license-access";
 import { PageHeader } from "@/components/page-header";
@@ -9,8 +9,8 @@ import { LicenseBlockedCard } from "@/components/license/license-blocked-card";
 import { StandardsClient } from "./standards-client";
 
 export default function EtalonsPage() {
-  const locale = useLocale();
-  const tCommon = useTranslations("common");
+  const t = useTranslations("standardsPage")
+  const tCommon = useTranslations("common")
   const { license, loading } = useLicense();
 
   const isBlocked = useMemo(() => isOneOrPack(license), [license]);
@@ -20,11 +20,8 @@ export default function EtalonsPage() {
   }
 
   if (isBlocked) {
-    const blockedTitle = locale === "fr" ? "Gestion des étalons indisponible" : "Standards management unavailable";
-    const blockedDescription =
-      locale === "fr"
-        ? "Cette page n'est pas disponible avec votre licence actuelle."
-        : "This page is not available with your current license.";
+    const blockedTitle = t("blocked.title")
+    const blockedDescription = t("blocked.description")
 
     return (
       <>
@@ -38,7 +35,7 @@ export default function EtalonsPage() {
 
   return (
     <>
-      <PageHeader title="Gestion des étalons" description="Gérez les étalons de calibration" />
+      <PageHeader titleKey="standardsPage.title" descriptionKey="standardsPage.description" />
       <div className="space-y-6 p-6">
         <StandardsClient />
       </div>

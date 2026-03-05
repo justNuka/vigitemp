@@ -32,7 +32,7 @@ export function HotlineLogsPanel({
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
         <Terminal className="max-h-120 max-w-full overflow-x-hidden" sequence={false}>
           {lines.map((line, index) => (
-            <span key={`${line}-${index}`} className={cn('block break-words whitespace-pre-wrap', lineClassName(line))}>{line}</span>
+            <span key={`${line}-${index}`} className={cn('block wrap-break-word whitespace-pre-wrap', lineClassName(line))}>{line}</span>
           ))}
           {!loading && lines.length === 0 ? <span className="text-muted-foreground">{emptyLabel}</span> : null}
         </Terminal>

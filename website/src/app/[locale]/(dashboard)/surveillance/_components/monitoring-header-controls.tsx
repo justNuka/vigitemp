@@ -1,5 +1,6 @@
 "use client"
 
+import type { FilterState } from "../_helpers/monitoring-derived"
 import type { Group, Site } from "../server-filters"
 
 import { SurveillanceFilters } from "../monitoring-filters"
@@ -10,10 +11,6 @@ import { useTranslations } from "next-intl"
 
 type ViewMode = "tree" | "graphs"
 
-type FilterState = {
-  siteIds: number[]
-  groupIds: number[]
-}
 
 type Props = {
   sites: Site[]

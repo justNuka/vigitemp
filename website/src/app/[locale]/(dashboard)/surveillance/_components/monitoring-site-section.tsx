@@ -6,7 +6,7 @@ import { countStatus } from "@/lib/surveillance-status"
 import type { SensorWithLocation } from "@/lib/api"
 
 import { type SiteSection } from "../_helpers/group-sensors"
-import { sortSensorsByStatus } from "../_helpers/monitoring-derived"
+import { sortSensors, type SurveillanceSortMode } from "../_helpers/monitoring-derived"
 import { formatAlarmes, formatGroupes, formatPreAlarmes, formatSondes } from "../_helpers/monitoring-labels"
 import { SurveillanceTreeStatsBadges } from "./monitoring-tree-stats-badges"
 import { buildMonitoringCardProps } from "./monitoring-card-props"
@@ -34,6 +34,7 @@ type MonitoringSiteSectionProps = {
   ) => void
   onEditLocation?: (idLieu: number) => void
   showNullNonResponse: boolean
+  sortMode: SurveillanceSortMode
 }
 
 function formatDisabledLabel(
@@ -83,6 +84,7 @@ export function MonitoringSiteSection({
   onSurveillanceToggle,
   onEditLocation,
   showNullNonResponse,
+  sortMode,
 }: MonitoringSiteSectionProps) {
   const isSiteExpanded = expandedSites.has(siteKey)
   const handleSurveillanceToggle =
@@ -122,7 +124,7 @@ export function MonitoringSiteSection({
         <div className="space-y-3 animate-fade-in">
           {site.groups.map((group) => {
             const groupStats = countStatus(group.sensors)
-            const sortedGroupSensors = sortSensorsByStatus(group.sensors)
+            const sortedGroupSensors = sortSensors(group.sensors, sortMode)
             const isGroupExpanded = disabledView ? true : expandedGroups.has(group.groupKey)
             const groupDisabled =
               group.groupId !== null &&

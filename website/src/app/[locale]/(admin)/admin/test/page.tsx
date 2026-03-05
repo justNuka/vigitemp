@@ -1,63 +1,65 @@
-import { notFound } from "next/navigation";
-import { FEATURE_FLAGS } from "@/lib/feature-flags";
-import { DevModeBadge } from "@/components/dev-mode-badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Beaker, Zap, Database, Clock } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { notFound } from "next/navigation"
+import { getTranslations } from "next-intl/server"
+import { FEATURE_FLAGS } from "@/lib/feature-flags"
+import { DevModeBadge } from "@/components/dev-mode-badge"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Beaker, Zap, Database, Clock } from "lucide-react"
+import { Link } from "@/i18n/navigation"
 
-export default function TestIndexPage() {
-  // Page de test uniquement disponible en dev
+export default async function TestIndexPage() {
   if (!FEATURE_FLAGS.enableTestPages) {
-    notFound();
+    notFound()
   }
+
+  const t = await getTranslations("testPages.index")
 
   const perfTests = [
     {
-      title: "Surveillance",
-      description: "Capteurs et statistiques",
+      title: t("cards.monitoring.title"),
+      description: t("cards.monitoring.description"),
       href: "/admin/test/surveillance-perf",
       tags: ["sensors-data", "surveillance-stats"],
     },
     {
-      title: "Alarmes",
-      description: "Liste et statistiques d'alarmes",
+      title: t("cards.alarms.title"),
+      description: t("cards.alarms.description"),
       href: "/admin/test/alarms-perf",
       tags: ["alarms-data", "alarms-stats"],
     },
     {
-      title: "Audit",
-      description: "Journal et événements",
+      title: t("cards.audit.title"),
+      description: t("cards.audit.description"),
       href: "/admin/test/audit-perf",
       tags: ["audit-logs", "audit-stats"],
     },
     {
-      title: "Paramètres",
-      description: "Configuration système",
+      title: t("cards.settings.title"),
+      description: t("cards.settings.description"),
       href: "/admin/test/settings-perf",
       tags: ["parametres-data"],
     },
     {
-      title: "Utilisateurs",
-      description: "Gestion des utilisateurs",
+      title: t("cards.users.title"),
+      description: t("cards.users.description"),
       href: "/admin/test/users-perf",
       tags: ["users-data"],
     },
-  ];
+  ]
 
   const apiTools = [
     {
-      title: "API Revalidate",
-      description: "Endpoint pour invalider manuellement le cache",
+      title: t("api_revalidate.title"),
+      description: t("api_revalidate.description"),
       href: "/api/revalidate",
       icon: Database,
       features: [
-        "GET : Invalide tous les caches dashboard",
-        "POST : Invalide un tag spécifique",
-        "Disponible uniquement en dev",
+        t("api_revalidate.features.get"),
+        t("api_revalidate.features.post"),
+        t("api_revalidate.features.dev_only"),
       ],
     },
-  ];
+  ]
 
   return (
     <div className="flex flex-col min-h-full p-4 md:p-6 space-y-8">
@@ -66,23 +68,18 @@ export default function TestIndexPage() {
       <div className="space-y-2">
         <div className="flex items-center gap-3">
           <Beaker className="h-8 w-8 text-warning" />
-          <h1 className="text-3xl font-bold tracking-tight">Pages de Test</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
         </div>
-        <p className="text-muted-foreground">
-          Outils de développement et tests de performance - Désactivés automatiquement en production
-        </p>
+        <p className="text-muted-foreground">{t("description")}</p>
       </div>
 
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
             <Zap className="h-6 w-6 text-primary" />
-            Tests de Performance
+            {t("performance.title")}
           </h2>
-          <p className="text-muted-foreground mb-4">
-            Pages de test pour mesurer l'impact du cache Next.js 16 sur chaque section.
-            Comparez les temps avant/après optimisation (~20-50ms vs ~1000-2000ms).
-          </p>
+          <p className="text-muted-foreground mb-4">{t("performance.description")}</p>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {perfTests.map((test) => (
               <Card key={test.href}>
@@ -101,7 +98,7 @@ export default function TestIndexPage() {
                   <Link href={test.href}>
                     <Button className="w-full" size="sm">
                       <Zap className="mr-2 h-4 w-4" />
-                      Tester
+                      {t("actions.test")}
                     </Button>
                   </Link>
                 </CardContent>
@@ -113,11 +110,11 @@ export default function TestIndexPage() {
         <div>
           <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
             <Database className="h-6 w-6 text-primary" />
-            Outils API
+            {t("api_tools.title")}
           </h2>
           <div className="grid gap-4 md:grid-cols-2">
             {apiTools.map((tool) => {
-              const Icon = tool.icon;
+              const Icon = tool.icon
               return (
                 <Card key={tool.href} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
@@ -131,19 +128,17 @@ export default function TestIndexPage() {
                     <ul className="space-y-2 text-sm">
                       {tool.features.map((feature, idx) => (
                         <li key={idx} className="flex items-start gap-2">
-                          <span className="text-primary">•</span>
+                          <span className="text-primary">?</span>
                           <span className="text-muted-foreground">{feature}</span>
                         </li>
                       ))}
                     </ul>
                     <Link href={tool.href}>
-                      <Button className="w-full">
-                        Accéder à {tool.title}
-                      </Button>
+                      <Button className="w-full">{t("actions.open_tool", { title: tool.title })}</Button>
                     </Link>
                   </CardContent>
                 </Card>
-              );
+              )
             })}
           </div>
         </div>
@@ -153,42 +148,29 @@ export default function TestIndexPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-warning">
             <Clock className="h-5 w-5" />
-            Comment utiliser les tests de performance ?
+            {t("guide.title")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
           <div>
-            <h4 className="font-semibold mb-1">1. Mesurer Cold Cache (première charge)</h4>
-            <p className="text-muted-foreground">
-              Ouvrir DevTools → Network, vider le cache (Ctrl+Shift+Del), recharger.
-              Noter le temps (~1000-2000ms sans cache).
-            </p>
+            <h4 className="font-semibold mb-1">{t("guide.step1_title")}</h4>
+            <p className="text-muted-foreground">{t("guide.step1_description")}</p>
           </div>
           <div>
-            <h4 className="font-semibold mb-1">2. Mesurer Warm Cache (cache actif)</h4>
-            <p className="text-muted-foreground">
-              Recharger plusieurs fois (F5). Le cache Next.js 16 sert les données instantanément (~20-50ms).
-              Amélioration de 50-100x.
-            </p>
+            <h4 className="font-semibold mb-1">{t("guide.step2_title")}</h4>
+            <p className="text-muted-foreground">{t("guide.step2_description")}</p>
           </div>
           <div>
-            <h4 className="font-semibold mb-1">3. Comparer avec l'ancienne version</h4>
-            <p className="text-muted-foreground">
-              Dans chaque dossier de page, renommer page.tsx et page-old.tsx pour tester
-              la version client-only (sans optimisation).
-            </p>
+            <h4 className="font-semibold mb-1">{t("guide.step3_title")}</h4>
+            <p className="text-muted-foreground">{t("guide.step3_description")}</p>
           </div>
           <div className="pt-2 border-t">
-            <h4 className="font-semibold mb-1">Build test complet</h4>
-            <code className="block bg-muted p-2 rounded mt-1">
-              npm run build:test && npm run start:test
-            </code>
-            <p className="text-muted-foreground mt-1">
-              Mesurer les temps réels de production (~5-15ms avec cache).
-            </p>
+            <h4 className="font-semibold mb-1">{t("guide.build_title")}</h4>
+            <code className="block bg-muted p-2 rounded mt-1">npm run build:test && npm run start:test</code>
+            <p className="text-muted-foreground mt-1">{t("guide.build_description")}</p>
           </div>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

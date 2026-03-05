@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { ServerUsers } from "./server-users";
 import { UsersClient } from "./users-client";
 import { PageHeader } from "@/components/page-header";
@@ -7,13 +8,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 
-export const metadata: Metadata = {
-  title: "Utilisateurs - Vigitemp",
-  description: "Gestion des utilisateurs",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("usersPage")
 
+  return {
+    title: t("title"),
+    description: t("description"),
+  }
+}
 
-// Skeleton pour la liste des utilisateurs
 function UsersLoadingSkeleton() {
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -52,7 +55,6 @@ async function getActiveAlarmsCount() {
 }
 
 export default async function UsersPage() {
-  // Chargement parallèle des données côté serveur avec cache
   const [usersData, activeAlarmsCount] = await Promise.all([
     ServerUsers(),
     getActiveAlarmsCount(),
@@ -61,11 +63,11 @@ export default async function UsersPage() {
   return (
     <div className="flex flex-col min-h-full">
       <PageHeader
-        title="Gestion des utilisateurs"
-        description="Administration des comptes utilisateurs"
+        titleKey="usersPage.title"
+        descriptionKey="usersPage.description"
         activeAlarms={activeAlarmsCount}
       />
-      
+
       <div className="space-y-6 p-6">
         <Suspense fallback={<UsersLoadingSkeleton />}>
           <UsersClient users={usersData} />

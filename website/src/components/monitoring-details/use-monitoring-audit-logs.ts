@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import type { AuditLog } from "./types"
 
@@ -53,11 +53,11 @@ export function useMonitoringAuditLogs(
     return () => controller.abort()
   }, [enabled, errorMessage, idLieu, isLoaded])
 
-  const reset = () => {
+  const reset = useCallback(() => {
     setLogs([])
     setError(null)
     setIsLoaded(false)
-  }
+  }, [])
 
   return { logs, isLoading, error, isLoaded, reset }
 }

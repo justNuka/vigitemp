@@ -26,8 +26,11 @@ export const PATCH = withAuthLogging(
         payload.disabled && payload.durationMinutes && payload.durationMinutes > 0
           ? payload.durationMinutes
           : null
-      const reactivationAt =
-        payload.disabled && durationMinutes ? new Date(Date.now() + durationMinutes * 60 * 1000) : null
+      const [reactivationRow] =
+        payload.disabled && durationMinutes
+          ? await prisma.$queryRaw<Array<{ reactivationAt: Date }>>`SELECT DATE_ADD(NOW(), INTERVAL ${durationMinutes} MINUTE) AS reactivationAt`
+          : [null]
+      const reactivationAt = reactivationRow?.reactivationAt ?? null
 
       const updated = await prisma.t_lieu.update({
         where: { Id_Lieu: lieuId },

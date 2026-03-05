@@ -16,4 +16,5 @@ export type SharedImportStepperProps<TImportResult> = {
   invalidRootError?: string
   onUploadResult?: (result: TImportResult) => void
   onFinish?: () => void
+  closeOnProcessSuccess?: boolean
 }

@@ -67,7 +67,8 @@ export function LoginForm() {
     if (reason === "inactivity") {
       const canShow = consumeDisconnectReason("inactivity");
       setShowInactivityMessage(canShow);
-
+    } else if (reason === "session-expired") {
+      setShowInactivityMessage(true);
     } else {
       setShowInactivityMessage(false);
     }

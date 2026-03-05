@@ -52,7 +52,7 @@ export function AutoLockSettingsCard() {
   };
 
   return (
-    <Card className="bg-white/60 dark:bg-card">
+    <Card className="border-sky-200 bg-[linear-gradient(180deg,rgba(14,165,233,0.08),rgba(255,255,255,0.92))] dark:bg-card">
       <CardHeader>
         <CardTitle>{t('security.title')}</CardTitle>
         <CardDescription>{t('security.description')}</CardDescription>

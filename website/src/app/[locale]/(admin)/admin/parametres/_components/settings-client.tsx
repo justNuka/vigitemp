@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { useLicense } from "@/components/license/license-provider";
@@ -56,6 +56,26 @@ function getRefreshIntervalLabel(t: ReturnType<typeof useTranslations>, value: s
   }
 }
 
+function getTranslatedLabel(t: ReturnType<typeof useTranslations>, setting: Setting) {
+  const translatedLabels: Record<string, string> = {
+    "general:timezone": t("timezone.label"),
+    "general:global_language": t("general.labels.global_language"),
+    "notifications:email": t("notifications.email_toggle"),
+    "notifications:alarm_email_recipients": t("notifications.cc_recipients_label"),
+    "notifications:alarm_email_acknowledged": t("notifications.acknowledged_toggle"),
+    "notifications:alarm_email_ended": t("notifications.ended_toggle"),
+    "notifications:sms": t("general.labels.notifications_sms"),
+    "alarms:sound": t("general.labels.alarms_sound"),
+    "dashboard:refresh": t("general.labels.dashboard_refresh"),
+    "dashboard:surveillance_refresh": t("general.labels.surveillance_refresh"),
+    "dashboard:show_null_non_response": t("general.labels.show_null_non_response"),
+    "dashboard:etalonnage_warning_days": t("general.labels.etalonnage_warning_days"),
+    "messaging:enabled": t("messaging.toggle_label"),
+  };
+
+  return translatedLabels[setting.key] ?? setting.label;
+}
+
 export function SettingsClient({ settings: initialSettings }: Props) {
   const t = useTranslations("adminSettings");
   const { license } = useLicense();
@@ -63,18 +83,23 @@ export function SettingsClient({ settings: initialSettings }: Props) {
   const [smtpModalOpen, setSmtpModalOpen] = useState(false);
   const { settings, loadingKeys, persist, toggle } = useSettingsEditor(initialSettings);
 
-  const generalSettings = settings.filter((setting) => {
+  const localizedSettings = useMemo(
+    () => settings.map((setting) => ({ ...setting, label: getTranslatedLabel(t, setting) })),
+    [settings, t],
+  );
+
+  const generalSettings = localizedSettings.filter((setting) => {
     if (NOTIFICATION_SETTING_KEYS.has(setting.key)) return false;
     if (setting.key === MESSAGING_SETTING_KEY) return false;
     if (!canEditSurveillanceRefresh && setting.key === SURVEILLANCE_REFRESH_KEY) return false;
     return true;
   });
 
-  const notificationSettings = settings.filter((setting) => NOTIFICATION_SETTING_KEYS.has(setting.key));
-  const messagingSettings = settings.filter((setting) => setting.key === MESSAGING_SETTING_KEY);
+  const notificationSettings = localizedSettings.filter((setting) => NOTIFICATION_SETTING_KEYS.has(setting.key));
+  const messagingSettings = localizedSettings.filter((setting) => setting.key === MESSAGING_SETTING_KEY);
 
   return (
-    <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
+    <main className="flex-1 space-y-6 p-4 md:p-6 animate-fade-in">
       <GeneralSettingsCard
         settings={generalSettings}
         loadingKeys={loadingKeys}
@@ -90,7 +115,7 @@ export function SettingsClient({ settings: initialSettings }: Props) {
       />
 
       <TimezoneSettingsCard
-        settings={settings}
+        settings={localizedSettings}
         loadingKeys={loadingKeys}
         onTimezoneChange={(key, value) => persist(key, value)}
       />
@@ -105,13 +130,13 @@ export function SettingsClient({ settings: initialSettings }: Props) {
         onSaveRecipients={(key, value) => persist(key, value)}
       />
 
-      {isStandardOrExpert(license) && (
+      {isStandardOrExpert(license) ? (
         <MessagingSettingsCard
           settings={messagingSettings}
           loadingKeys={loadingKeys}
           onToggle={(key) => toggle(key)}
         />
-      )}
+      ) : null}
 
       <SmtpSettingsCard onOpenSmtpModal={() => setSmtpModalOpen(true)} />
       <TelephonySettingsCard />

@@ -14,7 +14,6 @@ import { SurveillanceHeaderControls } from "./_components/monitoring-header-cont
 import { SurveillanceLoadMore } from "./_components/monitoring-load-more";
 import { CurvesOverlayModal } from "./_components/curves-overlay-modal";
 import { applySurveillanceFilters, computeSurveillanceStats, type FilterState } from "./_helpers/monitoring-derived";
-import { getJson } from "@/lib/http";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { LocationFormDialog } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-dialog";
@@ -44,16 +43,17 @@ interface Props {
   sites: Site[];
   groups: Group[];
   refreshIntervalSeconds: number;
+  showNullNonResponse: boolean;
 }
 
 
-export function SurveillancePageClient({ initialStats, sites, groups, refreshIntervalSeconds }: Props) {
+export function SurveillancePageClient({ initialStats, sites, groups, refreshIntervalSeconds, showNullNonResponse: initialShowNullNonResponse }: Props) {
   const t = useTranslations("surveillance");
   const [viewMode, setViewMode] = useState<ViewMode>("graphs");
-  const [filters, setFilters] = useState<FilterState>({ siteIds: [], groupIds: [] });
+  const [filters, setFilters] = useState<FilterState>({ siteIds: [], groupIds: [], sortMode: "status" });
   const [disabledFirst, setDisabledFirst] = useState(true);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
-  const [showNullNonResponse, setShowNullNonResponse] = useState(false);
+  const [showNullNonResponse] = useState(initialShowNullNonResponse);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
@@ -167,23 +167,6 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     await performRefresh(false);
   }, [performRefresh]);
 
-  useEffect(() => {
-    let isActive = true;
-
-    void getJson<{ enabled: boolean }>("/api/preferences/non-response")
-      .then((payload) => {
-        if (!isActive) return;
-        setShowNullNonResponse(Boolean(payload?.enabled));
-      })
-      .catch(() => {
-        if (!isActive) return;
-        setShowNullNonResponse(false);
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
 
   useEffect(() => {
     const interval = Number.isFinite(refreshIntervalSeconds) ? refreshIntervalSeconds : 15;
@@ -383,6 +366,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
             onEditLocation={handleOpenLocationEdit}
             isLoading={isFetching && visibleSensors.length === 0}
             showNullNonResponse={showNullNonResponse}
+            sortMode={filters.sortMode}
           />
           <SurveillanceLoadMore
             sentinelRef={loadMoreRef}
@@ -401,6 +385,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
             onEditLocation={handleOpenLocationEdit}
             isLoading={isFetching && visibleSensors.length === 0}
             showNullNonResponse={showNullNonResponse}
+            sortMode={filters.sortMode}
           />
           <SurveillanceLoadMore
             sentinelRef={loadMoreRef}

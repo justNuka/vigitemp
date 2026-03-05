@@ -180,7 +180,7 @@ const [commentOptions, setCommentOptions] = useState<{ id: number; text: string 
           }
         }}
       >
-        <DialogContent className="sm:max-w-3xl max-h-[92dvh] overflow-y-auto">
+        <DialogContent className="sm:max-w-3xl max-h-[92dvh] overflow-y-auto border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-warning" />
@@ -197,7 +197,7 @@ const [commentOptions, setCommentOptions] = useState<{ id: number; text: string 
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-2 p-3 bg-muted/50 rounded-lg">
+            <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4 md:grid-cols-2 dark:border-slate-800 dark:bg-slate-900/60">
               <div>
                 <p className="text-xs uppercase text-muted-foreground">{t("dialog.type_label")}</p>
                 <p className="text-sm font-medium">{alarmTypeLabel}</p>
@@ -241,7 +241,7 @@ const [commentOptions, setCommentOptions] = useState<{ id: number; text: string 
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-2 rounded-md border border-dashed border-border px-3 py-2">
+            <div className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-3 py-3 dark:border-slate-700 dark:bg-slate-900/50">
               <div className="space-y-0.5">
                 <p className="text-sm font-medium">{t("dialog.graph_label")}</p>
                 <p className="text-xs text-muted-foreground">{t("dialog.graph_hint")}</p>

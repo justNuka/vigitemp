@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 import {
   getHotlineAccessCookieName,
   getHotlineRefreshCookieName,
@@ -13,23 +14,24 @@ type HotlinePageProps = {
   params: Promise<{ slug: string; locale: string }>
 }
 
-export default function HotlinePage({ params }: HotlinePageProps) {
+export default async function HotlinePage({ params }: HotlinePageProps) {
+  const resolvedParams = await params
+  const tCommon = await getTranslations({ locale: resolvedParams.locale, namespace: "common" })
+
   return (
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">
-          Chargement...
+          {tCommon("loading")}
         </div>
       }
     >
-      <HotlineGate params={params} />
+      <HotlineGate slug={resolvedParams.slug} locale={resolvedParams.locale} />
     </Suspense>
   )
 }
 
-async function HotlineGate({ params }: HotlinePageProps) {
-  const { slug, locale } = await params
-
+async function HotlineGate({ slug, locale }: { slug: string; locale: string }) {
   const cookieStore = await cookies()
   const accessToken = cookieStore.get(getHotlineAccessCookieName())?.value
   const refreshToken = cookieStore.get(getHotlineRefreshCookieName())?.value

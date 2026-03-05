@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useMemo } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/page-header";
@@ -11,7 +11,6 @@ import { isOneOrPack } from "@/lib/license-access";
 import { LicenseBlockedCard } from "@/components/license/license-blocked-card";
 
 export default function EtalonnageImportPage() {
-  const locale = useLocale();
   const t = useTranslations("sensorCalibrationImport");
   const tCommon = useTranslations("common");
   const { license, loading } = useLicense();
@@ -23,14 +22,8 @@ export default function EtalonnageImportPage() {
   }
 
   if (isBlocked) {
-    const blockedTitle =
-      locale === "fr"
-        ? "Import d'étalonnage indisponible"
-        : "Calibration import unavailable";
-    const blockedDescription =
-      locale === "fr"
-        ? "Cette page n'est pas disponible avec votre licence actuelle."
-        : "This page is not available with your current license.";
+    const blockedTitle = t("page.blocked_title")
+    const blockedDescription = t("page.blocked_description")
 
     return (
       <>

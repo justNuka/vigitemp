@@ -1,0 +1,283 @@
+@layer components {
+  .gb-root {
+    position: relative;
+    display: inline-block;
+  }
+
+  .gb-size-sm .gb-btn {
+    font-size: 1rem;
+    padding: 0.75em 1.05em;
+    border-radius: 9999px;
+  }
+
+  .gb-size-md .gb-btn {
+    font-size: 1.25rem;
+    padding: 0.9em 1.3em;
+    border-radius: 9999px;
+  }
+
+  .gb-size-lg .gb-btn {
+    font-size: 1.6rem;
+    padding: 0.95em 1.45em;
+    border-radius: 9999px;
+  }
+
+  .gb-btn {
+    --cut: 0.1em;
+
+    --bg:
+      radial-gradient(
+        120% 120% at 126% 126%,
+        hsl(var(--hue) calc(var(--active) * 97%) 98% / calc(var(--active) * 0.9))
+          40%,
+        transparent 50%
+      )
+      calc(100px - (var(--active) * 100px)) 0 / 100% 100% no-repeat,
+      radial-gradient(
+        120% 120% at 120% 120%,
+        hsl(var(--hue) calc(var(--active) * 97%) 70% / calc(var(--active) * 1))
+          30%,
+        transparent 70%
+      )
+      calc(100px - (var(--active) * 100px)) 0 / 100% 100% no-repeat,
+      hsl(var(--hue) calc(var(--active) * 100%) calc(12% - (var(--active) * 8%)));
+
+    background: var(--bg);
+    border: 0;
+    cursor: pointer;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25em;
+    white-space: nowrap;
+
+    position: relative;
+
+    box-shadow:
+      0 0 calc(var(--active) * 6em) calc(var(--active) * 3em)
+        hsl(var(--hue) 97% 61% / 0.5),
+      0 0.05em 0 0
+        hsl(var(--hue) calc(var(--active) * 97%) calc((var(--active) * 50%) + 30%))
+        inset,
+      0 -0.05em 0 0
+        hsl(var(--hue) calc(var(--active) * 97%) calc(var(--active) * 10%))
+        inset;
+
+    transition: box-shadow var(--transition), transform var(--transition),
+      background var(--transition), filter var(--transition);
+    transform: scale(calc(1 + (var(--active) * 0.1)));
+    transform-style: preserve-3d;
+    perspective: 100vmin;
+    overflow: hidden;
+
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .gb-btn:active {
+    transform: scale(1);
+  }
+
+  .gb-root[data-disabled="true"] .gb-btn {
+    cursor: not-allowed;
+    filter: grayscale(0.2) brightness(0.85);
+    opacity: 0.85;
+  }
+
+  .gb-star {
+    height: calc(var(--size) * 1px);
+    aspect-ratio: 1;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    opacity: var(--alpha);
+    top: 50%;
+    left: 50%;
+  }
+
+  .gb-star--orbit {
+    transform: translate(-50%, -50%) rotate(10deg) rotate(0deg)
+      translateY(calc(var(--distance) * 1px));
+    animation: gb-orbit calc(var(--duration) * 1s) calc(var(--delay) * -1s) infinite
+      linear;
+  }
+
+  @keyframes gb-orbit {
+    to {
+      transform: translate(-50%, -50%) rotate(10deg) rotate(360deg)
+        translateY(calc(var(--distance) * 1px));
+    }
+  }
+
+  .gb-galaxy {
+    position: absolute;
+    width: 100%;
+    aspect-ratio: 1;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    overflow: hidden;
+    opacity: var(--active);
+    transition: opacity var(--transition);
+    pointer-events: none;
+  }
+
+  .gb-galaxy__ring {
+    height: 200%;
+    width: 200%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 50%;
+    transform: translate(-28%, -40%) rotateX(-24deg) rotateY(-30deg) rotateX(90deg);
+    transform-style: preserve-3d;
+  }
+
+  .gb-galaxy__container {
+    position: absolute;
+    inset: 0;
+    opacity: var(--active);
+    transition: opacity var(--transition);
+    mask: radial-gradient(white, transparent);
+    pointer-events: none;
+  }
+
+  .gb-star--static {
+    max-height: 4px;
+    filter: brightness(4);
+    opacity: 0.9;
+    animation:
+      gb-move-x calc(var(--duration) * 0.1s) calc(var(--delay) * -0.1s) infinite
+        linear,
+      gb-move-y calc(var(--duration) * 0.2s) calc(var(--delay) * -0.2s) infinite
+        linear;
+  }
+
+  .gb-btn:hover .gb-star--static {
+    animation-play-state: paused;
+  }
+
+  @keyframes gb-move-x {
+    0% { translate: -100px 0; }
+    100% { translate: 100px 0; }
+  }
+
+  @keyframes gb-move-y {
+    0% { transform: translate(0, -50px); }
+    100% { transform: translate(0, 50px); }
+  }
+
+  .gb-spark {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    rotate: 0deg;
+    overflow: hidden;
+    mask: linear-gradient(white, transparent 50%);
+    animation: gb-flip calc(var(--spark) * 2) infinite steps(2, end);
+    pointer-events: none;
+  }
+
+  @keyframes gb-flip {
+    to { rotate: 360deg; }
+  }
+
+  .gb-spark::before {
+    content: "";
+    position: absolute;
+    width: 200%;
+    aspect-ratio: 1;
+    top: 0%;
+    left: 50%;
+    z-index: -1;
+    translate: -50% -15%;
+    transform: rotate(-90deg);
+    opacity: calc((var(--active)) + 0.4);
+    background: conic-gradient(from 0deg, transparent 0 340deg, white 360deg);
+    transition: opacity var(--transition);
+    animation: gb-rotate var(--spark) linear infinite both;
+  }
+
+  .gb-spark::after {
+    content: "";
+    position: absolute;
+    inset: var(--cut);
+    border-radius: inherit;
+  }
+
+  .gb-backdrop {
+    position: absolute;
+    inset: var(--cut);
+    background: var(--bg);
+    border-radius: inherit;
+    transition: background var(--transition);
+    pointer-events: none;
+  }
+
+  @keyframes gb-rotate {
+    to { transform: rotate(90deg); }
+  }
+
+  .gb-text {
+    translate: 2% -6%;
+    letter-spacing: 0.01ch;
+    color: hsl(0 0% calc(60% + (var(--active) * 26%)));
+    position: relative;
+    z-index: 1;
+  }
+
+  .gb-btn:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 3px hsl(var(--hue) 90% 70% / 0.35),
+      0 0 calc(var(--active) * 6em) calc(var(--active) * 3em)
+        hsl(var(--hue) 97% 61% / 0.5),
+      0 0.05em 0 0
+        hsl(var(--hue) calc(var(--active) * 97%) calc((var(--active) * 50%) + 30%))
+        inset,
+      0 -0.05em 0 0
+        hsl(var(--hue) calc(var(--active) * 97%) calc(var(--active) * 10%))
+        inset;
+  }
+
+  /* Local backdrop (dashboard-friendly) */
+  .gb-localdrop {
+    position: absolute;
+    inset: -18px;
+    border-radius: 9999px;
+    z-index: -1;
+    pointer-events: none;
+    opacity: calc(0.25 + (var(--active) * 0.45));
+    transition: opacity var(--transition), transform var(--transition), filter var(--transition);
+
+    /* glow + halo (sans overlay full screen) */
+    background:
+      radial-gradient(
+        60% 60% at 50% 50%,
+        hsl(var(--hue) 95% 60% / 0.35),
+        transparent 65%
+      ),
+      radial-gradient(
+        70% 90% at 30% 50%,
+        hsl(var(--hue) 95% 70% / 0.18),
+        transparent 70%
+      );
+
+    filter: blur(14px);
+    transform: scale(calc(0.98 + (var(--active) * 0.06)));
+  }
+
+  /* Optionnel: rendre le localdrop un peu plus “glassy” */
+  .gb-root[data-backdrop="local"] .gb-localdrop {
+    mix-blend-mode: screen;
+  }
+
+  /* Fullscreen overlay (déjà présent) */
+  .gb-bodydrop {
+    background: hsl(260 calc(var(--active) * 97%) 6%);
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+}

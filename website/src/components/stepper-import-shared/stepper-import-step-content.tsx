@@ -1,3 +1,5 @@
+import { LoaderCircleIcon } from "lucide-react"
+
 import SharedFileUpload, { type UploadItem } from "@/components/file-upload-shared"
 import type { ValidationResult } from "./stepper-import-types"
 
@@ -14,6 +16,7 @@ export function StepperImportStepContent<TImportResult>({
   processState,
   processStats,
   processError,
+  closeOnProcessSuccess,
 }: {
   currentStep: number
   uploadNamespace: "sensorAdjustmentUpload" | "sensorCalibrationUpload"
@@ -27,6 +30,7 @@ export function StepperImportStepContent<TImportResult>({
   processState: "idle" | "running" | "done"
   processStats: { processed: number; success: number; failed: number }
   processError: string | null
+  closeOnProcessSuccess: boolean
 }) {
   if (currentStep === 1) {
     return (
@@ -90,7 +94,13 @@ export function StepperImportStepContent<TImportResult>({
       </div>
 
       {processState === "running" ? (
-        <div className="text-sm text-muted-foreground">{t("create.processing", { processed: processStats.processed, total: summary.total })}</div>
+        <div className="rounded-md border border-sky-200 bg-sky-50/80 p-3 text-sm text-sky-800">
+          <div className="flex items-center gap-2 font-medium">
+            <LoaderCircleIcon className="h-4 w-4 animate-spin" />
+            {t("create.processing", { processed: processStats.processed, total: summary.ok + summary.fixed })}
+          </div>
+          <div className="mt-1 text-sky-700/80">{t("create.processing_hint")}</div>
+        </div>
       ) : null}
 
       {processState === "done" ? (
@@ -99,6 +109,9 @@ export function StepperImportStepContent<TImportResult>({
           <div className="mt-1 text-emerald-700/80">
             {t("create.process_result", { success: processStats.success, failed: processStats.failed })}
           </div>
+          {closeOnProcessSuccess && processStats.failed === 0 ? (
+            <div className="mt-1 text-emerald-700/70">{t("actions.finish")}</div>
+          ) : null}
         </div>
       ) : null}
 

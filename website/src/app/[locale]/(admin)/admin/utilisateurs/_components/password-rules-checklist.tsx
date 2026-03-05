@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { CheckCircle2, XCircle } from "lucide-react"
 import type { PasswordRules } from "@/lib/api"
 
@@ -9,33 +10,35 @@ interface Props {
 }
 
 export function PasswordRulesChecklist({ rules, password }: Props) {
+  const t = useTranslations("usersPage.password_rules_checklist")
+
   return (
     <div className="mt-2 p-3 rounded-lg border bg-muted/50 space-y-2">
-      <p className="text-xs font-medium text-muted-foreground">Règles de sécurité :</p>
+      <p className="text-xs font-medium text-muted-foreground">{t("title")}</p>
       <div className="space-y-1">
-        <RuleLine ok={password.length >= rules.min_length} label={`Au moins ${rules.min_length} caractères`} />
+        <RuleLine ok={password.length >= rules.min_length} label={t("min_length", { count: rules.min_length })} />
         {rules.min_uppercase > 0 ? (
           <RuleLine
             ok={(password.match(/[A-Z]/g) || []).length >= rules.min_uppercase}
-            label={`Au moins ${rules.min_uppercase} majuscule${rules.min_uppercase > 1 ? "s" : ""}`}
+            label={t("min_uppercase", { count: rules.min_uppercase })}
           />
         ) : null}
         {rules.min_lowercase > 0 ? (
           <RuleLine
             ok={(password.match(/[a-z]/g) || []).length >= rules.min_lowercase}
-            label={`Au moins ${rules.min_lowercase} minuscule${rules.min_lowercase > 1 ? "s" : ""}`}
+            label={t("min_lowercase", { count: rules.min_lowercase })}
           />
         ) : null}
         {rules.min_numbers > 0 ? (
           <RuleLine
             ok={(password.match(/[0-9]/g) || []).length >= rules.min_numbers}
-            label={`Au moins ${rules.min_numbers} chiffre${rules.min_numbers > 1 ? "s" : ""}`}
+            label={t("min_numbers", { count: rules.min_numbers })}
           />
         ) : null}
         {rules.min_special > 0 ? (
           <RuleLine
             ok={(password.match(/[^A-Za-z0-9]/g) || []).length >= rules.min_special}
-            label={`Au moins ${rules.min_special} caractère spécial${rules.min_special > 1 ? "s" : ""}`}
+            label={t("min_special", { count: rules.min_special })}
           />
         ) : null}
       </div>
@@ -51,4 +54,3 @@ function RuleLine({ ok, label }: { ok: boolean; label: string }) {
     </div>
   )
 }
-

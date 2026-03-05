@@ -1,16 +1,17 @@
-'use client'
+"use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { TanStackTable } from '@/components/data-table/tanstack-table'
-import type { ColumnDef } from '@tanstack/react-table'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { TanStackTable } from "@/components/data-table/tanstack-table"
+import type { ColumnDef } from "@tanstack/react-table"
 
-import type { Module } from '@/hooks/useModules'
+import type { Module } from "@/hooks/useModules"
 
 interface AdjustmentImportTableCardProps<Row extends Record<string, any>> {
   title: string
   modules: Module[]
+  modulePlaceholder: string
   selectedModuleId: string
   onModuleChange: (value: string) => void
   onOpenImport: () => void
@@ -30,6 +31,7 @@ interface AdjustmentImportTableCardProps<Row extends Record<string, any>> {
 export function AdjustmentImportTableCard<Row extends Record<string, any>>({
   title,
   modules,
+  modulePlaceholder,
   selectedModuleId,
   onModuleChange,
   onOpenImport,
@@ -54,7 +56,7 @@ export function AdjustmentImportTableCard<Row extends Record<string, any>>({
             <div className="w-65">
               <Select value={selectedModuleId} onValueChange={onModuleChange}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un module" />
+                  <SelectValue placeholder={modulePlaceholder} />
                 </SelectTrigger>
                 <SelectContent>
                   {modules.map((module) => (
@@ -93,4 +95,3 @@ export function AdjustmentImportTableCard<Row extends Record<string, any>>({
     </Card>
   )
 }
-

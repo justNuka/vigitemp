@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { Accordion } from "@/components/ui/accordion";
 import type { SensorWithLocation } from "@/lib/api";
 import { buildSurveillanceTree } from "./_components/build-monitoring-tree";
@@ -13,7 +14,12 @@ interface SurveillanceTreeProps {
 }
 
 export function SurveillanceTree({ sensors }: SurveillanceTreeProps) {
-  const tree = useMemo(() => buildSurveillanceTree(sensors), [sensors]);
+  const t = useTranslations("surveillance");
+  const treeLabels = useMemo(
+    () => ({ noGroup: t("grid.no_group"), noSite: t("grid.no_site") }),
+    [t],
+  );
+  const tree = useMemo(() => buildSurveillanceTree(sensors, treeLabels), [sensors, treeLabels]);
   const defaultExpandedSites = useMemo(() => tree.map((site) => `site-${site.siteId}`), [tree]);
   const { value: expandedSites, replace: setExpandedSites } = usePersistentStringSet(
     "surveillance-tree-expanded-sites",

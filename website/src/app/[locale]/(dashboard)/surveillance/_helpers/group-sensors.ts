@@ -1,4 +1,5 @@
 import type { SensorWithLocation } from "@/lib/api"
+import type { SurveillanceSortMode } from "./monitoring-derived"
 
 export type GroupSection = {
   groupKey: string
@@ -20,6 +21,11 @@ export type SiteSection = {
   groups: GroupSection[]
 }
 
+export type GroupingLabels = {
+  noGroup: string
+  noSite: string
+}
+
 function countCritical(sensors: SensorWithLocation[]) {
   return sensors.filter((s) => s.isActive && s.status === "critical").length
 }
@@ -32,7 +38,11 @@ function countAlarms(sensors: SensorWithLocation[]) {
   return countCritical(sensors) + countWarning(sensors)
 }
 
-export function groupSensorsBySiteAndGroup(sensors: SensorWithLocation[]): SiteSection[] {
+export function groupSensorsBySiteAndGroup(
+  sensors: SensorWithLocation[],
+  labels: GroupingLabels = { noGroup: "Sans groupe", noSite: "Sans site" },
+  sortMode: SurveillanceSortMode = "status",
+): SiteSection[] {
   const bySite = new Map<
     string,
     { siteName: string; groups: Map<string, { groupId: number | null; groupName: string; sensors: SensorWithLocation[] }> }
@@ -40,7 +50,7 @@ export function groupSensorsBySiteAndGroup(sensors: SensorWithLocation[]): SiteS
 
   for (const sensor of sensors) {
     const siteId = String(sensor.location.siteId || "no-site")
-    const siteName = sensor.location.site || `Site ${siteId}`
+    const siteName = sensor.location.site || (siteId === "no-site" ? labels.noSite : `Site ${siteId}`)
     const groupEntries: Array<{ id: number | null; name: string }> = []
 
     if (sensor.location.groupIds && sensor.location.groupIds.length > 0) {
@@ -64,7 +74,7 @@ export function groupSensorsBySiteAndGroup(sensors: SensorWithLocation[]): SiteS
     }
 
     if (groupEntries.length === 0) {
-      groupEntries.push({ id: null, name: "Sans groupe" })
+      groupEntries.push({ id: null, name: labels.noGroup })
     }
 
     let siteEntry = bySite.get(siteId)
@@ -106,9 +116,12 @@ export function groupSensorsBySiteAndGroup(sensors: SensorWithLocation[]): SiteS
     })
 
     groupSections.sort((a, b) => {
+      if (sortMode === "alphabetical") {
+        return a.groupName.localeCompare(b.groupName, "fr", { sensitivity: "base", numeric: true })
+      }
       if (a.criticalCount !== b.criticalCount) return b.criticalCount - a.criticalCount
       if (a.warningCount !== b.warningCount) return b.warningCount - a.warningCount
-      return a.groupName.localeCompare(b.groupName, "fr", { sensitivity: "base" })
+      return a.groupName.localeCompare(b.groupName, "fr", { sensitivity: "base", numeric: true })
     })
 
     const allSensorsMap = new Map<string, SensorWithLocation>()
@@ -132,9 +145,12 @@ export function groupSensorsBySiteAndGroup(sensors: SensorWithLocation[]): SiteS
   })
 
   siteSections.sort((a, b) => {
+    if (sortMode === "alphabetical") {
+      return a.siteName.localeCompare(b.siteName, "fr", { sensitivity: "base", numeric: true })
+    }
     if (a.criticalCount !== b.criticalCount) return b.criticalCount - a.criticalCount
     if (a.warningCount !== b.warningCount) return b.warningCount - a.warningCount
-    return a.siteName.localeCompare(b.siteName, "fr", { sensitivity: "base" })
+    return a.siteName.localeCompare(b.siteName, "fr", { sensitivity: "base", numeric: true })
   })
 
   return siteSections

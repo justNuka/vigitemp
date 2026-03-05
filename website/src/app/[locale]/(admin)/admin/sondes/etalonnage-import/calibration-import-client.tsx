@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -14,11 +14,11 @@ import StepperCalibrationFileUpload, {
   type CalibrationInsertData,
 } from "@/components/stepper-calibration-file-upload";
 
-const formatDateTimeFr = (value: string | Date | null | undefined) => {
+const formatDateTime = (value: string | Date | null | undefined, locale: string) => {
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -28,11 +28,11 @@ const formatDateTimeFr = (value: string | Date | null | undefined) => {
   }).format(date);
 };
 
-const formatDateFr = (value: string | Date | null | undefined) => {
+const formatDate = (value: string | Date | null | undefined, locale: string) => {
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat("fr-FR", {
+  return new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -53,6 +53,7 @@ type CalibrationImportRow = {
 
 export function CalibrationImportClient() {
   const t = useTranslations("sensorCalibrationImport");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<CalibrationImportRow[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -62,12 +63,12 @@ export function CalibrationImportClient() {
 
   const handleUploadResult = (result: CalibrationImportResult) => {
     const dateText =
-      formatDateTimeFr(result.date) ??
+      formatDateTime(result.date, locale) ??
       result.dateText ??
       (typeof result.date === "string" ? result.date : null);
 
     const dateValidityText =
-      formatDateFr(result.dateValidity) ??
+      formatDate(result.dateValidity, locale) ??
       result.dateValidityText ??
       (typeof result.dateValidity === "string" ? result.dateValidity : null);
 
