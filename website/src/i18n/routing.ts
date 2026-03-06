@@ -80,6 +80,10 @@ export const routing = defineRouting({
       fr: '/admin/sites',
       en: '/admin/sites',
     },
+    '/admin/analyse-impact': {
+      fr: '/admin/analyse-impact',
+      en: '/admin/impact-analysis',
+    },
     '/admin/sondes': {
       fr: '/admin/sondes',
       en: '/admin/sensors',

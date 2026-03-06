@@ -362,6 +362,14 @@
       "groups": {
         "label": "Groups",
         "placeholder": "All groups"
+      },
+      "sort": {
+        "label": "Sort",
+        "placeholder": "Select sort",
+        "options": {
+          "status": "By status",
+          "alphabetical": "Alphabetical order"
+        }
       }
     },
     "tabs": {
@@ -1165,7 +1173,43 @@
       "backups": "Backups"
     },
     "metrology": {
-      "calibration_import": "Calibration import"
+      "calibration_import": "Calibration import",
+      "impact_analysis": "Impact analysis"
+    }
+  },
+  "impactAnalysis": {
+    "title": "Impact analysis",
+    "description": "Simulate the impact of new tolerances on your historical measurements.",
+    "selector": {
+      "lieuLabel": "Location",
+      "lieuPlaceholder": "Select a location...",
+      "lieuSearch": "Search location...",
+      "lieuEmpty": "No location found",
+      "dateRangeLabel": "Period",
+      "analyzeButton": "Analyze"
+    },
+    "summary": {
+      "recapTitle": "Location summary",
+      "consigne": "Setpoint",
+      "toleranceSup": "Upper tolerance",
+      "toleranceInf": "Lower tolerance",
+      "emtMode": "EMT mode",
+      "measureCount": "Measurement count",
+      "notDefined": "Not defined",
+      "newTolerancesTitle": "New tolerances",
+      "newToleranceSup": "New upper tolerance",
+      "newToleranceInf": "New lower tolerance",
+      "validationError": "Lower tolerance must be strictly less than upper tolerance.",
+      "resetButton": "Reset to current values"
+    },
+    "chart": {
+      "noData": "No measurements available for this period.",
+      "measurements": "Measurements",
+      "legendRealAlarms": "Real alarms ({count})",
+      "legendSimAlarms": "Simulated alarms ({count})",
+      "legendActualSup": "Current upper threshold",
+      "legendActualInf": "Current lower threshold",
+      "legendNewThreshold": "New threshold"
     }
   },
   "profilesPage": {

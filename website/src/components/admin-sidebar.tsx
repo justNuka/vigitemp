@@ -29,6 +29,7 @@ import {
   FileText,
   FlaskConical,
   MessageSquare,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -104,7 +105,10 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
   ];
 
   const metrologyNavItems: NavItem[] = isStandardOrExpert(license)
-    ? [{ title: t("metrology.calibration_import"), href: "/admin/sondes/etalonnage-import", icon: FlaskConical }]
+    ? [
+        { title: t("metrology.calibration_import"), href: "/admin/sondes/etalonnage-import", icon: FlaskConical },
+        { title: t("metrology.impact_analysis"), href: "/admin/analyse-impact", icon: TrendingUp },
+      ]
     : [];
 
   const globalSettingsNavItems: NavItem[] = [

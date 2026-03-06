@@ -207,6 +207,14 @@
       "groups": {
         "label": "Groupes",
         "placeholder": "Tous les groupes"
+      },
+      "sort": {
+        "label": "Tri",
+        "placeholder": "Choisir un tri",
+        "options": {
+          "status": "Par statut",
+          "alphabetical": "Ordre alphab?tique"
+        }
       }
     },
     "tabs": {
@@ -895,6 +903,7 @@
         "labelConsigneSup": "Consigne sup. (optionnel)",
         "labelConsigneInf": "Consigne inf. (optionnel)",
         "labelPriorite": "Priorité",
+        "hintPriorite": "Plus la priorit? est ?lev?e, plus cette r?gle prend le dessus quand des plages se chevauchent.",
         "labelActif": "Règle active",
         "placeholderJour": "Sélectionner un jour",
         "placeholderNumeric": "Valeur numérique",
@@ -1417,7 +1426,43 @@
       "backups": "Sauvegardes"
     },
     "metrology": {
-      "calibration_import": "Import etalonnage"
+      "calibration_import": "Import etalonnage",
+      "impact_analysis": "Analyse d'impact"
+    }
+  },
+  "impactAnalysis": {
+    "title": "Analyse d'impact",
+    "description": "Simulez l'impact de nouvelles tolérances sur vos historiques de mesures.",
+    "selector": {
+      "lieuLabel": "Lieu",
+      "lieuPlaceholder": "Sélectionner un lieu...",
+      "lieuSearch": "Rechercher un lieu...",
+      "lieuEmpty": "Aucun lieu trouvé",
+      "dateRangeLabel": "Période",
+      "analyzeButton": "Analyser"
+    },
+    "summary": {
+      "recapTitle": "Récapitulatif du lieu",
+      "consigne": "Consigne",
+      "toleranceSup": "Tolérance sup.",
+      "toleranceInf": "Tolérance inf.",
+      "emtMode": "Mode EMT",
+      "measureCount": "Nombre de mesures",
+      "notDefined": "Non définie",
+      "newTolerancesTitle": "Nouvelles tolérances",
+      "newToleranceSup": "Nouvelle tolérance sup.",
+      "newToleranceInf": "Nouvelle tolérance inf.",
+      "validationError": "La tolérance inférieure doit être strictement inférieure à la tolérance supérieure.",
+      "resetButton": "Réinitialiser aux valeurs actuelles"
+    },
+    "chart": {
+      "noData": "Aucune mesure disponible pour cette période.",
+      "measurements": "Mesures",
+      "legendRealAlarms": "Alarmes réelles ({count})",
+      "legendSimAlarms": "Alarmes simulées ({count})",
+      "legendActualSup": "Seuil actuel sup.",
+      "legendActualInf": "Seuil actuel inf.",
+      "legendNewThreshold": "Nouveau seuil"
     }
   },
   "profilesPage": {
