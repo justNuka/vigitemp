@@ -1,4 +1,5 @@
 import { Building2, ChevronDown, Power, Users } from "lucide-react"
+import { LazyMotion, domAnimation, m } from "motion/react"
 
 import MonitoringCard from "@/components/monitoring-card"
 import { Button } from "@/components/ui/button"
@@ -6,6 +7,7 @@ import { countStatus } from "@/lib/surveillance-status"
 import type { SensorWithLocation } from "@/lib/api"
 
 import { type SiteSection } from "../_helpers/group-sensors"
+import { staggerContainer } from "@/lib/motion-variants"
 import { sortSensors, type SurveillanceSortMode } from "../_helpers/monitoring-derived"
 import { formatAlarmes, formatGroupes, formatPreAlarmes, formatSondes } from "../_helpers/monitoring-labels"
 import { SurveillanceTreeStatsBadges } from "./monitoring-tree-stats-badges"
@@ -94,6 +96,7 @@ export function MonitoringSiteSection({
   const siteStats = countStatus(siteSensors)
 
   return (
+    <LazyMotion features={domAnimation}>
     <div className={disabledView ? "space-y-4" : "space-y-6"}>
       <button
         onClick={() => toggleSite(siteKey)}
@@ -121,7 +124,7 @@ export function MonitoringSiteSection({
       </button>
 
       {isSiteExpanded ? (
-        <div className="space-y-3 animate-fade-in">
+        <div className="space-y-3">
           {site.groups.map((group) => {
             const groupStats = countStatus(group.sensors)
             const sortedGroupSensors = sortSensors(group.sensors, sortMode)
@@ -190,12 +193,15 @@ export function MonitoringSiteSection({
                 )}
 
                 {isGroupExpanded ? (
-                  <div
-                    className={`grid gap-4 justify-start animate-fade-in ${
+                  <m.div
+                    className={`grid gap-4 justify-start ${
                       disabledView
                         ? "grid-cols-[repeat(auto-fill,minmax(250px,305px))]"
                         : "grid-cols-[repeat(auto-fill,minmax(260px,320px))]"
                     }`}
+                    variants={staggerContainer}
+                    initial="hidden"
+                    animate="visible"
                   >
                     {sortedGroupSensors.map((sensor) => (
                       <MonitoringCard
@@ -210,7 +216,7 @@ export function MonitoringSiteSection({
                         )}
                       />
                     ))}
-                  </div>
+                  </m.div>
                 ) : null}
               </div>
             )
@@ -218,5 +224,6 @@ export function MonitoringSiteSection({
         </div>
       ) : null}
     </div>
+    </LazyMotion>
   )
 }
