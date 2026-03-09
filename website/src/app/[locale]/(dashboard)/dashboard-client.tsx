@@ -5,12 +5,14 @@ import { enUS, fr } from "date-fns/locale"
 import { useQueryClient } from "@tanstack/react-query"
 import { useLocale, useTranslations } from "next-intl"
 import { toast } from "sonner"
+import { LazyMotion, domAnimation, m } from "motion/react"
 
 import { AlarmAcknowledgeDialog } from "@/components/alarm-acknowledge-dialog"
 import { useAppAccess } from "@/components/access/app-access-provider"
 import { useAppTimezone } from "@/components/timezone-provider"
 import { alarmsApi, type AlarmWithDetails, type Measurement, type SensorWithLocation } from "@/lib/api"
 import { markAlarmAcknowledgedInPaginatedSensorsCache } from "@/lib/surveillance-cache"
+import { staggerContainer, fadeInUp } from "@/lib/motion-variants"
 import { DashboardActiveAlarmsSection } from "./_components/dashboard/dashboard-active-alarms-section"
 import { createDashboardAlarmColumns, buildAlarmRows } from "./_components/dashboard/dashboard-alarm-columns"
 import { DashboardTrendSection } from "./_components/dashboard/dashboard-trend-section"
@@ -105,57 +107,64 @@ export function DashboardClient({
   )
 
   return (
-    <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <DashboardActiveAlarmsSection
-          t={t}
-          activeCount={activeCount}
-          data={tableData}
-          columns={columns}
-          selectedAlarmId={selectedAlarm?.id}
-          canAcknowledgeAlarm={canAcknowledgeAlarm}
-          onRowClick={(row) => {
-            const fullAlarm = displayedAlarms.find((item) => item.id === row.id)
-            if (fullAlarm && canAcknowledgeAlarm) setSelectedAlarm(fullAlarm)
+    <LazyMotion features={domAnimation}>
+      <m.main
+        className="flex-1 p-4 md:p-6 space-y-6"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        <m.div variants={fadeInUp} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <DashboardActiveAlarmsSection
+            t={t}
+            activeCount={activeCount}
+            data={tableData}
+            columns={columns}
+            selectedAlarmId={selectedAlarm?.id}
+            canAcknowledgeAlarm={canAcknowledgeAlarm}
+            onRowClick={(row) => {
+              const fullAlarm = displayedAlarms.find((item) => item.id === row.id)
+              if (fullAlarm && canAcknowledgeAlarm) setSelectedAlarm(fullAlarm)
+            }}
+          />
+
+          <DashboardTrendSection
+            t={t}
+            trendMeasurements={trendMeasurements}
+            trendCountLast7d={trendCountLast7d}
+          />
+        </m.div>
+
+        <AlarmAcknowledgeDialog
+          open={canAcknowledgeAlarm && !!selectedAlarm}
+          alarm={
+            selectedAlarm
+              ? {
+                  id: selectedAlarm.id,
+                  locationId: selectedAlarm.locationId,
+                  locationName: selectedAlarm.location.name,
+                  sensorName: selectedAlarm.sensor.name,
+                  type: selectedAlarm.type,
+                  currentValue: selectedAlarm.sensor.currentValue,
+                  value: selectedAlarm.value,
+                  unit: selectedAlarm.sensor.unit,
+                  minThreshold: selectedAlarm.sensor.minThreshold,
+                  maxThreshold: selectedAlarm.sensor.maxThreshold,
+                  triggeredAt: selectedAlarm.triggeredAt,
+                  endedAt: selectedAlarm.resolvedAt,
+                }
+              : null
+          }
+          onOpenChange={(open) => {
+            if (!open) setSelectedAlarm(null)
           }}
+          onConfirm={async (alarmId, commentValue) => {
+            await handleAcknowledge(alarmId, commentValue ?? "")
+            setSelectedAlarm(null)
+          }}
+          isConfirming={isAcknowledging}
         />
-
-        <DashboardTrendSection
-          t={t}
-          trendMeasurements={trendMeasurements}
-          trendCountLast7d={trendCountLast7d}
-        />
-      </div>
-
-      <AlarmAcknowledgeDialog
-        open={canAcknowledgeAlarm && !!selectedAlarm}
-        alarm={
-          selectedAlarm
-            ? {
-                id: selectedAlarm.id,
-                locationId: selectedAlarm.locationId,
-                locationName: selectedAlarm.location.name,
-                sensorName: selectedAlarm.sensor.name,
-                type: selectedAlarm.type,
-                currentValue: selectedAlarm.sensor.currentValue,
-                value: selectedAlarm.value,
-                unit: selectedAlarm.sensor.unit,
-                minThreshold: selectedAlarm.sensor.minThreshold,
-                maxThreshold: selectedAlarm.sensor.maxThreshold,
-                triggeredAt: selectedAlarm.triggeredAt,
-                endedAt: selectedAlarm.resolvedAt,
-              }
-            : null
-        }
-        onOpenChange={(open) => {
-          if (!open) setSelectedAlarm(null)
-        }}
-        onConfirm={async (alarmId, commentValue) => {
-          await handleAcknowledge(alarmId, commentValue ?? "")
-          setSelectedAlarm(null)
-        }}
-        isConfirming={isAcknowledging}
-      />
-    </main>
+      </m.main>
+    </LazyMotion>
   )
 }
