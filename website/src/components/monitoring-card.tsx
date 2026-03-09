@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Chart as ChartJS, CategoryScale, Filler, Legend, LineElement, LinearScale, PointElement, Title, Tooltip } from 'chart.js'
 import { FileText, MapPin, Power, PowerOff, Settings } from 'lucide-react'
+import { LazyMotion, domAnimation, m } from 'motion/react'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { useAppAccess } from '@/components/access/app-access-provider'
@@ -18,6 +19,8 @@ import { useLieuMeasurements } from '@/hooks/useLieuMeasurements'
 import { formatDbDateTime } from '@/lib/date-display'
 import type { LieuTypeValue } from '@/lib/lieu-types'
 import { calculateYDomain, formatMeasureValue, getMeasureSummary, sortMeasuresChronologically } from '@/lib/measurements'
+import { cn } from '@/lib/utils'
+import { fadeInUp } from '@/lib/motion-variants'
 import { markAlarmAcknowledgedInPaginatedSensorsCache } from '@/lib/surveillance-cache'
 import type { SensorStatus } from '@/lib/surveillance-status'
 
@@ -172,9 +175,9 @@ export default function MonitoringCard({
     return t('alarms.disabled_until', { date: formatDbDateTime(date, { withSeconds: false }) })
   }, [alarmDisabledUntil, isAlarmActive, t])
 
-  const contentTextClassName = isSurveillanceActive ? 'text-gray-600 dark:text-gray-400' : 'text-white'
-  const actionButtonClassName = isSurveillanceActive ? 'hover:bg-gray-100 dark:hover:bg-gray-700' : 'hover:bg-white/10'
-  const actionIconClassName = isSurveillanceActive ? 'text-gray-600 dark:text-gray-400' : 'text-white'
+  const contentTextClassName = isSurveillanceActive ? 'text-muted-foreground' : 'text-white'
+  const actionButtonClassName = isSurveillanceActive ? 'hover:bg-muted' : 'hover:bg-white/10'
+  const actionIconClassName = isSurveillanceActive ? 'text-muted-foreground' : 'text-white'
 
   const canAcknowledge =
     hasPermission('ALARM_ACK_ACCESS') &&
@@ -238,8 +241,17 @@ export default function MonitoringCard({
     : null
 
   return (
-    <>
-      <div className={`relative w-full rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden flex flex-col ${isSurveillanceActive ? 'bg-white dark:bg-gray-800' : 'bg-slate-700 dark:bg-gray-800'}`}>
+    <LazyMotion features={domAnimation}>
+      <m.div
+        variants={fadeInUp}
+        className={cn(
+          "relative w-full rounded-lg border overflow-hidden flex flex-col transition-all duration-200",
+          "hover:shadow-lg hover:-translate-y-0.5",
+          isSurveillanceActive
+            ? "bg-card border-border shadow-sm"
+            : "bg-slate-700 dark:bg-slate-800 border-slate-600"
+        )}
+      >
         <MonitoringCardHeader
           status={effectiveStatus}
           effectiveAlarmType={effectiveAlarmType}
@@ -279,7 +291,7 @@ export default function MonitoringCard({
                 />
               </div>
 
-              <div className="mt-auto space-y-3 text-sm border-t border-gray-200 dark:border-gray-700 pt-3">
+              <div className="mt-auto space-y-3 text-sm border-t border-border pt-3">
                 {lastDateTime ? (
                   <>
                     <div className={`flex items-center justify-between text-[11px] ${contentTextClassName}`}>
@@ -313,7 +325,7 @@ export default function MonitoringCard({
                     </div>
                   </>
                 ) : (
-                  <div className="text-center text-gray-500 dark:text-gray-400 italic py-3">{t('no_measurements')}</div>
+                  <div className="text-center text-muted-foreground italic py-3">{t('no_measurements')}</div>
                 )}
               </div>
             </>
@@ -321,7 +333,7 @@ export default function MonitoringCard({
             <div className={`text-sm font-medium ${contentTextClassName}`}>{t('surveillance.disabled')}</div>
           )}
 
-          <div className={`mt-4 border-t border-gray-200 dark:border-gray-700 pt-3 ${isSurveillanceActive ? '' : 'border-white/20'}`}>
+          <div className={`mt-4 border-t border-border pt-3 ${isSurveillanceActive ? '' : 'border-white/20'}`}>
             <TooltipProvider>
               <div className="flex justify-center gap-4">
                 <UITooltip>
@@ -363,108 +375,108 @@ export default function MonitoringCard({
             </TooltipProvider>
           </div>
         </div>
+      </m.div>
 
-        <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>{t('confirm.title')}</DialogTitle>
-              <DialogDescription>
-                {actionType === 'surveillance'
-                  ? t('confirm.description_surveillance', { action: isSurveillanceActive ? t('confirm.action_disable') : t('confirm.action_enable') })
-                  : t('confirm.description_alarms', { action: isAlarmActive ? t('confirm.action_disable') : t('confirm.action_enable') })}
-              </DialogDescription>
-            </DialogHeader>
+      <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('confirm.title')}</DialogTitle>
+            <DialogDescription>
+              {actionType === 'surveillance'
+                ? t('confirm.description_surveillance', { action: isSurveillanceActive ? t('confirm.action_disable') : t('confirm.action_enable') })
+                : t('confirm.description_alarms', { action: isAlarmActive ? t('confirm.action_disable') : t('confirm.action_enable') })}
+            </DialogDescription>
+          </DialogHeader>
 
+          <div className="space-y-2">
+            <label className="text-sm font-medium">{t('confirm.action_type.label')}</label>
+            <Select value={actionType} onValueChange={(value) => setActionType(value as 'surveillance' | 'alarms')}>
+              <SelectTrigger><SelectValue placeholder={t('confirm.action_type.placeholder')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="surveillance">{t('confirm.action_type.options.surveillance')}</SelectItem>
+                <SelectItem value="alarms">{t('confirm.action_type.options.alarms')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {(actionType === 'surveillance' ? isSurveillanceActive : isAlarmActive) ? (
             <div className="space-y-2">
-              <label className="text-sm font-medium">{t('confirm.action_type.label')}</label>
-              <Select value={actionType} onValueChange={(value) => setActionType(value as 'surveillance' | 'alarms')}>
-                <SelectTrigger><SelectValue placeholder={t('confirm.action_type.placeholder')} /></SelectTrigger>
+              <label className="text-sm font-medium">{t('confirm.disable_duration.label')}</label>
+              <Select value={disableDuration} onValueChange={setDisableDuration}>
+                <SelectTrigger><SelectValue placeholder={t('confirm.disable_duration.placeholder')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="surveillance">{t('confirm.action_type.options.surveillance')}</SelectItem>
-                  <SelectItem value="alarms">{t('confirm.action_type.options.alarms')}</SelectItem>
+                  <SelectItem value="15">{t('confirm.disable_duration.options.15')}</SelectItem>
+                  <SelectItem value="60">{t('confirm.disable_duration.options.60')}</SelectItem>
+                  <SelectItem value="240">{t('confirm.disable_duration.options.240')}</SelectItem>
+                  <SelectItem value="720">{t('confirm.disable_duration.options.720')}</SelectItem>
+                  <SelectItem value="manual">{t('confirm.disable_duration.options.manual')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+          ) : null}
 
-            {(actionType === 'surveillance' ? isSurveillanceActive : isAlarmActive) ? (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">{t('confirm.disable_duration.label')}</label>
-                <Select value={disableDuration} onValueChange={setDisableDuration}>
-                  <SelectTrigger><SelectValue placeholder={t('confirm.disable_duration.placeholder')} /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="15">{t('confirm.disable_duration.options.15')}</SelectItem>
-                    <SelectItem value="60">{t('confirm.disable_duration.options.60')}</SelectItem>
-                    <SelectItem value="240">{t('confirm.disable_duration.options.240')}</SelectItem>
-                    <SelectItem value="720">{t('confirm.disable_duration.options.720')}</SelectItem>
-                    <SelectItem value="manual">{t('confirm.disable_duration.options.manual')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : null}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConfirmModal(false)}>{t('confirm.cancel')}</Button>
+            <Button variant={(actionType === 'surveillance' ? isSurveillanceActive : isAlarmActive) ? 'destructive' : 'default'} onClick={confirmSurveillanceToggle}>{t('confirm.confirm')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowConfirmModal(false)}>{t('confirm.cancel')}</Button>
-              <Button variant={(actionType === 'surveillance' ? isSurveillanceActive : isAlarmActive) ? 'destructive' : 'default'} onClick={confirmSurveillanceToggle}>{t('confirm.confirm')}</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {isModalOpen ? (
-          <MonitoringDetailsModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            idLieu={idLieu}
-            nomLieu={nomLieu}
-            sondeNumeroSerie={sondeNumeroSerie || ''}
-            isGso={isGso ?? null}
-            gsoRssi={gsoRssi ?? null}
-            gsoTension={gsoTension ?? null}
-            consigneSup={consigneSup}
-            consigneInf={consigneInf}
-            consigne={consigne}
-            consigneSupPreAlarme={consigneSupPreAlarme ?? null}
-            estConsigneSupPreAlarmeActive={estConsigneSupPreAlarmeActive ?? false}
-            consigneInfPreAlarme={consigneInfPreAlarme ?? null}
-            estConsigneInfPreAlarmeActive={estConsigneInfPreAlarmeActive ?? false}
-            unite={unite}
-            isSurveillanceActive={isSurveillanceActive}
-            measurements={isSurveillanceActive ? orderedData : []}
-            showNullNonResponse={showNullNonResponse}
-          />
-        ) : null}
-
-        <AlarmAcknowledgeDialog
-          open={showAcknowledgeModal}
-          alarm={acknowledgeDialogAlarm}
-          onOpenChange={(open) => {
-            setShowAcknowledgeModal(open)
-            if (!open) setAckComment('')
-          }}
-          onConfirm={async (ackAlarmId, commentValue) => {
-            try {
-              const response = await fetch(`/api/alarmes/${ackAlarmId}/acknowledge`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ comment: commentValue || ackComment || undefined }),
-              })
-              if (!response.ok) {
-                console.error('Acknowledge alarm error', await response.text())
-                return
-              }
-              const acknowledgedId = Number(ackAlarmId)
-              if (Number.isFinite(acknowledgedId)) {
-                setLocallyAcknowledgedAlarmId(acknowledgedId)
-                markAlarmAcknowledgedInPaginatedSensorsCache(queryClient, acknowledgedId)
-              }
-              setShowAcknowledgeModal(false)
-              setAckComment('')
-              reload(true)
-            } catch (error) {
-              console.error('Acknowledge alarm error', error)
-            }
-          }}
+      {isModalOpen ? (
+        <MonitoringDetailsModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          idLieu={idLieu}
+          nomLieu={nomLieu}
+          sondeNumeroSerie={sondeNumeroSerie || ''}
+          isGso={isGso ?? null}
+          gsoRssi={gsoRssi ?? null}
+          gsoTension={gsoTension ?? null}
+          consigneSup={consigneSup}
+          consigneInf={consigneInf}
+          consigne={consigne}
+          consigneSupPreAlarme={consigneSupPreAlarme ?? null}
+          estConsigneSupPreAlarmeActive={estConsigneSupPreAlarmeActive ?? false}
+          consigneInfPreAlarme={consigneInfPreAlarme ?? null}
+          estConsigneInfPreAlarmeActive={estConsigneInfPreAlarmeActive ?? false}
+          unite={unite}
+          isSurveillanceActive={isSurveillanceActive}
+          measurements={isSurveillanceActive ? orderedData : []}
+          showNullNonResponse={showNullNonResponse}
         />
-      </div>
-    </>
+      ) : null}
+
+      <AlarmAcknowledgeDialog
+        open={showAcknowledgeModal}
+        alarm={acknowledgeDialogAlarm}
+        onOpenChange={(open) => {
+          setShowAcknowledgeModal(open)
+          if (!open) setAckComment('')
+        }}
+        onConfirm={async (ackAlarmId, commentValue) => {
+          try {
+            const response = await fetch(`/api/alarmes/${ackAlarmId}/acknowledge`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ comment: commentValue || ackComment || undefined }),
+            })
+            if (!response.ok) {
+              console.error('Acknowledge alarm error', await response.text())
+              return
+            }
+            const acknowledgedId = Number(ackAlarmId)
+            if (Number.isFinite(acknowledgedId)) {
+              setLocallyAcknowledgedAlarmId(acknowledgedId)
+              markAlarmAcknowledgedInPaginatedSensorsCache(queryClient, acknowledgedId)
+            }
+            setShowAcknowledgeModal(false)
+            setAckComment('')
+            reload(true)
+          } catch (error) {
+            console.error('Acknowledge alarm error', error)
+          }
+        }}
+      />
+    </LazyMotion>
   )
 }
