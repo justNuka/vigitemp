@@ -12,9 +12,9 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { useMemo, useState, type ReactNode } from 'react';
+import { LazyMotion, domAnimation, m } from 'motion/react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations } from 'next-intl';
 import {
   Select,
@@ -429,6 +429,7 @@ export function TanStackTable<TData extends Record<string, any>>({
           ['--vt-table-max-height' as any]: maxHeight ?? 'none',
         }}
       >
+        <LazyMotion features={domAnimation}>
         <Table className={tableClassName}>
           <TableHeader
             className={cn(
@@ -512,7 +513,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                 <TableRow key={`loading-${rowIndex}`} className="hover:bg-transparent">
                   {table.getVisibleLeafColumns().map((col, colIndex) => (
                     <TableCell key={`loading-${rowIndex}-${col.id}-${colIndex}`} className="border-r border-border">
-                      <Skeleton className="h-4 w-full" />
+                      <div className="h-4 rounded animate-shimmer" />
                     </TableCell>
                   ))}
                 </TableRow>
@@ -521,28 +522,35 @@ export function TanStackTable<TData extends Record<string, any>>({
               rows.map((row, rowIndex) => {
                 // Vérifier si la ligne est sélectionnée
                 const isSelected = selectedRowId !== null && selectedRowId !== undefined && (
-                  (row.original as any).Id_Sonde === selectedRowId ||
-                  (row.original as any).Id_Calibrage === selectedRowId ||
-                  (row.original as any).Id_Ajustage === selectedRowId ||
-                  (row.original as any).Id_Etalonnage === selectedRowId ||
-                  (row.original as any).Id_Site === selectedRowId ||
-                  (row.original as any).Id_Lieu === selectedRowId ||
-                  (row.original as any).Id_Utilisateur === selectedRowId ||
-                  (row.original as any).Id_Groupe === selectedRowId ||
-                  (row.original as any).Id_Profil === selectedRowId ||
-                  (row.original as any).Id_Etalon === selectedRowId ||
-                  (row.original as any).Id_Actionneur === selectedRowId ||
-                  (row.original as any).Id_Alarme === selectedRowId ||
-                  (row.original as any).id === selectedRowId ||
-                  (row.original as any).Id === selectedRowId
+                  (row.original as Record<string, unknown>)['Id_Sonde'] === selectedRowId ||
+                  (row.original as Record<string, unknown>)['Id_Calibrage'] === selectedRowId ||
+                  (row.original as Record<string, unknown>)['Id_Ajustage'] === selectedRowId ||
+                  (row.original as Record<string, unknown>)['Id_Etalonnage'] === selectedRowId ||
+                  (row.original as Record<string, unknown>)['Id_Site'] === selectedRowId ||
+                  (row.original as Record<string, unknown>)['Id_Lieu'] === selectedRowId ||
+                  (row.original as Record<string, unknown>)['Id_Utilisateur'] === selectedRowId ||
+                  (row.original as Record<string, unknown>)['Id_Groupe'] === selectedRowId ||
+                  (row.original as Record<string, unknown>)['Id_Profil'] === selectedRowId ||
+                  (row.original as Record<string, unknown>)['Id_Etalon'] === selectedRowId ||
+                  (row.original as Record<string, unknown>)['Id_Actionneur'] === selectedRowId ||
+                  (row.original as Record<string, unknown>)['Id_Alarme'] === selectedRowId ||
+                  (row.original as Record<string, unknown>)['id'] === selectedRowId ||
+                  (row.original as Record<string, unknown>)['Id'] === selectedRowId
                 );
-                
+
                 return (
-                  <TableRow
+                  <m.tr
                     key={`row-${rowIndex}-${row.id}`}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      delay: Math.min(rowIndex, 10) * 0.04,
+                      duration: 0.22,
+                      ease: [0.22, 1, 0.36, 1] as const,
+                    }}
                     onClick={() => onRowClick?.(row.original)}
                     onDoubleClick={() => onRowDoubleClick?.(row.original)}
-                    onKeyDown={(e) => {
+                    onKeyDown={(e: React.KeyboardEvent<HTMLTableRowElement>) => {
                       if (!onRowClick) return;
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
@@ -552,22 +560,20 @@ export function TanStackTable<TData extends Record<string, any>>({
                     tabIndex={onRowClick ? 0 : undefined}
                     aria-selected={isSelected || undefined}
                     className={cn(
+                      "border-b transition-colors",
                       onRowClick && 'cursor-pointer hover:bg-muted/50',
                       onRowDoubleClick && 'cursor-pointer',
                       isSelected &&
                         'bg-blue-100 dark:bg-blue-950 text-blue-900 dark:text-blue-100 font-medium [&_td:first-child]:border-l-4 [&_td:first-child]:border-l-primary',
                       onRowClick && 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                      'transition-colors'
                     )}
                   >
-                    {row.getVisibleCells().map((cell, cellIndex, cellsArray) => {
-                      const cellMeta = (cell.column.columnDef as any)?.meta as
-                        | { cellClassName?: string }
-                        | undefined;
+                    {row.getVisibleCells().map((cell, cellIndex) => {
+                      const cellMeta = (cell.column.columnDef as { meta?: { cellClassName?: string } })?.meta;
                       const cellMetaClass = cellMeta?.cellClassName;
 
                       return (
-                      <TableCell 
+                      <TableCell
                         key={`cell-${rowIndex}-${cellIndex}-${cell.id}`}
                         className={cn("border-r border-border", cellMetaClass)}
                       >
@@ -575,7 +581,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                       </TableCell>
                       );
                     })}
-                  </TableRow>
+                  </m.tr>
                 );
               })
             ) : (
@@ -593,6 +599,7 @@ export function TanStackTable<TData extends Record<string, any>>({
             )}
           </TableBody>
         </Table>
+        </LazyMotion>
       </div>
 
       {/* Contrôles de pagination - conditionnels */}
