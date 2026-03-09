@@ -98,7 +98,8 @@ export const DateRangePicker: FC<DateRangePickerProps> & { filePath: string } = 
       openedRangeRef.current = range
       openedRangeCompareRef.current = rangeCompare
     }
-  }, [isOpen, range, rangeCompare])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen])
 
   return (
     <Popover
@@ -138,7 +139,7 @@ export const DateRangePicker: FC<DateRangePickerProps> & { filePath: string } = 
       <PopoverContent
         align={align}
         className={cn(
-          matchTriggerWidth ? 'w-(--radix-popover-trigger-width)' : 'w-auto min-w-[22rem]',
+          matchTriggerWidth ? 'w-(--radix-popover-trigger-width)' : 'w-auto min-w-88',
           'max-w-[95vw] p-4 max-h-[75vh] overflow-auto',
           popoverClassName,
         )}

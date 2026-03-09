@@ -43,40 +43,42 @@ export function AlarmDetailsDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-3xl max-h-[92dvh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-warning" />
+        <DialogContent className="sm:max-w-3xl max-h-[92dvh] overflow-y-auto border-border bg-card shadow-2xl">
+          <DialogHeader className="pb-3 border-b border-border/50">
+            <DialogTitle className="flex items-center gap-3">
+              <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-destructive/10 text-destructive shrink-0">
+                <AlertTriangle className="h-5 w-5" />
+              </span>
               {t('dialog.title')}
             </DialogTitle>
             {selectedAlarm ? (
-              <DialogDescription>
-                <span className="block">{t('dialog.location_label')}: {selectedAlarm.location.name}</span>
-                <span className="block">{t('dialog.sensor_label')}: {selectedAlarm.sensor.name}</span>
+              <DialogDescription className="pl-12">
+                <span className="block font-medium text-foreground/80">{selectedAlarm.location.name}</span>
+                <span className="block text-muted-foreground">{selectedAlarm.sensor.name}</span>
               </DialogDescription>
             ) : null}
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-2 p-3 bg-muted/50 rounded-lg">
-              <div><p className="text-xs uppercase text-muted-foreground">{t('dialog.type_label')}</p><p className="text-sm font-medium">{alarmTypeLabel}</p></div>
-              <div><p className="text-xs uppercase text-muted-foreground">{t('dialog.last_value_label')}</p><p className="text-sm font-mono font-semibold">{selectedAlarm?.sensor.currentValue ?? selectedAlarm?.value ?? '-'} {selectedAlarm?.sensor.unit}</p></div>
-              <div><p className="text-xs uppercase text-muted-foreground">{t('dialog.start_label')}</p><p className="text-sm font-medium">{formattedStart}</p></div>
-              <div><p className="text-xs uppercase text-muted-foreground">{t('dialog.end_label')}</p><p className="text-sm font-medium">{formattedEnd}</p></div>
-              <div><p className="text-xs uppercase text-muted-foreground">{t('dialog.duration_label')}</p><p className="text-sm font-medium">{formattedDuration}</p></div>
-              <div><p className="text-xs uppercase text-muted-foreground">{t('dialog.count_30_label')}</p><p className="text-sm font-medium">{isStatsLoading ? t('dialog.loading') : alarmCount30 !== null ? t('dialog.count_30_value', { count: alarmCount30 }) : t('dialog.na')}</p></div>
+            <div className="grid gap-3 md:grid-cols-2 p-4 bg-muted/40 rounded-xl border border-border/50">
+              <div><p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.type_label')}</p><p className="text-sm font-medium">{alarmTypeLabel}</p></div>
+              <div><p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.last_value_label')}</p><p className="text-sm font-mono font-semibold text-primary">{selectedAlarm?.sensor.currentValue ?? selectedAlarm?.value ?? '-'} {selectedAlarm?.sensor.unit}</p></div>
+              <div><p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.start_label')}</p><p className="text-sm font-medium">{formattedStart}</p></div>
+              <div><p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.end_label')}</p><p className="text-sm font-medium">{formattedEnd}</p></div>
+              <div><p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.duration_label')}</p><p className="text-sm font-medium">{formattedDuration}</p></div>
+              <div><p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.count_30_label')}</p><p className="text-sm font-medium">{isStatsLoading ? t('dialog.loading') : alarmCount30 !== null ? t('dialog.count_30_value', { count: alarmCount30 }) : t('dialog.na')}</p></div>
               <div>
-                <p className="text-xs uppercase text-muted-foreground">{t('dialog.thresholds_label')}</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.thresholds_label')}</p>
                 <p className="text-sm font-mono text-muted-foreground">{selectedAlarm && hasConfiguredThresholds(selectedAlarm) ? t('dialog.sup_value', { value: selectedAlarm.sensor.maxThreshold ?? '-', unit: selectedAlarm.sensor.unit ?? '' }) : '-'}</p>
                 <p className="text-sm font-mono text-muted-foreground">{selectedAlarm && hasConfiguredThresholds(selectedAlarm) ? t('dialog.inf_value', { value: selectedAlarm.sensor.minThreshold ?? '-', unit: selectedAlarm.sensor.unit ?? '' }) : '-'}</p>
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-2 rounded-md border border-dashed border-border px-3 py-2">
+            <div className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-4 py-3">
               <div className="space-y-0.5">
                 <p className="text-sm font-medium">{t('dialog.graph_label')}</p>
                 <p className="text-xs text-muted-foreground">{t('dialog.graph_hint')}</p>
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={() => setShowGraph((prev: boolean) => !prev)}>
+              <Button type="button" variant="outline" size="sm" className="border-primary/40 text-primary hover:bg-primary/10 hover:text-primary" onClick={() => setShowGraph((prev: boolean) => !prev)}>
                 {showGraph ? t('dialog.graph_hide') : t('dialog.graph_show')}
               </Button>
             </div>

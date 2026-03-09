@@ -313,6 +313,8 @@ export type AuditLog = {
   targetId: string | null;
   timestamp: Date;
   ipAddress: string | null;
+  commentaireUtilisateur?: string | null;
+  profileUtilisateur?: string | null;
 };
 
 export type Setting = {

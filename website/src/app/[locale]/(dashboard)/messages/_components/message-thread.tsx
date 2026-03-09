@@ -3,14 +3,16 @@
 import { useEffect, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { ChevronUp } from "lucide-react"
+import { ChevronUp, Check, CheckCheck } from "lucide-react"
 import { toast } from "sonner"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getJson, postJson } from "@/lib/http"
 import { cn } from "@/lib/utils"
 import { MessageInput } from "./message-input"
+import { AttachmentPreview } from "./attachment-preview"
+import { TypingIndicator } from "./typing-indicator"
 import type { ConversationSummary, MessageItem, MessagesResponse } from "./_types"
 import { getInitials } from "../_utils"
 
@@ -178,9 +180,12 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
     }
   }
 
-  async function handleSend(content: string) {
+  async function handleSend(content: string, attachmentIds: number[]) {
     try {
-      await postJson(`/api/chat/conversations/${convId}/messages`, { contenu: content })
+      await postJson(`/api/chat/conversations/${convId}/messages`, {
+        contenu: content,
+        attachmentIds: attachmentIds.length > 0 ? attachmentIds : undefined,
+      })
       await queryClient.invalidateQueries({ queryKey: ["chat", "messages", convId] })
       await queryClient.invalidateQueries({ queryKey: ["chat", "conversations"] })
     } catch {
@@ -274,6 +279,7 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
               >
                 {!isOwn && (
                   <Avatar className="h-7 w-7 shrink-0 mb-0.5">
+                    <AvatarImage src={msg.senderAvatarSrc ?? undefined} />
                     <AvatarFallback className="text-[10px] font-medium bg-muted-foreground/15">
                       {msg.senderInitials}
                     </AvatarFallback>
@@ -295,29 +301,54 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
                     className={cn(
                       "px-3.5 py-2 text-sm leading-relaxed wrap-break-word",
                       isOwn
-                        ? "bg-primary text-primary-foreground rounded-2xl rounded-br-sm"
-                        : "bg-muted text-foreground rounded-2xl rounded-bl-sm"
+                        ? "bg-primary text-primary-foreground rounded-2xl rounded-br-none shadow-sm"
+                        : "bg-card border border-border/70 text-foreground rounded-2xl rounded-bl-none shadow-sm"
                     )}
                   >
                     {msg.content}
-                  </div>
-                  <span className="text-[10px] text-muted-foreground px-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {formatMessageTime(msg.createdAt)}
-                    {msg.updatedAt !== null && msg.updatedAt !== msg.createdAt && (
-                      <span className="ml-1">{t("conversations.edited_label")}</span>
+                    {msg.attachments.length > 0 && (
+                      <div className="mt-2 space-y-1">
+                        {msg.attachments.map((att) => (
+                          <AttachmentPreview key={att.id} attachment={att} isOwn={isOwn} />
+                        ))}
+                      </div>
                     )}
-                  </span>
+                  </div>
+
+                  {isOwn ? (
+                    <div className="flex items-center gap-1 px-1">
+                      <span className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                        {formatMessageTime(msg.createdAt)}
+                        {msg.updatedAt !== null && msg.updatedAt !== msg.createdAt && (
+                          <span className="ml-1">{t("conversations.edited_label")}</span>
+                        )}
+                      </span>
+                      {msg.readByAll ? (
+                        <CheckCheck className="h-3 w-3 text-primary/60 shrink-0" />
+                      ) : (
+                        <Check className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground px-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {formatMessageTime(msg.createdAt)}
+                      {msg.updatedAt !== null && msg.updatedAt !== msg.createdAt && (
+                        <span className="ml-1">{t("conversations.edited_label")}</span>
+                      )}
+                    </span>
+                  )}
                 </div>
               </div>
             )
           })
         )}
 
+        <TypingIndicator convId={convId} currentUserId={currentUserId} />
         <div ref={bottomRef} />
       </div>
 
       {/* Input */}
-      <MessageInput onSend={handleSend} />
+      <MessageInput onSend={handleSend} convId={convId} />
     </div>
   )
 }

@@ -110,22 +110,19 @@ export const PATCH = withAuthLogging(
         invalidatedEtalonnages,
       })
 
-      log.audit("CC", {
-        user: ctx.user.username,
-        userId: ctx.user.userId,
-        ip,
-        resource: "Sonde (Modification)",
-        resourceId: updated.Id_Sonde,
-        changes: {
-          moduleIdBefore: existing.Id_Module,
-          moduleIdAfter: updated.Id_Module,
-          offsetBefore: existing.Sonde_Offset,
-          offsetAfter: updated.Sonde_Offset,
-          offsetChanged,
-          invalidatedEtalonnages,
-          invalidatedEtalonnageMeasures,
-        },
-      })
+      const changedSondeFields: Record<string, unknown> = {}
+      if (data.moduleId !== undefined && Number(existing.Id_Module) !== Number(updated.Id_Module)) {
+        changedSondeFields.moduleId = { from: existing.Id_Module, to: updated.Id_Module }
+      }
+      if (offsetChanged) {
+        changedSondeFields.sondeOffset = { from: existing.Sonde_Offset, to: updated.Sonde_Offset }
+        if (invalidatedEtalonnages > 0) {
+          changedSondeFields.invalidatedEtalonnages = invalidatedEtalonnages
+          changedSondeFields.invalidatedEtalonnageMeasures = invalidatedEtalonnageMeasures
+        }
+      }
+
+      log.data.update("Sonde", updated.Id_Sonde, ctx.user.username, ctx.user.userId, ip, changedSondeFields)
 
       return apiOk({
         Id_Sonde: updated.Id_Sonde,

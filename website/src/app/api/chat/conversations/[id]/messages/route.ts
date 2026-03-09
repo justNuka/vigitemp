@@ -15,6 +15,7 @@ const TAKE = 50
 
 const postBodySchema = z.object({
   contenu: z.string().min(1).max(10000),
+  attachmentIds: z.array(z.number().int().positive()).max(10).optional(),
 })
 
 type RouteParams = { params: Promise<{ id: string }> }
@@ -59,17 +60,42 @@ export const GET = withAuthLogging(
         },
       })
 
+      const messageIds = messages.map((m) => m.Id_Message)
       const senderIds = Array.from(new Set(messages.map((m) => m.Sender_Id)))
 
-      const dbUsers = await prisma.t_utilisateur.findMany({
-        where: { Id_Utilisateur: { in: senderIds } },
-        select: {
-          Id_Utilisateur: true,
-          Login: true,
-          Prenom: true,
-          Nom: true,
-        },
-      })
+      const [dbUsers, participants, attachments] = await Promise.all([
+        prisma.t_utilisateur.findMany({
+          where: { Id_Utilisateur: { in: senderIds } },
+          select: {
+            Id_Utilisateur: true,
+            Login: true,
+            Prenom: true,
+            Nom: true,
+          },
+        }),
+        prismaChat.t_conversation_participant.findMany({
+          where: { Id_Conversation: convId },
+          select: { Id_Utilisateur: true, Last_Read_Msg_Id: true },
+        }),
+        prismaChat.t_message_attachment.findMany({
+          where: { Id_Message: { in: messageIds } },
+          select: {
+            Id_Attachment: true,
+            Id_Message: true,
+            File_Name: true,
+            Mime_Type: true,
+            File_Size: true,
+          },
+        }),
+      ])
+
+      // Group attachments by message ID
+      const attachmentsByMsgId = new Map<number, typeof attachments>()
+      for (const att of attachments) {
+        const existing = attachmentsByMsgId.get(att.Id_Message) ?? []
+        existing.push(att)
+        attachmentsByMsgId.set(att.Id_Message, existing)
+      }
 
       const avatarMap = await getUserAvatarMap(senderIds)
 
@@ -85,11 +111,18 @@ export const GET = withAuthLogging(
         })
       }
 
+      const otherParticipants = participants.filter((p) => p.Id_Utilisateur !== userId)
+
       const enriched = messages
         .slice()
         .reverse()
         .map((msg) => {
           const sender = userMap.get(msg.Sender_Id)
+          const msgAttachments = attachmentsByMsgId.get(msg.Id_Message) ?? []
+          const readByAll =
+            msg.Sender_Id === userId
+              ? otherParticipants.every((p) => (p.Last_Read_Msg_Id ?? 0) >= msg.Id_Message)
+              : false
           return {
             id: msg.Id_Message,
             conversationId: msg.Id_Conversation,
@@ -100,6 +133,13 @@ export const GET = withAuthLogging(
             content: msg.Contenu,
             createdAt: msg.Date_Creation.toISOString(),
             updatedAt: msg.Date_Modification?.toISOString() ?? null,
+            readByAll,
+            attachments: msgAttachments.map((att) => ({
+              id: att.Id_Attachment,
+              fileName: att.File_Name,
+              mimeType: att.Mime_Type,
+              size: att.File_Size,
+            })),
           }
         })
 
@@ -108,7 +148,7 @@ export const GET = withAuthLogging(
 
       return apiOk({ messages: enriched, nextCursor })
     } catch (error) {
-      log.error("chat/conversations/messages", "messages_fetch_error", { error: error });
+      log.error("chat/conversations/messages", "messages_fetch_error", { error })
       return apiError(500, "messages_fetch_failed", "Erreur lors de la recuperation des messages")
     }
   },
@@ -140,7 +180,7 @@ export const POST = withAuthLogging(
         return apiError(400, "validation_error", "Donnees invalides", { issues: parsed.error.issues })
       }
 
-      const { contenu } = parsed.data
+      const { contenu, attachmentIds } = parsed.data
 
       const created = await prismaChat.t_message.create({
         data: {
@@ -158,6 +198,14 @@ export const POST = withAuthLogging(
         },
       })
 
+      // Link any pending attachments to this message
+      if (attachmentIds && attachmentIds.length > 0) {
+        await prismaChat.t_message_attachment.updateMany({
+          where: { Id_Attachment: { in: attachmentIds }, Id_Message: 0 },
+          data: { Id_Message: created.Id_Message },
+        })
+      }
+
       return apiOk({
         id: created.Id_Message,
         conversationId: created.Id_Conversation,
@@ -167,7 +215,7 @@ export const POST = withAuthLogging(
         updatedAt: created.Date_Modification?.toISOString() ?? null,
       })
     } catch (error) {
-      log.error("chat/conversations/messages", "message_send_error", { error: error });
+      log.error("chat/conversations/messages", "message_send_error", { error })
       return apiError(500, "message_send_failed", "Erreur lors de l'envoi du message")
     }
   },

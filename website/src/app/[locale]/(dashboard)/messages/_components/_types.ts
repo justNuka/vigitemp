@@ -22,6 +22,13 @@ export type ConversationSummary = {
   unreadCount: number // always 0 in V1; we derive unread state from senderId
 }
 
+export type Attachment = {
+  id: number
+  fileName: string
+  mimeType: string
+  size: number
+}
+
 export type MessageItem = {
   id: number
   conversationId: number
@@ -32,6 +39,8 @@ export type MessageItem = {
   content: string
   createdAt: string // ISO string
   updatedAt: string | null // ISO string or null
+  attachments: Attachment[]
+  readByAll: boolean
 }
 
 export type MessagesResponse = {

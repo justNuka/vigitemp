@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, Thermometer } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
@@ -102,9 +102,12 @@ export function SensorsClient() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40 pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle>{t('title', { count: sensors?.length || 0 })}</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Thermometer className="h-4 w-4 text-primary" />
+              {t('title_with_count', { count: sensors?.length || 0 })}
+            </CardTitle>
             <div className="flex gap-2">
               <Button size="sm" className="gap-2" asChild>
                 <Link href="/admin/sondes/ajustage-import">

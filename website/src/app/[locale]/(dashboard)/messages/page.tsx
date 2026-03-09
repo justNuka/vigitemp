@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { MessageSquare } from "lucide-react"
 import { getJson, postJson } from "@/lib/http"
@@ -16,15 +16,11 @@ import type { ConversationSummary } from "./_components/_types"
 export default function MessagesPage() {
   const t = useTranslations("messaging")
   const router = useRouter()
-  const searchParams = useSearchParams()
   const queryClient = useQueryClient()
   const messagingEnabled = useMessagingEnabled()
   const { data: currentUser } = useCurrentUser()
 
-  const [selectedConvId, setSelectedConvId] = useState<number | null>(() => {
-    const param = searchParams.get("conv")
-    return param ? parseInt(param, 10) : null
-  })
+  const [selectedConvId, setSelectedConvId] = useState<number | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [viewedConvIds, setViewedConvIds] = useState<Set<number>>(new Set())
 
@@ -50,11 +46,6 @@ export default function MessagesPage() {
       setSelectedConvId(conv.id)
       setViewedConvIds((prev) => new Set([...prev, conv.id]))
 
-      // Update URL query param without full navigation
-      const params = new URLSearchParams(searchParams.toString())
-      params.set("conv", String(conv.id))
-      router.replace(`?${params.toString()}`, { scroll: false })
-
       // Mark as read
       try {
         await postJson(`/api/chat/conversations/${conv.id}/read`, {})
@@ -64,7 +55,7 @@ export default function MessagesPage() {
         // Non-blocking — ignore if read mark fails
       }
     },
-    [queryClient, router, searchParams]
+    [queryClient]
   )
 
   const handleConversationCreated = useCallback(

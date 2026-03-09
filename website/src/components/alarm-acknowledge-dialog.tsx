@@ -180,48 +180,46 @@ const [commentOptions, setCommentOptions] = useState<{ id: number; text: string 
           }
         }}
       >
-        <DialogContent className="sm:max-w-3xl max-h-[92dvh] overflow-y-auto border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-warning" />
+        <DialogContent className="sm:max-w-3xl max-h-[92dvh] overflow-y-auto border-border bg-card shadow-2xl">
+          <DialogHeader className="pb-3 border-b border-border/50">
+            <DialogTitle className="flex items-center gap-3">
+              <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-destructive/10 text-destructive shrink-0">
+                <AlertTriangle className="h-5 w-5" />
+              </span>
               {t("dialog.title")}
             </DialogTitle>
-            <DialogDescription>
-              <span className="block">
-                {t("dialog.location_label")}: {alarm.locationName}
-              </span>
-              <span className="block">
-                {t("dialog.sensor_label")}: {alarm.sensorName}
-              </span>
+            <DialogDescription className="pl-12">
+              <span className="block font-medium text-foreground/80">{alarm.locationName}</span>
+              <span className="block text-muted-foreground">{alarm.sensorName}</span>
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50/80 p-4 md:grid-cols-2 dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="grid gap-3 rounded-xl border border-border/50 bg-muted/40 p-4 md:grid-cols-2">
               <div>
-                <p className="text-xs uppercase text-muted-foreground">{t("dialog.type_label")}</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t("dialog.type_label")}</p>
                 <p className="text-sm font-medium">{alarmTypeLabel}</p>
               </div>
               <div>
-                <p className="text-xs uppercase text-muted-foreground">{t("dialog.last_value_label")}</p>
-                <p className="text-sm font-mono font-semibold">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t("dialog.last_value_label")}</p>
+                <p className="text-sm font-mono font-semibold text-primary">
                   {alarm.currentValue ?? alarm.value ?? "-"} {alarm.unit ?? ""}
                 </p>
               </div>
               <div>
-                <p className="text-xs uppercase text-muted-foreground">{t("dialog.start_label")}</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t("dialog.start_label")}</p>
                 <p className="text-sm font-medium">{formattedStart}</p>
               </div>
               <div>
-                <p className="text-xs uppercase text-muted-foreground">{t("dialog.end_label")}</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t("dialog.end_label")}</p>
                 <p className="text-sm font-medium">{formattedEnd}</p>
               </div>
               <div>
-                <p className="text-xs uppercase text-muted-foreground">{t("dialog.duration_label")}</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t("dialog.duration_label")}</p>
                 <p className="text-sm font-medium">{formattedDuration}</p>
               </div>
               <div>
-                <p className="text-xs uppercase text-muted-foreground">{t("dialog.count_30_label")}</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t("dialog.count_30_label")}</p>
                 <p className="text-sm font-medium">
                   {isStatsLoading
                     ? t("dialog.loading")
@@ -231,7 +229,7 @@ const [commentOptions, setCommentOptions] = useState<{ id: number; text: string 
                 </p>
               </div>
               <div>
-                <p className="text-xs uppercase text-muted-foreground">{t("dialog.thresholds_label")}</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t("dialog.thresholds_label")}</p>
                 <p className="text-sm font-mono text-muted-foreground">
                   {t("dialog.sup_value", { value: alarm.maxThreshold ?? "-", unit: alarm.unit ?? "" })}
                 </p>
@@ -241,12 +239,12 @@ const [commentOptions, setCommentOptions] = useState<{ id: number; text: string 
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-3 py-3 dark:border-slate-700 dark:bg-slate-900/50">
+            <div className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-4 py-3">
               <div className="space-y-0.5">
                 <p className="text-sm font-medium">{t("dialog.graph_label")}</p>
                 <p className="text-xs text-muted-foreground">{t("dialog.graph_hint")}</p>
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={() => setShowGraph((prev) => !prev)}>
+              <Button type="button" variant="outline" size="sm" className="border-primary/40 text-primary hover:bg-primary/10 hover:text-primary" onClick={() => setShowGraph((prev) => !prev)}>
                 {showGraph ? t("dialog.graph_hide") : t("dialog.graph_show")}
               </Button>
             </div>

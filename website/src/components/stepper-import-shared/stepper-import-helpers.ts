@@ -1,4 +1,4 @@
-import type { UploadItem } from "@/components/file-upload-shared"
+﻿import type { UploadItem } from "@/components/file-upload-shared"
 import { decodeXmlArrayBuffer } from "@/lib/xml-decoding"
 import type { ValidationResult, ValidationStatus } from "./stepper-import-types"
 
@@ -54,8 +54,30 @@ export function validateXml(
   invalidRootMessage: string,
 ) {
   const parser = new DOMParser()
-  const doc = parser.parseFromString(xmlText, "application/xml")
-  const hasError = doc.getElementsByTagName("parsererror").length > 0
+
+  const parseXml = (source: string) => {
+    const parsed = parser.parseFromString(source, "application/xml")
+    const hasError = parsed.getElementsByTagName("parsererror").length > 0
+    return { parsed, hasError }
+  }
+
+  let { parsed: doc, hasError } = parseXml(xmlText)
+
+  // Some imported XML files declare legacy encodings (ISO-8859-1) and can fail
+  // browser DOMParser validation despite being usable by the backend parser.
+  if (hasError) {
+    const cleaned = xmlText
+      .replace(/^\uFEFF/, "")
+      .replace(/^\s*<\?xml[^>]*\?>\s*/i, "")
+      .trim()
+
+    if (cleaned.length > 0) {
+      const retry = parseXml(cleaned)
+      doc = retry.parsed
+      hasError = retry.hasError
+    }
+  }
+
   if (hasError) return { ok: false, errors: [invalidXmlMessage] }
 
   const rawRootTag = doc.documentElement?.tagName?.toUpperCase() ?? ""
@@ -70,3 +92,4 @@ export function validateXml(
 export function buildValidationResult(file: File, status: ValidationStatus, errors: string[], encoding: string, xmlText: string): ValidationResult {
   return { file, status, errors, encoding, xmlText }
 }
+

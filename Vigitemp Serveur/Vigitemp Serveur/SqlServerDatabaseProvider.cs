@@ -556,13 +556,14 @@ namespace Vigitemp_Serveur
                     float consigneInf;
                     int frequence;
                     object idServeur;
+                    int estEtatAlarme;
 
                     using (var cmdMain = CreateCommand(
                         _connectionMain,
                         "SELECT Frequence, Consigne, " +
                         "Tolerance_Surveillance_Sup as Consigne_Sup, " +
                         "Tolerance_Surveillance_Inf as Consigne_Inf, " +
-                        "t_module.Id_Serveur, Nom_Lieu, Id_Lieu, t_lieu.Sonde_Numero_Serie, t_sonde.Id_Sonde FROM t_lieu " +
+                        "t_module.Id_Serveur, Nom_Lieu, Id_Lieu, t_lieu.Est_Lieu_En_Alarme, t_lieu.Sonde_Numero_Serie, t_sonde.Id_Sonde FROM t_lieu " +
                             "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                             "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
                             "WHERE t_lieu.Sonde_Numero_Serie = @serial " +
@@ -585,15 +586,16 @@ namespace Vigitemp_Serveur
                             consigneInf = GetFloatOrDefault(reader["Consigne_Inf"]);
                             frequence = (int)reader["Frequence"];
                             idServeur = reader["Id_Serveur"];
+                            estEtatAlarme = Convert.ToInt32(reader["Est_Lieu_En_Alarme"]);
                         }
                     }
 
                     using (var cmdMeasure = CreateCommand(
                         _connectionMeasure,
                         "INSERT INTO tm_mesures " +
-                        "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu) " +
+                        "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Etat_Alarme) " +
                         "VALUES " +
-                        "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu)"))
+                        "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, @estEtatAlarme)"))
                     {
                         cmdMeasure.Parameters.AddWithValue("@idserveurbdd", idServeur);
                         cmdMeasure.Parameters.AddWithValue("@dateheuremesure", DateTime.Now);
@@ -606,6 +608,7 @@ namespace Vigitemp_Serveur
                         cmdMeasure.Parameters.AddWithValue("@frequence", frequence);
                         cmdMeasure.Parameters.AddWithValue("@sondenumeroserie", p_numeroSerie);
                         cmdMeasure.Parameters.AddWithValue("@idlieu", idLieu);
+                        cmdMeasure.Parameters.AddWithValue("@estEtatAlarme", estEtatAlarme);
                         cmdMeasure.ExecuteNonQuery();
                     }
 
@@ -626,7 +629,7 @@ namespace Vigitemp_Serveur
                         consigneSup,
                         consigneInf,
                         frequence,
-                        0);
+                        estEtatAlarme);
 
                     VigitempServeur.nombres_reponses++;
                     return true;
@@ -657,13 +660,14 @@ namespace Vigitemp_Serveur
                     float consigneInf;
                     int frequence;
                     object idServeur;
+                    int estEtatAlarme;
 
                     using (var cmdMain = CreateCommand(
                         _connectionMain,
                         "SELECT Frequence, Consigne, " +
                         "Tolerance_Surveillance_Sup as Consigne_Sup, " +
                         "Tolerance_Surveillance_Inf as Consigne_Inf, " +
-                        "t_module.Id_Serveur, Id_Lieu, t_sonde.Id_Sonde FROM t_lieu " +
+                        "t_module.Id_Serveur, Id_Lieu, t_lieu.Est_Lieu_En_Alarme, t_sonde.Id_Sonde FROM t_lieu " +
                             "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                             "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
                             "WHERE t_lieu.Sonde_Numero_Serie = @serial " +
@@ -686,6 +690,7 @@ namespace Vigitemp_Serveur
                             consigneInf = GetFloatOrDefault(reader["Consigne_Inf"]);
                             frequence = (int)reader["Frequence"];
                             idServeur = reader["Id_Serveur"];
+                            estEtatAlarme = Convert.ToInt32(reader["Est_Lieu_En_Alarme"]);
                         }
                     }
 
@@ -694,9 +699,9 @@ namespace Vigitemp_Serveur
                     using (var cmdMeasure = CreateCommand(
                         _connectionMeasure,
                         "INSERT INTO tm_mesures " +
-                        "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Valeur_Null) " +
+                        "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Etat_Alarme, Est_Valeur_Null) " +
                         "VALUES " +
-                        "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, 1)"))
+                        "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, @estEtatAlarme, 1)"))
                     {
                         cmdMeasure.Parameters.AddWithValue("@idserveurbdd", idServeur);
                         cmdMeasure.Parameters.AddWithValue("@dateheuremesure", DateTime.Now);
@@ -709,6 +714,7 @@ namespace Vigitemp_Serveur
                         cmdMeasure.Parameters.AddWithValue("@frequence", frequence);
                         cmdMeasure.Parameters.AddWithValue("@sondenumeroserie", p_numeroSerie);
                         cmdMeasure.Parameters.AddWithValue("@idlieu", idLieu);
+                        cmdMeasure.Parameters.AddWithValue("@estEtatAlarme", estEtatAlarme);
                         cmdMeasure.ExecuteNonQuery();
                     }
 
@@ -723,7 +729,7 @@ namespace Vigitemp_Serveur
                         consigneSup,
                         consigneInf,
                         frequence,
-                        0,
+                        estEtatAlarme,
                         1);
 
                     VigitempServeur.Log($"(AddMesureNoResponse MSSQL) Mesure null inseree pour non-reponse sonde={p_numeroSerie} lieu={idLieu}");

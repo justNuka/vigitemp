@@ -33,15 +33,29 @@ model t_conversation_participant {
 }
 
 model t_message {
-  Id_Message        Int            @id @default(autoincrement())
+  Id_Message        Int                    @id @default(autoincrement())
   Id_Conversation   Int
   Sender_Id         Int
-  Contenu           String         @db.Text
-  Date_Creation     DateTime       @default(now()) @db.DateTime(0)
-  Date_Modification DateTime?      @db.DateTime(0)
-  Date_Suppression  DateTime?      @db.DateTime(0)
-  conversation      t_conversation @relation(fields: [Id_Conversation], references: [Id_Conversation], onDelete: Cascade)
+  Contenu           String                 @db.Text
+  Date_Creation     DateTime               @default(now()) @db.DateTime(0)
+  Date_Modification DateTime?              @db.DateTime(0)
+  Date_Suppression  DateTime?              @db.DateTime(0)
+  conversation      t_conversation         @relation(fields: [Id_Conversation], references: [Id_Conversation], onDelete: Cascade)
+  attachments       t_message_attachment[]
 
   @@index([Id_Conversation, Id_Message])
   @@index([Date_Creation])
+}
+
+model t_message_attachment {
+  Id_Attachment Int       @id @default(autoincrement())
+  Id_Message    Int
+  File_Name     String    @db.VarChar(255)
+  File_Path     String    @db.VarChar(512)
+  File_Size     Int
+  Mime_Type     String    @db.VarChar(128)
+  Date_Upload   DateTime  @default(now()) @db.DateTime(0)
+  message       t_message @relation(fields: [Id_Message], references: [Id_Message], onDelete: Cascade)
+
+  @@index([Id_Message])
 }

@@ -23,3 +23,21 @@ export function getLocalizedPathname(pathnameKey: string, locale: Locale) {
   return pathnameKey
 }
 
+export function resolveLocaleFromPathname(pathname: string): Locale {
+  const match = pathname.match(/^\/([a-z]{2})(?=\/|$)/i)
+  const locale = match?.[1]
+
+  if (locale && routing.locales.includes(locale as Locale)) {
+    return locale as Locale
+  }
+
+  return routing.defaultLocale
+}
+
+export function buildLocalizedPath(pathnameKey: string, locale: Locale, query?: Record<string, string>) {
+  const localizedPath = getLocalizedPathname(pathnameKey, locale)
+  const search = query ? new URLSearchParams(query).toString() : ""
+
+  return `/${locale}${localizedPath}${search ? `?${search}` : ""}`
+}
+

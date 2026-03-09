@@ -140,7 +140,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-4 flex flex-col items-center">
+      <SidebarHeader className="p-4 flex flex-col items-center bg-linear-to-b from-sidebar-accent/30 to-transparent">
         <Link href="/" className="flex items-center justify-center gap-2">
           <Logo size="xs" showText textClassName="text-sidebar-foreground" />
         </Link>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { useRouter } from "@/i18n/navigation";
+import { buildLocalizedPath, resolveLocaleFromPathname } from "@/i18n/pathnames";
 import { fetchJson } from "@/lib/http";
 import { markDisconnectReason } from "@/lib/auth-disconnect-marker";
 
@@ -37,13 +38,16 @@ export function useAutoLock() {
 
   // Fonction de logout automatique
   const handleLogout = useCallback(async () => {
+    const locale = typeof window !== "undefined" ? resolveLocaleFromPathname(window.location.pathname) : "fr";
+    const localizedLoginPath = buildLocalizedPath("/login", locale, { reason: "inactivity" });
+
     try {
       await fetchJson<{ success: true }>("/api/auth/logout-auto", { method: "POST", credentials: "include" });
       markDisconnectReason("inactivity");
-      router.push({ pathname: "/login", query: { reason: "inactivity" } } as any);
+      router.push(localizedLoginPath);
     } catch (error) {
       console.error("Erreur lors du logout automatique:", error);
-      router.push("/login");
+      router.push(localizedLoginPath);
     }
   }, [router]);
 

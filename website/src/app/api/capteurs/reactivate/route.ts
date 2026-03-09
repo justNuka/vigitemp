@@ -21,6 +21,9 @@ export const POST = withAuthLogging(async (_request: NextRequest) => {
     })
 
     // 2. Reactivate snoozed surveillance whose snooze period has expired.
+    const [dbNowRow] = await prisma.$queryRaw<Array<{ nowAt: Date }>>`SELECT NOW() AS nowAt`
+    const surveillanceReactivatedAt = dbNowRow?.nowAt ?? new Date()
+
     const lieuxToReactivate = await prisma.t_lieu.findMany({
       where: {
         Est_Archive: false,
@@ -42,6 +45,8 @@ export const POST = withAuthLogging(async (_request: NextRequest) => {
         data: {
           Lieu_Etat: "S",
           Date_Heure_Reactivation_Surveillance: null,
+          Date_Heure_Surveillance_On: surveillanceReactivatedAt,
+          Date_Heure_Surveillance_Off: null,
         },
       })
 

@@ -2,8 +2,10 @@
 
 import { useMemo } from "react"
 import { useTranslations, useLocale } from "next-intl"
+import { SlidersHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Combobox } from "@/components/ui/combobox"
 import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { useLocations } from "@/hooks/useLocations"
@@ -81,8 +83,15 @@ export function LieuDateSelector({
   const isAnalyzeDisabled = !selectedLieu || !dateRange
 
   return (
-    <div className="flex flex-col gap-4 p-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <Card className="mx-6 mt-6">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-base flex items-center gap-2">
+          <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
+          {t("selector.title")}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor="lieu-combobox">{t("selector.lieuLabel")}</Label>
           <Combobox
@@ -112,6 +121,9 @@ export function LieuDateSelector({
             showCompare={false}
             locale={locale}
             allowEmpty
+            align="start"
+            matchTriggerWidth={false}
+            popoverClassName="w-[min(980px,calc(100vw-2rem))]"
           />
         </div>
 
@@ -124,7 +136,8 @@ export function LieuDateSelector({
             {t("selector.analyzeButton")}
           </Button>
         </div>
-      </div>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

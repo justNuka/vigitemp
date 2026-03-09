@@ -38,7 +38,8 @@ const DialogContent = React.forwardRef<
   DialogContentProps
 >(({ className, children, draggable = true, style, ...props }, ref) => {
   const contentRef = React.useRef<React.ElementRef<typeof DialogPrimitive.Content> | null>(null)
-  const [offset, setOffset] = React.useState({ x: 0, y: 0 })
+  // Fix 3: use a ref instead of state — direct DOM mutation, zero re-renders during drag
+  const offsetRef = React.useRef({ x: 0, y: 0 })
   const dragStateRef = React.useRef<{
     startX: number
     startY: number
@@ -48,12 +49,14 @@ const DialogContent = React.forwardRef<
 
   const handlePointerMove = React.useCallback((event: PointerEvent) => {
     const dragState = dragStateRef.current
-    if (!dragState) return
+    const el = contentRef.current
+    if (!dragState || !el) return
 
-    setOffset({
-      x: dragState.offsetX + event.clientX - dragState.startX,
-      y: dragState.offsetY + event.clientY - dragState.startY,
-    })
+    const x = dragState.offsetX + event.clientX - dragState.startX
+    const y = dragState.offsetY + event.clientY - dragState.startY
+    offsetRef.current = { x, y }
+    // Mutate the DOM directly — no setState, no re-render
+    el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`
   }, [])
 
   const stopDragging = React.useCallback(() => {
@@ -61,6 +64,7 @@ const DialogContent = React.forwardRef<
     window.removeEventListener("pointermove", handlePointerMove)
     window.removeEventListener("pointerup", stopDragging)
     document.body.style.removeProperty("user-select")
+    document.body.style.removeProperty("cursor")
   }, [handlePointerMove])
 
   const setRefs = React.useCallback(
@@ -84,29 +88,29 @@ const DialogContent = React.forwardRef<
 
       const target = event.target as HTMLElement | null
       if (!target) return
-      if (
-        target.closest(
-          "[data-dialog-no-drag],button,input,textarea,select,option,a,[role='button'],[role='combobox'],[role='listbox'],[role='option'],[contenteditable='true']",
-        )
-      ) {
-        return
-      }
 
-      const rect = content.getBoundingClientRect()
-      if (event.clientY > rect.top + 72) return
+      // Fix 1: reject clicks from nested dialog portals — they bubble up through
+      // React's virtual tree even though they're not DOM children of this dialog
+      if (!content.contains(target)) return
+
+      // Fix 2: only allow drag from the dedicated handle, not the whole header zone
+      if (!target.closest("[data-drag-handle]")) return
 
       dragStateRef.current = {
         startX: event.clientX,
         startY: event.clientY,
-        offsetX: offset.x,
-        offsetY: offset.y,
+        offsetX: offsetRef.current.x,
+        offsetY: offsetRef.current.y,
       }
 
       document.body.style.userSelect = "none"
+      document.body.style.cursor = "grabbing"
       window.addEventListener("pointermove", handlePointerMove)
       window.addEventListener("pointerup", stopDragging)
+      // Fix 1: stop propagation so a parent dialog doesn't also start dragging
+      event.stopPropagation()
     },
-    [draggable, handlePointerMove, offset.x, offset.y, stopDragging],
+    [draggable, handlePointerMove, stopDragging],
   )
 
   React.useEffect(() => stopDragging, [stopDragging])
@@ -117,20 +121,22 @@ const DialogContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={setRefs}
         className={cn(
-          "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
-          draggable && "sm:cursor-move",
+          "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-top-1 data-[state=closed]:slide-out-to-top-1 sm:rounded-lg",
           className
         )}
-        style={
-          offset.x !== 0 || offset.y !== 0
-            ? { ...style, transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px))` }
-            : style
-        }
+        style={style}
         onPointerDownCapture={handlePointerDownCapture}
         {...props}
       >
+        {draggable && (
+          <div
+            data-drag-handle
+            aria-hidden="true"
+            className="absolute top-2 left-1/2 -translate-x-1/2 h-1 w-10 rounded-full bg-muted-foreground/25 cursor-grab hover:bg-muted-foreground/40 transition-colors"
+          />
+        )}
         {children}
-        <DialogPrimitive.Close data-dialog-no-drag className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>

@@ -12,6 +12,7 @@ import { useGroupUsers } from '@/hooks/useGroupUsers';
 import { deleteJson, getJson, HttpError } from "@/lib/http";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Layers } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -87,9 +88,12 @@ export function GroupsClient() {
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40 flex flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle>{t('title')}</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Layers className="h-4 w-4 text-primary" />
+              {t('title')}
+            </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
               {t('count', { count: groups.length })}
             </p>

@@ -151,3 +151,101 @@ export function toAuditTableData(logs: AuditLog[]): AuditLogRow[] {
     targetId: log.targetId,
   }))
 }
+
+// ─── Human-readable expanded details ────────────────────────────────────────
+
+const FIELD_LABEL_MAP: Record<string, { fr: string; en: string }> = {
+  // CONNEXION / DECONNEXION
+  address: { fr: 'Adresse', en: 'Address' },
+  connectedAt: { fr: 'Connecté le', en: 'Connected at' },
+  machineName: { fr: 'Machine', en: 'Machine' },
+  // AIM (analyse d'impact)
+  newToleranceSup: { fr: 'Tolérance sup.', en: 'Upper tolerance' },
+  newToleranceInf: { fr: 'Tolérance inf.', en: 'Lower tolerance' },
+  simAlarms: { fr: 'Alarmes simulées', en: 'Simulated alarms' },
+  realAlarms: { fr: 'Alarmes réelles', en: 'Real alarms' },
+  dateRange: { fr: 'Période', en: 'Period' },
+  // ACQ
+  alarmId: { fr: 'N° alarme', en: 'Alarm #' },
+  acknowledgedAt: { fr: 'Acquitté le', en: 'Acknowledged at' },
+  // Champs génériques de changement (CF, CR, CS, config.change)
+  from: { fr: 'Avant', en: 'Before' },
+  to: { fr: 'Après', en: 'After' },
+  forced: { fr: 'Forcé', en: 'Forced' },
+  description: { fr: 'Description', en: 'Description' },
+  format: { fr: 'Format', en: 'Format' },
+  // Noms de champs Prisma / DB dans les entrées CC
+  Nom_Lieu: { fr: 'Nom du lieu', en: 'Location name' },
+  Tolerance_Sup: { fr: 'Tolérance sup.', en: 'Upper tolerance' },
+  Tolerance_Inf: { fr: 'Tolérance inf.', en: 'Lower tolerance' },
+  Consigne_Sup: { fr: 'Consigne sup.', en: 'Upper setpoint' },
+  Consigne_Inf: { fr: 'Consigne inf.', en: 'Lower setpoint' },
+  Est_Son_Alarme_Active: { fr: "Son d'alarme", en: 'Alarm sound' },
+  Nom_Sonde: { fr: 'Nom de la sonde', en: 'Sensor name' },
+  Frequence_Mesure: { fr: 'Fréquence mesure (s)', en: 'Measurement freq. (s)' },
+  Retard_Alarme: { fr: "Retard d'alarme (s)", en: 'Alarm delay (s)' },
+  Hysteresis: { fr: 'Hystérésis', en: 'Hysteresis' },
+}
+
+function formatFieldValue(
+  key: string,
+  value: unknown,
+  localeTag: string,
+  timezone?: string,
+): string {
+  if (value === null || value === undefined) return '—'
+
+  if (typeof value === 'boolean') {
+    return localeTag.startsWith('fr') ? (value ? 'Oui' : 'Non') : (value ? 'Yes' : 'No')
+  }
+
+  if (typeof value === 'number') return String(value)
+
+  if (typeof value === 'string') {
+    // Plage de dates : "ISO_START → ISO_END"
+    if (value.includes(' → ')) {
+      const sep = value.indexOf(' → ')
+      const start = value.slice(0, sep).trim()
+      const end = value.slice(sep + 3).trim()
+      const startFmt = formatDateSafe(start, localeTag, timezone) ?? start
+      const endFmt = formatDateSafe(end, localeTag, timezone) ?? end
+      return `${startFmt} → ${endFmt}`
+    }
+    // Chaînes ISO pour les clés à connotation temporelle
+    const keyLower = key.toLowerCase()
+    if (keyLower.endsWith('at') || keyLower.includes('date') || keyLower.includes('time')) {
+      const formatted = formatDateSafe(value, localeTag, timezone)
+      if (formatted) return formatted
+    }
+    return value
+  }
+
+  if (typeof value === 'object') return JSON.stringify(value)
+  return String(value)
+}
+
+/**
+ * Convertit un objet `changes` (extrait du JSON d'audit) en liste de paires
+ * label / valeur lisibles, pour l'affichage dans la ligne expandée.
+ */
+export function renderChangesAsRows(
+  changes: Record<string, unknown>,
+  localeTag: string,
+  timezone?: string,
+): Array<{ label: string; value: string }> {
+  const isFr = localeTag.toLowerCase().startsWith('fr')
+  const rows: Array<{ label: string; value: string }> = []
+
+  for (const [key, value] of Object.entries(changes)) {
+    // On saute le champ synthétique 'action' (create/update/delete) — déjà
+    // visible via le badge d'action et le titre de ressource
+    if (key === 'action') continue
+    if (value === null || value === undefined) continue
+
+    const labelDef = FIELD_LABEL_MAP[key]
+    const label = labelDef ? (isFr ? labelDef.fr : labelDef.en) : key
+    rows.push({ label, value: formatFieldValue(key, value, localeTag, timezone) })
+  }
+
+  return rows
+}

@@ -6,6 +6,7 @@ import { SwitchWithLoading } from '@/components/ui/switch-with-loading';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useTranslations } from 'next-intl';
+import { Settings2 } from 'lucide-react';
 
 type Setting = {
   key: string;
@@ -42,13 +43,16 @@ export function GeneralSettingsCard({
 
   return (
     <Card className="border-sky-200 bg-[linear-gradient(180deg,rgba(14,165,233,0.08),rgba(255,255,255,0.92))] dark:bg-card">
-      <CardHeader>
-        <CardTitle>{t('general.title')}</CardTitle>
+      <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Settings2 className="h-4 w-4 text-primary" />
+          {t('general.title')}
+        </CardTitle>
         <CardDescription>{t('general.description')}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="divide-y divide-border/40">
         {settings.map((setting) => (
-          <div key={setting.key} className="flex items-center justify-between">
+          <div key={setting.key} className="flex items-center justify-between py-4">
             <Label htmlFor={setting.key} className="flex-1">
               {labelMap[setting.key] ?? setting.label}
             </Label>

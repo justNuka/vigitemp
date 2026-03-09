@@ -292,6 +292,10 @@ export const PATCH = withLogging(
         ? await prisma.$queryRaw<Array<{ reactivationAt: Date }>>`SELECT DATE_ADD(NOW(), INTERVAL ${surveillanceDurationMinutes} MINUTE) AS reactivationAt`
         : [null]
       const surveillanceReactivationAt = surveillanceReactivationRow?.reactivationAt ?? null
+      const [surveillanceStateChangedRow] = applyLieuEtat
+        ? await prisma.$queryRaw<Array<{ nowAt: Date }>>`SELECT NOW() AS nowAt`
+        : [null]
+      const surveillanceStateChangedAt = surveillanceStateChangedRow?.nowAt ?? null
 
       const shouldUpdateMailingContacts = Object.prototype.hasOwnProperty.call(body, "MailingContacts")
       const mailingContacts = shouldUpdateMailingContacts ? normalizeMailingContacts(MailingContacts) : []
@@ -303,6 +307,8 @@ export const PATCH = withLogging(
       const ip = getClientIp(req)
       let previousLieuEtat: string | null = null
       let lieuName: string | null = null
+      let previousSoundActive: boolean | null = null
+      let previousValues: Record<string, unknown> = {}
 
       const lieu = await prisma.$transaction(async (tx) => {
         const current = await tx.t_lieu.findUnique({
@@ -313,11 +319,37 @@ export const PATCH = withLogging(
             Nom_Lieu: true,
             Adresse_Sonde: true,
             Est_Lieu_GSO: true,
+            Est_Son_Alarme_Active: true,
+            Commentaire: true,
+            Observations_Info: true,
+            Id_Site: true,
+            Consigne: true,
+            Frequence: true,
+            Consigne_Sup: true,
+            Consigne_Inf: true,
+            Retard_Alarme_Haut: true,
+            Retard_Alarme_Bas: true,
+            Nb_Mesures_Temporisation_Redeclenchement: true,
           },
         })
 
         previousLieuEtat = current?.Lieu_Etat ?? null
         lieuName = current?.Nom_Lieu ?? null
+        previousSoundActive = current?.Est_Son_Alarme_Active ?? null
+        previousValues = {
+          Nom_Lieu: current?.Nom_Lieu,
+          Commentaire: current?.Commentaire,
+          Observations_Info: current?.Observations_Info,
+          Id_Site: current?.Id_Site,
+          Sonde_Numero_Serie: current?.Sonde_Numero_Serie,
+          Consigne: current?.Consigne,
+          Frequence: current?.Frequence !== null && current?.Frequence !== undefined ? Number(current.Frequence) / 60 : current?.Frequence,
+          Consigne_Sup: current?.Consigne_Sup,
+          Consigne_Inf: current?.Consigne_Inf,
+          Retard_Alarme_Haut: current?.Retard_Alarme_Haut,
+          Retard_Alarme_Bas: current?.Retard_Alarme_Bas,
+          Nb_Mesures_Temporisation_Redeclenchement: current?.Nb_Mesures_Temporisation_Redeclenchement,
+        }
 
         const group1Id = groupIds?.[0] ?? null
         const group2Id = groupIds?.[1] ?? null
@@ -367,6 +399,8 @@ export const PATCH = withLogging(
                   : { disconnect: true },
                 Date_Heure_Reactivation_Surveillance:
                   Lieu_Etat === "D" ? surveillanceReactivationAt : null,
+                Date_Heure_Surveillance_On: Lieu_Etat === "S" ? surveillanceStateChangedAt : null,
+                Date_Heure_Surveillance_Off: Lieu_Etat === "D" ? surveillanceStateChangedAt : null,
               }
             : {}),
           ...(shouldArchive
@@ -549,6 +583,47 @@ export const PATCH = withLogging(
           resourceId: lieuId,
           reason,
         })
+      }
+
+      // Log sound change
+      const hasSoundField = Object.prototype.hasOwnProperty.call(validated, "Est_Son_Alarme_Active")
+      if (hasSoundField && user && validated.Est_Son_Alarme_Active !== undefined && previousSoundActive !== validated.Est_Son_Alarme_Active) {
+        if (validated.Est_Son_Alarme_Active) {
+          log.lieu.soundOn(lieuName ?? String(lieuId), lieuId, user.username, user.userId, ip)
+        } else {
+          log.lieu.soundOff(lieuName ?? String(lieuId), lieuId, user.username, user.userId, ip)
+        }
+      }
+
+      // Log generic field changes (excluding Lieu_Etat which is already logged as DES/ACT)
+      if (user) {
+        const TRACKED_FIELDS = [
+          "Nom_Lieu",
+          "Commentaire",
+          "Observations_Info",
+          "Id_Site",
+          "Sonde_Numero_Serie",
+          "Consigne",
+          "Frequence",
+          "Consigne_Sup",
+          "Consigne_Inf",
+          "Retard_Alarme_Haut",
+          "Retard_Alarme_Bas",
+          "Nb_Mesures_Temporisation_Redeclenchement",
+        ] as const
+
+        const changedFields: Record<string, unknown> = {}
+        for (const field of TRACKED_FIELDS) {
+          if (Object.prototype.hasOwnProperty.call(body, field) && previousValues[field] !== undefined) {
+            const newValue = field === "Frequence" ? validated.Frequence : (validated as Record<string, unknown>)[field]
+            if (previousValues[field] !== newValue) {
+              changedFields[field] = { from: previousValues[field], to: newValue }
+            }
+          }
+        }
+        if (Object.keys(changedFields).length > 0) {
+          log.data.update("Lieu", lieuId, user.username, user.userId, ip, changedFields)
+        }
       }
 
       // EMT cascade: recalculate tolerances for all active planning rules if EMT params changed

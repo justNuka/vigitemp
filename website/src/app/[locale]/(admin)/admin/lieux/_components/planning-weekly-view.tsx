@@ -22,6 +22,25 @@ function dayInRule(regle: PlanningRegleResponse, day: number): boolean {
   return day >= Jour_Debut || day <= Jour_Fin
 }
 
+function formatRuleLabelForDay(regle: PlanningRegleResponse, day: number): string {
+  const isStart = day == regle.Jour_Debut
+  const isEnd = day == regle.Jour_Fin
+
+  if (isStart && isEnd) {
+    return `${regle.Heure_Debut}-${regle.Heure_Fin}`
+  }
+
+  if (isStart) {
+    return `${regle.Heure_Debut}->`
+  }
+
+  if (isEnd) {
+    return `->${regle.Heure_Fin}`
+  }
+
+  return "En cours"
+}
+
 export function WeeklyPlanningView({ regles, onSelectRegle }: WeeklyPlanningViewProps) {
   const t = useTranslations("lieux.planning")
 
@@ -42,14 +61,14 @@ export function WeeklyPlanningView({ regles, onSelectRegle }: WeeklyPlanningView
                   type="button"
                   onClick={() => onSelectRegle?.(r)}
                   className="w-full rounded bg-blue-500/20 border border-blue-500/40 px-1 py-0.5 text-blue-700 dark:text-blue-300 hover:bg-blue-500/30 truncate"
-                  title={`${r.Heure_Debut}–${r.Heure_Fin}`}
+                  title={`${r.Heure_Debut}-${r.Heure_Fin}`}
                 >
-                  {r.Heure_Debut}–{r.Heure_Fin}
+                  {formatRuleLabelForDay(r, day)}
                 </button>
               ))
             ) : (
               <div className="w-full rounded bg-muted/30 px-1 py-1 text-center text-muted-foreground">
-                —
+                --
               </div>
             )}
           </div>

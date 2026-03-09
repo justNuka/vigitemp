@@ -120,7 +120,7 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-4 flex flex-col items-center">
+      <SidebarHeader className="p-4 flex flex-col items-center bg-linear-to-b from-sidebar-accent/30 to-transparent">
         <IntlLink href="/" className="flex items-center justify-center">
           <Logo size="xs" showText textClassName="text-sidebar-foreground" />
         </IntlLink>

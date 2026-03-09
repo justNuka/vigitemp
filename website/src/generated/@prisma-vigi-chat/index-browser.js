@@ -146,6 +146,16 @@ exports.Prisma.T_messageScalarFieldEnum = {
   Date_Suppression: 'Date_Suppression'
 };
 
+exports.Prisma.T_message_attachmentScalarFieldEnum = {
+  Id_Attachment: 'Id_Attachment',
+  Id_Message: 'Id_Message',
+  File_Name: 'File_Name',
+  File_Path: 'File_Path',
+  File_Size: 'File_Size',
+  Mime_Type: 'Mime_Type',
+  Date_Upload: 'Date_Upload'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -166,11 +176,18 @@ exports.Prisma.t_messageOrderByRelevanceFieldEnum = {
   Contenu: 'Contenu'
 };
 
+exports.Prisma.t_message_attachmentOrderByRelevanceFieldEnum = {
+  File_Name: 'File_Name',
+  File_Path: 'File_Path',
+  Mime_Type: 'Mime_Type'
+};
+
 
 exports.Prisma.ModelName = {
   t_conversation: 't_conversation',
   t_conversation_participant: 't_conversation_participant',
-  t_message: 't_message'
+  t_message: 't_message',
+  t_message_attachment: 't_message_attachment'
 };
 
 /**

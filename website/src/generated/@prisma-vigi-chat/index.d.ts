@@ -28,6 +28,11 @@ export type t_conversation_participant = $Result.DefaultSelection<Prisma.$t_conv
  * 
  */
 export type t_message = $Result.DefaultSelection<Prisma.$t_messagePayload>
+/**
+ * Model t_message_attachment
+ * 
+ */
+export type t_message_attachment = $Result.DefaultSelection<Prisma.$t_message_attachmentPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -175,6 +180,16 @@ export class PrismaClient<
     * ```
     */
   get t_message(): Prisma.t_messageDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.t_message_attachment`: Exposes CRUD operations for the **t_message_attachment** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more T_message_attachments
+    * const t_message_attachments = await prisma.t_message_attachment.findMany()
+    * ```
+    */
+  get t_message_attachment(): Prisma.t_message_attachmentDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -611,7 +626,8 @@ export namespace Prisma {
   export const ModelName: {
     t_conversation: 't_conversation',
     t_conversation_participant: 't_conversation_participant',
-    t_message: 't_message'
+    t_message: 't_message',
+    t_message_attachment: 't_message_attachment'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -627,7 +643,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "t_conversation" | "t_conversation_participant" | "t_message"
+      modelProps: "t_conversation" | "t_conversation_participant" | "t_message" | "t_message_attachment"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -829,6 +845,72 @@ export namespace Prisma {
           }
         }
       }
+      t_message_attachment: {
+        payload: Prisma.$t_message_attachmentPayload<ExtArgs>
+        fields: Prisma.t_message_attachmentFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.t_message_attachmentFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_message_attachmentPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.t_message_attachmentFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_message_attachmentPayload>
+          }
+          findFirst: {
+            args: Prisma.t_message_attachmentFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_message_attachmentPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.t_message_attachmentFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_message_attachmentPayload>
+          }
+          findMany: {
+            args: Prisma.t_message_attachmentFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_message_attachmentPayload>[]
+          }
+          create: {
+            args: Prisma.t_message_attachmentCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_message_attachmentPayload>
+          }
+          createMany: {
+            args: Prisma.t_message_attachmentCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.t_message_attachmentDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_message_attachmentPayload>
+          }
+          update: {
+            args: Prisma.t_message_attachmentUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_message_attachmentPayload>
+          }
+          deleteMany: {
+            args: Prisma.t_message_attachmentDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.t_message_attachmentUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.t_message_attachmentUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_message_attachmentPayload>
+          }
+          aggregate: {
+            args: Prisma.T_message_attachmentAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateT_message_attachment>
+          }
+          groupBy: {
+            args: Prisma.t_message_attachmentGroupByArgs<ExtArgs>
+            result: $Utils.Optional<T_message_attachmentGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.t_message_attachmentCountArgs<ExtArgs>
+            result: $Utils.Optional<T_message_attachmentCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -940,6 +1022,7 @@ export namespace Prisma {
     t_conversation?: t_conversationOmit
     t_conversation_participant?: t_conversation_participantOmit
     t_message?: t_messageOmit
+    t_message_attachment?: t_message_attachmentOmit
   }
 
   /* Types for Logging */
@@ -1052,6 +1135,37 @@ export namespace Prisma {
    */
   export type T_conversationCountOutputTypeCountMessagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: t_messageWhereInput
+  }
+
+
+  /**
+   * Count Type T_messageCountOutputType
+   */
+
+  export type T_messageCountOutputType = {
+    attachments: number
+  }
+
+  export type T_messageCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    attachments?: boolean | T_messageCountOutputTypeCountAttachmentsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * T_messageCountOutputType without action
+   */
+  export type T_messageCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the T_messageCountOutputType
+     */
+    select?: T_messageCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * T_messageCountOutputType without action
+   */
+  export type T_messageCountOutputTypeCountAttachmentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: t_message_attachmentWhereInput
   }
 
 
@@ -3274,6 +3388,8 @@ export namespace Prisma {
     Date_Modification?: boolean
     Date_Suppression?: boolean
     conversation?: boolean | t_conversationDefaultArgs<ExtArgs>
+    attachments?: boolean | t_message$attachmentsArgs<ExtArgs>
+    _count?: boolean | T_messageCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["t_message"]>
 
 
@@ -3291,12 +3407,15 @@ export namespace Prisma {
   export type t_messageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Message" | "Id_Conversation" | "Sender_Id" | "Contenu" | "Date_Creation" | "Date_Modification" | "Date_Suppression", ExtArgs["result"]["t_message"]>
   export type t_messageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     conversation?: boolean | t_conversationDefaultArgs<ExtArgs>
+    attachments?: boolean | t_message$attachmentsArgs<ExtArgs>
+    _count?: boolean | T_messageCountOutputTypeDefaultArgs<ExtArgs>
   }
 
   export type $t_messagePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "t_message"
     objects: {
       conversation: Prisma.$t_conversationPayload<ExtArgs>
+      attachments: Prisma.$t_message_attachmentPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       Id_Message: number
@@ -3647,6 +3766,7 @@ export namespace Prisma {
   export interface Prisma__t_messageClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     conversation<T extends t_conversationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, t_conversationDefaultArgs<ExtArgs>>): Prisma__t_conversationClient<$Result.GetResult<Prisma.$t_conversationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    attachments<T extends t_message$attachmentsArgs<ExtArgs> = {}>(args?: Subset<T, t_message$attachmentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_message_attachmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4026,6 +4146,30 @@ export namespace Prisma {
   }
 
   /**
+   * t_message.attachments
+   */
+  export type t_message$attachmentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_message_attachment
+     */
+    select?: t_message_attachmentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_message_attachment
+     */
+    omit?: t_message_attachmentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_message_attachmentInclude<ExtArgs> | null
+    where?: t_message_attachmentWhereInput
+    orderBy?: t_message_attachmentOrderByWithRelationInput | t_message_attachmentOrderByWithRelationInput[]
+    cursor?: t_message_attachmentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: T_message_attachmentScalarFieldEnum | T_message_attachmentScalarFieldEnum[]
+  }
+
+  /**
    * t_message without action
    */
   export type t_messageDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4041,6 +4185,999 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: t_messageInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model t_message_attachment
+   */
+
+  export type AggregateT_message_attachment = {
+    _count: T_message_attachmentCountAggregateOutputType | null
+    _avg: T_message_attachmentAvgAggregateOutputType | null
+    _sum: T_message_attachmentSumAggregateOutputType | null
+    _min: T_message_attachmentMinAggregateOutputType | null
+    _max: T_message_attachmentMaxAggregateOutputType | null
+  }
+
+  export type T_message_attachmentAvgAggregateOutputType = {
+    Id_Attachment: number | null
+    Id_Message: number | null
+    File_Size: number | null
+  }
+
+  export type T_message_attachmentSumAggregateOutputType = {
+    Id_Attachment: number | null
+    Id_Message: number | null
+    File_Size: number | null
+  }
+
+  export type T_message_attachmentMinAggregateOutputType = {
+    Id_Attachment: number | null
+    Id_Message: number | null
+    File_Name: string | null
+    File_Path: string | null
+    File_Size: number | null
+    Mime_Type: string | null
+    Date_Upload: Date | null
+  }
+
+  export type T_message_attachmentMaxAggregateOutputType = {
+    Id_Attachment: number | null
+    Id_Message: number | null
+    File_Name: string | null
+    File_Path: string | null
+    File_Size: number | null
+    Mime_Type: string | null
+    Date_Upload: Date | null
+  }
+
+  export type T_message_attachmentCountAggregateOutputType = {
+    Id_Attachment: number
+    Id_Message: number
+    File_Name: number
+    File_Path: number
+    File_Size: number
+    Mime_Type: number
+    Date_Upload: number
+    _all: number
+  }
+
+
+  export type T_message_attachmentAvgAggregateInputType = {
+    Id_Attachment?: true
+    Id_Message?: true
+    File_Size?: true
+  }
+
+  export type T_message_attachmentSumAggregateInputType = {
+    Id_Attachment?: true
+    Id_Message?: true
+    File_Size?: true
+  }
+
+  export type T_message_attachmentMinAggregateInputType = {
+    Id_Attachment?: true
+    Id_Message?: true
+    File_Name?: true
+    File_Path?: true
+    File_Size?: true
+    Mime_Type?: true
+    Date_Upload?: true
+  }
+
+  export type T_message_attachmentMaxAggregateInputType = {
+    Id_Attachment?: true
+    Id_Message?: true
+    File_Name?: true
+    File_Path?: true
+    File_Size?: true
+    Mime_Type?: true
+    Date_Upload?: true
+  }
+
+  export type T_message_attachmentCountAggregateInputType = {
+    Id_Attachment?: true
+    Id_Message?: true
+    File_Name?: true
+    File_Path?: true
+    File_Size?: true
+    Mime_Type?: true
+    Date_Upload?: true
+    _all?: true
+  }
+
+  export type T_message_attachmentAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which t_message_attachment to aggregate.
+     */
+    where?: t_message_attachmentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of t_message_attachments to fetch.
+     */
+    orderBy?: t_message_attachmentOrderByWithRelationInput | t_message_attachmentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: t_message_attachmentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` t_message_attachments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` t_message_attachments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned t_message_attachments
+    **/
+    _count?: true | T_message_attachmentCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: T_message_attachmentAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: T_message_attachmentSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: T_message_attachmentMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: T_message_attachmentMaxAggregateInputType
+  }
+
+  export type GetT_message_attachmentAggregateType<T extends T_message_attachmentAggregateArgs> = {
+        [P in keyof T & keyof AggregateT_message_attachment]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateT_message_attachment[P]>
+      : GetScalarType<T[P], AggregateT_message_attachment[P]>
+  }
+
+
+
+
+  export type t_message_attachmentGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: t_message_attachmentWhereInput
+    orderBy?: t_message_attachmentOrderByWithAggregationInput | t_message_attachmentOrderByWithAggregationInput[]
+    by: T_message_attachmentScalarFieldEnum[] | T_message_attachmentScalarFieldEnum
+    having?: t_message_attachmentScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: T_message_attachmentCountAggregateInputType | true
+    _avg?: T_message_attachmentAvgAggregateInputType
+    _sum?: T_message_attachmentSumAggregateInputType
+    _min?: T_message_attachmentMinAggregateInputType
+    _max?: T_message_attachmentMaxAggregateInputType
+  }
+
+  export type T_message_attachmentGroupByOutputType = {
+    Id_Attachment: number
+    Id_Message: number
+    File_Name: string
+    File_Path: string
+    File_Size: number
+    Mime_Type: string
+    Date_Upload: Date
+    _count: T_message_attachmentCountAggregateOutputType | null
+    _avg: T_message_attachmentAvgAggregateOutputType | null
+    _sum: T_message_attachmentSumAggregateOutputType | null
+    _min: T_message_attachmentMinAggregateOutputType | null
+    _max: T_message_attachmentMaxAggregateOutputType | null
+  }
+
+  type GetT_message_attachmentGroupByPayload<T extends t_message_attachmentGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<T_message_attachmentGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof T_message_attachmentGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], T_message_attachmentGroupByOutputType[P]>
+            : GetScalarType<T[P], T_message_attachmentGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type t_message_attachmentSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    Id_Attachment?: boolean
+    Id_Message?: boolean
+    File_Name?: boolean
+    File_Path?: boolean
+    File_Size?: boolean
+    Mime_Type?: boolean
+    Date_Upload?: boolean
+    message?: boolean | t_messageDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["t_message_attachment"]>
+
+
+
+  export type t_message_attachmentSelectScalar = {
+    Id_Attachment?: boolean
+    Id_Message?: boolean
+    File_Name?: boolean
+    File_Path?: boolean
+    File_Size?: boolean
+    Mime_Type?: boolean
+    Date_Upload?: boolean
+  }
+
+  export type t_message_attachmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Attachment" | "Id_Message" | "File_Name" | "File_Path" | "File_Size" | "Mime_Type" | "Date_Upload", ExtArgs["result"]["t_message_attachment"]>
+  export type t_message_attachmentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    message?: boolean | t_messageDefaultArgs<ExtArgs>
+  }
+
+  export type $t_message_attachmentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "t_message_attachment"
+    objects: {
+      message: Prisma.$t_messagePayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      Id_Attachment: number
+      Id_Message: number
+      File_Name: string
+      File_Path: string
+      File_Size: number
+      Mime_Type: string
+      Date_Upload: Date
+    }, ExtArgs["result"]["t_message_attachment"]>
+    composites: {}
+  }
+
+  type t_message_attachmentGetPayload<S extends boolean | null | undefined | t_message_attachmentDefaultArgs> = $Result.GetResult<Prisma.$t_message_attachmentPayload, S>
+
+  type t_message_attachmentCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<t_message_attachmentFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: T_message_attachmentCountAggregateInputType | true
+    }
+
+  export interface t_message_attachmentDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['t_message_attachment'], meta: { name: 't_message_attachment' } }
+    /**
+     * Find zero or one T_message_attachment that matches the filter.
+     * @param {t_message_attachmentFindUniqueArgs} args - Arguments to find a T_message_attachment
+     * @example
+     * // Get one T_message_attachment
+     * const t_message_attachment = await prisma.t_message_attachment.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends t_message_attachmentFindUniqueArgs>(args: SelectSubset<T, t_message_attachmentFindUniqueArgs<ExtArgs>>): Prisma__t_message_attachmentClient<$Result.GetResult<Prisma.$t_message_attachmentPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one T_message_attachment that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {t_message_attachmentFindUniqueOrThrowArgs} args - Arguments to find a T_message_attachment
+     * @example
+     * // Get one T_message_attachment
+     * const t_message_attachment = await prisma.t_message_attachment.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends t_message_attachmentFindUniqueOrThrowArgs>(args: SelectSubset<T, t_message_attachmentFindUniqueOrThrowArgs<ExtArgs>>): Prisma__t_message_attachmentClient<$Result.GetResult<Prisma.$t_message_attachmentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first T_message_attachment that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {t_message_attachmentFindFirstArgs} args - Arguments to find a T_message_attachment
+     * @example
+     * // Get one T_message_attachment
+     * const t_message_attachment = await prisma.t_message_attachment.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends t_message_attachmentFindFirstArgs>(args?: SelectSubset<T, t_message_attachmentFindFirstArgs<ExtArgs>>): Prisma__t_message_attachmentClient<$Result.GetResult<Prisma.$t_message_attachmentPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first T_message_attachment that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {t_message_attachmentFindFirstOrThrowArgs} args - Arguments to find a T_message_attachment
+     * @example
+     * // Get one T_message_attachment
+     * const t_message_attachment = await prisma.t_message_attachment.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends t_message_attachmentFindFirstOrThrowArgs>(args?: SelectSubset<T, t_message_attachmentFindFirstOrThrowArgs<ExtArgs>>): Prisma__t_message_attachmentClient<$Result.GetResult<Prisma.$t_message_attachmentPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more T_message_attachments that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {t_message_attachmentFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all T_message_attachments
+     * const t_message_attachments = await prisma.t_message_attachment.findMany()
+     * 
+     * // Get first 10 T_message_attachments
+     * const t_message_attachments = await prisma.t_message_attachment.findMany({ take: 10 })
+     * 
+     * // Only select the `Id_Attachment`
+     * const t_message_attachmentWithId_AttachmentOnly = await prisma.t_message_attachment.findMany({ select: { Id_Attachment: true } })
+     * 
+     */
+    findMany<T extends t_message_attachmentFindManyArgs>(args?: SelectSubset<T, t_message_attachmentFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_message_attachmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a T_message_attachment.
+     * @param {t_message_attachmentCreateArgs} args - Arguments to create a T_message_attachment.
+     * @example
+     * // Create one T_message_attachment
+     * const T_message_attachment = await prisma.t_message_attachment.create({
+     *   data: {
+     *     // ... data to create a T_message_attachment
+     *   }
+     * })
+     * 
+     */
+    create<T extends t_message_attachmentCreateArgs>(args: SelectSubset<T, t_message_attachmentCreateArgs<ExtArgs>>): Prisma__t_message_attachmentClient<$Result.GetResult<Prisma.$t_message_attachmentPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many T_message_attachments.
+     * @param {t_message_attachmentCreateManyArgs} args - Arguments to create many T_message_attachments.
+     * @example
+     * // Create many T_message_attachments
+     * const t_message_attachment = await prisma.t_message_attachment.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends t_message_attachmentCreateManyArgs>(args?: SelectSubset<T, t_message_attachmentCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a T_message_attachment.
+     * @param {t_message_attachmentDeleteArgs} args - Arguments to delete one T_message_attachment.
+     * @example
+     * // Delete one T_message_attachment
+     * const T_message_attachment = await prisma.t_message_attachment.delete({
+     *   where: {
+     *     // ... filter to delete one T_message_attachment
+     *   }
+     * })
+     * 
+     */
+    delete<T extends t_message_attachmentDeleteArgs>(args: SelectSubset<T, t_message_attachmentDeleteArgs<ExtArgs>>): Prisma__t_message_attachmentClient<$Result.GetResult<Prisma.$t_message_attachmentPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one T_message_attachment.
+     * @param {t_message_attachmentUpdateArgs} args - Arguments to update one T_message_attachment.
+     * @example
+     * // Update one T_message_attachment
+     * const t_message_attachment = await prisma.t_message_attachment.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends t_message_attachmentUpdateArgs>(args: SelectSubset<T, t_message_attachmentUpdateArgs<ExtArgs>>): Prisma__t_message_attachmentClient<$Result.GetResult<Prisma.$t_message_attachmentPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more T_message_attachments.
+     * @param {t_message_attachmentDeleteManyArgs} args - Arguments to filter T_message_attachments to delete.
+     * @example
+     * // Delete a few T_message_attachments
+     * const { count } = await prisma.t_message_attachment.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends t_message_attachmentDeleteManyArgs>(args?: SelectSubset<T, t_message_attachmentDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more T_message_attachments.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {t_message_attachmentUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many T_message_attachments
+     * const t_message_attachment = await prisma.t_message_attachment.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends t_message_attachmentUpdateManyArgs>(args: SelectSubset<T, t_message_attachmentUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one T_message_attachment.
+     * @param {t_message_attachmentUpsertArgs} args - Arguments to update or create a T_message_attachment.
+     * @example
+     * // Update or create a T_message_attachment
+     * const t_message_attachment = await prisma.t_message_attachment.upsert({
+     *   create: {
+     *     // ... data to create a T_message_attachment
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the T_message_attachment we want to update
+     *   }
+     * })
+     */
+    upsert<T extends t_message_attachmentUpsertArgs>(args: SelectSubset<T, t_message_attachmentUpsertArgs<ExtArgs>>): Prisma__t_message_attachmentClient<$Result.GetResult<Prisma.$t_message_attachmentPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of T_message_attachments.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {t_message_attachmentCountArgs} args - Arguments to filter T_message_attachments to count.
+     * @example
+     * // Count the number of T_message_attachments
+     * const count = await prisma.t_message_attachment.count({
+     *   where: {
+     *     // ... the filter for the T_message_attachments we want to count
+     *   }
+     * })
+    **/
+    count<T extends t_message_attachmentCountArgs>(
+      args?: Subset<T, t_message_attachmentCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], T_message_attachmentCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a T_message_attachment.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {T_message_attachmentAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends T_message_attachmentAggregateArgs>(args: Subset<T, T_message_attachmentAggregateArgs>): Prisma.PrismaPromise<GetT_message_attachmentAggregateType<T>>
+
+    /**
+     * Group by T_message_attachment.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {t_message_attachmentGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends t_message_attachmentGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: t_message_attachmentGroupByArgs['orderBy'] }
+        : { orderBy?: t_message_attachmentGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, t_message_attachmentGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetT_message_attachmentGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the t_message_attachment model
+   */
+  readonly fields: t_message_attachmentFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for t_message_attachment.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__t_message_attachmentClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    message<T extends t_messageDefaultArgs<ExtArgs> = {}>(args?: Subset<T, t_messageDefaultArgs<ExtArgs>>): Prisma__t_messageClient<$Result.GetResult<Prisma.$t_messagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the t_message_attachment model
+   */
+  interface t_message_attachmentFieldRefs {
+    readonly Id_Attachment: FieldRef<"t_message_attachment", 'Int'>
+    readonly Id_Message: FieldRef<"t_message_attachment", 'Int'>
+    readonly File_Name: FieldRef<"t_message_attachment", 'String'>
+    readonly File_Path: FieldRef<"t_message_attachment", 'String'>
+    readonly File_Size: FieldRef<"t_message_attachment", 'Int'>
+    readonly Mime_Type: FieldRef<"t_message_attachment", 'String'>
+    readonly Date_Upload: FieldRef<"t_message_attachment", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * t_message_attachment findUnique
+   */
+  export type t_message_attachmentFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_message_attachment
+     */
+    select?: t_message_attachmentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_message_attachment
+     */
+    omit?: t_message_attachmentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_message_attachmentInclude<ExtArgs> | null
+    /**
+     * Filter, which t_message_attachment to fetch.
+     */
+    where: t_message_attachmentWhereUniqueInput
+  }
+
+  /**
+   * t_message_attachment findUniqueOrThrow
+   */
+  export type t_message_attachmentFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_message_attachment
+     */
+    select?: t_message_attachmentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_message_attachment
+     */
+    omit?: t_message_attachmentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_message_attachmentInclude<ExtArgs> | null
+    /**
+     * Filter, which t_message_attachment to fetch.
+     */
+    where: t_message_attachmentWhereUniqueInput
+  }
+
+  /**
+   * t_message_attachment findFirst
+   */
+  export type t_message_attachmentFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_message_attachment
+     */
+    select?: t_message_attachmentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_message_attachment
+     */
+    omit?: t_message_attachmentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_message_attachmentInclude<ExtArgs> | null
+    /**
+     * Filter, which t_message_attachment to fetch.
+     */
+    where?: t_message_attachmentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of t_message_attachments to fetch.
+     */
+    orderBy?: t_message_attachmentOrderByWithRelationInput | t_message_attachmentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for t_message_attachments.
+     */
+    cursor?: t_message_attachmentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` t_message_attachments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` t_message_attachments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_message_attachments.
+     */
+    distinct?: T_message_attachmentScalarFieldEnum | T_message_attachmentScalarFieldEnum[]
+  }
+
+  /**
+   * t_message_attachment findFirstOrThrow
+   */
+  export type t_message_attachmentFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_message_attachment
+     */
+    select?: t_message_attachmentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_message_attachment
+     */
+    omit?: t_message_attachmentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_message_attachmentInclude<ExtArgs> | null
+    /**
+     * Filter, which t_message_attachment to fetch.
+     */
+    where?: t_message_attachmentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of t_message_attachments to fetch.
+     */
+    orderBy?: t_message_attachmentOrderByWithRelationInput | t_message_attachmentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for t_message_attachments.
+     */
+    cursor?: t_message_attachmentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` t_message_attachments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` t_message_attachments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_message_attachments.
+     */
+    distinct?: T_message_attachmentScalarFieldEnum | T_message_attachmentScalarFieldEnum[]
+  }
+
+  /**
+   * t_message_attachment findMany
+   */
+  export type t_message_attachmentFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_message_attachment
+     */
+    select?: t_message_attachmentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_message_attachment
+     */
+    omit?: t_message_attachmentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_message_attachmentInclude<ExtArgs> | null
+    /**
+     * Filter, which t_message_attachments to fetch.
+     */
+    where?: t_message_attachmentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of t_message_attachments to fetch.
+     */
+    orderBy?: t_message_attachmentOrderByWithRelationInput | t_message_attachmentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing t_message_attachments.
+     */
+    cursor?: t_message_attachmentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` t_message_attachments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` t_message_attachments.
+     */
+    skip?: number
+    distinct?: T_message_attachmentScalarFieldEnum | T_message_attachmentScalarFieldEnum[]
+  }
+
+  /**
+   * t_message_attachment create
+   */
+  export type t_message_attachmentCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_message_attachment
+     */
+    select?: t_message_attachmentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_message_attachment
+     */
+    omit?: t_message_attachmentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_message_attachmentInclude<ExtArgs> | null
+    /**
+     * The data needed to create a t_message_attachment.
+     */
+    data: XOR<t_message_attachmentCreateInput, t_message_attachmentUncheckedCreateInput>
+  }
+
+  /**
+   * t_message_attachment createMany
+   */
+  export type t_message_attachmentCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many t_message_attachments.
+     */
+    data: t_message_attachmentCreateManyInput | t_message_attachmentCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * t_message_attachment update
+   */
+  export type t_message_attachmentUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_message_attachment
+     */
+    select?: t_message_attachmentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_message_attachment
+     */
+    omit?: t_message_attachmentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_message_attachmentInclude<ExtArgs> | null
+    /**
+     * The data needed to update a t_message_attachment.
+     */
+    data: XOR<t_message_attachmentUpdateInput, t_message_attachmentUncheckedUpdateInput>
+    /**
+     * Choose, which t_message_attachment to update.
+     */
+    where: t_message_attachmentWhereUniqueInput
+  }
+
+  /**
+   * t_message_attachment updateMany
+   */
+  export type t_message_attachmentUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update t_message_attachments.
+     */
+    data: XOR<t_message_attachmentUpdateManyMutationInput, t_message_attachmentUncheckedUpdateManyInput>
+    /**
+     * Filter which t_message_attachments to update
+     */
+    where?: t_message_attachmentWhereInput
+    /**
+     * Limit how many t_message_attachments to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * t_message_attachment upsert
+   */
+  export type t_message_attachmentUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_message_attachment
+     */
+    select?: t_message_attachmentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_message_attachment
+     */
+    omit?: t_message_attachmentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_message_attachmentInclude<ExtArgs> | null
+    /**
+     * The filter to search for the t_message_attachment to update in case it exists.
+     */
+    where: t_message_attachmentWhereUniqueInput
+    /**
+     * In case the t_message_attachment found by the `where` argument doesn't exist, create a new t_message_attachment with this data.
+     */
+    create: XOR<t_message_attachmentCreateInput, t_message_attachmentUncheckedCreateInput>
+    /**
+     * In case the t_message_attachment was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<t_message_attachmentUpdateInput, t_message_attachmentUncheckedUpdateInput>
+  }
+
+  /**
+   * t_message_attachment delete
+   */
+  export type t_message_attachmentDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_message_attachment
+     */
+    select?: t_message_attachmentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_message_attachment
+     */
+    omit?: t_message_attachmentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_message_attachmentInclude<ExtArgs> | null
+    /**
+     * Filter which t_message_attachment to delete.
+     */
+    where: t_message_attachmentWhereUniqueInput
+  }
+
+  /**
+   * t_message_attachment deleteMany
+   */
+  export type t_message_attachmentDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which t_message_attachments to delete
+     */
+    where?: t_message_attachmentWhereInput
+    /**
+     * Limit how many t_message_attachments to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * t_message_attachment without action
+   */
+  export type t_message_attachmentDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_message_attachment
+     */
+    select?: t_message_attachmentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_message_attachment
+     */
+    omit?: t_message_attachmentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_message_attachmentInclude<ExtArgs> | null
   }
 
 
@@ -4093,6 +5230,19 @@ export namespace Prisma {
   export type T_messageScalarFieldEnum = (typeof T_messageScalarFieldEnum)[keyof typeof T_messageScalarFieldEnum]
 
 
+  export const T_message_attachmentScalarFieldEnum: {
+    Id_Attachment: 'Id_Attachment',
+    Id_Message: 'Id_Message',
+    File_Name: 'File_Name',
+    File_Path: 'File_Path',
+    File_Size: 'File_Size',
+    Mime_Type: 'Mime_Type',
+    Date_Upload: 'Date_Upload'
+  };
+
+  export type T_message_attachmentScalarFieldEnum = (typeof T_message_attachmentScalarFieldEnum)[keyof typeof T_message_attachmentScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -4123,6 +5273,15 @@ export namespace Prisma {
   };
 
   export type t_messageOrderByRelevanceFieldEnum = (typeof t_messageOrderByRelevanceFieldEnum)[keyof typeof t_messageOrderByRelevanceFieldEnum]
+
+
+  export const t_message_attachmentOrderByRelevanceFieldEnum: {
+    File_Name: 'File_Name',
+    File_Path: 'File_Path',
+    Mime_Type: 'Mime_Type'
+  };
+
+  export type t_message_attachmentOrderByRelevanceFieldEnum = (typeof t_message_attachmentOrderByRelevanceFieldEnum)[keyof typeof t_message_attachmentOrderByRelevanceFieldEnum]
 
 
   /**
@@ -4292,6 +5451,7 @@ export namespace Prisma {
     Date_Modification?: DateTimeNullableFilter<"t_message"> | Date | string | null
     Date_Suppression?: DateTimeNullableFilter<"t_message"> | Date | string | null
     conversation?: XOR<T_conversationScalarRelationFilter, t_conversationWhereInput>
+    attachments?: T_message_attachmentListRelationFilter
   }
 
   export type t_messageOrderByWithRelationInput = {
@@ -4303,6 +5463,7 @@ export namespace Prisma {
     Date_Modification?: SortOrderInput | SortOrder
     Date_Suppression?: SortOrderInput | SortOrder
     conversation?: t_conversationOrderByWithRelationInput
+    attachments?: t_message_attachmentOrderByRelationAggregateInput
     _relevance?: t_messageOrderByRelevanceInput
   }
 
@@ -4318,6 +5479,7 @@ export namespace Prisma {
     Date_Modification?: DateTimeNullableFilter<"t_message"> | Date | string | null
     Date_Suppression?: DateTimeNullableFilter<"t_message"> | Date | string | null
     conversation?: XOR<T_conversationScalarRelationFilter, t_conversationWhereInput>
+    attachments?: T_message_attachmentListRelationFilter
   }, "Id_Message">
 
   export type t_messageOrderByWithAggregationInput = {
@@ -4346,6 +5508,74 @@ export namespace Prisma {
     Date_Creation?: DateTimeWithAggregatesFilter<"t_message"> | Date | string
     Date_Modification?: DateTimeNullableWithAggregatesFilter<"t_message"> | Date | string | null
     Date_Suppression?: DateTimeNullableWithAggregatesFilter<"t_message"> | Date | string | null
+  }
+
+  export type t_message_attachmentWhereInput = {
+    AND?: t_message_attachmentWhereInput | t_message_attachmentWhereInput[]
+    OR?: t_message_attachmentWhereInput[]
+    NOT?: t_message_attachmentWhereInput | t_message_attachmentWhereInput[]
+    Id_Attachment?: IntFilter<"t_message_attachment"> | number
+    Id_Message?: IntFilter<"t_message_attachment"> | number
+    File_Name?: StringFilter<"t_message_attachment"> | string
+    File_Path?: StringFilter<"t_message_attachment"> | string
+    File_Size?: IntFilter<"t_message_attachment"> | number
+    Mime_Type?: StringFilter<"t_message_attachment"> | string
+    Date_Upload?: DateTimeFilter<"t_message_attachment"> | Date | string
+    message?: XOR<T_messageScalarRelationFilter, t_messageWhereInput>
+  }
+
+  export type t_message_attachmentOrderByWithRelationInput = {
+    Id_Attachment?: SortOrder
+    Id_Message?: SortOrder
+    File_Name?: SortOrder
+    File_Path?: SortOrder
+    File_Size?: SortOrder
+    Mime_Type?: SortOrder
+    Date_Upload?: SortOrder
+    message?: t_messageOrderByWithRelationInput
+    _relevance?: t_message_attachmentOrderByRelevanceInput
+  }
+
+  export type t_message_attachmentWhereUniqueInput = Prisma.AtLeast<{
+    Id_Attachment?: number
+    AND?: t_message_attachmentWhereInput | t_message_attachmentWhereInput[]
+    OR?: t_message_attachmentWhereInput[]
+    NOT?: t_message_attachmentWhereInput | t_message_attachmentWhereInput[]
+    Id_Message?: IntFilter<"t_message_attachment"> | number
+    File_Name?: StringFilter<"t_message_attachment"> | string
+    File_Path?: StringFilter<"t_message_attachment"> | string
+    File_Size?: IntFilter<"t_message_attachment"> | number
+    Mime_Type?: StringFilter<"t_message_attachment"> | string
+    Date_Upload?: DateTimeFilter<"t_message_attachment"> | Date | string
+    message?: XOR<T_messageScalarRelationFilter, t_messageWhereInput>
+  }, "Id_Attachment">
+
+  export type t_message_attachmentOrderByWithAggregationInput = {
+    Id_Attachment?: SortOrder
+    Id_Message?: SortOrder
+    File_Name?: SortOrder
+    File_Path?: SortOrder
+    File_Size?: SortOrder
+    Mime_Type?: SortOrder
+    Date_Upload?: SortOrder
+    _count?: t_message_attachmentCountOrderByAggregateInput
+    _avg?: t_message_attachmentAvgOrderByAggregateInput
+    _max?: t_message_attachmentMaxOrderByAggregateInput
+    _min?: t_message_attachmentMinOrderByAggregateInput
+    _sum?: t_message_attachmentSumOrderByAggregateInput
+  }
+
+  export type t_message_attachmentScalarWhereWithAggregatesInput = {
+    AND?: t_message_attachmentScalarWhereWithAggregatesInput | t_message_attachmentScalarWhereWithAggregatesInput[]
+    OR?: t_message_attachmentScalarWhereWithAggregatesInput[]
+    NOT?: t_message_attachmentScalarWhereWithAggregatesInput | t_message_attachmentScalarWhereWithAggregatesInput[]
+    Id_Attachment?: IntWithAggregatesFilter<"t_message_attachment"> | number
+    Id_Message?: IntWithAggregatesFilter<"t_message_attachment"> | number
+    File_Name?: StringWithAggregatesFilter<"t_message_attachment"> | string
+    File_Path?: StringWithAggregatesFilter<"t_message_attachment"> | string
+    File_Size?: IntWithAggregatesFilter<"t_message_attachment"> | number
+    Mime_Type?: StringWithAggregatesFilter<"t_message_attachment"> | string
+    Date_Upload?: DateTimeWithAggregatesFilter<"t_message_attachment"> | Date | string
   }
 
   export type t_conversationCreateInput = {
@@ -4468,6 +5698,7 @@ export namespace Prisma {
     Date_Modification?: Date | string | null
     Date_Suppression?: Date | string | null
     conversation: t_conversationCreateNestedOneWithoutMessagesInput
+    attachments?: t_message_attachmentCreateNestedManyWithoutMessageInput
   }
 
   export type t_messageUncheckedCreateInput = {
@@ -4478,6 +5709,7 @@ export namespace Prisma {
     Date_Creation?: Date | string
     Date_Modification?: Date | string | null
     Date_Suppression?: Date | string | null
+    attachments?: t_message_attachmentUncheckedCreateNestedManyWithoutMessageInput
   }
 
   export type t_messageUpdateInput = {
@@ -4487,6 +5719,7 @@ export namespace Prisma {
     Date_Modification?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Suppression?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     conversation?: t_conversationUpdateOneRequiredWithoutMessagesNestedInput
+    attachments?: t_message_attachmentUpdateManyWithoutMessageNestedInput
   }
 
   export type t_messageUncheckedUpdateInput = {
@@ -4497,6 +5730,7 @@ export namespace Prisma {
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Modification?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Suppression?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    attachments?: t_message_attachmentUncheckedUpdateManyWithoutMessageNestedInput
   }
 
   export type t_messageCreateManyInput = {
@@ -4525,6 +5759,72 @@ export namespace Prisma {
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Modification?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Suppression?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type t_message_attachmentCreateInput = {
+    File_Name: string
+    File_Path: string
+    File_Size: number
+    Mime_Type: string
+    Date_Upload?: Date | string
+    message: t_messageCreateNestedOneWithoutAttachmentsInput
+  }
+
+  export type t_message_attachmentUncheckedCreateInput = {
+    Id_Attachment?: number
+    Id_Message: number
+    File_Name: string
+    File_Path: string
+    File_Size: number
+    Mime_Type: string
+    Date_Upload?: Date | string
+  }
+
+  export type t_message_attachmentUpdateInput = {
+    File_Name?: StringFieldUpdateOperationsInput | string
+    File_Path?: StringFieldUpdateOperationsInput | string
+    File_Size?: IntFieldUpdateOperationsInput | number
+    Mime_Type?: StringFieldUpdateOperationsInput | string
+    Date_Upload?: DateTimeFieldUpdateOperationsInput | Date | string
+    message?: t_messageUpdateOneRequiredWithoutAttachmentsNestedInput
+  }
+
+  export type t_message_attachmentUncheckedUpdateInput = {
+    Id_Attachment?: IntFieldUpdateOperationsInput | number
+    Id_Message?: IntFieldUpdateOperationsInput | number
+    File_Name?: StringFieldUpdateOperationsInput | string
+    File_Path?: StringFieldUpdateOperationsInput | string
+    File_Size?: IntFieldUpdateOperationsInput | number
+    Mime_Type?: StringFieldUpdateOperationsInput | string
+    Date_Upload?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type t_message_attachmentCreateManyInput = {
+    Id_Attachment?: number
+    Id_Message: number
+    File_Name: string
+    File_Path: string
+    File_Size: number
+    Mime_Type: string
+    Date_Upload?: Date | string
+  }
+
+  export type t_message_attachmentUpdateManyMutationInput = {
+    File_Name?: StringFieldUpdateOperationsInput | string
+    File_Path?: StringFieldUpdateOperationsInput | string
+    File_Size?: IntFieldUpdateOperationsInput | number
+    Mime_Type?: StringFieldUpdateOperationsInput | string
+    Date_Upload?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type t_message_attachmentUncheckedUpdateManyInput = {
+    Id_Attachment?: IntFieldUpdateOperationsInput | number
+    Id_Message?: IntFieldUpdateOperationsInput | number
+    File_Name?: StringFieldUpdateOperationsInput | string
+    File_Path?: StringFieldUpdateOperationsInput | string
+    File_Size?: IntFieldUpdateOperationsInput | number
+    Mime_Type?: StringFieldUpdateOperationsInput | string
+    Date_Upload?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type IntFilter<$PrismaModel = never> = {
@@ -4794,6 +6094,16 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
+  export type T_message_attachmentListRelationFilter = {
+    every?: t_message_attachmentWhereInput
+    some?: t_message_attachmentWhereInput
+    none?: t_message_attachmentWhereInput
+  }
+
+  export type t_message_attachmentOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type t_messageOrderByRelevanceInput = {
     fields: t_messageOrderByRelevanceFieldEnum | t_messageOrderByRelevanceFieldEnum[]
     sort: SortOrder
@@ -4854,6 +6164,59 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type T_messageScalarRelationFilter = {
+    is?: t_messageWhereInput
+    isNot?: t_messageWhereInput
+  }
+
+  export type t_message_attachmentOrderByRelevanceInput = {
+    fields: t_message_attachmentOrderByRelevanceFieldEnum | t_message_attachmentOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type t_message_attachmentCountOrderByAggregateInput = {
+    Id_Attachment?: SortOrder
+    Id_Message?: SortOrder
+    File_Name?: SortOrder
+    File_Path?: SortOrder
+    File_Size?: SortOrder
+    Mime_Type?: SortOrder
+    Date_Upload?: SortOrder
+  }
+
+  export type t_message_attachmentAvgOrderByAggregateInput = {
+    Id_Attachment?: SortOrder
+    Id_Message?: SortOrder
+    File_Size?: SortOrder
+  }
+
+  export type t_message_attachmentMaxOrderByAggregateInput = {
+    Id_Attachment?: SortOrder
+    Id_Message?: SortOrder
+    File_Name?: SortOrder
+    File_Path?: SortOrder
+    File_Size?: SortOrder
+    Mime_Type?: SortOrder
+    Date_Upload?: SortOrder
+  }
+
+  export type t_message_attachmentMinOrderByAggregateInput = {
+    Id_Attachment?: SortOrder
+    Id_Message?: SortOrder
+    File_Name?: SortOrder
+    File_Path?: SortOrder
+    File_Size?: SortOrder
+    Mime_Type?: SortOrder
+    Date_Upload?: SortOrder
+  }
+
+  export type t_message_attachmentSumOrderByAggregateInput = {
+    Id_Attachment?: SortOrder
+    Id_Message?: SortOrder
+    File_Size?: SortOrder
   }
 
   export type t_conversation_participantCreateNestedManyWithoutConversationInput = {
@@ -4988,6 +6351,20 @@ export namespace Prisma {
     connect?: t_conversationWhereUniqueInput
   }
 
+  export type t_message_attachmentCreateNestedManyWithoutMessageInput = {
+    create?: XOR<t_message_attachmentCreateWithoutMessageInput, t_message_attachmentUncheckedCreateWithoutMessageInput> | t_message_attachmentCreateWithoutMessageInput[] | t_message_attachmentUncheckedCreateWithoutMessageInput[]
+    connectOrCreate?: t_message_attachmentCreateOrConnectWithoutMessageInput | t_message_attachmentCreateOrConnectWithoutMessageInput[]
+    createMany?: t_message_attachmentCreateManyMessageInputEnvelope
+    connect?: t_message_attachmentWhereUniqueInput | t_message_attachmentWhereUniqueInput[]
+  }
+
+  export type t_message_attachmentUncheckedCreateNestedManyWithoutMessageInput = {
+    create?: XOR<t_message_attachmentCreateWithoutMessageInput, t_message_attachmentUncheckedCreateWithoutMessageInput> | t_message_attachmentCreateWithoutMessageInput[] | t_message_attachmentUncheckedCreateWithoutMessageInput[]
+    connectOrCreate?: t_message_attachmentCreateOrConnectWithoutMessageInput | t_message_attachmentCreateOrConnectWithoutMessageInput[]
+    createMany?: t_message_attachmentCreateManyMessageInputEnvelope
+    connect?: t_message_attachmentWhereUniqueInput | t_message_attachmentWhereUniqueInput[]
+  }
+
   export type NullableDateTimeFieldUpdateOperationsInput = {
     set?: Date | string | null
   }
@@ -4998,6 +6375,48 @@ export namespace Prisma {
     upsert?: t_conversationUpsertWithoutMessagesInput
     connect?: t_conversationWhereUniqueInput
     update?: XOR<XOR<t_conversationUpdateToOneWithWhereWithoutMessagesInput, t_conversationUpdateWithoutMessagesInput>, t_conversationUncheckedUpdateWithoutMessagesInput>
+  }
+
+  export type t_message_attachmentUpdateManyWithoutMessageNestedInput = {
+    create?: XOR<t_message_attachmentCreateWithoutMessageInput, t_message_attachmentUncheckedCreateWithoutMessageInput> | t_message_attachmentCreateWithoutMessageInput[] | t_message_attachmentUncheckedCreateWithoutMessageInput[]
+    connectOrCreate?: t_message_attachmentCreateOrConnectWithoutMessageInput | t_message_attachmentCreateOrConnectWithoutMessageInput[]
+    upsert?: t_message_attachmentUpsertWithWhereUniqueWithoutMessageInput | t_message_attachmentUpsertWithWhereUniqueWithoutMessageInput[]
+    createMany?: t_message_attachmentCreateManyMessageInputEnvelope
+    set?: t_message_attachmentWhereUniqueInput | t_message_attachmentWhereUniqueInput[]
+    disconnect?: t_message_attachmentWhereUniqueInput | t_message_attachmentWhereUniqueInput[]
+    delete?: t_message_attachmentWhereUniqueInput | t_message_attachmentWhereUniqueInput[]
+    connect?: t_message_attachmentWhereUniqueInput | t_message_attachmentWhereUniqueInput[]
+    update?: t_message_attachmentUpdateWithWhereUniqueWithoutMessageInput | t_message_attachmentUpdateWithWhereUniqueWithoutMessageInput[]
+    updateMany?: t_message_attachmentUpdateManyWithWhereWithoutMessageInput | t_message_attachmentUpdateManyWithWhereWithoutMessageInput[]
+    deleteMany?: t_message_attachmentScalarWhereInput | t_message_attachmentScalarWhereInput[]
+  }
+
+  export type t_message_attachmentUncheckedUpdateManyWithoutMessageNestedInput = {
+    create?: XOR<t_message_attachmentCreateWithoutMessageInput, t_message_attachmentUncheckedCreateWithoutMessageInput> | t_message_attachmentCreateWithoutMessageInput[] | t_message_attachmentUncheckedCreateWithoutMessageInput[]
+    connectOrCreate?: t_message_attachmentCreateOrConnectWithoutMessageInput | t_message_attachmentCreateOrConnectWithoutMessageInput[]
+    upsert?: t_message_attachmentUpsertWithWhereUniqueWithoutMessageInput | t_message_attachmentUpsertWithWhereUniqueWithoutMessageInput[]
+    createMany?: t_message_attachmentCreateManyMessageInputEnvelope
+    set?: t_message_attachmentWhereUniqueInput | t_message_attachmentWhereUniqueInput[]
+    disconnect?: t_message_attachmentWhereUniqueInput | t_message_attachmentWhereUniqueInput[]
+    delete?: t_message_attachmentWhereUniqueInput | t_message_attachmentWhereUniqueInput[]
+    connect?: t_message_attachmentWhereUniqueInput | t_message_attachmentWhereUniqueInput[]
+    update?: t_message_attachmentUpdateWithWhereUniqueWithoutMessageInput | t_message_attachmentUpdateWithWhereUniqueWithoutMessageInput[]
+    updateMany?: t_message_attachmentUpdateManyWithWhereWithoutMessageInput | t_message_attachmentUpdateManyWithWhereWithoutMessageInput[]
+    deleteMany?: t_message_attachmentScalarWhereInput | t_message_attachmentScalarWhereInput[]
+  }
+
+  export type t_messageCreateNestedOneWithoutAttachmentsInput = {
+    create?: XOR<t_messageCreateWithoutAttachmentsInput, t_messageUncheckedCreateWithoutAttachmentsInput>
+    connectOrCreate?: t_messageCreateOrConnectWithoutAttachmentsInput
+    connect?: t_messageWhereUniqueInput
+  }
+
+  export type t_messageUpdateOneRequiredWithoutAttachmentsNestedInput = {
+    create?: XOR<t_messageCreateWithoutAttachmentsInput, t_messageUncheckedCreateWithoutAttachmentsInput>
+    connectOrCreate?: t_messageCreateOrConnectWithoutAttachmentsInput
+    upsert?: t_messageUpsertWithoutAttachmentsInput
+    connect?: t_messageWhereUniqueInput
+    update?: XOR<XOR<t_messageUpdateToOneWithWhereWithoutAttachmentsInput, t_messageUpdateWithoutAttachmentsInput>, t_messageUncheckedUpdateWithoutAttachmentsInput>
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
@@ -5221,6 +6640,7 @@ export namespace Prisma {
     Date_Creation?: Date | string
     Date_Modification?: Date | string | null
     Date_Suppression?: Date | string | null
+    attachments?: t_message_attachmentCreateNestedManyWithoutMessageInput
   }
 
   export type t_messageUncheckedCreateWithoutConversationInput = {
@@ -5230,6 +6650,7 @@ export namespace Prisma {
     Date_Creation?: Date | string
     Date_Modification?: Date | string | null
     Date_Suppression?: Date | string | null
+    attachments?: t_message_attachmentUncheckedCreateNestedManyWithoutMessageInput
   }
 
   export type t_messageCreateOrConnectWithoutConversationInput = {
@@ -5370,6 +6791,33 @@ export namespace Prisma {
     create: XOR<t_conversationCreateWithoutMessagesInput, t_conversationUncheckedCreateWithoutMessagesInput>
   }
 
+  export type t_message_attachmentCreateWithoutMessageInput = {
+    File_Name: string
+    File_Path: string
+    File_Size: number
+    Mime_Type: string
+    Date_Upload?: Date | string
+  }
+
+  export type t_message_attachmentUncheckedCreateWithoutMessageInput = {
+    Id_Attachment?: number
+    File_Name: string
+    File_Path: string
+    File_Size: number
+    Mime_Type: string
+    Date_Upload?: Date | string
+  }
+
+  export type t_message_attachmentCreateOrConnectWithoutMessageInput = {
+    where: t_message_attachmentWhereUniqueInput
+    create: XOR<t_message_attachmentCreateWithoutMessageInput, t_message_attachmentUncheckedCreateWithoutMessageInput>
+  }
+
+  export type t_message_attachmentCreateManyMessageInputEnvelope = {
+    data: t_message_attachmentCreateManyMessageInput | t_message_attachmentCreateManyMessageInput[]
+    skipDuplicates?: boolean
+  }
+
   export type t_conversationUpsertWithoutMessagesInput = {
     update: XOR<t_conversationUpdateWithoutMessagesInput, t_conversationUncheckedUpdateWithoutMessagesInput>
     create: XOR<t_conversationCreateWithoutMessagesInput, t_conversationUncheckedCreateWithoutMessagesInput>
@@ -5396,6 +6844,89 @@ export namespace Prisma {
     DM_Key?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     participants?: t_conversation_participantUncheckedUpdateManyWithoutConversationNestedInput
+  }
+
+  export type t_message_attachmentUpsertWithWhereUniqueWithoutMessageInput = {
+    where: t_message_attachmentWhereUniqueInput
+    update: XOR<t_message_attachmentUpdateWithoutMessageInput, t_message_attachmentUncheckedUpdateWithoutMessageInput>
+    create: XOR<t_message_attachmentCreateWithoutMessageInput, t_message_attachmentUncheckedCreateWithoutMessageInput>
+  }
+
+  export type t_message_attachmentUpdateWithWhereUniqueWithoutMessageInput = {
+    where: t_message_attachmentWhereUniqueInput
+    data: XOR<t_message_attachmentUpdateWithoutMessageInput, t_message_attachmentUncheckedUpdateWithoutMessageInput>
+  }
+
+  export type t_message_attachmentUpdateManyWithWhereWithoutMessageInput = {
+    where: t_message_attachmentScalarWhereInput
+    data: XOR<t_message_attachmentUpdateManyMutationInput, t_message_attachmentUncheckedUpdateManyWithoutMessageInput>
+  }
+
+  export type t_message_attachmentScalarWhereInput = {
+    AND?: t_message_attachmentScalarWhereInput | t_message_attachmentScalarWhereInput[]
+    OR?: t_message_attachmentScalarWhereInput[]
+    NOT?: t_message_attachmentScalarWhereInput | t_message_attachmentScalarWhereInput[]
+    Id_Attachment?: IntFilter<"t_message_attachment"> | number
+    Id_Message?: IntFilter<"t_message_attachment"> | number
+    File_Name?: StringFilter<"t_message_attachment"> | string
+    File_Path?: StringFilter<"t_message_attachment"> | string
+    File_Size?: IntFilter<"t_message_attachment"> | number
+    Mime_Type?: StringFilter<"t_message_attachment"> | string
+    Date_Upload?: DateTimeFilter<"t_message_attachment"> | Date | string
+  }
+
+  export type t_messageCreateWithoutAttachmentsInput = {
+    Sender_Id: number
+    Contenu: string
+    Date_Creation?: Date | string
+    Date_Modification?: Date | string | null
+    Date_Suppression?: Date | string | null
+    conversation: t_conversationCreateNestedOneWithoutMessagesInput
+  }
+
+  export type t_messageUncheckedCreateWithoutAttachmentsInput = {
+    Id_Message?: number
+    Id_Conversation: number
+    Sender_Id: number
+    Contenu: string
+    Date_Creation?: Date | string
+    Date_Modification?: Date | string | null
+    Date_Suppression?: Date | string | null
+  }
+
+  export type t_messageCreateOrConnectWithoutAttachmentsInput = {
+    where: t_messageWhereUniqueInput
+    create: XOR<t_messageCreateWithoutAttachmentsInput, t_messageUncheckedCreateWithoutAttachmentsInput>
+  }
+
+  export type t_messageUpsertWithoutAttachmentsInput = {
+    update: XOR<t_messageUpdateWithoutAttachmentsInput, t_messageUncheckedUpdateWithoutAttachmentsInput>
+    create: XOR<t_messageCreateWithoutAttachmentsInput, t_messageUncheckedCreateWithoutAttachmentsInput>
+    where?: t_messageWhereInput
+  }
+
+  export type t_messageUpdateToOneWithWhereWithoutAttachmentsInput = {
+    where?: t_messageWhereInput
+    data: XOR<t_messageUpdateWithoutAttachmentsInput, t_messageUncheckedUpdateWithoutAttachmentsInput>
+  }
+
+  export type t_messageUpdateWithoutAttachmentsInput = {
+    Sender_Id?: IntFieldUpdateOperationsInput | number
+    Contenu?: StringFieldUpdateOperationsInput | string
+    Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Modification?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Date_Suppression?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    conversation?: t_conversationUpdateOneRequiredWithoutMessagesNestedInput
+  }
+
+  export type t_messageUncheckedUpdateWithoutAttachmentsInput = {
+    Id_Message?: IntFieldUpdateOperationsInput | number
+    Id_Conversation?: IntFieldUpdateOperationsInput | number
+    Sender_Id?: IntFieldUpdateOperationsInput | number
+    Contenu?: StringFieldUpdateOperationsInput | string
+    Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Modification?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Date_Suppression?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type t_conversation_participantCreateManyConversationInput = {
@@ -5440,6 +6971,7 @@ export namespace Prisma {
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Modification?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Suppression?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    attachments?: t_message_attachmentUpdateManyWithoutMessageNestedInput
   }
 
   export type t_messageUncheckedUpdateWithoutConversationInput = {
@@ -5449,6 +6981,7 @@ export namespace Prisma {
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Modification?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Suppression?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    attachments?: t_message_attachmentUncheckedUpdateManyWithoutMessageNestedInput
   }
 
   export type t_messageUncheckedUpdateManyWithoutConversationInput = {
@@ -5458,6 +6991,41 @@ export namespace Prisma {
     Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Modification?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Suppression?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type t_message_attachmentCreateManyMessageInput = {
+    Id_Attachment?: number
+    File_Name: string
+    File_Path: string
+    File_Size: number
+    Mime_Type: string
+    Date_Upload?: Date | string
+  }
+
+  export type t_message_attachmentUpdateWithoutMessageInput = {
+    File_Name?: StringFieldUpdateOperationsInput | string
+    File_Path?: StringFieldUpdateOperationsInput | string
+    File_Size?: IntFieldUpdateOperationsInput | number
+    Mime_Type?: StringFieldUpdateOperationsInput | string
+    Date_Upload?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type t_message_attachmentUncheckedUpdateWithoutMessageInput = {
+    Id_Attachment?: IntFieldUpdateOperationsInput | number
+    File_Name?: StringFieldUpdateOperationsInput | string
+    File_Path?: StringFieldUpdateOperationsInput | string
+    File_Size?: IntFieldUpdateOperationsInput | number
+    Mime_Type?: StringFieldUpdateOperationsInput | string
+    Date_Upload?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type t_message_attachmentUncheckedUpdateManyWithoutMessageInput = {
+    Id_Attachment?: IntFieldUpdateOperationsInput | number
+    File_Name?: StringFieldUpdateOperationsInput | string
+    File_Path?: StringFieldUpdateOperationsInput | string
+    File_Size?: IntFieldUpdateOperationsInput | number
+    Mime_Type?: StringFieldUpdateOperationsInput | string
+    Date_Upload?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 

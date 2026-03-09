@@ -4,6 +4,18 @@ import { apiError } from "@/lib/api-response";
 import { log } from "@/lib/logger";
 import { recordRequestError } from "@/lib/request-error-store";
 
+const SENSITIVE_KEYS = new Set(["password", "token", "secret", "currentpassword", "newpassword", "confirmpassword", "accesstoken", "refreshtoken"])
+
+function redactSensitive(obj: unknown, depth = 0): unknown {
+  if (depth > 5 || obj === null || typeof obj !== "object") return obj
+  if (Array.isArray(obj)) return obj.map((item) => redactSensitive(item, depth + 1))
+  const result: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+    result[key] = SENSITIVE_KEYS.has(key.toLowerCase()) ? "[REDACTED]" : redactSensitive(value, depth + 1)
+  }
+  return result
+}
+
 function normalizeIp(rawIp?: string | null): string | undefined {
   if (!rawIp) return undefined;
   const trimmed = rawIp.trim();
@@ -60,6 +72,9 @@ export function withLogging(
 
     const ip = getClientIp(req);
 
+    // Clone the request before handing it to the handler so we can read the body later on error
+    const reqClone = req.clone();
+
     const readErrorBody = async (response: NextResponse) => {
       try {
         const clone = response.clone();
@@ -87,6 +102,19 @@ export function withLogging(
       const response = await handler(req, ...args);
       const duration = Date.now() - startTime;
       const errorBody = response.status >= 400 ? await readErrorBody(response) : undefined;
+
+      let requestBody: unknown | undefined;
+      if (response.status >= 400 && ["POST", "PUT", "PATCH"].includes(method)) {
+        try {
+          const bodyText = await reqClone.text();
+          if (bodyText.trim()) {
+            const parsed: unknown = JSON.parse(bodyText);
+            requestBody = redactSensitive(parsed);
+          }
+        } catch {
+          // ignore body read/parse errors
+        }
+      }
 
       let errorId: string | undefined;
       if (response.status >= 400) {
@@ -123,6 +151,7 @@ export function withLogging(
           duration,
           statusCode: response.status,
           errorBody,
+          requestBody,
           clientTrace,
           queryClientId,
           bootId,

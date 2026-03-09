@@ -6,7 +6,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { formatDistanceStrict, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertTriangle, ArrowDown, ArrowUp, Clock, MessageSquare, RefreshCw, WifiOff } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, Bell, Clock, MessageSquare, RefreshCw, WifiOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -290,10 +290,17 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
     return { from: new Date(start.getTime() - padMs), to: new Date(end.getTime() + padMs) };
   }, [selectedAlarm]);
 
+  const cardTitle = statusFilter === "active" ? t("titles.active") : statusFilter === "acknowledged" ? t("titles.acknowledged") : t("titles.resolved");
+
   const content = localAlarms.length === 0 ? (
-    <Card>
-      <CardHeader className="space-y-4">
-        <CardTitle>{statusFilter === "active" ? t("titles.active") : statusFilter === "acknowledged" ? t("titles.acknowledged") : t("titles.resolved")}</CardTitle>
+    <Card className="overflow-hidden">
+      <CardHeader className="space-y-4 bg-linear-to-r from-primary/5 to-transparent border-b border-border/50">
+        <CardTitle className="flex items-center gap-2">
+          <span className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10 text-primary">
+            <Bell className="h-4 w-4" />
+          </span>
+          {cardTitle}
+        </CardTitle>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <AlarmStatusTabs statusFilter={statusFilter} stats={stats} onStatusChange={onStatusChange} t={t} />
           <div className="flex justify-end">{refreshButton}</div>
@@ -304,9 +311,14 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
       </CardContent>
     </Card>
   ) : (
-    <Card>
-      <CardHeader className="space-y-4">
-        <CardTitle>{statusFilter === "active" ? t("titles.active") : statusFilter === "acknowledged" ? t("titles.acknowledged") : t("titles.resolved")}</CardTitle>
+    <Card className="overflow-hidden">
+      <CardHeader className="space-y-4 bg-linear-to-r from-primary/5 to-transparent border-b border-border/50">
+        <CardTitle className="flex items-center gap-2">
+          <span className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-primary/10 text-primary">
+            <Bell className="h-4 w-4" />
+          </span>
+          {cardTitle}
+        </CardTitle>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <AlarmStatusTabs statusFilter={statusFilter} stats={stats} onStatusChange={onStatusChange} t={t} />
         </div>
@@ -328,7 +340,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
           maxHeight="calc(100dvh - 25rem)"
           headerClassName="!bg-sidebar !text-sidebar-foreground"
           headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
-          tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
+          tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150"
         />
       </CardContent>
     </Card>

@@ -339,6 +339,28 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
         activeAlarms={visibleStats.activeAlarms}
       />
       <div className="h-px bg-slate-200 dark:bg-slate-800" />
+
+      {/* Stats bar */}
+      <div className="px-4 md:px-6 pt-3 pb-0">
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1 font-medium text-muted-foreground">
+            {t("stats.total", { count: visibleStats.total })}
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 font-medium text-green-700 dark:bg-green-500/10 dark:text-green-400">
+            <span className="h-2 w-2 rounded-full bg-green-500" aria-hidden="true" />
+            {t("stats.ok", { count: visibleStats.ok })}
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+            <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
+            {t("stats.warning", { count: visibleStats.warning })}
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400">
+            <span className="h-2 w-2 rounded-full bg-red-500" aria-hidden="true" />
+            {t("stats.critical", { count: visibleStats.critical })}
+          </span>
+        </div>
+      </div>
+
       <div className="px-4 md:px-6 py-4">
         <SurveillanceHeaderControls
           sites={sites}

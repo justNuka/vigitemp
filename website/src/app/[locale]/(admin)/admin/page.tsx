@@ -59,8 +59,8 @@ function SummaryCard({
   helper,
 }: SummaryCardProps) {
   return (
-    <Card className="border-slate-200 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-      <CardHeader className="pb-2">
+    <Card className="card-interactive border-border/60 bg-card shadow-sm overflow-hidden">
+      <CardHeader className="pb-2 bg-linear-to-br from-card to-muted/20 border-b border-border/40">
         <div className="flex items-start justify-between gap-3">
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -72,12 +72,12 @@ function SummaryCard({
           {badge}
         </div>
       </CardHeader>
-      <CardContent className="space-y-2">
-        <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">{value}</div>
+      <CardContent className="space-y-2 pt-4">
+        <div className="text-3xl font-bold tabular-nums">{value}</div>
         {helper ? <p className="text-sm text-muted-foreground">{helper}</p> : null}
         <Link
           href={href as any}
-          className="inline-flex items-center gap-1 text-sm font-medium text-sky-600 transition-colors hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300"
+          className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/80"
         >
           {hrefLabel}
           <ArrowRight className="h-4 w-4" />
@@ -238,7 +238,7 @@ export default function AdminDashboard() {
     return (
       <div className="flex flex-1 items-center justify-center p-6">
         <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600" />
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
           <p className="mt-4 text-muted-foreground">{t("loading")}</p>
         </div>
       </div>

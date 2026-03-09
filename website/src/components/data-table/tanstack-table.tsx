@@ -31,7 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ChevronDown, ChevronUp, ChevronsUpDown, Download, Printer } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronsUpDown, Download, Inbox, Printer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -579,12 +579,15 @@ export function TanStackTable<TData extends Record<string, any>>({
                 );
               })
             ) : (
-              <TableRow>
+              <TableRow className="hover:bg-transparent">
                 <TableCell
                   colSpan={columns.length}
-                  className="text-center py-8 text-muted-foreground"
+                  className="py-12 text-center"
                 >
-                  {resolvedEmptyMessage}
+                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                    <Inbox className="h-8 w-8 opacity-40" />
+                    <p className="text-sm">{resolvedEmptyMessage}</p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}

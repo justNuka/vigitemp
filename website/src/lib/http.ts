@@ -1,3 +1,5 @@
+import { buildLocalizedPath, resolveLocaleFromPathname } from "@/i18n/pathnames"
+
 export type HttpErrorPayload = {
   ok?: false
   error?: string
@@ -61,9 +63,8 @@ function getLocaleAwareLoginPath(reason: "session-expired" | "inactivity") {
   if (typeof window === "undefined") return null
 
   const pathname = window.location.pathname || "/"
-  const match = pathname.match(/^\/([a-z]{2})(?=\/|$)/i)
-  const localePrefix = match ? `/${match[1]}` : ""
-  return `${localePrefix}/login?reason=${reason}`
+  const locale = resolveLocaleFromPathname(pathname)
+  return buildLocalizedPath("/login", locale, { reason })
 }
 
 function isPublicAppPath(pathname: string) {

@@ -248,6 +248,7 @@ export default function MonitoringCard({
           siteName={siteName}
           groupName={groupName}
           nomLieu={nomLieu}
+          sondeNumeroSerie={sondeNumeroSerie || ""}
           locationComment={locationComment}
           lieuType={resolvedLieuType}
           surveillanceDisabledLabel={surveillanceDisabledLabel}

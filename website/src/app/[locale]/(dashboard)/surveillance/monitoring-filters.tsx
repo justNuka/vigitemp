@@ -124,7 +124,6 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
 
       <div className="w-full lg:max-w-xs">
         <div className="space-y-2">
-          <div className="text-sm font-medium">{t('sort.label')}</div>
           <Select
             value={filters.sortMode}
             onValueChange={(value) => {

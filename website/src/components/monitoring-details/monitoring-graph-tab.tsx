@@ -30,9 +30,7 @@ interface MonitoringGraphTabProps {
   guidePositions: GuidePositions
   yMin: number
   yMax: number
-  zoomMode: "x" | "xy"
   zoomBounds: ZoomBounds | null
-  setZoomMode: (mode: "x" | "xy") => void
   resetChartZoom: () => void
   captureZoomBounds: (chart: ChartJS<"line">) => void
   t: (key: string, values?: Record<string, string | number>) => string
@@ -53,9 +51,7 @@ export function MonitoringGraphTab({
   guidePositions,
   yMin,
   yMax,
-  zoomMode,
   zoomBounds,
-  setZoomMode,
   resetChartZoom,
   captureZoomBounds,
   t,
@@ -67,12 +63,6 @@ export function MonitoringGraphTab({
           {t("chart.measure_count", { count: graphMeasureCount })}
         </span>
         <div className="flex items-center gap-2">
-          <Button type="button" variant={zoomMode === "x" ? "default" : "outline"} size="sm" onClick={() => setZoomMode("x")}>
-            Zoom X
-          </Button>
-          <Button type="button" variant={zoomMode === "xy" ? "default" : "outline"} size="sm" onClick={() => setZoomMode("xy")}>
-            Zoom XY
-          </Button>
           <Button type="button" variant="outline" size="sm" onClick={resetChartZoom}>
             {locale === "fr" ? "Reinitialiser zoom" : "Reset zoom"}
           </Button>
@@ -187,19 +177,15 @@ export function MonitoringGraphTab({
                 limits: { x: { minRange: 10 } },
                 pan: {
                   enabled: true,
-                  mode: zoomMode,
+                  mode: "x" as const,
                   onPanComplete: ({ chart }: { chart: ChartJS<"line"> }) => captureZoomBounds(chart),
                 },
                 zoom: {
-                  drag: {
-                    enabled: true,
-                    borderColor: "rgba(37, 99, 235, 0.7)",
-                    borderWidth: 1,
-                    backgroundColor: "rgba(37, 99, 235, 0.15)",
-                  },
+                  // Drag désactivé : le glissement est réservé au pan
+                  drag: { enabled: false },
                   wheel: { enabled: true },
                   pinch: { enabled: true },
-                  mode: zoomMode,
+                  mode: "x" as const,
                   onZoomComplete: ({ chart }: { chart: ChartJS<"line"> }) => captureZoomBounds(chart),
                 },
               } as never,

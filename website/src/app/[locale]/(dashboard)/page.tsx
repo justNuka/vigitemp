@@ -70,19 +70,35 @@ export default async function DashboardPage({
 function DashboardContentSkeleton() {
   return (
     <div className="flex-1 p-4 md:p-6 space-y-6">
+      {/* Main grid: chart + side card */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Skeleton className="h-64 w-full" />
+        <div className="lg:col-span-2 rounded-xl border border-border bg-card shadow-md p-4 space-y-3">
+          <Skeleton className="h-5 w-40 rounded" />
+          <Skeleton className="h-3 w-56 rounded" />
+          <Skeleton className="h-44 w-full rounded-lg mt-2" />
         </div>
-        <div>
-          <Skeleton className="h-64 w-full" />
+        <div className="rounded-xl border border-border bg-card shadow-md p-4 space-y-3">
+          <Skeleton className="h-5 w-32 rounded" />
+          <Skeleton className="h-3 w-48 rounded" />
+          <div className="space-y-2 mt-2">
+            <Skeleton className="h-10 w-full rounded" />
+            <Skeleton className="h-10 w-full rounded" />
+            <Skeleton className="h-10 w-full rounded" />
+          </div>
         </div>
       </div>
+      {/* Stat cards row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Skeleton className="h-40 w-full" />
-        <Skeleton className="h-40 w-full" />
-        <Skeleton className="h-40 w-full" />
-        <Skeleton className="h-40 w-full" />
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="rounded-xl border border-border bg-card shadow-md p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-4 w-24 rounded" />
+              <Skeleton className="h-8 w-8 rounded-lg" />
+            </div>
+            <Skeleton className="h-8 w-16 rounded" />
+            <Skeleton className="h-3 w-32 rounded" />
+          </div>
+        ))}
       </div>
     </div>
   );

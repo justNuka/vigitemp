@@ -128,7 +128,7 @@ export function ConversationList({
                   className={cn(
                     "w-full flex items-center gap-3 px-2 py-2.5 rounded-lg text-left transition-colors group",
                     isActive
-                      ? "bg-muted"
+                      ? "bg-linear-to-r from-primary/15 to-primary/5 border-l-2 border-primary"
                       : "hover:bg-muted/50"
                   )}
                 >
@@ -182,7 +182,7 @@ export function ConversationList({
                   </div>
 
                   {unread && (
-                    <div className="h-2 w-2 rounded-full bg-primary shrink-0" aria-hidden />
+                    <div className="h-2 w-2 rounded-full bg-primary shrink-0 animate-pulse" aria-hidden />
                   )}
                 </button>
               )

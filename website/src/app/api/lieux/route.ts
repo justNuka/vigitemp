@@ -255,6 +255,10 @@ export const POST = withLogging(async (req: NextRequest) => {
     const group2Id = groupIds[1] ?? validated.Id_Groupe2 ?? null
     const dateCreation = new Date()
     dateCreation.setHours(0, 0, 0, 0)
+    const [dbNowRow] = await prisma.$queryRaw<Array<{ nowAt: Date }>>`SELECT NOW() AS nowAt`
+    const dbNow = dbNowRow?.nowAt ?? new Date()
+    const surveillanceOnAt = lieuEtat === "S" ? dbNow : null
+    const surveillanceOffAt = lieuEtat === "D" ? dbNow : null
 
     const includeDeriveInUncertainty =
       validated.EMT_Mode === "quart" || validated.EMT_Mode === "manuel"
@@ -320,6 +324,8 @@ export const POST = withLogging(async (req: NextRequest) => {
         Est_Correction_Ej: validated.Corriger_Erreur_Justesse ? 1 : 0,
         Est_Correction_derive: includeDeriveInUncertainty,
         Est_Archive: false,
+        Date_Heure_Surveillance_On: surveillanceOnAt,
+        Date_Heure_Surveillance_Off: surveillanceOffAt,
         Est_Lieu_GSO: estLieuGso,
         Est_Son_Alarme_Active: validated.Est_Son_Alarme_Active ?? true,
         Adresse_Sonde: adresseSondeLieu,

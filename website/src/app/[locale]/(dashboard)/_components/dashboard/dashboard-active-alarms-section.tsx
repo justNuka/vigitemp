@@ -41,7 +41,7 @@ export function DashboardActiveAlarmsSection({
             </Badge>
           ) : null}
         </h2>
-        <Link href="alarmes">
+        <Link href="/alarmes">
           <Button variant="ghost" size="sm" className="gap-1">
             {t("active_alarms.view_all")}
             <ArrowRight className="h-4 w-4" />

@@ -190,7 +190,13 @@ export function MonitoringSiteSection({
                 )}
 
                 {isGroupExpanded ? (
-                  <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(260px,320px))] justify-start animate-fade-in">
+                  <div
+                    className={`grid gap-4 justify-start animate-fade-in ${
+                      disabledView
+                        ? "grid-cols-[repeat(auto-fill,minmax(250px,305px))]"
+                        : "grid-cols-[repeat(auto-fill,minmax(260px,320px))]"
+                    }`}
+                  >
                     {sortedGroupSensors.map((sensor) => (
                       <MonitoringCard
                         key={sensor.id}

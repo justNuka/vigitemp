@@ -396,6 +396,8 @@ model t_lieu {
   Commentaire                               String?                 @db.VarChar(200)
   Infos_Modifiees_Depuis_Derniere_Mesure    Boolean                 @default(true)
   Date_Heure_Reactivation_Surveillance      DateTime?               @db.DateTime(0)
+  Date_Heure_Surveillance_On                DateTime?               @db.DateTime(0)
+  Date_Heure_Surveillance_Off               DateTime?               @db.DateTime(0)
   Derniere_Val_Rssi                         String?                 @db.VarChar(10)
   Derniere_Val_Tension                      String?                 @db.VarChar(10)
   Est_Lieu_GSO                              Boolean?                @default(false)

@@ -13,6 +13,7 @@ interface MonitoringCardHeaderProps {
   siteName: string
   groupName: string
   nomLieu: string
+  sondeNumeroSerie?: string
   locationComment?: string | null
   lieuType: LieuTypeValue | null
   surveillanceDisabledLabel: string | null
@@ -31,6 +32,7 @@ export function MonitoringCardHeader({
   siteName,
   groupName,
   nomLieu,
+  sondeNumeroSerie,
   locationComment,
   lieuType,
   surveillanceDisabledLabel,
@@ -109,6 +111,7 @@ export function MonitoringCardHeader({
               ) : null}
             </UITooltip>
           </div>
+          {sondeNumeroSerie ? <div className="truncate text-[11px] opacity-90">{sondeNumeroSerie}</div> : null}
           {surveillanceDisabledLabel ? (
             <div className={`inline-flex items-center w-fit gap-1 rounded-full text-[10px] px-2 py-0.5 ${alarmBadgeClassName}`}>
               <PowerOff className="h-3 w-3" />

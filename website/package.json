@@ -29,7 +29,8 @@
     "prisma:migrate:chat": "prisma migrate dev --config prisma-chat.config.ts",
     "email-dev": "email dev",
     "smtp:encrypt-passwords": "tsx scripts/encrypt-smtp-passwords.ts",
-    "test:license-smoke": "tsx scripts/smoke-license-matrix.ts"
+    "test:license-smoke": "tsx scripts/smoke-license-matrix.ts",
+    "seed:mesures:journal-codes": "tsx scripts/seed-mesures-journal-codes.ts"
   },
   "dependencies": {
     "@heroui/react": "^2.8.8",

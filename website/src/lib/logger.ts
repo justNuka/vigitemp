@@ -223,6 +223,7 @@ export const log = {
     statusCode?: number;
     error?: string;
     errorBody?: string;
+    requestBody?: unknown;
     clientTrace?: string;
     queryClientId?: string;
     bootId?: string;
@@ -242,11 +243,12 @@ export const log = {
       return trimmed.length > 2000 ? `${trimmed.slice(0, 2000)}…` : trimmed;
     };
 
-    const { clientTrace, queryClientId, bootId, errorBody, ...rest } = details;
+    const { clientTrace, queryClientId, bootId, errorBody, requestBody, ...rest } = details;
     logger.log("http", message, {
       label: "HTTP",
       ...rest,
       errorBody: normalizeErrorBody(errorBody),
+      ...(requestBody !== undefined ? { requestBody } : {}),
     });
   },
 
@@ -529,6 +531,49 @@ export const log = {
         resource: `Sonde: ${sensorName}`,
         resourceId: sensorId,
         success,
+      }),
+  },
+
+  // Logs d'analyse d'impact
+  impactAnalysis: {
+    // AIM - Enregistrement d'une analyse d'impact
+    save: (
+      lieuName: string,
+      lieuId: number,
+      user: string,
+      userId: number,
+      ip: string,
+      data: { newSup: number | null; newInf: number | null; simCount: number; realCount: number; dateRange: string },
+      comment: string,
+    ) =>
+      log.audit("AIM", {
+        user,
+        userId,
+        ip,
+        resource: `Lieu: ${lieuName}`,
+        resourceId: lieuId,
+        changes: { newToleranceSup: data.newSup, newToleranceInf: data.newInf, simAlarms: data.simCount, realAlarms: data.realCount, dateRange: data.dateRange },
+        reason: comment,
+      }),
+  },
+
+  // Logs de lieu (son d'alarme)
+  lieu: {
+    soundOn: (lieuName: string, lieuId: number, user: string, userId: number, ip: string) =>
+      log.audit("SONS", {
+        user,
+        userId,
+        ip,
+        resource: `Lieu: ${lieuName}`,
+        resourceId: lieuId,
+      }),
+    soundOff: (lieuName: string, lieuId: number, user: string, userId: number, ip: string) =>
+      log.audit("SOND", {
+        user,
+        userId,
+        ip,
+        resource: `Lieu: ${lieuName}`,
+        resourceId: lieuId,
       }),
   },
 

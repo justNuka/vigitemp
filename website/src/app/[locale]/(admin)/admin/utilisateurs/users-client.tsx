@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Users } from "lucide-react";
 import { usersApi, type CreateUserInput, type User } from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "@/i18n/navigation";
@@ -217,10 +217,13 @@ export function UsersClient({ users }: Props) {
         onReactivate={handleReactivateUser}
       />
 
-      <Card className="bg-white">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+      <Card>
+        <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40 flex flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle>{t("title")}</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Users className="h-4 w-4 text-primary" />
+              {t("title")}
+            </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
               {t("count", { count: users.length })}
             </p>
@@ -230,7 +233,7 @@ export function UsersClient({ users }: Props) {
             {t("actions.new")}
           </Button>
         </CardHeader>
-        <CardContent className="p-2 md:p-4 xl:p-4 bg-white">
+        <CardContent className="p-2 md:p-4 xl:p-4">
           <UsersTable
             users={users}
             selectedUserId={selectedUser?.id ?? null}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Archive, Pencil, Plus } from "lucide-react";
+import { Archive, Cpu, Pencil, Plus, Thermometer } from "lucide-react";
 import { useRouter } from '@/i18n/navigation';
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -117,9 +117,12 @@ export function ModulesClient() {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40 pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle>{t('title', { count: modules?.length || 0 })}</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Cpu className="h-4 w-4 text-primary" />
+              {t('title', { count: modules?.length || 0 })}
+            </CardTitle>
             <div className="flex gap-2">
               <Button
                 size="sm"
@@ -173,8 +176,11 @@ export function ModulesClient() {
 
       {selectedModuleId && (
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">{t('associated.title', { count: sondes?.length || 0 })}</CardTitle>
+          <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40 pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Thermometer className="h-4 w-4 text-primary" />
+              {t('associated.title', { count: sondes?.length || 0 })}
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-2 md:p-4 xl:p-4">
             {sondesLoading ? (

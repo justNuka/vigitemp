@@ -349,6 +349,16 @@ a {
   .dark .dashboard-light {
     background: hsl(var(--background));
   }
+
+  /* Section header avec accent */
+  .section-header {
+    @apply border-b pb-4 mb-6;
+  }
+
+  /* Card avec hover effect */
+  .card-interactive {
+    @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5;
+  }
 }
 
 @theme inline {

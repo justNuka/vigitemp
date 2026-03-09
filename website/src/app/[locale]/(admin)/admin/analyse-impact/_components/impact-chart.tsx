@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useRef, useState, useCallback } from "react"
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,9 +14,14 @@ import {
 import annotationPlugin from "chartjs-plugin-annotation"
 import type { AnnotationOptions } from "chartjs-plugin-annotation"
 import { Line } from "react-chartjs-2"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
+import { Loader2, ZoomOut } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { MeasureData } from "@/lib/measurements"
+import type { ZoomBounds } from "@/components/monitoring-details/types"
+import { computeSimulatedZones } from "../lib/simulated-zones"
 
 ChartJS.register(
   CategoryScale,
@@ -35,6 +41,8 @@ export interface RealAlarm {
   Type: string | null
 }
 
+export type { SimulatedZone } from "../lib/simulated-zones"
+
 export interface ImpactChartProps {
   measurements: MeasureData[]
   realAlarms: RealAlarm[]
@@ -44,64 +52,11 @@ export interface ImpactChartProps {
   newInf: number | null
   unit: string
   isLoading: boolean
+  alarmsLoading?: boolean
+  onChartReady?: (chart: ChartJS<"line">) => void
 }
 
-interface SimulatedZone {
-  start: string
-  end: string
-}
-
-export function computeSimulatedZones(
-  measurements: MeasureData[],
-  newSup: number,
-  newInf: number,
-  actualSup: number | null,
-  actualInf: number | null,
-): SimulatedZone[] {
-  if (measurements.length === 0) return []
-
-  const zones: SimulatedZone[] = []
-  let zoneStart: string | null = null
-
-  for (const m of measurements) {
-    const value = m.Valeur
-    if (value === null) {
-      if (zoneStart !== null) {
-        zones.push({ start: zoneStart, end: m.DateHeureMesureIso ?? m.DateHeureMesure })
-        zoneStart = null
-      }
-      continue
-    }
-
-    const isOutsideNew = value > newSup || value < newInf
-    const isInsideActual =
-      (actualSup === null || value <= actualSup) &&
-      (actualInf === null || value >= actualInf)
-
-    const isSimulatedAlarm = isOutsideNew && isInsideActual
-
-    if (isSimulatedAlarm) {
-      if (zoneStart === null) {
-        zoneStart = m.DateHeureMesureIso ?? m.DateHeureMesure
-      }
-    } else {
-      if (zoneStart !== null) {
-        zones.push({ start: zoneStart, end: m.DateHeureMesureIso ?? m.DateHeureMesure })
-        zoneStart = null
-      }
-    }
-  }
-
-  if (zoneStart !== null && measurements.length > 0) {
-    const last = measurements[measurements.length - 1]
-    zones.push({
-      start: zoneStart,
-      end: last.DateHeureMesureIso ?? last.DateHeureMesure,
-    })
-  }
-
-  return zones
-}
+let isImpactChartZoomPluginRegistered = false
 
 function buildAnnotations(
   measurements: MeasureData[],
@@ -201,22 +156,82 @@ export function ImpactChart({
   newInf,
   unit,
   isLoading,
+  alarmsLoading = false,
+  onChartReady,
 }: ImpactChartProps) {
   const t = useTranslations("impactAnalysis")
+  const locale = useLocale()
+
+  const chartRef = useRef<ChartJS<"line"> | null>(null)
+  const [zoomBounds, setZoomBounds] = useState<ZoomBounds | null>(null)
+
+  // Register zoom plugin dynamically (same pattern as monitoring-details-modal)
+  useEffect(() => {
+    if (isImpactChartZoomPluginRegistered) return
+    let cancelled = false
+    import("chartjs-plugin-zoom")
+      .then((mod) => {
+        if (cancelled || isImpactChartZoomPluginRegistered) return
+        ChartJS.register(mod.default)
+        isImpactChartZoomPluginRegistered = true
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to load chartjs-plugin-zoom", error)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Notify parent when chart is ready
+  useEffect(() => {
+    if (chartRef.current && onChartReady) {
+      onChartReady(chartRef.current)
+    }
+  })
+
+  const captureZoomBounds = useCallback((chart: ChartJS<"line">) => {
+    const xScale = chart.scales?.x
+    const next: ZoomBounds = {
+      xMin: typeof xScale?.min === "number" ? xScale.min : undefined,
+      xMax: typeof xScale?.max === "number" ? xScale.max : undefined,
+    }
+    setZoomBounds((prev) => {
+      if (prev?.xMin === next.xMin && prev?.xMax === next.xMax) return prev
+      return next
+    })
+  }, [])
+
+  const resetChartZoom = useCallback(() => {
+    chartRef.current?.resetZoom()
+    setZoomBounds(null)
+  }, [])
 
   if (isLoading) {
     return (
-      <div className="px-6 pb-6">
-        <Skeleton className="h-80 w-full" />
-      </div>
+      <Card className="mx-6 mb-6">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">{t("chart.title")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-120 w-full" />
+        </CardContent>
+      </Card>
     )
   }
 
   if (measurements.length === 0) {
     return (
-      <div className="px-6 pb-6 text-center text-muted-foreground py-12">
-        {t("chart.noData")}
-      </div>
+      <Card className="mx-6 mb-6">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">{t("chart.title")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
+            {t("chart.noData")}
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 
@@ -257,6 +272,55 @@ export function ImpactChart({
     ],
   }
 
+  const xScaleConfig =
+    zoomBounds?.xMin !== undefined || zoomBounds?.xMax !== undefined
+      ? {
+          type: "category" as const,
+          min: zoomBounds?.xMin,
+          max: zoomBounds?.xMax,
+          ticks: {
+            maxTicksLimit: 8,
+            maxRotation: 0,
+            autoSkip: true,
+            callback: (_value: unknown, index: number) => {
+              const label = labels[index]
+              if (!label) return ""
+              try {
+                return new Date(label).toLocaleString(locale, {
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              } catch {
+                return label
+              }
+            },
+          },
+        }
+      : {
+          type: "category" as const,
+          ticks: {
+            maxTicksLimit: 8,
+            maxRotation: 0,
+            autoSkip: true,
+            callback: (_value: unknown, index: number) => {
+              const label = labels[index]
+              if (!label) return ""
+              try {
+                return new Date(label).toLocaleString(locale, {
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              } catch {
+                return label
+              }
+            },
+          },
+        }
+
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -276,30 +340,25 @@ export function ImpactChart({
           },
         },
       },
+      zoom: {
+        limits: { x: { minRange: 10 } },
+        pan: {
+          enabled: true,
+          mode: "x" as const,
+          onPanComplete: ({ chart }: { chart: ChartJS<"line"> }) => captureZoomBounds(chart),
+        },
+        zoom: {
+          // Drag désactivé : le glissement est réservé au pan
+          drag: { enabled: false },
+          wheel: { enabled: true },
+          pinch: { enabled: true },
+          mode: "x" as const,
+          onZoomComplete: ({ chart }: { chart: ChartJS<"line"> }) => captureZoomBounds(chart),
+        },
+      } as never,
     },
     scales: {
-      x: {
-        type: "category" as const,
-        ticks: {
-          maxTicksLimit: 8,
-          maxRotation: 0,
-          autoSkip: true,
-          callback: (_value: unknown, index: number) => {
-            const label = labels[index]
-            if (!label) return ""
-            try {
-              return new Date(label).toLocaleString("fr-FR", {
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            } catch {
-              return label
-            }
-          },
-        },
-      },
+      x: xScaleConfig,
       y: {
         title: {
           display: true,
@@ -310,40 +369,54 @@ export function ImpactChart({
   }
 
   return (
-    <div className="px-6 pb-6 space-y-4">
-      <div className="h-80">
-        <Line data={chartData} options={options} />
-      </div>
+    <Card className="mx-6 mb-6">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-base">{t("chart.title")}</CardTitle>
+        {zoomBounds !== null && (
+          <Button variant="outline" size="sm" onClick={resetChartZoom} className="flex items-center gap-1.5">
+            <ZoomOut className="h-4 w-4" />
+            {t("chart.resetZoom")}
+          </Button>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="h-120">
+          <Line ref={chartRef} data={chartData} options={options} />
+        </div>
 
-      <div className="flex flex-wrap gap-4 text-sm">
-        <div className="flex items-center gap-2">
-          <span className="inline-block h-3 w-6 rounded-sm bg-red-500/20 border border-red-500/40" />
-          <span>
-            {t("chart.legendRealAlarms", { count: realAlarms.length })}
-          </span>
+        <div className="rounded-lg border bg-muted/30 p-3">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-3 w-6 rounded-sm bg-red-500/20 border border-red-500/40 shrink-0" />
+              <span className="flex items-center gap-1">
+                {t("chart.legendRealAlarms", { count: realAlarms.length })}
+                {alarmsLoading && realAlarms.length === 0 && (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                )}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-3 w-6 rounded-sm bg-orange-500/20 border border-orange-500/40 shrink-0" />
+              <span>{t("chart.legendSimAlarms", { count: simZones.length })}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-0.5 w-6 bg-red-500 shrink-0" />
+              <span>{t("chart.legendActualSup")}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-block h-0.5 w-6 bg-blue-500 shrink-0" />
+              <span>{t("chart.legendActualInf")}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-block h-0.5 w-6 shrink-0"
+                style={{ borderTop: "2px dashed rgb(249,115,22)" }}
+              />
+              <span>{t("chart.legendNewThreshold")}</span>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-block h-3 w-6 rounded-sm bg-orange-500/20 border border-orange-500/40" />
-          <span>
-            {t("chart.legendSimAlarms", { count: simZones.length })}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-block h-0.5 w-6 bg-red-500" />
-          <span>{t("chart.legendActualSup")}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="inline-block h-0.5 w-6 bg-blue-500" />
-          <span>{t("chart.legendActualInf")}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span
-            className="inline-block h-0.5 w-6 bg-orange-500"
-            style={{ borderTop: "2px dashed rgb(249,115,22)" }}
-          />
-          <span>{t("chart.legendNewThreshold")}</span>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

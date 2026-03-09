@@ -1,4 +1,4 @@
-import { Activity, AlertCircle, Archive, Bell, FileText, LogIn, LogOut, Plug, Settings, UserCog, Wrench } from 'lucide-react'
+import { Activity, AlertCircle, Archive, Bell, BellOff, FileText, LogIn, LogOut, Phone, PhoneOff, Plug, Server, Settings, TrendingUp, Unplug, UserCheck, UserCog, Volume2, VolumeX, Wrench } from 'lucide-react'
 
 export type ActionConfig = {
   icon: typeof LogIn
@@ -15,6 +15,7 @@ export function buildAuditActionConfig(t: (key: string, values?: Record<string, 
     DES: { icon: AlertCircle, label: t('actions.DES'), color: 'text-destructive', badgeVariant: 'destructive' },
     ACT: { icon: AlertCircle, label: t('actions.ACT'), color: 'text-success', badgeVariant: 'outline' },
     AS: { icon: AlertCircle, label: t('actions.AS'), color: 'text-destructive', badgeVariant: 'destructive' },
+    DS: { icon: Activity, label: t('actions.DS'), color: 'text-success', badgeVariant: 'outline' },
     CC: { icon: FileText, label: t('actions.CC'), color: 'text-muted-foreground', badgeVariant: 'outline' },
     CF: { icon: Settings, label: t('actions.CF'), color: 'text-primary', badgeVariant: 'secondary' },
     CR: { icon: Settings, label: t('actions.CR'), color: 'text-primary', badgeVariant: 'secondary' },
@@ -25,9 +26,17 @@ export function buildAuditActionConfig(t: (key: string, values?: Record<string, 
     TC: { icon: Plug, label: t('actions.TC'), color: 'text-primary', badgeVariant: 'secondary' },
     MDP: { icon: UserCog, label: t('actions.MDP'), color: 'text-warning', badgeVariant: 'outline' },
     ARC: { icon: Archive, label: t('actions.ARC'), color: 'text-muted-foreground', badgeVariant: 'outline' },
-    ALARM_RESOLVED: { icon: Bell, label: t('actions.ALARM_RESOLVED'), color: 'text-muted-foreground', badgeVariant: 'outline' },
-    settings_changed: { icon: Settings, label: t('actions.settings_changed'), color: 'text-primary', badgeVariant: 'secondary' },
-    user_created: { icon: UserCog, label: t('actions.user_created'), color: 'text-primary', badgeVariant: 'default' },
-    user_updated: { icon: UserCog, label: t('actions.user_updated'), color: 'text-primary', badgeVariant: 'secondary' },
+    DESA: { icon: BellOff, label: t('actions.DESA'), color: 'text-destructive', badgeVariant: 'destructive' },
+    ACTA: { icon: Bell, label: t('actions.ACTA'), color: 'text-success', badgeVariant: 'outline' },
+    SONS: { icon: Volume2, label: t('actions.SONS'), color: 'text-success', badgeVariant: 'outline' },
+    SOND: { icon: VolumeX, label: t('actions.SOND'), color: 'text-warning', badgeVariant: 'secondary' },
+    AIM: { icon: TrendingUp, label: t('actions.AIM'), color: 'text-primary', badgeVariant: 'secondary' },
+    ACTU: { icon: UserCheck, label: t('actions.ACTU'), color: 'text-success', badgeVariant: 'outline' },
+    AT: { icon: Phone, label: t('actions.AT'), color: 'text-primary', badgeVariant: 'secondary' },
+    DT: { icon: PhoneOff, label: t('actions.DT'), color: 'text-muted-foreground', badgeVariant: 'outline' },
+    CDA: { icon: Activity, label: t('actions.CDA'), color: 'text-muted-foreground', badgeVariant: 'outline' },
+    PS: { icon: Server, label: t('actions.PS'), color: 'text-muted-foreground', badgeVariant: 'outline' },
+    SACT: { icon: Unplug, label: t('actions.SACT'), color: 'text-warning', badgeVariant: 'secondary' },
+    AACT: { icon: Plug, label: t('actions.AACT'), color: 'text-primary', badgeVariant: 'secondary' },
   }
 }

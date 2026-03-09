@@ -6,7 +6,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { useTranslations } from "next-intl"
 
-import { stripLocalePrefix } from "@/i18n/pathnames"
+import { buildLocalizedPath, resolveLocaleFromPathname, stripLocalePrefix } from "@/i18n/pathnames"
 import { useRouter } from "@/i18n/navigation"
 import { useCurrentUser } from "@/hooks/useCurrentUser"
 import {
@@ -181,13 +181,16 @@ export function GlobalAppEffects() {
       }
 
       if (!isPublicRoute(pathname)) {
+        const locale = resolveLocaleFromPathname(pathname)
+        const localizedLoginPath = buildLocalizedPath("/login", locale)
+
         if (shouldShowSessionExpiredToast) {
           markDisconnectReason("inactivity")
         }
         if (shouldShowSessionExpiredToast) {
-          router.push({ pathname: "/login", query: { reason: "inactivity" } } as any)
+          router.push(buildLocalizedPath("/login", locale, { reason: "inactivity" }))
         } else {
-          router.push("/login")
+          router.push(localizedLoginPath)
         }
       }
     }

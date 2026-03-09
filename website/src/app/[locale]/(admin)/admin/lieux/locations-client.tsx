@@ -30,6 +30,7 @@ import { getDefaultLocationFormData } from './_components/location-form-defaults
 import { mapLocationToFormData } from './_components/location-form-mappers'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslations } from 'next-intl'
+import { MapPin } from 'lucide-react'
 
 export function LocationsClient() {
   const t = useTranslations('locationsPage')
@@ -153,9 +154,12 @@ export function LocationsClient() {
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40 flex flex-row items-center justify-between space-y-0">
           <div>
-            <CardTitle>{t('title')}</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <MapPin className="h-4 w-4 text-primary" />
+              {t('title')}
+            </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
               {t('count', { count: locations.length })}
             </p>

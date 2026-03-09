@@ -367,8 +367,8 @@
         "label": "Sort",
         "placeholder": "Select sort",
         "options": {
-          "status": "By status",
-          "alphabetical": "Alphabetical order"
+          "status": "Display by status",
+          "alphabetical": "Display alphabetically"
         }
       }
     },
@@ -397,6 +397,12 @@
       "empty": "Select 2 locations and click display"
     },
     "load_more": "Load more",
+    "stats": {
+      "total": "{count, plural, one {# sensor} other {# sensors}}",
+      "ok": "{count} OK",
+      "warning": "{count} warning",
+      "critical": "{count} critical"
+    },
     "footer": {
       "count": "{count, plural, one {# sensor} other {# sensors}}",
       "total": " out of {total} total"
@@ -650,7 +656,7 @@
         "labelConsigneSup": "Upper setpoint (optional)",
         "labelConsigneInf": "Lower setpoint (optional)",
         "labelPriorite": "Priority",
-          "hintPriorite": "The higher the priority, the more this rule overrides the others when their time ranges overlap.",
+        "hintPriorite": "The higher the priority, the more this rule overrides the others when their time ranges overlap.",
         "labelActif": "Rule active",
         "placeholderJour": "Select a day",
         "placeholderNumeric": "Numeric value",
@@ -1008,6 +1014,13 @@
     "toast": {
       "refreshed": "Data refreshed"
     },
+    "filter": {
+      "user": "User",
+      "dateFrom": "From",
+      "dateTo": "To",
+      "clearFilters": "Clear filters"
+    },
+    "expandedDetails": "Full details",
     "actions": {
       "CONNEXION": "Login",
       "DECONNEXION": "Logout",
@@ -1026,10 +1039,18 @@
       "TC": "Sensor connection test",
       "MDP": "Password",
       "ARC": "Archive / export",
-      "ALARM_RESOLVED": "Alarm resolved",
-      "settings_changed": "Settings updated",
-      "user_created": "User created",
-      "user_updated": "User updated",
+      "DESA": "Alarm disabled",
+      "ACTA": "Alarm enabled",
+      "SONS": "Sound on",
+      "SOND": "Sound off",
+      "AIM": "Impact analysis",
+      "ACTU": "User reactivated",
+      "AT": "Telephony enabled",
+      "DT": "Telephony disabled",
+      "CDA": "Datalogger state",
+      "PS": "Serial port restart",
+      "SACT": "Alarm module removed",
+      "AACT": "Alarm module added",
       "unknown": "Unknown action ({code})"
     },
     "table": {
@@ -1181,6 +1202,7 @@
     "title": "Impact analysis",
     "description": "Simulate the impact of new tolerances on your historical measurements.",
     "selector": {
+      "title": "Analysis parameters",
       "lieuLabel": "Location",
       "lieuPlaceholder": "Select a location...",
       "lieuSearch": "Search location...",
@@ -1188,12 +1210,21 @@
       "dateRangeLabel": "Period",
       "analyzeButton": "Analyze"
     },
+    "emptyState": {
+      "description": "Select a location and a time period, then click Analyze to simulate the impact of new tolerances on your historical measurements."
+    },
     "summary": {
       "recapTitle": "Location summary",
       "consigne": "Setpoint",
       "toleranceSup": "Upper tolerance",
       "toleranceInf": "Lower tolerance",
       "emtMode": "EMT mode",
+      "emtModes": {
+        "quart": "Quarter method (EMT/4)",
+        "manuel": "Manual",
+        "uncertainties": "Uncertainty calculation",
+        "sansObjet": "Not applicable"
+      },
       "measureCount": "Measurement count",
       "notDefined": "Not defined",
       "newTolerancesTitle": "New tolerances",
@@ -1203,13 +1234,43 @@
       "resetButton": "Reset to current values"
     },
     "chart": {
+      "title": "Measurement chart",
       "noData": "No measurements available for this period.",
       "measurements": "Measurements",
       "legendRealAlarms": "Real alarms ({count})",
       "legendSimAlarms": "Simulated alarms ({count})",
       "legendActualSup": "Current upper threshold",
       "legendActualInf": "Current lower threshold",
-      "legendNewThreshold": "New threshold"
+      "legendNewThreshold": "New threshold",
+      "resetZoom": "Reset zoom"
+    },
+    "table": {
+      "simTitle": "Simulated alarms ({count})",
+      "realTitle": "Real alarms ({count})",
+      "colIndex": "#",
+      "colStart": "Start",
+      "colEnd": "End",
+      "colDuration": "Duration",
+      "colPoints": "Out-of-bound points",
+      "colType": "Type",
+      "noSimAlarms": "No simulated alarms with these tolerances.",
+      "noRealAlarms": "No real alarms during this period."
+    },
+    "export": {
+      "button": "Export",
+      "csv": "Export CSV (alarms)",
+      "image": "Export chart"
+    },
+    "save": {
+      "button": "Save analysis",
+      "dialogTitle": "Save to audit trail",
+      "dialogDescription": "This analysis will be logged in the system audit trail.",
+      "commentLabel": "Conclusion / comment",
+      "commentPlaceholder": "E.g.: Location [name] – New tolerances: +X°C / -Y°C – N simulated alarms. Impact deemed acceptable because...",
+      "cancel": "Cancel",
+      "confirm": "Save",
+      "success": "Analysis saved successfully",
+      "error": "Error while saving"
     }
   },
   "profilesPage": {
@@ -1670,7 +1731,7 @@
     }
   },
   "sensorsPage": {
-    "title": "Sensor management ({count, plural, one {# sensor} other {# sensors}})",
+    "title": "Sensor management",
     "actions": {
       "add": "Add",
       "edit": "Edit",
@@ -1756,7 +1817,8 @@
       }
     },
     "description": "Manage sensors, calibrations and verifications",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "title_with_count": "Sensor management ({count, plural, one {# sensor} other {# sensors}})"
   },
   "sensorAdjustmentImport": {
     "page": {
@@ -3249,7 +3311,8 @@
       "outils": {
         "title": "Tools",
         "description": "Access administration tools."
-      }
+      },
+      "access": "Open"
     },
     "loading": "Loading data...",
     "updating": "Updating...",
@@ -3756,6 +3819,7 @@
       "participants_count": "{count, plural, one {{count} participant} other {{count} participants}}",
       "input_placeholder": "Write a message… (Enter to send, Shift+Enter for new line)",
       "send": "Send",
+      "attach_file": "Attach file",
       "load_more": "Load previous messages",
       "send_error": "Failed to send message",
       "load_more_error": "Failed to load previous messages"

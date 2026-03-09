@@ -15,9 +15,9 @@ const normalizeEncoding = (value: string | null | undefined): string | null => {
 }
 
 const detectBomEncoding = (bytes: Uint8Array): string | null => {
-  if (bytes.length >= 3 && BOM_UTF8.every((b, i) => bytes[i] == b)) return "utf-8"
-  if (bytes.length >= 2 && BOM_UTF16LE.every((b, i) => bytes[i] == b)) return "utf-16le"
-  if (bytes.length >= 2 && BOM_UTF16BE.every((b, i) => bytes[i] == b)) return "utf-16be"
+  if (bytes.length >= 3 && BOM_UTF8.every((b, i) => bytes[i] === b)) return "utf-8"
+  if (bytes.length >= 2 && BOM_UTF16LE.every((b, i) => bytes[i] === b)) return "utf-16le"
+  if (bytes.length >= 2 && BOM_UTF16BE.every((b, i) => bytes[i] === b)) return "utf-16be"
   return null
 }
 
@@ -39,15 +39,14 @@ const countSuspiciousControlChars = (value: string) => {
   return count
 }
 
-const mojibakeScore = (value: string) => {
-  const replacement = countOccurrences(value, "�")
-  const accentPrefix = countOccurrences(value, "?")
-  const degreePrefix = countOccurrences(value, "?")
-  const punctuationPrefix = countOccurrences(value, "?")
-  const legacyReplacement = countOccurrences(value, "???")
-  const controls = countSuspiciousControlChars(value)
+const looksLikeXml = (value: string) => /^\s*(<\?xml\b[^>]*>\s*)?<([A-Za-z_][\w:.-]*)[^>]*>/i.test(value)
 
-  return replacement * 8 + legacyReplacement * 8 + punctuationPrefix * 5 + degreePrefix * 4 + accentPrefix * 3 + controls * 10
+const mojibakeScore = (value: string) => {
+  const replacement = countOccurrences(value, "\uFFFD")
+  const controls = countSuspiciousControlChars(value)
+  const missingXmlShapePenalty = looksLikeXml(value) ? 0 : 1000
+
+  return replacement * 8 + controls * 10 + missingXmlShapePenalty
 }
 
 const decodeWithEncoding = (bytes: Uint8Array, encoding: string) => {
@@ -60,15 +59,33 @@ export function decodeXmlBytes(bytes: Uint8Array) {
   const declaredEncoding = detectDeclaredEncoding(bytes)
 
   const candidates = Array.from(
-    new Set([
-      bomEncoding,
-      declaredEncoding,
-      "utf-8",
-      "windows-1252",
-      "utf-16le",
-      "utf-16be",
-    ].filter((value): value is string => Boolean(value))),
+    new Set(
+      [
+        bomEncoding,
+        declaredEncoding,
+        "utf-8",
+        "windows-1252",
+        "utf-16le",
+        "utf-16be",
+      ].filter((value): value is string => Boolean(value)),
+    ),
   )
+
+  if (declaredEncoding) {
+    try {
+      const declaredText = decodeWithEncoding(bytes, declaredEncoding)
+      if (looksLikeXml(declaredText)) {
+        return {
+          text: declaredText,
+          encoding: declaredEncoding,
+          corrected: false,
+          detectedEncoding: declaredEncoding,
+        }
+      }
+    } catch {
+      // Fall back to scored candidates below.
+    }
+  }
 
   let best = {
     text: decodeWithEncoding(bytes, candidates[0] ?? "utf-8"),
@@ -85,10 +102,8 @@ export function decodeXmlBytes(bytes: Uint8Array) {
     }
 
     let score = mojibakeScore(text)
-    if (encoding === bomEncoding) score -= 3
-    if (encoding === declaredEncoding) score -= 2
-    if (encoding === "utf-8" && declaredEncoding === "utf-8") score -= 1
-    if (encoding === "windows-1252" && declaredEncoding === "windows-1252") score -= 1
+    if (encoding === bomEncoding) score -= 10
+    if (encoding === declaredEncoding) score -= 25
 
     if (score < best.score) {
       best = { text, encoding, score }

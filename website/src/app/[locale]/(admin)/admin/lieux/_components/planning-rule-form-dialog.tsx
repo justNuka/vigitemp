@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
-import { Check, X } from "lucide-react"
+import { CalendarClock, Check, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -95,7 +95,10 @@ export function PlanningRuleFormDialog({
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <DialogContent className="sm:max-w-lg bg-white dark:bg-card">
         <DialogHeader>
-          <DialogTitle>{isEdit ? tDialog("titleEdit") : tDialog("titleCreate")}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <CalendarClock className="h-4 w-4 text-primary" />
+            {isEdit ? tDialog("titleEdit") : tDialog("titleCreate")}
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -107,8 +110,13 @@ export function PlanningRuleFormDialog({
             }}
             className="space-y-4"
           >
-            <PlanningRuleScheduleFields form={form} tDialog={tDialog} joursOptions={joursOptions} />
-            <PlanningRuleThresholdFields form={form} tDialog={tDialog} />
+            <div className="rounded-md bg-muted/30 p-3 space-y-4">
+              <PlanningRuleScheduleFields form={form} tDialog={tDialog} joursOptions={joursOptions} />
+            </div>
+
+            <div className="rounded-md bg-muted/30 p-3 space-y-4">
+              <PlanningRuleThresholdFields form={form} tDialog={tDialog} />
+            </div>
 
             <PlanningRuleEmtSummary
               tDialog={tDialog}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/button"
 import { emtModeFromDb } from "@/lib/emt"
 import type { SelectedLieu } from "../impact-analysis-client"
 
-const EMT_LABELS_FR: Record<string, string> = {
-  quart: "Methode du quart (EMT/4)",
-  manuel: "Manuel",
-  uncertainties: "Calcul par incertitudes",
-  "sans-objet": "Sans objet",
+const EMT_MODE_TO_KEY: Record<string, "quart" | "manuel" | "uncertainties" | "sansObjet"> = {
+  quart: "quart",
+  manuel: "manuel",
+  uncertainties: "uncertainties",
+  "sans-objet": "sansObjet",
 }
 
 interface ImpactSummaryCardProps {
@@ -35,11 +35,13 @@ export function ImpactSummaryCard({
   onReset,
 }: ImpactSummaryCardProps) {
   const t = useTranslations("impactAnalysis")
+  const locale = useLocale()
 
   const displayToleranceSup = lieu.toleranceSup ?? lieu.consigneSup
   const displayToleranceInf = lieu.toleranceInf ?? lieu.consigneInf
   const emtMode = emtModeFromDb(lieu.emtModeDb)
-  const emtLabel = EMT_LABELS_FR[emtMode] ?? "Sans objet"
+  const emtKey = EMT_MODE_TO_KEY[emtMode] ?? "sansObjet"
+  const emtLabel = t(`summary.emtModes.${emtKey}`)
 
   const newSupNum = newSup !== "" ? parseFloat(newSup) : null
   const newInfNum = newInf !== "" ? parseFloat(newInf) : null
@@ -52,7 +54,7 @@ export function ImpactSummaryCard({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 p-6 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 mx-6 mt-4 lg:grid-cols-2">
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{t("summary.recapTitle")}</CardTitle>
@@ -65,11 +67,17 @@ export function ImpactSummaryCard({
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">{t("summary.toleranceSup")}</dt>
-              <dd className="font-medium">{formatThreshold(displayToleranceSup)}</dd>
+              <dd className="font-medium flex items-center gap-1.5">
+                <span className="inline-block h-2 w-2 rounded-full bg-red-500 shrink-0" />
+                {formatThreshold(displayToleranceSup)}
+              </dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">{t("summary.toleranceInf")}</dt>
-              <dd className="font-medium">{formatThreshold(displayToleranceInf)}</dd>
+              <dd className="font-medium flex items-center gap-1.5">
+                <span className="inline-block h-2 w-2 rounded-full bg-blue-500 shrink-0" />
+                {formatThreshold(displayToleranceInf)}
+              </dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">{t("summary.emtMode")}</dt>
@@ -77,7 +85,7 @@ export function ImpactSummaryCard({
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">{t("summary.measureCount")}</dt>
-              <dd className="font-medium">{measureCount.toLocaleString("fr-FR")}</dd>
+              <dd className="font-medium">{measureCount.toLocaleString(locale)}</dd>
             </div>
           </dl>
         </CardContent>
@@ -90,7 +98,10 @@ export function ImpactSummaryCard({
         <CardContent>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="new-tolerance-sup">{t("summary.newToleranceSup")}</Label>
+              <Label htmlFor="new-tolerance-sup" className="flex items-center gap-1.5">
+                <span className="inline-block h-2 w-2 rounded-full bg-orange-500 shrink-0" />
+                {t("summary.newToleranceSup")}
+              </Label>
               <Input
                 id="new-tolerance-sup"
                 type="number"
@@ -102,7 +113,10 @@ export function ImpactSummaryCard({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="new-tolerance-inf">{t("summary.newToleranceInf")}</Label>
+              <Label htmlFor="new-tolerance-inf" className="flex items-center gap-1.5">
+                <span className="inline-block h-2 w-2 rounded-full bg-orange-500 shrink-0" />
+                {t("summary.newToleranceInf")}
+              </Label>
               <Input
                 id="new-tolerance-inf"
                 type="number"

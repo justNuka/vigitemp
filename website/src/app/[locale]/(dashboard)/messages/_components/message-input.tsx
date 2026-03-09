@@ -1,22 +1,35 @@
 "use client"
 
-import { useRef, useState, type KeyboardEvent, type ChangeEvent } from "react"
+import { useRef, useState, useCallback, type KeyboardEvent, type ChangeEvent } from "react"
 import { useTranslations } from "next-intl"
-import { Send } from "lucide-react"
+import { Send, Paperclip, X, FileText, Image as ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
+import { postJson } from "@/lib/http"
+import type { Attachment } from "./_types"
+
+type PendingAttachment = {
+  file: File
+  attachment: Attachment
+}
 
 type MessageInputProps = {
-  onSend: (content: string) => Promise<void>
+  onSend: (content: string, attachmentIds: number[]) => Promise<void>
+  convId: number
   disabled?: boolean
 }
 
-export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
+export function MessageInput({ onSend, convId, disabled = false }: MessageInputProps) {
   const t = useTranslations("messaging.thread")
   const [content, setContent] = useState("")
   const [isSending, setIsSending] = useState(false)
+  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>([])
+  const [uploadingCount, setUploadingCount] = useState(0)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isTypingRef = useRef(false)
 
   function adjustHeight() {
     const el = textareaRef.current
@@ -28,21 +41,74 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
     el.style.height = `${Math.min(Math.max(el.scrollHeight, minH), maxH)}px`
   }
 
+  const sendTypingStop = useCallback(() => {
+    if (!isTypingRef.current) return
+    isTypingRef.current = false
+    void postJson(`/api/chat/conversations/${convId}/typing`, { isTyping: false }).catch(() => {})
+  }, [convId])
+
+  const sendTypingStart = useCallback(() => {
+    if (isTypingRef.current) return
+    isTypingRef.current = true
+    void postJson(`/api/chat/conversations/${convId}/typing`, { isTyping: true }).catch(() => {})
+  }, [convId])
+
   function handleChange(e: ChangeEvent<HTMLTextAreaElement>) {
     setContent(e.target.value)
     adjustHeight()
+    // Typing indicator
+    if (e.target.value.trim().length > 0) {
+      sendTypingStart()
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+      typingTimerRef.current = setTimeout(sendTypingStop, 3000)
+    } else {
+      sendTypingStop()
+    }
+  }
+
+  async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    if (files.length === 0) return
+    e.target.value = ""
+
+    setUploadingCount((c) => c + files.length)
+    await Promise.all(
+      files.map(async (file) => {
+        try {
+          const formData = new FormData()
+          formData.append("file", file)
+          const res = await fetch(`/api/chat/conversations/${convId}/attachments`, {
+            method: "POST",
+            body: formData,
+          })
+          if (!res.ok) throw new Error("upload failed")
+          const data = await res.json() as { data: Attachment }
+          setPendingAttachments((prev) => [...prev, { file, attachment: data.data }])
+        } catch {
+          // ignore individual upload errors silently
+        } finally {
+          setUploadingCount((c) => c - 1)
+        }
+      })
+    )
+  }
+
+  function removeAttachment(id: number) {
+    setPendingAttachments((prev) => prev.filter((p) => p.attachment.id !== id))
   }
 
   async function handleSend() {
     const trimmed = content.trim()
-    if (!trimmed || isSending || disabled) return
+    if ((!trimmed && pendingAttachments.length === 0) || isSending || disabled) return
     setIsSending(true)
+    sendTypingStop()
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
     try {
-      await onSend(trimmed)
+      const attachmentIds = pendingAttachments.map((p) => p.attachment.id)
+      await onSend(trimmed, attachmentIds)
       setContent("")
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto"
-      }
+      setPendingAttachments([])
+      if (textareaRef.current) textareaRef.current.style.height = "auto"
     } finally {
       setIsSending(false)
     }
@@ -55,17 +121,73 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
     }
   }
 
-  const isEmpty = content.trim().length === 0
-  const isDisabled = disabled || isSending
+  const isEmpty = content.trim().length === 0 && pendingAttachments.length === 0
+  const isDisabled = disabled || isSending || uploadingCount > 0
 
   return (
-    <div className="border-t bg-background/80 backdrop-blur-sm px-4 py-3">
+    <div className="border-t bg-card px-4 py-3 space-y-2">
+      {/* Pending attachments preview */}
+      {pendingAttachments.length > 0 && (
+        <div className="flex flex-wrap gap-2 px-1">
+          {pendingAttachments.map(({ attachment }) => {
+            const isImage = attachment.mimeType.startsWith("image/")
+            return (
+              <div
+                key={attachment.id}
+                className="relative group/att flex items-center gap-1.5 bg-muted/60 rounded-lg px-2 py-1.5 text-xs max-w-40"
+              >
+                {isImage ? (
+                  <ImageIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                ) : (
+                  <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                )}
+                <span className="truncate text-foreground/80">{attachment.fileName}</span>
+                <button
+                  type="button"
+                  onClick={() => removeAttachment(attachment.id)}
+                  className="ml-1 opacity-60 hover:opacity-100 shrink-0"
+                  aria-label="Remove attachment"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            )
+          })}
+          {uploadingCount > 0 && (
+            <div className="flex items-center gap-1.5 bg-muted/60 rounded-lg px-2 py-1.5 text-xs text-muted-foreground">
+              <span className="animate-pulse">Uploading…</span>
+            </div>
+          )}
+        </div>
+      )}
+
       <div
         className={cn(
           "flex items-end gap-2 rounded-xl border bg-background px-3 py-2 transition-colors",
           "focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20"
         )}
       >
+        {/* Paperclip button */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isDisabled}
+          className="h-8 w-8 shrink-0 rounded-lg text-muted-foreground hover:text-foreground"
+          aria-label={t("attach_file")}
+        >
+          <Paperclip className="h-4 w-4" />
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+
         <Textarea
           ref={textareaRef}
           value={content}
@@ -89,9 +211,7 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
           disabled={isEmpty || isDisabled}
           className={cn(
             "h-8 w-8 shrink-0 rounded-lg transition-all",
-            isEmpty || isDisabled
-              ? "opacity-40"
-              : "opacity-100 shadow-sm hover:shadow-md"
+            isEmpty || isDisabled ? "opacity-40" : "opacity-100 shadow-sm hover:shadow-md"
           )}
         >
           <Send className="h-3.5 w-3.5" />

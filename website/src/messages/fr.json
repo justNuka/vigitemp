@@ -212,8 +212,8 @@
         "label": "Tri",
         "placeholder": "Choisir un tri",
         "options": {
-          "status": "Par statut",
-          "alphabetical": "Ordre alphab?tique"
+          "status": "Affichage par statut",
+          "alphabetical": "Affichage par ordre alphab?tique"
         }
       }
     },
@@ -232,7 +232,7 @@
       "location_update_error": "Erreur lors de la modification du lieu"
     },
     "overlay": {
-      "button": "Superposer courbes",
+      "button": "Superposer des courbes",
       "title": "Superposition des courbes",
       "locations": "Lieux a comparer",
       "range": "Plage de dates",
@@ -242,6 +242,12 @@
       "empty": "Selectionnez 2 lieux puis cliquez sur afficher"
     },
     "load_more": "Charger plus",
+    "stats": {
+      "total": "{count, plural, one {# sonde} other {# sondes}}",
+      "ok": "{count} OK",
+      "warning": "{count} alerte",
+      "critical": "{count} critique"
+    },
     "footer": {
       "count": "{count, plural, one {# sonde} other {# sondes}}",
       "total": " sur {total} au total"
@@ -1261,6 +1267,13 @@
     "toast": {
       "refreshed": "Données actualisées"
     },
+    "filter": {
+      "user": "Utilisateur",
+      "dateFrom": "Du",
+      "dateTo": "Au",
+      "clearFilters": "Effacer les filtres"
+    },
+    "expandedDetails": "Détails complets",
     "actions": {
       "CONNEXION": "Connexion",
       "DECONNEXION": "Déconnexion",
@@ -1279,10 +1292,18 @@
       "TC": "Test connexion sonde",
       "MDP": "Mot de passe",
       "ARC": "Archivage / export",
-      "ALARM_RESOLVED": "Alarme terminée",
-      "settings_changed": "Paramètres modifiés",
-      "user_created": "Utilisateur créé",
-      "user_updated": "Utilisateur modifié",
+      "DESA": "Alarme désactivée",
+      "ACTA": "Alarme activée",
+      "SONS": "Son activé",
+      "SOND": "Son désactivé",
+      "AIM": "Analyse d'impact",
+      "ACTU": "Réactivation utilisateur",
+      "AT": "Tél. activée",
+      "DT": "Tél. désactivée",
+      "CDA": "État datalogger",
+      "PS": "Redémarrage port série",
+      "SACT": "Module alarme retiré",
+      "AACT": "Module alarme associé",
       "unknown": "Action inconnue ({code})"
     },
     "table": {
@@ -1426,7 +1447,7 @@
       "backups": "Sauvegardes"
     },
     "metrology": {
-      "calibration_import": "Import etalonnage",
+      "calibration_import": "Import étalonnage",
       "impact_analysis": "Analyse d'impact"
     }
   },
@@ -1434,6 +1455,7 @@
     "title": "Analyse d'impact",
     "description": "Simulez l'impact de nouvelles tolérances sur vos historiques de mesures.",
     "selector": {
+      "title": "Paramètres d'analyse",
       "lieuLabel": "Lieu",
       "lieuPlaceholder": "Sélectionner un lieu...",
       "lieuSearch": "Rechercher un lieu...",
@@ -1441,12 +1463,21 @@
       "dateRangeLabel": "Période",
       "analyzeButton": "Analyser"
     },
+    "emptyState": {
+      "description": "Sélectionnez un lieu et une période d'analyse, puis cliquez sur Analyser pour simuler l'impact de nouvelles tolérances sur vos mesures historiques."
+    },
     "summary": {
       "recapTitle": "Récapitulatif du lieu",
       "consigne": "Consigne",
       "toleranceSup": "Tolérance sup.",
       "toleranceInf": "Tolérance inf.",
       "emtMode": "Mode EMT",
+      "emtModes": {
+        "quart": "Méthode du quart (EMT/4)",
+        "manuel": "Manuel",
+        "uncertainties": "Calcul par incertitudes",
+        "sansObjet": "Sans objet"
+      },
       "measureCount": "Nombre de mesures",
       "notDefined": "Non définie",
       "newTolerancesTitle": "Nouvelles tolérances",
@@ -1456,13 +1487,43 @@
       "resetButton": "Réinitialiser aux valeurs actuelles"
     },
     "chart": {
+      "title": "Courbe de mesures",
       "noData": "Aucune mesure disponible pour cette période.",
       "measurements": "Mesures",
       "legendRealAlarms": "Alarmes réelles ({count})",
       "legendSimAlarms": "Alarmes simulées ({count})",
       "legendActualSup": "Seuil actuel sup.",
       "legendActualInf": "Seuil actuel inf.",
-      "legendNewThreshold": "Nouveau seuil"
+      "legendNewThreshold": "Nouveau seuil",
+      "resetZoom": "Réinitialiser le zoom"
+    },
+    "table": {
+      "simTitle": "Alarmes simulées ({count})",
+      "realTitle": "Alarmes réelles ({count})",
+      "colIndex": "#",
+      "colStart": "Début",
+      "colEnd": "Fin",
+      "colDuration": "Durée",
+      "colPoints": "Points hors seuil",
+      "colType": "Type",
+      "noSimAlarms": "Aucune alarme simulée avec ces tolérances.",
+      "noRealAlarms": "Aucune alarme réelle sur cette période."
+    },
+    "export": {
+      "button": "Exporter",
+      "csv": "Exporter CSV (alarmes)",
+      "image": "Exporter le graphique"
+    },
+    "save": {
+      "button": "Enregistrer l'analyse",
+      "dialogTitle": "Enregistrer dans l'audit",
+      "dialogDescription": "Cette analyse sera consignée dans l'audit trail du système.",
+      "commentLabel": "Conclusion / commentaire",
+      "commentPlaceholder": "Ex : Lieu [nom] – Nouvelles tolérances : +X°C / -Y°C – N alarmes simulées. Impact jugé acceptable car...",
+      "cancel": "Annuler",
+      "confirm": "Enregistrer",
+      "success": "Analyse enregistrée avec succès",
+      "error": "Erreur lors de l'enregistrement"
     }
   },
   "profilesPage": {
@@ -1670,7 +1731,7 @@
     }
   },
   "sensorsPage": {
-    "title": "Gestion des sondes ({count, plural, one {# sonde} other {# sondes}})",
+    "title": "Gestion des sondes",
     "actions": {
       "add": "Ajouter",
       "edit": "Modifier",
@@ -1756,7 +1817,8 @@
       }
     },
     "description": "Gestion des sondes, calibrages et étalonnages",
-    "loading": "Chargement..."
+    "loading": "Chargement...",
+    "title_with_count": "Gestion des sondes ({count, plural, one {# sonde} other {# sondes}})"
   },
   "sensorAdjustmentImport": {
     "page": {
@@ -3249,7 +3311,8 @@
       "outils": {
         "title": "Outils",
         "description": "Acceder aux outils d'administration."
-      }
+      },
+      "access": "Acc?der"
     },
     "loading": "Chargement des données...",
     "updating": "Mise à jour...",
@@ -3756,6 +3819,7 @@
       "participants_count": "{count, plural, one {{count} participant} other {{count} participants}}",
       "input_placeholder": "Écrivez un message… (Entrée pour envoyer, Maj+Entrée pour saut de ligne)",
       "send": "Envoyer",
+      "attach_file": "Joindre un fichier",
       "load_more": "Charger les messages précédents",
       "send_error": "Échec de l'envoi du message",
       "load_more_error": "Impossible de charger les messages précédents"

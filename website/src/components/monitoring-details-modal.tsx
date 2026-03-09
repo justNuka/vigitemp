@@ -118,7 +118,6 @@ export default function MonitoringDetailsModal({
     preInf: null,
   });
   const [activeTab, setActiveTab] = useState<"graph" | "table" | "audit">("graph");
-  const [zoomMode, setZoomMode] = useState<"x" | "xy">("x");
   const [zoomBounds, setZoomBounds] = useState<ZoomBounds | null>(null);
   const chartRef = useRef<ChartJS<"line"> | null>(null);
   const showNullNonResponse = Boolean(controlledShowNullNonResponse);
@@ -328,6 +327,8 @@ export default function MonitoringDetailsModal({
                   align="start"
                   locale={localeTag}
                   showCompare={false}
+                  matchTriggerWidth={false}
+                  popoverClassName="w-[min(980px,calc(100vw-2rem))]"
                 />
               </div>
             </div>
@@ -361,9 +362,7 @@ export default function MonitoringDetailsModal({
                   guidePositions={guidePositions}
                   yMin={yMin}
                   yMax={yMax}
-                  zoomMode={zoomMode}
                   zoomBounds={zoomBounds}
-                  setZoomMode={setZoomMode}
                   resetChartZoom={resetChartZoom}
                   captureZoomBounds={captureZoomBounds}
                   t={t}

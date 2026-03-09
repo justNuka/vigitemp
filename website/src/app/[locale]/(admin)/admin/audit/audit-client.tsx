@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
-import { FileText, RefreshCw, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, FileText, RefreshCw, Search, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useLocale, useTranslations } from "next-intl";
@@ -18,15 +18,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getJson } from "@/lib/http";
 import { cn } from "@/lib/utils";
 import type { AuditLog } from "@/lib/api";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { buildAuditActionConfig } from "./_components/audit-action-config";
-import { filterAuditLogs, parseAuditDetails, toAuditTableData, type AuditCode, type AuditLogRow } from "./_components/audit-client-helpers";
+import { filterAuditLogs, parseAuditDetails, renderChangesAsRows, toAuditTableData, type AuditCode, type AuditLogRow } from "./_components/audit-client-helpers";
 
 interface Props {
   logs: AuditLog[];
 }
 
-export function AuditClient({ logs }: Props) {
+interface ActiveFilters {
+  user: string;
+  dateFrom: string;
+  dateTo: string;
+  code: string;
+}
+
+const EMPTY_FILTERS: ActiveFilters = { user: "", dateFrom: "", dateTo: "", code: "" };
+
+function hasActiveFilters(filters: ActiveFilters): boolean {
+  return !!(filters.user || filters.dateFrom || filters.dateTo || (filters.code && filters.code !== "all"));
+}
+
+export function AuditClient({ logs: initialLogs }: Props) {
   const t = useTranslations("audit");
   const locale = useLocale();
   const timezone = useAppTimezone();
@@ -35,6 +49,35 @@ export function AuditClient({ logs }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [codeFilter, setCodeFilter] = useState<string>("all");
   const [codesOpen, setCodesOpen] = useState(false);
+  const [userFilter, setUserFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+
+  const activeFilters: ActiveFilters = useMemo(() => ({
+    user: userFilter,
+    dateFrom,
+    dateTo,
+    code: codeFilter,
+  }), [userFilter, dateFrom, dateTo, codeFilter]);
+
+  const filtersActive = hasActiveFilters(activeFilters);
+
+  const queryParams = useMemo(() => {
+    const params = new URLSearchParams();
+    if (activeFilters.code && activeFilters.code !== "all") params.set("code", activeFilters.code);
+    if (activeFilters.user) params.set("user", activeFilters.user);
+    if (activeFilters.dateFrom) params.set("dateFrom", activeFilters.dateFrom);
+    if (activeFilters.dateTo) params.set("dateTo", activeFilters.dateTo);
+    return params.toString();
+  }, [activeFilters]);
+
+  const { data: filteredByServerLogs, isLoading: isServerFiltering } = useQuery({
+    queryKey: ["audit-logs", queryParams],
+    queryFn: () => getJson<AuditLog[]>(`/api/audit${queryParams ? `?${queryParams}` : ""}`),
+    enabled: filtersActive,
+    staleTime: 30 * 1000,
+  });
 
   const actionConfig = useMemo(() => buildAuditActionConfig(t), [t]);
 
@@ -45,19 +88,74 @@ export function AuditClient({ logs }: Props) {
     staleTime: 10 * 60 * 1000,
   });
 
-  const filteredLogs = useMemo(() => filterAuditLogs(logs, codeFilter, searchQuery), [logs, codeFilter, searchQuery]);
+  // When server-side filters are active, use the server result; otherwise use initial logs filtered locally
+  const sourceLogs: AuditLog[] = filtersActive ? (filteredByServerLogs ?? []) : initialLogs;
+
+  const filteredLogs = useMemo(
+    () => filtersActive ? sourceLogs : filterAuditLogs(sourceLogs, codeFilter, searchQuery),
+    [sourceLogs, codeFilter, searchQuery, filtersActive]
+  );
 
   const handleRefresh = () => {
     router.refresh();
     toast.success(t("toast.refreshed"));
   };
 
+  const clearFilters = () => {
+    setUserFilter("");
+    setDateFrom("");
+    setDateTo("");
+    setCodeFilter("all");
+    setSearchQuery("");
+    setExpandedRowId(null);
+  };
+
+  const totalLogs = filtersActive ? sourceLogs.length : initialLogs.length;
   const summary =
-    filteredLogs.length === logs.length
+    filteredLogs.length === totalLogs
       ? t("events_summary", { count: filteredLogs.length })
-      : t("events_summary_filtered", { count: filteredLogs.length, total: logs.length });
+      : t("events_summary_filtered", { count: filteredLogs.length, total: totalLogs });
+
+  // Extrait et traduit le contenu expandable d'une ligne (JSON changes + commentaire utilisateur)
+  const getRowExpandableContent = useCallback((rowId: string) => {
+    const originalLog = sourceLogs.find((l) => String(l.id) === rowId)
+    if (!originalLog) return { rows: [], commentaire: null, hasContent: false }
+
+    const details = originalLog.details
+    let changesJson: Record<string, unknown> | null = null
+    if (details) {
+      const parts = details.split('|').map((p) => p.trim())
+      const jsonPart = parts.find((p) => p.startsWith('{') && p.endsWith('}'))
+      if (jsonPart) {
+        try { changesJson = JSON.parse(jsonPart) } catch { /* ignore */ }
+      }
+    }
+
+    const commentaire = originalLog.commentaireUtilisateur ?? null
+    const rows = changesJson ? renderChangesAsRows(changesJson, localeTag, timezone) : []
+    return { rows, commentaire, hasContent: rows.length > 0 || !!commentaire }
+  }, [sourceLogs, localeTag, timezone])
 
   const columns: ColumnDef<AuditLogRow>[] = [
+    {
+      id: "expand",
+      header: "",
+      size: 32,
+      cell: ({ row }) => {
+        const isExpanded = expandedRowId === row.original.id;
+        const { hasContent } = getRowExpandableContent(row.original.id);
+        if (!hasContent) return null;
+        return (
+          <button
+            onClick={() => setExpandedRowId(isExpanded ? null : row.original.id)}
+            className="flex items-center justify-center text-muted-foreground hover:text-foreground"
+            aria-label={isExpanded ? "Collapse" : "Expand"}
+          >
+            {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </button>
+        );
+      },
+    },
     {
       accessorKey: "timestamp",
       header: t("table.columns.timestamp"),
@@ -107,11 +205,55 @@ export function AuditClient({ logs }: Props) {
       accessorKey: "details",
       header: t("table.columns.details"),
       cell: ({ row }) => {
-        const parsed = parseAuditDetails(row.getValue("details") as string | null, t, localeTag, timezone);
+        const isExpanded = expandedRowId === row.original.id;
+        const details = row.getValue("details") as string | null;
+        const parsed = parseAuditDetails(details, t, localeTag, timezone);
+        const content = getRowExpandableContent(row.original.id);
+
+        // Le titre est "du bruit" quand c'est directement un blob JSON ou une IP
+        const titleIsJunk = parsed.title.startsWith('{') || parsed.title.toLowerCase().startsWith('ip:')
+        const mainText = titleIsJunk ? (parsed.subtitle || parsed.raw || t("table.empty_value")) : parsed.title
+        const subText = titleIsJunk ? null : (parsed.subtitle || parsed.raw || null)
+
         return (
           <div className="flex flex-col gap-1 max-w-90">
-            <p className="text-sm font-medium truncate" title={parsed.title}>{parsed.title}</p>
-            <p className="text-xs text-muted-foreground truncate" title={parsed.subtitle || parsed.raw}>{parsed.subtitle || parsed.raw || t("table.empty_value")}</p>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="text-sm font-medium truncate cursor-help">{mainText}</p>
+                </TooltipTrigger>
+                <TooltipContent>{mainText}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            {subText && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="text-xs text-muted-foreground truncate cursor-help">{subText}</p>
+                  </TooltipTrigger>
+                  <TooltipContent>{subText}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {isExpanded && content.hasContent && (
+              <div className="mt-2 rounded border bg-muted/50 p-2 space-y-2">
+                {content.rows.length > 0 && (
+                  <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+                    {content.rows.map(({ label, value }) => (
+                      <Fragment key={label}>
+                        <dt className="text-xs text-muted-foreground whitespace-nowrap">{label}</dt>
+                        <dd className="text-xs font-medium">{value}</dd>
+                      </Fragment>
+                    ))}
+                  </dl>
+                )}
+                {content.commentaire && (
+                  <p className={cn("text-xs text-muted-foreground italic", content.rows.length > 0 && "pt-2 border-t")}>
+                    {content.commentaire}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         );
       },
@@ -140,7 +282,7 @@ export function AuditClient({ logs }: Props) {
   return (
     <main className="flex-1 p-4 md:p-4 space-y-4 animate-fade-in">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 flex-wrap gap-2">
           <div>
             <CardTitle>{t("latest_activity")}</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">{summary}</p>
@@ -162,10 +304,39 @@ export function AuditClient({ logs }: Props) {
               </SelectContent>
             </Select>
 
+            <Input
+              placeholder={t("filter.user")}
+              value={userFilter}
+              onChange={(e) => setUserFilter(e.target.value)}
+              className="w-40"
+            />
+
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-36"
+              aria-label={t("filter.dateFrom")}
+            />
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-36"
+              aria-label={t("filter.dateTo")}
+            />
+
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input type="text" placeholder={t("search_placeholder")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 w-64" />
+              <Input type="text" placeholder={t("search_placeholder")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 w-48" />
             </div>
+
+            {filtersActive && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
+                <X className="h-4 w-4" />
+                {t("filter.clearFilters")}
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -174,7 +345,7 @@ export function AuditClient({ logs }: Props) {
             data={tableData}
             searchPlaceholder={t("search_placeholder")}
             pageSize={20}
-            isLoading={false}
+            isLoading={isServerFiltering}
             emptyMessage={t("empty")}
             showSearch={false}
             maxHeight="60vh"
