@@ -2,16 +2,17 @@
 
 import { useRef, useState, useCallback, type KeyboardEvent, type ChangeEvent } from "react"
 import { useTranslations } from "next-intl"
-import { Send, Paperclip, X, FileText, Image as ImageIcon } from "lucide-react"
+import { Send, Paperclip, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { postJson } from "@/lib/http"
 import type { Attachment } from "./_types"
+import { AttachmentPreview } from "./attachment-preview"
 
 type PendingAttachment = {
-  file: File
   attachment: Attachment
+  previewUrl: string
 }
 
 type MessageInputProps = {
@@ -41,6 +42,12 @@ export function MessageInput({ onSend, convId, disabled = false }: MessageInputP
     el.style.height = `${Math.min(Math.max(el.scrollHeight, minH), maxH)}px`
   }
 
+  function revokePreviewUrl(url: string) {
+    if (url.startsWith("blob:")) {
+      URL.revokeObjectURL(url)
+    }
+  }
+
   const sendTypingStop = useCallback(() => {
     if (!isTypingRef.current) return
     isTypingRef.current = false
@@ -56,7 +63,7 @@ export function MessageInput({ onSend, convId, disabled = false }: MessageInputP
   function handleChange(e: ChangeEvent<HTMLTextAreaElement>) {
     setContent(e.target.value)
     adjustHeight()
-    // Typing indicator
+
     if (e.target.value.trim().length > 0) {
       sendTypingStart()
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
@@ -71,41 +78,56 @@ export function MessageInput({ onSend, convId, disabled = false }: MessageInputP
     if (files.length === 0) return
     e.target.value = ""
 
-    setUploadingCount((c) => c + files.length)
+    setUploadingCount((count) => count + files.length)
+
     await Promise.all(
       files.map(async (file) => {
+        const previewUrl = URL.createObjectURL(file)
+
         try {
           const formData = new FormData()
           formData.append("file", file)
+
           const res = await fetch(`/api/chat/conversations/${convId}/attachments`, {
             method: "POST",
             body: formData,
           })
+
           if (!res.ok) throw new Error("upload failed")
+
           const data = await res.json() as { data: Attachment }
-          setPendingAttachments((prev) => [...prev, { file, attachment: data.data }])
+          setPendingAttachments((prev) => [...prev, { attachment: data.data, previewUrl }])
         } catch {
-          // ignore individual upload errors silently
+          revokePreviewUrl(previewUrl)
         } finally {
-          setUploadingCount((c) => c - 1)
+          setUploadingCount((count) => count - 1)
         }
-      })
+      }),
     )
   }
 
   function removeAttachment(id: number) {
-    setPendingAttachments((prev) => prev.filter((p) => p.attachment.id !== id))
+    setPendingAttachments((prev) => {
+      const pending = prev.find((item) => item.attachment.id === id)
+      if (pending) {
+        revokePreviewUrl(pending.previewUrl)
+      }
+      return prev.filter((item) => item.attachment.id !== id)
+    })
   }
 
   async function handleSend() {
     const trimmed = content.trim()
     if ((!trimmed && pendingAttachments.length === 0) || isSending || disabled) return
+
     setIsSending(true)
     sendTypingStop()
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+
     try {
-      const attachmentIds = pendingAttachments.map((p) => p.attachment.id)
+      const attachmentIds = pendingAttachments.map((pending) => pending.attachment.id)
       await onSend(trimmed, attachmentIds)
+      pendingAttachments.forEach((pending) => revokePreviewUrl(pending.previewUrl))
       setContent("")
       setPendingAttachments([])
       if (textareaRef.current) textareaRef.current.style.height = "auto"
@@ -125,37 +147,26 @@ export function MessageInput({ onSend, convId, disabled = false }: MessageInputP
   const isDisabled = disabled || isSending || uploadingCount > 0
 
   return (
-    <div className="border-t bg-card px-4 py-3 space-y-2">
-      {/* Pending attachments preview */}
+    <div className="space-y-2 border-t bg-card px-4 py-3">
       {pendingAttachments.length > 0 && (
-        <div className="flex flex-wrap gap-2 px-1">
-          {pendingAttachments.map(({ attachment }) => {
-            const isImage = attachment.mimeType.startsWith("image/")
-            return (
-              <div
-                key={attachment.id}
-                className="relative group/att flex items-center gap-1.5 bg-muted/60 rounded-lg px-2 py-1.5 text-xs max-w-40"
+        <div className="flex flex-wrap gap-3 px-1">
+          {pendingAttachments.map(({ attachment, previewUrl }) => (
+            <div key={attachment.id} className="relative max-w-72">
+              <AttachmentPreview attachment={attachment} isOwn={false} previewUrl={previewUrl} />
+              <button
+                type="button"
+                onClick={() => removeAttachment(attachment.id)}
+                className="absolute right-2 top-2 z-10 rounded-full bg-background/85 p-1 opacity-80 shadow-sm hover:opacity-100"
+                aria-label="Remove attachment"
               >
-                {isImage ? (
-                  <ImageIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                ) : (
-                  <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                )}
-                <span className="truncate text-foreground/80">{attachment.fileName}</span>
-                <button
-                  type="button"
-                  onClick={() => removeAttachment(attachment.id)}
-                  className="ml-1 opacity-60 hover:opacity-100 shrink-0"
-                  aria-label="Remove attachment"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-            )
-          })}
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+
           {uploadingCount > 0 && (
-            <div className="flex items-center gap-1.5 bg-muted/60 rounded-lg px-2 py-1.5 text-xs text-muted-foreground">
-              <span className="animate-pulse">Uploading…</span>
+            <div className="flex items-center gap-1.5 rounded-lg bg-muted/60 px-2 py-1.5 text-xs text-muted-foreground">
+              <span className="animate-pulse">{t("uploading")}</span>
             </div>
           )}
         </div>
@@ -164,10 +175,9 @@ export function MessageInput({ onSend, convId, disabled = false }: MessageInputP
       <div
         className={cn(
           "flex items-end gap-2 rounded-xl border bg-background px-3 py-2 transition-colors",
-          "focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20"
+          "focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20",
         )}
       >
-        {/* Paperclip button */}
         <Button
           type="button"
           variant="ghost"
@@ -179,6 +189,7 @@ export function MessageInput({ onSend, convId, disabled = false }: MessageInputP
         >
           <Paperclip className="h-4 w-4" />
         </Button>
+
         <input
           ref={fileInputRef}
           type="file"
@@ -197,13 +208,13 @@ export function MessageInput({ onSend, convId, disabled = false }: MessageInputP
           disabled={isDisabled}
           rows={1}
           className={cn(
-            "flex-1 resize-none border-0 bg-transparent p-0 text-sm shadow-none",
+            "min-h-6 max-h-24 flex-1 resize-none overflow-y-auto border-0 bg-transparent p-0 text-sm leading-6 shadow-none",
             "focus-visible:ring-0 focus-visible:ring-offset-0",
-            "min-h-6 max-h-24 overflow-y-auto leading-6",
-            "placeholder:text-muted-foreground/60"
+            "placeholder:text-muted-foreground/60",
           )}
           style={{ height: "24px" }}
         />
+
         <Button
           type="button"
           size="icon"
@@ -211,7 +222,7 @@ export function MessageInput({ onSend, convId, disabled = false }: MessageInputP
           disabled={isEmpty || isDisabled}
           className={cn(
             "h-8 w-8 shrink-0 rounded-lg transition-all",
-            isEmpty || isDisabled ? "opacity-40" : "opacity-100 shadow-sm hover:shadow-md"
+            isEmpty || isDisabled ? "opacity-40" : "opacity-100 shadow-sm hover:shadow-md",
           )}
         >
           <Send className="h-3.5 w-3.5" />

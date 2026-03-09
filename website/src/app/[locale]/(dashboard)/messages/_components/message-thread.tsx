@@ -97,6 +97,15 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
     staleTime: 5_000,
   })
 
+  // Reset state when conversation changes
+  const prevMessageCount = useRef(0)
+  useEffect(() => {
+    setHasScrolledToBottom(false)
+    setAllMessages([])
+    setLoadMoreCursor(undefined)
+    prevMessageCount.current = 0
+  }, [convId])
+
   // Merge new messages from polling with already-loaded older messages
   useEffect(() => {
     if (!data) return
@@ -109,13 +118,6 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
     })
   }, [data])
 
-  // Reset state when conversation changes
-  useEffect(() => {
-    setHasScrolledToBottom(false)
-    setAllMessages([])
-    setLoadMoreCursor(undefined)
-  }, [convId])
-
   // Auto-scroll to bottom on initial load
   useEffect(() => {
     if (!hasScrolledToBottom && allMessages.length > 0) {
@@ -125,7 +127,6 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
   }, [allMessages, hasScrolledToBottom])
 
   // Smart scroll: only scroll to bottom on new messages if user is near bottom
-  const prevMessageCount = useRef(0)
   useEffect(() => {
     if (!hasScrolledToBottom) return
     if (allMessages.length <= prevMessageCount.current) {
@@ -322,6 +323,9 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
                         {msg.updatedAt !== null && msg.updatedAt !== msg.createdAt && (
                           <span className="ml-1">{t("conversations.edited_label")}</span>
                         )}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground/80">
+                        {msg.readByAll ? t("thread.status_read") : t("thread.status_sent")}
                       </span>
                       {msg.readByAll ? (
                         <CheckCheck className="h-3 w-3 text-primary/60 shrink-0" />

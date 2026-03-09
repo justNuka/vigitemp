@@ -13,10 +13,15 @@ import { log } from "@/lib/logger"
 
 const TAKE = 50
 
-const postBodySchema = z.object({
-  contenu: z.string().min(1).max(10000),
-  attachmentIds: z.array(z.number().int().positive()).max(10).optional(),
-})
+const postBodySchema = z
+  .object({
+    contenu: z.string().max(10000).default(""),
+    attachmentIds: z.array(z.number().int().positive()).max(10).optional().default([]),
+  })
+  .refine((data) => data.contenu.trim().length > 0 || data.attachmentIds.length > 0, {
+    message: "Message vide",
+    path: ["contenu"],
+  })
 
 type RouteParams = { params: Promise<{ id: string }> }
 
@@ -181,30 +186,72 @@ export const POST = withAuthLogging(
       }
 
       const { contenu, attachmentIds } = parsed.data
+      const normalizedContent = contenu.trim()
 
-      const created = await prismaChat.t_message.create({
-        data: {
-          Id_Conversation: convId,
-          Sender_Id: userId,
-          Contenu: contenu,
-        },
-        select: {
-          Id_Message: true,
-          Id_Conversation: true,
-          Sender_Id: true,
-          Contenu: true,
-          Date_Creation: true,
-          Date_Modification: true,
-        },
-      })
+      const created = await prismaChat.$transaction(async (tx) => {
+        let placeholderAttachments:
+          | Array<{
+              Id_Attachment: number
+              Id_Message: number
+            }>
+          = []
 
-      // Link any pending attachments to this message
-      if (attachmentIds && attachmentIds.length > 0) {
-        await prismaChat.t_message_attachment.updateMany({
-          where: { Id_Attachment: { in: attachmentIds }, Id_Message: 0 },
-          data: { Id_Message: created.Id_Message },
+        if (attachmentIds.length > 0) {
+          placeholderAttachments = await tx.t_message_attachment.findMany({
+            where: {
+              Id_Attachment: { in: attachmentIds },
+              message: {
+                Id_Conversation: convId,
+                Sender_Id: userId,
+                Date_Suppression: { not: null },
+              },
+            },
+            select: {
+              Id_Attachment: true,
+              Id_Message: true,
+            },
+          })
+
+          if (placeholderAttachments.length !== attachmentIds.length) {
+            throw new Error("invalid_pending_attachments")
+          }
+        }
+
+        const message = await tx.t_message.create({
+          data: {
+            Id_Conversation: convId,
+            Sender_Id: userId,
+            Contenu: normalizedContent,
+          },
+          select: {
+            Id_Message: true,
+            Id_Conversation: true,
+            Sender_Id: true,
+            Contenu: true,
+            Date_Creation: true,
+            Date_Modification: true,
+          },
         })
-      }
+
+        if (placeholderAttachments.length > 0) {
+          await tx.t_message_attachment.updateMany({
+            where: {
+              Id_Attachment: { in: placeholderAttachments.map((attachment) => attachment.Id_Attachment) },
+            },
+            data: { Id_Message: message.Id_Message },
+          })
+
+          await tx.t_message.deleteMany({
+            where: {
+              Id_Message: {
+                in: Array.from(new Set(placeholderAttachments.map((attachment) => attachment.Id_Message))),
+              },
+            },
+          })
+        }
+
+        return message
+      })
 
       return apiOk({
         id: created.Id_Message,
@@ -215,6 +262,10 @@ export const POST = withAuthLogging(
         updatedAt: created.Date_Modification?.toISOString() ?? null,
       })
     } catch (error) {
+      if (error instanceof Error && error.message === "invalid_pending_attachments") {
+        return apiError(400, "invalid_pending_attachments", "Pieces jointes temporaires invalides")
+      }
+
       log.error("chat/conversations/messages", "message_send_error", { error })
       return apiError(500, "message_send_failed", "Erreur lors de l'envoi du message")
     }

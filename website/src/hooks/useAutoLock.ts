@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { useEffect, useRef, useCallback } from "react";
-import { useRouter } from "@/i18n/navigation";
 import { buildLocalizedPath, resolveLocaleFromPathname } from "@/i18n/pathnames";
 import { fetchJson } from "@/lib/http";
 import { markDisconnectReason } from "@/lib/auth-disconnect-marker";
@@ -14,7 +13,6 @@ interface AutoLockConfig {
 const DEFAULT_DURATION = 15; // 15 minutes par défaut
 
 export function useAutoLock() {
-  const router = useRouter();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const configRef = useRef<AutoLockConfig | null>(null);
 
@@ -44,12 +42,12 @@ export function useAutoLock() {
     try {
       await fetchJson<{ success: true }>("/api/auth/logout-auto", { method: "POST", credentials: "include" });
       markDisconnectReason("inactivity");
-      router.push(localizedLoginPath);
+      window.location.assign(localizedLoginPath);
     } catch (error) {
       console.error("Erreur lors du logout automatique:", error);
-      router.push(localizedLoginPath);
+      window.location.assign(localizedLoginPath);
     }
-  }, [router]);
+  }, []);
 
   // Réinitialiser le timer d'inactivité
   const resetTimer = useCallback(() => {

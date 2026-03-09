@@ -3819,10 +3819,17 @@
       "participants_count": "{count, plural, one {{count} participant} other {{count} participants}}",
       "input_placeholder": "Écrivez un message… (Entrée pour envoyer, Maj+Entrée pour saut de ligne)",
       "send": "Envoyer",
+      "uploading": "Televersement...",
       "attach_file": "Joindre un fichier",
       "load_more": "Charger les messages précédents",
       "send_error": "Échec de l'envoi du message",
-      "load_more_error": "Impossible de charger les messages précédents"
+      "load_more_error": "Impossible de charger les messages précédents",
+      "pdf_preview_unavailable": "Apercu indisponible. Ouvrir le fichier pour le consulter.",
+      "spreadsheet_preview_unavailable": "Apercu du tableur indisponible. Telecharger le fichier pour le consulter.",
+      "text_preview_unavailable": "Apercu du fichier texte indisponible.",
+      "office_preview_unavailable": "Apercu non disponible pour ce format Office.",
+      "status_sent": "Envoye",
+      "status_read": "Lu"
     },
     "new_conversation": {
       "title": "Nouvelle conversation",

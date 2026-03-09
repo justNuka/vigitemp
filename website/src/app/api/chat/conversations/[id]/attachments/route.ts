@@ -65,21 +65,35 @@ export const POST = withAuthLogging(
       const buffer = Buffer.from(await file.arrayBuffer())
       await writeFile(join(UPLOAD_DIR, uniqueName), buffer)
 
-      // Use Id_Message = 0 as placeholder; POST /messages will link it to the real message
-      const attachment = await prismaChat.t_message_attachment.create({
-        data: {
-          Id_Message: 0,
-          File_Name: originalName,
-          File_Path: uniqueName,
-          File_Size: file.size,
-          Mime_Type: file.type,
-        },
-        select: {
-          Id_Attachment: true,
-          File_Name: true,
-          Mime_Type: true,
-          File_Size: true,
-        },
+      const attachment = await prismaChat.$transaction(async (tx) => {
+        // Keep pending uploads attached to a hidden placeholder message so the FK stays valid.
+        const placeholderMessage = await tx.t_message.create({
+          data: {
+            Id_Conversation: convId,
+            Sender_Id: userId,
+            Contenu: "",
+            Date_Suppression: new Date(),
+          },
+          select: {
+            Id_Message: true,
+          },
+        })
+
+        return tx.t_message_attachment.create({
+          data: {
+            Id_Message: placeholderMessage.Id_Message,
+            File_Name: originalName,
+            File_Path: uniqueName,
+            File_Size: file.size,
+            Mime_Type: file.type,
+          },
+          select: {
+            Id_Attachment: true,
+            File_Name: true,
+            Mime_Type: true,
+            File_Size: true,
+          },
+        })
       })
 
       return apiOk({

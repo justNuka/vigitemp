@@ -188,9 +188,9 @@ export function GlobalAppEffects() {
           markDisconnectReason("inactivity")
         }
         if (shouldShowSessionExpiredToast) {
-          router.push(buildLocalizedPath("/login", locale, { reason: "inactivity" }))
+          window.location.assign(buildLocalizedPath("/login", locale, { reason: "inactivity" }))
         } else {
-          router.push(localizedLoginPath)
+          window.location.assign(localizedLoginPath)
         }
       }
     }

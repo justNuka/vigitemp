@@ -3819,10 +3819,17 @@
       "participants_count": "{count, plural, one {{count} participant} other {{count} participants}}",
       "input_placeholder": "Write a message… (Enter to send, Shift+Enter for new line)",
       "send": "Send",
+      "uploading": "Uploading...",
       "attach_file": "Attach file",
       "load_more": "Load previous messages",
       "send_error": "Failed to send message",
-      "load_more_error": "Failed to load previous messages"
+      "load_more_error": "Failed to load previous messages",
+      "pdf_preview_unavailable": "Preview unavailable. Open the file to view it.",
+      "spreadsheet_preview_unavailable": "Spreadsheet preview unavailable. Download the file to view it.",
+      "text_preview_unavailable": "Text file preview unavailable.",
+      "office_preview_unavailable": "Preview is not available for this Office format.",
+      "status_sent": "Sent",
+      "status_read": "Read"
     },
     "new_conversation": {
       "title": "New conversation",
