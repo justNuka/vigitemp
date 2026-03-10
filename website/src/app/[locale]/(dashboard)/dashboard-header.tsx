@@ -35,25 +35,25 @@ export function DashboardHeader({ stats }: { stats: Stats }) {
   const t = useTranslations("dashboard");
   const [activeAlarms, setActiveAlarms] = useState(stats.activeAlarms);
   const cardBaseClass =
-    "relative overflow-hidden bg-slate-800 text-white border border-white/10 shadow-[0_12px_24px_-16px_rgba(15,23,42,0.7)] dark:bg-card dark:text-card-foreground dark:border-border";
+    "relative overflow-hidden bg-linear-to-br from-foreground/[.92] to-foreground/[.80] text-white border border-foreground/10 shadow-[0_12px_24px_-16px_rgba(15,23,42,0.7)] dark:from-card dark:to-muted/30 dark:text-card-foreground dark:border-border";
   const cardTitleClass = "text-white/70 dark:text-muted-foreground";
   const cardValueClass = "text-white dark:text-foreground";
   const cardVariants = {
     info: {
       border: "border-l-8 border-l-sky-400",
-      icon: "bg-sky-500 text-sidebar ring-1 ring-sky-300/40 dark:bg-primary/10 dark:text-sidebar-foreground",
+      icon: "bg-sky-500/25 text-sky-300 ring-1 ring-sky-400/30",
     },
     danger: {
       border: "border-l-8 border-l-red-500",
-      icon: "bg-red-500 text-sidebar ring-1 ring-rose-300/40 dark:bg-destructive/10 dark:text-sidebar-foreground",
+      icon: "bg-red-500/25 text-red-300 ring-1 ring-red-400/30",
     },
     muted: {
       border: "border-l-8 border-l-slate-400",
-      icon: "bg-slate-500 text-sidebar ring-1 ring-slate-300/40 dark:bg-muted dark:text-sidebar-foreground",
+      icon: "bg-slate-500/25 text-slate-300 ring-1 ring-slate-400/30",
     },
     warning: {
       border: "border-l-8 border-l-amber-400",
-      icon: "bg-amber-500 text-sidebar ring-1 ring-amber-300/40 dark:bg-warning/10 dark:text-sidebar-foreground",
+      icon: "bg-amber-500/25 text-amber-300 ring-1 ring-amber-400/30",
     },
   };
 
