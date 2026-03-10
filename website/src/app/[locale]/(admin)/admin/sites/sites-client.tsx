@@ -1,5 +1,7 @@
 'use client'
 
+import { LazyMotion, domAnimation, m } from 'motion/react'
+import { fadeInUp } from '@/lib/motion-variants'
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -133,7 +135,13 @@ export function SitesClient() {
   }
 
   return (
-    <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
+    <LazyMotion features={domAnimation}>
+    <m.main
+      className="flex-1 p-4 md:p-6 space-y-6"
+      variants={fadeInUp}
+      initial="hidden"
+      animate="visible"
+    >
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
@@ -219,6 +227,7 @@ export function SitesClient() {
           </AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>
-    </main>
+    </m.main>
+    </LazyMotion>
   )}
 

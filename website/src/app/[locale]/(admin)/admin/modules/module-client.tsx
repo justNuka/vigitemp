@@ -1,5 +1,7 @@
 "use client";
 
+import { LazyMotion, domAnimation, m } from "motion/react";
+import { fadeInUp } from "@/lib/motion-variants";
 import { useEffect, useRef, useState } from "react";
 import { Archive, Cpu, Pencil, Plus, Thermometer } from "lucide-react";
 import { useRouter } from '@/i18n/navigation';
@@ -115,7 +117,13 @@ export function ModulesClient() {
   }
 
   return (
-    <div className="space-y-6">
+    <LazyMotion features={domAnimation}>
+    <m.div
+      className="space-y-6"
+      variants={fadeInUp}
+      initial="hidden"
+      animate="visible"
+    >
       <Card>
         <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40 pb-3">
           <div className="flex items-center justify-between">
@@ -245,7 +253,8 @@ export function ModulesClient() {
         </AlertDialogContent>
       </AlertDialog>
 
-    </div>
+    </m.div>
+    </LazyMotion>
   );
 }
 

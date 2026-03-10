@@ -1,5 +1,7 @@
 "use client"
 
+import { LazyMotion, domAnimation, m } from "motion/react"
+import { fadeInUp } from "@/lib/motion-variants"
 import { useEffect, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import type { ColumnDef } from "@tanstack/react-table"
@@ -126,7 +128,13 @@ export function ActuatorsClient() {
   }))
 
   return (
-    <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
+    <LazyMotion features={domAnimation}>
+    <m.main
+      className="flex-1 p-4 md:p-6 space-y-6"
+      variants={fadeInUp}
+      initial="hidden"
+      animate="visible"
+    >
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <div>
@@ -193,7 +201,8 @@ export function ActuatorsClient() {
           </AlertDialogAction>
         </AlertDialogContent>
       </AlertDialog>
-    </main>
+    </m.main>
+    </LazyMotion>
   )
 }
 
