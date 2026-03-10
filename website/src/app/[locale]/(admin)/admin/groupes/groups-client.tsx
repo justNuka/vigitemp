@@ -6,6 +6,9 @@ import { toast } from "sonner";
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 
+import { LazyMotion, domAnimation, m } from "motion/react";
+import { fadeInUp } from "@/lib/motion-variants";
+
 import { useGroups, type Group } from '@/hooks/useGroups';
 import { useGroupLocations } from '@/hooks/useGroupLocations';
 import { useGroupUsers } from '@/hooks/useGroupUsers';
@@ -86,7 +89,13 @@ export function GroupsClient() {
 
 
   return (
-    <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
+    <LazyMotion features={domAnimation}>
+      <m.main
+        className="flex-1 p-4 md:p-6 space-y-6"
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+      >
       <Card>
         <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40 flex flex-row items-center justify-between space-y-0">
           <div>
@@ -128,7 +137,8 @@ export function GroupsClient() {
       </div>
 
       <GroupModal open={modalOpen} onOpenChange={setModalOpen} group={selectedGroup} isEditing={isEditing} />
-    </main>
+      </m.main>
+    </LazyMotion>
   );
 }
 

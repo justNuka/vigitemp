@@ -11,6 +11,9 @@ import { useRouter } from "@/i18n/navigation";
 import { getJson } from "@/lib/http";
 import { useTranslations } from "next-intl";
 
+import { LazyMotion, domAnimation, m } from "motion/react";
+import { fadeInUp } from "@/lib/motion-variants";
+
 import { usePasswordRules } from "@/hooks/usePasswordRules";
 import { useProfiles } from "@/hooks/useProfiles";
 import { useSitesSimple } from "@/hooks/useSites";
@@ -183,7 +186,13 @@ export function UsersClient({ users }: Props) {
   };
 
   return (
-    <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
+    <LazyMotion features={domAnimation}>
+      <m.main
+        className="flex-1 p-4 md:p-6 space-y-6"
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+      >
       <CreateUserDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
@@ -243,7 +252,8 @@ export function UsersClient({ users }: Props) {
           />
         </CardContent>
       </Card>
-    </main>
+      </m.main>
+    </LazyMotion>
   );
 }
 

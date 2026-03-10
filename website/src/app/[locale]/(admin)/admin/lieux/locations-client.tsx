@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
+import { LazyMotion, domAnimation, m } from "motion/react";
+import { fadeInUp } from "@/lib/motion-variants";
+
 import { useAvailableSensors } from '@/hooks/useAvailableSensors'
 import { useGroups } from '@/hooks/useGroups'
 import { useModules } from '@/hooks/useModules'
@@ -152,7 +155,13 @@ export function LocationsClient() {
   }
 
   return (
-    <main className="flex-1 p-4 md:p-6 space-y-6 animate-fade-in">
+    <LazyMotion features={domAnimation}>
+      <m.main
+        className="flex-1 p-4 md:p-6 space-y-6"
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+      >
       <Card>
         <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40 flex flex-row items-center justify-between space-y-0">
           <div>
@@ -285,7 +294,8 @@ export function LocationsClient() {
           </div>
         </AlertDialogContent>
       </AlertDialog>
-    </main>
+      </m.main>
+    </LazyMotion>
   )
 }
 

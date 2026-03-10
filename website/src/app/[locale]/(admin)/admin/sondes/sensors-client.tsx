@@ -15,6 +15,9 @@ import { Link } from "@/i18n/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { LazyMotion, domAnimation, m } from "motion/react";
+import { fadeInUp } from "@/lib/motion-variants";
+
 import { SensorModal } from "./sensor-modal";
 import { AdjustmentsPanel, type AdjustmentRow } from "./_components/adjustments-panel";
 import { CalibrationsPanel, type CalibrationRow } from "./_components/calibrations-panel";
@@ -100,7 +103,13 @@ export function SensorsClient() {
   }
 
   return (
-    <div className="space-y-6">
+    <LazyMotion features={domAnimation}>
+      <m.div
+        className="space-y-6"
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+      >
       <Card>
         <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40 pb-3">
           <div className="flex items-center justify-between">
@@ -184,7 +193,8 @@ export function SensorsClient() {
       </div>
 
       <SensorModal open={isModalOpen} onOpenChange={setIsModalOpen} sensor={selectedSensor || null} isEditing={isEditing} />
-    </div>
+      </m.div>
+    </LazyMotion>
   );
 }
 

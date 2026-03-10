@@ -20,6 +20,9 @@ import { cn } from "@/lib/utils";
 import type { AuditLog } from "@/lib/api";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
+import { LazyMotion, domAnimation, m } from "motion/react";
+import { fadeInUp } from "@/lib/motion-variants";
+
 import { buildAuditActionConfig } from "./_components/audit-action-config";
 import { filterAuditLogs, parseAuditDetails, renderChangesAsRows, toAuditTableData, type AuditCode, type AuditLogRow } from "./_components/audit-client-helpers";
 
@@ -280,7 +283,13 @@ export function AuditClient({ logs: initialLogs }: Props) {
   const tableData = useMemo(() => toAuditTableData(filteredLogs), [filteredLogs]);
 
   return (
-    <main className="flex-1 p-4 md:p-4 space-y-4 animate-fade-in">
+    <LazyMotion features={domAnimation}>
+      <m.main
+        className="flex-1 p-4 md:p-4 space-y-4"
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+      >
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 flex-wrap gap-2">
           <div>
@@ -365,6 +374,7 @@ export function AuditClient({ logs: initialLogs }: Props) {
           />
         </CardContent>
       </Card>
-    </main>
+      </m.main>
+    </LazyMotion>
   );
 }
