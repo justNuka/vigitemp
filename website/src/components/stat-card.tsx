@@ -66,7 +66,7 @@ export function StatCard({
 
   return (
     <LazyMotion features={domAnimation}>
-      <m.div variants={fadeInUp} initial="hidden" animate="visible">
+      <m.div variants={fadeInUp}>
         <Card className={cn("overflow-visible", styles.card, className)}>
           <CardContent className={cn("p-4 md:p-6", contentClassName)}>
             <div className="flex items-start justify-between gap-4">
