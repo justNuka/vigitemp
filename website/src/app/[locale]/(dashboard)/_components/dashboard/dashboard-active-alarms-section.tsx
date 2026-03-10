@@ -36,9 +36,15 @@ export function DashboardActiveAlarmsSection({
           <AlertTriangle className="h-5 w-5 text-destructive" />
           {t("active_alarms.title")}
           {activeCount > 0 ? (
-            <Badge variant="destructive" className="ml-2">
-              {activeCount}
-            </Badge>
+            <>
+              <span
+                className="h-2 w-2 rounded-full bg-destructive animate-pulse"
+                aria-hidden="true"
+              />
+              <Badge variant="destructive" className="ml-1">
+                {activeCount}
+              </Badge>
+            </>
           ) : null}
         </h2>
         <Link href="/alarmes">
@@ -49,7 +55,7 @@ export function DashboardActiveAlarmsSection({
         </Link>
       </div>
 
-      <Card className="bg-white/90 border-slate-200 shadow-md dark:bg-card dark:border-border">
+      <Card className="bg-card border-border shadow-md">
         <CardContent className="p-0">
           <TanStackTable<AlarmRow>
             columns={columns}
@@ -64,12 +70,12 @@ export function DashboardActiveAlarmsSection({
             }}
             showSearch={false}
             showPagination={false}
-            containerClassName="border-slate-200"
-            headerClassName="!bg-slate-800 text-white"
-            headerCellClassName="!bg-slate-800 !text-white [&_svg]:!text-white !border-slate-700"
-            bodyClassName="[&_tr:nth-child(odd)]:bg-white [&_tr:nth-child(even)]:bg-slate-50/70 dark:[&_tr:nth-child(odd)]:bg-muted/30 dark:[&_tr:nth-child(even)]:bg-background"
-            tableClassName="text-slate-900 dark:text-card-foreground"
-            toolbarClassName="rounded-lg border border-slate-200 bg-white/80 px-3 py-2 shadow-sm"
+            containerClassName="border-border"
+            headerClassName="!bg-foreground/90 text-white dark:!bg-muted"
+            headerCellClassName="!bg-foreground/90 !text-white [&_svg]:!text-white !border-foreground/20 dark:!bg-muted dark:!border-border"
+            bodyClassName="[&_tr:nth-child(odd)]:bg-card [&_tr:nth-child(even)]:bg-muted/40 dark:[&_tr:nth-child(odd)]:bg-muted/30 dark:[&_tr:nth-child(even)]:bg-background"
+            tableClassName="text-foreground dark:text-card-foreground"
+            toolbarClassName="rounded-lg border border-border bg-card px-3 py-2 shadow-sm"
           />
         </CardContent>
       </Card>
