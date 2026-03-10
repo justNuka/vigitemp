@@ -138,36 +138,22 @@ export function SensorsCardsGrid({
   )
 
   return (
-    <div className="p-4 md:p-6 space-y-8 animate-fade-in">
-      {disabledFirst ? (
-        <>
-          {renderSection(
-            t("grid.disabled_title"),
-            <PowerOff className="h-5 w-5 text-slate-400" />,
-            disabledSensors,
-            true,
-          )}
-          {renderSection(
-            t("grid.active_title"),
-            <Power className="h-5 w-5 text-sky-500" />,
-            activeSensors,
-          )}
-        </>
-      ) : (
-        <>
-          {renderSection(
-            t("grid.active_title"),
-            <Power className="h-5 w-5 text-sky-500" />,
-            activeSensors,
-          )}
-          {renderSection(
-            t("grid.disabled_title"),
-            <PowerOff className="h-5 w-5 text-slate-400" />,
-            disabledSensors,
-            true,
-          )}
-        </>
-      )}
+    <div className="p-4 md:p-6 flex flex-col gap-8 animate-fade-in">
+      <div style={{ order: disabledFirst ? 2 : 1 }}>
+        {renderSection(
+          t("grid.active_title"),
+          <Power className="h-5 w-5 text-sky-500" />,
+          activeSensors,
+        )}
+      </div>
+      <div style={{ order: disabledFirst ? 1 : 2 }}>
+        {renderSection(
+          t("grid.disabled_title"),
+          <PowerOff className="h-5 w-5 text-slate-400" />,
+          disabledSensors,
+          true,
+        )}
+      </div>
     </div>
   )
 }

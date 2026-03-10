@@ -3,7 +3,6 @@
 
 
 
-
 import { useState } from "react"
 
 
@@ -11,7 +10,6 @@ import { Power, PowerOff } from "lucide-react"
 
 
 import { useLocale, useTranslations } from "next-intl"
-
 
 
 
@@ -39,7 +37,6 @@ import { usePersistentStringSet } from "./_hooks/use-persistent-string-set"
 
 import type { SensorWithLocation } from "@/lib/api"
 import type { SurveillanceSortMode } from "./_helpers/monitoring-derived"
-
 
 
 
@@ -89,7 +86,6 @@ interface MonitoringCardsGridProps {
 
 
 
-
 function MonitoringCardsGridSkeleton({ title }: { title: string }) {
 
 
@@ -124,7 +120,6 @@ function MonitoringCardsGridSkeleton({ title }: { title: string }) {
 
 
 }
-
 
 
 
@@ -182,7 +177,6 @@ function MonitoringSectionHeader({
 
 
 
-
 export function MonitoringCardsGrid({
 
 
@@ -234,7 +228,6 @@ export function MonitoringCardsGrid({
 
 
 
-
   const handleSurveillanceToggle =
 
 
@@ -248,7 +241,6 @@ export function MonitoringCardsGrid({
 
 
     })
-
 
 
 
@@ -297,7 +289,6 @@ export function MonitoringCardsGrid({
 
 
 
-
   if (sensors.length === 0) {
 
 
@@ -305,7 +296,6 @@ export function MonitoringCardsGrid({
 
 
   }
-
 
 
 
@@ -323,7 +313,6 @@ export function MonitoringCardsGrid({
   const groupedActive = groupSensorsBySiteAndGroup(activeSensors, groupingLabels, sortMode)
 
   const groupedDisabled = groupSensorsBySiteAndGroup(disabledSensors, groupingLabels, sortMode)
-
 
 
 
@@ -390,136 +379,130 @@ export function MonitoringCardsGrid({
 
 
 
-
-  const orderedSections = disabledFirst ? [sections[1], sections[0]] : sections
-
-
-
-
-
   return (
 
 
-    <div className="p-4 md:p-6 space-y-8 animate-fade-in">
+    <div className="p-4 md:p-6 flex flex-col gap-8 animate-fade-in">
 
 
-      {orderedSections.map((section) => (
+      {sections.map((section, index) => {
+        const order = index === 0
+          ? (disabledFirst ? 2 : 1)
+          : (disabledFirst ? 1 : 2)
 
+        return (
+          <div key={section.key} className={section.className} style={{ order }}>
 
-        <div key={section.key} className={section.className}>
 
+            <MonitoringSectionHeader title={section.title} icon={section.icon} />
 
-          <MonitoringSectionHeader title={section.title} icon={section.icon} />
 
+            {section.sites.length > 0 ? (
 
-          {section.sites.length > 0 ? (
 
+              <div className="space-y-6">
 
-            <div className="space-y-6">
 
+                {section.sites.map((site) => (
 
-              {section.sites.map((site) => (
 
+                  <MonitoringSiteSection
 
-                <MonitoringSiteSection
 
+                    key={`${section.key}-${site.siteId}`}
 
-                  key={`${section.key}-${site.siteId}`}
 
+                    site={site}
 
-                  site={site}
 
+                    siteKey={section.disabledView ? `disabled-${site.siteId}` : site.siteId}
 
-                  siteKey={section.disabledView ? `disabled-${site.siteId}` : site.siteId}
 
+                    disabledView={section.disabledView}
 
-                  disabledView={section.disabledView}
 
+                    expandedSites={expandedSites}
 
-                  expandedSites={expandedSites}
 
+                    expandedGroups={expandedGroups}
 
-                  expandedGroups={expandedGroups}
 
+                    toggleSite={toggleSite}
 
-                  toggleSite={toggleSite}
 
+                    toggleGroup={toggleGroup}
 
-                  toggleGroup={toggleGroup}
 
+                    locale={locale}
 
-                  locale={locale}
 
+                    timezone={timezone}
 
-                  timezone={timezone}
 
+                    t={t}
 
-                  t={t}
 
+                    onOpenGroupModal={
 
-                  onOpenGroupModal={
 
+                      section.disabledView
 
-                    section.disabledView
 
+                        ? undefined
 
-                      ? undefined
 
+                        : (modal) => {
 
-                      : (modal) => {
 
+                            setGroupDisableDuration("60")
 
-                          setGroupDisableDuration("60")
 
+                            setGroupModal(modal)
 
-                          setGroupModal(modal)
 
+                          }
 
-                        }
 
+                    }
 
-                  }
 
+                    onSurveillanceToggle={handleSurveillanceToggle}
 
-                  onSurveillanceToggle={handleSurveillanceToggle}
 
+                    onEditLocation={onEditLocation}
 
-                  onEditLocation={onEditLocation}
 
+                    showNullNonResponse={showNullNonResponse}
+                    sortMode={sortMode}
 
-                  showNullNonResponse={showNullNonResponse}
-                  sortMode={sortMode}
 
+                  />
 
-                />
 
+                ))}
 
-              ))}
 
+              </div>
 
-            </div>
 
+            ) : section.emptyMessage ? (
 
-          ) : section.emptyMessage ? (
 
+              <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 px-4 py-3 text-sm text-slate-500">
 
-            <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 px-4 py-3 text-sm text-slate-500">
 
+                {section.emptyMessage}
 
-              {section.emptyMessage}
 
+              </div>
 
-            </div>
 
+            ) : null}
 
-          ) : null}
 
-
-        </div>
-
-
-      ))}
-
+          </div>
+        )
+      })}
 
 
 
