@@ -2,6 +2,7 @@
 import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useEffect, useState } from "react";
+import { LazyMotion, domAnimation, m, useReducedMotion } from "motion/react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useMutation } from "@tanstack/react-query";
@@ -57,6 +58,9 @@ export function LoginForm() {
   const licenseLabel = formatLicenseLabel(license, tCommon);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
+  const ease = [0.22, 1, 0.36, 1] as const;
+  const dur = shouldReduceMotion ? 0 : 0.5;
 
   const reason = searchParams.get("reason");
   const passwordChanged = searchParams.get("passwordChanged");
@@ -235,87 +239,121 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-between p-4 bg-linear-to-br from-background via-background to-muted/20">
-      <div className="absolute top-4 right-4 flex items-center gap-2">
-        <LanguageSwitcher />
-        <ThemeToggle />
-      </div>
+    <LazyMotion features={domAnimation}>
+      <div className="relative min-h-screen flex flex-col items-center justify-between p-4 overflow-hidden bg-background">
+        {/* Animated background orbs — CSS only, hidden when reduced motion */}
+        {!shouldReduceMotion && (
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+            <div className="animate-blob absolute top-1/4 left-1/4 h-72 w-72 rounded-full bg-primary/15 blur-3xl opacity-60" />
+            <div className="animate-blob animation-delay-2000 absolute top-1/2 right-1/4 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl opacity-60" />
+            <div className="animate-blob animation-delay-4000 absolute bottom-1/4 left-1/3 h-56 w-56 rounded-full bg-purple-500/10 blur-3xl opacity-60" />
+          </div>
+        )}
 
-      <div className="w-full max-w-md space-y-8 flex-1 flex flex-col justify-center">
-        <div className="flex flex-col items-center text-center space-y-3">
-          <Logo size="lg" showText />
-          <span className="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">
-            {licenseLabel}
-          </span>
+        <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+          <LanguageSwitcher />
+          <ThemeToggle />
         </div>
 
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
+        <div className="relative z-10 w-full max-w-md space-y-8 flex-1 flex flex-col justify-center">
+          {/* Logo + badge licence */}
+          <m.div
+            className="flex flex-col items-center text-center space-y-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: dur, ease }}
+          >
+            <Logo size="lg" showText />
+            <m.span
+              className="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: dur, ease, delay: shouldReduceMotion ? 0 : 0.15 }}
+            >
+              {licenseLabel}
+            </m.span>
+          </m.div>
+
+          {/* Title */}
+          <m.div
+            className="text-center space-y-2"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: dur, ease, delay: shouldReduceMotion ? 0 : 0.25 }}
+          >
+            <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
+          </m.div>
+
+          {/* Card glassmorphism */}
+          <m.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: dur, ease, delay: shouldReduceMotion ? 0 : 0.38 }}
+          >
+            <Card className="bg-background/70 backdrop-blur-xl border border-border/50 shadow-2xl">
+              <CardHeader>
+                <CardTitle>{t("card.title")}</CardTitle>
+                <CardDescription>
+                  {t("card.description")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <>
+                  {showInactivityMessage && (
+                    <LoginInactivityAlert message={t("inactivity_alert")} />
+                  )}
+                  <LoginCredentialsForm
+                    register={register}
+                    errors={errors}
+                    onSubmit={handleSubmit(handleFormSubmit, (errors) => showFormValidationToast(errors))}
+                    onForgotPassword={() => setShowForgotPassword(true)}
+                    isSubmitting={loginMutation.isPending}
+                    translations={{
+                      usernameLabel: t("fields.username_label"),
+                      usernamePlaceholder: t("fields.username_placeholder"),
+                      passwordLabel: t("fields.password_label"),
+                      passwordPlaceholder: t("fields.password_placeholder"),
+                      signingIn: t("buttons.signing_in"),
+                      signIn: t("buttons.sign_in"),
+                      forgotPassword: t("buttons.forgot_password"),
+                    }}
+                  />
+                </>
+              </CardContent>
+            </Card>
+          </m.div>
+
+          <p className="text-center text-sm text-muted-foreground">{t("footer.tagline")}</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("card.title")}</CardTitle>
-            <CardDescription>
-              {t("card.description")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <>
-              {showInactivityMessage && (
-                <LoginInactivityAlert message={t("inactivity_alert")} />
-              )}
+        <p className="relative z-10 w-full text-center text-xs text-muted-foreground/70 pb-4">
+          Vigi<span className="font-semibold">Sensys</span> - MC2 Lab
+        </p>
 
-              <LoginCredentialsForm
-                register={register}
-                errors={errors}
-                onSubmit={handleSubmit(handleFormSubmit, (errors) => showFormValidationToast(errors))}
-                onForgotPassword={() => setShowForgotPassword(true)}
-                isSubmitting={loginMutation.isPending}
-                translations={{
-                  usernameLabel: t("fields.username_label"),
-                  usernamePlaceholder: t("fields.username_placeholder"),
-                  passwordLabel: t("fields.password_label"),
-                  passwordPlaceholder: t("fields.password_placeholder"),
-                  signingIn: t("buttons.signing_in"),
-                  signIn: t("buttons.sign_in"),
-                  forgotPassword: t("buttons.forgot_password"),
-                }}
-              />
-            </>
-          </CardContent>
-        </Card>
-
-        <p className="text-center text-sm text-muted-foreground">{t("footer.tagline")}</p>
+        <ForgotPasswordDialog
+          open={showForgotPassword}
+          onOpenChange={handleCloseForgotPassword}
+          success={resetSuccess}
+          register={registerReset}
+          errors={resetErrors}
+          onSubmit={handleResetSubmit(handleResetPasswordSubmit)}
+          onClose={handleCloseForgotPassword}
+          isSubmitting={resetPasswordMutation.isPending}
+          translations={{
+            title: t("reset_modal.title"),
+            description: t("reset_modal.description"),
+            emailLabel: t("fields.reset_email_label"),
+            emailPlaceholder: t("fields.reset_email_placeholder"),
+            successMessage: t("reset_modal.success_message"),
+            cancel: tCommon("cancel"),
+            send: t("buttons.send"),
+            sending: t("buttons.sending"),
+            close: tCommon("close"),
+          }}
+        />
       </div>
-
-      <p className="w-full text-center text-xs text-muted-foreground/70 pb-4">
-        Vigi<span className="font-semibold">Sensys</span> - MC2 Lab
-      </p>
-
-      <ForgotPasswordDialog
-        open={showForgotPassword}
-        onOpenChange={handleCloseForgotPassword}
-        success={resetSuccess}
-        register={registerReset}
-        errors={resetErrors}
-        onSubmit={handleResetSubmit(handleResetPasswordSubmit)}
-        onClose={handleCloseForgotPassword}
-        isSubmitting={resetPasswordMutation.isPending}
-        translations={{
-          title: t("reset_modal.title"),
-          description: t("reset_modal.description"),
-          emailLabel: t("fields.reset_email_label"),
-          emailPlaceholder: t("fields.reset_email_placeholder"),
-          successMessage: t("reset_modal.success_message"),
-          cancel: tCommon("cancel"),
-          send: t("buttons.send"),
-          sending: t("buttons.sending"),
-          close: tCommon("close"),
-        }}
-      />
-    </div>
+    </LazyMotion>
   );
 }
 
