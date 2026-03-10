@@ -124,81 +124,81 @@ export function StandardsClient() {
 
   return (
     <LazyMotion features={domAnimation}>
-    <m.main
-      className="flex-1 p-4 md:p-6 space-y-6"
-      variants={fadeInUp}
-      initial="hidden"
-      animate="visible"
-    >
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle>{t('title')}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t('count', { count: standards?.length || 0 })}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={handleAddClick} variant="default" size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              {t('actions.add')}
-            </Button>
-            <Button onClick={handleEditClick} disabled={!selectedStandard} variant="outline" size="sm" className="gap-2">
-              <Pencil className="h-4 w-4" />
-              {t('actions.edit')}
-            </Button>
-            <Button onClick={handleArchiveClick} disabled={!selectedStandard} variant="outline" size="sm" className="gap-2">
-              <Archive className="h-4 w-4" />
-              {t('actions.archive')}
-            </Button>
-            <Button onClick={handleTestClick} disabled={!selectedStandard} variant="outline" size="sm" className="gap-2">
-              <TestTube2 className="h-4 w-4" />
-              {t('actions.test')}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-2 md:p-4 xl:p-4">
-          <TanStackTable
-            columns={columns}
-            data={tableData}
-            searchField="Etalon_Numero_Serie"
-            searchPlaceholder={t('table.search_placeholder')}
-            isLoading={isLoading}
-            emptyMessage={t('table.empty')}
-            selectedRowId={selectedStandard?.Id_Etalon}
-            onRowClick={(row: StandardRow) => {
-              setSelectedStandard(standards?.find((e) => e.Id_Etalon === row.Id_Etalon) || null)
-            }}
-            onRowDoubleClick={(row: StandardRow) => {
-              const standard = standards?.find((e) => e.Id_Etalon === row.Id_Etalon) || null
-              if (!standard) return
-              setSelectedStandard(standard)
-              setIsEditing(true)
-              setIsModalOpen(true)
-            }}
-            maxHeight="60vh"
-            headerClassName="!bg-sidebar !text-sidebar-foreground"
-            headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
-            tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
-          />
-        </CardContent>
-      </Card>
+      <m.main
+        className="flex-1 p-4 md:p-6 space-y-6"
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+      >
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle>{t('title')}</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t('count', { count: standards?.length || 0 })}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleAddClick} variant="default" size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                {t('actions.add')}
+              </Button>
+              <Button onClick={handleEditClick} disabled={!selectedStandard} variant="outline" size="sm" className="gap-2">
+                <Pencil className="h-4 w-4" />
+                {t('actions.edit')}
+              </Button>
+              <Button onClick={handleArchiveClick} disabled={!selectedStandard} variant="outline" size="sm" className="gap-2">
+                <Archive className="h-4 w-4" />
+                {t('actions.archive')}
+              </Button>
+              <Button onClick={handleTestClick} disabled={!selectedStandard} variant="outline" size="sm" className="gap-2">
+                <TestTube2 className="h-4 w-4" />
+                {t('actions.test')}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-2 md:p-4 xl:p-4">
+            <TanStackTable
+              columns={columns}
+              data={tableData}
+              searchField="Etalon_Numero_Serie"
+              searchPlaceholder={t('table.search_placeholder')}
+              isLoading={isLoading}
+              emptyMessage={t('table.empty')}
+              selectedRowId={selectedStandard?.Id_Etalon}
+              onRowClick={(row: StandardRow) => {
+                setSelectedStandard(standards?.find((e) => e.Id_Etalon === row.Id_Etalon) || null)
+              }}
+              onRowDoubleClick={(row: StandardRow) => {
+                const standard = standards?.find((e) => e.Id_Etalon === row.Id_Etalon) || null
+                if (!standard) return
+                setSelectedStandard(standard)
+                setIsEditing(true)
+                setIsModalOpen(true)
+              }}
+              maxHeight="60vh"
+              headerClassName="!bg-sidebar !text-sidebar-foreground"
+              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+              tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
+            />
+          </CardContent>
+        </Card>
 
-      <StandardModal open={isModalOpen} onOpenChange={setIsModalOpen} standard={selectedStandard} isEditing={isEditing} />
+        <StandardModal open={isModalOpen} onOpenChange={setIsModalOpen} standard={selectedStandard} isEditing={isEditing} />
 
-      <AlertDialog open={isArchiveDialogOpen} onOpenChange={setIsArchiveDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('archive.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('archive.description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogCancel>{t('archive.cancel')}</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirmArchive}>{t('archive.confirm')}</AlertDialogAction>
-        </AlertDialogContent>
-      </AlertDialog>
-    </m.main>
+        <AlertDialog open={isArchiveDialogOpen} onOpenChange={setIsArchiveDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('archive.title')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('archive.description')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogCancel>{t('archive.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmArchive}>{t('archive.confirm')}</AlertDialogAction>
+          </AlertDialogContent>
+        </AlertDialog>
+      </m.main>
     </LazyMotion>
   )
 }

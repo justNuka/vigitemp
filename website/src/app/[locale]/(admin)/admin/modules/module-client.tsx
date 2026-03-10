@@ -118,142 +118,142 @@ export function ModulesClient() {
 
   return (
     <LazyMotion features={domAnimation}>
-    <m.div
-      className="space-y-6"
-      variants={fadeInUp}
-      initial="hidden"
-      animate="visible"
-    >
-      <Card>
-        <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40 pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Cpu className="h-4 w-4 text-primary" />
-              {t('title', { count: modules?.length || 0 })}
-            </CardTitle>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                className="gap-2"
-                onClick={() => {
-                  setIsEditMode(false);
-                  setIsModalOpen(true);
-                }}
-              >
-                <Plus className="w-4 h-4" />
-                {t('actions.new')}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={!selectedModuleId}
-                className="gap-2"
-                onClick={() => {
-                  setIsEditMode(true);
-                  setIsModalOpen(true);
-                }}
-              >
-                <Pencil className="w-4 h-4" />
-                {t('actions.edit')}
-              </Button>
-              <Button size="sm" variant="outline" disabled={!selectedModuleId} className="gap-2" onClick={() => setArchiveConfirmOpen(true)}>
-                <Archive className="w-4 h-4" />
-                {t('actions.archive')}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-2 md:p-4 xl:p-4">
-          <ModulesTable
-            modules={modulesTableData}
-            isLoading={modulesLoading}
-            selectedModuleId={selectedModuleId}
-            onSelectModule={(moduleId) => {
-              setSelectedModuleId(moduleId);
-              setSelectedSondeId(null);
-            }}
-            onEditModule={(moduleId) => {
-              setSelectedModuleId(moduleId);
-              setSelectedSondeId(null);
-              setIsEditMode(true);
-              setIsModalOpen(true);
-            }}
-          />
-        </CardContent>
-      </Card>
-
-      {selectedModuleId && (
+      <m.div
+        className="space-y-6"
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+      >
         <Card>
           <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40 pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Thermometer className="h-4 w-4 text-primary" />
-              {t('associated.title', { count: sondes?.length || 0 })}
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Cpu className="h-4 w-4 text-primary" />
+                {t('title', { count: modules?.length || 0 })}
+              </CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => {
+                    setIsEditMode(false);
+                    setIsModalOpen(true);
+                  }}
+                >
+                  <Plus className="w-4 h-4" />
+                  {t('actions.new')}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!selectedModuleId}
+                  className="gap-2"
+                  onClick={() => {
+                    setIsEditMode(true);
+                    setIsModalOpen(true);
+                  }}
+                >
+                  <Pencil className="w-4 h-4" />
+                  {t('actions.edit')}
+                </Button>
+                <Button size="sm" variant="outline" disabled={!selectedModuleId} className="gap-2" onClick={() => setArchiveConfirmOpen(true)}>
+                  <Archive className="w-4 h-4" />
+                  {t('actions.archive')}
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="p-2 md:p-4 xl:p-4">
-            {sondesLoading ? (
-              <div className="p-6 space-y-3">
-                {[...Array(4)].map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
-            ) : sondesTableData.length > 0 ? (
-              <SensorsTable
-                sensors={sondesTableData}
-                isLoading={false}
-                selectedSensorId={selectedSondeId}
-                onSelectSensor={setSelectedSondeId}
-              />
-            ) : (
-              <div className="text-center py-8 text-sm text-muted-foreground">{t('associated.empty')}</div>
-            )}
+            <ModulesTable
+              modules={modulesTableData}
+              isLoading={modulesLoading}
+              selectedModuleId={selectedModuleId}
+              onSelectModule={(moduleId) => {
+                setSelectedModuleId(moduleId);
+                setSelectedSondeId(null);
+              }}
+              onEditModule={(moduleId) => {
+                setSelectedModuleId(moduleId);
+                setSelectedSondeId(null);
+                setIsEditMode(true);
+                setIsModalOpen(true);
+              }}
+            />
           </CardContent>
         </Card>
-      )}
 
-      <ModuleModal
-        open={isModalOpen}
-        onOpenChange={(open) => {
-          setIsModalOpen(open);
-          if (!open) {
+        {selectedModuleId && (
+          <Card>
+            <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40 pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Thermometer className="h-4 w-4 text-primary" />
+                {t('associated.title', { count: sondes?.length || 0 })}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-2 md:p-4 xl:p-4">
+              {sondesLoading ? (
+                <div className="p-6 space-y-3">
+                  {[...Array(4)].map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : sondesTableData.length > 0 ? (
+                <SensorsTable
+                  sensors={sondesTableData}
+                  isLoading={false}
+                  selectedSensorId={selectedSondeId}
+                  onSelectSensor={setSelectedSondeId}
+                />
+              ) : (
+                <div className="text-center py-8 text-sm text-muted-foreground">{t('associated.empty')}</div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        <ModuleModal
+          open={isModalOpen}
+          onOpenChange={(open) => {
+            setIsModalOpen(open);
+            if (!open) {
+              setIsEditMode(false);
+            }
+          }}
+          module={isEditMode ? selectedModule : null}
+          onSuccess={() => {
+            refetchModules();
+            router.refresh();
+            setSelectedModuleId(null);
             setIsEditMode(false);
-          }
-        }}
-        module={isEditMode ? selectedModule : null}
-        onSuccess={() => {
-          refetchModules();
-          router.refresh();
-          setSelectedModuleId(null);
-          setIsEditMode(false);
-        }}
-      />
+          }}
+        />
 
-      <AlertDialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('archive.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('archive.description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
-          <AlertDialogAction onClick={handleArchive}>{t('archive.confirm')}</AlertDialogAction>
-        </AlertDialogContent>
-      </AlertDialog>
+        <AlertDialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('archive.title')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('archive.description')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleArchive}>{t('archive.confirm')}</AlertDialogAction>
+          </AlertDialogContent>
+        </AlertDialog>
 
-      <AlertDialog open={archiveBlockedOpen} onOpenChange={setArchiveBlockedOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('archive_blocked.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {archiveBlockedMessage || t('archive_blocked.default')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogAction onClick={() => setArchiveBlockedOpen(false)}>{tCommon('confirm')}</AlertDialogAction>
-        </AlertDialogContent>
-      </AlertDialog>
+        <AlertDialog open={archiveBlockedOpen} onOpenChange={setArchiveBlockedOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('archive_blocked.title')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {archiveBlockedMessage || t('archive_blocked.default')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogAction onClick={() => setArchiveBlockedOpen(false)}>{tCommon('confirm')}</AlertDialogAction>
+          </AlertDialogContent>
+        </AlertDialog>
 
-    </m.div>
+      </m.div>
     </LazyMotion>
   );
 }

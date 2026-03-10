@@ -129,79 +129,79 @@ export function ActuatorsClient() {
 
   return (
     <LazyMotion features={domAnimation}>
-    <m.main
-      className="flex-1 p-4 md:p-6 space-y-6"
-      variants={fadeInUp}
-      initial="hidden"
-      animate="visible"
-    >
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle>{t('title')}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t('count', { count: actuators?.length || 0 })}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={handleAddClick} variant="default" size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              {t('actions.new')}
-            </Button>
-            <Button onClick={handleEditClick} disabled={!selectedActuator} variant="outline" size="sm" className="gap-2">
-              <Pencil className="h-4 w-4" />
-              {t('actions.edit')}
-            </Button>
-            <Button onClick={handleDeleteClick} disabled={!selectedActuator} variant="outline" size="sm" className="gap-2">
-              <Archive className="h-4 w-4" />
-              {t('actions.archive')}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <TanStackTable
-            columns={columns}
-            data={tableData}
-            searchField="Num_Serie"
-            searchPlaceholder={t('table.search_placeholder')}
-            isLoading={isLoading}
-            maxHeight="calc(100dvh - 25rem)"
-            emptyMessage={t('table.empty')}
-            selectedRowId={selectedActuator?.Id_Actionneur}
-            onRowClick={(row: ActuatorRow) => {
-              setSelectedActuator(actuators?.find((a) => a.Id_Actionneur === row.Id_Actionneur) || null)
-            }}
-            onRowDoubleClick={(row: ActuatorRow) => {
-              const actuator = actuators?.find((a) => a.Id_Actionneur === row.Id_Actionneur) || null
-              if (!actuator) return
-              setSelectedActuator(actuator)
-              setIsEditing(true)
-              setIsModalOpen(true)
-            }}
-            headerClassName="!bg-sidebar !text-sidebar-foreground"
-            headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
-            tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
-          />
-        </CardContent>
-      </Card>
+      <m.main
+        className="flex-1 p-4 md:p-6 space-y-6"
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+      >
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle>{t('title')}</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t('count', { count: actuators?.length || 0 })}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleAddClick} variant="default" size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                {t('actions.new')}
+              </Button>
+              <Button onClick={handleEditClick} disabled={!selectedActuator} variant="outline" size="sm" className="gap-2">
+                <Pencil className="h-4 w-4" />
+                {t('actions.edit')}
+              </Button>
+              <Button onClick={handleDeleteClick} disabled={!selectedActuator} variant="outline" size="sm" className="gap-2">
+                <Archive className="h-4 w-4" />
+                {t('actions.archive')}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <TanStackTable
+              columns={columns}
+              data={tableData}
+              searchField="Num_Serie"
+              searchPlaceholder={t('table.search_placeholder')}
+              isLoading={isLoading}
+              maxHeight="calc(100dvh - 25rem)"
+              emptyMessage={t('table.empty')}
+              selectedRowId={selectedActuator?.Id_Actionneur}
+              onRowClick={(row: ActuatorRow) => {
+                setSelectedActuator(actuators?.find((a) => a.Id_Actionneur === row.Id_Actionneur) || null)
+              }}
+              onRowDoubleClick={(row: ActuatorRow) => {
+                const actuator = actuators?.find((a) => a.Id_Actionneur === row.Id_Actionneur) || null
+                if (!actuator) return
+                setSelectedActuator(actuator)
+                setIsEditing(true)
+                setIsModalOpen(true)
+              }}
+              headerClassName="!bg-sidebar !text-sidebar-foreground"
+              headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
+              tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
+            />
+          </CardContent>
+        </Card>
 
-      <ActuatorModal open={isModalOpen} onOpenChange={setIsModalOpen} actuator={selectedActuator} isEditing={isEditing} />
+        <ActuatorModal open={isModalOpen} onOpenChange={setIsModalOpen} actuator={selectedActuator} isEditing={isEditing} />
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('archive.title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('archive.description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600">
-            {t('archive.confirm')}
-          </AlertDialogAction>
-        </AlertDialogContent>
-      </AlertDialog>
-    </m.main>
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('archive.title')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('archive.description')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600">
+              {t('archive.confirm')}
+            </AlertDialogAction>
+          </AlertDialogContent>
+        </AlertDialog>
+      </m.main>
     </LazyMotion>
   )
 }

@@ -136,98 +136,98 @@ export function SitesClient() {
 
   return (
     <LazyMotion features={domAnimation}>
-    <m.main
-      className="flex-1 p-4 md:p-6 space-y-6"
-      variants={fadeInUp}
-      initial="hidden"
-      animate="visible"
-    >
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle>{t('title')}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t('count', { count: sites.length })}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={() => setIsCreateOpen(true)} variant="default" size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              {tCommon('add')}
-            </Button>
-            <Button onClick={handleEdit} variant="outline" size="sm" disabled={!selectedSite} className="gap-2">
-              <Pencil className="h-4 w-4" />
-              {tCommon('edit')}
-            </Button>
-            <Button
-              onClick={() => setIsArchiveAlertOpen(true)}
-              variant="outline"
-              size="sm"
-              disabled={!selectedSite}
-              className="gap-2"
-            >
-              <Archive className="h-4 w-4" />
-              {t('actions.archive')}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <SitesTable
-            sites={sites}
-            isLoading={isLoading}
-            selectedSiteId={selectedSite?.Id_Site}
-            onSelectSite={setSelectedSite}
-            onEditSite={(site) => {
-              setSelectedSite(site)
-              editForm.reset({
-                Libelle_Site: site.Libelle_Site || '',
-                Commentaire: site.Commentaire,
-              })
-              setIsEditOpen(true)
-            }}
-          />
-        </CardContent>
-      </Card>
+      <m.main
+        className="flex-1 p-4 md:p-6 space-y-6"
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+      >
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle>{t('title')}</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t('count', { count: sites.length })}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={() => setIsCreateOpen(true)} variant="default" size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                {tCommon('add')}
+              </Button>
+              <Button onClick={handleEdit} variant="outline" size="sm" disabled={!selectedSite} className="gap-2">
+                <Pencil className="h-4 w-4" />
+                {tCommon('edit')}
+              </Button>
+              <Button
+                onClick={() => setIsArchiveAlertOpen(true)}
+                variant="outline"
+                size="sm"
+                disabled={!selectedSite}
+                className="gap-2"
+              >
+                <Archive className="h-4 w-4" />
+                {t('actions.archive')}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <SitesTable
+              sites={sites}
+              isLoading={isLoading}
+              selectedSiteId={selectedSite?.Id_Site}
+              onSelectSite={setSelectedSite}
+              onEditSite={(site) => {
+                setSelectedSite(site)
+                editForm.reset({
+                  Libelle_Site: site.Libelle_Site || '',
+                  Commentaire: site.Commentaire,
+                })
+                setIsEditOpen(true)
+              }}
+            />
+          </CardContent>
+        </Card>
 
-      <CreateSiteDialog
-        open={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-        form={createForm}
-        isSubmitting={createMutation.isPending}
-        onSubmit={(data) => createMutation.mutate(data)}
-      />
+        <CreateSiteDialog
+          open={isCreateOpen}
+          onOpenChange={setIsCreateOpen}
+          form={createForm}
+          isSubmitting={createMutation.isPending}
+          onSubmit={(data) => createMutation.mutate(data)}
+        />
 
-      <EditSiteDialog
-        open={isEditOpen}
-        onOpenChange={setIsEditOpen}
-        site={selectedSite}
-        form={editForm}
-        isSubmitting={updateMutation.isPending}
-        onSubmit={(data) => updateMutation.mutate(data)}
-      />
+        <EditSiteDialog
+          open={isEditOpen}
+          onOpenChange={setIsEditOpen}
+          site={selectedSite}
+          form={editForm}
+          isSubmitting={updateMutation.isPending}
+          onSubmit={(data) => updateMutation.mutate(data)}
+        />
 
-      <ArchiveSiteDialog
-        open={isArchiveAlertOpen}
-        onOpenChange={setIsArchiveAlertOpen}
-        site={selectedSite}
-        isArchiving={archiveMutation.isPending}
-        onConfirm={() => archiveMutation.mutate()}
-      />
+        <ArchiveSiteDialog
+          open={isArchiveAlertOpen}
+          onOpenChange={setIsArchiveAlertOpen}
+          site={selectedSite}
+          isArchiving={archiveMutation.isPending}
+          onConfirm={() => archiveMutation.mutate()}
+        />
 
-      <AlertDialog open={archiveBlockedOpen} onOpenChange={setArchiveBlockedOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('archive_blocked_title')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {archiveBlockedMessage || t('archive_blocked_fallback')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogAction onClick={() => setArchiveBlockedOpen(false)}>
-            {tCommon('confirm')}
-          </AlertDialogAction>
-        </AlertDialogContent>
-      </AlertDialog>
-    </m.main>
+        <AlertDialog open={archiveBlockedOpen} onOpenChange={setArchiveBlockedOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('archive_blocked_title')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {archiveBlockedMessage || t('archive_blocked_fallback')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogAction onClick={() => setArchiveBlockedOpen(false)}>
+              {tCommon('confirm')}
+            </AlertDialogAction>
+          </AlertDialogContent>
+        </AlertDialog>
+      </m.main>
     </LazyMotion>
   )}
 
