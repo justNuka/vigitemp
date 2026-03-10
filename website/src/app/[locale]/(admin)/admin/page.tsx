@@ -251,7 +251,7 @@ export default function AdminDashboard() {
         <PageHeader title={t("title")} />
         <div className="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-xl h-[160px] animate-shimmer" />
+            <div key={i} className="rounded-xl h-40 animate-shimmer" />
           ))}
         </div>
       </div>
