@@ -91,7 +91,7 @@ export function SensorsCardsGrid({
           {title === t("grid.disabled_title") ? t("grid.disabled_empty") : t("grid.empty_title")}
         </div>
       ) : (
-        <div className={`grid gap-4 ${isDisabledSection ? "grid-cols-[repeat(auto-fill,minmax(260px,320px))] justify-start" : "grid-cols-[repeat(auto-fit,minmax(260px,1fr))]"}`}>
+        <div className={`grid gap-4 ${isDisabledSection ? "grid-cols-[repeat(auto-fill,minmax(250px,305px))] justify-start" : "grid-cols-[repeat(auto-fit,minmax(260px,1fr))]"}`}>
           {items.map((sensor) => {
             const groupName =
               sensor.location.groupNames && sensor.location.groupNames.length > 0

@@ -128,7 +128,7 @@ export function DashboardLinkCard({
                 className="inline-flex items-center gap-2 text-base font-semibold text-foreground transition-colors group-hover:text-primary"
               >
                 {title}
-                <ArrowRight className="h-4 w-4 translate-x-[-2px] opacity-0 transition-all duration-200 group-hover:translate-x-1 group-hover:opacity-100" />
+                <ArrowRight className="h-4 w-4 -translate-x-0.5 opacity-0 transition-all duration-200 group-hover:translate-x-1 group-hover:opacity-100" />
               </Link>
               <p className="text-sm text-muted-foreground">{description}</p>
             </div>
@@ -461,7 +461,7 @@ Par :
         <PageHeader title={t("title")} />
         <div className="grid gap-4 p-6 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-xl h-[160px] animate-shimmer" />
+            <div key={i} className="rounded-xl h-40 animate-shimmer" />
           ))}
         </div>
       </div>
