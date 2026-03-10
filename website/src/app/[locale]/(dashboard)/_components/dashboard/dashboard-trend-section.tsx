@@ -26,7 +26,7 @@ export function DashboardTrendSection({
         </h2>
       </div>
 
-      <Card className="card-interactive bg-white/90 border-slate-200 shadow-md dark:bg-card dark:border-border overflow-hidden">
+      <Card className="card-interactive bg-card border-border shadow-lg overflow-hidden">
         <CardHeader className="pb-2 bg-linear-to-r from-primary/5 to-transparent border-b border-border/50">
           <CardTitle className="text-sm font-medium text-muted-foreground">
             {t("trend.subtitle")}
@@ -35,7 +35,14 @@ export function DashboardTrendSection({
         <CardContent className="pt-4">
           <MiniChart measurements={trendMeasurements} height={120} className="rounded-lg overflow-hidden" />
           <div className="mt-4 flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{t("trend.count", { count: trendCountLast7d })}</span>
+            <div className="flex flex-col">
+              <span className="text-2xl font-bold text-foreground tabular-nums">
+                {trendCountLast7d}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {t("trend.count", { count: trendCountLast7d })}
+              </span>
+            </div>
             <Link href="/surveillance">
               <Button variant="ghost" size="sm" className="gap-1 -mr-2 text-primary hover:text-primary/80">
                 {t("trend.details")}
