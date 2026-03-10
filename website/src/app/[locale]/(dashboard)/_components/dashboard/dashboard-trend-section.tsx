@@ -40,7 +40,7 @@ export function DashboardTrendSection({
                 {trendCountLast7d}
               </span>
               <span className="text-xs text-muted-foreground">
-                {t("trend.count", { count: trendCountLast7d })}
+                {t("trend.count", { count: "" }).trim()}
               </span>
             </div>
             <Link href="/surveillance">
