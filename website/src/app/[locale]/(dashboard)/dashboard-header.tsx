@@ -35,7 +35,7 @@ export function DashboardHeader({ stats }: { stats: Stats }) {
   const t = useTranslations("dashboard");
   const [activeAlarms, setActiveAlarms] = useState(stats.activeAlarms);
   const cardBaseClass =
-    "relative overflow-hidden bg-linear-to-br from-foreground/[.92] to-foreground/[.80] text-white border border-foreground/10 shadow-[0_12px_24px_-16px_rgba(15,23,42,0.7)] dark:from-card dark:to-muted/30 dark:text-card-foreground dark:border-border";
+    "relative overflow-hidden bg-linear-to-br from-foreground/90 to-foreground/80 text-white border border-foreground/10 shadow-[0_12px_24px_-16px_rgba(15,23,42,0.7)] dark:from-card dark:to-muted/30 dark:text-card-foreground dark:border-border";
   const cardTitleClass = "text-white/70 dark:text-muted-foreground";
   const cardValueClass = "text-white dark:text-foreground";
   const cardVariants = {
