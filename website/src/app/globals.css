@@ -78,6 +78,12 @@
     animation-delay: 4s;
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .animate-blob {
+      animation: none;
+    }
+  }
+
   .embla {
     overflow: hidden;
   }
