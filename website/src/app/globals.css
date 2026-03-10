@@ -82,6 +82,10 @@
     .animate-blob {
       animation: none;
     }
+    .animate-shimmer {
+      animation: none;
+      background: hsl(var(--muted));
+    }
   }
 
   .embla {

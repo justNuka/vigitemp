@@ -92,7 +92,6 @@ export function StandardsClient() {
   }
 
   const handleTestClick = () => {
-    console.log("Test:", selectedStandard)
   }
 
   const columns: ColumnDef<StandardRow>[] = [
