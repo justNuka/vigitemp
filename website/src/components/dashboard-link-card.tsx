@@ -28,6 +28,8 @@ export function DashboardLinkCard({
     <LazyMotion features={domAnimation}>
       <m.div
         variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
         className={cn(
           "group rounded-xl border border-border bg-card p-4 shadow-sm",
           "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
