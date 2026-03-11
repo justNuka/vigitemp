@@ -69,9 +69,21 @@ export function MonitoringCardHeader({
   const typeIconInfo = lieuType ? getTypeIcon(lieuType, 'w-4 h-4') : null
   const alarmBadgeClassName = isSurveillanceActive ? 'bg-red-500/30 text-red-500 dark:text-red-100' : 'bg-white/20 text-white'
 
+  const gradientMap: Record<string, string> = {
+    "bg-red-700":    "bg-linear-to-br from-red-600 to-red-800",
+    "bg-blue-700":   "bg-linear-to-br from-blue-600 to-blue-800",
+    "bg-black":      "bg-linear-to-br from-slate-900 to-black",
+    "bg-violet-600": "bg-linear-to-br from-violet-500 to-violet-700",
+    "bg-green-700":  "bg-linear-to-br from-emerald-600 to-emerald-800",
+    "bg-amber-600":  "bg-linear-to-br from-amber-500 to-amber-700",
+    "bg-slate-600":  "bg-linear-to-br from-slate-500 to-slate-700",
+    "bg-gray-700":   "bg-linear-to-br from-gray-600 to-gray-800",
+  }
+  const resolvedHeaderBg = gradientMap[headerBgClassName] ?? headerBgClassName
+
   return (
     <div
-      className={`px-3 py-2 ${headerBgClassName} border-b-2 ${headerBorderClassName} ${canAcknowledge ? 'cursor-pointer' : ''}`}
+      className={`px-3 py-2 relative ${resolvedHeaderBg} border-b-2 ${headerBorderClassName} ${canAcknowledge ? 'cursor-pointer' : ''}`}
       onClick={() => canAcknowledge && onAcknowledge()}
       onKeyDown={(event) => {
         if (!canAcknowledge) return
@@ -84,6 +96,12 @@ export function MonitoringCardHeader({
       tabIndex={canAcknowledge ? 0 : undefined}
       aria-label={canAcknowledge ? t('acknowledge.button') : undefined}
     >
+      {(status === 'critical' || status === 'technical') && isSurveillanceActive && (
+        <span
+          className="absolute top-2 right-10 h-2 w-2 rounded-full bg-white/80 animate-pulse pointer-events-none"
+          aria-hidden="true"
+        />
+      )}
       <div className="flex items-start justify-between gap-2">
         <div className={`${headerTextClassName} text-xs font-medium space-y-1 flex-1`}>
           <TooltipProvider>
