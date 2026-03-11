@@ -5,6 +5,20 @@ import { getTypeIcon } from '@/lib/lieu-types'
 import type { LieuTypeValue } from '@/lib/lieu-types'
 import { getStatusTheme, type SensorStatus } from '@/lib/surveillance-status'
 
+const HEADER_GRADIENT_MAP: Record<string, string> = {
+  // alarmTypeTheme values (clean single tokens)
+  "bg-red-700":    "bg-linear-to-br from-red-600 to-red-800",
+  "bg-blue-700":   "bg-linear-to-br from-blue-600 to-blue-800",
+  "bg-black":      "bg-linear-to-br from-slate-900 to-black",
+  "bg-violet-600": "bg-linear-to-br from-violet-500 to-violet-700",
+  // getStatusTheme values (exact strings including dark: variants)
+  "bg-slate-600 dark:bg-gray-700":    "bg-linear-to-br from-slate-500 to-slate-700 dark:from-gray-600 dark:to-gray-800",
+  "bg-red-700 dark:bg-red-700":       "bg-linear-to-br from-red-600 to-red-800",
+  "bg-amber-300 dark:bg-amber-300":   "bg-linear-to-br from-amber-200 to-amber-400",
+  "bg-violet-600 dark:bg-violet-700": "bg-linear-to-br from-violet-500 to-violet-700 dark:from-violet-600 dark:to-violet-800",
+  "bg-primary":                        "bg-linear-to-br from-primary/90 to-primary",
+}
+
 interface MonitoringCardHeaderProps {
   status: SensorStatus
   effectiveAlarmType: 'H' | 'B' | 'N' | 'T' | null
@@ -69,17 +83,7 @@ export function MonitoringCardHeader({
   const typeIconInfo = lieuType ? getTypeIcon(lieuType, 'w-4 h-4') : null
   const alarmBadgeClassName = isSurveillanceActive ? 'bg-red-500/30 text-red-500 dark:text-red-100' : 'bg-white/20 text-white'
 
-  const gradientMap: Record<string, string> = {
-    "bg-red-700":    "bg-linear-to-br from-red-600 to-red-800",
-    "bg-blue-700":   "bg-linear-to-br from-blue-600 to-blue-800",
-    "bg-black":      "bg-linear-to-br from-slate-900 to-black",
-    "bg-violet-600": "bg-linear-to-br from-violet-500 to-violet-700",
-    "bg-green-700":  "bg-linear-to-br from-emerald-600 to-emerald-800",
-    "bg-amber-600":  "bg-linear-to-br from-amber-500 to-amber-700",
-    "bg-slate-600":  "bg-linear-to-br from-slate-500 to-slate-700",
-    "bg-gray-700":   "bg-linear-to-br from-gray-600 to-gray-800",
-  }
-  const resolvedHeaderBg = gradientMap[headerBgClassName] ?? headerBgClassName
+  const resolvedHeaderBg = HEADER_GRADIENT_MAP[headerBgClassName] ?? headerBgClassName
 
   return (
     <div
