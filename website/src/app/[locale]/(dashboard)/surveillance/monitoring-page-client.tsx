@@ -1,6 +1,8 @@
 ﻿"use client";
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { LazyMotion, domAnimation, m } from "motion/react";
+import { fadeInUp } from "@/lib/motion-variants";
 import { useQueryClient } from "@tanstack/react-query";
 import { PageHeader } from "@/components/page-header";
 import { MonitoringCardsGrid } from "./monitoring-cards-grid";
@@ -338,86 +340,99 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
         description={t("description")}
         activeAlarms={visibleStats.activeAlarms}
       />
-      <div className="h-px bg-slate-200 dark:bg-slate-800" />
 
-      {/* Stats bar */}
-      <div className="px-4 md:px-6 pt-3 pb-0">
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1 font-medium text-muted-foreground">
-            {t("stats.total", { count: visibleStats.total })}
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 font-medium text-green-700 dark:bg-green-500/10 dark:text-green-400">
-            <span className="h-2 w-2 rounded-full bg-green-500" aria-hidden="true" />
-            {t("stats.ok", { count: visibleStats.ok })}
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-            <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
-            {t("stats.warning", { count: visibleStats.warning })}
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400">
-            <span className="h-2 w-2 rounded-full bg-red-500" aria-hidden="true" />
-            {t("stats.critical", { count: visibleStats.critical })}
-          </span>
-        </div>
-      </div>
+      <LazyMotion features={domAnimation}>
+        <m.div variants={fadeInUp} initial="hidden" animate="visible">
+          {/* Stats bar */}
+          <div className="px-4 md:px-6 pt-3 pb-0">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1 font-medium text-muted-foreground hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-default">
+                {t("stats.total", { count: visibleStats.total })}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 font-medium text-green-700 dark:bg-green-500/10 dark:text-green-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-default">
+                <span className="h-2 w-2 rounded-full bg-green-500" aria-hidden="true" />
+                {t("stats.ok", { count: visibleStats.ok })}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-default">
+                <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
+                {t("stats.warning", { count: visibleStats.warning })}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-default">
+                <span
+                  className={`h-2 w-2 rounded-full bg-red-500${visibleStats.critical > 0 ? " animate-pulse" : ""}`}
+                  aria-hidden="true"
+                />
+                {t("stats.critical", { count: visibleStats.critical })}
+              </span>
+            </div>
+          </div>
 
-      <div className="px-4 md:px-6 py-4">
-        <SurveillanceHeaderControls
-          sites={sites}
-          groups={groups}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          onFilterChange={handleFilterChange}
-          onRefresh={handleRefresh}
-          isRefreshing={isFetching}
-          graphsLabel={t("tabs.graphs")}
-          treeLabel={t("tabs.tree")}
-          orderToggleLabel={disabledFirst ? t("grid.toggle_active_first") : t("grid.toggle_disabled_first")}
-          onToggleOrder={handleToggleOrder}
-          onOpenOverlay={() => setIsOverlayOpen(true)}
-        />
-      </div>
+          <div className="px-4 md:px-6 py-4">
+            <SurveillanceHeaderControls
+              sites={sites}
+              groups={groups}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              onFilterChange={handleFilterChange}
+              onRefresh={handleRefresh}
+              isRefreshing={isFetching}
+              graphsLabel={t("tabs.graphs")}
+              treeLabel={t("tabs.tree")}
+              orderToggleLabel={disabledFirst ? t("grid.toggle_active_first") : t("grid.toggle_disabled_first")}
+              onToggleOrder={handleToggleOrder}
+              onOpenOverlay={() => setIsOverlayOpen(true)}
+            />
+          </div>
 
-      {viewMode === "tree" ? (
-        <>
-          <MonitoringCardsGrid 
-            sensors={visibleSensors}
-            disabledFirst={disabledFirst}
-            onSurveillanceToggle={handleSurveillanceToggle}
-            onGroupSurveillanceToggle={handleGroupSurveillanceToggle}
-            onEditLocation={handleOpenLocationEdit}
-            isLoading={isFetching && visibleSensors.length === 0}
-            showNullNonResponse={showNullNonResponse}
-            sortMode={filters.sortMode}
-          />
-          <SurveillanceLoadMore
-            sentinelRef={loadMoreRef}
-            hasNextPage={!!hasNextPage}
-            isFetching={isFetching}
-            onLoadMore={fetchNextPage}
-            label={t("load_more")}
-          />
-        </>
-      ) : (
-        <>
-          <SensorsCardsGrid 
-            sensors={visibleSensors}
-            disabledFirst={disabledFirst}
-            onSurveillanceToggle={handleSurveillanceToggle}
-            onEditLocation={handleOpenLocationEdit}
-            isLoading={isFetching && visibleSensors.length === 0}
-            showNullNonResponse={showNullNonResponse}
-            sortMode={filters.sortMode}
-          />
-          <SurveillanceLoadMore
-            sentinelRef={loadMoreRef}
-            hasNextPage={!!hasNextPage}
-            isFetching={isFetching}
-            onLoadMore={fetchNextPage}
-            label={t("load_more")}
-          />
-        </>
-      )}
+          {viewMode === "tree" ? (
+            <>
+              <MonitoringCardsGrid
+                sensors={visibleSensors}
+                disabledFirst={disabledFirst}
+                onSurveillanceToggle={handleSurveillanceToggle}
+                onGroupSurveillanceToggle={handleGroupSurveillanceToggle}
+                onEditLocation={handleOpenLocationEdit}
+                isLoading={isFetching && visibleSensors.length === 0}
+                showNullNonResponse={showNullNonResponse}
+                sortMode={filters.sortMode}
+              />
+              <SurveillanceLoadMore
+                sentinelRef={loadMoreRef}
+                hasNextPage={!!hasNextPage}
+                isFetching={isFetching}
+                onLoadMore={fetchNextPage}
+                label={t("load_more")}
+              />
+            </>
+          ) : (
+            <>
+              <SensorsCardsGrid
+                sensors={visibleSensors}
+                disabledFirst={disabledFirst}
+                onSurveillanceToggle={handleSurveillanceToggle}
+                onEditLocation={handleOpenLocationEdit}
+                isLoading={isFetching && visibleSensors.length === 0}
+                showNullNonResponse={showNullNonResponse}
+                sortMode={filters.sortMode}
+              />
+              <SurveillanceLoadMore
+                sentinelRef={loadMoreRef}
+                hasNextPage={!!hasNextPage}
+                isFetching={isFetching}
+                onLoadMore={fetchNextPage}
+                label={t("load_more")}
+              />
+            </>
+          )}
+
+          <div className="flex items-center justify-between text-sm text-muted-foreground pt-4">
+            <p>
+              {t("footer.count", { count: visibleSensors.length })}
+              {filtersActive ? t("footer.total", { total: allSensors.length }) : null}
+            </p>
+          </div>
+        </m.div>
+      </LazyMotion>
 
       <CurvesOverlayModal
         open={isOverlayOpen}
@@ -438,13 +453,6 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
         onCancel={closeEditor}
         onSubmit={handleEditLocationSubmit}
       />
-
-      <div className="flex items-center justify-between text-sm text-muted-foreground pt-4">
-        <p>
-          {t("footer.count", { count: visibleSensors.length })}
-          {filtersActive ? t("footer.total", { total: allSensors.length }) : null}
-        </p>
-      </div>
     </>
   );
 }
