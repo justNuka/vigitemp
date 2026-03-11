@@ -22,6 +22,7 @@ import { LocationFormDialog } from "@/app/[locale]/(admin)/admin/lieux/_componen
 import { getDefaultLocationFormData } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-defaults";
 import type { LocationFormData } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-types";
 import { useAvailableSensors } from "@/hooks/useAvailableSensors";
+import { cn } from "@/lib/utils";
 import { useGroups } from "@/hooks/useGroups";
 import { useModules } from "@/hooks/useModules";
 import { useLocations } from "@/hooks/useLocations";
@@ -359,7 +360,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-default">
                 <span
-                  className={`h-2 w-2 rounded-full bg-red-500${visibleStats.critical > 0 ? " animate-pulse" : ""}`}
+                  className={cn("h-2 w-2 rounded-full bg-red-500", visibleStats.critical > 0 && "animate-pulse")}
                   aria-hidden="true"
                 />
                 {t("stats.critical", { count: visibleStats.critical })}
