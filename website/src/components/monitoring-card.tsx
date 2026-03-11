@@ -216,6 +216,15 @@ export default function MonitoringCard({
   const formattedLastValue = useMemo(() => formatMeasureValue(lastValue, decimals, localeTag), [lastValue, decimals, localeTag])
   const hasGsoMetrics = Boolean(isGso && (gsoRssi || gsoTension))
 
+  const cardGlowClass = (() => {
+    if (!isSurveillanceActive) return "opacity-75"
+    if (effectiveStatus === "critical" || effectiveStatus === "technical")
+      return "ring-1 ring-red-500/30 shadow-[0_4px_24px_-6px_rgba(239,68,68,0.35)]"
+    if (effectiveStatus === "warning")
+      return "ring-1 ring-amber-500/20 shadow-[0_4px_20px_-6px_rgba(245,158,11,0.25)]"
+    return ""
+  })()
+
   const acknowledgeDialogAlarm: AcknowledgeDialogAlarm | null = canAcknowledge && effectiveAlarmId
     ? {
         id: String(effectiveAlarmId),
@@ -249,7 +258,8 @@ export default function MonitoringCard({
           "hover:shadow-lg hover:-translate-y-0.5",
           isSurveillanceActive
             ? "bg-card border-border shadow-sm"
-            : "bg-slate-700 dark:bg-slate-800 border-slate-600"
+            : "bg-slate-700 dark:bg-slate-800 border-slate-600",
+          cardGlowClass,
         )}
       >
         <MonitoringCardHeader
