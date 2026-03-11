@@ -21,6 +21,9 @@ export type StatusTheme = {
   Icon: LucideIcon
   textClassName: string
   softBgClassName: string
+  // NOTE: headerBgClassName values are used as keys in HEADER_GRADIENT_MAP
+  // (monitoring-card/monitoring-card-header.tsx). If you change a value here,
+  // update the corresponding key in that map to avoid silent gradient loss.
   headerBgClassName: string
   headerBorderClassName: string
   headerTextClassName: string

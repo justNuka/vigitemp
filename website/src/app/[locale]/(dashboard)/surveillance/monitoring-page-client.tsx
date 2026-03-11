@@ -215,7 +215,6 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       lieuEtat: string | null | undefined,
       surveillanceDisabled: boolean,
     ) => {
-      const idSet = new Set(ids.map(String));
       queryClient.setQueryData<PaginatedSensorsData>(["capteurs", "paginated", 100], (data) =>
         updateSurveillanceStateInCache(data, ids, (sensor) => ({
           ...sensor,
@@ -232,7 +231,6 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
 
   const updateAlarmCache = useCallback(
     (ids: number[], alarmDisabled: boolean, alarmDisabledUntil: Date | null) => {
-      const idSet = new Set(ids.map(String));
       queryClient.setQueryData<PaginatedSensorsData>(["capteurs", "paginated", 100], (data) =>
         updateSurveillanceStateInCache(data, ids, (sensor) => ({
           ...sensor,

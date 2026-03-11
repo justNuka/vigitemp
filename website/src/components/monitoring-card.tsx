@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { Chart as ChartJS, CategoryScale, Filler, Legend, LineElement, LinearScale, PointElement, Title, Tooltip } from 'chart.js'
 import { FileText, MapPin, Power, PowerOff, Settings } from 'lucide-react'
-import { LazyMotion, domAnimation, m } from 'motion/react'
+import { m } from 'motion/react'
 import { useQueryClient } from '@tanstack/react-query'
 
 import { useAppAccess } from '@/components/access/app-access-provider'
@@ -250,15 +250,15 @@ export default function MonitoringCard({
     : null
 
   return (
-    <LazyMotion features={domAnimation}>
-      <m.div
+    <>
+    <m.div
         variants={fadeInUp}
         className={cn(
           "relative w-full rounded-lg border overflow-hidden flex flex-col transition-all duration-200",
           "hover:shadow-lg hover:-translate-y-0.5",
           isSurveillanceActive
             ? "bg-card border-border shadow-sm"
-            : "bg-slate-700 dark:bg-slate-800 border-slate-600",
+            : "bg-muted/60 dark:bg-muted/40 border-muted-foreground/20",
           cardGlowClass,
         )}
       >
@@ -487,6 +487,6 @@ export default function MonitoringCard({
           }
         }}
       />
-    </LazyMotion>
+    </>
   )
 }
