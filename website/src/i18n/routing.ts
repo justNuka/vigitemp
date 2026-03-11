@@ -136,8 +136,8 @@ export const routing = defineRouting({
       fr: '/services/upgrade-licence',
       en: '/services/upgrade-licence',
     },
-    '/services/achat-materiel': {
-      fr: '/services/achat-materiel',
+    '/services/demande-materiel': {
+      fr: '/services/demande-materiel',
       en: '/services/hardware',
     },
     '/services/actualites-mc2': {

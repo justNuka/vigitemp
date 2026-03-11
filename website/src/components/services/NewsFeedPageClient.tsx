@@ -16,7 +16,7 @@ export function NewsFeedPageClient() {
   const t = useTranslations();
   const navItems = [
     { name: t("servicesNav.upgrade"), link: "/services/upgrade-licence" },
-    { name: t("servicesNav.hardware"), link: "/services/achat-materiel" },
+    { name: t("servicesNav.hardware"), link: "/services/demande-materiel" },
     { name: t("servicesNav.news"), link: "/services/actualites-mc2" },
   ];
   const channels = [

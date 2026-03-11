@@ -480,10 +480,11 @@ model t_parametre {
 }
 
 model t_pdf {
-  Id_PDF      Int      @id @default(autoincrement())
-  Nom_PDF     String?  @db.VarChar(50)
-  Contenu_PDF Bytes?
-  t_lieu      t_lieu[]
+  Id_PDF              Int                   @id @default(autoincrement())
+  Nom_PDF             String?               @db.VarChar(50)
+  Contenu_PDF         Bytes?
+  t_commande_materiel t_commande_materiel[]
+  t_lieu              t_lieu[]
 }
 
 model t_plan {
@@ -593,6 +594,7 @@ model t_utilisateur {
   Est_Mot_De_Passe_Temporaire    Boolean?                       @default(false)
   Avatar_Utilisateur             String?                        @db.VarChar(512)
   t_ancien_mot_de_passe          t_ancien_mot_de_passe[]
+  t_commande_materiel            t_commande_materiel[]
   t_liaison_utilisateur_groupe   t_liaison_utilisateur_groupe[]
   t_liaison_utilisateur_site     t_liaison_utilisateur_site[]
   t_notification_delivery        t_notification_delivery[]
@@ -884,29 +886,91 @@ model t_lieu_planning_audit {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model t_lieu_planning_regle {
-  Id_Regle           Int       @id @default(autoincrement())
-  Id_Lieu            Int
-  Actif              Boolean   @default(true)
-  Jour_Debut         Int       @db.TinyInt
-  Heure_Debut        DateTime  @db.Time(0)
-  Jour_Fin           Int       @db.TinyInt
-  Heure_Fin          DateTime  @db.Time(0)
-  Consigne           Float?
-  Consigne_Sup       Float?
-  Consigne_Inf       Float?
-  Priorite           Int       @default(0)
-  Tolerance_Sup_Calc Float?
-  Tolerance_Inf_Calc Float?
+  Id_Regle                          Int       @id @default(autoincrement())
+  Id_Lieu                           Int
+  Actif                             Boolean   @default(true)
+  Jour_Debut                        Int       @db.TinyInt
+  Heure_Debut                       DateTime  @db.Time(0)
+  Jour_Fin                          Int       @db.TinyInt
+  Heure_Fin                         DateTime  @db.Time(0)
+  Consigne                          Float?
+  Consigne_Sup                      Float?
+  Consigne_Inf                      Float?
+  Priorite                          Int       @default(0)
+  Tolerance_Sup_Calc                Float?
+  Tolerance_Inf_Calc                Float?
+  Date_Creation                     DateTime  @default(now()) @db.DateTime(0)
+  Date_Maj                          DateTime? @db.DateTime(0)
   Retard_Alarme_Changement_Consigne Int?
-  Date_Creation      DateTime  @default(now()) @db.DateTime(0)
-  Date_Maj           DateTime? @db.DateTime(0)
-  t_lieu             t_lieu    @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: Cascade, onUpdate: NoAction, map: "FK_PLANNING_REGLE_LIEU")
+  t_lieu                            t_lieu    @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: Cascade, onUpdate: NoAction, map: "FK_PLANNING_REGLE_LIEU")
 
   @@index([Actif, Id_Lieu], map: "IDX_Actif_Lieu")
   @@index([Id_Lieu], map: "IDX_Id_Lieu")
 }
 
+model t_materiel {
+  Id_Materiel               Int                         @id @default(autoincrement())
+  Ref_Commercial            String                      @default("") @db.VarChar(50)
+  Designation               String                      @default("") @db.VarChar(100)
+  Descriptif                String                      @default("") @db.VarChar(1000)
+  Gamme                     String                      @default("") @db.VarChar(10)
+  Type                      String                      @default("") @db.VarChar(10)
+  Chemin_Image              String?                     @db.VarChar(500)
+  t_commande_materiel_ligne t_commande_materiel_ligne[]
+
+  @@index([Id_Materiel], map: "Id_Materiel")
+}
+
+model t_commande_materiel {
+  Id_Commande_Materiel Int                                   @id @default(autoincrement())
+  Reference_Commande   String                                @unique(map: "UK_t_commande_materiel_reference") @db.VarChar(64)
+  Id_Utilisateur       Int
+  Nom_Demandeur        String                                @db.VarChar(255)
+  Email_Demandeur      String?                               @db.VarChar(255)
+  Email_Commercial     String                                @db.VarChar(255)
+  Commentaire          String?                               @db.Text
+  Mode_Transmission    t_commande_materiel_Mode_Transmission
+  Statut_Commande      t_commande_materiel_Statut_Commande   @default(BROUILLON)
+  Date_Creation        DateTime                              @default(now()) @db.DateTime(0)
+  Date_Envoi           DateTime?                             @db.DateTime(0)
+  Id_Pdf               Int?
+  t_pdf                t_pdf?                                @relation(fields: [Id_Pdf], references: [Id_PDF], map: "FK_t_commande_materiel_pdf")
+  t_utilisateur        t_utilisateur                         @relation(fields: [Id_Utilisateur], references: [Id_Utilisateur], onDelete: NoAction, map: "FK_t_commande_materiel_utilisateur")
+  lignes               t_commande_materiel_ligne[]
+
+  @@index([Id_Pdf], map: "IX_t_commande_materiel_pdf")
+  @@index([Id_Utilisateur], map: "IX_t_commande_materiel_utilisateur")
+}
+
+model t_commande_materiel_ligne {
+  Id_Commande_Materiel_Ligne Int                 @id @default(autoincrement())
+  Id_Commande_Materiel       Int
+  Id_Materiel                Int
+  Ref_Commercial             String              @db.VarChar(100)
+  Designation                String              @db.VarChar(255)
+  Descriptif                 String?             @db.Text
+  Gamme                      String?             @db.VarChar(50)
+  Type                       String?             @db.VarChar(50)
+  Quantite                   Int
+  commande                   t_commande_materiel @relation(fields: [Id_Commande_Materiel], references: [Id_Commande_Materiel], onDelete: Cascade, map: "FK_COMMANDE_MATERIEL_LIGNE")
+  materiel                   t_materiel          @relation(fields: [Id_Materiel], references: [Id_Materiel], onDelete: NoAction, map: "FK_MATERIEL_COMMANDE_LIGNE")
+
+  @@index([Id_Commande_Materiel], map: "IX_t_commande_materiel_ligne_commande")
+  @@index([Id_Materiel], map: "IX_t_commande_materiel_ligne_materiel")
+}
+
 enum t_lieu_planning_audit_Type {
   ACTIVATION
   RETOUR_BASE
+}
+
+enum t_commande_materiel_Mode_Transmission {
+  SMTP
+  MAILTO
+}
+
+enum t_commande_materiel_Statut_Commande {
+  BROUILLON
+  ENVOYEE
+  PREPAREE
 }

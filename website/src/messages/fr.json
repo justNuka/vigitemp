@@ -171,7 +171,7 @@
         },
         "lieux": {
           "title": "Lieux",
-          "description": "Gérer les lieux surveillés et leurs parametres."
+          "description": "Gérer les lieux surveillés et leurs paramètres."
         },
         "sondes": {
           "title": "Sondes",
@@ -182,8 +182,8 @@
           "description": "Gérer les comptes et les profils."
         },
         "parametres": {
-          "title": "Parametres",
-          "description": "Acceder aux reglages generaux."
+          "title": "Paramètres",
+          "description": "Accéder aux réglages généraux."
         }
       }
     },
@@ -1467,6 +1467,8 @@
       "description": "Sélectionnez un lieu et une période d'analyse, puis cliquez sur Analyser pour simuler l'impact de nouvelles tolérances sur vos mesures historiques."
     },
     "summary": {
+      "kindModule": "Module",
+      "kindSensor": "Sonde",
       "recapTitle": "Récapitulatif du lieu",
       "consigne": "Consigne",
       "toleranceSup": "Tolérance sup.",
@@ -2193,6 +2195,7 @@
       "first_login": "Première connexion"
     },
     "inactivity_alert": "Vous avez été déconnecté automatiquement après une période d'inactivité. Reconnectez-vous pour continuer.",
+    "session_expired_alert": "Votre session a expiré. Veuillez vous reconnecter pour continuer.",
     "fields": {
       "username_label": "Nom d'utilisateur",
       "username_placeholder": "Votre identifiant",
@@ -2223,7 +2226,7 @@
     "toasts": {
       "session_expired": {
         "title": "Session expirée",
-        "description": "Vous avez été déconnecté pour cause d'inactivité"
+        "description": "Votre session a expiré. Veuillez vous reconnecter pour continuer."
       },
       "password_changed": {
         "title": "Mot de passe changé",
@@ -2573,7 +2576,7 @@
   },
   "servicesNav": {
     "upgrade": "Upgrade licence",
-    "hardware": "Achat matériel",
+    "hardware": "Demande de matériel",
     "news": "Actualités MC2"
   },
   "servicesHub": {
@@ -2587,7 +2590,7 @@
       "titleHighlight": "nos services",
       "subtitle": "Upgrade, matériel et actualités pour aller plus loin avec VigiSensys.",
       "ctaPrimary": "Upgrade de licence",
-      "ctaSecondary": "Achat matériel"
+      "ctaSecondary": "Demande de matériel"
     },
     "highlights": {
       "eyebrow": "Pourquoi MC2",
@@ -2607,7 +2610,7 @@
         "cta": "Découvrir l'upgrade"
       },
       "hardware": {
-        "title": "Achat de matériel",
+        "title": "Demande de matériel",
         "description": "Sondes, modules et accessoires sélectionnés pour l'usage terrain.",
         "tag": "Matériel",
         "cta": "Voir le matériel"
@@ -2622,50 +2625,83 @@
   },
   "servicesHardware": {
     "meta": {
-      "title": "VigiSensys | Catalogue matériel",
-      "description": "Catalogue de matériel validé pour les déploiements VigiSensys."
+      "title": "VigiSensys | Demande de devis mat?riel",
+      "description": "Catalogue MC2 pour pr?parer une demande de devis mat?riel, g?n?rer un PDF et transmettre la demande au service commercial."
     },
     "hero": {
-      "eyebrow": "Matériel MC2",
-      "title": "Catalogue de matériel validé",
-      "subtitle": "Sélection de sondes, modules et accessoires compatibles avec VigiSensys."
+      "eyebrow": "Devis mat?riel MC2",
+      "title": "Pr?parez une demande de devis mat?riel sans sortir de VigiSensys.",
+      "subtitle": "Parcourez le catalogue MC2, ajustez les quantit?s, g?n?rez un PDF de synth?se et transmettez la demande directement au service commercial."
     },
-    "items": {
-      "0": {
-        "title": "Kits de démarrage",
-        "description": "Pack complet pour déployer rapidement un site.",
-        "tag": "Kit"
-      },
-      "1": {
-        "title": "Modules et passerelles",
-        "description": "Modules d'acquisition et passerelles réseau éprouvés.",
-        "tag": "Modules"
-      },
-      "2": {
-        "title": "Sondes et capteurs",
-        "description": "Température, humidité, CO2 et capteurs spécialisés.",
-        "tag": "Capteurs"
-      },
-      "3": {
-        "title": "Accessoires d'installation",
-        "description": "Fixations, boîtiers et câblage adaptés aux sites.",
-        "tag": "Accessoires"
-      },
-      "4": {
-        "title": "Conformité et étalonnage",
-        "description": "Étalons, certificats et options de conformité.",
-        "tag": "Qualité"
-      },
-      "5": {
-        "title": "Services sur mesure",
-        "description": "Conseil, intégration et support technique dédié.",
-        "tag": "Service"
+    "nav": {
+      "title": "Catalogue",
+      "modules": "Modules",
+      "sensors": "Sondes"
+    },
+    "contact": {
+      "title": "Transmission commerciale",
+      "smtpDescription": "Le PDF est joint automatiquement ? l'email envoy? au service commercial MC2.",
+      "mailtoDescription": "Si aucun serveur mail n'est configur?, le PDF est pr?par? et votre messagerie locale s'ouvre avec un mail pr?-rempli.",
+      "footer": "La demande est transmise directement au service commercial MC2."
+    },
+    "states": {
+      "loading": "Chargement du catalogue mat?riel...",
+      "error": "Impossible de charger le catalogue mat?riel pour le moment."
+    },
+    "sections": {
+      "gamme": "Gamme",
+      "references": "{count, plural, one {# reference} other {# references}}"
+    },
+    "summary": {
+      "title": "Récapitulatif du besoin",
+      "empty": "Ajoutez du matériel pour construire votre demande de devis.",
+      "quantity": "Quantité",
+      "comment": "Commentaire pour le service commercial",
+      "commentPlaceholder": "Contexte du besoin, délai souhaité, références projet, contraintes site...",
+      "totalItems": "Articles",
+      "customerNumber": "Numéro client",
+      "customerNumberEmpty": "Non renseigné",
+      "totalReferences": "Références",
+      "emailDelivery": "Envoi par mail avec PDF en pièce jointe",
+      "mailtoDelivery": "Préparation manuelle par mailto avec PDF à joindre",
+      "kindModule": "Module",
+      "kindSensor": "Sonde"
+    },
+    "actions": {
+      "add": "Ajouter",
+      "savePdf": "Enregistrer le PDF",
+      "submitQuote": "Envoyer la demande de devis",
+      "prepareQuoteEmail": "Préparer le mail de devis",
+      "remove": "Supprimer la ligne"
+    },
+    "footer": {
+      "title": "Le PDF peut être généré sans envoi.",
+      "subtitle": "Vous pouvez préparer la demande, enregistrer le document puis transmettre le devis plus tard."
+    },
+    "feedback": {
+      "pdfReadyTitle": "PDF généré",
+      "pdfReadyDescription": "Le récapitulatif a été téléchargé.",
+      "pdfErrorTitle": "Génération impossible",
+      "pdfError": "Impossible de générer le PDF de devis.",
+      "orderSentTitle": "Demande envoyée",
+      "orderSentDescription": "La demande de devis {reference} a été transmise au service commercial.",
+      "orderPreparedTitle": "Demande préparée",
+      "orderPreparedDescription": "La demande de devis {reference} est prête. Le PDF a été téléchargé et votre messagerie va s'ouvrir.",
+      "orderErrorTitle": "Envoi impossible",
+      "orderError": "Impossible de préparer la demande de devis matériel.",
+      "dialog": {
+        "successTitle": "Demande envoyée",
+        "failureTitle": "Envoi impossible",
+        "preparedTitle": "Demande préparée",
+        "countdown": "Le téléchargement du PDF d?marrera automatiquement dans {seconds} seconde(s).",
+        "downloadHint": "Si le téléchargement n'a pas commencé, utilisez le bouton ci-dessous.",
+        "downloadNow": "Télécharger le PDF",
+        "close": "Fermer",
+        "cancel": "Abandonner",
+        "failureDescription": "La demande de devis {reference} n'a pas pu être envoyée. Vous pouvez télécharger le PDF ou fermer cette fenêtre. Détail : {details}",
+        "failureFallback": "Erreur lors de l'envoi de la demande de devis.",
+        "preparedDescription": "Le PDF de la demande de devis {reference} va être téléchargé, puis votre messagerie va s'ouvrir avec un brouillon préd rempli."
       }
-    },
-    "note": {
-      "title": "Un besoin spécifique ?",
-      "subtitle": "Écrivez-nous et nous proposons une configuration adaptée.",
-      "cta": "Contacter MC2"
     }
   },
   "servicesNews": {
@@ -3286,7 +3322,7 @@
       },
       "modules": {
         "title": "Modules",
-        "description": "Gérer les modules et leurs parametres."
+        "description": "Gérer les modules et leurs paramètres."
       },
       "etalons": {
         "title": "Etalons",

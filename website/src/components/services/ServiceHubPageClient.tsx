@@ -1,18 +1,17 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
 import { AuroraText } from "@/components/ui/aurora-text";
 import { SparklesText } from "@/components/ui/sparkles-text";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { MagicCard } from "@/components/ui/magic-card";
-import { RainbowButton } from "@/components/ui/rainbow-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpRight, ShoppingCart, Megaphone } from "lucide-react";
 import { useTheme } from "next-themes";
 import { ServicesNavbar } from "@/components/services/ServicesNavbar";
+import { Link } from "@/i18n/navigation";
 
 const cardIcons = {
   upgrade: ArrowUpRight,
@@ -48,7 +47,7 @@ export function ServiceHubPageClient() {
     },
     {
       key: "hardware",
-      href: "/services/achat-materiel",
+      href: "/services/demande-materiel",
       title: t("servicesHub.cards.hardware.title"),
       description: t("servicesHub.cards.hardware.description"),
       tag: t("servicesHub.cards.hardware.tag"),
@@ -72,7 +71,7 @@ export function ServiceHubPageClient() {
 
   const navItems = [
     { name: t("servicesNav.upgrade"), link: "/services/upgrade-licence" },
-    { name: t("servicesNav.hardware"), link: "/services/achat-materiel" },
+    { name: t("servicesNav.hardware"), link: "/services/demande-materiel" },
     { name: t("servicesNav.news"), link: "/services/actualites-mc2" },
   ];
 
@@ -114,20 +113,6 @@ export function ServiceHubPageClient() {
               </SparklesText>
             </BlurFade>
 
-            <BlurFade delay={150}>
-              <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <RainbowButton size="lg" asChild>
-                  <Link href="/services/upgrade-licence">
-                    {t("servicesHub.hero.ctaPrimary")}
-                  </Link>
-                </RainbowButton>
-                <RainbowButton size="lg" variant="outline" asChild>
-                  <Link href="/services/achat-materiel">
-                    {t("servicesHub.hero.ctaSecondary")}
-                  </Link>
-                </RainbowButton>
-              </div>
-            </BlurFade>
           </div>
         </section>
 

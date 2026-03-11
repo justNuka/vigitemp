@@ -23,6 +23,7 @@ export function ThemeToggle() {
           size="icon"
           data-testid="button-theme-toggle"
           aria-label={t("aria")}
+          className="text-[hsl(var(--sidebar))] hover:text-[hsl(var(--sidebar))] dark:text-white dark:hover:text-white"
         >
           <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />

@@ -65,16 +65,16 @@ export function LoginForm() {
   const reason = searchParams.get("reason");
   const passwordChanged = searchParams.get("passwordChanged");
   const fromParam = searchParams.get("from");
-  const [showInactivityMessage, setShowInactivityMessage] = useState(false);
+  const [loginAlertReason, setLoginAlertReason] = useState<"inactivity" | "session-expired" | null>(null);
 
   useEffect(() => {
     if (reason === "inactivity") {
       const canShow = consumeDisconnectReason("inactivity");
-      setShowInactivityMessage(canShow);
+      setLoginAlertReason(canShow ? "inactivity" : null);
     } else if (reason === "session-expired") {
-      setShowInactivityMessage(true);
+      setLoginAlertReason("session-expired");
     } else {
-      setShowInactivityMessage(false);
+      setLoginAlertReason(null);
     }
 
     if (passwordChanged === "true") {
@@ -85,11 +85,19 @@ export function LoginForm() {
   }, [passwordChanged, reason, t]);
 
   useEffect(() => {
-    if (!showInactivityMessage) return;
+    if (!loginAlertReason) return;
+
+    if (loginAlertReason === "session-expired") {
+      toast.info(t("toasts.session_expired.title"), {
+        description: t("toasts.session_expired.description"),
+      });
+      return;
+    }
+
     toast.warning(t("toasts.session_expired.title"), {
       description: t("toasts.session_expired.description"),
     });
-  }, [showInactivityMessage, t]);
+  }, [loginAlertReason, t]);
 
   const loginSchema = z.object({
     username: z
@@ -300,8 +308,15 @@ export function LoginForm() {
               </CardHeader>
               <CardContent>
                 <>
-                  {showInactivityMessage && (
-                    <LoginInactivityAlert message={t("inactivity_alert")} />
+                  {loginAlertReason && (
+                    <LoginInactivityAlert
+                      message={
+                        loginAlertReason === "session-expired"
+                          ? t("session_expired_alert")
+                          : t("inactivity_alert")
+                      }
+                      variant={loginAlertReason === "session-expired" ? "info" : "warning"}
+                    />
                   )}
                   <LoginCredentialsForm
                     register={register}

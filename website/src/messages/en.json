@@ -1214,6 +1214,8 @@
       "description": "Select a location and a time period, then click Analyze to simulate the impact of new tolerances on your historical measurements."
     },
     "summary": {
+      "kindModule": "Module",
+      "kindSensor": "Sensor",
       "recapTitle": "Location summary",
       "consigne": "Setpoint",
       "toleranceSup": "Upper tolerance",
@@ -1507,11 +1509,11 @@
       "refresh_options": {
         "5": "5 seconds",
         "10": "10 seconds",
+        "15": "Every 15 seconds",
         "30": "30 seconds",
         "60": "1 minute",
         "manual": "Manual (disabled)",
-        "custom": "{seconds} seconds",
-        "15": "Every 15 seconds"
+        "custom": "{seconds} seconds"
       },
       "language_options": {
         "fr": "French",
@@ -2193,6 +2195,7 @@
       "first_login": "First sign-in"
     },
     "inactivity_alert": "You have been automatically signed out after a period of inactivity. Sign in again to continue.",
+    "session_expired_alert": "Your session has expired. Please sign in again to continue.",
     "fields": {
       "username_label": "Username",
       "username_placeholder": "Your username",
@@ -2223,7 +2226,7 @@
     "toasts": {
       "session_expired": {
         "title": "Session expired",
-        "description": "You have been signed out due to inactivity"
+        "description": "Your session has expired. Please sign in again to continue."
       },
       "password_changed": {
         "title": "Password changed",
@@ -2622,50 +2625,83 @@
   },
   "servicesHardware": {
     "meta": {
-      "title": "VigiSensys | Hardware catalog",
-      "description": "Validated hardware catalog for VigiSensys deployments."
+      "title": "VigiSensys | Hardware quote request",
+      "description": "MC2 catalog to prepare a hardware quote request, generate a PDF, and send the request to the sales team."
     },
     "hero": {
-      "eyebrow": "MC2 Hardware",
-      "title": "Validated hardware catalog",
-      "subtitle": "A curated selection of sensors, modules, and accessories compatible with VigiSensys."
+      "eyebrow": "MC2 hardware quote",
+      "title": "Prepare a hardware quote request without leaving VigiSensys.",
+      "subtitle": "Browse the MC2 catalog, adjust quantities, generate a summary PDF, and send the request directly to the sales team."
     },
-    "items": {
-      "0": {
-        "title": "Starter kits",
-        "description": "All-in-one packs to deploy a site quickly.",
-        "tag": "Kit"
-      },
-      "1": {
-        "title": "Modules and gateways",
-        "description": "Acquisition modules and proven network gateways.",
-        "tag": "Modules"
-      },
-      "2": {
-        "title": "Sensors and probes",
-        "description": "Temperature, humidity, CO2, and specialized sensors.",
-        "tag": "Sensors"
-      },
-      "3": {
-        "title": "Installation accessories",
-        "description": "Mounts, enclosures, and site-ready cabling.",
-        "tag": "Accessories"
-      },
-      "4": {
-        "title": "Compliance and calibration",
-        "description": "Standards, certificates, and compliance options.",
-        "tag": "Quality"
-      },
-      "5": {
-        "title": "Custom services",
-        "description": "Consulting, integration, and dedicated support.",
-        "tag": "Service"
+    "nav": {
+      "title": "Catalog",
+      "modules": "Modules",
+      "sensors": "Sensors"
+    },
+    "contact": {
+      "title": "Commercial delivery",
+      "smtpDescription": "The PDF is automatically attached to the email sent to the MC2 sales team.",
+      "mailtoDescription": "If no mail server is configured, the PDF is prepared and your local email app opens with a pre-filled draft.",
+      "footer": "The request is sent directly to the MC2 sales team."
+    },
+    "states": {
+      "loading": "Loading hardware catalog...",
+      "error": "Unable to load the hardware catalog right now."
+    },
+    "sections": {
+      "gamme": "Product line",
+      "references": "{count, plural, one {# reference} other {# references}}"
+    },
+    "summary": {
+      "title": "Needs summary",
+      "empty": "Add hardware to build your quote request.",
+      "quantity": "Quantity",
+      "comment": "Comment for the sales team",
+      "commentPlaceholder": "Need context, desired timeline, project references, site constraints...",
+      "totalItems": "Items",
+      "customerNumber": "Customer number",
+      "customerNumberEmpty": "Not provided",
+      "totalReferences": "References",
+      "emailDelivery": "Email delivery with PDF attached",
+      "mailtoDelivery": "Manual mailto preparation with PDF to attach",
+      "kindModule": "Module",
+      "kindSensor": "Sensor"
+    },
+    "actions": {
+      "add": "Add",
+      "savePdf": "Save PDF",
+      "submitQuote": "Send quote request",
+      "prepareQuoteEmail": "Prepare quote email",
+      "remove": "Remove line"
+    },
+    "footer": {
+      "title": "The PDF can be generated without sending.",
+      "subtitle": "You can prepare the request, save the document, and send the quote later."
+    },
+    "feedback": {
+      "pdfReadyTitle": "PDF generated",
+      "pdfReadyDescription": "The summary has been downloaded.",
+      "pdfErrorTitle": "Generation failed",
+      "pdfError": "Unable to generate the quote PDF.",
+      "orderSentTitle": "Request sent",
+      "orderSentDescription": "Quote request {reference} has been sent to the sales team.",
+      "orderPreparedTitle": "Request prepared",
+      "orderPreparedDescription": "Quote request {reference} is ready. The PDF has been downloaded and your email app will open.",
+      "orderErrorTitle": "Send failed",
+      "orderError": "Unable to prepare the hardware quote request.",
+      "dialog": {
+        "successTitle": "Request sent",
+        "failureTitle": "Send failed",
+        "preparedTitle": "Request prepared",
+        "countdown": "The PDF download will start automatically in {seconds} second(s).",
+        "downloadHint": "If the download did not start, use the button below.",
+        "downloadNow": "Download the PDF",
+        "close": "Close",
+        "cancel": "Cancel",
+        "failureDescription": "The quote request {reference} could not be sent. You can download the PDF or close this window. Details: {details}",
+        "failureFallback": "An error occurred while sending the quote request.",
+        "preparedDescription": "The PDF for quote request {reference} will be downloaded, then your email app will open with a pre-filled draft."
       }
-    },
-    "note": {
-      "title": "Need something specific?",
-      "subtitle": "Email us and we will propose a tailored configuration.",
-      "cta": "Contact MC2"
     }
   },
   "servicesNews": {

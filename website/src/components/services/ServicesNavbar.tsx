@@ -1,7 +1,10 @@
 "use client";
 
+import type { ReactNode } from "react";
+import type { MouseEvent } from "react";
 import { useState } from "react";
 import Image from "next/image";
+import { Link } from "@/i18n/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import {
@@ -15,7 +18,7 @@ import {
 } from "@/components/ui/resizable-navbar";
 
 type NavItem = {
-  name: string;
+  name: ReactNode;
   link: string;
 };
 
@@ -41,6 +44,28 @@ interface ServicesNavbarProps {
   scrolledLinkClassName?: string;
   topHoverClassName?: string;
   scrolledHoverClassName?: string;
+}
+
+function handleAnchorNavigation(
+  event: MouseEvent<HTMLAnchorElement>,
+  link: string,
+  onDone?: () => void,
+) {
+  if (!link.startsWith("#")) {
+    onDone?.();
+    return;
+  }
+
+  event.preventDefault();
+  const target = document.getElementById(link.slice(1));
+  if (!target) {
+    onDone?.();
+    return;
+  }
+
+  target.scrollIntoView({ behavior: "smooth", block: "start" });
+  window.history.replaceState(null, "", link);
+  onDone?.();
 }
 
 function ServicesNavBody({
@@ -82,7 +107,7 @@ function ServicesNavBody({
 
   return (
     <NavBody visible={visible} className={navClassName}>
-      <a href="/" className="relative z-20 flex items-center gap-2 px-2 py-1">
+      <Link href="/" className="relative z-20 flex items-center gap-2 px-2 py-1">
         <Image
           src="/logos/Icone-VigiSensys.png"
           alt="VigiSensys"
@@ -95,12 +120,18 @@ function ServicesNavBody({
             Vigi<span className="font-bold text-primary">Sensys</span>
           </span>
         )}
-      </a>
+      </Link>
 
       <NavItems
         items={displayItems}
         linkClassName={navLinkClassName}
         hoverClassName={navHoverClassName}
+        onItemClick={(event) =>
+          handleAnchorNavigation(
+            event as MouseEvent<HTMLAnchorElement>,
+            (event.currentTarget as HTMLAnchorElement).getAttribute("href") ?? "",
+          )
+        }
       />
 
       <div className="relative z-20 hidden items-center gap-3 lg:flex">
@@ -114,7 +145,7 @@ function ServicesNavBody({
         )}
         {!visible && cta && (
           <RainbowButton size="sm" className="px-5" asChild>
-            <a href={cta.href}>{cta.label}</a>
+            <Link href={cta.href as never}>{cta.label}</Link>
           </RainbowButton>
         )}
         <ThemeToggle />
@@ -161,7 +192,7 @@ function ServicesMobileNav({
   return (
     <MobileNav visible={visible} className={mobileNavClassName}>
       <MobileNavHeader>
-        <a href="/" className="flex items-center gap-2 px-2 py-1">
+        <Link href="/" className="flex items-center gap-2 px-2 py-1">
           <Image
             src="/logos/Icone-VigiSensys.png"
             alt="VigiSensys"
@@ -174,7 +205,7 @@ function ServicesMobileNav({
               Vigi<span className="font-bold text-primary">Sensys</span>
             </span>
           )}
-        </a>
+        </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <MobileNavToggle isOpen={isOpen} onClick={onToggle} />
@@ -183,18 +214,18 @@ function ServicesMobileNav({
 
       <MobileNavMenu isOpen={isOpen} onClose={onClose}>
         {displayItems.map((item) => (
-          <a
+          <Link
             key={item.link}
-            href={item.link}
-            onClick={onClose}
+            href={item.link as never}
+            onClick={(event) => handleAnchorNavigation(event, item.link, onClose)}
             className={mobileLinkClassName}
           >
             {item.name}
-          </a>
+          </Link>
         ))}
         {!visible && cta && (
           <RainbowButton className="w-full text-sm" asChild>
-            <a href={cta.href}>{cta.label}</a>
+            <Link href={cta.href as never}>{cta.label}</Link>
           </RainbowButton>
         )}
       </MobileNavMenu>
