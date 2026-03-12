@@ -7,6 +7,7 @@ import { Download, FileText, FileSpreadsheet, FileImage, File } from "lucide-rea
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
@@ -75,6 +76,7 @@ export function ConversationDetailsSheet({
         <SheetContent side="right" className="w-80 sm:w-96 flex flex-col p-0">
           <SheetHeader className="px-6 py-4 border-b shrink-0">
             <SheetTitle>{t("sheet_title")}</SheetTitle>
+            <SheetDescription className="sr-only">{t("sheet_title")}</SheetDescription>
           </SheetHeader>
 
           <ScrollArea className="flex-1">

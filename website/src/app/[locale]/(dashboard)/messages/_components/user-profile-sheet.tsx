@@ -5,6 +5,7 @@ import { Mail, Phone, PhoneCall, User, Shield, Calendar } from "lucide-react"
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
@@ -28,6 +29,7 @@ export function UserProfileSheet({ user, open, onOpenChange }: UserProfileSheetP
       <SheetContent side="right" className="w-80 sm:w-96 overflow-y-auto">
         <SheetHeader className="pb-4">
           <SheetTitle>{t("user_profile_title")}</SheetTitle>
+          <SheetDescription className="sr-only">{t("user_profile_title")}</SheetDescription>
         </SheetHeader>
 
         {/* Avatar + name */}

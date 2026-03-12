@@ -243,6 +243,7 @@
       "empty": "Selectionnez 2 lieux puis cliquez sur afficher"
     },
     "load_more": "Charger plus",
+      "open_details": "Voir les détails",
     "stats": {
       "total": "{count, plural, one {# sonde} other {# sondes}}",
       "ok": "{count} OK",

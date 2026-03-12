@@ -253,7 +253,9 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
     <div className="flex flex-col h-full overflow-hidden">
       {/* Thread header — cliquable pour ouvrir le Sheet de détails */}
       <button
+        type="button"
         onClick={() => setSheetOpen(true)}
+        aria-label={t("thread.open_details")}
         className="flex items-center gap-3 px-5 py-3.5 border-b shrink-0 bg-background/80 backdrop-blur-sm w-full text-left cursor-pointer hover:bg-muted/40 transition-colors"
       >
         {conversation.type === "group" ? (
