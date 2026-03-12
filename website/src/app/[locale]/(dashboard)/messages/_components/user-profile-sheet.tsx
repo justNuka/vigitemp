@@ -9,18 +9,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { getInitials } from "../_utils"
+import { getInitials, formatDate } from "../_utils"
 import type { ConversationParticipant } from "./_types"
 
 type UserProfileSheetProps = {
   user: ConversationParticipant | null
   open: boolean
   onOpenChange: (open: boolean) => void
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return "—"
-  return new Date(iso).toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" })
 }
 
 export function UserProfileSheet({ user, open, onOpenChange }: UserProfileSheetProps) {

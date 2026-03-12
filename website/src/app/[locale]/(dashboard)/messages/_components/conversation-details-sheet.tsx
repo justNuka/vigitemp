@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getJson } from "@/lib/http"
-import { getInitials } from "../_utils"
+import { getInitials, formatDate } from "../_utils"
 import { UserProfileSheet } from "./user-profile-sheet"
 import type {
   ConversationDetails,
@@ -35,9 +35,6 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" })
-}
 
 function getFileIcon(mimeType: string) {
   if (mimeType.startsWith("image/")) return <FileImage className="h-4 w-4 text-blue-500 shrink-0" />
