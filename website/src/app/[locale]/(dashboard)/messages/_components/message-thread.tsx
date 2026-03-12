@@ -72,17 +72,19 @@ function formatMessageTime(dateStr: string): string {
   return new Date(dateStr).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 }
 
+const GROUP_AVATAR_MAX_SHOWN = 4
+
 function GroupAvatarStack({ convId }: { convId: number }) {
+  // Intentional eager pre-fetch: warms the cache so ConversationDetailsSheet opens instantly
   const { data } = useQuery<ConversationDetails>({
     queryKey: ["chat", "conv-details", convId],
     queryFn: () => getJson<ConversationDetails>(`/api/chat/conversations/${convId}/details`),
     staleTime: 60_000,
   })
 
-  const MAX_SHOWN = 4
   const participants = data?.participants ?? []
-  const shown = participants.slice(0, MAX_SHOWN)
-  const extra = participants.length - MAX_SHOWN
+  const shown = participants.slice(0, GROUP_AVATAR_MAX_SHOWN)
+  const extra = participants.length - GROUP_AVATAR_MAX_SHOWN
 
   if (shown.length === 0) {
     return (

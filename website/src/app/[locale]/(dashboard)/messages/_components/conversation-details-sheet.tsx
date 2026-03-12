@@ -57,7 +57,7 @@ export function ConversationDetailsSheet({
     queryKey: ["chat", "conv-details", convId],
     queryFn: () => getJson<ConversationDetails>(`/api/chat/conversations/${convId}/details`),
     enabled: open,
-    staleTime: 30_000,
+    staleTime: 60_000,
   })
 
   const { data: attachmentsData, isLoading: isLoadingAttachments } =
