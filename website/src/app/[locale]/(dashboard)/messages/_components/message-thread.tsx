@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { ChevronUp, Check, CheckCheck } from "lucide-react"
+import { ChevronUp, Check, CheckCheck, Info } from "lucide-react"
 import { toast } from "sonner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -15,6 +15,8 @@ import { AttachmentPreview } from "./attachment-preview"
 import { TypingIndicator } from "./typing-indicator"
 import type { ConversationSummary, MessageItem, MessagesResponse } from "./_types"
 import { getInitials } from "../_utils"
+import { ConversationDetailsSheet } from "./conversation-details-sheet"
+import type { ConversationDetails } from "./_types"
 
 type DateLabel = {
   type: "date"
@@ -70,6 +72,54 @@ function formatMessageTime(dateStr: string): string {
   return new Date(dateStr).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 }
 
+function GroupAvatarStack({ convId }: { convId: number }) {
+  const { data } = useQuery<ConversationDetails>({
+    queryKey: ["chat", "conv-details", convId],
+    queryFn: () => getJson<ConversationDetails>(`/api/chat/conversations/${convId}/details`),
+    staleTime: 60_000,
+  })
+
+  const MAX_SHOWN = 4
+  const participants = data?.participants ?? []
+  const shown = participants.slice(0, MAX_SHOWN)
+  const extra = participants.length - MAX_SHOWN
+
+  if (shown.length === 0) {
+    return (
+      <Avatar className="h-8 w-8 shrink-0">
+        <AvatarFallback className="text-xs font-medium bg-primary/10 text-primary">
+          G
+        </AvatarFallback>
+      </Avatar>
+    )
+  }
+
+  return (
+    <div className="flex items-center shrink-0">
+      {shown.map((p, i) => (
+        <Avatar
+          key={p.id}
+          className="h-7 w-7 border-2 border-background"
+          style={{ marginLeft: i === 0 ? 0 : -10 }}
+        >
+          <AvatarImage src={p.avatar ?? undefined} />
+          <AvatarFallback className="text-[10px] font-medium bg-primary/10 text-primary">
+            {getInitials(p.displayName)}
+          </AvatarFallback>
+        </Avatar>
+      ))}
+      {extra > 0 && (
+        <div
+          className="h-7 w-7 rounded-full border-2 border-background bg-muted flex items-center justify-center text-[10px] font-medium text-muted-foreground"
+          style={{ marginLeft: -10 }}
+        >
+          +{extra}
+        </div>
+      )}
+    </div>
+  )
+}
+
 type MessageThreadProps = {
   conversation: ConversationSummary
   currentUserId: number | undefined
@@ -87,6 +137,7 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   // undefined = not yet loaded older messages, null = exhausted (no more), number = cursor to next page
   const [loadMoreCursor, setLoadMoreCursor] = useState<number | null | undefined>(undefined)
+  const [sheetOpen, setSheetOpen] = useState(false)
 
   const convId = conversation.id
 
@@ -198,13 +249,20 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Thread header */}
-      <div className="flex items-center gap-3 px-5 py-3.5 border-b shrink-0 bg-background/80 backdrop-blur-sm">
-        <Avatar className="h-8 w-8 shrink-0">
-          <AvatarFallback className="text-xs font-medium bg-primary/10 text-primary">
-            {getInitials(conversation.name)}
-          </AvatarFallback>
-        </Avatar>
+      {/* Thread header — cliquable pour ouvrir le Sheet de détails */}
+      <button
+        onClick={() => setSheetOpen(true)}
+        className="flex items-center gap-3 px-5 py-3.5 border-b shrink-0 bg-background/80 backdrop-blur-sm w-full text-left cursor-pointer hover:bg-muted/40 transition-colors"
+      >
+        {conversation.type === "group" ? (
+          <GroupAvatarStack convId={convId} />
+        ) : (
+          <Avatar className="h-8 w-8 shrink-0">
+            <AvatarFallback className="text-xs font-medium bg-primary/10 text-primary">
+              {getInitials(conversation.name)}
+            </AvatarFallback>
+          </Avatar>
+        )}
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-semibold truncate">{conversation.name}</h3>
           {conversation.type === "group" && (
@@ -213,7 +271,8 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
             </p>
           )}
         </div>
-      </div>
+        <Info className="h-4 w-4 text-muted-foreground shrink-0" />
+      </button>
 
       {/* Messages — using a plain div for the scrollable area so we can ref the viewport */}
       <div
@@ -353,6 +412,11 @@ export function MessageThread({ conversation, currentUserId }: MessageThreadProp
 
       {/* Input */}
       <MessageInput onSend={handleSend} convId={convId} />
+      <ConversationDetailsSheet
+        convId={convId}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+      />
     </div>
   )
 }
