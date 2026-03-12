@@ -122,7 +122,8 @@
     "admin_dashboard": "Admin dashboard",
     "admin_dashboard_tooltip": "Administrator dashboard",
     "services": "Services",
-    "messaging": "Messaging"
+    "messaging": "Messaging",
+    "vigilog": "VigiLog"
   },
   "sidebarGroups": {
     "navigation": "Navigation",
@@ -2577,7 +2578,8 @@
   "servicesNav": {
     "upgrade": "License upgrade",
     "hardware": "Hardware",
-    "news": "MC2 news"
+    "news": "MC2 news",
+    "vigilog": "VigiLog"
   },
   "servicesHub": {
     "meta": {
@@ -2620,6 +2622,12 @@
         "description": "Product updates, releases, and operational tips.",
         "tag": "Updates",
         "cta": "Read news"
+      },
+      "vigilog": {
+        "title": "VigiLog",
+        "description": "Manage transport runs, logger configurations, and reception workflows.",
+        "tag": "Transport",
+        "cta": "Open VigiLog"
       }
     }
   },
@@ -3893,6 +3901,17 @@
       "yesterday": "Yesterday",
       "date_separator_today": "Today",
       "date_separator_yesterday": "Yesterday"
+    },
+    "details": {
+      "sheet_title": "Details",
+      "user_profile_title": "Profile",
+      "member_since": "Member since",
+      "joined_conversation": "Joined on",
+      "members_section": "Members",
+      "documents_section": "Shared documents",
+      "no_documents": "No shared documents",
+      "group_created": "Created on",
+      "download": "Download"
     }
   },
   "testPages": {
@@ -4099,6 +4118,205 @@
       },
       "more": "+ {count} more",
       "loaded_count": "{count} user{count, plural, one {} other {s}} loaded in <strong>{duration}ms</strong>"
+    }
+  },
+  "servicesVigilog": {
+    "meta": {
+      "title": "VigiSensys | VigiLog",
+      "description": "VigiLog management for logger configurations, departures, arrivals, and run history."
+    },
+    "nav": {
+      "upgrade": "License upgrade",
+      "hardware": "Hardware",
+      "vigilog": "VigiLog",
+      "news": "MC2 news"
+    },
+    "hero": {
+      "eyebrow": "Controlled transport",
+      "title": "VigiLog operations",
+      "description": "Prepare logger configurations, launch departures, register arrivals, and review alarm status."
+    },
+    "stats": {
+      "configurations": "Configurations",
+      "pending": "Pending arrivals",
+      "alarms": "Runs in alarm"
+    },
+    "tabs": {
+      "movements": "Departure / Arrival",
+      "configurations": "Configurations",
+      "history": "History"
+    },
+    "forbidden": {
+      "title": "Access denied",
+      "description": "Your account cannot use the VigiLog module.",
+      "alertTitle": "Authorization required",
+      "alertDescription": "Request ACCES_VIGILOG or ACCES_METROLOGIE to open this page."
+    },
+    "common": {
+      "loading": "Loading...",
+      "cancel": "Cancel",
+      "disabled": "Disabled",
+      "updatedAt": "Last update",
+      "noDescription": "No description",
+      "frequencyBadge": "{count} min",
+      "delayBadge": "Delay {count} min"
+    },
+    "departure": {
+      "title": "Departure",
+      "description": "Select a configuration, both sites, and the logger to prepare before transport.",
+      "fields": {
+        "configuration": "Configuration",
+        "loggerSerial": "Logger serial number",
+        "departureSite": "Departure site",
+        "arrivalSite": "Arrival site",
+        "comment": "Comment"
+      },
+      "placeholders": {
+        "configuration": "Choose a configuration",
+        "loggerSerial": "Ex: LT-00012345",
+        "site": "Choose a site",
+        "comment": "Useful notes for the run"
+      },
+      "actions": {
+        "submit": "Create run"
+      }
+    },
+    "arrival": {
+      "title": "Arrival",
+      "description": "Select a pending run, place the logger on its base, then confirm arrival.",
+      "fields": {
+        "pendingTour": "Pending run",
+        "comment": "Arrival comment"
+      },
+      "placeholders": {
+        "pendingTour": "Choose a run",
+        "comment": "Arrival notes"
+      },
+      "summary": {
+        "departureSite": "Departure",
+        "arrivalSite": "Arrival",
+        "departureAt": "Started at",
+        "loggerSerial": "Logger"
+      },
+      "emptyTitle": "No pending run",
+      "emptyDescription": "Create a departure first or wait for a logger return.",
+      "actions": {
+        "submit": "Confirm arrival"
+      }
+    },
+    "config": {
+      "title": "Logger configurations",
+      "description": "Active configurations can be loaded onto a logger during departure.",
+      "readOnlyTitle": "Read only mode",
+      "readOnlyDescription": "Only users with metrology access can create or edit a configuration.",
+      "states": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "fields": {
+        "name": "Name",
+        "description": "Description",
+        "target": "Target",
+        "lowLimitActive": "Low limit",
+        "highLimitActive": "High limit",
+        "frequencyMinutes": "Frequency (min)",
+        "alarmDelayMinutes": "Alarm delay (min)",
+        "active": "Active configuration"
+      },
+      "actions": {
+        "create": "New configuration",
+        "edit": "Edit",
+        "save": "Save"
+      },
+      "dialog": {
+        "createTitle": "Create VigiLog configuration",
+        "editTitle": "Edit VigiLog configuration",
+        "description": "Define thresholds, frequency, and alarm delay to load onto the logger.",
+        "activeHint": "An inactive configuration remains in history but can no longer be selected for departure."
+      }
+    },
+    "history": {
+      "title": "Run history",
+      "description": "Review created runs, results, and pending arrivals.",
+      "filters": {
+        "search": "Search",
+        "status": "Status"
+      },
+      "placeholders": {
+        "search": "Reference, configuration, logger, site..."
+      },
+      "columns": {
+        "reference": "Reference",
+        "route": "Route",
+        "status": "Status",
+        "result": "Light",
+        "measures": "Measures",
+        "departureAt": "Departure",
+        "arrivalAt": "Arrival",
+        "actions": "Actions"
+      },
+      "actions": {
+        "receive": "Receive",
+        "acknowledge": "Acknowledge"
+      },
+      "empty": "No run to display.",
+      "alarm": "Alarm during {duration}",
+      "traffic": {
+        "vert": "Green",
+        "orange": "Orange",
+        "rouge": "Red"
+      },
+      "status": {
+        "all": "All",
+        "pendingReception": "Pending arrival",
+        "received": "Received",
+        "analysed": "Analysed",
+        "acknowledged": "Acknowledged",
+        "cancelled": "Cancelled",
+        "en_attente_reception": "Pending arrival",
+        "recue": "Received",
+        "analysee": "Analysed",
+        "acquittee": "Acknowledged",
+        "annulee": "Cancelled"
+      }
+    },
+    "feedback": {
+      "configurationCreated": {
+        "title": "Configuration created",
+        "description": "The VigiLog configuration has been created."
+      },
+      "configurationUpdated": {
+        "title": "Configuration updated",
+        "description": "The VigiLog configuration has been updated."
+      },
+      "configurationError": {
+        "title": "Configuration failed",
+        "description": "The VigiLog configuration could not be saved."
+      },
+      "departureCreated": {
+        "title": "Run created",
+        "description": "Run {reference} has been created and is waiting for arrival."
+      },
+      "departureError": {
+        "title": "Creation failed",
+        "description": "The VigiLog run could not be created."
+      },
+      "receiveSuccess": {
+        "title": "Arrival confirmed",
+        "description": "The run has been marked as received."
+      },
+      "receiveError": {
+        "title": "Arrival failed",
+        "description": "The run arrival could not be confirmed."
+      },
+      "ackSuccess": {
+        "title": "Run acknowledged",
+        "description": "The VigiLog alarm has been acknowledged."
+      },
+      "ackError": {
+        "title": "Acknowledgement failed",
+        "description": "The run acknowledgement failed."
+      }
     }
   }
 }

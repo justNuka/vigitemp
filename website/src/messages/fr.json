@@ -122,7 +122,8 @@
     "admin_dashboard": "Dashboard Admin",
     "admin_dashboard_tooltip": "Tableau de bord administrateur",
     "services": "Services",
-    "messaging": "Messagerie"
+    "messaging": "Messagerie",
+    "vigilog": "VigiLog"
   },
   "sidebarGroups": {
     "navigation": "Navigation",
@@ -2577,7 +2578,8 @@
   "servicesNav": {
     "upgrade": "Upgrade licence",
     "hardware": "Demande de matériel",
-    "news": "Actualités MC2"
+    "news": "Actualités MC2",
+    "vigilog": "VigiLog"
   },
   "servicesHub": {
     "meta": {
@@ -2620,18 +2622,24 @@
         "description": "Suivez les nouveautés produits, versions et conseils d'exploitation.",
         "tag": "Actus",
         "cta": "Lire les actualités"
+      },
+      "vigilog": {
+        "title": "VigiLog",
+        "description": "Gerez les tournees de transport, les configurations et les receptions de logger.",
+        "tag": "Transport",
+        "cta": "Ouvrir VigiLog"
       }
     }
   },
   "servicesHardware": {
     "meta": {
-      "title": "VigiSensys | Demande de devis mat?riel",
-      "description": "Catalogue MC2 pour pr?parer une demande de devis mat?riel, g?n?rer un PDF et transmettre la demande au service commercial."
+      "title": "VigiSensys | Demande de devis matériel",
+      "description": "Catalogue MC2 pour préparer une demande de devis matériel, générer un PDF et transmettre la demande au service commercial."
     },
     "hero": {
-      "eyebrow": "Devis mat?riel MC2",
-      "title": "Pr?parez une demande de devis mat?riel sans sortir de VigiSensys.",
-      "subtitle": "Parcourez le catalogue MC2, ajustez les quantit?s, g?n?rez un PDF de synth?se et transmettez la demande directement au service commercial."
+      "eyebrow": "Devis matériel MC2",
+      "title": "Préparez une demande de devis matériel sans sortir de VigiSensys.",
+      "subtitle": "Parcourez le catalogue MC2, ajustez les quantités, générez un PDF de synthèse et transmettez la demande directement au service commercial."
     },
     "nav": {
       "title": "Catalogue",
@@ -2640,13 +2648,13 @@
     },
     "contact": {
       "title": "Transmission commerciale",
-      "smtpDescription": "Le PDF est joint automatiquement ? l'email envoy? au service commercial MC2.",
-      "mailtoDescription": "Si aucun serveur mail n'est configur?, le PDF est pr?par? et votre messagerie locale s'ouvre avec un mail pr?-rempli.",
+      "smtpDescription": "Le PDF est joint automatiquement à l'email envoyé au service commercial MC2.",
+      "mailtoDescription": "Si aucun serveur mail n'est configuré, le PDF est préparé et votre messagerie locale s'ouvre avec un mail pré-rempli.",
       "footer": "La demande est transmise directement au service commercial MC2."
     },
     "states": {
-      "loading": "Chargement du catalogue mat?riel...",
-      "error": "Impossible de charger le catalogue mat?riel pour le moment."
+      "loading": "Chargement du catalogue matériel...",
+      "error": "Impossible de charger le catalogue matériel pour le moment."
     },
     "sections": {
       "gamme": "Gamme",
@@ -3893,6 +3901,17 @@
       "yesterday": "Hier",
       "date_separator_today": "Aujourd'hui",
       "date_separator_yesterday": "Hier"
+    },
+    "details": {
+      "sheet_title": "Détails",
+      "user_profile_title": "Profil",
+      "member_since": "Membre depuis",
+      "joined_conversation": "A rejoint le",
+      "members_section": "Membres",
+      "documents_section": "Documents partagés",
+      "no_documents": "Aucun document partagé",
+      "group_created": "Créé le",
+      "download": "Télécharger"
     }
   },
   "testPages": {
@@ -4099,6 +4118,205 @@
       },
       "more": "+ {count} autre{count, plural, one {} other {s}}",
       "loaded_count": "{count} utilisateur{count, plural, one {} other {s}} chargé{count, plural, one {} other {s}} en <strong>{duration}ms</strong>"
+    }
+  },
+  "servicesVigilog": {
+    "meta": {
+      "title": "VigiSensys | VigiLog",
+      "description": "Gestion VigiLog des configurations, departs, receptions et historique de tournee."
+    },
+    "nav": {
+      "upgrade": "Upgrade licence",
+      "hardware": "Demande materiel",
+      "vigilog": "VigiLog",
+      "news": "Actualites MC2"
+    },
+    "hero": {
+      "eyebrow": "Transport controle",
+      "title": "Pilotage VigiLog",
+      "description": "Preparez les configurations de logger, lancez les tournees au depart, receptionnez les retours et suivez les alarmes."
+    },
+    "stats": {
+      "configurations": "Configurations",
+      "pending": "En attente de reception",
+      "alarms": "Tournees en alarme"
+    },
+    "tabs": {
+      "movements": "Depart / Arrivee",
+      "configurations": "Configurations",
+      "history": "Historique"
+    },
+    "forbidden": {
+      "title": "Acces refuse",
+      "description": "Votre compte ne permet pas d utiliser le module VigiLog.",
+      "alertTitle": "Autorisation requise",
+      "alertDescription": "Demandez ACCES_VIGILOG ou ACCES_METROLOGIE pour ouvrir cette page."
+    },
+    "common": {
+      "loading": "Chargement...",
+      "cancel": "Annuler",
+      "disabled": "Desactive",
+      "updatedAt": "Derniere mise a jour",
+      "noDescription": "Aucune description",
+      "frequencyBadge": "{count} min",
+      "delayBadge": "Retard {count} min"
+    },
+    "departure": {
+      "title": "Départ",
+      "description": "Selectionnez une configuration, les sites et le logger à preparer avant transport.",
+      "fields": {
+        "configuration": "Configuration",
+        "loggerSerial": "Numero de serie logger",
+        "departureSite": "Site de départ",
+        "arrivalSite": "Site d'arrivée",
+        "comment": "Commentaire"
+      },
+      "placeholders": {
+        "configuration": "Choisir une configuration",
+        "loggerSerial": "Ex: LT-00012345",
+        "site": "Choisir un site",
+        "comment": "Informations utiles pour la tourneé"
+      },
+      "actions": {
+        "submit": "Créer la tournée"
+      }
+    },
+    "arrival": {
+      "title": "Arrivée",
+      "description": "Selectionnez une tournée en attente, posez le logger sur sa base puis validez la reception.",
+      "fields": {
+        "pendingTour": "Tournée en attente",
+        "comment": "Commentaire de reception"
+      },
+      "placeholders": {
+        "pendingTour": "Choisir une tournée",
+        "comment": "Remarques de reception"
+      },
+      "summary": {
+        "departureSite": "Départ",
+        "arrivalSite": "Arrivée",
+        "departureAt": "Départ lancé",
+        "loggerSerial": "Logger"
+      },
+      "emptyTitle": "Aucune tournée en attente",
+      "emptyDescription": "Créez d abord un départ ou attendez le retour d'un logger.",
+      "actions": {
+        "submit": "Valider la reception"
+      }
+    },
+    "config": {
+      "title": "Configurations logger",
+      "description": "Les configurations actives peuvent etre chargées sur un logger au départ.",
+      "readOnlyTitle": "Mode lecture seule",
+      "readOnlyDescription": "Seuls les utilisateurs disposant d'un acces métrologie peuvent créer ou modifier une configuration.",
+      "states": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "fields": {
+        "name": "Nom",
+        "description": "Description",
+        "target": "Consigne",
+        "lowLimitActive": "Limite basse",
+        "highLimitActive": "Limite haute",
+        "frequencyMinutes": "Fréquence (min)",
+        "alarmDelayMinutes": "Retard alarme (min)",
+        "active": "Configuration active"
+      },
+      "actions": {
+        "create": "Nouvelle configuration",
+        "edit": "Modifier",
+        "save": "Enregistrer"
+      },
+      "dialog": {
+        "createTitle": "Créer une configuration VigiLog",
+        "editTitle": "Modifier la configuration VigiLog",
+        "description": "Definissez les seuils, la fréquence et le retard d'alarme a charger sur le logger.",
+        "activeHint": "Une configuration inactive reste historique mais ne peut plus être sélectionnée au départ."
+      }
+    },
+    "history": {
+      "title": "Historique des tournées",
+      "description": "Consultez les tournées lancées, leur résultat et les réceptions en attente.",
+      "filters": {
+        "search": "Recherche",
+        "status": "Statut"
+      },
+      "placeholders": {
+        "search": "Référence, configuration, logger, site..."
+      },
+      "columns": {
+        "reference": "Reference",
+        "route": "Trajet",
+        "status": "Statut",
+        "result": "Feu",
+        "measures": "Mesures",
+        "departureAt": "Départ",
+        "arrivalAt": "Arrivée",
+        "actions": "Actions"
+      },
+      "actions": {
+        "receive": "Receptionner",
+        "acknowledge": "Acquitter"
+      },
+      "empty": "Aucune tournée à afficher.",
+      "alarm": "Alarme sur {duration}",
+      "traffic": {
+        "vert": "Vert",
+        "orange": "Orange",
+        "rouge": "Rouge"
+      },
+      "status": {
+        "all": "Tous",
+        "pendingReception": "En attente de reception",
+        "received": "Recue",
+        "analysed": "Analysee",
+        "acknowledged": "Acquittée",
+        "cancelled": "Annulée",
+        "en_attente_reception": "En attente de reception",
+        "recue": "Reçue",
+        "analysee": "Analysée",
+        "acquittee": "Acquittée",
+        "annulee": "Annulée"
+      }
+    },
+    "feedback": {
+      "configurationCreated": {
+        "title": "Configuration créée",
+        "description": "La configuration VigiLog a ete créée."
+      },
+      "configurationUpdated": {
+        "title": "Configuration mise à jour",
+        "description": "La configuration VigiLog a été modifiée."
+      },
+      "configurationError": {
+        "title": "Configuration impossible",
+        "description": "La configuration VigiLog n'a pas pu être enregistrée."
+      },
+      "departureCreated": {
+        "title": "Tournee créee",
+        "description": "La tournee {reference} a ete créee et attend sa reception."
+      },
+      "departureError": {
+        "title": "Création impossible",
+        "description": "La tournée VigiLog n'a pas pu être créée."
+      },
+      "receiveSuccess": {
+        "title": "Reception validée",
+        "description": "La tournée a été marquée comme reçue."
+      },
+      "receiveError": {
+        "title": "Reception impossible",
+        "description": "La reception de la tournée a échoué."
+      },
+      "ackSuccess": {
+        "title": "Tournée acquittée",
+        "description": "L'alarme VigiLog a été acquittée."
+      },
+      "ackError": {
+        "title": "Acquittement impossible",
+        "description": "L acquittement de la tournée a échoué."
+      }
     }
   }
 }
