@@ -70,3 +70,37 @@ export type GroupConversationRef = {
   type: string
   titre: string | null
 }
+
+export type ConversationParticipant = {
+  id: number
+  displayName: string
+  username: string
+  email: string | null
+  avatar: string | null
+  role: string | null
+  phoneMobile: string | null
+  phoneFixed: string | null
+  createdAt: string | null
+  joinedAt: string
+}
+
+export type ConversationDetails = {
+  id: number
+  type: "dm" | "group"
+  titre: string | null
+  createdAt: string
+  participants: ConversationParticipant[]
+}
+
+export type ConversationAttachment = {
+  id: number
+  fileName: string
+  mimeType: string
+  size: number
+  uploadedAt: string
+  senderName: string
+}
+
+export type ConversationAttachmentsResponse = {
+  attachments: ConversationAttachment[]
+}
