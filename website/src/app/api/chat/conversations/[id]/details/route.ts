@@ -26,7 +26,7 @@ export const GET = withAuthLogging(
       const userId = ctx.user.userId
       const isMember = await verifyParticipant(convId, userId)
       if (!isMember) {
-        return apiError(403, "not_participant", "Vous n'êtes pas membre de cette conversation")
+        return apiError(403, "not_participant", "Vous n'etes pas membre de cette conversation")
       }
 
       const conversation = await prismaChat.t_conversation.findUnique({
