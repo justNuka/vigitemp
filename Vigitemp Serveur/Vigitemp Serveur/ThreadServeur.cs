@@ -45,6 +45,7 @@ namespace Vigitemp_Serveur
         private readonly object _alarmPollLock = new object();
         private DateTime _lastAlarmPollUtc = DateTime.MinValue;
         private int _lastAlarmIdSeen = 0;
+        private bool _alarmCursorInitialized = false;
         private DateTime _lastAlarmEndPollLocal = DateTime.MinValue;
 
         private sealed class CachedLieuSettings
@@ -280,7 +281,7 @@ namespace Vigitemp_Serveur
 
         private void EnsureAlarmCursorInitialized()
         {
-            if (_lastAlarmIdSeen > 0)
+            if (_alarmCursorInitialized)
             {
                 return;
             }
@@ -289,11 +290,13 @@ namespace Vigitemp_Serveur
             {
                 var lastId = GetDatabase().getLastAlarmIdByServeur(_idServer);
                 _lastAlarmIdSeen = Math.Max(0, lastId);
+                _alarmCursorInitialized = true;
                 VigitempServeur.Log($"Alarm poll init: lastAlarmId={_lastAlarmIdSeen} server={_idServer}");
             }
             catch (Exception ex)
             {
-                VigitempServeur.Log("Alarm poll init error: " + ex.Message);
+                VigitempServeur.Log("Alarm poll init error (will retry next tick): " + ex.Message);
+                // _alarmCursorInitialized reste false → skip poll ce tick
             }
         }
 
@@ -331,6 +334,12 @@ namespace Vigitemp_Serveur
             }
 
             EnsureAlarmCursorInitialized();
+
+            if (!_alarmCursorInitialized)
+            {
+                VigitempServeur.Log("Alarm poll skipped: cursor not initialized yet");
+                return;
+            }
 
             var newAlarms = GetDatabase().getNewAlarmsSince(_idServer, _lastAlarmIdSeen, _alarmPollMaxBatch);
             if (newAlarms == null || newAlarms.Count == 0)
