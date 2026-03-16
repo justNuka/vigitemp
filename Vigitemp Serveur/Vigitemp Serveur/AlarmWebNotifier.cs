@@ -15,6 +15,30 @@ namespace Vigitemp_Serveur
         private static string BaseUrl => ConfigurationManager.AppSettings["Vigi.WebsiteBaseUrl"];
         private static string Secret => ConfigurationManager.AppSettings["Vigi.AlarmDispatchSecret"];
 
+        public static void ValidateConfig()
+        {
+            var baseUrl = ConfigurationManager.AppSettings["Vigi.WebsiteBaseUrl"];
+            var secret = ConfigurationManager.AppSettings["Vigi.AlarmDispatchSecret"];
+
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                VigitempServeur.Log("WARNING AlarmWebNotifier: Vigi.WebsiteBaseUrl non configuré dans App.config. Aucune notification d'alarme ne sera envoyée aux agents.");
+            }
+            else
+            {
+                VigitempServeur.Log($"AlarmWebNotifier: WebsiteBaseUrl={baseUrl}");
+            }
+
+            if (string.IsNullOrWhiteSpace(secret))
+            {
+                VigitempServeur.Log("WARNING AlarmWebNotifier: Vigi.AlarmDispatchSecret non configuré dans App.config. Les requêtes seront rejetées avec 401.");
+            }
+            else
+            {
+                VigitempServeur.Log("AlarmWebNotifier: AlarmDispatchSecret configuré.");
+            }
+        }
+
         public static async Task NotifyAlarmAsync(int idLieu, double valeur, int? alarmId = null)
         {
             try

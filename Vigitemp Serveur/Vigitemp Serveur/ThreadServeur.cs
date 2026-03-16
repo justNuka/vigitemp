@@ -390,6 +390,7 @@ namespace Vigitemp_Serveur
         public void Start()
         {
             VigitempServeur.Log("Starting Thread#" + _idServer + "...");
+            AlarmWebNotifier.ValidateConfig();
             RefreshSchedule();
 
             _schedulerTimer = new System.Timers.Timer(_schedulerTickMs);
