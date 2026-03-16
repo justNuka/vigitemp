@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { fetchJson } from "@/lib/http"
+import { toApiUtcDateTime } from "@/lib/date-range-api"
 import type { MeasureData } from "@/lib/measurements"
 
 type Options = {
@@ -40,8 +41,8 @@ function buildKey(
   includeNullNonResponse?: boolean,
 ) {
   const start =
-    startDate instanceof Date ? startDate.toISOString() : startDate ?? ""
-  const end = endDate instanceof Date ? endDate.toISOString() : endDate ?? ""
+    startDate instanceof Date ? toApiUtcDateTime(startDate) : startDate ?? ""
+  const end = endDate instanceof Date ? toApiUtcDateTime(endDate) : endDate ?? ""
   return `${idLieu}|${pageIndex}|${pageSize}|${start}|${end}|${includeNullNonResponse ? "1" : "0"}`
 }
 
@@ -99,11 +100,11 @@ export function useLieuMeasurementsPaged(
       if (startDate && endDate) {
         params.set(
           "startDate",
-          startDate instanceof Date ? startDate.toISOString() : startDate,
+          startDate instanceof Date ? toApiUtcDateTime(startDate) : startDate,
         )
         params.set(
           "endDate",
-          endDate instanceof Date ? endDate.toISOString() : endDate,
+          endDate instanceof Date ? toApiUtcDateTime(endDate) : endDate,
         )
       }
       if (typeof includeNullNonResponse === "boolean") {

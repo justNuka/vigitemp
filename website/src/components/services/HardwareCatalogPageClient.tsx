@@ -430,6 +430,7 @@ export function HardwareCatalogPageClient() {
             pdfDownloadUrl: data.pdfDownloadUrl,
             countdown: 3,
             downloadStarted: false,
+            mailtoUrl: null,
           })
           return
         }

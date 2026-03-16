@@ -20,6 +20,7 @@ export type ComboboxOption = {
   label: string;
   searchText?: string;
   disabled?: boolean;
+  className?: string;
 };
 
 type ComboboxProps = {
@@ -107,6 +108,7 @@ export function Combobox({
                   <CommandItem
                     key={option.value}
                     value={option.label}
+                    className={option.className}
                     onSelect={() => {
                       onValueChange(option.value);
                       setOpen(false);

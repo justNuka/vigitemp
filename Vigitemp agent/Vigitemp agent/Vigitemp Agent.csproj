@@ -51,17 +51,15 @@
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <ManifestCertificateThumbprint>E6D86BA80F7FC4A38006322758AE2B1E323C4D33</ManifestCertificateThumbprint>
-  </PropertyGroup>
-  <PropertyGroup>
     <ManifestKeyFile>Vigitemp Agent_1_TemporaryKey.pfx</ManifestKeyFile>
-  </PropertyGroup>
-  <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
-  </PropertyGroup>
-  <PropertyGroup>
     <SignManifests>true</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <GenerateManifests>false</GenerateManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup>
@@ -147,6 +145,7 @@
     </Reference>
     <Reference Include="System.Transactions" />
     <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -179,6 +178,7 @@
     <Compile Include="MyCustomApplicationContext.cs" />
     <Compile Include="LogTagNet2.9.cs" />
     <Compile Include="HttpServer.cs" />
+    <Compile Include="VigilogWorkerRunner.cs" />
     <Compile Include="NotificationTracking.cs" />
     <Compile Include="SessionStore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -214,7 +214,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="AppIcon.ico" />
-    <Content Include="LogTagIO29.dll" />
+    <Content Include="LogTagIO29.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Resources\Logo_Vigitemp_noir.png" />
     <None Include="Resources\output-onlinepngtools.png" />
     <None Include="Resources\captive_portal_16dp_D40D33_FILL0_wght400_GRAD0_opsz20.png">
@@ -237,5 +239,10 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <Target Name="BuildLogTagWorker" BeforeTargets="BeforeBuild">
+    <MSBuild Projects="..\VigitempLogTagWorker\VigitempLogTagWorker.csproj"
+             Targets="Build"
+             Properties="Configuration=$(Configuration);Platform=AnyCPU" />
+  </Target>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

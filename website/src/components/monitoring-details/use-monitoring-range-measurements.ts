@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 
 import { fetchJson } from "@/lib/http"
+import { toApiUtcDateTime } from "@/lib/date-range-api"
 import type { MeasureData } from "@/lib/measurements"
 import { sortMeasuresChronologically } from "@/lib/measurements"
 
@@ -40,8 +41,8 @@ export function useMonitoringRangeMeasurements(
             page: String(page),
             pageSize: String(pageSize),
             source: "mesures",
-            startDate: rangeStart.toISOString(),
-            endDate: rangeEnd.toISOString(),
+            startDate: toApiUtcDateTime(rangeStart),
+            endDate: toApiUtcDateTime(rangeEnd),
             includeNullNonResponse: includeNullNonResponse ? "1" : "0",
           })
 

@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { getJson } from "@/lib/http"
+import { toApiUtcDateTime } from "@/lib/date-range-api"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
 
@@ -161,8 +162,8 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
 
     setIsLoading(true)
     try {
-      const startDateIso = effectiveRange.from.toISOString()
-      const endDateIso = effectiveRange.to.toISOString()
+      const startDateIso = toApiUtcDateTime(effectiveRange.from)
+      const endDateIso = toApiUtcDateTime(effectiveRange.to)
 
       const entries = await Promise.all(
         selectedIds.map(async (idLieu) => {

@@ -68,20 +68,6 @@ model tm_compteur_id_table {
   @@id([Id_Serveur_BDD, Nom_Table])
 }
 
-model tm_datalogger_mesures {
-  Id_Datalogger_Mesures Int      @id @default(autoincrement())
-  Id_Reception          Int?
-  Date_Heure_Mesure     DateTime @default(now()) @db.DateTime(0)
-  Valeur                Float?   @db.Float
-  Est_Hors_Consignes    Int?     @db.TinyInt
-  Est_En_Alarme         Int?     @db.TinyInt
-  Est_Marqueur          Int?     @db.TinyInt
-  Details               String?  @db.VarChar(200)
-
-  @@index([Date_Heure_Mesure], map: "IDX_Date_Heure_Mesure")
-  @@index([Id_Reception], map: "IDX_Id_Reception")
-}
-
 model tm_mesures {
   Id_Serveur_BDD          Int      @default(0)
   Id_Mesure               Int      @default(autoincrement())
@@ -292,4 +278,23 @@ model tm_parametre {
   Commentaire_Parametre String? @db.VarChar(100)
 
   @@id([Id_Parametre, Cle_Parametre])
+}
+
+model tm_vigilog_mesure {
+  Id_VigiLog_Mesure  Int      @id @default(autoincrement())
+  Id_VigiLog_Tournee Int
+  Numero_Ordre       Int?
+  Date_Heure_Mesure  DateTime @db.DateTime(0)
+  Valeur             Decimal? @db.Decimal(10, 2)
+  Est_Hors_Limites   Boolean  @default(false)
+  Est_En_Alarme      Boolean  @default(false)
+  Est_Marqueur       Boolean  @default(false)
+  Details            String?  @db.VarChar(200)
+  Date_Heure_Import  DateTime @default(now()) @db.DateTime(0)
+
+  @@unique([Id_VigiLog_Tournee, Date_Heure_Mesure, Numero_Ordre], map: "UK_tm_vigilog_mesure_unique")
+  @@index([Est_En_Alarme], map: "IDX_tm_vigilog_mesure_alarm")
+  @@index([Date_Heure_Mesure], map: "IDX_tm_vigilog_mesure_date")
+  @@index([Est_Marqueur], map: "IDX_tm_vigilog_mesure_marker")
+  @@index([Id_VigiLog_Tournee], map: "IDX_tm_vigilog_mesure_tournee")
 }

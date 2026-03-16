@@ -26,6 +26,8 @@ type TableRow = {
   dateLabel: string
   value: number | null
   unit: string
+  consigneInf: number | null
+  consigneSup: number | null
 }
 
 export function MonitoringTableTab({
@@ -49,6 +51,8 @@ export function MonitoringTableTab({
       dateLabel: measure.DateHeureMesure,
       value: measure.Valeur,
       unit: unite,
+      consigneInf: measure.Consigne_Inf,
+      consigneSup: measure.Consigne_Sup,
     }))
   }, [tableMeasurements, unite])
 
@@ -69,8 +73,8 @@ export function MonitoringTableTab({
         }
 
         const isOutOfRange =
-          (consigneInf !== null && value < consigneInf) ||
-          (consigneSup !== null && value > consigneSup)
+          (row.original.consigneInf !== null && value < row.original.consigneInf) ||
+          (row.original.consigneSup !== null && value > row.original.consigneSup)
 
         return <span className={isOutOfRange ? "text-red-600 dark:text-red-400 font-bold" : ""}>{value}{row.original.unit}</span>
       },
@@ -78,12 +82,12 @@ export function MonitoringTableTab({
     {
       id: "consigneInf",
       header: t("table.columns.lower_threshold"),
-      cell: () => <span>{consigneInf !== null ? `${consigneInf}${unite}` : "-"}</span>,
+      cell: ({ row }) => <span>{row.original.consigneInf !== null ? `${row.original.consigneInf}${unite}` : "-"}</span>,
     },
     {
       id: "consigneSup",
       header: t("table.columns.upper_threshold"),
-      cell: () => <span>{consigneSup !== null ? `${consigneSup}${unite}` : "-"}</span>,
+      cell: ({ row }) => <span>{row.original.consigneSup !== null ? `${row.original.consigneSup}${unite}` : "-"}</span>,
     },
     {
       id: "statut",
@@ -95,8 +99,8 @@ export function MonitoringTableTab({
         }
 
         const isOutOfRange =
-          (consigneInf !== null && value < consigneInf) ||
-          (consigneSup !== null && value > consigneSup)
+          (row.original.consigneInf !== null && value < row.original.consigneInf) ||
+          (row.original.consigneSup !== null && value > row.original.consigneSup)
 
         return isOutOfRange ? (
           <span className="text-red-600 dark:text-red-400 font-semibold">{t("table.status.out_of_range")}</span>
@@ -105,7 +109,7 @@ export function MonitoringTableTab({
         )
       },
     },
-  ], [consigneInf, consigneSup, t, unite])
+  ], [t, unite])
 
   return (
     <div className="space-y-4 pt-4 h-140">

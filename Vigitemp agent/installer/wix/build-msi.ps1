@@ -22,6 +22,7 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $agentRoot = Resolve-Path (Join-Path $scriptDir "..\\..")
 $agentProjectRoot = Join-Path $agentRoot "Vigitemp agent"
 $buildOutput = Join-Path (Join-Path $agentProjectRoot "bin") $Configuration
+$agentExe = Join-Path $buildOutput "VigitempAgent.exe"
 $wxsMain = Join-Path $scriptDir "VigitempAgent.wxs"
 $harvestFile = Join-Path $scriptDir "Harvest.wxs"
 $outDir = Join-Path $scriptDir "out"
@@ -31,11 +32,17 @@ if (-not (Test-Path $buildOutput)) {
     throw "Build output introuvable: $buildOutput"
 }
 
+if (-not (Test-Path $agentExe)) {
+    throw "Executable agent introuvable: $agentExe"
+}
+
 if (-not (Get-Command wix -ErrorAction SilentlyContinue)) {
     throw "WiX v4 introuvable. Installez-le avec: dotnet tool install --global wix"
 }
 
 New-Item -Path $outDir -ItemType Directory -Force | Out-Null
+
+Get-ChildItem -Path $outDir -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
 
 function Ensure-WixExtension {
     param([string]$ExtensionId)
@@ -56,9 +63,29 @@ function Ensure-WixExtension {
 Ensure-WixExtension "WixToolset.UI.wixext"
 Ensure-WixExtension "WixToolset.Util.wixext"
 
+$fileVersion = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($agentExe).FileVersion
+$versionMatch = [regex]::Match($fileVersion, '^(?<major>\d+)\.(?<minor>\d+)\.(?<build>\d+)')
+if (-not $versionMatch.Success) {
+    throw "Version fichier invalide pour MSI: $fileVersion"
+}
+
+$productVersion = "{0}.{1}.{2}" -f `
+    $versionMatch.Groups["major"].Value, `
+    $versionMatch.Groups["minor"].Value, `
+    $versionMatch.Groups["build"].Value
+
+Write-Log "Version MSI: $productVersion (depuis $fileVersion)"
+
 Write-Log "Generation de Harvest.wxs..."
-$files = Get-ChildItem -Path $buildOutput -Recurse -File | Sort-Object FullName
-$dirs = Get-ChildItem -Path $buildOutput -Recurse -Directory | Sort-Object FullName
+$files = Get-ChildItem -Path $buildOutput -Recurse -File | Where-Object {
+    $_.FullName -notmatch "\\app\.publish(\\|$)" -and
+    $_.Name -notmatch "\.pdb$" -and
+    $_.Name -ne "VigitempLogTagWorker.exe" -and
+    $_.Name -ne "VigitempLogTagWorker.exe.config"
+} | Sort-Object FullName
+$dirs = Get-ChildItem -Path $buildOutput -Recurse -Directory | Where-Object {
+    $_.FullName -notmatch "\\app\.publish(\\|$)"
+} | Sort-Object FullName
 $dirMap = @{}
 $dirIndex = 0
 
@@ -177,7 +204,13 @@ wix build "$wxsMain" "$harvestFile" `
     -ext WixToolset.UI.wixext `
     -ext WixToolset.Util.wixext `
     -arch x64 `
+    -d "ProductVersion=$productVersion" `
     -o "$outMsi"
+
+$wixpdb = [System.IO.Path]::ChangeExtension($outMsi, ".wixpdb")
+if (Test-Path $wixpdb) {
+    Remove-Item $wixpdb -Force -ErrorAction SilentlyContinue
+}
 
 Write-Log "MSI genere: $outMsi"
 

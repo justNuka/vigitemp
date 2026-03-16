@@ -29,6 +29,8 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 interface MonitoringCardProps {
   idLieu: number
   nomLieu: string
+  currentValue?: number | null
+  lastMeasurement?: Date | string | null
   sondeNumeroSerie?: string
   lieuEtat: string
   lieuType: LieuTypeValue
@@ -65,6 +67,8 @@ interface MonitoringCardProps {
 export default function MonitoringCard({
   idLieu,
   nomLieu,
+  currentValue = null,
+  lastMeasurement = null,
   sondeNumeroSerie = '',
   lieuEtat,
   lieuType,
@@ -105,7 +109,51 @@ export default function MonitoringCard({
   })
 
   const orderedData = useMemo(() => sortMeasuresChronologically(data), [data])
-  const summary = useMemo(() => getMeasureSummary(orderedData), [orderedData])
+  const liveMeasurementDate = useMemo(() => {
+    if (!lastMeasurement) return null
+    const parsed = new Date(lastMeasurement)
+    return Number.isNaN(parsed.getTime()) ? null : parsed
+  }, [lastMeasurement])
+
+  const previewData = useMemo(() => {
+    if (currentValue === null || !liveMeasurementDate) return orderedData
+    const lastPoint = orderedData[orderedData.length - 1]
+    const lastPointDate = lastPoint?.DateHeureMesureIso ? new Date(lastPoint.DateHeureMesureIso) : null
+
+    if (lastPointDate && !Number.isNaN(lastPointDate.getTime()) && liveMeasurementDate <= lastPointDate) {
+      return orderedData
+    }
+
+    const template = lastPoint ?? null
+    const timeLabel = new Intl.DateTimeFormat(localeTag, {
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(liveMeasurementDate)
+
+    const dateLabel = formatDbDateTime(liveMeasurementDate, { withSeconds: false })
+
+    return [
+      ...orderedData,
+      {
+        id: `live-${idLieu}-${liveMeasurementDate.toISOString()}`,
+        Valeur: currentValue,
+        Nb_Decimal: template?.Nb_Decimal ?? null,
+        Unite: template?.Unite ?? "?C",
+        DateHeureMesure: dateLabel,
+        DateHeureMesureIso: liveMeasurementDate.toISOString(),
+        DateHeureMesureXaxis: timeLabel,
+        Consigne: template?.Consigne ?? null,
+        Consigne_Sup: template?.Consigne_Sup ?? null,
+        Consigne_Inf: template?.Consigne_Inf ?? null,
+        SondeNumeroSerie: template?.SondeNumeroSerie ?? sondeNumeroSerie,
+        Frequence: template?.Frequence ?? 15,
+        Est_Valeur_Null: false,
+        Etat_Alarme: template?.Etat_Alarme ?? 0,
+      },
+    ]
+  }, [currentValue, idLieu, liveMeasurementDate, localeTag, orderedData, sondeNumeroSerie])
+
+  const summary = useMemo(() => getMeasureSummary(previewData), [previewData])
   const { consigneSup, consigneInf, consigne, unite, frequence, lastMeasureText, lastDateTime, decimals, lastValue } = summary
 
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -162,8 +210,8 @@ export default function MonitoringCard({
   }
 
   const [yMin, yMax] = useMemo(
-    () => calculateYDomain(orderedData, { consigneSup, consigneInf, consigne }),
-    [consigne, consigneInf, consigneSup, orderedData],
+    () => calculateYDomain(previewData, { consigneSup, consigneInf, consigne }),
+    [consigne, consigneInf, consigneSup, previewData],
   )
 
   const surveillanceDisabledLabel = useMemo(() => (!isSurveillanceActive ? t('surveillance.disabled') : null), [isSurveillanceActive, t])
@@ -175,9 +223,9 @@ export default function MonitoringCard({
     return t('alarms.disabled_until', { date: formatDbDateTime(date, { withSeconds: false }) })
   }, [alarmDisabledUntil, isAlarmActive, t])
 
-  const contentTextClassName = isSurveillanceActive ? 'text-muted-foreground' : 'text-white'
-  const actionButtonClassName = isSurveillanceActive ? 'hover:bg-muted' : 'hover:bg-white/10'
-  const actionIconClassName = isSurveillanceActive ? 'text-muted-foreground' : 'text-white'
+  const contentTextClassName = 'text-muted-foreground'
+  const actionButtonClassName = 'hover:bg-muted'
+  const actionIconClassName = 'text-muted-foreground'
 
   const canAcknowledge =
     hasPermission('ALARM_ACK_ACCESS') &&
@@ -195,8 +243,46 @@ export default function MonitoringCard({
   const chartDatasets = useMemo(
     () => [
       {
+        label: t('chart.upper_threshold', { unit: unite }),
+        data: previewData.map((point) => point.Consigne_Sup),
+        borderColor: 'rgba(239, 68, 68, 0.8)',
+        backgroundColor: 'transparent',
+        borderWidth: 1.5,
+        fill: false,
+        tension: 0,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        borderDash: [6, 4],
+        order: 0,
+      },
+      {
+        label: t('chart.target', { unit: unite }),
+        data: previewData.map((point) => point.Consigne),
+        borderColor: '#111827',
+        backgroundColor: 'transparent',
+        borderWidth: 1.5,
+        fill: false,
+        tension: 0,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        order: 0,
+      },
+      {
+        label: t('chart.lower_threshold', { unit: unite }),
+        data: previewData.map((point) => point.Consigne_Inf),
+        borderColor: 'rgba(239, 68, 68, 0.8)',
+        backgroundColor: 'transparent',
+        borderWidth: 1.5,
+        fill: false,
+        tension: 0,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        borderDash: [6, 4],
+        order: 0,
+      },
+      {
         label: t('chart.measures', { unit: unite }),
-        data: orderedData.map((point) => point.Valeur),
+        data: previewData.map((point) => point.Valeur),
         borderColor: '#3b82f6',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         borderWidth: 2,
@@ -207,7 +293,7 @@ export default function MonitoringCard({
         order: 1,
       },
     ],
-    [orderedData, t, unite],
+    [previewData, t, unite],
   )
 
   const formattedConsigne = useMemo(() => formatMeasureValue(consigne, decimals, localeTag), [consigne, decimals, localeTag])
@@ -287,7 +373,7 @@ export default function MonitoringCard({
               <div className="cursor-pointer relative" onClick={() => setIsModalOpen(true)}>
                 <MonitoringCardChartPreview
                   isLoading={isLoading}
-                  orderedData={orderedData}
+                  orderedData={previewData}
                   chartDatasets={chartDatasets}
                   yMin={yMin}
                   yMax={yMax}
@@ -357,7 +443,7 @@ export default function MonitoringCard({
 
                 <UITooltip>
                   <TooltipTrigger asChild>
-                    <button onClick={(event) => { event.stopPropagation(); setActionType('surveillance'); setShowConfirmModal(true) }} className={`p-1.5 rounded-md transition-colors ${actionButtonClassName} ${isSurveillanceActive ? 'text-red-600' : 'text-white'}`}>
+                    <button onClick={(event) => { event.stopPropagation(); setActionType('surveillance'); setShowConfirmModal(true) }} className={`p-1.5 rounded-md transition-colors ${actionButtonClassName} ${isSurveillanceActive ? 'text-red-600' : 'text-green-600 dark:text-green-400'}`}>
                       {isSurveillanceActive ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
                     </button>
                   </TooltipTrigger>
@@ -451,7 +537,7 @@ export default function MonitoringCard({
           estConsigneInfPreAlarmeActive={estConsigneInfPreAlarmeActive ?? false}
           unite={unite}
           isSurveillanceActive={isSurveillanceActive}
-          measurements={isSurveillanceActive ? orderedData : []}
+          measurements={isSurveillanceActive ? previewData : []}
           showNullNonResponse={showNullNonResponse}
         />
       ) : null}

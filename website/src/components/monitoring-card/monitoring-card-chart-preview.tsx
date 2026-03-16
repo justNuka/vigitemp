@@ -74,33 +74,6 @@ export function MonitoringCardChartPreview({
         />
       </div>
 
-      <div className="absolute inset-0 pointer-events-none">
-        {consigneInf !== null ? (
-          <div
-            className="absolute w-full h-0.5"
-            style={{
-              top: `${yMax === yMin ? 0 : ((yMax - consigneInf) / (yMax - yMin)) * 100}%`,
-              backgroundImage: 'repeating-linear-gradient(to right, rgba(239, 68, 68, 0.8) 0 10px, transparent 10px 16px)',
-            }}
-          />
-        ) : null}
-        {consigneSup !== null ? (
-          <div
-            className="absolute w-full h-0.5"
-            style={{
-              top: `${yMax === yMin ? 0 : ((yMax - consigneSup) / (yMax - yMin)) * 100}%`,
-              backgroundImage: 'repeating-linear-gradient(to right, rgba(239, 68, 68, 0.8) 0 10px, transparent 10px 16px)',
-            }}
-          />
-        ) : null}
-        {consigne !== null ? (
-          <div
-            className="absolute w-full border-t border-gray-900 dark:border-white"
-            style={{ top: `${yMax === yMin ? 0 : ((yMax - consigne) / (yMax - yMin)) * 100}%` }}
-          />
-        ) : null}
-      </div>
-
       <div className="absolute right-0 top-0 bottom-0 flex flex-col justify-between py-2 pointer-events-none pr-1">
         {consigneSup !== null ? (
           <div className="text-[9px] font-medium text-red-600 dark:text-red-200 bg-white/90 dark:bg-gray-800/90 px-1 rounded shadow-sm whitespace-nowrap" style={{ position: 'absolute', top: `${yMax === yMin ? 0 : ((yMax - consigneSup) / (yMax - yMin)) * 100}%`, transform: 'translateY(-50%)', right: '4px' }}>

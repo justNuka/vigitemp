@@ -214,7 +214,7 @@
         "placeholder": "Choisir un tri",
         "options": {
           "status": "Affichage par statut",
-          "alphabetical": "Affichage par ordre alphab?tique"
+          "alphabetical": "Affichage par ordre alphabétique"
         }
       }
     },
@@ -243,7 +243,7 @@
       "empty": "Selectionnez 2 lieux puis cliquez sur afficher"
     },
     "load_more": "Charger plus",
-      "open_details": "Voir les détails",
+    "open_details": "Voir les détails",
     "stats": {
       "total": "{count, plural, one {# sonde} other {# sondes}}",
       "ok": "{count} OK",
@@ -4133,41 +4133,42 @@
       "news": "Actualites MC2"
     },
     "hero": {
-      "eyebrow": "Transport controle",
+      "eyebrow": "Transport contrôle",
       "title": "Pilotage VigiLog",
-      "description": "Preparez les configurations de logger, lancez les tournees au depart, receptionnez les retours et suivez les alarmes."
+      "description": "Préparez les configurations de VigiLog, lancez les tournées au depart, réceptionnez les retours et suivez les alarmes."
     },
     "stats": {
       "configurations": "Configurations",
       "pending": "En attente de reception",
-      "alarms": "Tournees en alarme"
+      "alarms": "Tournées en alarme"
     },
     "tabs": {
-      "movements": "Depart / Arrivee",
+      "movements": "Départ / Arrivée",
       "configurations": "Configurations",
-      "history": "Historique"
+      "history": "Historique",
+      "loggers": "VigiLog"
     },
     "forbidden": {
-      "title": "Acces refuse",
-      "description": "Votre compte ne permet pas d utiliser le module VigiLog.",
+      "title": "Accès refusé",
+      "description": "Votre compte ne permet pas d'utiliser le module VigiLog.",
       "alertTitle": "Autorisation requise",
-      "alertDescription": "Demandez ACCES_VIGILOG ou ACCES_METROLOGIE pour ouvrir cette page."
+      "alertDescription": "Demandez les accès nécessaire pour ouvrir cette page."
     },
     "common": {
       "loading": "Chargement...",
       "cancel": "Annuler",
-      "disabled": "Desactive",
-      "updatedAt": "Derniere mise a jour",
+      "disabled": "Désactivé",
+      "updatedAt": "Dernière mise à jour",
       "noDescription": "Aucune description",
       "frequencyBadge": "{count} min",
       "delayBadge": "Retard {count} min"
     },
     "departure": {
       "title": "Départ",
-      "description": "Selectionnez une configuration, les sites et le logger à preparer avant transport.",
+      "description": "Sélectionnez une configuration, les sites et le VigiLog à préparer avant transport.",
       "fields": {
         "configuration": "Configuration",
-        "loggerSerial": "Numero de serie logger",
+        "loggerSerial": "Numéro de série VigiLog",
         "departureSite": "Site de départ",
         "arrivalSite": "Site d'arrivée",
         "comment": "Commentaire"
@@ -4176,38 +4177,77 @@
         "configuration": "Choisir une configuration",
         "loggerSerial": "Ex: LT-00012345",
         "site": "Choisir un site",
-        "comment": "Informations utiles pour la tourneé"
+        "comment": "Saisir les informations utiles pour la tournée",
+        "configurationEmpty": "Aucune configuration active disponible",
+        "siteEmpty": "Aucun site disponible",
+        "configurationSearch": "Rechercher une configuration",
+        "siteSearch": "Rechercher un site"
       },
       "actions": {
-        "submit": "Créer la tournée"
+        "submit": "Créer la tournée",
+        "detectLogger": "Détecter le VigiLog sur la base",
+        "refreshLogger": "Actualiser"
+      },
+      "loggerRegistered": {
+        "title": "VigiLog enregistré",
+        "description": "Le VigiLog {serial} est deja enregistré dans le registre."
+      },
+      "loggerUnknown": {
+        "title": "VigiLog non enregistré",
+        "description": "Le VigiLog {serial} est détecté mais n'est pas encore enregistré.",
+        "register": "Enregistrer ce VigiLog"
+      },
+      "loggerState": {
+        "loadingTitle": "Détection en cours",
+        "loadingDescription": "Vérification de la base et du VigiLog posé sur celle-ci.",
+        "readyTitle": "VigiLog détecté et prêt",
+        "readyDescription": "Le VigiLog {serial} est bien détecté sur la base.",
+        "baseOnlyTitle": "Base branchée sans VigiLog",
+        "baseOnlyDescription": "La base est détectée, mais aucun VigiLog n'est actuellement posé dessus.",
+        "missingTitle": "Base non détectée",
+        "missingDescription": "Aucune base VigiLog n'est détectée sur ce poste.",
+        "errorTitle": "État du VigiLog indisponible",
+        "errorDescription": "Impossible de vérifier l'état de la base VigiLog.",
+        "busyTitle": "Communication avec le VigiLog en cours",
+        "busyDescription": "La base est deja utilisee pour une operation VigiLog. Patientez jusqu a la fin de la preparation ou de la lecture."
       }
     },
     "arrival": {
       "title": "Arrivée",
-      "description": "Selectionnez une tournée en attente, posez le logger sur sa base puis validez la reception.",
+      "description": "Sélectionnez une tournée en attente, posez le VigiLog sur sa base puis validez la reception.",
       "fields": {
         "pendingTour": "Tournée en attente",
-        "comment": "Commentaire de reception"
+        "comment": "Commentaire de réception"
       },
       "placeholders": {
         "pendingTour": "Choisir une tournée",
-        "comment": "Remarques de reception"
+        "comment": "Remarques de réception",
+        "pendingTourEmpty": "Aucune tournée en attente disponible",
+        "pendingTourSearch": "Rechercher une tournée en attente"
       },
       "summary": {
         "departureSite": "Départ",
         "arrivalSite": "Arrivée",
         "departureAt": "Départ lancé",
-        "loggerSerial": "Logger"
+        "loggerSerial": "VigiLog"
+      },
+      "detectedMatch": {
+        "title": "Une tourn?e en attente correspond au VigiLog pos? sur la base.",
+        "reference": "Tourn?e",
+        "loggerSerial": "VigiLog",
+        "departureSite": "Site de d?part",
+        "departureAt": "Date de d?part",
+        "optionSuffix": "correspondance d?tect?e"
       },
       "emptyTitle": "Aucune tournée en attente",
-      "emptyDescription": "Créez d abord un départ ou attendez le retour d'un logger.",
+      "emptyDescription": "Créez d'abord un départ ou attendez le retour d'un VigiLog.",
       "actions": {
         "submit": "Valider la reception"
       }
     },
     "config": {
-      "title": "Configurations logger",
-      "description": "Les configurations actives peuvent etre chargées sur un logger au départ.",
+      "title": "Configurations VigiLog",
+      "description": "Les configurations actives peuvent être chargées sur un VigiLog au départ.",
       "readOnlyTitle": "Mode lecture seule",
       "readOnlyDescription": "Seuls les utilisateurs disposant d'un acces métrologie peuvent créer ou modifier une configuration.",
       "states": {
@@ -4244,10 +4284,12 @@
         "status": "Statut"
       },
       "placeholders": {
-        "search": "Référence, configuration, logger, site..."
+        "search": "Référence, configuration, logger, site...",
+        "statusEmpty": "Aucun statut disponible",
+        "statusSearch": "Rechercher un statut"
       },
       "columns": {
-        "reference": "Reference",
+        "reference": "Référence",
         "route": "Trajet",
         "status": "Statut",
         "result": "Feu",
@@ -4258,7 +4300,8 @@
       },
       "actions": {
         "receive": "Receptionner",
-        "acknowledge": "Acquitter"
+        "acknowledge": "Acquitter",
+        "details": "Détails"
       },
       "empty": "Aucune tournée à afficher.",
       "alarm": "Alarme sur {duration}",
@@ -4270,15 +4313,15 @@
       "status": {
         "all": "Tous",
         "pendingReception": "En attente de reception",
-        "received": "Recue",
-        "analysed": "Analysee",
+        "received": "Reçue",
+        "analysed": "Analysée",
         "acknowledged": "Acquittée",
         "cancelled": "Annulée",
         "en_attente_reception": "En attente de reception",
-        "recue": "Reçue",
         "analysee": "Analysée",
-        "acquittee": "Acquittée",
-        "annulee": "Annulée"
+        "recue": "Recue",
+        "acquittee": "Acquittee",
+        "annulee": "Annulee"
       }
     },
     "feedback": {
@@ -4295,19 +4338,19 @@
         "description": "La configuration VigiLog n'a pas pu être enregistrée."
       },
       "departureCreated": {
-        "title": "Tournee créee",
-        "description": "La tournee {reference} a ete créee et attend sa reception."
+        "title": "Tournée créée",
+        "description": "La tournée {reference} a ete créée et attend sa reception."
       },
       "departureError": {
         "title": "Création impossible",
         "description": "La tournée VigiLog n'a pas pu être créée."
       },
       "receiveSuccess": {
-        "title": "Reception validée",
+        "title": "Réception validée",
         "description": "La tournée a été marquée comme reçue."
       },
       "receiveError": {
-        "title": "Reception impossible",
+        "title": "Réception impossible",
         "description": "La reception de la tournée a échoué."
       },
       "ackSuccess": {
@@ -4316,7 +4359,168 @@
       },
       "ackError": {
         "title": "Acquittement impossible",
-        "description": "L acquittement de la tournée a échoué."
+        "description": "L'acquittement de la tournée a échoué."
+      },
+      "probeSuccess": {
+        "title": "lors des tournées tournées",
+        "description": "Le lors des tournées {serial} est détecté sur la base.",
+        "fallback": "Un lors des tournées a ete tournées sur la base."
+      },
+      "probeError": {
+        "title": "Detection impossible",
+        "description": "Impossible de detecter un VigiLog sur la base."
+      },
+      "loggerSerialMissing": {
+        "title": "Numéro de serie manquant",
+        "description": "Aucun numéro de serie lors des tournées n'a pu être determiné."
+      },
+      "detailError": {
+        "title": "Chargement impossible",
+        "description": "Les détails de la tournée n'ont pas pu être chargés."
+      },
+      "loggerCreated": {
+        "title": "VigiLog enregistré",
+        "description": "Le VigiLog {serial} a été ajouté."
+      },
+      "loggerUpdated": {
+        "title": "VigiLog mis à jour",
+        "description": "Le VigiLog {serial} a été mis à jour."
+      },
+      "loggerError": {
+        "title": "Opération impossible",
+        "description": "Le VigiLog n'a pas pu être enregistré ou mis à jour."
+      },
+      "receiveSuccessEmpty": {
+        "title": "Réception validée sans mesure",
+        "description": "La tournée a été reçue, mais aucune mesure n'a été importée depuis le VigiLog."
+      }
+    },
+    "detail": {
+      "title": "Détails de la tournee",
+      "loading": "Chargement des details de la tournee...",
+      "cards": {
+        "status": "Statut",
+        "route": "Trajet",
+        "temperature": "Températures",
+        "durations": "Durées"
+      },
+      "excursion": "Dépassement",
+      "alarm": "Alarme",
+      "snapshotTitle": "Configuration chargée",
+      "snapshot": {
+        "configuration": "Configuration",
+        "logger": "VigiLog",
+        "target": "Consigne",
+        "frequency": "Fréquence (min)",
+        "lowLimit": "Limite basse",
+        "highLimit": "Limite haute",
+        "departureAt": "Départ",
+        "arrivalAt": "Arrivée"
+      },
+      "commentsTitle": "Commentaires",
+      "comment": "Commentaire de tournée",
+      "ackComment": "Commentaire d'acquittement",
+      "measuresTitle": "Mesures importées",
+      "columns": {
+        "measuredAt": "Date / heure",
+        "value": "Valeur",
+        "outOfLimit": "Hors limites",
+        "alarm": "En alarme",
+        "marker": "Marqueur",
+        "details": "Détails"
+      },
+      "emptyMeasures": "Aucune mesure importée pour cette tournée.",
+      "yes": "Oui",
+      "no": "Non",
+      "chart": {
+        "title": "Courbe des mesures",
+        "temperature": "Température",
+        "lowLimit": "Limite basse",
+        "highLimit": "Limite haute",
+        "alarm": "Points en alarme",
+        "target": "Cible",
+        "highGuide": "Max: {value}",
+        "lowGuide": "Min: {value}",
+        "targetGuide": "Cible: {value}"
+      },
+      "noMeasurementsAlert": {
+        "title": "Aucune mesure importée",
+        "description": "Cette tournée a été réceptionnée, mais le VigiLog ne contenait aucune mesure exploitable."
+      }
+    },
+    "loggers": {
+      "title": "Registre des VigiLog",
+      "description": "Gérez les VigiLog enregistrés et mettez à jour leur étalonnage sans historique.",
+      "emptyTitle": "Aucun VigiLog enregistré",
+      "emptyDescription": "Ajoutez un VigiLog pour pouvoir l'identifier rapidement lors des tournées.",
+      "states": {
+        "active": "Actif",
+        "inactive": "Inactif"
+      },
+      "fields": {
+        "serial": "Numéro de série",
+        "model": "Modèle",
+        "label": "Libellé",
+        "active": "VigiLog actif",
+        "calibrationDate": "Date d'étalonnage",
+        "validityDate": "Date de validité",
+        "validityDays": "Validité (jours)",
+        "accuracyError": "Erreur de justesse",
+        "comment": "Commentaire"
+      },
+      "actions": {
+        "create": "Nouveau VigiLog",
+        "edit": "Modifier",
+        "saveCalibration": "Ajouter un étalonnage"
+      },
+      "importCalibration": {
+        "label": "Fichier d'étalonnage",
+        "action": "Importer un fichier d'étalonnage",
+        "selectedFile": "Fichier importé : {file}",
+        "hint": "Le fichier XML est analysé pour récupérer l'erreur de justesse du VigiLog.",
+        "success": "Erreur de justesse importée depuis {file}.",
+        "missingAccuracyError": "Aucune erreur de justesse n'a été trouvée dans ce fichier d'étalonnage.",
+        "error": "Impossible d'importer ce fichier d'étalonnage."
+      },
+      "dialog": {
+        "createTitle": "Ajouter un VigiLog",
+        "editTitle": "Mettre à jour le VigiLog",
+        "description": "Renseignez les infos du VigiLog, et, si besoin, l'étalonnage.",
+        "activeHint": "Un VigiLog inactif reste dans l'historique mais n'est plus proposé au départ d'une tournée."
+      }
+    },
+    "departurePreparation": {
+      "title": "Préparation du VigiLog",
+      "description": "Choisissez si le VigiLog doit être démarré automatiquement après la preparation.",
+      "runningDescription": "Préparation du VigiLog en cours sur la base.",
+      "manualHint": "Le VigiLog sera d'abord vidé puis reconfiguré avec la tournée. Si vous choisissez un démarrage manuel, il faudra appuyer vous-même sur le bouton du VigiLog.",
+      "success": "La tournée {reference} a été préparée sur le VigiLog.",
+      "autoStartAt": "Démarrage automatique programme pour {date}.",
+      "manualStartDone": "Le VigiLog est preparé. Lancez-le manuellement sur l'appareil quand vous êtes prêt.",
+      "steps": {
+        "resetMeasures": "Suppression des mesures existantes",
+        "applyConfiguration": "Application des paramètres de la tournée",
+        "autoStart": "Démarrage automatique du VigiLog",
+        "manualStart": "Démarrage manuel par l'utilisateur"
+      },
+      "actions": {
+        "startAutomatically": "Démarrer automatiquement",
+        "startManually": "Je démarrerai manuellement",
+        "close": "Fermer"
+      }
+    },
+    "receivePreparation": {
+      "title": "Réception du VigiLog",
+      "description": "La réception lit les mesures, les prépare pour l'analyse puis vide le VigiLog.",
+      "runningDescription": "Suivi des étapes de la réception en cours.",
+      "steps": {
+        "readStatus": "Récupération du statut du VigiLog",
+        "extractData": "Extraction des données",
+        "prepareAnalysis": "Préparation des données pour l'analyse",
+        "clearData": "Suppression des données"
+      },
+      "actions": {
+        "close": "Fermer"
       }
     }
   }

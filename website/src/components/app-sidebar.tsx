@@ -24,8 +24,6 @@ import {
   LayoutDashboard,
   Activity,
   Bell,
-  Settings,
-  Users,
   FileText,
   LogOut,
   Volume2,
@@ -33,6 +31,7 @@ import {
   User,
   Shield,
   MessageSquare,
+  Truck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ALARM_AUDIO_STATE_EVENT, getAlarmAudioMuted, setAlarmAudioMuted } from "@/lib/alarm-audio";
@@ -45,9 +44,10 @@ import { formatLicenseLabel } from "@/lib/license-label";
 import { getInitialsForAvatar, resolveAvatarSrc } from "@/lib/avatar-library";
 import { useMessagingEnabled } from "@/hooks/useMessagingEnabled";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
+import { hasAuthorizationCode } from "@/lib/permissions";
 
 interface NavItem {
-  href: "/" | "/surveillance" | "/alarmes" | "/messages" | "/profil" | "/admin";
+  href: "/" | "/surveillance" | "/alarmes" | "/messages" | "/vigilog" | "/profil" | "/admin";
   icon: typeof LayoutDashboard;
   badge?: number;
   badgeVariant?: "default" | "destructive";
@@ -59,6 +59,7 @@ const mainNavItems: NavItem[] = [
   { titleKey: "monitoring", href: "/surveillance", icon: Activity },
   { titleKey: "alarms", href: "/alarmes", icon: Bell },
   { titleKey: "messaging", href: "/messages", icon: MessageSquare },
+  { titleKey: "vigilog", href: "/vigilog", icon: Truck },
 ];
 
 import { CurrentUser } from "@/lib/types";
@@ -127,6 +128,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
   };
 
   const navItemsWithBadges = mainNavItems
+    .filter((item) => item.href !== "/vigilog" || hasAuthorizationCode(currentUser, ["ACCES_VIGILOG", "ACCES_METROLOGIE"]))
     .filter((item) => item.href !== "/messages" || messagingEnabled)
     .map((item) => {
       if (item.href === "/alarmes" && activeAlarms > 0) {

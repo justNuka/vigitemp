@@ -1,4 +1,4 @@
-ï»¿/*
+/*
 | ==============================================================================
 | Copyright (C) 2017 LogTag Recorders Limited.  All Rights Reserved.
 |
@@ -42,6 +42,7 @@
 
 
 using System;
+using System.Text;
 using System.Runtime.InteropServices;
 
 namespace LogTagNET
@@ -50,8 +51,8 @@ namespace LogTagNET
     /// .NET interface to LogTag API
     /// </summary>
     using HANDLE = UInt32;
-    using HINSTANCE = IntPtr;
     using LOGTAG_HANDLE = UInt32;
+    using HINSTANCE = IntPtr;
 
     public enum FEEDBACK_EVENT : uint
     {
@@ -242,7 +243,7 @@ namespace LogTagNET
 
     public enum LTR_COMMS : uint
     {
-        NOERROR = 0x00000,	        // No Error internal
+        NOERROR = 0x00000,	        // No Error – internal
         INTERNALERROR = 0x00001,	// Internal General Error (unimplemented or otherwise)
         BADMSGSIZE = 0x00002,	    // Bad Message Size
         BADFCHKSUM = 0x00003,	    // Message FCHKSUM error
@@ -453,9 +454,9 @@ namespace LogTagNET
         USRIC8 = 0x000D,
         UTRIX = 0x000E,
         USRIC4 = 0x000F,
-        UTRID = 0x0010,
+        UTRID =	0x0010,
         UTRIX16M = 0x0011,
-        USRIC8M = 0x0012,
+        USRIC8M	= 0x0012,
         LASTKNOWN = USRIC8M
     }
 
@@ -548,11 +549,11 @@ namespace LogTagNET
         CAN_12HR_DISPLAY = 0x00010000,	        // read-only: USB logger can be programmed to use 12-hour display in PDF, CSV file
         NEED_FW_UPDATE = 0x00020000,            // read-only: firmware upgrade is strongly recommended before configuring logger
         EXPANDED_DELAY_VALUES = 0x00040000,     // read-only: LogTag has 2 Byte values for Alert Delay meaning values can exceed 256 counts
-        CAN_HOLDOFF = 0x00080000,	            // read-only: LogTag firmware supports the feature "prioritise download over pdf file generation", a format update may be required (indicated in flag LTEF_CAN_FORMAT_VER_UPDATE)
+        CAN_HOLDOFF	= 0x00080000,	            // read-only: LogTag firmware supports the feature "prioritise download over pdf file generation", a format update may be required (indicated in flag LTEF_CAN_FORMAT_VER_UPDATE)
         CAN_QUICKSTART = 0x00100000,	        // read-only: LogTag firmware supports Quick start/stop
         IN_VERIFICATION_MODE = 0x00200000,	    // read-only: LogTag is in verification mode (indicators only)
         IN_VERIFICATION_MODE_LOCKED = 0x00400000 // read-only: LogTag is in verification mode, locked in verification mode (single trip has been used, indicators only)
-    }
+   }
 
     // LogTag DACONTROL flags (TRID)
     public enum LTDC : uint
@@ -560,7 +561,7 @@ namespace LogTagNET
         ENABLE_LCD = 0x8000,            // LCD on
         POWER_SAVE = 0x4000,            // switch LCD off (power save mode) if no button activated for 30 seconds
         LOOKUP_EEPROM = 0x2000,	        // set: Use lookup table in EEPROM, otherwise use internal table
-        SHOW_THRESHVIEW = 0x1000,	    // USRIC only: set: show all limit value and duration screens during review. Not set: only MIN MAX screens will be shown
+        SHOW_THRESHVIEW	= 0x1000,	    // USRIC only: set: show all limit value and duration screens during review. Not set: only MIN MAX screens will be shown
         INTERNAL_LOOKUP = 0x1000,	    // internal use only
         DIAGMODE = 0x0800,              // internal use only
         ENABLE_STOP = 0x0400,           // recording can be stopped with STOP button
@@ -585,7 +586,7 @@ namespace LogTagNET
         INHIBIT_OK_LED = 0x00000080	    // inhibit OK LED
     }
 
-    [StructLayout(LayoutKind.Sequential, Pack = 2, CharSet = CharSet.Ansi, Size = 910)]
+    [StructLayout(LayoutKind.Sequential, Pack = 2, CharSet = CharSet.Ansi, Size = 910)] 
     public struct LOGTAG_INFO
     {
         public UInt32 cbSize;
@@ -663,11 +664,11 @@ namespace LogTagNET
         public LOGTAG_PDF_INFO[] pPDFInfo;	// added in 2.5r1: additional information for PDF loggers, this can be set/retrieved with extra parameter in GetInfo3() and SetInfo3()
         UInt32 dwLControl;
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
-        public byte[] baMultiAlertControlByte;  // Extended alert control information for multi-alarm loggers (UTRID-16, UTRIX-16M, USRIC-8M)
+	    public byte[] baMultiAlertControlByte;  // Extended alert control information for multi-alarm loggers (UTRID-16, UTRIX-16M, USRIC-8M)
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
-        public float[] fMultiAlertThreshVal;	// Exytended alert threshold information for multi-alarm loggers (UTRID-16, UTRIX-16M, USRIC-8M)
+	    public float[] fMultiAlertThreshVal;	// Exytended alert threshold information for multi-alarm loggers (UTRID-16, UTRIX-16M, USRIC-8M)
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
-        public UInt16[] waMultiAlertDelay;		// Extended alert delay information for multi-alarm loggers (UTRID-16, UTRIX-16M, USRIC-8M)
+	    public UInt16[] waMultiAlertDelay;		// Extended alert delay information for multi-alarm loggers (UTRID-16, UTRIX-16M, USRIC-8M)
     };
 
     // LogTag Digital Signature flags
@@ -929,13 +930,13 @@ namespace LogTagNET
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_OpenAccess", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
         public static extern LOGTAG_HANDLE OpenAccess(HINSTANCE hInstance);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_AddSignature", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint AddSignature(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_DIGITAL_SIGNATURE[] lpSignature); //NOT TESTED
+        public static extern uint AddSignature(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_DIGITAL_SIGNATURE[] lpSignature); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_AttachIO", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
         public static extern uint AttachIO(LOGTAG_HANDLE handle, HANDLE hPort, UInt16 wPortType); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_AttachIO_1", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
         public static extern uint AttachIO_1(LOGTAG_HANDLE handle, HANDLE hPort, UInt16 wPortType, UInt16 wFlags); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_ChangeUserPassword", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint ChangeUserPassword([MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_USER[] lpUser, string lpszPassword); //NOT TESTED
+        public static extern uint ChangeUserPassword([MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_USER[] lpUser, string lpszPassword); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_Close", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
         public static extern uint Close(LOGTAG_HANDLE handle); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_CloseIO", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
@@ -943,47 +944,47 @@ namespace LogTagNET
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetAppName", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
         public static extern uint GetAppName(Guid guid, string lpszAppName, ref UInt32 chAppName); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetCal", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetCal(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_CALIBRATION[] pLogTagCal); //NOT TESTED
+        public static extern uint GetCal(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_CALIBRATION[] pLogTagCal); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetData", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetData(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_INFO[] pInfo);
+        public static extern uint GetData(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_INFO[] pInfo);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetData2", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetData2(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_INFO[] pInfo, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_SENSOR[] pSensor, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_READING[] pReading);
+        public static extern uint GetData2(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_INFO[] pInfo, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_SENSOR[] pSensor, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_READING[] pReading);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetDaySummary", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetDaySummary(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_DAY_SUMMARY[] pDaySummary);
+        public static extern uint GetDaySummary(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_DAY_SUMMARY[] pDaySummary);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetDaySummaryTIC", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetDaySummaryTIC(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_DAY_SUMMARY_TIC[] pDaySummary);
+        public static extern uint GetDaySummaryTIC(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_DAY_SUMMARY_TIC[] pDaySummary);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetDaySummaryiS0TagNET", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetDaySummaryiS0TagNET(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_DAY_SUMMARY_IS0TAG[] pDaySummary, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_DAY_STATS_TIC[] pDayStats);
+        public static extern uint GetDaySummaryiS0TagNET(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_DAY_SUMMARY_IS0TAG[] pDaySummary, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_DAY_STATS_TIC[] pDayStats);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetErrorInfo", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
         public static extern uint GetErrorInfo(LOGTAG_HANDLE handle, string lpszContext, UInt32 cbSize); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetInfo", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetInfo(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_INFO[] pLogTagInfo);
+        public static extern uint GetInfo(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_INFO[] pLogTagInfo);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetInfo1", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetInfo1(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_INFO[] pLogTagInfo, UInt16 nDownload); // NOT to be used with .NET wrapper
+        public static extern uint GetInfo1(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_INFO[] pLogTagInfo, UInt16 nDownload); // NOT to be used with .NET wrapper
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetInfo2", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetInfo2(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_INFO[] pLogTagInfo, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_SENSOR[] pLogTagSensor);
+        public static extern uint GetInfo2(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_INFO[] pLogTagInfo, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_SENSOR[] pLogTagSensor);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetInfo3", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetInfo3(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_INFO[] pLogTagInfo, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_SENSOR[] pLogTagSensor, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_PDF_INFO[] pPdfInfo);
+        public static extern uint GetInfo3(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_INFO[] pLogTagInfo, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_SENSOR[] pLogTagSensor, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_PDF_INFO[] pPdfInfo);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetInterface", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetInterface(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_INTERFACE[] pPortInfo);
+        public static extern uint GetInterface(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_INTERFACE[] pPortInfo);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetPortInfo", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetPortInfo([MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_PORTINFO[] pPortInfo, ref UInt32 nCount, UInt16 wPortType);
+        public static extern uint GetPortInfo([MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_PORTINFO[] pPortInfo, ref UInt32 nCount, UInt16 wPortType);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetPortType", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
         public static extern uint GetPortType(UInt16 wPortType); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetSDKMemory", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetSDKMemory(LOGTAG_HANDLE handle, UInt16 nPageId, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_SDKMEM[] pMemInfo); // do not use with .NET
+        public static extern uint GetSDKMemory(LOGTAG_HANDLE handle, UInt16 nPageId, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_SDKMEM[] pMemInfo); // do not use with .NET
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetSDKMemoryNET", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetSDKMemoryNET(LOGTAG_HANDLE handle, UInt16 nPageId, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_SDKMEM[] pMemInfo, IntPtr lpData);
+        public static extern uint GetSDKMemoryNET(LOGTAG_HANDLE handle, UInt16 nPageId, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_SDKMEM[] pMemInfo, IntPtr lpData);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetServer", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
         public static extern uint GetServer(Guid guid, ref UInt16 nPortNum, string lpszServer, UInt32 chServer); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetSignatures", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetSignatures(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_DIGITAL_SIGNATURE[] lpSignature, ref UInt32 nCount); //NOT TESTED
+        public static extern uint GetSignatures(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_DIGITAL_SIGNATURE[] lpSignature, ref UInt32 nCount); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetUploadCalCount", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetUploadCalCount(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_CALIBRATION[] pLogTagCal, ref UInt32 nCount); //NOT TESTED
+        public static extern uint GetUploadCalCount(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_CALIBRATION[] pLogTagCal, ref UInt32 nCount); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetUploadMemCount", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetUploadMemCount(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_INFO[] pLogTagInfo, ref UInt32 nCount); //NOT TESTED
+        public static extern uint GetUploadMemCount(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_INFO[] pLogTagInfo, ref UInt32 nCount); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GetUploadSDKCount", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint GetUploadSDKCount(LOGTAG_HANDLE handle, UInt16 nPageId, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_SDKMEM[] pMemInfo, ref UInt32 dwCount); //NOT TESTED
+        public static extern uint GetUploadSDKCount(LOGTAG_HANDLE handle, UInt16 nPageId, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_SDKMEM[] pMemInfo, ref UInt32 dwCount); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_GivePassword", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
         public static extern uint GivePassword(LOGTAG_HANDLE handle, string lpszPassword); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_Hibernate", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
@@ -993,15 +994,15 @@ namespace LogTagNET
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_LogOffUser", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
         public static extern uint LogOffUser(); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_LogOnUser", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint LogOnUser([MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_USER[] lpUser, string lpszUsername, string lpszPassUInt16);
+        public static extern uint LogOnUser([MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_USER[] lpUser, string lpszUsername, string lpszPassUInt16);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_OpenIO", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint OpenIO(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_PORTINFO[] pPortInfo);
+        public static extern uint OpenIO(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_PORTINFO[] pPortInfo);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_OpenPath", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint OpenPath(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPWStr)] string lpszPathName);
+        public static extern uint OpenPath(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPWStr)] string lpszPathName); 
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_PingServer", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
         public static extern uint PingServer(UInt16 nPortNum, string lpszServer); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_QuerySensors", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint QuerySensors(LOGTAG_HANDLE handle, UInt16 wSensorCount, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_READING[] pReadings); //NOT TESTED
+        public static extern uint QuerySensors(LOGTAG_HANDLE handle, UInt16 wSensorCount, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_READING[] pReadings); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_RefreshLEDMode", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
         public static extern uint RefreshLEDMode(LOGTAG_HANDLE handle, Byte bLEDMode);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_Reset", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
@@ -1015,29 +1016,29 @@ namespace LogTagNET
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_SetAppName", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
         public static extern uint SetAppName(Guid guid, string lpszAppName, UInt16 nFlags); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_SetCal", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint SetCal(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_CALIBRATION[] pLogTagCal, UInt32 nAttributes); //NOT TESTED
+        public static extern uint SetCal(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_CALIBRATION[] pLogTagCal, UInt32 nAttributes); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_SetData", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint SetData(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_INFO[] pLogTagInfo); //NOT TESTED
+        public static extern uint SetData(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_INFO[] pLogTagInfo); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_SetFeedback", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint SetFeedback(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_FEEDBACK[] pFeedbackProc, UInt64 ullHookParam); //NOT TESTED
+        public static extern uint SetFeedback(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_FEEDBACK[] pFeedbackProc, UInt64 ullHookParam); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_SetFormatVersion", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
         public static extern uint SetFormatVersion(LOGTAG_HANDLE handle, byte bFormatVersion);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_SetInfo", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint SetInfo(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_INFO[] pLogTagInfo);
+        public static extern uint SetInfo(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_INFO[] pLogTagInfo);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_SetInfoTime", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint SetInfoTime(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_INFO[] pLogTagInfo, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_SENSOR[] pLogTagSensor, SYSTEMTIME stTime);
+        public static extern uint SetInfoTime(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_INFO[] pLogTagInfo, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_SENSOR[] pLogTagSensor, SYSTEMTIME stTime);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_SetInfo2", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint SetInfo2(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_INFO[] pLogTagInfo, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_SENSOR[] pLogTagSensor);
+        public static extern uint SetInfo2(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_INFO[] pLogTagInfo, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_SENSOR[] pLogTagSensor);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_SetInfo3", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint SetInfo3(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_INFO[] pLogTagInfo, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_SENSOR[] pLogTagSensor, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_PDF_INFO[] pPdfInfo);
+        public static extern uint SetInfo3(LOGTAG_HANDLE handle, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_INFO[] pLogTagInfo, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_SENSOR[] pLogTagSensor, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_PDF_INFO[] pPdfInfo);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_SetInterfaceSpeed", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
         public static extern uint SetInterfaceSpeed(LOGTAG_HANDLE handle, UInt32 nMaximum); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_SetLEDMode", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint SetLEDMode(LOGTAG_HANDLE handle, Byte bLEDMode);
+        public static extern uint SetLEDMode(LOGTAG_HANDLE handle, Byte bLEDMode); 
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_SetSDKMemory", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint SetSDKMemory(LOGTAG_HANDLE handle, UInt16 nPageId, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_SDKMEM[] pMemInfo); // do not use with .NET
+        public static extern uint SetSDKMemory(LOGTAG_HANDLE handle, UInt16 nPageId, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_SDKMEM[] pMemInfo); // do not use with .NET
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_SetSDKMemoryNET", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
-        public static extern uint SetSDKMemoryNET(LOGTAG_HANDLE handle, UInt16 nPageId, [MarshalAs(UnmanagedType.LPArray)][In, Out] LOGTAG_SDKMEM[] pMemInfo, IntPtr lpData);
+        public static extern uint SetSDKMemoryNET(LOGTAG_HANDLE handle, UInt16 nPageId, [MarshalAs(UnmanagedType.LPArray)] [In, Out] LOGTAG_SDKMEM[] pMemInfo, IntPtr lpData);
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_SetServer", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]
         public static extern uint SetServer(Guid guid, UInt16 nPortNum, string lpszServer); //NOT TESTED
         [DllImport("LogTagIO29.dll", EntryPoint = "LogTag_SetOptions", ExactSpelling = false, CallingConvention = CallingConvention.StdCall)]

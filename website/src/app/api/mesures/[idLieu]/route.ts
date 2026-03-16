@@ -180,22 +180,22 @@ export const GET = withAuthLogging(
           DateHeureMesureIso: dateHeure.toISOString(),
           DateHeureMesureXaxis: dateXaxis,
           Consigne:
-            consigneLieu !== null
-              ? parseFloat(consigneLieu.toString())
-              : m.Consigne !== null
-                ? parseFloat(m.Consigne.toString())
+            m.Consigne !== null
+              ? parseFloat(m.Consigne.toString())
+              : consigneLieu !== null
+                ? parseFloat(consigneLieu.toString())
                 : null,
           Consigne_Sup:
-            consigneSupLieu !== null
-              ? parseFloat(consigneSupLieu.toString())
-              : m.Consigne_Sup !== null
-                ? parseFloat(m.Consigne_Sup.toString())
+            m.Consigne_Sup !== null
+              ? parseFloat(m.Consigne_Sup.toString())
+              : consigneSupLieu !== null
+                ? parseFloat(consigneSupLieu.toString())
                 : null,
           Consigne_Inf:
-            consigneInfLieu !== null
-              ? parseFloat(consigneInfLieu.toString())
-              : m.Consigne_Inf !== null
-                ? parseFloat(m.Consigne_Inf.toString())
+            m.Consigne_Inf !== null
+              ? parseFloat(m.Consigne_Inf.toString())
+              : consigneInfLieu !== null
+                ? parseFloat(consigneInfLieu.toString())
                 : null,
           SondeNumeroSerie: m.Sonde_Numero_Serie || "",
           Frequence: m.Frequence || 15,

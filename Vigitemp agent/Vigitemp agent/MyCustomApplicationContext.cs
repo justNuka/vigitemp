@@ -1,6 +1,7 @@
 using System;
 using System.Configuration;
 using System.Diagnostics;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -31,6 +32,7 @@ namespace VigitempAgent
         private StatusForm statusForm;
         private ToolStripMenuItem sessionStatusMenuItem;
         private LoopbackSessionServer loopbackSessionServer;
+        private bool usingLoopbackSessionServerOnly;
         private static readonly HttpClient NotificationClient = new HttpClient
         {
             Timeout = TimeSpan.FromSeconds(3)
@@ -210,6 +212,19 @@ namespace VigitempAgent
             catch (Exception ex)
             {
                 AgentLog.Error("Initial CheckSessionAndNotify failed.", ex);
+            }
+
+            try
+            {
+                Task.Run(async () =>
+                {
+                    await Task.Delay(2500).ConfigureAwait(false);
+                    ShowInstallSummaryIfNeeded();
+                });
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("Schedule install summary failed.", ex);
             }
         }
 
@@ -476,6 +491,87 @@ namespace VigitempAgent
             throw new Exception("No network adapters with an IPv4 address in the system!");
         }
 
+        private static string GetInstallSummaryMarkerPath()
+        {
+            var folder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "VigitempAgent");
+            Directory.CreateDirectory(folder);
+            return Path.Combine(folder, "install-summary-shown.txt");
+        }
+
+        private static bool HasLoopbackUrlAcl()
+        {
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "netsh",
+                    Arguments = "http show urlacl",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using (var process = Process.Start(psi))
+                {
+                    if (process == null)
+                    {
+                        return false;
+                    }
+
+                    var output = process.StandardOutput.ReadToEnd();
+                    process.WaitForExit(3000);
+                    return output.IndexOf("http://127.0.0.1:8000/", StringComparison.OrdinalIgnoreCase) >= 0;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void ShowInstallSummaryIfNeeded()
+        {
+            try
+            {
+                var marker = GetInstallSummaryMarkerPath();
+                if (File.Exists(marker))
+                {
+                    return;
+                }
+
+                var installPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory ?? "", "VigitempAgent.exe");
+                var agentInstalled = File.Exists(installPath);
+                var urlAclOk = HasLoopbackUrlAcl();
+                var httpServerOk = HttpServer.listener != null && HttpServer.listener.IsListening;
+                var localApiStatus = httpServerOk
+                    ? "OK"
+                    : (usingLoopbackSessionServerOnly ? "Mode degrade" : "ECHEC");
+
+                var summary =
+                    "Installation terminee." + Environment.NewLine + Environment.NewLine +
+                    "Agent installe : " + (agentInstalled ? "OK" : "ECHEC") + Environment.NewLine +
+                    "Reservation HTTP : " + (urlAclOk ? "OK" : "ECHEC") + Environment.NewLine +
+                    "API locale : " + localApiStatus + Environment.NewLine + Environment.NewLine +
+                    "Si l'icone Vigitemp n'apparait pas dans la zone de notification, fermez puis rouvrez votre session Windows.";
+
+                File.WriteAllText(marker, DateTime.UtcNow.ToString("o"));
+
+                if (trayIcon != null && trayIcon.Visible)
+                {
+                    trayIcon.ShowBalloonTip(8000, "Vigitemp Agent", summary, ToolTipIcon.Info);
+                }
+
+                MessageBox.Show(summary, "Vigitemp Agent", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("ShowInstallSummaryIfNeeded failed.", ex);
+            }
+        }
+
         private void Start()
         {
             try
@@ -484,7 +580,6 @@ namespace VigitempAgent
                 {
                     HttpServer.listener = new HttpListener();
                     HttpServer.listener.Prefixes.Add(HttpServer.url_localhost);
-                    HttpServer.listener.Prefixes.Add(HttpServer.url);
                     HttpServer.listener.Start();
 
                     AgentLog.Info("HttpServer listening: " + HttpServer.url_localhost);
@@ -493,7 +588,8 @@ namespace VigitempAgent
                 }
                 catch (HttpListenerException ex) when (ex.ErrorCode == 5)
                 {
-                    // Access denied on HTTP.SYS (missing URLACL). Keep only session API via TcpListener.
+                    // Access denied on HTTP.SYS (missing loopback URLACL). Keep only session API via TcpListener.
+                    usingLoopbackSessionServerOnly = true;
                     AgentLog.Error("HttpServer access denied; starting LoopbackSessionServer only.", ex);
                     loopbackSessionServer = new LoopbackSessionServer(8000);
                     loopbackSessionServer.Start();

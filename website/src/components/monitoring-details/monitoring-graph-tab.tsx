@@ -56,6 +56,10 @@ export function MonitoringGraphTab({
   captureZoomBounds,
   t,
 }: MonitoringGraphTabProps) {
+  const upperLine = orderedData.map((point) => point.Consigne_Sup)
+  const lowerLine = orderedData.map((point) => point.Consigne_Inf)
+  const targetLine = orderedData.map((point) => point.Consigne)
+
   return (
     <div className="space-y-4 pt-4 h-[68vh]">
       <div className="flex items-center justify-between gap-2">
@@ -78,7 +82,7 @@ export function MonitoringGraphTab({
               ...(consigneSup !== null
                 ? [{
                     label: t("chart.over_high"),
-                    data: orderedData.map(() => consigneSup),
+                    data: upperLine,
                     borderColor: "transparent",
                     borderWidth: 0,
                     pointRadius: 0,
@@ -93,7 +97,7 @@ export function MonitoringGraphTab({
               ...(consigneInf !== null
                 ? [{
                     label: t("chart.over_low"),
-                    data: orderedData.map(() => consigneInf),
+                    data: lowerLine,
                     borderColor: "transparent",
                     borderWidth: 0,
                     pointRadius: 0,
@@ -105,6 +109,44 @@ export function MonitoringGraphTab({
                     order: 0,
                   }]
                 : []),
+              {
+                label: t("guides.max", { value: consigneSup ?? "-", unit: unite }),
+                data: upperLine,
+                borderColor: "#ef4444",
+                borderWidth: 2,
+                borderDash: [6, 4],
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                fill: false,
+                tension: 0,
+                spanGaps: true,
+                order: 1,
+              },
+              {
+                label: t("guides.target", { value: consigne ?? "-", unit: unite }),
+                data: targetLine,
+                borderColor: "#111827",
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                fill: false,
+                tension: 0,
+                spanGaps: true,
+                order: 1,
+              },
+              {
+                label: t("guides.min", { value: consigneInf ?? "-", unit: unite }),
+                data: lowerLine,
+                borderColor: "#ef4444",
+                borderWidth: 2,
+                borderDash: [6, 4],
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                fill: false,
+                tension: 0,
+                spanGaps: true,
+                order: 1,
+              },
               {
                 label: measuresLabel,
                 data: orderedData.map((point) => (typeof point.Valeur === "number" ? point.Valeur : null)),
@@ -156,8 +198,11 @@ export function MonitoringGraphTab({
                   if (!aIsMeasure && bIsMeasure) return 1
                   return 0
                 },
-                filter: (context) => context?.dataset?.label === measuresLabel && typeof context.dataIndex === "number",
-                callbacks: {
+                  filter: (context) =>
+                    typeof context.dataIndex === "number" &&
+                    context?.dataset?.label !== t("chart.over_high") &&
+                    context?.dataset?.label !== t("chart.over_low"),
+                  callbacks: {
                   title: (context) => {
                     const index = context?.[0]?.dataIndex
                     return typeof index === "number" ? orderedData[index]?.DateHeureMesure || "" : ""
@@ -169,7 +214,10 @@ export function MonitoringGraphTab({
                     if (!measure || measure.Valeur === null) {
                       return t("table.status.no_response")
                     }
-                    return t("tooltip.value", { value: measure.Valeur, unit: unite })
+                    if (context.dataset.label === measuresLabel) {
+                      return t("tooltip.value", { value: measure.Valeur, unit: unite })
+                    }
+                    return `${context.dataset.label}`
                   },
                 },
               },

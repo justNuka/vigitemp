@@ -1,0 +1,956 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../src/generated/@prisma-db-main"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model t_actionneur {
+  Id_Actionneur    Int                @id @default(autoincrement())
+  Num_Serie        String?            @db.VarChar(50)
+  Type             Int?
+  Est_Etat         Boolean?           @default(false)
+  Est_Demande      Boolean?           @default(false)
+  Commentaire      String?            @db.VarChar(255)
+  Port_Serie       Int?
+  Id_Module        Int?
+  Relai_1          String?            @db.VarChar(50)
+  Relai_2          String?            @db.VarChar(50)
+  Relai_3          String?            @db.VarChar(50)
+  Relai_4          String?            @db.VarChar(50)
+  Est_Test         Boolean?           @default(false)
+  Libelle_Erreur   String?            @db.VarChar(50)
+  Id_Plan          Int?
+  Position_Plan_X  BigInt?
+  Position_Plan_Y  BigInt?
+  Est_Archive      Boolean?           @default(false)
+  Id_Serveur       Int?               @default(1)
+  t_plan           t_plan?            @relation(fields: [Id_Plan], references: [Id_Plan], onDelete: NoAction, onUpdate: NoAction, map: "FK_PLAN_ACTIONNEUR")
+  t_actionneurtype t_actionneur_type? @relation(fields: [Type], references: [Type], onDelete: NoAction, onUpdate: NoAction, map: "FK_TYPE_ACTIONNEUR")
+
+  @@index([Est_Etat], map: "IDX_Est_Etat")
+  @@index([Id_Module], map: "IDX_Id_Module")
+  @@index([Id_Plan], map: "IDX_Id_Plan")
+  @@index([Num_Serie], map: "IDX_Num_Serie")
+  @@index([Type], map: "IDX_Type")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_alarme {
+  Id_Alarme                    Int              @id @default(autoincrement())
+  Date_Heure_Debut             DateTime?        @db.DateTime(0)
+  Valeur                       Float?           @db.Float
+  Type                         String?          @db.VarChar(1)
+  Date_Heure_Fin               DateTime?        @db.DateTime(0)
+  Est_Alarme_Vrai              Boolean?         @default(false)
+  Id_Lieu                      Int?
+  Sonde_Numero_Serie           String?          @db.VarChar(50)
+  Unite                        String?          @db.VarChar(10)
+  Est_Acquittee                Boolean?         @default(false)
+  Date_Heure_Derniere_Mesure   DateTime?        @db.DateTime(0)
+  Date_Heure_Debut_Alarme_Vrai DateTime?        @db.DateTime(0)
+  Est_Alarme_Pour_VigiTel      Boolean?         @default(false)
+  Est_Mail_Envoye              Boolean?
+  Est_Tel_Acquittee            Boolean?
+  t_lieu                       t_lieu?          @relation("lieu_alarme", fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ALARME")
+  t_notification               t_notification[]
+
+  @@index([Est_Acquittee], map: "IDX_Est_Acquittee")
+  @@index([Est_Alarme_Vrai], map: "IDX_Est_Alarme_Vrai")
+  @@index([Date_Heure_Debut], map: "IDX_Date_Heure_Debut")
+  @@index([Date_Heure_Fin], map: "IDX_Date_Heure_Fin")
+  @@index([Date_Heure_Debut_Alarme_Vrai], map: "IDX_Date_Heure_Debut_Alarme_Vrai")
+  @@index([Date_Heure_Derniere_Mesure], map: "IDX_Date_Heure_Derniere_Mesure")
+  @@index([Sonde_Numero_Serie], map: "IDX_Sonde_Numero_Serie")
+  @@index([Id_Lieu], map: "IDX_Id_Lieu")
+  @@index([Type], map: "IDX_Type")
+  @@index([Unite], map: "IDX_Unite")
+  @@index([Valeur], map: "IDX_Valeur")
+}
+
+model t_alarme_histo {
+  Id_Alarme_Histo              Int       @id @default(autoincrement())
+  Id_Alarme                    Int
+  Date_Heure_Debut             DateTime? @db.DateTime(0)
+  Valeur                       Float?    @db.Float
+  Type                         String?   @db.VarChar(1)
+  Date_Heure_Fin               DateTime? @db.DateTime(0)
+  Est_Alarme_Vrai              Boolean?  @default(false)
+  Id_Lieu                      Int?
+  Sonde_Numero_Serie           String?   @db.VarChar(50)
+  Unite                        String?   @db.VarChar(10)
+  Est_Acquittee                Boolean?  @default(false)
+  Date_Heure_Derniere_Mesure   DateTime? @db.DateTime(0)
+  Date_Heure_Debut_Alarme_Vrai DateTime? @db.DateTime(0)
+  Est_Alarme_Pour_VigiTel      Boolean?
+  Est_Mail_Envoye              Boolean?
+  Est_Tel_Acquittee            Boolean?
+  Date_Heure_Acquittement      DateTime? @db.DateTime(0)
+  t_lieu                       t_lieu?   @relation("lieu_alarme_histo", fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ALARME_HISTO")
+
+  @@index([Est_Acquittee], map: "IDX_HISTO_Est_Acquittee")
+  @@index([Est_Alarme_Vrai], map: "IDX_HISTO_Est_Alarme_Vrai")
+  @@index([Date_Heure_Debut], map: "IDX_HISTO_Date_Heure_Debut")
+  @@index([Date_Heure_Fin], map: "IDX_HISTO_Date_Heure_Fin")
+  @@index([Date_Heure_Debut_Alarme_Vrai], map: "IDX_HISTO_Date_Heure_Debut_Alarme_Vrai")
+  @@index([Date_Heure_Derniere_Mesure], map: "IDX_HISTO_Date_Heure_Derniere_Mesure")
+  @@index([Sonde_Numero_Serie], map: "IDX_HISTO_Sonde_Numero_Serie")
+  @@index([Id_Alarme], map: "IDX_HISTO_Id_Alarme")
+  @@index([Id_Lieu], map: "IDX_HISTO_Id_Lieu")
+  @@index([Type], map: "IDX_HISTO_Type")
+  @@index([Unite], map: "IDX_HISTO_Unite")
+  @@index([Valeur], map: "IDX_HISTO_Valeur")
+  @@index([Id_Alarme_Histo], map: "Id_Alarme_Histo")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_alarme_message {
+  Id_Alarme_Message   Int     @id @default(autoincrement())
+  Code_Alarme_Message String? @unique(map: "CodeAlarmeMessage") @db.VarChar(20)
+  Type                String? @db.VarChar(1)
+  Texte_Message       String? @db.LongText
+}
+
+model t_autorisation {
+  Id_Autorisation               Int                             @id @default(autoincrement())
+  Code_Autorisation             String?                         @db.VarChar(50)
+  Libelle_Autorisation          String?                         @db.VarChar(50)
+  Commentaire                   String?                         @db.VarChar(200)
+  t_liaison_profil_autorisation t_liaison_profil_autorisation[]
+
+  @@index([Code_Autorisation], map: "IDX_Code_Autorisation")
+}
+
+model t_milieu {
+  Id_Milieu       Int      @id @default(autoincrement())
+  Model           String?  @db.VarChar(50)
+  Reference       String?  @db.VarChar(50)
+  Stabilite       Float?   @db.Float
+  Homogeneite     Float?   @db.Float
+  Contenu         String?  @db.VarChar(50)
+  Est_Reserve_MC2 Boolean? @default(false)
+  Est_Archive     Boolean? @default(false)
+
+  @@index([Model], map: "IDX_Model")
+  @@index([Reference], map: "IDX_Reference")
+}
+
+model t_ajustage {
+  Id_Ajustage         Int       @id @default(autoincrement())
+  Date_Heure_Ajustage DateTime? @db.DateTime(0)
+  Sonde_Numero_Serie  String?   @db.VarChar(50)
+  Coeff_X2            Float?    @default(0) @db.Float
+  Coeff_X             Float?    @db.Float
+  Coeff_Constant      Float?    @db.Float
+  Unite               String?   @db.VarChar(10)
+  Nb_Decimale         Int?
+  Operateur           String?   @db.VarChar(255)
+  SE_Numero           String?   @db.VarChar(50)
+  SE_Organisme        String?   @db.VarChar(50)
+  SE_Date_Certif      DateTime? @db.Date
+  SE_Numero_Certif    String?   @db.VarChar(50)
+  Mesure_Etalon1      Float?    @db.Float
+  Mesure_Etalon2      Float?    @db.Float
+  Valeur_Brute1       Float?    @db.Float
+  Valeur_Brute2       Float?    @db.Float
+  Ancienne_Mesure1    Float?    @db.Float
+  Ancienne_Mesure2    Float?    @db.Float
+  Nouvelle_Mesure1    Float?    @db.Float
+  Nouvelle_Mesure2    Float?    @db.Float
+  Id_Milieu           Int?
+
+  @@index([Id_Milieu], map: "IDX_Id_Bain")
+  @@index([Sonde_Numero_Serie], map: "IDX_Sonde_Numero_Serie")
+  @@index([SE_Numero], map: "IDX_SE_Numero")
+  @@index([Date_Heure_Ajustage], map: "IDX_Date_Heure_Calibrage")
+  @@index([Sonde_Numero_Serie, Date_Heure_Ajustage], map: "idx_ajustage_sonde_date")
+}
+
+model t_certif {
+  Id_Certif           Int       @id @default(autoincrement())
+  Numero              String?   @db.VarChar(50)
+  Organisme           String?   @db.VarChar(50)
+  Date                DateTime? @db.Date
+  Etalon_Numero_Serie String?   @db.VarChar(50)
+  Unite               String?   @db.VarChar(10)
+  Id_PDF              Int?
+
+  @@index([Date], map: "IDX_Date")
+  @@index([Id_PDF], map: "IDX_Id_PDF")
+  @@index([Etalon_Numero_Serie], map: "IDX_Etalon_Numero_Serie")
+  @@index([Numero], map: "IDX_Numero")
+  @@index([Organisme], map: "IDX_Organisme")
+  @@index([Unite], map: "IDX_Unite")
+}
+
+model t_certif_mesure {
+  Id_Certif_Mesure      Int     @id @default(autoincrement())
+  Id_Certif             Int?
+  Numero_Ordre          Int?
+  Temperature_Vraie     String? @db.VarChar(50)
+  Temperature_Reference String? @db.VarChar(50)
+  Incertitude           Float?  @db.Float
+
+  @@index([Id_Certif], map: "IDX_Id_Certif")
+}
+
+model t_etalon {
+  Id_Etalon           Int      @id @default(autoincrement())
+  Etalon_Numero_Serie String?  @unique(map: "EtalonNumeroSerie_IDX") @db.VarChar(50)
+  Est_Archive         Boolean? @default(false)
+  Etat_Etalon         String?  @db.VarChar(1)
+  Port_Serie          String?  @db.VarChar(10)
+  Est_Sonde_Externe   Boolean?
+  Resolution          String?  @db.VarChar(50)
+  Incertitude         String?  @db.VarChar(50)
+  Nb_Decimale         Int?
+  Reserve_MC2         String?  @db.VarChar(50)
+  Id_Serveur          Int?
+  Id_Module           Int?
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_etalonnage {
+  Id_Etalonnage         Int       @id @default(autoincrement())
+  Date_Heure_Etalonnage DateTime? @db.DateTime(0)
+  Sonde_Numero_Serie    String?   @db.VarChar(50)
+  Date_Validite         DateTime? @db.Date
+  Duree_Validite_Jours  Int?
+  Operateur             String?   @db.VarChar(255)
+  Etalon_Numero_Serie   String?   @db.VarChar(50)
+  Date_Certif           DateTime? @db.Date
+  Organisme             String?   @db.VarChar(50)
+  Num_Certif            String?   @db.VarChar(50)
+  Unite                 String?   @db.VarChar(10)
+  Incertitude           Float?    @db.Float
+  Moyenne_Etalon        Float?    @db.Float
+  Moyenne_Sonde         Float?    @db.Float
+  Repetabilite          String?   @db.VarChar(50)
+  Id_Bain               Int?
+  Err_Justesse          Float?    @db.Float
+
+  @@index([Date_Certif], map: "IDX_Date_Certif")
+  @@index([Date_Heure_Etalonnage], map: "IDX_Date_Heure_Etalonnage")
+  @@index([Id_Bain], map: "IDX_Id_Bain")
+  @@index([Incertitude], map: "IDX_Incertitude")
+  @@index([Moyenne_Etalon], map: "IDX_Moyenne_Etalon")
+  @@index([Moyenne_Sonde], map: "IDX_Moyenne_Sonde")
+  @@index([Num_Certif], map: "IDX_Num_Certif")
+  @@index([Etalon_Numero_Serie], map: "IDX_Etalon_Numero_Serie")
+  @@index([Sonde_Numero_Serie], map: "IDX_Sonde_Numero_Serie")
+  @@index([Organisme], map: "IDX_Organisme")
+  @@index([Repetabilite], map: "IDX_Repetabilite")
+  @@index([Unite], map: "IDX_Unite")
+}
+
+model t_etalonnage_mesure {
+  Id_Etalonnage_Mesure_Sonde Int    @id @default(autoincrement())
+  Id_Etalonnage              Int?
+  Numero_Ordre               Int?
+  Mesure_Sonde               Float? @db.Float
+  Mesure_Etalon              Float? @db.Float
+
+  @@index([Id_Etalonnage], map: "IDX_Id_Etalonnage")
+}
+
+model t_groupe {
+  Id_Groupe                    Int                            @id @default(autoincrement())
+  Nom_Groupe                   String?                        @unique(map: "Groupe_NomGroupe_IDX") @db.VarChar(64)
+  Numero_Regroupement          String?                        @db.VarChar(1)
+  Est_Archive                  Boolean?                       @default(false)
+  t_liaison_utilisateur_groupe t_liaison_utilisateur_groupe[]
+  t_lieux_groupe1              t_lieu[]                       @relation("groupe1")
+  t_lieux_groupe2              t_lieu[]                       @relation("groupe2")
+  t_lieu_groupe                t_lieu_groupe[]
+
+  @@index([Numero_Regroupement], map: "IDX_Numero_Regroupement")
+}
+
+model t_liaison_profil_autorisation {
+  Id_Profil       Int
+  Id_Autorisation Int
+  t_autorisation  t_autorisation @relation(fields: [Id_Autorisation], references: [Id_Autorisation], onDelete: NoAction, onUpdate: NoAction, map: "FK_AUTORISATION_LIAISON")
+  t_profil        t_profil       @relation(fields: [Id_Profil], references: [Id_Profil], onDelete: NoAction, onUpdate: NoAction, map: "FK_PROFIL_LIAISON")
+
+  @@id([Id_Profil, Id_Autorisation])
+  @@index([Id_Autorisation], map: "IDX_IdAutorisation")
+  @@index([Id_Profil], map: "IDX_IdProfil")
+}
+
+model t_liaison_sonde_type_mesure {
+  Id_Liaison        Int     @id @default(autoincrement())
+  Sonde_Type        String? @db.VarChar(50)
+  Sonde_Type_Mesure String? @db.VarChar(50)
+}
+
+model t_liaison_utilisateur_groupe {
+  Id_Liaison_u_g Int           @id @default(autoincrement())
+  Id_Utilisateur Int
+  Id_Groupe      Int?
+  t_groupe       t_groupe?     @relation(fields: [Id_Groupe], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE_LIAISON_UTILISATEUR")
+  t_utilisateur  t_utilisateur @relation(fields: [Id_Utilisateur], references: [Id_Utilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_UTILISATEUR_LIAISON")
+
+  @@index([Id_Groupe], map: "IDX_IdGroupe")
+  @@index([Id_Utilisateur], map: "IDX_IdUtilisateur")
+}
+
+model t_liaison_utilisateur_site {
+  Id_Liaison       Int            @id @default(autoincrement())
+  Id_Utilisateur   Int?
+  Id_Site          Int?
+  Date_Affectation DateTime?      @db.DateTime(0)
+  t_site           t_site?        @relation(fields: [Id_Site], references: [Id_Site], onDelete: Cascade, onUpdate: NoAction, map: "FK_SITE_LIAISON_UTILISATEUR")
+  t_utilisateur    t_utilisateur? @relation(fields: [Id_Utilisateur], references: [Id_Utilisateur], onDelete: Cascade, onUpdate: NoAction, map: "FK_UTILISATEUR_LIAISON_SITE")
+
+  @@unique([Id_Utilisateur, Id_Site], map: "UK_USER_SITE")
+  @@index([Id_Utilisateur], map: "IDX_IdUtilisateur")
+  @@index([Id_Site], map: "IDX_IdSite")
+  @@index([Date_Affectation], map: "IDX_DateAffectation")
+}
+
+model t_lieu_groupe {
+  Id_Lieu   Int
+  Id_Groupe Int
+  t_groupe  t_groupe @relation(fields: [Id_Groupe], references: [Id_Groupe], onDelete: Cascade, onUpdate: NoAction, map: "FK_GROUPE_LIEU_GROUPE")
+  t_lieu    t_lieu   @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: Cascade, onUpdate: NoAction, map: "FK_LIEU_LIEU_GROUPE")
+
+  @@id([Id_Lieu, Id_Groupe])
+  @@index([Id_Groupe], map: "IDX_LIEU_GROUPE_Id_Groupe")
+  @@index([Id_Lieu], map: "IDX_LIEU_GROUPE_Id_Lieu")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_lieu {
+  Id_Lieu                                   Int                     @id @default(autoincrement())
+  Id_Groupe1                                Int?
+  Id_Groupe2                                Int?
+  Id_Site                                   Int?
+  Nom_Lieu                                  String?                 @db.VarChar(30)
+  Sonde_Numero_Serie                        String?                 @db.VarChar(50)
+  Adresse_Sonde                             String?                 @db.VarChar(50)
+  Consigne                                  Float?                  @db.Float
+  Consigne_Base                             Float?
+  Observations_Info                         String?                 @db.TinyText
+  Consigne_Sup                              Float?                  @db.Float
+  Consigne_Sup_Base                         Float?
+  Tolerance_Surveillance_Sup                Float?                  @db.Float
+  Tolerance_Surveillance_Sup_Base           Float?
+  Est_Consigne_Sup_Active                   Boolean?                @default(false)
+  Consigne_Sup_Pre_Alarme                   Float?                  @db.Float
+  Est_Consigne_Sup_Pre_Alarme_Active        Boolean?                @default(false)
+  Consigne_Inf                              Float?                  @db.Float
+  Consigne_Inf_Base                         Float?
+  Tolerance_Surveillance_Inf                Float?                  @db.Float
+  Tolerance_Surveillance_Inf_Base           Float?
+  Est_Consigne_Inf_Active                   Boolean?                @default(false)
+  Consigne_Inf_Pre_Alarme                   Float?                  @db.Float
+  Est_Consigne_Inf_Pre_Alarme_Active        Boolean?                @default(false)
+  Frequence                                 Int?
+  Lieu_Etat                                 String?                 @default("D") @db.VarChar(1)
+  Retard_Alarme_Haut                        Int?
+  Retard_Alarme_Bas                         Int?
+  Id_Plan                                   Int?
+  Position_Plan_X                           BigInt?
+  Position_Plan_Y                           BigInt?
+  Date_Creation                             DateTime?               @default(dbgenerated("(now())")) @db.Date
+  Est_Archive                               Boolean?                @default(false)
+  Est_Tel_Actif                             Boolean?                @default(false)
+  Tel_Code                                  String?                 @db.VarChar(4)
+  Tel_Son_Lieu                              String?                 @db.VarChar(260)
+  Id_Actionneur                             Int?
+  Est_Mode_Serotheque                       Boolean?                @default(false)
+  Coef_Sensibilite                          Int?
+  Id_PDF                                    Int?
+  Est_DataLogger                            Boolean?                @default(false)
+  EMT                                       Float?                  @db.Float
+  EMT_Choix_Mode                            Int?                    @default(4)
+  EMT_Sonde                                 Float?                  @db.Float
+  Retard_Alarme_Changement_Consigne         Int?
+  Derniere_Date_Heure                       DateTime?               @db.DateTime(0)
+  Derniere_Valeur                           Float?                  @db.Float
+  Derniere_Unite                            String?                 @db.VarChar(10)
+  Derniere_Nb_Decimal                       Int?                    @default(2)
+  Est_Lieu_En_Alarme                        Int?                    @default(0) @db.TinyInt
+  Est_Lieu_Alarme_Terminee_Non_Acquittee    Int?                    @default(0) @db.TinyInt
+  Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 Int?                    @default(0) @db.TinyInt
+  Est_Lieu_En_Pre_Alarme                    Int?                    @default(0) @db.TinyInt
+  Id_Alarme                                 Int?                    @default(0)
+  Lieu_Etat_N1                              String?                 @db.VarChar(50)
+  Derniere_Date_Etalonnage                  DateTime?               @db.Date
+  Derniere_Erreur_Justesse                  Float?                  @db.Float
+  Derniere_Incertitude                      Float?                  @db.Float
+  Retard_Non_Reponse                        Int?                    @default(60)
+  Date_Heure_Derniere_Reponse               DateTime?               @db.DateTime(0)
+  Date_Heure_Derniere_Reponse_Recue_OK      DateTime?               @db.DateTime(0)
+  Est_Correction_Ej                         Int?                    @default(0) @db.TinyInt
+  Derive                                    Float?                  @default(0) @db.Float
+  Est_Correction_derive                     Boolean?                @default(false)
+  Derniere_Valeur_Null                      Int?                    @default(0)
+  Type_Lieu                                 String?                 @db.VarChar(20)
+  Date_Heure_Dernier_Acquittement_En_Cours  DateTime?               @db.DateTime(0)
+  Date_Heure_Last_Update_EVT_GSO            DateTime?               @db.DateTime(0)
+  Date_Heure_Reactivation_Alarme            DateTime?               @db.DateTime(0)
+  Notification_Active                       Boolean                 @default(true)
+  Commentaire                               String?                 @db.VarChar(200)
+  Infos_Modifiees_Depuis_Derniere_Mesure    Boolean                 @default(true)
+  Date_Heure_Reactivation_Surveillance      DateTime?               @db.DateTime(0)
+  Date_Heure_Surveillance_On                DateTime?               @db.DateTime(0)
+  Date_Heure_Surveillance_Off               DateTime?               @db.DateTime(0)
+  Derniere_Val_Rssi                         String?                 @db.VarChar(10)
+  Derniere_Val_Tension                      String?                 @db.VarChar(10)
+  Est_Lieu_GSO                              Boolean?                @default(false)
+  Est_Son_Alarme_Active                     Boolean                 @default(true)
+  Planning_Actif                            Boolean                 @default(false)
+  Planning_Source_Regle_Id                  Int?
+  Planning_Derniere_Maj                     DateTime?               @db.DateTime(0)
+  Est_Redeclenchement_Immediat              Boolean                 @default(false)
+  Nb_Mesures_Temporisation_Redeclenchement  Int?                    @default(0)
+  t_alarme                                  t_alarme[]              @relation("lieu_alarme")
+  t_alarme_histo                            t_alarme_histo[]        @relation("lieu_alarme_histo")
+  t_groupe1                                 t_groupe?               @relation("groupe1", fields: [Id_Groupe1], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE1_LIEU")
+  t_groupe2                                 t_groupe?               @relation("groupe2", fields: [Id_Groupe2], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE2_LIEU")
+  t_etat_surveillance                       t_etat_surveillance?    @relation(fields: [Lieu_Etat], references: [Surveillance_Etat], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ETAT_SURVEILLANCE")
+  t_pdf                                     t_pdf?                  @relation(fields: [Id_PDF], references: [Id_PDF], onDelete: NoAction, onUpdate: NoAction, map: "FK_PDF_LIEU")
+  t_plan                                    t_plan?                 @relation(fields: [Id_Plan], references: [Id_Plan], onDelete: NoAction, onUpdate: NoAction, map: "FK_PLAN_LIEU")
+  t_site                                    t_site?                 @relation(fields: [Id_Site], references: [Id_Site], onDelete: NoAction, onUpdate: NoAction, map: "FK_SITE_LIEU")
+  t_sonde                                   t_sonde?                @relation(fields: [Sonde_Numero_Serie], references: [Sonde_Numero_Serie], onDelete: NoAction, onUpdate: NoAction, map: "FK_SONDE_LIEU")
+  t_lieu_groupe                             t_lieu_groupe[]
+  t_lieu_mail_tel                           t_lieu_mail_tel[]
+  t_lieu_planning_regle                     t_lieu_planning_regle[]
+
+  @@index([Id_Groupe1], map: "IDX_Id_Groupe1")
+  @@index([Id_Groupe2], map: "IDX_Id_Groupe2")
+  @@index([Id_PDF], map: "IDX_Id_PDF")
+  @@index([Id_Site], map: "IDX_Id_Site")
+  @@index([Est_Archive], map: "IDX_Est_Archive")
+  @@index([Date_Creation], map: "IDX_Date_Creation")
+  @@index([Id_Actionneur], map: "IDX_Id_Actionneur")
+  @@index([Id_Plan], map: "IDX_Id_Plan")
+  @@index([Lieu_Etat], map: "IDX_Lieu_Etat")
+  @@index([Nom_Lieu], map: "IDX_Nom_Lieu")
+  @@index([Sonde_Numero_Serie], map: "IDX_Sonde_Numero_Serie")
+  @@index([Est_Tel_Actif], map: "IDX_Est_Tel_Actif")
+  @@index([Tel_Code], map: "IDX_Tel_Code")
+  @@index([Tel_Son_Lieu], map: "IDX_Tel_Son_Lieu")
+  @@index([Est_Lieu_GSO, Lieu_Etat], map: "idx_lieu_gso_etat")
+}
+
+model t_module {
+  Id_Module           Int     @id @default(autoincrement())
+  Module_Numero_Serie String? @db.VarChar(50)
+  Type_Module         Int?
+  Port_Serie          String? @db.VarChar(10)
+  Position_Plan_X     BigInt?
+  Position_Plan_Y     BigInt?
+  Id_Plan             Int?
+  Adresse_IP          String? @db.VarChar(50)
+  Delai_Reseau        Int?
+  Emplacement         String? @db.VarChar(50)
+  Archive             Int?    @default(0) @db.TinyInt
+  Id_Serveur          Int?
+  Est_Module_GSO      Boolean @default(false)
+  Port_Serie_Send_GSO String? @db.VarChar(10)
+
+  @@unique([Type_Module, Module_Numero_Serie], map: "Identifiant_Module")
+  @@index([Id_Plan], map: "IDX_Id_Plan")
+  @@index([Module_Numero_Serie], map: "IDX_Module_Numero_Serie")
+  @@index([Port_Serie], map: "IDX_Port_Serie")
+  @@index([Type_Module], map: "IDX_Type_Module")
+}
+
+model t_module_type {
+  Id_Module_Type        Int      @id @default(autoincrement())
+  Libelle_Type_Module   String?  @db.VarChar(50)
+  Libelle_Module        String?  @db.VarChar(100)
+  Est_Flag_Affiche_Plan Boolean? @default(false)
+}
+
+model t_parametre {
+  Section        String    @db.VarChar(100)
+  Mot_Cle        String    @db.VarChar(100)
+  Valeur         String?   @db.LongText
+  Commentaire    String?   @db.LongText
+  Champ_DATETIME DateTime? @db.DateTime(0)
+
+  @@id([Section, Mot_Cle])
+  @@index([Mot_Cle], map: "IDX_Mot_Cle")
+  @@index([Section], map: "IDX_Section")
+}
+
+model t_pdf {
+  Id_PDF              Int                   @id @default(autoincrement())
+  Nom_PDF             String?               @db.VarChar(50)
+  Contenu_PDF         Bytes?
+  t_commande_materiel t_commande_materiel[]
+  t_lieu              t_lieu[]
+}
+
+model t_plan {
+  Id_Plan      Int            @id @default(autoincrement())
+  Image        Bytes?
+  Titre        String?        @unique(map: "Plan_Titre_IDX") @db.VarChar(50)
+  Est_Archive  Boolean?       @default(false)
+  t_actionneur t_actionneur[]
+  t_lieu       t_lieu[]
+}
+
+model t_postes_clients {
+  Id_Poste                      Int                       @id @default(autoincrement())
+  Nom_Machine_Connexion         String?                   @unique(map: "nomMachineId") @db.VarChar(255)
+  Adresse_IP_Connexion          String?                   @db.VarChar(50)
+  Login                         String?                   @db.VarChar(64)
+  Nom                           String?                   @db.VarChar(50)
+  Prenom                        String?                   @db.VarChar(50)
+  Date_Heure_Derniere_Connexion DateTime?                 @db.DateTime(0)
+  t_notification_delivery       t_notification_delivery[]
+}
+
+model t_profil {
+  Id_Profil                     Int                             @id @default(autoincrement())
+  Profil_Utilisateur            String?                         @unique(map: "Profil_ProfilUtilisateur_IDX") @db.VarChar(50)
+  Commentaire                   String?                         @db.VarChar(100)
+  Est_MC2                       Boolean?                        @default(false)
+  t_liaison_profil_autorisation t_liaison_profil_autorisation[]
+}
+
+model t_site {
+  Id_Site                                                     Int                          @id @default(autoincrement())
+  Code_Site                                                   String?                      @unique(map: "CodeSite_IDX") @db.VarChar(20)
+  Libelle_Site                                                String?                      @db.VarChar(50)
+  Commentaire                                                 String?                      @db.VarChar(200)
+  Est_Archive                                                 Boolean?                     @default(false)
+  t_liaison_utilisateur_site                                  t_liaison_utilisateur_site[]
+  t_lieu                                                      t_lieu[]
+  t_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_site t_vigilog_tournee[]          @relation("t_vigilog_tournee_Id_Site_ArriveeTot_site")
+  t_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_site  t_vigilog_tournee[]          @relation("t_vigilog_tournee_Id_Site_DepartTot_site")
+}
+
+model t_sonde {
+  Id_Sonde            Int                 @id @default(autoincrement())
+  Adresse_Sonde       String?             @db.VarChar(50)
+  Sonde_Numero_Serie  String?             @unique(map: "Numero_serie") @db.VarChar(50)
+  Est_Sonde_GSO       Boolean             @default(false)
+  Port_Serie          String?             @db.VarChar(10)
+  Surveillance_Etat   String              @default("D") @map("Etat_Sonde") @db.VarChar(1)
+  Id_Module           Int?
+  Relai_1             String?             @db.VarChar(50)
+  Relai_2             String?             @db.VarChar(50)
+  Relai_3             String?             @db.VarChar(50)
+  Relai_4             String?             @db.VarChar(50)
+  Frequence_Mesure    Int?
+  Frequence_Recup     Int?
+  Est_Sonde_Reformee  Boolean?
+  Etat_Sonde_N1       String?             @db.VarChar(1)
+  Id_Serveur          Int?
+  Id_Sonde_Etat       Int?
+  Sonde_Offset        Float               @default(0) @db.Float
+  t_lieu              t_lieu[]
+  t_sonde_etat        t_sonde_etat?       @relation(fields: [Id_Sonde_Etat], references: [Id_Sonde_Etat], onDelete: NoAction, onUpdate: NoAction, map: "FK_SONDE_ETAT")
+  t_etat_surveillance t_etat_surveillance @relation(fields: [Surveillance_Etat], references: [Surveillance_Etat], onDelete: NoAction, onUpdate: NoAction, map: "FK_SONDE_ETAT_SURVEILLANCE")
+
+  @@index([Adresse_Sonde], map: "IDX_Adresse_Sonde")
+  @@index([Surveillance_Etat], map: "IDX_Etat_Sonde")
+  @@index([Port_Serie], map: "IDX_Port_Serie")
+  @@index([Id_Module], map: "IDX_Id_Module")
+  @@index([Id_Sonde_Etat], map: "IDX_Id_Sonde_Etat")
+}
+
+model t_etat_surveillance {
+  Id_Surveillance_Etat      Int       @id @default(autoincrement())
+  Surveillance_Etat         String?   @unique @db.VarChar(1)
+  Surveillance_Etat_Libelle String?   @db.VarChar(50)
+  t_lieu                    t_lieu[]
+  t_sonde                   t_sonde[]
+}
+
+model t_sonde_type {
+  Id_Sonde_Type      Int      @id @default(autoincrement())
+  Sonde_Type         String?  @unique(map: "Sonde_Type") @db.VarChar(50)
+  Libelle_Sonde_Type String?  @db.VarChar(50)
+  Est_Gestion_Relais Boolean?
+  Est_Double_Capteur Boolean  @default(false)
+}
+
+model t_utilisateur {
+  Id_Utilisateur                                                                         Int                            @id @default(autoincrement())
+  Login                                                                                  String?                        @unique(map: "Login") @db.VarChar(64)
+  Mot_De_Passe                                                                           String?                        @db.VarChar(60)
+  Date_Validite                                                                          DateTime?                      @db.Date
+  Date_Creation                                                                          DateTime?                      @db.Date
+  Est_Archive                                                                            Boolean?                       @default(false)
+  Profil_Utilisateur                                                                     String?                        @db.VarChar(50)
+  Date_Heure_Derniere_Connexion                                                          DateTime?                      @db.DateTime(0)
+  Adresse_IP_Connexion                                                                   String?                        @db.VarChar(50)
+  Nom_Machine_Connexion                                                                  String?                        @db.VarChar(50)
+  Id_Site                                                                                Int?
+  Nom                                                                                    String?                        @db.VarChar(50)
+  Prenom                                                                                 String?                        @db.VarChar(50)
+  Tel_Num_Fixe                                                                           String?                        @db.VarChar(50)
+  Tel_Num_Mobile                                                                         String?                        @db.VarChar(50)
+  Adresse_Email                                                                          String?                        @db.VarChar(100)
+  Date_Derniere_Modification_MDP                                                         DateTime?                      @db.DateTime(0)
+  Reset_Password_Token                                                                   String?                        @db.VarChar(255)
+  Reset_Password_Expires                                                                 DateTime?                      @db.DateTime(0)
+  Est_Mot_De_Passe_Temporaire                                                            Boolean?                       @default(false)
+  Avatar_Utilisateur                                                                     String?                        @db.VarChar(512)
+  t_ancien_mot_de_passe                                                                  t_ancien_mot_de_passe[]
+  t_commande_materiel                                                                    t_commande_materiel[]
+  t_liaison_utilisateur_groupe                                                           t_liaison_utilisateur_groupe[]
+  t_liaison_utilisateur_site                                                             t_liaison_utilisateur_site[]
+  t_notification_delivery                                                                t_notification_delivery[]
+  t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur t_vigilog_configuration[]      @relation("t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur")
+  t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur      t_vigilog_configuration[]      @relation("t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur")
+  t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur         t_vigilog_tournee[]            @relation("t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur")
+  t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur              t_vigilog_tournee[]            @relation("t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur")
+  t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur               t_vigilog_tournee[]            @relation("t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur")
+
+  @@index([Est_Archive], map: "IDX_Est_Archive")
+  @@index([Profil_Utilisateur], map: "IDX_Profil_Utilisateur")
+}
+
+model t_notification {
+  Id_Notification         Int                       @id @default(autoincrement())
+  Type                    String                    @db.VarChar(32)
+  Id_Alarme               Int?
+  Titre                   String?                   @db.VarChar(128)
+  Message                 String                    @db.VarChar(512)
+  Payload_Json            String?                   @db.LongText
+  Priorite                Int?                      @default(0)
+  Date_Creation           DateTime                  @default(now()) @db.DateTime(0)
+  Est_Archive             Boolean                   @default(false)
+  t_alarme                t_alarme?                 @relation(fields: [Id_Alarme], references: [Id_Alarme], onUpdate: NoAction, map: "FK_ALARME_NOTIFICATION")
+  t_notification_delivery t_notification_delivery[]
+
+  @@index([Id_Alarme], map: "IDX_Id_Alarme_Notification")
+  @@index([Date_Creation], map: "IDX_Date_Creation_Notification")
+}
+
+model t_notification_delivery {
+  Id_Delivery          Int                    @id @default(autoincrement())
+  Id_Notification      Int
+  Id_Poste             Int
+  Id_Utilisateur       Int?
+  Statut               String                 @db.VarChar(32)
+  Nb_Tentatives        Int                    @default(0)
+  Derniere_Erreur      String?                @db.VarChar(255)
+  Date_Queue           DateTime               @default(now()) @db.DateTime(0)
+  Date_Envoi           DateTime?              @db.DateTime(0)
+  Date_Ack_Agent       DateTime?              @db.DateTime(0)
+  Date_Dernier_Event   DateTime?              @db.DateTime(0)
+  Correlation_Id       String?                @db.VarChar(64)
+  t_notification       t_notification         @relation(fields: [Id_Notification], references: [Id_Notification], onDelete: Cascade, onUpdate: NoAction, map: "FK_NOTIFICATION_DELIVERY")
+  t_postes_clients     t_postes_clients       @relation(fields: [Id_Poste], references: [Id_Poste], onDelete: Cascade, onUpdate: NoAction, map: "FK_POSTE_DELIVERY")
+  t_utilisateur        t_utilisateur?         @relation(fields: [Id_Utilisateur], references: [Id_Utilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_UTILISATEUR_DELIVERY")
+  t_notification_event t_notification_event[]
+
+  @@unique([Id_Notification, Id_Poste], map: "UK_NOTIFICATION_POSTE")
+  @@index([Statut], map: "IDX_STATUT_DELIVERY")
+  @@index([Date_Envoi], map: "IDX_Date_Envoi_Delivery")
+  @@index([Id_Poste], map: "FK_POSTE_DELIVERY")
+  @@index([Id_Utilisateur], map: "FK_UTILISATEUR_DELIVERY")
+}
+
+model t_notification_event {
+  Id_Event                Int                     @id @default(autoincrement())
+  Id_Delivery             Int
+  Event_Type              String                  @db.VarChar(32)
+  Event_Data              String?                 @db.LongText
+  Date_Event              DateTime                @default(now()) @db.DateTime(0)
+  t_notification_delivery t_notification_delivery @relation(fields: [Id_Delivery], references: [Id_Delivery], onDelete: Cascade, onUpdate: NoAction, map: "FK_DELIVERY_EVENT")
+
+  @@index([Id_Delivery], map: "IDX_Id_Delivery_Event")
+  @@index([Date_Event], map: "IDX_Date_Event")
+}
+
+model liste_clients {
+  Id_Client                    Int       @id @default(autoincrement())
+  Nom                          String    @db.VarChar(100)
+  Num_Compte                   String?   @unique(map: "UK_Num_Compte") @db.VarChar(50)
+  VigiServ_Derniere_Date_Heure DateTime? @db.DateTime(0)
+  Vigitel_Derniere_Date_Heure  DateTime? @db.DateTime(0)
+}
+
+model t_actionneur_type {
+  Id_Actionneur_Type Int            @id @default(autoincrement())
+  Type               Int?           @unique(map: "Type")
+  Description        String?        @db.VarChar(50)
+  Gere_Relais        Boolean?       @default(false)
+  t_actionneur       t_actionneur[]
+}
+
+model t_ancien_mot_de_passe {
+  Id_Ancien_Mot_De_Passe Int            @id @default(autoincrement())
+  Id_Utilisateur         Int?
+  Mot_De_Passe           String?        @db.VarChar(100)
+  Est_Premiere_Connexion Boolean?       @default(false)
+  t_utilisateur          t_utilisateur? @relation(fields: [Id_Utilisateur], references: [Id_Utilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_UTILISATEUR_ANCIENMDP")
+
+  @@index([Id_Utilisateur], map: "IDX_Id_Utilisateur")
+}
+
+model t_commentaire_acquittement_alarme {
+  Id_Commentaire   Int     @id @default(autoincrement())
+  Type_Commentaire String? @db.VarChar(50)
+  Texte            String? @db.VarChar(255)
+
+  @@index([Texte], map: "IDX_Texte")
+  @@index([Type_Commentaire], map: "IDX_Type_Commentaire")
+}
+
+model t_etalon_type {
+  Type_Etalon       String   @id @db.VarChar(4)
+  Nom               String?  @db.VarChar(30)
+  Descriptif        String?  @db.VarChar(100)
+  Est_Saisie_Module Boolean? @default(false)
+  Est_Sonde_Externe Boolean? @default(false)
+  Resolution        Float?   @db.Float
+}
+
+model t_sonde_type_mesure {
+  Id_Sonde_Type_Mesure         Int      @id @default(autoincrement())
+  Sonde_Type_Mesure            String?  @unique(map: "Sonde_Type_Mesure") @db.VarChar(50)
+  Libelle_Sonde_Type_Mesure    String?  @db.VarChar(255)
+  Est_Flag_Relais              Boolean?
+  Est_Flag_Affiche_Information Boolean?
+  Unite_Mesure                 String?  @db.VarChar(20)
+  Libelle_Unite_Mesure         String?  @db.VarChar(50)
+  Reserve_MC2                  String?  @db.VarChar(50)
+}
+
+model t_mem_gso {
+  id          Int       @id
+  last_sonde  String?   @db.VarChar(20)
+  cycle_MEM   Int?
+  cycle_start DateTime? @db.DateTime(0)
+  last_update DateTime? @db.DateTime(0)
+}
+
+model t_sonde_etat {
+  Id_Sonde_Etat Int       @id @default(autoincrement())
+  Etat_Sonde    String?   @unique(map: "Etat_Sonde") @db.VarChar(1)
+  Etat_Libelle  String?   @db.VarChar(50)
+  t_sonde       t_sonde[]
+}
+
+model t_lieu_mail_tel {
+  Id_Mail_Tel       Int      @id @default(autoincrement())
+  Id_Lieu           Int?
+  Ordre_Contact     Int?
+  Id_Utilisateur    Int?
+  Est_Via_Telephone Boolean?
+  Est_Via_Email     Boolean?
+  t_lieu            t_lieu?  @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_TEL_NUM")
+
+  @@index([Id_Lieu], map: "IDX_Id_Lieu")
+  @@index([Id_Utilisateur], map: "IDX_Id_Utilisateur")
+}
+
+model t_lieu_planning_audit {
+  Id_Audit           Int                        @id @default(autoincrement())
+  Id_Lieu            Int
+  Timestamp          DateTime                   @default(now()) @db.DateTime(0)
+  Type               t_lieu_planning_audit_Type
+  Planning_Regle_Id  Int?
+  Consigne_Avant     Float?
+  Consigne_Sup_Avant Float?
+  Consigne_Inf_Avant Float?
+  Consigne_Apres     Float?
+  Consigne_Sup_Apres Float?
+  Consigne_Inf_Apres Float?
+
+  @@index([Id_Lieu, Timestamp], map: "IDX_Id_Lieu_Timestamp")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model t_lieu_planning_regle {
+  Id_Regle                          Int       @id @default(autoincrement())
+  Id_Lieu                           Int
+  Actif                             Boolean   @default(true)
+  Jour_Debut                        Int       @db.TinyInt
+  Heure_Debut                       DateTime  @db.Time(0)
+  Jour_Fin                          Int       @db.TinyInt
+  Heure_Fin                         DateTime  @db.Time(0)
+  Consigne                          Float?
+  Consigne_Sup                      Float?
+  Consigne_Inf                      Float?
+  Priorite                          Int       @default(0)
+  Tolerance_Sup_Calc                Float?
+  Tolerance_Inf_Calc                Float?
+  Date_Creation                     DateTime  @default(now()) @db.DateTime(0)
+  Date_Maj                          DateTime? @db.DateTime(0)
+  Retard_Alarme_Changement_Consigne Int?
+  t_lieu                            t_lieu    @relation(fields: [Id_Lieu], references: [Id_Lieu], onDelete: Cascade, onUpdate: NoAction, map: "FK_PLANNING_REGLE_LIEU")
+
+  @@index([Actif, Id_Lieu], map: "IDX_Actif_Lieu")
+  @@index([Id_Lieu], map: "IDX_Id_Lieu")
+}
+
+model t_materiel {
+  Id_Materiel               Int                         @id @default(autoincrement())
+  Ref_Commercial            String                      @default("") @db.VarChar(50)
+  Designation               String                      @default("") @db.VarChar(100)
+  Descriptif                String                      @default("") @db.VarChar(1000)
+  Gamme                     String                      @default("") @db.VarChar(10)
+  Type                      String                      @default("") @db.VarChar(10)
+  Chemin_Image              String?                     @db.VarChar(500)
+  t_commande_materiel_ligne t_commande_materiel_ligne[]
+
+  @@index([Id_Materiel], map: "Id_Materiel")
+}
+
+model t_commande_materiel {
+  Id_Commande_Materiel Int                                   @id @default(autoincrement())
+  Reference_Commande   String                                @unique(map: "UK_t_commande_materiel_reference") @db.VarChar(64)
+  Id_Utilisateur       Int
+  Nom_Demandeur        String                                @db.VarChar(255)
+  Email_Demandeur      String?                               @db.VarChar(255)
+  Email_Commercial     String                                @db.VarChar(255)
+  Commentaire          String?                               @db.Text
+  Mode_Transmission    t_commande_materiel_Mode_Transmission
+  Statut_Commande      t_commande_materiel_Statut_Commande   @default(BROUILLON)
+  Date_Creation        DateTime                              @default(now()) @db.DateTime(0)
+  Date_Envoi           DateTime?                             @db.DateTime(0)
+  Id_Pdf               Int?
+  t_pdf                t_pdf?                                @relation(fields: [Id_Pdf], references: [Id_PDF], map: "FK_t_commande_materiel_pdf")
+  t_utilisateur        t_utilisateur                         @relation(fields: [Id_Utilisateur], references: [Id_Utilisateur], onDelete: NoAction, map: "FK_t_commande_materiel_utilisateur")
+  lignes               t_commande_materiel_ligne[]
+
+  @@index([Id_Pdf], map: "IX_t_commande_materiel_pdf")
+  @@index([Id_Utilisateur], map: "IX_t_commande_materiel_utilisateur")
+}
+
+model t_commande_materiel_ligne {
+  Id_Commande_Materiel_Ligne Int                 @id @default(autoincrement())
+  Id_Commande_Materiel       Int
+  Id_Materiel                Int
+  Ref_Commercial             String              @db.VarChar(100)
+  Designation                String              @db.VarChar(255)
+  Descriptif                 String?             @db.Text
+  Gamme                      String?             @db.VarChar(50)
+  Type                       String?             @db.VarChar(50)
+  Quantite                   Int
+  commande                   t_commande_materiel @relation(fields: [Id_Commande_Materiel], references: [Id_Commande_Materiel], onDelete: Cascade, map: "FK_COMMANDE_MATERIEL_LIGNE")
+  materiel                   t_materiel          @relation(fields: [Id_Materiel], references: [Id_Materiel], onDelete: NoAction, map: "FK_MATERIEL_COMMANDE_LIGNE")
+
+  @@index([Id_Commande_Materiel], map: "IX_t_commande_materiel_ligne_commande")
+  @@index([Id_Materiel], map: "IX_t_commande_materiel_ligne_materiel")
+}
+
+model t_vigilog_configuration {
+  Id_VigiLog_Configuration                                                     Int                 @id @default(autoincrement())
+  Nom_Configuration                                                            String              @unique(map: "UK_t_vigilog_configuration_nom") @db.VarChar(100)
+  Description_Configuration                                                    String?             @db.VarChar(255)
+  Consigne                                                                     Decimal?            @db.Decimal(10, 2)
+  Limite_Basse_Active                                                          Boolean             @default(false)
+  Limite_Basse                                                                 Decimal?            @db.Decimal(10, 2)
+  Limite_Haute_Active                                                          Boolean             @default(false)
+  Limite_Haute                                                                 Decimal?            @db.Decimal(10, 2)
+  Frequence_Min                                                                Int
+  Retard_Alarme_Min                                                            Int
+  Actif                                                                        Boolean             @default(true)
+  Id_Utilisateur_Creation                                                      Int?
+  Date_Heure_Creation                                                          DateTime            @default(now()) @db.DateTime(0)
+  Id_Utilisateur_Maj                                                           Int?
+  Date_Heure_Maj                                                               DateTime?           @db.DateTime(0)
+  t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur t_utilisateur?      @relation("t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur", fields: [Id_Utilisateur_Creation], references: [Id_Utilisateur], map: "FK_t_vigilog_configuration_user_creation")
+  t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur      t_utilisateur?      @relation("t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur", fields: [Id_Utilisateur_Maj], references: [Id_Utilisateur], map: "FK_t_vigilog_configuration_user_maj")
+  t_vigilog_tournee                                                            t_vigilog_tournee[]
+
+  @@index([Id_Utilisateur_Creation], map: "IDX_t_vigilog_configuration_user_create")
+  @@index([Id_Utilisateur_Maj], map: "IDX_t_vigilog_configuration_user_update")
+}
+
+model t_vigilog {
+  Id_VigiLog              Int                 @id @default(autoincrement())
+  Numero_Serie            String              @unique(map: "UK_t_vigilog_numero_serie") @db.VarChar(30)
+  Modele                  String?             @db.VarChar(50)
+  Libelle                 String?             @db.VarChar(100)
+  Actif                   Boolean             @default(true)
+  Date_Etalonnage         DateTime?           @db.DateTime(0)
+  Date_Validite           DateTime?           @db.Date
+  Duree_Validite_Jours    Int?
+  Err_Justesse            Float?              @db.Float
+  Commentaire             String?             @db.Text
+  Id_Utilisateur_Creation Int?
+  Date_Heure_Creation     DateTime            @default(now()) @db.DateTime(0)
+  Id_Utilisateur_Maj      Int?
+  Date_Heure_Maj          DateTime?           @db.DateTime(0)
+  t_vigilog_tournee       t_vigilog_tournee[]
+
+  @@index([Actif], map: "IDX_t_vigilog_actif")
+  @@index([Modele], map: "IDX_t_vigilog_modele")
+}
+
+model t_vigilog_tournee {
+  Id_VigiLog_Tournee                                                         Int                      @id @default(autoincrement())
+  Reference_Tournee                                                          String                   @unique(map: "UK_t_vigilog_tournee_reference") @db.VarChar(50)
+  Id_VigiLog_Configuration                                                   Int?
+  Id_VigiLog                                                                 Int?
+  Nom_Configuration                                                          String                   @db.VarChar(100)
+  Id_Site_Depart                                                             Int
+  Id_Site_Arrivee                                                            Int
+  Numero_Serie_VigiLog                                                       String                   @db.VarChar(30)
+  Statut                                                                     String                   @db.VarChar(30)
+  Resultat_Feu                                                               String?                  @db.VarChar(10)
+  Id_Utilisateur_Depart                                                      Int
+  Date_Heure_Depart                                                          DateTime                 @db.DateTime(0)
+  Id_Utilisateur_Arrivee                                                     Int?
+  Date_Heure_Arrivee                                                         DateTime?                @db.DateTime(0)
+  Consigne                                                                   Decimal?                 @db.Decimal(10, 2)
+  Limite_Basse_Active                                                        Boolean                  @default(false)
+  Limite_Basse                                                               Decimal?                 @db.Decimal(10, 2)
+  Limite_Haute_Active                                                        Boolean                  @default(false)
+  Limite_Haute                                                               Decimal?                 @db.Decimal(10, 2)
+  Frequence_Min                                                              Int
+  Retard_Alarme_Min                                                          Int
+  Nb_Mesures                                                                 Int                      @default(0)
+  Temperature_Min                                                            Decimal?                 @db.Decimal(10, 2)
+  Temperature_Moyenne                                                        Decimal?                 @db.Decimal(10, 2)
+  Temperature_Max                                                            Decimal?                 @db.Decimal(10, 2)
+  Duree_Hors_Limites_Secondes                                                Int                      @default(0)
+  Duree_Alarme_Secondes                                                      Int                      @default(0)
+  Est_Depassement_Limites                                                    Boolean                  @default(false)
+  Est_Alarme                                                                 Boolean                  @default(false)
+  Est_Acquittee                                                              Boolean                  @default(false)
+  Commentaire                                                                String?                  @db.Text
+  Commentaire_Acquittement                                                   String?                  @db.Text
+  Id_Utilisateur_Acquittement                                                Int?
+  Date_Heure_Acquittement                                                    DateTime?                @db.DateTime(0)
+  Date_Heure_Creation                                                        DateTime                 @default(now()) @db.DateTime(0)
+  Date_Heure_Maj                                                             DateTime?                @db.DateTime(0)
+  t_vigilog                                                                  t_vigilog?               @relation(fields: [Id_VigiLog], references: [Id_VigiLog], map: "FK_t_vigilog_tournee_vigilog")
+  t_vigilog_configuration                                                    t_vigilog_configuration? @relation(fields: [Id_VigiLog_Configuration], references: [Id_VigiLog_Configuration], map: "FK_t_vigilog_tournee_configuration")
+  t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site                           t_site                   @relation("t_vigilog_tournee_Id_Site_ArriveeTot_site", fields: [Id_Site_Arrivee], references: [Id_Site], map: "FK_t_vigilog_tournee_site_arrivee")
+  t_site_t_vigilog_tournee_Id_Site_DepartTot_site                            t_site                   @relation("t_vigilog_tournee_Id_Site_DepartTot_site", fields: [Id_Site_Depart], references: [Id_Site], map: "FK_t_vigilog_tournee_site_depart")
+  t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur t_utilisateur?           @relation("t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur", fields: [Id_Utilisateur_Acquittement], references: [Id_Utilisateur], map: "FK_t_vigilog_tournee_user_acquittement")
+  t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur      t_utilisateur?           @relation("t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur", fields: [Id_Utilisateur_Arrivee], references: [Id_Utilisateur], map: "FK_t_vigilog_tournee_user_arrivee")
+  t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur       t_utilisateur            @relation("t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur", fields: [Id_Utilisateur_Depart], references: [Id_Utilisateur], map: "FK_t_vigilog_tournee_user_depart")
+
+  @@index([Id_Utilisateur_Acquittement], map: "IDX_t_vigilog_tournee_acquit_user")
+  @@index([Id_Utilisateur_Arrivee], map: "IDX_t_vigilog_tournee_arrivee_user")
+  @@index([Id_VigiLog_Configuration], map: "IDX_t_vigilog_tournee_config")
+  @@index([Id_VigiLog], map: "IDX_t_vigilog_tournee_vigilog")
+  @@index([Id_Utilisateur_Depart], map: "IDX_t_vigilog_tournee_depart_user")
+  @@index([Numero_Serie_VigiLog], map: "IDX_t_vigilog_tournee_logger")
+  @@index([Id_Site_Arrivee], map: "IDX_t_vigilog_tournee_site_arrivee")
+  @@index([Id_Site_Depart], map: "IDX_t_vigilog_tournee_site_depart")
+  @@index([Statut], map: "IDX_t_vigilog_tournee_statut")
+}
+
+enum t_lieu_planning_audit_Type {
+  ACTIVATION
+  RETOUR_BASE
+}
+
+enum t_commande_materiel_Mode_Transmission {
+  SMTP
+  MAILTO
+}
+
+enum t_commande_materiel_Statut_Commande {
+  BROUILLON
+  ENVOYEE
+  PREPAREE
+}

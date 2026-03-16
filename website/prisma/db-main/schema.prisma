@@ -516,13 +516,15 @@ model t_profil {
 }
 
 model t_site {
-  Id_Site                    Int                          @id @default(autoincrement())
-  Code_Site                  String?                      @unique(map: "CodeSite_IDX") @db.VarChar(20)
-  Libelle_Site               String?                      @db.VarChar(50)
-  Commentaire                String?                      @db.VarChar(200)
-  Est_Archive                Boolean?                     @default(false)
-  t_liaison_utilisateur_site t_liaison_utilisateur_site[]
-  t_lieu                     t_lieu[]
+  Id_Site                                                     Int                          @id @default(autoincrement())
+  Code_Site                                                   String?                      @unique(map: "CodeSite_IDX") @db.VarChar(20)
+  Libelle_Site                                                String?                      @db.VarChar(50)
+  Commentaire                                                 String?                      @db.VarChar(200)
+  Est_Archive                                                 Boolean?                     @default(false)
+  t_liaison_utilisateur_site                                  t_liaison_utilisateur_site[]
+  t_lieu                                                      t_lieu[]
+  t_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_site t_vigilog_tournee[]          @relation("t_vigilog_tournee_Id_Site_ArriveeTot_site")
+  t_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_site  t_vigilog_tournee[]          @relation("t_vigilog_tournee_Id_Site_DepartTot_site")
 }
 
 model t_sonde {
@@ -572,32 +574,37 @@ model t_sonde_type {
 }
 
 model t_utilisateur {
-  Id_Utilisateur                 Int                            @id @default(autoincrement())
-  Login                          String?                        @unique(map: "Login") @db.VarChar(64)
-  Mot_De_Passe                   String?                        @db.VarChar(60)
-  Date_Validite                  DateTime?                      @db.Date
-  Date_Creation                  DateTime?                      @db.Date
-  Est_Archive                    Boolean?                       @default(false)
-  Profil_Utilisateur             String?                        @db.VarChar(50)
-  Date_Heure_Derniere_Connexion  DateTime?                      @db.DateTime(0)
-  Adresse_IP_Connexion           String?                        @db.VarChar(50)
-  Nom_Machine_Connexion          String?                        @db.VarChar(50)
-  Id_Site                        Int?
-  Nom                            String?                        @db.VarChar(50)
-  Prenom                         String?                        @db.VarChar(50)
-  Tel_Num_Fixe                   String?                        @db.VarChar(50)
-  Tel_Num_Mobile                 String?                        @db.VarChar(50)
-  Adresse_Email                  String?                        @db.VarChar(100)
-  Date_Derniere_Modification_MDP DateTime?                      @db.DateTime(0)
-  Reset_Password_Token           String?                        @db.VarChar(255)
-  Reset_Password_Expires         DateTime?                      @db.DateTime(0)
-  Est_Mot_De_Passe_Temporaire    Boolean?                       @default(false)
-  Avatar_Utilisateur             String?                        @db.VarChar(512)
-  t_ancien_mot_de_passe          t_ancien_mot_de_passe[]
-  t_commande_materiel            t_commande_materiel[]
-  t_liaison_utilisateur_groupe   t_liaison_utilisateur_groupe[]
-  t_liaison_utilisateur_site     t_liaison_utilisateur_site[]
-  t_notification_delivery        t_notification_delivery[]
+  Id_Utilisateur                                                                         Int                            @id @default(autoincrement())
+  Login                                                                                  String?                        @unique(map: "Login") @db.VarChar(64)
+  Mot_De_Passe                                                                           String?                        @db.VarChar(60)
+  Date_Validite                                                                          DateTime?                      @db.Date
+  Date_Creation                                                                          DateTime?                      @db.Date
+  Est_Archive                                                                            Boolean?                       @default(false)
+  Profil_Utilisateur                                                                     String?                        @db.VarChar(50)
+  Date_Heure_Derniere_Connexion                                                          DateTime?                      @db.DateTime(0)
+  Adresse_IP_Connexion                                                                   String?                        @db.VarChar(50)
+  Nom_Machine_Connexion                                                                  String?                        @db.VarChar(50)
+  Id_Site                                                                                Int?
+  Nom                                                                                    String?                        @db.VarChar(50)
+  Prenom                                                                                 String?                        @db.VarChar(50)
+  Tel_Num_Fixe                                                                           String?                        @db.VarChar(50)
+  Tel_Num_Mobile                                                                         String?                        @db.VarChar(50)
+  Adresse_Email                                                                          String?                        @db.VarChar(100)
+  Date_Derniere_Modification_MDP                                                         DateTime?                      @db.DateTime(0)
+  Reset_Password_Token                                                                   String?                        @db.VarChar(255)
+  Reset_Password_Expires                                                                 DateTime?                      @db.DateTime(0)
+  Est_Mot_De_Passe_Temporaire                                                            Boolean?                       @default(false)
+  Avatar_Utilisateur                                                                     String?                        @db.VarChar(512)
+  t_ancien_mot_de_passe                                                                  t_ancien_mot_de_passe[]
+  t_commande_materiel                                                                    t_commande_materiel[]
+  t_liaison_utilisateur_groupe                                                           t_liaison_utilisateur_groupe[]
+  t_liaison_utilisateur_site                                                             t_liaison_utilisateur_site[]
+  t_notification_delivery                                                                t_notification_delivery[]
+  t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur t_vigilog_configuration[]      @relation("t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur")
+  t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur      t_vigilog_configuration[]      @relation("t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur")
+  t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur         t_vigilog_tournee[]            @relation("t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur")
+  t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur              t_vigilog_tournee[]            @relation("t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur")
+  t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur               t_vigilog_tournee[]            @relation("t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur")
 
   @@index([Est_Archive], map: "IDX_Est_Archive")
   @@index([Profil_Utilisateur], map: "IDX_Profil_Utilisateur")
@@ -690,134 +697,6 @@ model t_commentaire_acquittement_alarme {
 
   @@index([Texte], map: "IDX_Texte")
   @@index([Type_Commentaire], map: "IDX_Type_Commentaire")
-}
-
-model t_datalogger_alarme {
-  Id_Log_Alarme Int      @id
-  Id_Reception  Int?     @db.TinyInt
-  Date_Debut    DateTime @db.DateTime(0)
-  Date_Fin      DateTime @db.DateTime(0)
-  Est_Acquitte  Int?     @db.TinyInt
-  Commentaire   String?  @db.VarChar(200)
-
-  @@index([Id_Reception], map: "IDX_Id_Reception")
-}
-
-model t_datalogger_coursier {
-  Id_Datalogger_Coursier Int       @id @default(autoincrement())
-  Code                   String?   @unique(map: "Code") @db.VarChar(10)
-  Nom                    String?   @db.VarChar(64)
-  Prenom                 String?   @db.VarChar(64)
-  Date_Maj               DateTime? @db.Date
-  Heure_Maj              DateTime? @db.Time(0)
-  Login_Maj              String?   @db.VarChar(64)
-}
-
-model t_datalogger_envoi {
-  Id_Datalogger_Envoi     Int       @id @default(autoincrement())
-  Id_Datalogger_Reception Int?
-  Id_Site                 Int?
-  Materiel                String?   @db.VarChar(50)
-  Date_Maj                DateTime? @db.Date
-  Heure_Maj               DateTime? @db.Time(0)
-  Login_Maj               String?   @db.VarChar(64)
-
-  @@index([Id_Datalogger_Reception], map: "IDX_Id_Datalogger_Reception")
-  @@index([Id_Site], map: "IDX_Id_Site")
-}
-
-model t_datalogger_etape {
-  Id_Datalogger_Etape   Int                   @id @default(autoincrement())
-  Id_Datalogger_Tournee Int?                  @default(0)
-  Ordre                 Int?
-  Id_Site               Int?
-  t_datalogger_tournee  t_datalogger_tournee? @relation(fields: [Id_Datalogger_Tournee], references: [Id_Datalogger_Tournee], onDelete: NoAction, onUpdate: NoAction, map: "t_datalogger_etape_ibfk_1")
-
-  @@index([Id_Datalogger_Tournee], map: "IDX_Id_Datalogger_Tournee")
-}
-
-model t_datalogger_reception {
-  Id_Datalogger_Reception      Int       @id @default(autoincrement())
-  Id_Tournee                   String?   @db.VarChar(50)
-  Id_Coursier                  Int?
-  Id_Site_Depart               Int?      @default(0)
-  Id_Site_Arrivee              Int?
-  Numserie_VigiLog             String?   @db.VarChar(13)
-  Date_Reception               DateTime? @db.Date
-  Heure_Reception              DateTime? @db.Time(0)
-  En_Attente                   Int?      @db.TinyInt
-  Termine                      Int?      @db.TinyInt
-  Duree_Livraison              Int?
-  Depassement_Temperature_Bool Int?      @db.TinyInt
-  Depassement_Temps_Bool       Int?      @db.TinyInt
-  Consigne                     Float?    @db.Float
-  Consigne_Inf_Active          Int?      @db.TinyInt
-  Consigne_Inf                 Float?    @db.Float
-  Consigne_Sup_Active          Int?      @db.TinyInt
-  Consigne_Sup                 Float?    @db.Float
-  Retard_Alarme_Temps          Int?
-  Retard_Alarme_Temperature    Int?
-  Temps                        Int?
-  Temperature_Moyenne          Float?    @db.Float
-  Temperature_Max              Float?    @db.Float
-  Temperature_Min              Float?    @db.Float
-  Somme_Valeur_Temperature     Float?    @db.Float
-  Nb_Valeur_Temperature        Int?
-  Depassement_Temperature      Int?
-  Depassement_Temps            Int?
-  Commentaire_Acquittement     String?   @db.LongText
-  Date_Enregistrement          DateTime? @db.Date
-  Heure_Enregistrement         DateTime? @db.Time(0)
-  Login_Enregistrement         String?   @db.VarChar(64)
-
-  @@index([Id_Coursier], map: "IDX_Id_Coursier")
-  @@index([Id_Site_Arrivee], map: "IDX_Id_Site_Arrivee")
-  @@index([Id_Site_Depart], map: "IDX_Id_Site_Depart")
-  @@index([Id_Tournee], map: "IDX_Id_Tournee")
-  @@index([Numserie_VigiLog], map: "IDX_Numserie_VigiLog")
-}
-
-model t_datalogger_sonde {
-  Id_Datalogger_Sonde               Int       @default(autoincrement())
-  Num_Serie                         String    @unique(map: "NumSerie") @db.VarChar(13)
-  Consigne                          Float?    @db.Float
-  Consigne_Sup_Active               Int?      @db.TinyInt
-  Consigne_Sup                      Float?    @db.Float
-  Consigne_Sup_Corrigee             Float?    @db.Float
-  Consigne_Inf_Active               Int?      @db.TinyInt
-  Consigne_Inf                      Float?    @db.Float
-  Consigne_Inf_Corrigee             Float?    @db.Float
-  Avec_Prise_En_Compte_Incertitudes Int?      @db.TinyInt
-  Frequence                         Int?
-  Retard_Alarme_Temperature         Int?
-  Coeff_X                           Float?    @db.Float
-  Coeff_Constant                    Float?    @db.Float
-  Repetabilite                      Float?    @db.Float
-  Incertitude                       Float?    @db.Float
-  Err_Justesse                      Float?    @db.Float
-  Date_Maj                          DateTime? @db.Date
-  Heure_Maj                         DateTime? @db.Time(0)
-  Login_Maj                         String?   @db.VarChar(64)
-  Archive                           Int?      @db.TinyInt
-
-  @@id([Id_Datalogger_Sonde, Num_Serie])
-  @@index([Archive], map: "IDX_Archive")
-}
-
-model t_datalogger_tournee {
-  Id_Datalogger_Tournee Int                  @id @default(autoincrement())
-  Nom                   String?              @unique(map: "Nom") @db.VarChar(64)
-  Id_Site_Depart        Int?
-  Id_Site_Arrivee       Int?
-  Temps                 Int?
-  Retard_Alarme_Temps   Int?
-  Date_Maj              DateTime?            @db.Date
-  Heure_Maj             DateTime?            @db.Time(0)
-  Login_Maj             String?              @db.VarChar(64)
-  t_datalogger_etape    t_datalogger_etape[]
-
-  @@index([Id_Site_Arrivee], map: "IDX_Id_Site_Arrivee")
-  @@index([Id_Site_Depart], map: "IDX_Id_Site_Depart")
 }
 
 model t_etalon_type {
@@ -957,6 +836,107 @@ model t_commande_materiel_ligne {
 
   @@index([Id_Commande_Materiel], map: "IX_t_commande_materiel_ligne_commande")
   @@index([Id_Materiel], map: "IX_t_commande_materiel_ligne_materiel")
+}
+
+model t_vigilog_configuration {
+  Id_VigiLog_Configuration                                                     Int                 @id @default(autoincrement())
+  Nom_Configuration                                                            String              @unique(map: "UK_t_vigilog_configuration_nom") @db.VarChar(100)
+  Description_Configuration                                                    String?             @db.VarChar(255)
+  Consigne                                                                     Decimal?            @db.Decimal(10, 2)
+  Limite_Basse_Active                                                          Boolean             @default(false)
+  Limite_Basse                                                                 Decimal?            @db.Decimal(10, 2)
+  Limite_Haute_Active                                                          Boolean             @default(false)
+  Limite_Haute                                                                 Decimal?            @db.Decimal(10, 2)
+  Frequence_Min                                                                Int
+  Retard_Alarme_Min                                                            Int
+  Actif                                                                        Boolean             @default(true)
+  Id_Utilisateur_Creation                                                      Int?
+  Date_Heure_Creation                                                          DateTime            @default(now()) @db.DateTime(0)
+  Id_Utilisateur_Maj                                                           Int?
+  Date_Heure_Maj                                                               DateTime?           @db.DateTime(0)
+  t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur t_utilisateur?      @relation("t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur", fields: [Id_Utilisateur_Creation], references: [Id_Utilisateur], map: "FK_t_vigilog_configuration_user_creation")
+  t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur      t_utilisateur?      @relation("t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur", fields: [Id_Utilisateur_Maj], references: [Id_Utilisateur], map: "FK_t_vigilog_configuration_user_maj")
+  t_vigilog_tournee                                                            t_vigilog_tournee[]
+
+  @@index([Id_Utilisateur_Creation], map: "IDX_t_vigilog_configuration_user_create")
+  @@index([Id_Utilisateur_Maj], map: "IDX_t_vigilog_configuration_user_update")
+}
+
+model t_vigilog {
+  Id_VigiLog           Int                 @id @default(autoincrement())
+  Numero_Serie         String              @unique(map: "UK_t_vigilog_numero_serie") @db.VarChar(30)
+  Modele               String?             @db.VarChar(50)
+  Libelle              String?             @db.VarChar(100)
+  Actif                Boolean             @default(true)
+  Date_Etalonnage      DateTime?           @db.DateTime(0)
+  Date_Validite        DateTime?           @db.Date
+  Duree_Validite_Jours Int?
+  Err_Justesse         Float?              @db.Float
+  Commentaire          String?             @db.Text
+  Id_Utilisateur_Creation Int?
+  Date_Heure_Creation  DateTime            @default(now()) @db.DateTime(0)
+  Id_Utilisateur_Maj   Int?
+  Date_Heure_Maj       DateTime?           @db.DateTime(0)
+  t_vigilog_tournee    t_vigilog_tournee[]
+
+  @@index([Actif], map: "IDX_t_vigilog_actif")
+  @@index([Modele], map: "IDX_t_vigilog_modele")
+}
+
+model t_vigilog_tournee {
+  Id_VigiLog_Tournee                                                         Int                      @id @default(autoincrement())
+  Reference_Tournee                                                          String                   @unique(map: "UK_t_vigilog_tournee_reference") @db.VarChar(50)
+  Id_VigiLog_Configuration                                                   Int?
+  Id_VigiLog                                                                 Int?
+  Nom_Configuration                                                          String                   @db.VarChar(100)
+  Id_Site_Depart                                                             Int
+  Id_Site_Arrivee                                                            Int
+  Numero_Serie_VigiLog                                                       String                   @db.VarChar(30)
+  Statut                                                                     String                   @db.VarChar(30)
+  Resultat_Feu                                                               String?                  @db.VarChar(10)
+  Id_Utilisateur_Depart                                                      Int
+  Date_Heure_Depart                                                          DateTime                 @db.DateTime(0)
+  Id_Utilisateur_Arrivee                                                     Int?
+  Date_Heure_Arrivee                                                         DateTime?                @db.DateTime(0)
+  Consigne                                                                   Decimal?                 @db.Decimal(10, 2)
+  Limite_Basse_Active                                                        Boolean                  @default(false)
+  Limite_Basse                                                               Decimal?                 @db.Decimal(10, 2)
+  Limite_Haute_Active                                                        Boolean                  @default(false)
+  Limite_Haute                                                               Decimal?                 @db.Decimal(10, 2)
+  Frequence_Min                                                              Int
+  Retard_Alarme_Min                                                          Int
+  Nb_Mesures                                                                 Int                      @default(0)
+  Temperature_Min                                                            Decimal?                 @db.Decimal(10, 2)
+  Temperature_Moyenne                                                        Decimal?                 @db.Decimal(10, 2)
+  Temperature_Max                                                            Decimal?                 @db.Decimal(10, 2)
+  Duree_Hors_Limites_Secondes                                                Int                      @default(0)
+  Duree_Alarme_Secondes                                                      Int                      @default(0)
+  Est_Depassement_Limites                                                    Boolean                  @default(false)
+  Est_Alarme                                                                 Boolean                  @default(false)
+  Est_Acquittee                                                              Boolean                  @default(false)
+  Commentaire                                                                String?                  @db.Text
+  Commentaire_Acquittement                                                   String?                  @db.Text
+  Id_Utilisateur_Acquittement                                                Int?
+  Date_Heure_Acquittement                                                    DateTime?                @db.DateTime(0)
+  Date_Heure_Creation                                                        DateTime                 @default(now()) @db.DateTime(0)
+  Date_Heure_Maj                                                             DateTime?                @db.DateTime(0)
+  t_vigilog                                                                  t_vigilog?               @relation(fields: [Id_VigiLog], references: [Id_VigiLog], map: "FK_t_vigilog_tournee_vigilog")
+  t_vigilog_configuration                                                    t_vigilog_configuration? @relation(fields: [Id_VigiLog_Configuration], references: [Id_VigiLog_Configuration], map: "FK_t_vigilog_tournee_configuration")
+  t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site                           t_site                   @relation("t_vigilog_tournee_Id_Site_ArriveeTot_site", fields: [Id_Site_Arrivee], references: [Id_Site], map: "FK_t_vigilog_tournee_site_arrivee")
+  t_site_t_vigilog_tournee_Id_Site_DepartTot_site                            t_site                   @relation("t_vigilog_tournee_Id_Site_DepartTot_site", fields: [Id_Site_Depart], references: [Id_Site], map: "FK_t_vigilog_tournee_site_depart")
+  t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur t_utilisateur?           @relation("t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur", fields: [Id_Utilisateur_Acquittement], references: [Id_Utilisateur], map: "FK_t_vigilog_tournee_user_acquittement")
+  t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur      t_utilisateur?           @relation("t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur", fields: [Id_Utilisateur_Arrivee], references: [Id_Utilisateur], map: "FK_t_vigilog_tournee_user_arrivee")
+  t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur       t_utilisateur            @relation("t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur", fields: [Id_Utilisateur_Depart], references: [Id_Utilisateur], map: "FK_t_vigilog_tournee_user_depart")
+
+  @@index([Id_Utilisateur_Acquittement], map: "IDX_t_vigilog_tournee_acquit_user")
+  @@index([Id_Utilisateur_Arrivee], map: "IDX_t_vigilog_tournee_arrivee_user")
+  @@index([Id_VigiLog_Configuration], map: "IDX_t_vigilog_tournee_config")
+  @@index([Id_VigiLog], map: "IDX_t_vigilog_tournee_vigilog")
+  @@index([Id_Utilisateur_Depart], map: "IDX_t_vigilog_tournee_depart_user")
+  @@index([Numero_Serie_VigiLog], map: "IDX_t_vigilog_tournee_logger")
+  @@index([Id_Site_Arrivee], map: "IDX_t_vigilog_tournee_site_arrivee")
+  @@index([Id_Site_Depart], map: "IDX_t_vigilog_tournee_site_depart")
+  @@index([Statut], map: "IDX_t_vigilog_tournee_statut")
 }
 
 enum t_lieu_planning_audit_Type {

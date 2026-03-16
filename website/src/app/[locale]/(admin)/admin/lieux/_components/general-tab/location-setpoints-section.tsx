@@ -24,7 +24,7 @@ export function LocationSetpointsSection({ isGsoSensor }: { isGsoSensor: boolean
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>{t('labels.setpoint')}</Label>
-              <Input type="number" {...register('Consigne', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
+              <Input type="number" step="any" {...register('Consigne', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
             </div>
             <div className="space-y-2">
               <Label>{t('labels.frequency')}</Label>
@@ -34,6 +34,7 @@ export function LocationSetpointsSection({ isGsoSensor }: { isGsoSensor: boolean
                     <div className={isGsoSensor ? 'cursor-not-allowed' : ''}>
                       <Input
                         type="number"
+                        step="any"
                         {...register('Frequence', { setValueAs: toOptionalNumber })}
                         placeholder={t('placeholders.frequency')}
                         disabled={isGsoSensor}
@@ -91,11 +92,11 @@ export function LocationSetpointsSection({ isGsoSensor }: { isGsoSensor: boolean
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t('labels.upper_max')}</Label>
-                  <Input type="number" {...register('Consigne_Sup', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
+                  <Input type="number" step="any" {...register('Consigne_Sup', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
                 </div>
                 <div className="space-y-2">
                   <Label>{t('labels.alarm_delay_minutes')}</Label>
-                  <Input type="number" {...register('Retard_Alarme_Haut', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.delay')} />
+                  <Input type="number" step="any" {...register('Retard_Alarme_Haut', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.delay')} />
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -105,7 +106,7 @@ export function LocationSetpointsSection({ isGsoSensor }: { isGsoSensor: boolean
               {formData.Est_Consigne_Sup_Pre_Alarme_Active && (
                 <div className="space-y-2 pl-6">
                   <Label>{t('labels.upper_pre_label')}</Label>
-                  <Input type="number" {...register('Consigne_Sup_Pre_Alarme', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
+                  <Input type="number" step="any" {...register('Consigne_Sup_Pre_Alarme', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
                 </div>
               )}
             </div>
@@ -122,11 +123,11 @@ export function LocationSetpointsSection({ isGsoSensor }: { isGsoSensor: boolean
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{t('labels.lower_min')}</Label>
-                  <Input type="number" {...register('Consigne_Inf', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
+                  <Input type="number" step="any" {...register('Consigne_Inf', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
                 </div>
                 <div className="space-y-2">
                   <Label>{t('labels.alarm_delay_minutes')}</Label>
-                  <Input type="number" {...register('Retard_Alarme_Bas', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.delay')} />
+                  <Input type="number" step="any" {...register('Retard_Alarme_Bas', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.delay')} />
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -136,7 +137,7 @@ export function LocationSetpointsSection({ isGsoSensor }: { isGsoSensor: boolean
               {formData.Est_Consigne_Inf_Pre_Alarme_Active && (
                 <div className="space-y-2 pl-6">
                   <Label>{t('labels.lower_pre_label')}</Label>
-                  <Input type="number" {...register('Consigne_Inf_Pre_Alarme', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
+                  <Input type="number" step="any" {...register('Consigne_Inf_Pre_Alarme', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
                 </div>
               )}
             </div>

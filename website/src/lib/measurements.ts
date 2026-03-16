@@ -101,13 +101,18 @@ export function calculateYDomain(
   if (measures.length === 0) return [0, 30]
 
   const values = measures.map((d) => d.Valeur).filter((v): v is number => typeof v === "number")
+  const thresholdValues = measures.flatMap((measure) =>
+    [measure.Consigne_Inf, measure.Consigne, measure.Consigne_Sup].filter(
+      (value): value is number => typeof value === "number",
+    ),
+  )
   if (values.length === 0) {
-    const minFallback = consigneInf ?? consigne ?? 0
-    const maxFallback = consigneSup ?? consigne ?? 30
+    const minFallback = Math.min(...thresholdValues, consigneInf ?? consigne ?? 0)
+    const maxFallback = Math.max(...thresholdValues, consigneSup ?? consigne ?? 30)
     return [Math.floor(minFallback - 1), Math.ceil(maxFallback + 1)]
   }
-  const min = Math.min(...values, consigneInf ?? 0, consigne ?? 0)
-  const max = Math.max(...values, consigneSup ?? 30, consigne ?? 30)
+  const min = Math.min(...values, ...thresholdValues, consigneInf ?? 0, consigne ?? 0)
+  const max = Math.max(...values, ...thresholdValues, consigneSup ?? 30, consigne ?? 30)
   const padding = (max - min) * 0.1
 
   return [Math.floor(min - padding), Math.ceil(max + padding)]

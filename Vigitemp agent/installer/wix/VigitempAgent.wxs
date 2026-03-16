@@ -4,13 +4,13 @@
   <Package
     Name="Vigitemp Agent"
     Manufacturer="Vigitemp"
-    Version="1.0.0"
+    Version="$(var.ProductVersion)"
     UpgradeCode="c79acc5b-b54f-413b-b52a-7614910a0462"
     InstallerVersion="500"
     Compressed="yes"
     Scope="perMachine">
     <MajorUpgrade DowngradeErrorMessage="Une version plus recente de Vigitemp Agent est deja installee." />
-    <MediaTemplate />
+    <MediaTemplate EmbedCab="yes" />
 
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     <Property Id="VIGI_WEB_URL" Value="http://127.0.0.1:3000" />
@@ -60,23 +60,29 @@
   </Fragment>
 
   <Fragment>
-    <CustomAction
-      Id="LaunchAgent"
-      Directory="INSTALLFOLDER"
-      ExeCommand="VigitempAgent.exe"
-      Execute="immediate"
-      Return="asyncNoWait"
-      Impersonate="yes" />
-  </Fragment>
-
-  <Fragment>
-    <InstallExecuteSequence>
-      <Custom Action="LaunchAgent" After="InstallFinalize" Condition="NOT Installed" />
-    </InstallExecuteSequence>
-  </Fragment>
-
-  <Fragment>
     <UI>
+      <Dialog Id="InstallOverviewDlg" Width="370" Height="270" Title="Vigitemp Agent - Etapes d'installation">
+        <Control Id="Title" Type="Text" X="15" Y="10" Width="340" Height="20" Transparent="yes" NoPrefix="yes"
+                 Text="Etapes d'installation" />
+        <Control Id="Description" Type="Text" X="15" Y="40" Width="340" Height="20" Transparent="yes" NoPrefix="yes"
+                 Text="L'installation se deroulera en trois etapes :" />
+        <Control Id="Step1" Type="Text" X="25" Y="78" Width="320" Height="20" Transparent="yes" NoPrefix="yes"
+                 Text="1. Copie des fichiers et configuration de l'agent" />
+        <Control Id="Step2" Type="Text" X="25" Y="108" Width="320" Height="20" Transparent="yes" NoPrefix="yes"
+                 Text="2. Finalisation de l'installation" />
+        <Control Id="Step3" Type="Text" X="25" Y="138" Width="320" Height="32" Transparent="yes" NoPrefix="yes"
+                 Text="3. Finalisation via le script Finalize-AgentInstall.ps1" />
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&lt; Precedent">
+          <Publish Event="NewDialog" Value="WelcomeDlg" Condition="1" />
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Suivant &gt;">
+          <Publish Event="NewDialog" Value="InstallDirDlg" Condition="1" />
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Annuler">
+          <Publish Event="SpawnDialog" Value="CancelDlg" Condition="1" />
+        </Control>
+      </Dialog>
+
       <Dialog Id="ServerUrlDlg" Width="370" Height="270" Title="Vigitemp Agent - Configuration">
         <Control Id="Title" Type="Text" X="15" Y="10" Width="340" Height="20" Transparent="yes" NoPrefix="yes"
                  Text="Configuration du serveur web" />
@@ -95,6 +101,7 @@
         </Control>
       </Dialog>
 
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallOverviewDlg" Condition="1" />
       <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="ServerUrlDlg" Condition="1" />
     </UI>
   </Fragment>
