@@ -372,7 +372,8 @@ namespace Vigitemp_Serveur
 
             EnsureAlarmEndCursorInitialized();
 
-            var ended = GetDatabase().getEndedAlarmsSince(_idServer, _lastAlarmEndPollLocal, _alarmPollMaxBatch);
+            var queryFrom = _lastAlarmEndPollLocal.AddSeconds(-10);
+            var ended = GetDatabase().getEndedAlarmsSince(_idServer, queryFrom, _alarmPollMaxBatch);
             _lastAlarmEndPollLocal = DateTime.Now;
 
             if (ended == null || ended.Count == 0)
