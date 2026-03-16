@@ -1532,6 +1532,10 @@ namespace Vigitemp_Serveur
 
         public bool setNonResponseAlarm(int idLieu, string sondeNumeroSerie, bool isActive)
         {
+            bool notifyTriggered = false;
+            int? capturedAlarmId = null;
+            bool notifyEnded = false;
+
             lock (_lock)
             {
                 try
@@ -1573,7 +1577,8 @@ namespace Vigitemp_Serveur
                         }
                         if (existing == null || existing == DBNull.Value)
                         {
-                            _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(alarmId, idLieu, "triggered");
+                            notifyTriggered = true;
+                            capturedAlarmId = alarmId;
                         }
                         else
                         {
@@ -1606,11 +1611,9 @@ namespace Vigitemp_Serveur
                         UpdateLieuEndedFlag(idLieu);
                         if (updated > 0)
                         {
-                            _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(null, idLieu, "ended");
+                            notifyEnded = true;
                         }
                     }
-
-                    return true;
                 }
                 catch (Exception ex)
                 {
@@ -1618,6 +1621,13 @@ namespace Vigitemp_Serveur
                     return false;
                 }
             }
+
+            if (notifyTriggered)
+                _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(capturedAlarmId, idLieu, "triggered");
+            if (notifyEnded)
+                _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(null, idLieu, "ended");
+
+            return true;
         }
 
         public AlarmSummary getActiveAlarmSummary(int idLieu)
@@ -1680,6 +1690,10 @@ namespace Vigitemp_Serveur
 
         public bool setThresholdAlarm(int idLieu, string sondeNumeroSerie, string type, double value, string unite, bool isActive)
         {
+            bool notifyTriggered = false;
+            int? capturedTriggeredAlarmId = null;
+            bool notifyEnded = false;
+
             lock (_lock)
             {
                 try
@@ -1725,7 +1739,8 @@ namespace Vigitemp_Serveur
                         }
                         if (existing == null || existing == DBNull.Value)
                         {
-                            _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(alarmId, idLieu, "triggered");
+                            notifyTriggered = true;
+                            capturedTriggeredAlarmId = alarmId;
                         }
                         else
                         {
@@ -1761,11 +1776,9 @@ namespace Vigitemp_Serveur
                         UpdateLieuEndedFlag(idLieu);
                         if (updated > 0)
                         {
-                            _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(null, idLieu, "ended");
+                            notifyEnded = true;
                         }
                     }
-
-                    return true;
                 }
                 catch (Exception ex)
                 {
@@ -1773,10 +1786,19 @@ namespace Vigitemp_Serveur
                     return false;
                 }
             }
+
+            if (notifyTriggered)
+                _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(capturedTriggeredAlarmId, idLieu, "triggered");
+            if (notifyEnded)
+                _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(null, idLieu, "ended");
+
+            return true;
         }
 
         public bool setThresholdAlarmEnded(int idLieu)
         {
+            bool notifyEnded = false;
+
             lock (_lock)
             {
                 try
@@ -1797,10 +1819,8 @@ namespace Vigitemp_Serveur
                     UpdateLieuEndedFlag(idLieu);
                     if (updated > 0)
                     {
-                        _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(null, idLieu, "ended");
+                        notifyEnded = true;
                     }
-
-                    return true;
                 }
                 catch (Exception ex)
                 {
@@ -1808,6 +1828,11 @@ namespace Vigitemp_Serveur
                     return false;
                 }
             }
+
+            if (notifyEnded)
+                _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(null, idLieu, "ended");
+
+            return true;
         }
 
         private bool SetLieuAlarmFlagsV2(int idLieu, bool isPreAlarm, bool isAlarm)
