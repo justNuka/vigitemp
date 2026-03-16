@@ -395,7 +395,8 @@ namespace Vigitemp_Serveur
                 "Id_Lieu, " +
                 "Tolerance_Surveillance_Inf as Consigne_Inf, Est_Consigne_Inf_Active, Retard_Alarme_Bas, Consigne_Inf_Pre_Alarme, Est_Consigne_Inf_Pre_Alarme_Active, " +
                 "Tolerance_Surveillance_Sup as Consigne_Sup, Est_Consigne_Sup_Active, Retard_Alarme_Haut, Consigne_Sup_Pre_Alarme, Est_Consigne_Sup_Pre_Alarme_Active, " +
-                "Retard_Non_Reponse, Retard_Alarme_Changement_Consigne, Nb_Mesures_Temporisation_Redeclenchement, Planning_Derniere_Maj " +
+                "Retard_Non_Reponse, Retard_Alarme_Changement_Consigne, Nb_Mesures_Temporisation_Redeclenchement, Planning_Derniere_Maj, " +
+                "Notification_Active, Date_Heure_Reactivation_Alarme " +
                 "FROM t_lieu WHERE Id_Lieu = @idLieu;");
             cmd.Parameters.AddWithValue("@idLieu", idLieu);
 
@@ -439,8 +440,8 @@ namespace Vigitemp_Serveur
                     retardNonReponseMinutes: Math.Max(0, GetNullableInt(reader, "Retard_Non_Reponse", 0)),
                     retardAlarmeChangementConsigneMinutes: Math.Max(0, GetNullableInt(reader, "Retard_Alarme_Changement_Consigne", 0)),
                     nbMesuresTemporisationRedeclenchement: Math.Max(0, GetNullableInt(reader, "Nb_Mesures_Temporisation_Redeclenchement", 0)),
-                    notificationActive: true,
-                    dateHeureReactivationAlarme: default(DateTime),
+                    notificationActive: GetNullableBool(reader, "Notification_Active", true),
+                    dateHeureReactivationAlarme: GetNullableDateTime(reader, "Date_Heure_Reactivation_Alarme"),
                     planningDerniereMaj: GetNullableDateTime(reader, "Planning_Derniere_Maj"));
             }
         }
