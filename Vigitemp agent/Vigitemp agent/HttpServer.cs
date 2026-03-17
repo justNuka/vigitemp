@@ -35,7 +35,8 @@ namespace VigitempAgent
         public static string url_localhost = "http://127.0.0.1:8000/";
 
 
-        public static List<int> idLieuxEnAlarmes = new List<int>();
+        private static readonly object _alarmLock = new object();
+        private static readonly HashSet<int> _alarmLieuxActive = new HashSet<int>();
 
         private static void SafeInvokeFormAlert(Form_Alert frmAlert, Action action)
         {
@@ -682,65 +683,42 @@ namespace VigitempAgent
 
         // Méthode helper pour afficher l'alerte via un `Invoke`
 
-        public static async Task HandleIncomingConnections(Form_Alert frm_alert)
+        private static async Task HandleRequestAsync(HttpListenerContext ctx, Form_Alert frm_alert)
         {
-            bool runServer = true;
+            HttpListenerRequest req = ctx.Request;
+            HttpListenerResponse resp = ctx.Response;
 
-            // While a user hasn't visited the `shutdown` url, keep on handling requests
-            while (runServer)
+            try
             {
-                // Will wait here until we hear from a connection
-                HttpListenerContext ctx;
-                try
+                EnsureCorsHeaders(resp, req);
+
+                if (req.HttpMethod == "OPTIONS")
                 {
-                    ctx = await listener.GetContextAsync();
-                }
-                catch (HttpListenerException)
-                {
-                    // Listener stopped (shutdown)
+                    resp.StatusCode = 204;
+                    resp.Close();
                     return;
                 }
-                catch (Exception ex)
+                if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/info")
                 {
-                    AgentLog.Error("HttpServer GetContextAsync failed.", ex);
-                    return;
-                }
+                    if (!IsLoopback(req))
+                    {
+                        resp.StatusCode = 403;
+                        resp.Close();
+                        return;
+                    }
 
-                // Peel out the requests and response objects
-                HttpListenerRequest req = ctx.Request;
-                HttpListenerResponse resp = ctx.Response;
-
-                try
-                {
+                    var payload =
+                        "{\"machineName\":\"" + JsonEscape(Environment.MachineName) + "\"," +
+                        "\"ip\":\"" + JsonEscape(GetLocalIPAddress()) + "\"}";
+                    var infoData = Encoding.UTF8.GetBytes(payload.ToCharArray());
+                    resp.ContentType = "application/json";
+                    resp.ContentEncoding = Encoding.UTF8;
                     EnsureCorsHeaders(resp, req);
-
-                    if (req.HttpMethod == "OPTIONS")
-                    {
-                        resp.StatusCode = 204;
-                        resp.Close();
-                        continue;
-                    }
-                    if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/info")
-                    {
-                        if (!IsLoopback(req))
-                        {
-                            resp.StatusCode = 403;
-                            resp.Close();
-                            continue;
-                        }
-
-                        var payload =
-                            "{\"machineName\":\"" + JsonEscape(Environment.MachineName) + "\"," +
-                            "\"ip\":\"" + JsonEscape(GetLocalIPAddress()) + "\"}";
-                        var infoData = Encoding.UTF8.GetBytes(payload.ToCharArray());
-                        resp.ContentType = "application/json";
-                        resp.ContentEncoding = Encoding.UTF8;
-                        EnsureCorsHeaders(resp, req);
-                        resp.ContentLength64 = infoData.LongLength;
-                        await resp.OutputStream.WriteAsync(infoData, 0, infoData.Length);
-                        resp.Close();
-                        continue;
-                    }
+                    resp.ContentLength64 = infoData.LongLength;
+                    await resp.OutputStream.WriteAsync(infoData, 0, infoData.Length);
+                    resp.Close();
+                    return;
+                }
 
                     //réponse de la fonction renvoyées par le HttpListener
                     string res = "false";
@@ -757,7 +735,7 @@ namespace VigitempAgent
                         switch (req.Url.AbsolutePath)
                         {
                             case "/shutdown":
-                                runServer = false;
+                                try { listener.Stop(); } catch { }
                                 break;
                             case "/notify":
                                 {
@@ -913,8 +891,7 @@ namespace VigitempAgent
 
                                 if (action == "show" && idLieuVal > 0)
                                 {
-                                    if (!idLieuxEnAlarmes.Contains(idLieuVal))
-                                        idLieuxEnAlarmes.Add(idLieuVal);
+                                    lock (_alarmLock) { _alarmLieuxActive.Add(idLieuVal); }
                                     if (SessionStore.HasValidSession())
                                         SafeInvokeFormAlert(frm_alert, () => frm_alert.DisplayAlarm());
                                     else
@@ -922,8 +899,13 @@ namespace VigitempAgent
                                 }
                                 if (action == "hide" && idLieuVal > 0)
                                 {
-                                    idLieuxEnAlarmes.Remove(idLieuVal);
-                                    if (idLieuxEnAlarmes.Count == 0)
+                                    int alarmCount;
+                                    lock (_alarmLock)
+                                    {
+                                        _alarmLieuxActive.Remove(idLieuVal);
+                                        alarmCount = _alarmLieuxActive.Count;
+                                    }
+                                    if (alarmCount == 0)
                                         SafeInvokeFormAlert(frm_alert, () => frm_alert.HideAlarm());
                                 }
                             }
@@ -977,7 +959,9 @@ namespace VigitempAgent
 
                                 SessionStore.Save(session);
 
-                                if (idLieuxEnAlarmes.Count > 0 && SessionStore.HasValidSession())
+                                int pendingAlarms;
+                                lock (_alarmLock) { pendingAlarms = _alarmLieuxActive.Count; }
+                                if (pendingAlarms > 0 && SessionStore.HasValidSession())
                                 {
                                     SafeInvokeFormAlert(frm_alert, () => frm_alert.DisplayAlarm());
                                 }
@@ -1122,7 +1106,7 @@ namespace VigitempAgent
                         {
                             resp.StatusCode = 403;
                             resp.Close();
-                            continue;
+                            return;
                         }
 
                         SessionStore.Clear();
@@ -1130,7 +1114,7 @@ namespace VigitempAgent
 
                         resp.StatusCode = 204;
                         resp.Close();
-                        continue;
+                        return;
                     }
                     else if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/session")
                     {
@@ -1149,7 +1133,7 @@ namespace VigitempAgent
                         resp.ContentLength64 = bytes.LongLength;
                         await resp.OutputStream.WriteAsync(bytes, 0, bytes.Length);
                         resp.Close();
-                        continue;
+                        return;
                     }
                     if (req.HttpMethod == "GET")
                     {
@@ -1299,8 +1283,31 @@ namespace VigitempAgent
                     {
                         // ignore
                     }
-                    continue;
                 }
+        }
+
+        public static async Task HandleIncomingConnections(Form_Alert frm_alert)
+        {
+            while (true)
+            {
+                HttpListenerContext ctx;
+                try
+                {
+                    ctx = await listener.GetContextAsync();
+                }
+                catch (HttpListenerException)
+                {
+                    // Listener stopped (shutdown)
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    AgentLog.Error("HttpServer GetContextAsync failed.", ex);
+                    return;
+                }
+
+                // Dispatch each request on the thread pool — don't block the accept loop
+                _ = Task.Run(async () => await HandleRequestAsync(ctx, frm_alert));
             }
         }
 
