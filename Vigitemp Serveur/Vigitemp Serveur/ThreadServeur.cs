@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -665,6 +665,7 @@ namespace Vigitemp_Serveur
                     var idLieu = arr_lieuxAvecAlarmeSnooze[i];
                     try
                     {
+                        sensor = null;
                         VigitempServeur.Log("Le lieu " + idLieu + " doit etre reactiv�.");
 
                         GetDatabase().setAlarmeByIdLieu(idLieu, true);
