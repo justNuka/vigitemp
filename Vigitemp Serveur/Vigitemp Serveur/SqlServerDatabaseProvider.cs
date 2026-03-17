@@ -1708,44 +1708,6 @@ namespace Vigitemp_Serveur
             }
         }
 
-        public bool setThresholdAlarmEnded(int idLieu)
-        {
-            lock (_lock)
-            {
-                try
-                {
-                    if (!EnsureConnected())
-                    {
-                        return false;
-                    }
-
-                    int updated;
-                    using (var cmdResolve = CreateCommand(
-                        _connectionMain,
-                        "UPDATE t_alarme " +
-                        "SET Date_Heure_Fin = GETDATE(), Est_Alarme_Vrai = 0 " +
-                        "WHERE Id_Lieu = @idLieu AND Type IN ('H','B') AND Date_Heure_Fin IS NULL;"))
-                    {
-                        cmdResolve.Parameters.AddWithValue("@idLieu", idLieu);
-                        updated = cmdResolve.ExecuteNonQuery();
-                    }
-
-                    UpdateLieuEndedFlag(idLieu);
-                    if (updated > 0)
-                    {
-                        _ = AlarmWebNotifier.NotifyRealtimeAlarmAsync(null, idLieu, "ended");
-                    }
-
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    VigitempServeur.Log("(setThresholdAlarmEnded MSSQL) SQL Erreur: " + ex.Message);
-                    return false;
-                }
-            }
-        }
-
         private bool SetLieuAlarmFlagsV2(int idLieu, bool isPreAlarm, bool isAlarm)
         {
             using (var cmd = CreateCommand(

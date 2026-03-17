@@ -21,7 +21,6 @@ namespace Vigitemp_Serveur
         (double value, string unit, bool hasValue) getLastMeasureWithUnit(int idLieu);
         bool setAlarmeByIdLieu(int p_idLieu, bool p_valeur);
         bool setSurveillanceByIdLieu(int p_idLieu, bool p_valeur);
-        bool setThresholdAlarmEnded(int idLieu);
         bool setThresholdAlarm(int idLieu, string sondeNumeroSerie, string type, double value, string unite, bool isActive);
         bool setLieuAlarmFlags(int idLieu, bool isPreAlarm, bool isAlarm);
         bool getLieuImmediateRetriggerFlag(int idLieu);

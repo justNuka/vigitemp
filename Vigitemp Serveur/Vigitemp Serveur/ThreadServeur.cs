@@ -713,7 +713,7 @@ namespace Vigitemp_Serveur
 
                         if (!derniereMesure.hasValue)
                         {
-                            VigitempServeur.Log($"Snooze r�activ� pour lieu {idLieu} : aucune mesure existante, comparaison ignor�e.");
+                            VigitempServeur.Log($"Snooze lieu {idLieu} : alarme réactivée, aucune mesure disponible pour comparaison (ignoré).");
                             continue;
                         }
 
