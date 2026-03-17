@@ -37,8 +37,9 @@ namespace VigitempAgent
                     var bytes = ProtectedData.Unprotect(protectedBytes, null, DataProtectionScope.CurrentUser);
                     _secret = Encoding.UTF8.GetString(bytes);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    AgentLog.Error("AgentSecretStore load failed.", ex);
                     _secret = null;
                 }
             }
@@ -56,6 +57,21 @@ namespace VigitempAgent
         {
             lock (_lock)
             {
+                if (string.IsNullOrWhiteSpace(secret))
+                {
+                    _secret = null;
+                    try
+                    {
+                        var path = SecretFilePath();
+                        if (File.Exists(path)) File.Delete(path);
+                    }
+                    catch (Exception ex)
+                    {
+                        AgentLog.Error("AgentSecretStore.Save failed deleting file.", ex);
+                    }
+                    return;
+                }
+
                 _secret = secret;
                 Persist(secret);
             }
@@ -82,13 +98,13 @@ namespace VigitempAgent
         {
             try
             {
-                var bytes = Encoding.UTF8.GetBytes(secret ?? "");
+                var bytes = Encoding.UTF8.GetBytes(secret);
                 var protectedBytes = ProtectedData.Protect(bytes, null, DataProtectionScope.CurrentUser);
                 File.WriteAllBytes(SecretFilePath(), protectedBytes);
             }
-            catch
+            catch (Exception ex)
             {
-                // ignore
+                AgentLog.Error("AgentSecretStore.Save failed.", ex);
             }
         }
     }

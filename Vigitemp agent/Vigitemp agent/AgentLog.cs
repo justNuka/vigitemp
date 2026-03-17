@@ -30,14 +30,39 @@ namespace VigitempAgent
             Write("ERROR", full);
         }
 
+        private const long MaxLogSizeBytes = 5L * 1024 * 1024; // 5 MB
+
+        private static void RotateIfNeeded(string path)
+        {
+            try
+            {
+                if (!File.Exists(path)) return;
+                var info = new FileInfo(path);
+                if (info.Length < MaxLogSizeBytes) return;
+
+                var backupPath = path + ".bak";
+                if (File.Exists(backupPath))
+                {
+                    File.Delete(backupPath);
+                }
+                File.Move(path, backupPath);
+            }
+            catch
+            {
+                // ignore rotation errors — don't break logging
+            }
+        }
+
         private static void Write(string level, string message)
         {
             try
             {
                 lock (_lock)
                 {
+                    var filePath = LogPath();
+                    RotateIfNeeded(filePath);
                     File.AppendAllText(
-                        LogPath(),
+                        filePath,
                         $"{DateTime.UtcNow:O} [{level}] {message}{Environment.NewLine}",
                         Encoding.UTF8
                     );

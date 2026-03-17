@@ -308,7 +308,8 @@ namespace VigitempAgent
                 case 400: return "Bad Request";
                 case 403: return "Forbidden";
                 case 404: return "Not Found";
-                default: return "OK";
+                case 500: return "Internal Server Error";
+                default: return "Unknown";
             }
         }
 
