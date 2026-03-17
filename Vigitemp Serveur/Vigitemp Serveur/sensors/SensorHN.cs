@@ -18,6 +18,7 @@ namespace Vigitemp_Serveur.sensors
         public SensorHN(ThreadServeur p_ths, string p_comPort, string p_sondeSerialNumber, string p_sondeAdresse, string p_moduleSerialNumber) : base(p_ths, p_comPort, p_sondeSerialNumber, p_sondeAdresse)
         {
             this.m_moduleSerialNumber = p_moduleSerialNumber;
+            m_port.DataReceived += new SerialDataReceivedEventHandler(DataReceivedHandler);
         }
 
         public override async Task<bool> read()
@@ -48,7 +49,6 @@ namespace Vigitemp_Serveur.sensors
                     {
                         VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=retry elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
                         m_port.Close();
-                        m_port.DataReceived += new SerialDataReceivedEventHandler(DataReceivedHandler);
                         m_port.Open();
                         m_port.DiscardInBuffer();
                         m_port.DiscardOutBuffer();
@@ -143,8 +143,8 @@ namespace Vigitemp_Serveur.sensors
             Console.WriteLine("resultat binaire: " + tmp_valeur);
             Trace.WriteLine("resultat binaire: " + tmp_valeur);
             int tmp_temperature_int = (int)Convert.ToInt64(tmp_valeur, 2);
-            Console.WriteLine("resultat décimal: " + tmp_temperature_int);
-            Trace.WriteLine("resultat décimal: " + tmp_temperature_int);
+            Console.WriteLine("resultat dï¿½cimal: " + tmp_temperature_int);
+            Trace.WriteLine("resultat dï¿½cimal: " + tmp_temperature_int);
             tmp_valeur = ((1 - tmp_temperature_int / Math.Pow(2, 20) - 0.32) / 0.0047).ToString();
             tmp_valeur = tmp_valeur.Replace(",", ".");
             Console.WriteLine("resultat final: " + tmp_valeur);
@@ -152,13 +152,13 @@ namespace Vigitemp_Serveur.sensors
 
             var rawValue = Convert.ToDouble(float.Parse(tmp_valeur, CultureInfo.InvariantCulture.NumberFormat));
             var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
-            Console.WriteLine("Données corrigées: " + correctedValue);
-            Trace.WriteLine("Données corrigées: " + correctedValue);
+            Console.WriteLine("Donnï¿½es corrigï¿½es: " + correctedValue);
+            Trace.WriteLine("Donnï¿½es corrigï¿½es: " + correctedValue);
 
-                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
-                VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=°C raw={ToInvariantRaw(rawValue)}");
+                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "ï¿½C", ToInvariantRaw(rawValue));
+                VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=ï¿½C raw={ToInvariantRaw(rawValue)}");
                 HandleNoResponseAlarm(true);
-                compareMeasuresAndLimits(correctedValue, "°C");
+                compareMeasuresAndLimits(correctedValue, "ï¿½C");
                 m_port.DiscardInBuffer(); 
                 m_port.DiscardOutBuffer();
                 m_port.Close();
