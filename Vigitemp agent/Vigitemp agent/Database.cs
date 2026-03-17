@@ -18,7 +18,7 @@ public class Database
     // Constructeur
     public Database()
     {
-        this.InitConnexion();
+        // Connexion gérée par l'appelant via InitConnexion() / CloseConnexion()
     }
 
     // Méthode pour ouvrir les connexions
@@ -49,156 +49,120 @@ public class Database
 
     public string addPCtoDBClientsList(string adresseIP, string nomMachine)
     {
-        if (this.connection_vigitemp != null)
+        if (this.connection_vigitemp == null || this.connection_vigitemp_mesure == null)
+            return null;
+
+        try
         {
-            try
+            string res;
+            using (var cmd = this.connection_vigitemp.CreateCommand())
             {
+                cmd.CommandText = "SELECT 1 AS res FROM t_postes_clients WHERE AdresseIpConnexion = @adresseIP";
+                cmd.Parameters.AddWithValue("@adresseIP", adresseIP);
 
-                MySqlCommand cmd_vigitemp = this.connection_vigitemp.CreateCommand();
-                String res;
-                cmd_vigitemp.CommandText = "SELECT 1 AS res FROM t_postes_clients WHERE AdresseIpConnexion = @adresseIP";
-                cmd_vigitemp.Parameters.AddWithValue("@adresseIP", adresseIP);
-
-                // Exécution de la commande SQL 
-                MySqlDataReader dr_lieux = cmd_vigitemp.ExecuteReader();
-                MySqlCommand cmd_vigitemp_mesure = this.connection_vigitemp.CreateCommand();
-                dr_lieux.Read();
-                if (dr_lieux.HasRows)
+                using (var dr = cmd.ExecuteReader())
                 {
-                    dr_lieux.Close();
-                    res = "1";
-                    
-                    cmd_vigitemp_mesure.CommandText = "UPDATE t_postes_clients SET NomMachineConnexion = @nomMachine WHERE AdresseIpConnexion = @adresseIP";
-                    cmd_vigitemp_mesure.Parameters.AddWithValue("@nomMachine", nomMachine);
-                    cmd_vigitemp_mesure.Parameters.AddWithValue("@adresseIP", adresseIP);
+                    dr.Read();
+                    res = dr.HasRows ? "1" : "0";
+                }
+            }
 
-                    cmd_vigitemp_mesure.ExecuteNonQuery();
-                    CloseConnexion();
+            using (var cmd2 = this.connection_vigitemp.CreateCommand())
+            {
+                if (res == "1")
+                {
+                    cmd2.CommandText = "UPDATE t_postes_clients SET NomMachineConnexion = @nomMachine WHERE AdresseIpConnexion = @adresseIP";
                 }
                 else
                 {
-                    dr_lieux.Close();
-                    res = "0";
-                    cmd_vigitemp_mesure.CommandText = "INSERT INTO t_postes_clients (NomMachineConnexion, AdresseIpConnexion) VALUES (@nomMachine, @adresseIP)";
-                    cmd_vigitemp_mesure.Parameters.AddWithValue("@nomMachine", nomMachine);
-                    cmd_vigitemp_mesure.Parameters.AddWithValue("@adresseIP", adresseIP);
-
-                    cmd_vigitemp_mesure.ExecuteNonQuery();
-                    CloseConnexion();
+                    cmd2.CommandText = "INSERT INTO t_postes_clients (NomMachineConnexion, AdresseIpConnexion) VALUES (@nomMachine, @adresseIP)";
                 }
-                //res = dr_lieux["res"].ToString();
-                dr_lieux.Close();
-                CloseConnexion();
+                cmd2.Parameters.AddWithValue("@nomMachine", nomMachine);
+                cmd2.Parameters.AddWithValue("@adresseIP", adresseIP);
+                cmd2.ExecuteNonQuery();
+            }
 
-                Console.WriteLine(res);
-                return res;
-            }
-            catch (Exception ex)
-            {
-                CloseConnexion();
-                AgentLog.Error("Database operation failed.", ex);
-                return null;
-            }
+            return res;
         }
-
-        return null;
+        catch (Exception ex)
+        {
+            AgentLog.Error("Database operation failed.", ex);
+            return null;
+        }
     }
 
     public bool AddMesure(string p_numeroSerie, string p_id_recuperationMesure, double p_valeur_mesure, DateTime p_heure_mesure)
     {
-        if (this.connection_vigitemp != null || this.connection_vigitemp_mesure != null)
+        if (this.connection_vigitemp == null || this.connection_vigitemp_mesure == null)
+            return false;
+
+        try
         {
-            try
+            using (var cmd = this.connection_vigitemp_mesure.CreateCommand())
             {
-
-                MySqlCommand cmd_vigitemp_mesure = this.connection_vigitemp_mesure.CreateCommand();
-                cmd_vigitemp_mesure.CommandText = "INSERT INTO ts_mesuresvigiloghugo " +
-                                                    "(serialNumber, id_recuperationMesure, valeur_mesure, heure_mesure) " +
-                                                    "VALUES " +
-                                                    "(@serialNumber, @idrecuperationmesure, @valeurmesure, @heuremesure)";
-
-                // utilisation de l'objet contact passé en paramètre 
-                cmd_vigitemp_mesure.Parameters.AddWithValue("@serialNumber", p_numeroSerie);
-                cmd_vigitemp_mesure.Parameters.AddWithValue("@idrecuperationmesure", p_id_recuperationMesure);
-                cmd_vigitemp_mesure.Parameters.AddWithValue("@valeurmesure", p_valeur_mesure);
-                cmd_vigitemp_mesure.Parameters.AddWithValue("@heuremesure", p_heure_mesure);
-
-                cmd_vigitemp_mesure.ExecuteNonQuery();
-
-                CloseConnexion();
-
-                return true;
+                cmd.CommandText = "INSERT INTO ts_mesuresvigiloghugo " +
+                                  "(serialNumber, id_recuperationMesure, valeur_mesure, heure_mesure) " +
+                                  "VALUES (@serialNumber, @idrecuperationmesure, @valeurmesure, @heuremesure)";
+                cmd.Parameters.AddWithValue("@serialNumber", p_numeroSerie);
+                cmd.Parameters.AddWithValue("@idrecuperationmesure", p_id_recuperationMesure);
+                cmd.Parameters.AddWithValue("@valeurmesure", p_valeur_mesure);
+                cmd.Parameters.AddWithValue("@heuremesure", p_heure_mesure);
+                cmd.ExecuteNonQuery();
             }
-            catch (Exception ex)
-            {
-                CloseConnexion();
-                AgentLog.Error("Database operation failed.", ex);
-                return false;
-            }
+            return true;
         }
-
-        return false;
+        catch (Exception ex)
+        {
+            AgentLog.Error("Database operation failed.", ex);
+            return false;
+        }
     }
 
     public string getServerIp()
     {
-        if (this.connection_vigitemp != null || this.connection_vigitemp_mesure != null)
+        if (this.connection_vigitemp == null || this.connection_vigitemp_mesure == null)
+            return null;
+
+        try
         {
-            try
+            using (var cmd = this.connection_vigitemp.CreateCommand())
             {
-
-                MySqlCommand cmd_vigitemp = this.connection_vigitemp.CreateCommand();
-                String res;
-                cmd_vigitemp.CommandText = "SELECT Valeur from t_parametre where MotCle = 'serveur_ip_1';";
-
-                // Exécution de la commande SQL 
-                MySqlDataReader dr_lieux = cmd_vigitemp.ExecuteReader();
-                dr_lieux.Read();
-                res = dr_lieux["Valeur"].ToString();
-                dr_lieux.Close();
-                CloseConnexion();
-
-                return res;
-            }
-            catch (Exception ex)
-            {
-                CloseConnexion();
-                AgentLog.Error("Database operation failed.", ex);
-                return null;
+                cmd.CommandText = "SELECT Valeur from t_parametre where MotCle = 'serveur_ip_1';";
+                using (var dr = cmd.ExecuteReader())
+                {
+                    if (!dr.Read()) return null;
+                    return dr["Valeur"].ToString();
+                }
             }
         }
-
-        return null;
+        catch (Exception ex)
+        {
+            AgentLog.Error("Database operation failed.", ex);
+            return null;
+        }
     }
     
     public string getWebsiteURL()
     {
-        if (this.connection_vigitemp != null || this.connection_vigitemp_mesure != null)
+        if (this.connection_vigitemp == null || this.connection_vigitemp_mesure == null)
+            return null;
+
+        try
         {
-            try
+            using (var cmd = this.connection_vigitemp.CreateCommand())
             {
-
-                MySqlCommand cmd_vigitemp = this.connection_vigitemp.CreateCommand();
-                String res;
-                cmd_vigitemp.CommandText = "SELECT Valeur from t_parametre where MotCle = 'SITE_WEB_URL';";
-
-                // Exécution de la commande SQL 
-                MySqlDataReader dr_lieux = cmd_vigitemp.ExecuteReader();
-                dr_lieux.Read();
-                res = dr_lieux["Valeur"].ToString();
-                dr_lieux.Close();
-                CloseConnexion();
-
-                return res;
-            }
-            catch (Exception ex)
-            {
-                CloseConnexion();
-                AgentLog.Error("Database operation failed.", ex);
-                return null;
+                cmd.CommandText = "SELECT Valeur from t_parametre where MotCle = 'SITE_WEB_URL';";
+                using (var dr = cmd.ExecuteReader())
+                {
+                    if (!dr.Read()) return null;
+                    return dr["Valeur"].ToString();
+                }
             }
         }
-
-        return null;
+        catch (Exception ex)
+        {
+            AgentLog.Error("Database operation failed.", ex);
+            return null;
+        }
     }
 }

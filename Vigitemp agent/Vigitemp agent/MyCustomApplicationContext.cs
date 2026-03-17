@@ -151,8 +151,8 @@ namespace VigitempAgent
             {
                 // Enregistrement dans la BDD + récupération URL site web (optionnel)
                 Database database = new Database();
-                database.addPCtoDBClientsList(GetLocalIPAddress(), Environment.MachineName);
                 database.InitConnexion();
+                database.addPCtoDBClientsList(GetLocalIPAddress(), Environment.MachineName);
                 var url = database.getWebsiteURL();
                 if (!resolved.explicitOverride && !string.IsNullOrWhiteSpace(url))
                 {
