@@ -544,6 +544,8 @@ namespace Vigitemp_Serveur
             if (isAlarmActive)
             {
                 _alarmStateByLieu[idLieu] = true;
+                _lowAlarmStateByLieu[idLieu] = true;
+                _highAlarmStateByLieu[idLieu] = true;
                 AlarmStateEvaluator.ForceActive("alarm-low", idLieu);
                 AlarmStateEvaluator.ForceActive("alarm-high", idLieu);
             }

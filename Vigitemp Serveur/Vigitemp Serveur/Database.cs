@@ -2117,23 +2117,25 @@ namespace Vigitemp_Serveur
 
                 try
                 {
-                    var cmd = this.connection_vigitemp.CreateCommand();
-                    cmd.CommandText =
-                        "SELECT l.Id_Lieu, l.Est_Lieu_En_Alarme, " +
-                        "CASE WHEN nr.Id_Lieu IS NOT NULL THEN 1 ELSE 0 END AS Has_Non_Reponse " +
-                        "FROM t_lieu l " +
-                        "LEFT JOIN (SELECT DISTINCT Id_Lieu FROM t_alarme WHERE Type = 'N' AND Date_Heure_Fin IS NULL) nr " +
-                        "ON l.Id_Lieu = nr.Id_Lieu " +
-                        "WHERE l.Est_Lieu_En_Alarme = 1 OR nr.Id_Lieu IS NOT NULL;";
-
-                    using (var dr = cmd.ExecuteReader())
+                    using (var cmd = this.connection_vigitemp.CreateCommand())
                     {
-                        while (dr.Read())
+                        cmd.CommandText =
+                            "SELECT l.Id_Lieu, l.Est_Lieu_En_Alarme, " +
+                            "CASE WHEN nr.Id_Lieu IS NOT NULL THEN 1 ELSE 0 END AS Has_Non_Reponse " +
+                            "FROM t_lieu l " +
+                            "LEFT JOIN (SELECT DISTINCT Id_Lieu FROM t_alarme WHERE Type = 'N' AND Date_Heure_Fin IS NULL) nr " +
+                            "ON l.Id_Lieu = nr.Id_Lieu " +
+                            "WHERE l.Est_Lieu_En_Alarme = 1 OR nr.Id_Lieu IS NOT NULL;";
+
+                        using (var dr = cmd.ExecuteReader())
                         {
-                            result.Add((
-                                Convert.ToInt32(dr["Id_Lieu"]),
-                                Convert.ToInt32(dr["Est_Lieu_En_Alarme"]) == 1,
-                                Convert.ToInt32(dr["Has_Non_Reponse"]) == 1));
+                            while (dr.Read())
+                            {
+                                result.Add((
+                                    Convert.ToInt32(dr["Id_Lieu"]),
+                                    Convert.ToInt32(dr["Est_Lieu_En_Alarme"]) == 1,
+                                    Convert.ToInt32(dr["Has_Non_Reponse"]) == 1));
+                            }
                         }
                     }
                 }
