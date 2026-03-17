@@ -37,6 +37,7 @@ namespace VigitempAgent
         {
             Timeout = TimeSpan.FromSeconds(3)
         };
+        private readonly object _notifLock = new object();
 
         private static (string url, bool explicitOverride) ResolveSiteWebUrl()
         {
@@ -288,13 +289,15 @@ namespace VigitempAgent
 
         public void ShowAlarmNotification(string title, string message, string alarmUrl, NotificationTracking tracking)
         {
-            if (!string.IsNullOrWhiteSpace(alarmUrl))
+            lock (_notifLock)
             {
-                lastAlarmUrl = alarmUrl;
+                if (!string.IsNullOrWhiteSpace(alarmUrl))
+                {
+                    lastAlarmUrl = alarmUrl;
+                }
+                lastNotificationTracking = tracking;
+                lastNotificationClicked = false;
             }
-
-            lastNotificationTracking = tracking;
-            lastNotificationClicked = false;
 
             var body = string.IsNullOrWhiteSpace(message)
                 ? "Cliquez sur la notification pour vous rendre sur la page des alarmes."
@@ -323,12 +326,18 @@ namespace VigitempAgent
 
         private void OnBalloonTipClicked(object sender, EventArgs e)
         {
-            try
+            NotificationTracking tracking;
+            lock (_notifLock)
             {
                 lastNotificationClicked = true;
-                if (lastNotificationTracking != null)
+                tracking = lastNotificationTracking;
+            }
+
+            try
+            {
+                if (tracking != null)
                 {
-                    _ = SendNotificationEvent(lastNotificationTracking, "clicked", null);
+                    _ = SendNotificationEvent(tracking, "clicked", null);
                 }
             }
             catch
@@ -341,20 +350,25 @@ namespace VigitempAgent
 
         private void OnBalloonTipClosed(object sender, EventArgs e)
         {
+            NotificationTracking tracking;
+            bool clicked;
+            lock (_notifLock)
+            {
+                clicked = lastNotificationClicked;
+                tracking = lastNotificationTracking;
+                lastNotificationClicked = false;
+            }
+
             try
             {
-                if (!lastNotificationClicked && lastNotificationTracking != null)
+                if (!clicked && tracking != null)
                 {
-                    _ = SendNotificationEvent(lastNotificationTracking, "closed", null);
+                    _ = SendNotificationEvent(tracking, "closed", null);
                 }
             }
             catch
             {
                 // ignore
-            }
-            finally
-            {
-                lastNotificationClicked = false;
             }
         }
 

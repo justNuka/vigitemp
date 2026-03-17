@@ -16,6 +16,14 @@ namespace VigitempAgent
         {
             InitializeComponent();
             SITEWEB_URL = p_SITEWEB_URL;
+            // Load font once — prevents PrivateFontCollection leak on every showAlert()
+            byte[] fontData = Properties.Resources.Poppins_SemiBold;
+            IntPtr fontPtr = System.Runtime.InteropServices.Marshal.AllocCoTaskMem(fontData.Length);
+            Marshal.Copy(fontData, 0, fontPtr, fontData.Length);
+            uint dummy = 0;
+            fonts.AddMemoryFont(fontPtr, fontData.Length);
+            AddFontMemResourceEx(fontPtr, (uint)fontData.Length, IntPtr.Zero, ref dummy);
+            Marshal.FreeCoTaskMem(fontPtr);
             foreach (Control ctl in this.Controls)
             {
                 ctl.MouseClick += new MouseEventHandler(Form_Alert_Click);
@@ -91,7 +99,7 @@ namespace VigitempAgent
                 case enumAction.restart_2:
                     timer1.Interval = 1;
                     this.Opacity += 0.02;
-                    if (this.Opacity == 1)
+                    if (this.Opacity >= 1.0)
                     {
                         action = enumAction.wait;
                     }
@@ -142,16 +150,8 @@ namespace VigitempAgent
 
         public void showAlert(string msg)
         {
-
-            byte[] fontData = Properties.Resources.Poppins_SemiBold;
-            IntPtr fontPtr = System.Runtime.InteropServices.Marshal.AllocCoTaskMem(fontData.Length);
-            Marshal.Copy(fontData, 0, fontPtr, fontData.Length);
-            uint dummy = 0;
-            fonts.AddMemoryFont(fontPtr, Properties.Resources.Poppins_SemiBold.Length);
-            AddFontMemResourceEx(fontPtr, (uint)Properties.Resources.Poppins_SemiBold.Length, IntPtr.Zero, ref dummy);
-            Marshal.FreeCoTaskMem(fontPtr);
-
-            this.label2.Font = new Font(fonts.Families[0], 14.0F);
+            if (fonts.Families.Length > 0)
+                this.label2.Font = new Font(fonts.Families[0], 14.0F);
             this.Opacity = 1.0;
             this.StartPosition = FormStartPosition.Manual;
 
@@ -243,25 +243,32 @@ namespace VigitempAgent
 
         private void Form_Alert_Click(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start(SITEWEB_URL + "/alarmes");
+            try
+            {
+                var url = (SITEWEB_URL ?? "").TrimEnd('/') + "/alarmes";
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("Failed to open alarm URL.", ex);
+            }
             HideAlarm();
         }
 
         private void button1_Click_1(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start(SITEWEB_URL + "/alarmes");
+            try
+            {
+                var url = (SITEWEB_URL ?? "").TrimEnd('/') + "/alarmes";
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("Failed to open alarm URL.", ex);
+            }
             HideAlarm();
         }
 
-        private void labelmessage_Click_1(object sender, EventArgs e)
-        {
-
-        }
-
-        private void button2_Click_1(object sender, EventArgs e)
-        {
-
-        }
 
         public void DisplayAlarm()
         {
@@ -281,25 +288,6 @@ namespace VigitempAgent
             }
         }
 
-        private void button3_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-
-        }
 
         public void HideAlarm()
         {
