@@ -39,7 +39,9 @@ namespace Vigitemp_Serveur
             new ConcurrentDictionary<int, bool>();
         private static readonly ConcurrentDictionary<int, bool> _noResponseStateByLieu =
             new ConcurrentDictionary<int, bool>();
-        private static readonly ConcurrentDictionary<int, int> _retriggerThresholdWaitCountByLieu =
+        private static readonly ConcurrentDictionary<int, int> _retriggerLowWaitCountByLieu =
+            new ConcurrentDictionary<int, int>();
+        private static readonly ConcurrentDictionary<int, int> _retriggerHighWaitCountByLieu =
             new ConcurrentDictionary<int, int>();
         private static readonly ConcurrentDictionary<int, int> _retriggerNoResponseWaitCountByLieu =
             new ConcurrentDictionary<int, int>();
@@ -184,22 +186,41 @@ namespace Vigitemp_Serveur
                 {
                     if (outOfToleranceNow)
                     {
-                        var waitCount = _retriggerThresholdWaitCountByLieu.AddOrUpdate(m_idLieu, 1, (_, previous) => previous + 1);
-                        suppressRetriggerThisMeasure = waitCount <= retriggerDelayMeasures;
-                        if (!suppressRetriggerThisMeasure)
+                        if (outLowNow)
                         {
-                            forceLowImmediate = outLowNow;
-                            forceHighImmediate = outHighNow;
+                            var waitCount = _retriggerLowWaitCountByLieu.AddOrUpdate(m_idLieu, 1, (_, previous) => previous + 1);
+                            if (waitCount > retriggerDelayMeasures)
+                            {
+                                forceLowImmediate = true;
+                            }
+                            else
+                            {
+                                suppressRetriggerThisMeasure = true;
+                            }
+                        }
+                        if (outHighNow)
+                        {
+                            var waitCount = _retriggerHighWaitCountByLieu.AddOrUpdate(m_idLieu, 1, (_, previous) => previous + 1);
+                            if (waitCount > retriggerDelayMeasures)
+                            {
+                                forceHighImmediate = true;
+                            }
+                            else
+                            {
+                                suppressRetriggerThisMeasure = true;
+                            }
                         }
                     }
                     else
                     {
-                        _retriggerThresholdWaitCountByLieu[m_idLieu] = 0;
+                        _retriggerLowWaitCountByLieu[m_idLieu] = 0;
+                        _retriggerHighWaitCountByLieu[m_idLieu] = 0;
                     }
                 }
                 else
                 {
-                    _retriggerThresholdWaitCountByLieu[m_idLieu] = 0;
+                    _retriggerLowWaitCountByLieu[m_idLieu] = 0;
+                    _retriggerHighWaitCountByLieu[m_idLieu] = 0;
                 }
 
                 if (forceLowImmediate)
@@ -486,7 +507,8 @@ namespace Vigitemp_Serveur
             else if (prevAlarm && !alarmActive)
             {
                 ths.GetDatabase().setLieuImmediateRetriggerFlag(m_idLieu, true);
-                _retriggerThresholdWaitCountByLieu[m_idLieu] = 0;
+                _retriggerLowWaitCountByLieu[m_idLieu] = 0;
+                _retriggerHighWaitCountByLieu[m_idLieu] = 0;
                 VigitempServeur.Log($"Alarme terminée (H/B) pour le lieu {m_idLieu} - sonde {m_sondeSerialNumber}");
                 var ips_clients = ths.GetDatabase().getPCsClients();
                 for (int i = 0; i < ips_clients.Count; i++)
@@ -503,7 +525,8 @@ namespace Vigitemp_Serveur
             _lowAlarmStateByLieu.TryRemove(idLieu, out _);
             _highAlarmStateByLieu.TryRemove(idLieu, out _);
             _noResponseStateByLieu.TryRemove(idLieu, out _);
-            _retriggerThresholdWaitCountByLieu.TryRemove(idLieu, out _);
+            _retriggerLowWaitCountByLieu.TryRemove(idLieu, out _);
+            _retriggerHighWaitCountByLieu.TryRemove(idLieu, out _);
             _retriggerNoResponseWaitCountByLieu.TryRemove(idLieu, out _);
         }
 
