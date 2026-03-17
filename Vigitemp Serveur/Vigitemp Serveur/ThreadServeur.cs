@@ -47,6 +47,8 @@ namespace Vigitemp_Serveur
         private int _lastAlarmIdSeen = 0;
         private bool _alarmCursorInitialized = false;
         private DateTime _lastAlarmEndPollLocal = DateTime.MinValue;
+        private readonly ConcurrentDictionary<int, (bool flag, DateTime expiry)> _retriggerFlagCache =
+            new ConcurrentDictionary<int, (bool, DateTime)>();
 
         private sealed class CachedLieuSettings
         {
@@ -188,6 +190,30 @@ namespace Vigitemp_Serveur
             var fromDb = GetDatabase().getSondeMetrologyBySerialNumber(serialNumber) ?? new SondeMetrologySettings();
             _sondeMetrologyCache[serialNumber] = new CachedMetrology(fromDb, DateTime.UtcNow);
             return fromDb;
+        }
+
+        public bool GetLieuRetriggerFlagCached(int idLieu)
+        {
+            try
+            {
+                if (_retriggerFlagCache.TryGetValue(idLieu, out var cached) && DateTime.UtcNow < cached.expiry)
+                {
+                    return cached.flag;
+                }
+                var flag = GetDatabase().getLieuImmediateRetriggerFlag(idLieu);
+                _retriggerFlagCache[idLieu] = (flag, DateTime.UtcNow.AddMilliseconds(5000));
+                return flag;
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log($"GetLieuRetriggerFlagCached erreur idLieu={idLieu} : {ex.Message}");
+                return false;
+            }
+        }
+
+        public void InvalidateRetriggerFlagCache(int idLieu)
+        {
+            _retriggerFlagCache.TryRemove(idLieu, out _);
         }
 
         private void SetSondeMetrologyFromSchedule(SondeScheduleInfo row)

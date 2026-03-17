@@ -172,7 +172,7 @@ namespace Vigitemp_Serveur
                     DateTime.Now < settings.PlanningDerniereMaj.AddMinutes(settings.RetardAlarmeChangementConsigneMinutes);
 
                 var retriggerDelayMeasures = Math.Max(0, settings.NbMesuresTemporisationRedeclenchement);
-                var forceImmediateRetrigger = ths.GetDatabase().getLieuImmediateRetriggerFlag(m_idLieu);
+                var forceImmediateRetrigger = ths.GetLieuRetriggerFlagCached(m_idLieu);
 
                 var outLowNow = hasLow && p_valeur < settings.ConsigneInf.Value;
                 var outHighNow = hasHigh && p_valeur > settings.ConsigneSup.Value;
@@ -306,6 +306,7 @@ namespace Vigitemp_Serveur
                 if (forceImmediateRetrigger && overallAlarmActive)
                 {
                     ths.GetDatabase().setLieuImmediateRetriggerFlag(m_idLieu, false);
+                    ths.InvalidateRetriggerFlagCache(m_idLieu);
                     _retriggerLowWaitCountByLieu[m_idLieu] = 0;
                     _retriggerHighWaitCountByLieu[m_idLieu] = 0;
                 }
@@ -374,7 +375,7 @@ namespace Vigitemp_Serveur
 
                 var value = ok ? 0d : 1d;
                 var retriggerDelayMeasures = Math.Max(0, settings.NbMesuresTemporisationRedeclenchement);
-                var forceRetriggerFlag = ths.GetDatabase().getLieuImmediateRetriggerFlag(m_idLieu);
+                var forceRetriggerFlag = ths.GetLieuRetriggerFlagCached(m_idLieu);
 
                 var suppressRetriggerThisMeasure = false;
                 var forceImmediate = false;
@@ -422,6 +423,7 @@ namespace Vigitemp_Serveur
                 {
                     ths.GetDatabase().setNonResponseAlarm(m_idLieu, m_sondeSerialNumber, false);
                     ths.GetDatabase().setLieuImmediateRetriggerFlag(m_idLieu, true);
+                    ths.InvalidateRetriggerFlagCache(m_idLieu);
                     _retriggerNoResponseWaitCountByLieu[m_idLieu] = 0;
                     VigitempServeur.Log($"Alarme non-reponse terminee pour le lieu {m_idLieu} - sonde {m_sondeSerialNumber}");
                 }
@@ -436,6 +438,7 @@ namespace Vigitemp_Serveur
                 if (forceRetriggerFlag && overallAlarmActive)
                 {
                     ths.GetDatabase().setLieuImmediateRetriggerFlag(m_idLieu, false);
+                    ths.InvalidateRetriggerFlagCache(m_idLieu);
                     _retriggerNoResponseWaitCountByLieu[m_idLieu] = 0;
                 }
 
@@ -508,6 +511,7 @@ namespace Vigitemp_Serveur
             else if (prevAlarm && !alarmActive)
             {
                 ths.GetDatabase().setLieuImmediateRetriggerFlag(m_idLieu, true);
+                ths.InvalidateRetriggerFlagCache(m_idLieu);
                 _retriggerLowWaitCountByLieu[m_idLieu] = 0;
                 _retriggerHighWaitCountByLieu[m_idLieu] = 0;
                 VigitempServeur.Log($"Alarme terminée (H/B) pour le lieu {m_idLieu} - sonde {m_sondeSerialNumber}");
