@@ -613,6 +613,22 @@ namespace Vigitemp_Serveur
                         cmdMeasure.ExecuteNonQuery();
                     }
 
+                    using (var cmdUpdateLieu = CreateCommand(
+                        _connectionMain,
+                        "UPDATE t_lieu SET " +
+                        "Derniere_Date_Heure = @dateheuremesure, " +
+                        "Date_Heure_Derniere_Reponse_Recue_OK = @dateheuremesure, " +
+                        "Derniere_Valeur = @valeur, " +
+                        "Derniere_Unite = @unite " +
+                        "WHERE Id_Lieu = @idlieu;"))
+                    {
+                        cmdUpdateLieu.Parameters.AddWithValue("@dateheuremesure", DateTime.Now);
+                        cmdUpdateLieu.Parameters.AddWithValue("@valeur", p_valeur);
+                        cmdUpdateLieu.Parameters.AddWithValue("@unite", p_unite);
+                        cmdUpdateLieu.Parameters.AddWithValue("@idlieu", idLieu);
+                        cmdUpdateLieu.ExecuteNonQuery();
+                    }
+
                     var resistance = 0d;
                     if (!string.IsNullOrWhiteSpace(p_resistance))
                     {
