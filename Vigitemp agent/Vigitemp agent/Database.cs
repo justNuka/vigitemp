@@ -62,7 +62,6 @@ public class Database
 
                 using (var dr = cmd.ExecuteReader())
                 {
-                    dr.Read();
                     res = dr.HasRows ? "1" : "0";
                 }
             }
