@@ -910,17 +910,11 @@ namespace VigitempAgent
                                     if (alarmCount == 0)
                                         SafeInvokeFormAlert(frm_alert, () => frm_alert.HideAlarm());
                                 }
-                            }
-                                resp.ContentType = "application/json";
-                                resp.ContentEncoding = Encoding.UTF8;
-                                EnsureCorsHeaders(resp, req);
-                                resp.ContentLength64 = data.LongLength;
 
-                                // Write out to the response stream (asynchronously), then close it
-                                await resp.OutputStream.WriteAsync(data, 0, data.Length);
+                                resp.StatusCode = 204;
                                 resp.Close();
-
-                                break;
+                                return;
+                            }
                             case "/session":
                                 if (!IsLoopback(req))
                                 {
@@ -1306,10 +1300,15 @@ namespace VigitempAgent
                     // Listener stopped (shutdown)
                     return;
                 }
+                catch (ObjectDisposedException)
+                {
+                    // listener.Close() race during shutdown — clean exit
+                    return;
+                }
                 catch (Exception ex)
                 {
                     AgentLog.Error("HttpServer GetContextAsync failed.", ex);
-                    return;
+                    continue;   // keep accepting — transient error
                 }
 
                 // Dispatch each request on the thread pool — don't block the accept loop
@@ -1390,21 +1389,3 @@ namespace VigitempAgent
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
