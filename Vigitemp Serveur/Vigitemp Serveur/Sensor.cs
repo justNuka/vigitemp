@@ -485,7 +485,6 @@ namespace Vigitemp_Serveur
             }
             else if (prevAlarm && !alarmActive)
             {
-                ths.GetDatabase().setThresholdAlarmEnded(m_idLieu);
                 ths.GetDatabase().setLieuImmediateRetriggerFlag(m_idLieu, true);
                 _retriggerThresholdWaitCountByLieu[m_idLieu] = 0;
                 VigitempServeur.Log($"Alarme terminée (H/B) pour le lieu {m_idLieu} - sonde {m_sondeSerialNumber}");
