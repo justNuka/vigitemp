@@ -662,75 +662,89 @@ namespace Vigitemp_Serveur
                 (List<int> arr_lieuxAvecAlarmeSnooze, _) = GetDatabase().getLieuxAvecAlarmesEnSnooze();
                 for (int i = 0; i < arr_lieuxAvecAlarmeSnooze.Count(); i++)
                 {
-                    VigitempServeur.Log("Le lieu " + arr_lieuxAvecAlarmeSnooze[i] + " doit etre reactiv�.");
-
-                    GetDatabase().setAlarmeByIdLieu(arr_lieuxAvecAlarmeSnooze[i], true);
-
-                    var derniereMesure = GetDatabase().getLastMeasureWithUnit(arr_lieuxAvecAlarmeSnooze[i]);
-
-                    //recuperer infos du lieu
-                    (string arr_portSerie, string arr_sondeNumeroSerie, string arr_sondeAdresse, string arr_moduleNumeroSerie) = GetDatabase().getInfosByIdLieu(arr_lieuxAvecAlarmeSnooze[i]);
-
-                    if (string.IsNullOrEmpty(arr_sondeNumeroSerie) || arr_sondeNumeroSerie.Length < 2)
+                    var idLieu = arr_lieuxAvecAlarmeSnooze[i];
+                    try
                     {
-                        VigitempServeur.Log("Numero de serie invalide pour le lieu " + arr_lieuxAvecAlarmeSnooze[i] + ".");
-                        continue;
-                    }
-                    VigitempServeur.Log("Ouverture du port " + arr_portSerie + " pour la sonde " + arr_sondeNumeroSerie);
-                    sensorType = arr_sondeNumeroSerie.StartsWith("GSP", StringComparison.OrdinalIgnoreCase)
-                        ? "GSP"
-                        : arr_sondeNumeroSerie.Substring(0, 2);
+                        VigitempServeur.Log("Le lieu " + idLieu + " doit etre reactiv�.");
 
-                    switch (sensorType)
-                    {
-                        case "IN":
-                            sensor = new SensorIN(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
-                            break;
-                        case "IE":
-                            sensor = new SensorIE(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
-                            break;
-                        case "IQ":
-                            break;
-                        case "IP":
-                            sensor = new SensorIP(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
-                            break;
-                        case "IC":
-                            sensor = new SensorIC(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
-                            break;
-                        case "IH":
-                            sensor = new SensorIH(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
-                            break;
-                        case "EN":
-                            sensor = new SensorEN(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
-                            break;
-                        case "HN":
-                            sensor = new SensorHN(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse, arr_moduleNumeroSerie);
-                            break;
-                        case "GSP":
-                            sensor = new SensorGSP(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
-                            break;
-                        default: break;
-                    }
+                        GetDatabase().setAlarmeByIdLieu(idLieu, true);
 
-                    if (sensor == null)
-                    {
-                        VigitempServeur.Log("Aucun capteur cree pour le lieu " + arr_lieuxAvecAlarmeSnooze[i] + ".");
-                        continue;
-                    }
-                    string unit;
-                    if (string.IsNullOrWhiteSpace(derniereMesure.unit))
-                    {
-                        var fallbackUnit = GetDatabase().getLieuUnite(arr_lieuxAvecAlarmeSnooze[i]);
-                        VigitempServeur.Log(
-                            $"Unite mesure absente en maintenance (lieu {arr_lieuxAvecAlarmeSnooze[i]}). Fallback Derniere_Unite={fallbackUnit}");
-                        unit = fallbackUnit;
-                    }
-                    else
-                    {
-                        unit = derniereMesure.unit;
-                    }
+                        var derniereMesure = GetDatabase().getLastMeasureWithUnit(idLieu);
 
-                    sensor.compareMeasuresAndLimits(derniereMesure.value, unit);
+                        if (!derniereMesure.hasValue)
+                        {
+                            VigitempServeur.Log($"Snooze r�activ� pour lieu {idLieu} : aucune mesure existante, comparaison ignor�e.");
+                            continue;
+                        }
+
+                        //recuperer infos du lieu
+                        (string arr_portSerie, string arr_sondeNumeroSerie, string arr_sondeAdresse, string arr_moduleNumeroSerie) = GetDatabase().getInfosByIdLieu(idLieu);
+
+                        if (string.IsNullOrEmpty(arr_sondeNumeroSerie) || arr_sondeNumeroSerie.Length < 2)
+                        {
+                            VigitempServeur.Log("Numero de serie invalide pour le lieu " + idLieu + ".");
+                            continue;
+                        }
+                        VigitempServeur.Log("Ouverture du port " + arr_portSerie + " pour la sonde " + arr_sondeNumeroSerie);
+                        sensorType = arr_sondeNumeroSerie.StartsWith("GSP", StringComparison.OrdinalIgnoreCase)
+                            ? "GSP"
+                            : arr_sondeNumeroSerie.Substring(0, 2);
+
+                        switch (sensorType)
+                        {
+                            case "IN":
+                                sensor = new SensorIN(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
+                                break;
+                            case "IE":
+                                sensor = new SensorIE(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
+                                break;
+                            case "IQ":
+                                break;
+                            case "IP":
+                                sensor = new SensorIP(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
+                                break;
+                            case "IC":
+                                sensor = new SensorIC(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
+                                break;
+                            case "IH":
+                                sensor = new SensorIH(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
+                                break;
+                            case "EN":
+                                sensor = new SensorEN(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
+                                break;
+                            case "HN":
+                                sensor = new SensorHN(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse, arr_moduleNumeroSerie);
+                                break;
+                            case "GSP":
+                                sensor = new SensorGSP(this, arr_portSerie, arr_sondeNumeroSerie, arr_sondeAdresse);
+                                break;
+                            default: break;
+                        }
+
+                        if (sensor == null)
+                        {
+                            VigitempServeur.Log("Aucun capteur cree pour le lieu " + idLieu + ".");
+                            continue;
+                        }
+                        string unit;
+                        if (string.IsNullOrWhiteSpace(derniereMesure.unit))
+                        {
+                            var fallbackUnit = GetDatabase().getLieuUnite(idLieu);
+                            VigitempServeur.Log(
+                                $"Unite mesure absente en maintenance (lieu {idLieu}). Fallback Derniere_Unite={fallbackUnit}");
+                            unit = fallbackUnit;
+                        }
+                        else
+                        {
+                            unit = derniereMesure.unit;
+                        }
+
+                        sensor.compareMeasuresAndLimits(derniereMesure.value, unit);
+                    }
+                    catch (Exception exLieu)
+                    {
+                        VigitempServeur.Log($"ProcessMaintenanceTick: erreur lieu {idLieu}: {exLieu.Message}");
+                    }
                 }
 
                 // R�activation automatique de la surveillance (Lieu_Etat)

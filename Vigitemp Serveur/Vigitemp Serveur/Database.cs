@@ -1237,16 +1237,17 @@ namespace Vigitemp_Serveur
             }
         }
 
-        public (double value, string unit) getLastMeasureWithUnit(int idLieu)
+        public (double value, string unit, bool hasValue) getLastMeasureWithUnit(int idLieu)
         {
             lock (_lock)
             {
                 double value = 0.00;
                 string unit = "";
+                bool hasValue = false;
 
                 if (!EnsureConnected())
                 {
-                    return (value, unit);
+                    return (value, unit, hasValue);
                 }
 
                 var cmd = this.connection_vigitemp_mesure.CreateCommand();
@@ -1268,6 +1269,7 @@ namespace Vigitemp_Serveur
                             {
                                 double.TryParse(rawText, NumberStyles.Float, CultureInfo.CurrentCulture, out value);
                             }
+                            hasValue = true;
                         }
 
                         var rawUnit = reader["Unite"];
@@ -1278,7 +1280,7 @@ namespace Vigitemp_Serveur
                     }
                 }
 
-                return (value, unit);
+                return (value, unit, hasValue);
             }
         }
 
