@@ -31,21 +31,6 @@ namespace VigitempAgent
         // private static extern HINSTANCE getData(string lpModuleName);
         public static HttpListener listener;
 
-        public static int pageViews = 0;
-        public static int requestCount = 0;
-        public static string pageData =
-            "<!DOCTYPE>" +
-            "<html>" +
-            "  <head>" +
-            "    <title>HttpListener Example</title>" +
-            "  </head>" +
-            "  <body>" +
-            "    <p>Page Views: {0}</p>" +
-            "    <form method=\"post\" action=\"query?ouais=super\">" +
-            "      <input type=\"submit\" value=\"Shutdown\" {1}>" +
-            "    </form>" +
-            "  </body>" +
-            "</html>";
         public static string url = "http://" + GetLocalIPAddress() + ":8000/";
         public static string url_localhost = "http://127.0.0.1:8000/";
 
@@ -283,7 +268,7 @@ namespace VigitempAgent
             if (hLogTag == 0)
             {
                 setStep?.Invoke("LogOnUser");
-                if (LogTag.LogOnUser(null, null, null) != 0) Console.WriteLine("Erreur LogOnUser: fermeture logtag");
+                LogTag.LogOnUser(null, null, null);
                 setStep?.Invoke("OpenAccessRetry");
                 hLogTag = LogTag.OpenAccess(hInstance);
                 if (hLogTag == 0)
@@ -294,11 +279,11 @@ namespace VigitempAgent
             }
 
             setStep?.Invoke("GetPortInfoPrimary");
-            if (LogTag.GetPortInfo(null, ref portCount, 4) != 0) Console.WriteLine("Erreur GetPortInfo 1: fermeture logtag");
+            LogTag.GetPortInfo(null, ref portCount, 4);
             if (portCount == 0)
             {
                 setStep?.Invoke("GetPortInfoFallback");
-                if (LogTag.GetPortInfo(null, ref portCount, 8) != 0) Console.WriteLine("Erreur GetPortInfo 1b: fermeture logtag");
+                LogTag.GetPortInfo(null, ref portCount, 8);
             }
 
             if (portCount > 1)
@@ -318,16 +303,16 @@ namespace VigitempAgent
 
             LOGTAG_PORTINFO[] tabPortInfo = new LOGTAG_PORTINFO[portCount];
             setStep?.Invoke("GetPortInfoDetails");
-            if (LogTag.GetPortInfo(tabPortInfo, ref portCount, 4) != 0) Console.WriteLine("Erreur GetPortInfo 2: fermeture logtag");
+            LogTag.GetPortInfo(tabPortInfo, ref portCount, 4);
             tabPortInfo[0].cbSize = (uint)Marshal.SizeOf(tabPortInfo[0]);
             tabPortInfo[0].wPortIndex = 1;
 
             LOGTAG_INTERFACE[] ltInterface = new LOGTAG_INTERFACE[1];
             ltInterface[0].cbSize = (uint)Marshal.SizeOf(ltInterface[0]);
             setStep?.Invoke("OpenIO");
-            if (LogTag.OpenIO(hLogTag, tabPortInfo) != 0) Console.WriteLine("Erreur OpenIO: fermeture logtag");
+            LogTag.OpenIO(hLogTag, tabPortInfo);
             setStep?.Invoke("GetInterface");
-            if (LogTag.GetInterface(hLogTag, ltInterface) != 0) Console.WriteLine("Erreur GetInterface: fermeture logtag");
+            LogTag.GetInterface(hLogTag, ltInterface);
 
             ltinfo = new LOGTAG_INFO[1];
             ltinfo[0].cbSize = (uint)Marshal.SizeOf(ltinfo[0]);
@@ -695,19 +680,33 @@ namespace VigitempAgent
         {
             bool runServer = true;
 
-            //try
-            //{
             // While a user hasn't visited the `shutdown` url, keep on handling requests
             while (runServer)
             {
                 // Will wait here until we hear from a connection
-                HttpListenerContext ctx = await listener.GetContextAsync();
+                HttpListenerContext ctx;
+                try
+                {
+                    ctx = await listener.GetContextAsync();
+                }
+                catch (HttpListenerException)
+                {
+                    // Listener stopped (shutdown)
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    AgentLog.Error("HttpServer GetContextAsync failed.", ex);
+                    return;
+                }
 
                 // Peel out the requests and response objects
                 HttpListenerRequest req = ctx.Request;
                 HttpListenerResponse resp = ctx.Response;
 
-                EnsureCorsHeaders(resp, req);
+                try
+                {
+                    EnsureCorsHeaders(resp, req);
 
                 if (req.HttpMethod == "OPTIONS")
                 {
@@ -746,21 +745,12 @@ namespace VigitempAgent
                 string[] rawParams;
                 Dictionary<string, string> postParams = new Dictionary<string, string>();
 
-                // Print out some info about the request
-                Console.WriteLine("Request #: {0}", ++requestCount);
-                Console.WriteLine(req.Url.ToString());
-                Console.WriteLine(req.HttpMethod);
-                Console.WriteLine(req.UserHostName);
-                Console.WriteLine(req.UserAgent);
-                Console.WriteLine();
-
                 // If `shutdown` url requested w/ POST, then shutdown the server after serving the page
                 if (req.HttpMethod == "POST")
                 {
                     switch (req.Url.AbsolutePath)
                     {
                         case "/shutdown":
-                            Console.WriteLine("Shutdown requested");
                             runServer = false;
                             break;
                         case "/notify":
@@ -927,13 +917,10 @@ namespace VigitempAgent
                             if (action == "hide" && idLieuVal > 0)
                             {
                                 idLieuxEnAlarmes.Remove(idLieuVal);
-                                Console.WriteLine("alamres en cours: " + idLieuxEnAlarmes.Count);
                                 if (idLieuxEnAlarmes.Count == 0)
                                     SafeInvokeFormAlert(frm_alert, () => frm_alert.HideAlarm());
                             }
                         }
-
-                            //frm_alert.DisplayAlarm();
                             resp.ContentType = "application/json";
                             resp.ContentEncoding = Encoding.UTF8;
                             EnsureCorsHeaders(resp, req);
@@ -1052,10 +1039,8 @@ namespace VigitempAgent
                             }
 
                         case "/uploadLogTagConfiguration":
-                            Console.WriteLine(req.RawUrl);
                             if (req.RawUrl.Split('?').Length <= 1)
                             {
-                                Console.WriteLine("Erreur: fermeture logtag");
                                 res = "false";
                                 details = "Echec d'envoi des paramatres -> aucun parametre";
                                 json = "{\"res\":" + res + ", \"details\":\"" + JsonEscape(details) + "\"}";
@@ -1073,9 +1058,10 @@ namespace VigitempAgent
                             foreach (string param in rawParams)
                             {
                                 string[] kvPair = param.Split('=');
+                                if (kvPair.Length < 2 || string.IsNullOrEmpty(kvPair[0])) continue;
                                 string key = kvPair[0];
                                 string value = HttpUtility.UrlDecode(kvPair[1]);
-                                postParams.Add(key, value);
+                                postParams[key] = value;
                             }
 
                             bool params_consigneHaute = Convert.ToBoolean(postParams["consigneHaute"]);
@@ -1118,6 +1104,8 @@ namespace VigitempAgent
                             break;
 
                         default:
+                            resp.StatusCode = 404;
+                            resp.Close();
                             break;
                     }
 
@@ -1286,20 +1274,28 @@ namespace VigitempAgent
                             }
 
                         default:
+                            resp.StatusCode = 404;
+                            resp.Close();
                             break;
                     }
                 }
 
-                // Make sure we don't increment the page views counter if `favicon.ico` is requested
-                if (req.Url.AbsolutePath != "/favicon.ico")
-                    pageViews += 1;
-                resp.Close();
+                }
+                catch (Exception ex)
+                {
+                    AgentLog.Error("HttpServer request handler failed.", ex);
+                    try
+                    {
+                        resp.StatusCode = 500;
+                        resp.Close();
+                    }
+                    catch
+                    {
+                        // ignore
+                    }
+                    continue;
+                }
             }
-            //}
-            //catch (Exception)
-            //{
-            //    Console.WriteLine("Thread terminé");
-            //}
         }
 
 
