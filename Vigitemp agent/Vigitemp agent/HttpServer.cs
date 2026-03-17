@@ -735,8 +735,10 @@ namespace VigitempAgent
                         switch (req.Url.AbsolutePath)
                         {
                             case "/shutdown":
+                                resp.StatusCode = 204;
+                                resp.Close();
                                 try { listener.Stop(); } catch { }
-                                break;
+                                return;
                             case "/notify":
                                 {
                                     if (!IsNotifyAuthorized(req))
@@ -917,8 +919,6 @@ namespace VigitempAgent
                                 // Write out to the response stream (asynchronously), then close it
                                 await resp.OutputStream.WriteAsync(data, 0, data.Length);
                                 resp.Close();
-
-                                //break;
 
                                 break;
                             case "/session":
@@ -1135,7 +1135,7 @@ namespace VigitempAgent
                         resp.Close();
                         return;
                     }
-                    if (req.HttpMethod == "GET")
+                    else if (req.HttpMethod == "GET")
                     {
                         switch (req.Url.AbsolutePath)
                         {
@@ -1269,6 +1269,12 @@ namespace VigitempAgent
                                 break;
                         }
                     }
+                    else
+                    {
+                        // Fallback: unmatched method or path
+                        resp.StatusCode = 405;
+                        resp.Close();
+                    }
 
                 }
                 catch (Exception ex)
@@ -1307,7 +1313,7 @@ namespace VigitempAgent
                 }
 
                 // Dispatch each request on the thread pool — don't block the accept loop
-                _ = Task.Run(async () => await HandleRequestAsync(ctx, frm_alert));
+                _ = Task.Run(() => HandleRequestAsync(ctx, frm_alert));
             }
         }
 
