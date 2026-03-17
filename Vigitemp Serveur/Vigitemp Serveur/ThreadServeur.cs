@@ -869,6 +869,7 @@ namespace Vigitemp_Serveur
                 {
                     _sondeMetrologyCache.TryRemove(removed.Serial, out _);
                     Sensor.ClearAlarmState(idLieu);
+                    InvalidateRetriggerFlagCache(idLieu);
                 }
                 if (_logScheduler)
                 {
