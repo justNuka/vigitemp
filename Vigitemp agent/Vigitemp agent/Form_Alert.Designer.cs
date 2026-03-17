@@ -18,9 +18,10 @@ namespace VigitempAgent
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
+            if (disposing)
             {
-                components.Dispose();
+                components?.Dispose();
+                fonts?.Dispose();
             }
             base.Dispose(disposing);
         }
@@ -64,7 +65,7 @@ namespace VigitempAgent
             this.button2.TabIndex = 2;
             this.button2.TabStop = false;
             this.button2.UseVisualStyleBackColor = false;
-            this.button2.Click += new System.EventHandler(this.button2_Click_1);
+            this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // label1
             // 

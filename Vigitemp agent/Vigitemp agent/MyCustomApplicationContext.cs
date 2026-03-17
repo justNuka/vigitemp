@@ -262,9 +262,15 @@ namespace VigitempAgent
 
         private void OpenPortal(object sender, EventArgs e)
         {
+            string alarmUrl;
+            lock (_notifLock)
+            {
+                alarmUrl = lastAlarmUrl;
+            }
+
             try
             {
-                var targetUrl = !string.IsNullOrWhiteSpace(lastAlarmUrl) ? lastAlarmUrl : GetLoginUrl();
+                var targetUrl = !string.IsNullOrWhiteSpace(alarmUrl) ? alarmUrl : GetLoginUrl();
                 Process.Start(new ProcessStartInfo(targetUrl) { UseShellExecute = true });
             }
             catch (Exception ex)

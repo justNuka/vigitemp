@@ -108,7 +108,7 @@ namespace VigitempAgent
                     timer1.Interval = 1;
                     this.Opacity -= 0.1;
                     this.Top -= 3;
-                    if (base.Opacity == 0.0)
+                    if (base.Opacity <= 0.0)
                     {
                         base.Hide();
                     }
