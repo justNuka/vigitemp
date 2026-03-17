@@ -2063,6 +2063,48 @@ namespace Vigitemp_Serveur
                 return (coeffX, coeffConstant);
             }
         }
+        public List<(int idLieu, bool isAlarm, bool isNonResponse)> getActiveLieuAlarmStates()
+        {
+            var result = new List<(int, bool, bool)>();
+            lock (_lock)
+            {
+                try
+                {
+                    if (!EnsureConnected())
+                    {
+                        return result;
+                    }
+
+                    using (var cmd = CreateCommand(
+                        _connectionMain,
+                        "SELECT l.Id_Lieu, l.Est_Lieu_En_Alarme, " +
+                        "CASE WHEN nr.Id_Lieu IS NOT NULL THEN 1 ELSE 0 END AS Has_Non_Reponse " +
+                        "FROM t_lieu l " +
+                        "LEFT JOIN (SELECT DISTINCT Id_Lieu FROM t_alarme WHERE Type = 'N' AND Date_Heure_Fin IS NULL) nr " +
+                        "ON l.Id_Lieu = nr.Id_Lieu " +
+                        "WHERE l.Est_Lieu_En_Alarme = 1 OR nr.Id_Lieu IS NOT NULL;"))
+                    {
+                        using (var dr = cmd.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                result.Add((
+                                    Convert.ToInt32(dr["Id_Lieu"]),
+                                    Convert.ToInt32(dr["Est_Lieu_En_Alarme"]) == 1,
+                                    Convert.ToInt32(dr["Has_Non_Reponse"]) == 1));
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("getActiveLieuAlarmStates SQL Server error: " + ex.Message);
+                }
+
+                return result;
+            }
+        }
+
         public SondeMetrologySettings getSondeMetrologyBySerialNumber(string p_serial_number)
         {
             lock (_lock)

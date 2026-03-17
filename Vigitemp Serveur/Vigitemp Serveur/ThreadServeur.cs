@@ -417,6 +417,19 @@ namespace Vigitemp_Serveur
         {
             VigitempServeur.Log("Starting Thread#" + _idServer + "...");
             AlarmWebNotifier.ValidateConfig();
+            try
+            {
+                var activeStates = GetDatabase().getActiveLieuAlarmStates();
+                foreach (var s in activeStates)
+                {
+                    Sensor.SeedAlarmState(s.idLieu, s.isAlarm, s.isNonResponse);
+                }
+                VigitempServeur.Log($"Alarm state seeded: {activeStates.Count} lieux actifs en DB au d\u00e9marrage.");
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("Alarm state seed error (non-fatal): " + ex.Message);
+            }
             RefreshSchedule();
 
             _schedulerTimer = new System.Timers.Timer(_schedulerTickMs);

@@ -37,6 +37,7 @@ namespace Vigitemp_Serveur
         (double, double) getCoeffCalibrageBySerialNumber(string p_serial_number);
         SondeMetrologySettings getSondeMetrologyBySerialNumber(string p_serial_number);
         bool writeAuditJournal(string codeJournal, string username, string userProfile, int? idLieu, string commentaire, string commentaireUtilisateur);
+        List<(int idLieu, bool isAlarm, bool isNonResponse)> getActiveLieuAlarmStates();
     }
 }
 

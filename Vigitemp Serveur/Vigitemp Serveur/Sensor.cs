@@ -535,6 +535,26 @@ namespace Vigitemp_Serveur
             _retriggerNoResponseWaitCountByLieu.TryRemove(idLieu, out _);
         }
 
+        /// <summary>
+        /// Called at startup to reconcile in-memory alarm state with the DB.
+        /// Prevents re-triggering alarms that were already active before restart.
+        /// </summary>
+        public static void SeedAlarmState(int idLieu, bool isAlarmActive, bool isNoResponseActive)
+        {
+            if (isAlarmActive)
+            {
+                _alarmStateByLieu[idLieu] = true;
+                AlarmStateEvaluator.ForceActive("alarm-low", idLieu);
+                AlarmStateEvaluator.ForceActive("alarm-high", idLieu);
+            }
+            if (isNoResponseActive)
+            {
+                _noResponseStateByLieu[idLieu] = true;
+                AlarmStateEvaluator.ForceActive("alarm-nr", idLieu);
+                if (!isAlarmActive) _alarmStateByLieu[idLieu] = true;
+            }
+        }
+
     }
 }
 

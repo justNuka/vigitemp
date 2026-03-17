@@ -42,6 +42,19 @@ namespace Vigitemp_Serveur
             }
         }
 
+        public static void ForceActive(string channel, int idLieu)
+        {
+            if (idLieu <= 0) return;
+            if (channel == null) channel = "alarm";
+            var key = channel + ":" + idLieu;
+            var state = _stateByKey.GetOrAdd(key, _ => new RuntimeState());
+            lock (state)
+            {
+                state.IsActive = true;
+                state.OutOfRangeSinceUtc = null;
+            }
+        }
+
         public static AlarmEvaluation Evaluate(
             string channel,
             int idLieu,
