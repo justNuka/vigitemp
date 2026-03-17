@@ -30,7 +30,7 @@ namespace Vigitemp_Serveur.sensors
                 m_port.Write(command);
                 Stopwatch tmp_sw = new Stopwatch();
                 tmp_sw.Start();
-                while (tmp_sw.Elapsed.TotalMilliseconds < 100) { }
+                await Task.Delay(100);
                 VigitempServeur.Log($"[SONDE][TX] type=IE serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} cmd={command} (repeat)");
                 m_port.Write(command);
 
