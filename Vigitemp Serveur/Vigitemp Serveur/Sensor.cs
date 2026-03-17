@@ -306,7 +306,8 @@ namespace Vigitemp_Serveur
                 if (forceImmediateRetrigger && overallAlarmActive)
                 {
                     ths.GetDatabase().setLieuImmediateRetriggerFlag(m_idLieu, false);
-                    _retriggerThresholdWaitCountByLieu[m_idLieu] = 0;
+                    _retriggerLowWaitCountByLieu[m_idLieu] = 0;
+                    _retriggerHighWaitCountByLieu[m_idLieu] = 0;
                 }
 
                 AlarmEvaluation preEvaluation;
