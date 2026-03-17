@@ -268,7 +268,8 @@ namespace VigitempAgent
             if (hLogTag == 0)
             {
                 setStep?.Invoke("LogOnUser");
-                LogTag.LogOnUser(null, null, null);
+                if (LogTag.LogOnUser(null, null, null) != 0)
+                    AgentLog.Error("TryOpenSingleLogTag: LogOnUser failed.", null);
                 setStep?.Invoke("OpenAccessRetry");
                 hLogTag = LogTag.OpenAccess(hInstance);
                 if (hLogTag == 0)
@@ -279,11 +280,13 @@ namespace VigitempAgent
             }
 
             setStep?.Invoke("GetPortInfoPrimary");
-            LogTag.GetPortInfo(null, ref portCount, 4);
+            if (LogTag.GetPortInfo(null, ref portCount, 4) != 0)
+                AgentLog.Error("TryOpenSingleLogTag: GetPortInfo(4) failed.", null);
             if (portCount == 0)
             {
                 setStep?.Invoke("GetPortInfoFallback");
-                LogTag.GetPortInfo(null, ref portCount, 8);
+                if (LogTag.GetPortInfo(null, ref portCount, 8) != 0)
+                    AgentLog.Error("TryOpenSingleLogTag: GetPortInfo(8) failed.", null);
             }
 
             if (portCount > 1)
@@ -303,16 +306,19 @@ namespace VigitempAgent
 
             LOGTAG_PORTINFO[] tabPortInfo = new LOGTAG_PORTINFO[portCount];
             setStep?.Invoke("GetPortInfoDetails");
-            LogTag.GetPortInfo(tabPortInfo, ref portCount, 4);
+            if (LogTag.GetPortInfo(tabPortInfo, ref portCount, 4) != 0)
+                AgentLog.Error("TryOpenSingleLogTag: GetPortInfo(details) failed.", null);
             tabPortInfo[0].cbSize = (uint)Marshal.SizeOf(tabPortInfo[0]);
             tabPortInfo[0].wPortIndex = 1;
 
             LOGTAG_INTERFACE[] ltInterface = new LOGTAG_INTERFACE[1];
             ltInterface[0].cbSize = (uint)Marshal.SizeOf(ltInterface[0]);
             setStep?.Invoke("OpenIO");
-            LogTag.OpenIO(hLogTag, tabPortInfo);
+            if (LogTag.OpenIO(hLogTag, tabPortInfo) != 0)
+                AgentLog.Error("TryOpenSingleLogTag: OpenIO failed.", null);
             setStep?.Invoke("GetInterface");
-            LogTag.GetInterface(hLogTag, ltInterface);
+            if (LogTag.GetInterface(hLogTag, ltInterface) != 0)
+                AgentLog.Error("TryOpenSingleLogTag: GetInterface failed.", null);
 
             ltinfo = new LOGTAG_INFO[1];
             ltinfo[0].cbSize = (uint)Marshal.SizeOf(ltinfo[0]);
@@ -708,454 +714,341 @@ namespace VigitempAgent
                 {
                     EnsureCorsHeaders(resp, req);
 
-                if (req.HttpMethod == "OPTIONS")
-                {
-                    resp.StatusCode = 204;
-                    resp.Close();
-                    continue;
-                }
-                if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/info")
-                {
-                    if (!IsLoopback(req))
+                    if (req.HttpMethod == "OPTIONS")
                     {
-                        resp.StatusCode = 403;
+                        resp.StatusCode = 204;
+                        resp.Close();
+                        continue;
+                    }
+                    if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/info")
+                    {
+                        if (!IsLoopback(req))
+                        {
+                            resp.StatusCode = 403;
+                            resp.Close();
+                            continue;
+                        }
+
+                        var payload =
+                            "{\"machineName\":\"" + JsonEscape(Environment.MachineName) + "\"," +
+                            "\"ip\":\"" + JsonEscape(GetLocalIPAddress()) + "\"}";
+                        var infoData = Encoding.UTF8.GetBytes(payload.ToCharArray());
+                        resp.ContentType = "application/json";
+                        resp.ContentEncoding = Encoding.UTF8;
+                        EnsureCorsHeaders(resp, req);
+                        resp.ContentLength64 = infoData.LongLength;
+                        await resp.OutputStream.WriteAsync(infoData, 0, infoData.Length);
                         resp.Close();
                         continue;
                     }
 
-                    var payload =
-                        "{\"machineName\":\"" + JsonEscape(Environment.MachineName) + "\"," +
-                        "\"ip\":\"" + JsonEscape(GetLocalIPAddress()) + "\"}";
-                    var infoData = Encoding.UTF8.GetBytes(payload.ToCharArray());
-                    resp.ContentType = "application/json";
-                    resp.ContentEncoding = Encoding.UTF8;
-                    EnsureCorsHeaders(resp, req);
-                    resp.ContentLength64 = infoData.LongLength;
-                    await resp.OutputStream.WriteAsync(infoData, 0, infoData.Length);
-                    resp.Close();
-                    continue;
-                }
+                    //réponse de la fonction renvoyées par le HttpListener
+                    string res = "false";
+                    string details = "erreur";
+                    string json = "";
+                    byte[] data = new byte[0];
 
-                //réponse de la fonction renvoyées par le HttpListener
-                string res = "false";
-                string details = "erreur";
-                string json = "";
-                byte[] data = new byte[0];
+                    string[] rawParams;
+                    Dictionary<string, string> postParams = new Dictionary<string, string>();
 
-                string[] rawParams;
-                Dictionary<string, string> postParams = new Dictionary<string, string>();
-
-                // If `shutdown` url requested w/ POST, then shutdown the server after serving the page
-                if (req.HttpMethod == "POST")
-                {
-                    switch (req.Url.AbsolutePath)
+                    // If `shutdown` url requested w/ POST, then shutdown the server after serving the page
+                    if (req.HttpMethod == "POST")
                     {
-                        case "/shutdown":
-                            runServer = false;
-                            break;
-                        case "/notify":
-                            {
-                                if (!IsNotifyAuthorized(req))
-                                {
-                                    resp.StatusCode = 401;
-                                    resp.Close();
-                                    break;
-                                }
-
-                                string payload;
-                                using (var reader = new StreamReader(req.InputStream, req.ContentEncoding))
-                                {
-                                    payload = await reader.ReadToEndAsync();
-                                }
-
-                                JObject jPayload;
-                                try { jPayload = JObject.Parse(payload); }
-                                catch { jPayload = new JObject(); }
-
-                                var title        = jPayload.Value<string>("title") ?? "Alarme Vigitemp";
-                                var message      = jPayload.Value<string>("message");
-                                var location     = jPayload.Value<string>("location");
-                                var date         = jPayload.Value<string>("date");
-                                var url          = jPayload.Value<string>("url");
-                                var deliveryId   = jPayload.Value<int?>("deliveryId");
-                                var correlationId= jPayload.Value<string>("correlationId");
-                                var alarmId      = jPayload.Value<int?>("alarmId");
-                                var lieuId       = jPayload.Value<int?>("lieuId");
-                                var alarmType    = jPayload.Value<string>("alarmType");
-                                var triggeredAt  = jPayload.Value<string>("triggeredAt");
-                                var lastValue    = jPayload.Value<string>("lastValue");
-                                var lastMeasureAt= jPayload.Value<string>("lastMeasureAt");
-
-                                var combined = message;
-                                if (!string.IsNullOrWhiteSpace(location) || !string.IsNullOrWhiteSpace(date))
-                                {
-                                    var detailsText = string.Join(" | ", new[] { location, date });
-                                    combined = string.IsNullOrWhiteSpace(message)
-                                        ? detailsText
-                                        : (message + Environment.NewLine + detailsText);
-                                }
-
-                                try
-                                {
-                                    if (SessionStore.HasValidSession())
-                                    {
-                                        SafeInvokeFormAlert(frm_alert, () =>
-                                        {
-                                            frm_alert.SetAlarmBannerDetails(new Form_Alert.AlarmBannerDetails
-                                            {
-                                                Location = location,
-                                                TriggeredAt = triggeredAt,
-                                                AlarmType = alarmType,
-                                                LastValue = lastValue,
-                                                LastMeasureAt = lastMeasureAt,
-                                            });
-                                            frm_alert.DisplayAlarm();
-                                        });
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    AgentLog.Error("DisplayAlarm failed.", ex);
-                                }
-
-                                try
-                                {
-                                    MyCustomApplicationContext.Instance?.ShowAlarmNotification(
-                                        title,
-                                        combined,
-                                        url ?? (MyCustomApplicationContext.Instance?.SITEWEB_URL ?? ""),
-                                        new NotificationTracking
-                                        {
-                                            DeliveryId = deliveryId,
-                                            CorrelationId = correlationId,
-                                            AlarmId = alarmId,
-                                            LieuId = lieuId,
-                                        }
-                                    );
-                                }
-                                catch (Exception ex)
-                                {
-                                    AgentLog.Error("ShowAlarmNotification failed.", ex);
-                                }
-
-                                resp.StatusCode = 204;
-                                resp.Close();
+                        switch (req.Url.AbsolutePath)
+                        {
+                            case "/shutdown":
+                                runServer = false;
                                 break;
-                            }
-                        case "/agent-secret":
-                            {
-                                if (!IsLoopback(req))
+                            case "/notify":
                                 {
-                                    resp.StatusCode = 403;
-                                    resp.Close();
-                                    break;
-                                }
+                                    if (!IsNotifyAuthorized(req))
+                                    {
+                                        resp.StatusCode = 401;
+                                        resp.Close();
+                                        break;
+                                    }
 
-                                string payload;
-                                using (var reader = new StreamReader(req.InputStream, req.ContentEncoding))
-                                {
-                                    payload = await reader.ReadToEndAsync();
-                                }
+                                    string payload;
+                                    using (var reader = new StreamReader(req.InputStream, req.ContentEncoding))
+                                    {
+                                        payload = await reader.ReadToEndAsync();
+                                    }
 
-                                JObject jSecret;
-                                try { jSecret = JObject.Parse(payload); } catch { jSecret = new JObject(); }
-                                var secret = jSecret.Value<string>("secret");
-                                if (!string.IsNullOrWhiteSpace(secret))
-                                {
+                                    JObject jPayload;
+                                    try { jPayload = JObject.Parse(payload); }
+                                    catch { jPayload = new JObject(); }
+
+                                    var title        = jPayload.Value<string>("title") ?? "Alarme Vigitemp";
+                                    var message      = jPayload.Value<string>("message");
+                                    var location     = jPayload.Value<string>("location");
+                                    var date         = jPayload.Value<string>("date");
+                                    var url          = jPayload.Value<string>("url");
+                                    var deliveryId   = jPayload.Value<int?>("deliveryId");
+                                    var correlationId= jPayload.Value<string>("correlationId");
+                                    var alarmId      = jPayload.Value<int?>("alarmId");
+                                    var lieuId       = jPayload.Value<int?>("lieuId");
+                                    var alarmType    = jPayload.Value<string>("alarmType");
+                                    var triggeredAt  = jPayload.Value<string>("triggeredAt");
+                                    var lastValue    = jPayload.Value<string>("lastValue");
+                                    var lastMeasureAt= jPayload.Value<string>("lastMeasureAt");
+
+                                    var combined = message;
+                                    if (!string.IsNullOrWhiteSpace(location) || !string.IsNullOrWhiteSpace(date))
+                                    {
+                                        var detailsText = string.Join(" | ", new[] { location, date });
+                                        combined = string.IsNullOrWhiteSpace(message)
+                                            ? detailsText
+                                            : (message + Environment.NewLine + detailsText);
+                                    }
+
                                     try
                                     {
-                                        AgentSecretStore.Save(secret);
-                                        MyCustomApplicationContext.Instance?.SetAgentSecret(secret);
+                                        if (SessionStore.HasValidSession())
+                                        {
+                                            SafeInvokeFormAlert(frm_alert, () =>
+                                            {
+                                                frm_alert.SetAlarmBannerDetails(new Form_Alert.AlarmBannerDetails
+                                                {
+                                                    Location = location,
+                                                    TriggeredAt = triggeredAt,
+                                                    AlarmType = alarmType,
+                                                    LastValue = lastValue,
+                                                    LastMeasureAt = lastMeasureAt,
+                                                });
+                                                frm_alert.DisplayAlarm();
+                                            });
+                                        }
                                     }
                                     catch (Exception ex)
                                     {
-                                        AgentLog.Error("AgentSecretStore.Save failed.", ex);
+                                        AgentLog.Error("DisplayAlarm failed.", ex);
+                                    }
+
+                                    try
+                                    {
+                                        MyCustomApplicationContext.Instance?.ShowAlarmNotification(
+                                            title,
+                                            combined,
+                                            url ?? (MyCustomApplicationContext.Instance?.SITEWEB_URL ?? ""),
+                                            new NotificationTracking
+                                            {
+                                                DeliveryId = deliveryId,
+                                                CorrelationId = correlationId,
+                                                AlarmId = alarmId,
+                                                LieuId = lieuId,
+                                            }
+                                        );
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        AgentLog.Error("ShowAlarmNotification failed.", ex);
+                                    }
+
+                                    resp.StatusCode = 204;
+                                    resp.Close();
+                                    break;
+                                }
+                            case "/agent-secret":
+                                {
+                                    if (!IsLoopback(req))
+                                    {
+                                        resp.StatusCode = 403;
+                                        resp.Close();
+                                        break;
+                                    }
+
+                                    string payload;
+                                    using (var reader = new StreamReader(req.InputStream, req.ContentEncoding))
+                                    {
+                                        payload = await reader.ReadToEndAsync();
+                                    }
+
+                                    JObject jSecret;
+                                    try { jSecret = JObject.Parse(payload); } catch { jSecret = new JObject(); }
+                                    var secret = jSecret.Value<string>("secret");
+                                    if (!string.IsNullOrWhiteSpace(secret))
+                                    {
+                                        try
+                                        {
+                                            AgentSecretStore.Save(secret);
+                                            MyCustomApplicationContext.Instance?.SetAgentSecret(secret);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            AgentLog.Error("AgentSecretStore.Save failed.", ex);
+                                        }
+                                    }
+
+                                    resp.StatusCode = 204;
+                                    resp.Close();
+                                    break;
+                                }
+                            case "/alarm":
+                            {
+                                if (!IsLoopback(req))
+                                {
+                                    resp.StatusCode = 403;
+                                    resp.Close();
+                                    break;
+                                }
+
+                                var queryParts = req.RawUrl.Split('?');
+                                if (queryParts.Length > 1)
+                                {
+                                    rawParams = queryParts[1].Split('&');
+                                    foreach (string param in rawParams)
+                                    {
+                                        string[] kvPair = param.Split('=');
+                                        if (kvPair.Length < 2 || string.IsNullOrEmpty(kvPair[0])) continue;
+                                        postParams[kvPair[0]] = HttpUtility.UrlDecode(kvPair[1]);
                                     }
                                 }
 
-                                resp.StatusCode = 204;
-                                resp.Close();
-                                break;
-                            }
-                        case "/alarm":
-                        {
-                            if (!IsLoopback(req))
-                            {
-                                resp.StatusCode = 403;
-                                resp.Close();
-                                break;
-                            }
+                                string action;
+                                postParams.TryGetValue("action", out action);
+                                string idLieuStr;
+                                int idLieuVal = 0;
+                                if (postParams.TryGetValue("idLieu", out idLieuStr))
+                                    int.TryParse(idLieuStr, out idLieuVal);
 
-                            var queryParts = req.RawUrl.Split('?');
-                            if (queryParts.Length > 1)
-                            {
-                                rawParams = queryParts[1].Split('&');
-                                foreach (string param in rawParams)
+                                if (action == "show" && idLieuVal > 0)
                                 {
-                                    string[] kvPair = param.Split('=');
-                                    if (kvPair.Length < 2 || string.IsNullOrEmpty(kvPair[0])) continue;
-                                    postParams[kvPair[0]] = HttpUtility.UrlDecode(kvPair[1]);
+                                    if (!idLieuxEnAlarmes.Contains(idLieuVal))
+                                        idLieuxEnAlarmes.Add(idLieuVal);
+                                    if (SessionStore.HasValidSession())
+                                        SafeInvokeFormAlert(frm_alert, () => frm_alert.DisplayAlarm());
+                                    else
+                                        SafeInvokeFormAlert(frm_alert, () => frm_alert.HideAlarm());
+                                }
+                                if (action == "hide" && idLieuVal > 0)
+                                {
+                                    idLieuxEnAlarmes.Remove(idLieuVal);
+                                    if (idLieuxEnAlarmes.Count == 0)
+                                        SafeInvokeFormAlert(frm_alert, () => frm_alert.HideAlarm());
                                 }
                             }
-
-                            string action;
-                            postParams.TryGetValue("action", out action);
-                            string idLieuStr;
-                            int idLieuVal = 0;
-                            if (postParams.TryGetValue("idLieu", out idLieuStr))
-                                int.TryParse(idLieuStr, out idLieuVal);
-
-                            if (action == "show" && idLieuVal > 0)
-                            {
-                                if (!idLieuxEnAlarmes.Contains(idLieuVal))
-                                    idLieuxEnAlarmes.Add(idLieuVal);
-                                if (SessionStore.HasValidSession())
-                                    SafeInvokeFormAlert(frm_alert, () => frm_alert.DisplayAlarm());
-                                else
-                                    SafeInvokeFormAlert(frm_alert, () => frm_alert.HideAlarm());
-                            }
-                            if (action == "hide" && idLieuVal > 0)
-                            {
-                                idLieuxEnAlarmes.Remove(idLieuVal);
-                                if (idLieuxEnAlarmes.Count == 0)
-                                    SafeInvokeFormAlert(frm_alert, () => frm_alert.HideAlarm());
-                            }
-                        }
-                            resp.ContentType = "application/json";
-                            resp.ContentEncoding = Encoding.UTF8;
-                            EnsureCorsHeaders(resp, req);
-                            resp.ContentLength64 = data.LongLength;
-
-                            // Write out to the response stream (asynchronously), then close it
-                            await resp.OutputStream.WriteAsync(data, 0, data.Length);
-                            resp.Close();
-
-                            //break;
-
-                            break;
-                        case "/session":
-                            if (!IsLoopback(req))
-                            {
-                                resp.StatusCode = 403;
-                                resp.Close();
-                                break;
-                            }
-
-                            string body;
-                            using (var reader = new StreamReader(req.InputStream, req.ContentEncoding))
-                            {
-                                body = await reader.ReadToEndAsync();
-                            }
-
-                            var session = new SessionInfo();
-                            if (!string.IsNullOrWhiteSpace(body))
-                            {
-                                JObject jSession;
-                                try { jSession = JObject.Parse(body); } catch { jSession = new JObject(); }
-                                var expiresAtRaw = jSession.Value<string>("expiresAtUtc") ?? jSession.Value<string>("expiresAt");
-                                DateTime? expiresAt = null;
-                                if (!string.IsNullOrWhiteSpace(expiresAtRaw))
-                                {
-                                    DateTime dt;
-                                    if (DateTime.TryParse(expiresAtRaw, out dt))
-                                        expiresAt = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
-                                }
-                                session = new SessionInfo
-                                {
-                                    Token = jSession.Value<string>("token"),
-                                    UserId = jSession.Value<string>("userId"),
-                                    Username = jSession.Value<string>("username"),
-                                    ExpiresAtUtc = expiresAt,
-                                };
-                            }
-
-                            SessionStore.Save(session);
-
-                            if (idLieuxEnAlarmes.Count > 0 && SessionStore.HasValidSession())
-                            {
-                                SafeInvokeFormAlert(frm_alert, () => frm_alert.DisplayAlarm());
-                            }
-
-                            resp.ContentType = "application/json";
-                            resp.ContentEncoding = Encoding.UTF8;
-                            EnsureCorsHeaders(resp, req);
-                            resp.ContentLength64 = 0;
-                            await resp.OutputStream.WriteAsync(new byte[0], 0, 0);
-                            resp.Close();
-                            break;
-
-                        case "/vigilog/configure":
-                            {
-                                if (!IsLoopback(req))
-                                {
-                                    resp.StatusCode = 403;
-                                    resp.Close();
-                                    break;
-                                }
-
-                                string payload;
-                                using (var reader = new StreamReader(req.InputStream, req.ContentEncoding))
-                                {
-                                    payload = await reader.ReadToEndAsync();
-                                }
-
-                                JObject jPayload;
-                                try { jPayload = JObject.Parse(payload); } catch { jPayload = new JObject(); }
-
-                                bool lowLimitActive = jPayload.Value<bool?>("lowLimitActive") ?? false;
-                                bool highLimitActive = jPayload.Value<bool?>("highLimitActive") ?? false;
-                                double? lowLimit = jPayload.Value<double?>("lowLimit");
-                                double? highLimit = jPayload.Value<double?>("highLimit");
-                                int frequencyMinutes = jPayload.Value<int?>("frequencyMinutes") ?? 1;
-                                int alarmDelayMinutes = jPayload.Value<int?>("alarmDelayMinutes") ?? 1;
-                                bool startAutomatically = jPayload.Value<bool?>("startAutomatically") ?? false;
-                                var configurePayload = await InvokeVigilogWorkerAsync(
-                                    "configure",
-                                    30000,
-                                    lowLimitActive ? "1" : "0",
-                                    lowLimit.HasValue ? lowLimit.Value.ToString(CultureInfo.InvariantCulture) : "null",
-                                    highLimitActive ? "1" : "0",
-                                    highLimit.HasValue ? highLimit.Value.ToString(CultureInfo.InvariantCulture) : "null",
-                                    frequencyMinutes.ToString(CultureInfo.InvariantCulture),
-                                    alarmDelayMinutes.ToString(CultureInfo.InvariantCulture),
-                                    startAutomatically ? "1" : "0"
-                                );
-                                await WriteJsonResponse(resp, configurePayload.Value<bool?>("res") == true ? 200 : 503, configurePayload, req);
-                                break;
-                            }
-
-                        case "/vigilog/clear":
-                            {
-                                if (!IsLoopback(req))
-                                {
-                                    resp.StatusCode = 403;
-                                    resp.Close();
-                                    break;
-                                }
-
-                                var clearPayload = await InvokeVigilogWorkerAsync("clear", 35000);
-                                await WriteJsonResponse(resp, clearPayload.Value<bool?>("res") == true ? 200 : 503, clearPayload, req);
-                                break;
-                            }
-
-                        case "/uploadLogTagConfiguration":
-                            if (req.RawUrl.Split('?').Length <= 1)
-                            {
-                                res = "false";
-                                details = "Echec d'envoi des paramatres -> aucun parametre";
-                                json = "{\"res\":" + res + ", \"details\":\"" + JsonEscape(details) + "\"}";
-                                data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                 resp.ContentType = "application/json";
                                 resp.ContentEncoding = Encoding.UTF8;
                                 EnsureCorsHeaders(resp, req);
                                 resp.ContentLength64 = data.LongLength;
+
+                                // Write out to the response stream (asynchronously), then close it
                                 await resp.OutputStream.WriteAsync(data, 0, data.Length);
                                 resp.Close();
+
+                                //break;
+
                                 break;
-                            }
+                            case "/session":
+                                if (!IsLoopback(req))
+                                {
+                                    resp.StatusCode = 403;
+                                    resp.Close();
+                                    break;
+                                }
 
-                            rawParams = req.RawUrl.Split('?')[1].Split('&');
-                            foreach (string param in rawParams)
-                            {
-                                string[] kvPair = param.Split('=');
-                                if (kvPair.Length < 2 || string.IsNullOrEmpty(kvPair[0])) continue;
-                                string key = kvPair[0];
-                                string value = HttpUtility.UrlDecode(kvPair[1]);
-                                postParams[key] = value;
-                            }
+                                string body;
+                                using (var reader = new StreamReader(req.InputStream, req.ContentEncoding))
+                                {
+                                    body = await reader.ReadToEndAsync();
+                                }
 
-                            bool params_consigneHaute = Convert.ToBoolean(postParams["consigneHaute"]);
-                            bool params_consigneBasse = Convert.ToBoolean(postParams["consigneBasse"]);
-                            int params_valeurConsigneHaute = Convert.ToInt32(postParams["valeurConsigneHaute"]);
-                            int params_valeurConsigneBasse = Convert.ToInt32(postParams["valeurConsigneBasse"]);
+                                var session = new SessionInfo();
+                                if (!string.IsNullOrWhiteSpace(body))
+                                {
+                                    JObject jSession;
+                                    try { jSession = JObject.Parse(body); } catch { jSession = new JObject(); }
+                                    var expiresAtRaw = jSession.Value<string>("expiresAtUtc") ?? jSession.Value<string>("expiresAt");
+                                    DateTime? expiresAt = null;
+                                    if (!string.IsNullOrWhiteSpace(expiresAtRaw))
+                                    {
+                                        DateTime dt;
+                                        if (DateTime.TryParse(expiresAtRaw, out dt))
+                                            expiresAt = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                                    }
+                                    session = new SessionInfo
+                                    {
+                                        Token = jSession.Value<string>("token"),
+                                        UserId = jSession.Value<string>("userId"),
+                                        Username = jSession.Value<string>("username"),
+                                        ExpiresAtUtc = expiresAt,
+                                    };
+                                }
 
-                            var legacyConfigurePayload = await InvokeVigilogWorkerAsync(
-                                "configure",
-                                30000,
-                                params_consigneBasse ? "1" : "0",
-                                params_consigneBasse ? params_valeurConsigneBasse.ToString(CultureInfo.InvariantCulture) : "null",
-                                params_consigneHaute ? "1" : "0",
-                                params_consigneHaute ? params_valeurConsigneHaute.ToString(CultureInfo.InvariantCulture) : "null",
-                                "1",
-                                "1",
-                                "0"
-                            );
+                                SessionStore.Save(session);
 
-                            if (legacyConfigurePayload.Value<bool?>("res") == true)
-                            {
-                                res = "true";
-                                details = "Parametrages correctement appliques";
-                            }
-                            else
-                            {
-                                res = "false";
-                                details = legacyConfigurePayload.Value<string>("details") ?? "Parametrage echoue";
-                            }
+                                if (idLieuxEnAlarmes.Count > 0 && SessionStore.HasValidSession())
+                                {
+                                    SafeInvokeFormAlert(frm_alert, () => frm_alert.DisplayAlarm());
+                                }
 
-                            json = "{\"res\":" + res + ", \"details\":\"" + JsonEscape(details) + "\"}";
-                            data = Encoding.UTF8.GetBytes(json.ToCharArray());
-                            resp.ContentType = "application/json";
-                            resp.ContentEncoding = Encoding.UTF8;
-                            EnsureCorsHeaders(resp, req);
-                            resp.ContentLength64 = data.LongLength;
-                            await resp.OutputStream.WriteAsync(data, 0, data.Length);
-                            resp.Close();
+                                resp.ContentType = "application/json";
+                                resp.ContentEncoding = Encoding.UTF8;
+                                EnsureCorsHeaders(resp, req);
+                                resp.ContentLength64 = 0;
+                                await resp.OutputStream.WriteAsync(new byte[0], 0, 0);
+                                resp.Close();
+                                break;
 
-                            break;
+                            case "/vigilog/configure":
+                                {
+                                    if (!IsLoopback(req))
+                                    {
+                                        resp.StatusCode = 403;
+                                        resp.Close();
+                                        break;
+                                    }
 
-                        default:
-                            resp.StatusCode = 404;
-                            resp.Close();
-                            break;
-                    }
+                                    string payload;
+                                    using (var reader = new StreamReader(req.InputStream, req.ContentEncoding))
+                                    {
+                                        payload = await reader.ReadToEndAsync();
+                                    }
 
-                }
-                else if (req.HttpMethod == "DELETE" && req.Url.AbsolutePath == "/session")
-                {
-                    if (!IsLoopback(req))
-                    {
-                        resp.StatusCode = 403;
-                        resp.Close();
-                        continue;
-                    }
+                                    JObject jPayload;
+                                    try { jPayload = JObject.Parse(payload); } catch { jPayload = new JObject(); }
 
-                    SessionStore.Clear();
-                    SafeInvokeFormAlert(frm_alert, () => frm_alert.HideAlarm());
+                                    bool lowLimitActive = jPayload.Value<bool?>("lowLimitActive") ?? false;
+                                    bool highLimitActive = jPayload.Value<bool?>("highLimitActive") ?? false;
+                                    double? lowLimit = jPayload.Value<double?>("lowLimit");
+                                    double? highLimit = jPayload.Value<double?>("highLimit");
+                                    int frequencyMinutes = jPayload.Value<int?>("frequencyMinutes") ?? 1;
+                                    int alarmDelayMinutes = jPayload.Value<int?>("alarmDelayMinutes") ?? 1;
+                                    bool startAutomatically = jPayload.Value<bool?>("startAutomatically") ?? false;
+                                    var configurePayload = await InvokeVigilogWorkerAsync(
+                                        "configure",
+                                        30000,
+                                        lowLimitActive ? "1" : "0",
+                                        lowLimit.HasValue ? lowLimit.Value.ToString(CultureInfo.InvariantCulture) : "null",
+                                        highLimitActive ? "1" : "0",
+                                        highLimit.HasValue ? highLimit.Value.ToString(CultureInfo.InvariantCulture) : "null",
+                                        frequencyMinutes.ToString(CultureInfo.InvariantCulture),
+                                        alarmDelayMinutes.ToString(CultureInfo.InvariantCulture),
+                                        startAutomatically ? "1" : "0"
+                                    );
+                                    await WriteJsonResponse(resp, configurePayload.Value<bool?>("res") == true ? 200 : 503, configurePayload, req);
+                                    break;
+                                }
 
-                    resp.StatusCode = 204;
-                    resp.Close();
-                    continue;
-                }
-                else if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/session")
-                {
-                    var s = SessionStore.Get();
-                    var connected = SessionStore.HasValidSession();
-                    var jsonSession = "{\"connected\":" + (connected ? "true" : "false") +
-                                      ",\"username\":\"" + JsonEscape(s != null ? s.Username : "") + "\"" +
-                                      ",\"userId\":\"" + JsonEscape(s != null ? s.UserId : "") + "\"" +
-                                      ",\"expiresAtUtc\":\"" + (s != null && s.ExpiresAtUtc.HasValue ? s.ExpiresAtUtc.Value.ToString("o") : "") + "\"" +
-                                      "}";
+                            case "/vigilog/clear":
+                                {
+                                    if (!IsLoopback(req))
+                                    {
+                                        resp.StatusCode = 403;
+                                        resp.Close();
+                                        break;
+                                    }
 
-                    var bytes = Encoding.UTF8.GetBytes(jsonSession);
-                    resp.ContentType = "application/json";
-                    resp.ContentEncoding = Encoding.UTF8;
-                    EnsureCorsHeaders(resp, req);
-                    resp.ContentLength64 = bytes.LongLength;
-                    await resp.OutputStream.WriteAsync(bytes, 0, bytes.Length);
-                    resp.Close();
-                    continue;
-                }
-                if (req.HttpMethod == "GET")
-                {
-                    switch (req.Url.AbsolutePath)
-                    {
-                        case "/DownloadLogTagData":
-                            {
-                            var legacyReadPayload = await InvokeVigilogWorkerAsync("read", 35000);
-                                if (legacyReadPayload.Value<bool?>("res") != true)
+                                    var clearPayload = await InvokeVigilogWorkerAsync("clear", 35000);
+                                    await WriteJsonResponse(resp, clearPayload.Value<bool?>("res") == true ? 200 : 503, clearPayload, req);
+                                    break;
+                                }
+
+                            case "/uploadLogTagConfiguration":
+                                if (req.RawUrl.Split('?').Length <= 1)
                                 {
                                     res = "false";
-                                    details = legacyReadPayload.Value<string>("details") ?? "Lecture des mesures impossible";
+                                    details = "Echec d'envoi des paramatres -> aucun parametre";
                                     json = "{\"res\":" + res + ", \"details\":\"" + JsonEscape(details) + "\"}";
                                     data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                     resp.ContentType = "application/json";
@@ -1167,37 +1060,45 @@ namespace VigitempAgent
                                     break;
                                 }
 
-                                string serialNumber = legacyReadPayload.Value<string>("loggerSerial") ?? string.Empty;
-                                string id_recuperationMesure = DateTime.Now.ToString("yyyyMMddHHmmss");
-                                var measuresArray = legacyReadPayload["measures"] as JArray ?? new JArray();
-
-                                Database database = new Database();
-                                database.InitConnexion();
-                                try
+                                rawParams = req.RawUrl.Split('?')[1].Split('&');
+                                foreach (string param in rawParams)
                                 {
-                                    foreach (var token in measuresArray)
-                                    {
-                                        var measureObject = token as JObject;
-                                        if (measureObject == null) continue;
-                                        var valeur = measureObject.Value<double?>("Valeur");
-                                        var rawDate = measureObject.Value<string>("Date_Heure_Mesure");
-                                        DateTime dt_mesure;
-                                        if (!valeur.HasValue || string.IsNullOrWhiteSpace(rawDate) || !DateTime.TryParse(rawDate, null, DateTimeStyles.RoundtripKind, out dt_mesure))
-                                        {
-                                            continue;
-                                        }
-
-                                        database.AddMesure(serialNumber, id_recuperationMesure, valeur.Value, dt_mesure);
-                                    }
-                                }
-                                finally
-                                {
-                                    database.CloseConnexion();
+                                    string[] kvPair = param.Split('=');
+                                    if (kvPair.Length < 2 || string.IsNullOrEmpty(kvPair[0])) continue;
+                                    string key = kvPair[0];
+                                    string value = HttpUtility.UrlDecode(kvPair[1]);
+                                    postParams[key] = value;
                                 }
 
-                                res = "true";
-                                details = "Valeur correctement recuperees";
-                                json = "{\"res\":" + res + ", \"details\":\"" + details + "\", \"id_recuperationMesure\":" + id_recuperationMesure + "}";
+                                bool params_consigneHaute = Convert.ToBoolean(postParams["consigneHaute"]);
+                                bool params_consigneBasse = Convert.ToBoolean(postParams["consigneBasse"]);
+                                int params_valeurConsigneHaute = Convert.ToInt32(postParams["valeurConsigneHaute"]);
+                                int params_valeurConsigneBasse = Convert.ToInt32(postParams["valeurConsigneBasse"]);
+
+                                var legacyConfigurePayload = await InvokeVigilogWorkerAsync(
+                                    "configure",
+                                    30000,
+                                    params_consigneBasse ? "1" : "0",
+                                    params_consigneBasse ? params_valeurConsigneBasse.ToString(CultureInfo.InvariantCulture) : "null",
+                                    params_consigneHaute ? "1" : "0",
+                                    params_consigneHaute ? params_valeurConsigneHaute.ToString(CultureInfo.InvariantCulture) : "null",
+                                    "1",
+                                    "1",
+                                    "0"
+                                );
+
+                                if (legacyConfigurePayload.Value<bool?>("res") == true)
+                                {
+                                    res = "true";
+                                    details = "Parametrages correctement appliques";
+                                }
+                                else
+                                {
+                                    res = "false";
+                                    details = legacyConfigurePayload.Value<string>("details") ?? "Parametrage echoue";
+                                }
+
+                                json = "{\"res\":" + res + ", \"details\":\"" + JsonEscape(details) + "\"}";
                                 data = Encoding.UTF8.GetBytes(json.ToCharArray());
                                 resp.ContentType = "application/json";
                                 resp.ContentEncoding = Encoding.UTF8;
@@ -1205,80 +1106,185 @@ namespace VigitempAgent
                                 resp.ContentLength64 = data.LongLength;
                                 await resp.OutputStream.WriteAsync(data, 0, data.Length);
                                 resp.Close();
-                                break;
-                            }
-                        case "/vigilog/probe":
-                            {
-                                if (!IsLoopback(req))
-                                {
-                                    resp.StatusCode = 403;
-                                    resp.Close();
-                                    break;
-                                }
-                                var probePayload = await InvokeVigilogWorkerAsync("probe", 15000);
-                                await WriteJsonResponse(resp, probePayload.Value<bool?>("res") == true ? 200 : 503, probePayload, req);
-                                break;
-                            }
-                        case "/vigilog/presence":
-                            {
-                                if (!IsLoopback(req))
-                                {
-                                    resp.StatusCode = 403;
-                                    resp.Close();
-                                    break;
-                                }
-                                var presencePayload = await InvokeVigilogWorkerAsync("presence", 5000);
-                                await WriteJsonResponse(resp, 200, presencePayload, req);
-                                break;
-                            }
-                        case "/vigilog/read":
-                            {
-                                if (!IsLoopback(req))
-                                {
-                                    resp.StatusCode = 403;
-                                    resp.Close();
-                                    break;
-                                }
-                                var readPayload = await InvokeVigilogWorkerAsync("read", 35000);
-                                await WriteJsonResponse(resp, readPayload.Value<bool?>("res") == true ? 200 : 503, readPayload, req);
-                                break;
-                            }
 
-                        case "/downloadLogTagConfiguration":
-                            {
-                                AgentLog.Info("Legacy LogTag configuration download requested.");
-                                var legacyProbePayload = await InvokeVigilogWorkerAsync("probe", 15000);
-                                if (legacyProbePayload.Value<bool?>("res") == true)
-                                {
-                                    var legacySuccessPayload = new JObject
-                                    {
-                                        ["res"] = true,
-                                        ["details"] = "Valeur correctement recuperees",
-                                        ["res_consigneBasseActive"] = legacyProbePayload.Value<bool?>("lowLimitActive") == true,
-                                        ["res_consigneHauteActive"] = legacyProbePayload.Value<bool?>("highLimitActive") == true,
-                                        ["res_consigneBasseValeur"] = legacyProbePayload["lowLimit"] ?? JValue.CreateNull(),
-                                        ["res_consigneHauteValeur"] = legacyProbePayload["highLimit"] ?? JValue.CreateNull()
-                                    };
-                                    AgentLog.Info("Legacy LogTag configuration download: success via worker");
-                                    await WriteJsonResponse(resp, 200, legacySuccessPayload, req);
-                                    break;
-                                }
-
-                                AgentLog.Error("Legacy LogTag configuration download failed via worker.", null);
-                                await WriteJsonResponse(resp, 503, new JObject
-                                {
-                                    ["res"] = false,
-                                    ["details"] = legacyProbePayload.Value<string>("details") ?? "Erreur lors de la lecture de configuration LogTag"
-                                });
                                 break;
-                            }
 
-                        default:
-                            resp.StatusCode = 404;
-                            resp.Close();
-                            break;
+                            default:
+                                resp.StatusCode = 404;
+                                resp.Close();
+                                break;
+                        }
+
                     }
-                }
+                    else if (req.HttpMethod == "DELETE" && req.Url.AbsolutePath == "/session")
+                    {
+                        if (!IsLoopback(req))
+                        {
+                            resp.StatusCode = 403;
+                            resp.Close();
+                            continue;
+                        }
+
+                        SessionStore.Clear();
+                        SafeInvokeFormAlert(frm_alert, () => frm_alert.HideAlarm());
+
+                        resp.StatusCode = 204;
+                        resp.Close();
+                        continue;
+                    }
+                    else if (req.HttpMethod == "GET" && req.Url.AbsolutePath == "/session")
+                    {
+                        var s = SessionStore.Get();
+                        var connected = SessionStore.HasValidSession();
+                        var jsonSession = "{\"connected\":" + (connected ? "true" : "false") +
+                                          ",\"username\":\"" + JsonEscape(s != null ? s.Username : "") + "\"" +
+                                          ",\"userId\":\"" + JsonEscape(s != null ? s.UserId : "") + "\"" +
+                                          ",\"expiresAtUtc\":\"" + (s != null && s.ExpiresAtUtc.HasValue ? s.ExpiresAtUtc.Value.ToString("o") : "") + "\"" +
+                                          "}";
+
+                        var bytes = Encoding.UTF8.GetBytes(jsonSession);
+                        resp.ContentType = "application/json";
+                        resp.ContentEncoding = Encoding.UTF8;
+                        EnsureCorsHeaders(resp, req);
+                        resp.ContentLength64 = bytes.LongLength;
+                        await resp.OutputStream.WriteAsync(bytes, 0, bytes.Length);
+                        resp.Close();
+                        continue;
+                    }
+                    if (req.HttpMethod == "GET")
+                    {
+                        switch (req.Url.AbsolutePath)
+                        {
+                            case "/DownloadLogTagData":
+                                {
+                                var legacyReadPayload = await InvokeVigilogWorkerAsync("read", 35000);
+                                    if (legacyReadPayload.Value<bool?>("res") != true)
+                                    {
+                                        res = "false";
+                                        details = legacyReadPayload.Value<string>("details") ?? "Lecture des mesures impossible";
+                                        json = "{\"res\":" + res + ", \"details\":\"" + JsonEscape(details) + "\"}";
+                                        data = Encoding.UTF8.GetBytes(json.ToCharArray());
+                                        resp.ContentType = "application/json";
+                                        resp.ContentEncoding = Encoding.UTF8;
+                                        EnsureCorsHeaders(resp, req);
+                                        resp.ContentLength64 = data.LongLength;
+                                        await resp.OutputStream.WriteAsync(data, 0, data.Length);
+                                        resp.Close();
+                                        break;
+                                    }
+
+                                    string serialNumber = legacyReadPayload.Value<string>("loggerSerial") ?? string.Empty;
+                                    string id_recuperationMesure = DateTime.Now.ToString("yyyyMMddHHmmss");
+                                    var measuresArray = legacyReadPayload["measures"] as JArray ?? new JArray();
+
+                                    Database database = new Database();
+                                    database.InitConnexion();
+                                    try
+                                    {
+                                        foreach (var token in measuresArray)
+                                        {
+                                            var measureObject = token as JObject;
+                                            if (measureObject == null) continue;
+                                            var valeur = measureObject.Value<double?>("Valeur");
+                                            var rawDate = measureObject.Value<string>("Date_Heure_Mesure");
+                                            DateTime dt_mesure;
+                                            if (!valeur.HasValue || string.IsNullOrWhiteSpace(rawDate) || !DateTime.TryParse(rawDate, null, DateTimeStyles.RoundtripKind, out dt_mesure))
+                                            {
+                                                continue;
+                                            }
+
+                                            database.AddMesure(serialNumber, id_recuperationMesure, valeur.Value, dt_mesure);
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        database.CloseConnexion();
+                                    }
+
+                                    res = "true";
+                                    details = "Valeur correctement recuperees";
+                                    json = "{\"res\":" + res + ", \"details\":\"" + details + "\", \"id_recuperationMesure\":" + id_recuperationMesure + "}";
+                                    data = Encoding.UTF8.GetBytes(json.ToCharArray());
+                                    resp.ContentType = "application/json";
+                                    resp.ContentEncoding = Encoding.UTF8;
+                                    EnsureCorsHeaders(resp, req);
+                                    resp.ContentLength64 = data.LongLength;
+                                    await resp.OutputStream.WriteAsync(data, 0, data.Length);
+                                    resp.Close();
+                                    break;
+                                }
+                            case "/vigilog/probe":
+                                {
+                                    if (!IsLoopback(req))
+                                    {
+                                        resp.StatusCode = 403;
+                                        resp.Close();
+                                        break;
+                                    }
+                                    var probePayload = await InvokeVigilogWorkerAsync("probe", 15000);
+                                    await WriteJsonResponse(resp, probePayload.Value<bool?>("res") == true ? 200 : 503, probePayload, req);
+                                    break;
+                                }
+                            case "/vigilog/presence":
+                                {
+                                    if (!IsLoopback(req))
+                                    {
+                                        resp.StatusCode = 403;
+                                        resp.Close();
+                                        break;
+                                    }
+                                    var presencePayload = await InvokeVigilogWorkerAsync("presence", 5000);
+                                    await WriteJsonResponse(resp, 200, presencePayload, req);
+                                    break;
+                                }
+                            case "/vigilog/read":
+                                {
+                                    if (!IsLoopback(req))
+                                    {
+                                        resp.StatusCode = 403;
+                                        resp.Close();
+                                        break;
+                                    }
+                                    var readPayload = await InvokeVigilogWorkerAsync("read", 35000);
+                                    await WriteJsonResponse(resp, readPayload.Value<bool?>("res") == true ? 200 : 503, readPayload, req);
+                                    break;
+                                }
+
+                            case "/downloadLogTagConfiguration":
+                                {
+                                    AgentLog.Info("Legacy LogTag configuration download requested.");
+                                    var legacyProbePayload = await InvokeVigilogWorkerAsync("probe", 15000);
+                                    if (legacyProbePayload.Value<bool?>("res") == true)
+                                    {
+                                        var legacySuccessPayload = new JObject
+                                        {
+                                            ["res"] = true,
+                                            ["details"] = "Valeur correctement recuperees",
+                                            ["res_consigneBasseActive"] = legacyProbePayload.Value<bool?>("lowLimitActive") == true,
+                                            ["res_consigneHauteActive"] = legacyProbePayload.Value<bool?>("highLimitActive") == true,
+                                            ["res_consigneBasseValeur"] = legacyProbePayload["lowLimit"] ?? JValue.CreateNull(),
+                                            ["res_consigneHauteValeur"] = legacyProbePayload["highLimit"] ?? JValue.CreateNull()
+                                        };
+                                        AgentLog.Info("Legacy LogTag configuration download: success via worker");
+                                        await WriteJsonResponse(resp, 200, legacySuccessPayload, req);
+                                        break;
+                                    }
+
+                                    AgentLog.Error("Legacy LogTag configuration download failed via worker.", null);
+                                    await WriteJsonResponse(resp, 503, new JObject
+                                    {
+                                        ["res"] = false,
+                                        ["details"] = legacyProbePayload.Value<string>("details") ?? "Erreur lors de la lecture de configuration LogTag"
+                                    });
+                                    break;
+                                }
+
+                            default:
+                                resp.StatusCode = 404;
+                                resp.Close();
+                                break;
+                        }
+                    }
 
                 }
                 catch (Exception ex)
