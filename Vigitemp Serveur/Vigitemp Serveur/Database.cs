@@ -1222,7 +1222,12 @@ namespace Vigitemp_Serveur
                 MySqlDataReader dr_mesure = cmd_vigitemp_mesure.ExecuteReader();
                 while (dr_mesure.Read())
                 {
-                    array_tmpIdLieu = double.Parse(dr_mesure["Valeur"].ToString());
+                    var rawVal = dr_mesure["Valeur"];
+                    if (rawVal != null && rawVal != DBNull.Value)
+                    {
+                        double.TryParse(rawVal.ToString(), System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out array_tmpIdLieu);
+                    }
                     //VigitempServeur.Log("Date_Heure_Reactivation_Alarme " + DateTime.Parse(dr_lieux["Date_Heure_Reactivation_Alarme"].ToString()).ToString());
                 }
 
