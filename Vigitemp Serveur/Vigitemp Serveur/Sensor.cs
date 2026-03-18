@@ -17,9 +17,15 @@ namespace Vigitemp_Serveur
         protected int m_idLieu;
         protected SerialPort m_port;
         // public static bool LOCKER = false;
-        public bool pendingResults = false;
+        public volatile bool pendingResults = false;
         // private string m_regexResponseTempSensor = @"R[A-Z][0-9]{2}[A-Z]TEMP-?[0-9]{1,3}.[0-9]{2}'C";
-        public string m_sensor_response;
+        private string m_sensor_response_internal;
+        private readonly object _responseLock = new object();
+        public string m_sensor_response
+        {
+            get { lock (_responseLock) { return m_sensor_response_internal; } }
+            set { lock (_responseLock) { m_sensor_response_internal = value; } }
+        }
 
         public ThreadServeur ths;
 
@@ -76,8 +82,20 @@ namespace Vigitemp_Serveur
 
         public abstract Task<bool> read();
         protected abstract void DataReceivedHandler(object sender, SerialDataReceivedEventArgs e);
+        protected virtual bool ShouldApplyMetrology => true;
         protected double ApplyMetrology(double rawValue)
         {
+            if (!ShouldApplyMetrology)
+            {
+                if (ths != null && ths.LogMetrologyDetailed)
+                {
+                    VigitempServeur.Log(
+                        $"Metrology bypass serial={m_sondeSerialNumber} idLieu={m_idLieu} raw={rawValue.ToString(CultureInfo.InvariantCulture)}");
+                }
+
+                return rawValue;
+            }
+
             var metrology = ths.GetSondeMetrologyCached(m_sondeSerialNumber);
             if (metrology == null)
             {

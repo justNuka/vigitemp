@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Globalization;
+using System.Threading;
 
 namespace Vigitemp_Serveur
 {
     internal sealed class SqlServerDatabaseProvider : IDatabaseProvider, IDisposable
     {
-        private static readonly object _lock = new object();
+        private readonly object _lock = new object();
         private SqlConnection _connectionMain;
         private SqlConnection _connectionMeasure;
 
@@ -648,7 +649,7 @@ namespace Vigitemp_Serveur
                         frequence,
                         estEtatAlarme);
 
-                    VigitempServeur.nombres_reponses++;
+                    Interlocked.Increment(ref VigitempServeur.nombres_reponses);
                     return true;
                 }
                 catch (Exception ex)

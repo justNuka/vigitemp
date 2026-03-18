@@ -20,9 +20,7 @@ namespace Vigitemp_Serveur
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
         private static readonly object _lock = new object();
         private CancellationToken m_cts;
-        private IDatabaseProvider m_database;
-        private Sensor sensor;
-        private string sensorType;
+        private volatile IDatabaseProvider m_database;
         private readonly ConcurrentDictionary<int, SensorSchedule> _schedules =
             new ConcurrentDictionary<int, SensorSchedule>();
         private List<SerialPort> list_SerialPort_open = new List<SerialPort>();
@@ -81,6 +79,7 @@ namespace Vigitemp_Serveur
             public string Adresse { get; set; }
             public string Port { get; set; }
             public string Module { get; set; }
+            public bool ConfigDirty { get; set; }
             public int FrequencySeconds { get; set; }
             public DateTime? LastMeasure { get; set; }
             public DateTime NextDue { get; set; }
@@ -612,61 +611,65 @@ namespace Vigitemp_Serveur
 
             VigitempServeur.Log("--------------------ID SERVEUR : " + _idServer + "---CAPTEUR : " + serial + "--------------------");
             VigitempServeur.Log("Ouverture du port " + schedule.Port + " pour la sonde " + serial);
-            sensorType = serial.StartsWith("GSP", StringComparison.OrdinalIgnoreCase)
+            var sensorType = serial.StartsWith("GSP", StringComparison.OrdinalIgnoreCase)
                 ? "GSP"
                 : serial.Substring(0, 2);
 
             switch (sensorType)
             {
                 case "IN":
-                    VigitempServeur.nombres_interrogations++;
-                    sensor = new SensorIN(this, schedule.Port, serial, schedule.Adresse);
+                    Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
+                    var sensorIN = new SensorIN(this, schedule.Port, serial, schedule.Adresse);
                     VigitempServeur.Log($"Interrogation sonde IN serial={serial} port={schedule.Port} adresse={schedule.Adresse}");
-                    await sensor.read();
+                    await sensorIN.read();
                     break;
                 case "IE":
-                    VigitempServeur.nombres_interrogations++;
-                    sensor = new SensorIE(this, schedule.Port, serial, schedule.Adresse);
+                    Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
+                    var sensorIE = new SensorIE(this, schedule.Port, serial, schedule.Adresse);
                     VigitempServeur.Log($"Interrogation sonde IE serial={serial} port={schedule.Port} adresse={schedule.Adresse}");
-                    await sensor.read();
+                    await sensorIE.read();
                     break;
                 case "IQ":
                     break;
                 case "IP":
-                    VigitempServeur.nombres_interrogations++;
-                    sensor = new SensorIP(this, schedule.Port, serial, schedule.Adresse);
+                    Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
+                    var sensorIP = new SensorIP(this, schedule.Port, serial, schedule.Adresse);
                     VigitempServeur.Log($"Interrogation sonde IP serial={serial} port={schedule.Port} adresse={schedule.Adresse}");
-                    await sensor.read();
+                    await sensorIP.read();
                     break;
                 case "IC":
-                    VigitempServeur.nombres_interrogations++;
-                    sensor = new SensorIC(this, schedule.Port, serial, schedule.Adresse);
+                    Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
+                    var sensorIC = new SensorIC(this, schedule.Port, serial, schedule.Adresse);
                     VigitempServeur.Log($"Interrogation sonde IC serial={serial} port={schedule.Port} adresse={schedule.Adresse}");
-                    await sensor.read();
+                    await sensorIC.read();
                     break;
                 case "IH":
-                    VigitempServeur.nombres_interrogations++;
-                    sensor = new SensorIH(this, schedule.Port, serial, schedule.Adresse);
+                    Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
+                    var sensorIH = new SensorIH(this, schedule.Port, serial, schedule.Adresse);
                     VigitempServeur.Log($"Interrogation sonde IH serial={serial} port={schedule.Port} adresse={schedule.Adresse}");
-                    await sensor.read();
+                    await sensorIH.read();
                     break;
                 case "EN":
-                    VigitempServeur.nombres_interrogations++;
-                    sensor = new SensorEN(this, schedule.Port, serial, schedule.Adresse);
+                    Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
+                    var sensorEN = new SensorEN(this, schedule.Port, serial, schedule.Adresse);
                     VigitempServeur.Log($"Interrogation sonde EN serial={serial} port={schedule.Port} adresse={schedule.Adresse}");
-                    await sensor.read();
+                    await sensorEN.read();
                     break;
                 case "HN":
-                    VigitempServeur.nombres_interrogations++;
-                    sensor = new SensorHN(this, schedule.Port, serial, schedule.Adresse, schedule.Module);
+                    Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
+                    var sensorHN = new SensorHN(this, schedule.Port, serial, schedule.Adresse, schedule.Module);
                     VigitempServeur.Log($"Interrogation sonde HN serial={serial} port={schedule.Port} adresse={schedule.Adresse} module={schedule.Module}");
-                    await sensor.read();
+                    await sensorHN.read();
                     break;
                 case "GSP":
-                    VigitempServeur.nombres_interrogations++;
-                    sensor = new SensorGSP(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"Interrogation sonde GSP serial={serial} port={schedule.Port} adresse={schedule.Adresse}");
-                    await sensor.read();
+                    Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
+                    var gspSensor = new SensorGSP(this, schedule.Port, serial, schedule.Adresse, schedule.FrequencySeconds, schedule.ConfigDirty);
+                    VigitempServeur.Log($"Interrogation sonde GSP serial={serial} port={schedule.Port} adresse={schedule.Adresse} configDirty={schedule.ConfigDirty}");
+                    await gspSensor.read();
+                    if (gspSensor.ConfigurationSynchronized)
+                    {
+                        schedule.ConfigDirty = false;
+                    }
                     break;
                 default:
                     break;
@@ -704,7 +707,6 @@ namespace Vigitemp_Serveur
                     var idLieu = arr_lieuxAvecAlarmeSnooze[i];
                     try
                     {
-                        sensor = null;
                         VigitempServeur.Log("Le lieu " + idLieu + " doit etre reactiv�.");
 
                         GetDatabase().setAlarmeByIdLieu(idLieu, true);
@@ -726,10 +728,11 @@ namespace Vigitemp_Serveur
                             continue;
                         }
                         VigitempServeur.Log("Ouverture du port " + arr_portSerie + " pour la sonde " + arr_sondeNumeroSerie);
-                        sensorType = arr_sondeNumeroSerie.StartsWith("GSP", StringComparison.OrdinalIgnoreCase)
+                        var sensorType = arr_sondeNumeroSerie.StartsWith("GSP", StringComparison.OrdinalIgnoreCase)
                             ? "GSP"
                             : arr_sondeNumeroSerie.Substring(0, 2);
 
+                        Sensor sensor = null;
                         switch (sensorType)
                         {
                             case "IN":
@@ -859,6 +862,7 @@ namespace Vigitemp_Serveur
                     schedule.Adresse = row.AdresseSonde;
                     schedule.Port = row.PortSerie;
                     schedule.Module = row.ModuleNumeroSerie;
+                    schedule.ConfigDirty = row.InfosModifiees || schedule.ConfigDirty;
                     schedule.FrequencySeconds = row.FrequenceSecondes;
                     schedule.LastMeasure = row.DerniereDateHeure ?? schedule.LastMeasure;
                     schedule.NextDue = ComputeNextDue(now, schedule.LastMeasure, schedule.FrequencySeconds);
@@ -901,6 +905,7 @@ namespace Vigitemp_Serveur
                 Adresse = info.AdresseSonde,
                 Port = info.PortSerie,
                 Module = info.ModuleNumeroSerie,
+                ConfigDirty = info.InfosModifiees || info.SondeNumeroSerie.StartsWith("GSP", StringComparison.OrdinalIgnoreCase),
                 FrequencySeconds = info.FrequenceSecondes,
                 LastMeasure = lastMeasure,
                 NextDue = ComputeNextDue(now, lastMeasure, info.FrequenceSecondes)

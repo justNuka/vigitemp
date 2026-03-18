@@ -4,12 +4,13 @@ using MySql.Data.MySqlClient;
 using System.Configuration;
 using System.Diagnostics;
 using System.Globalization;
+using System.Threading;
 
 namespace Vigitemp_Serveur
 {
     class Database : IDatabaseProvider, IDisposable
     {
-        private static readonly object _lock = new object();
+        private readonly object _lock = new object();
         private MySqlConnection connection_vigitemp;
         private MySqlConnection connection_vigitemp_mesure;
 
@@ -753,7 +754,7 @@ namespace Vigitemp_Serveur
                         //probleme : si plusieurs alarmes, je veut en enlever une comment faire?
                         //le texte change uniquement en fct du type d'alarme et pas en fonction du materiel
 
-                        VigitempServeur.nombres_reponses++;
+                        Interlocked.Increment(ref VigitempServeur.nombres_reponses);
                         return true;
                 }
                 catch (Exception ex)
