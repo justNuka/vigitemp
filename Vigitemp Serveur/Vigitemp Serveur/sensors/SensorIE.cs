@@ -56,8 +56,6 @@ namespace Vigitemp_Serveur.sensors
             }
             catch (Exception e)
             {
-                Console.WriteLine("erreur: " + e);
-                Trace.WriteLine("erreur: " + e);
                 VigitempServeur.Log("SensorIE.read error: " + e);
                 HandleNoResponseAlarm(false, "exception");
                 DisposePort();
@@ -105,8 +103,6 @@ namespace Vigitemp_Serveur.sensors
                 var rawValue = Convert.ToDouble(float.Parse(tmp_valeur.Remove(tmp_valeur.Length - 2, 2), CultureInfo.InvariantCulture.NumberFormat));
                 var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
                 // tmp_temperature = (-19.5262).ToString();
-                Console.WriteLine("Donnees corrigees: " + correctedValue);
-                Trace.WriteLine("Donnees corrigees: " + correctedValue);
 
 
                 // ThreadServeur.GetDatabase().AddMesure(m_serialNumber, float.Parse(String.Format("{0:0.00}", tmp_temperature)), "°C");
@@ -116,7 +112,6 @@ namespace Vigitemp_Serveur.sensors
                 compareMeasuresAndLimits(correctedValue, "°C");
                 m_port.Close();
                 pendingResults = false;
-                System.Diagnostics.Trace.WriteLine("Fermeture du port " + m_comPort);
             }
             catch (Exception ex)
             {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Ports;
@@ -42,8 +42,6 @@ namespace Vigitemp_Serveur.sensors
 
                 Stopwatch tmp_sw = new Stopwatch();
                 tmp_sw.Start();
-                Console.WriteLine("write");
-                Trace.WriteLine("write");
                 while (pendingResults)
                 {
                     await Task.Delay(25);
@@ -60,8 +58,6 @@ namespace Vigitemp_Serveur.sensors
                         m_port.Write(bytestosend, 0, bytestosend.Length);
                         tmp_sw = new Stopwatch();
                         tmp_sw.Start();
-                        Console.WriteLine("write");
-                        Trace.WriteLine("write");
 
                         while (pendingResults)
                         {
@@ -126,34 +122,22 @@ namespace Vigitemp_Serveur.sensors
                 VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} hex={hexString}");
 
             suplex = hexString.Substring(28, 2);
-            Console.WriteLine("suplex: " + suplex);
-            Trace.WriteLine("suplex: " + suplex);
             tmp_valeur = Convert.ToString(Convert.ToInt32(suplex, 16), 2).PadLeft(8, '0');
 
             suplex = hexString.Substring(30, 2);
-            Console.WriteLine("suplex: " + suplex);
-            Trace.WriteLine("suplex: " + suplex);
             tmp_valeur += Convert.ToString(Convert.ToInt32(suplex, 16), 2).PadLeft(8, '0');
 
             suplex = hexString.Substring(32, 2);
-            Console.WriteLine("suplex: " + suplex);
-            Trace.WriteLine("suplex: " + suplex);
             tmp_valeur += Convert.ToString(Convert.ToInt32(suplex, 16), 2).PadLeft(8, '0');
 
-            Console.WriteLine("resultat binaire: " + tmp_valeur);
-            Trace.WriteLine("resultat binaire: " + tmp_valeur);
+            VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} binary={tmp_valeur}");
             int tmp_temperature_int = (int)Convert.ToInt64(tmp_valeur, 2);
-            Console.WriteLine("resultat d�cimal: " + tmp_temperature_int);
-            Trace.WriteLine("resultat d�cimal: " + tmp_temperature_int);
             tmp_valeur = ((1 - tmp_temperature_int / Math.Pow(2, 20) - 0.32) / 0.0047).ToString();
             tmp_valeur = tmp_valeur.Replace(",", ".");
-            Console.WriteLine("resultat final: " + tmp_valeur);
-            Trace.WriteLine("resultat final: " + tmp_valeur);
+            VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} parsedValue={tmp_valeur}");
 
             var rawValue = Convert.ToDouble(float.Parse(tmp_valeur, CultureInfo.InvariantCulture.NumberFormat));
             var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
-            Console.WriteLine("Donn�es corrig�es: " + correctedValue);
-            Trace.WriteLine("Donn�es corrig�es: " + correctedValue);
 
                 ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "�C", ToInvariantRaw(rawValue));
                 VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=�C raw={ToInvariantRaw(rawValue)}");
@@ -163,7 +147,6 @@ namespace Vigitemp_Serveur.sensors
                 m_port.DiscardOutBuffer();
                 m_port.Close();
                 pendingResults = false;
-                Trace.WriteLine("Fermeture du port " + m_comPort);
             }
             catch (Exception ex)
             {

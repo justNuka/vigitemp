@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.Ports;
@@ -59,8 +59,6 @@ namespace Vigitemp_Serveur.sensors
 
                 Stopwatch tmp_sw = new Stopwatch();
                 tmp_sw.Start();
-                Console.WriteLine("write");
-                Trace.WriteLine("write");
                 while (pendingResults)
                 {
                     await Task.Delay(25);
@@ -124,23 +122,15 @@ namespace Vigitemp_Serveur.sensors
                 VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} hex={hexString}");
 
                 suplex = hexString.Substring(24, 2);
-                Console.WriteLine("suplex: " + suplex);
-                Trace.WriteLine("suplex: " + suplex);
                 int poidsFort = int.Parse(suplex, NumberStyles.HexNumber);
-                Console.WriteLine("suplex decimal: " + poidsFort);
-                Trace.WriteLine("suplex decimal: " + poidsFort);
+                VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} poidsFort={poidsFort}");
 
                 suplex = hexString.Substring(26, 2);
-                Console.WriteLine("suplex: " + suplex);
-                Trace.WriteLine("suplex: " + suplex);
                 int poidsFaible = int.Parse(suplex, NumberStyles.HexNumber);
-                Console.WriteLine("suplex decimal: " + poidsFaible);
-                Trace.WriteLine("suplex decimal: " + poidsFaible);
-
+                VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} poidsFaible={poidsFaible}");
 
                 tmp_resistance = (poidsFort * 256 + poidsFaible - 2048).ToString();
-                Console.WriteLine("resultat d�cimal: " + tmp_resistance);
-                Trace.WriteLine("resultat d�cimal: " + tmp_resistance);
+                VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} resistance={tmp_resistance}");
 
                 if (int.Parse(tmp_resistance) > -2048 && int.Parse(tmp_resistance) < 2048)
                 {
@@ -165,7 +155,6 @@ namespace Vigitemp_Serveur.sensors
                 m_port.Close();
                 //sp.Dispose();
                 pendingResults = false;
-                System.Diagnostics.Trace.WriteLine("Fermeture du port " + m_comPort);
             }
             catch (Exception ex)
             {

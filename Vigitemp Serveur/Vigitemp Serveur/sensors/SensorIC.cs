@@ -34,9 +34,6 @@ namespace Vigitemp_Serveur.sensors
                 // while (tmp_sw.Elapsed.TotalMilliseconds < 100) {}
                 // m_port.Write("SM"+m_serialNumber.Substring(m_serialNumber.Length - 4)+"0000000000000000");
 
-                Console.WriteLine("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                Trace.WriteLine("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-
                 while (pendingResults)
                 {
                     await Task.Delay(25);
@@ -55,8 +52,6 @@ namespace Vigitemp_Serveur.sensors
             }
             catch (Exception e)
             {
-                Console.WriteLine("erreur: " + e);
-                Trace.WriteLine("erreur: " + e);
                 VigitempServeur.Log($"[SONDE][ERR] type=IC serial={m_sondeSerialNumber} port={m_comPort} error={e}");
                 HandleNoResponseAlarm(false, "exception");
                 DisposePort();
@@ -104,8 +99,6 @@ namespace Vigitemp_Serveur.sensors
                     // recuperer a et b our corriger la valeur brute
                     var rawValue = Convert.ToDouble(float.Parse(tmp_resistance, CultureInfo.InvariantCulture.NumberFormat));
                     var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
-                    Console.WriteLine("Donnees corrigees: " + correctedValue);
-                    Trace.WriteLine("Donnees corrigees: " + correctedValue);
 
                     ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "%CO2", ToInvariantRaw(rawValue));
                     VigitempServeur.Log($"[SONDE][DONE] type=IC serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=%CO2 raw={ToInvariantRaw(rawValue)}");
@@ -120,9 +113,6 @@ namespace Vigitemp_Serveur.sensors
 
                 m_port.Close();
                 pendingResults = false;
-                Trace.WriteLine("Fermeture du port " + m_comPort);
-                Trace.WriteLine("Taux de reponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
-                Trace.WriteLine("-----------------------------------");
             }
             catch (Exception ex)
             {

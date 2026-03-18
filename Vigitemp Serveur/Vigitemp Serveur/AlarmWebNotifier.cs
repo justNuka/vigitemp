@@ -39,64 +39,6 @@ namespace Vigitemp_Serveur
             }
         }
 
-        public static async Task NotifyAlarmAsync(int idLieu, double valeur, int? alarmId = null)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
-                {
-                    VigitempServeur.Log("AlarmWebNotifier: configuration manquante (BaseUrl/Secret)");
-                    return;
-                }
-
-                var url = Combine(BaseUrl, "/api/alarmes/dispatch");
-                string payload;
-                if (alarmId.HasValue)
-                {
-                    payload = "{" + "\"alarmId\":" + alarmId.Value + "}";
-                }
-                else
-                {
-                    payload =
-                        "{" +
-                        "\"title\":\"Alarme Vigitemp\"," +
-                        "\"body\":\"Alarme declenchee (Lieu " + idLieu + ", valeur " + valeur.ToString("0.##", CultureInfo.InvariantCulture) + ")\"," +
-                        "\"url\":\"/surveillance\"" +
-                        "}";
-                }
-
-                var req = new HttpRequestMessage(HttpMethod.Post, url);
-                req.Headers.Add("x-vigitemp-secret", Secret);
-                req.Content = new StringContent(payload, Encoding.UTF8, "application/json");
-
-                VigitempServeur.Log(
-                    "AlarmWebNotifier: envoi notification web " +
-                    "idLieu=" + idLieu +
-                    (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : "") +
-                    " url=" + url);
-
-                var response = await _http.SendAsync(req);
-                var statusCode = (int)response.StatusCode;
-                if (statusCode < 200 || statusCode >= 300)
-                    VigitempServeur.Log(
-                        "AlarmWebNotifier: WARNING reponse non-2xx (status=" + statusCode + ") " +
-                        "idLieu=" + idLieu +
-                        (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : ""));
-                else
-                    VigitempServeur.Log(
-                        "AlarmWebNotifier: notification envoyee (status=" + statusCode + ") " +
-                        "idLieu=" + idLieu +
-                        (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : ""));
-
-                return;
-            }
-            catch (Exception ex)
-            {
-                VigitempServeur.Log("AlarmWebNotifier: echec envoi notification: " + ex.Message);
-                return;
-            }
-        }
-
         public static async Task NotifyAlarmBatchAsync(IReadOnlyList<AlarmNotificationItem> alarms)
         {
             try

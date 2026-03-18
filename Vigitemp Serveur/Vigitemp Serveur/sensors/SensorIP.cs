@@ -31,9 +31,6 @@ namespace Vigitemp_Serveur.sensors
                 Stopwatch tmp_sw = new Stopwatch();
                 tmp_sw.Start();
 
-                Console.WriteLine("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-                Trace.WriteLine("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
-
                 while (pendingResults)
                 {
                     await Task.Delay(25);
@@ -52,8 +49,6 @@ namespace Vigitemp_Serveur.sensors
             }
             catch (Exception e)
             {
-                Console.WriteLine("erreur: " + e);
-                Trace.WriteLine("erreur: " + e);
                 VigitempServeur.Log($"[SONDE][ERR] type=IP serial={m_sondeSerialNumber} port={m_comPort} error={e}");
                 HandleNoResponseAlarm(false, "exception");
                 DisposePort();
@@ -99,8 +94,6 @@ namespace Vigitemp_Serveur.sensors
                 var rawValue = Convert.ToDouble(tmp_resistance, System.Globalization.CultureInfo.InvariantCulture);
                 var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
 
-                Console.WriteLine("Donnees corrigees: " + correctedValue);
-                Trace.WriteLine("Donnees corrigees: " + correctedValue);
                 ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
                 HandleNoResponseAlarm(true);
                 compareMeasuresAndLimits(correctedValue, "°C");
@@ -108,7 +101,6 @@ namespace Vigitemp_Serveur.sensors
 
                 m_port.Close();
                 pendingResults = false;
-                Trace.WriteLine("Fermeture du port " + m_comPort);
             }
             catch (Exception ex)
             {

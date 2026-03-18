@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
@@ -813,67 +813,6 @@ namespace Vigitemp_Serveur
                 VigitempServeur.Log("(InsertMeasureToGraphique MSSQL) Erreur: " + ex.Message);
             }
         }
-        public (List<string>, List<string>, List<string>, List<string>, List<int>, List<DateTime?>) getInfosByIdServeurAndFrequencies(int p_idServer, int p_frequence)
-        {
-            lock (_lock)
-            {
-                try
-                {
-                    var tmpPort = new List<string>();
-                    var tmpSerial = new List<string>();
-                    var tmpAdresse = new List<string>();
-                    var tmpModule = new List<string>();
-                    var tmpIdLieu = new List<int>();
-                    var tmpLastMeasure = new List<DateTime?>();
-
-                    if (!EnsureConnected())
-                    {
-                        return (tmpPort, tmpSerial, tmpAdresse, tmpModule, tmpIdLieu, tmpLastMeasure);
-                    }
-
-                    using (var cmd = CreateCommand(
-                        _connectionMain,
-                        "SELECT t_lieu.Id_Lieu, t_lieu.Derniere_Date_Heure, t_module.Port_Serie, t_module.Module_Numero_Serie, t_sonde.Sonde_Numero_Serie, t_sonde.Adresse_Sonde FROM t_lieu " +
-                        "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
-                        "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
-                        "WHERE t_lieu.Frequence = @frequence " +
-                        "AND t_module.Id_Serveur = @idServeur " +
-                        "AND t_lieu.Lieu_Etat = 'S' " +
-                        "AND t_sonde.Etat_Sonde = 'S' " +
-                        "AND ISNULL(t_sonde.Est_Sonde_GSO, 0) = 0;"))
-                    {
-                        cmd.Parameters.AddWithValue("@frequence", p_frequence);
-                        cmd.Parameters.AddWithValue("@idServeur", p_idServer);
-                        using (var reader = cmd.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                tmpPort.Add("COM" + reader["Port_Serie"].ToString());
-                                tmpSerial.Add(reader["Sonde_Numero_Serie"].ToString());
-                                tmpAdresse.Add(reader["Adresse_Sonde"].ToString());
-                                tmpModule.Add(reader["Module_Numero_Serie"].ToString());
-                                tmpIdLieu.Add(Convert.ToInt32(reader["Id_Lieu"]));
-                                if (reader["Derniere_Date_Heure"] == DBNull.Value)
-                                {
-                                    tmpLastMeasure.Add(null);
-                                }
-                                else
-                                {
-                                    tmpLastMeasure.Add(Convert.ToDateTime(reader["Derniere_Date_Heure"]));
-                                }
-                            }
-                        }
-                    }
-
-                    return (tmpPort, tmpSerial, tmpAdresse, tmpModule, tmpIdLieu, tmpLastMeasure);
-                }
-                catch (Exception ex)
-                {
-                    VigitempServeur.Log("(getInfosByIdServeurAndFrequencies MSSQL) SQL Erreur: " + ex);
-                    return (new List<string>(), new List<string>(), new List<string>(), new List<string>(), new List<int>(), new List<DateTime?>());
-                }
-            }
-        }
 
         public List<SondeScheduleInfo> getSondesActivesByServeur(int idServeur)
         {
@@ -1042,41 +981,6 @@ namespace Vigitemp_Serveur
             }
         }
 
-        public List<int> getDistinctFrequenciesByIdServeur(int p_idServeur)
-        {
-            lock (_lock)
-            {
-                var arrayTmp = new List<int>();
-
-                if (!EnsureConnected())
-                {
-                    return arrayTmp;
-                }
-
-                using (var cmd = CreateCommand(
-                    _connectionMain,
-                    "SELECT distinct frequence FROM t_lieu " +
-                    "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
-                    "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
-                    "where t_module.Id_Serveur = @idServeur " +
-                    "AND t_lieu.Lieu_Etat = 'S' " +
-                    "AND t_sonde.Etat_Sonde = 'S' " +
-                    "AND ISNULL(t_sonde.Est_Sonde_GSO, 0) = 0;"))
-                {
-                    cmd.Parameters.AddWithValue("@idServeur", p_idServeur);
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            arrayTmp.Add(Int32.Parse(reader["frequence"].ToString()));
-                        }
-                    }
-                }
-
-                return arrayTmp;
-            }
-        }
-
         public (List<int>, List<DateTime>) getLieuxAvecAlarmesEnSnooze()
         {
             lock (_lock)
@@ -1164,35 +1068,6 @@ namespace Vigitemp_Serveur
                     VigitempServeur.Log("(getLieuUnite MSSQL) SQL Erreur: " + ex.Message);
                     return "";
                 }
-            }
-        }
-
-        public double getLastMeasure(int p_IdLieu)
-        {
-            lock (_lock)
-            {
-                double value = 0.0;
-
-                if (!EnsureConnected())
-                {
-                    return value;
-                }
-
-                using (var cmd = CreateCommand(
-                    _connectionMeasure,
-                    "SELECT TOP 1 * FROM tm_mesures WHERE Id_Lieu = @idLieu ORDER BY Date_Heure_Mesure DESC"))
-                {
-                    cmd.Parameters.AddWithValue("@idLieu", p_IdLieu);
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            value = double.Parse(reader["Valeur"].ToString());
-                        }
-                    }
-                }
-
-                return value;
             }
         }
 
@@ -1987,43 +1862,6 @@ namespace Vigitemp_Serveur
                 cmdUpdate.Parameters.AddWithValue("@idAlarme", alarmId);
                 cmdUpdate.Parameters.AddWithValue("@idLieu", idLieu);
                 cmdUpdate.ExecuteNonQuery();
-            }
-        }
-
-        public (double, double) getCoeffCalibrageBySerialNumber(string p_serial_number)
-        {
-            lock (_lock)
-            {
-                double coeffX;
-                double coeffConstant;
-
-                if (!EnsureConnected())
-                {
-                    return (1, 0);
-                }
-
-                using (var cmd = CreateCommand(
-                    _connectionMain,
-                    "SELECT TOP 1 Coeff_X, Coeff_Constant FROM t_ajustage where Sonde_Numero_Serie = @serial ORDER BY Date_Heure_Ajustage DESC"))
-                {
-                    cmd.Parameters.AddWithValue("@serial", p_serial_number);
-                    try
-                    {
-                        using (var reader = cmd.ExecuteReader())
-                        {
-                            reader.Read();
-                            coeffX = Convert.ToDouble(reader["Coeff_X"]);
-                            coeffConstant = Convert.ToDouble(reader["Coeff_Constant"]);
-                        }
-                    }
-                    catch
-                    {
-                        VigitempServeur.Log("ERREUR : PAS DE CALIBRAGE POUR LA SONDE " + p_serial_number);
-                        return (1, 0);
-                    }
-                }
-
-                return (coeffX, coeffConstant);
             }
         }
         public List<(int idLieu, bool isAlarm, bool isNonResponse)> getActiveLieuAlarmStates()
