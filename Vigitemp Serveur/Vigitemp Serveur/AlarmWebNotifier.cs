@@ -76,10 +76,17 @@ namespace Vigitemp_Serveur
                     " url=" + url);
 
                 var response = await _http.SendAsync(req);
-                VigitempServeur.Log(
-                    "AlarmWebNotifier: notification envoyee (status=" + (int)response.StatusCode + ") " +
-                    "idLieu=" + idLieu +
-                    (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : ""));
+                var statusCode = (int)response.StatusCode;
+                if (statusCode < 200 || statusCode >= 300)
+                    VigitempServeur.Log(
+                        "AlarmWebNotifier: WARNING reponse non-2xx (status=" + statusCode + ") " +
+                        "idLieu=" + idLieu +
+                        (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : ""));
+                else
+                    VigitempServeur.Log(
+                        "AlarmWebNotifier: notification envoyee (status=" + statusCode + ") " +
+                        "idLieu=" + idLieu +
+                        (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : ""));
 
                 return;
             }
@@ -145,9 +152,15 @@ namespace Vigitemp_Serveur
                     " url=" + url);
 
                 var response = await _http.SendAsync(req);
-                VigitempServeur.Log(
-                    "AlarmWebNotifier: notification batch envoyee (status=" + (int)response.StatusCode + ") " +
-                    "count=" + alarms.Count);
+                var statusCode = (int)response.StatusCode;
+                if (statusCode < 200 || statusCode >= 300)
+                    VigitempServeur.Log(
+                        "AlarmWebNotifier: WARNING reponse non-2xx batch (status=" + statusCode + ") " +
+                        "count=" + alarms.Count);
+                else
+                    VigitempServeur.Log(
+                        "AlarmWebNotifier: notification batch envoyee (status=" + statusCode + ") " +
+                        "count=" + alarms.Count);
             }
             catch (Exception ex)
             {
@@ -190,10 +203,17 @@ namespace Vigitemp_Serveur
                             req.Content = new StringContent(payload, Encoding.UTF8, "application/json");
 
                             var response = await _http.SendAsync(req);
-                            VigitempServeur.Log(
-                                "AlarmWebNotifier: notification ended envoyee (status=" + (int)response.StatusCode + ") " +
-                                "idLieu=" + capturedAlarm.IdLieu +
-                                " alarmId=" + capturedAlarm.IdAlarme);
+                            var statusCode = (int)response.StatusCode;
+                            if (statusCode < 200 || statusCode >= 300)
+                                VigitempServeur.Log(
+                                    "AlarmWebNotifier: WARNING reponse non-2xx ended (status=" + statusCode + ") " +
+                                    "idLieu=" + capturedAlarm.IdLieu +
+                                    " alarmId=" + capturedAlarm.IdAlarme);
+                            else
+                                VigitempServeur.Log(
+                                    "AlarmWebNotifier: notification ended envoyee (status=" + statusCode + ") " +
+                                    "idLieu=" + capturedAlarm.IdLieu +
+                                    " alarmId=" + capturedAlarm.IdAlarme);
                         }
                         catch (Exception ex)
                         {
@@ -258,11 +278,19 @@ namespace Vigitemp_Serveur
                     " url=" + url);
 
                 var response = await _http.SendAsync(req);
-                VigitempServeur.Log(
-                    "AlarmWebNotifier: realtime web envoye (status=" + (int)response.StatusCode + ") " +
-                    "eventType=" + normalizedEventType +
-                    (idLieu.HasValue ? (" idLieu=" + idLieu.Value) : "") +
-                    (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : ""));
+                var statusCode = (int)response.StatusCode;
+                if (statusCode < 200 || statusCode >= 300)
+                    VigitempServeur.Log(
+                        "AlarmWebNotifier: WARNING reponse non-2xx realtime (status=" + statusCode + ") " +
+                        "eventType=" + normalizedEventType +
+                        (idLieu.HasValue ? (" idLieu=" + idLieu.Value) : "") +
+                        (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : ""));
+                else
+                    VigitempServeur.Log(
+                        "AlarmWebNotifier: realtime web envoye (status=" + statusCode + ") " +
+                        "eventType=" + normalizedEventType +
+                        (idLieu.HasValue ? (" idLieu=" + idLieu.Value) : "") +
+                        (alarmId.HasValue ? (" alarmId=" + alarmId.Value) : ""));
             }
             catch (Exception ex)
             {

@@ -21,6 +21,13 @@ namespace Vigitemp_Serveur.sensors
 
         public override async Task<bool> read()
         {
+            if (!int.TryParse(m_sondeAdresse, out int sRelais1))
+            {
+                VigitempServeur.Log($"[SONDE][ERR] type=EN serial={m_sondeSerialNumber} adresse invalide='{m_sondeAdresse}'");
+                HandleNoResponseAlarm(false, "invalid-address");
+                return false;
+            }
+
             try
             {
                 pendingResults = true;
@@ -29,7 +36,6 @@ namespace Vigitemp_Serveur.sensors
                 m_port.DiscardInBuffer();
                 m_port.DiscardOutBuffer();
 
-                int sRelais1 = int.Parse(m_sondeAdresse); //adresse sonde
 
                 byte[] bytestosend = {  0x51,
                                     Convert.ToByte(sRelais1),
@@ -69,10 +75,8 @@ namespace Vigitemp_Serveur.sensors
 
                 tmp_sw.Stop();
             }
-            catch (TimeoutException e)
+            catch (Exception e)
             {
-                Console.WriteLine("erreur: " + e);
-                Trace.WriteLine("erreur: " + e);
                 VigitempServeur.Log($"[SONDE][ERR] type=EN serial={m_sondeSerialNumber} port={m_comPort} error={e}");
                 HandleNoResponseAlarm(false, "exception");
                 DisposePort();

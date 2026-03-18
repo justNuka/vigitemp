@@ -208,14 +208,13 @@ namespace Vigitemp_Serveur
 
                             notificationActive_tmp = dr_ConsignesLieux.GetBoolean("Notification_Active");
                             //VigitempServeur.Log("Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu + ": " + dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString());
-                            if (dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString() != "")
+                            var rawDate = dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString();
+                            if (rawDate != "")
                             {
-                                //VigitempServeur.Log("V2 IL Y A UNE Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu);
-                                Date_Heure_Reactivation_Alarme_tmp = DateTime.Parse(dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString());
-                            }
-                            else
-                            {
-                                //VigitempServeur.Log("V2 PAS DE Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu);
+                                if (!DateTime.TryParse(rawDate, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out Date_Heure_Reactivation_Alarme_tmp))
+                                {
+                                    DateTime.TryParse(rawDate, CultureInfo.CurrentCulture, DateTimeStyles.AssumeLocal, out Date_Heure_Reactivation_Alarme_tmp);
+                                }
                             }
                             //if (DateTime.TryParse(dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString(), out Date_Heure_Reactivation_Alarme_tmp))
                             //if (DateTime.TryParseExact(dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString(), "yyyy-M-d h:m:s" ,new CultureInfo("FR-fr"),DateTimeStyles.None,out Date_Heure_Reactivation_Alarme_tmp))
@@ -1220,7 +1219,6 @@ namespace Vigitemp_Serveur
                                                         "ORDER BY Date_Heure_Mesure DESC LIMIT 1";
                     cmd_vigitemp_mesure.Parameters.AddWithValue("@idLieu", p_IdLieu);
 
-                    VigitempServeur.Log(cmd_vigitemp_mesure.CommandText);
                     // Ex�cution de la commande SQL
                     using (var dr_mesure = cmd_vigitemp_mesure.ExecuteReader())
                     {
@@ -2056,25 +2054,32 @@ namespace Vigitemp_Serveur
 
         private void UpdateLieuEndedFlag(int idLieu)
         {
-            int count;
-            using (var cmdCount = this.connection_vigitemp.CreateCommand())
+            try
             {
-                cmdCount.CommandText =
-                    "SELECT COUNT(*) FROM t_alarme " +
-                    "WHERE Id_Lieu = @idLieu AND Date_Heure_Fin IS NOT NULL AND IFNULL(Est_Acquittee, 0) = 0;";
-                cmdCount.Parameters.AddWithValue("@idLieu", idLieu);
-                count = Convert.ToInt32(cmdCount.ExecuteScalar());
+                int count;
+                using (var cmdCount = this.connection_vigitemp.CreateCommand())
+                {
+                    cmdCount.CommandText =
+                        "SELECT COUNT(*) FROM t_alarme " +
+                        "WHERE Id_Lieu = @idLieu AND Date_Heure_Fin IS NOT NULL AND IFNULL(Est_Acquittee, 0) = 0;";
+                    cmdCount.Parameters.AddWithValue("@idLieu", idLieu);
+                    count = Convert.ToInt32(cmdCount.ExecuteScalar());
+                }
+
+                var flag = count > 0 ? 1 : 0;
+
+                using (var cmdUpdate = this.connection_vigitemp.CreateCommand())
+                {
+                    cmdUpdate.CommandText =
+                        "UPDATE t_lieu SET Est_Lieu_Alarme_Terminee_Non_Acquittee = @flag WHERE Id_Lieu = @idLieu;";
+                    cmdUpdate.Parameters.AddWithValue("@flag", flag);
+                    cmdUpdate.Parameters.AddWithValue("@idLieu", idLieu);
+                    cmdUpdate.ExecuteNonQuery();
+                }
             }
-
-            var flag = count > 0 ? 1 : 0;
-
-            using (var cmdUpdate = this.connection_vigitemp.CreateCommand())
+            catch (Exception ex)
             {
-                cmdUpdate.CommandText =
-                    "UPDATE t_lieu SET Est_Lieu_Alarme_Terminee_Non_Acquittee = @flag WHERE Id_Lieu = @idLieu;";
-                cmdUpdate.Parameters.AddWithValue("@flag", flag);
-                cmdUpdate.Parameters.AddWithValue("@idLieu", idLieu);
-                cmdUpdate.ExecuteNonQuery();
+                VigitempServeur.Log("(UpdateLieuEndedFlag) SQL Erreur idLieu=" + idLieu + ": " + ex.Message);
             }
         }
 
@@ -2123,13 +2128,20 @@ namespace Vigitemp_Serveur
 
         private void UpdateLieuAlarmReference(int idLieu, int alarmId)
         {
-            using (var cmdUpdate = this.connection_vigitemp.CreateCommand())
+            try
             {
-                cmdUpdate.CommandText =
-                    "UPDATE t_lieu SET Id_Alarme = @idAlarme WHERE Id_Lieu = @idLieu;";
-                cmdUpdate.Parameters.AddWithValue("@idAlarme", alarmId);
-                cmdUpdate.Parameters.AddWithValue("@idLieu", idLieu);
-                cmdUpdate.ExecuteNonQuery();
+                using (var cmdUpdate = this.connection_vigitemp.CreateCommand())
+                {
+                    cmdUpdate.CommandText =
+                        "UPDATE t_lieu SET Id_Alarme = @idAlarme WHERE Id_Lieu = @idLieu;";
+                    cmdUpdate.Parameters.AddWithValue("@idAlarme", alarmId);
+                    cmdUpdate.Parameters.AddWithValue("@idLieu", idLieu);
+                    cmdUpdate.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("(UpdateLieuAlarmReference) SQL Erreur idLieu=" + idLieu + " alarmId=" + alarmId + ": " + ex.Message);
             }
         }
 
@@ -2155,17 +2167,23 @@ namespace Vigitemp_Serveur
                 // Ex�cution de la commande SQL
                 try
                 {
-                    MySqlDataReader dr_lieux = cmd_vigitemp.ExecuteReader();
-                    dr_lieux.Read();
-                    coeffX = Convert.ToDouble(dr_lieux["Coeff_X"]);
-                    coeffConstant = Convert.ToDouble(dr_lieux["Coeff_Constant"]);
-                    dr_lieux.Close();
+                    using (var dr_lieux = cmd_vigitemp.ExecuteReader())
+                    {
+                        if (dr_lieux.Read())
+                        {
+                            coeffX = Convert.ToDouble(dr_lieux["Coeff_X"]);
+                            coeffConstant = Convert.ToDouble(dr_lieux["Coeff_Constant"]);
+                        }
+                        else
+                        {
+                            VigitempServeur.Log("getCoeffCalibrageBySerialNumber: aucun calibrage pour " + p_serial_number);
+                            return (1, 0);
+                        }
+                    }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    //Console.WriteLine("ERREUR : PAS DE CALIBRAGE POUR LA SONDE " + p_serial_number + "\n" + sqle);
-                    //Trace.WriteLine("ERREUR : PAS DE CALIBRAGE POUR LA SONDE " + p_serial_number);
-                    VigitempServeur.Log("ERREUR : PAS DE CALIBRAGE POUR LA SONDE " + p_serial_number);
+                    VigitempServeur.Log("getCoeffCalibrageBySerialNumber: erreur SQL sonde=" + p_serial_number + " " + ex.Message);
                     return (1, 0);
                 }
 

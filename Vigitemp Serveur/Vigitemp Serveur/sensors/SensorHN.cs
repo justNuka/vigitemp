@@ -79,10 +79,8 @@ namespace Vigitemp_Serveur.sensors
 
                 tmp_sw.Stop();
             }
-            catch (TimeoutException e)
+            catch (Exception e)
             {
-                Console.WriteLine("erreur: " + e);
-                Trace.WriteLine("erreur: " + e);
                 VigitempServeur.Log($"[SONDE][ERR] type=HN serial={m_sondeSerialNumber} port={m_comPort} error={e}");
                 HandleNoResponseAlarm(false, "exception");
                 DisposePort();
