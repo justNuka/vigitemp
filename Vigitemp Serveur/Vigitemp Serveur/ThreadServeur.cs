@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Globalization;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -16,7 +15,6 @@ namespace Vigitemp_Serveur
 {
     class ThreadServeur
     {
-        private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
         private readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
         private static readonly object _lock = new object();
         private CancellationToken m_cts;

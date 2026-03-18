@@ -68,6 +68,7 @@ namespace Vigitemp_Serveur
         /// Appelé après chaque insertion de mesure dans tm_mesures
         /// </summary>
         public static void InsertMeasureToGraphique(
+            MySqlConnection connection,
             int idSonde,
             int idLieu,
             string sondeNumeroSerie,
@@ -83,48 +84,39 @@ namespace Vigitemp_Serveur
         {
             lock (_lock)
             {
-                MySqlConnection connection = null;
-
                 try
                 {
-                    var databaseName = GetSetting("Vigi.Db.MeasureDatabase", "vigitemp_mesure");
-                    connection = CreateConnection(databaseName);
-                    connection.Open();
-
-                    MySqlCommand cmd = connection.CreateCommand();
-                    cmd.CommandText = @"
-                        INSERT INTO tm_graphique 
-                        (Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, 
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        cmd.CommandText = @"
+                        INSERT INTO tm_graphique
+                        (Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf,
                          Unite, Sonde_Numero_Serie, Id_Sonde, Id_Lieu, Frequence, Est_Etat_Alarme, Est_Valeur_Null)
-                        VALUES 
-                        (NOW(), @valeur, @valeurBrute, @consigne, @consigneSup, @consigneInf, 
+                        VALUES
+                        (NOW(), @valeur, @valeurBrute, @consigne, @consigneSup, @consigneInf,
                          @unite, @sondeNumeroSerie, @idSonde, @idLieu, @frequence, @etatAlarme, 0)";
 
-                    cmd.Parameters.AddWithValue("@valeur", valeur.HasValue ? (object)valeur.Value : DBNull.Value);
-                    cmd.Parameters.AddWithValue("@valeurBrute", resistance.HasValue ? (object)resistance.Value : DBNull.Value);
-                    cmd.Parameters.AddWithValue("@consigne", consigne);
-                    cmd.Parameters.AddWithValue("@consigneSup", consigneSup);
-                    cmd.Parameters.AddWithValue("@consigneInf", consigneInf);
-                    cmd.Parameters.AddWithValue("@unite", unite);
-                    cmd.Parameters.AddWithValue("@sondeNumeroSerie", sondeNumeroSerie);
-                    cmd.Parameters.AddWithValue("@idSonde", idSonde);
-                    cmd.Parameters.AddWithValue("@idLieu", idLieu);
-                    cmd.Parameters.AddWithValue("@frequence", frequence);
-                    cmd.Parameters.AddWithValue("@etatAlarme", etatAlarme);
-                    cmd.Parameters.AddWithValue("@estValeurNull", estValeurNull);
+                        cmd.Parameters.AddWithValue("@valeur", valeur.HasValue ? (object)valeur.Value : DBNull.Value);
+                        cmd.Parameters.AddWithValue("@valeurBrute", resistance.HasValue ? (object)resistance.Value : DBNull.Value);
+                        cmd.Parameters.AddWithValue("@consigne", consigne);
+                        cmd.Parameters.AddWithValue("@consigneSup", consigneSup);
+                        cmd.Parameters.AddWithValue("@consigneInf", consigneInf);
+                        cmd.Parameters.AddWithValue("@unite", unite);
+                        cmd.Parameters.AddWithValue("@sondeNumeroSerie", sondeNumeroSerie);
+                        cmd.Parameters.AddWithValue("@idSonde", idSonde);
+                        cmd.Parameters.AddWithValue("@idLieu", idLieu);
+                        cmd.Parameters.AddWithValue("@frequence", frequence);
+                        cmd.Parameters.AddWithValue("@etatAlarme", etatAlarme);
+                        cmd.Parameters.AddWithValue("@estValeurNull", estValeurNull);
 
-                    cmd.ExecuteNonQuery();
+                        cmd.ExecuteNonQuery();
+                    }
 
                     VigitempServeur.Log($"(InsertMeasureToGraphique) Mesure inséée dans tm_graphique pour idSonde={idSonde}");
                 }
                 catch (Exception ex)
                 {
                     VigitempServeur.Log($"(InsertMeasureToGraphique) Erreur: {ex.Message} | {ex.StackTrace}");
-                }
-                finally
-                {
-                    connection?.Close();
-                    connection?.Dispose();
                 }
             }
         }

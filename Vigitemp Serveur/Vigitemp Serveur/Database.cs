@@ -155,20 +155,20 @@ namespace Vigitemp_Serveur
                     return idLieu_tmp;
                 }
 
-                MySqlCommand cmd_vigitemp = connection_vigitemp.CreateCommand();
-
-                cmd_vigitemp.CommandText = "select Id_Lieu FROM t_lieu where Sonde_Numero_Serie = @serial;";
-                cmd_vigitemp.Parameters.AddWithValue("@serial", p_sondSerialNumber);
-
-
-                // Ex�cution de la commande SQL
-                MySqlDataReader dr_IdLieu = cmd_vigitemp.ExecuteReader();
-                while (dr_IdLieu.Read())
+                using (var cmd_vigitemp = connection_vigitemp.CreateCommand())
                 {
-                    idLieu_tmp = dr_IdLieu.GetInt32("Id_Lieu");
-                }
+                    cmd_vigitemp.CommandText = "select Id_Lieu FROM t_lieu where Sonde_Numero_Serie = @serial;";
+                    cmd_vigitemp.Parameters.AddWithValue("@serial", p_sondSerialNumber);
 
-                dr_IdLieu.Close();
+                    // Ex�cution de la commande SQL
+                    using (var dr_IdLieu = cmd_vigitemp.ExecuteReader())
+                    {
+                        while (dr_IdLieu.Read())
+                        {
+                            idLieu_tmp = dr_IdLieu.GetInt32("Id_Lieu");
+                        }
+                    }
+                }
 
                 return idLieu_tmp;
             }
@@ -187,48 +187,49 @@ namespace Vigitemp_Serveur
                     return (array_tmp, notificationActive_tmp, Date_Heure_Reactivation_Alarme_tmp);
                 }
 
-                MySqlCommand cmd_vigitemp = connection_vigitemp.CreateCommand();
-
-                cmd_vigitemp.CommandText = "select " +
-                                            "Tolerance_Surveillance_Sup as Consigne_Sup, " +
-                                            "Tolerance_Surveillance_Inf as Consigne_Inf, " +
-                                            "Notification_Active, Date_Heure_Reactivation_Alarme from t_lieu " +
-                                            "where Id_Lieu= @idLieu;";
-                cmd_vigitemp.Parameters.AddWithValue("@idLieu", p_idLieu);
-
-                // Ex�cution de la commande SQL 
-                MySqlDataReader dr_ConsignesLieux = cmd_vigitemp.ExecuteReader();
-                while (dr_ConsignesLieux.Read())
+                using (var cmd_vigitemp = connection_vigitemp.CreateCommand())
                 {
-                    //array_tmp.Add((float)dr_ConsignesLieux["Consigne_Inf"]);
-                    array_tmp.Add(GetFloatOrDefault(dr_ConsignesLieux["Consigne_Inf"]));
-                    //array_tmp.Add(float.Parse(String.Format("{0:0.00}", dr_ConsignesLieux["Consigne_Sup"])));
-                    array_tmp.Add(GetFloatOrDefault(dr_ConsignesLieux["Consigne_Sup"]));
+                    cmd_vigitemp.CommandText = "select " +
+                                                "Tolerance_Surveillance_Sup as Consigne_Sup, " +
+                                                "Tolerance_Surveillance_Inf as Consigne_Inf, " +
+                                                "Notification_Active, Date_Heure_Reactivation_Alarme from t_lieu " +
+                                                "where Id_Lieu= @idLieu;";
+                    cmd_vigitemp.Parameters.AddWithValue("@idLieu", p_idLieu);
 
-                    notificationActive_tmp = dr_ConsignesLieux.GetBoolean("Notification_Active");
-                    //VigitempServeur.Log("Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu + ": " + dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString());
-                    if (dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString() != "")
+                    // Ex�cution de la commande SQL
+                    using (var dr_ConsignesLieux = cmd_vigitemp.ExecuteReader())
                     {
-                        //VigitempServeur.Log("V2 IL Y A UNE Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu);
-                        Date_Heure_Reactivation_Alarme_tmp = DateTime.Parse(dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString());
+                        while (dr_ConsignesLieux.Read())
+                        {
+                            //array_tmp.Add((float)dr_ConsignesLieux["Consigne_Inf"]);
+                            array_tmp.Add(GetFloatOrDefault(dr_ConsignesLieux["Consigne_Inf"]));
+                            //array_tmp.Add(float.Parse(String.Format("{0:0.00}", dr_ConsignesLieux["Consigne_Sup"])));
+                            array_tmp.Add(GetFloatOrDefault(dr_ConsignesLieux["Consigne_Sup"]));
+
+                            notificationActive_tmp = dr_ConsignesLieux.GetBoolean("Notification_Active");
+                            //VigitempServeur.Log("Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu + ": " + dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString());
+                            if (dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString() != "")
+                            {
+                                //VigitempServeur.Log("V2 IL Y A UNE Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu);
+                                Date_Heure_Reactivation_Alarme_tmp = DateTime.Parse(dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString());
+                            }
+                            else
+                            {
+                                //VigitempServeur.Log("V2 PAS DE Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu);
+                            }
+                            //if (DateTime.TryParse(dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString(), out Date_Heure_Reactivation_Alarme_tmp))
+                            //if (DateTime.TryParseExact(dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString(), "yyyy-M-d h:m:s" ,new CultureInfo("FR-fr"),DateTimeStyles.None,out Date_Heure_Reactivation_Alarme_tmp))
+                            //{
+                            //    VigitempServeur.Log("V2 PAS DE Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu);
+                            //}
+                            //else
+                            //{
+                            //    VigitempServeur.Log("V2 IL Y A UNE Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu);
+                            //}
+                            //Date_Heure_Reactivation_Alarme_tmp = DateTime.Parse(dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString());
+                        }
                     }
-                    else
-                    {
-                        //VigitempServeur.Log("V2 PAS DE Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu);
-                    }
-                    //if (DateTime.TryParse(dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString(), out Date_Heure_Reactivation_Alarme_tmp))
-                    //if (DateTime.TryParseExact(dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString(), "yyyy-M-d h:m:s" ,new CultureInfo("FR-fr"),DateTimeStyles.None,out Date_Heure_Reactivation_Alarme_tmp))
-                    //{
-                    //    VigitempServeur.Log("V2 PAS DE Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu);
-                    //}
-                    //else
-                    //{
-                    //    VigitempServeur.Log("V2 IL Y A UNE Date_Heure_Reactivation_Alarme POUR LE LIEU " + p_idLieu);
-                    //}
-                    //Date_Heure_Reactivation_Alarme_tmp = DateTime.Parse(dr_ConsignesLieux["Date_Heure_Reactivation_Alarme"].ToString());
                 }
-
-                dr_ConsignesLieux.Close();
 
                 return (array_tmp, notificationActive_tmp, Date_Heure_Reactivation_Alarme_tmp);
             }
@@ -732,6 +733,7 @@ namespace Vigitemp_Serveur
                         }
 
                         CacheService.InsertMeasureToGraphique(
+                            connection_vigitemp_mesure,
                             idSonde,
                             idLieu,
                             p_numeroSerie,
@@ -838,6 +840,7 @@ namespace Vigitemp_Serveur
                     cmd_vigitemp_mesure.ExecuteNonQuery();
 
                     CacheService.InsertMeasureToGraphique(
+                        connection_vigitemp_mesure,
                         idSonde,
                         idLieu,
                         p_numeroSerie,
@@ -1055,26 +1058,26 @@ namespace Vigitemp_Serveur
                         }
 
                         // Cr�ation d'une commande SQL en fonction de l'objet connection
-                        MySqlCommand cmd_vigitemp = this.connection_vigitemp.CreateCommand();
-
-                        cmd_vigitemp.CommandText = "SELECT t_module.Port_Serie, t_module.Module_Numero_Serie, t_sonde.Sonde_Numero_Serie, t_sonde.Adresse_Sonde FROM t_lieu " +
-                                                    "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
-                                                    "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
-                                                    "WHERE t_lieu.Id_Lieu = @idLieu;";
-                        cmd_vigitemp.Parameters.AddWithValue("@idLieu", p_idLieu);
-
-
-                        // Ex�cution de la commande SQL
-                        MySqlDataReader dr_lieux = cmd_vigitemp.ExecuteReader();
-                        while (dr_lieux.Read())
+                        using (var cmd_vigitemp = this.connection_vigitemp.CreateCommand())
                         {
-                            tmp_arr_portSerie = ("COM" + dr_lieux["Port_Serie"].ToString());
-                            tmp_arr_sondeNumeroSerie = (dr_lieux["Sonde_Numero_Serie"].ToString());
-                            tmp_arr_sondeAdresse = (dr_lieux["Adresse_Sonde"].ToString());
-                            tmp_arr_moduleNumeroSerie = (dr_lieux["Module_Numero_Serie"].ToString());
-                        }
+                            cmd_vigitemp.CommandText = "SELECT t_module.Port_Serie, t_module.Module_Numero_Serie, t_sonde.Sonde_Numero_Serie, t_sonde.Adresse_Sonde FROM t_lieu " +
+                                                        "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
+                                                        "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
+                                                        "WHERE t_lieu.Id_Lieu = @idLieu;";
+                            cmd_vigitemp.Parameters.AddWithValue("@idLieu", p_idLieu);
 
-                        dr_lieux.Close();
+                            // Ex�cution de la commande SQL
+                            using (var dr_lieux = cmd_vigitemp.ExecuteReader())
+                            {
+                                while (dr_lieux.Read())
+                                {
+                                    tmp_arr_portSerie = ("COM" + dr_lieux["Port_Serie"].ToString());
+                                    tmp_arr_sondeNumeroSerie = (dr_lieux["Sonde_Numero_Serie"].ToString());
+                                    tmp_arr_sondeAdresse = (dr_lieux["Adresse_Sonde"].ToString());
+                                    tmp_arr_moduleNumeroSerie = (dr_lieux["Module_Numero_Serie"].ToString());
+                                }
+                            }
+                        }
 
                         return (tmp_arr_portSerie, tmp_arr_sondeNumeroSerie, tmp_arr_sondeAdresse, tmp_arr_moduleNumeroSerie);
                     }
@@ -1097,21 +1100,21 @@ namespace Vigitemp_Serveur
                     return array_tmp;
                 }
 
-                MySqlCommand cmd_vigitemp = connection_vigitemp.CreateCommand();
-
-                cmd_vigitemp.CommandText = "SELECT distinct Id_Serveur FROM t_sonde " +
-                                            "where Etat_Sonde = 'S' " +
-                                            "AND IFNULL(Est_Sonde_GSO, 0) = 0;";
-
-
-                // Ex�cution de la commande SQL 
-                MySqlDataReader dr_lieux = cmd_vigitemp.ExecuteReader();
-                while (dr_lieux.Read())
+                using (var cmd_vigitemp = connection_vigitemp.CreateCommand())
                 {
-                    array_tmp.Add((int)dr_lieux["Id_Serveur"]);
-                }
+                    cmd_vigitemp.CommandText = "SELECT distinct Id_Serveur FROM t_sonde " +
+                                                "where Etat_Sonde = 'S' " +
+                                                "AND IFNULL(Est_Sonde_GSO, 0) = 0;";
 
-                dr_lieux.Close();
+                    // Ex�cution de la commande SQL
+                    using (var dr_lieux = cmd_vigitemp.ExecuteReader())
+                    {
+                        while (dr_lieux.Read())
+                        {
+                            array_tmp.Add((int)dr_lieux["Id_Serveur"]);
+                        }
+                    }
+                }
 
                 return array_tmp;
             }
@@ -1128,38 +1131,38 @@ namespace Vigitemp_Serveur
                     return array_tmp;
                 }
 
-                MySqlCommand cmd_vigitemp = this.connection_vigitemp.CreateCommand();
-
-                cmd_vigitemp.CommandText = "SELECT distinct frequence FROM t_lieu " +
-                                            "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
-                                            "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
-                                            "where t_module.Id_Serveur = @idServeur " +
-                                            "AND t_lieu.Lieu_Etat = 'S' " +
-                                            "AND t_sonde.Etat_Sonde = 'S' " +
-                                            "AND IFNULL(t_sonde.Est_Sonde_GSO, 0) = 0;";
-                cmd_vigitemp.Parameters.AddWithValue("@idServeur", p_idServeur);
-
-
-                // Ex�cution de la commande SQL 
-                MySqlDataReader dr_lieux = cmd_vigitemp.ExecuteReader();
-                while (dr_lieux.Read())
+                using (var cmd_vigitemp = this.connection_vigitemp.CreateCommand())
                 {
-                    var freqObj = dr_lieux["frequence"];
-                    if (freqObj == null || freqObj == DBNull.Value) continue;
+                    cmd_vigitemp.CommandText = "SELECT distinct frequence FROM t_lieu " +
+                                                "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
+                                                "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
+                                                "where t_module.Id_Serveur = @idServeur " +
+                                                "AND t_lieu.Lieu_Etat = 'S' " +
+                                                "AND t_sonde.Etat_Sonde = 'S' " +
+                                                "AND IFNULL(t_sonde.Est_Sonde_GSO, 0) = 0;";
+                    cmd_vigitemp.Parameters.AddWithValue("@idServeur", p_idServeur);
 
-                    var freqRaw = freqObj.ToString();
-                    if (string.IsNullOrWhiteSpace(freqRaw)) continue;
-
-                    if (!int.TryParse(freqRaw, out var frequency))
+                    // Ex�cution de la commande SQL
+                    using (var dr_lieux = cmd_vigitemp.ExecuteReader())
                     {
-                        VigitempServeur.Log("Frequence invalide (t_lieu): " + freqRaw);
-                        continue;
+                        while (dr_lieux.Read())
+                        {
+                            var freqObj = dr_lieux["frequence"];
+                            if (freqObj == null || freqObj == DBNull.Value) continue;
+
+                            var freqRaw = freqObj.ToString();
+                            if (string.IsNullOrWhiteSpace(freqRaw)) continue;
+
+                            if (!int.TryParse(freqRaw, out var frequency))
+                            {
+                                VigitempServeur.Log("Frequence invalide (t_lieu): " + freqRaw);
+                                continue;
+                            }
+
+                            array_tmp.Add(frequency);
+                        }
                     }
-
-                    array_tmp.Add(frequency);
                 }
-
-                dr_lieux.Close();
 
                 return array_tmp;
             }
@@ -1177,22 +1180,22 @@ namespace Vigitemp_Serveur
                     return (array_tmpIdLieu, array_tmpSnoozeDateTime);
                 }
 
-                MySqlCommand cmd_vigitemp = this.connection_vigitemp.CreateCommand();
-
-                cmd_vigitemp.CommandText = "SELECT distinct Id_Lieu, Date_Heure_Reactivation_Alarme FROM t_lieu " +
-                                            "where Date_Heure_Reactivation_Alarme is not null AND Date_Heure_Reactivation_Alarme <= NOW();";
-
-
-                // Ex�cution de la commande SQL 
-                MySqlDataReader dr_lieux = cmd_vigitemp.ExecuteReader();
-                while (dr_lieux.Read())
+                using (var cmd_vigitemp = this.connection_vigitemp.CreateCommand())
                 {
-                    array_tmpIdLieu.Add(Int32.Parse(dr_lieux["Id_Lieu"].ToString()));
-                    //VigitempServeur.Log("Date_Heure_Reactivation_Alarme " + DateTime.Parse(dr_lieux["Date_Heure_Reactivation_Alarme"].ToString()).ToString());
-                    array_tmpSnoozeDateTime.Add(DateTime.Parse(dr_lieux["Date_Heure_Reactivation_Alarme"].ToString()));
-                }
+                    cmd_vigitemp.CommandText = "SELECT distinct Id_Lieu, Date_Heure_Reactivation_Alarme FROM t_lieu " +
+                                                "where Date_Heure_Reactivation_Alarme is not null AND Date_Heure_Reactivation_Alarme <= NOW();";
 
-                dr_lieux.Close();
+                    // Ex�cution de la commande SQL
+                    using (var dr_lieux = cmd_vigitemp.ExecuteReader())
+                    {
+                        while (dr_lieux.Read())
+                        {
+                            array_tmpIdLieu.Add(Int32.Parse(dr_lieux["Id_Lieu"].ToString()));
+                            //VigitempServeur.Log("Date_Heure_Reactivation_Alarme " + DateTime.Parse(dr_lieux["Date_Heure_Reactivation_Alarme"].ToString()).ToString());
+                            array_tmpSnoozeDateTime.Add(DateTime.Parse(dr_lieux["Date_Heure_Reactivation_Alarme"].ToString()));
+                        }
+                    }
+                }
 
                 return (array_tmpIdLieu, array_tmpSnoozeDateTime);
             }
@@ -1210,29 +1213,29 @@ namespace Vigitemp_Serveur
                     return array_tmpIdLieu;
                 }
 
-                MySqlCommand cmd_vigitemp_mesure = this.connection_vigitemp_mesure.CreateCommand();
-
-                cmd_vigitemp_mesure.CommandText =   "SELECT * from tm_mesures " + 
-                                                    "WHERE Id_Lieu = @idLieu " +
-                                                    "ORDER BY Date_Heure_Mesure DESC LIMIT 1";
-                cmd_vigitemp_mesure.Parameters.AddWithValue("@idLieu", p_IdLieu);
-
-
-                VigitempServeur.Log(cmd_vigitemp_mesure.CommandText);
-                // Ex�cution de la commande SQL 
-                MySqlDataReader dr_mesure = cmd_vigitemp_mesure.ExecuteReader();
-                while (dr_mesure.Read())
+                using (var cmd_vigitemp_mesure = this.connection_vigitemp_mesure.CreateCommand())
                 {
-                    var rawVal = dr_mesure["Valeur"];
-                    if (rawVal != null && rawVal != DBNull.Value)
-                    {
-                        double.TryParse(rawVal.ToString(), System.Globalization.NumberStyles.Any,
-                            System.Globalization.CultureInfo.InvariantCulture, out array_tmpIdLieu);
-                    }
-                    //VigitempServeur.Log("Date_Heure_Reactivation_Alarme " + DateTime.Parse(dr_lieux["Date_Heure_Reactivation_Alarme"].ToString()).ToString());
-                }
+                    cmd_vigitemp_mesure.CommandText =   "SELECT * from tm_mesures " +
+                                                        "WHERE Id_Lieu = @idLieu " +
+                                                        "ORDER BY Date_Heure_Mesure DESC LIMIT 1";
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@idLieu", p_IdLieu);
 
-                dr_mesure.Close();
+                    VigitempServeur.Log(cmd_vigitemp_mesure.CommandText);
+                    // Ex�cution de la commande SQL
+                    using (var dr_mesure = cmd_vigitemp_mesure.ExecuteReader())
+                    {
+                        while (dr_mesure.Read())
+                        {
+                            var rawVal = dr_mesure["Valeur"];
+                            if (rawVal != null && rawVal != DBNull.Value)
+                            {
+                                double.TryParse(rawVal.ToString(), System.Globalization.NumberStyles.Any,
+                                    System.Globalization.CultureInfo.InvariantCulture, out array_tmpIdLieu);
+                            }
+                            //VigitempServeur.Log("Date_Heure_Reactivation_Alarme " + DateTime.Parse(dr_lieux["Date_Heure_Reactivation_Alarme"].ToString()).ToString());
+                        }
+                    }
+                }
 
                 return array_tmpIdLieu;
             }
@@ -1805,31 +1808,35 @@ namespace Vigitemp_Serveur
 
         private bool SetLieuAlarmFlagsV2(int idLieu, bool isPreAlarm, bool isAlarm)
         {
-            var cmd = this.connection_vigitemp.CreateCommand();
-            cmd.CommandText =
-                "UPDATE t_lieu SET " +
-                "Est_Lieu_En_Pre_Alarme = @pre, " +
-                "Est_Lieu_En_Alarme = @alarm " +
-                "WHERE Id_Lieu = @id;";
-            cmd.Parameters.AddWithValue("@pre", isPreAlarm ? 1 : 0);
-            cmd.Parameters.AddWithValue("@alarm", isAlarm ? 1 : 0);
-            cmd.Parameters.AddWithValue("@id", idLieu);
-            cmd.ExecuteNonQuery();
+            using (var cmd = this.connection_vigitemp.CreateCommand())
+            {
+                cmd.CommandText =
+                    "UPDATE t_lieu SET " +
+                    "Est_Lieu_En_Pre_Alarme = @pre, " +
+                    "Est_Lieu_En_Alarme = @alarm " +
+                    "WHERE Id_Lieu = @id;";
+                cmd.Parameters.AddWithValue("@pre", isPreAlarm ? 1 : 0);
+                cmd.Parameters.AddWithValue("@alarm", isAlarm ? 1 : 0);
+                cmd.Parameters.AddWithValue("@id", idLieu);
+                cmd.ExecuteNonQuery();
+            }
             return true;
         }
 
         private bool SetLieuAlarmFlagsV1(int idLieu, bool isPreAlarm, bool isAlarm)
         {
-            var cmd = this.connection_vigitemp.CreateCommand();
-            cmd.CommandText =
-                "UPDATE t_lieu SET " +
-                "Est_Lieu_En_Pre_Alarme = @pre, " +
-                "Est_Lieu_En_Alarme = @alarm " +
-                "WHERE IdLieu = @id;";
-            cmd.Parameters.AddWithValue("@pre", isPreAlarm ? 1 : 0);
-            cmd.Parameters.AddWithValue("@alarm", isAlarm ? 1 : 0);
-            cmd.Parameters.AddWithValue("@id", idLieu);
-            cmd.ExecuteNonQuery();
+            using (var cmd = this.connection_vigitemp.CreateCommand())
+            {
+                cmd.CommandText =
+                    "UPDATE t_lieu SET " +
+                    "Est_Lieu_En_Pre_Alarme = @pre, " +
+                    "Est_Lieu_En_Alarme = @alarm " +
+                    "WHERE IdLieu = @id;";
+                cmd.Parameters.AddWithValue("@pre", isPreAlarm ? 1 : 0);
+                cmd.Parameters.AddWithValue("@alarm", isAlarm ? 1 : 0);
+                cmd.Parameters.AddWithValue("@id", idLieu);
+                cmd.ExecuteNonQuery();
+            }
             return true;
         }
 
@@ -2049,21 +2056,26 @@ namespace Vigitemp_Serveur
 
         private void UpdateLieuEndedFlag(int idLieu)
         {
-            var cmdCount = this.connection_vigitemp.CreateCommand();
-            cmdCount.CommandText =
-                "SELECT COUNT(*) FROM t_alarme " +
-                "WHERE Id_Lieu = @idLieu AND Date_Heure_Fin IS NOT NULL AND IFNULL(Est_Acquittee, 0) = 0;";
-            cmdCount.Parameters.AddWithValue("@idLieu", idLieu);
+            int count;
+            using (var cmdCount = this.connection_vigitemp.CreateCommand())
+            {
+                cmdCount.CommandText =
+                    "SELECT COUNT(*) FROM t_alarme " +
+                    "WHERE Id_Lieu = @idLieu AND Date_Heure_Fin IS NOT NULL AND IFNULL(Est_Acquittee, 0) = 0;";
+                cmdCount.Parameters.AddWithValue("@idLieu", idLieu);
+                count = Convert.ToInt32(cmdCount.ExecuteScalar());
+            }
 
-            var count = Convert.ToInt32(cmdCount.ExecuteScalar());
             var flag = count > 0 ? 1 : 0;
 
-            var cmdUpdate = this.connection_vigitemp.CreateCommand();
-            cmdUpdate.CommandText =
-                "UPDATE t_lieu SET Est_Lieu_Alarme_Terminee_Non_Acquittee = @flag WHERE Id_Lieu = @idLieu;";
-            cmdUpdate.Parameters.AddWithValue("@flag", flag);
-            cmdUpdate.Parameters.AddWithValue("@idLieu", idLieu);
-            cmdUpdate.ExecuteNonQuery();
+            using (var cmdUpdate = this.connection_vigitemp.CreateCommand())
+            {
+                cmdUpdate.CommandText =
+                    "UPDATE t_lieu SET Est_Lieu_Alarme_Terminee_Non_Acquittee = @flag WHERE Id_Lieu = @idLieu;";
+                cmdUpdate.Parameters.AddWithValue("@flag", flag);
+                cmdUpdate.Parameters.AddWithValue("@idLieu", idLieu);
+                cmdUpdate.ExecuteNonQuery();
+            }
         }
 
         public List<(int idLieu, bool isAlarm, bool isNonResponse)> getActiveLieuAlarmStates()
@@ -2111,12 +2123,14 @@ namespace Vigitemp_Serveur
 
         private void UpdateLieuAlarmReference(int idLieu, int alarmId)
         {
-            var cmdUpdate = this.connection_vigitemp.CreateCommand();
-            cmdUpdate.CommandText =
-                "UPDATE t_lieu SET Id_Alarme = @idAlarme WHERE Id_Lieu = @idLieu;";
-            cmdUpdate.Parameters.AddWithValue("@idAlarme", alarmId);
-            cmdUpdate.Parameters.AddWithValue("@idLieu", idLieu);
-            cmdUpdate.ExecuteNonQuery();
+            using (var cmdUpdate = this.connection_vigitemp.CreateCommand())
+            {
+                cmdUpdate.CommandText =
+                    "UPDATE t_lieu SET Id_Alarme = @idAlarme WHERE Id_Lieu = @idLieu;";
+                cmdUpdate.Parameters.AddWithValue("@idAlarme", alarmId);
+                cmdUpdate.Parameters.AddWithValue("@idLieu", idLieu);
+                cmdUpdate.ExecuteNonQuery();
+            }
         }
 
         public (double, double) getCoeffCalibrageBySerialNumber(string p_serial_number)
