@@ -37,6 +37,18 @@ namespace Vigitemp_Serveur
             lock (_responseLock) { m_sensor_response_internal += chunk; }
         }
 
+        /// <summary>
+        /// Closes and disposes the serial port, then removes it from the global open-port list.
+        /// Must be called only on error paths (catch blocks). The normal success path closes the
+        /// port but keeps it in the list for reuse on the next cycle.
+        /// </summary>
+        protected void DisposePort()
+        {
+            try { if (m_port.IsOpen) m_port.Close(); } catch { /* ignore */ }
+            try { m_port.Dispose(); } catch { /* ignore */ }
+            ths.list_removeComPort(m_port);
+        }
+
         public ThreadServeur ths;
 
         protected string tmp_resistance = "";

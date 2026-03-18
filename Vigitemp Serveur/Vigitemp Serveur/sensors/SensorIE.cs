@@ -60,7 +60,7 @@ namespace Vigitemp_Serveur.sensors
                 Trace.WriteLine("erreur: " + e);
                 VigitempServeur.Log("SensorIE.read error: " + e);
                 HandleNoResponseAlarm(false, "exception");
-                m_port.Close();
+                DisposePort();
                 return false;
             }
             return true;
@@ -121,6 +121,8 @@ namespace Vigitemp_Serveur.sensors
             catch (Exception ex)
             {
                 VigitempServeur.Log($"[SONDE][ERR] type=IE serial={m_sondeSerialNumber} port={m_comPort} error={ex}");
+                DisposePort();
+                pendingResults = false;
             }
         }
 

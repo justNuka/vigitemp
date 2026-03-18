@@ -66,8 +66,7 @@ namespace Vigitemp_Serveur.sensors
                 //Trace.WriteLine("erreur: " + e);
                 VigitempServeur.Log("erreur read(): " + e);
                 HandleNoResponseAlarm(false, "exception");
-                m_port.Close();
-                m_port.Dispose();
+                DisposePort();
                 return false;
             }
             return true;
@@ -131,9 +130,12 @@ namespace Vigitemp_Serveur.sensors
                 VigitempServeur.Log("Taux de reponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
                 //Trace.WriteLine("-----------------------------------");
                 VigitempServeur.Log("-----------------------------------");
-            } catch (Exception error)
+            }
+            catch (Exception error)
             {
                 VigitempServeur.Log("SensorIN.DataReceived: " + error);
+                DisposePort();
+                pendingResults = false;
             }
            
         }
