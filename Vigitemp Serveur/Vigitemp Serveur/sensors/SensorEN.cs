@@ -98,7 +98,7 @@ namespace Vigitemp_Serveur.sensors
 
                 VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} bytes={length}");
                 sp.Read(buf, 0, length);
-                m_sensor_response += iso.GetString(buf);
+                AppendToResponse(iso.GetString(buf));
                 m_sensor_response = m_sensor_response.Replace(@"/(/\r?\n|\r/)/gm", "");
                 VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} raw={m_sensor_response} len={m_sensor_response.Length}");
                 var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
@@ -133,8 +133,8 @@ namespace Vigitemp_Serveur.sensors
 
 
                 tmp_resistance = (poidsFort * 256 + poidsFaible - 2048).ToString();
-                Console.WriteLine("resultat décimal: " + tmp_resistance);
-                Trace.WriteLine("resultat décimal: " + tmp_resistance);
+                Console.WriteLine("resultat dï¿½cimal: " + tmp_resistance);
+                Trace.WriteLine("resultat dï¿½cimal: " + tmp_resistance);
 
                 if (int.Parse(tmp_resistance) > -2048 && int.Parse(tmp_resistance) < 2048)
                 {
@@ -142,10 +142,10 @@ namespace Vigitemp_Serveur.sensors
                     var rawValue = Convert.ToDouble(float.Parse(tmp_resistance, CultureInfo.InvariantCulture.NumberFormat));
                     var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
 
-                    ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
-                    VigitempServeur.Log($"[SONDE][DONE] type=EN serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=°C raw={ToInvariantRaw(rawValue)}");
+                    ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "ï¿½C", ToInvariantRaw(rawValue));
+                    VigitempServeur.Log($"[SONDE][DONE] type=EN serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=ï¿½C raw={ToInvariantRaw(rawValue)}");
                     HandleNoResponseAlarm(true);
-                    compareMeasuresAndLimits(correctedValue, "°C");
+                    compareMeasuresAndLimits(correctedValue, "ï¿½C");
                 }
                 else
                 {

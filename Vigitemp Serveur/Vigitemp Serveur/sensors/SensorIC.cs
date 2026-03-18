@@ -76,7 +76,7 @@ namespace Vigitemp_Serveur.sensors
                 var chunk = sp.ReadExisting();
                 if (!string.IsNullOrEmpty(chunk))
                 {
-                    m_sensor_response += chunk;
+                    AppendToResponse(chunk);
                 }
                 VigitempServeur.Log($"[SONDE][RX] type=IC serial={m_sondeSerialNumber} port={m_comPort} raw={m_sensor_response}");
                 var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);

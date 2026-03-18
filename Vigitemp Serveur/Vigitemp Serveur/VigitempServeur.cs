@@ -17,8 +17,8 @@ namespace Vigitemp_Serveur
     {
         //private NotifyIcon trayIcon;
         public static EventLog eventLog1;
-        public static int nombres_interrogations;
-        public static int nombres_reponses;
+        public static volatile int nombres_interrogations;
+        public static volatile int nombres_reponses;
         private static StreamWriter _fileLogWriter;
         private static readonly object _fileLogLock = new object();
         private static readonly object _lock = new object();

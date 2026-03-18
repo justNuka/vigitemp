@@ -27,6 +27,16 @@ namespace Vigitemp_Serveur
             set { lock (_responseLock) { m_sensor_response_internal = value; } }
         }
 
+        /// <summary>
+        /// Appends a chunk to the accumulated response buffer under the response lock.
+        /// Use this instead of m_sensor_response += chunk in DataReceivedHandlers to avoid
+        /// a read-modify-write race condition (compound += is not atomic with a property lock).
+        /// </summary>
+        protected void AppendToResponse(string chunk)
+        {
+            lock (_responseLock) { m_sensor_response_internal += chunk; }
+        }
+
         public ThreadServeur ths;
 
         protected string tmp_resistance = "";

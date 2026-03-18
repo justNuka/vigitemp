@@ -79,6 +79,8 @@ namespace Vigitemp_Serveur
             public string Adresse { get; set; }
             public string Port { get; set; }
             public string Module { get; set; }
+            // NOTE: ConfigDirty est accede uniquement depuis les methodes qui tiennent
+            // le SemaphoreSlim(1,1) — pas de volatile requis pour cette raison.
             public bool ConfigDirty { get; set; }
             public int FrequencySeconds { get; set; }
             public DateTime? LastMeasure { get; set; }
