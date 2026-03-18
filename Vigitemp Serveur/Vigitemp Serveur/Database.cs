@@ -1440,6 +1440,10 @@ namespace Vigitemp_Serveur
                         ensureCmd.ExecuteNonQuery();
                     }
 
+                    // NOTE: La séquence UPDATE+SELECT LAST_INSERT_ID() + INSERT est atomique
+                    // du point de vue de cette instance Database car toutes les méthodes
+                    // utilisent le même lock(_lock). En mode multi-serveur, chaque ThreadServeur
+                    // a sa propre instance Database, donc son propre lock.
                     int nextId;
                     using (var updateCmd = this.connection_vigitemp_mesure.CreateCommand())
                     {
@@ -1558,47 +1562,64 @@ namespace Vigitemp_Serveur
 
                     if (isActive)
                     {
-                        var cmdCheck = this.connection_vigitemp.CreateCommand();
-                        cmdCheck.CommandText =
-                            "SELECT Id_Alarme FROM t_alarme " +
-                            "WHERE Id_Lieu = @idLieu AND Type = 'N' AND Date_Heure_Fin IS NULL " +
-                            "ORDER BY Date_Heure_Debut DESC LIMIT 1;";
-                        cmdCheck.Parameters.AddWithValue("@idLieu", idLieu);
-
-                        object existing = cmdCheck.ExecuteScalar();
-
-                        if (existing == null || existing == DBNull.Value)
+                        using (var transaction = connection_vigitemp.BeginTransaction())
                         {
-                            var cmdInsert = this.connection_vigitemp.CreateCommand();
-                            cmdInsert.CommandText =
-                                "INSERT INTO t_alarme " +
-                                "(Date_Heure_Debut, Valeur, Type, Est_Alarme_Vrai, Id_Lieu, Sonde_Numero_Serie, Unite, " +
-                                "Est_Acquittee, Date_Heure_Derniere_Mesure, Date_Heure_Debut_Alarme_Vrai, " +
-                                "Est_Alarme_Pour_VigiTel, Est_Mail_Envoye, Est_Tel_Acquittee) " +
-                                "VALUES (NOW(), NULL, 'N', 1, @idLieu, @serie, NULL, 0, NOW(), NOW(), 0, 0, 0);";
-                            cmdInsert.Parameters.AddWithValue("@idLieu", idLieu);
-                            cmdInsert.Parameters.AddWithValue("@serie", sondeNumeroSerie ?? string.Empty);
-                            cmdInsert.ExecuteNonQuery();
+                            try
+                            {
+                                var cmdCheck = this.connection_vigitemp.CreateCommand();
+                                cmdCheck.Transaction = transaction;
+                                cmdCheck.CommandText =
+                                    "SELECT Id_Alarme FROM t_alarme " +
+                                    "WHERE Id_Lieu = @idLieu AND Type = 'N' AND Date_Heure_Fin IS NULL " +
+                                    "ORDER BY Date_Heure_Debut DESC LIMIT 1;";
+                                cmdCheck.Parameters.AddWithValue("@idLieu", idLieu);
 
-                            var cmdId = this.connection_vigitemp.CreateCommand();
-                            cmdId.CommandText = "SELECT LAST_INSERT_ID();";
-                            alarmId = Convert.ToInt32(cmdId.ExecuteScalar());
-                        }
-                        if (existing == null || existing == DBNull.Value)
-                        {
-                            notifyTriggered = true;
-                            capturedAlarmId = alarmId;
-                        }
-                        else
-                        {
-                            var cmdUpdate = this.connection_vigitemp.CreateCommand();
-                            cmdUpdate.CommandText =
-                                "UPDATE t_alarme SET Date_Heure_Derniere_Mesure = NOW(), Est_Alarme_Vrai = 1, " +
-                                "Est_Acquittee = 0, Est_Tel_Acquittee = 0 " +
-                                "WHERE Id_Alarme = @idAlarme;";
-                            alarmId = Convert.ToInt32(existing);
-                            cmdUpdate.Parameters.AddWithValue("@idAlarme", alarmId.Value);
-                            cmdUpdate.ExecuteNonQuery();
+                                object existing = cmdCheck.ExecuteScalar();
+
+                                if (existing == null || existing == DBNull.Value)
+                                {
+                                    var cmdInsert = this.connection_vigitemp.CreateCommand();
+                                    cmdInsert.Transaction = transaction;
+                                    cmdInsert.CommandText =
+                                        "INSERT INTO t_alarme " +
+                                        "(Date_Heure_Debut, Valeur, Type, Est_Alarme_Vrai, Id_Lieu, Sonde_Numero_Serie, Unite, " +
+                                        "Est_Acquittee, Date_Heure_Derniere_Mesure, Date_Heure_Debut_Alarme_Vrai, " +
+                                        "Est_Alarme_Pour_VigiTel, Est_Mail_Envoye, Est_Tel_Acquittee) " +
+                                        "VALUES (NOW(), NULL, 'N', 1, @idLieu, @serie, NULL, 0, NOW(), NOW(), 0, 0, 0);";
+                                    cmdInsert.Parameters.AddWithValue("@idLieu", idLieu);
+                                    cmdInsert.Parameters.AddWithValue("@serie", sondeNumeroSerie ?? string.Empty);
+                                    cmdInsert.ExecuteNonQuery();
+
+                                    var cmdId = this.connection_vigitemp.CreateCommand();
+                                    cmdId.Transaction = transaction;
+                                    cmdId.CommandText = "SELECT LAST_INSERT_ID();";
+                                    alarmId = Convert.ToInt32(cmdId.ExecuteScalar());
+                                }
+                                if (existing == null || existing == DBNull.Value)
+                                {
+                                    notifyTriggered = true;
+                                    capturedAlarmId = alarmId;
+                                }
+                                else
+                                {
+                                    var cmdUpdate = this.connection_vigitemp.CreateCommand();
+                                    cmdUpdate.Transaction = transaction;
+                                    cmdUpdate.CommandText =
+                                        "UPDATE t_alarme SET Date_Heure_Derniere_Mesure = NOW(), Est_Alarme_Vrai = 1, " +
+                                        "Est_Acquittee = 0, Est_Tel_Acquittee = 0 " +
+                                        "WHERE Id_Alarme = @idAlarme;";
+                                    alarmId = Convert.ToInt32(existing);
+                                    cmdUpdate.Parameters.AddWithValue("@idAlarme", alarmId.Value);
+                                    cmdUpdate.ExecuteNonQuery();
+                                }
+
+                                transaction.Commit();
+                            }
+                            catch
+                            {
+                                try { transaction.Rollback(); } catch { /* ignore */ }
+                                throw;
+                            }
                         }
 
                         if (alarmId.HasValue)
@@ -1716,53 +1737,70 @@ namespace Vigitemp_Serveur
 
                     if (isActive)
                     {
-                        var cmdCheck = this.connection_vigitemp.CreateCommand();
-                        cmdCheck.CommandText =
-                            "SELECT Id_Alarme FROM t_alarme " +
-                            "WHERE Id_Lieu = @idLieu AND Type = @type AND Date_Heure_Fin IS NULL " +
-                            "ORDER BY Date_Heure_Debut DESC LIMIT 1;";
-                        cmdCheck.Parameters.AddWithValue("@idLieu", idLieu);
-                        cmdCheck.Parameters.AddWithValue("@type", type);
-
-                        object existing = cmdCheck.ExecuteScalar();
-
-                        if (existing == null || existing == DBNull.Value)
+                        using (var transaction = connection_vigitemp.BeginTransaction())
                         {
-                            var cmdInsert = this.connection_vigitemp.CreateCommand();
-                            cmdInsert.CommandText =
-                                "INSERT INTO t_alarme " +
-                                "(Date_Heure_Debut, Valeur, Type, Est_Alarme_Vrai, Id_Lieu, Sonde_Numero_Serie, Unite, " +
-                                "Est_Acquittee, Date_Heure_Derniere_Mesure, Date_Heure_Debut_Alarme_Vrai, " +
-                                "Est_Alarme_Pour_VigiTel, Est_Mail_Envoye, Est_Tel_Acquittee) " +
-                                "VALUES (NOW(), @valeur, @type, 1, @idLieu, @serie, @unite, 0, NOW(), NOW(), 0, 0, 0);";
-                            cmdInsert.Parameters.AddWithValue("@idLieu", idLieu);
-                            cmdInsert.Parameters.AddWithValue("@type", type);
-                            cmdInsert.Parameters.AddWithValue("@valeur", value);
-                            cmdInsert.Parameters.AddWithValue("@serie", sondeNumeroSerie ?? string.Empty);
-                            cmdInsert.Parameters.AddWithValue("@unite", unite ?? string.Empty);
-                            cmdInsert.ExecuteNonQuery();
+                            try
+                            {
+                                var cmdCheck = this.connection_vigitemp.CreateCommand();
+                                cmdCheck.Transaction = transaction;
+                                cmdCheck.CommandText =
+                                    "SELECT Id_Alarme FROM t_alarme " +
+                                    "WHERE Id_Lieu = @idLieu AND Type = @type AND Date_Heure_Fin IS NULL " +
+                                    "ORDER BY Date_Heure_Debut DESC LIMIT 1;";
+                                cmdCheck.Parameters.AddWithValue("@idLieu", idLieu);
+                                cmdCheck.Parameters.AddWithValue("@type", type);
 
-                            var cmdId = this.connection_vigitemp.CreateCommand();
-                            cmdId.CommandText = "SELECT LAST_INSERT_ID();";
-                            alarmId = Convert.ToInt32(cmdId.ExecuteScalar());
-                        }
-                        if (existing == null || existing == DBNull.Value)
-                        {
-                            notifyTriggered = true;
-                            capturedTriggeredAlarmId = alarmId;
-                        }
-                        else
-                        {
-                            var cmdUpdate = this.connection_vigitemp.CreateCommand();
-                            cmdUpdate.CommandText =
-                                "UPDATE t_alarme SET Valeur = @valeur, Unite = @unite, Date_Heure_Derniere_Mesure = NOW(), Est_Alarme_Vrai = 1, " +
-                                "Est_Acquittee = 0, Est_Tel_Acquittee = 0 " +
-                                "WHERE Id_Alarme = @idAlarme;";
-                            cmdUpdate.Parameters.AddWithValue("@valeur", value);
-                            cmdUpdate.Parameters.AddWithValue("@unite", unite ?? string.Empty);
-                            alarmId = Convert.ToInt32(existing);
-                            cmdUpdate.Parameters.AddWithValue("@idAlarme", alarmId.Value);
-                            cmdUpdate.ExecuteNonQuery();
+                                object existing = cmdCheck.ExecuteScalar();
+
+                                if (existing == null || existing == DBNull.Value)
+                                {
+                                    var cmdInsert = this.connection_vigitemp.CreateCommand();
+                                    cmdInsert.Transaction = transaction;
+                                    cmdInsert.CommandText =
+                                        "INSERT INTO t_alarme " +
+                                        "(Date_Heure_Debut, Valeur, Type, Est_Alarme_Vrai, Id_Lieu, Sonde_Numero_Serie, Unite, " +
+                                        "Est_Acquittee, Date_Heure_Derniere_Mesure, Date_Heure_Debut_Alarme_Vrai, " +
+                                        "Est_Alarme_Pour_VigiTel, Est_Mail_Envoye, Est_Tel_Acquittee) " +
+                                        "VALUES (NOW(), @valeur, @type, 1, @idLieu, @serie, @unite, 0, NOW(), NOW(), 0, 0, 0);";
+                                    cmdInsert.Parameters.AddWithValue("@idLieu", idLieu);
+                                    cmdInsert.Parameters.AddWithValue("@type", type);
+                                    cmdInsert.Parameters.AddWithValue("@valeur", value);
+                                    cmdInsert.Parameters.AddWithValue("@serie", sondeNumeroSerie ?? string.Empty);
+                                    cmdInsert.Parameters.AddWithValue("@unite", unite ?? string.Empty);
+                                    cmdInsert.ExecuteNonQuery();
+
+                                    var cmdId = this.connection_vigitemp.CreateCommand();
+                                    cmdId.Transaction = transaction;
+                                    cmdId.CommandText = "SELECT LAST_INSERT_ID();";
+                                    alarmId = Convert.ToInt32(cmdId.ExecuteScalar());
+                                }
+                                if (existing == null || existing == DBNull.Value)
+                                {
+                                    notifyTriggered = true;
+                                    capturedTriggeredAlarmId = alarmId;
+                                }
+                                else
+                                {
+                                    var cmdUpdate = this.connection_vigitemp.CreateCommand();
+                                    cmdUpdate.Transaction = transaction;
+                                    cmdUpdate.CommandText =
+                                        "UPDATE t_alarme SET Valeur = @valeur, Unite = @unite, Date_Heure_Derniere_Mesure = NOW(), Est_Alarme_Vrai = 1, " +
+                                        "Est_Acquittee = 0, Est_Tel_Acquittee = 0 " +
+                                        "WHERE Id_Alarme = @idAlarme;";
+                                    cmdUpdate.Parameters.AddWithValue("@valeur", value);
+                                    cmdUpdate.Parameters.AddWithValue("@unite", unite ?? string.Empty);
+                                    alarmId = Convert.ToInt32(existing);
+                                    cmdUpdate.Parameters.AddWithValue("@idAlarme", alarmId.Value);
+                                    cmdUpdate.ExecuteNonQuery();
+                                }
+
+                                transaction.Commit();
+                            }
+                            catch
+                            {
+                                try { transaction.Rollback(); } catch { /* ignore */ }
+                                throw;
+                            }
                         }
 
                         if (alarmId.HasValue)

@@ -42,6 +42,9 @@ namespace Vigitemp_Serveur
         private DateTime _lastAlarmPollUtc = DateTime.MinValue;
         private int _lastAlarmIdSeen = 0;
         private bool _alarmCursorInitialized = false;
+        // NOTE: heure locale intentionnelle — correspond au NOW() MySQL qui utilise
+        // l'heure locale du serveur de base de données.
+        // Ne pas remplacer par DateTime.UtcNow sans aligner le fuseau horaire MySQL.
         private DateTime _lastAlarmEndPollLocal = DateTime.MinValue;
         private readonly ConcurrentDictionary<int, (bool flag, DateTime expiry)> _retriggerFlagCache =
             new ConcurrentDictionary<int, (bool, DateTime)>();

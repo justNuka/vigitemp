@@ -18,6 +18,9 @@ namespace Vigitemp_Serveur
         }
 
         private static readonly Lazy<AlarmPolicy> _current = new Lazy<AlarmPolicy>(Load);
+
+        // NOTE: AlarmPolicy est chargée une seule fois au démarrage depuis App.config.
+        // Pour modifier la politique, un redémarrage du service Vigitemp est nécessaire.
         public static AlarmPolicy Current => _current.Value;
 
         private static AlarmPolicy Load()

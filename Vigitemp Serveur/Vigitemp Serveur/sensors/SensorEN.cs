@@ -31,7 +31,9 @@ namespace Vigitemp_Serveur.sensors
             try
             {
                 pendingResults = true;
-                m_port.Encoding = Encoding.UTF32;
+                // L'encodage du port n'est pas utilisé directement : les bytes sont lus via
+                // sp.Read(buf) et décodés manuellement avec ISO-8859-1 dans le handler.
+                m_port.Encoding = Encoding.GetEncoding("ISO-8859-1");
                 m_port.Open();
                 m_port.DiscardInBuffer();
                 m_port.DiscardOutBuffer();
@@ -103,7 +105,7 @@ namespace Vigitemp_Serveur.sensors
                 VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} bytes={length}");
                 sp.Read(buf, 0, length);
                 AppendToResponse(iso.GetString(buf));
-                m_sensor_response = m_sensor_response.Replace(@"/(/\r?\n|\r/)/gm", "");
+                m_sensor_response = System.Text.RegularExpressions.Regex.Replace(m_sensor_response, @"\r?\n|\r", "");
                 VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} raw={m_sensor_response} len={m_sensor_response.Length}");
                 var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
                 if (m_sensor_response.Length == 14)

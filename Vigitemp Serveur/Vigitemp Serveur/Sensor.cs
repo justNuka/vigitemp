@@ -583,6 +583,9 @@ namespace Vigitemp_Serveur
         {
             if (isAlarmActive)
             {
+                // LIMITATION : Est_Lieu_En_Alarme ne distingue pas H/B.
+                // On sème les deux canaux à true pour éviter un re-déclenchement immédiat
+                // au redémarrage. Le prochain cycle de mesure corrigera l'état réel.
                 _alarmStateByLieu[idLieu] = true;
                 _lowAlarmStateByLieu[idLieu] = true;
                 _highAlarmStateByLieu[idLieu] = true;
