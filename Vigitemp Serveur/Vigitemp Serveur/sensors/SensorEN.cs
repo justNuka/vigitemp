@@ -105,7 +105,7 @@ namespace Vigitemp_Serveur.sensors
                 VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} bytes={length}");
                 sp.Read(buf, 0, length);
                 AppendToResponse(iso.GetString(buf));
-                m_sensor_response = System.Text.RegularExpressions.Regex.Replace(m_sensor_response, @"\r?\n|\r", "");
+                m_sensor_response = Regex.Replace(m_sensor_response, @"\r?\n|\r", "");
                 VigitempServeur.Log($"[SONDE][RX] type=EN serial={m_sondeSerialNumber} raw={m_sensor_response} len={m_sensor_response.Length}");
                 var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
                 if (m_sensor_response.Length == 14)
