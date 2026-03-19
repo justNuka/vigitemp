@@ -603,9 +603,12 @@ namespace VigitempAgent
             {
                 try
                 {
-                    HttpServer.listener = new HttpListener();
-                    HttpServer.listener.Prefixes.Add(HttpServer.url_localhost);
-                    HttpServer.listener.Start();
+                    lock (HttpServer._listenerLock)
+                    {
+                        HttpServer.listener = new HttpListener();
+                        HttpServer.listener.Prefixes.Add(HttpServer.url_localhost);
+                        HttpServer.listener.Start();
+                    }
 
                     AgentLog.Info("HttpServer listening: " + HttpServer.url_localhost);
                     var listenTask = HttpServer.HandleIncomingConnections(frm);

@@ -29,7 +29,7 @@ namespace VigitempAgent
         private static extern HINSTANCE GetModuleHandle(string lpModuleName);
         // [DllImport("LogTagIO29.dll")]
         // private static extern HINSTANCE getData(string lpModuleName);
-        public static HttpListener listener;
+        public static volatile HttpListener listener;
 
         public static string url = "";
         public static string url_localhost = "http://127.0.0.1:8000/";
