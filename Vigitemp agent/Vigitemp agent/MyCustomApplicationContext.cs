@@ -16,8 +16,8 @@ namespace VigitempAgent
     public class MyCustomApplicationContext : ApplicationContext
     {
         public static MyCustomApplicationContext Instance { get; private set; }
-        public string SITEWEB_URL;
-        public string AGENT_SECRET;
+        public volatile string SITEWEB_URL;
+        public volatile string AGENT_SECRET;
         private NotifyIcon trayIcon;
         private System.Windows.Forms.Timer sessionTimer;
         private DateTime lastNoSessionTipUtc = DateTime.MinValue;
@@ -27,7 +27,12 @@ namespace VigitempAgent
         private bool lastNotificationClicked;
         public static Thread UIThread;
         public Thread serverThread;
-        public Form_Alert frm;
+        private volatile Form_Alert _frm;
+        public Form_Alert frm
+        {
+            get { return _frm; }
+            set { _frm = value; }
+        }
 
         private StatusForm statusForm;
         private ToolStripMenuItem sessionStatusMenuItem;
@@ -663,11 +668,14 @@ namespace VigitempAgent
 
             try
             {
-                if (HttpServer.listener != null)
+                lock (HttpServer._listenerLock)
                 {
-                    try { HttpServer.listener.Stop(); } catch { /* ignore */ }
-                    try { HttpServer.listener.Close(); } catch { /* ignore */ }
-                    HttpServer.listener = null;
+                    if (HttpServer.listener != null)
+                    {
+                        try { HttpServer.listener.Stop(); } catch { /* ignore */ }
+                        try { HttpServer.listener.Close(); } catch { /* ignore */ }
+                        HttpServer.listener = null;
+                    }
                 }
             }
             catch

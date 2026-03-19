@@ -31,11 +31,23 @@ namespace VigitempAgent
         // private static extern HINSTANCE getData(string lpModuleName);
         public static HttpListener listener;
 
-        public static string url = "http://" + GetLocalIPAddress() + ":8000/";
+        public static string url = "";
         public static string url_localhost = "http://127.0.0.1:8000/";
 
+        public static string GetUrl()
+        {
+            try
+            {
+                return "http://" + GetLocalIPAddress() + ":8000/";
+            }
+            catch
+            {
+                return "http://127.0.0.1:8000/";
+            }
+        }
 
         private static readonly object _alarmLock = new object();
+        internal static readonly object _listenerLock = new object();
         private static readonly HashSet<int> _alarmLieuxActive = new HashSet<int>();
 
         private static void SafeInvokeFormAlert(Form_Alert frmAlert, Action action)
@@ -737,7 +749,7 @@ namespace VigitempAgent
                             case "/shutdown":
                                 resp.StatusCode = 204;
                                 resp.Close();
-                                try { listener.Stop(); } catch { }
+                                try { lock (_listenerLock) { listener?.Stop(); } } catch { /* ignore */ }
                                 return;
                             case "/notify":
                                 {
