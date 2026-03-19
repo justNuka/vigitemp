@@ -4,6 +4,7 @@ import { apiError } from "@/lib/api-response"
 import { hardwareOrderBodySchema, buildHardwareOrderDocumentPayload } from "../_shared"
 import { log } from "@/lib/logger"
 import type { JWTPayload } from "@/lib/jwt"
+import { buildHardwarePdfFileName } from "@/lib/hardware-order"
 
 export const POST = withAuthLogging(async (req: NextRequest, ctx: { user: JWTPayload }) => {
   try {
@@ -17,17 +18,19 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: { user: JWTPay
     }
 
     const reference = `PDF-${Date.now()}`
-    const { pdfBuffer } = await buildHardwareOrderDocumentPayload({
+    const { pdfBuffer, documentInput } = await buildHardwareOrderDocumentPayload({
       userId: ctx.user.userId,
       items: parsed.data.items,
       comment: parsed.data.comment,
+      customerId: parsed.data.customerId,
       reference,
     })
+    const fileName = buildHardwarePdfFileName(documentInput.customerId, documentInput.createdAt)
 
     return new NextResponse(pdfBuffer, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="commande-materiel-${reference}.pdf"`,
+        "Content-Disposition": `attachment; filename="${fileName}"`,
         "Content-Length": String(pdfBuffer.length),
         "Cache-Control": "private, no-store",
       },

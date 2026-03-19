@@ -1,5 +1,5 @@
 param(
-    [string]$InstallDir = "${env:ProgramFiles}\Vigitemp\Agent",
+    [string]$InstallDir,
     [string]$SiteWebUrl,
     [switch]$NoPause
 )
@@ -42,6 +42,34 @@ function Ensure-Admin {
     exit 0
 }
 
+function Resolve-InstallDir {
+    param([string]$ProvidedInstallDir)
+
+    if (-not [string]::IsNullOrWhiteSpace($ProvidedInstallDir)) {
+        return $ProvidedInstallDir
+    }
+
+    $candidates = @()
+    if ($env:ProgramFiles -and $env:ProgramFiles.Trim()) {
+        $candidates += (Join-Path $env:ProgramFiles "Vigitemp\Agent")
+    }
+    if (${env:ProgramFiles(x86)} -and ${env:ProgramFiles(x86)}.Trim()) {
+        $candidates += (Join-Path ${env:ProgramFiles(x86)} "Vigitemp\Agent")
+    }
+
+    foreach ($candidate in $candidates | Select-Object -Unique) {
+        if (Test-Path (Join-Path $candidate "VigitempAgent.exe")) {
+            return $candidate
+        }
+    }
+
+    if (${env:ProgramFiles(x86)} -and ${env:ProgramFiles(x86)}.Trim()) {
+        return (Join-Path ${env:ProgramFiles(x86)} "Vigitemp\Agent")
+    }
+
+    return (Join-Path $env:ProgramFiles "Vigitemp\Agent")
+}
+
 function Remove-UrlAclIfExists {
     param([string]$Url)
     & netsh http delete urlacl url=$Url *> $null
@@ -58,6 +86,37 @@ function Ensure-LoopbackUrlAcl {
     if ($LASTEXITCODE -ne 0) {
         throw "Impossible d'ajouter l'URLACL loopback."
     }
+}
+
+function Test-AgentPortListening {
+    param(
+        [int]$Port = 8000,
+        [int]$TimeoutSeconds = 15
+    )
+
+    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+    do {
+        try {
+            $getNetTcpConnection = Get-Command Get-NetTCPConnection -ErrorAction SilentlyContinue
+            if ($getNetTcpConnection) {
+                $listener = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+                if ($listener) {
+                    return $true
+                }
+            } else {
+                $netstat = netstat -ano -p tcp 2>$null | Select-String (":{0}\s+LISTENING" -f $Port)
+                if ($netstat) {
+                    return $true
+                }
+            }
+        } catch {
+            # ignore and retry until timeout
+        }
+
+        Start-Sleep -Milliseconds 500
+    } while ((Get-Date) -lt $deadline)
+
+    return $false
 }
 
 function Ensure-StartupRegistry {
@@ -86,6 +145,10 @@ function Update-AgentConfig {
 
     $node.SetAttribute("value", $Url)
     $config.Save($ConfigPath)
+}
+
+if ([string]::IsNullOrWhiteSpace($InstallDir)) {
+    $InstallDir = Resolve-InstallDir -ProvidedInstallDir $InstallDir
 }
 
 Ensure-Admin
@@ -139,7 +202,7 @@ try {
     Start-Sleep -Seconds 2
 
     $running = Get-Process VigitempAgent -ErrorAction SilentlyContinue
-    $listening = Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue
+    $listening = Test-AgentPortListening -Port 8000 -TimeoutSeconds 15
 
     $summary = @(
         "Finalisation terminee.",

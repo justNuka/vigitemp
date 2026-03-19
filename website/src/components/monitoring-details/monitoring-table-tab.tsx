@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 import type { Dispatch, SetStateAction } from "react"
-import type { ColumnDef } from "@tanstack/react-table"
+import type { ColumnDef, SortingState, Updater } from "@tanstack/react-table"
 
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import type { MeasureData } from "@/lib/measurements"
@@ -15,6 +15,8 @@ interface MonitoringTableTabProps {
   pageCount: number
   totalRows: number
   onPaginationChange: Dispatch<SetStateAction<{ pageIndex: number; pageSize: number }>>
+  sorting: SortingState
+  onSortingChange: (updater: Updater<SortingState>) => void
   isSurveillanceActive: boolean
   rangeEnabled: boolean
   t: (key: string) => string
@@ -40,6 +42,8 @@ export function MonitoringTableTab({
   pageCount,
   totalRows,
   onPaginationChange,
+  sorting,
+  onSortingChange,
   isSurveillanceActive,
   rangeEnabled,
   t,
@@ -58,6 +62,7 @@ export function MonitoringTableTab({
 
   const columns = useMemo<ColumnDef<TableRow>[]>(() => [
     {
+      id: "date",
       accessorKey: "dateIso",
       header: t("table.columns.date_time"),
       sortingFn: (rowA, rowB, columnId) => Date.parse(rowA.getValue(columnId) as string) - Date.parse(rowB.getValue(columnId) as string),
@@ -121,10 +126,13 @@ export function MonitoringTableTab({
         emptyMessage={isSurveillanceActive || rangeEnabled ? t("table.empty") : t("table.empty_with_range")}
         isLoading={rangeLoading}
         manualPagination
+        manualSorting
         pageCount={pageCount}
         totalRows={totalRows}
         paginationState={pagination}
         onPaginationChange={onPaginationChange}
+        sortingState={sorting}
+        onSortingChange={onSortingChange}
         headerClassName="!bg-sidebar !text-sidebar-foreground"
         headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
         tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"

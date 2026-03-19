@@ -106,13 +106,18 @@ function slugify(value: string) {
     .replace(/^-+|-+$/g, "")
 }
 
-function buildPdfPayload(cart: Record<number, number>, comment: string) {
+function buildPdfPayload(
+  cart: Record<number, number>,
+  comment: string,
+  customerId: string | null,
+) {
   return {
     items: Object.entries(cart).map(([materialId, quantity]) => ({
       materialId: Number(materialId),
       quantity,
     })),
     comment: comment.trim() || null,
+    customerId: customerId?.trim() || null,
   }
 }
 
@@ -382,7 +387,7 @@ export function HardwareCatalogPageClient() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(buildPdfPayload(cart, comment)),
+        body: JSON.stringify(buildPdfPayload(cart, comment, customerId)),
       })
 
       if (!response.ok) {
@@ -397,7 +402,7 @@ export function HardwareCatalogPageClient() {
       }
 
       const blob = await response.blob()
-      downloadBlob(blob, "demande-devis-materiel-mc2.pdf")
+      downloadBlob(blob, "DM-sans-client.pdf")
     },
     onSuccess: () => {
       toast({
@@ -417,7 +422,10 @@ export function HardwareCatalogPageClient() {
 
   const orderMutation = useMutation({
     mutationFn: () =>
-      postJson<HardwareOrderResponse>("/api/services/hardware/orders", buildPdfPayload(cart, comment)),
+      postJson<HardwareOrderResponse>(
+        "/api/services/hardware/orders",
+        buildPdfPayload(cart, comment, customerId),
+      ),
     onSuccess: async (data) => {
       setCart({})
       setComment("")

@@ -4,12 +4,12 @@ using System.Runtime.InteropServices;
 // Les informations générales relatives à un assembly dépendent de
 // l'ensemble d'attributs suivant. Changez les valeurs de ces attributs pour modifier les informations
 // associées à un assembly.
-[assembly: AssemblyTitle("Vigitemp Agent")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("VigiSensys Agent")]
+[assembly: AssemblyDescription("Agent local VigiSensys pour la detection VigiLog et les integrations poste")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Vigitemp Agent")]
-[assembly: AssemblyCopyright("Copyright ©  2024")]
+[assembly: AssemblyCompany("VigiSensys by MC2")]
+[assembly: AssemblyProduct("VigiSensys Agent")]
+[assembly: AssemblyCopyright("Copyright © VigiSensys by MC2")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

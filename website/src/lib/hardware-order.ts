@@ -25,6 +25,7 @@ export type HardwareOrderMaterialSnapshot = {
 export type HardwareOrderDocumentInput = {
   reference: string
   createdAt: Date
+  customerId: string
   requesterName: string
   requesterEmail: string
   commercialEmail: string
@@ -53,6 +54,19 @@ function formatDateTime(value: Date) {
     dateStyle: "short",
     timeStyle: "short",
   }).format(value)
+}
+
+function formatPdfFileDate(value: Date) {
+  const pad = (part: number) => String(part).padStart(2, "0")
+  return `${value.getFullYear()}${pad(value.getMonth() + 1)}${pad(value.getDate())}-${pad(
+    value.getHours(),
+  )}${pad(value.getMinutes())}${pad(value.getSeconds())}`
+}
+
+export function buildHardwarePdfFileName(customerId: string | null | undefined, createdAt: Date) {
+  const normalizedCustomerId =
+    customerId?.trim().replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "sans-client"
+  return `DM-${normalizedCustomerId}-${formatPdfFileDate(createdAt)}.pdf`
 }
 
 export async function getHardwareCommercialEmail() {
@@ -178,43 +192,64 @@ export function generateHardwareOrderPdfBuffer(input: HardwareOrderDocumentInput
   const mc2Blue: [number, number, number] = [25, 145, 201]
   const dark: [number, number, number] = [31, 41, 55]
   const muted: [number, number, number] = [99, 115, 129]
+  const lightBorder: [number, number, number] = [226, 232, 240]
+  const lightFill: [number, number, number] = [248, 250, 252]
 
   doc.setFillColor(...mc2Blue)
   doc.rect(0, 0, 210, 22, "F")
   doc.setTextColor(255, 255, 255)
   doc.setFont("helvetica", "bold")
   doc.setFontSize(18)
-  doc.text("Demande de devis matériel MC2", 14, 14)
+  doc.text("Demande de devis materiel MC2", 14, 14)
 
   doc.setTextColor(...dark)
   doc.setFont("helvetica", "bold")
   doc.setFontSize(12)
   doc.text("Informations devis", 14, 32)
 
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(10)
-  doc.text(`Référence : ${input.reference}`, 14, 40)
-  doc.text(`Date : ${formatDateTime(input.createdAt)}`, 14, 46)
-  doc.text(`Demandeur : ${input.requesterName}`, 14, 52)
-  doc.text(`Email demandeur : ${input.requesterEmail}`, 14, 58)
-  doc.text(`Contact commercial : ${input.commercialEmail}`, 14, 64)
+  doc.setDrawColor(...lightBorder)
+  doc.setFillColor(...lightFill)
+  doc.roundedRect(14, 36, 182, 34, 2, 2, "FD")
 
-  if (input.comment?.trim()) {
+  const infoLabel = (label: string, value: string, x: number, y: number) => {
     doc.setFont("helvetica", "bold")
-    doc.text("Commentaire", 14, 74)
-    doc.setFont("helvetica", "normal")
+    doc.setFontSize(9)
     doc.setTextColor(...muted)
-    const commentLines = doc.splitTextToSize(input.comment.trim(), 180)
-    doc.text(commentLines, 14, 80)
+    doc.text(label, x, y)
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(10)
     doc.setTextColor(...dark)
+    doc.text(value || "-", x, y + 5)
   }
 
-  const commentHeight = input.comment?.trim()
-    ? Math.max(doc.splitTextToSize(input.comment.trim(), 180).length * 4, 12)
-    : 0
+  infoLabel("Reference", input.reference, 18, 43)
+  infoLabel("Date", formatDateTime(input.createdAt), 18, 54)
+  infoLabel("Numero client", input.customerId || "-", 18, 65)
+  infoLabel("Demandeur", input.requesterName, 105, 43)
+  infoLabel("Email demandeur", input.requesterEmail, 105, 54)
+  infoLabel("Contact commercial", input.commercialEmail, 105, 65)
+
+  let tableStartY = 80
+  if (input.comment?.trim()) {
+    const commentLines = doc.splitTextToSize(input.comment.trim(), 174)
+    const commentHeight = Math.max(commentLines.length * 4 + 10, 18)
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(11)
+    doc.setTextColor(...dark)
+    doc.text("Commentaire", 14, 80)
+    doc.setDrawColor(...lightBorder)
+    doc.setFillColor(...lightFill)
+    doc.roundedRect(14, 84, 182, commentHeight, 2, 2, "FD")
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(9)
+    doc.setTextColor(...muted)
+    doc.text(commentLines, 18, 91)
+    doc.setTextColor(...dark)
+    tableStartY = 90 + commentHeight
+  }
 
   autoTable(doc, {
-    startY: 86 + commentHeight,
+    startY: tableStartY,
     head: [["Ref", "Désignation", "Gamme", "Famille", "Type", "Quantité"]],
     body: input.items.map((item) => [
       item.refCommercial,
@@ -234,7 +269,7 @@ export function generateHardwareOrderPdfBuffer(input: HardwareOrderDocumentInput
       fontSize: 9,
       cellPadding: 2.5,
       textColor: dark,
-      lineColor: [226, 232, 240],
+      lineColor: lightBorder,
       lineWidth: 0.1,
     },
     bodyStyles: {
@@ -253,9 +288,9 @@ export function generateHardwareOrderPdfBuffer(input: HardwareOrderDocumentInput
   const finalY = (doc as jsPDF & { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY ?? 110
   doc.setFont("helvetica", "bold")
   doc.setFontSize(11)
-  doc.text("Descriptif par gamme et famille", 14, finalY + 10)
+  doc.text("Descriptif par gamme et famille", 14, finalY + 12)
 
-  let cursorY = finalY + 18
+  let cursorY = finalY + 20
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   const typeOrder: Record<string, number> = {
@@ -347,15 +382,19 @@ export function generateHardwareOrderPdfBuffer(input: HardwareOrderDocumentInput
 
       items.forEach((item) => {
         ensurePageRoom(270)
+        const details = doc.splitTextToSize(item.descriptif || "-", 162 - indent)
+        const blockHeight = Math.max(details.length * 4 + 12, 18)
+        doc.setDrawColor(...lightBorder)
+        doc.setFillColor(...lightFill)
+        doc.roundedRect(indent + 1, cursorY - 4, 178 - indent, blockHeight, 2, 2, "FD")
         doc.setFont("helvetica", "bold")
         doc.setFontSize(9)
         doc.text(`${item.designation} (${item.refCommercial}) x ${item.quantity}`, indent + 4, cursorY)
         doc.setFont("helvetica", "normal")
         doc.setTextColor(...muted)
-        const details = doc.splitTextToSize(item.descriptif || "-", 170 - indent)
         doc.text(details, indent + 4, cursorY + 5)
         doc.setTextColor(...dark)
-        cursorY += Math.max(details.length * 4 + 10, 16)
+        cursorY += blockHeight + 4
       })
     }
 
@@ -375,7 +414,7 @@ export function generateHardwareOrderPdfBuffer(input: HardwareOrderDocumentInput
     }
 
     if (groupIndex < groupedItems.length - 1) {
-      doc.setDrawColor(226, 232, 240)
+      doc.setDrawColor(...lightBorder)
       doc.line(14, cursorY - 3, 196, cursorY - 3)
       cursorY += 6
     }

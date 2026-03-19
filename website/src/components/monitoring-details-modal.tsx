@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import type { SortingState, Updater } from "@tanstack/react-table";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -119,6 +120,7 @@ export default function MonitoringDetailsModal({
   });
   const [activeTab, setActiveTab] = useState<"graph" | "table" | "audit">("graph");
   const [zoomBounds, setZoomBounds] = useState<ZoomBounds | null>(null);
+  const [tableSorting, setTableSorting] = useState<SortingState>([]);
   const chartRef = useRef<ChartJS<"line"> | null>(null);
   const showNullNonResponse = Boolean(controlledShowNullNonResponse);
 
@@ -169,6 +171,10 @@ export default function MonitoringDetailsModal({
     : rangeGraphData;
   const data = rangeEnabled ? rangeGraphData : baseData;
 
+  const measurementSortBy = tableSorting[0]?.id === "value" ? "value" : tableSorting[0]?.id === "date" ? "date" : null;
+  const measurementSortDirection =
+    tableSorting[0]?.desc === true ? "desc" : tableSorting[0] ? "asc" : null;
+
   const { data: historyData, isLoading: isHistoryLoading, totalRows, pageCount } = useLieuMeasurementsPaged(idLieu, {
     enabled: isOpen && !baseLoading && (isSurveillanceActive || rangeEnabled),
     pageIndex: pagination.pageIndex,
@@ -176,10 +182,17 @@ export default function MonitoringDetailsModal({
     startDate: rangeEnabled ? rangeStart : null,
     endDate: rangeEnabled ? rangeEnd : null,
     includeNullNonResponse: showNullNonResponse,
+    sortBy: measurementSortBy,
+    sortDirection: measurementSortDirection,
   });
 
   const orderedData = useMemo(() => sortMeasuresChronologically(data), [data]);
-  const orderedHistoryData = useMemo(() => sortMeasuresChronologically(historyData), [historyData]);
+  const orderedHistoryData = useMemo(() => {
+    if (measurementSortBy) {
+      return historyData;
+    }
+    return sortMeasuresChronologically(historyData);
+  }, [historyData, measurementSortBy]);
 
   const summary = useMemo(
     () =>
@@ -242,6 +255,7 @@ export default function MonitoringDetailsModal({
   useEffect(() => {
     if (!isOpen) return;
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    setTableSorting([]);
   }, [idLieu, isOpen, rangeEnabled]);
 
   const { logs: auditLogs, isLoading: auditLoading, error: auditError, reset: resetAuditState } = useMonitoringAuditLogs(idLieu, {
@@ -297,6 +311,13 @@ export default function MonitoringDetailsModal({
   }, [idLieu, isOpen, rangeEnabled, rangeStart, rangeEnd]);
 
   const isDialogLoading = rangeEnabled ? rangeGraphLoading : baseLoading;
+  const handleTableSortingChange = useCallback((updater: Updater<SortingState>) => {
+    setTableSorting((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      return next;
+    });
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, []);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -380,6 +401,8 @@ export default function MonitoringDetailsModal({
                   pageCount={pageCount}
                   totalRows={totalRows}
                   onPaginationChange={setPagination}
+                  sorting={tableSorting}
+                  onSortingChange={handleTableSortingChange}
                   isSurveillanceActive={isSurveillanceActive}
                   rangeEnabled={rangeEnabled}
                   t={t}

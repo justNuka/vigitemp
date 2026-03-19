@@ -15,6 +15,7 @@ import { getJson, isUnauthorizedError, postJson } from "@/lib/http"
 
 import { HotlineHealthCard } from "./dashboard/hotline-health-card"
 import { HotlineLogsFilters, HotlineLogsPanel } from "./dashboard/hotline-logs-panel"
+import { HotlineSensorTestPanel } from "./dashboard/hotline-sensor-test-panel"
 
 type HealthStatus = "ok" | "error" | "unknown"
 
@@ -182,6 +183,7 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
         <TabsList className="bg-[#26A5DA]/15 p-1">
           <TabsTrigger value="overview" className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-white hover:bg-[#26A5DA]/20">{t('tabs.overview')}</TabsTrigger>
           <TabsTrigger value="logs" className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-white hover:bg-[#26A5DA]/20">{t('tabs.logs')}</TabsTrigger>
+          <TabsTrigger value="sensor_test" className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-white hover:bg-[#26A5DA]/20">{t('tabs.sensor_test')}</TabsTrigger>
           <TabsTrigger value="request_errors" className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-white hover:bg-[#26A5DA]/20">{t('tabs.request_errors')}</TabsTrigger>
         </TabsList>
 
@@ -220,6 +222,10 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
             }}
           />
           <HotlineLogsPanel title={t('logs.output_title')} filePath={logs?.filePath ? t('logs.file', { path: logs.filePath }) : null} error={logsError} lines={logs?.lines || []} loading={loadingLogs} emptyLabel={t('logs.empty')} lineClassName={getLogLineClass} />
+        </TabsContent>
+
+        <TabsContent value="sensor_test" className="mt-4">
+          <HotlineSensorTestPanel />
         </TabsContent>
 
         <TabsContent value="request_errors" className="mt-4 space-y-4">

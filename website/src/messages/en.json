@@ -215,6 +215,7 @@
       "type_high": "High threshold",
       "type_low": "Low threshold",
       "type_no_response": "No response",
+      "type_ended": "Ended alarm",
       "type_other": "Other",
       "resolved": "Alarms to acknowledge",
       "start_label": "Alarm start",
@@ -249,6 +250,14 @@
     },
     "validation": {
       "comment_max": "{max} characters maximum"
+    },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "allSites": "All sites",
+      "allTypes": "All types"
     },
     "table": {
       "search_placeholder": "Search alarms...",
@@ -330,6 +339,53 @@
       "high": "High alarm - {value} C",
       "low": "Low alarm - {value} C",
       "temperature": "Temperature alarm - {value} C"
+    }
+  },
+  "alarmAckHistoryPage": {
+    "title": "Alarm acknowledgment history",
+    "shortTitle": "Ack history",
+    "description": "Who acknowledged which alarm, when, and with which comment.",
+    "meta": {
+      "title": "Alarm acknowledgment history - VigiSensys",
+      "description": "Alarm acknowledgment history restricted to metrology users"
+    },
+    "actions": {
+      "refresh": "Refresh",
+      "apply": "Apply",
+      "reset": "Reset"
+    },
+    "helper": "Acknowledgments are listed from the alarm audit trail.",
+    "emptyTitle": "No acknowledgment found",
+    "empty": "No alarm acknowledgment was found for the accessible scope.",
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "allSites": "All sites",
+      "allTypes": "All types"
+    },
+    "table": {
+      "search": "Search acknowledgments...",
+      "columns": {
+        "acknowledgedAt": "Acknowledged at",
+        "acknowledgedBy": "User",
+        "location": "Site / Location",
+        "sensor": "Sensor",
+        "type": "Type",
+        "value": "Value",
+        "period": "Alarm period",
+        "comment": "Comment"
+      },
+      "period": {
+        "start": "Start:",
+        "end": "End:"
+      },
+      "type": {
+        "high": "High threshold",
+        "low": "Low threshold",
+        "no_response": "No response"
+      }
     }
   },
   "auditPage": {
@@ -804,6 +860,14 @@
       "edit": "Edit",
       "archive": "Archive"
     },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "allSites": "All sites",
+      "allTypes": "All types"
+    },
     "table": {
       "columns": {
         "serial": "Serial number",
@@ -914,6 +978,14 @@
       "comment_required": "Comment is required",
       "max": "{max} characters maximum"
     },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "allSites": "All sites",
+      "allTypes": "All types"
+    },
     "table": {
       "title": "Comments",
       "count": "{count, plural, one {{count} comment} other {{count} comments}}",
@@ -960,6 +1032,14 @@
     }
   },
   "toolsTestConnection": {
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "allSites": "All sites",
+      "allTypes": "All types"
+    },
     "table": {
       "title": "Sensors",
       "count": "{count, plural, one {{count} sensor} other {{count} sensors}}",
@@ -1053,6 +1133,14 @@
       "SACT": "Alarm module removed",
       "AACT": "Alarm module added",
       "unknown": "Unknown action ({code})"
+    },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "allSites": "All sites",
+      "allTypes": "All types"
     },
     "table": {
       "columns": {
@@ -1247,6 +1335,14 @@
       "legendNewThreshold": "New threshold",
       "resetZoom": "Reset zoom"
     },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "allSites": "All sites",
+      "allTypes": "All types"
+    },
     "table": {
       "simTitle": "Simulated alarms ({count})",
       "realTitle": "Real alarms ({count})",
@@ -1439,6 +1535,14 @@
       "new": "New",
       "edit": "Edit",
       "archive": "Archive"
+    },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "allSites": "All sites",
+      "allTypes": "All types"
     },
     "table": {
       "columns": {
@@ -1740,6 +1844,14 @@
       "edit": "Edit",
       "create_from_adjustment_file": "Add sensor from adjustment/calibration file"
     },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "allSites": "All sites",
+      "allTypes": "All types"
+    },
     "table": {
       "columns": {
         "address": "Address",
@@ -1836,6 +1948,14 @@
       "edit": "Edit",
       "cancel": "Cancel",
       "apply": "Apply"
+    },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "allSites": "All sites",
+      "allTypes": "All types"
     },
     "table": {
       "title": "Adjustment/Calibration files",
@@ -1974,6 +2094,14 @@
       "cancel": "Cancel",
       "apply": "Apply"
     },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "allSites": "All sites",
+      "allTypes": "All types"
+    },
     "table": {
       "title": "Calibration files",
       "columns": {
@@ -2087,6 +2215,14 @@
       "edit": "Edit",
       "archive": "Archive",
       "test": "Test"
+    },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "allSites": "All sites",
+      "allTypes": "All types"
     },
     "table": {
       "columns": {
@@ -2332,6 +2468,14 @@
     "comment": {
       "max": "Maximum 200 characters"
     },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "allSites": "All sites",
+      "allTypes": "All types"
+    },
     "table": {
       "columns": {
         "type": "Type",
@@ -2455,6 +2599,14 @@
       "graph": "Chart",
       "table": "Measurements table",
       "audit": "Audit"
+    },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "allSites": "All sites",
+      "allTypes": "All types"
     },
     "table": {
       "columns": {
@@ -3013,7 +3165,15 @@
       "eyebrow": "Licenses",
       "title": "License comparison table",
       "subtitle": "Choose the level that matches your needs.",
-      "table": {
+      "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "allSites": "All sites",
+      "allTypes": "All types"
+    },
+    "table": {
         "feature": "Feature",
         "pack": "Pack",
         "one": "One",
@@ -3254,6 +3414,10 @@
     "chart": {
       "measures": "Measurements ({unit})"
     },
+    "mobile": {
+      "graph_in_details_title": "Chart available in details",
+      "graph_in_details_description": "Tap the card to open the location and display the full chart."
+    },
     "guides": {
       "max": "Max: {value}",
       "min": "Min: {value}",
@@ -3281,7 +3445,8 @@
       "enable": "Enable monitoring",
       "toggle": "Manage monitoring / alarms",
       "location": "Location",
-      "settings": "Edit location settings"
+      "settings": "Edit location settings",
+      "settings_forbidden": "You are not allowed to edit this location"
     },
     "confirm": {
       "title": "Confirmation",
@@ -3614,6 +3779,7 @@
     "tabs": {
       "overview": "Overview",
       "logs": "Logs",
+      "sensor_test": "Sensor test",
       "request_errors": "API errors"
     },
     "actions": {

@@ -63,6 +63,14 @@ const TOURNEES_QUERY_KEY = ["services", "vigilog", "tournees"] as const
 const AGENT_PRESENCE_QUERY_KEY = ["services", "vigilog", "agent", "presence"] as const
 const AUTO_PROBE_INTERVAL_MS = 4000
 
+function normalizePresenceDetails(value: string | null | undefined) {
+  return (value ?? "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .trim()
+}
+
 function formatDateTime(value: string | null, locale: string) {
   if (!value) return "-"
   return new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-GB", {
@@ -665,6 +673,7 @@ export function VigilogPageClient() {
     }
 
     const presence = autoPresenceQuery.data
+    const normalizedPresenceDetails = normalizePresenceDetails(presence?.details)
     if (!presence) {
       return {
         tone: "loading" as const,
@@ -683,7 +692,7 @@ export function VigilogPageClient() {
       }
     }
 
-    if (presence.details === "Base branchee sans VigiLog") {
+    if (normalizedPresenceDetails === "base branchee sans vigilog") {
       return {
         tone: "base-only" as const,
         title: t("departure.loggerState.baseOnlyTitle"),
@@ -691,7 +700,7 @@ export function VigilogPageClient() {
       }
     }
 
-    if (presence.details === "Aucune base VigiLog detectee") {
+    if (normalizedPresenceDetails === "aucune base vigilog detectee") {
       return {
         tone: "missing" as const,
         title: t("departure.loggerState.missingTitle"),

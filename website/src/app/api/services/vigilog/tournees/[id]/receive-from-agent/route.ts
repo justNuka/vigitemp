@@ -37,6 +37,16 @@ export const POST = withAnyAuthorizationLogging(
         return apiError(409, "invalid_status", "Cette tournee n'est pas en attente de reception")
       }
 
+      const linkedLogger = existing.Id_VigiLog
+        ? await prisma.t_vigilog.findUnique({
+            where: { Id_VigiLog: existing.Id_VigiLog },
+            select: { Err_Justesse: true },
+          })
+        : await prisma.t_vigilog.findUnique({
+            where: { Numero_Serie: existing.Numero_Serie_VigiLog },
+            select: { Err_Justesse: true },
+          })
+
       const agentResponse = await readVigilogAgent()
       if (!agentResponse.res) {
         return apiError(
@@ -79,6 +89,8 @@ export const POST = withAnyAuthorizationLogging(
         highLimit: existing.Limite_Haute != null ? Number(existing.Limite_Haute) : null,
         frequencyMinutes: existing.Frequence_Min,
         alarmDelayMinutes: existing.Retard_Alarme_Min,
+        accuracyError:
+          linkedLogger?.Err_Justesse != null ? Number(linkedLogger.Err_Justesse) : null,
       })
 
       let clearSucceeded = false

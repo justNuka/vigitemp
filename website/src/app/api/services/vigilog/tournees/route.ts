@@ -179,10 +179,6 @@ export const POST = withAnyAuthorizationLogging(
         })
       }
 
-      if (parsed.data.Id_Site_Depart === parsed.data.Id_Site_Arrivee) {
-        return apiError(400, "same_site", "Le site de depart et d'arrivee doivent etre differents")
-      }
-
       const configuration = await prisma.t_vigilog_configuration.findUnique({
         where: { Id_VigiLog_Configuration: parsed.data.Id_VigiLog_Configuration },
       })

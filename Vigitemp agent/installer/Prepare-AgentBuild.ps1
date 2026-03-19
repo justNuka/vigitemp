@@ -1,16 +1,18 @@
-﻿Param(
+Param(
     [ValidateSet("Debug", "Release")]
     [string]$Configuration = "Release",
     [string]$AgentBuildOutput,
-    [string]$MsiPath,
     [string]$OutputDir,
-    [string]$FinalizeScriptPath
+    [string]$InstallerProjectPath,
+    [string]$SignCertPath,
+    [string]$SignCertPassword,
+    [string]$SignThumbprint,
+    [string]$TimestampUrl = "http://timestamp.digicert.com"
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-# Force UTF-8 console encoding for correct accents/special characters in logs.
 try { cmd /c chcp 65001 > $null } catch { }
 try {
     [Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
@@ -40,30 +42,74 @@ function Get-MSBuildPath {
     throw "MSBuild introuvable. Installez les Build Tools Visual Studio ou ajoutez MSBuild au PATH."
 }
 
+function Get-SignToolPath {
+    $command = Get-Command signtool.exe -ErrorAction SilentlyContinue
+    if ($command) {
+        return $command.Source
+    }
+
+    $kitsRoot = Join-Path ${env:ProgramFiles(x86)} "Windows Kits\10\bin"
+    if (Test-Path $kitsRoot) {
+        $candidates = Get-ChildItem -Path $kitsRoot -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue |
+            Sort-Object FullName -Descending
+        if ($candidates) {
+            return $candidates[0].FullName
+        }
+    }
+
+    throw "signtool.exe introuvable. Installez le Windows SDK ou ajoutez signtool au PATH."
+}
+
+function Sign-File {
+    Param(
+        [Parameter(Mandatory = $true)][string]$FilePath
+    )
+
+    if ([string]::IsNullOrWhiteSpace($SignCertPath) -and [string]::IsNullOrWhiteSpace($SignThumbprint)) {
+        return
+    }
+
+    $signToolPath = Get-SignToolPath
+    $arguments = @("sign", "/fd", "SHA256", "/td", "SHA256", "/tr", $TimestampUrl)
+
+    if (-not [string]::IsNullOrWhiteSpace($SignCertPath)) {
+        $arguments += @("/f", $SignCertPath)
+        if (-not [string]::IsNullOrWhiteSpace($SignCertPassword)) {
+            $arguments += @("/p", $SignCertPassword)
+        }
+    } elseif (-not [string]::IsNullOrWhiteSpace($SignThumbprint)) {
+        $arguments += @("/sha1", $SignThumbprint)
+    }
+
+    $arguments += $FilePath
+
+    Write-Log "Signature: $FilePath"
+    & $signToolPath @arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "Echec de la signature pour $FilePath"
+    }
+}
+
 $scriptRoot = $PSScriptRoot
 $agentRoot = Resolve-Path (Join-Path $scriptRoot "..")
 $repoRoot = Resolve-Path (Join-Path $agentRoot "..")
 $agentProjectPath = Join-Path $agentRoot "Vigitemp agent\Vigitemp Agent.csproj"
-$buildMsiScriptPath = Join-Path $scriptRoot "wix\build-msi.ps1"
+$installerPayloadRoot = Join-Path $agentRoot "VigitempAgentInstaller\Payload"
 
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
     $OutputDir = Join-Path $repoRoot "..\vigi\2 - installation\3 - agent"
 }
 
-if ([string]::IsNullOrWhiteSpace($FinalizeScriptPath)) {
-    $FinalizeScriptPath = Join-Path $scriptRoot "Finalize-AgentInstall.ps1"
+if ([string]::IsNullOrWhiteSpace($InstallerProjectPath)) {
+    $InstallerProjectPath = Join-Path $agentRoot "VigitempAgentInstaller\VigitempAgentInstaller.csproj"
 }
 
 if (-not (Test-Path $agentProjectPath)) {
     throw "Projet agent introuvable: $agentProjectPath"
 }
 
-if (-not (Test-Path $buildMsiScriptPath)) {
-    throw "Script build MSI introuvable: $buildMsiScriptPath"
-}
-
-if (-not (Test-Path $FinalizeScriptPath)) {
-    throw "Script de finalisation introuvable: $FinalizeScriptPath"
+if (-not (Test-Path $InstallerProjectPath)) {
+    throw "Projet installeur EXE introuvable: $InstallerProjectPath"
 }
 
 $msbuildPath = Get-MSBuildPath
@@ -79,45 +125,64 @@ if ([string]::IsNullOrWhiteSpace($AgentBuildOutput)) {
 
 $agentExe = Join-Path $AgentBuildOutput "VigitempAgent.exe"
 if (-not (Test-Path $agentExe)) {
-    throw "Agent executable not found: $agentExe"
+    throw "Executable agent introuvable: $agentExe"
+}
+$workerExe = Join-Path $AgentBuildOutput "VigitempLogTagWorker.exe"
+if (-not (Test-Path $workerExe)) {
+    throw "Executable worker introuvable: $workerExe"
 }
 
-Write-Log "Build MSI..."
-powershell -ExecutionPolicy Bypass -File $buildMsiScriptPath -Configuration $Configuration
+Sign-File -FilePath $agentExe
+Sign-File -FilePath $workerExe
+
+Write-Log "Preparation du payload embarque..."
+if (Test-Path $installerPayloadRoot) {
+    Remove-Item -Path $installerPayloadRoot -Recurse -Force
+}
+
+$agentPayloadDir = Join-Path $installerPayloadRoot "agent"
+$driverPayloadDir = Join-Path $installerPayloadRoot "driver"
+New-Item -ItemType Directory -Force -Path $agentPayloadDir | Out-Null
+New-Item -ItemType Directory -Force -Path $driverPayloadDir | Out-Null
+
+Get-ChildItem -Path $AgentBuildOutput -File | Where-Object {
+    $_.Extension -notin @('.pdb', '.xml') -and
+    $_.Name -notlike '*.vshost.*'
+} | ForEach-Object {
+    Copy-Item -Path $_.FullName -Destination (Join-Path $agentPayloadDir $_.Name) -Force
+}
+
+Get-ChildItem -Path $AgentBuildOutput -Directory | ForEach-Object {
+    Copy-Item -Path $_.FullName -Destination (Join-Path $agentPayloadDir $_.Name) -Recurse -Force
+}
+
+$driverSource = Get-ChildItem -Path (Join-Path $agentRoot "Vigitemp agent\Resources") -File |
+    Where-Object { $_.Name -like '*Cradle*Driver*Installation*.exe' -or $_.Name -like '*Cradle*.exe' } |
+    Select-Object -First 1
+
+if (-not $driverSource) {
+    throw "Driver cradle introuvable dans Vigitemp agent\\Resources."
+}
+
+Copy-Item -Path $driverSource.FullName -Destination (Join-Path $driverPayloadDir $driverSource.Name) -Force
+
+Write-Log "Build installeur EXE..."
+& $msbuildPath $InstallerProjectPath /restore /t:Build /p:Configuration=$Configuration /p:Platform=AnyCPU /nologo
 if ($LASTEXITCODE -ne 0) {
-    throw "Echec du build MSI."
+    throw "Echec du build de l'installeur EXE."
 }
 
-if ([string]::IsNullOrWhiteSpace($MsiPath)) {
-    $MsiPath = Join-Path $agentRoot "installer\wix\out\VigitempAgent.msi"
+$installerOutputExe = Join-Path $agentRoot "VigitempAgentInstaller\bin\$Configuration\VigiSensysAgentSetup.exe"
+if (-not (Test-Path $installerOutputExe)) {
+    throw "Executable installeur introuvable: $installerOutputExe"
 }
 
-if (-not (Test-Path $MsiPath)) {
-    throw "MSI introuvable: $MsiPath"
-}
+Sign-File -FilePath $installerOutputExe
 
-Write-Log "Preparing agent package: $OutputDir"
+Write-Log "Preparation du package final: $OutputDir"
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
+Get-ChildItem -Path $OutputDir -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
 
-$legacyInstallerDir = Join-Path $OutputDir "installer"
-if (Test-Path $legacyInstallerDir) {
-    Write-Log "Removing legacy installer folder..."
-    Remove-Item -Path $legacyInstallerDir -Recurse -Force
-}
+Copy-Item -Path $installerOutputExe -Destination (Join-Path $OutputDir 'VigiSensysAgentSetup.exe') -Force
 
-Write-Log "Copying MSI installer..."
-Copy-Item -Path $MsiPath -Destination $OutputDir -Force
-
-Write-Log "Copying finalization script..."
-Copy-Item -Path $FinalizeScriptPath -Destination $OutputDir -Force
-
-Write-Log "Creating finalization launcher..."
-$launcherCmdPath = Join-Path $OutputDir "Finalize-AgentInstall.cmd"
-$cmdContent = @"
-@echo off
-powershell.exe -ExecutionPolicy Bypass -File "%~dp0Finalize-AgentInstall.ps1" -InstallDir "%ProgramFiles(x86)%\Vigitemp\Agent"
-pause
-"@
-Set-Content -Path $launcherCmdPath -Value $cmdContent -Encoding ASCII
-
-Write-Log "Done. Package ready at: $OutputDir"
+Write-Log "Package pret: $OutputDir"

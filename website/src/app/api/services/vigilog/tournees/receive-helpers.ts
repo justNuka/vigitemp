@@ -32,6 +32,12 @@ function isOutOfLimits(
   return false
 }
 
+function applyAccuracyError(value: number | null, accuracyError: number | null) {
+  if (value == null) return null
+  if (accuracyError == null) return value
+  return Number((value + accuracyError).toFixed(4))
+}
+
 export function analyseVigilogMeasures(params: {
   measures: InputVigilogMeasure[]
   lowActive: boolean
@@ -40,6 +46,7 @@ export function analyseVigilogMeasures(params: {
   highLimit: number | null
   frequencyMinutes: number
   alarmDelayMinutes: number
+  accuracyError?: number | null
 }) {
   const sorted = [...params.measures].sort(
     (a, b) => a.Date_Heure_Mesure.getTime() - b.Date_Heure_Mesure.getTime(),
@@ -51,7 +58,7 @@ export function analyseVigilogMeasures(params: {
   let hasAlarm = false
 
   const analysed = sorted.map((measure, index) => {
-    const value = measure.Valeur ?? null
+    const value = applyAccuracyError(measure.Valeur ?? null, params.accuracyError ?? null)
     const outOfLimit = isOutOfLimits(
       value,
       params.lowActive,
@@ -155,6 +162,7 @@ export async function persistVigilogReception(params: {
   highLimit: number | null
   frequencyMinutes: number
   alarmDelayMinutes: number
+  accuracyError?: number | null
 }) {
   const analysis = analyseVigilogMeasures({
     measures: params.measures,
@@ -164,6 +172,7 @@ export async function persistVigilogReception(params: {
     highLimit: params.highLimit,
     frequencyMinutes: params.frequencyMinutes,
     alarmDelayMinutes: params.alarmDelayMinutes,
+    accuracyError: params.accuracyError ?? null,
   })
 
   if (analysis.analysed.length > 0) {

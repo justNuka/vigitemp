@@ -6,6 +6,7 @@ import { sendEmail } from "@/lib/email"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import {
+  buildHardwarePdfFileName,
   getHardwareOrderCapabilities,
 } from "@/lib/hardware-order"
 import HardwareOrderRequestEmail from "../../../../../../emails/hardware-order-request"
@@ -37,13 +38,17 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
       userId: ctx.user.userId,
       items: parsed.data.items,
       comment: parsed.data.comment,
+      customerId: parsed.data.customerId,
       reference,
     })
 
     const { smtpReady } = await getHardwareOrderCapabilities()
     const modeTransmission = smtpReady ? "SMTP" : "MAILTO"
     const initialStatus = smtpReady ? "BROUILLON" : "PREPAREE"
-    const pdfFileName = `${reference}.pdf`.slice(0, 50)
+    const pdfFileName = buildHardwarePdfFileName(
+      documentInput.customerId,
+      documentInput.createdAt,
+    ).slice(0, 100)
 
     const persisted = await prisma.$transaction(async (tx) => {
       const pdf = await tx.t_pdf.create({

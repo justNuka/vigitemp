@@ -21,11 +21,15 @@ export const GET = withAuthLogging(
       const pageSize = Number.isFinite(pageSizeParam) && pageSizeParam > 0 ? Math.min(pageSizeParam, 200) : 20
       const startDate = searchParams.get("startDate")
       const endDate = searchParams.get("endDate")
+      const sortByParam = searchParams.get("sortBy")
+      const sortDirectionParam = searchParams.get("sortDirection")
       const forceFresh = searchParams.get("fresh") === "true"
       const includeMeta = searchParams.get("includeMeta") === "true"
       const source = searchParams.get("source") === "mesures" ? "mesures" : "graphique"
       const usePagination = source === "mesures" && (searchParams.has("page") || searchParams.has("pageSize"))
       const includeNullNonResponse = await getGlobalNonResponseDefault()
+      const sortBy = sortByParam === "value" ? "value" : sortByParam === "date" ? "date" : null
+      const sortDirection: "asc" | "desc" = sortDirectionParam === "asc" ? "asc" : "desc"
 
       const idLieuInt = parseInt(idLieu)
       if (isNaN(idLieuInt)) {
@@ -71,6 +75,11 @@ export const GET = withAuthLogging(
         Id_Lieu: idLieuInt,
       }
 
+      const mesureOrderBy =
+        sortBy === "value"
+          ? [{ Valeur: sortDirection }, { Date_Heure_Mesure: sortDirection }]
+          : [{ Date_Heure_Mesure: sortBy === "date" ? sortDirection : "desc" }]
+
       if (startDate && endDate) {
         whereClause.Date_Heure_Mesure = {
           gte: new Date(startDate),
@@ -87,7 +96,7 @@ export const GET = withAuthLogging(
               },
               take: usePagination ? pageSize : rowNumber,
               skip: usePagination ? (page - 1) * pageSize : 0,
-              orderBy: { Date_Heure_Mesure: "desc" },
+              orderBy: mesureOrderBy,
               select: {
                 Id_Mesure: true,
                 Date_Heure_Mesure: true,
@@ -156,7 +165,8 @@ export const GET = withAuthLogging(
       const consigneLieu = lieu?.Consigne ?? null
       const decimalsLieu = lieu?.Derniere_Nb_Decimal ?? null
 
-      const chronologicalMeasurements = measurements.reverse()
+      const shouldReverseMeasurements = source === "graphique" || sortBy === null
+      const chronologicalMeasurements = shouldReverseMeasurements ? measurements.reverse() : measurements
 
       const formattedMeasurements = chronologicalMeasurements.map((m) => {
         const dateHeure = m.Date_Heure_Mesure ? new Date(m.Date_Heure_Mesure) : new Date()

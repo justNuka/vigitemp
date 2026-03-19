@@ -7,13 +7,14 @@
     <ProjectGuid>{5D7F6C8F-0F24-4D4A-9E8B-7C6A6A7E9D0A}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>VigitempAgentInstaller</RootNamespace>
-    <AssemblyName>VigitempAgentInstaller</AssemblyName>
+    <AssemblyName>VigiSensysAgentSetup</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>resources\AppIcon.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -55,6 +56,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.manifest" />
+    <Content Include="resources\AppIcon.ico" />
+    <EmbeddedResource Include="Payload\**\*">
+      <LogicalName>Payload/%(RecursiveDir)%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

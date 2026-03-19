@@ -47,8 +47,8 @@ export function NewConversationModal({
   const [isCreating, setIsCreating] = useState(false)
 
   const { data: users = [], isLoading: isLoadingUsers } = useQuery<ApiUser[]>({
-    queryKey: ["utilisateurs"],
-    queryFn: () => getJson<ApiUser[]>("/api/utilisateurs"),
+    queryKey: ["chat", "users"],
+    queryFn: () => getJson<ApiUser[]>("/api/chat/users"),
     enabled: open,
     staleTime: 60_000,
   })

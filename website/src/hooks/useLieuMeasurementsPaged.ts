@@ -13,6 +13,8 @@ type Options = {
   startDate?: string | Date | null
   endDate?: string | Date | null
   includeNullNonResponse?: boolean
+  sortBy?: "date" | "value" | null
+  sortDirection?: "asc" | "desc" | null
 }
 
 type PaginatedResponse = {
@@ -39,11 +41,13 @@ function buildKey(
   startDate?: string | Date | null,
   endDate?: string | Date | null,
   includeNullNonResponse?: boolean,
+  sortBy?: "date" | "value" | null,
+  sortDirection?: "asc" | "desc" | null,
 ) {
   const start =
     startDate instanceof Date ? toApiUtcDateTime(startDate) : startDate ?? ""
   const end = endDate instanceof Date ? toApiUtcDateTime(endDate) : endDate ?? ""
-  return `${idLieu}|${pageIndex}|${pageSize}|${start}|${end}|${includeNullNonResponse ? "1" : "0"}`
+  return `${idLieu}|${pageIndex}|${pageSize}|${start}|${end}|${includeNullNonResponse ? "1" : "0"}|${sortBy ?? ""}|${sortDirection ?? ""}`
 }
 
 export function useLieuMeasurementsPaged(
@@ -55,6 +59,8 @@ export function useLieuMeasurementsPaged(
     startDate,
     endDate,
     includeNullNonResponse,
+    sortBy,
+    sortDirection,
   }: Options = {},
 ) {
   const [data, setData] = useState<MeasureData[]>([])
@@ -63,8 +69,8 @@ export function useLieuMeasurementsPaged(
   const lastKeyRef = useRef<string | null>(null)
 
   const key = useMemo(
-    () => buildKey(idLieu, pageIndex, pageSize, startDate, endDate, includeNullNonResponse),
-    [idLieu, pageIndex, pageSize, startDate, endDate, includeNullNonResponse],
+    () => buildKey(idLieu, pageIndex, pageSize, startDate, endDate, includeNullNonResponse, sortBy, sortDirection),
+    [idLieu, pageIndex, pageSize, startDate, endDate, includeNullNonResponse, sortBy, sortDirection],
   )
 
   const pageCount = useMemo(() => {
@@ -81,6 +87,8 @@ export function useLieuMeasurementsPaged(
         startDate,
         endDate,
         includeNullNonResponse,
+        sortBy,
+        sortDirection,
       )
       if (useCache) {
         const cached = pageCache.get(cacheKey)
@@ -110,6 +118,12 @@ export function useLieuMeasurementsPaged(
       if (typeof includeNullNonResponse === "boolean") {
         params.set("includeNullNonResponse", includeNullNonResponse ? "1" : "0")
       }
+      if (sortBy) {
+        params.set("sortBy", sortBy)
+      }
+      if (sortDirection) {
+        params.set("sortDirection", sortDirection)
+      }
       const payload = await fetchJson<PaginatedResponse>(
         `/api/mesures/${idLieu}?${params}`,
       )
@@ -126,7 +140,7 @@ export function useLieuMeasurementsPaged(
       pageCache.set(cacheKey, entry)
       return entry
     },
-    [endDate, idLieu, pageSize, startDate, includeNullNonResponse],
+    [endDate, idLieu, pageSize, startDate, includeNullNonResponse, sortBy, sortDirection],
   )
 
   useEffect(() => {

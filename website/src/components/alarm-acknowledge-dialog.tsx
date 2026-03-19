@@ -38,6 +38,21 @@ export type AcknowledgeDialogAlarm = {
   endedAt?: string | Date | null;
 };
 
+type AlarmDetailPayload = {
+  id: number
+  locationId: number | null
+  locationName: string | null
+  sensorName: string | null
+  type?: "high" | "low" | "no-response" | "ended"
+  currentValue?: number | null
+  value?: number | null
+  unit?: string | null
+  minThreshold?: number | null
+  maxThreshold?: number | null
+  triggeredAt?: string | null
+  endedAt?: string | null
+}
+
 type Props = {
   open: boolean;
   alarm: AcknowledgeDialogAlarm | null;
@@ -55,12 +70,20 @@ export function AlarmAcknowledgeDialog({
 }: Props) {
   const t = useTranslations("alarmsPage");
   const locale = useLocale();
-const [commentOptions, setCommentOptions] = useState<{ id: number; text: string }[]>([]);
+  const baseAlarm: AcknowledgeDialogAlarm = alarm ?? {
+    id: "",
+    locationId: "",
+    locationName: "",
+    sensorName: "",
+  };
+  const [commentOptions, setCommentOptions] = useState<{ id: number; text: string }[]>([]);
   const [selectedCommentId, setSelectedCommentId] = useState<string>("");
   const [showGraph, setShowGraph] = useState(false);
   const [alarmCount30, setAlarmCount30] = useState<number | null>(null);
   const [isCommentsLoading, setIsCommentsLoading] = useState(false);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
+  const [alarmDetails, setAlarmDetails] = useState<AlarmDetailPayload | null>(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
 
   const commentSchema = z.object({
     comment: z.string().max(200, t("validation.comment_max", { max: 200 })).optional(),
@@ -88,6 +111,7 @@ const [commentOptions, setCommentOptions] = useState<{ id: number; text: string 
     setSelectedCommentId("");
     setAlarmCount30(null);
     setShowGraph(false);
+    setAlarmDetails(null);
 
     setIsCommentsLoading(true);
     fetch("/api/alarmes/commentaires-acquittement")
@@ -124,34 +148,65 @@ const [commentOptions, setCommentOptions] = useState<{ id: number; text: string 
         setIsStatsLoading(false);
       });
 
+    setIsDetailLoading(true);
+    fetch(`/api/alarmes/${alarm.id}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((payload) => {
+        if (!isActive) return;
+        setAlarmDetails(payload?.data ?? null);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setAlarmDetails(null);
+      })
+      .finally(() => {
+        if (!isActive) return;
+        setIsDetailLoading(false);
+      });
+
     return () => {
       isActive = false;
     };
   }, [open, alarm]);
 
+  const resolvedAlarm = useMemo<AcknowledgeDialogAlarm>(() => ({
+    ...baseAlarm,
+    locationId: String(alarmDetails?.locationId ?? baseAlarm.locationId),
+    locationName: alarmDetails?.locationName || baseAlarm.locationName,
+    sensorName: alarmDetails?.sensorName || baseAlarm.sensorName,
+    type: alarmDetails?.type ?? baseAlarm.type,
+    currentValue: alarmDetails?.currentValue ?? baseAlarm.currentValue ?? null,
+    value: alarmDetails?.value ?? baseAlarm.value ?? null,
+    unit: alarmDetails?.unit ?? baseAlarm.unit ?? null,
+    minThreshold: alarmDetails?.minThreshold ?? baseAlarm.minThreshold ?? null,
+    maxThreshold: alarmDetails?.maxThreshold ?? baseAlarm.maxThreshold ?? null,
+    triggeredAt: alarmDetails?.triggeredAt ?? baseAlarm.triggeredAt ?? null,
+    endedAt: alarmDetails?.endedAt ?? baseAlarm.endedAt ?? null,
+  }), [alarmDetails, baseAlarm]);
+
   const formattedStart = useMemo(() => {
-    if (!alarm?.triggeredAt) return "-";
-    return formatDbDateTime(alarm.triggeredAt);
-  }, [alarm?.triggeredAt]);
+    if (!resolvedAlarm.triggeredAt) return "-";
+    return formatDbDateTime(resolvedAlarm.triggeredAt);
+  }, [resolvedAlarm.triggeredAt]);
 
   const formattedEnd = useMemo(() => {
-    if (!alarm?.endedAt) return "-";
-    return formatDbDateTime(alarm.endedAt);
-  }, [alarm?.endedAt]);
+    if (!resolvedAlarm.endedAt) return t("dialog.end_in_progress");
+    return formatDbDateTime(resolvedAlarm.endedAt);
+  }, [resolvedAlarm.endedAt, t]);
 
   const formattedDuration = useMemo(() => {
-    if (!alarm?.triggeredAt) return "-";
-    const start = new Date(alarm.triggeredAt);
+    if (!resolvedAlarm.triggeredAt) return "-";
+    const start = new Date(resolvedAlarm.triggeredAt);
     if (Number.isNaN(start.getTime())) return "-";
-    const end = alarm.endedAt ? new Date(alarm.endedAt) : new Date();
+    const end = resolvedAlarm.endedAt ? new Date(resolvedAlarm.endedAt) : new Date();
     if (Number.isNaN(end.getTime())) return "-";
     return formatDistanceStrict(start, end, {
       locale: locale.toLowerCase().startsWith("fr") ? fr : undefined,
     });
-  }, [alarm?.endedAt, alarm?.triggeredAt, locale]);
+  }, [locale, resolvedAlarm.endedAt, resolvedAlarm.triggeredAt]);
 
   const alarmTypeLabel = useMemo(() => {
-    switch (alarm?.type) {
+    switch (resolvedAlarm.type) {
       case "high":
         return t("dialog.type_high");
       case "low":
@@ -159,11 +214,11 @@ const [commentOptions, setCommentOptions] = useState<{ id: number; text: string 
       case "no-response":
         return t("dialog.type_no_response");
       case "ended":
-        return t("dialog.type_other");
+        return t("dialog.type_ended");
       default:
-        return t("dialog.na");
+        return t("dialog.type_other");
     }
-  }, [alarm?.type, t]);
+  }, [resolvedAlarm.type, t]);
 
   if (!alarm) return null;
 
@@ -203,7 +258,7 @@ const [commentOptions, setCommentOptions] = useState<{ id: number; text: string 
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t("dialog.last_value_label")}</p>
                 <p className="text-sm font-mono font-semibold text-primary">
-                  {alarm.currentValue ?? alarm.value ?? "-"} {alarm.unit ?? ""}
+                  {resolvedAlarm.currentValue ?? resolvedAlarm.value ?? "-"} {resolvedAlarm.unit ?? ""}
                 </p>
               </div>
               <div>
@@ -221,7 +276,7 @@ const [commentOptions, setCommentOptions] = useState<{ id: number; text: string 
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t("dialog.count_30_label")}</p>
                 <p className="text-sm font-medium">
-                  {isStatsLoading
+                  {isStatsLoading || isDetailLoading
                     ? t("dialog.loading")
                     : alarmCount30 !== null
                       ? t("dialog.count_30_value", { count: alarmCount30 })
@@ -231,10 +286,10 @@ const [commentOptions, setCommentOptions] = useState<{ id: number; text: string 
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t("dialog.thresholds_label")}</p>
                 <p className="text-sm font-mono text-muted-foreground">
-                  {t("dialog.sup_value", { value: alarm.maxThreshold ?? "-", unit: alarm.unit ?? "" })}
+                  {t("dialog.sup_value", { value: resolvedAlarm.maxThreshold ?? "-", unit: resolvedAlarm.unit ?? "" })}
                 </p>
                 <p className="text-sm font-mono text-muted-foreground">
-                  {t("dialog.inf_value", { value: alarm.minThreshold ?? "-", unit: alarm.unit ?? "" })}
+                  {t("dialog.inf_value", { value: resolvedAlarm.minThreshold ?? "-", unit: resolvedAlarm.unit ?? "" })}
                 </p>
               </div>
             </div>
@@ -330,12 +385,12 @@ const [commentOptions, setCommentOptions] = useState<{ id: number; text: string 
           isOpen={showGraph}
           onClose={() => setShowGraph(false)}
           idLieu={Number(alarm.locationId)}
-          nomLieu={alarm.locationName}
-          sondeNumeroSerie={alarm.sensorName}
-          consigneSup={alarm.maxThreshold ?? null}
-          consigneInf={alarm.minThreshold ?? null}
-          consigne={alarm.maxThreshold ?? null}
-          unite={alarm.unit ?? ""}
+          nomLieu={resolvedAlarm.locationName}
+          sondeNumeroSerie={resolvedAlarm.sensorName}
+          consigneSup={resolvedAlarm.maxThreshold ?? null}
+          consigneInf={resolvedAlarm.minThreshold ?? null}
+          consigne={resolvedAlarm.maxThreshold ?? null}
+          unite={resolvedAlarm.unit ?? ""}
           isSurveillanceActive={false}
         />
       ) : null}

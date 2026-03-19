@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { useLieuMeasurements } from '@/hooks/useLieuMeasurements'
 import { formatDbDateTime } from '@/lib/date-display'
 import type { LieuTypeValue } from '@/lib/lieu-types'
@@ -99,11 +100,14 @@ export default function MonitoringCard({
   const t = useTranslations('monitoringCard')
   const tStatus = useTranslations('surveillanceStatus')
   const { hasPermission } = useAppAccess()
+  const isMobile = useIsMobile()
   const locale = useLocale()
   const localeTag = locale === 'fr' ? 'fr-FR' : locale
   const queryClient = useQueryClient()
+  const shouldLoadCardMeasurements = !isMobile
 
   const { data, isLoading, reload, meta } = useLieuMeasurements(idLieu, {
+    enabled: shouldLoadCardMeasurements,
     includeMeta: true,
     includeNullNonResponse: showNullNonResponse,
   })
@@ -233,6 +237,7 @@ export default function MonitoringCard({
     effectiveAlarmId !== null &&
     effectiveAlarmId !== undefined &&
     (effectiveStatus === 'critical' || effectiveStatus === 'technical' || effectiveStatus === 'ended')
+  const canEditLocation = hasPermission('LOCATION_CONFIG_ACCESS')
 
   const frequencyMinutes = useMemo(() => {
     if (isGso) return 15
@@ -371,20 +376,27 @@ export default function MonitoringCard({
           {isSurveillanceActive ? (
             <>
               <div className="cursor-pointer relative" onClick={() => setIsModalOpen(true)}>
-                <MonitoringCardChartPreview
-                  isLoading={isLoading}
-                  orderedData={previewData}
-                  chartDatasets={chartDatasets}
-                  yMin={yMin}
-                  yMax={yMax}
-                  consigne={consigne}
-                  consigneSup={consigneSup}
-                  consigneInf={consigneInf}
-                  formattedConsigne={formattedConsigne}
-                  formattedConsigneSup={formattedConsigneSup}
-                  formattedConsigneInf={formattedConsigneInf}
-                  unite={unite}
-                />
+                {isMobile ? (
+                  <div className="flex min-h-[180px] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 px-4 text-center">
+                    <p className="text-sm font-medium text-foreground">{t('mobile.graph_in_details_title')}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">{t('mobile.graph_in_details_description')}</p>
+                  </div>
+                ) : (
+                  <MonitoringCardChartPreview
+                    isLoading={isLoading}
+                    orderedData={previewData}
+                    chartDatasets={chartDatasets}
+                    yMin={yMin}
+                    yMax={yMax}
+                    consigne={consigne}
+                    consigneSup={consigneSup}
+                    consigneInf={consigneInf}
+                    formattedConsigne={formattedConsigne}
+                    formattedConsigneSup={formattedConsigneSup}
+                    formattedConsigneInf={formattedConsigneInf}
+                    unite={unite}
+                  />
+                )}
               </div>
 
               <div className="mt-auto space-y-3 text-sm border-t border-border pt-3">
@@ -461,11 +473,21 @@ export default function MonitoringCard({
 
                 <UITooltip>
                   <TooltipTrigger asChild>
-                    <button onClick={(event) => { event.stopPropagation(); onEditLocation?.(idLieu) }} className={`p-1.5 rounded-md transition-colors ${actionButtonClassName}`}>
-                      <Settings className={`w-4 h-4 ${actionIconClassName}`} />
-                    </button>
+                    <span>
+                      <button
+                        onClick={(event) => { event.stopPropagation(); onEditLocation?.(idLieu) }}
+                        className={`p-1.5 rounded-md transition-colors ${actionButtonClassName} ${canEditLocation ? "" : "cursor-not-allowed opacity-40"}`}
+                        disabled={!canEditLocation}
+                      >
+                        <Settings className={`w-4 h-4 ${actionIconClassName}`} />
+                      </button>
+                    </span>
                   </TooltipTrigger>
-                  <TooltipContent><p className="text-xs">{t('actions.settings')}</p></TooltipContent>
+                  <TooltipContent>
+                    <p className="text-xs">
+                      {canEditLocation ? t('actions.settings') : t('actions.settings_forbidden')}
+                    </p>
+                  </TooltipContent>
                 </UITooltip>
               </div>
             </TooltipProvider>
@@ -537,7 +559,7 @@ export default function MonitoringCard({
           estConsigneInfPreAlarmeActive={estConsigneInfPreAlarmeActive ?? false}
           unite={unite}
           isSurveillanceActive={isSurveillanceActive}
-          measurements={isSurveillanceActive ? previewData : []}
+          measurements={isSurveillanceActive && shouldLoadCardMeasurements ? previewData : []}
           showNullNonResponse={showNullNonResponse}
         />
       ) : null}

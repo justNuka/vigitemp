@@ -9,6 +9,7 @@ import {
   getFilteredRowModel,
   SortingState,
   ColumnFiltersState,
+  type Updater,
   useReactTable,
 } from '@tanstack/react-table';
 import { useMemo, useState, type ReactNode } from 'react';
@@ -69,7 +70,9 @@ export interface TanStackTableProps<TData> {
   exportExcludeColumnIds?: string[];
   enableExport?: boolean;
   enablePrint?: boolean;
+  exportFormats?: Array<"csv" | "xlsx" | "pdf">;
   manualPagination?: boolean;
+  manualSorting?: boolean;
   pageCount?: number;
   totalRows?: number;
   paginationState?: { pageIndex: number; pageSize: number };
@@ -78,6 +81,8 @@ export interface TanStackTableProps<TData> {
       | { pageIndex: number; pageSize: number }
       | ((prev: { pageIndex: number; pageSize: number }) => { pageIndex: number; pageSize: number })
   ) => void;
+  sortingState?: SortingState;
+  onSortingChange?: (updater: Updater<SortingState>) => void;
 }
 
 /**
@@ -122,11 +127,15 @@ export function TanStackTable<TData extends Record<string, any>>({
   exportExcludeColumnIds = ["actions", "action", "select"],
   enableExport = true,
   enablePrint = true,
+  exportFormats = ["csv", "xlsx", "pdf"],
   manualPagination = false,
+  manualSorting = false,
   pageCount,
   totalRows,
   paginationState,
   onPaginationChange,
+  sortingState,
+  onSortingChange,
 }: TanStackTableProps<TData>) {
   const t = useTranslations('tanstackTable');
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -142,17 +151,19 @@ export function TanStackTable<TData extends Record<string, any>>({
 
   const resolvedPagination = paginationState ?? pagination;
   const handlePaginationChange = onPaginationChange ?? setPagination;
+  const resolvedSorting = sortingState ?? sorting;
+  const handleSortingChange = onSortingChange ?? setSorting;
 
   const table = useReactTable({
     data,
     columns,
     state: {
-      sorting,
+      sorting: resolvedSorting,
       columnFilters,
       globalFilter,
       pagination: resolvedPagination,
     },
-    onSortingChange: setSorting,
+    onSortingChange: handleSortingChange,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
     onPaginationChange: handlePaginationChange,
@@ -161,6 +172,7 @@ export function TanStackTable<TData extends Record<string, any>>({
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     manualPagination,
+    manualSorting,
     pageCount: manualPagination ? pageCount : undefined,
     globalFilterFn: (row, columnId, filterValue) => {
       if (!filterValue) return true;
@@ -391,9 +403,15 @@ export function TanStackTable<TData extends Record<string, any>>({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={exportCsv}>CSV</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => void exportExcel()}>Excel</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => void exportPdf()}>PDF</DropdownMenuItem>
+                    {exportFormats.includes("csv") ? (
+                      <DropdownMenuItem onClick={exportCsv}>CSV</DropdownMenuItem>
+                    ) : null}
+                    {exportFormats.includes("xlsx") ? (
+                      <DropdownMenuItem onClick={() => void exportExcel()}>Excel</DropdownMenuItem>
+                    ) : null}
+                    {exportFormats.includes("pdf") ? (
+                      <DropdownMenuItem onClick={() => void exportPdf()}>PDF</DropdownMenuItem>
+                    ) : null}
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}

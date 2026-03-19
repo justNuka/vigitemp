@@ -188,6 +188,7 @@ namespace VigitempLogTagWorker
                 LogStep("GetPortInfoPrimary");
                 var portType = (ushort)COMMPORT.LTHID;
                 LogTag.GetPortInfo(null, ref portCount, portType);
+                LogPortProbe("presence", currentStep, portType, portCount);
 
                 if (portCount == 0)
                 {
@@ -195,6 +196,7 @@ namespace VigitempLogTagWorker
                     LogStep("GetPortInfoUsb");
                     portType = (ushort)COMMPORT.USB;
                     LogTag.GetPortInfo(null, ref portCount, portType);
+                    LogPortProbe("presence", currentStep, portType, portCount);
                 }
 
                 if (portCount == 0)
@@ -203,6 +205,7 @@ namespace VigitempLogTagWorker
                     LogStep("GetPortInfoHid");
                     portType = (ushort)COMMPORT.HID;
                     LogTag.GetPortInfo(null, ref portCount, portType);
+                    LogPortProbe("presence", currentStep, portType, portCount);
                 }
 
                 if (portCount == 0)
@@ -566,12 +569,14 @@ namespace VigitempLogTagWorker
             setStep("GetPortInfoPrimary");
             LogStep("GetPortInfoPrimary");
             LogTag.GetPortInfo(null, ref portCount, portType);
+            LogPortProbe("open-single", "GetPortInfoPrimary", portType, portCount);
             if (portCount == 0)
             {
                 setStep("GetPortInfoFallback");
                 LogStep("GetPortInfoFallback");
                 portType = (ushort)COMMPORT.USB;
                 LogTag.GetPortInfo(null, ref portCount, portType);
+                LogPortProbe("open-single", "GetPortInfoFallback", portType, portCount);
             }
             if (portCount == 0)
             {
@@ -579,6 +584,7 @@ namespace VigitempLogTagWorker
                 LogStep("GetPortInfoFallbackHid");
                 portType = (ushort)COMMPORT.HID;
                 LogTag.GetPortInfo(null, ref portCount, portType);
+                LogPortProbe("open-single", "GetPortInfoFallbackHid", portType, portCount);
             }
 
             if (portCount > 1)
@@ -795,6 +801,30 @@ namespace VigitempLogTagWorker
             }
 
             Log("step", step ?? string.Empty);
+        }
+
+        private static void LogPortProbe(string context, string step, ushort portType, uint portCount)
+        {
+            Log(
+                "info",
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    "port_probe context={0}; step={1}; portType={2}; portTypeName={3}; portCount={4}",
+                    context ?? string.Empty,
+                    step ?? string.Empty,
+                    portType,
+                    DescribePortType(portType),
+                    portCount
+                )
+            );
+        }
+
+        private static string DescribePortType(ushort portType)
+        {
+            if (portType == (ushort)COMMPORT.LTHID) return "LTHID";
+            if (portType == (ushort)COMMPORT.USB) return "USB";
+            if (portType == (ushort)COMMPORT.HID) return "HID";
+            return "UNKNOWN";
         }
 
         private static void Log(string level, string message)

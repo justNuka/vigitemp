@@ -513,6 +513,7 @@
       "type_high": "Dépassement haut",
       "type_low": "Dépassement bas",
       "type_no_response": "Non réponse",
+      "type_ended": "Alarme termin?e",
       "type_other": "Autre",
       "start_label": "Début alarme",
       "end_label": "Fin alarme",
@@ -536,7 +537,13 @@
       "high": "Haut",
       "low": "Bas",
       "no_response": "Non réponse",
-      "ended": "Terminée"
+      "ended": "Terminée",
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Date de début",
+      "dateTo": "Date de fin",
+      "allSites": "Tous les sites",
+      "allTypes": "Tous les types"
     },
     "toast": {
       "na": "-",
@@ -627,6 +634,53 @@
       "high": "Alarme haute - {value} C",
       "low": "Alarme basse - {value} C",
       "temperature": "Alarme température - {value} C"
+    }
+  },
+  "alarmAckHistoryPage": {
+    "title": "Historique d'acquittement des alarmes",
+    "shortTitle": "Historique acquittements",
+    "description": "Qui a acquitt? quelle alarme, quand et avec quel commentaire.",
+    "meta": {
+      "title": "Historique d'acquittement - VigiSensys",
+      "description": "Historique des acquittements d'alarmes r?serv? ? la m?trologie"
+    },
+    "actions": {
+      "refresh": "Actualiser",
+      "apply": "Filtrer",
+      "reset": "R?initialiser"
+    },
+    "helper": "Les acquittements sont journalis?s depuis l'audit technique des alarmes.",
+    "emptyTitle": "Aucun acquittement trouv?",
+    "empty": "Aucun acquittement d'alarme n'a ?t? trouv? pour le p?rim?tre accessible.",
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Date de d?but",
+      "dateTo": "Date de fin",
+      "allSites": "Tous les sites",
+      "allTypes": "Tous les types"
+    },
+    "table": {
+      "search": "Rechercher un acquittement...",
+      "columns": {
+        "acknowledgedAt": "Date d'acquittement",
+        "acknowledgedBy": "Utilisateur",
+        "location": "Site / Lieu",
+        "sensor": "Sonde",
+        "type": "Type",
+        "value": "Valeur",
+        "period": "P?riode d'alarme",
+        "comment": "Commentaire"
+      },
+      "period": {
+        "start": "D?but :",
+        "end": "Fin :"
+      },
+      "type": {
+        "high": "D?passement haut",
+        "low": "D?passement bas",
+        "no_response": "Non r?ponse"
+      }
     }
   },
   "adminAlarmsPage": {
@@ -1058,6 +1112,14 @@
       "edit": "Modifier",
       "archive": "Archiver"
     },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Date de d?but",
+      "dateTo": "Date de fin",
+      "allSites": "Tous les sites",
+      "allTypes": "Tous les types"
+    },
     "table": {
       "columns": {
         "serial": "Numéro de série",
@@ -1168,6 +1230,14 @@
       "comment_required": "Le commentaire est requis",
       "max": "{max} caractères maximum"
     },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Date de d?but",
+      "dateTo": "Date de fin",
+      "allSites": "Tous les sites",
+      "allTypes": "Tous les types"
+    },
     "table": {
       "title": "Commentaires",
       "count": "{count, plural, one {{count} commentaire} other {{count} commentaires}}",
@@ -1214,6 +1284,14 @@
     }
   },
   "toolsTestConnection": {
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Date de d?but",
+      "dateTo": "Date de fin",
+      "allSites": "Tous les sites",
+      "allTypes": "Tous les types"
+    },
     "table": {
       "title": "Sondes",
       "count": "{count, plural, one {{count} sonde} other {{count} sondes}}",
@@ -1308,6 +1386,16 @@
       "AACT": "Module alarme associé",
       "unknown": "Action inconnue ({code})"
     },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Date de d?but",
+      "dateTo": "Date de fin",
+      "allSites": "Tous les sites",
+      "allTypes": "Tous les types",
+      "code_all": "Tous les codes",
+      "code_placeholder": "Code action"
+    },
     "table": {
       "columns": {
         "timestamp": "Date / Heure",
@@ -1327,10 +1415,6 @@
       "to": "Vers : {value}",
       "action": "Action : {action}",
       "ip": "IP : {ip}"
-    },
-    "filters": {
-      "code_all": "Tous les codes",
-      "code_placeholder": "Code action"
     }
   },
   "profilePage": {
@@ -1500,6 +1584,14 @@
       "legendActualInf": "Seuil actuel inf.",
       "legendNewThreshold": "Nouveau seuil",
       "resetZoom": "Réinitialiser le zoom"
+    },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Date de d?but",
+      "dateTo": "Date de fin",
+      "allSites": "Tous les sites",
+      "allTypes": "Tous les types"
     },
     "table": {
       "simTitle": "Alarmes simulées ({count})",
@@ -1694,6 +1786,14 @@
       "edit": "Modifier",
       "archive": "Archiver"
     },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Date de d?but",
+      "dateTo": "Date de fin",
+      "allSites": "Tous les sites",
+      "allTypes": "Tous les types"
+    },
     "table": {
       "columns": {
         "number": "Numéro",
@@ -1740,6 +1840,14 @@
       "add": "Ajouter",
       "edit": "Modifier",
       "create_from_adjustment_file": "Ajouter sonde avec fichier d'ajustage/calibrage"
+    },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Date de d?but",
+      "dateTo": "Date de fin",
+      "allSites": "Tous les sites",
+      "allTypes": "Tous les types"
     },
     "table": {
       "columns": {
@@ -1837,6 +1945,14 @@
       "edit": "Modifier",
       "cancel": "Annuler",
       "apply": "Appliquer"
+    },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Date de d?but",
+      "dateTo": "Date de fin",
+      "allSites": "Tous les sites",
+      "allTypes": "Tous les types"
     },
     "table": {
       "title": "Fichiers d'ajustage/calibrage",
@@ -1975,6 +2091,14 @@
       "cancel": "Annuler",
       "apply": "Appliquer"
     },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Date de d?but",
+      "dateTo": "Date de fin",
+      "allSites": "Tous les sites",
+      "allTypes": "Tous les types"
+    },
     "table": {
       "title": "Fichiers d'étalonnage",
       "columns": {
@@ -2088,6 +2212,14 @@
       "edit": "Modifier",
       "archive": "Archiver",
       "test": "Tester"
+    },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Date de d?but",
+      "dateTo": "Date de fin",
+      "allSites": "Tous les sites",
+      "allTypes": "Tous les types"
     },
     "table": {
       "columns": {
@@ -2333,6 +2465,14 @@
     "comment": {
       "max": "200 caractères maximum"
     },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Date de d?but",
+      "dateTo": "Date de fin",
+      "allSites": "Tous les sites",
+      "allTypes": "Tous les types"
+    },
     "table": {
       "columns": {
         "type": "Type",
@@ -2456,6 +2596,14 @@
       "graph": "Graphique",
       "table": "Tableau des mesures",
       "audit": "Audit"
+    },
+    "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Date de d?but",
+      "dateTo": "Date de fin",
+      "allSites": "Tous les sites",
+      "allTypes": "Tous les types"
     },
     "table": {
       "columns": {
@@ -3014,7 +3162,15 @@
       "eyebrow": "Licences",
       "title": "Tableau comparatif des licences",
       "subtitle": "Choisissez le niveau qui correspond à vos besoins.",
-      "table": {
+      "filters": {
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Date de d?but",
+      "dateTo": "Date de fin",
+      "allSites": "Tous les sites",
+      "allTypes": "Tous les types"
+    },
+    "table": {
         "feature": "Fonctionnalité",
         "pack": "Pack",
         "one": "One",
@@ -3254,6 +3410,10 @@
     },
     "chart": {
       "measures": "Mesures ({unit})"
+    },
+    "mobile": {
+      "graph_in_details_title": "Graphique disponible dans le d?tail",
+      "graph_in_details_description": "Touchez la carte pour ouvrir le lieu et afficher la courbe compl?te."
     },
     "guides": {
       "max": "Max: {value}",
@@ -3615,6 +3775,7 @@
     "tabs": {
       "overview": "Vue globale",
       "logs": "Logs",
+      "sensor_test": "Test sonde",
       "request_errors": "Erreurs API"
     },
     "actions": {
@@ -3634,7 +3795,7 @@
       "db_main": "Base principale",
       "db_mesure": "Base mesures",
       "db_chat": "Base messagerie",
-      "banner": "Statuts en temps reel des services hotline"
+      "banner": "Statuts en temps réel des services hotline"
     },
     "logs": {
       "filter_title": "Filtrer les logs",
@@ -4232,12 +4393,12 @@
         "loggerSerial": "VigiLog"
       },
       "detectedMatch": {
-        "title": "Une tourn?e en attente correspond au VigiLog pos? sur la base.",
-        "reference": "Tourn?e",
+        "title": "Une tournée en attente correspond au VigiLog posé sur la base.",
+        "reference": "Tournée",
         "loggerSerial": "VigiLog",
-        "departureSite": "Site de d?part",
-        "departureAt": "Date de d?part",
-        "optionSuffix": "correspondance d?tect?e"
+        "departureSite": "Site de départ",
+        "departureAt": "Date de départ",
+        "optionSuffix": "correspondance détectée"
       },
       "emptyTitle": "Aucune tournée en attente",
       "emptyDescription": "Créez d'abord un départ ou attendez le retour d'un VigiLog.",

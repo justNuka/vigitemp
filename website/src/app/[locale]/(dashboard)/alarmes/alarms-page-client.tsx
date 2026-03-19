@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { History } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { AlarmsClient } from "./alarms-client";
 import type { AlarmWithDetails } from "@/lib/api";
 import { useTranslations } from "next-intl";
+import { useAppAccess } from "@/components/access/app-access-provider";
+import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 
 type AlarmStatus = "active" | "acknowledged" | "resolved";
 
@@ -23,7 +27,10 @@ interface Props {
 
 export function AlarmsPageClient({ alarms, stats, initialStatus }: Props) {
   const t = useTranslations("alarmsPage");
+  const tAckHistory = useTranslations("alarmAckHistoryPage");
+  const { hasPermission } = useAppAccess();
   const [statusFilter, setStatusFilter] = useState<AlarmStatus>(initialStatus);
+  const canViewAckHistory = hasPermission("METROLOGY_WORK_ACCESS");
 
   // Filter alarms based on current status
   const filteredAlarms = alarms.filter((alarm) => alarm.status === statusFilter);
@@ -34,7 +41,16 @@ export function AlarmsPageClient({ alarms, stats, initialStatus }: Props) {
         title={t("title")}
         description={t("description")}
         activeAlarms={stats.active}
-      />
+      >
+        {canViewAckHistory ? (
+          <Button asChild variant="outline" size="sm" className="gap-2">
+            <Link href="/alarmes/acquittements">
+              <History className="h-4 w-4" />
+              {tAckHistory("shortTitle")}
+            </Link>
+          </Button>
+        ) : null}
+      </PageHeader>
 
       <AlarmsClient
         alarms={filteredAlarms}

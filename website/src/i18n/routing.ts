@@ -24,6 +24,10 @@ export const routing = defineRouting({
       fr: '/alarmes',
       en: '/alarms',
     },
+    '/alarmes/acquittements': {
+      fr: '/alarmes/acquittements',
+      en: '/alarms/acknowledgments',
+    },
     '/parametres': {
       fr: '/parametres',
       en: '/settings',

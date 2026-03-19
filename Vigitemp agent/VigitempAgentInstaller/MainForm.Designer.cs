@@ -3,18 +3,28 @@ namespace VigitempAgentInstaller
     partial class MainForm
     {
         private System.ComponentModel.IContainer components = null;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel;
-        private System.Windows.Forms.Label serverIpLabel;
-        private System.Windows.Forms.TextBox serverIpTextBox;
-        private System.Windows.Forms.Label siteUrlLabel;
-        private System.Windows.Forms.TextBox siteUrlTextBox;
-        private System.Windows.Forms.Label installPathLabel;
-        private System.Windows.Forms.TextBox installPathTextBox;
-        private System.Windows.Forms.Button browseButton;
-        private System.Windows.Forms.CheckBox autoStartCheckBox;
-        private System.Windows.Forms.CheckBox launchCheckBox;
-        private System.Windows.Forms.Button installButton;
-        private System.Windows.Forms.TextBox logTextBox;
+        private System.Windows.Forms.Panel headerPanel;
+        private System.Windows.Forms.Label headerTitleLabel;
+        private System.Windows.Forms.Label headerSubtitleLabel;
+        private System.Windows.Forms.Panel contentHostPanel;
+        private System.Windows.Forms.Panel welcomePanel;
+        private System.Windows.Forms.Label welcomeTitleLabel;
+        private System.Windows.Forms.Label welcomeDescriptionLabel;
+        private System.Windows.Forms.Panel installPanel;
+        private System.Windows.Forms.Label installTitleLabel;
+        private System.Windows.Forms.Label installDescriptionLabel;
+        private System.Windows.Forms.ProgressBar installProgressBar;
+        private System.Windows.Forms.Label installProgressLabel;
+        private System.Windows.Forms.Label installProgressCountLabel;
+        private System.Windows.Forms.FlowLayoutPanel stepsFlowPanel;
+        private System.Windows.Forms.Panel finishPanel;
+        private System.Windows.Forms.Label finishTitleLabel;
+        private System.Windows.Forms.Label finishDescriptionLabel;
+        private System.Windows.Forms.TextBox summaryTextBox;
+        private System.Windows.Forms.Panel footerPanel;
+        private System.Windows.Forms.Button backButton;
+        private System.Windows.Forms.Button nextButton;
+        private System.Windows.Forms.Button cancelButton;
 
         protected override void Dispose(bool disposing)
         {
@@ -27,187 +37,334 @@ namespace VigitempAgentInstaller
 
         private void InitializeComponent()
         {
-            this.tableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
-            this.serverIpLabel = new System.Windows.Forms.Label();
-            this.serverIpTextBox = new System.Windows.Forms.TextBox();
-            this.siteUrlLabel = new System.Windows.Forms.Label();
-            this.siteUrlTextBox = new System.Windows.Forms.TextBox();
-            this.installPathLabel = new System.Windows.Forms.Label();
-            this.installPathTextBox = new System.Windows.Forms.TextBox();
-            this.browseButton = new System.Windows.Forms.Button();
-            this.autoStartCheckBox = new System.Windows.Forms.CheckBox();
-            this.launchCheckBox = new System.Windows.Forms.CheckBox();
-            this.installButton = new System.Windows.Forms.Button();
-            this.logTextBox = new System.Windows.Forms.TextBox();
-            this.tableLayoutPanel.SuspendLayout();
+            this.headerPanel = new System.Windows.Forms.Panel();
+            this.headerSubtitleLabel = new System.Windows.Forms.Label();
+            this.headerTitleLabel = new System.Windows.Forms.Label();
+            this.contentHostPanel = new System.Windows.Forms.Panel();
+            this.welcomePanel = new System.Windows.Forms.Panel();
+            this.welcomeDescriptionLabel = new System.Windows.Forms.Label();
+            this.welcomeTitleLabel = new System.Windows.Forms.Label();
+            this.installPanel = new System.Windows.Forms.Panel();
+            this.installProgressCountLabel = new System.Windows.Forms.Label();
+            this.installProgressLabel = new System.Windows.Forms.Label();
+            this.installProgressBar = new System.Windows.Forms.ProgressBar();
+            this.stepsFlowPanel = new System.Windows.Forms.FlowLayoutPanel();
+            this.installDescriptionLabel = new System.Windows.Forms.Label();
+            this.installTitleLabel = new System.Windows.Forms.Label();
+            this.finishPanel = new System.Windows.Forms.Panel();
+            this.summaryTextBox = new System.Windows.Forms.TextBox();
+            this.finishDescriptionLabel = new System.Windows.Forms.Label();
+            this.finishTitleLabel = new System.Windows.Forms.Label();
+            this.footerPanel = new System.Windows.Forms.Panel();
+            this.cancelButton = new System.Windows.Forms.Button();
+            this.backButton = new System.Windows.Forms.Button();
+            this.nextButton = new System.Windows.Forms.Button();
+            this.headerPanel.SuspendLayout();
+            this.contentHostPanel.SuspendLayout();
+            this.welcomePanel.SuspendLayout();
+            this.installPanel.SuspendLayout();
+            this.finishPanel.SuspendLayout();
+            this.footerPanel.SuspendLayout();
             this.SuspendLayout();
             // 
-            // tableLayoutPanel
+            // headerPanel
             // 
-            this.tableLayoutPanel.ColumnCount = 3;
-            this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 140F));
-            this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 90F));
-            this.tableLayoutPanel.Controls.Add(this.serverIpLabel, 0, 0);
-            this.tableLayoutPanel.Controls.Add(this.serverIpTextBox, 1, 0);
-            this.tableLayoutPanel.Controls.Add(this.siteUrlLabel, 0, 1);
-            this.tableLayoutPanel.Controls.Add(this.siteUrlTextBox, 1, 1);
-            this.tableLayoutPanel.Controls.Add(this.installPathLabel, 0, 2);
-            this.tableLayoutPanel.Controls.Add(this.installPathTextBox, 1, 2);
-            this.tableLayoutPanel.Controls.Add(this.browseButton, 2, 2);
-            this.tableLayoutPanel.Controls.Add(this.autoStartCheckBox, 1, 3);
-            this.tableLayoutPanel.Controls.Add(this.launchCheckBox, 1, 4);
-            this.tableLayoutPanel.Controls.Add(this.installButton, 2, 4);
-            this.tableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.tableLayoutPanel.Location = new System.Drawing.Point(12, 12);
-            this.tableLayoutPanel.Name = "tableLayoutPanel";
-            this.tableLayoutPanel.RowCount = 5;
-            this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 28F));
-            this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 28F));
-            this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 28F));
-            this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 26F));
-            this.tableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
-            this.tableLayoutPanel.Size = new System.Drawing.Size(640, 140);
-            this.tableLayoutPanel.TabIndex = 0;
+            this.headerPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(17)))), ((int)(((byte)(37)))), ((int)(((byte)(68)))));
+            this.headerPanel.Controls.Add(this.headerSubtitleLabel);
+            this.headerPanel.Controls.Add(this.headerTitleLabel);
+            this.headerPanel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.headerPanel.Location = new System.Drawing.Point(0, 0);
+            this.headerPanel.Name = "headerPanel";
+            this.headerPanel.Padding = new System.Windows.Forms.Padding(28, 24, 28, 20);
+            this.headerPanel.Size = new System.Drawing.Size(884, 106);
+            this.headerPanel.TabIndex = 0;
             // 
-            // serverIpLabel
+            // headerSubtitleLabel
             // 
-            this.serverIpLabel.AutoSize = true;
-            this.serverIpLabel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.serverIpLabel.Location = new System.Drawing.Point(3, 0);
-            this.serverIpLabel.Name = "serverIpLabel";
-            this.serverIpLabel.Size = new System.Drawing.Size(134, 28);
-            this.serverIpLabel.TabIndex = 0;
-            this.serverIpLabel.Text = "Server IP";
-            this.serverIpLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.headerSubtitleLabel.AutoSize = true;
+            this.headerSubtitleLabel.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.headerSubtitleLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(195)))), ((int)(((byte)(211)))), ((int)(((byte)(235)))));
+            this.headerSubtitleLabel.Location = new System.Drawing.Point(30, 62);
+            this.headerSubtitleLabel.Name = "headerSubtitleLabel";
+            this.headerSubtitleLabel.Size = new System.Drawing.Size(394, 19);
+            this.headerSubtitleLabel.TabIndex = 1;
+            this.headerSubtitleLabel.Text = "Installation autonome de l'agent et du driver du cradle LogTag";
             // 
-            // serverIpTextBox
+            // headerTitleLabel
             // 
-            this.serverIpTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.serverIpTextBox.Location = new System.Drawing.Point(143, 4);
-            this.serverIpTextBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 3);
-            this.serverIpTextBox.Name = "serverIpTextBox";
-            this.serverIpTextBox.Size = new System.Drawing.Size(404, 20);
-            this.serverIpTextBox.TabIndex = 1;
-            this.serverIpTextBox.TextChanged += new System.EventHandler(this.OnServerIpChanged);
+            this.headerTitleLabel.AutoSize = true;
+            this.headerTitleLabel.Font = new System.Drawing.Font("Segoe UI Semibold", 20F, System.Drawing.FontStyle.Bold);
+            this.headerTitleLabel.ForeColor = System.Drawing.Color.White;
+            this.headerTitleLabel.Location = new System.Drawing.Point(26, 20);
+            this.headerTitleLabel.Name = "headerTitleLabel";
+            this.headerTitleLabel.Size = new System.Drawing.Size(372, 37);
+            this.headerTitleLabel.TabIndex = 0;
+            this.headerTitleLabel.Text = "Installation de l'agent VigiSensys";
             // 
-            // siteUrlLabel
+            // contentHostPanel
             // 
-            this.siteUrlLabel.AutoSize = true;
-            this.siteUrlLabel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.siteUrlLabel.Location = new System.Drawing.Point(3, 28);
-            this.siteUrlLabel.Name = "siteUrlLabel";
-            this.siteUrlLabel.Size = new System.Drawing.Size(134, 28);
-            this.siteUrlLabel.TabIndex = 2;
-            this.siteUrlLabel.Text = "Site web URL";
-            this.siteUrlLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.contentHostPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(245)))), ((int)(((byte)(247)))), ((int)(((byte)(251)))));
+            this.contentHostPanel.Controls.Add(this.welcomePanel);
+            this.contentHostPanel.Controls.Add(this.installPanel);
+            this.contentHostPanel.Controls.Add(this.finishPanel);
+            this.contentHostPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.contentHostPanel.Location = new System.Drawing.Point(0, 106);
+            this.contentHostPanel.Name = "contentHostPanel";
+            this.contentHostPanel.Padding = new System.Windows.Forms.Padding(28, 24, 28, 16);
+            this.contentHostPanel.Size = new System.Drawing.Size(884, 470);
+            this.contentHostPanel.TabIndex = 1;
             // 
-            // siteUrlTextBox
+            // welcomePanel
             // 
-            this.siteUrlTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.siteUrlTextBox.Location = new System.Drawing.Point(143, 32);
-            this.siteUrlTextBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 3);
-            this.siteUrlTextBox.Name = "siteUrlTextBox";
-            this.siteUrlTextBox.Size = new System.Drawing.Size(404, 20);
-            this.siteUrlTextBox.TabIndex = 3;
-            this.siteUrlTextBox.TextChanged += new System.EventHandler(this.OnSiteUrlChanged);
+            this.welcomePanel.BackColor = System.Drawing.Color.White;
+            this.welcomePanel.Controls.Add(this.welcomeDescriptionLabel);
+            this.welcomePanel.Controls.Add(this.welcomeTitleLabel);
+            this.welcomePanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.welcomePanel.Location = new System.Drawing.Point(28, 24);
+            this.welcomePanel.Name = "welcomePanel";
+            this.welcomePanel.Padding = new System.Windows.Forms.Padding(34, 32, 34, 32);
+            this.welcomePanel.Size = new System.Drawing.Size(828, 430);
+            this.welcomePanel.TabIndex = 0;
             // 
-            // installPathLabel
+            // welcomeDescriptionLabel
             // 
-            this.installPathLabel.AutoSize = true;
-            this.installPathLabel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.installPathLabel.Location = new System.Drawing.Point(3, 56);
-            this.installPathLabel.Name = "installPathLabel";
-            this.installPathLabel.Size = new System.Drawing.Size(134, 28);
-            this.installPathLabel.TabIndex = 4;
-            this.installPathLabel.Text = "Install path";
-            this.installPathLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.welcomeDescriptionLabel.AutoSize = true;
+            this.welcomeDescriptionLabel.Font = new System.Drawing.Font("Segoe UI", 12F);
+            this.welcomeDescriptionLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(76)))), ((int)(((byte)(88)))), ((int)(((byte)(108)))));
+            this.welcomeDescriptionLabel.Location = new System.Drawing.Point(38, 100);
+            this.welcomeDescriptionLabel.MaximumSize = new System.Drawing.Size(700, 0);
+            this.welcomeDescriptionLabel.Name = "welcomeDescriptionLabel";
+            this.welcomeDescriptionLabel.Size = new System.Drawing.Size(686, 63);
+            this.welcomeDescriptionLabel.TabIndex = 1;
+            this.welcomeDescriptionLabel.Text = "Cet assistant va installer l'agent VigiSensys, copier les fichiers necessaires, " +
+    "installer le driver du cradle LogTag, configurer l'acces local sur 127.0.0.1:8" +
+    "000 et activer le demarrage automatique.";
             // 
-            // installPathTextBox
+            // welcomeTitleLabel
             // 
-            this.installPathTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.installPathTextBox.Location = new System.Drawing.Point(143, 60);
-            this.installPathTextBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 3);
-            this.installPathTextBox.Name = "installPathTextBox";
-            this.installPathTextBox.Size = new System.Drawing.Size(404, 20);
-            this.installPathTextBox.TabIndex = 5;
+            this.welcomeTitleLabel.AutoSize = true;
+            this.welcomeTitleLabel.Font = new System.Drawing.Font("Segoe UI Semibold", 24F, System.Drawing.FontStyle.Bold);
+            this.welcomeTitleLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(31)))), ((int)(((byte)(54)))));
+            this.welcomeTitleLabel.Location = new System.Drawing.Point(34, 38);
+            this.welcomeTitleLabel.Name = "welcomeTitleLabel";
+            this.welcomeTitleLabel.Size = new System.Drawing.Size(404, 45);
+            this.welcomeTitleLabel.TabIndex = 0;
+            this.welcomeTitleLabel.Text = "Bienvenue dans l'installation";
             // 
-            // browseButton
+            // installPanel
             // 
-            this.browseButton.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.browseButton.Location = new System.Drawing.Point(553, 60);
-            this.browseButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 3);
-            this.browseButton.Name = "browseButton";
-            this.browseButton.Size = new System.Drawing.Size(84, 21);
-            this.browseButton.TabIndex = 6;
-            this.browseButton.Text = "Browse...";
-            this.browseButton.UseVisualStyleBackColor = true;
-            this.browseButton.Click += new System.EventHandler(this.OnBrowseInstallPath);
+            this.installPanel.BackColor = System.Drawing.Color.White;
+            this.installPanel.Controls.Add(this.installProgressCountLabel);
+            this.installPanel.Controls.Add(this.installProgressLabel);
+            this.installPanel.Controls.Add(this.installProgressBar);
+            this.installPanel.Controls.Add(this.stepsFlowPanel);
+            this.installPanel.Controls.Add(this.installDescriptionLabel);
+            this.installPanel.Controls.Add(this.installTitleLabel);
+            this.installPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.installPanel.Location = new System.Drawing.Point(28, 24);
+            this.installPanel.Name = "installPanel";
+            this.installPanel.Padding = new System.Windows.Forms.Padding(28, 24, 28, 24);
+            this.installPanel.Size = new System.Drawing.Size(828, 430);
+            this.installPanel.TabIndex = 1;
             // 
-            // autoStartCheckBox
+            // installProgressCountLabel
             // 
-            this.autoStartCheckBox.AutoSize = true;
-            this.autoStartCheckBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.autoStartCheckBox.Location = new System.Drawing.Point(143, 87);
-            this.autoStartCheckBox.Name = "autoStartCheckBox";
-            this.autoStartCheckBox.Size = new System.Drawing.Size(404, 20);
-            this.autoStartCheckBox.TabIndex = 7;
-            this.autoStartCheckBox.Text = "Start on Windows boot";
-            this.autoStartCheckBox.UseVisualStyleBackColor = true;
+            this.installProgressCountLabel.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.installProgressCountLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(88)))), ((int)(((byte)(99)))), ((int)(((byte)(120)))));
+            this.installProgressCountLabel.Location = new System.Drawing.Point(36, 58);
+            this.installProgressCountLabel.Name = "installProgressCountLabel";
+            this.installProgressCountLabel.Size = new System.Drawing.Size(180, 20);
+            this.installProgressCountLabel.TabIndex = 5;
+            this.installProgressCountLabel.Text = "0/0 etapes";
+            this.installProgressCountLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // launchCheckBox
+            // installProgressLabel
             // 
-            this.launchCheckBox.AutoSize = true;
-            this.launchCheckBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.launchCheckBox.Location = new System.Drawing.Point(143, 113);
-            this.launchCheckBox.Name = "launchCheckBox";
-            this.launchCheckBox.Size = new System.Drawing.Size(404, 24);
-            this.launchCheckBox.TabIndex = 8;
-            this.launchCheckBox.Text = "Start agent after install";
-            this.launchCheckBox.UseVisualStyleBackColor = true;
+            this.installProgressLabel.Font = new System.Drawing.Font("Segoe UI Semibold", 9.5F, System.Drawing.FontStyle.Bold);
+            this.installProgressLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(92)))), ((int)(((byte)(179)))));
+            this.installProgressLabel.Location = new System.Drawing.Point(689, 58);
+            this.installProgressLabel.Name = "installProgressLabel";
+            this.installProgressLabel.Size = new System.Drawing.Size(103, 20);
+            this.installProgressLabel.TabIndex = 4;
+            this.installProgressLabel.Text = "0%";
+            this.installProgressLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
-            // installButton
+            // installProgressBar
             // 
-            this.installButton.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.installButton.Location = new System.Drawing.Point(553, 113);
-            this.installButton.Name = "installButton";
-            this.installButton.Size = new System.Drawing.Size(84, 24);
-            this.installButton.TabIndex = 9;
-            this.installButton.Text = "Install";
-            this.installButton.UseVisualStyleBackColor = true;
-            this.installButton.Click += new System.EventHandler(this.OnInstallClick);
+            this.installProgressBar.Location = new System.Drawing.Point(36, 94);
+            this.installProgressBar.Name = "installProgressBar";
+            this.installProgressBar.Size = new System.Drawing.Size(756, 18);
+            this.installProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.installProgressBar.TabIndex = 3;
             // 
-            // logTextBox
+            // stepsFlowPanel
             // 
-            this.logTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.logTextBox.Location = new System.Drawing.Point(12, 160);
-            this.logTextBox.Multiline = true;
-            this.logTextBox.Name = "logTextBox";
-            this.logTextBox.ReadOnly = true;
-            this.logTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.logTextBox.Size = new System.Drawing.Size(640, 230);
-            this.logTextBox.TabIndex = 1;
+            this.stepsFlowPanel.AutoScroll = true;
+            this.stepsFlowPanel.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
+            this.stepsFlowPanel.Location = new System.Drawing.Point(31, 122);
+            this.stepsFlowPanel.Name = "stepsFlowPanel";
+            this.stepsFlowPanel.Size = new System.Drawing.Size(766, 278);
+            this.stepsFlowPanel.TabIndex = 2;
+            this.stepsFlowPanel.WrapContents = false;
+            // 
+            // installDescriptionLabel
+            // 
+            this.installDescriptionLabel.AutoSize = true;
+            this.installDescriptionLabel.Font = new System.Drawing.Font("Segoe UI", 11F);
+            this.installDescriptionLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(88)))), ((int)(((byte)(99)))), ((int)(((byte)(120)))));
+            this.installDescriptionLabel.Location = new System.Drawing.Point(33, 58);
+            this.installDescriptionLabel.Name = "installDescriptionLabel";
+            this.installDescriptionLabel.Size = new System.Drawing.Size(505, 20);
+            this.installDescriptionLabel.TabIndex = 1;
+            this.installDescriptionLabel.Text = "Les etapes ci-dessous seront executees l'une apres l'autre pendant l'installatio" +
+    "n.";
+            // 
+            // installTitleLabel
+            // 
+            this.installTitleLabel.AutoSize = true;
+            this.installTitleLabel.Font = new System.Drawing.Font("Segoe UI Semibold", 20F, System.Drawing.FontStyle.Bold);
+            this.installTitleLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(31)))), ((int)(((byte)(54)))));
+            this.installTitleLabel.Location = new System.Drawing.Point(27, 18);
+            this.installTitleLabel.Name = "installTitleLabel";
+            this.installTitleLabel.Size = new System.Drawing.Size(364, 37);
+            this.installTitleLabel.TabIndex = 0;
+            this.installTitleLabel.Text = "Etapes de l'installation agent";
+            // 
+            // finishPanel
+            // 
+            this.finishPanel.BackColor = System.Drawing.Color.White;
+            this.finishPanel.Controls.Add(this.summaryTextBox);
+            this.finishPanel.Controls.Add(this.finishDescriptionLabel);
+            this.finishPanel.Controls.Add(this.finishTitleLabel);
+            this.finishPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.finishPanel.Location = new System.Drawing.Point(28, 24);
+            this.finishPanel.Name = "finishPanel";
+            this.finishPanel.Padding = new System.Windows.Forms.Padding(28, 24, 28, 24);
+            this.finishPanel.Size = new System.Drawing.Size(828, 430);
+            this.finishPanel.TabIndex = 2;
+            // 
+            // summaryTextBox
+            // 
+            this.summaryTextBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(250)))), ((int)(((byte)(253)))));
+            this.summaryTextBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.summaryTextBox.Font = new System.Drawing.Font("Consolas", 10F);
+            this.summaryTextBox.Location = new System.Drawing.Point(34, 103);
+            this.summaryTextBox.Multiline = true;
+            this.summaryTextBox.Name = "summaryTextBox";
+            this.summaryTextBox.ReadOnly = true;
+            this.summaryTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.summaryTextBox.Size = new System.Drawing.Size(758, 286);
+            this.summaryTextBox.TabIndex = 2;
+            // 
+            // finishDescriptionLabel
+            // 
+            this.finishDescriptionLabel.AutoSize = true;
+            this.finishDescriptionLabel.Font = new System.Drawing.Font("Segoe UI", 11F);
+            this.finishDescriptionLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(88)))), ((int)(((byte)(99)))), ((int)(((byte)(120)))));
+            this.finishDescriptionLabel.Location = new System.Drawing.Point(32, 61);
+            this.finishDescriptionLabel.Name = "finishDescriptionLabel";
+            this.finishDescriptionLabel.Size = new System.Drawing.Size(444, 20);
+            this.finishDescriptionLabel.TabIndex = 1;
+            this.finishDescriptionLabel.Text = "Le recapitulatif ci-dessous liste le resultat de chaque etape executee.";
+            // 
+            // finishTitleLabel
+            // 
+            this.finishTitleLabel.AutoSize = true;
+            this.finishTitleLabel.Font = new System.Drawing.Font("Segoe UI Semibold", 20F, System.Drawing.FontStyle.Bold);
+            this.finishTitleLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(31)))), ((int)(((byte)(54)))));
+            this.finishTitleLabel.Location = new System.Drawing.Point(28, 20);
+            this.finishTitleLabel.Name = "finishTitleLabel";
+            this.finishTitleLabel.Size = new System.Drawing.Size(252, 37);
+            this.finishTitleLabel.TabIndex = 0;
+            this.finishTitleLabel.Text = "Installation terminee";
+            // 
+            // footerPanel
+            // 
+            this.footerPanel.BackColor = System.Drawing.Color.White;
+            this.footerPanel.Controls.Add(this.cancelButton);
+            this.footerPanel.Controls.Add(this.backButton);
+            this.footerPanel.Controls.Add(this.nextButton);
+            this.footerPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.footerPanel.Location = new System.Drawing.Point(0, 576);
+            this.footerPanel.Name = "footerPanel";
+            this.footerPanel.Padding = new System.Windows.Forms.Padding(28, 18, 28, 18);
+            this.footerPanel.Size = new System.Drawing.Size(884, 78);
+            this.footerPanel.TabIndex = 2;
+            // 
+            // cancelButton
+            // 
+            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cancelButton.BackColor = System.Drawing.Color.White;
+            this.cancelButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.cancelButton.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold);
+            this.cancelButton.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(31)))), ((int)(((byte)(54)))));
+            this.cancelButton.Location = new System.Drawing.Point(585, 16);
+            this.cancelButton.Name = "cancelButton";
+            this.cancelButton.Size = new System.Drawing.Size(120, 40);
+            this.cancelButton.TabIndex = 2;
+            this.cancelButton.Text = "Annuler";
+            this.cancelButton.UseVisualStyleBackColor = false;
+            this.cancelButton.Click += new System.EventHandler(this.OnCancelClick);
+            // 
+            // backButton
+            // 
+            this.backButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.backButton.BackColor = System.Drawing.Color.White;
+            this.backButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.backButton.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold);
+            this.backButton.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(31)))), ((int)(((byte)(54)))));
+            this.backButton.Location = new System.Drawing.Point(454, 16);
+            this.backButton.Name = "backButton";
+            this.backButton.Size = new System.Drawing.Size(120, 40);
+            this.backButton.TabIndex = 1;
+            this.backButton.Text = "Retour";
+            this.backButton.UseVisualStyleBackColor = false;
+            this.backButton.Click += new System.EventHandler(this.OnBackClick);
+            // 
+            // nextButton
+            // 
+            this.nextButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.nextButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(24)))), ((int)(((byte)(142)))), ((int)(((byte)(215)))));
+            this.nextButton.FlatAppearance.BorderSize = 0;
+            this.nextButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.nextButton.Font = new System.Drawing.Font("Segoe UI Semibold", 10F, System.Drawing.FontStyle.Bold);
+            this.nextButton.ForeColor = System.Drawing.Color.White;
+            this.nextButton.Location = new System.Drawing.Point(717, 16);
+            this.nextButton.Name = "nextButton";
+            this.nextButton.Size = new System.Drawing.Size(139, 40);
+            this.nextButton.TabIndex = 0;
+            this.nextButton.Text = "Suivant";
+            this.nextButton.UseVisualStyleBackColor = false;
+            this.nextButton.Click += new System.EventHandler(this.OnNextClick);
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(664, 402);
-            this.Controls.Add(this.logTextBox);
-            this.Controls.Add(this.tableLayoutPanel);
+            this.BackColor = System.Drawing.Color.White;
+            this.ClientSize = new System.Drawing.Size(884, 654);
+            this.Controls.Add(this.contentHostPanel);
+            this.Controls.Add(this.footerPanel);
+            this.Controls.Add(this.headerPanel);
+            this.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "MainForm";
-            this.Padding = new System.Windows.Forms.Padding(12);
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Vigitemp Agent Installer";
-            this.tableLayoutPanel.ResumeLayout(false);
-            this.tableLayoutPanel.PerformLayout();
+            this.Text = "Installation de l'agent VigiSensys";
+            this.headerPanel.ResumeLayout(false);
+            this.headerPanel.PerformLayout();
+            this.contentHostPanel.ResumeLayout(false);
+            this.welcomePanel.ResumeLayout(false);
+            this.welcomePanel.PerformLayout();
+            this.installPanel.ResumeLayout(false);
+            this.installPanel.PerformLayout();
+            this.finishPanel.ResumeLayout(false);
+            this.finishPanel.PerformLayout();
+            this.footerPanel.ResumeLayout(false);
             this.ResumeLayout(false);
-            this.PerformLayout();
+
         }
     }
 }

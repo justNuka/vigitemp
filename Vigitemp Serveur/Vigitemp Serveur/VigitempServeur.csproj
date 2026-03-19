@@ -164,6 +164,7 @@
     <Compile Include="sensors\SensorHN.cs" />
     <Compile Include="sensors\SensorEN.cs" />
     <Compile Include="sensors\SensorGSP.cs" />
+    <Compile Include="sensors\GspProtocol.cs" />
     <Compile Include="ThreadServeur.cs" />
     <Compile Include="Database.cs" />
     <Compile Include="SqlServerDatabaseProvider.cs" />

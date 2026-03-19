@@ -19,6 +19,7 @@ export const hardwareOrderBodySchema = z.object({
     .min(1)
     .max(100),
   comment: z.string().max(4000).optional().nullable(),
+  customerId: z.string().trim().max(100).optional().nullable(),
 })
 
 export function createHardwareOrderReference(userId: number) {
@@ -53,6 +54,7 @@ export async function buildHardwareOrderDocumentPayload(input: {
   userId: number
   items: Array<{ materialId: number; quantity: number }>
   comment?: string | null
+  customerId?: string | null
   reference: string
 }) {
   const uniqueMaterialIds = Array.from(new Set(input.items.map((item) => item.materialId)))
@@ -84,6 +86,7 @@ export async function buildHardwareOrderDocumentPayload(input: {
   const documentInput: HardwareOrderDocumentInput = {
     reference: input.reference,
     createdAt: new Date(),
+    customerId: input.customerId?.trim() || "",
     requesterName: requester.requesterName,
     requesterEmail: requester.requesterEmail,
     commercialEmail,

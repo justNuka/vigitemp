@@ -6,11 +6,14 @@ namespace VigitempAgentInstaller
     internal static class Program
     {
         [STAThread]
-        private static void Main()
+        private static void Main(string[] args)
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+            var uninstallMode = args != null && Array.Exists(args, arg =>
+                string.Equals(arg, "/uninstall", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(arg, "-uninstall", StringComparison.OrdinalIgnoreCase));
+            Application.Run(new MainForm(uninstallMode));
         }
     }
 }

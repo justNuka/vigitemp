@@ -11,6 +11,8 @@ namespace Vigitemp_Serveur.sensors
     class SensorGSP : Sensor
     {
         private const int ReadTimeoutMs = 1500;
+        private const int BufferDrainMs = 400;
+        private const int EndOfResponseSilenceMs = 500;
         private const int InterCommandDelayMs = 150;
         private readonly int _frequencySeconds;
         private readonly bool _synchronizeConfiguration;
@@ -26,8 +28,7 @@ namespace Vigitemp_Serveur.sensors
         {
             _frequencySeconds = Math.Max(0, frequencySeconds);
             _synchronizeConfiguration = synchronizeConfiguration;
-            _commandTarget = BuildCommandTarget(p_sondeSerialNumber);
-            m_port.NewLine = "\r\n";
+            _commandTarget = GspProtocol.NormalizeCommandTarget(p_sondeSerialNumber);
         }
 
         protected override bool ShouldApplyMetrology => false;
@@ -52,7 +53,14 @@ namespace Vigitemp_Serveur.sensors
                 string response = await SendRequestAndReadAsync("TEMP", allowEmptyResponse: false);
                 if (string.IsNullOrWhiteSpace(response))
                 {
-                    VigitempServeur.Log($"[SONDE][WARN] type=GSP serial={m_sondeSerialNumber} no response on TEMP, retrying with FTEM");
+                    VigitempServeur.Log($"[SONDE][WARN] type=GSP serial={m_sondeSerialNumber} no response on TEMP, retrying TEMP after 5s");
+                    await Task.Delay(5000);
+                    response = await SendRequestAndReadAsync("TEMP", allowEmptyResponse: false);
+                }
+
+                if (string.IsNullOrWhiteSpace(response))
+                {
+                    VigitempServeur.Log($"[SONDE][WARN] type=GSP serial={m_sondeSerialNumber} no response on TEMP after retry, retrying with FTEM");
                     response = await SendRequestAndReadAsync("FTEM", allowEmptyResponse: false);
                 }
 
@@ -63,7 +71,10 @@ namespace Vigitemp_Serveur.sensors
                     return false;
                 }
 
-                if (!TryExtractTemperature(response, out var rawValue))
+                var detectedSerials = GspProtocol.ExtractDetectedSerials(response);
+                VigitempServeur.Log($"[SONDE][INFO] type=GSP serial={m_sondeSerialNumber} port={m_comPort} detectedSerials={(detectedSerials.Count == 0 ? "<none>" : string.Join(",", detectedSerials))}");
+
+                if (!GspProtocol.TryExtractTemperature(response, _commandTarget, out var rawValue))
                 {
                     VigitempServeur.Log($"[SONDE][ERR] type=GSP serial={m_sondeSerialNumber} port={m_comPort} parse=temperature rawResponse={response}");
                     HandleNoResponseAlarm(false, "parse");
@@ -138,60 +149,11 @@ namespace Vigitemp_Serveur.sensors
             SondeMetrologySettings metrology,
             LieuAlarmSettings alarmSettings)
         {
-            var commands = new List<KeyValuePair<string, string>>();
-
-            var now = DateTime.Now;
-            commands.Add(new KeyValuePair<string, string>(
-                "ED-H",
-                string.Format(
-                    CultureInfo.InvariantCulture,
-                    "{0:00},{1:00},{2:00},{3:00},{4:00},{5:00},",
-                    now.Year % 100,
-                    now.Month,
-                    now.Day,
-                    now.Hour,
-                    now.Minute,
-                    now.Second)));
-
-            if (metrology != null)
-            {
-                commands.Add(new KeyValuePair<string, string>(
-                    "ECAL",
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "{0}a{1}b",
-                        FormatNumericPayload(metrology.CoeffX),
-                        FormatNumericPayload(metrology.CoeffConstant))));
-
-                if (metrology.ErrJustesse.HasValue)
-                {
-                    commands.Add(new KeyValuePair<string, string>(
-                        "EETA",
-                        FormatNumericPayload(metrology.ErrJustesse.Value) + "c"));
-                }
-            }
-
-            var high = alarmSettings.ConsigneSup ?? 0d;
-            var low = alarmSettings.ConsigneInf ?? 0d;
-            var delay = Math.Max(0, Math.Max(alarmSettings.RetardAlarmeBasMinutes, alarmSettings.RetardAlarmeHautMinutes));
-            commands.Add(new KeyValuePair<string, string>(
-                "ECON",
-                string.Format(
-                    CultureInfo.InvariantCulture,
-                    "{0}h{1}l{2}f{3}d",
-                    FormatNumericPayload(high),
-                    FormatNumericPayload(low),
-                    Math.Max(1, _frequencySeconds),
-                    delay)));
-
-            if (!string.IsNullOrWhiteSpace(m_sondeAdresse))
-            {
-                commands.Add(new KeyValuePair<string, string>(
-                    "CHAN",
-                    m_sondeAdresse.Trim() + "n"));
-            }
-
-            return commands;
+            return GspProtocol.BuildConfigurationCommands(
+                channel: null,
+                metrology: metrology,
+                alarmSettings: alarmSettings,
+                frequencySeconds: _frequencySeconds);
         }
 
         private async Task<string> SendRequestAndReadAsync(string commandPrefix, bool allowEmptyResponse)
@@ -201,13 +163,20 @@ namespace Vigitemp_Serveur.sensors
 
         private async Task<string> SendRequestAndReadAsync(string commandPrefix, string payload, bool allowEmptyResponse)
         {
-            var command = commandPrefix + _commandTarget + payload;
-            foreach (var candidate in BuildCandidateCommands(command))
+            var command = GspProtocol.BuildCommand(commandPrefix, _commandTarget, payload);
+            foreach (var candidate in GspProtocol.BuildCandidateCommands(command))
             {
+                var drained = await DrainBufferedDataAsync();
+                if (!string.IsNullOrWhiteSpace(drained))
+                {
+                    VigitempServeur.Log($"[SONDE][DRAIN] type=GSP serial={m_sondeSerialNumber} port={m_comPort} raw={drained}");
+                }
+
                 m_port.DiscardInBuffer();
                 m_port.DiscardOutBuffer();
                 VigitempServeur.Log($"[SONDE][TX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} cmd={EscapeForLog(candidate)}");
                 m_port.Write(candidate);
+                await Task.Delay(InterCommandDelayMs);
 
                 var response = await ReadResponseAsync();
                 if (!string.IsNullOrWhiteSpace(response))
@@ -216,13 +185,15 @@ namespace Vigitemp_Serveur.sensors
                     return response;
                 }
 
+                VigitempServeur.Log($"[SONDE][RX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} raw=<empty>");
+
                 if (allowEmptyResponse)
                 {
-                    VigitempServeur.Log($"[SONDE][RX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} raw=<empty>");
                     return string.Empty;
                 }
             }
 
+            VigitempServeur.Log($"[SONDE][RX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} raw=<timeout>");
             return string.Empty;
         }
 
@@ -230,6 +201,7 @@ namespace Vigitemp_Serveur.sensors
         {
             var startedAt = DateTime.UtcNow;
             var buffer = string.Empty;
+            DateTime? lastDataAt = null;
             while ((DateTime.UtcNow - startedAt).TotalMilliseconds < ReadTimeoutMs)
             {
                 await Task.Delay(50);
@@ -237,71 +209,44 @@ namespace Vigitemp_Serveur.sensors
                 var chunk = m_port.ReadExisting();
                 if (string.IsNullOrEmpty(chunk))
                 {
+                    if (lastDataAt.HasValue && (DateTime.UtcNow - lastDataAt.Value).TotalMilliseconds >= EndOfResponseSilenceMs)
+                    {
+                        break;
+                    }
                     continue;
                 }
 
                 buffer += chunk;
-                if (buffer.Contains("\n") || buffer.Contains("\r"))
-                {
-                    return buffer.Trim();
-                }
+                lastDataAt = DateTime.UtcNow;
             }
 
             return buffer.Trim();
         }
 
-        private static IEnumerable<string> BuildCandidateCommands(string command)
+        private async Task<string> DrainBufferedDataAsync()
         {
-            yield return command;
-            yield return command + "\r\n";
-            yield return command + "\n";
-        }
+            var startedAt = DateTime.UtcNow;
+            var buffer = string.Empty;
+            DateTime? lastDataAt = null;
 
-        private static string BuildCommandTarget(string serialNumber)
-        {
-            if (string.IsNullOrWhiteSpace(serialNumber))
+            while ((DateTime.UtcNow - startedAt).TotalMilliseconds < BufferDrainMs)
             {
-                return string.Empty;
-            }
-
-            var trimmed = serialNumber.Trim();
-            return trimmed.StartsWith("GSP", StringComparison.OrdinalIgnoreCase) && trimmed.Length > 3
-                ? trimmed.Substring(3)
-                : trimmed;
-        }
-
-        private static bool TryExtractTemperature(string response, out double temperature)
-        {
-            temperature = 0d;
-            if (string.IsNullOrWhiteSpace(response))
-            {
-                return false;
-            }
-
-            var matches = Regex.Matches(response, @"-?\d+(?:[.,]\d+)?");
-            for (var i = matches.Count - 1; i >= 0; i--)
-            {
-                var candidate = matches[i].Value.Replace(',', '.');
-                if (!double.TryParse(candidate, NumberStyles.Float | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var parsed))
+                await Task.Delay(25);
+                var chunk = m_port.ReadExisting();
+                if (string.IsNullOrEmpty(chunk))
                 {
+                    if (lastDataAt.HasValue && (DateTime.UtcNow - lastDataAt.Value).TotalMilliseconds >= 100)
+                    {
+                        break;
+                    }
                     continue;
                 }
 
-                if (Math.Abs(parsed) > 500)
-                {
-                    continue;
-                }
-
-                temperature = parsed;
-                return true;
+                buffer += chunk;
+                lastDataAt = DateTime.UtcNow;
             }
 
-            return false;
-        }
-
-        private static string FormatNumericPayload(double value)
-        {
-            return value.ToString("0.###", CultureInfo.InvariantCulture);
+            return buffer.Trim();
         }
 
         private static string EscapeForLog(string value)

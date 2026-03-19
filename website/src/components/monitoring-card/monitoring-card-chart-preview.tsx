@@ -63,7 +63,7 @@ export function MonitoringCardChartPreview({
             maintainAspectRatio: false,
             plugins: {
               legend: { display: false },
-              tooltip: { enabled: true, mode: 'index', intersect: false },
+              tooltip: { enabled: false },
             },
             scales: {
               x: { display: false },
