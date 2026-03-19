@@ -1168,9 +1168,9 @@ namespace VigitempAgent
                                     var measuresArray = legacyReadPayload["measures"] as JArray ?? new JArray();
 
                                     Database database = new Database();
-                                    database.InitConnexion();
                                     try
                                     {
+                                        database.InitConnexion();
                                         foreach (var token in measuresArray)
                                         {
                                             var measureObject = token as JObject;

@@ -22,6 +22,7 @@ namespace VigitempAgent
             {
                 components?.Dispose();
                 fonts?.Dispose();
+                _alertFont?.Dispose();
             }
             base.Dispose(disposing);
         }

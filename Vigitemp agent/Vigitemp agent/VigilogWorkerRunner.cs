@@ -827,10 +827,30 @@ namespace VigitempLogTagWorker
             return "UNKNOWN";
         }
 
+        private const long MaxWorkerLogSizeBytes = 5L * 1024 * 1024; // 5 MB
+
+        private static void RotateWorkerLogIfNeeded(string path)
+        {
+            try
+            {
+                if (!File.Exists(path)) return;
+                var info = new FileInfo(path);
+                if (info.Length < MaxWorkerLogSizeBytes) return;
+                var backupPath = path + ".bak";
+                if (File.Exists(backupPath)) File.Delete(backupPath);
+                File.Move(path, backupPath);
+            }
+            catch
+            {
+                // ignore rotation errors — don't break logging
+            }
+        }
+
         private static void Log(string level, string message)
         {
             try
             {
+                RotateWorkerLogIfNeeded(LogFilePath);
                 File.AppendAllText(
                     LogFilePath,
                     $"{DateTime.UtcNow:O} [{level}] {message}{Environment.NewLine}"

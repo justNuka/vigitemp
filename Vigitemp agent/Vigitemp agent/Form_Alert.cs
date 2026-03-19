@@ -10,6 +10,7 @@ namespace VigitempAgent
     public partial class Form_Alert : Form
     {
         PrivateFontCollection fonts = new PrivateFontCollection();
+        private Font _alertFont;
         private string SITEWEB_URL;
         private const string DefaultAlertText = "Une alarme Vigitemp est actuellement en cours";
         public Form_Alert(string p_SITEWEB_URL)
@@ -151,7 +152,11 @@ namespace VigitempAgent
         public void showAlert(string msg)
         {
             if (fonts.Families.Length > 0)
-                this.label2.Font = new Font(fonts.Families[0], 14.0F);
+            {
+                if (_alertFont == null)
+                    _alertFont = new Font(fonts.Families[0], 14.0F);
+                this.label2.Font = _alertFont;
+            }
             this.Opacity = 1.0;
             this.StartPosition = FormStartPosition.Manual;
 

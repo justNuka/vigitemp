@@ -735,7 +735,7 @@ namespace VigitempAgent
 
             try
             {
-                statusForm?.Close();
+                statusForm?.Dispose();
             }
             catch
             {
