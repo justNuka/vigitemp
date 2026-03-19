@@ -47,8 +47,9 @@ namespace VigitempAgent
 
                     _session = ParseJson(json);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    AgentLog.Error("SessionStore.Load failed: session file may be corrupt or unreadable.", ex);
                     _session = null;
                 }
             }

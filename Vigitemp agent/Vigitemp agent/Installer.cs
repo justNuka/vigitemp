@@ -24,7 +24,14 @@ namespace VigitempAgent
             base.Commit(savedState);
 
             Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
-            Process.Start(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\MyApp.exe");
+            var exePath = Path.Combine(
+                Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+                "VigitempAgent.exe"
+            );
+            if (File.Exists(exePath))
+            {
+                Process.Start(new ProcessStartInfo(exePath) { UseShellExecute = true });
+            }
         }
 
     }

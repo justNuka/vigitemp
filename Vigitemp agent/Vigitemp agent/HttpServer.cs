@@ -642,15 +642,28 @@ namespace VigitempAgent
                 var measures = new JArray();
                 for (int i = 0; i < ltreading.Length; i++)
                 {
-                    DateTime dtMesure = new DateTime(
-                        ltreading[i].stTaken.wYear,
-                        ltreading[i].stTaken.wMonth,
-                        ltreading[i].stTaken.wDay,
-                        ltreading[i].stTaken.wHour,
-                        ltreading[i].stTaken.wMinute,
-                        ltreading[i].stTaken.wSecond,
-                        DateTimeKind.Local
-                    );
+                    var year = ltreading[i].stTaken.wYear;
+                    var month = ltreading[i].stTaken.wMonth;
+                    var day = ltreading[i].stTaken.wDay;
+                    if (year <= 0 || month <= 0 || day <= 0) continue;
+
+                    DateTime dtMesure;
+                    try
+                    {
+                        dtMesure = new DateTime(
+                            year,
+                            month,
+                            day,
+                            ltreading[i].stTaken.wHour,
+                            ltreading[i].stTaken.wMinute,
+                            ltreading[i].stTaken.wSecond,
+                            DateTimeKind.Local
+                        );
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        continue;
+                    }
 
                     string measureDetails = ExtractLogTagComment(ltreading[i]);
 
@@ -682,15 +695,22 @@ namespace VigitempAgent
 
         public static string GetLocalIPAddress()
         {
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (var ip in host.AddressList)
+            try
             {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                var host = Dns.GetHostEntry(Dns.GetHostName());
+                foreach (var ip in host.AddressList)
                 {
-                    return ip.ToString();
+                    if (ip.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        return ip.ToString();
+                    }
                 }
             }
-            throw new Exception("No network adapters with an IPv4 address in the system!");
+            catch (Exception ex)
+            {
+                AgentLog.Error("GetLocalIPAddress failed.", ex);
+            }
+            return "0.0.0.0";
         }
 
         // Méthode helper pour afficher l'alerte via un `Invoke`
@@ -1060,10 +1080,29 @@ namespace VigitempAgent
                                     postParams[key] = value;
                                 }
 
-                                bool params_consigneHaute = Convert.ToBoolean(postParams["consigneHaute"]);
-                                bool params_consigneBasse = Convert.ToBoolean(postParams["consigneBasse"]);
-                                int params_valeurConsigneHaute = Convert.ToInt32(postParams["valeurConsigneHaute"]);
-                                int params_valeurConsigneBasse = Convert.ToInt32(postParams["valeurConsigneBasse"]);
+                                string rawConsigneHaute, rawConsigneBasse, rawValeurHaute, rawValeurBasse;
+                                if (!postParams.TryGetValue("consigneHaute", out rawConsigneHaute) ||
+                                    !postParams.TryGetValue("consigneBasse", out rawConsigneBasse) ||
+                                    !postParams.TryGetValue("valeurConsigneHaute", out rawValeurHaute) ||
+                                    !postParams.TryGetValue("valeurConsigneBasse", out rawValeurBasse))
+                                {
+                                    res = "false";
+                                    details = "Parametre(s) manquant(s) dans la requete uploadLogTagConfiguration";
+                                    json = "{\"res\":" + res + ", \"details\":\"" + JsonEscape(details) + "\"}";
+                                    data = Encoding.UTF8.GetBytes(json.ToCharArray());
+                                    resp.ContentType = "application/json";
+                                    resp.ContentEncoding = Encoding.UTF8;
+                                    EnsureCorsHeaders(resp, req);
+                                    resp.StatusCode = 400;
+                                    resp.ContentLength64 = data.LongLength;
+                                    await resp.OutputStream.WriteAsync(data, 0, data.Length);
+                                    resp.Close();
+                                    break;
+                                }
+                                bool params_consigneHaute = Convert.ToBoolean(rawConsigneHaute);
+                                bool params_consigneBasse = Convert.ToBoolean(rawConsigneBasse);
+                                int params_valeurConsigneHaute = Convert.ToInt32(rawValeurHaute);
+                                int params_valeurConsigneBasse = Convert.ToInt32(rawValeurBasse);
 
                                 var legacyConfigurePayload = await InvokeVigilogWorkerAsync(
                                     "configure",

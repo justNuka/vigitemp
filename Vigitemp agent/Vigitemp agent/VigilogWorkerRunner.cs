@@ -697,7 +697,8 @@ namespace VigitempLogTagWorker
                 return null;
             }
 
-            return double.Parse(value, CultureInfo.InvariantCulture);
+            double val;
+            return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out val) ? val : (double?)null;
         }
 
         private static int ParseIntArg(string value, int fallback)

@@ -624,7 +624,15 @@ namespace VigitempAgent
 
                     while (true)
                     {
-                        Thread.Sleep(1000);
+                        try
+                        {
+                            Thread.Sleep(1000);
+                        }
+                        catch (ThreadInterruptedException)
+                        {
+                            AgentLog.Info("LoopbackSessionServer fallback loop interrupted (clean shutdown).");
+                            return;
+                        }
                     }
                 }
             }
