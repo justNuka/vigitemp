@@ -51,7 +51,7 @@ namespace VigitempAgent
 
         private Form_Alert.enumAction action;
 
-        private int x, y;
+        private int x;
 
         private void button2_Click(object sender, EventArgs e)
         {
@@ -61,11 +61,6 @@ namespace VigitempAgent
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-
-
-            //if (!this.IsHandleCreated)
-            //    this.CreateHandle();
-            //this.Invoke((MethodInvoker)delegate {
             switch (this.action)
             {
                 case enumAction.wait:
@@ -116,38 +111,6 @@ namespace VigitempAgent
                     }
                     break;
             }
-            //});
-            //switch (this.action)
-            //{
-            //    case enumAction.wait:
-            //        timer1.Interval = 5000;
-            //        action = enumAction.close;
-            //        break;
-            //    case enumAction.start:
-            //        timer1.Interval = 1;
-            //        this.Opacity += 0.1;
-            //        if (this.x < this.Location.X)
-            //        {
-            //            this.Left--;
-            //        }
-            //        else
-            //        {
-            //            if (this.Opacity == 1.0)
-            //            {
-            //                action = enumAction.wait;
-            //            }
-            //        }
-            //        break;
-            //    case enumAction.close:
-            //        timer1.Interval = 1;
-            //        this.Opacity -= 0.1;
-            //        this.Left -= 3;
-            //        if (base.Opacity == 0.0)
-            //        {
-            //            base.Close();
-            //        }
-            //        break;
-            //}
         }
 
         public void showAlert(string msg)
@@ -161,14 +124,12 @@ namespace VigitempAgent
             this.Opacity = 1.0;
             this.StartPosition = FormStartPosition.Manual;
 
-            //Form_Alert frm = (Form_Alert)Application.OpenForms["form_Alert"];
-
             if(this.Visible == false)
             {
                 this.Name = "form_Alert";
                 this.x = Screen.PrimaryScreen.WorkingArea.Width - base.Width - 5;
-                this.y = -this.Height - 15;
-                this.Location = new Point(this.x, this.y);
+                int startY = -this.Height - 15;
+                this.Location = new Point(this.x, startY);
                 this.Show();
             }
             
@@ -181,9 +142,6 @@ namespace VigitempAgent
 
         public void hideAlert(string msg)
         {
-            //this.action = enumAction.start;
-            //this.timer1.Interval = 1;
-            //timer1.Start();
             timer1.Interval = 1;
             action = enumAction.close;
         }
@@ -282,14 +240,11 @@ namespace VigitempAgent
                 this.Invoke(new Action(() =>
                 {
                     this.showAlert("alarm");
-                    //MessageBox.Show("Alarm triggered!");
                 }));
             }
             else
             {
-
                 this.showAlert("alarm");
-                //MessageBox.Show("Alarm triggered!");
             }
         }
 
@@ -302,14 +257,12 @@ namespace VigitempAgent
                 {
                     ResetAlarmBannerDetails();
                     this.hideAlert("alarm");
-                    //MessageBox.Show("Alarm triggered!");
                 }));
             }
             else
             {
                 ResetAlarmBannerDetails();
                 this.hideAlert("alarm");
-                //MessageBox.Show("Alarm triggered!");
             }
         }
 
