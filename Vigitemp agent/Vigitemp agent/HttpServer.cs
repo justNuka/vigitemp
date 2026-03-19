@@ -292,11 +292,13 @@ namespace VigitempAgent
                 }
             }
 
+            int portType = 4;
             setStep?.Invoke("GetPortInfoPrimary");
             if (LogTag.GetPortInfo(null, ref portCount, 4) != 0)
                 AgentLog.Error("TryOpenSingleLogTag: GetPortInfo(4) failed.", null);
             if (portCount == 0)
             {
+                portType = 8;
                 setStep?.Invoke("GetPortInfoFallback");
                 if (LogTag.GetPortInfo(null, ref portCount, 8) != 0)
                     AgentLog.Error("TryOpenSingleLogTag: GetPortInfo(8) failed.", null);
@@ -319,7 +321,7 @@ namespace VigitempAgent
 
             LOGTAG_PORTINFO[] tabPortInfo = new LOGTAG_PORTINFO[portCount];
             setStep?.Invoke("GetPortInfoDetails");
-            if (LogTag.GetPortInfo(tabPortInfo, ref portCount, 4) != 0)
+            if (LogTag.GetPortInfo(tabPortInfo, ref portCount, (ushort)portType) != 0)
                 AgentLog.Error("TryOpenSingleLogTag: GetPortInfo(details) failed.", null);
             tabPortInfo[0].cbSize = (uint)Marshal.SizeOf(tabPortInfo[0]);
             tabPortInfo[0].wPortIndex = 1;
@@ -568,7 +570,6 @@ namespace VigitempAgent
                 ushort consecutiveAlertDelay = (ushort)Math.Max(0, alertDelayReadings - 1);
                 byte alertDelayByte = (byte)Math.Min(255, alertDelayReadings);
 
-                vigilogSensor[0].cbSize = 0;
                 vigilogInfo[0].wSensorCount = 1;
 
                 for (int i = 0; i < vigilogInfo[0].wSensorCount; i++)

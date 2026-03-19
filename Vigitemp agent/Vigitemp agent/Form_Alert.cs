@@ -109,9 +109,10 @@ namespace VigitempAgent
                     timer1.Interval = 1;
                     this.Opacity -= 0.1;
                     this.Top -= 3;
-                    if (base.Opacity <= 0.0)
+                    if (this.Opacity <= 0.0)
                     {
                         base.Hide();
+                        timer1.Stop();
                     }
                     break;
             }
@@ -165,10 +166,9 @@ namespace VigitempAgent
             if(this.Visible == false)
             {
                 this.Name = "form_Alert";
-                this.x = Screen.PrimaryScreen.WorkingArea.Width - Screen.PrimaryScreen.WorkingArea.Width / 2 - this.Width / 2;
+                this.x = Screen.PrimaryScreen.WorkingArea.Width - base.Width - 5;
                 this.y = -this.Height - 15;
                 this.Location = new Point(this.x, this.y);
-                this.x = Screen.PrimaryScreen.WorkingArea.Width - base.Width - 5;
                 this.Show();
             }
             

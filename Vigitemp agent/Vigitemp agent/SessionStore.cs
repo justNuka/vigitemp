@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace VigitempAgent
 {
@@ -128,47 +129,30 @@ namespace VigitempAgent
             }
         }
 
-        // Minimal JSON (avoid extra deps)
         private static SessionInfo ParseJson(string json)
         {
-            // Expected keys: token, userId, username, expiresAtUtc
             var session = new SessionInfo();
             if (string.IsNullOrWhiteSpace(json)) return session;
 
-            string GetValue(string key)
+            try
             {
-                var token = "\"" + key + "\"";
-                var idx = json.IndexOf(token, StringComparison.OrdinalIgnoreCase);
-                if (idx < 0) return null;
-                idx = json.IndexOf(':', idx);
-                if (idx < 0) return null;
-                idx++;
-                while (idx < json.Length && char.IsWhiteSpace(json[idx])) idx++;
-                if (idx >= json.Length) return null;
-                if (json[idx] == '"')
+                var obj = JObject.Parse(json);
+                session.Token = obj.Value<string>("token");
+                session.UserId = obj.Value<string>("userId");
+                session.Username = obj.Value<string>("username");
+                var expiresRaw = obj.Value<string>("expiresAtUtc") ?? obj.Value<string>("expiresAt");
+                if (!string.IsNullOrWhiteSpace(expiresRaw) && expiresRaw != "null")
                 {
-                    idx++;
-                    var end = json.IndexOf('"', idx);
-                    if (end < 0) return null;
-                    return json.Substring(idx, end - idx);
+                    DateTime dt;
+                    if (DateTime.TryParse(expiresRaw, out dt))
+                    {
+                        session.ExpiresAtUtc = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                    }
                 }
-                // non-string (null/number/bool)
-                var end2 = idx;
-                while (end2 < json.Length && json[end2] != ',' && json[end2] != '}') end2++;
-                return json.Substring(idx, end2 - idx).Trim();
             }
-
-            session.Token = GetValue("token");
-            session.UserId = GetValue("userId");
-            session.Username = GetValue("username");
-            var expires = GetValue("expiresAtUtc") ?? GetValue("expiresAt");
-            if (!string.IsNullOrWhiteSpace(expires) && expires != "null")
+            catch
             {
-                DateTime dt;
-                if (DateTime.TryParse(expires, out dt))
-                {
-                    session.ExpiresAtUtc = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
-                }
+                // JSON parse error — return partial/empty session
             }
 
             return session;

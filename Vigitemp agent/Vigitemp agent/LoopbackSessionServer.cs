@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace VigitempAgent
 {
@@ -324,19 +325,8 @@ namespace VigitempAgent
             try
             {
                 if (string.IsNullOrWhiteSpace(json)) return null;
-                var token = "\"" + key + "\"";
-                var idx = json.IndexOf(token, StringComparison.OrdinalIgnoreCase);
-                if (idx < 0) return null;
-                idx = json.IndexOf(':', idx);
-                if (idx < 0) return null;
-                idx++;
-                while (idx < json.Length && char.IsWhiteSpace(json[idx])) idx++;
-                if (idx >= json.Length) return null;
-                if (json[idx] != '"') return null;
-                idx++;
-                var end = json.IndexOf('"', idx);
-                if (end < 0) return null;
-                return json.Substring(idx, end - idx);
+                var obj = JObject.Parse(json);
+                return obj.Value<string>(key);
             }
             catch
             {
