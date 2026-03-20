@@ -41,6 +41,9 @@ export const POST = withAnyAuthorizationLogging(VIGILOG_ACCESS_CODES, async (req
       highLimit: configuration.Limite_Haute != null ? Number(configuration.Limite_Haute) : null,
       frequencyMinutes: configuration.Frequence_Min,
       alarmDelayMinutes: configuration.Retard_Alarme_Min,
+      startDelayMinutes: configuration.Delai_Demarrage_Min,
+      stopButtonEnabled: configuration.Autorise_Arret_Bouton_Stop,
+      resetWithStartEnabled: configuration.Reinitialise_Avec_Bouton_Start,
       startAutomatically: false,
     })
 

@@ -37,7 +37,11 @@ export function useAutoLock() {
   // Fonction de logout automatique
   const handleLogout = useCallback(async () => {
     const locale = typeof window !== "undefined" ? resolveLocaleFromPathname(window.location.pathname) : "fr";
-    const localizedLoginPath = buildLocalizedPath("/login", locale, { reason: "inactivity" });
+    const from =
+      typeof window !== "undefined"
+        ? `${window.location.pathname.replace(/^\/([a-z]{2})(?=\/|$)/i, "") || "/"}${window.location.search || ""}`
+        : "/";
+    const localizedLoginPath = buildLocalizedPath("/login", locale, { reason: "inactivity", from });
 
     try {
       await fetchJson<{ success: true }>("/api/auth/logout-auto", { method: "POST", credentials: "include" });

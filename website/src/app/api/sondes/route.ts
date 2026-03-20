@@ -6,7 +6,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { validateLicense } from "@/lib/license-server"
 import { log } from "@/lib/logger"
-import { buildSensorSerialsFromInput, extractAddressFromSerial } from "@/lib/sensor-naming"
+import { buildSensorSerialsFromInput, extractProbeAddressFromSerial } from "@/lib/sensor-naming"
 import { z } from "zod"
 
 export const GET = withAuthLogging(async (_req: NextRequest) => {
@@ -149,7 +149,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
       serialsToCreate.map((serial) =>
         prisma.t_sonde.create({
           data: {
-            Adresse_Sonde: creation.isGso ? extractAddressFromSerial(serial) : data.serieNum,
+            Adresse_Sonde: extractProbeAddressFromSerial(serial),
             Sonde_Numero_Serie: serial,
             Id_Module: data.moduleId ?? null,
             Port_Serie: portSerie,

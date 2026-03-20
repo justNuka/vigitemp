@@ -39,6 +39,14 @@ function addConsigneGuards(data: any, ctx: z.RefinementCtx) {
       message: "La consigne inf doit etre strictement inferieure a la consigne sup.",
     })
   }
+
+  if ((hasConsigne || supActive || infActive) && (data.Frequence === null || data.Frequence === undefined)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Frequence"],
+      message: "La frequence de mesure est requise.",
+    })
+  }
 }
 
 export const locationFormSchema = z.object({

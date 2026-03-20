@@ -49,6 +49,9 @@ export type VigilogAgentProbeResponse = {
   lowLimit: number | null
   highLimitActive: boolean
   highLimit: number | null
+  startDelayMinutes: number | null
+  stopButtonEnabled: boolean | null
+  resetWithStartEnabled: boolean | null
 }
 
 export type VigilogAgentPresenceResponse = {
@@ -68,6 +71,9 @@ export type VigilogAgentConfigureResponse = {
   lowLimit: number | null
   highLimitActive: boolean
   highLimit: number | null
+  startDelayMinutes: number
+  stopButtonEnabled: boolean
+  resetWithStartEnabled: boolean
   startedAutomatically: boolean | null
   scheduledStartAt: string | null
 }
@@ -118,6 +124,9 @@ export async function configureVigilogAgent(payload: {
   highLimit: number | null
   frequencyMinutes: number
   alarmDelayMinutes: number
+  startDelayMinutes: number
+  stopButtonEnabled: boolean
+  resetWithStartEnabled: boolean
   startAutomatically: boolean
 }) {
   return fetchAgentJson<VigilogAgentConfigureResponse>(

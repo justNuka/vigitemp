@@ -973,6 +973,11 @@ namespace Vigitemp_Serveur
                 {
                     while (reader.Read())
                     {
+                        if (reader["Id_Serveur"] == DBNull.Value)
+                        {
+                            continue;
+                        }
+
                         arrayTmp.Add(Convert.ToInt32(reader["Id_Serveur"]));
                     }
                 }

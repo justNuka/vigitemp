@@ -49,13 +49,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { useSitesSimple } from "@/hooks/useSites"
 import { useToast } from "@/hooks/use-toast"
 import { getJson, patchJson, postJson } from "@/lib/http"
-import {
-  clearVigilogAgent,
-  configureVigilogAgent,
-  presenceVigilogAgent,
-  probeVigilogAgent,
-  readVigilogAgent,
-} from "@/lib/vigilog-agent"
+import type { VigilogAgentConfigureResponse } from "@/lib/vigilog-agent"
+import { presenceVigilogAgent, probeVigilogAgent } from "@/lib/vigilog-agent"
 
 const CONFIG_QUERY_KEY = ["services", "vigilog", "configurations"] as const
 const LOGGERS_QUERY_KEY = ["services", "vigilog", "loggers"] as const
@@ -220,8 +215,12 @@ export function VigilogPageClient() {
 
   const [historySearch, setHistorySearch] = useState("")
   const [historyStatus, setHistoryStatus] = useState("ALL")
+  const [usageNote, setUsageNote] = useState("")
   const [detailTourneeId, setDetailTourneeId] = useState<number | null>(null)
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)
+  const [acknowledgeDialogTournee, setAcknowledgeDialogTournee] = useState<VigilogTournee | null>(null)
+  const [acknowledgeComment, setAcknowledgeComment] = useState("")
+  const [cancelDialogTournee, setCancelDialogTournee] = useState<VigilogTournee | null>(null)
 
   const sitesQuery = useSitesSimple(canAccess)
   const configurationsQuery = useQuery({
@@ -428,32 +427,9 @@ export function VigilogPageClient() {
     },
   })
 
-  const departureMutation = useMutation({
+  const createTourneeMutation = useMutation({
     mutationFn: async () => {
-      const configuration = configurations.find(
-        (item) => item.id === Number(selectedConfigurationId),
-      )
-      if (!configuration || !configuration.active) {
-        throw new Error(t("feedback.departureError.description"))
-      }
-
-      const agentConfiguration = await configureVigilogAgent({
-        lowLimitActive: configuration.lowLimitActive,
-        lowLimit: configuration.lowLimit,
-        highLimitActive: configuration.highLimitActive,
-        highLimit: configuration.highLimit,
-        frequencyMinutes: configuration.frequencyMinutes,
-        alarmDelayMinutes: configuration.alarmDelayMinutes,
-        startAutomatically: false,
-      })
-
-      if (!agentConfiguration.res) {
-        throw new Error(
-          agentConfiguration.details || t("feedback.departureError.description"),
-        )
-      }
-
-      const serial = (agentConfiguration.loggerSerial || loggerSerial).trim()
+      const serial = loggerSerial.trim()
       if (!serial) {
         throw new Error(t("feedback.loggerSerialMissing.description"))
       }
@@ -469,31 +445,12 @@ export function VigilogPageClient() {
     },
     onSuccess: async (data) => {
       await invalidateVigilogData()
-      setLoggerSerial("")
-      setAutoDetectedSerial(null)
-      setDetectedLogger(null)
-      setDepartureComment("")
-      setDepartureDialogState({
-        mode: "success",
-        currentStep: 3,
-        reference: data.reference,
-      })
       toast({
         title: t("feedback.departureCreated.title"),
         description: t("feedback.departureCreated.description", { reference: data.reference }),
       })
     },
     onError: (error) => {
-      setDepartureDialogState((current) =>
-        current.mode === "running"
-          ? {
-              ...current,
-              mode: "error",
-              error:
-                error instanceof Error ? error.message : t("feedback.departureError.description"),
-            }
-          : current,
-      )
       toast({
         variant: "destructive",
         title: t("feedback.departureError.title"),
@@ -502,13 +459,55 @@ export function VigilogPageClient() {
     },
   })
 
-  const receiveMutation = useMutation({
+  const prepareLoggerMutation = useMutation({
     mutationFn: async () => {
-      const agentResponse = await readVigilogAgent()
-      if (!agentResponse.res) {
-        throw new Error(agentResponse.details || t("feedback.receiveError.description"))
+      if (!selectedConfigurationId) {
+        throw new Error(t("feedback.prepareError.description"))
       }
 
+      return postJson<VigilogAgentConfigureResponse>("/api/services/vigilog/agent/configure", {
+        configurationId: Number(selectedConfigurationId),
+      })
+    },
+    onSuccess: async (data) => {
+      await invalidateVigilogData()
+      const serial = (data.loggerSerial || loggerSerial).trim()
+      if (serial) {
+        setLoggerSerial(serial)
+        setAutoDetectedSerial(serial)
+      }
+      setDepartureDialogState({
+        mode: "success",
+        currentStep: 3,
+        reference: serial || undefined,
+      })
+      toast({
+        title: t("feedback.prepareSuccess.title"),
+        description: data.loggerSerial
+          ? t("feedback.prepareSuccess.description", { serial: data.loggerSerial })
+          : t("feedback.prepareSuccess.fallback"),
+      })
+    },
+    onError: (error) => {
+      setDepartureDialogState((current) =>
+        current.mode === "running"
+          ? {
+              ...current,
+              mode: "error",
+              error: error instanceof Error ? error.message : t("feedback.prepareError.description"),
+            }
+          : current,
+      )
+      toast({
+        variant: "destructive",
+        title: t("feedback.prepareError.title"),
+        description: error instanceof Error ? error.message : t("feedback.prepareError.description"),
+      })
+    },
+  })
+
+  const receiveMutation = useMutation({
+    mutationFn: async () => {
       const persisted = await postJson<{
         id: number
         status: string
@@ -516,16 +515,12 @@ export function VigilogPageClient() {
         trafficLight: VigilogTournee["trafficLight"]
         measurementCount: number
         hasAlarm: boolean
-      }>(`/api/services/vigilog/tournees/${receiveTourneeId}/receive`, {
+        loggerSerial: string | null
+        clearedAfterReceive: boolean
+        clearDetails: string | null
+      }>(`/api/services/vigilog/tournees/${receiveTourneeId}/receive-from-agent`, {
         Commentaire: receiveComment.trim() || null,
-        Mesures: agentResponse.measures,
       })
-
-      try {
-        await clearVigilogAgent()
-      } catch {
-        // Data persistence takes precedence; clear failure is non-blocking here.
-      }
 
       return persisted
     },
@@ -565,12 +560,14 @@ export function VigilogPageClient() {
   })
 
   const acknowledgeMutation = useMutation({
-    mutationFn: (tourneeId: number) =>
+    mutationFn: ({ tourneeId, comment }: { tourneeId: number; comment: string | null }) =>
       postJson(`/api/services/vigilog/tournees/${tourneeId}/acknowledge`, {
-        Commentaire_Acquittement: null,
+        Commentaire_Acquittement: comment,
       }),
     onSuccess: async () => {
       await invalidateVigilogData()
+      setAcknowledgeDialogTournee(null)
+      setAcknowledgeComment("")
       toast({
         title: t("feedback.ackSuccess.title"),
         description: t("feedback.ackSuccess.description"),
@@ -585,8 +582,31 @@ export function VigilogPageClient() {
     },
   })
 
+  const cancelMutation = useMutation({
+    mutationFn: (tourneeId: number) =>
+      postJson<{ id: number; status: string }>(`/api/services/vigilog/tournees/${tourneeId}/cancel`, {}),
+    onSuccess: async (data) => {
+      await invalidateVigilogData()
+      if (receiveTourneeId === String(data.id)) {
+        setReceiveTourneeId("")
+      }
+      setCancelDialogTournee(null)
+      toast({
+        title: t("feedback.cancelSuccess.title"),
+        description: t("feedback.cancelSuccess.description"),
+      })
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: t("feedback.cancelError.title"),
+        description: error instanceof Error ? error.message : t("feedback.cancelError.description"),
+      })
+    },
+  })
+
   const isCradleBusy =
-    departureMutation.isPending || departureDialogState.mode === "running" || receiveMutation.isPending
+    prepareLoggerMutation.isPending || departureDialogState.mode === "running" || receiveMutation.isPending
   const shouldAutoProbe = canAccess && !isCradleBusy && (activeTab === "movements" || activeTab === "loggers")
   const autoPresenceQuery = useQuery({
     queryKey: AGENT_PRESENCE_QUERY_KEY,
@@ -788,6 +808,19 @@ export function VigilogPageClient() {
   const selectedConfiguration = configurations.find(
     (configuration) => String(configuration.id) === selectedConfigurationId,
   )
+  const selectedReceiveTournee = pendingTournees.find(
+    (tournee) => String(tournee.id) === receiveTourneeId,
+  )
+  const receiveSerialMismatch =
+    !!selectedReceiveTournee?.loggerSerial &&
+    !!detectedLogger?.serial &&
+    selectedReceiveTournee.loggerSerial.trim() !== detectedLogger.serial.trim()
+  const canSubmitReception =
+    !receiveMutation.isPending &&
+    !!receiveTourneeId &&
+    loggerStatus.tone === "ready" &&
+    !!detectedLogger?.serial &&
+    !receiveSerialMismatch
 
   const openTourneeDetail = (tourneeId: number) => {
     setDetailTourneeId(tourneeId)
@@ -878,17 +911,27 @@ export function VigilogPageClient() {
         cell: ({ row }) => (
           <div className="flex justify-end gap-2">
             {row.original.status === "EN_ATTENTE_RECEPTION" ? (
-              <Button
-                size="sm"
-                variant="outline"
-                className={vigilogBlueActionButtonClass}
-                onClick={() => {
-                  setReceiveTourneeId(String(row.original.id))
-                  setActiveTab("movements")
-                }}
-              >
-                {t("history.actions.receive")}
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={vigilogBlueActionButtonClass}
+                  onClick={() => {
+                    setReceiveTourneeId(String(row.original.id))
+                    setActiveTab("movements")
+                  }}
+                >
+                  {t("history.actions.receive")}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={vigilogActionButtonSecondaryShadowClass}
+                  onClick={() => setCancelDialogTournee(row.original)}
+                >
+                  {t("history.actions.cancelTour")}
+                </Button>
+              </>
             ) : null}
             <Button
               size="sm"
@@ -902,7 +945,10 @@ export function VigilogPageClient() {
               <Button
                 size="sm"
                 className={vigilogAmberButtonClass}
-                onClick={() => acknowledgeMutation.mutate(row.original.id)}
+                onClick={() => {
+                  setAcknowledgeDialogTournee(row.original)
+                  setAcknowledgeComment(row.original.acknowledgeComment || "")
+                }}
                 disabled={acknowledgeMutation.isPending}
               >
                 {t("history.actions.acknowledge")}
@@ -920,7 +966,7 @@ export function VigilogPageClient() {
       mode: "running",
       currentStep: 1,
     })
-    departureMutation.mutate()
+    prepareLoggerMutation.mutate()
   }
 
   const startReceivePreparation = () => {
@@ -1025,8 +1071,9 @@ export function VigilogPageClient() {
           </section>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4 bg-primary/10 text-primary md:w-[720px]">
+            <TabsList className="grid w-full grid-cols-5 bg-primary/10 text-primary md:w-[920px]">
               <TabsTrigger value="movements">{t("tabs.movements")}</TabsTrigger>
+              <TabsTrigger value="usage">{t("tabs.usage")}</TabsTrigger>
               <TabsTrigger value="configurations">{t("tabs.configurations")}</TabsTrigger>
               <TabsTrigger value="loggers">{t("tabs.loggers")}</TabsTrigger>
               <TabsTrigger value="history">{t("tabs.history")}</TabsTrigger>
@@ -1088,6 +1135,7 @@ export function VigilogPageClient() {
                         <div className="space-y-1">
                           <p className="font-medium">{loggerStatus.title}</p>
                           <p className="text-xs/5 opacity-90">{loggerStatus.description}</p>
+                          <p className="text-xs/5 opacity-90">{t("departure.loggerState.optionalHint")}</p>
                         </div>
                         <Button
                           type="button"
@@ -1228,24 +1276,43 @@ export function VigilogPageClient() {
                       />
                     </div>
 
-                    <Button
-                      className={`w-full ${vigilogBluePrimaryButtonClass}`}
-                      disabled={
-                        departureMutation.isPending ||
-                        !selectedConfigurationId ||
-                        !departureSiteId ||
-                        !arrivalSiteId ||
-                        !loggerSerial.trim()
-                      }
-                      onClick={startDeparturePreparation}
-                    >
-                      {departureMutation.isPending ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Truck className="mr-2 h-4 w-4" />
-                      )}
-                      {t("departure.actions.submit")}
-                    </Button>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <Button
+                        className={`w-full ${vigilogBluePrimaryButtonClass}`}
+                        disabled={
+                          createTourneeMutation.isPending ||
+                          !selectedConfigurationId ||
+                          !departureSiteId ||
+                          !arrivalSiteId ||
+                          !loggerSerial.trim()
+                        }
+                        onClick={() => createTourneeMutation.mutate()}
+                      >
+                        {createTourneeMutation.isPending ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Truck className="mr-2 h-4 w-4" />
+                        )}
+                        {t("departure.actions.submit")}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className={`w-full ${vigilogBlueActionButtonClass}`}
+                        disabled={
+                          prepareLoggerMutation.isPending ||
+                          !selectedConfigurationId ||
+                          loggerStatus.tone !== "ready"
+                        }
+                        onClick={startDeparturePreparation}
+                      >
+                        {prepareLoggerMutation.isPending ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <FileCog className="mr-2 h-4 w-4" />
+                        )}
+                        {t("departure.actions.prepareLogger")}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
                 <Card className="border-border/60 bg-card/95 shadow-sm">
@@ -1304,28 +1371,25 @@ export function VigilogPageClient() {
 
                     {receiveTourneeId ? (
                       (() => {
-                        const activeTournee = pendingTournees.find(
-                          (tournee) => String(tournee.id) === receiveTourneeId,
-                        )
-                        if (!activeTournee) return null
+                        if (!selectedReceiveTournee) return null
                         return (
                           <div className="rounded-2xl border border-border/60 bg-muted/30 p-4 text-sm">
                             <div className="flex flex-wrap items-center gap-2">
-                              <Badge variant="outline">{activeTournee.reference}</Badge>
-                              <Badge variant="secondary">{activeTournee.configurationName}</Badge>
+                              <Badge variant="outline">{selectedReceiveTournee.reference}</Badge>
+                              <Badge variant="secondary">{selectedReceiveTournee.configurationName}</Badge>
                             </div>
                             <div className="mt-3 grid gap-2 text-muted-foreground sm:grid-cols-2">
                               <p>
-                                {t("arrival.summary.departureSite")}: {activeTournee.departureSite.name || "-"}
+                                {t("arrival.summary.departureSite")}: {selectedReceiveTournee.departureSite.name || "-"}
                               </p>
                               <p>
-                                {t("arrival.summary.arrivalSite")}: {activeTournee.arrivalSite.name || "-"}
+                                {t("arrival.summary.arrivalSite")}: {selectedReceiveTournee.arrivalSite.name || "-"}
                               </p>
                               <p>
-                                {t("arrival.summary.departureAt")}: {formatDateTime(activeTournee.departureAt, locale)}
+                                {t("arrival.summary.departureAt")}: {formatDateTime(selectedReceiveTournee.departureAt, locale)}
                               </p>
                               <p>
-                                {t("arrival.summary.loggerSerial")}: {activeTournee.loggerSerial}
+                                {t("arrival.summary.loggerSerial")}: {selectedReceiveTournee.loggerSerial}
                               </p>
                             </div>
                           </div>
@@ -1339,6 +1403,27 @@ export function VigilogPageClient() {
                       </Alert>
                     )}
 
+                    {loggerStatus.tone !== "ready" ? (
+                      <Alert className="border-rose-200 bg-rose-50 text-rose-950">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>{t("arrival.warnings.noLoggerTitle")}</AlertTitle>
+                        <AlertDescription>{t("arrival.warnings.noLoggerDescription")}</AlertDescription>
+                      </Alert>
+                    ) : null}
+
+                    {receiveSerialMismatch && selectedReceiveTournee ? (
+                      <Alert className="border-amber-200 bg-amber-50 text-amber-950">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>{t("arrival.warnings.mismatchTitle")}</AlertTitle>
+                        <AlertDescription>
+                          {t("arrival.warnings.mismatchDescription", {
+                            expected: selectedReceiveTournee.loggerSerial,
+                            detected: detectedLogger?.serial ?? "-",
+                          })}
+                        </AlertDescription>
+                      </Alert>
+                    ) : null}
+
                     <div className="space-y-2">
                       <Label>{t("arrival.fields.comment")}</Label>
                       <Textarea
@@ -1351,7 +1436,7 @@ export function VigilogPageClient() {
 
                     <Button
                       className={`w-full ${vigilogBluePrimaryButtonClass}`}
-                      disabled={receiveMutation.isPending || !receiveTourneeId}
+                      disabled={!canSubmitReception}
                       onClick={startReceivePreparation}
                     >
                       {receiveMutation.isPending ? (
@@ -1364,6 +1449,130 @@ export function VigilogPageClient() {
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+
+            <TabsContent value="usage" className="mt-6 space-y-6">
+              <Card className="border-border/60 bg-card/95 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileCog className="h-5 w-5 text-primary" />
+                    {t("usage.title")}
+                  </CardTitle>
+                  <CardDescription>{t("usage.description")}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Alert className="border-sky-200 bg-sky-50 text-sky-950">
+                    <FileCog className="h-4 w-4" />
+                    <AlertTitle>{t("usage.infoTitle")}</AlertTitle>
+                    <AlertDescription>{t("usage.infoDescription")}</AlertDescription>
+                  </Alert>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>{t("usage.fields.configuration")}</Label>
+                      <Combobox
+                        value={selectedConfigurationId}
+                        onValueChange={setSelectedConfigurationId}
+                        placeholder={t("departure.placeholders.configuration")}
+                        searchPlaceholder={t("departure.placeholders.configurationSearch")}
+                        emptyMessage={t("departure.placeholders.configurationEmpty")}
+                        buttonClassName={vigilogComboboxButtonClass}
+                        className={vigilogComboboxPopoverClass}
+                        options={configurations
+                          .filter((configuration) => configuration.active)
+                          .map((configuration) => ({
+                            value: String(configuration.id),
+                            label: configuration.name,
+                            searchText: `${configuration.name} ${configuration.description ?? ""}`,
+                          }))}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>{t("usage.fields.loggerSerial")}</Label>
+                      <Input
+                        value={loggerSerial}
+                        onChange={(event) => {
+                          setLoggerSerial(event.target.value)
+                          setAutoDetectedSerial(null)
+                          setDetectedLogger((current) =>
+                            current?.serial === event.target.value ? current : null,
+                          )
+                        }}
+                        placeholder={t("departure.placeholders.loggerSerial")}
+                        maxLength={30}
+                      />
+                    </div>
+                  </div>
+
+                  <div className={`rounded-xl border px-3 py-3 text-sm ${loggerStatusClasses(loggerStatus.tone)}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <p className="font-medium">{loggerStatus.title}</p>
+                        <p className="text-xs/5 opacity-90">{loggerStatus.description}</p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className={vigilogBlueActionButtonClass}
+                        disabled={probeMutation.isPending || isCradleBusy}
+                        onClick={() => probeMutation.mutate({ silent: false })}
+                      >
+                        {probeMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t("departure.actions.refreshLogger")}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {selectedConfiguration ? (
+                    <div className="rounded-2xl border border-border/60 bg-muted/30 p-4 text-sm">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge className="border-sky-200 bg-sky-50 text-sky-950 hover:bg-sky-100">
+                          {selectedConfiguration.name}
+                        </Badge>
+                        <Badge className="border-emerald-200 bg-emerald-50 text-emerald-950 hover:bg-emerald-100">
+                          {t("common.frequencyBadge", { count: selectedConfiguration.frequencyMinutes })}
+                        </Badge>
+                        <Badge className="border-amber-200 bg-amber-50 text-amber-950 hover:bg-amber-100">
+                          {t("common.delayBadge", { count: selectedConfiguration.alarmDelayMinutes })}
+                        </Badge>
+                      </div>
+                      <p className="mt-3 text-muted-foreground">
+                        {selectedConfiguration.description || t("common.noDescription")}
+                      </p>
+                    </div>
+                  ) : null}
+
+                  <div className="space-y-2">
+                    <Label>{t("usage.fields.note")}</Label>
+                    <Textarea
+                      value={usageNote}
+                      onChange={(event) => setUsageNote(event.target.value)}
+                      rows={4}
+                      placeholder={t("usage.placeholders.note")}
+                    />
+                    <p className="text-xs text-muted-foreground">{t("usage.noteHint")}</p>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    className={`w-full ${vigilogBlueActionButtonClass}`}
+                    disabled={
+                      prepareLoggerMutation.isPending ||
+                      !selectedConfigurationId ||
+                      loggerStatus.tone !== "ready"
+                    }
+                    onClick={startDeparturePreparation}
+                  >
+                    {prepareLoggerMutation.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileCog className="mr-2 h-4 w-4" />
+                    )}
+                    {t("usage.actions.prepare")}
+                  </Button>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="configurations" className="mt-6 space-y-6">
@@ -1711,7 +1920,7 @@ export function VigilogPageClient() {
       <Dialog
         open={departureDialogState.mode !== "closed"}
         onOpenChange={(open) => {
-          if (departureMutation.isPending) return
+          if (prepareLoggerMutation.isPending) return
           if (!open) setDepartureDialogState({ mode: "closed" })
         }}
       >
@@ -1770,7 +1979,7 @@ export function VigilogPageClient() {
               {departureRunState.mode === "success" ? (
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
                   <p className="font-medium">
-                    {t("departurePreparation.success", { reference: departureRunState.reference ?? "-" })}
+                    {t("departurePreparation.success", { serial: departureRunState.reference ?? "-" })}
                   </p>
                   <p className="mt-1 text-xs">{t("departurePreparation.manualStartDone")}</p>
                 </div>
@@ -1892,6 +2101,119 @@ export function VigilogPageClient() {
           createLoggerMutation.mutate(payload)
         }}
       />
+
+      <Dialog
+        open={acknowledgeDialogTournee != null}
+        onOpenChange={(open) => {
+          if (!open && !acknowledgeMutation.isPending) {
+            setAcknowledgeDialogTournee(null)
+            setAcknowledgeComment("")
+          }
+        }}
+      >
+        <DialogContent className="max-w-xl border-border/60 bg-white shadow-sm">
+          <DialogHeader>
+            <DialogTitle>{t("history.actions.acknowledge")}</DialogTitle>
+            <DialogDescription>
+              {acknowledgeDialogTournee
+                ? `${acknowledgeDialogTournee.reference} - ${acknowledgeDialogTournee.loggerSerial}`
+                : t("feedback.ackError.description")}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Label htmlFor="vigilog-acknowledge-comment">{t("detail.ackComment")}</Label>
+            <Textarea
+              id="vigilog-acknowledge-comment"
+              value={acknowledgeComment}
+              onChange={(event) => setAcknowledgeComment(event.target.value)}
+              rows={4}
+              maxLength={2000}
+              placeholder={t("detail.ackComment")}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={acknowledgeMutation.isPending}
+              onClick={() => {
+                setAcknowledgeDialogTournee(null)
+                setAcknowledgeComment("")
+              }}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              type="button"
+              className={vigilogAmberButtonClass}
+              disabled={acknowledgeMutation.isPending || !acknowledgeDialogTournee}
+              onClick={() => {
+                if (!acknowledgeDialogTournee) return
+                acknowledgeMutation.mutate({
+                  tourneeId: acknowledgeDialogTournee.id,
+                  comment: acknowledgeComment.trim() || null,
+                })
+              }}
+            >
+              {t("history.actions.acknowledge")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={cancelDialogTournee != null}
+        onOpenChange={(open) => {
+          if (!open && !cancelMutation.isPending) {
+            setCancelDialogTournee(null)
+          }
+        }}
+      >
+        <DialogContent className="max-w-xl border-border/60 bg-white shadow-sm">
+          <DialogHeader>
+            <DialogTitle>{t("cancelTour.title")}</DialogTitle>
+            <DialogDescription>
+              {cancelDialogTournee
+                ? t("cancelTour.description", {
+                    reference: cancelDialogTournee.reference,
+                    serial: cancelDialogTournee.loggerSerial,
+                  })
+                : t("cancelTour.descriptionFallback")}
+            </DialogDescription>
+          </DialogHeader>
+
+          <Alert className="border-amber-200 bg-amber-50 text-amber-950">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>{t("cancelTour.warningTitle")}</AlertTitle>
+            <AlertDescription>{t("cancelTour.warningDescription")}</AlertDescription>
+          </Alert>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={cancelMutation.isPending}
+              onClick={() => setCancelDialogTournee(null)}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={cancelMutation.isPending || !cancelDialogTournee}
+              onClick={() => {
+                if (!cancelDialogTournee) return
+                cancelMutation.mutate(cancelDialogTournee.id)
+              }}
+            >
+              {cancelMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {t("cancelTour.confirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <VigilogTourneeDetailDialog
         open={detailDialogOpen}

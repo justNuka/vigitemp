@@ -192,12 +192,14 @@ export function LoginForm() {
       }
 
       const getRedirectTarget = (userCanAccessDashboard: boolean) => {
+        if (fromParam) {
+          const trimmed = fromParam.trim();
+          if (!trimmed.startsWith("/")) return "/";
+          if (trimmed.startsWith("//")) return "/";
+          return trimmed;
+        }
         if (!userCanAccessDashboard) return "/surveillance";
-        if (!fromParam) return "/";
-        const trimmed = fromParam.trim();
-        if (!trimmed.startsWith("/")) return "/";
-        if (trimmed.startsWith("//")) return "/";
-        return trimmed;
+        return "/";
       };
 
       let canAccessDashboard = true;

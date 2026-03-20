@@ -28,6 +28,9 @@ type ConfigurationFormValue = {
   highLimit: string
   frequencyMinutes: string
   alarmDelayMinutes: string
+  startDelayMinutes: string
+  stopButtonEnabled: boolean
+  resetWithStartEnabled: boolean
   active: boolean
 }
 
@@ -44,6 +47,10 @@ function buildFormValue(configuration?: VigilogConfiguration | null): Configurat
       configuration?.frequencyMinutes != null ? String(configuration.frequencyMinutes) : "15",
     alarmDelayMinutes:
       configuration?.alarmDelayMinutes != null ? String(configuration.alarmDelayMinutes) : "15",
+    startDelayMinutes:
+      configuration?.startDelayMinutes != null ? String(configuration.startDelayMinutes) : "0",
+    stopButtonEnabled: configuration?.stopButtonEnabled ?? true,
+    resetWithStartEnabled: configuration?.resetWithStartEnabled ?? true,
     active: configuration?.active ?? true,
   }
 }
@@ -63,6 +70,9 @@ type VigilogConfigurationDialogProps = {
     Limite_Haute: number | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min: number
+    Autorise_Arret_Bouton_Stop: boolean
+    Reinitialise_Avec_Bouton_Start: boolean
     Actif: boolean
   }) => void
 }
@@ -91,6 +101,7 @@ export function VigilogConfigurationDialog({
     if (!form.name.trim()) return false
     if (!form.frequencyMinutes.trim() || Number(form.frequencyMinutes) <= 0) return false
     if (!form.alarmDelayMinutes.trim() || Number(form.alarmDelayMinutes) <= 0) return false
+    if (!form.startDelayMinutes.trim() || Number(form.startDelayMinutes) < 0) return false
     if (form.lowLimitActive && !form.lowLimit.trim()) return false
     if (form.highLimitActive && !form.highLimit.trim()) return false
     return true
@@ -207,6 +218,22 @@ export function VigilogConfigurationDialog({
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="vigilog-config-start-delay">{t("config.fields.startDelayMinutes")}</Label>
+                <Input
+                  id="vigilog-config-start-delay"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.startDelayMinutes}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, startDelayMinutes: event.target.value }))
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
                 <Label htmlFor="vigilog-config-delay">{t("config.fields.alarmDelayMinutes")}</Label>
                 <Input
                   id="vigilog-config-delay"
@@ -216,6 +243,34 @@ export function VigilogConfigurationDialog({
                   value={form.alarmDelayMinutes}
                   onChange={(event) =>
                     setForm((current) => ({ ...current, alarmDelayMinutes: event.target.value }))
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3 rounded-2xl border border-border/60 bg-muted/30 p-4">
+              <p className="text-sm font-medium text-foreground">{t("config.advanced.title")}</p>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm text-foreground">{t("config.fields.stopButtonEnabled")}</p>
+                  <p className="text-xs text-muted-foreground">{t("config.advanced.stopHint")}</p>
+                </div>
+                <Switch
+                  checked={form.stopButtonEnabled}
+                  onCheckedChange={(checked) =>
+                    setForm((current) => ({ ...current, stopButtonEnabled: checked }))
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm text-foreground">{t("config.fields.resetWithStartEnabled")}</p>
+                  <p className="text-xs text-muted-foreground">{t("config.advanced.resetHint")}</p>
+                </div>
+                <Switch
+                  checked={form.resetWithStartEnabled}
+                  onCheckedChange={(checked) =>
+                    setForm((current) => ({ ...current, resetWithStartEnabled: checked }))
                   }
                 />
               </div>
@@ -258,6 +313,9 @@ export function VigilogConfigurationDialog({
                 Limite_Haute: form.highLimitActive && form.highLimit.trim() ? Number(form.highLimit) : null,
                 Frequence_Min: Number(form.frequencyMinutes),
                 Retard_Alarme_Min: Number(form.alarmDelayMinutes),
+                Delai_Demarrage_Min: Number(form.startDelayMinutes),
+                Autorise_Arret_Bouton_Stop: form.stopButtonEnabled,
+                Reinitialise_Avec_Bouton_Start: form.resetWithStartEnabled,
                 Actif: form.active,
               })
             }

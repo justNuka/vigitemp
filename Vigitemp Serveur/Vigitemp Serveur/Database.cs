@@ -1046,7 +1046,12 @@ namespace Vigitemp_Serveur
                     {
                         while (dr_lieux.Read())
                         {
-                            array_tmp.Add((int)dr_lieux["Id_Serveur"]);
+                            if (dr_lieux["Id_Serveur"] == DBNull.Value)
+                            {
+                                continue;
+                            }
+
+                            array_tmp.Add(Convert.ToInt32(dr_lieux["Id_Serveur"]));
                         }
                     }
                 }

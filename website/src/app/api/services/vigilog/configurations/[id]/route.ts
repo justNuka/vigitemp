@@ -48,6 +48,9 @@ export const PATCH = withAnyAuthorizationLogging(
           Limite_Haute: parsed.data.Limite_Haute_Active ? parsed.data.Limite_Haute ?? null : null,
           Frequence_Min: parsed.data.Frequence_Min,
           Retard_Alarme_Min: parsed.data.Retard_Alarme_Min,
+          Delai_Demarrage_Min: parsed.data.Delai_Demarrage_Min,
+          Autorise_Arret_Bouton_Stop: parsed.data.Autorise_Arret_Bouton_Stop,
+          Reinitialise_Avec_Bouton_Start: parsed.data.Reinitialise_Avec_Bouton_Start,
           Actif: parsed.data.Actif,
           Id_Utilisateur_Maj: ctx.user.userId,
           Date_Heure_Maj: new Date(),
@@ -65,6 +68,9 @@ export const PATCH = withAnyAuthorizationLogging(
           active: updated.Actif,
           frequencyMinutes: updated.Frequence_Min,
           alarmDelayMinutes: updated.Retard_Alarme_Min,
+          startDelayMinutes: updated.Delai_Demarrage_Min,
+          stopButtonEnabled: updated.Autorise_Arret_Bouton_Stop,
+          resetWithStartEnabled: updated.Reinitialise_Avec_Bouton_Start,
         },
       )
 

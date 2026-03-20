@@ -140,9 +140,7 @@ export default function middleware(request: NextRequest) {
       console.log(`[Proxy] No valid token for protected route ${pathname}, redirecting to login`)
     }
     const loginUrl = new URL(`/${locale}${localizedLoginPath}`, request.url)
-    if (!pathnameWithoutLocale.includes("/surveillance")) {
-      loginUrl.searchParams.set("from", pathnameWithoutLocale)
-    }
+    loginUrl.searchParams.set("from", `${pathnameWithoutLocale}${request.nextUrl.search}`)
     const response = NextResponse.redirect(loginUrl)
     clearAuthCookies(response, request)
     return response
@@ -153,7 +151,12 @@ export default function middleware(request: NextRequest) {
     if (shouldLog) {
       console.log("[Proxy] Valid token found for /login, redirecting to /")
     }
-    const response = NextResponse.redirect(new URL(`/${locale}`, request.url))
+    const requestedTarget = request.nextUrl.searchParams.get("from")
+    const safeTarget =
+      requestedTarget && requestedTarget.startsWith("/") && !requestedTarget.startsWith("//")
+        ? requestedTarget
+        : `/${locale}`
+    const response = NextResponse.redirect(new URL(safeTarget, request.url))
     if (rawToken) refreshAuthCookie(response, request, rawToken)
     return response
   }

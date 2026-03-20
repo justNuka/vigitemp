@@ -80,7 +80,7 @@ namespace Vigitemp_Serveur
             this.ths = p_ths;
             m_comPort = p_comPort;
             m_sondeSerialNumber = p_sondeSerialNumber;
-            m_sondeAdresse = p_sondeAdresse;
+            m_sondeAdresse = NormalizeSensorAddress(p_sondeSerialNumber, p_sondeAdresse);
             m_idLieu = ths.GetDatabase().getIDLieuBySerialNumber(m_sondeSerialNumber);
 
             sw = new Stopwatch();
@@ -100,6 +100,41 @@ namespace Vigitemp_Serveur
             m_port.WriteTimeout = 5000;
 
             p_ths.list_addComPort(m_port);
+        }
+
+        private static string NormalizeSensorAddress(string serialNumber, string sensorAddress)
+        {
+            if (string.IsNullOrWhiteSpace(sensorAddress))
+            {
+                return sensorAddress;
+            }
+
+            var address = sensorAddress.Trim();
+            var serial = (serialNumber ?? string.Empty).Trim();
+            if (serial.Length < 2)
+            {
+                return address;
+            }
+
+            var sensorType = serial.Substring(0, 2).ToUpperInvariant();
+            switch (sensorType)
+            {
+                case "IN":
+                case "IE":
+                case "IP":
+                case "IC":
+                case "IH":
+                case "EN":
+                    // These ASCII probes answer on a 4-character address.
+                    // Some DB rows contain the full serial instead of the short address.
+                    if (address.Length > 4)
+                    {
+                        return address.Substring(address.Length - 4, 4);
+                    }
+                    break;
+            }
+
+            return address;
         }
 
         public abstract Task<bool> read();
@@ -183,6 +218,28 @@ namespace Vigitemp_Serveur
         protected double RoundMeasure(double value)
         {
             return Math.Round(value, 2, MidpointRounding.AwayFromZero);
+        }
+
+        private void HideAlarmOnClientAsync(string ipClient)
+        {
+            if (string.IsNullOrWhiteSpace(ipClient))
+            {
+                return;
+            }
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var url = "http://" + ipClient + ":8000/alarm?action=hide&idLieu=" + m_idLieu;
+                    await client.PostAsync(url, null);
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log(
+                        $"HideAlarm notification failed lieu={m_idLieu} sonde={m_sondeSerialNumber} ip={ipClient}: {ex.Message}");
+                }
+            });
         }
 
         
@@ -554,11 +611,11 @@ namespace Vigitemp_Serveur
                 ths.InvalidateRetriggerFlagCache(m_idLieu);
                 _retriggerLowWaitCountByLieu[m_idLieu] = 0;
                 _retriggerHighWaitCountByLieu[m_idLieu] = 0;
-                VigitempServeur.Log($"Alarme terminée (H/B) pour le lieu {m_idLieu} - sonde {m_sondeSerialNumber}");
+                VigitempServeur.Log($"Alarme terminee (H/B) pour le lieu {m_idLieu} - sonde {m_sondeSerialNumber}");
                 var ips_clients = ths.GetDatabase().getPCsClients();
                 for (int i = 0; i < ips_clients.Count; i++)
                 {
-                    _ = client.PostAsync("http://" + ips_clients[i] + ":8000/alarm?action=hide&idLieu=" + m_idLieu, null);
+                    HideAlarmOnClientAsync(ips_clients[i]);
                 }
             }
         }

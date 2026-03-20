@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { TemporaryMemoryControls } from '@/components/form/temporary-memory-controls'
 import { Input } from '@/components/ui/input'
 import {
   Form,
@@ -101,6 +102,7 @@ export function GroupModal({ open, onOpenChange, group, isEditing }: GroupModalP
   }
 
   const isSubmitting = form.formState.isSubmitting
+  const memoryKey = `group-form:${isEditing ? group?.Id_Groupe ?? "edit" : "new"}`
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -111,6 +113,17 @@ export function GroupModal({ open, onOpenChange, group, isEditing }: GroupModalP
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
+            <TemporaryMemoryControls
+              form={form}
+              storageKey={memoryKey}
+              resetValues={{ name: '', regroupement: '' }}
+              labels={{
+                save: tCommon('temporary_memory.save'),
+                restore: tCommon('temporary_memory.restore'),
+                clear: tCommon('temporary_memory.clear'),
+                saved: tCommon('temporary_memory.saved'),
+              }}
+            />
             <FormField
               control={form.control}
               name="regroupement"

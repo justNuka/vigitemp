@@ -19,6 +19,7 @@ import type { VigilogTourneeDetail } from "./types"
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -48,6 +49,14 @@ function formatDate(value: string | null, locale: string) {
 function formatNumber(value: number | null) {
   if (value == null) return "-"
   return value.toFixed(2)
+}
+
+function escapeCsv(value: string | number | null | undefined) {
+  const normalized = value == null ? "" : String(value)
+  if (/[",;\n\r]/.test(normalized)) {
+    return `"${normalized.replace(/"/g, '""')}"`
+  }
+  return normalized
 }
 
 function formatDuration(totalSeconds: number) {
@@ -319,6 +328,35 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
     })
   }, [chartData, tournee])
 
+  const exportMeasuresAsCsv = () => {
+    if (!tournee || measures.length === 0) return
+
+    const headers = ["Ordre", "DateHeure", "Valeur", "HorsLimites", "EnAlarme", "Marqueur", "Details"]
+    const rows = measures.map((measure) => [
+      measure.order ?? "",
+      measure.measuredAt,
+      measure.value ?? "",
+      measure.outOfLimit ? "1" : "0",
+      measure.inAlarm ? "1" : "0",
+      measure.marker ? "1" : "0",
+      measure.details ?? "",
+    ])
+
+    const csv = [headers, ...rows]
+      .map((row) => row.map((value) => escapeCsv(value)).join(";"))
+      .join("\r\n")
+
+    const blob = new Blob([`\ufeff${csv}`], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement("a")
+    anchor.href = url
+    anchor.download = `vigilog-${tournee.reference}-mesures.csv`
+    document.body.appendChild(anchor)
+    anchor.click()
+    document.body.removeChild(anchor)
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-[78rem] overflow-hidden border-border/60 bg-white px-6 shadow-sm">
@@ -488,7 +526,18 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
             </div>
 
             <div className="rounded-xl border border-slate-200/80 bg-white/65 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
-              <h3 className="mb-3 font-medium text-foreground">{t("detail.measuresTitle")}</h3>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h3 className="font-medium text-foreground">{t("detail.measuresTitle")}</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={exportMeasuresAsCsv}
+                  disabled={measures.length === 0}
+                >
+                  {t("detail.export")}
+                </Button>
+              </div>
               <TanStackTable
                 columns={measuresColumns}
                 data={measures}

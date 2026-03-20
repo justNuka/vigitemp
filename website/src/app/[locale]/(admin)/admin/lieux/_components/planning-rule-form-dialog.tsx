@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { CalendarClock, Check, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { TemporaryMemoryControls } from "@/components/form/temporary-memory-controls"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Form } from "@/components/ui/form"
 import { computeEmt } from "@/lib/emt"
@@ -90,6 +91,8 @@ export function PlanningRuleFormDialog({
 
   const isSubmitting = form.formState.isSubmitting
   const submitForm = form.handleSubmit(handleSubmit, (errors) => showFormValidationToast(errors))
+  const resetValues = isEdit && editRegle ? mapPlanningRuleToFormValues(editRegle) : getDefaultPlanningRuleValues()
+  const memoryKey = `planning-rule:${idLieu}:${editRegle?.Id_Regle ?? "new"}`
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
@@ -110,6 +113,18 @@ export function PlanningRuleFormDialog({
             }}
             className="space-y-4"
           >
+            <TemporaryMemoryControls
+              form={form}
+              storageKey={memoryKey}
+              resetValues={resetValues}
+              labels={{
+                save: tDialog("temporaryMemory.save"),
+                restore: tDialog("temporaryMemory.restore"),
+                clear: tDialog("temporaryMemory.clear"),
+                saved: tDialog("temporaryMemory.saved"),
+              }}
+            />
+
             <div className="rounded-md bg-muted/30 p-3 space-y-4">
               <PlanningRuleScheduleFields form={form} tDialog={tDialog} joursOptions={joursOptions} />
             </div>

@@ -75,7 +75,12 @@ export function EmtModeSection({
               <div className="font-medium">{t('emt.option.uncertainties.title')}</div>
               <div className="text-sm text-muted-foreground">{t('emt.option.uncertainties.description')}</div>
               <div className="mt-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
-                {!formData.Prendre_En_Compte_Derive ? (
+                {!formData.Prendre_En_Compte_Derive && formData.Corriger_Erreur_Justesse ? (
+                  <>
+                    <span className="font-medium">I<sub>mes</sub> = I<sub>et</sub></span>
+                    <div className="text-xs text-muted-foreground">{`I_et = ${iEtalonnage}`}</div>
+                  </>
+                ) : !formData.Prendre_En_Compte_Derive ? (
                   <>
                     <span className="font-medium">I<sub>mes</sub> = |EJ| + I<sub>etalonnage</sub></span>
                     <div className="text-xs text-muted-foreground">{`I_mes = |${absEj}| + ${iEtalonnage} = ${(absEj + iEtalonnage).toFixed(4)}`}</div>

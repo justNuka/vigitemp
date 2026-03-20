@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { parseAdjustmentXml } from "@/lib/adjustment-import";
 import { log } from "@/lib/logger";
 import { decodeXmlBytes } from "@/lib/xml-decoding";
-import { expandRelatedGsoSerials, extractAddressFromSerial, isGsoType } from "@/lib/sensor-naming";
+import { expandRelatedGsoSerials, extractProbeAddressFromSerial, isGsoType } from "@/lib/sensor-naming";
 
 const isXmlFile = (file: File) => {
   const name = file.name.toLowerCase();
@@ -67,7 +67,7 @@ export const POST = async (req: NextRequest) => {
       await prisma.t_sonde.createMany({
         data: relatedSerials.map((value) => ({
           Sonde_Numero_Serie: value,
-          Adresse_Sonde: extractAddressFromSerial(value),
+          Adresse_Sonde: extractProbeAddressFromSerial(value),
           Est_Sonde_GSO: true,
           Surveillance_Etat: "D",
           Sonde_Offset: 0,

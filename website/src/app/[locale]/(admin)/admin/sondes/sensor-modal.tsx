@@ -15,6 +15,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { TemporaryMemoryControls } from "@/components/form/temporary-memory-controls";
 import { Input } from "@/components/ui/input";
 import {
   Form,
@@ -79,6 +80,7 @@ export function SensorModal({ open, onOpenChange, sensor, isEditing }: SensorMod
 
   const { data: sensorTypes, isLoading: sensorTypesLoading } = useSensorTypes(open);
   const { data: modules, isLoading: modulesLoading } = useModules(open);
+  const memoryKey = `sensor-form:${isEdit ? sensor?.Id_Sonde ?? sensor?.Sonde_Numero_Serie ?? "edit" : "new"}`;
 
   useEffect(() => {
     if (!open) return;
@@ -141,6 +143,17 @@ export function SensorModal({ open, onOpenChange, sensor, isEditing }: SensorMod
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit, (errors) => showFormValidationToast(errors))} className="space-y-6">
+            <TemporaryMemoryControls
+              form={form}
+              storageKey={memoryKey}
+              resetValues={{ sondeType: "", serieNum: "", moduleId: "", sondeOffset: undefined }}
+              labels={{
+                save: tCommon('temporary_memory.save'),
+                restore: tCommon('temporary_memory.restore'),
+                clear: tCommon('temporary_memory.clear'),
+                saved: tCommon('temporary_memory.saved'),
+              }}
+            />
             <FormField
               control={form.control}
               name="sondeType"

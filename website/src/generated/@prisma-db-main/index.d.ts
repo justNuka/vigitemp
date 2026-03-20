@@ -55679,6 +55679,7 @@ export namespace Prisma {
     Limite_Haute: Decimal | null
     Frequence_Min: number | null
     Retard_Alarme_Min: number | null
+    Delai_Demarrage_Min: number | null
     Id_Utilisateur_Creation: number | null
     Id_Utilisateur_Maj: number | null
   }
@@ -55690,6 +55691,7 @@ export namespace Prisma {
     Limite_Haute: Decimal | null
     Frequence_Min: number | null
     Retard_Alarme_Min: number | null
+    Delai_Demarrage_Min: number | null
     Id_Utilisateur_Creation: number | null
     Id_Utilisateur_Maj: number | null
   }
@@ -55705,6 +55707,9 @@ export namespace Prisma {
     Limite_Haute: Decimal | null
     Frequence_Min: number | null
     Retard_Alarme_Min: number | null
+    Delai_Demarrage_Min: number | null
+    Autorise_Arret_Bouton_Stop: boolean | null
+    Reinitialise_Avec_Bouton_Start: boolean | null
     Actif: boolean | null
     Id_Utilisateur_Creation: number | null
     Date_Heure_Creation: Date | null
@@ -55723,6 +55728,9 @@ export namespace Prisma {
     Limite_Haute: Decimal | null
     Frequence_Min: number | null
     Retard_Alarme_Min: number | null
+    Delai_Demarrage_Min: number | null
+    Autorise_Arret_Bouton_Stop: boolean | null
+    Reinitialise_Avec_Bouton_Start: boolean | null
     Actif: boolean | null
     Id_Utilisateur_Creation: number | null
     Date_Heure_Creation: Date | null
@@ -55741,6 +55749,9 @@ export namespace Prisma {
     Limite_Haute: number
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min: number
+    Autorise_Arret_Bouton_Stop: number
+    Reinitialise_Avec_Bouton_Start: number
     Actif: number
     Id_Utilisateur_Creation: number
     Date_Heure_Creation: number
@@ -55757,6 +55768,7 @@ export namespace Prisma {
     Limite_Haute?: true
     Frequence_Min?: true
     Retard_Alarme_Min?: true
+    Delai_Demarrage_Min?: true
     Id_Utilisateur_Creation?: true
     Id_Utilisateur_Maj?: true
   }
@@ -55768,6 +55780,7 @@ export namespace Prisma {
     Limite_Haute?: true
     Frequence_Min?: true
     Retard_Alarme_Min?: true
+    Delai_Demarrage_Min?: true
     Id_Utilisateur_Creation?: true
     Id_Utilisateur_Maj?: true
   }
@@ -55783,6 +55796,9 @@ export namespace Prisma {
     Limite_Haute?: true
     Frequence_Min?: true
     Retard_Alarme_Min?: true
+    Delai_Demarrage_Min?: true
+    Autorise_Arret_Bouton_Stop?: true
+    Reinitialise_Avec_Bouton_Start?: true
     Actif?: true
     Id_Utilisateur_Creation?: true
     Date_Heure_Creation?: true
@@ -55801,6 +55817,9 @@ export namespace Prisma {
     Limite_Haute?: true
     Frequence_Min?: true
     Retard_Alarme_Min?: true
+    Delai_Demarrage_Min?: true
+    Autorise_Arret_Bouton_Stop?: true
+    Reinitialise_Avec_Bouton_Start?: true
     Actif?: true
     Id_Utilisateur_Creation?: true
     Date_Heure_Creation?: true
@@ -55819,6 +55838,9 @@ export namespace Prisma {
     Limite_Haute?: true
     Frequence_Min?: true
     Retard_Alarme_Min?: true
+    Delai_Demarrage_Min?: true
+    Autorise_Arret_Bouton_Stop?: true
+    Reinitialise_Avec_Bouton_Start?: true
     Actif?: true
     Id_Utilisateur_Creation?: true
     Date_Heure_Creation?: true
@@ -55924,6 +55946,9 @@ export namespace Prisma {
     Limite_Haute: Decimal | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min: number
+    Autorise_Arret_Bouton_Stop: boolean
+    Reinitialise_Avec_Bouton_Start: boolean
     Actif: boolean
     Id_Utilisateur_Creation: number | null
     Date_Heure_Creation: Date
@@ -55961,6 +55986,9 @@ export namespace Prisma {
     Limite_Haute?: boolean
     Frequence_Min?: boolean
     Retard_Alarme_Min?: boolean
+    Delai_Demarrage_Min?: boolean
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Actif?: boolean
     Id_Utilisateur_Creation?: boolean
     Date_Heure_Creation?: boolean
@@ -55985,6 +56013,9 @@ export namespace Prisma {
     Limite_Haute?: boolean
     Frequence_Min?: boolean
     Retard_Alarme_Min?: boolean
+    Delai_Demarrage_Min?: boolean
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Actif?: boolean
     Id_Utilisateur_Creation?: boolean
     Date_Heure_Creation?: boolean
@@ -55992,7 +56023,7 @@ export namespace Prisma {
     Date_Heure_Maj?: boolean
   }
 
-  export type t_vigilog_configurationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_VigiLog_Configuration" | "Nom_Configuration" | "Description_Configuration" | "Consigne" | "Limite_Basse_Active" | "Limite_Basse" | "Limite_Haute_Active" | "Limite_Haute" | "Frequence_Min" | "Retard_Alarme_Min" | "Actif" | "Id_Utilisateur_Creation" | "Date_Heure_Creation" | "Id_Utilisateur_Maj" | "Date_Heure_Maj", ExtArgs["result"]["t_vigilog_configuration"]>
+  export type t_vigilog_configurationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_VigiLog_Configuration" | "Nom_Configuration" | "Description_Configuration" | "Consigne" | "Limite_Basse_Active" | "Limite_Basse" | "Limite_Haute_Active" | "Limite_Haute" | "Frequence_Min" | "Retard_Alarme_Min" | "Delai_Demarrage_Min" | "Autorise_Arret_Bouton_Stop" | "Reinitialise_Avec_Bouton_Start" | "Actif" | "Id_Utilisateur_Creation" | "Date_Heure_Creation" | "Id_Utilisateur_Maj" | "Date_Heure_Maj", ExtArgs["result"]["t_vigilog_configuration"]>
   export type t_vigilog_configurationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: boolean | t_vigilog_configuration$t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurArgs<ExtArgs>
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: boolean | t_vigilog_configuration$t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurArgs<ExtArgs>
@@ -56018,6 +56049,9 @@ export namespace Prisma {
       Limite_Haute: Prisma.Decimal | null
       Frequence_Min: number
       Retard_Alarme_Min: number
+      Delai_Demarrage_Min: number
+      Autorise_Arret_Bouton_Stop: boolean
+      Reinitialise_Avec_Bouton_Start: boolean
       Actif: boolean
       Id_Utilisateur_Creation: number | null
       Date_Heure_Creation: Date
@@ -56405,6 +56439,9 @@ export namespace Prisma {
     readonly Limite_Haute: FieldRef<"t_vigilog_configuration", 'Decimal'>
     readonly Frequence_Min: FieldRef<"t_vigilog_configuration", 'Int'>
     readonly Retard_Alarme_Min: FieldRef<"t_vigilog_configuration", 'Int'>
+    readonly Delai_Demarrage_Min: FieldRef<"t_vigilog_configuration", 'Int'>
+    readonly Autorise_Arret_Bouton_Stop: FieldRef<"t_vigilog_configuration", 'Boolean'>
+    readonly Reinitialise_Avec_Bouton_Start: FieldRef<"t_vigilog_configuration", 'Boolean'>
     readonly Actif: FieldRef<"t_vigilog_configuration", 'Boolean'>
     readonly Id_Utilisateur_Creation: FieldRef<"t_vigilog_configuration", 'Int'>
     readonly Date_Heure_Creation: FieldRef<"t_vigilog_configuration", 'DateTime'>
@@ -57962,6 +57999,7 @@ export namespace Prisma {
     Limite_Haute: Decimal | null
     Frequence_Min: number | null
     Retard_Alarme_Min: number | null
+    Delai_Demarrage_Min: number | null
     Nb_Mesures: number | null
     Temperature_Min: Decimal | null
     Temperature_Moyenne: Decimal | null
@@ -57984,6 +58022,7 @@ export namespace Prisma {
     Limite_Haute: Decimal | null
     Frequence_Min: number | null
     Retard_Alarme_Min: number | null
+    Delai_Demarrage_Min: number | null
     Nb_Mesures: number | null
     Temperature_Min: Decimal | null
     Temperature_Moyenne: Decimal | null
@@ -58015,6 +58054,9 @@ export namespace Prisma {
     Limite_Haute: Decimal | null
     Frequence_Min: number | null
     Retard_Alarme_Min: number | null
+    Delai_Demarrage_Min: number | null
+    Autorise_Arret_Bouton_Stop: boolean | null
+    Reinitialise_Avec_Bouton_Start: boolean | null
     Nb_Mesures: number | null
     Temperature_Min: Decimal | null
     Temperature_Moyenne: Decimal | null
@@ -58054,6 +58096,9 @@ export namespace Prisma {
     Limite_Haute: Decimal | null
     Frequence_Min: number | null
     Retard_Alarme_Min: number | null
+    Delai_Demarrage_Min: number | null
+    Autorise_Arret_Bouton_Stop: boolean | null
+    Reinitialise_Avec_Bouton_Start: boolean | null
     Nb_Mesures: number | null
     Temperature_Min: Decimal | null
     Temperature_Moyenne: Decimal | null
@@ -58093,6 +58138,9 @@ export namespace Prisma {
     Limite_Haute: number
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min: number
+    Autorise_Arret_Bouton_Stop: number
+    Reinitialise_Avec_Bouton_Start: number
     Nb_Mesures: number
     Temperature_Min: number
     Temperature_Moyenne: number
@@ -58125,6 +58173,7 @@ export namespace Prisma {
     Limite_Haute?: true
     Frequence_Min?: true
     Retard_Alarme_Min?: true
+    Delai_Demarrage_Min?: true
     Nb_Mesures?: true
     Temperature_Min?: true
     Temperature_Moyenne?: true
@@ -58147,6 +58196,7 @@ export namespace Prisma {
     Limite_Haute?: true
     Frequence_Min?: true
     Retard_Alarme_Min?: true
+    Delai_Demarrage_Min?: true
     Nb_Mesures?: true
     Temperature_Min?: true
     Temperature_Moyenne?: true
@@ -58178,6 +58228,9 @@ export namespace Prisma {
     Limite_Haute?: true
     Frequence_Min?: true
     Retard_Alarme_Min?: true
+    Delai_Demarrage_Min?: true
+    Autorise_Arret_Bouton_Stop?: true
+    Reinitialise_Avec_Bouton_Start?: true
     Nb_Mesures?: true
     Temperature_Min?: true
     Temperature_Moyenne?: true
@@ -58217,6 +58270,9 @@ export namespace Prisma {
     Limite_Haute?: true
     Frequence_Min?: true
     Retard_Alarme_Min?: true
+    Delai_Demarrage_Min?: true
+    Autorise_Arret_Bouton_Stop?: true
+    Reinitialise_Avec_Bouton_Start?: true
     Nb_Mesures?: true
     Temperature_Min?: true
     Temperature_Moyenne?: true
@@ -58256,6 +58312,9 @@ export namespace Prisma {
     Limite_Haute?: true
     Frequence_Min?: true
     Retard_Alarme_Min?: true
+    Delai_Demarrage_Min?: true
+    Autorise_Arret_Bouton_Stop?: true
+    Reinitialise_Avec_Bouton_Start?: true
     Nb_Mesures?: true
     Temperature_Min?: true
     Temperature_Moyenne?: true
@@ -58382,6 +58441,9 @@ export namespace Prisma {
     Limite_Haute: Decimal | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min: number
+    Autorise_Arret_Bouton_Stop: boolean
+    Reinitialise_Avec_Bouton_Start: boolean
     Nb_Mesures: number
     Temperature_Min: Decimal | null
     Temperature_Moyenne: Decimal | null
@@ -58440,6 +58502,9 @@ export namespace Prisma {
     Limite_Haute?: boolean
     Frequence_Min?: boolean
     Retard_Alarme_Min?: boolean
+    Delai_Demarrage_Min?: boolean
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: boolean
     Temperature_Min?: boolean
     Temperature_Moyenne?: boolean
@@ -58488,6 +58553,9 @@ export namespace Prisma {
     Limite_Haute?: boolean
     Frequence_Min?: boolean
     Retard_Alarme_Min?: boolean
+    Delai_Demarrage_Min?: boolean
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: boolean
     Temperature_Min?: boolean
     Temperature_Moyenne?: boolean
@@ -58505,7 +58573,7 @@ export namespace Prisma {
     Date_Heure_Maj?: boolean
   }
 
-  export type t_vigilog_tourneeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_VigiLog_Tournee" | "Reference_Tournee" | "Id_VigiLog_Configuration" | "Id_VigiLog" | "Nom_Configuration" | "Id_Site_Depart" | "Id_Site_Arrivee" | "Numero_Serie_VigiLog" | "Statut" | "Resultat_Feu" | "Id_Utilisateur_Depart" | "Date_Heure_Depart" | "Id_Utilisateur_Arrivee" | "Date_Heure_Arrivee" | "Consigne" | "Limite_Basse_Active" | "Limite_Basse" | "Limite_Haute_Active" | "Limite_Haute" | "Frequence_Min" | "Retard_Alarme_Min" | "Nb_Mesures" | "Temperature_Min" | "Temperature_Moyenne" | "Temperature_Max" | "Duree_Hors_Limites_Secondes" | "Duree_Alarme_Secondes" | "Est_Depassement_Limites" | "Est_Alarme" | "Est_Acquittee" | "Commentaire" | "Commentaire_Acquittement" | "Id_Utilisateur_Acquittement" | "Date_Heure_Acquittement" | "Date_Heure_Creation" | "Date_Heure_Maj", ExtArgs["result"]["t_vigilog_tournee"]>
+  export type t_vigilog_tourneeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_VigiLog_Tournee" | "Reference_Tournee" | "Id_VigiLog_Configuration" | "Id_VigiLog" | "Nom_Configuration" | "Id_Site_Depart" | "Id_Site_Arrivee" | "Numero_Serie_VigiLog" | "Statut" | "Resultat_Feu" | "Id_Utilisateur_Depart" | "Date_Heure_Depart" | "Id_Utilisateur_Arrivee" | "Date_Heure_Arrivee" | "Consigne" | "Limite_Basse_Active" | "Limite_Basse" | "Limite_Haute_Active" | "Limite_Haute" | "Frequence_Min" | "Retard_Alarme_Min" | "Delai_Demarrage_Min" | "Autorise_Arret_Bouton_Stop" | "Reinitialise_Avec_Bouton_Start" | "Nb_Mesures" | "Temperature_Min" | "Temperature_Moyenne" | "Temperature_Max" | "Duree_Hors_Limites_Secondes" | "Duree_Alarme_Secondes" | "Est_Depassement_Limites" | "Est_Alarme" | "Est_Acquittee" | "Commentaire" | "Commentaire_Acquittement" | "Id_Utilisateur_Acquittement" | "Date_Heure_Acquittement" | "Date_Heure_Creation" | "Date_Heure_Maj", ExtArgs["result"]["t_vigilog_tournee"]>
   export type t_vigilog_tourneeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     t_vigilog?: boolean | t_vigilog_tournee$t_vigilogArgs<ExtArgs>
     t_vigilog_configuration?: boolean | t_vigilog_tournee$t_vigilog_configurationArgs<ExtArgs>
@@ -58549,6 +58617,9 @@ export namespace Prisma {
       Limite_Haute: Prisma.Decimal | null
       Frequence_Min: number
       Retard_Alarme_Min: number
+      Delai_Demarrage_Min: number
+      Autorise_Arret_Bouton_Stop: boolean
+      Reinitialise_Avec_Bouton_Start: boolean
       Nb_Mesures: number
       Temperature_Min: Prisma.Decimal | null
       Temperature_Moyenne: Prisma.Decimal | null
@@ -58961,6 +59032,9 @@ export namespace Prisma {
     readonly Limite_Haute: FieldRef<"t_vigilog_tournee", 'Decimal'>
     readonly Frequence_Min: FieldRef<"t_vigilog_tournee", 'Int'>
     readonly Retard_Alarme_Min: FieldRef<"t_vigilog_tournee", 'Int'>
+    readonly Delai_Demarrage_Min: FieldRef<"t_vigilog_tournee", 'Int'>
+    readonly Autorise_Arret_Bouton_Stop: FieldRef<"t_vigilog_tournee", 'Boolean'>
+    readonly Reinitialise_Avec_Bouton_Start: FieldRef<"t_vigilog_tournee", 'Boolean'>
     readonly Nb_Mesures: FieldRef<"t_vigilog_tournee", 'Int'>
     readonly Temperature_Min: FieldRef<"t_vigilog_tournee", 'Decimal'>
     readonly Temperature_Moyenne: FieldRef<"t_vigilog_tournee", 'Decimal'>
@@ -60182,6 +60256,9 @@ export namespace Prisma {
     Limite_Haute: 'Limite_Haute',
     Frequence_Min: 'Frequence_Min',
     Retard_Alarme_Min: 'Retard_Alarme_Min',
+    Delai_Demarrage_Min: 'Delai_Demarrage_Min',
+    Autorise_Arret_Bouton_Stop: 'Autorise_Arret_Bouton_Stop',
+    Reinitialise_Avec_Bouton_Start: 'Reinitialise_Avec_Bouton_Start',
     Actif: 'Actif',
     Id_Utilisateur_Creation: 'Id_Utilisateur_Creation',
     Date_Heure_Creation: 'Date_Heure_Creation',
@@ -60234,6 +60311,9 @@ export namespace Prisma {
     Limite_Haute: 'Limite_Haute',
     Frequence_Min: 'Frequence_Min',
     Retard_Alarme_Min: 'Retard_Alarme_Min',
+    Delai_Demarrage_Min: 'Delai_Demarrage_Min',
+    Autorise_Arret_Bouton_Stop: 'Autorise_Arret_Bouton_Stop',
+    Reinitialise_Avec_Bouton_Start: 'Reinitialise_Avec_Bouton_Start',
     Nb_Mesures: 'Nb_Mesures',
     Temperature_Min: 'Temperature_Min',
     Temperature_Moyenne: 'Temperature_Moyenne',
@@ -64729,6 +64809,9 @@ export namespace Prisma {
     Limite_Haute?: DecimalNullableFilter<"t_vigilog_configuration"> | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFilter<"t_vigilog_configuration"> | number
     Retard_Alarme_Min?: IntFilter<"t_vigilog_configuration"> | number
+    Delai_Demarrage_Min?: IntFilter<"t_vigilog_configuration"> | number
+    Autorise_Arret_Bouton_Stop?: BoolFilter<"t_vigilog_configuration"> | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFilter<"t_vigilog_configuration"> | boolean
     Actif?: BoolFilter<"t_vigilog_configuration"> | boolean
     Id_Utilisateur_Creation?: IntNullableFilter<"t_vigilog_configuration"> | number | null
     Date_Heure_Creation?: DateTimeFilter<"t_vigilog_configuration"> | Date | string
@@ -64750,6 +64833,9 @@ export namespace Prisma {
     Limite_Haute?: SortOrderInput | SortOrder
     Frequence_Min?: SortOrder
     Retard_Alarme_Min?: SortOrder
+    Delai_Demarrage_Min?: SortOrder
+    Autorise_Arret_Bouton_Stop?: SortOrder
+    Reinitialise_Avec_Bouton_Start?: SortOrder
     Actif?: SortOrder
     Id_Utilisateur_Creation?: SortOrderInput | SortOrder
     Date_Heure_Creation?: SortOrder
@@ -64775,6 +64861,9 @@ export namespace Prisma {
     Limite_Haute?: DecimalNullableFilter<"t_vigilog_configuration"> | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFilter<"t_vigilog_configuration"> | number
     Retard_Alarme_Min?: IntFilter<"t_vigilog_configuration"> | number
+    Delai_Demarrage_Min?: IntFilter<"t_vigilog_configuration"> | number
+    Autorise_Arret_Bouton_Stop?: BoolFilter<"t_vigilog_configuration"> | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFilter<"t_vigilog_configuration"> | boolean
     Actif?: BoolFilter<"t_vigilog_configuration"> | boolean
     Id_Utilisateur_Creation?: IntNullableFilter<"t_vigilog_configuration"> | number | null
     Date_Heure_Creation?: DateTimeFilter<"t_vigilog_configuration"> | Date | string
@@ -64796,6 +64885,9 @@ export namespace Prisma {
     Limite_Haute?: SortOrderInput | SortOrder
     Frequence_Min?: SortOrder
     Retard_Alarme_Min?: SortOrder
+    Delai_Demarrage_Min?: SortOrder
+    Autorise_Arret_Bouton_Stop?: SortOrder
+    Reinitialise_Avec_Bouton_Start?: SortOrder
     Actif?: SortOrder
     Id_Utilisateur_Creation?: SortOrderInput | SortOrder
     Date_Heure_Creation?: SortOrder
@@ -64822,6 +64914,9 @@ export namespace Prisma {
     Limite_Haute?: DecimalNullableWithAggregatesFilter<"t_vigilog_configuration"> | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntWithAggregatesFilter<"t_vigilog_configuration"> | number
     Retard_Alarme_Min?: IntWithAggregatesFilter<"t_vigilog_configuration"> | number
+    Delai_Demarrage_Min?: IntWithAggregatesFilter<"t_vigilog_configuration"> | number
+    Autorise_Arret_Bouton_Stop?: BoolWithAggregatesFilter<"t_vigilog_configuration"> | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolWithAggregatesFilter<"t_vigilog_configuration"> | boolean
     Actif?: BoolWithAggregatesFilter<"t_vigilog_configuration"> | boolean
     Id_Utilisateur_Creation?: IntNullableWithAggregatesFilter<"t_vigilog_configuration"> | number | null
     Date_Heure_Creation?: DateTimeWithAggregatesFilter<"t_vigilog_configuration"> | Date | string
@@ -64957,6 +65052,9 @@ export namespace Prisma {
     Limite_Haute?: DecimalNullableFilter<"t_vigilog_tournee"> | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFilter<"t_vigilog_tournee"> | number
     Retard_Alarme_Min?: IntFilter<"t_vigilog_tournee"> | number
+    Delai_Demarrage_Min?: IntFilter<"t_vigilog_tournee"> | number
+    Autorise_Arret_Bouton_Stop?: BoolFilter<"t_vigilog_tournee"> | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFilter<"t_vigilog_tournee"> | boolean
     Nb_Mesures?: IntFilter<"t_vigilog_tournee"> | number
     Temperature_Min?: DecimalNullableFilter<"t_vigilog_tournee"> | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: DecimalNullableFilter<"t_vigilog_tournee"> | Decimal | DecimalJsLike | number | string | null
@@ -65003,6 +65101,9 @@ export namespace Prisma {
     Limite_Haute?: SortOrderInput | SortOrder
     Frequence_Min?: SortOrder
     Retard_Alarme_Min?: SortOrder
+    Delai_Demarrage_Min?: SortOrder
+    Autorise_Arret_Bouton_Stop?: SortOrder
+    Reinitialise_Avec_Bouton_Start?: SortOrder
     Nb_Mesures?: SortOrder
     Temperature_Min?: SortOrderInput | SortOrder
     Temperature_Moyenne?: SortOrderInput | SortOrder
@@ -65053,6 +65154,9 @@ export namespace Prisma {
     Limite_Haute?: DecimalNullableFilter<"t_vigilog_tournee"> | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFilter<"t_vigilog_tournee"> | number
     Retard_Alarme_Min?: IntFilter<"t_vigilog_tournee"> | number
+    Delai_Demarrage_Min?: IntFilter<"t_vigilog_tournee"> | number
+    Autorise_Arret_Bouton_Stop?: BoolFilter<"t_vigilog_tournee"> | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFilter<"t_vigilog_tournee"> | boolean
     Nb_Mesures?: IntFilter<"t_vigilog_tournee"> | number
     Temperature_Min?: DecimalNullableFilter<"t_vigilog_tournee"> | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: DecimalNullableFilter<"t_vigilog_tournee"> | Decimal | DecimalJsLike | number | string | null
@@ -65099,6 +65203,9 @@ export namespace Prisma {
     Limite_Haute?: SortOrderInput | SortOrder
     Frequence_Min?: SortOrder
     Retard_Alarme_Min?: SortOrder
+    Delai_Demarrage_Min?: SortOrder
+    Autorise_Arret_Bouton_Stop?: SortOrder
+    Reinitialise_Avec_Bouton_Start?: SortOrder
     Nb_Mesures?: SortOrder
     Temperature_Min?: SortOrderInput | SortOrder
     Temperature_Moyenne?: SortOrderInput | SortOrder
@@ -65146,6 +65253,9 @@ export namespace Prisma {
     Limite_Haute?: DecimalNullableWithAggregatesFilter<"t_vigilog_tournee"> | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntWithAggregatesFilter<"t_vigilog_tournee"> | number
     Retard_Alarme_Min?: IntWithAggregatesFilter<"t_vigilog_tournee"> | number
+    Delai_Demarrage_Min?: IntWithAggregatesFilter<"t_vigilog_tournee"> | number
+    Autorise_Arret_Bouton_Stop?: BoolWithAggregatesFilter<"t_vigilog_tournee"> | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolWithAggregatesFilter<"t_vigilog_tournee"> | boolean
     Nb_Mesures?: IntWithAggregatesFilter<"t_vigilog_tournee"> | number
     Temperature_Min?: DecimalNullableWithAggregatesFilter<"t_vigilog_tournee"> | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: DecimalNullableWithAggregatesFilter<"t_vigilog_tournee"> | Decimal | DecimalJsLike | number | string | null
@@ -69374,6 +69484,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Actif?: boolean
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
@@ -69393,6 +69506,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Actif?: boolean
     Id_Utilisateur_Creation?: number | null
     Date_Heure_Creation?: Date | string
@@ -69411,6 +69527,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Actif?: BoolFieldUpdateOperationsInput | boolean
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -69430,6 +69549,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Actif?: BoolFieldUpdateOperationsInput | boolean
     Id_Utilisateur_Creation?: NullableIntFieldUpdateOperationsInput | number | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -69449,6 +69571,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Actif?: boolean
     Id_Utilisateur_Creation?: number | null
     Date_Heure_Creation?: Date | string
@@ -69466,6 +69591,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Actif?: BoolFieldUpdateOperationsInput | boolean
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -69482,6 +69610,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Actif?: BoolFieldUpdateOperationsInput | boolean
     Id_Utilisateur_Creation?: NullableIntFieldUpdateOperationsInput | number | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -69624,6 +69755,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -69669,6 +69803,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -69701,6 +69838,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -69746,6 +69886,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -69785,6 +69928,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -69817,6 +69963,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -69855,6 +70004,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -73282,6 +73434,9 @@ export namespace Prisma {
     Limite_Haute?: SortOrder
     Frequence_Min?: SortOrder
     Retard_Alarme_Min?: SortOrder
+    Delai_Demarrage_Min?: SortOrder
+    Autorise_Arret_Bouton_Stop?: SortOrder
+    Reinitialise_Avec_Bouton_Start?: SortOrder
     Actif?: SortOrder
     Id_Utilisateur_Creation?: SortOrder
     Date_Heure_Creation?: SortOrder
@@ -73296,6 +73451,7 @@ export namespace Prisma {
     Limite_Haute?: SortOrder
     Frequence_Min?: SortOrder
     Retard_Alarme_Min?: SortOrder
+    Delai_Demarrage_Min?: SortOrder
     Id_Utilisateur_Creation?: SortOrder
     Id_Utilisateur_Maj?: SortOrder
   }
@@ -73311,6 +73467,9 @@ export namespace Prisma {
     Limite_Haute?: SortOrder
     Frequence_Min?: SortOrder
     Retard_Alarme_Min?: SortOrder
+    Delai_Demarrage_Min?: SortOrder
+    Autorise_Arret_Bouton_Stop?: SortOrder
+    Reinitialise_Avec_Bouton_Start?: SortOrder
     Actif?: SortOrder
     Id_Utilisateur_Creation?: SortOrder
     Date_Heure_Creation?: SortOrder
@@ -73329,6 +73488,9 @@ export namespace Prisma {
     Limite_Haute?: SortOrder
     Frequence_Min?: SortOrder
     Retard_Alarme_Min?: SortOrder
+    Delai_Demarrage_Min?: SortOrder
+    Autorise_Arret_Bouton_Stop?: SortOrder
+    Reinitialise_Avec_Bouton_Start?: SortOrder
     Actif?: SortOrder
     Id_Utilisateur_Creation?: SortOrder
     Date_Heure_Creation?: SortOrder
@@ -73343,6 +73505,7 @@ export namespace Prisma {
     Limite_Haute?: SortOrder
     Frequence_Min?: SortOrder
     Retard_Alarme_Min?: SortOrder
+    Delai_Demarrage_Min?: SortOrder
     Id_Utilisateur_Creation?: SortOrder
     Id_Utilisateur_Maj?: SortOrder
   }
@@ -73479,6 +73642,9 @@ export namespace Prisma {
     Limite_Haute?: SortOrder
     Frequence_Min?: SortOrder
     Retard_Alarme_Min?: SortOrder
+    Delai_Demarrage_Min?: SortOrder
+    Autorise_Arret_Bouton_Stop?: SortOrder
+    Reinitialise_Avec_Bouton_Start?: SortOrder
     Nb_Mesures?: SortOrder
     Temperature_Min?: SortOrder
     Temperature_Moyenne?: SortOrder
@@ -73509,6 +73675,7 @@ export namespace Prisma {
     Limite_Haute?: SortOrder
     Frequence_Min?: SortOrder
     Retard_Alarme_Min?: SortOrder
+    Delai_Demarrage_Min?: SortOrder
     Nb_Mesures?: SortOrder
     Temperature_Min?: SortOrder
     Temperature_Moyenne?: SortOrder
@@ -73540,6 +73707,9 @@ export namespace Prisma {
     Limite_Haute?: SortOrder
     Frequence_Min?: SortOrder
     Retard_Alarme_Min?: SortOrder
+    Delai_Demarrage_Min?: SortOrder
+    Autorise_Arret_Bouton_Stop?: SortOrder
+    Reinitialise_Avec_Bouton_Start?: SortOrder
     Nb_Mesures?: SortOrder
     Temperature_Min?: SortOrder
     Temperature_Moyenne?: SortOrder
@@ -73579,6 +73749,9 @@ export namespace Prisma {
     Limite_Haute?: SortOrder
     Frequence_Min?: SortOrder
     Retard_Alarme_Min?: SortOrder
+    Delai_Demarrage_Min?: SortOrder
+    Autorise_Arret_Bouton_Stop?: SortOrder
+    Reinitialise_Avec_Bouton_Start?: SortOrder
     Nb_Mesures?: SortOrder
     Temperature_Min?: SortOrder
     Temperature_Moyenne?: SortOrder
@@ -73609,6 +73782,7 @@ export namespace Prisma {
     Limite_Haute?: SortOrder
     Frequence_Min?: SortOrder
     Retard_Alarme_Min?: SortOrder
+    Delai_Demarrage_Min?: SortOrder
     Nb_Mesures?: SortOrder
     Temperature_Min?: SortOrder
     Temperature_Moyenne?: SortOrder
@@ -80587,6 +80761,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -80630,6 +80807,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -80672,6 +80852,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -80715,6 +80898,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -80825,6 +81011,9 @@ export namespace Prisma {
     Limite_Haute?: DecimalNullableFilter<"t_vigilog_tournee"> | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFilter<"t_vigilog_tournee"> | number
     Retard_Alarme_Min?: IntFilter<"t_vigilog_tournee"> | number
+    Delai_Demarrage_Min?: IntFilter<"t_vigilog_tournee"> | number
+    Autorise_Arret_Bouton_Stop?: BoolFilter<"t_vigilog_tournee"> | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFilter<"t_vigilog_tournee"> | boolean
     Nb_Mesures?: IntFilter<"t_vigilog_tournee"> | number
     Temperature_Min?: DecimalNullableFilter<"t_vigilog_tournee"> | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: DecimalNullableFilter<"t_vigilog_tournee"> | Decimal | DecimalJsLike | number | string | null
@@ -81592,6 +81781,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Actif?: boolean
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
@@ -81610,6 +81802,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Actif?: boolean
     Date_Heure_Creation?: Date | string
     Id_Utilisateur_Maj?: number | null
@@ -81637,6 +81832,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Actif?: boolean
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
@@ -81655,6 +81853,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Actif?: boolean
     Id_Utilisateur_Creation?: number | null
     Date_Heure_Creation?: Date | string
@@ -81687,6 +81888,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -81731,6 +81935,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -81772,6 +81979,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -81815,6 +82025,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -81857,6 +82070,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -81900,6 +82116,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -82047,6 +82266,9 @@ export namespace Prisma {
     Limite_Haute?: DecimalNullableFilter<"t_vigilog_configuration"> | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFilter<"t_vigilog_configuration"> | number
     Retard_Alarme_Min?: IntFilter<"t_vigilog_configuration"> | number
+    Delai_Demarrage_Min?: IntFilter<"t_vigilog_configuration"> | number
+    Autorise_Arret_Bouton_Stop?: BoolFilter<"t_vigilog_configuration"> | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFilter<"t_vigilog_configuration"> | boolean
     Actif?: BoolFilter<"t_vigilog_configuration"> | boolean
     Id_Utilisateur_Creation?: IntNullableFilter<"t_vigilog_configuration"> | number | null
     Date_Heure_Creation?: DateTimeFilter<"t_vigilog_configuration"> | Date | string
@@ -84261,6 +84483,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -84304,6 +84529,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -84514,6 +84742,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -84557,6 +84788,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -84648,6 +84882,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Actif?: boolean
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
@@ -84666,6 +84903,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Actif?: boolean
     Id_Utilisateur_Creation?: number | null
     Date_Heure_Creation?: Date | string
@@ -85005,6 +85245,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Actif?: BoolFieldUpdateOperationsInput | boolean
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -85023,6 +85266,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Actif?: BoolFieldUpdateOperationsInput | boolean
     Id_Utilisateur_Creation?: NullableIntFieldUpdateOperationsInput | number | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -87418,6 +87664,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -87456,6 +87705,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -87772,6 +88024,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -87815,6 +88070,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -87853,6 +88111,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -87885,6 +88146,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -87928,6 +88192,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -87966,6 +88233,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -88826,6 +89096,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Actif?: boolean
     Date_Heure_Creation?: Date | string
     Id_Utilisateur_Maj?: number | null
@@ -88843,6 +89116,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Actif?: boolean
     Id_Utilisateur_Creation?: number | null
     Date_Heure_Creation?: Date | string
@@ -88871,6 +89147,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -88908,6 +89187,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -88946,6 +89228,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -89107,6 +89392,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Actif?: BoolFieldUpdateOperationsInput | boolean
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -89125,6 +89413,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Actif?: BoolFieldUpdateOperationsInput | boolean
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Id_Utilisateur_Maj?: NullableIntFieldUpdateOperationsInput | number | null
@@ -89143,6 +89434,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Actif?: BoolFieldUpdateOperationsInput | boolean
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Id_Utilisateur_Maj?: NullableIntFieldUpdateOperationsInput | number | null
@@ -89159,6 +89453,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Actif?: BoolFieldUpdateOperationsInput | boolean
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -89177,6 +89474,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Actif?: BoolFieldUpdateOperationsInput | boolean
     Id_Utilisateur_Creation?: NullableIntFieldUpdateOperationsInput | number | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -89195,6 +89495,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Actif?: BoolFieldUpdateOperationsInput | boolean
     Id_Utilisateur_Creation?: NullableIntFieldUpdateOperationsInput | number | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -89216,6 +89519,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -89260,6 +89566,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -89298,6 +89607,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -89329,6 +89641,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -89372,6 +89687,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -89410,6 +89728,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -89442,6 +89763,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -89485,6 +89809,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -89523,6 +89850,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -89895,6 +90225,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -89927,6 +90260,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -89970,6 +90306,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -90008,6 +90347,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -90046,6 +90388,9 @@ export namespace Prisma {
     Limite_Haute?: Decimal | DecimalJsLike | number | string | null
     Frequence_Min: number
     Retard_Alarme_Min: number
+    Delai_Demarrage_Min?: number
+    Autorise_Arret_Bouton_Stop?: boolean
+    Reinitialise_Avec_Bouton_Start?: boolean
     Nb_Mesures?: number
     Temperature_Min?: Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: Decimal | DecimalJsLike | number | string | null
@@ -90078,6 +90423,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -90121,6 +90469,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
@@ -90159,6 +90510,9 @@ export namespace Prisma {
     Limite_Haute?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Frequence_Min?: IntFieldUpdateOperationsInput | number
     Retard_Alarme_Min?: IntFieldUpdateOperationsInput | number
+    Delai_Demarrage_Min?: IntFieldUpdateOperationsInput | number
+    Autorise_Arret_Bouton_Stop?: BoolFieldUpdateOperationsInput | boolean
+    Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures?: IntFieldUpdateOperationsInput | number
     Temperature_Min?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
     Temperature_Moyenne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null

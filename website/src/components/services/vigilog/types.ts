@@ -9,6 +9,9 @@ export type VigilogConfiguration = {
   highLimit: number | null
   frequencyMinutes: number
   alarmDelayMinutes: number
+  startDelayMinutes: number
+  stopButtonEnabled: boolean
+  resetWithStartEnabled: boolean
   active: boolean
   createdAt: string
   updatedAt: string | null
@@ -49,6 +52,9 @@ export type VigilogTournee = {
   highLimit: number | null
   frequencyMinutes: number
   alarmDelayMinutes: number
+  startDelayMinutes: number
+  stopButtonEnabled: boolean
+  resetWithStartEnabled: boolean
   measurementCount: number
   temperatureMin: number | null
   temperatureAverage: number | null

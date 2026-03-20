@@ -183,14 +183,15 @@ export function GlobalAppEffects() {
       if (!isPublicRoute(pathname)) {
         const locale = resolveLocaleFromPathname(pathname)
         const localizedLoginPath = buildLocalizedPath("/login", locale)
+        const from = `${stripLocalePrefix(window.location.pathname)}${window.location.search || ""}`
 
         if (shouldShowSessionExpiredToast) {
           markDisconnectReason("inactivity")
         }
         if (shouldShowSessionExpiredToast) {
-          window.location.assign(buildLocalizedPath("/login", locale, { reason: "inactivity" }))
+          window.location.assign(buildLocalizedPath("/login", locale, { reason: "inactivity", from }))
         } else {
-          window.location.assign(localizedLoginPath)
+          window.location.assign(`${localizedLoginPath}?${new URLSearchParams({ from }).toString()}`)
         }
       }
     }

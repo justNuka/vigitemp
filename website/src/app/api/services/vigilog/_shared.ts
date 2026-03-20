@@ -35,6 +35,9 @@ export const vigilogConfigurationSchema = z.object({
   Limite_Haute: decimalSchema.nullable().optional(),
   Frequence_Min: positiveIntegerSchema,
   Retard_Alarme_Min: positiveIntegerSchema,
+  Delai_Demarrage_Min: z.coerce.number().int().min(0).max(1440).default(0),
+  Autorise_Arret_Bouton_Stop: z.coerce.boolean().default(true),
+  Reinitialise_Avec_Bouton_Start: z.coerce.boolean().default(true),
   Actif: z.coerce.boolean().default(true),
 }).superRefine((value, ctx) => {
   if (value.Limite_Basse_Active && value.Limite_Basse == null) {

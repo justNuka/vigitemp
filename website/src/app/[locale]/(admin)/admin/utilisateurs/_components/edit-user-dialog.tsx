@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { TemporaryMemoryControls } from "@/components/form/temporary-memory-controls";
 import { Input } from "@/components/ui/input";
 import {
   Form,
@@ -79,6 +80,7 @@ export function EditUserDialog({
   onReactivate,
 }: Props) {
   const t = useTranslations("editUserDialog");
+  const tCommon = useTranslations("common");
   const userId = user?.id;
   const isArchived = Boolean(user && !user.isActive);
   const editForm = useForm<EditUserFormValues>({
@@ -126,6 +128,7 @@ export function EditUserDialog({
         .filter((id: any) => typeof id === "number") as number[],
     [assignedGroups],
   );
+  const memoryKey = `edit-user-form:${userId ?? "unknown"}`;
 
   useEffect(() => {
     if (!open || !user) return;
@@ -165,6 +168,17 @@ export function EditUserDialog({
 
         <Form {...editForm}>
           <form onSubmit={editForm.handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
+            <TemporaryMemoryControls
+              form={editForm}
+              storageKey={memoryKey}
+              resetValues={editForm.getValues()}
+              labels={{
+                save: tCommon('temporary_memory.save'),
+                restore: tCommon('temporary_memory.restore'),
+                clear: tCommon('temporary_memory.clear'),
+                saved: tCommon('temporary_memory.saved'),
+              }}
+            />
             {isArchived ? (
               <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
                 {t("archived_notice")}

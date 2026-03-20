@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { TemporaryMemoryControls } from "@/components/form/temporary-memory-controls";
 import { Input } from "@/components/ui/input";
 import {
   Form,
@@ -75,6 +76,7 @@ export function CreateUserDialog({
   onSubmit,
 }: Props) {
   const t = useTranslations("createUserDialog");
+  const tCommon = useTranslations("common");
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
@@ -99,6 +101,7 @@ export function CreateUserDialog({
 
   const hasExpiryDate = form.watch("hasExpiryDate");
   const currentPassword = form.watch("password");
+  const memoryKey = "create-user-form:new";
 
   const validation = useMemo(
     () => (rules ? validatePassword(currentPassword, rules as any) : null),
@@ -142,6 +145,31 @@ export function CreateUserDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
+            <TemporaryMemoryControls
+              form={form}
+              storageKey={memoryKey}
+              resetValues={{
+                username: "",
+                password: "",
+                passwordConfirm: "",
+                nom: "",
+                prenom: "",
+                email: "",
+                profileId: "",
+                telephone: "",
+                siteIds: [],
+                groupeIds: [],
+                hasExpiryDate: false,
+                expiryDate: undefined,
+                avatar: "",
+              } as CreateUserFormValues}
+              labels={{
+                save: tCommon('temporary_memory.save'),
+                restore: tCommon('temporary_memory.restore'),
+                clear: tCommon('temporary_memory.clear'),
+                saved: tCommon('temporary_memory.saved'),
+              }}
+            />
             <UserNameFields control={form.control} />
             <UserEmailField control={form.control} />
             <UserUsernameField control={form.control} />

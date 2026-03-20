@@ -9,6 +9,7 @@ import { useTranslations } from 'next-intl';
 import { showFormValidationToast } from '@/lib/form-toast';
 import { getAuthorizationDomain } from '@/lib/authorization-domain';
 import { Button } from '@/components/ui/button';
+import { TemporaryMemoryControls } from '@/components/form/temporary-memory-controls';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -149,6 +150,7 @@ export function ProfileDialog({
 
   const selectedAuthorizations = form.watch('authorizations') || [];
   const profileName = form.watch('name');
+  const memoryKey = `profile-form:${mode}:${initialValues.name || 'new'}`;
   const domainLabels = {
     administration: t('domains.administration'),
     metrology: t('domains.metrology'),
@@ -174,6 +176,17 @@ export function ProfileDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
+            <TemporaryMemoryControls
+              form={form}
+              storageKey={memoryKey}
+              resetValues={initialValues}
+              labels={{
+                save: tCommon('temporary_memory.save'),
+                restore: tCommon('temporary_memory.restore'),
+                clear: tCommon('temporary_memory.clear'),
+                saved: tCommon('temporary_memory.saved'),
+              }}
+            />
             <FormField
               control={form.control}
               name="name"

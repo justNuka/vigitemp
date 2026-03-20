@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { showFormValidationToast } from '@/lib/form-toast';
 import type { CreateSiteInput } from './site-schemas';
 import { Button } from '@/components/ui/button';
+import { TemporaryMemoryControls } from '@/components/form/temporary-memory-controls';
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,7 @@ export function CreateSiteDialog({
 }: CreateSiteDialogProps) {
   const t = useTranslations('sitesDialog');
   const tCommon = useTranslations('common');
+  const memoryKey = 'create-site-form:new';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -52,6 +54,17 @@ export function CreateSiteDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit, (errors) => showFormValidationToast(errors))} className="space-y-4">
+            <TemporaryMemoryControls
+              form={form}
+              storageKey={memoryKey}
+              resetValues={{ Code_Site: '', Libelle_Site: '', Commentaire: '' }}
+              labels={{
+                save: tCommon('temporary_memory.save'),
+                restore: tCommon('temporary_memory.restore'),
+                clear: tCommon('temporary_memory.clear'),
+                saved: tCommon('temporary_memory.saved'),
+              }}
+            />
             <FormField
               control={form.control}
               name="Code_Site"

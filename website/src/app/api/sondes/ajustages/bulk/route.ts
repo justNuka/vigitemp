@@ -7,7 +7,7 @@ import { withAuthLogging } from "@/lib/api-wrappers";
 import { log } from "@/lib/logger";
 import {
   expandRelatedGsoSerials,
-  extractAddressFromSerial,
+  extractProbeAddressFromSerial,
   isGsoType,
   normalizeImportedGsoSerial,
 } from "@/lib/sensor-naming";
@@ -189,7 +189,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
             const gso = isGsoType(serial);
             return {
               Sonde_Numero_Serie: serial,
-              Adresse_Sonde: gso ? extractAddressFromSerial(serial) : serial,
+              Adresse_Sonde: extractProbeAddressFromSerial(serial),
               Est_Sonde_GSO: gso,
               Surveillance_Etat: "D",
               Sonde_Offset: 0,

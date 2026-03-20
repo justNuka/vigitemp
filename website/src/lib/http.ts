@@ -1,4 +1,4 @@
-import { buildLocalizedPath, resolveLocaleFromPathname } from "@/i18n/pathnames"
+import { buildLocalizedPath, resolveLocaleFromPathname, stripLocalePrefix } from "@/i18n/pathnames"
 
 export type HttpErrorPayload = {
   ok?: false
@@ -64,7 +64,8 @@ function getLocaleAwareLoginPath(reason: "session-expired" | "inactivity") {
 
   const pathname = window.location.pathname || "/"
   const locale = resolveLocaleFromPathname(pathname)
-  return buildLocalizedPath("/login", locale, { reason })
+  const from = `${stripLocalePrefix(pathname)}${window.location.search || ""}`
+  return buildLocalizedPath("/login", locale, { reason, from })
 }
 
 function isPublicAppPath(pathname: string) {

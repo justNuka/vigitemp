@@ -22,7 +22,13 @@
     "license_one": "Licence One",
     "license_prefix": "License",
     "license_unknown": "Unknown license",
-    "license_invalid": "Invalid license"
+    "license_invalid": "Invalid license",
+    "temporary_memory": {
+      "save": "Temporarily save data",
+      "restore": "Restore saved data",
+      "clear": "Clear data",
+      "saved": "Temporary data available"
+    }
   },
   "dateRangePicker": {
     "selectRange": "Select a range",
@@ -235,12 +241,12 @@
       "loading": "Refreshing..."
     },
     "filters": {
-      "type_label": "Alarm type",
-      "all": "All",
-      "high": "High",
-      "low": "Low",
-      "no_response": "No response",
-      "ended": "Ended"
+      "site": "Site",
+      "type": "Type",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "allSites": "All sites",
+      "allTypes": "All types"
     },
     "toast": {
       "na": "-",
@@ -250,14 +256,6 @@
     },
     "validation": {
       "comment_max": "{max} characters maximum"
-    },
-    "filters": {
-      "site": "Site",
-      "type": "Type",
-      "dateFrom": "Start date",
-      "dateTo": "End date",
-      "allSites": "All sites",
-      "allTypes": "All types"
     },
     "table": {
       "search_placeholder": "Search alarms...",
@@ -540,6 +538,12 @@
       },
       "submit": {
         "saving": "Saving..."
+      },
+      "temporary_memory": {
+        "save": "Temporarily save data",
+        "restore": "Restore saved data",
+        "clear": "Clear data",
+        "saved": "Temporary data available"
       }
     },
     "general": {
@@ -741,7 +745,13 @@
         "emtModeUncertainties": "Uncertainties",
         "emtModeSansObjet": "Not applicable",
         "labelRetardChangementConsigne": "Setpoint change delay (min)",
-        "placeholderRetardChangementConsigne": "0"
+        "placeholderRetardChangementConsigne": "0",
+        "temporaryMemory": {
+          "save": "Temporarily save data",
+          "restore": "Restore saved data",
+          "clear": "Clear data",
+          "saved": "Temporary data available"
+        }
       },
       "deleteConfirm": {
         "title": "Delete rule",
@@ -1135,12 +1145,8 @@
       "unknown": "Unknown action ({code})"
     },
     "filters": {
-      "site": "Site",
-      "type": "Type",
-      "dateFrom": "Start date",
-      "dateTo": "End date",
-      "allSites": "All sites",
-      "allTypes": "All types"
+      "code_all": "All codes",
+      "code_placeholder": "Action code"
     },
     "table": {
       "columns": {
@@ -1161,10 +1167,6 @@
       "to": "To: {value}",
       "action": "Action: {action}",
       "ip": "IP: {ip}"
-    },
-    "filters": {
-      "code_all": "All codes",
-      "code_placeholder": "Action code"
     }
   },
   "profilePage": {
@@ -3166,14 +3168,14 @@
       "title": "License comparison table",
       "subtitle": "Choose the level that matches your needs.",
       "filters": {
-      "site": "Site",
-      "type": "Type",
-      "dateFrom": "Start date",
-      "dateTo": "End date",
-      "allSites": "All sites",
-      "allTypes": "All types"
-    },
-    "table": {
+        "site": "Site",
+        "type": "Type",
+        "dateFrom": "Start date",
+        "dateTo": "End date",
+        "allSites": "All sites",
+        "allTypes": "All types"
+      },
+      "table": {
         "feature": "Feature",
         "pack": "Pack",
         "one": "One",
@@ -3770,7 +3772,7 @@
     },
     "security": {
       "title": "Security",
-      "description": "After a hotline operation, sign out from the session."
+      "description": "After each hotline operation, sign out of the session and do not save any access credentials, in order to prevent unauthorized access to the tools."
     }
   },
   "hotlineDashboard": {
@@ -4309,6 +4311,7 @@
     },
     "tabs": {
       "movements": "Departure / Arrival",
+      "usage": "Spot use",
       "configurations": "Configurations",
       "history": "History",
       "loggers": "Loggers"
@@ -4350,6 +4353,7 @@
       },
       "actions": {
         "submit": "Create run",
+        "prepareLogger": "Prepare VigiLog",
         "detectLogger": "Detect VigiLog on dock",
         "refreshLogger": "Refresh"
       },
@@ -4374,7 +4378,8 @@
         "errorTitle": "VigiLog status unavailable",
         "errorDescription": "Unable to verify the VigiLog cradle status.",
         "busyTitle": "VigiLog communication in progress",
-        "busyDescription": "The cradle is already being used for a VigiLog operation. Wait until preparation or reading has finished."
+        "busyDescription": "The cradle is already being used for a VigiLog operation. Wait until preparation or reading has finished.",
+        "optionalHint": "Run creation remains available without a USB cradle. Preparing the VigiLog on the cradle is a separate action."
       }
     },
     "arrival": {
@@ -4406,8 +4411,32 @@
       },
       "emptyTitle": "No pending run",
       "emptyDescription": "Create a departure first or wait for a logger return.",
+      "warnings": {
+        "noLoggerTitle": "A VigiLog must be placed on the cradle",
+        "noLoggerDescription": "Place the expected VigiLog on the USB cradle before confirming arrival.",
+        "mismatchTitle": "Wrong VigiLog detected",
+        "mismatchDescription": "This run expects VigiLog {expected}, but the cradle currently detects {detected}."
+      },
       "actions": {
         "submit": "Confirm arrival"
+      }
+    },
+    "usage": {
+      "title": "Spot use",
+      "description": "Prepare a VigiLog for temporary monitoring without creating a run.",
+      "infoTitle": "Standalone mode",
+      "infoDescription": "This action loads a configuration onto the detected VigiLog without creating a run record in history.",
+      "fields": {
+        "configuration": "Configuration",
+        "loggerSerial": "Logger serial number",
+        "note": "Local note"
+      },
+      "placeholders": {
+        "note": "Useful information for this temporary use"
+      },
+      "noteHint": "This note is only informational in the interface. It is not stored in the database yet.",
+      "actions": {
+        "prepare": "Prepare the VigiLog"
       }
     },
     "config": {
@@ -4427,7 +4456,15 @@
         "highLimitActive": "High limit",
         "frequencyMinutes": "Frequency (min)",
         "alarmDelayMinutes": "Alarm delay (min)",
+        "startDelayMinutes": "Start delay (min)",
+        "stopButtonEnabled": "Allow Stop button to stop",
+        "resetWithStartEnabled": "Reset with Start button",
         "active": "Active configuration"
+      },
+      "advanced": {
+        "title": "Advanced options",
+        "stopHint": "Allows the user to stop recording with the Stop button.",
+        "resetHint": "Allows the logger to be reset and reused with the Start button."
       },
       "actions": {
         "create": "New configuration",
@@ -4466,7 +4503,8 @@
       "actions": {
         "receive": "Receive",
         "acknowledge": "Acknowledge",
-        "details": "Details"
+        "details": "Details",
+        "cancelTour": "Cancel run"
       },
       "empty": "No run to display.",
       "alarm": "Alarm during {duration}",
@@ -4509,6 +4547,15 @@
       "departureError": {
         "title": "Creation failed",
         "description": "The VigiLog run could not be created."
+      },
+      "prepareSuccess": {
+        "title": "VigiLog prepared",
+        "description": "VigiLog {serial} has been prepared on the cradle.",
+        "fallback": "The VigiLog has been prepared on the cradle."
+      },
+      "prepareError": {
+        "title": "Preparation failed",
+        "description": "The VigiLog could not be prepared on the cradle."
       },
       "receiveSuccess": {
         "title": "Arrival confirmed",
@@ -4554,6 +4601,14 @@
       "loggerError": {
         "title": "Operation failed",
         "description": "The VigiLog could not be created or updated."
+      },
+      "cancelSuccess": {
+        "title": "Run cancelled",
+        "description": "The run has been cancelled and the VigiLog is available again."
+      },
+      "cancelError": {
+        "title": "Cancellation failed",
+        "description": "The run could not be cancelled."
       },
       "receiveSuccessEmpty": {
         "title": "Arrival confirmed without measurements",
@@ -4611,7 +4666,8 @@
       "noMeasurementsAlert": {
         "title": "No measurements imported",
         "description": "This run was received, but the VigiLog did not contain any usable measurements."
-      }
+      },
+      "export": "Export measures"
     },
     "loggers": {
       "title": "VigiLog registry",
@@ -4658,13 +4714,13 @@
       "title": "Prepare VigiLog",
       "description": "Choose whether the VigiLog should start automatically after preparation.",
       "runningDescription": "Preparing the VigiLog on the cradle.",
-      "manualHint": "The VigiLog will first be cleared and then reconfigured for the route. If you choose manual start, the user must start it directly on the device.",
-      "success": "Route {reference} has been prepared on the VigiLog.",
+      "manualHint": "The VigiLog will first be cleared and then reconfigured with the selected configuration. If you choose manual start, the user must start it directly on the device.",
+      "success": "VigiLog {serial} has been prepared on the cradle.",
       "autoStartAt": "Automatic start scheduled for {date}.",
       "manualStartDone": "The VigiLog is prepared. Start it manually on the device when ready.",
       "steps": {
         "resetMeasures": "Clear existing readings",
-        "applyConfiguration": "Apply route settings",
+        "applyConfiguration": "Apply configuration settings",
         "autoStart": "Start the VigiLog automatically",
         "manualStart": "Manual start by the user"
       },
@@ -4687,6 +4743,14 @@
       "actions": {
         "close": "Close"
       }
+    },
+    "cancelTour": {
+      "title": "Cancel run",
+      "description": "You are about to cancel run {reference} linked to VigiLog {serial}.",
+      "descriptionFallback": "You are about to cancel this run.",
+      "warningTitle": "Confirmation required",
+      "warningDescription": "Use this only if the run must be abandoned. The VigiLog will become available again in the application.",
+      "confirm": "Confirm cancellation"
     }
   }
 }

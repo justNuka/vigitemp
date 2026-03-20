@@ -53,8 +53,8 @@ namespace Vigitemp_Serveur.sensors
                 string response = await SendRequestAndReadAsync("TEMP", allowEmptyResponse: false);
                 if (string.IsNullOrWhiteSpace(response))
                 {
-                    VigitempServeur.Log($"[SONDE][WARN] type=GSP serial={m_sondeSerialNumber} no response on TEMP, retrying TEMP after 5s");
-                    await Task.Delay(5000);
+                    VigitempServeur.Log($"[SONDE][WARN] type=GSP serial={m_sondeSerialNumber} no response on TEMP, retrying TEMP after 10s");
+                    await Task.Delay(10000);
                     response = await SendRequestAndReadAsync("TEMP", allowEmptyResponse: false);
                 }
 

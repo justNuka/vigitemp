@@ -17,6 +17,7 @@ const gspSchema = z.object({
   customCommandPrefix: z.string().optional(),
   customPayload: z.string().optional(),
   rawCommand: z.string().optional(),
+  listenWindowMs: z.number().int().positive().nullable().optional(),
 }).optional()
 
 const bodySchema = z.object({

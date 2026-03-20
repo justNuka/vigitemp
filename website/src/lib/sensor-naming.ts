@@ -1,4 +1,5 @@
 const DUAL_GSO_TYPES = new Set(["SOIH", "SOEH", "SOIT"]);
+const PREFIX_STRIPPED_ADDRESS_TYPES = new Set(["IN", "IE", "IP", "IC", "IH", "EN"]);
 
 const normalizeType = (value: string) => value.trim().toUpperCase().replace(/-+$/g, "");
 const normalizeSerial = (value: string) => value.trim().toUpperCase();
@@ -15,6 +16,23 @@ export const extractAddressFromSerial = (serial: string) => {
   const firstDash = normalized.indexOf("-");
   if (firstDash < 0) return normalized;
   return normalized.slice(firstDash + 1);
+};
+
+export const extractProbeAddressFromSerial = (serial: string) => {
+  const normalized = normalizeSerial(serial);
+  const gsoAddress = extractAddressFromSerial(normalized);
+  const dashIndex = normalized.indexOf("-");
+  const type = dashIndex >= 0 ? normalizeType(normalized.slice(0, dashIndex)) : normalizeType(normalized.slice(0, 2));
+
+  if (isGsoType(type)) {
+    return gsoAddress;
+  }
+
+  if (PREFIX_STRIPPED_ADDRESS_TYPES.has(type) && normalized.length > type.length) {
+    return normalized.slice(type.length);
+  }
+
+  return normalized;
 };
 
 const stripGsoSuffix = (value: string) => value.replace(/-(T|H)$/i, "");

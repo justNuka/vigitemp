@@ -101,12 +101,9 @@ namespace Vigitemp_Serveur.sensors
         internal static IEnumerable<string> BuildCandidateCommands(string command)
         {
             var baseCommand = command ?? string.Empty;
-            yield return baseCommand;
-
-            if (!baseCommand.EndsWith(" ", StringComparison.Ordinal))
-            {
-                yield return baseCommand + " ";
-            }
+            yield return baseCommand.EndsWith(" ", StringComparison.Ordinal)
+                ? baseCommand
+                : baseCommand + " ";
         }
 
         internal static string BuildCommand(string prefix, string target, string payload)
@@ -142,6 +139,34 @@ namespace Vigitemp_Serveur.sensors
                 return true;
             }
 
+            var serialMatches = Regex.Matches(response, @"(?:^|\r?\n)\s*Serial\s*=\s*([A-Z0-9\-]+)\s*(?:\r?\n|$)", RegexOptions.IgnoreCase);
+            if (serialMatches.Count > 0)
+            {
+                var normalizedTarget = target.Trim().ToUpperInvariant();
+                var hasMatchingSerial = serialMatches
+                    .Cast<Match>()
+                    .Select(match => (match.Groups[1].Value ?? string.Empty).Trim().ToUpperInvariant())
+                    .Any(serial => string.Equals(serial, normalizedTarget, StringComparison.OrdinalIgnoreCase));
+
+                if (!hasMatchingSerial)
+                {
+                    return false;
+                }
+            }
+
+            var temperatureMatches = Regex.Matches(response, @"(?:^|\r?\n)\s*Temperature\s*=\s*(-?\d+(?:[.,]\d+)?)\s*(?:\r?\n|$)", RegexOptions.IgnoreCase);
+            for (var i = temperatureMatches.Count - 1; i >= 0; i--)
+            {
+                var candidate = temperatureMatches[i].Groups[1].Value.Replace(',', '.');
+                if (!double.TryParse(candidate, NumberStyles.Float | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var parsed))
+                {
+                    continue;
+                }
+
+                temperature = parsed;
+                return true;
+            }
+
             return false;
         }
 
@@ -156,6 +181,11 @@ namespace Vigitemp_Serveur.sensors
                 .Cast<Match>()
                 .Where(match => match.Success && match.Groups.Count >= 2)
                 .Select(match => (match.Groups[1].Value ?? string.Empty).Trim().ToUpperInvariant())
+                .Concat(
+                    Regex.Matches(response, @"(?:^|\r?\n)\s*Serial\s*=\s*([A-Z0-9\-]+)\s*(?:\r?\n|$)", RegexOptions.IgnoreCase)
+                        .Cast<Match>()
+                        .Where(match => match.Success && match.Groups.Count >= 2)
+                        .Select(match => (match.Groups[1].Value ?? string.Empty).Trim().ToUpperInvariant()))
                 .Where(serial => !string.IsNullOrWhiteSpace(serial))
                 .Distinct()
                 .ToList();

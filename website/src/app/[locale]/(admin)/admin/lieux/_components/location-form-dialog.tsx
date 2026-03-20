@@ -6,6 +6,7 @@ import type { Module } from '@/hooks/useModules';
 import type { SiteSimple } from '@/hooks/useSites';
 import type { MailingUser } from '@/hooks/useUsersForMailing';
 import { Button } from '@/components/ui/button';
+import { TemporaryMemoryControls } from '@/components/form/temporary-memory-controls';
 import {
   Dialog,
   DialogContent,
@@ -75,6 +76,8 @@ export function LocationFormDialog({
   const resolvedForm = form ?? internalForm;
   const hasChanges = open && resolvedForm.formState.isDirty;
   const handleSubmit = resolvedForm.handleSubmit(onSubmit, (errors) => showFormValidationToast(errors));
+  const memoryKey = `location-form:${mode}:${resolvedForm.watch('Id_Lieu') ?? 'new'}`;
+  const resetValues = (resolvedForm.getValues() as LocationFormData) ?? getDefaultLocationFormData();
 
   useEffect(() => {
     if (!open || form || !formData) return;
@@ -112,14 +115,25 @@ export function LocationFormDialog({
         if (!nextOpen) onCancel();
       }}
     >
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white p-0 dark:bg-card">
+      <DialogContent className="max-w-4xl xl:max-w-5xl max-h-[96vh] overflow-y-auto bg-white p-0 dark:bg-card">
         <DialogHeader className="px-6 pt-6">
           <DialogTitle>{isEdit ? t('title_edit') : t('title_create')}</DialogTitle>
           <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
 
         <FormProvider {...resolvedForm}>
-          <form onSubmit={handleSubmit} className="space-y-6 px-6 pb-6">
+          <form onSubmit={handleSubmit} className="space-y-4 px-6 pb-6">
+            <TemporaryMemoryControls
+              form={resolvedForm}
+              storageKey={memoryKey}
+              resetValues={resetValues}
+              labels={{
+                save: t('temporary_memory.save'),
+                restore: t('temporary_memory.restore'),
+                clear: t('temporary_memory.clear'),
+                saved: t('temporary_memory.saved'),
+              }}
+            />
             <Tabs defaultValue="general" className="w-full">
               <TabsList
                 className={`grid w-full ${hasMetrologyTabs ? "grid-cols-4" : "grid-cols-2"} bg-[#26A5DA]/10 text-[#26A5DA] border border-[#26A5DA]/30`}

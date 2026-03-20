@@ -37,6 +37,7 @@ namespace Vigitemp_Serveur
             public string Channel { get; set; }
             public int? MemoryCount { get; set; }
             public string RawCommand { get; set; }
+            public int? ListenWindowMs { get; set; }
         }
 
         private sealed class SensorTestRequest
@@ -239,6 +240,7 @@ namespace Vigitemp_Serveur
                     Channel = (gspToken.Value<string>("channel") ?? string.Empty).Trim(),
                     MemoryCount = ValueOrNullInt(gspToken["memoryCount"]),
                     RawCommand = gspToken.Value<string>("rawCommand") ?? string.Empty,
+                    ListenWindowMs = ValueOrNullInt(gspToken["listenWindowMs"]),
                 }
             };
         }
@@ -253,7 +255,7 @@ namespace Vigitemp_Serveur
             };
 
             VigitempServeur.Log(string.Format(CultureInfo.InvariantCulture,
-                "Hotline sensor-test request: type={0}; serial={1}; action={2}; manualPort={3}; manualAddress={4}; manualModule={5}; baudRate={6}; parity={7}; dataBits={8}; stopBits={9}; readTimeoutMs={10}; writeTimeoutMs={11}",
+                "Hotline sensor-test request: type={0}; serial={1}; action={2}; manualPort={3}; manualAddress={4}; manualModule={5}; baudRate={6}; parity={7}; dataBits={8}; stopBits={9}; readTimeoutMs={10}; writeTimeoutMs={11}; listenWindowMs={12}",
                 request.SensorType ?? string.Empty,
                 request.Serial ?? string.Empty,
                 request.Action ?? string.Empty,
@@ -265,7 +267,8 @@ namespace Vigitemp_Serveur
                 request.DataBits.HasValue ? request.DataBits.Value.ToString(CultureInfo.InvariantCulture) : string.Empty,
                 request.StopBits ?? string.Empty,
                 request.ReadTimeoutMs.HasValue ? request.ReadTimeoutMs.Value.ToString(CultureInfo.InvariantCulture) : string.Empty,
-                request.WriteTimeoutMs.HasValue ? request.WriteTimeoutMs.Value.ToString(CultureInfo.InvariantCulture) : string.Empty));
+                request.WriteTimeoutMs.HasValue ? request.WriteTimeoutMs.Value.ToString(CultureInfo.InvariantCulture) : string.Empty,
+                request.Gsp != null && request.Gsp.ListenWindowMs.HasValue ? request.Gsp.ListenWindowMs.Value.ToString(CultureInfo.InvariantCulture) : string.Empty));
 
             try
             {
@@ -334,7 +337,7 @@ namespace Vigitemp_Serveur
                     foreach (var command in BuildGspSyncCommands(gsp, address))
                     {
                         result.RequestedCommand = GspProtocol.BuildCommand(command.Key, target, command.Value);
-                        var response = SendGspCommand(port, result, command.Key, target, command.Value, true);
+                        var response = SendGspCommand(port, result, command.Key, target, command.Value, true, gsp.ListenWindowMs);
                         if (!string.IsNullOrWhiteSpace(response))
                         {
                             result.RawValue = response;
@@ -350,7 +353,7 @@ namespace Vigitemp_Serveur
                     foreach (var prefix in new[] { "DD-H", "DCAL", "DETA", "DCON" })
                     {
                         result.RequestedCommand = GspProtocol.BuildCommand(prefix, target, string.Empty);
-                        var response = SendGspCommand(port, result, prefix, target, string.Empty, true);
+                        var response = SendGspCommand(port, result, prefix, target, string.Empty, true, gsp.ListenWindowMs);
                         if (!string.IsNullOrWhiteSpace(response))
                         {
                             result.RawValue = response;
@@ -365,7 +368,7 @@ namespace Vigitemp_Serveur
                 {
                     var payload = (gsp.MemoryCount ?? 1).ToString(CultureInfo.InvariantCulture) + "x";
                     result.RequestedCommand = GspProtocol.BuildCommand("MEMO", target, payload);
-                    var response = SendGspCommand(port, result, "MEMO", target, payload, false);
+                    var response = SendGspCommand(port, result, "MEMO", target, payload, false, gsp.ListenWindowMs);
                     result.RawValue = response;
                     result.DetectedSerials = GspProtocol.ExtractDetectedSerials(response);
                     result.Unit = "memory";
@@ -375,7 +378,7 @@ namespace Vigitemp_Serveur
                 if (request.Action == "raw")
                 {
                     result.RequestedCommand = gsp.RawCommand;
-                    var response = SendRawCommand(port, result, gsp.RawCommand, false);
+                    var response = SendRawCommand(port, result, gsp.RawCommand, false, gsp.ListenWindowMs);
                     result.RawValue = response;
                     result.DetectedSerials = GspProtocol.ExtractDetectedSerials(response);
                     var rawCommand = (gsp.RawCommand ?? string.Empty).Trim();
@@ -404,12 +407,12 @@ namespace Vigitemp_Serveur
 
                 var readPrefix = string.Equals(request.Action, "force-read", StringComparison.OrdinalIgnoreCase) ? "FTEM" : "TEMP";
                 result.RequestedCommand = GspProtocol.BuildCommand(readPrefix, target, string.Empty);
-                var readResponse = SendGspCommand(port, result, readPrefix, target, string.Empty, false);
+                var readResponse = SendGspCommand(port, result, readPrefix, target, string.Empty, false, gsp.ListenWindowMs);
                 if (string.IsNullOrWhiteSpace(readResponse))
                 {
-                    AddExchange(result, "info", "ascii", "<wait-5s-before-retry>");
-                    Thread.Sleep(5000);
-                    readResponse = SendGspCommand(port, result, readPrefix, target, string.Empty, false);
+                    AddExchange(result, "info", "ascii", "<wait-10s-before-retry>");
+                    Thread.Sleep(10000);
+                    readResponse = SendGspCommand(port, result, readPrefix, target, string.Empty, false, gsp.ListenWindowMs);
                 }
 
                 result.RawValue = readResponse;
@@ -450,7 +453,7 @@ namespace Vigitemp_Serveur
                 frequencySeconds: Math.Max(1, gsp.FrequencySeconds ?? 60));
         }
 
-        private static string SendGspCommand(SerialPort port, SensorTestResult result, string prefix, string target, string payload, bool allowEmptyResponse)
+        private static string SendGspCommand(SerialPort port, SensorTestResult result, string prefix, string target, string payload, bool allowEmptyResponse, int? listenWindowMs)
         {
             if (string.IsNullOrWhiteSpace(prefix)) return string.Empty;
 
@@ -466,7 +469,7 @@ namespace Vigitemp_Serveur
                 port.Write(command);
                 Thread.Sleep(150);
 
-                var response = ReadGspResponse(port);
+                var response = ReadGspResponse(port, listenWindowMs);
                 if (!string.IsNullOrWhiteSpace(response))
                 {
                     AddExchange(result, "rx", "ascii", response.Trim());
@@ -481,7 +484,7 @@ namespace Vigitemp_Serveur
             return string.Empty;
         }
 
-        private static string SendRawCommand(SerialPort port, SensorTestResult result, string rawCommand, bool allowEmptyResponse)
+        private static string SendRawCommand(SerialPort port, SensorTestResult result, string rawCommand, bool allowEmptyResponse, int? listenWindowMs)
         {
             if (string.IsNullOrWhiteSpace(rawCommand))
             {
@@ -500,7 +503,7 @@ namespace Vigitemp_Serveur
                 port.Write(command);
                 Thread.Sleep(200);
 
-                var response = ReadGspResponse(port);
+                var response = ReadGspResponse(port, listenWindowMs);
                 if (!string.IsNullOrWhiteSpace(response))
                 {
                     AddExchange(result, "rx", "ascii", response.Trim());
@@ -535,8 +538,11 @@ namespace Vigitemp_Serveur
             return buffer.Trim();
         }
 
-        private static string ReadGspResponse(SerialPort port)
+        private static string ReadGspResponse(SerialPort port, int? listenWindowMs)
         {
+            var endOfResponseSilenceMs = listenWindowMs.HasValue && listenWindowMs.Value > 0
+                ? listenWindowMs.Value
+                : GspEndOfResponseSilenceMs;
             var startedAt = DateTime.UtcNow;
             var buffer = string.Empty;
             DateTime? lastDataAt = null;
@@ -546,7 +552,7 @@ namespace Vigitemp_Serveur
                 var chunk = port.ReadExisting();
                 if (string.IsNullOrEmpty(chunk))
                 {
-                    if (lastDataAt.HasValue && (DateTime.UtcNow - lastDataAt.Value).TotalMilliseconds >= GspEndOfResponseSilenceMs) break;
+                    if (lastDataAt.HasValue && (DateTime.UtcNow - lastDataAt.Value).TotalMilliseconds >= endOfResponseSilenceMs) break;
                     continue;
                 }
                 buffer += chunk;

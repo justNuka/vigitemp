@@ -45,6 +45,9 @@ type ParsedSensorResponse = {
   tx: string[]
   rx: string[]
   parsed: Array<{ label: string; value: string }>
+  memoMeasureCount: number
+  memoOffset?: string
+  memoReturnedCount?: string
 }
 
 const SENSOR_TYPES: SensorType[] = ["IN", "IE", "IP", "IC", "IH", "EN", "HN", "GSP"]
@@ -74,8 +77,9 @@ export function HotlineSensorTestPanel() {
   const [parity, setParity] = useState("None")
   const [dataBits, setDataBits] = useState("8")
   const [stopBits, setStopBits] = useState("One")
-  const [readTimeoutMs, setReadTimeoutMs] = useState("5000")
-  const [writeTimeoutMs, setWriteTimeoutMs] = useState("5000")
+  const [readTimeoutMs, setReadTimeoutMs] = useState("10000")
+  const [writeTimeoutMs, setWriteTimeoutMs] = useState("10000")
+  const [listenWindowMs, setListenWindowMs] = useState("500")
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [action, setAction] = useState<GspAction>("read")
   const [gsp, setGsp] = useState({
@@ -120,6 +124,11 @@ export function HotlineSensorTestPanel() {
 
     const combined = rx.join("\n").trim()
     const parsed: Array<{ label: string; value: string }> = []
+    const indexedMemoMatches =
+      combined.match(/(?:^|\r?\n)\d+\|\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2}=-?\d+(?:[.,]\d+)?(?=\r?\n|$)/g) ?? []
+    const legacyMemoMatches =
+      combined.match(/(?:^|\r?\n)\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2}=-?\d+(?:[.,]\d+)?(?=\r?\n|$)/g) ?? []
+    const memoMeasureCount = indexedMemoMatches.length || legacyMemoMatches.length
 
     const dateMatch = combined.match(/\b\d{2}\/\d{2}\/\d{4}\s+\d{2}:\d{2}:\d{2}\b/)
     if (dateMatch) {
@@ -129,6 +138,36 @@ export function HotlineSensorTestPanel() {
     const tempMatch = combined.match(/RTEMP(N\d+)\s*:\s*(-?\d+(?:[.,]\d+)?)/i)
     if (tempMatch) {
       parsed.push({ label: `Temperature ${tempMatch[1]}`, value: tempMatch[2].replace(".", ",") + " °C" })
+    }
+
+    const ackTempMatch = combined.match(/(?:^|\n)Temperature=(-?\d+(?:[.,]\d+)?)(?:\n|$)/i)
+    if (ackTempMatch) {
+      parsed.push({ label: "Temperature", value: ackTempMatch[1].replace(".", ",") + " C" })
+    }
+
+    const serialMatch = combined.match(/(?:^|\n)Serial=([A-Z0-9\-]+)(?:\n|$)/i)
+    if (serialMatch) {
+      parsed.push({ label: "Serial repondu", value: serialMatch[1] })
+    }
+
+    const memoOffsetMatch = combined.match(/(?:^|\n)Offset=(\d+)(?:\n|$)/i)
+    if (memoOffsetMatch) {
+      parsed.push({ label: "Offset MEMO", value: memoOffsetMatch[1] })
+    }
+
+    const memoReturnedCountMatch = combined.match(/(?:^|\n)NombreMesure=(\d+)(?:\n|$)/i)
+    if (memoReturnedCountMatch) {
+      parsed.push({ label: "NombreMesure", value: memoReturnedCountMatch[1] })
+    }
+
+    const batteryMatch = combined.match(/(?:^|\n)Batterie=(-?\d+(?:[.,]\d+)?)(?:\n|$)/i)
+    if (batteryMatch) {
+      parsed.push({ label: "Batterie", value: batteryMatch[1].replace(".", ",") })
+    }
+
+    const rssiMatch = combined.match(/(?:^|\n)RSSI=(-?\d+(?:[.,]\d+)?)(?:\n|$)/i)
+    if (rssiMatch) {
+      parsed.push({ label: "RSSI", value: rssiMatch[1].replace(".", ",") })
     }
 
     const alarmStateMatch = combined.match(/\b(no ALARME|ALARME BAS|ALARME HAUT)\b/i)
@@ -155,7 +194,25 @@ export function HotlineSensorTestPanel() {
       parsed.push({ label: "Frequence", value: frequencyMatch[1].replace(".", ",") })
     }
 
-    return { tx, rx, parsed }
+    if (memoMeasureCount > 0) {
+      parsed.push({ label: "Nb mesures MEMO", value: String(memoMeasureCount) })
+    }
+
+    return {
+      tx,
+      rx,
+      parsed,
+      memoMeasureCount,
+      memoOffset: memoOffsetMatch?.[1],
+      memoReturnedCount: memoReturnedCountMatch?.[1],
+    }
+  }, [result])
+
+  const rawPreview = useMemo(() => {
+    const raw = result?.rawValue?.trim()
+    if (!raw) return "-"
+    const normalized = raw.replace(/\s+/g, " ").trim()
+    return normalized.length > 120 ? normalized.slice(0, 117) + "..." : normalized
   }, [result])
 
   const rawCommandValue = useMemo(() => {
@@ -231,6 +288,7 @@ export function HotlineSensorTestPanel() {
                 channel: gsp.channel.trim() || undefined,
                 memoryCount: parseOptionalInteger(gsp.memoryCount),
                 rawCommand: isGspRaw ? rawCommandValue : undefined,
+                listenWindowMs: parseOptionalInteger(listenWindowMs),
               }
             : undefined,
         }),
@@ -378,6 +436,16 @@ export function HotlineSensorTestPanel() {
                   <Field label="Write timeout (ms)">
                     <Input value={writeTimeoutMs} onChange={(e) => setWriteTimeoutMs(e.target.value)} placeholder="5000" />
                   </Field>
+                  {showGspFields ? (
+                    <Field label="Temps d'ecoute (ms)">
+                      <div className="space-y-2">
+                        <Input value={listenWindowMs} onChange={(e) => setListenWindowMs(e.target.value)} placeholder="500" />
+                        <div className="text-xs text-muted-foreground">
+                          Temps de silence apres le dernier octet recu avant de considerer la reponse terminee.
+                        </div>
+                      </div>
+                    </Field>
+                  ) : null}
                 </div>
               </div>
             ) : null}
@@ -570,7 +638,13 @@ export function HotlineSensorTestPanel() {
                 <ResultItem label="Sondes detectees" value={result.detectedSerials?.join(", ") || "-"} />
                 <ResultItem label="Valeur" value={result.value != null ? String(result.value) : "-"} />
                 <ResultItem label="Unite" value={result.unit || "-"} />
-                <ResultItem label="Brut" value={result.rawValue || "-"} />
+                {parsedResponse?.memoMeasureCount ? (
+                  <ResultItem
+                    label="Mesures MEMO"
+                    value={parsedResponse.memoReturnedCount || String(parsedResponse.memoMeasureCount)}
+                  />
+                ) : null}
+                <ResultItem label="Brut" value={rawPreview} />
               </div>
             ) : (
               <div className="text-sm text-muted-foreground">Aucun résultat pour le moment.</div>
@@ -587,21 +661,21 @@ export function HotlineSensorTestPanel() {
               <div>
                 <SectionTitleWithInfo
                   title="TX"
-                  description="Trames envoyees au module ou a la sonde. Cela permet de verifier la commande exacte transmise."
+                  description="Trames envoyées au module ou à la sonde. Cela permet de vérifier la commande exacte transmise."
                 />
                 <Textarea value={parsedResponse?.tx.join("\n") || ""} readOnly rows={6} className="font-mono text-xs" />
               </div>
               <div>
                 <SectionTitleWithInfo
                   title="RX"
-                  description="Trames recues depuis le module ou la sonde. Cela permet de verifier la reponse brute avant interpretation."
+                  description="Trames reçues depuis le module ou la sonde. Cela permet de vérifier la réponse brute avant interprétation."
                 />
                 <Textarea value={parsedResponse?.rx.join("\n\n") || ""} readOnly rows={8} className="font-mono text-xs" />
               </div>
               <div>
                 <SectionTitleWithInfo
                   title="Analyse"
-                  description="Extraction lisible des informations detectees dans la reponse brute, sans supprimer les trames TX/RX."
+                  description="Extraction lisible des informations détectées dans la reponse brute, sans supprimer les trames TX/RX."
                 />
                 {parsedResponse?.parsed.length ? (
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -610,13 +684,13 @@ export function HotlineSensorTestPanel() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-sm text-muted-foreground">Aucune information parsee pour le moment.</div>
+                  <div className="text-sm text-muted-foreground">Aucune information parsée pour le moment.</div>
                 )}
               </div>
               <div className="pt-2">
                 <SectionTitleWithInfo
                   title="Journal complet"
-                  description="Vue brute complete des echanges, utile pour le diagnostic fin ou la comparaison avec l’outil de test constructeur."
+                  description="Vue brute complète des échanges, utile pour le diagnostic fin ou la comparaison avec l’outil de test constructeur."
                 />
                 <Textarea value={exchangeText} readOnly rows={12} className="font-mono text-xs" />
               </div>

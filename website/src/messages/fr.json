@@ -22,7 +22,13 @@
     "license_one": "Licence One",
     "license_prefix": "Licence",
     "license_unknown": "Licence inconnue",
-    "license_invalid": "Licence invalide"
+    "license_invalid": "Licence invalide",
+    "temporary_memory": {
+      "save": "Garder en memoire temporaire les infos",
+      "restore": "Restaurer les donnees sauvegardees",
+      "clear": "Vider les donnees",
+      "saved": "Donnees temporaires disponibles"
+    }
   },
   "dateRangePicker": {
     "selectRange": "Sélectionner une plage",
@@ -792,6 +798,12 @@
       },
       "submit": {
         "saving": "Enregistrement..."
+      },
+      "temporary_memory": {
+        "save": "Garder en memoire temporaire les infos",
+        "restore": "Restaurer les donnees sauvegardees",
+        "clear": "Vider les donnees",
+        "saved": "Donnees temporaires disponibles"
       }
     },
     "general": {
@@ -993,7 +1005,13 @@
         "emtModeUncertainties": "Incertitudes",
         "emtModeSansObjet": "Sans objet",
         "labelRetardChangementConsigne": "Retard changement consigne (min)",
-        "placeholderRetardChangementConsigne": "0"
+        "placeholderRetardChangementConsigne": "0",
+        "temporaryMemory": {
+          "save": "Garder en memoire temporaire les infos",
+          "restore": "Restaurer les donnees sauvegardees",
+          "clear": "Vider les donnees",
+          "saved": "Donnees temporaires disponibles"
+        }
       },
       "deleteConfirm": {
         "title": "Supprimer la règle",
@@ -3163,14 +3181,14 @@
       "title": "Tableau comparatif des licences",
       "subtitle": "Choisissez le niveau qui correspond à vos besoins.",
       "filters": {
-      "site": "Site",
-      "type": "Type",
-      "dateFrom": "Date de d?but",
-      "dateTo": "Date de fin",
-      "allSites": "Tous les sites",
-      "allTypes": "Tous les types"
-    },
-    "table": {
+        "site": "Site",
+        "type": "Type",
+        "dateFrom": "Date de d?but",
+        "dateTo": "Date de fin",
+        "allSites": "Tous les sites",
+        "allTypes": "Tous les types"
+      },
+      "table": {
         "feature": "Fonctionnalité",
         "pack": "Pack",
         "one": "One",
@@ -3766,7 +3784,7 @@
     },
     "security": {
       "title": "Sécurité",
-      "description": "À la fin d'une opération hotline, déconnectez-vous de la session."
+      "description": "Après chaque opération de hotline, déconnectez-vous de la session et n’enregistrez aucun identifiant d’accès, afin d’empêcher tout accès non autorisé aux outils."
     }
   },
   "hotlineDashboard": {
@@ -4305,6 +4323,7 @@
     },
     "tabs": {
       "movements": "Départ / Arrivée",
+      "usage": "Usage ponctuel",
       "configurations": "Configurations",
       "history": "Historique",
       "loggers": "VigiLog"
@@ -4346,6 +4365,7 @@
       },
       "actions": {
         "submit": "Créer la tournée",
+        "prepareLogger": "Préparer le VigiLog",
         "detectLogger": "Détecter le VigiLog sur la base",
         "refreshLogger": "Actualiser"
       },
@@ -4370,7 +4390,8 @@
         "errorTitle": "État du VigiLog indisponible",
         "errorDescription": "Impossible de vérifier l'état de la base VigiLog.",
         "busyTitle": "Communication avec le VigiLog en cours",
-        "busyDescription": "La base est deja utilisee pour une operation VigiLog. Patientez jusqu a la fin de la preparation ou de la lecture."
+        "busyDescription": "La base est deja utilisee pour une operation VigiLog. Patientez jusqu a la fin de la preparation ou de la lecture.",
+        "optionalHint": "La creation de tournée reste possible sans base USB. La preparation du VigiLog sur base est une action distincte."
       }
     },
     "arrival": {
@@ -4402,8 +4423,32 @@
       },
       "emptyTitle": "Aucune tournée en attente",
       "emptyDescription": "Créez d'abord un départ ou attendez le retour d'un VigiLog.",
+      "warnings": {
+        "noLoggerTitle": "VigiLog requis sur la base",
+        "noLoggerDescription": "Posez le VigiLog attendu sur la base USB avant de valider la reception.",
+        "mismatchTitle": "VigiLog detecte incorrect",
+        "mismatchDescription": "La tournée attend le VigiLog {expected}, mais la base detecte actuellement {detected}."
+      },
       "actions": {
         "submit": "Valider la reception"
+      }
+    },
+    "usage": {
+      "title": "Usage ponctuel",
+      "description": "Préparez un VigiLog pour un suivi temporaire sans créer de tournée.",
+      "infoTitle": "Mode hors tournée",
+      "infoDescription": "Cette action charge une configuration sur le VigiLog détecté, sans créer d'enregistrement de tournée dans l'historique.",
+      "fields": {
+        "configuration": "Configuration",
+        "loggerSerial": "Numéro de série VigiLog",
+        "note": "Note locale"
+      },
+      "placeholders": {
+        "note": "Informations utiles pour cet usage ponctuel"
+      },
+      "noteHint": "Cette note est informative côté interface. Elle n'est pas enregistrée en base pour l'instant.",
+      "actions": {
+        "prepare": "Préparer le VigiLog"
       }
     },
     "config": {
@@ -4423,7 +4468,15 @@
         "highLimitActive": "Limite haute",
         "frequencyMinutes": "Fréquence (min)",
         "alarmDelayMinutes": "Retard alarme (min)",
+        "startDelayMinutes": "Délai de démarrage (min)",
+        "stopButtonEnabled": "Autoriser l'arrêt avec Stop",
+        "resetWithStartEnabled": "Réinitialiser avec Start",
         "active": "Configuration active"
+      },
+      "advanced": {
+        "title": "Options avancées",
+        "stopHint": "Autorise l'utilisateur a arreter l'enregistrement avec le bouton Stop.",
+        "resetHint": "Autorise une remise a disposition du logger avec le bouton Start."
       },
       "actions": {
         "create": "Nouvelle configuration",
@@ -4462,7 +4515,8 @@
       "actions": {
         "receive": "Receptionner",
         "acknowledge": "Acquitter",
-        "details": "Détails"
+        "details": "Détails",
+        "cancelTour": "Annuler la tournée"
       },
       "empty": "Aucune tournée à afficher.",
       "alarm": "Alarme sur {duration}",
@@ -4505,6 +4559,15 @@
       "departureError": {
         "title": "Création impossible",
         "description": "La tournée VigiLog n'a pas pu être créée."
+      },
+      "prepareSuccess": {
+        "title": "VigiLog prepare",
+        "description": "Le VigiLog {serial} a ete prepare sur la base.",
+        "fallback": "Le VigiLog a ete prepare sur la base."
+      },
+      "prepareError": {
+        "title": "Preparation impossible",
+        "description": "Le VigiLog n'a pas pu etre prepare sur la base."
       },
       "receiveSuccess": {
         "title": "Réception validée",
@@ -4550,6 +4613,14 @@
       "loggerError": {
         "title": "Opération impossible",
         "description": "Le VigiLog n'a pas pu être enregistré ou mis à jour."
+      },
+      "cancelSuccess": {
+        "title": "Tournée annulee",
+        "description": "La tournée a ete annulee et le VigiLog peut etre reutilise."
+      },
+      "cancelError": {
+        "title": "Annulation impossible",
+        "description": "La tournée n'a pas pu etre annulee."
       },
       "receiveSuccessEmpty": {
         "title": "Réception validée sans mesure",
@@ -4607,7 +4678,8 @@
       "noMeasurementsAlert": {
         "title": "Aucune mesure importée",
         "description": "Cette tournée a été réceptionnée, mais le VigiLog ne contenait aucune mesure exploitable."
-      }
+      },
+      "export": "Exporter les mesures"
     },
     "loggers": {
       "title": "Registre des VigiLog",
@@ -4654,13 +4726,13 @@
       "title": "Préparation du VigiLog",
       "description": "Choisissez si le VigiLog doit être démarré automatiquement après la preparation.",
       "runningDescription": "Préparation du VigiLog en cours sur la base.",
-      "manualHint": "Le VigiLog sera d'abord vidé puis reconfiguré avec la tournée. Si vous choisissez un démarrage manuel, il faudra appuyer vous-même sur le bouton du VigiLog.",
-      "success": "La tournée {reference} a été préparée sur le VigiLog.",
+      "manualHint": "Le VigiLog sera d'abord vide puis reconfiguré avec la configuration sélectionnée. Si vous choisissez un démarrage manuel, il faudra appuyer vous-même sur le bouton du VigiLog.",
+      "success": "Le VigiLog {serial} a ete prepare sur la base.",
       "autoStartAt": "Démarrage automatique programme pour {date}.",
       "manualStartDone": "Le VigiLog est preparé. Lancez-le manuellement sur l'appareil quand vous êtes prêt.",
       "steps": {
         "resetMeasures": "Suppression des mesures existantes",
-        "applyConfiguration": "Application des paramètres de la tournée",
+        "applyConfiguration": "Application des paramètres de la configuration",
         "autoStart": "Démarrage automatique du VigiLog",
         "manualStart": "Démarrage manuel par l'utilisateur"
       },
@@ -4683,6 +4755,14 @@
       "actions": {
         "close": "Fermer"
       }
+    },
+    "cancelTour": {
+      "title": "Annuler la tournée",
+      "description": "Vous allez annuler la tournée {reference} associee au VigiLog {serial}.",
+      "descriptionFallback": "Vous allez annuler cette tournée.",
+      "warningTitle": "Confirmation requise",
+      "warningDescription": "Utilisez cette action uniquement si la tournée doit etre abandonnee. Le VigiLog redeviendra disponible dans l'application.",
+      "confirm": "Confirmer l'annulation"
     }
   }
 }

@@ -849,6 +849,9 @@ model t_vigilog_configuration {
   Limite_Haute                                                                 Decimal?            @db.Decimal(10, 2)
   Frequence_Min                                                                Int
   Retard_Alarme_Min                                                            Int
+  Delai_Demarrage_Min                                                          Int                 @default(0)
+  Autorise_Arret_Bouton_Stop                                                   Boolean             @default(true)
+  Reinitialise_Avec_Bouton_Start                                               Boolean             @default(true)
   Actif                                                                        Boolean             @default(true)
   Id_Utilisateur_Creation                                                      Int?
   Date_Heure_Creation                                                          DateTime            @default(now()) @db.DateTime(0)
@@ -905,6 +908,9 @@ model t_vigilog_tournee {
   Limite_Haute                                                               Decimal?                 @db.Decimal(10, 2)
   Frequence_Min                                                              Int
   Retard_Alarme_Min                                                          Int
+  Delai_Demarrage_Min                                                        Int                      @default(0)
+  Autorise_Arret_Bouton_Stop                                                 Boolean                  @default(true)
+  Reinitialise_Avec_Bouton_Start                                             Boolean                  @default(true)
   Nb_Mesures                                                                 Int                      @default(0)
   Temperature_Min                                                            Decimal?                 @db.Decimal(10, 2)
   Temperature_Moyenne                                                        Decimal?                 @db.Decimal(10, 2)
