@@ -42,8 +42,8 @@ export function GeneralSettingsCard({
   };
 
   return (
-    <Card className="border-sky-200 bg-[linear-gradient(180deg,rgba(14,165,233,0.08),rgba(255,255,255,0.92))] dark:bg-card">
-      <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40">
+    <Card className="border-border/60 bg-white dark:bg-card">
+      <CardHeader className="bg-background border-b border-border/40">
         <CardTitle className="flex items-center gap-2 text-base">
           <Settings2 className="h-4 w-4 text-primary" />
           {t('general.title')}

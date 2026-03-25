@@ -6,7 +6,6 @@ import { getRequestContext } from "@/lib/api-logger";
 import { withAuthLogging } from "@/lib/api-wrappers";
 import { log } from "@/lib/logger";
 import {
-  expandRelatedGsoSerials,
   extractProbeAddressFromSerial,
   isGsoType,
   normalizeImportedGsoSerial,
@@ -96,15 +95,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
       ),
     );
 
-    const gsoSerialCandidates = Array.from(
-      new Set(
-        serials
-          .filter((serial) => isGsoType(serial))
-          .flatMap((serial) => expandRelatedGsoSerials(serial)),
-      ),
-    );
-
-    const [existingAdjustments, sensorsWithOffset, existingGsoSensors, selectedModule] = await Promise.all([
+    const [existingAdjustments, sensorsWithOffset, selectedModule] = await Promise.all([
       serials.length > 0
         ? prisma.t_ajustage.groupBy({
             by: ["Sonde_Numero_Serie"],
@@ -115,12 +106,6 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
         ? prisma.t_sonde.findMany({
             where: { Sonde_Numero_Serie: { in: serials } },
             select: { Sonde_Numero_Serie: true, Sonde_Offset: true, Id_Module: true },
-          })
-        : Promise.resolve([]),
-      gsoSerialCandidates.length > 0
-        ? prisma.t_sonde.findMany({
-            where: { Sonde_Numero_Serie: { in: gsoSerialCandidates } },
-            select: { Sonde_Numero_Serie: true },
           })
         : Promise.resolve([]),
       selectedModuleId
@@ -167,14 +152,8 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
         .filter((serial): serial is string => Boolean(serial)),
     );
 
-    const existingGsoSet = new Set(
-      existingGsoSensors
-        .map((sensor) => sensor.Sonde_Numero_Serie)
-        .filter((serial): serial is string => Boolean(serial)),
-    );
-    const missingGsoSerials = gsoSerialCandidates.filter((serial) => !existingGsoSet.has(serial));
     const missingSerialsFromRows = serials.filter((serial) => !existingSerialSet.has(serial));
-    const serialsToCreate = Array.from(new Set([...missingSerialsFromRows, ...missingGsoSerials]));
+    const serialsToCreate = Array.from(new Set(missingSerialsFromRows));
 
     const insertedIds: string[] = [];
     const skippedIds: string[] = [];
@@ -321,6 +300,8 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
         clearedOffsets: validated.confirmOverwrite ? offsetSerials.length : 0,
         invalidatedEtalonnages,
         invalidatedEtalonnageMeasures,
+        serials: serials.slice(0, 10),
+        fileNames: validated.rows.slice(0, 10).map((row) => row.file),
       },
       success: true,
     });

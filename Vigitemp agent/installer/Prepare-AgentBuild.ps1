@@ -7,7 +7,8 @@ Param(
     [string]$SignCertPath,
     [string]$SignCertPassword,
     [string]$SignThumbprint,
-    [string]$TimestampUrl = "http://timestamp.digicert.com"
+    [string]$TimestampUrl = "http://timestamp.digicert.com",
+    [switch]$SkipBuild
 )
 
 Set-StrictMode -Version Latest
@@ -97,7 +98,7 @@ $agentProjectPath = Join-Path $agentRoot "Vigitemp agent\Vigitemp Agent.csproj"
 $installerPayloadRoot = Join-Path $agentRoot "VigitempAgentInstaller\Payload"
 
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
-    $OutputDir = Join-Path $repoRoot "..\vigi\2 - installation\3 - agent"
+    $OutputDir = Join-Path $repoRoot "..\VigiSensys\2 - installation\3 - VigiSensys Agent"
 }
 
 if ([string]::IsNullOrWhiteSpace($InstallerProjectPath)) {
@@ -113,10 +114,12 @@ if (-not (Test-Path $InstallerProjectPath)) {
 }
 
 $msbuildPath = Get-MSBuildPath
-Write-Log "Build agent ($Configuration) avec MSBuild..."
-& $msbuildPath $agentProjectPath /restore /t:Build /p:Configuration=$Configuration /p:Platform=AnyCPU /nologo
-if ($LASTEXITCODE -ne 0) {
-    throw "Echec du build agent."
+if (-not $SkipBuild) {
+    Write-Log "Build agent ($Configuration) avec MSBuild..."
+    & $msbuildPath $agentProjectPath /restore /t:Build /p:Configuration=$Configuration /p:Platform=AnyCPU /nologo /p:GenerateManifests=false /p:SignManifests=false
+    if ($LASTEXITCODE -ne 0) {
+        throw "Echec du build agent."
+    }
 }
 
 if ([string]::IsNullOrWhiteSpace($AgentBuildOutput)) {
@@ -166,10 +169,12 @@ if (-not $driverSource) {
 
 Copy-Item -Path $driverSource.FullName -Destination (Join-Path $driverPayloadDir $driverSource.Name) -Force
 
-Write-Log "Build installeur EXE..."
-& $msbuildPath $InstallerProjectPath /restore /t:Build /p:Configuration=$Configuration /p:Platform=AnyCPU /nologo
-if ($LASTEXITCODE -ne 0) {
-    throw "Echec du build de l'installeur EXE."
+if (-not $SkipBuild) {
+    Write-Log "Build installeur EXE..."
+    & $msbuildPath $InstallerProjectPath /restore /t:Build /p:Configuration=$Configuration /p:Platform=AnyCPU /nologo
+    if ($LASTEXITCODE -ne 0) {
+        throw "Echec du build de l'installeur EXE."
+    }
 }
 
 $installerOutputExe = Join-Path $agentRoot "VigitempAgentInstaller\bin\$Configuration\VigiSensysAgentSetup.exe"

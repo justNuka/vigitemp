@@ -36,6 +36,7 @@ namespace Vigitemp_Serveur
             public int? AlarmDelayMinutes { get; set; }
             public string Channel { get; set; }
             public int? MemoryCount { get; set; }
+            public int? MemoryOffset { get; set; }
             public string RawCommand { get; set; }
             public int? ListenWindowMs { get; set; }
         }
@@ -239,6 +240,7 @@ namespace Vigitemp_Serveur
                     AlarmDelayMinutes = ValueOrNullInt(gspToken["alarmDelayMinutes"]),
                     Channel = (gspToken.Value<string>("channel") ?? string.Empty).Trim(),
                     MemoryCount = ValueOrNullInt(gspToken["memoryCount"]),
+                    MemoryOffset = ValueOrNullInt(gspToken["memoryOffset"]),
                     RawCommand = gspToken.Value<string>("rawCommand") ?? string.Empty,
                     ListenWindowMs = ValueOrNullInt(gspToken["listenWindowMs"]),
                 }
@@ -321,6 +323,22 @@ namespace Vigitemp_Serveur
             return result;
         }
 
+        private static int GetRecommendedMemoReadTimeoutMs(int memoryCount)
+        {
+            if (memoryCount <= 20) return 10000;
+            if (memoryCount <= 100) return 30000;
+            if (memoryCount <= 500) return 90000;
+            return 180000;
+        }
+
+        private static int GetRecommendedMemoListenWindowMs(int memoryCount)
+        {
+            if (memoryCount <= 20) return 1000;
+            if (memoryCount <= 100) return 5000;
+            if (memoryCount <= 500) return 15000;
+            return 30000;
+        }
+
         private static void ProbeGsp(SensorTestResult result, SensorTestRequest request, string portName, string address)
         {
             var gsp = request.Gsp ?? new GspSensorTestRequest();
@@ -366,9 +384,30 @@ namespace Vigitemp_Serveur
 
                 if (request.Action == "read-memory")
                 {
-                    var payload = (gsp.MemoryCount ?? 1).ToString(CultureInfo.InvariantCulture) + "x";
+                    var memoryCount = Math.Max(1, gsp.MemoryCount ?? 1);
+                    var recommendedReadTimeoutMs = GetRecommendedMemoReadTimeoutMs(memoryCount);
+                    var recommendedListenWindowMs = GetRecommendedMemoListenWindowMs(memoryCount);
+                    var effectiveReadTimeoutMs = Math.Max(port.ReadTimeout, recommendedReadTimeoutMs);
+                    var effectiveListenWindowMs = Math.Max(gsp.ListenWindowMs ?? 0, recommendedListenWindowMs);
+
+                    if (effectiveReadTimeoutMs != port.ReadTimeout)
+                    {
+                        port.ReadTimeout = effectiveReadTimeoutMs;
+                    }
+
+                    AddExchange(result, "info", "ascii", string.Format(CultureInfo.InvariantCulture,
+                        "<memo-timeout readTimeoutMs={0} listenWindowMs={1} count={2}>",
+                        effectiveReadTimeoutMs,
+                        effectiveListenWindowMs,
+                        memoryCount));
+
+                    var payload = memoryCount.ToString(CultureInfo.InvariantCulture) + "x";
+                    if (gsp.MemoryOffset.HasValue)
+                    {
+                        payload += gsp.MemoryOffset.Value.ToString(CultureInfo.InvariantCulture) + "o";
+                    }
                     result.RequestedCommand = GspProtocol.BuildCommand("MEMO", target, payload);
-                    var response = SendGspCommand(port, result, "MEMO", target, payload, false, gsp.ListenWindowMs);
+                    var response = SendGspCommand(port, result, "MEMO", target, payload, false, effectiveListenWindowMs);
                     result.RawValue = response;
                     result.DetectedSerials = GspProtocol.ExtractDetectedSerials(response);
                     result.Unit = "memory";

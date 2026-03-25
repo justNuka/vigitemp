@@ -20,6 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { getJson } from "@/lib/http"
 import { toApiUtcDateTime } from "@/lib/date-range-api"
+import { formatTimeAxisLabel } from "@/lib/measurements"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
 
@@ -63,7 +64,9 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
   const localeTag = locale === "fr" ? "fr-FR" : locale
 
   const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [appliedIds, setAppliedIds] = useState<number[]>([])
   const [dateRange, setDateRange] = useState<DateRangeValue | null>(null)
+  const [appliedRange, setAppliedRange] = useState<DateRangeValue | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [dataByLocation, setDataByLocation] = useState<Record<number, OverlayMeasurement[]>>({})
   const chartRef = useRef<ChartJS<"line"> | null>(null)
@@ -71,6 +74,11 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
   const selectedLocations = useMemo(
     () => locations.filter((item) => selectedIds.includes(item.id)),
     [locations, selectedIds],
+  )
+
+  const appliedLocations = useMemo(
+    () => locations.filter((item) => appliedIds.includes(item.id)),
+    [locations, appliedIds],
   )
 
   const effectiveRange = useMemo(() => {
@@ -85,7 +93,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
   const chartPayload = useMemo(() => {
     const labelIsoMap = new Map<string, string>()
 
-    for (const location of selectedLocations) {
+    for (const location of appliedLocations) {
       const points = dataByLocation[location.id] ?? []
       for (const point of points) {
         if (!point.DateHeureMesure) continue
@@ -96,12 +104,12 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
 
     const labels = Array.from(labelIsoMap.entries())
       .sort((a, b) => new Date(a[1]).getTime() - new Date(b[1]).getTime())
-      .map(([label]) => label)
+      .map(([, iso]) => iso)
 
-    const datasets = selectedLocations.map((location, index) => {
+    const datasets = appliedLocations.map((location, index) => {
       const map = new Map<string, number | null>()
       for (const point of dataByLocation[location.id] ?? []) {
-        map.set(point.DateHeureMesure, point.Valeur)
+        map.set(point.DateHeureMesureIso ?? point.DateHeureMesure, point.Valeur)
       }
 
       return {
@@ -118,7 +126,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
     })
 
     return { labels, datasets }
-  }, [dataByLocation, selectedLocations])
+  }, [appliedLocations, dataByLocation])
 
   const toggleLocation = (locationId: number) => {
     setSelectedIds((current) =>
@@ -164,9 +172,10 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
     try {
       const startDateIso = toApiUtcDateTime(effectiveRange.from)
       const endDateIso = toApiUtcDateTime(effectiveRange.to)
+      const requestedIds = [...selectedIds]
 
       const entries = await Promise.all(
-        selectedIds.map(async (idLieu) => {
+        requestedIds.map(async (idLieu) => {
           const points = await fetchAllMeasuresForLocation(idLieu, startDateIso, endDateIso)
           return [idLieu, points] as const
         }),
@@ -177,12 +186,22 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
         next[idLieu] = points
       }
       setDataByLocation(next)
+      setAppliedIds(requestedIds)
+      setAppliedRange(dateRange)
     } finally {
       setIsLoading(false)
     }
   }
 
   const canExport = chartPayload.datasets.length >= 2 && chartPayload.labels.length > 0
+
+  const chartSpanMs = useMemo(() => {
+    if (chartPayload.labels.length <= 1) return 0
+    const first = new Date(chartPayload.labels[0]).getTime()
+    const last = new Date(chartPayload.labels[chartPayload.labels.length - 1]).getTime()
+    if (!Number.isFinite(first) || !Number.isFinite(last)) return 0
+    return Math.max(0, last - first)
+  }, [chartPayload.labels])
 
   const downloadBlob = (content: string, mimeType: string, filename: string) => {
     const blob = new Blob([content], { type: mimeType })
@@ -203,7 +222,7 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
         const value = dataset.data[rowIndex]
         return value === null || value === undefined ? "" : String(value)
       })
-      return [label, ...values]
+      return [new Date(label).toLocaleString(localeTag), ...values]
     })
 
     const escapeCell = (value: string) => {
@@ -317,6 +336,13 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
             <p className="text-xs text-muted-foreground mt-2">
               {!effectiveRange ? t("overlay.hint_range") : t("overlay.hint")}
             </p>
+            {appliedIds.length >= 2 ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {appliedRange?.from
+                  ? `${locale === "fr" ? "Superposition affich?e" : "Displayed overlay"} : ${appliedLocations.length} ${locale === "fr" ? "lieux" : "locations"}`
+                  : `${locale === "fr" ? "Superposition affich?e" : "Displayed overlay"} : ${appliedLocations.length} ${locale === "fr" ? "lieux" : "locations"}`}
+              </p>
+            ) : null}
           </div>
 
           <div className="rounded-md border p-3 h-full overflow-hidden flex flex-col">
@@ -344,6 +370,18 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
                     },
                   },
                   scales: {
+                    x: {
+                      ticks: {
+                        autoSkip: true,
+                        maxTicksLimit: chartSpanMs >= 24 * 60 * 60 * 1000 ? 10 : 8,
+                        maxRotation: 0,
+                        minRotation: 0,
+                        callback: (_value, index) => {
+                          const rawValue = chartPayload.labels[index]
+                          return rawValue ? formatTimeAxisLabel(rawValue, localeTag, chartSpanMs) : ""
+                        },
+                      },
+                    },
                     y: {
                       ticks: {
                         callback: (value) => `${value}`,

@@ -53,6 +53,7 @@ interface MonitoringCardProps {
   surveillanceDisabled: boolean
   isGso?: boolean | null
   gsoRssi?: string | null
+  batteryPercent?: number | null
   gsoTension?: string | null
   alarmId?: number | null
   onEditLocation?: (idLieu: number) => void
@@ -91,6 +92,7 @@ export default function MonitoringCard({
   surveillanceDisabled,
   isGso,
   gsoRssi,
+  batteryPercent,
   gsoTension,
   alarmId = null,
   onEditLocation,
@@ -305,7 +307,7 @@ export default function MonitoringCard({
   const formattedConsigneSup = useMemo(() => formatMeasureValue(consigneSup, decimals, localeTag), [consigneSup, decimals, localeTag])
   const formattedConsigneInf = useMemo(() => formatMeasureValue(consigneInf, decimals, localeTag), [consigneInf, decimals, localeTag])
   const formattedLastValue = useMemo(() => formatMeasureValue(lastValue, decimals, localeTag), [lastValue, decimals, localeTag])
-  const hasGsoMetrics = Boolean(isGso && (gsoRssi || gsoTension))
+  const hasWirelessMetrics = Boolean(gsoRssi || gsoTension || batteryPercent !== null && batteryPercent !== undefined)
 
   const cardGlowClass = (() => {
     if (!isSurveillanceActive) return "opacity-75"
@@ -377,9 +379,8 @@ export default function MonitoringCard({
             <>
               <div className="cursor-pointer relative" onClick={() => setIsModalOpen(true)}>
                 {isMobile ? (
-                  <div className="flex min-h-[180px] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 px-4 text-center">
-                    <p className="text-sm font-medium text-foreground">{t('mobile.graph_in_details_title')}</p>
-                    <p className="mt-2 text-sm text-muted-foreground">{t('mobile.graph_in_details_description')}</p>
+                  <div className="py-2 text-center">
+                    <p className="text-xs text-muted-foreground">{t('mobile.small_hint')}</p>
                   </div>
                 ) : (
                   <MonitoringCardChartPreview
@@ -402,13 +403,14 @@ export default function MonitoringCard({
               <div className="mt-auto space-y-3 text-sm border-t border-border pt-3">
                 {lastDateTime ? (
                   <>
-                    <div className={`flex items-center justify-between text-[11px] ${contentTextClassName}`}>
-                      <span>{t('last_measure.label', { value: formattedLastValue ? `${formattedLastValue}${unite}` : lastMeasureText })}</span>
-                      <span>{lastDateTime}</span>
+                    <div className={`flex items-center justify-between gap-3 text-[13px] font-semibold ${contentTextClassName}`}>
+                      <span className="truncate">{t('last_measure.label', { value: formattedLastValue ? `${formattedLastValue}${unite}` : lastMeasureText })}</span>
+                      <span className="shrink-0 text-xs font-semibold">{lastDateTime}</span>
                     </div>
-                    {hasGsoMetrics ? (
+                    {hasWirelessMetrics ? (
                       <div className={`flex flex-wrap items-center justify-center gap-4 text-[11px] ${contentTextClassName}`}>
                         {gsoRssi ? <RssiBars value={gsoRssi} label={t('gso.rssi', { value: gsoRssi })} /> : null}
+                        {batteryPercent !== null && batteryPercent !== undefined ? <span>{t('wireless.battery', { value: batteryPercent })}</span> : null}
                         {gsoTension ? <span>{t('gso.tension', { value: gsoTension })}</span> : null}
                       </div>
                     ) : null}
@@ -549,6 +551,7 @@ export default function MonitoringCard({
           sondeNumeroSerie={sondeNumeroSerie || ''}
           isGso={isGso ?? null}
           gsoRssi={gsoRssi ?? null}
+          batteryPercent={batteryPercent ?? null}
           gsoTension={gsoTension ?? null}
           consigneSup={consigneSup}
           consigneInf={consigneInf}

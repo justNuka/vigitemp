@@ -320,6 +320,8 @@ export const PATCH = withLogging(
             Adresse_Sonde: true,
             Est_Lieu_GSO: true,
             Est_Son_Alarme_Active: true,
+            Date_Heure_Surveillance_On: true,
+            Date_Heure_Surveillance_Off: true,
             Commentaire: true,
             Observations_Info: true,
             Id_Site: true,
@@ -390,6 +392,8 @@ export const PATCH = withLogging(
           lieuPatch.Observations_Info = normalizedObservation
         }
 
+        const surveillanceStateHasChanged = applyLieuEtat && current?.Lieu_Etat !== Lieu_Etat
+
         const baseData = {
           ...lieuPatch,
           ...(applyLieuEtat
@@ -399,8 +403,12 @@ export const PATCH = withLogging(
                   : { disconnect: true },
                 Date_Heure_Reactivation_Surveillance:
                   Lieu_Etat === "D" ? surveillanceReactivationAt : null,
-                Date_Heure_Surveillance_On: Lieu_Etat === "S" ? surveillanceStateChangedAt : null,
-                Date_Heure_Surveillance_Off: Lieu_Etat === "D" ? surveillanceStateChangedAt : null,
+                ...(surveillanceStateHasChanged
+                  ? {
+                      Date_Heure_Surveillance_On: Lieu_Etat === "S" ? surveillanceStateChangedAt : current?.Date_Heure_Surveillance_On,
+                      Date_Heure_Surveillance_Off: Lieu_Etat === "D" ? surveillanceStateChangedAt : null,
+                    }
+                  : {}),
               }
             : {}),
           ...(shouldArchive
@@ -595,27 +603,78 @@ export const PATCH = withLogging(
         }
       }
 
-      // Log generic field changes (excluding Lieu_Etat which is already logged as DES/ACT)
+      // Log field changes using existing audit codes where they have a specific meaning.
       if (user) {
+        const handledFields = new Set<string>()
+
+        if (Object.prototype.hasOwnProperty.call(body, "Sonde_Numero_Serie") && previousValues.Sonde_Numero_Serie !== Sonde_Numero_Serie) {
+          log.config.changeSensor(
+            lieuName ?? String(lieuId),
+            lieuId,
+            user.username,
+            user.userId,
+            ip,
+            String(previousValues.Sonde_Numero_Serie ?? ""),
+            String(Sonde_Numero_Serie ?? ""),
+          )
+          handledFields.add("Sonde_Numero_Serie")
+        }
+
+        if (Object.prototype.hasOwnProperty.call(body, "Frequence") && previousValues.Frequence !== validated.Frequence) {
+          log.config.changeFrequency(
+            `Lieu: ${lieuName ?? lieuId}`,
+            lieuId,
+            user.username,
+            user.userId,
+            ip,
+            previousValues.Frequence,
+            validated.Frequence,
+          )
+          handledFields.add("Frequence")
+        }
+
+        if (Object.prototype.hasOwnProperty.call(body, "Retard_Alarme_Haut") && previousValues.Retard_Alarme_Haut !== validated.Retard_Alarme_Haut) {
+          log.config.changeAlarmDelay(
+            `Lieu: ${lieuName ?? lieuId} (Haut)`,
+            lieuId,
+            user.username,
+            user.userId,
+            ip,
+            previousValues.Retard_Alarme_Haut,
+            validated.Retard_Alarme_Haut,
+          )
+          handledFields.add("Retard_Alarme_Haut")
+        }
+
+        if (Object.prototype.hasOwnProperty.call(body, "Retard_Alarme_Bas") && previousValues.Retard_Alarme_Bas !== validated.Retard_Alarme_Bas) {
+          log.config.changeAlarmDelay(
+            `Lieu: ${lieuName ?? lieuId} (Bas)`,
+            lieuId,
+            user.username,
+            user.userId,
+            ip,
+            previousValues.Retard_Alarme_Bas,
+            validated.Retard_Alarme_Bas,
+          )
+          handledFields.add("Retard_Alarme_Bas")
+        }
+
         const TRACKED_FIELDS = [
           "Nom_Lieu",
           "Commentaire",
           "Observations_Info",
           "Id_Site",
-          "Sonde_Numero_Serie",
           "Consigne",
-          "Frequence",
           "Consigne_Sup",
           "Consigne_Inf",
-          "Retard_Alarme_Haut",
-          "Retard_Alarme_Bas",
           "Nb_Mesures_Temporisation_Redeclenchement",
         ] as const
 
         const changedFields: Record<string, unknown> = {}
         for (const field of TRACKED_FIELDS) {
+          if (handledFields.has(field)) continue
           if (Object.prototype.hasOwnProperty.call(body, field) && previousValues[field] !== undefined) {
-            const newValue = field === "Frequence" ? validated.Frequence : (validated as Record<string, unknown>)[field]
+            const newValue = (validated as Record<string, unknown>)[field]
             if (previousValues[field] !== newValue) {
               changedFields[field] = { from: previousValues[field], to: newValue }
             }

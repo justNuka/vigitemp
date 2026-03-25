@@ -251,6 +251,15 @@ $dbUser = Read-InstallValue (T "Utilisateur BDD" "DB user") $dbDefaultUser
 $dbPassword = Read-InstallSecret (T "Mot de passe BDD" "DB password") ""
 $dbMain = Read-InstallValue (T "Nom BDD principale" "Main DB name") "vigi_main"
 $dbMeasure = Read-InstallValue (T "Nom BDD mesures" "Measure DB name") "vigi_mesures"
+$dbConnectionTimeoutSeconds = Read-InstallValue (T "Timeout connexion BDD (secondes)" "DB connection timeout (seconds)") "5"
+$dbCommandTimeoutSeconds = Read-InstallValue (T "Timeout requete BDD (secondes)" "DB command timeout (seconds)") "30"
+$sqlServerEncrypt = Read-InstallValue (T "SQL Server encrypt (true/false)" "SQL Server encrypt (true/false)") "false"
+$sqlServerTrustServerCertificate = Read-InstallValue (T "SQL Server trustServerCertificate (true/false)" "SQL Server trustServerCertificate (true/false)") "true"
+$licenseHysteresisDelta = Read-InstallValue (T "Delta hysteresis alarmes" "Alarm hysteresis delta") "0"
+$licenseDebounceSeconds = Read-InstallValue (T "Debounce alarmes (secondes)" "Alarm debounce (seconds)") "0"
+$licenseShowWhileSnoozed = Read-InstallValue (T "Afficher alarmes pendant snooze (true/false)" "Show alarms while snoozed (true/false)") "true"
+$settingsCacheSeconds = Read-InstallValue (T "Cache reglages alarmes (secondes)" "Alarm settings cache (seconds)") "60"
+$metrologyLogDetailed = Read-InstallValue (T "Logs metrologie detailles (true/false)" "Detailed metrology logs (true/false)") "false"
 if ([string]::IsNullOrWhiteSpace($AlarmDispatchSecretFile)) {
     $AlarmDispatchSecretFile = Join-Path $programData "Vigitemp\shared-secrets\alarm-dispatch-secret.txt"
 }
@@ -329,6 +338,15 @@ Set-AppSetting $configPath "Vigi.Db.User" $dbUser
 Set-AppSetting $configPath "Vigi.Db.Password" $dbPassword
 Set-AppSetting $configPath "Vigi.Db.MainDatabase" $dbMain
 Set-AppSetting $configPath "Vigi.Db.MeasureDatabase" $dbMeasure
+Set-AppSetting $configPath "Vigi.Db.ConnectionTimeoutSeconds" $dbConnectionTimeoutSeconds
+Set-AppSetting $configPath "Vigi.Db.CommandTimeoutSeconds" $dbCommandTimeoutSeconds
+Set-AppSetting $configPath "Vigi.Db.SqlServer.Encrypt" $sqlServerEncrypt
+Set-AppSetting $configPath "Vigi.Db.SqlServer.TrustServerCertificate" $sqlServerTrustServerCertificate
+Set-AppSetting $configPath "Vigi.License.HysteresisDelta" $licenseHysteresisDelta
+Set-AppSetting $configPath "Vigi.License.DebounceSeconds" $licenseDebounceSeconds
+Set-AppSetting $configPath "Vigi.License.ShowWhileSnoozed" $licenseShowWhileSnoozed
+Set-AppSetting $configPath "Vigi.License.SettingsCacheSeconds" $settingsCacheSeconds
+Set-AppSetting $configPath "Vigitemp.Metrology.LogDetailed" $metrologyLogDetailed
 Set-AppSetting $configPath "Vigi.License.Path" $licenseDestPath
 Set-AppSetting $configPath "Vigi.License.PublicKeyPath" $publicKeyDestPath
 Set-AppSetting $configPath "Vigi.License.InstancePublicKey" $instancePublicKey

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Line } from "react-chartjs-2"
 import type { Chart as ChartJS } from "chart.js"
 
-import type { MeasureData } from "@/lib/measurements"
+import { formatTimeAxisLabel, getTimeAxisSpanMs, type MeasureData } from "@/lib/measurements"
 import type { ZoomBounds } from "./types"
 
 type GuidePositions = {
@@ -56,9 +56,12 @@ export function MonitoringGraphTab({
   captureZoomBounds,
   t,
 }: MonitoringGraphTabProps) {
+  const localeTag = locale === "fr" ? "fr-FR" : locale
   const upperLine = orderedData.map((point) => point.Consigne_Sup)
   const lowerLine = orderedData.map((point) => point.Consigne_Inf)
   const targetLine = orderedData.map((point) => point.Consigne)
+  const timeAxisSpanMs = getTimeAxisSpanMs(orderedData)
+  const xAxisLabels = orderedData.map((point) => point.DateHeureMesureIso ?? point.DateHeureMesure)
 
   return (
     <div className="space-y-4 pt-4 h-[68vh]">
@@ -77,7 +80,7 @@ export function MonitoringGraphTab({
         <Line
           ref={chartRef}
           data={{
-            labels: orderedData.map((point) => point.DateHeureMesureXaxis),
+            labels: xAxisLabels,
             datasets: [
               ...(consigneSup !== null
                 ? [{
@@ -114,7 +117,6 @@ export function MonitoringGraphTab({
                 data: upperLine,
                 borderColor: "#ef4444",
                 borderWidth: 2,
-                borderDash: [6, 4],
                 pointRadius: 0,
                 pointHoverRadius: 0,
                 fill: false,
@@ -139,7 +141,6 @@ export function MonitoringGraphTab({
                 data: lowerLine,
                 borderColor: "#ef4444",
                 borderWidth: 2,
-                borderDash: [6, 4],
                 pointRadius: 0,
                 pointHoverRadius: 0,
                 fill: false,
@@ -244,7 +245,17 @@ export function MonitoringGraphTab({
                 min: zoomBounds?.xMin,
                 max: zoomBounds?.xMax,
                 grid: { display: true, color: "rgba(0, 0, 0, 0.05)" },
-                ticks: { autoSkip: true, maxTicksLimit: 8, font: { size: 11 } },
+                ticks: {
+                  autoSkip: true,
+                  maxTicksLimit: timeAxisSpanMs >= 24 * 60 * 60 * 1000 ? 10 : 8,
+                  maxRotation: 0,
+                  minRotation: 0,
+                  font: { size: 11 },
+                  callback: (_value, index) => {
+                    const rawValue = xAxisLabels[index]
+                    return rawValue ? formatTimeAxisLabel(rawValue, localeTag, timeAxisSpanMs) : ""
+                  },
+                },
               },
               y: {
                 display: true,

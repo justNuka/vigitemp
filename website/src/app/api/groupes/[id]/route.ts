@@ -3,6 +3,7 @@ import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getClientIp, withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
+import { auditRouteDelete, auditRouteUpdate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 
 export const PATCH = withLogging(
@@ -39,9 +40,11 @@ export const PATCH = withLogging(
         },
       })
 
-      log.data.update("Groupe", id, user.username, user.userId, getClientIp(req), {
-        nom: nom || groupe.Nom_Groupe,
-        regroupement: regroupement || groupe.Numero_Regroupement,
+      auditRouteUpdate(req, user, {
+        resource: "Groupe",
+        resourceId: id,
+        before: { Nom_Groupe: groupe.Nom_Groupe, Numero_Regroupement: groupe.Numero_Regroupement },
+        after: { Nom_Groupe: updated.Nom_Groupe, Numero_Regroupement: updated.Numero_Regroupement },
       })
 
       const nombre_lieux = await prisma.t_lieu.count({
@@ -112,7 +115,12 @@ export const DELETE = withLogging(
         data: { Est_Archive: true },
       })
 
-      log.data.delete("Groupe", id, user.username, user.userId, getClientIp(req), `Archivage groupe ${updated.Nom_Groupe}`)
+      auditRouteDelete(req, user, {
+        resource: "Groupe",
+        resourceId: id,
+        reason: `Archivage groupe ${updated.Nom_Groupe}`,
+        data: { Nom_Groupe: updated.Nom_Groupe },
+      })
 
       return apiOk({
         Id_Groupe: updated.Id_Groupe,

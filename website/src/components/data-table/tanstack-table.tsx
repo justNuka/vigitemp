@@ -395,7 +395,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                   <DropdownMenuTrigger asChild>
                     <Button
                       size="sm"
-                      className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                      variant="outline" className="gap-2"
                       disabled={isLoading}
                     >
                       <Download className="h-4 w-4" />
@@ -419,7 +419,7 @@ export function TanStackTable<TData extends Record<string, any>>({
               {enablePrint && (
                 <Button
                   size="sm"
-                  className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                  variant="outline" className="gap-2"
                   disabled={isLoading}
                   onClick={printTableOnly}
                 >

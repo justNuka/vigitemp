@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { getAuthenticatedUser } from "@/lib/auth"
 import { getClientIp, withLogging } from "@/lib/api-logger"
 import { z } from "zod"
+import { auditRouteDelete, auditRouteUpdate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { apiError, apiOk } from "@/lib/api-response"
 
@@ -79,19 +80,30 @@ export const PATCH = withLogging(
         where: { Id_Module: id },
       })
 
-      log.data.update(
-        "Module",
-        id.toString(),
-        user.username,
-        user.userId,
-        getClientIp(req),
-        {
-          Module_Numero_Serie: validatedData.Module_Numero_Serie,
-          Type_Module: validatedData.Type_Module,
-          Port_Serie: validatedData.Port_Serie,
-          Emplacement: validatedData.Emplacement,
+      auditRouteUpdate(req, user, {
+        resource: "Module",
+        resourceId: id.toString(),
+        before: {
+          Module_Numero_Serie: existingModule.Module_Numero_Serie,
+          Type_Module: existingModule.Type_Module,
+          Port_Serie: existingModule.Port_Serie,
+          Emplacement: existingModule.Emplacement,
+          Adresse_IP: existingModule.Adresse_IP,
+          Id_Serveur: existingModule.Id_Serveur,
+          Delai_Reseau: existingModule.Delai_Reseau,
+          Est_Module_GSO: existingModule.Est_Module_GSO,
         },
-      )
+        after: {
+          Module_Numero_Serie: updatedModule.Module_Numero_Serie,
+          Type_Module: updatedModule.Type_Module,
+          Port_Serie: updatedModule.Port_Serie,
+          Emplacement: updatedModule.Emplacement,
+          Adresse_IP: updatedModule.Adresse_IP,
+          Id_Serveur: updatedModule.Id_Serveur,
+          Delai_Reseau: updatedModule.Delai_Reseau,
+          Est_Module_GSO: updatedModule.Est_Module_GSO,
+        },
+      })
 
       const moduleType = await prisma.t_module_type.findUnique({
         where: { Id_Module_Type: validatedData.Type_Module },

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 
 import { MultiSelectFilter } from "@/components/multi-select-filter"
+import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslations } from 'next-intl'
 
@@ -32,19 +33,20 @@ function buildAllowedGroupIdSet(groups: Group[], selectedSiteIds: number[]) {
 export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
   const t = useTranslations('surveillance.filters')
   const [filters, setFilters] = useState<FilterState>(() => {
-    if (typeof window === "undefined") return { siteIds: [], groupIds: [], sortMode: "status" }
+    if (typeof window === "undefined") return { siteIds: [], groupIds: [], searchTerm: "", sortMode: "status" }
     const saved = localStorage.getItem(STORAGE_KEY)
-    if (!saved) return { siteIds: [], groupIds: [], sortMode: "status" }
+    if (!saved) return { siteIds: [], groupIds: [], searchTerm: "", sortMode: "status" }
 
     try {
       const parsed = JSON.parse(saved)
       return {
         siteIds: Array.isArray(parsed.siteIds) ? parsed.siteIds : [],
         groupIds: Array.isArray(parsed.groupIds) ? parsed.groupIds : [],
+        searchTerm: typeof parsed.searchTerm === "string" ? parsed.searchTerm : "",
         sortMode: parsed.sortMode === "alphabetical" ? "alphabetical" : "status",
       }
     } catch {
-      return { siteIds: [], groupIds: [], sortMode: "status" }
+      return { siteIds: [], groupIds: [], searchTerm: "", sortMode: "status" }
     }
   })
 
@@ -88,7 +90,7 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row">
+    <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
       <MultiSelectFilter
         label={t('sites.label')}
         options={sites?.map((site) => ({ id: site.id, label: site.name })) || []}
@@ -121,6 +123,20 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
         placeholder={t('groups.placeholder')}
         tone="default"
       />
+
+      <div className="w-full lg:max-w-sm">
+        <div className="space-y-2">
+          <Input
+            value={filters.searchTerm}
+            onChange={(event) => {
+              const value = event.target.value
+              setFilters((prev) => ({ ...prev, searchTerm: value }))
+            }}
+            placeholder={t('search.placeholder')}
+            aria-label={t('search.label')}
+          />
+        </div>
+      </div>
 
       <div className="w-full lg:max-w-xs">
         <div className="space-y-2">

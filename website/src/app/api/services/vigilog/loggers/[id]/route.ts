@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getClientIp } from "@/lib/api-logger"
 import { withAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { auditRouteUpdate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { normalizeOptionalText, vigilogLoggerSchema } from "../../_shared"
@@ -102,9 +103,46 @@ export const PATCH = withAuthorizationLogging(
         },
       })
 
-      log.data.update("VigiLog", updated.Id_VigiLog, ctx.user.username, ctx.user.userId, getClientIp(req), {
-        serial: updated.Numero_Serie,
-        model: updated.Modele,
+      log.audit("VLOG", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        ip: getClientIp(req),
+        resource: "VigiLog",
+        resourceId: updated.Id_VigiLog,
+        changes: {
+          action: "update",
+          serial: updated.Numero_Serie,
+          model: updated.Modele,
+          label: updated.Libelle,
+          active: updated.Actif,
+        },
+      })
+
+      auditRouteUpdate(req, ctx.user, {
+        resource: "VigiLog",
+        resourceId: updated.Id_VigiLog,
+        before: {
+          serial: existing.Numero_Serie,
+          model: existing.Modele,
+          label: existing.Libelle,
+          active: existing.Actif,
+          calibrationDate: existing.Date_Etalonnage,
+          calibrationValidityDate: existing.Date_Validite,
+          calibrationValidityDays: existing.Duree_Validite_Jours,
+          accuracyError: existing.Err_Justesse,
+          comment: existing.Commentaire,
+        },
+        after: {
+          serial: updated.Numero_Serie,
+          model: updated.Modele,
+          label: updated.Libelle,
+          active: updated.Actif,
+          calibrationDate: updated.Date_Etalonnage,
+          calibrationValidityDate: updated.Date_Validite,
+          calibrationValidityDays: updated.Duree_Validite_Jours,
+          accuracyError: updated.Err_Justesse,
+          comment: updated.Commentaire,
+        },
       })
 
       return apiOk(serializeLogger(updated))

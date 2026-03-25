@@ -69,7 +69,7 @@ export function SensorsTableCard({
               variant="outline"
               size="sm"
               onClick={onToggleAll}
-              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              className="gap-2"
             >
               {allSelected ? <Square className="h-4 w-4" /> : <CheckSquare className="h-4 w-4" />}
               {allSelected ? t('actions.uncheck_all') : t('actions.check_all')}
@@ -79,7 +79,7 @@ export function SensorsTableCard({
                 variant="outline"
                 size="sm"
                 onClick={onDeselectAll}
-                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                className="gap-2"
               >
                 <Square className="h-4 w-4" />
                 {t('actions.uncheck_selection')}
@@ -89,7 +89,7 @@ export function SensorsTableCard({
               variant="outline"
               size="sm"
               onClick={onReset}
-              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              className="gap-2"
             >
               <RotateCcw className="h-4 w-4" />
               {t('actions.reset')}

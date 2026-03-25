@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getClientIp } from "@/lib/api-logger"
 import { withAnyAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { auditRouteUpdate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { VIGILOG_ACCESS_CODES } from "../../../_shared"
@@ -35,20 +36,27 @@ export const POST = withAnyAuthorizationLogging(
         },
       })
 
-      log.data.update(
-        "Tournee VigiLog",
-        updated.Id_VigiLog_Tournee,
-        ctx.user.username,
-        ctx.user.userId,
-        getClientIp(req),
-        {
+      log.audit("VLOG", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        ip: getClientIp(req),
+        resource: "Tournee VigiLog",
+        resourceId: updated.Id_VigiLog_Tournee,
+        changes: {
           action: "cancel",
           reference: updated.Reference_Tournee,
           loggerSerial: updated.Numero_Serie_VigiLog,
           previousStatus: existing.Statut,
           status: updated.Statut,
         },
-      )
+      })
+
+      auditRouteUpdate(req, ctx.user, {
+        resource: "Tournee VigiLog",
+        resourceId: updated.Id_VigiLog_Tournee,
+        before: { status: existing.Statut },
+        after: { status: updated.Statut },
+      })
 
       return apiOk({
         id: updated.Id_VigiLog_Tournee,

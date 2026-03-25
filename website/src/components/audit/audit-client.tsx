@@ -225,7 +225,7 @@ export function AuditClient({ logs }: Props) {
       variant="outline"
       size="sm"
       onClick={handleRefresh}
-      className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 border-primary/40"
+      className="gap-2"
       data-testid="button-refresh"
     >
       <RefreshCw className="h-4 w-4" />

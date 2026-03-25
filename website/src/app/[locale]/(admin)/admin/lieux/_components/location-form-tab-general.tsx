@@ -25,9 +25,10 @@ type Props = {
   groups: Group[]
   availableSensors: AvailableSensor[]
   modules: Module[]
+  onGoToPlanning?: () => void
 }
 
-export function LocationFormTabGeneral({ sites, groups, availableSensors, modules }: Props) {
+export function LocationFormTabGeneral({ sites, groups, availableSensors, modules, onGoToPlanning }: Props) {
   const t = useTranslations('locationsForm.general')
   const {
     register,
@@ -126,7 +127,7 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
 
       <LocationGeneralSettingsSection sites={sites} groups={groups} />
       <LocationSensorSection availableSensors={availableSensors} modules={modules} hasSondeSelected={hasSondeSelected} />
-      <LocationSetpointsSection isGsoSensor={isGsoSensor} />
+      <LocationSetpointsSection isGsoSensor={isGsoSensor} idLieu={formData.Id_Lieu ?? null} onGoToPlanning={onGoToPlanning} />
     </TabsContent>
   )
 }

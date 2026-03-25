@@ -203,8 +203,7 @@ export function AlarmsClientTanStack() {
                 size="sm"
                 onClick={() => acknowledgeMutation.mutate(alarm.Id_Alarme)}
                 disabled={acknowledgeMutation.isPending}
-                className="border-amber-300 bg-amber-300 text-slate-900 hover:bg-amber-200 hover:text-slate-900 dark:border-warning dark:bg-warning/20 dark:text-warning-foreground dark:hover:bg-warning/30"
-              >
+                >
                 {tButtons("acknowledge")}
               </Button>
             </div>
@@ -269,7 +268,7 @@ export function AlarmsClientTanStack() {
       variant="outline"
       size="sm"
       onClick={handleRefresh}
-      className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 border-primary/40"
+      className="gap-2"
       disabled={isRefreshing}
       data-testid="button-refresh"
     >

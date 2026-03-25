@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { History } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { AlarmsClient } from "./alarms-client";
@@ -30,7 +30,12 @@ export function AlarmsPageClient({ alarms, stats, initialStatus }: Props) {
   const tAckHistory = useTranslations("alarmAckHistoryPage");
   const { hasPermission } = useAppAccess();
   const [statusFilter, setStatusFilter] = useState<AlarmStatus>(initialStatus);
+  const [localStats, setLocalStats] = useState(stats);
   const canViewAckHistory = hasPermission("METROLOGY_WORK_ACCESS");
+
+  useEffect(() => {
+    setLocalStats(stats);
+  }, [stats]);
 
   // Filter alarms based on current status
   const filteredAlarms = alarms.filter((alarm) => alarm.status === statusFilter);
@@ -40,7 +45,7 @@ export function AlarmsPageClient({ alarms, stats, initialStatus }: Props) {
       <PageHeader
         title={t("title")}
         description={t("description")}
-        activeAlarms={stats.active}
+        activeAlarms={localStats.active}
       >
         {canViewAckHistory ? (
           <Button asChild variant="outline" size="sm" className="gap-2">
@@ -55,8 +60,9 @@ export function AlarmsPageClient({ alarms, stats, initialStatus }: Props) {
       <AlarmsClient
         alarms={filteredAlarms}
         statusFilter={statusFilter}
-        stats={stats}
+        stats={localStats}
         onStatusChange={setStatusFilter}
+        onStatsChange={setLocalStats}
       />
     </div>
   );

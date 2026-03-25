@@ -1,4 +1,5 @@
-const DUAL_GSO_TYPES = new Set(["SOIH", "SOEH", "SOIT"]);
+const DUAL_GSO_TYPES = new Set(["SOIH", "SOEH"]);
+const SINGLE_TEMPERATURE_GSO_TYPES = new Set(["SOIT", "SOET"]);
 const PREFIX_STRIPPED_ADDRESS_TYPES = new Set(["IN", "IE", "IP", "IC", "IH", "EN"]);
 
 const normalizeType = (value: string) => value.trim().toUpperCase().replace(/-+$/g, "");
@@ -25,6 +26,9 @@ export const extractProbeAddressFromSerial = (serial: string) => {
   const type = dashIndex >= 0 ? normalizeType(normalized.slice(0, dashIndex)) : normalizeType(normalized.slice(0, 2));
 
   if (isGsoType(type)) {
+    if (SINGLE_TEMPERATURE_GSO_TYPES.has(type)) {
+      return `${stripGsoSuffix(gsoAddress)}-T`;
+    }
     return gsoAddress;
   }
 
@@ -50,7 +54,11 @@ export const normalizeImportedGsoSerial = (rawSerial: string) => {
     if (address.endsWith("-T") || address.endsWith("-H")) {
       return `${type}-${address}`;
     }
-    return `${type}-${address}-T`;
+    return `${type}-${stripGsoSuffix(address)}-T`;
+  }
+
+  if (SINGLE_TEMPERATURE_GSO_TYPES.has(type)) {
+    return `${type}-${stripGsoSuffix(address)}`;
   }
 
   return `${type}-${address}`;
@@ -58,7 +66,7 @@ export const normalizeImportedGsoSerial = (rawSerial: string) => {
 
 export const expandRelatedGsoSerials = (serial: string) => {
   const normalized = normalizeSerial(serial);
-  const match = normalized.match(/^(SOIH|SOEH|SOIT)-(.+)$/i);
+  const match = normalized.match(/^(SOIH|SOEH)-(.+)$/i);
   if (!match) return [normalized];
 
   const type = normalizeType(match[1]);
@@ -79,9 +87,9 @@ export const buildSensorSerialsFromInput = (rawType: string, rawSerieNum: string
   }
 
   let address = serie;
-  const firstDash = serie.indexOf("-");
-  if (firstDash >= 0) {
-    address = serie.slice(firstDash + 1);
+  const prefixedSerie = `${type}-`;
+  if (serie.startsWith(prefixedSerie)) {
+    address = serie.slice(prefixedSerie.length);
   }
   address = address.replace(/^-+/, "").replace(/-+$/, "");
 
@@ -91,6 +99,14 @@ export const buildSensorSerialsFromInput = (rawType: string, rawSerieNum: string
       type,
       isGso: true,
       serials: [`${type}-${baseAddress}-T`, `${type}-${baseAddress}-H`],
+    };
+  }
+
+  if (SINGLE_TEMPERATURE_GSO_TYPES.has(type)) {
+    return {
+      type,
+      isGso: true,
+      serials: [`${type}-${stripGsoSuffix(address)}`],
     };
   }
 

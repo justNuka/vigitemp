@@ -1529,14 +1529,16 @@ SET @sql := IF(@has_tbl = 0,
     `Id_Audit` INT NOT NULL AUTO_INCREMENT,\
     `Id_Lieu` INT NOT NULL,\
     `Timestamp` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\
-    `Type` ENUM(''ACTIVATION'',''RETOUR_BASE'') NOT NULL,\
+    `Date_Heure_Debut_Changement` DATETIME NULL,\
+    `Date_Heure_Fin_Changement` DATETIME NULL,\
+    `Type` ENUM(''PLAN_APPLY'') NOT NULL,\
     `Planning_Regle_Id` INT NULL,\
     `Consigne_Avant` FLOAT NULL,\
-    `Consigne_Sup_Avant` FLOAT NULL,\
-    `Consigne_Inf_Avant` FLOAT NULL,\
+    `Tolerance_Surveillance_Sup_Avant` FLOAT NULL,\
+    `Tolerance_Surveillance_Inf_Avant` FLOAT NULL,\
     `Consigne_Apres` FLOAT NULL,\
-    `Consigne_Sup_Apres` FLOAT NULL,\
-    `Consigne_Inf_Apres` FLOAT NULL,\
+    `Tolerance_Surveillance_Sup_Apres` FLOAT NULL,\
+    `Tolerance_Surveillance_Inf_Apres` FLOAT NULL,\
     PRIMARY KEY (`Id_Audit`),\
     KEY `IDX_Id_Lieu_Timestamp` (`Id_Lieu`,`Timestamp`)\
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
@@ -1561,132 +1563,150 @@ BEGIN
   SET v_now_day = IF(DAYOFWEEK(NOW()) = 1, 7, DAYOFWEEK(NOW()) - 1);
   SET v_now_time = TIME(NOW());
 
-  UPDATE t_lieu l
+  DROP TEMPORARY TABLE IF EXISTS tmp_planning_best;
+  CREATE TEMPORARY TABLE tmp_planning_best AS
+  SELECT r.Id_Lieu,
+         r.Id_Regle,
+         r.Consigne,
+         r.Tolerance_Sup_Calc,
+         r.Tolerance_Inf_Calc,
+         r.Retard_Alarme_Changement_Consigne
+  FROM t_lieu_planning_regle r
   INNER JOIN (
-    SELECT r.Id_Lieu, r.Id_Regle, r.Consigne, r.Consigne_Sup, r.Consigne_Inf,
-           r.Tolerance_Sup_Calc, r.Tolerance_Inf_Calc,
-           r.Retard_Alarme_Changement_Consigne
-    FROM t_lieu_planning_regle r
-    INNER JOIN (
-      SELECT Id_Lieu, MAX(Priorite) AS max_prio
-      FROM t_lieu_planning_regle
-      WHERE Actif = 1
-        AND (
-          (Jour_Debut = Jour_Fin AND
-            v_now_day = Jour_Debut AND
-            v_now_time >= Heure_Debut AND
-            v_now_time <  Heure_Fin)
-          OR
-          (Jour_Debut < Jour_Fin AND (
-            (v_now_day > Jour_Debut AND v_now_day < Jour_Fin)
-            OR (v_now_day = Jour_Debut AND v_now_time >= Heure_Debut)
-            OR (v_now_day = Jour_Fin   AND v_now_time <  Heure_Fin)
-          ))
-          OR
-          (Jour_Debut > Jour_Fin AND (
-            (v_now_day = Jour_Debut AND v_now_time >= Heure_Debut)
-            OR (v_now_day = Jour_Fin   AND v_now_time <  Heure_Fin)
-            OR (v_now_day > Jour_Debut)
-            OR (v_now_day < Jour_Fin)
-          ))
-        )
-      GROUP BY Id_Lieu
-    ) best_prio ON best_prio.Id_Lieu = r.Id_Lieu AND best_prio.max_prio = r.Priorite
-    WHERE r.Actif = 1
+    SELECT Id_Lieu, MAX(Priorite) AS max_prio
+    FROM t_lieu_planning_regle
+    WHERE Actif = 1
       AND (
-        (r.Jour_Debut = r.Jour_Fin AND
-          v_now_day = r.Jour_Debut AND
-          v_now_time >= r.Heure_Debut AND
-          v_now_time <  r.Heure_Fin)
+        (Jour_Debut = Jour_Fin AND
+          v_now_day = Jour_Debut AND
+          v_now_time >= Heure_Debut AND
+          v_now_time <  Heure_Fin)
         OR
-        (r.Jour_Debut < r.Jour_Fin AND (
-          (v_now_day > r.Jour_Debut AND v_now_day < r.Jour_Fin)
-          OR (v_now_day = r.Jour_Debut AND v_now_time >= r.Heure_Debut)
-          OR (v_now_day = r.Jour_Fin   AND v_now_time <  r.Heure_Fin)
+        (Jour_Debut < Jour_Fin AND (
+          (v_now_day > Jour_Debut AND v_now_day < Jour_Fin)
+          OR (v_now_day = Jour_Debut AND v_now_time >= Heure_Debut)
+          OR (v_now_day = Jour_Fin   AND v_now_time <  Heure_Fin)
         ))
         OR
-        (r.Jour_Debut > r.Jour_Fin AND (
-          (v_now_day = r.Jour_Debut AND v_now_time >= r.Heure_Debut)
-          OR (v_now_day = r.Jour_Fin   AND v_now_time <  r.Heure_Fin)
-          OR (v_now_day > r.Jour_Debut)
-          OR (v_now_day < r.Jour_Fin)
+        (Jour_Debut > Jour_Fin AND (
+          (v_now_day = Jour_Debut AND v_now_time >= Heure_Debut)
+          OR (v_now_day = Jour_Fin   AND v_now_time <  Heure_Fin)
+          OR (v_now_day > Jour_Debut)
+          OR (v_now_day < Jour_Fin)
         ))
       )
-  ) best ON best.Id_Lieu = l.Id_Lieu
-  SET
-    l.Consigne                       = best.Consigne,
-    l.Consigne_Sup                   = best.Consigne_Sup,
-    l.Consigne_Inf                   = best.Consigne_Inf,
-    l.Tolerance_Surveillance_Sup     = best.Tolerance_Sup_Calc,
-    l.Tolerance_Surveillance_Inf     = best.Tolerance_Inf_Calc,
-    l.Retard_Alarme_Changement_Consigne = best.Retard_Alarme_Changement_Consigne,
-    l.Planning_Actif                 = 1,
-    l.Planning_Source_Regle_Id       = best.Id_Regle,
-    l.Planning_Derniere_Maj          = NOW()
-  WHERE
-    l.Planning_Source_Regle_Id != best.Id_Regle
-    OR l.Planning_Source_Regle_Id IS NULL
-    OR l.Planning_Actif = 0;
+    GROUP BY Id_Lieu
+  ) best_prio ON best_prio.Id_Lieu = r.Id_Lieu AND best_prio.max_prio = r.Priorite
+  WHERE r.Actif = 1
+    AND (
+      (r.Jour_Debut = r.Jour_Fin AND
+        v_now_day = r.Jour_Debut AND
+        v_now_time >= r.Heure_Debut AND
+        v_now_time <  r.Heure_Fin)
+      OR
+      (r.Jour_Debut < r.Jour_Fin AND (
+        (v_now_day > r.Jour_Debut AND v_now_day < r.Jour_Fin)
+        OR (v_now_day = r.Jour_Debut AND v_now_time >= r.Heure_Debut)
+        OR (v_now_day = r.Jour_Fin   AND v_now_time <  r.Heure_Fin)
+      ))
+      OR
+      (r.Jour_Debut > r.Jour_Fin AND (
+        (v_now_day = r.Jour_Debut AND v_now_time >= r.Heure_Debut)
+        OR (v_now_day = r.Jour_Fin   AND v_now_time <  r.Heure_Fin)
+        OR (v_now_day > r.Jour_Debut)
+        OR (v_now_day < r.Jour_Fin)
+      ))
+    );
 
-  INSERT INTO t_lieu_planning_audit
-    (Id_Lieu, Timestamp, Type, Planning_Regle_Id,
-     Consigne_Avant, Consigne_Sup_Avant, Consigne_Inf_Avant,
-     Consigne_Apres, Consigne_Sup_Apres, Consigne_Inf_Apres)
-  SELECT l.Id_Lieu, NOW(), 'ACTIVATION', l.Planning_Source_Regle_Id,
-    l.Consigne_Base, l.Consigne_Sup_Base, l.Consigne_Inf_Base,
-    l.Consigne, l.Consigne_Sup, l.Consigne_Inf
+  DROP TEMPORARY TABLE IF EXISTS tmp_planning_apply;
+  CREATE TEMPORARY TABLE tmp_planning_apply AS
+  SELECT l.Id_Lieu,
+         best.Id_Regle AS Planning_Regle_Id,
+         l.Consigne AS Consigne_Avant,
+         l.Tolerance_Surveillance_Sup AS Tolerance_Surveillance_Sup_Avant,
+         l.Tolerance_Surveillance_Inf AS Tolerance_Surveillance_Inf_Avant,
+         best.Consigne AS Consigne_Apres,
+         best.Tolerance_Sup_Calc AS Tolerance_Surveillance_Sup_Apres,
+         best.Tolerance_Inf_Calc AS Tolerance_Surveillance_Inf_Apres,
+         best.Retard_Alarme_Changement_Consigne
   FROM t_lieu l
-  WHERE l.Planning_Actif = 1
-    AND l.Planning_Derniere_Maj >= NOW() - INTERVAL 1 MINUTE;
+  INNER JOIN tmp_planning_best best ON best.Id_Lieu = l.Id_Lieu
+  WHERE l.Planning_Source_Regle_Id <> best.Id_Regle
+     OR l.Planning_Source_Regle_Id IS NULL
+     OR l.Planning_Actif = 0
+     OR IFNULL(l.Consigne, -999999) <> IFNULL(best.Consigne, -999999)
+     OR IFNULL(l.Tolerance_Surveillance_Sup, -999999) <> IFNULL(best.Tolerance_Sup_Calc, -999999)
+     OR IFNULL(l.Tolerance_Surveillance_Inf, -999999) <> IFNULL(best.Tolerance_Inf_Calc, -999999);
+
+  UPDATE t_lieu_planning_audit a
+  INNER JOIN tmp_planning_apply c ON c.Id_Lieu = a.Id_Lieu
+  SET a.Date_Heure_Fin_Changement = NOW()
+  WHERE a.Type = 'PLAN_APPLY'
+    AND a.Date_Heure_Fin_Changement IS NULL;
 
   UPDATE t_lieu l
-  SET
-    l.Consigne                       = l.Consigne_Base,
-    l.Consigne_Sup                   = l.Consigne_Sup_Base,
-    l.Consigne_Inf                   = l.Consigne_Inf_Base,
-    l.Tolerance_Surveillance_Sup     = l.Tolerance_Surveillance_Sup_Base,
-    l.Tolerance_Surveillance_Inf     = l.Tolerance_Surveillance_Inf_Base,
-    l.Retard_Alarme_Changement_Consigne = NULL,
-    l.Planning_Actif                 = 0,
-    l.Planning_Source_Regle_Id       = NULL,
-    l.Planning_Derniere_Maj          = NOW()
+  INNER JOIN tmp_planning_apply c ON c.Id_Lieu = l.Id_Lieu
+  SET l.Consigne                          = c.Consigne_Apres,
+      l.Consigne_Sup                      = c.Tolerance_Surveillance_Sup_Apres,
+      l.Consigne_Inf                      = c.Tolerance_Surveillance_Inf_Apres,
+      l.Tolerance_Surveillance_Sup        = c.Tolerance_Surveillance_Sup_Apres,
+      l.Tolerance_Surveillance_Inf        = c.Tolerance_Surveillance_Inf_Apres,
+      l.Retard_Alarme_Changement_Consigne = c.Retard_Alarme_Changement_Consigne,
+      l.Planning_Actif                    = 1,
+      l.Planning_Source_Regle_Id          = c.Planning_Regle_Id,
+      l.Planning_Derniere_Maj             = NOW();
+
+  INSERT INTO t_lieu_planning_audit
+    (Id_Lieu, Timestamp, Date_Heure_Debut_Changement, Date_Heure_Fin_Changement, Type,
+     Planning_Regle_Id,
+     Consigne_Avant, Tolerance_Surveillance_Sup_Avant, Tolerance_Surveillance_Inf_Avant,
+     Consigne_Apres, Tolerance_Surveillance_Sup_Apres, Tolerance_Surveillance_Inf_Apres)
+  SELECT c.Id_Lieu,
+         NOW(),
+         NOW(),
+         NULL,
+         'PLAN_APPLY',
+         c.Planning_Regle_Id,
+         c.Consigne_Avant,
+         c.Tolerance_Surveillance_Sup_Avant,
+         c.Tolerance_Surveillance_Inf_Avant,
+         c.Consigne_Apres,
+         c.Tolerance_Surveillance_Sup_Apres,
+         c.Tolerance_Surveillance_Inf_Apres
+  FROM tmp_planning_apply c;
+
+  DROP TEMPORARY TABLE IF EXISTS tmp_planning_return;
+  CREATE TEMPORARY TABLE tmp_planning_return AS
+  SELECT l.Id_Lieu
+  FROM t_lieu l
   WHERE l.Planning_Actif = 1
     AND NOT EXISTS (
       SELECT 1
-      FROM t_lieu_planning_regle r2
-      WHERE r2.Id_Lieu = l.Id_Lieu
-        AND r2.Actif = 1
-        AND (
-          (r2.Jour_Debut = r2.Jour_Fin AND
-            v_now_day = r2.Jour_Debut AND
-            v_now_time >= r2.Heure_Debut AND
-            v_now_time <  r2.Heure_Fin)
-          OR
-          (r2.Jour_Debut < r2.Jour_Fin AND (
-            (v_now_day > r2.Jour_Debut AND v_now_day < r2.Jour_Fin)
-            OR (v_now_day = r2.Jour_Debut AND v_now_time >= r2.Heure_Debut)
-            OR (v_now_day = r2.Jour_Fin   AND v_now_time <  r2.Heure_Fin)
-          ))
-          OR
-          (r2.Jour_Debut > r2.Jour_Fin AND (
-            (v_now_day = r2.Jour_Debut AND v_now_time >= r2.Heure_Debut)
-            OR (v_now_day = r2.Jour_Fin   AND v_now_time <  r2.Heure_Fin)
-            OR (v_now_day > r2.Jour_Debut)
-            OR (v_now_day < r2.Jour_Fin)
-          ))
-        )
+      FROM tmp_planning_best best
+      WHERE best.Id_Lieu = l.Id_Lieu
     );
 
-  INSERT INTO t_lieu_planning_audit
-    (Id_Lieu, Timestamp, Type, Planning_Regle_Id,
-     Consigne_Avant, Consigne_Sup_Avant, Consigne_Inf_Avant,
-     Consigne_Apres, Consigne_Sup_Apres, Consigne_Inf_Apres)
-  SELECT l.Id_Lieu, NOW(), 'RETOUR_BASE', NULL,
-    NULL, NULL, NULL,
-    l.Consigne_Base, l.Consigne_Sup_Base, l.Consigne_Inf_Base
-  FROM t_lieu l
-  WHERE l.Planning_Actif = 0
-    AND l.Planning_Derniere_Maj >= NOW() - INTERVAL 1 MINUTE;
+  UPDATE t_lieu_planning_audit a
+  INNER JOIN tmp_planning_return r ON r.Id_Lieu = a.Id_Lieu
+  SET a.Date_Heure_Fin_Changement = NOW()
+  WHERE a.Type = 'PLAN_APPLY'
+    AND a.Date_Heure_Fin_Changement IS NULL;
+
+  UPDATE t_lieu l
+  INNER JOIN tmp_planning_return r ON r.Id_Lieu = l.Id_Lieu
+  SET l.Consigne                          = l.Consigne_Base,
+      l.Consigne_Sup                      = l.Consigne_Sup_Base,
+      l.Consigne_Inf                      = l.Consigne_Inf_Base,
+      l.Tolerance_Surveillance_Sup        = l.Tolerance_Surveillance_Sup_Base,
+      l.Tolerance_Surveillance_Inf        = l.Tolerance_Surveillance_Inf_Base,
+      l.Retard_Alarme_Changement_Consigne = NULL,
+      l.Planning_Actif                    = 0,
+      l.Planning_Source_Regle_Id          = NULL,
+      l.Planning_Derniere_Maj             = NOW();
+
+  DROP TEMPORARY TABLE IF EXISTS tmp_planning_return;
+  DROP TEMPORARY TABLE IF EXISTS tmp_planning_apply;
+  DROP TEMPORARY TABLE IF EXISTS tmp_planning_best;
 END$$
 DELIMITER ;
 

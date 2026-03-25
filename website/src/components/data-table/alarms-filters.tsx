@@ -33,7 +33,7 @@ export function AlarmsFilters({
         <Button
           variant="outline"
           size="sm"
-          className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 border-primary/40"
+          className="gap-2"
           data-testid="button-filter-type"
         >
           <Filter className="h-4 w-4" />

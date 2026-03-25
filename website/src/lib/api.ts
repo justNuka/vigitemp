@@ -249,6 +249,7 @@ export type Location = {
   alarmId?: number | null;
   isGso?: boolean | null;
   gsoRssi?: string | null;
+  batteryPercent?: number | null;
   gsoTension?: string | null;
   siteId?: number;
   groupIds?: number[];

@@ -81,7 +81,7 @@ export function MonitoringCardHeader({
   const headerStatusLabel = alarmTypeTheme?.label ?? headerTheme.label
   const HeaderIcon = headerTheme.Icon
   const typeIconInfo = lieuType ? getTypeIcon(lieuType, 'w-4 h-4') : null
-  const alarmBadgeClassName = isSurveillanceActive ? 'bg-red-500/30 text-red-500 dark:text-red-100' : 'bg-white/20 text-white'
+  const alarmBadgeClassName = isSurveillanceActive ? 'bg-black/15 text-white ring-1 ring-white/15 backdrop-blur-sm' : 'bg-white/20 text-white ring-1 ring-white/20'
 
   const resolvedHeaderBg = HEADER_GRADIENT_MAP[headerBgClassName] ?? headerBgClassName
 
@@ -107,11 +107,11 @@ export function MonitoringCardHeader({
         />
       )}
       <div className="flex items-start justify-between gap-2">
-        <div className={`${headerTextClassName} text-xs font-medium space-y-1 flex-1`}>
+        <div className={`${headerTextClassName} min-w-0 flex-1 text-xs font-medium space-y-1`}>
           <TooltipProvider>
             <UITooltip>
               <TooltipTrigger asChild>
-                <div className="cursor-help hover:opacity-80 transition-opacity truncate">
+                <div className="max-w-full cursor-help truncate hover:opacity-80 transition-opacity">
                   {siteName || t('site.unknown')}
                 </div>
               </TooltipTrigger>
@@ -120,11 +120,13 @@ export function MonitoringCardHeader({
               </TooltipContent>
             </UITooltip>
           </TooltipProvider>
-          {groupName ? <div className="truncate">{groupName}</div> : null}
-          <div className="flex items-center gap-2">
+          {groupName ? <div className="max-w-full truncate">{groupName}</div> : null}
+          <div className="flex min-w-0 items-start gap-2">
             <UITooltip>
               <TooltipTrigger asChild>
-                <div className="text-base font-semibold truncate cursor-help">{nomLieu}</div>
+                <div className="line-clamp-2 break-words text-[15px] leading-tight font-semibold cursor-help">
+                  {sondeNumeroSerie ? `${nomLieu} - ${sondeNumeroSerie}` : nomLieu}
+                </div>
               </TooltipTrigger>
               {locationComment ? (
                 <TooltipContent side="top" className="max-w-sm whitespace-pre-wrap wrap-break-word">
@@ -133,17 +135,16 @@ export function MonitoringCardHeader({
               ) : null}
             </UITooltip>
           </div>
-          {sondeNumeroSerie ? <div className="truncate text-[11px] opacity-90">{sondeNumeroSerie}</div> : null}
           {surveillanceDisabledLabel ? (
-            <div className={`inline-flex items-center w-fit gap-1 rounded-full text-[10px] px-2 py-0.5 ${alarmBadgeClassName}`}>
+            <div className={`inline-flex items-center max-w-full gap-1.5 rounded-full text-[11px] font-medium px-2.5 py-1 ${alarmBadgeClassName}`}>
               <PowerOff className="h-3 w-3" />
-              <span>{surveillanceDisabledLabel}</span>
+              <span className="truncate">{surveillanceDisabledLabel}</span>
             </div>
           ) : null}
           {alarmDisabledLabel ? (
-            <div className={`inline-flex items-center w-fit gap-1 rounded-full text-[10px] px-2 py-0.5 ${alarmBadgeClassName}`}>
+            <div className={`inline-flex items-center max-w-full gap-1.5 rounded-full text-[11px] font-medium px-2.5 py-1 ${alarmBadgeClassName}`}>
               <PowerOff className="h-3 w-3" />
-              <span>{alarmDisabledLabel}</span>
+              <span className="truncate">{alarmDisabledLabel}</span>
             </div>
           ) : null}
         </div>

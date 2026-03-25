@@ -41,12 +41,25 @@ const countSuspiciousControlChars = (value: string) => {
 
 const looksLikeXml = (value: string) => /^\s*(<\?xml\b[^>]*>\s*)?<([A-Za-z_][\w:.-]*)[^>]*>/i.test(value)
 
+const countMojibakeSequences = (value: string) => {
+  const patterns = [
+    "\\u00C3.",
+    "\\u00C2.",
+    "\\u00E2\\u20AC.",
+    "\\u00E2\\u20AC\\u2122",
+    "\\u00E2\\u20AC\\u0153",
+    "\\u00E2\\u20AC",
+  ]
+  return patterns.reduce((count, pattern) => count + ((value.match(new RegExp(pattern, "g")) ?? []).length), 0)
+}
+
 const mojibakeScore = (value: string) => {
   const replacement = countOccurrences(value, "\uFFFD")
   const controls = countSuspiciousControlChars(value)
+  const mojibake = countMojibakeSequences(value)
   const missingXmlShapePenalty = looksLikeXml(value) ? 0 : 1000
 
-  return replacement * 8 + controls * 10 + missingXmlShapePenalty
+  return replacement * 8 + controls * 10 + mojibake * 6 + missingXmlShapePenalty
 }
 
 const decodeWithEncoding = (bytes: Uint8Array, encoding: string) => {
@@ -74,7 +87,7 @@ export function decodeXmlBytes(bytes: Uint8Array) {
   if (declaredEncoding) {
     try {
       const declaredText = decodeWithEncoding(bytes, declaredEncoding)
-      if (looksLikeXml(declaredText)) {
+      if (looksLikeXml(declaredText) && mojibakeScore(declaredText) === 0) {
         return {
           text: declaredText,
           encoding: declaredEncoding,

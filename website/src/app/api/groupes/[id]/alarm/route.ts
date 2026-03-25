@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import { z } from "zod"
 
+import { getClientIp } from "@/lib/api-logger"
 import { prisma } from "@/lib/prisma"
 import { apiError, apiOk } from "@/lib/api-response"
 import { withAuthLogging } from "@/lib/api-wrappers"
@@ -57,18 +58,11 @@ export const PATCH = withAuthLogging(
         },
       })
 
-      log.audit(payload.disabled ? "DESA" : "ACTA", {
-        user: user.username,
-        userId: user.userId,
-        userProfile: user.profile,
-        resource: "groupe",
-        resourceId: groupId,
-        changes: {
-          disabled: payload.disabled,
-          durationMinutes,
-          reactivationAt: reactivationAt?.toISOString() ?? null,
-          updated: result.count,
-        },
+      log.data.update("Notifications d'alarme groupe", groupId, user.username, user.userId, getClientIp(req), {
+        disabled: { from: !payload.disabled, to: payload.disabled },
+        durationMinutes: { from: null, to: durationMinutes },
+        reactivationAt: { from: null, to: reactivationAt?.toISOString() ?? null },
+        updated: result.count,
       })
 
       return apiOk({

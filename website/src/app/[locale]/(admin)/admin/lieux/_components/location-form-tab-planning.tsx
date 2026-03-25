@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslations } from "next-intl"
-import { Plus, Pencil, Trash2 } from "lucide-react"
+import { Copy, Plus, Pencil, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label"
 import type { PlanningRegleResponse, LieuEmtParams } from "@/lib/planning-regle-schema"
 import { WeeklyPlanningView } from "./planning-weekly-view"
 import { PlanningRuleFormDialog } from "./planning-rule-form-dialog"
+import { mapPlanningRuleToFormValues, type PlanningRegleFormValues } from "./planning-dialog/planning-rule-form-helpers"
 
 interface PlanningPreviewResponse {
   regleActive: { Id_Regle: number } | null
@@ -69,6 +70,7 @@ export function LocationFormTabPlanning({
   const [retainMode, setRetainMode] = useState<"base" | "regle">("base")
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editRegle, setEditRegle] = useState<PlanningRegleResponse | null>(null)
+  const [initialValues, setInitialValues] = useState<PlanningRegleFormValues | null>(null)
 
   const queryKey = ["planning-regles", idLieu]
 
@@ -131,6 +133,7 @@ export function LocationFormTabPlanning({
           className="gap-1"
           onClick={() => {
             setEditRegle(null)
+            setInitialValues(null)
             setDialogOpen(true)
             onAddRule?.()
           }}
@@ -167,6 +170,7 @@ export function LocationFormTabPlanning({
           regles={regles}
           onSelectRegle={(regle) => {
             setEditRegle(regle)
+            setInitialValues(null)
             setDialogOpen(true)
             onEditRule?.(regle)
           }}
@@ -242,7 +246,22 @@ export function LocationFormTabPlanning({
                   variant="ghost"
                   className="h-7 w-7"
                   onClick={() => {
+                    setEditRegle(null)
+                    setInitialValues(mapPlanningRuleToFormValues(regle))
+                    setDialogOpen(true)
+                  }}
+                  title={t("duplicateRule")}
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7"
+                  onClick={() => {
                     setEditRegle(regle)
+                    setInitialValues(null)
                     setDialogOpen(true)
                     onEditRule?.(regle)
                   }}
@@ -279,6 +298,7 @@ export function LocationFormTabPlanning({
           idLieu={idLieu}
           editRegle={editRegle}
           emtParams={emtParams}
+          initialValues={initialValues}
         />
       )}
 

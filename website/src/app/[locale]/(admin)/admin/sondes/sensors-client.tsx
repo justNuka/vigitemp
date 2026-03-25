@@ -111,7 +111,7 @@ export function SensorsClient() {
         animate="visible"
       >
       <Card>
-        <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40 pb-3">
+        <CardHeader className="bg-background border-b border-border/40 pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
               <Thermometer className="h-4 w-4 text-primary" />

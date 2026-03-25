@@ -24,10 +24,10 @@
     "license_unknown": "Unknown license",
     "license_invalid": "Invalid license",
     "temporary_memory": {
-      "save": "Temporarily save data",
-      "restore": "Restore saved data",
-      "clear": "Clear data",
-      "saved": "Temporary data available"
+      "save": "Save for later",
+      "restore": "Restore draft",
+      "clear": "Clear form",
+      "saved": "Draft available"
     }
   },
   "dateRangePicker": {
@@ -295,6 +295,7 @@
       "type_high": "High threshold",
       "type_low": "Low threshold",
       "type_no_response": "No response",
+      "type_ended": "Ended alarm",
       "type_other": "Other",
       "last_value_label": "Last value",
       "start_label": "Alarm start",
@@ -522,6 +523,9 @@
       },
       "cancel": "Cancel",
       "confirm": "Confirm"
+    },
+    "legend": {
+      "technical_alarm": "Technical alarm"
     }
   },
   "locationsForm": {
@@ -540,11 +544,12 @@
         "saving": "Saving..."
       },
       "temporary_memory": {
-        "save": "Temporarily save data",
-        "restore": "Restore saved data",
-        "clear": "Clear data",
-        "saved": "Temporary data available"
-      }
+        "save": "Save for later",
+        "restore": "Restore draft",
+        "clear": "Clear form",
+        "saved": "Draft available"
+      },
+      "current_location_label": "Current location:"
     },
     "general": {
       "sections": {
@@ -614,7 +619,12 @@
         "frequency_gso": "Frequency is fixed to 15 minutes for GSO sensors.",
         "retrigger_delay_measures": "Number of out-of-tolerance measures to ignore before triggering a new alarm after acknowledge or alarm end."
       },
-      "group_fallback": "Group {id}"
+      "group_fallback": "Group {id}",
+      "planning_lock": {
+        "title": "Setpoints driven by planning",
+        "description": "Planning rules are active for this location. Base setpoints are locked here. Edit the planning if you need to change the applied setpoints.",
+        "go_to_planning": "Go to planning"
+      }
     },
     "metrology": {
       "sections": {
@@ -688,6 +698,7 @@
       "saveFirst": "Save the location before configuring the planning.",
       "noRules": "No planning rules configured.",
       "addRule": "Add a rule",
+      "duplicateRule": "Duplicate",
       "editRule": "Edit rule",
       "deleteRule": "Delete",
       "activeStatus": "Active planning â€” Rule",
@@ -745,12 +756,15 @@
         "emtModeUncertainties": "Uncertainties",
         "emtModeSansObjet": "Not applicable",
         "labelRetardChangementConsigne": "Setpoint change delay (min)",
+        "repeatEachDayLabel": "Repeat the rule for each covered day",
+        "repeatEachDayHint": "Automatically creates one rule per day across the selected range while keeping the same hours and thresholds.",
+        "repeatSuccess": "{count, plural, one {# rule created} other {# rules created}}",
         "placeholderRetardChangementConsigne": "0",
         "temporaryMemory": {
-          "save": "Temporarily save data",
-          "restore": "Restore saved data",
-          "clear": "Clear data",
-          "saved": "Temporary data available"
+          "save": "Save for later",
+          "restore": "Restore draft",
+          "clear": "Clear form",
+          "saved": "Draft available"
         }
       },
       "deleteConfirm": {
@@ -2597,6 +2611,9 @@
       "rssi": "RSSI: {value}",
       "tension": "Voltage: {value}"
     },
+    "wireless": {
+      "battery": "Battery: {value}%"
+    },
     "tabs": {
       "graph": "Chart",
       "table": "Measurements table",
@@ -3414,11 +3431,15 @@
       "unknown": "Unknown site"
     },
     "chart": {
-      "measures": "Measurements ({unit})"
+      "measures": "Measurements ({unit})",
+      "target": "Target ({unit})",
+      "upper_threshold": "Upper threshold ({unit})",
+      "lower_threshold": "Lower threshold ({unit})"
     },
     "mobile": {
       "graph_in_details_title": "Chart available in details",
-      "graph_in_details_description": "Tap the card to open the location and display the full chart."
+      "graph_in_details_description": "Tap the card to open the location and display the full chart.",
+      "small_hint": "Open details to view the chart."
     },
     "guides": {
       "max": "Max: {value}",
@@ -3431,6 +3452,9 @@
     "gso": {
       "rssi": "RSSI: {value}",
       "tension": "Voltage: {value}"
+    },
+    "wireless": {
+      "battery": "Battery: {value}%"
     },
     "frequency": "Freq: {minutes} min",
     "alarm_delay": "Alarm delay: {minutes} min",
@@ -4041,7 +4065,8 @@
       "text_preview_unavailable": "Text file preview unavailable.",
       "office_preview_unavailable": "Preview is not available for this Office format.",
       "status_sent": "Sent",
-      "status_read": "Read"
+      "status_read": "Read",
+      "open_details": "Open details"
     },
     "new_conversation": {
       "title": "New conversation",

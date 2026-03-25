@@ -49,7 +49,7 @@ export function SurveillanceHeaderControls({
     { key: "alarm_high", label: tCard("alarmTypes.high"), dotClassName: "bg-red-600" },
     { key: "alarm_low", label: tCard("alarmTypes.low"), dotClassName: "bg-blue-600" },
     { key: "warning", label: tStatus("warning"), dotClassName: "bg-amber-500" },
-    { key: "technical", label: tStatus("technical"), dotClassName: "bg-black" },
+    { key: "technical", label: t("legend.technical_alarm"), dotClassName: "bg-black" },
     { key: "ended", label: tStatus("ended"), dotClassName: "bg-violet-600" },
     { key: "ok", label: tStatus("ok"), dotClassName: "bg-primary" },
     { key: "inactive", label: tStatus("inactive"), dotClassName: "bg-slate-500" },

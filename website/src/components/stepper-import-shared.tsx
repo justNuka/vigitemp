@@ -249,7 +249,8 @@ export default function SharedImportStepper<TImportResult>({
             <TooltipTrigger asChild>
               <span className="inline-flex">
                 <Button
-                  className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                  variant="outline"
+                  className="gap-2"
                   onClick={() => {
                     if (currentStep === 3) {
                       if (processState === "done") onFinish?.()

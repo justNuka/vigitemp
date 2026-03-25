@@ -399,6 +399,7 @@ model t_lieu {
   Date_Heure_Surveillance_On                DateTime?               @db.DateTime(0)
   Date_Heure_Surveillance_Off               DateTime?               @db.DateTime(0)
   Derniere_Val_Rssi                         String?                 @db.VarChar(10)
+  Derniere_Val_Batterie                     Int?
   Derniere_Val_Tension                      String?                 @db.VarChar(10)
   Est_Lieu_GSO                              Boolean?                @default(false)
   Est_Son_Alarme_Active                     Boolean                 @default(true)
@@ -748,17 +749,19 @@ model t_lieu_mail_tel {
 }
 
 model t_lieu_planning_audit {
-  Id_Audit           Int                        @id @default(autoincrement())
-  Id_Lieu            Int
-  Timestamp          DateTime                   @default(now()) @db.DateTime(0)
-  Type               t_lieu_planning_audit_Type
-  Planning_Regle_Id  Int?
-  Consigne_Avant     Float?
-  Consigne_Sup_Avant Float?
-  Consigne_Inf_Avant Float?
-  Consigne_Apres     Float?
-  Consigne_Sup_Apres Float?
-  Consigne_Inf_Apres Float?
+  Id_Audit                         Int                        @id @default(autoincrement())
+  Id_Lieu                          Int
+  Timestamp                        DateTime                   @default(now()) @db.DateTime(0)
+  Date_Heure_Debut_Changement      DateTime?                  @db.DateTime(0)
+  Date_Heure_Fin_Changement        DateTime?                  @db.DateTime(0)
+  Type                             t_lieu_planning_audit_Type
+  Planning_Regle_Id                Int?
+  Consigne_Avant                   Float?
+  Tolerance_Surveillance_Sup_Avant Float?                     @db.Float
+  Tolerance_Surveillance_Inf_Avant Float?                     @db.Float
+  Consigne_Apres                   Float?
+  Tolerance_Surveillance_Sup_Apres Float?                     @db.Float
+  Tolerance_Surveillance_Inf_Apres Float?                     @db.Float
 
   @@index([Id_Lieu, Timestamp], map: "IDX_Id_Lieu_Timestamp")
 }
@@ -866,21 +869,21 @@ model t_vigilog_configuration {
 }
 
 model t_vigilog {
-  Id_VigiLog           Int                 @id @default(autoincrement())
-  Numero_Serie         String              @unique(map: "UK_t_vigilog_numero_serie") @db.VarChar(30)
-  Modele               String?             @db.VarChar(50)
-  Libelle              String?             @db.VarChar(100)
-  Actif                Boolean             @default(true)
-  Date_Etalonnage      DateTime?           @db.DateTime(0)
-  Date_Validite        DateTime?           @db.Date
-  Duree_Validite_Jours Int?
-  Err_Justesse         Float?              @db.Float
-  Commentaire          String?             @db.Text
+  Id_VigiLog              Int                 @id @default(autoincrement())
+  Numero_Serie            String              @unique(map: "UK_t_vigilog_numero_serie") @db.VarChar(30)
+  Modele                  String?             @db.VarChar(50)
+  Libelle                 String?             @db.VarChar(100)
+  Actif                   Boolean             @default(true)
+  Date_Etalonnage         DateTime?           @db.DateTime(0)
+  Date_Validite           DateTime?           @db.Date
+  Duree_Validite_Jours    Int?
+  Err_Justesse            Float?              @db.Float
+  Commentaire             String?             @db.Text
   Id_Utilisateur_Creation Int?
-  Date_Heure_Creation  DateTime            @default(now()) @db.DateTime(0)
-  Id_Utilisateur_Maj   Int?
-  Date_Heure_Maj       DateTime?           @db.DateTime(0)
-  t_vigilog_tournee    t_vigilog_tournee[]
+  Date_Heure_Creation     DateTime            @default(now()) @db.DateTime(0)
+  Id_Utilisateur_Maj      Int?
+  Date_Heure_Maj          DateTime?           @db.DateTime(0)
+  t_vigilog_tournee       t_vigilog_tournee[]
 
   @@index([Actif], map: "IDX_t_vigilog_actif")
   @@index([Modele], map: "IDX_t_vigilog_modele")
@@ -926,13 +929,13 @@ model t_vigilog_tournee {
   Date_Heure_Acquittement                                                    DateTime?                @db.DateTime(0)
   Date_Heure_Creation                                                        DateTime                 @default(now()) @db.DateTime(0)
   Date_Heure_Maj                                                             DateTime?                @db.DateTime(0)
-  t_vigilog                                                                  t_vigilog?               @relation(fields: [Id_VigiLog], references: [Id_VigiLog], map: "FK_t_vigilog_tournee_vigilog")
   t_vigilog_configuration                                                    t_vigilog_configuration? @relation(fields: [Id_VigiLog_Configuration], references: [Id_VigiLog_Configuration], map: "FK_t_vigilog_tournee_configuration")
   t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site                           t_site                   @relation("t_vigilog_tournee_Id_Site_ArriveeTot_site", fields: [Id_Site_Arrivee], references: [Id_Site], map: "FK_t_vigilog_tournee_site_arrivee")
   t_site_t_vigilog_tournee_Id_Site_DepartTot_site                            t_site                   @relation("t_vigilog_tournee_Id_Site_DepartTot_site", fields: [Id_Site_Depart], references: [Id_Site], map: "FK_t_vigilog_tournee_site_depart")
   t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur t_utilisateur?           @relation("t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur", fields: [Id_Utilisateur_Acquittement], references: [Id_Utilisateur], map: "FK_t_vigilog_tournee_user_acquittement")
   t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur      t_utilisateur?           @relation("t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur", fields: [Id_Utilisateur_Arrivee], references: [Id_Utilisateur], map: "FK_t_vigilog_tournee_user_arrivee")
   t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur       t_utilisateur            @relation("t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur", fields: [Id_Utilisateur_Depart], references: [Id_Utilisateur], map: "FK_t_vigilog_tournee_user_depart")
+  t_vigilog                                                                  t_vigilog?               @relation(fields: [Id_VigiLog], references: [Id_VigiLog], map: "FK_t_vigilog_tournee_vigilog")
 
   @@index([Id_Utilisateur_Acquittement], map: "IDX_t_vigilog_tournee_acquit_user")
   @@index([Id_Utilisateur_Arrivee], map: "IDX_t_vigilog_tournee_arrivee_user")
@@ -945,9 +948,25 @@ model t_vigilog_tournee {
   @@index([Statut], map: "IDX_t_vigilog_tournee_statut")
 }
 
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model t_lieu_planning_audit_backup_20260324 {
+  Id_Audit           Int                                        @default(0)
+  Id_Lieu            Int
+  Timestamp          DateTime                                   @default(now()) @db.DateTime(0)
+  Type               t_lieu_planning_audit_backup_20260324_Type
+  Planning_Regle_Id  Int?
+  Consigne_Avant     Float?
+  Consigne_Sup_Avant Float?
+  Consigne_Inf_Avant Float?
+  Consigne_Apres     Float?
+  Consigne_Sup_Apres Float?
+  Consigne_Inf_Apres Float?
+
+  @@ignore
+}
+
 enum t_lieu_planning_audit_Type {
-  ACTIVATION
-  RETOUR_BASE
+  PLAN_APPLY
 }
 
 enum t_commande_materiel_Mode_Transmission {
@@ -959,4 +978,9 @@ enum t_commande_materiel_Statut_Commande {
   BROUILLON
   ENVOYEE
   PREPAREE
+}
+
+enum t_lieu_planning_audit_backup_20260324_Type {
+  ACTIVATION
+  RETOUR_BASE
 }

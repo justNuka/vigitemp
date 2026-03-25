@@ -47,6 +47,7 @@ export function buildMonitoringCardProps(
     sondeNumeroSerie: sensor.location.sondeNumeroSerie ?? "",
     isGso: sensor.location.isGso ?? null,
     gsoRssi: sensor.location.gsoRssi ?? null,
+    batteryPercent: sensor.location.batteryPercent ?? null,
     gsoTension: sensor.location.gsoTension ?? null,
     onSurveillanceToggle: (id, action, newState, durationMinutes) =>
       onSurveillanceToggle(id, action, newState, durationMinutes ?? null),

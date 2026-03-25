@@ -10,14 +10,14 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-
-# Force UTF-8 console encoding for correct accents/special characters in logs.
 try { cmd /c chcp 65001 > $null } catch { }
 try {
     [Console]::InputEncoding = [System.Text.UTF8Encoding]::new($false)
     [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
     $OutputEncoding = [Console]::OutputEncoding
-} catch { }function Write-Log($message) {
+} catch { }
+
+function Write-Log($message) {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     Write-Host "[$timestamp] $message"
 }
@@ -25,12 +25,13 @@ try {
 $scriptRoot = $PSScriptRoot
 $websiteRoot = Resolve-Path (Join-Path $scriptRoot "..")
 $repoRoot = Resolve-Path (Join-Path $websiteRoot "..")
+$installerProject = Join-Path $websiteRoot "WebsiteInstallerBootstrapper\WebsiteInstallerBootstrapper.csproj"
 
 if ([string]::IsNullOrWhiteSpace($SourcePath)) {
     $SourcePath = $websiteRoot.Path
 }
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
-    $OutputDir = Join-Path $repoRoot "..\\vigi\\2 - installation\\2 - site web"
+    $OutputDir = Join-Path $repoRoot "..\VigiSensys\2 - installation\2 - VigiSensys Serveur Web"
 }
 
 if (-not (Test-Path (Join-Path $SourcePath "package.json"))) {
@@ -64,7 +65,7 @@ if (-not $SkipBuild) {
     $previousSkipDb = $env:VIGITEMP_SKIP_DB_ON_BUILD
     $previousLogsDir = $env:VIGITEMP_LOGS_DIR
     $previousDisableTurbo = $env:NEXT_DISABLE_TURBOPACK
-    $buildLogsDir = Join-Path $repoRoot "..\\vigi\\2 - installation\\tmp-logs"
+    $buildLogsDir = Join-Path $repoRoot "..\VigiSensys\2 - installation\tmp-logs"
     $projectLogsDir = Join-Path $SourcePath "logs"
     $env:VIGITEMP_SKIP_DB_ON_BUILD = "1"
     $env:VIGITEMP_LOGS_DIR = $buildLogsDir
@@ -85,21 +86,31 @@ if (-not $SkipBuild) {
     }
 }
 
+if (-not (Test-Path $installerProject)) {
+    Write-Error "Website installer bootstrapper project not found: $installerProject"
+}
+
+Write-Log "Publishing web installer bootstrapper..."
+& dotnet publish $installerProject -c Release -nologo | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "dotnet publish bootstrapper web a echoue (code $LASTEXITCODE)"
+}
+
 Pop-Location
 
-$standaloneDir = Join-Path $SourcePath ".next\\standalone"
-$staticDir = Join-Path $SourcePath ".next\\static"
-$publicDir = Join-Path $SourcePath "public"
+$standaloneDir = Join-Path $SourcePath ".next\standalone"
+$staticDir = Join-Path $SourcePath ".next\static"
 
 if (-not (Test-Path $standaloneDir)) {
-    Write-Error "Missing .next\\standalone. Make sure next.config.js has output=standalone and build succeeded."
+    Write-Error "Missing .next\standalone. Make sure next.config.js has output=standalone and build succeeded."
 }
 if (-not (Test-Path $staticDir)) {
-    Write-Error "Missing .next\\static. Build seems incomplete."
+    Write-Error "Missing .next\static. Build seems incomplete."
 }
 
 Write-Log "Preparing output folder: $OutputDir"
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
+$installerBootstrapperExe = Join-Path $websiteRoot "WebsiteInstallerBootstrapper\bin\Release\net8.0-windows\win-x64\publish\VigitempWebSetup.exe"
 
 $targetNext = Join-Path $OutputDir ".next"
 New-Item -ItemType Directory -Force -Path $targetNext | Out-Null
@@ -111,12 +122,12 @@ Write-Log "Copying static assets..."
 & robocopy $staticDir (Join-Path $targetNext "static") /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
 
 Write-Log "Copying static assets into standalone package..."
-$standaloneStaticDest = Join-Path $targetNext "standalone\\.next\\static"
+$standaloneStaticDest = Join-Path $targetNext "standalone\.next\static"
 New-Item -ItemType Directory -Force -Path $standaloneStaticDest | Out-Null
 & robocopy $staticDir $standaloneStaticDest /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
 
-$standaloneNodeModules = Join-Path $targetNext "standalone\\node_modules"
-$nextEnvTarget = Join-Path $standaloneNodeModules "@next\\env"
+$standaloneNodeModules = Join-Path $targetNext "standalone\node_modules"
+$nextEnvTarget = Join-Path $standaloneNodeModules "@next\env"
 if (-not (Test-Path $nextEnvTarget)) {
     $pnpmRoots = @()
     try {
@@ -130,7 +141,7 @@ if (-not (Test-Path $nextEnvTarget)) {
     $pnpmRoots = $pnpmRoots | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique
 
     foreach ($root in $pnpmRoots) {
-        $directEnv = Join-Path $root "@next\\env"
+        $directEnv = Join-Path $root "@next\env"
         if (Test-Path $directEnv) {
             Write-Log "Copying @next/env into standalone package..."
             New-Item -ItemType Directory -Force -Path (Split-Path $nextEnvTarget -Parent) | Out-Null
@@ -142,7 +153,7 @@ if (-not (Test-Path $nextEnvTarget)) {
         if (Test-Path $pnpmStore) {
             $nextEnvStore = Get-ChildItem -Path $pnpmStore -Directory -Filter "@next+env@*" -ErrorAction SilentlyContinue | Select-Object -First 1
             if ($nextEnvStore) {
-                $storeEnv = Join-Path $nextEnvStore.FullName "node_modules\\@next\\env"
+                $storeEnv = Join-Path $nextEnvStore.FullName "node_modules\@next\env"
                 if (Test-Path $storeEnv) {
                     Write-Log "Copying @next/env into standalone package..."
                     New-Item -ItemType Directory -Force -Path (Split-Path $nextEnvTarget -Parent) | Out-Null
@@ -154,35 +165,37 @@ if (-not (Test-Path $nextEnvTarget)) {
     }
 }
 
-$standaloneEnv = Join-Path $targetNext "standalone\\.env"
+$standaloneEnv = Join-Path $targetNext "standalone\.env"
 if (Test-Path $standaloneEnv) {
     Remove-Item -Path $standaloneEnv -Force
 }
 
-# public/ is already included in .next/standalone; do not copy it separately.
+$installerSrc = Join-Path $SourcePath "installer"
 
-# Installer scripts/dependency installers are centralized in vigi/1 - prerequis.
+if (Test-Path $installerBootstrapperExe) {
+    Copy-Item -Path $installerBootstrapperExe -Destination (Join-Path $OutputDir "VigitempWebSetup.exe") -Force
+    Write-Log "Copied web installer bootstrapper into package."
+}
+
+$winswSource = Join-Path $installerSrc "winsw.exe"
+if (Test-Path $winswSource) {
+    Copy-Item -Path $winswSource -Destination (Join-Path $OutputDir "winsw.exe") -Force
+    Write-Log "Copied winsw.exe into package."
+}
+
 foreach ($dirToDrop in @((Join-Path $OutputDir "installer"), (Join-Path $targetNext "standalone\installer"))) {
     if (Test-Path $dirToDrop) {
         try { [System.IO.Directory]::Delete($dirToDrop, $true) } catch { }
     }
 }
 
-$installerSrc = Join-Path $SourcePath "installer"
-
-
-$prereqRoot = Join-Path $repoRoot "..\\vigi\\1 - prerequis"
-$prereqInstallDir = Join-Path $prereqRoot "install"
+$prereqRoot = Join-Path $repoRoot "..\VigiSensys\1 - prerequis"
 $prereqNodeDir = Join-Path $prereqRoot "node"
 
 Write-Log "Updating shared prerequisites folder (Node)..."
-New-Item -ItemType Directory -Force -Path $prereqInstallDir | Out-Null
+New-Item -ItemType Directory -Force -Path $prereqRoot | Out-Null
 New-Item -ItemType Directory -Force -Path $prereqNodeDir | Out-Null
 
-$installNodeScript = Join-Path $installerSrc "Install-Node.ps1"
-if (Test-Path $installNodeScript) {
-    Copy-Item -Path $installNodeScript -Destination (Join-Path $prereqInstallDir "Install-Node.ps1") -Force
-}
 
 $nodeMsiSource = Join-Path $installerSrc "node-v24.12.0-x64.msi"
 if (Test-Path $nodeMsiSource) {
@@ -190,9 +203,3 @@ if (Test-Path $nodeMsiSource) {
 }
 
 Write-Log "Done. Standalone package ready at: $OutputDir"
-
-
-
-
-
-

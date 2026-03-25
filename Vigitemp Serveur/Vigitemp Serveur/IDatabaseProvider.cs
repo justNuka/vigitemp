@@ -9,7 +9,9 @@ namespace Vigitemp_Serveur
         LieuAlarmSettings getLieuAlarmSettings(int idLieu);
         List<string> getPCsClients();
         bool AddMesure(string p_numeroSerie, double p_valeur, string p_unite, string p_resistance);
+        bool AddHistoricalMesureIfMissing(string p_numeroSerie, double p_valeur, string p_unite, string p_resistance, DateTime measureDateTime);
         bool AddMesureNoResponse(string p_numeroSerie, string p_unite);
+        bool UpdateLieuWirelessMetrics(string p_numeroSerie, int? batteryPercent, int? rssi);
         List<SondeScheduleInfo> getSondesActivesByServeur(int idServeur);
         (string, string, string, string) getInfosByIdLieu(int p_idLieu);
         List<int> getDistinctIdServeur();

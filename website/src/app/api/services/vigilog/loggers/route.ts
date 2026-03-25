@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getClientIp } from "@/lib/api-logger"
 import { withAnyAuthorizationLogging, withAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { auditRouteCreate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import {
@@ -93,9 +94,35 @@ export const POST = withAuthorizationLogging(
         },
       })
 
-      log.data.create("VigiLog", created.Id_VigiLog, ctx.user.username, ctx.user.userId, getClientIp(req), {
-        serial: created.Numero_Serie,
-        model: created.Modele,
+      log.audit("VLOG", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        ip: getClientIp(req),
+        resource: "VigiLog",
+        resourceId: created.Id_VigiLog,
+        changes: {
+          action: "create",
+          serial: created.Numero_Serie,
+          model: created.Modele,
+          label: created.Libelle,
+          active: created.Actif,
+        },
+      })
+
+      auditRouteCreate(req, ctx.user, {
+        resource: "VigiLog",
+        resourceId: created.Id_VigiLog,
+        data: {
+          serial: created.Numero_Serie,
+          model: created.Modele,
+          label: created.Libelle,
+          active: created.Actif,
+          calibrationDate: created.Date_Etalonnage,
+          calibrationValidityDate: created.Date_Validite,
+          calibrationValidityDays: created.Duree_Validite_Jours,
+          accuracyError: created.Err_Justesse,
+          comment: created.Commentaire,
+        },
       })
 
       return apiOk(serializeLogger(created), { status: 201 })

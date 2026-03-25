@@ -106,6 +106,18 @@ function New-RandomSecret([int]$byteLength = 32) {
     return $base64
 }
 
+function Resolve-GeneratedSecretValue([string]$label, [string]$defaultValue = "") {
+    $secret = $defaultValue
+    if (-not $Silent) {
+        $secret = Read-InstallSecret "$label ($(T "laisser vide pour g?n?ration auto" "leave blank for auto generation"))" $defaultValue
+    }
+    if ([string]::IsNullOrWhiteSpace($secret)) {
+        $secret = New-RandomSecret
+        Write-Log (T "Secret g?n?r? automatiquement pour: $label" "Secret generated automatically for: $label")
+    }
+    return $secret.Trim()
+}
+
 function Resolve-SecretFilePath($customPath, $defaultPath) {
     $path = $customPath
     if ([string]::IsNullOrWhiteSpace($path)) {
@@ -331,6 +343,7 @@ if (-not $Offline) {
 }
 
 $websiteBaseUrl = Read-InstallValue (T "URL publique du site (ex: http://127.0.0.1:$Port/)" "Website public URL (example: http://127.0.0.1:$Port/)") "http://127.0.0.1:$Port/"
+$appBaseUrl = Read-InstallValue (T "URL applicative publique (liens emails/login)" "Public app URL (email/login links)") $websiteBaseUrl
 $dbProvider = Read-InstallValue (T "Type de BDD (mysql/mssql)" "DB provider (mysql/mssql)") "mysql"
 $dbProvider = $dbProvider.ToLowerInvariant()
 if ($dbProvider -ne "mssql") { $dbProvider = "mysql" }
@@ -342,24 +355,43 @@ $dbUser = Read-InstallValue (T "Utilisateur BDD" "DB user") $dbDefaultUser
 $dbPassword = Read-InstallSecret (T "Mot de passe BDD" "DB password") ""
 $dbMain = Read-InstallValue (T "Nom BDD principale" "Main DB name") "vigi_main"
 $dbMeasure = Read-InstallValue (T "Nom BDD mesures" "Measure DB name") "vigi_mesures"
+$dbChat = Read-InstallValue (T "Nom BDD chat" "Chat DB name") "vigi_chat"
 $cacheTtl = Read-InstallValue (T "Cache TTL (secondes)" "Cache TTL (seconds)") "30"
-$logsDir = Read-InstallValue (T "Dossier des logs" "Logs directory") (Join-Path $programData "Vigitemp\\web-logs")
+$logsDir = Read-InstallValue (T "Dossier des logs" "Logs directory") (Join-Path $programData "Vigitemp\web-logs")
+$licensePath = Read-InstallValue (T "Chemin licence site (.vtlic)" "Website license path (.vtlic)") (Join-Path $programData "Vigitemp\licenses\license.vtlic")
+$licensePublicKeyPath = Read-InstallValue (T "Chemin cle publique licence (.pem)" "License public key path (.pem)") (Join-Path $programData "Vigitemp\license_keys\public_key.pem")
+$agentSecretPrivateKeyPath = Read-InstallValue (T "Chemin cle privee secret agent (.pem)" "Agent secret private key path (.pem)") (Join-Path $programData "Vigitemp\license_keys\agent_secret_private.pem")
+$agentPort = Read-InstallValue (T "Port agent local" "Local agent port") "8000"
+$agentTimeoutMs = Read-InstallValue (T "Timeout agent local (ms)" "Local agent timeout (ms)") "1500"
+$agentActiveWindowMinutes = Read-InstallValue (T "Fenetre active agent (minutes)" "Agent active window (minutes)") "15"
+$hotlineServerHost = Read-InstallValue (T "Hote serveur hotline" "Hotline server host") "127.0.0.1"
+$hotlineServerPort = Read-InstallValue (T "Port serveur hotline" "Hotline server port") "5310"
+$hotlineServerTimeoutMs = Read-InstallValue (T "Timeout hotline (ms)" "Hotline timeout (ms)") "10000"
+$hotlineAccessTokenTtl = Read-InstallValue (T "TTL access hotline (minutes)" "Hotline access token TTL (minutes)") "15"
+$hotlineRefreshTokenTtl = Read-InstallValue (T "TTL refresh hotline (minutes)" "Hotline refresh token TTL (minutes)") "120"
+$cspConnectSrc = Read-InstallValue (T "CSP connect-src supplementaires (CSV, optionnel)" "Additional CSP connect-src values (CSV, optional)") "http://127.0.0.1:8000,http://localhost:8000"
+$allowedDevOrigins = Read-InstallValue (T "Origins dev autorisees (CSV, optionnel)" "Allowed dev origins (CSV, optional)") ""
 if ([string]::IsNullOrWhiteSpace($AlarmDispatchSecretFile)) {
     $AlarmDispatchSecretFile = Join-Path $programData "Vigitemp\shared-secrets\alarm-dispatch-secret.txt"
 }
 $dispatchSecret = Resolve-DispatchSecret -providedSecret $AlarmDispatchSecret -providedFilePath $AlarmDispatchSecretFile -interactiveMode (-not $Silent) -defaultSharedSecretPath $AlarmDispatchSecretFile
+$jwtSecret = Resolve-GeneratedSecretValue -label (T "JWT principal" "Primary JWT")
+$hotlineJwtSecret = Resolve-GeneratedSecretValue -label (T "JWT hotline" "Hotline JWT")
+$agentSharedSecret = Resolve-GeneratedSecretValue -label (T "Secret partage agent" "Agent shared secret")
 
 New-Item -ItemType Directory -Force -Path $logsDir | Out-Null
 
 if ($dbProvider -eq "mssql") {
     $databaseUrl = "sqlserver://${dbUser}:${dbPassword}@${dbHost}:${dbPort};database=${dbMain};encrypt=false;trustServerCertificate=true"
     $databaseMesureUrl = "sqlserver://${dbUser}:${dbPassword}@${dbHost}:${dbPort};database=${dbMeasure};encrypt=false;trustServerCertificate=true"
+    $databaseChatUrl = "sqlserver://${dbUser}:${dbPassword}@${dbHost}:${dbPort};database=${dbChat};encrypt=false;trustServerCertificate=true"
 } else {
     $dbUserEscaped = [System.Uri]::EscapeDataString($dbUser)
     $dbPasswordEscaped = [System.Uri]::EscapeDataString($dbPassword)
     $mysqlQuery = "allowPublicKeyRetrieval=true"
     $databaseUrl = "mysql://${dbUserEscaped}:${dbPasswordEscaped}@${dbHost}:${dbPort}/${dbMain}?${mysqlQuery}"
     $databaseMesureUrl = "mysql://${dbUserEscaped}:${dbPasswordEscaped}@${dbHost}:${dbPort}/${dbMeasure}?${mysqlQuery}"
+    $databaseChatUrl = "mysql://${dbUserEscaped}:${dbPasswordEscaped}@${dbHost}:${dbPort}/${dbChat}?${mysqlQuery}"
 }
 $envPath = Join-Path $InstallDir $EnvFileName
 $standaloneEnvPath = $null
@@ -370,12 +402,30 @@ if ($Standalone) {
 $envContent = @"
 DATABASE_URL="$databaseUrl"
 DATABASE_MESURES_URL="$databaseMesureUrl"
+DATABASE_CHAT_URL="$databaseChatUrl"
 DATABASE_PROVIDER="$dbProvider"
 NEXT_PUBLIC_API_BASE_URL="$websiteBaseUrl"
+NEXT_PUBLIC_APP_URL="$appBaseUrl"
 NEXT_PUBLIC_CACHE_TTL=$cacheTtl
+VIGITEMP_LICENSE_PATH="$licensePath"
+VIGITEMP_LICENSE_PUBLIC_KEY_PATH="$licensePublicKeyPath"
+VIGITEMP_AGENT_SECRET_PRIVATE_KEY_PATH="$agentSecretPrivateKeyPath"
+VIGITEMP_AGENT_PORT=$agentPort
+VIGITEMP_AGENT_TIMEOUT_MS=$agentTimeoutMs
+VIGITEMP_AGENT_ACTIVE_WINDOW_MINUTES=$agentActiveWindowMinutes
+VIGITEMP_AGENT_SECRET="$agentSharedSecret"
 VIGITEMP_ALARM_DISPATCH_SECRET="$dispatchSecret"
 VIGITEMP_SURVEILLANCE_DISPATCH_SECRET="$dispatchSecret"
 VIGITEMP_LOGS_DIR="$logsDir"
+VIGITEMP_ALLOWED_DEV_ORIGINS="$allowedDevOrigins"
+VIGITEMP_CSP_CONNECT_SRC="$cspConnectSrc"
+JWT_SECRET="$jwtSecret"
+HOTLINE_SERVER_HOST="$hotlineServerHost"
+HOTLINE_SERVER_PORT=$hotlineServerPort
+HOTLINE_SERVER_TIMEOUT_MS=$hotlineServerTimeoutMs
+HOTLINE_JWT_SECRET="$hotlineJwtSecret"
+HOTLINE_ACCESS_TOKEN_TTL_MINUTES=$hotlineAccessTokenTtl
+HOTLINE_REFRESH_TOKEN_TTL_MINUTES=$hotlineRefreshTokenTtl
 NODE_ENV=production
 "@
 

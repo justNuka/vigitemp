@@ -220,15 +220,17 @@ BEGIN
     Id_Audit INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     Id_Lieu INT NOT NULL,
     [Timestamp] DATETIME NOT NULL CONSTRAINT DF_t_lieu_planning_audit_Timestamp DEFAULT(GETDATE()),
+    Date_Heure_Debut_Changement DATETIME NULL,
+    Date_Heure_Fin_Changement DATETIME NULL,
     [Type] VARCHAR(32) NOT NULL,
-    CONSTRAINT CK_t_lieu_planning_audit_Type CHECK ([Type] IN ('ACTIVATION', 'RETOUR_BASE')),
+    CONSTRAINT CK_t_lieu_planning_audit_Type CHECK ([Type] IN ('PLAN_APPLY')),
     Planning_Regle_Id INT NULL,
     Consigne_Avant FLOAT NULL,
-    Consigne_Sup_Avant FLOAT NULL,
-    Consigne_Inf_Avant FLOAT NULL,
+    Tolerance_Surveillance_Sup_Avant FLOAT NULL,
+    Tolerance_Surveillance_Inf_Avant FLOAT NULL,
     Consigne_Apres FLOAT NULL,
-    Consigne_Sup_Apres FLOAT NULL,
-    Consigne_Inf_Apres FLOAT NULL
+    Tolerance_Surveillance_Sup_Apres FLOAT NULL,
+    Tolerance_Surveillance_Inf_Apres FLOAT NULL
   );
   CREATE INDEX IDX_Id_Lieu_Timestamp ON dbo.t_lieu_planning_audit(Id_Lieu, [Timestamp]);
 END;

@@ -5,6 +5,7 @@ import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
 import { withAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
+import { auditRouteDelete, auditRouteUpdate } from "@/lib/audit-route"
 import {
   isAdminDomainCode,
   isMetrologieDomainCode,
@@ -92,6 +93,7 @@ export const PATCH = withAuthorizationLogging(
 
       const existing = await prisma.t_profil.findUnique({
         where: { Id_Profil: profileId },
+        include: { t_liaison_profil_autorisation: true },
       })
       if (!existing) {
         return apiError(404, "not_found", "Profil non trouvé")
@@ -131,15 +133,22 @@ export const PATCH = withAuthorizationLogging(
         },
       })
 
-      const changes: Record<string, unknown> = {}
-      if (data.name) changes.name = data.name
-      if (data.description !== undefined) changes.description = data.description
-      if (data.mc2 !== undefined) changes.mc2 = data.mc2
-      if (data.authorizations !== undefined) {
-        changes.authorizationCount = data.authorizations.length
-      }
-
-      log.data.update("Profil", profileId, ctx.user.username, ctx.user.userId, ip, changes)
+      auditRouteUpdate(req, ctx.user, {
+        resource: "Profil",
+        resourceId: profileId,
+        before: {
+          Profil_Utilisateur: existing.Profil_Utilisateur,
+          Commentaire: existing.Commentaire,
+          Est_MC2: existing.Est_MC2,
+          authorizations: existing.t_liaison_profil_autorisation?.map?.((item: any) => item.Id_Autorisation) ?? undefined,
+        },
+        after: {
+          Profil_Utilisateur: updatedProfile!.Profil_Utilisateur,
+          Commentaire: updatedProfile!.Commentaire,
+          Est_MC2: updatedProfile!.Est_MC2,
+          authorizations: updatedProfile!.t_liaison_profil_autorisation.map((item) => item.Id_Autorisation),
+        },
+      })
 
       return apiOk({
         id: updatedProfile!.Id_Profil,
@@ -197,14 +206,12 @@ export const DELETE = withAuthorizationLogging(
       })
       await prisma.t_profil.delete({ where: { Id_Profil: profileId } })
 
-      log.data.delete(
-        "Profil",
-        profileId,
-        ctx.user.username,
-        ctx.user.userId,
-        ip,
-        `Suppression du profil ${profile.Profil_Utilisateur}`,
-      )
+      auditRouteDelete(req, ctx.user, {
+        resource: "Profil",
+        resourceId: profileId,
+        reason: `Suppression du profil ${profile.Profil_Utilisateur}`,
+        data: { Profil_Utilisateur: profile.Profil_Utilisateur },
+      })
 
       return apiOk({ success: true })
     } catch (error) {

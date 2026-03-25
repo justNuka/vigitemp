@@ -67,6 +67,15 @@ export const PUT = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequ
       },
     })
 
+    log.config.change(
+      `${param.Section}:${param.Mot_Cle}`,
+      ctx.user.username,
+      ctx.user.userId,
+      ip,
+      oldSetting?.Valeur ?? "N/A",
+      value ?? "",
+    )
+
     return apiOk({ message: "Paramètre mis à jour", param })
   } catch (error) {
     const { ip } = getRequestContext(req)

@@ -97,7 +97,7 @@ export function GroupsClient() {
         animate="visible"
       >
       <Card>
-        <CardHeader className="bg-linear-to-br from-card to-muted/20 border-b border-border/40 flex flex-row items-center justify-between space-y-0">
+        <CardHeader className="bg-background border-b border-border/40 flex flex-row items-center justify-between space-y-0">
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
               <Layers className="h-4 w-4 text-primary" />

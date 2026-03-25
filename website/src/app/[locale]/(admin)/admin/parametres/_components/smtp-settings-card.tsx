@@ -14,7 +14,7 @@ export function SmtpSettingsCard({ onOpenSmtpModal }: SmtpSettingsCardProps) {
   const t = useTranslations('adminSettings');
 
   return (
-    <Card className="border-sky-200 bg-[linear-gradient(180deg,rgba(14,165,233,0.08),rgba(255,255,255,0.92))] dark:bg-card mb-8">
+    <Card className="border-border/60 bg-white dark:bg-card mb-8">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Mail className="h-5 w-5" />

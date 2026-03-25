@@ -29,7 +29,15 @@ export const PATCH = withAuthLogging(async (req: NextRequest, ctx: HandlerContex
     const body = await req.json()
     const data = schema.parse(body)
 
-    await setUserAvatarValue(ctx.user.userId, data.avatar || null)
+    const updated = await setUserAvatarValue(ctx.user.userId, data.avatar || null)
+    if (!updated) {
+      log.warn("AVATAR", "Self avatar update rejected: avatar column unavailable or update failed", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        ip,
+      })
+      return apiError(500, "avatar_update_unavailable", "Impossible d'enregistrer l'avatar")
+    }
     log.info("AVATAR", "Self avatar updated", { user: ctx.user.username, userId: ctx.user.userId, ip, avatarType: data.avatar ? (data.avatar.startsWith("/") ? "uploaded" : "library") : "removed" })
     const avatar = await getUserAvatarValue(ctx.user.userId)
 

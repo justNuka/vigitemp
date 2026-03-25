@@ -109,7 +109,7 @@ export function StandardMeasurementsTable({
       />
 
       <div className="flex gap-2">
-        <Button onClick={onAdd} className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2" size="sm">
+        <Button onClick={onAdd} className="gap-2" size="sm">
           <Plus className="h-4 w-4" />
           {t('measurements.add')}
         </Button>

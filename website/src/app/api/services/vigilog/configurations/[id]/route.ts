@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getClientIp } from "@/lib/api-logger"
 import { withAnyAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { auditRouteUpdate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import {
@@ -57,13 +58,14 @@ export const PATCH = withAnyAuthorizationLogging(
         },
       })
 
-      log.data.update(
-        "Configuration VigiLog",
-        updated.Id_VigiLog_Configuration,
-        ctx.user.username,
-        ctx.user.userId,
-        getClientIp(req),
-        {
+      log.audit("VLOG", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        ip: getClientIp(req),
+        resource: "Configuration VigiLog",
+        resourceId: updated.Id_VigiLog_Configuration,
+        changes: {
+          action: "update",
           name: updated.Nom_Configuration,
           active: updated.Actif,
           frequencyMinutes: updated.Frequence_Min,
@@ -72,7 +74,42 @@ export const PATCH = withAnyAuthorizationLogging(
           stopButtonEnabled: updated.Autorise_Arret_Bouton_Stop,
           resetWithStartEnabled: updated.Reinitialise_Avec_Bouton_Start,
         },
-      )
+      })
+
+      auditRouteUpdate(req, ctx.user, {
+        resource: "Configuration VigiLog",
+        resourceId: updated.Id_VigiLog_Configuration,
+        before: {
+          name: existing.Nom_Configuration,
+          description: existing.Description_Configuration,
+          target: existing.Consigne,
+          lowLimitActive: existing.Limite_Basse_Active,
+          lowLimit: existing.Limite_Basse,
+          highLimitActive: existing.Limite_Haute_Active,
+          highLimit: existing.Limite_Haute,
+          frequencyMinutes: existing.Frequence_Min,
+          alarmDelayMinutes: existing.Retard_Alarme_Min,
+          startDelayMinutes: existing.Delai_Demarrage_Min,
+          stopButtonEnabled: existing.Autorise_Arret_Bouton_Stop,
+          resetWithStartEnabled: existing.Reinitialise_Avec_Bouton_Start,
+          active: existing.Actif,
+        },
+        after: {
+          name: updated.Nom_Configuration,
+          description: updated.Description_Configuration,
+          target: updated.Consigne,
+          lowLimitActive: updated.Limite_Basse_Active,
+          lowLimit: updated.Limite_Basse,
+          highLimitActive: updated.Limite_Haute_Active,
+          highLimit: updated.Limite_Haute,
+          frequencyMinutes: updated.Frequence_Min,
+          alarmDelayMinutes: updated.Retard_Alarme_Min,
+          startDelayMinutes: updated.Delai_Demarrage_Min,
+          stopButtonEnabled: updated.Autorise_Arret_Bouton_Stop,
+          resetWithStartEnabled: updated.Reinitialise_Avec_Bouton_Start,
+          active: updated.Actif,
+        },
+      })
 
       return apiOk({ id: updated.Id_VigiLog_Configuration })
     } catch (error) {

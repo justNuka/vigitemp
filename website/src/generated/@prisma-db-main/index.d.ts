@@ -274,8 +274,7 @@ export type t_vigilog_tournee = $Result.DefaultSelection<Prisma.$t_vigilog_tourn
  */
 export namespace $Enums {
   export const t_lieu_planning_audit_Type: {
-  ACTIVATION: 'ACTIVATION',
-  RETOUR_BASE: 'RETOUR_BASE'
+  PLAN_APPLY: 'PLAN_APPLY'
 };
 
 export type t_lieu_planning_audit_Type = (typeof t_lieu_planning_audit_Type)[keyof typeof t_lieu_planning_audit_Type]
@@ -297,6 +296,14 @@ export const t_commande_materiel_Statut_Commande: {
 
 export type t_commande_materiel_Statut_Commande = (typeof t_commande_materiel_Statut_Commande)[keyof typeof t_commande_materiel_Statut_Commande]
 
+
+export const t_lieu_planning_audit_backup_20260324_Type: {
+  ACTIVATION: 'ACTIVATION',
+  RETOUR_BASE: 'RETOUR_BASE'
+};
+
+export type t_lieu_planning_audit_backup_20260324_Type = (typeof t_lieu_planning_audit_backup_20260324_Type)[keyof typeof t_lieu_planning_audit_backup_20260324_Type]
+
 }
 
 export type t_lieu_planning_audit_Type = $Enums.t_lieu_planning_audit_Type
@@ -310,6 +317,10 @@ export const t_commande_materiel_Mode_Transmission: typeof $Enums.t_commande_mat
 export type t_commande_materiel_Statut_Commande = $Enums.t_commande_materiel_Statut_Commande
 
 export const t_commande_materiel_Statut_Commande: typeof $Enums.t_commande_materiel_Statut_Commande
+
+export type t_lieu_planning_audit_backup_20260324_Type = $Enums.t_lieu_planning_audit_backup_20260324_Type
+
+export const t_lieu_planning_audit_backup_20260324_Type: typeof $Enums.t_lieu_planning_audit_backup_20260324_Type
 
 /**
  * ##  Prisma Client ʲˢ
@@ -24052,6 +24063,7 @@ export namespace Prisma {
     Est_Correction_Ej: number | null
     Derive: number | null
     Derniere_Valeur_Null: number | null
+    Derniere_Val_Batterie: number | null
     Planning_Source_Regle_Id: number | null
     Nb_Mesures_Temporisation_Redeclenchement: number | null
   }
@@ -24099,6 +24111,7 @@ export namespace Prisma {
     Est_Correction_Ej: number | null
     Derive: number | null
     Derniere_Valeur_Null: number | null
+    Derniere_Val_Batterie: number | null
     Planning_Source_Regle_Id: number | null
     Nb_Mesures_Temporisation_Redeclenchement: number | null
   }
@@ -24180,6 +24193,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On: Date | null
     Date_Heure_Surveillance_Off: Date | null
     Derniere_Val_Rssi: string | null
+    Derniere_Val_Batterie: number | null
     Derniere_Val_Tension: string | null
     Est_Lieu_GSO: boolean | null
     Est_Son_Alarme_Active: boolean | null
@@ -24267,6 +24281,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On: Date | null
     Date_Heure_Surveillance_Off: Date | null
     Derniere_Val_Rssi: string | null
+    Derniere_Val_Batterie: number | null
     Derniere_Val_Tension: string | null
     Est_Lieu_GSO: boolean | null
     Est_Son_Alarme_Active: boolean | null
@@ -24354,6 +24369,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On: number
     Date_Heure_Surveillance_Off: number
     Derniere_Val_Rssi: number
+    Derniere_Val_Batterie: number
     Derniere_Val_Tension: number
     Est_Lieu_GSO: number
     Est_Son_Alarme_Active: number
@@ -24409,6 +24425,7 @@ export namespace Prisma {
     Est_Correction_Ej?: true
     Derive?: true
     Derniere_Valeur_Null?: true
+    Derniere_Val_Batterie?: true
     Planning_Source_Regle_Id?: true
     Nb_Mesures_Temporisation_Redeclenchement?: true
   }
@@ -24456,6 +24473,7 @@ export namespace Prisma {
     Est_Correction_Ej?: true
     Derive?: true
     Derniere_Valeur_Null?: true
+    Derniere_Val_Batterie?: true
     Planning_Source_Regle_Id?: true
     Nb_Mesures_Temporisation_Redeclenchement?: true
   }
@@ -24537,6 +24555,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: true
     Date_Heure_Surveillance_Off?: true
     Derniere_Val_Rssi?: true
+    Derniere_Val_Batterie?: true
     Derniere_Val_Tension?: true
     Est_Lieu_GSO?: true
     Est_Son_Alarme_Active?: true
@@ -24624,6 +24643,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: true
     Date_Heure_Surveillance_Off?: true
     Derniere_Val_Rssi?: true
+    Derniere_Val_Batterie?: true
     Derniere_Val_Tension?: true
     Est_Lieu_GSO?: true
     Est_Son_Alarme_Active?: true
@@ -24711,6 +24731,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: true
     Date_Heure_Surveillance_Off?: true
     Derniere_Val_Rssi?: true
+    Derniere_Val_Batterie?: true
     Derniere_Val_Tension?: true
     Est_Lieu_GSO?: true
     Est_Son_Alarme_Active?: true
@@ -24885,6 +24906,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On: Date | null
     Date_Heure_Surveillance_Off: Date | null
     Derniere_Val_Rssi: string | null
+    Derniere_Val_Batterie: number | null
     Derniere_Val_Tension: string | null
     Est_Lieu_GSO: boolean | null
     Est_Son_Alarme_Active: boolean
@@ -24991,6 +25013,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: boolean
     Date_Heure_Surveillance_Off?: boolean
     Derniere_Val_Rssi?: boolean
+    Derniere_Val_Batterie?: boolean
     Derniere_Val_Tension?: boolean
     Est_Lieu_GSO?: boolean
     Est_Son_Alarme_Active?: boolean
@@ -25093,6 +25116,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: boolean
     Date_Heure_Surveillance_Off?: boolean
     Derniere_Val_Rssi?: boolean
+    Derniere_Val_Batterie?: boolean
     Derniere_Val_Tension?: boolean
     Est_Lieu_GSO?: boolean
     Est_Son_Alarme_Active?: boolean
@@ -25103,7 +25127,7 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: boolean
   }
 
-  export type t_lieuOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Lieu" | "Id_Groupe1" | "Id_Groupe2" | "Id_Site" | "Nom_Lieu" | "Sonde_Numero_Serie" | "Adresse_Sonde" | "Consigne" | "Consigne_Base" | "Observations_Info" | "Consigne_Sup" | "Consigne_Sup_Base" | "Tolerance_Surveillance_Sup" | "Tolerance_Surveillance_Sup_Base" | "Est_Consigne_Sup_Active" | "Consigne_Sup_Pre_Alarme" | "Est_Consigne_Sup_Pre_Alarme_Active" | "Consigne_Inf" | "Consigne_Inf_Base" | "Tolerance_Surveillance_Inf" | "Tolerance_Surveillance_Inf_Base" | "Est_Consigne_Inf_Active" | "Consigne_Inf_Pre_Alarme" | "Est_Consigne_Inf_Pre_Alarme_Active" | "Frequence" | "Lieu_Etat" | "Retard_Alarme_Haut" | "Retard_Alarme_Bas" | "Id_Plan" | "Position_Plan_X" | "Position_Plan_Y" | "Date_Creation" | "Est_Archive" | "Est_Tel_Actif" | "Tel_Code" | "Tel_Son_Lieu" | "Id_Actionneur" | "Est_Mode_Serotheque" | "Coef_Sensibilite" | "Id_PDF" | "Est_DataLogger" | "EMT" | "EMT_Choix_Mode" | "EMT_Sonde" | "Retard_Alarme_Changement_Consigne" | "Derniere_Date_Heure" | "Derniere_Valeur" | "Derniere_Unite" | "Derniere_Nb_Decimal" | "Est_Lieu_En_Alarme" | "Est_Lieu_Alarme_Terminee_Non_Acquittee" | "Est_Lieu_Alarme_Terminee_Non_Acquittee_T1" | "Est_Lieu_En_Pre_Alarme" | "Id_Alarme" | "Lieu_Etat_N1" | "Derniere_Date_Etalonnage" | "Derniere_Erreur_Justesse" | "Derniere_Incertitude" | "Retard_Non_Reponse" | "Date_Heure_Derniere_Reponse" | "Date_Heure_Derniere_Reponse_Recue_OK" | "Est_Correction_Ej" | "Derive" | "Est_Correction_derive" | "Derniere_Valeur_Null" | "Type_Lieu" | "Date_Heure_Dernier_Acquittement_En_Cours" | "Date_Heure_Last_Update_EVT_GSO" | "Date_Heure_Reactivation_Alarme" | "Notification_Active" | "Commentaire" | "Infos_Modifiees_Depuis_Derniere_Mesure" | "Date_Heure_Reactivation_Surveillance" | "Date_Heure_Surveillance_On" | "Date_Heure_Surveillance_Off" | "Derniere_Val_Rssi" | "Derniere_Val_Tension" | "Est_Lieu_GSO" | "Est_Son_Alarme_Active" | "Planning_Actif" | "Planning_Source_Regle_Id" | "Planning_Derniere_Maj" | "Est_Redeclenchement_Immediat" | "Nb_Mesures_Temporisation_Redeclenchement", ExtArgs["result"]["t_lieu"]>
+  export type t_lieuOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Lieu" | "Id_Groupe1" | "Id_Groupe2" | "Id_Site" | "Nom_Lieu" | "Sonde_Numero_Serie" | "Adresse_Sonde" | "Consigne" | "Consigne_Base" | "Observations_Info" | "Consigne_Sup" | "Consigne_Sup_Base" | "Tolerance_Surveillance_Sup" | "Tolerance_Surveillance_Sup_Base" | "Est_Consigne_Sup_Active" | "Consigne_Sup_Pre_Alarme" | "Est_Consigne_Sup_Pre_Alarme_Active" | "Consigne_Inf" | "Consigne_Inf_Base" | "Tolerance_Surveillance_Inf" | "Tolerance_Surveillance_Inf_Base" | "Est_Consigne_Inf_Active" | "Consigne_Inf_Pre_Alarme" | "Est_Consigne_Inf_Pre_Alarme_Active" | "Frequence" | "Lieu_Etat" | "Retard_Alarme_Haut" | "Retard_Alarme_Bas" | "Id_Plan" | "Position_Plan_X" | "Position_Plan_Y" | "Date_Creation" | "Est_Archive" | "Est_Tel_Actif" | "Tel_Code" | "Tel_Son_Lieu" | "Id_Actionneur" | "Est_Mode_Serotheque" | "Coef_Sensibilite" | "Id_PDF" | "Est_DataLogger" | "EMT" | "EMT_Choix_Mode" | "EMT_Sonde" | "Retard_Alarme_Changement_Consigne" | "Derniere_Date_Heure" | "Derniere_Valeur" | "Derniere_Unite" | "Derniere_Nb_Decimal" | "Est_Lieu_En_Alarme" | "Est_Lieu_Alarme_Terminee_Non_Acquittee" | "Est_Lieu_Alarme_Terminee_Non_Acquittee_T1" | "Est_Lieu_En_Pre_Alarme" | "Id_Alarme" | "Lieu_Etat_N1" | "Derniere_Date_Etalonnage" | "Derniere_Erreur_Justesse" | "Derniere_Incertitude" | "Retard_Non_Reponse" | "Date_Heure_Derniere_Reponse" | "Date_Heure_Derniere_Reponse_Recue_OK" | "Est_Correction_Ej" | "Derive" | "Est_Correction_derive" | "Derniere_Valeur_Null" | "Type_Lieu" | "Date_Heure_Dernier_Acquittement_En_Cours" | "Date_Heure_Last_Update_EVT_GSO" | "Date_Heure_Reactivation_Alarme" | "Notification_Active" | "Commentaire" | "Infos_Modifiees_Depuis_Derniere_Mesure" | "Date_Heure_Reactivation_Surveillance" | "Date_Heure_Surveillance_On" | "Date_Heure_Surveillance_Off" | "Derniere_Val_Rssi" | "Derniere_Val_Batterie" | "Derniere_Val_Tension" | "Est_Lieu_GSO" | "Est_Son_Alarme_Active" | "Planning_Actif" | "Planning_Source_Regle_Id" | "Planning_Derniere_Maj" | "Est_Redeclenchement_Immediat" | "Nb_Mesures_Temporisation_Redeclenchement", ExtArgs["result"]["t_lieu"]>
   export type t_lieuInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     t_alarme?: boolean | t_lieu$t_alarmeArgs<ExtArgs>
     t_alarme_histo?: boolean | t_lieu$t_alarme_histoArgs<ExtArgs>
@@ -25213,6 +25237,7 @@ export namespace Prisma {
       Date_Heure_Surveillance_On: Date | null
       Date_Heure_Surveillance_Off: Date | null
       Derniere_Val_Rssi: string | null
+      Derniere_Val_Batterie: number | null
       Derniere_Val_Tension: string | null
       Est_Lieu_GSO: boolean | null
       Est_Son_Alarme_Active: boolean
@@ -25678,6 +25703,7 @@ export namespace Prisma {
     readonly Date_Heure_Surveillance_On: FieldRef<"t_lieu", 'DateTime'>
     readonly Date_Heure_Surveillance_Off: FieldRef<"t_lieu", 'DateTime'>
     readonly Derniere_Val_Rssi: FieldRef<"t_lieu", 'String'>
+    readonly Derniere_Val_Batterie: FieldRef<"t_lieu", 'Int'>
     readonly Derniere_Val_Tension: FieldRef<"t_lieu", 'String'>
     readonly Est_Lieu_GSO: FieldRef<"t_lieu", 'Boolean'>
     readonly Est_Son_Alarme_Active: FieldRef<"t_lieu", 'Boolean'>
@@ -50404,11 +50430,11 @@ export namespace Prisma {
     Id_Lieu: number | null
     Planning_Regle_Id: number | null
     Consigne_Avant: number | null
-    Consigne_Sup_Avant: number | null
-    Consigne_Inf_Avant: number | null
+    Tolerance_Surveillance_Sup_Avant: number | null
+    Tolerance_Surveillance_Inf_Avant: number | null
     Consigne_Apres: number | null
-    Consigne_Sup_Apres: number | null
-    Consigne_Inf_Apres: number | null
+    Tolerance_Surveillance_Sup_Apres: number | null
+    Tolerance_Surveillance_Inf_Apres: number | null
   }
 
   export type T_lieu_planning_auditSumAggregateOutputType = {
@@ -50416,53 +50442,59 @@ export namespace Prisma {
     Id_Lieu: number | null
     Planning_Regle_Id: number | null
     Consigne_Avant: number | null
-    Consigne_Sup_Avant: number | null
-    Consigne_Inf_Avant: number | null
+    Tolerance_Surveillance_Sup_Avant: number | null
+    Tolerance_Surveillance_Inf_Avant: number | null
     Consigne_Apres: number | null
-    Consigne_Sup_Apres: number | null
-    Consigne_Inf_Apres: number | null
+    Tolerance_Surveillance_Sup_Apres: number | null
+    Tolerance_Surveillance_Inf_Apres: number | null
   }
 
   export type T_lieu_planning_auditMinAggregateOutputType = {
     Id_Audit: number | null
     Id_Lieu: number | null
     Timestamp: Date | null
+    Date_Heure_Debut_Changement: Date | null
+    Date_Heure_Fin_Changement: Date | null
     Type: $Enums.t_lieu_planning_audit_Type | null
     Planning_Regle_Id: number | null
     Consigne_Avant: number | null
-    Consigne_Sup_Avant: number | null
-    Consigne_Inf_Avant: number | null
+    Tolerance_Surveillance_Sup_Avant: number | null
+    Tolerance_Surveillance_Inf_Avant: number | null
     Consigne_Apres: number | null
-    Consigne_Sup_Apres: number | null
-    Consigne_Inf_Apres: number | null
+    Tolerance_Surveillance_Sup_Apres: number | null
+    Tolerance_Surveillance_Inf_Apres: number | null
   }
 
   export type T_lieu_planning_auditMaxAggregateOutputType = {
     Id_Audit: number | null
     Id_Lieu: number | null
     Timestamp: Date | null
+    Date_Heure_Debut_Changement: Date | null
+    Date_Heure_Fin_Changement: Date | null
     Type: $Enums.t_lieu_planning_audit_Type | null
     Planning_Regle_Id: number | null
     Consigne_Avant: number | null
-    Consigne_Sup_Avant: number | null
-    Consigne_Inf_Avant: number | null
+    Tolerance_Surveillance_Sup_Avant: number | null
+    Tolerance_Surveillance_Inf_Avant: number | null
     Consigne_Apres: number | null
-    Consigne_Sup_Apres: number | null
-    Consigne_Inf_Apres: number | null
+    Tolerance_Surveillance_Sup_Apres: number | null
+    Tolerance_Surveillance_Inf_Apres: number | null
   }
 
   export type T_lieu_planning_auditCountAggregateOutputType = {
     Id_Audit: number
     Id_Lieu: number
     Timestamp: number
+    Date_Heure_Debut_Changement: number
+    Date_Heure_Fin_Changement: number
     Type: number
     Planning_Regle_Id: number
     Consigne_Avant: number
-    Consigne_Sup_Avant: number
-    Consigne_Inf_Avant: number
+    Tolerance_Surveillance_Sup_Avant: number
+    Tolerance_Surveillance_Inf_Avant: number
     Consigne_Apres: number
-    Consigne_Sup_Apres: number
-    Consigne_Inf_Apres: number
+    Tolerance_Surveillance_Sup_Apres: number
+    Tolerance_Surveillance_Inf_Apres: number
     _all: number
   }
 
@@ -50472,11 +50504,11 @@ export namespace Prisma {
     Id_Lieu?: true
     Planning_Regle_Id?: true
     Consigne_Avant?: true
-    Consigne_Sup_Avant?: true
-    Consigne_Inf_Avant?: true
+    Tolerance_Surveillance_Sup_Avant?: true
+    Tolerance_Surveillance_Inf_Avant?: true
     Consigne_Apres?: true
-    Consigne_Sup_Apres?: true
-    Consigne_Inf_Apres?: true
+    Tolerance_Surveillance_Sup_Apres?: true
+    Tolerance_Surveillance_Inf_Apres?: true
   }
 
   export type T_lieu_planning_auditSumAggregateInputType = {
@@ -50484,53 +50516,59 @@ export namespace Prisma {
     Id_Lieu?: true
     Planning_Regle_Id?: true
     Consigne_Avant?: true
-    Consigne_Sup_Avant?: true
-    Consigne_Inf_Avant?: true
+    Tolerance_Surveillance_Sup_Avant?: true
+    Tolerance_Surveillance_Inf_Avant?: true
     Consigne_Apres?: true
-    Consigne_Sup_Apres?: true
-    Consigne_Inf_Apres?: true
+    Tolerance_Surveillance_Sup_Apres?: true
+    Tolerance_Surveillance_Inf_Apres?: true
   }
 
   export type T_lieu_planning_auditMinAggregateInputType = {
     Id_Audit?: true
     Id_Lieu?: true
     Timestamp?: true
+    Date_Heure_Debut_Changement?: true
+    Date_Heure_Fin_Changement?: true
     Type?: true
     Planning_Regle_Id?: true
     Consigne_Avant?: true
-    Consigne_Sup_Avant?: true
-    Consigne_Inf_Avant?: true
+    Tolerance_Surveillance_Sup_Avant?: true
+    Tolerance_Surveillance_Inf_Avant?: true
     Consigne_Apres?: true
-    Consigne_Sup_Apres?: true
-    Consigne_Inf_Apres?: true
+    Tolerance_Surveillance_Sup_Apres?: true
+    Tolerance_Surveillance_Inf_Apres?: true
   }
 
   export type T_lieu_planning_auditMaxAggregateInputType = {
     Id_Audit?: true
     Id_Lieu?: true
     Timestamp?: true
+    Date_Heure_Debut_Changement?: true
+    Date_Heure_Fin_Changement?: true
     Type?: true
     Planning_Regle_Id?: true
     Consigne_Avant?: true
-    Consigne_Sup_Avant?: true
-    Consigne_Inf_Avant?: true
+    Tolerance_Surveillance_Sup_Avant?: true
+    Tolerance_Surveillance_Inf_Avant?: true
     Consigne_Apres?: true
-    Consigne_Sup_Apres?: true
-    Consigne_Inf_Apres?: true
+    Tolerance_Surveillance_Sup_Apres?: true
+    Tolerance_Surveillance_Inf_Apres?: true
   }
 
   export type T_lieu_planning_auditCountAggregateInputType = {
     Id_Audit?: true
     Id_Lieu?: true
     Timestamp?: true
+    Date_Heure_Debut_Changement?: true
+    Date_Heure_Fin_Changement?: true
     Type?: true
     Planning_Regle_Id?: true
     Consigne_Avant?: true
-    Consigne_Sup_Avant?: true
-    Consigne_Inf_Avant?: true
+    Tolerance_Surveillance_Sup_Avant?: true
+    Tolerance_Surveillance_Inf_Avant?: true
     Consigne_Apres?: true
-    Consigne_Sup_Apres?: true
-    Consigne_Inf_Apres?: true
+    Tolerance_Surveillance_Sup_Apres?: true
+    Tolerance_Surveillance_Inf_Apres?: true
     _all?: true
   }
 
@@ -50624,14 +50662,16 @@ export namespace Prisma {
     Id_Audit: number
     Id_Lieu: number
     Timestamp: Date
+    Date_Heure_Debut_Changement: Date | null
+    Date_Heure_Fin_Changement: Date | null
     Type: $Enums.t_lieu_planning_audit_Type
     Planning_Regle_Id: number | null
     Consigne_Avant: number | null
-    Consigne_Sup_Avant: number | null
-    Consigne_Inf_Avant: number | null
+    Tolerance_Surveillance_Sup_Avant: number | null
+    Tolerance_Surveillance_Inf_Avant: number | null
     Consigne_Apres: number | null
-    Consigne_Sup_Apres: number | null
-    Consigne_Inf_Apres: number | null
+    Tolerance_Surveillance_Sup_Apres: number | null
+    Tolerance_Surveillance_Inf_Apres: number | null
     _count: T_lieu_planning_auditCountAggregateOutputType | null
     _avg: T_lieu_planning_auditAvgAggregateOutputType | null
     _sum: T_lieu_planning_auditSumAggregateOutputType | null
@@ -50657,14 +50697,16 @@ export namespace Prisma {
     Id_Audit?: boolean
     Id_Lieu?: boolean
     Timestamp?: boolean
+    Date_Heure_Debut_Changement?: boolean
+    Date_Heure_Fin_Changement?: boolean
     Type?: boolean
     Planning_Regle_Id?: boolean
     Consigne_Avant?: boolean
-    Consigne_Sup_Avant?: boolean
-    Consigne_Inf_Avant?: boolean
+    Tolerance_Surveillance_Sup_Avant?: boolean
+    Tolerance_Surveillance_Inf_Avant?: boolean
     Consigne_Apres?: boolean
-    Consigne_Sup_Apres?: boolean
-    Consigne_Inf_Apres?: boolean
+    Tolerance_Surveillance_Sup_Apres?: boolean
+    Tolerance_Surveillance_Inf_Apres?: boolean
   }, ExtArgs["result"]["t_lieu_planning_audit"]>
 
 
@@ -50673,17 +50715,19 @@ export namespace Prisma {
     Id_Audit?: boolean
     Id_Lieu?: boolean
     Timestamp?: boolean
+    Date_Heure_Debut_Changement?: boolean
+    Date_Heure_Fin_Changement?: boolean
     Type?: boolean
     Planning_Regle_Id?: boolean
     Consigne_Avant?: boolean
-    Consigne_Sup_Avant?: boolean
-    Consigne_Inf_Avant?: boolean
+    Tolerance_Surveillance_Sup_Avant?: boolean
+    Tolerance_Surveillance_Inf_Avant?: boolean
     Consigne_Apres?: boolean
-    Consigne_Sup_Apres?: boolean
-    Consigne_Inf_Apres?: boolean
+    Tolerance_Surveillance_Sup_Apres?: boolean
+    Tolerance_Surveillance_Inf_Apres?: boolean
   }
 
-  export type t_lieu_planning_auditOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Audit" | "Id_Lieu" | "Timestamp" | "Type" | "Planning_Regle_Id" | "Consigne_Avant" | "Consigne_Sup_Avant" | "Consigne_Inf_Avant" | "Consigne_Apres" | "Consigne_Sup_Apres" | "Consigne_Inf_Apres", ExtArgs["result"]["t_lieu_planning_audit"]>
+  export type t_lieu_planning_auditOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Audit" | "Id_Lieu" | "Timestamp" | "Date_Heure_Debut_Changement" | "Date_Heure_Fin_Changement" | "Type" | "Planning_Regle_Id" | "Consigne_Avant" | "Tolerance_Surveillance_Sup_Avant" | "Tolerance_Surveillance_Inf_Avant" | "Consigne_Apres" | "Tolerance_Surveillance_Sup_Apres" | "Tolerance_Surveillance_Inf_Apres", ExtArgs["result"]["t_lieu_planning_audit"]>
 
   export type $t_lieu_planning_auditPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "t_lieu_planning_audit"
@@ -50692,14 +50736,16 @@ export namespace Prisma {
       Id_Audit: number
       Id_Lieu: number
       Timestamp: Date
+      Date_Heure_Debut_Changement: Date | null
+      Date_Heure_Fin_Changement: Date | null
       Type: $Enums.t_lieu_planning_audit_Type
       Planning_Regle_Id: number | null
       Consigne_Avant: number | null
-      Consigne_Sup_Avant: number | null
-      Consigne_Inf_Avant: number | null
+      Tolerance_Surveillance_Sup_Avant: number | null
+      Tolerance_Surveillance_Inf_Avant: number | null
       Consigne_Apres: number | null
-      Consigne_Sup_Apres: number | null
-      Consigne_Inf_Apres: number | null
+      Tolerance_Surveillance_Sup_Apres: number | null
+      Tolerance_Surveillance_Inf_Apres: number | null
     }, ExtArgs["result"]["t_lieu_planning_audit"]>
     composites: {}
   }
@@ -51072,14 +51118,16 @@ export namespace Prisma {
     readonly Id_Audit: FieldRef<"t_lieu_planning_audit", 'Int'>
     readonly Id_Lieu: FieldRef<"t_lieu_planning_audit", 'Int'>
     readonly Timestamp: FieldRef<"t_lieu_planning_audit", 'DateTime'>
+    readonly Date_Heure_Debut_Changement: FieldRef<"t_lieu_planning_audit", 'DateTime'>
+    readonly Date_Heure_Fin_Changement: FieldRef<"t_lieu_planning_audit", 'DateTime'>
     readonly Type: FieldRef<"t_lieu_planning_audit", 't_lieu_planning_audit_Type'>
     readonly Planning_Regle_Id: FieldRef<"t_lieu_planning_audit", 'Int'>
     readonly Consigne_Avant: FieldRef<"t_lieu_planning_audit", 'Float'>
-    readonly Consigne_Sup_Avant: FieldRef<"t_lieu_planning_audit", 'Float'>
-    readonly Consigne_Inf_Avant: FieldRef<"t_lieu_planning_audit", 'Float'>
+    readonly Tolerance_Surveillance_Sup_Avant: FieldRef<"t_lieu_planning_audit", 'Float'>
+    readonly Tolerance_Surveillance_Inf_Avant: FieldRef<"t_lieu_planning_audit", 'Float'>
     readonly Consigne_Apres: FieldRef<"t_lieu_planning_audit", 'Float'>
-    readonly Consigne_Sup_Apres: FieldRef<"t_lieu_planning_audit", 'Float'>
-    readonly Consigne_Inf_Apres: FieldRef<"t_lieu_planning_audit", 'Float'>
+    readonly Tolerance_Surveillance_Sup_Apres: FieldRef<"t_lieu_planning_audit", 'Float'>
+    readonly Tolerance_Surveillance_Inf_Apres: FieldRef<"t_lieu_planning_audit", 'Float'>
   }
     
 
@@ -58520,13 +58568,13 @@ export namespace Prisma {
     Date_Heure_Acquittement?: boolean
     Date_Heure_Creation?: boolean
     Date_Heure_Maj?: boolean
-    t_vigilog?: boolean | t_vigilog_tournee$t_vigilogArgs<ExtArgs>
     t_vigilog_configuration?: boolean | t_vigilog_tournee$t_vigilog_configurationArgs<ExtArgs>
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site?: boolean | t_siteDefaultArgs<ExtArgs>
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site?: boolean | t_siteDefaultArgs<ExtArgs>
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: boolean | t_vigilog_tournee$t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurArgs<ExtArgs>
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: boolean | t_vigilog_tournee$t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurArgs<ExtArgs>
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: boolean | t_utilisateurDefaultArgs<ExtArgs>
+    t_vigilog?: boolean | t_vigilog_tournee$t_vigilogArgs<ExtArgs>
   }, ExtArgs["result"]["t_vigilog_tournee"]>
 
 
@@ -58575,25 +58623,25 @@ export namespace Prisma {
 
   export type t_vigilog_tourneeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_VigiLog_Tournee" | "Reference_Tournee" | "Id_VigiLog_Configuration" | "Id_VigiLog" | "Nom_Configuration" | "Id_Site_Depart" | "Id_Site_Arrivee" | "Numero_Serie_VigiLog" | "Statut" | "Resultat_Feu" | "Id_Utilisateur_Depart" | "Date_Heure_Depart" | "Id_Utilisateur_Arrivee" | "Date_Heure_Arrivee" | "Consigne" | "Limite_Basse_Active" | "Limite_Basse" | "Limite_Haute_Active" | "Limite_Haute" | "Frequence_Min" | "Retard_Alarme_Min" | "Delai_Demarrage_Min" | "Autorise_Arret_Bouton_Stop" | "Reinitialise_Avec_Bouton_Start" | "Nb_Mesures" | "Temperature_Min" | "Temperature_Moyenne" | "Temperature_Max" | "Duree_Hors_Limites_Secondes" | "Duree_Alarme_Secondes" | "Est_Depassement_Limites" | "Est_Alarme" | "Est_Acquittee" | "Commentaire" | "Commentaire_Acquittement" | "Id_Utilisateur_Acquittement" | "Date_Heure_Acquittement" | "Date_Heure_Creation" | "Date_Heure_Maj", ExtArgs["result"]["t_vigilog_tournee"]>
   export type t_vigilog_tourneeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    t_vigilog?: boolean | t_vigilog_tournee$t_vigilogArgs<ExtArgs>
     t_vigilog_configuration?: boolean | t_vigilog_tournee$t_vigilog_configurationArgs<ExtArgs>
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site?: boolean | t_siteDefaultArgs<ExtArgs>
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site?: boolean | t_siteDefaultArgs<ExtArgs>
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: boolean | t_vigilog_tournee$t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurArgs<ExtArgs>
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: boolean | t_vigilog_tournee$t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurArgs<ExtArgs>
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: boolean | t_utilisateurDefaultArgs<ExtArgs>
+    t_vigilog?: boolean | t_vigilog_tournee$t_vigilogArgs<ExtArgs>
   }
 
   export type $t_vigilog_tourneePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "t_vigilog_tournee"
     objects: {
-      t_vigilog: Prisma.$t_vigilogPayload<ExtArgs> | null
       t_vigilog_configuration: Prisma.$t_vigilog_configurationPayload<ExtArgs> | null
       t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site: Prisma.$t_sitePayload<ExtArgs>
       t_site_t_vigilog_tournee_Id_Site_DepartTot_site: Prisma.$t_sitePayload<ExtArgs>
       t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur: Prisma.$t_utilisateurPayload<ExtArgs> | null
       t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur: Prisma.$t_utilisateurPayload<ExtArgs> | null
       t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur: Prisma.$t_utilisateurPayload<ExtArgs>
+      t_vigilog: Prisma.$t_vigilogPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       Id_VigiLog_Tournee: number
@@ -58975,13 +59023,13 @@ export namespace Prisma {
    */
   export interface Prisma__t_vigilog_tourneeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    t_vigilog<T extends t_vigilog_tournee$t_vigilogArgs<ExtArgs> = {}>(args?: Subset<T, t_vigilog_tournee$t_vigilogArgs<ExtArgs>>): Prisma__t_vigilogClient<$Result.GetResult<Prisma.$t_vigilogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     t_vigilog_configuration<T extends t_vigilog_tournee$t_vigilog_configurationArgs<ExtArgs> = {}>(args?: Subset<T, t_vigilog_tournee$t_vigilog_configurationArgs<ExtArgs>>): Prisma__t_vigilog_configurationClient<$Result.GetResult<Prisma.$t_vigilog_configurationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site<T extends t_siteDefaultArgs<ExtArgs> = {}>(args?: Subset<T, t_siteDefaultArgs<ExtArgs>>): Prisma__t_siteClient<$Result.GetResult<Prisma.$t_sitePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site<T extends t_siteDefaultArgs<ExtArgs> = {}>(args?: Subset<T, t_siteDefaultArgs<ExtArgs>>): Prisma__t_siteClient<$Result.GetResult<Prisma.$t_sitePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur<T extends t_vigilog_tournee$t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurArgs<ExtArgs> = {}>(args?: Subset<T, t_vigilog_tournee$t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurArgs<ExtArgs>>): Prisma__t_utilisateurClient<$Result.GetResult<Prisma.$t_utilisateurPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur<T extends t_vigilog_tournee$t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurArgs<ExtArgs> = {}>(args?: Subset<T, t_vigilog_tournee$t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurArgs<ExtArgs>>): Prisma__t_utilisateurClient<$Result.GetResult<Prisma.$t_utilisateurPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur<T extends t_utilisateurDefaultArgs<ExtArgs> = {}>(args?: Subset<T, t_utilisateurDefaultArgs<ExtArgs>>): Prisma__t_utilisateurClient<$Result.GetResult<Prisma.$t_utilisateurPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    t_vigilog<T extends t_vigilog_tournee$t_vigilogArgs<ExtArgs> = {}>(args?: Subset<T, t_vigilog_tournee$t_vigilogArgs<ExtArgs>>): Prisma__t_vigilogClient<$Result.GetResult<Prisma.$t_vigilogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -59393,25 +59441,6 @@ export namespace Prisma {
   }
 
   /**
-   * t_vigilog_tournee.t_vigilog
-   */
-  export type t_vigilog_tournee$t_vigilogArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_vigilog
-     */
-    select?: t_vigilogSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_vigilog
-     */
-    omit?: t_vigilogOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: t_vigilogInclude<ExtArgs> | null
-    where?: t_vigilogWhereInput
-  }
-
-  /**
    * t_vigilog_tournee.t_vigilog_configuration
    */
   export type t_vigilog_tournee$t_vigilog_configurationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -59466,6 +59495,25 @@ export namespace Prisma {
      */
     include?: t_utilisateurInclude<ExtArgs> | null
     where?: t_utilisateurWhereInput
+  }
+
+  /**
+   * t_vigilog_tournee.t_vigilog
+   */
+  export type t_vigilog_tournee$t_vigilogArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_vigilog
+     */
+    select?: t_vigilogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_vigilog
+     */
+    omit?: t_vigilogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_vigilogInclude<ExtArgs> | null
+    where?: t_vigilogWhereInput
   }
 
   /**
@@ -59840,6 +59888,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On: 'Date_Heure_Surveillance_On',
     Date_Heure_Surveillance_Off: 'Date_Heure_Surveillance_Off',
     Derniere_Val_Rssi: 'Derniere_Val_Rssi',
+    Derniere_Val_Batterie: 'Derniere_Val_Batterie',
     Derniere_Val_Tension: 'Derniere_Val_Tension',
     Est_Lieu_GSO: 'Est_Lieu_GSO',
     Est_Son_Alarme_Active: 'Est_Son_Alarme_Active',
@@ -60164,14 +60213,16 @@ export namespace Prisma {
     Id_Audit: 'Id_Audit',
     Id_Lieu: 'Id_Lieu',
     Timestamp: 'Timestamp',
+    Date_Heure_Debut_Changement: 'Date_Heure_Debut_Changement',
+    Date_Heure_Fin_Changement: 'Date_Heure_Fin_Changement',
     Type: 'Type',
     Planning_Regle_Id: 'Planning_Regle_Id',
     Consigne_Avant: 'Consigne_Avant',
-    Consigne_Sup_Avant: 'Consigne_Sup_Avant',
-    Consigne_Inf_Avant: 'Consigne_Inf_Avant',
+    Tolerance_Surveillance_Sup_Avant: 'Tolerance_Surveillance_Sup_Avant',
+    Tolerance_Surveillance_Inf_Avant: 'Tolerance_Surveillance_Inf_Avant',
     Consigne_Apres: 'Consigne_Apres',
-    Consigne_Sup_Apres: 'Consigne_Sup_Apres',
-    Consigne_Inf_Apres: 'Consigne_Inf_Apres'
+    Tolerance_Surveillance_Sup_Apres: 'Tolerance_Surveillance_Sup_Apres',
+    Tolerance_Surveillance_Inf_Apres: 'Tolerance_Surveillance_Inf_Apres'
   };
 
   export type T_lieu_planning_auditScalarFieldEnum = (typeof T_lieu_planning_auditScalarFieldEnum)[keyof typeof T_lieu_planning_auditScalarFieldEnum]
@@ -62302,6 +62353,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
     Date_Heure_Surveillance_Off?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
     Derniere_Val_Rssi?: StringNullableFilter<"t_lieu"> | string | null
+    Derniere_Val_Batterie?: IntNullableFilter<"t_lieu"> | number | null
     Derniere_Val_Tension?: StringNullableFilter<"t_lieu"> | string | null
     Est_Lieu_GSO?: BoolNullableFilter<"t_lieu"> | boolean | null
     Est_Son_Alarme_Active?: BoolFilter<"t_lieu"> | boolean
@@ -62401,6 +62453,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: SortOrderInput | SortOrder
     Date_Heure_Surveillance_Off?: SortOrderInput | SortOrder
     Derniere_Val_Rssi?: SortOrderInput | SortOrder
+    Derniere_Val_Batterie?: SortOrderInput | SortOrder
     Derniere_Val_Tension?: SortOrderInput | SortOrder
     Est_Lieu_GSO?: SortOrderInput | SortOrder
     Est_Son_Alarme_Active?: SortOrder
@@ -62504,6 +62557,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
     Date_Heure_Surveillance_Off?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
     Derniere_Val_Rssi?: StringNullableFilter<"t_lieu"> | string | null
+    Derniere_Val_Batterie?: IntNullableFilter<"t_lieu"> | number | null
     Derniere_Val_Tension?: StringNullableFilter<"t_lieu"> | string | null
     Est_Lieu_GSO?: BoolNullableFilter<"t_lieu"> | boolean | null
     Est_Son_Alarme_Active?: BoolFilter<"t_lieu"> | boolean
@@ -62603,6 +62657,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: SortOrderInput | SortOrder
     Date_Heure_Surveillance_Off?: SortOrderInput | SortOrder
     Derniere_Val_Rssi?: SortOrderInput | SortOrder
+    Derniere_Val_Batterie?: SortOrderInput | SortOrder
     Derniere_Val_Tension?: SortOrderInput | SortOrder
     Est_Lieu_GSO?: SortOrderInput | SortOrder
     Est_Son_Alarme_Active?: SortOrder
@@ -62698,6 +62753,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: DateTimeNullableWithAggregatesFilter<"t_lieu"> | Date | string | null
     Date_Heure_Surveillance_Off?: DateTimeNullableWithAggregatesFilter<"t_lieu"> | Date | string | null
     Derniere_Val_Rssi?: StringNullableWithAggregatesFilter<"t_lieu"> | string | null
+    Derniere_Val_Batterie?: IntNullableWithAggregatesFilter<"t_lieu"> | number | null
     Derniere_Val_Tension?: StringNullableWithAggregatesFilter<"t_lieu"> | string | null
     Est_Lieu_GSO?: BoolNullableWithAggregatesFilter<"t_lieu"> | boolean | null
     Est_Son_Alarme_Active?: BoolWithAggregatesFilter<"t_lieu"> | boolean
@@ -64358,28 +64414,32 @@ export namespace Prisma {
     Id_Audit?: IntFilter<"t_lieu_planning_audit"> | number
     Id_Lieu?: IntFilter<"t_lieu_planning_audit"> | number
     Timestamp?: DateTimeFilter<"t_lieu_planning_audit"> | Date | string
+    Date_Heure_Debut_Changement?: DateTimeNullableFilter<"t_lieu_planning_audit"> | Date | string | null
+    Date_Heure_Fin_Changement?: DateTimeNullableFilter<"t_lieu_planning_audit"> | Date | string | null
     Type?: Enumt_lieu_planning_audit_TypeFilter<"t_lieu_planning_audit"> | $Enums.t_lieu_planning_audit_Type
     Planning_Regle_Id?: IntNullableFilter<"t_lieu_planning_audit"> | number | null
     Consigne_Avant?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
-    Consigne_Sup_Avant?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
-    Consigne_Inf_Avant?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
+    Tolerance_Surveillance_Sup_Avant?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
+    Tolerance_Surveillance_Inf_Avant?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
     Consigne_Apres?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
-    Consigne_Sup_Apres?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
-    Consigne_Inf_Apres?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
+    Tolerance_Surveillance_Sup_Apres?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
+    Tolerance_Surveillance_Inf_Apres?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
   }
 
   export type t_lieu_planning_auditOrderByWithRelationInput = {
     Id_Audit?: SortOrder
     Id_Lieu?: SortOrder
     Timestamp?: SortOrder
+    Date_Heure_Debut_Changement?: SortOrderInput | SortOrder
+    Date_Heure_Fin_Changement?: SortOrderInput | SortOrder
     Type?: SortOrder
     Planning_Regle_Id?: SortOrderInput | SortOrder
     Consigne_Avant?: SortOrderInput | SortOrder
-    Consigne_Sup_Avant?: SortOrderInput | SortOrder
-    Consigne_Inf_Avant?: SortOrderInput | SortOrder
+    Tolerance_Surveillance_Sup_Avant?: SortOrderInput | SortOrder
+    Tolerance_Surveillance_Inf_Avant?: SortOrderInput | SortOrder
     Consigne_Apres?: SortOrderInput | SortOrder
-    Consigne_Sup_Apres?: SortOrderInput | SortOrder
-    Consigne_Inf_Apres?: SortOrderInput | SortOrder
+    Tolerance_Surveillance_Sup_Apres?: SortOrderInput | SortOrder
+    Tolerance_Surveillance_Inf_Apres?: SortOrderInput | SortOrder
   }
 
   export type t_lieu_planning_auditWhereUniqueInput = Prisma.AtLeast<{
@@ -64389,28 +64449,32 @@ export namespace Prisma {
     NOT?: t_lieu_planning_auditWhereInput | t_lieu_planning_auditWhereInput[]
     Id_Lieu?: IntFilter<"t_lieu_planning_audit"> | number
     Timestamp?: DateTimeFilter<"t_lieu_planning_audit"> | Date | string
+    Date_Heure_Debut_Changement?: DateTimeNullableFilter<"t_lieu_planning_audit"> | Date | string | null
+    Date_Heure_Fin_Changement?: DateTimeNullableFilter<"t_lieu_planning_audit"> | Date | string | null
     Type?: Enumt_lieu_planning_audit_TypeFilter<"t_lieu_planning_audit"> | $Enums.t_lieu_planning_audit_Type
     Planning_Regle_Id?: IntNullableFilter<"t_lieu_planning_audit"> | number | null
     Consigne_Avant?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
-    Consigne_Sup_Avant?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
-    Consigne_Inf_Avant?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
+    Tolerance_Surveillance_Sup_Avant?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
+    Tolerance_Surveillance_Inf_Avant?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
     Consigne_Apres?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
-    Consigne_Sup_Apres?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
-    Consigne_Inf_Apres?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
+    Tolerance_Surveillance_Sup_Apres?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
+    Tolerance_Surveillance_Inf_Apres?: FloatNullableFilter<"t_lieu_planning_audit"> | number | null
   }, "Id_Audit">
 
   export type t_lieu_planning_auditOrderByWithAggregationInput = {
     Id_Audit?: SortOrder
     Id_Lieu?: SortOrder
     Timestamp?: SortOrder
+    Date_Heure_Debut_Changement?: SortOrderInput | SortOrder
+    Date_Heure_Fin_Changement?: SortOrderInput | SortOrder
     Type?: SortOrder
     Planning_Regle_Id?: SortOrderInput | SortOrder
     Consigne_Avant?: SortOrderInput | SortOrder
-    Consigne_Sup_Avant?: SortOrderInput | SortOrder
-    Consigne_Inf_Avant?: SortOrderInput | SortOrder
+    Tolerance_Surveillance_Sup_Avant?: SortOrderInput | SortOrder
+    Tolerance_Surveillance_Inf_Avant?: SortOrderInput | SortOrder
     Consigne_Apres?: SortOrderInput | SortOrder
-    Consigne_Sup_Apres?: SortOrderInput | SortOrder
-    Consigne_Inf_Apres?: SortOrderInput | SortOrder
+    Tolerance_Surveillance_Sup_Apres?: SortOrderInput | SortOrder
+    Tolerance_Surveillance_Inf_Apres?: SortOrderInput | SortOrder
     _count?: t_lieu_planning_auditCountOrderByAggregateInput
     _avg?: t_lieu_planning_auditAvgOrderByAggregateInput
     _max?: t_lieu_planning_auditMaxOrderByAggregateInput
@@ -64425,14 +64489,16 @@ export namespace Prisma {
     Id_Audit?: IntWithAggregatesFilter<"t_lieu_planning_audit"> | number
     Id_Lieu?: IntWithAggregatesFilter<"t_lieu_planning_audit"> | number
     Timestamp?: DateTimeWithAggregatesFilter<"t_lieu_planning_audit"> | Date | string
+    Date_Heure_Debut_Changement?: DateTimeNullableWithAggregatesFilter<"t_lieu_planning_audit"> | Date | string | null
+    Date_Heure_Fin_Changement?: DateTimeNullableWithAggregatesFilter<"t_lieu_planning_audit"> | Date | string | null
     Type?: Enumt_lieu_planning_audit_TypeWithAggregatesFilter<"t_lieu_planning_audit"> | $Enums.t_lieu_planning_audit_Type
     Planning_Regle_Id?: IntNullableWithAggregatesFilter<"t_lieu_planning_audit"> | number | null
     Consigne_Avant?: FloatNullableWithAggregatesFilter<"t_lieu_planning_audit"> | number | null
-    Consigne_Sup_Avant?: FloatNullableWithAggregatesFilter<"t_lieu_planning_audit"> | number | null
-    Consigne_Inf_Avant?: FloatNullableWithAggregatesFilter<"t_lieu_planning_audit"> | number | null
+    Tolerance_Surveillance_Sup_Avant?: FloatNullableWithAggregatesFilter<"t_lieu_planning_audit"> | number | null
+    Tolerance_Surveillance_Inf_Avant?: FloatNullableWithAggregatesFilter<"t_lieu_planning_audit"> | number | null
     Consigne_Apres?: FloatNullableWithAggregatesFilter<"t_lieu_planning_audit"> | number | null
-    Consigne_Sup_Apres?: FloatNullableWithAggregatesFilter<"t_lieu_planning_audit"> | number | null
-    Consigne_Inf_Apres?: FloatNullableWithAggregatesFilter<"t_lieu_planning_audit"> | number | null
+    Tolerance_Surveillance_Sup_Apres?: FloatNullableWithAggregatesFilter<"t_lieu_planning_audit"> | number | null
+    Tolerance_Surveillance_Inf_Apres?: FloatNullableWithAggregatesFilter<"t_lieu_planning_audit"> | number | null
   }
 
   export type t_lieu_planning_regleWhereInput = {
@@ -65070,13 +65136,13 @@ export namespace Prisma {
     Date_Heure_Acquittement?: DateTimeNullableFilter<"t_vigilog_tournee"> | Date | string | null
     Date_Heure_Creation?: DateTimeFilter<"t_vigilog_tournee"> | Date | string
     Date_Heure_Maj?: DateTimeNullableFilter<"t_vigilog_tournee"> | Date | string | null
-    t_vigilog?: XOR<T_vigilogNullableScalarRelationFilter, t_vigilogWhereInput> | null
     t_vigilog_configuration?: XOR<T_vigilog_configurationNullableScalarRelationFilter, t_vigilog_configurationWhereInput> | null
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site?: XOR<T_siteScalarRelationFilter, t_siteWhereInput>
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site?: XOR<T_siteScalarRelationFilter, t_siteWhereInput>
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: XOR<T_utilisateurNullableScalarRelationFilter, t_utilisateurWhereInput> | null
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: XOR<T_utilisateurNullableScalarRelationFilter, t_utilisateurWhereInput> | null
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: XOR<T_utilisateurScalarRelationFilter, t_utilisateurWhereInput>
+    t_vigilog?: XOR<T_vigilogNullableScalarRelationFilter, t_vigilogWhereInput> | null
   }
 
   export type t_vigilog_tourneeOrderByWithRelationInput = {
@@ -65119,13 +65185,13 @@ export namespace Prisma {
     Date_Heure_Acquittement?: SortOrderInput | SortOrder
     Date_Heure_Creation?: SortOrder
     Date_Heure_Maj?: SortOrderInput | SortOrder
-    t_vigilog?: t_vigilogOrderByWithRelationInput
     t_vigilog_configuration?: t_vigilog_configurationOrderByWithRelationInput
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site?: t_siteOrderByWithRelationInput
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site?: t_siteOrderByWithRelationInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_utilisateurOrderByWithRelationInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_utilisateurOrderByWithRelationInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_utilisateurOrderByWithRelationInput
+    t_vigilog?: t_vigilogOrderByWithRelationInput
     _relevance?: t_vigilog_tourneeOrderByRelevanceInput
   }
 
@@ -65172,13 +65238,13 @@ export namespace Prisma {
     Date_Heure_Acquittement?: DateTimeNullableFilter<"t_vigilog_tournee"> | Date | string | null
     Date_Heure_Creation?: DateTimeFilter<"t_vigilog_tournee"> | Date | string
     Date_Heure_Maj?: DateTimeNullableFilter<"t_vigilog_tournee"> | Date | string | null
-    t_vigilog?: XOR<T_vigilogNullableScalarRelationFilter, t_vigilogWhereInput> | null
     t_vigilog_configuration?: XOR<T_vigilog_configurationNullableScalarRelationFilter, t_vigilog_configurationWhereInput> | null
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site?: XOR<T_siteScalarRelationFilter, t_siteWhereInput>
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site?: XOR<T_siteScalarRelationFilter, t_siteWhereInput>
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: XOR<T_utilisateurNullableScalarRelationFilter, t_utilisateurWhereInput> | null
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: XOR<T_utilisateurNullableScalarRelationFilter, t_utilisateurWhereInput> | null
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: XOR<T_utilisateurScalarRelationFilter, t_utilisateurWhereInput>
+    t_vigilog?: XOR<T_vigilogNullableScalarRelationFilter, t_vigilogWhereInput> | null
   }, "Id_VigiLog_Tournee" | "Reference_Tournee">
 
   export type t_vigilog_tourneeOrderByWithAggregationInput = {
@@ -66765,6 +66831,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -66864,6 +66931,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -66948,6 +67016,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -67047,6 +67116,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -67139,6 +67209,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -67218,6 +67289,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -67305,6 +67377,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -68999,96 +69072,110 @@ export namespace Prisma {
   export type t_lieu_planning_auditCreateInput = {
     Id_Lieu: number
     Timestamp?: Date | string
+    Date_Heure_Debut_Changement?: Date | string | null
+    Date_Heure_Fin_Changement?: Date | string | null
     Type: $Enums.t_lieu_planning_audit_Type
     Planning_Regle_Id?: number | null
     Consigne_Avant?: number | null
-    Consigne_Sup_Avant?: number | null
-    Consigne_Inf_Avant?: number | null
+    Tolerance_Surveillance_Sup_Avant?: number | null
+    Tolerance_Surveillance_Inf_Avant?: number | null
     Consigne_Apres?: number | null
-    Consigne_Sup_Apres?: number | null
-    Consigne_Inf_Apres?: number | null
+    Tolerance_Surveillance_Sup_Apres?: number | null
+    Tolerance_Surveillance_Inf_Apres?: number | null
   }
 
   export type t_lieu_planning_auditUncheckedCreateInput = {
     Id_Audit?: number
     Id_Lieu: number
     Timestamp?: Date | string
+    Date_Heure_Debut_Changement?: Date | string | null
+    Date_Heure_Fin_Changement?: Date | string | null
     Type: $Enums.t_lieu_planning_audit_Type
     Planning_Regle_Id?: number | null
     Consigne_Avant?: number | null
-    Consigne_Sup_Avant?: number | null
-    Consigne_Inf_Avant?: number | null
+    Tolerance_Surveillance_Sup_Avant?: number | null
+    Tolerance_Surveillance_Inf_Avant?: number | null
     Consigne_Apres?: number | null
-    Consigne_Sup_Apres?: number | null
-    Consigne_Inf_Apres?: number | null
+    Tolerance_Surveillance_Sup_Apres?: number | null
+    Tolerance_Surveillance_Inf_Apres?: number | null
   }
 
   export type t_lieu_planning_auditUpdateInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
     Timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Heure_Debut_Changement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Date_Heure_Fin_Changement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Type?: Enumt_lieu_planning_audit_TypeFieldUpdateOperationsInput | $Enums.t_lieu_planning_audit_Type
     Planning_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Consigne_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Sup_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Inf_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
+    Tolerance_Surveillance_Sup_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
+    Tolerance_Surveillance_Inf_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
     Consigne_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Sup_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Inf_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
+    Tolerance_Surveillance_Sup_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
+    Tolerance_Surveillance_Inf_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
   }
 
   export type t_lieu_planning_auditUncheckedUpdateInput = {
     Id_Audit?: IntFieldUpdateOperationsInput | number
     Id_Lieu?: IntFieldUpdateOperationsInput | number
     Timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Heure_Debut_Changement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Date_Heure_Fin_Changement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Type?: Enumt_lieu_planning_audit_TypeFieldUpdateOperationsInput | $Enums.t_lieu_planning_audit_Type
     Planning_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Consigne_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Sup_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Inf_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
+    Tolerance_Surveillance_Sup_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
+    Tolerance_Surveillance_Inf_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
     Consigne_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Sup_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Inf_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
+    Tolerance_Surveillance_Sup_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
+    Tolerance_Surveillance_Inf_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
   }
 
   export type t_lieu_planning_auditCreateManyInput = {
     Id_Audit?: number
     Id_Lieu: number
     Timestamp?: Date | string
+    Date_Heure_Debut_Changement?: Date | string | null
+    Date_Heure_Fin_Changement?: Date | string | null
     Type: $Enums.t_lieu_planning_audit_Type
     Planning_Regle_Id?: number | null
     Consigne_Avant?: number | null
-    Consigne_Sup_Avant?: number | null
-    Consigne_Inf_Avant?: number | null
+    Tolerance_Surveillance_Sup_Avant?: number | null
+    Tolerance_Surveillance_Inf_Avant?: number | null
     Consigne_Apres?: number | null
-    Consigne_Sup_Apres?: number | null
-    Consigne_Inf_Apres?: number | null
+    Tolerance_Surveillance_Sup_Apres?: number | null
+    Tolerance_Surveillance_Inf_Apres?: number | null
   }
 
   export type t_lieu_planning_auditUpdateManyMutationInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
     Timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Heure_Debut_Changement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Date_Heure_Fin_Changement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Type?: Enumt_lieu_planning_audit_TypeFieldUpdateOperationsInput | $Enums.t_lieu_planning_audit_Type
     Planning_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Consigne_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Sup_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Inf_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
+    Tolerance_Surveillance_Sup_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
+    Tolerance_Surveillance_Inf_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
     Consigne_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Sup_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Inf_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
+    Tolerance_Surveillance_Sup_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
+    Tolerance_Surveillance_Inf_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
   }
 
   export type t_lieu_planning_auditUncheckedUpdateManyInput = {
     Id_Audit?: IntFieldUpdateOperationsInput | number
     Id_Lieu?: IntFieldUpdateOperationsInput | number
     Timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Heure_Debut_Changement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Date_Heure_Fin_Changement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Type?: Enumt_lieu_planning_audit_TypeFieldUpdateOperationsInput | $Enums.t_lieu_planning_audit_Type
     Planning_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Consigne_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Sup_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Inf_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
+    Tolerance_Surveillance_Sup_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
+    Tolerance_Surveillance_Inf_Avant?: NullableFloatFieldUpdateOperationsInput | number | null
     Consigne_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Sup_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Inf_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
+    Tolerance_Surveillance_Sup_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
+    Tolerance_Surveillance_Inf_Apres?: NullableFloatFieldUpdateOperationsInput | number | null
   }
 
   export type t_lieu_planning_regleCreateInput = {
@@ -69772,13 +69859,13 @@ export namespace Prisma {
     Date_Heure_Acquittement?: Date | string | null
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
-    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_tourneeInput
     t_vigilog_configuration?: t_vigilog_configurationCreateNestedOneWithoutT_vigilog_tourneeInput
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site: t_siteCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_siteInput
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site: t_siteCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_siteInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_tourneeInput
   }
 
   export type t_vigilog_tourneeUncheckedCreateInput = {
@@ -69855,13 +69942,13 @@ export namespace Prisma {
     Date_Heure_Acquittement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_tourneeNestedInput
     t_vigilog_configuration?: t_vigilog_configurationUpdateOneWithoutT_vigilog_tourneeNestedInput
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site?: t_siteUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_siteNestedInput
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site?: t_siteUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_siteNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_utilisateurUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_tourneeNestedInput
   }
 
   export type t_vigilog_tourneeUncheckedUpdateInput = {
@@ -71417,6 +71504,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: SortOrder
     Date_Heure_Surveillance_Off?: SortOrder
     Derniere_Val_Rssi?: SortOrder
+    Derniere_Val_Batterie?: SortOrder
     Derniere_Val_Tension?: SortOrder
     Est_Lieu_GSO?: SortOrder
     Est_Son_Alarme_Active?: SortOrder
@@ -71470,6 +71558,7 @@ export namespace Prisma {
     Est_Correction_Ej?: SortOrder
     Derive?: SortOrder
     Derniere_Valeur_Null?: SortOrder
+    Derniere_Val_Batterie?: SortOrder
     Planning_Source_Regle_Id?: SortOrder
     Nb_Mesures_Temporisation_Redeclenchement?: SortOrder
   }
@@ -71551,6 +71640,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: SortOrder
     Date_Heure_Surveillance_Off?: SortOrder
     Derniere_Val_Rssi?: SortOrder
+    Derniere_Val_Batterie?: SortOrder
     Derniere_Val_Tension?: SortOrder
     Est_Lieu_GSO?: SortOrder
     Est_Son_Alarme_Active?: SortOrder
@@ -71638,6 +71728,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: SortOrder
     Date_Heure_Surveillance_Off?: SortOrder
     Derniere_Val_Rssi?: SortOrder
+    Derniere_Val_Batterie?: SortOrder
     Derniere_Val_Tension?: SortOrder
     Est_Lieu_GSO?: SortOrder
     Est_Son_Alarme_Active?: SortOrder
@@ -71691,6 +71782,7 @@ export namespace Prisma {
     Est_Correction_Ej?: SortOrder
     Derive?: SortOrder
     Derniere_Valeur_Null?: SortOrder
+    Derniere_Val_Batterie?: SortOrder
     Planning_Source_Regle_Id?: SortOrder
     Nb_Mesures_Temporisation_Redeclenchement?: SortOrder
   }
@@ -73032,14 +73124,16 @@ export namespace Prisma {
     Id_Audit?: SortOrder
     Id_Lieu?: SortOrder
     Timestamp?: SortOrder
+    Date_Heure_Debut_Changement?: SortOrder
+    Date_Heure_Fin_Changement?: SortOrder
     Type?: SortOrder
     Planning_Regle_Id?: SortOrder
     Consigne_Avant?: SortOrder
-    Consigne_Sup_Avant?: SortOrder
-    Consigne_Inf_Avant?: SortOrder
+    Tolerance_Surveillance_Sup_Avant?: SortOrder
+    Tolerance_Surveillance_Inf_Avant?: SortOrder
     Consigne_Apres?: SortOrder
-    Consigne_Sup_Apres?: SortOrder
-    Consigne_Inf_Apres?: SortOrder
+    Tolerance_Surveillance_Sup_Apres?: SortOrder
+    Tolerance_Surveillance_Inf_Apres?: SortOrder
   }
 
   export type t_lieu_planning_auditAvgOrderByAggregateInput = {
@@ -73047,39 +73141,43 @@ export namespace Prisma {
     Id_Lieu?: SortOrder
     Planning_Regle_Id?: SortOrder
     Consigne_Avant?: SortOrder
-    Consigne_Sup_Avant?: SortOrder
-    Consigne_Inf_Avant?: SortOrder
+    Tolerance_Surveillance_Sup_Avant?: SortOrder
+    Tolerance_Surveillance_Inf_Avant?: SortOrder
     Consigne_Apres?: SortOrder
-    Consigne_Sup_Apres?: SortOrder
-    Consigne_Inf_Apres?: SortOrder
+    Tolerance_Surveillance_Sup_Apres?: SortOrder
+    Tolerance_Surveillance_Inf_Apres?: SortOrder
   }
 
   export type t_lieu_planning_auditMaxOrderByAggregateInput = {
     Id_Audit?: SortOrder
     Id_Lieu?: SortOrder
     Timestamp?: SortOrder
+    Date_Heure_Debut_Changement?: SortOrder
+    Date_Heure_Fin_Changement?: SortOrder
     Type?: SortOrder
     Planning_Regle_Id?: SortOrder
     Consigne_Avant?: SortOrder
-    Consigne_Sup_Avant?: SortOrder
-    Consigne_Inf_Avant?: SortOrder
+    Tolerance_Surveillance_Sup_Avant?: SortOrder
+    Tolerance_Surveillance_Inf_Avant?: SortOrder
     Consigne_Apres?: SortOrder
-    Consigne_Sup_Apres?: SortOrder
-    Consigne_Inf_Apres?: SortOrder
+    Tolerance_Surveillance_Sup_Apres?: SortOrder
+    Tolerance_Surveillance_Inf_Apres?: SortOrder
   }
 
   export type t_lieu_planning_auditMinOrderByAggregateInput = {
     Id_Audit?: SortOrder
     Id_Lieu?: SortOrder
     Timestamp?: SortOrder
+    Date_Heure_Debut_Changement?: SortOrder
+    Date_Heure_Fin_Changement?: SortOrder
     Type?: SortOrder
     Planning_Regle_Id?: SortOrder
     Consigne_Avant?: SortOrder
-    Consigne_Sup_Avant?: SortOrder
-    Consigne_Inf_Avant?: SortOrder
+    Tolerance_Surveillance_Sup_Avant?: SortOrder
+    Tolerance_Surveillance_Inf_Avant?: SortOrder
     Consigne_Apres?: SortOrder
-    Consigne_Sup_Apres?: SortOrder
-    Consigne_Inf_Apres?: SortOrder
+    Tolerance_Surveillance_Sup_Apres?: SortOrder
+    Tolerance_Surveillance_Inf_Apres?: SortOrder
   }
 
   export type t_lieu_planning_auditSumOrderByAggregateInput = {
@@ -73087,11 +73185,11 @@ export namespace Prisma {
     Id_Lieu?: SortOrder
     Planning_Regle_Id?: SortOrder
     Consigne_Avant?: SortOrder
-    Consigne_Sup_Avant?: SortOrder
-    Consigne_Inf_Avant?: SortOrder
+    Tolerance_Surveillance_Sup_Avant?: SortOrder
+    Tolerance_Surveillance_Inf_Avant?: SortOrder
     Consigne_Apres?: SortOrder
-    Consigne_Sup_Apres?: SortOrder
-    Consigne_Inf_Apres?: SortOrder
+    Tolerance_Surveillance_Sup_Apres?: SortOrder
+    Tolerance_Surveillance_Inf_Apres?: SortOrder
   }
 
   export type Enumt_lieu_planning_audit_TypeWithAggregatesFilter<$PrismaModel = never> = {
@@ -73599,11 +73697,6 @@ export namespace Prisma {
     Id_Utilisateur_Maj?: SortOrder
   }
 
-  export type T_vigilogNullableScalarRelationFilter = {
-    is?: t_vigilogWhereInput | null
-    isNot?: t_vigilogWhereInput | null
-  }
-
   export type T_vigilog_configurationNullableScalarRelationFilter = {
     is?: t_vigilog_configurationWhereInput | null
     isNot?: t_vigilog_configurationWhereInput | null
@@ -73612,6 +73705,11 @@ export namespace Prisma {
   export type T_siteScalarRelationFilter = {
     is?: t_siteWhereInput
     isNot?: t_siteWhereInput
+  }
+
+  export type T_vigilogNullableScalarRelationFilter = {
+    is?: t_vigilogWhereInput | null
+    isNot?: t_vigilogWhereInput | null
   }
 
   export type t_vigilog_tourneeOrderByRelevanceInput = {
@@ -76178,12 +76276,6 @@ export namespace Prisma {
     deleteMany?: t_vigilog_tourneeScalarWhereInput | t_vigilog_tourneeScalarWhereInput[]
   }
 
-  export type t_vigilogCreateNestedOneWithoutT_vigilog_tourneeInput = {
-    create?: XOR<t_vigilogCreateWithoutT_vigilog_tourneeInput, t_vigilogUncheckedCreateWithoutT_vigilog_tourneeInput>
-    connectOrCreate?: t_vigilogCreateOrConnectWithoutT_vigilog_tourneeInput
-    connect?: t_vigilogWhereUniqueInput
-  }
-
   export type t_vigilog_configurationCreateNestedOneWithoutT_vigilog_tourneeInput = {
     create?: XOR<t_vigilog_configurationCreateWithoutT_vigilog_tourneeInput, t_vigilog_configurationUncheckedCreateWithoutT_vigilog_tourneeInput>
     connectOrCreate?: t_vigilog_configurationCreateOrConnectWithoutT_vigilog_tourneeInput
@@ -76220,14 +76312,10 @@ export namespace Prisma {
     connect?: t_utilisateurWhereUniqueInput
   }
 
-  export type t_vigilogUpdateOneWithoutT_vigilog_tourneeNestedInput = {
+  export type t_vigilogCreateNestedOneWithoutT_vigilog_tourneeInput = {
     create?: XOR<t_vigilogCreateWithoutT_vigilog_tourneeInput, t_vigilogUncheckedCreateWithoutT_vigilog_tourneeInput>
     connectOrCreate?: t_vigilogCreateOrConnectWithoutT_vigilog_tourneeInput
-    upsert?: t_vigilogUpsertWithoutT_vigilog_tourneeInput
-    disconnect?: t_vigilogWhereInput | boolean
-    delete?: t_vigilogWhereInput | boolean
     connect?: t_vigilogWhereUniqueInput
-    update?: XOR<XOR<t_vigilogUpdateToOneWithWhereWithoutT_vigilog_tourneeInput, t_vigilogUpdateWithoutT_vigilog_tourneeInput>, t_vigilogUncheckedUpdateWithoutT_vigilog_tourneeInput>
   }
 
   export type t_vigilog_configurationUpdateOneWithoutT_vigilog_tourneeNestedInput = {
@@ -76282,6 +76370,16 @@ export namespace Prisma {
     upsert?: t_utilisateurUpsertWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
     connect?: t_utilisateurWhereUniqueInput
     update?: XOR<XOR<t_utilisateurUpdateToOneWithWhereWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput, t_utilisateurUpdateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput>, t_utilisateurUncheckedUpdateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput>
+  }
+
+  export type t_vigilogUpdateOneWithoutT_vigilog_tourneeNestedInput = {
+    create?: XOR<t_vigilogCreateWithoutT_vigilog_tourneeInput, t_vigilogUncheckedCreateWithoutT_vigilog_tourneeInput>
+    connectOrCreate?: t_vigilogCreateOrConnectWithoutT_vigilog_tourneeInput
+    upsert?: t_vigilogUpsertWithoutT_vigilog_tourneeInput
+    disconnect?: t_vigilogWhereInput | boolean
+    delete?: t_vigilogWhereInput | boolean
+    connect?: t_vigilogWhereUniqueInput
+    update?: XOR<XOR<t_vigilogUpdateToOneWithWhereWithoutT_vigilog_tourneeInput, t_vigilogUpdateWithoutT_vigilog_tourneeInput>, t_vigilogUncheckedUpdateWithoutT_vigilog_tourneeInput>
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
@@ -76813,6 +76911,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -76911,6 +77010,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -77043,6 +77143,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -77141,6 +77242,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -77255,6 +77357,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -77353,6 +77456,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -77452,6 +77556,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -77550,6 +77655,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -77694,6 +77800,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -77791,6 +77898,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -77885,6 +77993,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -77982,6 +78091,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -78146,6 +78256,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
     Date_Heure_Surveillance_Off?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
     Derniere_Val_Rssi?: StringNullableFilter<"t_lieu"> | string | null
+    Derniere_Val_Batterie?: IntNullableFilter<"t_lieu"> | number | null
     Derniere_Val_Tension?: StringNullableFilter<"t_lieu"> | string | null
     Est_Lieu_GSO?: BoolNullableFilter<"t_lieu"> | boolean | null
     Est_Son_Alarme_Active?: BoolFilter<"t_lieu"> | boolean
@@ -78777,6 +78888,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -78875,6 +78987,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -79004,6 +79117,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -79102,6 +79216,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -79956,6 +80071,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -80053,6 +80169,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -80248,6 +80365,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -80345,6 +80463,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -80624,6 +80743,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -80721,6 +80841,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -80778,12 +80899,12 @@ export namespace Prisma {
     Date_Heure_Acquittement?: Date | string | null
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
-    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_tourneeInput
     t_vigilog_configuration?: t_vigilog_configurationCreateNestedOneWithoutT_vigilog_tourneeInput
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site: t_siteCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_siteInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_tourneeInput
   }
 
   export type t_vigilog_tourneeUncheckedCreateWithoutT_site_t_vigilog_tournee_Id_Site_ArriveeTot_siteInput = {
@@ -80869,12 +80990,12 @@ export namespace Prisma {
     Date_Heure_Acquittement?: Date | string | null
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
-    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_tourneeInput
     t_vigilog_configuration?: t_vigilog_configurationCreateNestedOneWithoutT_vigilog_tourneeInput
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site: t_siteCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_siteInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_tourneeInput
   }
 
   export type t_vigilog_tourneeUncheckedCreateWithoutT_site_t_vigilog_tournee_Id_Site_DepartTot_siteInput = {
@@ -81116,6 +81237,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -81213,6 +81335,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -81403,6 +81526,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -81500,6 +81624,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -81905,12 +82030,12 @@ export namespace Prisma {
     Date_Heure_Acquittement?: Date | string | null
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
-    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_tourneeInput
     t_vigilog_configuration?: t_vigilog_configurationCreateNestedOneWithoutT_vigilog_tourneeInput
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site: t_siteCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_siteInput
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site: t_siteCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_siteInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_tourneeInput
   }
 
   export type t_vigilog_tourneeUncheckedCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput = {
@@ -81996,12 +82121,12 @@ export namespace Prisma {
     Date_Heure_Acquittement?: Date | string | null
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
-    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_tourneeInput
     t_vigilog_configuration?: t_vigilog_configurationCreateNestedOneWithoutT_vigilog_tourneeInput
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site: t_siteCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_siteInput
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site: t_siteCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_siteInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_tourneeInput
   }
 
   export type t_vigilog_tourneeUncheckedCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput = {
@@ -82087,12 +82212,12 @@ export namespace Prisma {
     Date_Heure_Acquittement?: Date | string | null
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
-    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_tourneeInput
     t_vigilog_configuration?: t_vigilog_configurationCreateNestedOneWithoutT_vigilog_tourneeInput
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site: t_siteCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_siteInput
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site: t_siteCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_siteInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
+    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_tourneeInput
   }
 
   export type t_vigilog_tourneeUncheckedCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput = {
@@ -83216,6 +83341,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -83314,6 +83440,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -83413,6 +83540,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -83511,6 +83639,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -83594,6 +83723,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -83692,6 +83822,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -83791,6 +83922,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -83889,6 +84021,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -84500,12 +84633,12 @@ export namespace Prisma {
     Date_Heure_Acquittement?: Date | string | null
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
-    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_tourneeInput
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site: t_siteCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_siteInput
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site: t_siteCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_siteInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur: t_utilisateurCreateNestedOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_tourneeInput
   }
 
   export type t_vigilog_tourneeUncheckedCreateWithoutT_vigilog_configurationInput = {
@@ -84834,44 +84967,6 @@ export namespace Prisma {
     data: XOR<t_vigilog_tourneeUpdateManyMutationInput, t_vigilog_tourneeUncheckedUpdateManyWithoutT_vigilogInput>
   }
 
-  export type t_vigilogCreateWithoutT_vigilog_tourneeInput = {
-    Numero_Serie: string
-    Modele?: string | null
-    Libelle?: string | null
-    Actif?: boolean
-    Date_Etalonnage?: Date | string | null
-    Date_Validite?: Date | string | null
-    Duree_Validite_Jours?: number | null
-    Err_Justesse?: number | null
-    Commentaire?: string | null
-    Id_Utilisateur_Creation?: number | null
-    Date_Heure_Creation?: Date | string
-    Id_Utilisateur_Maj?: number | null
-    Date_Heure_Maj?: Date | string | null
-  }
-
-  export type t_vigilogUncheckedCreateWithoutT_vigilog_tourneeInput = {
-    Id_VigiLog?: number
-    Numero_Serie: string
-    Modele?: string | null
-    Libelle?: string | null
-    Actif?: boolean
-    Date_Etalonnage?: Date | string | null
-    Date_Validite?: Date | string | null
-    Duree_Validite_Jours?: number | null
-    Err_Justesse?: number | null
-    Commentaire?: string | null
-    Id_Utilisateur_Creation?: number | null
-    Date_Heure_Creation?: Date | string
-    Id_Utilisateur_Maj?: number | null
-    Date_Heure_Maj?: Date | string | null
-  }
-
-  export type t_vigilogCreateOrConnectWithoutT_vigilog_tourneeInput = {
-    where: t_vigilogWhereUniqueInput
-    create: XOR<t_vigilogCreateWithoutT_vigilog_tourneeInput, t_vigilogUncheckedCreateWithoutT_vigilog_tourneeInput>
-  }
-
   export type t_vigilog_configurationCreateWithoutT_vigilog_tourneeInput = {
     Nom_Configuration: string
     Description_Configuration?: string | null
@@ -85180,48 +85275,42 @@ export namespace Prisma {
     create: XOR<t_utilisateurCreateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput, t_utilisateurUncheckedCreateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput>
   }
 
-  export type t_vigilogUpsertWithoutT_vigilog_tourneeInput = {
-    update: XOR<t_vigilogUpdateWithoutT_vigilog_tourneeInput, t_vigilogUncheckedUpdateWithoutT_vigilog_tourneeInput>
+  export type t_vigilogCreateWithoutT_vigilog_tourneeInput = {
+    Numero_Serie: string
+    Modele?: string | null
+    Libelle?: string | null
+    Actif?: boolean
+    Date_Etalonnage?: Date | string | null
+    Date_Validite?: Date | string | null
+    Duree_Validite_Jours?: number | null
+    Err_Justesse?: number | null
+    Commentaire?: string | null
+    Id_Utilisateur_Creation?: number | null
+    Date_Heure_Creation?: Date | string
+    Id_Utilisateur_Maj?: number | null
+    Date_Heure_Maj?: Date | string | null
+  }
+
+  export type t_vigilogUncheckedCreateWithoutT_vigilog_tourneeInput = {
+    Id_VigiLog?: number
+    Numero_Serie: string
+    Modele?: string | null
+    Libelle?: string | null
+    Actif?: boolean
+    Date_Etalonnage?: Date | string | null
+    Date_Validite?: Date | string | null
+    Duree_Validite_Jours?: number | null
+    Err_Justesse?: number | null
+    Commentaire?: string | null
+    Id_Utilisateur_Creation?: number | null
+    Date_Heure_Creation?: Date | string
+    Id_Utilisateur_Maj?: number | null
+    Date_Heure_Maj?: Date | string | null
+  }
+
+  export type t_vigilogCreateOrConnectWithoutT_vigilog_tourneeInput = {
+    where: t_vigilogWhereUniqueInput
     create: XOR<t_vigilogCreateWithoutT_vigilog_tourneeInput, t_vigilogUncheckedCreateWithoutT_vigilog_tourneeInput>
-    where?: t_vigilogWhereInput
-  }
-
-  export type t_vigilogUpdateToOneWithWhereWithoutT_vigilog_tourneeInput = {
-    where?: t_vigilogWhereInput
-    data: XOR<t_vigilogUpdateWithoutT_vigilog_tourneeInput, t_vigilogUncheckedUpdateWithoutT_vigilog_tourneeInput>
-  }
-
-  export type t_vigilogUpdateWithoutT_vigilog_tourneeInput = {
-    Numero_Serie?: StringFieldUpdateOperationsInput | string
-    Modele?: NullableStringFieldUpdateOperationsInput | string | null
-    Libelle?: NullableStringFieldUpdateOperationsInput | string | null
-    Actif?: BoolFieldUpdateOperationsInput | boolean
-    Date_Etalonnage?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Validite?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Duree_Validite_Jours?: NullableIntFieldUpdateOperationsInput | number | null
-    Err_Justesse?: NullableFloatFieldUpdateOperationsInput | number | null
-    Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Utilisateur_Creation?: NullableIntFieldUpdateOperationsInput | number | null
-    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
-    Id_Utilisateur_Maj?: NullableIntFieldUpdateOperationsInput | number | null
-    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  }
-
-  export type t_vigilogUncheckedUpdateWithoutT_vigilog_tourneeInput = {
-    Id_VigiLog?: IntFieldUpdateOperationsInput | number
-    Numero_Serie?: StringFieldUpdateOperationsInput | string
-    Modele?: NullableStringFieldUpdateOperationsInput | string | null
-    Libelle?: NullableStringFieldUpdateOperationsInput | string | null
-    Actif?: BoolFieldUpdateOperationsInput | boolean
-    Date_Etalonnage?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Validite?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Duree_Validite_Jours?: NullableIntFieldUpdateOperationsInput | number | null
-    Err_Justesse?: NullableFloatFieldUpdateOperationsInput | number | null
-    Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Utilisateur_Creation?: NullableIntFieldUpdateOperationsInput | number | null
-    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
-    Id_Utilisateur_Maj?: NullableIntFieldUpdateOperationsInput | number | null
-    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type t_vigilog_configurationUpsertWithoutT_vigilog_tourneeInput = {
@@ -85568,6 +85657,50 @@ export namespace Prisma {
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
   }
 
+  export type t_vigilogUpsertWithoutT_vigilog_tourneeInput = {
+    update: XOR<t_vigilogUpdateWithoutT_vigilog_tourneeInput, t_vigilogUncheckedUpdateWithoutT_vigilog_tourneeInput>
+    create: XOR<t_vigilogCreateWithoutT_vigilog_tourneeInput, t_vigilogUncheckedCreateWithoutT_vigilog_tourneeInput>
+    where?: t_vigilogWhereInput
+  }
+
+  export type t_vigilogUpdateToOneWithWhereWithoutT_vigilog_tourneeInput = {
+    where?: t_vigilogWhereInput
+    data: XOR<t_vigilogUpdateWithoutT_vigilog_tourneeInput, t_vigilogUncheckedUpdateWithoutT_vigilog_tourneeInput>
+  }
+
+  export type t_vigilogUpdateWithoutT_vigilog_tourneeInput = {
+    Numero_Serie?: StringFieldUpdateOperationsInput | string
+    Modele?: NullableStringFieldUpdateOperationsInput | string | null
+    Libelle?: NullableStringFieldUpdateOperationsInput | string | null
+    Actif?: BoolFieldUpdateOperationsInput | boolean
+    Date_Etalonnage?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Date_Validite?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Duree_Validite_Jours?: NullableIntFieldUpdateOperationsInput | number | null
+    Err_Justesse?: NullableFloatFieldUpdateOperationsInput | number | null
+    Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
+    Id_Utilisateur_Creation?: NullableIntFieldUpdateOperationsInput | number | null
+    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Id_Utilisateur_Maj?: NullableIntFieldUpdateOperationsInput | number | null
+    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type t_vigilogUncheckedUpdateWithoutT_vigilog_tourneeInput = {
+    Id_VigiLog?: IntFieldUpdateOperationsInput | number
+    Numero_Serie?: StringFieldUpdateOperationsInput | string
+    Modele?: NullableStringFieldUpdateOperationsInput | string | null
+    Libelle?: NullableStringFieldUpdateOperationsInput | string | null
+    Actif?: BoolFieldUpdateOperationsInput | boolean
+    Date_Etalonnage?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Date_Validite?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Duree_Validite_Jours?: NullableIntFieldUpdateOperationsInput | number | null
+    Err_Justesse?: NullableFloatFieldUpdateOperationsInput | number | null
+    Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
+    Id_Utilisateur_Creation?: NullableIntFieldUpdateOperationsInput | number | null
+    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Id_Utilisateur_Maj?: NullableIntFieldUpdateOperationsInput | number | null
+    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
   export type t_notificationCreateManyT_alarmeInput = {
     Id_Notification?: number
     Type: string
@@ -85710,6 +85843,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -85796,6 +85930,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -85893,6 +86028,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -85990,6 +86126,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -86081,6 +86218,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -86160,6 +86298,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -86257,6 +86396,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -86348,6 +86488,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -86722,6 +86863,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -86844,6 +86986,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -86941,6 +87084,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -87032,6 +87176,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -87139,6 +87284,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -87280,6 +87426,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -87377,6 +87524,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -87468,6 +87616,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -87633,6 +87782,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -87811,6 +87961,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -87908,6 +88059,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -87999,6 +88151,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -88041,12 +88194,12 @@ export namespace Prisma {
     Date_Heure_Acquittement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_tourneeNestedInput
     t_vigilog_configuration?: t_vigilog_configurationUpdateOneWithoutT_vigilog_tourneeNestedInput
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site?: t_siteUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_siteNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_utilisateurUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_tourneeNestedInput
   }
 
   export type t_vigilog_tourneeUncheckedUpdateWithoutT_site_t_vigilog_tournee_Id_Site_ArriveeTot_siteInput = {
@@ -88163,12 +88316,12 @@ export namespace Prisma {
     Date_Heure_Acquittement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_tourneeNestedInput
     t_vigilog_configuration?: t_vigilog_configurationUpdateOneWithoutT_vigilog_tourneeNestedInput
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site?: t_siteUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_siteNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_utilisateurUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_tourneeNestedInput
   }
 
   export type t_vigilog_tourneeUncheckedUpdateWithoutT_site_t_vigilog_tournee_Id_Site_DepartTot_siteInput = {
@@ -88329,6 +88482,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -88408,6 +88562,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -88505,6 +88660,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -88596,6 +88752,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -88682,6 +88839,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: Date | string | null
     Date_Heure_Surveillance_Off?: Date | string | null
     Derniere_Val_Rssi?: string | null
+    Derniere_Val_Batterie?: number | null
     Derniere_Val_Tension?: string | null
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
@@ -88781,6 +88939,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -88878,6 +89037,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -88969,6 +89129,7 @@ export namespace Prisma {
     Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
+    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
     Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
@@ -89536,12 +89697,12 @@ export namespace Prisma {
     Date_Heure_Acquittement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_tourneeNestedInput
     t_vigilog_configuration?: t_vigilog_configurationUpdateOneWithoutT_vigilog_tourneeNestedInput
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site?: t_siteUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_siteNestedInput
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site?: t_siteUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_siteNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_utilisateurUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_tourneeNestedInput
   }
 
   export type t_vigilog_tourneeUncheckedUpdateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput = {
@@ -89658,12 +89819,12 @@ export namespace Prisma {
     Date_Heure_Acquittement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_tourneeNestedInput
     t_vigilog_configuration?: t_vigilog_configurationUpdateOneWithoutT_vigilog_tourneeNestedInput
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site?: t_siteUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_siteNestedInput
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site?: t_siteUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_siteNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_utilisateurUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_tourneeNestedInput
   }
 
   export type t_vigilog_tourneeUncheckedUpdateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput = {
@@ -89780,12 +89941,12 @@ export namespace Prisma {
     Date_Heure_Acquittement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_tourneeNestedInput
     t_vigilog_configuration?: t_vigilog_configurationUpdateOneWithoutT_vigilog_tourneeNestedInput
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site?: t_siteUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_siteNestedInput
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site?: t_siteUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_siteNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
+    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_tourneeNestedInput
   }
 
   export type t_vigilog_tourneeUncheckedUpdateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput = {
@@ -90277,12 +90438,12 @@ export namespace Prisma {
     Date_Heure_Acquittement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_tourneeNestedInput
     t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site?: t_siteUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_siteNestedInput
     t_site_t_vigilog_tournee_Id_Site_DepartTot_site?: t_siteUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_siteNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_utilisateurUpdateOneRequiredWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_tourneeNestedInput
   }
 
   export type t_vigilog_tourneeUncheckedUpdateWithoutT_vigilog_configurationInput = {

@@ -7,6 +7,7 @@ import { getRequestContext } from "@/lib/api-logger"
 import { withAdminLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { revalidateTag } from "next/cache"
 import { apiError, apiOk } from "@/lib/api-response"
+import { auditRouteDelete, auditRouteUpdate } from "@/lib/audit-route"
 import { getUserAvatarValue, setUserAvatarValue } from "@/lib/user-avatar-db"
 
 const updateUserSchema = z.object({
@@ -65,6 +66,13 @@ export const PATCH = withAdminLogging(
       const body = await req.json()
       const data = updateUserSchema.parse(body)
 
+      const existingUser = await prisma.t_utilisateur.findUnique({ where: { Id_Utilisateur: userId } })
+      if (!existingUser) {
+        return apiError(404, "not_found", "User not found")
+      }
+
+      const existingAvatar = await getUserAvatarValue(userId)
+
       const updateData: Record<string, unknown> = {}
 
       if (data.password) {
@@ -87,19 +95,52 @@ export const PATCH = withAdminLogging(
       })
 
       if (data.avatar !== undefined) {
-        await setUserAvatarValue(userId, data.avatar || null)
+        const avatarSaved = await setUserAvatarValue(userId, data.avatar || null)
+        if (!avatarSaved) {
+          return apiError(500, "avatar_update_unavailable", "Impossible d'enregistrer l'avatar")
+        }
       }
 
-      const changes: Record<string, unknown> = {}
-      if (data.nom) changes.nom = data.nom
-      if (data.prenom) changes.prenom = data.prenom
-      if (data.email) changes.email = data.email
-      if (data.profileId) changes.profile = data.profileId
-      if (data.password) changes.passwordChanged = true
-      if (data.reactivate) changes.reactivated = true
-      if (data.avatar !== undefined) changes.avatar = data.avatar || null
+      if (data.password) {
+        log.modifications.changeUserPassword(user.Login ?? String(userId), userId, ctx.user.username, ctx.user.userId, ip)
+      }
 
-      log.data.update("Utilisateur", userId, ctx.user.username, ctx.user.userId, ip, changes)
+      if (data.reactivate) {
+        log.audit("ACTU", {
+          user: ctx.user.username,
+          userId: ctx.user.userId,
+          userProfile: ctx.user.profile,
+          ip,
+          resource: `Utilisateur: ${user.Login}`,
+          resourceId: userId,
+        })
+      }
+
+      auditRouteUpdate(req, ctx.user, {
+        resource: "Utilisateur",
+        resourceId: userId,
+        before: {
+          Nom: existingUser.Nom,
+          Prenom: existingUser.Prenom,
+          Adresse_Email: existingUser.Adresse_Email,
+          Tel_Num_Mobile: existingUser.Tel_Num_Mobile,
+          Profil_Utilisateur: existingUser.Profil_Utilisateur,
+          Date_Validite: existingUser.Date_Validite,
+          Est_Archive: existingUser.Est_Archive,
+          Avatar: existingAvatar,
+        },
+        after: {
+          Nom: user.Nom,
+          Prenom: user.Prenom,
+          Adresse_Email: user.Adresse_Email,
+          Tel_Num_Mobile: user.Tel_Num_Mobile,
+          Profil_Utilisateur: user.Profil_Utilisateur,
+          Date_Validite: user.Date_Validite,
+          Est_Archive: user.Est_Archive,
+          Avatar: data.avatar !== undefined ? data.avatar || null : existingAvatar,
+        },
+        trackedFields: ["Nom", "Prenom", "Adresse_Email", "Tel_Num_Mobile", "Profil_Utilisateur", "Date_Validite", "Est_Archive", "Avatar"],
+      })
 
       revalidateTag("users-data", "default")
 
@@ -141,14 +182,12 @@ export const DELETE = withAdminLogging(
         data: { Est_Archive: true },
       })
 
-      log.data.delete(
-        "Utilisateur",
-        userId,
-        ctx.user.username,
-        ctx.user.userId,
-        ip,
-        `Archive de l'utilisateur ${userToDelete?.Login || userId}`,
-      )
+      auditRouteDelete(req, ctx.user, {
+        resource: "Utilisateur",
+        resourceId: userId,
+        reason: `Archive de l'utilisateur ${userToDelete?.Login || userId}`,
+        data: { Login: userToDelete?.Login || userId },
+      })
 
       revalidateTag("users-data", "default")
 
@@ -159,3 +198,4 @@ export const DELETE = withAdminLogging(
     }
   },
 )
+

@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getClientIp } from "@/lib/api-logger"
 import { withAnyAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { auditRouteCreate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import {
@@ -126,13 +127,14 @@ export const POST = withAnyAuthorizationLogging(
         },
       })
 
-      log.data.create(
-        "Configuration VigiLog",
-        configuration.Id_VigiLog_Configuration,
-        ctx.user.username,
-        ctx.user.userId,
-        getClientIp(req),
-        {
+      log.audit("VLOG", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        ip: getClientIp(req),
+        resource: "Configuration VigiLog",
+        resourceId: configuration.Id_VigiLog_Configuration,
+        changes: {
+          action: "create",
           name: configuration.Nom_Configuration,
           active: configuration.Actif,
           frequencyMinutes: configuration.Frequence_Min,
@@ -141,7 +143,27 @@ export const POST = withAnyAuthorizationLogging(
           stopButtonEnabled: configuration.Autorise_Arret_Bouton_Stop,
           resetWithStartEnabled: configuration.Reinitialise_Avec_Bouton_Start,
         },
-      )
+      })
+
+      auditRouteCreate(req, ctx.user, {
+        resource: "Configuration VigiLog",
+        resourceId: configuration.Id_VigiLog_Configuration,
+        data: {
+          name: configuration.Nom_Configuration,
+          description: configuration.Description_Configuration,
+          target: configuration.Consigne,
+          lowLimitActive: configuration.Limite_Basse_Active,
+          lowLimit: configuration.Limite_Basse,
+          highLimitActive: configuration.Limite_Haute_Active,
+          highLimit: configuration.Limite_Haute,
+          frequencyMinutes: configuration.Frequence_Min,
+          alarmDelayMinutes: configuration.Retard_Alarme_Min,
+          startDelayMinutes: configuration.Delai_Demarrage_Min,
+          stopButtonEnabled: configuration.Autorise_Arret_Bouton_Stop,
+          resetWithStartEnabled: configuration.Reinitialise_Avec_Bouton_Start,
+          active: configuration.Actif,
+        },
+      })
 
       return apiOk({ id: configuration.Id_VigiLog_Configuration }, { status: 201 })
     } catch (error) {

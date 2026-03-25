@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getClientIp } from "@/lib/api-logger"
 import { withAnyAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { auditRouteCreate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import {
@@ -231,20 +232,41 @@ export const POST = withAnyAuthorizationLogging(
         },
       })
 
-      log.data.create(
-        "Tournee VigiLog",
-        tournee.Id_VigiLog_Tournee,
-        ctx.user.username,
-        ctx.user.userId,
-        getClientIp(req),
-        {
+      log.audit("VLOG", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        ip: getClientIp(req),
+        resource: "Tournee VigiLog",
+        resourceId: tournee.Id_VigiLog_Tournee,
+        changes: {
+          action: "create",
           reference,
           configurationId: configuration.Id_VigiLog_Configuration,
+          loggerId: tournee.Id_VigiLog,
           loggerSerial: tournee.Numero_Serie_VigiLog,
           departureSiteId: parsed.data.Id_Site_Depart,
           arrivalSiteId: parsed.data.Id_Site_Arrivee,
+          status: tournee.Statut,
         },
-      )
+      })
+
+      auditRouteCreate(req, ctx.user, {
+        resource: "Tournee VigiLog",
+        resourceId: tournee.Id_VigiLog_Tournee,
+        data: {
+          reference,
+          configurationId: configuration.Id_VigiLog_Configuration,
+          loggerId: tournee.Id_VigiLog,
+          loggerSerial: tournee.Numero_Serie_VigiLog,
+          configurationName: configuration.Nom_Configuration,
+          departureSiteId: parsed.data.Id_Site_Depart,
+          arrivalSiteId: parsed.data.Id_Site_Arrivee,
+          status: tournee.Statut,
+          target: configuration.Consigne,
+          frequencyMinutes: configuration.Frequence_Min,
+          alarmDelayMinutes: configuration.Retard_Alarme_Min,
+        },
+      })
 
       return apiOk(
         {

@@ -3,6 +3,7 @@ import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { withLogging, getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
+import { auditRouteDelete, auditRouteUpdate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 
 export const PATCH = withLogging(
@@ -77,11 +78,20 @@ export const PATCH = withLogging(
         select: { Id_Lieu: true },
       })
 
-      log.data.update("Actionneur", id, user.username, user.userId, ip, {
-        type: updated.Type,
-        serie: updated.Num_Serie,
-        commentaire: updated.Commentaire,
-        lieuId: lieu?.Id_Lieu || null,
+      auditRouteUpdate(req, user, {
+        resource: "Actionneur",
+        resourceId: id,
+        before: {
+          Type: actionneur.Type,
+          Num_Serie: actionneur.Num_Serie,
+          Commentaire: actionneur.Commentaire,
+        },
+        after: {
+          Type: updated.Type,
+          Num_Serie: updated.Num_Serie,
+          Commentaire: updated.Commentaire,
+          Id_Lieu: lieu?.Id_Lieu || null,
+        },
       })
 
       return apiOk({
@@ -129,7 +139,12 @@ export const DELETE = withLogging(
         data: { Est_Archive: true },
       })
 
-      log.data.delete("Actionneur", id, user.username, user.userId, ip, "Archivage actionneur")
+      auditRouteDelete(req, user, {
+        resource: "Actionneur",
+        resourceId: id,
+        reason: "Archivage actionneur",
+        data: { Num_Serie: actionneur.Num_Serie },
+      })
 
       return apiOk({ Id_Actionneur: updated.Id_Actionneur, Est_Archive: updated.Est_Archive })
     } catch (error) {

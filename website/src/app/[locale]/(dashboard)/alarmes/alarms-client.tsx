@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition, type Dispatch, type SetStateAction } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -35,8 +35,15 @@ interface Props {
     active: number;
     acknowledged: number;
     resolved: number;
+    total?: number;
   };
   onStatusChange: (status: AlarmStatus) => void;
+  onStatsChange?: Dispatch<SetStateAction<{
+    active: number;
+    acknowledged: number;
+    resolved: number;
+    total: number;
+  }>>;
 }
 
 interface AlarmRow {
@@ -56,7 +63,7 @@ const hasConfiguredThresholds = (alarm: { sensor: AlarmWithDetails["sensor"] }):
   return sensorWithMeta.hasThresholds !== false;
 };
 
-export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Props) {
+export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onStatsChange }: Props) {
   const t = useTranslations("alarmsPage");
   const locale = useLocale();
   const router = useRouter();
@@ -136,8 +143,34 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
   const acknowledgeMutation = useMutation({
     mutationFn: ({ id, commentValue }: { id: string; commentValue?: string }) => alarmsApi.acknowledge(id, commentValue),
     onSuccess: (_data, variables) => {
+      const acknowledgedAlarm =
+        localAlarms.find((alarm) => alarm.id === variables.id) ??
+        alarms.find((alarm) => alarm.id === variables.id) ??
+        null;
+
       queryClient.invalidateQueries({ queryKey: ["alarms"] });
-      setLocalAlarms((prev) => statusFilter !== "acknowledged" ? prev.filter((alarm) => alarm.id !== variables.id) : prev.map((alarm) => alarm.id === variables.id ? { ...alarm, status: "acknowledged" as const } : alarm));
+      setLocalAlarms((prev) => prev.filter((alarm) => alarm.id !== variables.id));
+
+      if (acknowledgedAlarm) {
+        onStatsChange?.((prev) => {
+          const next = { ...prev };
+
+          if (acknowledgedAlarm.status === "active") {
+            next.active = Math.max(next.active - 1, 0);
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("vigitemp:active-alarms", { detail: { count: next.active } }));
+            }
+          } else if (acknowledgedAlarm.status === "resolved") {
+            next.resolved = Math.max(next.resolved - 1, 0);
+          } else if (acknowledgedAlarm.status === "acknowledged") {
+            next.acknowledged = Math.max(next.acknowledged - 1, 0);
+          }
+
+          next.total = next.active + next.acknowledged + next.resolved;
+          return next;
+        });
+      }
+
       toast.success(t("toast.acknowledge_success"));
     },
     onError: () => toast.error(t("toast.acknowledge_error")),
@@ -157,7 +190,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
   };
 
   const refreshButton = (
-    <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 border-primary/40" disabled={isRefreshing} data-testid="button-refresh">
+    <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2" disabled={isRefreshing} data-testid="button-refresh">
       <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
       <span className="hidden sm:inline">{isRefreshing ? t("refresh.loading") : t("refresh.label")}</span>
     </Button>
@@ -232,7 +265,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange }: Pr
               <Button variant="outline" size="sm" onClick={() => {
                 const fullAlarm = alarms.find((item) => item.id === alarm.id);
                 if (fullAlarm) setSelectedAlarm(fullAlarm);
-              }} data-testid={`button-acknowledge-${alarm.id}`} className="border-amber-300 bg-amber-300 text-slate-900 hover:bg-amber-200 hover:text-slate-900 dark:border-warning dark:bg-warning/20 dark:text-warning-foreground dark:hover:bg-warning/30">
+              }} data-testid={`button-acknowledge-${alarm.id}`} className="gap-2">
                 {t("table.actions.acknowledge")}
               </Button>
             ) : null}

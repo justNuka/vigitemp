@@ -299,7 +299,7 @@ export async function ServerAlarms(status?: AlarmStatus) {
       id: alarm.Id_Lieu?.toString() || "0",
 
 
-      name: alarm.t_lieu?.Sonde_Numero_Serie || alarm.t_lieu?.Nom_Lieu || t("fallback.unknown_name"),
+      name: alarm.t_lieu?.Sonde_Numero_Serie || t("fallback.unknown_name"),
 
 
       type: "temperature",
@@ -344,7 +344,7 @@ export async function ServerAlarms(status?: AlarmStatus) {
       id: alarm.Id_Lieu?.toString() || "0",
 
 
-      name: alarm.t_lieu?.Sonde_Numero_Serie || alarm.t_lieu?.Nom_Lieu || t("fallback.unknown_name"),
+      name: alarm.t_lieu?.Nom_Lieu || alarm.t_lieu?.Sonde_Numero_Serie || t("fallback.unknown_name"),
 
 
       description: null,

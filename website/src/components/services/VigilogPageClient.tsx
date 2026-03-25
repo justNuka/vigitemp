@@ -1839,14 +1839,14 @@ export function VigilogPageClient() {
                   <p className="text-sm text-muted-foreground">{t("history.description")}</p>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid min-w-0 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>{t("history.filters.search")}</Label>
                     <Input
                       value={historySearch}
                       onChange={(event) => setHistorySearch(event.target.value)}
                       placeholder={t("history.placeholders.search")}
-                      className="h-12 min-w-[320px] border-white/85 bg-white/88 shadow-[0_8px_24px_rgba(15,23,42,0.05)] backdrop-blur lg:min-w-[420px]"
+                      className="h-11 w-full min-w-0 border-border/60 bg-white shadow-sm lg:min-w-[360px]"
                     />
                   </div>
                   <div className="space-y-2">
@@ -1883,7 +1883,8 @@ export function VigilogPageClient() {
                     emptyMessage={t("history.empty")}
                     pageSize={8}
                     showPagination={filteredHistory.length > 8}
-                    containerClassName="border-border/60 bg-white/35"
+                    maxHeight="36rem"
+                    containerClassName="border-border/60 bg-white"
                     headerClassName="!bg-sidebar !text-sidebar-foreground"
                     headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
                     tableClassName="border-separate border-spacing-0 bg-transparent [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150"

@@ -660,6 +660,149 @@ namespace Vigitemp_Serveur
             }
         }
 
+        public bool AddHistoricalMesureIfMissing(string p_numeroSerie, double p_valeur, string p_unite, string p_resistance, DateTime measureDateTime)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!EnsureConnected())
+                    {
+                        return false;
+                    }
+
+                    int idLieu;
+                    float consigne;
+                    float consigneSup;
+                    float consigneInf;
+                    int frequence;
+                    object idServeur;
+                    int estEtatAlarme;
+
+                    using (var cmdMain = CreateCommand(
+                        _connectionMain,
+                        "SELECT Frequence, Consigne, " +
+                        "Tolerance_Surveillance_Sup as Consigne_Sup, " +
+                        "Tolerance_Surveillance_Inf as Consigne_Inf, " +
+                        "t_module.Id_Serveur, Id_Lieu, t_lieu.Est_Lieu_En_Alarme FROM t_lieu " +
+                        "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
+                        "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
+                        "WHERE t_lieu.Sonde_Numero_Serie = @serial " +
+                        "AND t_sonde.Etat_Sonde = 'S' " +
+                        "AND ISNULL(t_sonde.Est_Sonde_GSO, 0) = 0;"))
+                    {
+                        cmdMain.Parameters.AddWithValue("@serial", p_numeroSerie);
+                        using (var reader = cmdMain.ExecuteReader())
+                        {
+                            if (!reader.Read())
+                            {
+                                VigitempServeur.Log("(AddHistoricalMesureIfMissing MSSQL) Aucune ligne t_lieu pour la sonde: " + p_numeroSerie);
+                                return false;
+                            }
+
+                            idLieu = (int)reader["Id_Lieu"];
+                            consigne = GetFloatOrDefault(reader["Consigne"]);
+                            consigneSup = GetFloatOrDefault(reader["Consigne_Sup"]);
+                            consigneInf = GetFloatOrDefault(reader["Consigne_Inf"]);
+                            frequence = (int)reader["Frequence"];
+                            idServeur = reader["Id_Serveur"];
+                            estEtatAlarme = Convert.ToInt32(reader["Est_Lieu_En_Alarme"]);
+                        }
+                    }
+
+                    using (var cmdCheck = CreateCommand(
+                        _connectionMeasure,
+                        "SELECT TOP 1 1 FROM tm_mesures WHERE Sonde_Numero_Serie = @serial AND Date_Heure_Mesure = @dateheuremesure;"))
+                    {
+                        cmdCheck.Parameters.AddWithValue("@serial", p_numeroSerie);
+                        cmdCheck.Parameters.AddWithValue("@dateheuremesure", measureDateTime);
+                        var existing = cmdCheck.ExecuteScalar();
+                        if (existing != null && existing != DBNull.Value)
+                        {
+                            return false;
+                        }
+                    }
+
+                    using (var cmdMeasure = CreateCommand(
+                        _connectionMeasure,
+                        "INSERT INTO tm_mesures " +
+                        "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Etat_Alarme) " +
+                        "VALUES " +
+                        "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, @estEtatAlarme)"))
+                    {
+                        cmdMeasure.Parameters.AddWithValue("@idserveurbdd", idServeur);
+                        cmdMeasure.Parameters.AddWithValue("@dateheuremesure", measureDateTime);
+                        cmdMeasure.Parameters.AddWithValue("@valeur", p_valeur);
+                        cmdMeasure.Parameters.AddWithValue("@resistance", (object)p_resistance ?? DBNull.Value);
+                        cmdMeasure.Parameters.AddWithValue("@unite", p_unite);
+                        cmdMeasure.Parameters.AddWithValue("@consigne", consigne);
+                        cmdMeasure.Parameters.AddWithValue("@consignesup", consigneSup);
+                        cmdMeasure.Parameters.AddWithValue("@consigneinf", consigneInf);
+                        cmdMeasure.Parameters.AddWithValue("@frequence", frequence);
+                        cmdMeasure.Parameters.AddWithValue("@sondenumeroserie", p_numeroSerie);
+                        cmdMeasure.Parameters.AddWithValue("@idlieu", idLieu);
+                        cmdMeasure.Parameters.AddWithValue("@estEtatAlarme", estEtatAlarme);
+                        cmdMeasure.ExecuteNonQuery();
+                    }
+
+                    using (var cmdUpdateLieu = CreateCommand(
+                        _connectionMain,
+                        "UPDATE t_lieu SET " +
+                        "Derniere_Date_Heure = CASE WHEN Derniere_Date_Heure IS NULL OR Derniere_Date_Heure < @dateheuremesure THEN @dateheuremesure ELSE Derniere_Date_Heure END, " +
+                        "Date_Heure_Derniere_Reponse_Recue_OK = CASE WHEN Date_Heure_Derniere_Reponse_Recue_OK IS NULL OR Date_Heure_Derniere_Reponse_Recue_OK < @dateheuremesure THEN @dateheuremesure ELSE Date_Heure_Derniere_Reponse_Recue_OK END, " +
+                        "Derniere_Valeur = CASE WHEN Derniere_Date_Heure IS NULL OR Derniere_Date_Heure < @dateheuremesure THEN @valeur ELSE Derniere_Valeur END, " +
+                        "Derniere_Unite = CASE WHEN Derniere_Date_Heure IS NULL OR Derniere_Date_Heure < @dateheuremesure THEN @unite ELSE Derniere_Unite END " +
+                        "WHERE Id_Lieu = @idlieu;"))
+                    {
+                        cmdUpdateLieu.Parameters.AddWithValue("@dateheuremesure", measureDateTime);
+                        cmdUpdateLieu.Parameters.AddWithValue("@valeur", p_valeur);
+                        cmdUpdateLieu.Parameters.AddWithValue("@unite", p_unite);
+                        cmdUpdateLieu.Parameters.AddWithValue("@idlieu", idLieu);
+                        cmdUpdateLieu.ExecuteNonQuery();
+                    }
+
+                    VigitempServeur.Log($"(AddHistoricalMesureIfMissing MSSQL) mesure historisee serial={p_numeroSerie} date={measureDateTime:O} value={p_valeur.ToString(CultureInfo.InvariantCulture)}");
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("(AddHistoricalMesureIfMissing MSSQL) SQL Erreur: " + ex);
+                    return false;
+                }
+            }
+        }
+
+        public bool UpdateLieuWirelessMetrics(string p_numeroSerie, int? batteryPercent, int? rssi)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!EnsureConnected())
+                    {
+                        return false;
+                    }
+
+                    using (var cmd = CreateCommand(
+                        _connectionMain,
+                        "UPDATE t_lieu SET Derniere_Val_Batterie = @battery, Derniere_Val_Rssi = @rssi WHERE Sonde_Numero_Serie = @serial;"))
+                    {
+                        cmd.Parameters.AddWithValue("@battery", batteryPercent.HasValue ? (object)batteryPercent.Value : DBNull.Value);
+                        cmd.Parameters.AddWithValue("@rssi", rssi.HasValue ? (object)rssi.Value.ToString(CultureInfo.InvariantCulture) : DBNull.Value);
+                        cmd.Parameters.AddWithValue("@serial", p_numeroSerie);
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("(UpdateLieuWirelessMetrics) SQL Server Erreur: " + ex.Message);
+                    return false;
+                }
+            }
+        }
+
         public bool AddMesureNoResponse(string p_numeroSerie, string p_unite)
         {
             lock (_lock)

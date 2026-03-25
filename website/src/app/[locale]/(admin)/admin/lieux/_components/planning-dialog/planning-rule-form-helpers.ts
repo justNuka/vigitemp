@@ -10,6 +10,38 @@ export interface JourOption {
   label: string
 }
 
+export function getDaySpan(startDay: number, endDay: number): number {
+  return (endDay - startDay + 7) % 7
+}
+
+export function addDaysWrapped(day: number, delta: number): number {
+  return ((day - 1 + delta) % 7 + 7) % 7 + 1
+}
+
+export function enumerateDaysInclusive(startDay: number, endDay: number): number[] {
+  const days: number[] = []
+  let current = startDay
+
+  while (true) {
+    days.push(current)
+    if (current === endDay) break
+    current = addDaysWrapped(current, 1)
+  }
+
+  return days
+}
+
+export function expandPlanningRuleForDailyRepeat(data: PlanningRegleCreate): PlanningRegleCreate[] {
+  const coveredStartDays = enumerateDaysInclusive(data.Jour_Debut, data.Jour_Fin)
+  const span = getDaySpan(data.Jour_Debut, data.Jour_Fin)
+
+  return coveredStartDays.map((startDay) => ({
+    ...data,
+    Jour_Debut: startDay,
+    Jour_Fin: addDaysWrapped(startDay, span),
+  }))
+}
+
 export function getDefaultPlanningRuleValues(): PlanningRegleFormValues {
   return {
     Actif: true,

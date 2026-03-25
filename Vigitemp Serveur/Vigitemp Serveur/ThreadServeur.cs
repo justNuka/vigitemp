@@ -21,6 +21,8 @@ namespace Vigitemp_Serveur
         private volatile IDatabaseProvider m_database;
         private readonly ConcurrentDictionary<int, SensorSchedule> _schedules =
             new ConcurrentDictionary<int, SensorSchedule>();
+        private readonly ConcurrentDictionary<string, GspMemoJob> _gspMemoJobs =
+            new ConcurrentDictionary<string, GspMemoJob>(StringComparer.OrdinalIgnoreCase);
         private List<SerialPort> list_SerialPort_open = new List<SerialPort>();
 
         private System.Timers.Timer _schedulerTimer;
@@ -89,6 +91,22 @@ namespace Vigitemp_Serveur
             public bool InProgress { get; set; }
         }
 
+        private sealed class GspMemoJob
+        {
+            public string Serial { get; set; }
+            public int RequestedCount { get; set; }
+            public int BatchSize { get; set; }
+            public int CurrentOffset { get; set; }
+            public int CompletedCount { get; set; }
+            public int ScannedCount { get; set; }
+            public int ConsecutiveFailures { get; set; }
+            public DateTime CreatedAtUtc { get; set; }
+            public DateTime? LastChunkAtUtc { get; set; }
+            public bool InProgress { get; set; }
+            public DateTime? RecoverFromProbeDateTime { get; set; }
+            public DateTime? RecoverUntilProbeDateTime { get; set; }
+        }
+
         public ThreadServeur(CancellationToken obj, int p_idServer)
         {
             this.m_cts = obj;
@@ -96,6 +114,120 @@ namespace Vigitemp_Serveur
         }
 
         public bool LogMetrologyDetailed => _logMetrologyDetailed;
+
+        public bool EnqueueGspMemo(string serialNumber, int totalCount, int batchSize, int? startOffset = null)
+        {
+            var serial = (serialNumber ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(serial))
+            {
+                return false;
+            }
+
+            if (!_schedules.Values.Any(s => string.Equals(s.Serial, serial, StringComparison.OrdinalIgnoreCase)))
+            {
+                VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={serial} status=rejected reason=schedule-not-found");
+                return false;
+            }
+
+            var requestedCount = Math.Max(1, totalCount);
+            var safeBatchSize = Math.Max(1, batchSize);
+            var safeOffset = Math.Max(0, startOffset ?? 0);
+
+            _gspMemoJobs.AddOrUpdate(
+                serial,
+                _ => new GspMemoJob
+                {
+                    Serial = serial,
+                    RequestedCount = requestedCount,
+                    BatchSize = safeBatchSize,
+                    CurrentOffset = safeOffset,
+                    CompletedCount = 0,
+                    ConsecutiveFailures = 0,
+                    CreatedAtUtc = DateTime.UtcNow,
+                },
+                (_, existing) =>
+                {
+                    existing.RequestedCount = requestedCount;
+                    existing.BatchSize = safeBatchSize;
+                    existing.CurrentOffset = safeOffset;
+                    existing.CompletedCount = 0;
+                    existing.ConsecutiveFailures = 0;
+                    existing.CreatedAtUtc = DateTime.UtcNow;
+                    existing.LastChunkAtUtc = null;
+                    existing.InProgress = false;
+                    return existing;
+                });
+
+            VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={serial} status=queued requested={requestedCount} batch={safeBatchSize} offset={safeOffset}");
+            return true;
+        }
+
+        public bool CancelGspMemo(string serialNumber)
+        {
+            var serial = (serialNumber ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(serial))
+            {
+                return false;
+            }
+
+            if (_gspMemoJobs.TryRemove(serial, out _))
+            {
+                VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={serial} status=cancelled");
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool EnqueueGspRecovery(string serialNumber, DateTime recoverFromProbeDateTime, DateTime recoverUntilProbeDateTime, int expectedMissingCount)
+        {
+            var serial = (serialNumber ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(serial))
+            {
+                return false;
+            }
+
+            if (recoverUntilProbeDateTime <= recoverFromProbeDateTime)
+            {
+                return false;
+            }
+
+            var requestedCount = Math.Max(1, expectedMissingCount);
+            var batchSize = Math.Min(100, Math.Max(20, requestedCount));
+            _gspMemoJobs.AddOrUpdate(
+                serial,
+                _ => new GspMemoJob
+                {
+                    Serial = serial,
+                    RequestedCount = requestedCount,
+                    BatchSize = batchSize,
+                    CurrentOffset = 0,
+                    CompletedCount = 0,
+                    ScannedCount = 0,
+                    ConsecutiveFailures = 0,
+                    CreatedAtUtc = DateTime.UtcNow,
+                    RecoverFromProbeDateTime = recoverFromProbeDateTime,
+                    RecoverUntilProbeDateTime = recoverUntilProbeDateTime,
+                },
+                (_, existing) =>
+                {
+                    existing.RequestedCount = requestedCount;
+                    existing.BatchSize = batchSize;
+                    existing.CurrentOffset = 0;
+                    existing.CompletedCount = 0;
+                    existing.ScannedCount = 0;
+                    existing.ConsecutiveFailures = 0;
+                    existing.CreatedAtUtc = DateTime.UtcNow;
+                    existing.LastChunkAtUtc = null;
+                    existing.InProgress = false;
+                    existing.RecoverFromProbeDateTime = recoverFromProbeDateTime;
+                    existing.RecoverUntilProbeDateTime = recoverUntilProbeDateTime;
+                    return existing;
+                });
+
+            VigitempServeur.Log($"[SONDE][RECOVERY] serial={serial} status=queued from={recoverFromProbeDateTime:O} until={recoverUntilProbeDateTime:O} expectedMissingCount={requestedCount} batch={batchSize}");
+            return true;
+        }
 
         public IDatabaseProvider GetDatabase()
         { // singleton
@@ -591,6 +723,7 @@ namespace Vigitemp_Serveur
                     }
                 }
 
+                await ProcessPendingGspMemoBatchAsync();
                 await PollNewAlarmsAsync();
                 PollEndedAlarms();
             }
@@ -600,6 +733,155 @@ namespace Vigitemp_Serveur
                 {
                     semaphore.Release();
                 }
+            }
+        }
+
+        private async Task ProcessPendingGspMemoBatchAsync()
+        {
+            var job = _gspMemoJobs.Values
+                .Where(j => j != null && !j.InProgress)
+                .OrderBy(j => j.LastChunkAtUtc ?? j.CreatedAtUtc)
+                .FirstOrDefault();
+
+            if (job == null)
+            {
+                return;
+            }
+
+            var schedule = _schedules.Values.FirstOrDefault(s =>
+                string.Equals(s.Serial, job.Serial, StringComparison.OrdinalIgnoreCase));
+            if (schedule == null)
+            {
+                _gspMemoJobs.TryRemove(job.Serial, out _);
+                VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=aborted reason=schedule-not-found");
+                return;
+            }
+
+            var remaining = Math.Max(0, job.RequestedCount - job.CompletedCount);
+            if (!job.RecoverUntilProbeDateTime.HasValue && remaining <= 0)
+            {
+                _gspMemoJobs.TryRemove(job.Serial, out _);
+                VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=completed requested={job.RequestedCount} completed={job.CompletedCount} offset={job.CurrentOffset}");
+                return;
+            }
+
+            if (job.ScannedCount >= 6000)
+            {
+                _gspMemoJobs.TryRemove(job.Serial, out _);
+                VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=aborted reason=scan-limit scanned={job.ScannedCount}");
+                return;
+            }
+
+            var count = job.RecoverUntilProbeDateTime.HasValue
+                ? job.BatchSize
+                : Math.Min(job.BatchSize, remaining);
+            job.InProgress = true;
+            try
+            {
+                Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
+                VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=chunk-start count={count} offset={job.CurrentOffset}");
+                var sensor = new SensorGSP(this, schedule.Port, schedule.Serial, schedule.Adresse, schedule.FrequencySeconds, false);
+                var memo = await sensor.ReadMemoryChunkAsync(count, job.CurrentOffset);
+                if (memo == null)
+                {
+                    job.ConsecutiveFailures++;
+                    if (job.ConsecutiveFailures >= 3)
+                    {
+                        _gspMemoJobs.TryRemove(job.Serial, out _);
+                        VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=failed failures={job.ConsecutiveFailures}");
+                    }
+                    else
+                    {
+                        VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=retry failures={job.ConsecutiveFailures} nextOffset={job.CurrentOffset}");
+                    }
+                    return;
+                }
+
+                var returnedCount = memo.ReturnedCount ?? memo.Measurements.Count;
+                var effectiveOffset = memo.Offset ?? job.CurrentOffset;
+                job.LastChunkAtUtc = DateTime.UtcNow;
+                job.ConsecutiveFailures = 0;
+                job.ScannedCount += Math.Max(0, returnedCount);
+
+                if (returnedCount <= 0)
+                {
+                    _gspMemoJobs.TryRemove(job.Serial, out _);
+                    VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=completed requested={job.RequestedCount} completed={job.CompletedCount} offset={job.CurrentOffset} reason=no-more-data");
+                    return;
+                }
+
+                var insertedThisBatch = 0;
+                var reachedRecoveryEnd = false;
+
+                if (job.RecoverUntilProbeDateTime.HasValue)
+                {
+                    var fromDate = job.RecoverFromProbeDateTime;
+                    var untilDate = job.RecoverUntilProbeDateTime.Value;
+                    foreach (var measurement in memo.Measurements)
+                    {
+                        if (!measurement.ProbeDateTime.HasValue || !measurement.Temperature.HasValue)
+                        {
+                            continue;
+                        }
+
+                        var measurementDate = measurement.ProbeDateTime.Value;
+                        if (measurementDate <= fromDate.GetValueOrDefault(DateTime.MinValue))
+                        {
+                            continue;
+                        }
+
+                        if (measurementDate >= untilDate)
+                        {
+                            reachedRecoveryEnd = true;
+                            continue;
+                        }
+
+                        if (GetDatabase().AddHistoricalMesureIfMissing(
+                            job.Serial,
+                            Math.Round(measurement.Temperature.Value, 2, MidpointRounding.AwayFromZero),
+                            "C",
+                            measurement.Temperature.Value.ToString("0.########", CultureInfo.InvariantCulture),
+                            measurementDate))
+                        {
+                            insertedThisBatch++;
+                            job.CompletedCount++;
+                        }
+                    }
+                }
+                else
+                {
+                    job.CompletedCount += returnedCount;
+                }
+
+                job.CurrentOffset = effectiveOffset + returnedCount;
+                VigitempServeur.Log(
+                    $"[SONDE][MEMO-JOB] serial={job.Serial} status=batch returned={returnedCount} inserted={insertedThisBatch} completed={job.CompletedCount}/{job.RequestedCount} nextOffset={job.CurrentOffset} scanned={job.ScannedCount}");
+
+                var shouldComplete = job.RecoverUntilProbeDateTime.HasValue
+                    ? reachedRecoveryEnd || returnedCount < count
+                    : job.CompletedCount >= job.RequestedCount || returnedCount < count;
+                if (shouldComplete)
+                {
+                    _gspMemoJobs.TryRemove(job.Serial, out _);
+                    VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=completed requested={job.RequestedCount} completed={job.CompletedCount} offset={job.CurrentOffset} scanned={job.ScannedCount}");
+                }
+            }
+            catch (Exception ex)
+            {
+                job.ConsecutiveFailures++;
+                if (job.ConsecutiveFailures >= 3)
+                {
+                    _gspMemoJobs.TryRemove(job.Serial, out _);
+                    VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=failed failures={job.ConsecutiveFailures} error={ex}");
+                }
+                else
+                {
+                    VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=retry failures={job.ConsecutiveFailures} error={ex.Message}");
+                }
+            }
+            finally
+            {
+                job.InProgress = false;
             }
         }
 

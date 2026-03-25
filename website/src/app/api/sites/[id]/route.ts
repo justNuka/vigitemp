@@ -3,6 +3,7 @@ import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getClientIp, withLogging } from "@/lib/api-logger"
 import { z } from "zod"
+import { auditRouteUpdate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { apiError, apiOk } from "@/lib/api-response"
 
@@ -43,12 +44,22 @@ export const PATCH = withLogging(
         }
       }
 
+      const existingSite = await prisma.t_site.findUnique({
+        where: { Id_Site: id },
+      })
+
       const site = await prisma.t_site.update({
         where: { Id_Site: id },
         data: validated,
       })
 
-      log.data.update("Site", id, user.username, user.userId, getClientIp(req), validated as Record<string, unknown>)
+      auditRouteUpdate(req, user, {
+        resource: "Site",
+        resourceId: id,
+        before: existingSite as unknown as Record<string, unknown>,
+        after: site as unknown as Record<string, unknown>,
+        trackedFields: ["Libelle_Site", "Commentaire", "Est_Archive"],
+      })
 
       return apiOk(site)
     } catch (error) {

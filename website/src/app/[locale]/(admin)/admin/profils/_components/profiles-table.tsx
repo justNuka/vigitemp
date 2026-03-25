@@ -104,7 +104,7 @@ export function ProfilesTable({
               size="icon"
               onClick={() => onEdit(profile)}
               title={t('actions.edit')}
-              className="bg-primary/10 hover:bg-primary/20 border-primary/40 text-primary"
+              className="text-primary"
             >
               <Edit className="h-4 w-4" />
             </Button>
@@ -139,7 +139,7 @@ export function ProfilesTable({
           <CardTitle>{t('title')}</CardTitle>
           <CardDescription>{t('description')}</CardDescription>
         </div>
-        <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90" onClick={onCreate}>
+        <Button className="gap-2" onClick={onCreate}>
           <Plus className="h-4 w-4" />
           {t('actions.new')}
         </Button>

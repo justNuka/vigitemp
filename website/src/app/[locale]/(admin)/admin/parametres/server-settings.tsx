@@ -12,7 +12,6 @@ const DEFAULT_SETTINGS = [
   { key: "notifications:alarm_email_recipients", value: "", label: "CC recipients" },
   { key: "notifications:alarm_email_acknowledged", value: "true", label: "Acknowledgement emails" },
   { key: "notifications:alarm_email_ended", value: "true", label: "Ended alarm emails" },
-  { key: "notifications:sms", value: "false", label: "SMS notifications" },
   { key: "alarms:sound", value: "true", label: "Alarm sound" },
   { key: "dashboard:refresh", value: "30", label: "Dashboard refresh interval" },
   { key: "dashboard:surveillance_refresh", value: "15", label: "Surveillance refresh interval" },

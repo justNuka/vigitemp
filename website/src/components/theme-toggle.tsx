@@ -1,6 +1,7 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Monitor, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,8 +13,33 @@ import { useTheme } from "@/components/theme-provider";
 import { useTranslations } from "next-intl";
 
 export function ThemeToggle() {
-  const { setTheme, theme } = useTheme();
+  const { setTheme, theme, resolvedTheme } = useTheme();
   const t = useTranslations("themeToggle");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const selectedTheme = mounted ? (theme === "system" ? resolvedTheme ?? "system" : theme) : theme;
+
+  const applyThemeChoice = (nextTheme: "light" | "dark" | "system") => {
+    setTheme(nextTheme);
+
+    if (typeof window === "undefined") return;
+
+    try {
+      window.localStorage.setItem("vigitemp-theme", nextTheme);
+    } catch {
+      // ignore storage write failures
+    }
+
+    const root = window.document.documentElement;
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const shouldUseDark = nextTheme === "dark" || (nextTheme === "system" && prefersDark);
+    root.classList.toggle("dark", shouldUseDark);
+    root.style.colorScheme = shouldUseDark ? "dark" : "light";
+  };
 
   return (
     <DropdownMenu>
@@ -32,27 +58,27 @@ export function ThemeToggle() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem 
-          onClick={() => setTheme("light")}
+          onClick={() => applyThemeChoice("light")}
           data-testid="menu-theme-light"
-          className={theme === "light" ? "bg-accent" : ""}
+          className={selectedTheme === "light" ? "bg-accent" : ""}
         >
           <Sun className="mr-2 h-4 w-4" />
           {t("light")}
         </DropdownMenuItem>
         <DropdownMenuItem 
-          onClick={() => setTheme("dark")}
+          onClick={() => applyThemeChoice("dark")}
           data-testid="menu-theme-dark"
-          className={theme === "dark" ? "bg-accent" : ""}
+          className={selectedTheme === "dark" ? "bg-accent" : ""}
         >
           <Moon className="mr-2 h-4 w-4" />
           {t("dark")}
         </DropdownMenuItem>
         <DropdownMenuItem 
-          onClick={() => setTheme("system")}
+          onClick={() => applyThemeChoice("system")}
           data-testid="menu-theme-system"
           className={theme === "system" ? "bg-accent" : ""}
         >
-          <span className="mr-2 h-4 w-4 flex items-center justify-center text-xs">💻</span>
+          <Monitor className="mr-2 h-4 w-4" />
           {t("system")}
         </DropdownMenuItem>
       </DropdownMenuContent>

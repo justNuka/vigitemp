@@ -405,6 +405,7 @@ exports.Prisma.T_lieuScalarFieldEnum = {
   Date_Heure_Surveillance_On: 'Date_Heure_Surveillance_On',
   Date_Heure_Surveillance_Off: 'Date_Heure_Surveillance_Off',
   Derniere_Val_Rssi: 'Derniere_Val_Rssi',
+  Derniere_Val_Batterie: 'Derniere_Val_Batterie',
   Derniere_Val_Tension: 'Derniere_Val_Tension',
   Est_Lieu_GSO: 'Est_Lieu_GSO',
   Est_Son_Alarme_Active: 'Est_Son_Alarme_Active',
@@ -654,14 +655,16 @@ exports.Prisma.T_lieu_planning_auditScalarFieldEnum = {
   Id_Audit: 'Id_Audit',
   Id_Lieu: 'Id_Lieu',
   Timestamp: 'Timestamp',
+  Date_Heure_Debut_Changement: 'Date_Heure_Debut_Changement',
+  Date_Heure_Fin_Changement: 'Date_Heure_Fin_Changement',
   Type: 'Type',
   Planning_Regle_Id: 'Planning_Regle_Id',
   Consigne_Avant: 'Consigne_Avant',
-  Consigne_Sup_Avant: 'Consigne_Sup_Avant',
-  Consigne_Inf_Avant: 'Consigne_Inf_Avant',
+  Tolerance_Surveillance_Sup_Avant: 'Tolerance_Surveillance_Sup_Avant',
+  Tolerance_Surveillance_Inf_Avant: 'Tolerance_Surveillance_Inf_Avant',
   Consigne_Apres: 'Consigne_Apres',
-  Consigne_Sup_Apres: 'Consigne_Sup_Apres',
-  Consigne_Inf_Apres: 'Consigne_Inf_Apres'
+  Tolerance_Surveillance_Sup_Apres: 'Tolerance_Surveillance_Sup_Apres',
+  Tolerance_Surveillance_Inf_Apres: 'Tolerance_Surveillance_Inf_Apres'
 };
 
 exports.Prisma.T_lieu_planning_regleScalarFieldEnum = {
@@ -1106,8 +1109,7 @@ exports.Prisma.t_vigilog_tourneeOrderByRelevanceFieldEnum = {
   Commentaire_Acquittement: 'Commentaire_Acquittement'
 };
 exports.t_lieu_planning_audit_Type = exports.$Enums.t_lieu_planning_audit_Type = {
-  ACTIVATION: 'ACTIVATION',
-  RETOUR_BASE: 'RETOUR_BASE'
+  PLAN_APPLY: 'PLAN_APPLY'
 };
 
 exports.t_commande_materiel_Mode_Transmission = exports.$Enums.t_commande_materiel_Mode_Transmission = {

@@ -26,6 +26,8 @@ namespace Vigitemp_Serveur
             GetSettingInt("Vigitemp.Log.MaxFileSizeMB", 10) * 1024L * 1024L;
         private System.Timers.Timer _timer;
         private HotlineApiServer _hotlineApi;
+        private volatile bool _powerSuspendRequested;
+        private long _lastResumeSuspendAtUtcTicks;
 
         private readonly object _workersLock = new object();
         private readonly Dictionary<int, (ThreadServeur worker, CancellationTokenSource cts)> _workers =
@@ -414,39 +416,56 @@ namespace Vigitemp_Serveur
         {
             try
             {
-            // Console.WriteLine("Guid: "+systemi());
-            List<int> arr_serveurs;
-            using (IDatabaseProvider db = DatabaseFactory.Create())
-            {
-                arr_serveurs = db.getDistinctIdServeur();
-            }
-            //ajout de potentiel nouveau serveur créé depuis le lancement du service
-            foreach (int idServeur in arr_serveurs)
-            {
-                StartWorker(idServeur);
-            }
-
-
-            //suppression des serveur qui ne sont plus utilisés par les sondes
-            int[] currentIds;
-            lock (_workersLock)
-            {
-                currentIds = _workers.Keys.ToArray();
-            }
-
-            foreach (var idServeur in currentIds)
-            {
-                if (!arr_serveurs.Contains(idServeur))
+                if (_powerSuspendRequested)
                 {
-                    StopWorker(idServeur);
+                    VigitempServeur.Log("Process ignore pendant QuerySuspend/Suspend.");
+                    return;
                 }
-            }
+
+                var nowUtc = DateTime.UtcNow;
+                var lastResumeTicks = Interlocked.Read(ref _lastResumeSuspendAtUtcTicks);
+                if (lastResumeTicks > 0 && (nowUtc - new DateTime(lastResumeTicks, DateTimeKind.Utc)) < TimeSpan.FromSeconds(15))
+                {
+                    VigitempServeur.Log("Process differe apres ResumeSuspend pour laisser les ressources se stabiliser.");
+                    return;
+                }
+
+                Interlocked.Exchange(ref _lastResumeSuspendAtUtcTicks, 0L);
+
+                // Console.WriteLine("Guid: "+systemi());
+                List<int> arr_serveurs;
+                using (IDatabaseProvider db = DatabaseFactory.Create())
+                {
+                    arr_serveurs = db.getDistinctIdServeur();
+                }
+                //ajout de potentiel nouveau serveur cr?? depuis le lancement du service
+                foreach (int idServeur in arr_serveurs)
+                {
+                    StartWorker(idServeur);
+                }
+
+
+                //suppression des serveur qui ne sont plus utilis?s par les sondes
+                int[] currentIds;
+                lock (_workersLock)
+                {
+                    currentIds = _workers.Keys.ToArray();
+                }
+
+                foreach (var idServeur in currentIds)
+                {
+                    if (!arr_serveurs.Contains(idServeur))
+                    {
+                        StopWorker(idServeur);
+                    }
+                }
             }
             catch (Exception ex)
             {
                 VigitempServeur.Log("VigitempServeur.Process error: " + ex);
             }
         }
+
 
         protected override void OnShutdown()
         {
@@ -465,37 +484,34 @@ namespace Vigitemp_Serveur
 
         protected override bool OnPowerEvent(PowerBroadcastStatus powerStatus)
         {
-            VigitempServeur.Log("changement de powerstatus à (avant postpone) " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-            
-            VigitempServeur.Log("changement de powerstatus à (apres postpone) " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-            VigitempServeur.Log("Changement de powerStatus(object): "+powerStatus + "\n" +
-                                "Changement de powerStatus(toString): " + powerStatus.ToString() + "\n" +
-                                "Changement de powerStatus(GetType): " + powerStatus.GetType() + "\n" +
-                                "Changement de powerStatus(GetTypeCode): " + powerStatus.GetTypeCode() + "\n" +
-                                "Hasflag de powerStatus(BatteryLow): " + powerStatus.HasFlag(PowerBroadcastStatus.BatteryLow) + "\n" +
-                                "Hasflag de powerStatus(Suspend): " + powerStatus.HasFlag(PowerBroadcastStatus.Suspend) + "\n" +
-                                "Hasflag de powerStatus(ResumeSuspend): " + powerStatus.HasFlag(PowerBroadcastStatus.ResumeSuspend) + "\n" +
-                                "Hasflag de powerStatus(QuerySuspend): " + powerStatus.HasFlag(PowerBroadcastStatus.QuerySuspend) + "\n" 
-                                );  
-            if (powerStatus.HasFlag(PowerBroadcastStatus.QuerySuspend))
+            VigitempServeur.Log("Power event: " + powerStatus);
+
+            if (powerStatus == PowerBroadcastStatus.QuerySuspend)
             {
-                VigitempServeur.Log("Service need to stop");
-                //this.RequestAdditionalTime(10000); // ne marche pas, dans les logs on dirait que ça stop la fonction, il ne se passe rien apres cette ligne
-                //OnStop();
-                try
-                {
-                    this.Stop();
-                }
-                catch
-                {
-                    // ignore
-                }
-                //this.RequestAdditionalTime(10000);
+                _powerSuspendRequested = true;
+                VigitempServeur.Log("QuerySuspend detecte: le service reste actif mais differe les traitements non essentiels.");
+                return true;
             }
 
-            if (powerStatus.HasFlag(PowerBroadcastStatus.ResumeSuspend))
+            if (powerStatus == PowerBroadcastStatus.Suspend)
             {
-               VigitempServeur.Log("Resume detecte (service deja actif).");
+                _powerSuspendRequested = true;
+                VigitempServeur.Log("Suspend detecte: mise en pause logique des traitements periodiques.");
+                return true;
+            }
+
+            if (powerStatus == PowerBroadcastStatus.ResumeSuspend)
+            {
+                _powerSuspendRequested = false;
+                Interlocked.Exchange(ref _lastResumeSuspendAtUtcTicks, DateTime.UtcNow.Ticks);
+                VigitempServeur.Log("ResumeSuspend detecte: reprise differee pendant 15 secondes pour stabilisation.");
+                return true;
+            }
+
+            if (powerStatus == PowerBroadcastStatus.BatteryLow)
+            {
+                VigitempServeur.Log("BatteryLow detecte.");
+                return true;
             }
 
             return base.OnPowerEvent(powerStatus);

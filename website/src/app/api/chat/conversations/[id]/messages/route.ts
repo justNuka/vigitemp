@@ -13,6 +13,26 @@ import { log } from "@/lib/logger"
 
 const TAKE = 50
 
+async function loadAttachmentsSafe(messageIds: number[]) {
+  if (messageIds.length === 0) return []
+
+  try {
+    return await prismaChat.t_message_attachment.findMany({
+      where: { Id_Message: { in: messageIds } },
+      select: {
+        Id_Attachment: true,
+        Id_Message: true,
+        File_Name: true,
+        Mime_Type: true,
+        File_Size: true,
+      },
+    })
+  } catch (error) {
+    log.warn("chat/conversations/messages", "message_attachments_table_unavailable", { error })
+    return []
+  }
+}
+
 const postBodySchema = z
   .object({
     contenu: z.string().max(10000).default(""),
@@ -82,16 +102,7 @@ export const GET = withAuthLogging(
           where: { Id_Conversation: convId },
           select: { Id_Utilisateur: true, Last_Read_Msg_Id: true },
         }),
-        prismaChat.t_message_attachment.findMany({
-          where: { Id_Message: { in: messageIds } },
-          select: {
-            Id_Attachment: true,
-            Id_Message: true,
-            File_Name: true,
-            Mime_Type: true,
-            File_Size: true,
-          },
-        }),
+        loadAttachmentsSafe(messageIds),
       ])
 
       // Group attachments by message ID

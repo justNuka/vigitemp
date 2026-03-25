@@ -160,8 +160,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
               Date_Heure_Debut: { gte: startDate },
 
-              Est_Alarme_Vrai: true,
-
+  
             },
 
             _count: { _all: true },
@@ -178,8 +177,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
               Date_Heure_Debut: { gte: startDate },
 
-              Est_Alarme_Vrai: true,
-
+  
             },
 
             _count: { _all: true },

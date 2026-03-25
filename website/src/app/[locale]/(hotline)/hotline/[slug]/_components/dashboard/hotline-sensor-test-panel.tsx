@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { RssiBars } from "@/components/monitoring-card/rssi-bars"
 
 type SensorType = "IN" | "IE" | "IP" | "IC" | "IH" | "EN" | "HN" | "GSP"
 type GspAction = "read" | "force-read" | "sync-config" | "read-config" | "read-memory" | "raw"
@@ -48,6 +49,7 @@ type ParsedSensorResponse = {
   memoMeasureCount: number
   memoOffset?: string
   memoReturnedCount?: string
+  rssiRaw?: string
 }
 
 const SENSOR_TYPES: SensorType[] = ["IN", "IE", "IP", "IC", "IH", "EN", "HN", "GSP"]
@@ -92,6 +94,7 @@ export function HotlineSensorTestPanel() {
     alarmDelayMinutes: "",
     channel: "",
     memoryCount: "",
+    memoryOffset: "",
     rawPrefix: "TEMP",
     rawSerial: "",
     rawPayload: "",
@@ -140,32 +143,37 @@ export function HotlineSensorTestPanel() {
       parsed.push({ label: `Temperature ${tempMatch[1]}`, value: tempMatch[2].replace(".", ",") + " °C" })
     }
 
-    const ackTempMatch = combined.match(/(?:^|\n)Temperature=(-?\d+(?:[.,]\d+)?)(?:\n|$)/i)
+    const forceTempMatch = combined.match(/ACK\s*:\s*R?FTEM(N\d+)\s*:\s*(-?\d+(?:[.,]\d+)?)/i)
+    if (forceTempMatch) {
+      parsed.push({ label: `Temperature forcée ${forceTempMatch[1]}`, value: forceTempMatch[2].replace(".", ",") + " C" })
+    }
+
+    const ackTempMatch = combined.match(/(?:^|\r?\n)Temperature=(-?\d+(?:[.,]\d+)?)(?:\r?\n|$)/i)
     if (ackTempMatch) {
       parsed.push({ label: "Temperature", value: ackTempMatch[1].replace(".", ",") + " C" })
     }
 
-    const serialMatch = combined.match(/(?:^|\n)Serial=([A-Z0-9\-]+)(?:\n|$)/i)
+    const serialMatch = combined.match(/(?:^|\r?\n)Serial=([A-Z0-9\-]+)(?:\r?\n|$)/i)
     if (serialMatch) {
       parsed.push({ label: "Serial repondu", value: serialMatch[1] })
     }
 
-    const memoOffsetMatch = combined.match(/(?:^|\n)Offset=(\d+)(?:\n|$)/i)
+    const memoOffsetMatch = combined.match(/(?:^|\r?\n)Offset=(\d+)(?:\r?\n|$)/i)
     if (memoOffsetMatch) {
       parsed.push({ label: "Offset MEMO", value: memoOffsetMatch[1] })
     }
 
-    const memoReturnedCountMatch = combined.match(/(?:^|\n)NombreMesure=(\d+)(?:\n|$)/i)
+    const memoReturnedCountMatch = combined.match(/(?:^|\r?\n)NombreMesure=(\d+)(?:\r?\n|$)/i)
     if (memoReturnedCountMatch) {
       parsed.push({ label: "NombreMesure", value: memoReturnedCountMatch[1] })
     }
 
-    const batteryMatch = combined.match(/(?:^|\n)Batterie=(-?\d+(?:[.,]\d+)?)(?:\n|$)/i)
+    const batteryMatch = combined.match(/(?:^|\r?\n)Batterie=(-?\d+(?:[.,]\d+)?)(?:\r?\n|$)/i)
     if (batteryMatch) {
       parsed.push({ label: "Batterie", value: batteryMatch[1].replace(".", ",") })
     }
 
-    const rssiMatch = combined.match(/(?:^|\n)RSSI=(-?\d+(?:[.,]\d+)?)(?:\n|$)/i)
+    const rssiMatch = combined.match(/(?:^|\r?\n)RSSI=(-?\d+(?:[.,]\d+)?)(?:\r?\n|$)/i)
     if (rssiMatch) {
       parsed.push({ label: "RSSI", value: rssiMatch[1].replace(".", ",") })
     }
@@ -177,6 +185,11 @@ export function HotlineSensorTestPanel() {
 
     for (const match of combined.matchAll(/Coef([AB])=(-?\d+(?:[.,]\d+)?)/gi)) {
       parsed.push({ label: `Coef ${match[1].toUpperCase()}`, value: match[2].replace(".", ",") })
+    }
+
+    const etalMatch = combined.match(/Etal=(-?\d+(?:[.,]\d+)?)/i)
+    if (etalMatch) {
+      parsed.push({ label: "Etal", value: etalMatch[1].replace(".", ",") })
     }
 
     const highMatch = combined.match(/LimiteHaute=(-?\d+(?:[.,]\d+)?)/i)
@@ -205,6 +218,7 @@ export function HotlineSensorTestPanel() {
       memoMeasureCount,
       memoOffset: memoOffsetMatch?.[1],
       memoReturnedCount: memoReturnedCountMatch?.[1],
+      rssiRaw: rssiMatch?.[1],
     }
   }, [result])
 
@@ -231,7 +245,7 @@ export function HotlineSensorTestPanel() {
     if (!showGspFields) return "Commande generee selon le protocole de la sonde selectionnee."
 
     const target = serial.trim()
-    if (!target) return "Renseignez un numero de serie pour voir la commande."
+    if (!target) return "Renseignez un numéro de série pour voir la commande."
 
     switch (action) {
       case "read":
@@ -241,7 +255,7 @@ export function HotlineSensorTestPanel() {
       case "read-config":
         return `DD-H${target}, DCAL${target}, DETA${target}, DCON${target}`
       case "read-memory":
-        return `MEMO${target} ${(gsp.memoryCount || "x")}x`
+        return `MEMO${target} ${(gsp.memoryCount || "1")}x${gsp.memoryOffset.trim() ? `${gsp.memoryOffset}o` : ""}`
       case "raw":
         return rawCommandValue || "Saisissez une commande GSP."
       case "sync-config":
@@ -287,6 +301,7 @@ export function HotlineSensorTestPanel() {
                 alarmDelayMinutes: parseOptionalInteger(gsp.alarmDelayMinutes),
                 channel: gsp.channel.trim() || undefined,
                 memoryCount: parseOptionalInteger(gsp.memoryCount),
+                memoryOffset: parseOptionalInteger(gsp.memoryOffset),
                 rawCommand: isGspRaw ? rawCommandValue : undefined,
                 listenWindowMs: parseOptionalInteger(listenWindowMs),
               }
@@ -520,9 +535,14 @@ export function HotlineSensorTestPanel() {
               ) : null}
 
               {isGspMemory ? (
-                <Field label="Nombre de lignes memoire">
-                  <Input value={gsp.memoryCount} onChange={(e) => setGsp((prev) => ({ ...prev, memoryCount: e.target.value }))} />
-                </Field>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Nombre de lignes memoire">
+                    <Input value={gsp.memoryCount} onChange={(e) => setGsp((prev) => ({ ...prev, memoryCount: e.target.value }))} />
+                  </Field>
+                  <Field label="Offset memoire">
+                    <Input value={gsp.memoryOffset} onChange={(e) => setGsp((prev) => ({ ...prev, memoryOffset: e.target.value }))} placeholder="0" />
+                  </Field>
+                </div>
               ) : null}
 
               {isGspRaw ? (
@@ -587,10 +607,10 @@ export function HotlineSensorTestPanel() {
                     </Field>
                   )}
                   <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-                    <div className="mb-1 font-medium">Prefixes disponibles</div>
+                    <div className="mb-1 font-medium">Préfixes disponibles</div>
                     <div className="font-mono">TEMP, FTEM, DD-H, DCAL, DETA, DCON, MEMO, ED-H, ECAL, EETA, ECON, CHAN</div>
-                    <div className="mt-1 text-slate-600">Pour les commandes avec separateur, utiliser `-` et non `/`.</div>
-                    <div className="mt-1 text-slate-600">Les payloads sont separes de la commande par un espace.</div>
+                    <div className="mt-1 text-slate-600">Pour les commandes avec séparateur, utiliser `-` et non `/`.</div>
+                    <div className="mt-1 text-slate-600">Les payloads sont séparés de la commande par un espace.</div>
                   </div>
                 </div>
               ) : null}
@@ -644,6 +664,7 @@ export function HotlineSensorTestPanel() {
                     value={parsedResponse.memoReturnedCount || String(parsedResponse.memoMeasureCount)}
                   />
                 ) : null}
+                {parsedResponse?.rssiRaw ? <ResultRssiItem value={parsedResponse.rssiRaw} /> : null}
                 <ResultItem label="Brut" value={rawPreview} />
               </div>
             ) : (
@@ -685,7 +706,7 @@ export function HotlineSensorTestPanel() {
                   </div>
                 ) : (
                   <div className="text-sm text-muted-foreground">Aucune information parsée pour le moment.</div>
-                )}
+                )}  
               </div>
               <div className="pt-2">
                 <SectionTitleWithInfo
@@ -762,4 +783,17 @@ function parseOptionalInteger(value: string) {
   if (!trimmed) return null
   const parsed = Number.parseInt(trimmed, 10)
   return Number.isFinite(parsed) ? parsed : null
+}
+
+function ResultRssiItem({ value }: { value: string }) {
+  return (
+    <div className="rounded-md border bg-muted/20 px-3 py-2">
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">Signal</div>
+      <div className="mt-1 flex min-h-6 items-center">
+        <TooltipProvider>
+          <RssiBars value={value} label={`RSSI : ${value}`} />
+        </TooltipProvider>
+      </div>
+    </div>
+  )
 }

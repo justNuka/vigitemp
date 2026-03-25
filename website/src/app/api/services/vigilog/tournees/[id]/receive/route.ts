@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getClientIp } from "@/lib/api-logger"
 import { withAnyAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { auditRouteUpdate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { vigilogReceiveSchema, VIGILOG_ACCESS_CODES } from "../../../_shared"
@@ -15,13 +16,13 @@ export const POST = withAnyAuthorizationLogging(
       const { id } = await routeContext.params
       const tourneeId = Number(id)
       if (!Number.isInteger(tourneeId) || tourneeId <= 0) {
-        return apiError(400, "invalid_id", "Identifiant de tournee invalide")
+        return apiError(400, "invalid_id", "Identifiant de tournée invalide")
       }
 
       const body = await req.json().catch(() => ({}))
       const parsed = vigilogReceiveSchema.safeParse(body)
       if (!parsed.success) {
-        return apiError(400, "validation_error", "Reception VigiLog invalide", {
+        return apiError(400, "validation_error", "Réception VigiLog invalide", {
           issues: parsed.error.issues,
         })
       }
@@ -30,10 +31,10 @@ export const POST = withAnyAuthorizationLogging(
         where: { Id_VigiLog_Tournee: tourneeId },
       })
       if (!existing) {
-        return apiError(404, "not_found", "Tournee VigiLog introuvable")
+        return apiError(404, "not_found", "Tournée VigiLog introuvable")
       }
       if (existing.Statut !== "EN_ATTENTE_RECEPTION") {
-        return apiError(409, "invalid_status", "Cette tournee n'est pas en attente de reception")
+        return apiError(409, "invalid_status", "Cette tournée n'est pas en attente de réception")
       }
 
       const linkedLogger = existing.Id_VigiLog
@@ -64,21 +65,43 @@ export const POST = withAnyAuthorizationLogging(
           linkedLogger?.Err_Justesse != null ? Number(linkedLogger.Err_Justesse) : null,
       })
 
-      log.data.update(
-        "Tournee VigiLog",
-        updated.Id_VigiLog_Tournee,
-        ctx.user.username,
-        ctx.user.userId,
-        getClientIp(req),
-        {
+      log.audit("VLOG", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        ip: getClientIp(req),
+        resource: "Tournee VigiLog",
+        resourceId: updated.Id_VigiLog_Tournee,
+        changes: {
           action: "receive",
           reference: updated.Reference_Tournee,
           loggerSerial: updated.Numero_Serie_VigiLog,
           measurementCount: analysis.measurementCount,
           trafficLight: analysis.trafficLight,
           hasAlarm: analysis.hasAlarm,
+          status: updated.Statut,
         },
-      )
+      })
+
+      auditRouteUpdate(req, ctx.user, {
+        resource: "Tournee VigiLog",
+        resourceId: updated.Id_VigiLog_Tournee,
+        before: {
+          status: existing.Statut,
+          arrivalAt: existing.Date_Heure_Arrivee,
+          trafficLight: existing.Resultat_Feu,
+          measurementCount: existing.Nb_Mesures,
+          hasAlarm: existing.Est_Alarme,
+          acknowledged: existing.Est_Acquittee,
+        },
+        after: {
+          status: updated.Statut,
+          arrivalAt: updated.Date_Heure_Arrivee,
+          trafficLight: updated.Resultat_Feu,
+          measurementCount: updated.Nb_Mesures,
+          hasAlarm: updated.Est_Alarme,
+          acknowledged: updated.Est_Acquittee,
+        },
+      })
 
       return apiOk({
         id: updated.Id_VigiLog_Tournee,
@@ -92,7 +115,7 @@ export const POST = withAnyAuthorizationLogging(
       log.error("services/vigilog/tournees/[id]/receive", "vigilog_tournee_receive_failed", {
         error,
       })
-      return apiError(500, "vigilog_tournee_receive_failed", "Erreur lors de la reception de la tournee VigiLog")
+      return apiError(500, "vigilog_tournee_receive_failed", "Erreur lors de la réception de la tournée VigiLog")
     }
   },
 )

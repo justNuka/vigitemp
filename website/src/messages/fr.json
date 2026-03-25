@@ -24,10 +24,10 @@
     "license_unknown": "Licence inconnue",
     "license_invalid": "Licence invalide",
     "temporary_memory": {
-      "save": "Garder en memoire temporaire les infos",
-      "restore": "Restaurer les donnees sauvegardees",
-      "clear": "Vider les donnees",
-      "saved": "Donnees temporaires disponibles"
+      "save": "Sauvegarder pour plus tard",
+      "restore": "Restaurer le brouillon",
+      "clear": "Vider le formulaire",
+      "saved": "Brouillon disponible"
     }
   },
   "dateRangePicker": {
@@ -320,6 +320,9 @@
       },
       "cancel": "Annuler",
       "confirm": "Confirmer"
+    },
+    "legend": {
+      "technical_alarm": "Alarme technique"
     }
   },
   "surveillanceStatus": {
@@ -800,11 +803,12 @@
         "saving": "Enregistrement..."
       },
       "temporary_memory": {
-        "save": "Garder en memoire temporaire les infos",
-        "restore": "Restaurer les donnees sauvegardees",
-        "clear": "Vider les donnees",
-        "saved": "Donnees temporaires disponibles"
-      }
+        "save": "Sauvegarder pour plus tard",
+        "restore": "Restaurer le brouillon",
+        "clear": "Vider le formulaire",
+        "saved": "Brouillon disponible"
+      },
+      "current_location_label": "Lieu en cours :"
     },
     "general": {
       "sections": {
@@ -820,7 +824,7 @@
         "monitoring_disable": "Désactiver la surveillance",
         "site": "Site",
         "alarm_sound": "Son d'alarme",
-        "alarm_sound_enable": "Jouer le son lors du declenchement d'une alarme sur ce lieu",
+        "alarm_sound_enable": "Jouer le son lors du déclenchement d'une alarme sur ce lieu",
         "groups": "Groupe(s)",
         "sensor_select": "Sélection de sonde",
         "sensor_state": "État de la sonde",
@@ -874,7 +878,12 @@
         "frequency_gso": "Fréquence fixée à 15 min pour les sondes GSO.",
         "retrigger_delay_measures": "Nombre de mesures hors tolérances à ignorer avant un nouveau déclenchement apres acquittement ou alarme terminée."
       },
-      "group_fallback": "Groupe {id}"
+      "group_fallback": "Groupe {id}",
+      "planning_lock": {
+        "title": "Consignes pilotées par le planning",
+        "description": "Des règles de planning sont actives pour ce lieu. Les consignes de base sont verrouillées ici. Modifiez le planning si vous devez changer les consignes appliquées.",
+        "go_to_planning": "Aller au planning"
+      }
     },
     "metrology": {
       "sections": {
@@ -948,6 +957,7 @@
       "saveFirst": "Sauvegardez le lieu avant de configurer le planning.",
       "noRules": "Aucune règle de planning configurée.",
       "addRule": "Ajouter une règle",
+      "duplicateRule": "Dupliquer",
       "editRule": "Modifier la règle",
       "deleteRule": "Supprimer",
       "activeStatus": "Planning actif — Règle",
@@ -1005,12 +1015,15 @@
         "emtModeUncertainties": "Incertitudes",
         "emtModeSansObjet": "Sans objet",
         "labelRetardChangementConsigne": "Retard changement consigne (min)",
+        "repeatEachDayLabel": "Repeter la regle chaque jour couvert",
+        "repeatEachDayHint": "Cree automatiquement une regle par jour sur la plage choisie en conservant les horaires et consignes.",
+        "repeatSuccess": "{count, plural, one {# regle creee} other {# regles creees}}",
         "placeholderRetardChangementConsigne": "0",
         "temporaryMemory": {
-          "save": "Garder en memoire temporaire les infos",
-          "restore": "Restaurer les donnees sauvegardees",
-          "clear": "Vider les donnees",
-          "saved": "Donnees temporaires disponibles"
+          "save": "Sauvegarder pour plus tard",
+          "restore": "Restaurer le brouillon",
+          "clear": "Vider le formulaire",
+          "saved": "Brouillon disponible"
         }
       },
       "deleteConfirm": {
@@ -2610,6 +2623,9 @@
       "rssi": "RSSI : {value}",
       "tension": "Tension : {value}"
     },
+    "wireless": {
+      "battery": "Batterie : {value}%"
+    },
     "tabs": {
       "graph": "Graphique",
       "table": "Tableau des mesures",
@@ -3427,11 +3443,15 @@
       "unknown": "Site inconnu"
     },
     "chart": {
-      "measures": "Mesures ({unit})"
+      "measures": "Mesures ({unit})",
+      "target": "Consigne ({unit})",
+      "upper_threshold": "Consigne sup. ({unit})",
+      "lower_threshold": "Consigne inf. ({unit})"
     },
     "mobile": {
-      "graph_in_details_title": "Graphique disponible dans le d?tail",
-      "graph_in_details_description": "Touchez la carte pour ouvrir le lieu et afficher la courbe compl?te."
+      "graph_in_details_title": "Graphique disponible dans le détail",
+      "graph_in_details_description": "Touchez la carte pour ouvrir le lieu et afficher la courbe complète.",
+      "small_hint": "Ouvrir le detail pour voir la courbe."
     },
     "guides": {
       "max": "Max: {value}",
@@ -3444,6 +3464,9 @@
     "gso": {
       "rssi": "RSSI : {value}",
       "tension": "Tension : {value}"
+    },
+    "wireless": {
+      "battery": "Batterie : {value}%"
     },
     "frequency": "Fréq : {minutes} min",
     "alarm_delay": "Retard alarme : {minutes} min",
@@ -3535,7 +3558,7 @@
         "title": "Outils",
         "description": "Acceder aux outils d'administration."
       },
-      "access": "Acc?der"
+      "access": "Accéder"
     },
     "loading": "Chargement des données...",
     "updating": "Mise à jour...",
@@ -3628,7 +3651,7 @@
       }
     },
     "expert": {
-      "description": "Mode edition: deplacez, redimensionnez, ajoutez ou retirez des blocs.",
+      "description": "Mode édition: déplacez, redimensionnez, ajoutez ou retirez des blocs.",
       "edit": "Modifier le dashboard",
       "done": "Terminer",
       "toolbox_title": "Blocs disponibles",
@@ -4043,17 +4066,18 @@
       "participants_count": "{count, plural, one {{count} participant} other {{count} participants}}",
       "input_placeholder": "Écrivez un message… (Entrée pour envoyer, Maj+Entrée pour saut de ligne)",
       "send": "Envoyer",
-      "uploading": "Televersement...",
+      "uploading": "Envoi en cours...",
       "attach_file": "Joindre un fichier",
       "load_more": "Charger les messages précédents",
       "send_error": "Échec de l'envoi du message",
       "load_more_error": "Impossible de charger les messages précédents",
-      "pdf_preview_unavailable": "Apercu indisponible. Ouvrir le fichier pour le consulter.",
-      "spreadsheet_preview_unavailable": "Apercu du tableur indisponible. Telecharger le fichier pour le consulter.",
-      "text_preview_unavailable": "Apercu du fichier texte indisponible.",
-      "office_preview_unavailable": "Apercu non disponible pour ce format Office.",
-      "status_sent": "Envoye",
-      "status_read": "Lu"
+      "pdf_preview_unavailable": "Aperçu indisponible. Ouvrir le fichier pour le consulter.",
+      "spreadsheet_preview_unavailable": "Aperçu du tableur indisponible. Télécharger le fichier pour le consulter.",
+      "text_preview_unavailable": "Aperçu du fichier texte indisponible.",
+      "office_preview_unavailable": "Aperçu non disponible pour ce format Office.",
+      "status_sent": "Envoyé",
+      "status_read": "Lu",
+      "open_details": "Voir les détails"
     },
     "new_conversation": {
       "title": "Nouvelle conversation",
@@ -4314,11 +4338,11 @@
     "hero": {
       "eyebrow": "Transport contrôle",
       "title": "Pilotage VigiLog",
-      "description": "Préparez les configurations de VigiLog, lancez les tournées au depart, réceptionnez les retours et suivez les alarmes."
+      "description": "Préparez les configurations de VigiLog, lancez les tournées au départ, réceptionnez les retours et suivez les alarmes."
     },
     "stats": {
       "configurations": "Configurations",
-      "pending": "En attente de reception",
+      "pending": "En attente de réception",
       "alarms": "Tournées en alarme"
     },
     "tabs": {
@@ -4390,8 +4414,8 @@
         "errorTitle": "État du VigiLog indisponible",
         "errorDescription": "Impossible de vérifier l'état de la base VigiLog.",
         "busyTitle": "Communication avec le VigiLog en cours",
-        "busyDescription": "La base est deja utilisee pour une operation VigiLog. Patientez jusqu a la fin de la preparation ou de la lecture.",
-        "optionalHint": "La creation de tournée reste possible sans base USB. La preparation du VigiLog sur base est une action distincte."
+        "busyDescription": "La base est deja utilisee pour une operation VigiLog. Patientez jusqu'à la fin de la préparation ou de la lecture.",
+        "optionalHint": "La création de tournée reste possible sans base USB. La préparation du VigiLog sur base est une action distincte."
       }
     },
     "arrival": {
@@ -4527,16 +4551,16 @@
       },
       "status": {
         "all": "Tous",
-        "pendingReception": "En attente de reception",
+        "pendingReception": "En attente de réception",
         "received": "Reçue",
         "analysed": "Analysée",
         "acknowledged": "Acquittée",
         "cancelled": "Annulée",
-        "en_attente_reception": "En attente de reception",
+        "en_attente_reception": "En attente de réception",
         "analysee": "Analysée",
-        "recue": "Recue",
-        "acquittee": "Acquittee",
-        "annulee": "Annulee"
+        "recue": "Reçue",
+        "acquittee": "Acquittée",
+        "annulee": "Annulée"
       }
     },
     "feedback": {
@@ -4554,20 +4578,20 @@
       },
       "departureCreated": {
         "title": "Tournée créée",
-        "description": "La tournée {reference} a ete créée et attend sa reception."
+        "description": "La tournée {reference} a ete créée et attend sa réception."
       },
       "departureError": {
         "title": "Création impossible",
         "description": "La tournée VigiLog n'a pas pu être créée."
       },
       "prepareSuccess": {
-        "title": "VigiLog prepare",
-        "description": "Le VigiLog {serial} a ete prepare sur la base.",
-        "fallback": "Le VigiLog a ete prepare sur la base."
+        "title": "VigiLog préparé",
+        "description": "Le VigiLog {serial} a ete préparé sur la base.",
+        "fallback": "Le VigiLog a ete préparé sur la base."
       },
       "prepareError": {
-        "title": "Preparation impossible",
-        "description": "Le VigiLog n'a pas pu etre prepare sur la base."
+        "title": "Préparation impossible",
+        "description": "Le VigiLog n'a pas pu être préparé sur la base."
       },
       "receiveSuccess": {
         "title": "Réception validée",
@@ -4575,7 +4599,7 @@
       },
       "receiveError": {
         "title": "Réception impossible",
-        "description": "La reception de la tournée a échoué."
+        "description": "La réception de la tournée a échoué."
       },
       "ackSuccess": {
         "title": "Tournée acquittée",
@@ -4586,17 +4610,17 @@
         "description": "L'acquittement de la tournée a échoué."
       },
       "probeSuccess": {
-        "title": "lors des tournées tournées",
-        "description": "Le lors des tournées {serial} est détecté sur la base.",
-        "fallback": "Un lors des tournées a ete tournées sur la base."
+        "title": "VigiLog détecté",
+        "description": "Le VigiLog {serial} est détecté sur la base.",
+        "fallback": "Un VigiLog a été détecté sur la base."
       },
       "probeError": {
         "title": "Detection impossible",
         "description": "Impossible de detecter un VigiLog sur la base."
       },
       "loggerSerialMissing": {
-        "title": "Numéro de serie manquant",
-        "description": "Aucun numéro de serie lors des tournées n'a pu être determiné."
+        "title": "Numéro de série manquant",
+        "description": "Aucun numéro de série VigiLog n'a pu être determiné."
       },
       "detailError": {
         "title": "Chargement impossible",

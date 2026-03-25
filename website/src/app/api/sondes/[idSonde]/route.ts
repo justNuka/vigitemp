@@ -4,6 +4,7 @@ import { z } from "zod"
 import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
+import { auditRouteUpdate } from "@/lib/audit-route"
 import { prisma } from "@/lib/prisma"
 import { log } from "@/lib/logger"
 
@@ -110,19 +111,22 @@ export const PATCH = withAuthLogging(
         invalidatedEtalonnages,
       })
 
-      const changedSondeFields: Record<string, unknown> = {}
-      if (data.moduleId !== undefined && Number(existing.Id_Module) !== Number(updated.Id_Module)) {
-        changedSondeFields.moduleId = { from: existing.Id_Module, to: updated.Id_Module }
-      }
-      if (offsetChanged) {
-        changedSondeFields.sondeOffset = { from: existing.Sonde_Offset, to: updated.Sonde_Offset }
-        if (invalidatedEtalonnages > 0) {
-          changedSondeFields.invalidatedEtalonnages = invalidatedEtalonnages
-          changedSondeFields.invalidatedEtalonnageMeasures = invalidatedEtalonnageMeasures
-        }
-      }
-
-      log.data.update("Sonde", updated.Id_Sonde, ctx.user.username, ctx.user.userId, ip, changedSondeFields)
+      auditRouteUpdate(req, ctx.user, {
+        resource: "Sonde",
+        resourceId: updated.Id_Sonde,
+        before: {
+          Id_Module: existing.Id_Module,
+          Port_Serie: existing.Port_Serie,
+          Sonde_Offset: existing.Sonde_Offset,
+        },
+        after: {
+          Id_Module: updated.Id_Module,
+          Port_Serie: updated.Port_Serie,
+          Sonde_Offset: updated.Sonde_Offset,
+          invalidatedEtalonnages: invalidatedEtalonnages || null,
+          invalidatedEtalonnageMeasures: invalidatedEtalonnageMeasures || null,
+        },
+      })
 
       return apiOk({
         Id_Sonde: updated.Id_Sonde,

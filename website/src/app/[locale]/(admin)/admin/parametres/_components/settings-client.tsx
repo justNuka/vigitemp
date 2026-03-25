@@ -64,7 +64,6 @@ function getTranslatedLabel(t: ReturnType<typeof useTranslations>, setting: Sett
     "notifications:alarm_email_recipients": t("notifications.cc_recipients_label"),
     "notifications:alarm_email_acknowledged": t("notifications.acknowledged_toggle"),
     "notifications:alarm_email_ended": t("notifications.ended_toggle"),
-    "notifications:sms": t("general.labels.notifications_sms"),
     "alarms:sound": t("general.labels.alarms_sound"),
     "dashboard:refresh": t("general.labels.dashboard_refresh"),
     "dashboard:surveillance_refresh": t("general.labels.surveillance_refresh"),

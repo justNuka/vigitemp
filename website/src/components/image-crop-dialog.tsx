@@ -35,7 +35,7 @@ export function ImageCropDialog({
   cancelLabel = "Annuler",
   confirmLabel = "Valider",
   zoomLabel = "Zoom",
-  resetLabel = "Réinitialiser",
+  resetLabel = "Reinitialiser",
 }: Props) {
   const imgRef = useRef<HTMLImageElement | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -107,15 +107,15 @@ export function ImageCropDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-155 border-slate-700 bg-[#1f2937] text-slate-100">
+      <DialogContent className="max-w-155 border-border bg-background text-foreground shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-3xl font-bold tracking-tight">{title}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-5">
-          <div className="mx-auto rounded-lg border border-slate-700 bg-[#111827] p-4">
+          <div className="mx-auto rounded-lg border border-border bg-muted/40 p-4">
             <div
-              className="relative overflow-hidden rounded-lg bg-[#0b1220] touch-none"
+              className="relative overflow-hidden rounded-lg border border-border/70 bg-background touch-none"
               style={{ width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT }}
               onPointerDown={(event) => {
                 dragRef.current = { x: event.clientX, y: event.clientY }
@@ -167,11 +167,11 @@ export function ImageCropDialog({
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  background: `radial-gradient(circle ${SELECTION_SIZE / 2}px at 50% 50%, rgba(17,24,39,0) 0 ${SELECTION_SIZE / 2 - 2}px, rgba(17,24,39,0.62) ${SELECTION_SIZE / 2}px)`
+                  background: `radial-gradient(circle ${SELECTION_SIZE / 2}px at 50% 50%, rgba(15,23,42,0) 0 ${SELECTION_SIZE / 2 - 2}px, rgba(15,23,42,0.38) ${SELECTION_SIZE / 2}px)`
                 }}
               />
               <div
-                className="absolute left-1/2 top-1/2 pointer-events-none rounded-full border-4 border-white/95"
+                className="absolute left-1/2 top-1/2 pointer-events-none rounded-full border-4 border-primary/90 shadow-[0_0_0_9999px_rgba(0,0,0,0.02)]"
                 style={{
                   width: SELECTION_SIZE,
                   height: SELECTION_SIZE,
@@ -182,9 +182,9 @@ export function ImageCropDialog({
           </div>
 
           <div className="flex items-center justify-center gap-4">
-            <ImageMinus className="h-4 w-4 text-slate-300" />
+            <ImageMinus className="h-4 w-4 text-muted-foreground" />
             <div className="w-70">
-              <div className="mb-1 text-center text-xs text-slate-400">{zoomLabel}</div>
+              <div className="mb-1 text-center text-xs text-muted-foreground">{zoomLabel}</div>
               <input
                 type="range"
                 min={1}
@@ -192,10 +192,10 @@ export function ImageCropDialog({
                 step={0.01}
                 value={zoom}
                 onChange={(event) => setZoom(Number(event.target.value))}
-                className="w-full accent-indigo-500"
+                className="w-full accent-primary"
               />
             </div>
-            <ImagePlus className="h-4 w-4 text-slate-300" />
+            <ImagePlus className="h-4 w-4 text-muted-foreground" />
           </div>
         </div>
 
@@ -203,7 +203,7 @@ export function ImageCropDialog({
           <Button
             type="button"
             variant="ghost"
-            className="text-slate-300 hover:text-white hover:bg-slate-700/60"
+            className="text-muted-foreground hover:text-foreground"
             onClick={() => {
               setZoom(1)
               setOffset({ x: 0, y: 0 })
@@ -216,14 +216,12 @@ export function ImageCropDialog({
             <Button
               type="button"
               variant="secondary"
-              className="bg-slate-700 text-slate-100 hover:bg-slate-600"
               onClick={() => onOpenChange(false)}
             >
               {cancelLabel}
             </Button>
             <Button
               type="button"
-              className="bg-indigo-500 text-white hover:bg-indigo-400"
               onClick={applyCrop}
               disabled={!file}
             >

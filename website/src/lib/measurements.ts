@@ -131,3 +131,42 @@ export function calculateYDomainFromMeasures(measures: MeasureData[]): [number, 
 }
 
 
+export function getTimeAxisSpanMs(
+  measures: Array<Pick<MeasureData, "DateHeureMesureIso" | "DateHeureMesure">>,
+): number {
+  if (measures.length <= 1) return 0
+  const first = getMeasureTimestamp(measures[0])
+  const last = getMeasureTimestamp(measures[measures.length - 1])
+  if (!Number.isFinite(first) || !Number.isFinite(last)) return 0
+  return Math.max(0, last - first)
+}
+
+export function formatTimeAxisLabel(
+  value: string | Date,
+  locale = "fr-FR",
+  spanMs = 0,
+): string | string[] {
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return typeof value === "string" ? value : ""
+  }
+
+  if (spanMs >= 24 * 60 * 60 * 1000) {
+    return [
+      new Intl.DateTimeFormat(locale, {
+        day: "2-digit",
+        month: "2-digit",
+      }).format(date),
+      new Intl.DateTimeFormat(locale, {
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(date),
+    ]
+  }
+
+  return new Intl.DateTimeFormat(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date)
+}
+

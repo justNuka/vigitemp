@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO.Ports;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Vigitemp_Serveur.sensors
@@ -14,9 +12,31 @@ namespace Vigitemp_Serveur.sensors
         private const int BufferDrainMs = 400;
         private const int EndOfResponseSilenceMs = 500;
         private const int InterCommandDelayMs = 150;
+        private const int ClockCheckIntervalHours = 6;
+        private const int ClockDriftWarningSeconds = 120;
+        private const int ClockDriftCriticalSeconds = 600;
+        private const int BatteryWarningPercent = 30;
+        private const int BatteryCriticalPercent = 15;
+
+        private const int MemoBatchReadTimeoutMsShort = 10000;
+        private const int MemoBatchReadTimeoutMsMedium = 30000;
+        private const int MemoBatchReadTimeoutMsLarge = 90000;
+        private const int MemoBatchReadTimeoutMsVeryLarge = 180000;
+        private const int MemoBatchListenWindowMsShort = 1000;
+        private const int MemoBatchListenWindowMsMedium = 5000;
+        private const int MemoBatchListenWindowMsLarge = 15000;
+        private const int MemoBatchListenWindowMsVeryLarge = 30000;
+
         private readonly int _frequencySeconds;
         private readonly bool _synchronizeConfiguration;
         private readonly string _commandTarget;
+
+        private DateTime? _lastSuccessfulProbeDateTime;
+        private int? _lastBatteryPercent;
+        private int? _lastRssi;
+        private DateTime? _lastDateTimeCheckUtc;
+        private int _consecutiveTimeouts;
+        private string _lastBatteryStatus;
 
         public SensorGSP(
             ThreadServeur p_ths,
@@ -66,7 +86,8 @@ namespace Vigitemp_Serveur.sensors
 
                 if (string.IsNullOrWhiteSpace(response))
                 {
-                    VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=timeout");
+                    _consecutiveTimeouts++;
+                    VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=timeout consecutiveTimeouts={_consecutiveTimeouts}");
                     HandleNoResponseAlarm(false, "timeout");
                     return false;
                 }
@@ -74,22 +95,34 @@ namespace Vigitemp_Serveur.sensors
                 var detectedSerials = GspProtocol.ExtractDetectedSerials(response);
                 VigitempServeur.Log($"[SONDE][INFO] type=GSP serial={m_sondeSerialNumber} port={m_comPort} detectedSerials={(detectedSerials.Count == 0 ? "<none>" : string.Join(",", detectedSerials))}");
 
-                if (!GspProtocol.TryExtractTemperature(response, _commandTarget, out var rawValue))
+                if (!GspProtocol.TryParseTemperatureResponse(response, _commandTarget, out var parsed) || !parsed.Temperature.HasValue)
                 {
+                    _consecutiveTimeouts++;
                     VigitempServeur.Log($"[SONDE][ERR] type=GSP serial={m_sondeSerialNumber} port={m_comPort} parse=temperature rawResponse={response}");
                     HandleNoResponseAlarm(false, "parse");
                     return false;
                 }
 
+                var hadTimeoutBeforeSuccess = _consecutiveTimeouts > 0;
+                _consecutiveTimeouts = 0;
+
+                LogClockHealth(parsed, hadTimeoutBeforeSuccess);
+                LogMeasurementGap(parsed);
+                LogBatteryHealth(parsed);
+                LogSignalHealth(parsed);
+
+                var rawValue = parsed.Temperature.Value;
                 var measuredValue = RoundMeasure(ApplyMetrology(rawValue));
-                ths.GetDatabase().AddMesure(m_sondeSerialNumber, measuredValue, "°C", ToInvariantRaw(rawValue));
-                VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=success value={measuredValue.ToString(CultureInfo.InvariantCulture)} unit=°C raw={ToInvariantRaw(rawValue)}");
+                ths.GetDatabase().AddMesure(m_sondeSerialNumber, measuredValue, "C", ToInvariantRaw(rawValue));
+                ths.GetDatabase().UpdateLieuWirelessMetrics(m_sondeSerialNumber, parsed.BatteryPercent, parsed.Rssi);
+                VigitempServeur.Log($"[SONDE][DONE] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=success value={measuredValue.ToString(CultureInfo.InvariantCulture)} unit=C raw={ToInvariantRaw(rawValue)}");
                 HandleNoResponseAlarm(true);
-                compareMeasuresAndLimits(measuredValue, "°C");
+                compareMeasuresAndLimits(measuredValue, "C");
                 return true;
             }
             catch (Exception ex)
             {
+                _consecutiveTimeouts++;
                 VigitempServeur.Log($"[SONDE][ERR] type=GSP serial={m_sondeSerialNumber} port={m_comPort} error={ex}");
                 HandleNoResponseAlarm(false, "exception");
                 return false;
@@ -156,12 +189,63 @@ namespace Vigitemp_Serveur.sensors
                 frequencySeconds: _frequencySeconds);
         }
 
+        public async Task<GspMemoResponse> ReadMemoryChunkAsync(int memoryCount, int memoryOffset)
+        {
+            var safeCount = Math.Max(1, memoryCount);
+            var safeOffset = Math.Max(0, memoryOffset);
+            var payload = safeCount.ToString(CultureInfo.InvariantCulture) + "x" + safeOffset.ToString(CultureInfo.InvariantCulture) + "o";
+            var originalReadTimeout = m_port.ReadTimeout;
+
+            try
+            {
+                pendingResults = true;
+                m_port.Open();
+                m_port.DiscardInBuffer();
+                m_port.DiscardOutBuffer();
+                m_port.ReadTimeout = GetRecommendedMemoReadTimeoutMs(safeCount);
+
+                VigitempServeur.Log(
+                    $"[SONDE][MEMO] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=start count={safeCount} offset={safeOffset} readTimeoutMs={m_port.ReadTimeout} listenWindowMs={GetRecommendedMemoListenWindowMs(safeCount)}");
+
+                var response = await SendRequestAndReadAsync("MEMO", payload, false, GetRecommendedMemoListenWindowMs(safeCount));
+                if (string.IsNullOrWhiteSpace(response))
+                {
+                    VigitempServeur.Log($"[SONDE][MEMO] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=timeout count={safeCount} offset={safeOffset}");
+                    return null;
+                }
+
+                if (!GspProtocol.TryParseMemoResponse(response, _commandTarget, out var parsed))
+                {
+                    VigitempServeur.Log($"[SONDE][MEMO] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=parse-error count={safeCount} offset={safeOffset} raw={response}");
+                    return null;
+                }
+
+                VigitempServeur.Log(
+                    $"[SONDE][MEMO] type=GSP serial={m_sondeSerialNumber} port={m_comPort} status=success count={safeCount} offset={safeOffset} returned={parsed.ReturnedCount ?? parsed.Measurements.Count} parsedOffset={(parsed.Offset.HasValue ? parsed.Offset.Value.ToString(CultureInfo.InvariantCulture) : "null")}");
+                return parsed;
+            }
+            finally
+            {
+                pendingResults = false;
+                m_port.ReadTimeout = originalReadTimeout;
+                if (m_port.IsOpen)
+                {
+                    m_port.Close();
+                }
+            }
+        }
+
         private async Task<string> SendRequestAndReadAsync(string commandPrefix, bool allowEmptyResponse)
         {
             return await SendRequestAndReadAsync(commandPrefix, string.Empty, allowEmptyResponse);
         }
 
         private async Task<string> SendRequestAndReadAsync(string commandPrefix, string payload, bool allowEmptyResponse)
+        {
+            return await SendRequestAndReadAsync(commandPrefix, payload, allowEmptyResponse, EndOfResponseSilenceMs);
+        }
+
+        private async Task<string> SendRequestAndReadAsync(string commandPrefix, string payload, bool allowEmptyResponse, int endOfResponseSilenceMs)
         {
             var command = GspProtocol.BuildCommand(commandPrefix, _commandTarget, payload);
             foreach (var candidate in GspProtocol.BuildCandidateCommands(command))
@@ -178,7 +262,7 @@ namespace Vigitemp_Serveur.sensors
                 m_port.Write(candidate);
                 await Task.Delay(InterCommandDelayMs);
 
-                var response = await ReadResponseAsync();
+                var response = await ReadResponseAsync(endOfResponseSilenceMs);
                 if (!string.IsNullOrWhiteSpace(response))
                 {
                     VigitempServeur.Log($"[SONDE][RX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} raw={response}");
@@ -197,19 +281,19 @@ namespace Vigitemp_Serveur.sensors
             return string.Empty;
         }
 
-        private async Task<string> ReadResponseAsync()
+        private async Task<string> ReadResponseAsync(int endOfResponseSilenceMs)
         {
             var startedAt = DateTime.UtcNow;
             var buffer = string.Empty;
             DateTime? lastDataAt = null;
-            while ((DateTime.UtcNow - startedAt).TotalMilliseconds < ReadTimeoutMs)
+            while ((DateTime.UtcNow - startedAt).TotalMilliseconds < m_port.ReadTimeout)
             {
                 await Task.Delay(50);
 
                 var chunk = m_port.ReadExisting();
                 if (string.IsNullOrEmpty(chunk))
                 {
-                    if (lastDataAt.HasValue && (DateTime.UtcNow - lastDataAt.Value).TotalMilliseconds >= EndOfResponseSilenceMs)
+                    if (lastDataAt.HasValue && (DateTime.UtcNow - lastDataAt.Value).TotalMilliseconds >= endOfResponseSilenceMs)
                     {
                         break;
                     }
@@ -247,6 +331,117 @@ namespace Vigitemp_Serveur.sensors
             }
 
             return buffer.Trim();
+        }
+
+        private void LogClockHealth(GspTemperatureResponse parsed, bool hadTimeoutBeforeSuccess)
+        {
+            if (!parsed.ProbeDateTime.HasValue)
+            {
+                return;
+            }
+
+            var nowUtc = DateTime.UtcNow;
+            var shouldCheck = hadTimeoutBeforeSuccess
+                || !_lastDateTimeCheckUtc.HasValue
+                || (nowUtc - _lastDateTimeCheckUtc.Value).TotalHours >= ClockCheckIntervalHours;
+
+            if (!shouldCheck)
+            {
+                return;
+            }
+
+            _lastDateTimeCheckUtc = nowUtc;
+            var driftSeconds = Math.Abs((DateTime.Now - parsed.ProbeDateTime.Value).TotalSeconds);
+            var status = driftSeconds >= ClockDriftCriticalSeconds
+                ? "critical"
+                : driftSeconds >= ClockDriftWarningSeconds
+                    ? "warning"
+                    : "ok";
+
+            VigitempServeur.Log(
+                $"[SONDE][TIME] type=GSP serial={m_sondeSerialNumber} probe={parsed.ProbeDateTime.Value:O} server={DateTime.Now:O} driftSec={Math.Round(driftSeconds, 0, MidpointRounding.AwayFromZero)} status={status}");
+        }
+
+        private void LogMeasurementGap(GspTemperatureResponse parsed)
+        {
+            if (!parsed.ProbeDateTime.HasValue)
+            {
+                return;
+            }
+
+            var previousProbeDateTime = _lastSuccessfulProbeDateTime;
+            _lastSuccessfulProbeDateTime = parsed.ProbeDateTime;
+
+            if (!previousProbeDateTime.HasValue || _frequencySeconds <= 0)
+            {
+                return;
+            }
+
+            var gapSeconds = (parsed.ProbeDateTime.Value - previousProbeDateTime.Value).TotalSeconds;
+            if (gapSeconds <= 0)
+            {
+                return;
+            }
+
+            var thresholdSeconds = _frequencySeconds * 2.5d;
+            if (gapSeconds > thresholdSeconds)
+            {
+                var missingCount = Math.Max(1, (int)Math.Floor(gapSeconds / _frequencySeconds) - 1);
+                VigitempServeur.Log(
+                    $"[SONDE][GAP] type=GSP serial={m_sondeSerialNumber} previous={previousProbeDateTime.Value:O} current={parsed.ProbeDateTime.Value:O} expectedSec={_frequencySeconds} actualSec={Math.Round(gapSeconds, 0, MidpointRounding.AwayFromZero)} status=anomaly missingCount={missingCount}");
+                ths.EnqueueGspRecovery(m_sondeSerialNumber, previousProbeDateTime.Value, parsed.ProbeDateTime.Value, missingCount);
+            }
+        }
+
+        private void LogBatteryHealth(GspTemperatureResponse parsed)
+        {
+            if (!parsed.BatteryPercent.HasValue)
+            {
+                return;
+            }
+
+            _lastBatteryPercent = parsed.BatteryPercent;
+            var status = parsed.BatteryPercent.Value <= BatteryCriticalPercent
+                ? "critical"
+                : parsed.BatteryPercent.Value <= BatteryWarningPercent
+                    ? "warning"
+                    : "ok";
+
+            if (!string.Equals(status, _lastBatteryStatus, StringComparison.OrdinalIgnoreCase))
+            {
+                VigitempServeur.Log($"[SONDE][BAT] type=GSP serial={m_sondeSerialNumber} battery={parsed.BatteryPercent.Value} status={status}");
+                _lastBatteryStatus = status;
+            }
+        }
+
+        private void LogSignalHealth(GspTemperatureResponse parsed)
+        {
+            if (!parsed.Rssi.HasValue)
+            {
+                return;
+            }
+
+            if (_lastRssi != parsed.Rssi.Value)
+            {
+                VigitempServeur.Log($"[SONDE][RSSI] type=GSP serial={m_sondeSerialNumber} rssi={parsed.Rssi.Value}");
+                _lastRssi = parsed.Rssi.Value;
+            }
+        }
+
+        private static int GetRecommendedMemoReadTimeoutMs(int memoryCount)
+        {
+            if (memoryCount <= 20) return MemoBatchReadTimeoutMsShort;
+            if (memoryCount <= 100) return MemoBatchReadTimeoutMsMedium;
+            if (memoryCount <= 500) return MemoBatchReadTimeoutMsLarge;
+            return MemoBatchReadTimeoutMsVeryLarge;
+        }
+
+        private static int GetRecommendedMemoListenWindowMs(int memoryCount)
+        {
+            if (memoryCount <= 20) return MemoBatchListenWindowMsShort;
+            if (memoryCount <= 100) return MemoBatchListenWindowMsMedium;
+            if (memoryCount <= 500) return MemoBatchListenWindowMsLarge;
+            return MemoBatchListenWindowMsVeryLarge;
         }
 
         private static string EscapeForLog(string value)

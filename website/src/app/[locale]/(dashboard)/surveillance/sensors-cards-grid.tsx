@@ -125,6 +125,7 @@ export function SensorsCardsGrid({
                 sondeNumeroSerie={sensor.location.sondeNumeroSerie ?? ""}
                 isGso={sensor.location.isGso ?? null}
                 gsoRssi={sensor.location.gsoRssi ?? null}
+                batteryPercent={sensor.location.batteryPercent ?? null}
                 gsoTension={sensor.location.gsoTension ?? null}
                 onSurveillanceToggle={handleSurveillanceToggle}
                 onEditLocation={onEditLocation}

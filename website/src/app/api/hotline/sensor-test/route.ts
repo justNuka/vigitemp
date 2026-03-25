@@ -14,6 +14,7 @@ const gspSchema = z.object({
   alarmDelayMinutes: z.number().int().nullable().optional(),
   channel: z.string().optional(),
   memoryCount: z.number().int().nullable().optional(),
+  memoryOffset: z.number().int().nullable().optional(),
   customCommandPrefix: z.string().optional(),
   customPayload: z.string().optional(),
   rawCommand: z.string().optional(),

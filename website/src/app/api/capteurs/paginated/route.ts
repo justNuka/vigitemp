@@ -280,6 +280,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
             comment: location.Commentaire ?? null,
             isGso: isGso ?? null,
             gsoRssi: location.Derniere_Val_Rssi ?? null,
+            batteryPercent: location.Derniere_Val_Batterie ?? null,
             gsoTension: location.Derniere_Val_Tension ?? null,
             siteId: location.Id_Site,
             groupIds: locationGroupIds,

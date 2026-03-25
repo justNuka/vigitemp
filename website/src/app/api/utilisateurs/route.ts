@@ -90,7 +90,10 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: HandlerContex
     })
 
     if (data.avatar !== undefined) {
-      await setUserAvatarValue(user.Id_Utilisateur, data.avatar || null)
+      const avatarSaved = await setUserAvatarValue(user.Id_Utilisateur, data.avatar || null)
+      if (!avatarSaved) {
+        return apiError(500, "avatar_update_unavailable", "Impossible d'enregistrer l'avatar")
+      }
     }
 
     log.data.create("Utilisateur", user.Id_Utilisateur, ctx.user.username, ctx.user.userId, ip, {

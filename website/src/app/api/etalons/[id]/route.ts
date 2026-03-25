@@ -5,6 +5,7 @@ import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { log } from "@/lib/logger"
 import { getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
+import { auditRouteDelete, auditRouteUpdate } from "@/lib/audit-route"
 import { requireStandardOrExpertLicense } from "@/lib/license-guards"
 
 const updateEtalonSchema = z.object({
@@ -70,9 +71,34 @@ export const PATCH = withAuthLogging(
         },
       })
 
-      log.data.update("Etalon", etalonId, ctx.user.username, ctx.user.userId, ip, {
-        serie: data.Etalon_Numero_Serie,
-        etat: data.Etat_Etalon,
+      auditRouteUpdate(req, ctx.user, {
+        resource: "Etalon",
+        resourceId: etalonId,
+        before: {
+          Etat_Etalon: existingEtalon.Etat_Etalon,
+          Port_Serie: existingEtalon.Port_Serie,
+          Resolution: existingEtalon.Resolution,
+          Incertitude: existingEtalon.Incertitude,
+          Nb_Decimale: existingEtalon.Nb_Decimale,
+          Reserve_MC2: existingEtalon.Reserve_MC2,
+          Id_Serveur: existingEtalon.Id_Serveur,
+          Id_Module: existingEtalon.Id_Module,
+        },
+        after: {
+          Etat_Etalon: updatedEtalon.Etat_Etalon,
+          Port_Serie: updatedEtalon.Port_Serie,
+          Resolution: updatedEtalon.Resolution,
+          Incertitude: updatedEtalon.Incertitude,
+          Nb_Decimale: updatedEtalon.Nb_Decimale,
+          Reserve_MC2: updatedEtalon.Reserve_MC2,
+          Id_Serveur: updatedEtalon.Id_Serveur,
+          Id_Module: updatedEtalon.Id_Module,
+          Certificat_Numero: data.Numero,
+          Certificat_Organisme: data.Organisme,
+          Certificat_Date: data.Date,
+          Certificat_Unite: data.Unite,
+          Certificat_Mesures: data.mesures?.length ?? 0,
+        },
       })
 
       if (data.Numero || data.Organisme || data.Date || data.Unite) {
@@ -175,7 +201,12 @@ export const DELETE = withAuthLogging(
         data: { Est_Archive: true },
       })
 
-      log.data.delete("Etalon", etalonId, ctx.user.username, ctx.user.userId, ip, `Archivage etalon ${existingEtalon.Etalon_Numero_Serie}`)
+      auditRouteDelete(req, ctx.user, {
+        resource: "Etalon",
+        resourceId: etalonId,
+        reason: `Archivage etalon ${existingEtalon.Etalon_Numero_Serie}`,
+        data: { Etalon_Numero_Serie: existingEtalon.Etalon_Numero_Serie },
+      })
 
       return apiOk({ Id_Etalon: updated.Id_Etalon, Est_Archive: updated.Est_Archive })
     } catch (error) {

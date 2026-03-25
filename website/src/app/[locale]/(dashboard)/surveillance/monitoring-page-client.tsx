@@ -53,7 +53,7 @@ interface Props {
 export function SurveillancePageClient({ initialStats, sites, groups, refreshIntervalSeconds, showNullNonResponse: initialShowNullNonResponse }: Props) {
   const t = useTranslations("surveillance");
   const [viewMode, setViewMode] = useState<ViewMode>("graphs");
-  const [filters, setFilters] = useState<FilterState>({ siteIds: [], groupIds: [], sortMode: "status" });
+  const [filters, setFilters] = useState<FilterState>({ siteIds: [], groupIds: [], searchTerm: "", sortMode: "status" });
   const [disabledFirst, setDisabledFirst] = useState(true);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [showNullNonResponse] = useState(initialShowNullNonResponse);

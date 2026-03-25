@@ -5,6 +5,7 @@ export type SurveillanceSortMode = "status" | "alphabetical"
 export type FilterState = {
   siteIds: number[]
   groupIds: number[]
+  searchTerm: string
   sortMode: SurveillanceSortMode
 }
 
@@ -24,6 +25,17 @@ function compareByLocationName(a: SensorWithLocation, b: SensorWithLocation) {
 
 export function applySurveillanceFilters(sensors: SensorWithLocation[], filters: FilterState) {
   let result = sensors
+
+  const normalizedSearch = filters.searchTerm.trim().toLocaleLowerCase("fr")
+  if (normalizedSearch) {
+    result = result.filter((s) => {
+      const haystacks = [s.location.name, s.name, s.location.sondeNumeroSerie]
+        .filter((value): value is string => typeof value === "string" && value.length > 0)
+        .map((value) => value.toLocaleLowerCase("fr"))
+
+      return haystacks.some((value) => value.includes(normalizedSearch))
+    })
+  }
 
   if (filters.siteIds.length > 0) {
     result = result.filter((s) => s.location.siteId && filters.siteIds.includes(s.location.siteId))
@@ -79,3 +91,4 @@ export function sortSensorsByStatus(sensors: SensorWithLocation[]) {
 export function sortSensors(sensors: SensorWithLocation[], sortMode: SurveillanceSortMode) {
   return sortMode === "alphabetical" ? [...sensors].sort(compareByLocationName) : sortSensorsByStatus(sensors)
 }
+

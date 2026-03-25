@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getClientIp } from "@/lib/api-logger"
 import { withAnyAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
+import { auditRouteUpdate } from "@/lib/audit-route"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { clearVigilogAgent, readVigilogAgent } from "@/lib/vigilog-agent"
@@ -34,7 +35,7 @@ export const POST = withAnyAuthorizationLogging(
         return apiError(404, "not_found", "Tournee VigiLog introuvable")
       }
       if (existing.Statut !== "EN_ATTENTE_RECEPTION") {
-        return apiError(409, "invalid_status", "Cette tournee n'est pas en attente de reception")
+        return apiError(409, "invalid_status", "Cette tournee n'est pas en attente de réception")
       }
 
       const linkedLogger = existing.Id_VigiLog
@@ -123,13 +124,13 @@ export const POST = withAnyAuthorizationLogging(
         )
       }
 
-      log.data.update(
-        "Tournee VigiLog",
-        updated.Id_VigiLog_Tournee,
-        ctx.user.username,
-        ctx.user.userId,
-        getClientIp(req),
-        {
+      log.audit("VLOG", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        ip: getClientIp(req),
+        resource: "Tournee VigiLog",
+        resourceId: updated.Id_VigiLog_Tournee,
+        changes: {
           action: "receive_from_agent",
           reference: updated.Reference_Tournee,
           loggerSerial: agentSerial || updated.Numero_Serie_VigiLog,
@@ -137,8 +138,31 @@ export const POST = withAnyAuthorizationLogging(
           trafficLight: analysis.trafficLight,
           hasAlarm: analysis.hasAlarm,
           clearedAfterReceive: clearSucceeded,
+          status: updated.Statut,
         },
-      )
+      })
+
+      auditRouteUpdate(req, ctx.user, {
+        resource: "Tournee VigiLog",
+        resourceId: updated.Id_VigiLog_Tournee,
+        before: {
+          status: existing.Statut,
+          arrivalAt: existing.Date_Heure_Arrivee,
+          trafficLight: existing.Resultat_Feu,
+          measurementCount: existing.Nb_Mesures,
+          hasAlarm: existing.Est_Alarme,
+          acknowledged: existing.Est_Acquittee,
+        },
+        after: {
+          status: updated.Statut,
+          arrivalAt: updated.Date_Heure_Arrivee,
+          trafficLight: updated.Resultat_Feu,
+          measurementCount: updated.Nb_Mesures,
+          hasAlarm: updated.Est_Alarme,
+          acknowledged: updated.Est_Acquittee,
+          clearedAfterReceive: clearSucceeded,
+        },
+      })
 
       return apiOk({
         id: updated.Id_VigiLog_Tournee,

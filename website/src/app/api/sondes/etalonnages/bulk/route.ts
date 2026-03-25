@@ -194,6 +194,8 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
         files: validated.rows.length,
         inserted: insertedIds.length,
         skipped: skippedIds.length,
+        serials: serials.slice(0, 10),
+        fileNames: validated.rows.slice(0, 10).map((row) => row.file),
       },
       success: true,
     });

@@ -33,9 +33,6 @@ $webPrep = Join-Path $scriptRoot "website\installer\Prepare-StandaloneBuild.ps1"
 $serverPrep = Join-Path $scriptRoot "Vigitemp Serveur\installer\Prepare-ServerBuild.ps1"
 $agentPrep = Join-Path $scriptRoot "Vigitemp agent\installer\Prepare-AgentBuild.ps1"
 
-$serverProject = Join-Path $scriptRoot "Vigitemp Serveur\Vigitemp Serveur\VigitempServeur.csproj"
-$agentProject = Join-Path $scriptRoot "Vigitemp agent\Vigitemp agent\Vigitemp Agent.csproj"
-$agentWixBuild = Join-Path $scriptRoot "Vigitemp agent\installer\wix\build-msi.ps1"
 
 function Write-Banner([string]$title) {
     $line = "=" * 72
@@ -70,7 +67,7 @@ function Invoke-PrepStep {
     Write-Step "$Name"
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
     try {
-        & $ScriptPath @Arguments
+        & $ScriptPath @Arguments | Out-Host
         $sw.Stop()
         Write-StepOk ("{0} termine en {1:n1}s" -f $Name, $sw.Elapsed.TotalSeconds)
         return [pscustomobject]@{ Name = $Name; Status = "OK"; Seconds = [math]::Round($sw.Elapsed.TotalSeconds, 1) }
@@ -120,63 +117,20 @@ if ($Only -eq "All" -or $Only -eq "Website") {
     $results += Invoke-PrepStep -Name "Website" -ScriptPath $webPrep -Arguments $webArgs
 }
 
-$serverBuildResult = $null
-if (($Only -eq "All" -or $Only -eq "Server") -and -not $SkipServerBuild) {
-    $serverBuildResult = Invoke-CommandStep -Name "Build Serveur (Release)" -Command {
-        if (-not (Test-Path $serverProject)) {
-            throw "Projet serveur introuvable: $serverProject"
-        }
-        & dotnet build $serverProject -c Release -nologo
-        if ($LASTEXITCODE -ne 0) {
-            throw "dotnet build serveur a echoue (code $LASTEXITCODE)"
-        }
-    }
-    $results += $serverBuildResult
-}
-
-$serverArgs = @{}
+$serverArgs = @{ Configuration = "Release" }
 if (-not [string]::IsNullOrWhiteSpace($ServerBuildOutput)) { $serverArgs.BuildOutput = $ServerBuildOutput }
 if (-not [string]::IsNullOrWhiteSpace($ServerOutputDir)) { $serverArgs.OutputDir = $ServerOutputDir }
-$canPrepareServer = ($Only -eq "All" -or $Only -eq "Server") -and ($SkipServerBuild -or $null -eq $serverBuildResult -or $serverBuildResult.Status -eq "OK")
-if ($canPrepareServer) {
+if ($SkipServerBuild) { $serverArgs.SkipBuild = $true }
+if ($Only -eq "All" -or $Only -eq "Server") {
     $results += Invoke-PrepStep -Name "Serveur" -ScriptPath $serverPrep -Arguments $serverArgs
-} elseif ($Only -eq "All" -or $Only -eq "Server") {
-    Write-StepFail "Serveur saute (build Release en echec)"
 }
 
-$agentBuildResult = $null
-if (($Only -eq "All" -or $Only -eq "Agent") -and -not $SkipAgentBuild) {
-    $agentBuildResult = Invoke-CommandStep -Name "Build Agent (Release)" -Command {
-        if (-not (Test-Path $agentProject)) {
-            throw "Projet agent introuvable: $agentProject"
-        }
-
-        & dotnet build $agentProject -c Release -nologo /p:GenerateManifests=false
-        if ($LASTEXITCODE -ne 0) {
-            throw "dotnet build agent a echoue (code $LASTEXITCODE)"
-        }
-
-        if (-not (Test-Path $agentWixBuild)) {
-            throw "Script WiX introuvable: $agentWixBuild"
-        }
-
-        & $agentWixBuild -Configuration Release
-        if ($LASTEXITCODE -ne 0) {
-            throw "build MSI agent a echoue (code $LASTEXITCODE)"
-        }
-    }
-    $results += $agentBuildResult
-}
-
-$agentArgs = @{}
+$agentArgs = @{ Configuration = "Release" }
 if (-not [string]::IsNullOrWhiteSpace($AgentBuildOutput)) { $agentArgs.AgentBuildOutput = $AgentBuildOutput }
-if (-not [string]::IsNullOrWhiteSpace($AgentMsiPath)) { $agentArgs.MsiPath = $AgentMsiPath }
 if (-not [string]::IsNullOrWhiteSpace($AgentOutputDir)) { $agentArgs.OutputDir = $AgentOutputDir }
-$canPrepareAgent = ($Only -eq "All" -or $Only -eq "Agent") -and ($SkipAgentBuild -or $null -eq $agentBuildResult -or $agentBuildResult.Status -eq "OK")
-if ($canPrepareAgent) {
+if ($SkipAgentBuild) { $agentArgs.SkipBuild = $true }
+if ($Only -eq "All" -or $Only -eq "Agent") {
     $results += Invoke-PrepStep -Name "Agent" -ScriptPath $agentPrep -Arguments $agentArgs
-} elseif ($Only -eq "All" -or $Only -eq "Agent") {
-    Write-StepFail "Agent saute (build Release en echec)"
 }
 
 Write-Banner "Resume"
@@ -189,4 +143,5 @@ if ($hasFail) {
 }
 
 Write-Host "Toutes les etapes sont terminees avec succes." -ForegroundColor Green
+
 

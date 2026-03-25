@@ -120,7 +120,7 @@ export function AccountInfoCard({ userInfo }: Props) {
         <div className="rounded-md border p-4 space-y-3">
           <div className="flex items-center gap-3">
             <Avatar className="h-14 w-14">
-              {avatarPreview ? <AvatarImage src={avatarPreview} alt={initials} /> : null}
+              {avatarPreview ? <AvatarImage key={avatarPreview} src={avatarPreview} alt={initials} /> : null}
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <div className="flex flex-wrap items-center gap-2">
@@ -181,7 +181,7 @@ export function AccountInfoCard({ userInfo }: Props) {
                   onClick={() => setAvatarValue(value)}
                 >
                   <Avatar className="h-8 w-8 mx-auto">
-                    {previewSrc ? <AvatarImage src={previewSrc} alt={preset.id} /> : null}
+                    {previewSrc ? <AvatarImage key={previewSrc} src={previewSrc} alt={preset.id} /> : null}
                     <AvatarFallback>{initials}</AvatarFallback>
                   </Avatar>
                 </button>

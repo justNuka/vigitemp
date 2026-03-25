@@ -32,14 +32,12 @@ export const GET = withAuthLogging(
           where: {
             Id_Lieu: current.Id_Lieu,
             Date_Heure_Debut: { gte: startDate },
-            Est_Alarme_Vrai: true,
           },
         }),
         prisma.t_alarme_histo.count({
           where: {
             Id_Lieu: current.Id_Lieu,
             Date_Heure_Debut: { gte: startDate },
-            Est_Alarme_Vrai: true,
           },
         }),
       ])

@@ -361,7 +361,7 @@ export function AuditClient({ logs: initialLogs }: Props) {
             headerClassName="!bg-sidebar !text-sidebar-foreground"
             headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
             toolbarRight={
-              <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 border-primary/40" data-testid="button-refresh">
+              <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2" data-testid="button-refresh">
                 <RefreshCw className="h-4 w-4" />
                 {t("refresh")}
               </Button>

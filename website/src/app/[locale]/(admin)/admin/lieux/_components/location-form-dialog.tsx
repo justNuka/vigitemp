@@ -18,7 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLicense } from "@/components/license/license-provider";
 import { isStandardOrExpert } from "@/lib/license-access";
 import { Check, X } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { FormProvider, type UseFormReturn, useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
@@ -78,6 +78,7 @@ export function LocationFormDialog({
   const handleSubmit = resolvedForm.handleSubmit(onSubmit, (errors) => showFormValidationToast(errors));
   const memoryKey = `location-form:${mode}:${resolvedForm.watch('Id_Lieu') ?? 'new'}`;
   const resetValues = (resolvedForm.getValues() as LocationFormData) ?? getDefaultLocationFormData();
+  const [activeTab, setActiveTab] = useState<string>('general');
 
   useEffect(() => {
     if (!open || form || !formData) return;
@@ -134,7 +135,13 @@ export function LocationFormDialog({
                 saved: t('temporary_memory.saved'),
               }}
             />
-            <Tabs defaultValue="general" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              {isEdit && resolvedForm.watch('Nom_Lieu') ? (
+                <div className="mb-3 rounded-md border border-sky-200 bg-sky-50 px-4 py-2 text-sm text-sky-900 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-100">
+                  <span className="font-medium">{t('current_location_label')}</span>{' '}
+                  <span>{resolvedForm.watch('Nom_Lieu')}</span>
+                </div>
+              ) : null}
               <TabsList
                 className={`grid w-full ${hasMetrologyTabs ? "grid-cols-4" : "grid-cols-2"} bg-[#26A5DA]/10 text-[#26A5DA] border border-[#26A5DA]/30`}
               >
@@ -173,6 +180,7 @@ export function LocationFormDialog({
                 groups={groups}
                 availableSensors={availableSensors}
                 modules={modules}
+                onGoToPlanning={() => setActiveTab('planning')}
               />
               {hasMetrologyTabs && <LocationFormTabMetrology />}
               {hasMetrologyTabs && <LocationFormTabTelephony users={mailingUsers} />}

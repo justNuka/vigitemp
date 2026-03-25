@@ -44,6 +44,7 @@ interface MonitoringDetailsModalProps {
   sondeNumeroSerie: string;
   isGso?: boolean | null;
   gsoRssi?: string | null;
+  batteryPercent?: number | null;
   gsoTension?: string | null;
   consigneSup: number | null;
   consigneInf: number | null;
@@ -73,6 +74,9 @@ export default function MonitoringDetailsModal({
   idLieu,
   nomLieu,
   sondeNumeroSerie,
+  gsoRssi,
+  batteryPercent,
+  gsoTension,
   consigneSup: initialConsigneSup,
   consigneInf: initialConsigneInf,
   consigne: initialConsigne,
@@ -135,24 +139,24 @@ export default function MonitoringDetailsModal({
     return { from: dateRange.from, to: dateRange.to ?? dateRange.from };
   }, [dateRange]);
 
-  const rangeStart = useMemo(() => {
+  const explicitRangeStart = useMemo(() => {
     if (!effectiveRange?.from) return null;
     return new Date(effectiveRange.from);
   }, [effectiveRange]);
 
-  const rangeEnd = useMemo(() => {
+  const explicitRangeEnd = useMemo(() => {
     if (!effectiveRange?.to) return null;
     const end = new Date(effectiveRange.to);
     end.setHours(23, 59, 59, 999);
     return end;
   }, [effectiveRange]);
 
-  const rangeEnabled = Boolean(rangeStart && rangeEnd);
+  const rangeEnabled = Boolean(explicitRangeStart && explicitRangeEnd);
 
   const { data: rangeGraphData, isLoading: rangeGraphLoading } = useMonitoringRangeMeasurements(idLieu, {
     enabled: isOpen && rangeEnabled,
-    rangeStart,
-    rangeEnd,
+    rangeStart: explicitRangeStart,
+    rangeEnd: explicitRangeEnd,
     includeNullNonResponse: showNullNonResponse,
   });
 
@@ -170,6 +174,19 @@ export default function MonitoringDetailsModal({
       : fetchedData ?? []
     : rangeGraphData;
   const data = rangeEnabled ? rangeGraphData : baseData;
+  const fallbackHistoryRange = useMemo(() => {
+    if (rangeEnabled || !isSurveillanceActive || data.length === 0) return null;
+    const sorted = sortMeasuresChronologically(data);
+    const firstIso = sorted[0]?.DateHeureMesureIso;
+    const lastIso = sorted[sorted.length - 1]?.DateHeureMesureIso;
+    if (!firstIso || !lastIso) return null;
+    return {
+      start: new Date(firstIso),
+      end: new Date(lastIso),
+    };
+  }, [data, isSurveillanceActive, rangeEnabled]);
+  const historyRangeStart = rangeEnabled ? explicitRangeStart : fallbackHistoryRange?.start ?? null;
+  const historyRangeEnd = rangeEnabled ? explicitRangeEnd : fallbackHistoryRange?.end ?? null;
 
   const measurementSortBy = tableSorting[0]?.id === "value" ? "value" : tableSorting[0]?.id === "date" ? "date" : null;
   const measurementSortDirection =
@@ -179,8 +196,8 @@ export default function MonitoringDetailsModal({
     enabled: isOpen && !baseLoading && (isSurveillanceActive || rangeEnabled),
     pageIndex: pagination.pageIndex,
     pageSize: pagination.pageSize,
-    startDate: rangeEnabled ? rangeStart : null,
-    endDate: rangeEnabled ? rangeEnd : null,
+    startDate: historyRangeStart,
+    endDate: historyRangeEnd,
     includeNullNonResponse: showNullNonResponse,
     sortBy: measurementSortBy,
     sortDirection: measurementSortDirection,
@@ -272,7 +289,7 @@ export default function MonitoringDetailsModal({
   useEffect(() => {
     if (!isOpen) return;
     resetAuditState();
-  }, [isOpen, isSurveillanceActive, rangeEnabled, rangeStart, rangeEnd, resetAuditState]);
+  }, [isOpen, isSurveillanceActive, rangeEnabled, explicitRangeStart, explicitRangeEnd, resetAuditState]);
 
   const captureZoomBounds = useCallback((chart: ChartJS<"line">) => {
     const xScale = chart.scales?.x;
@@ -308,7 +325,7 @@ export default function MonitoringDetailsModal({
   useEffect(() => {
     if (!isOpen) return;
     setZoomBounds(null);
-  }, [idLieu, isOpen, rangeEnabled, rangeStart, rangeEnd]);
+  }, [idLieu, isOpen, rangeEnabled, explicitRangeStart, explicitRangeEnd]);
 
   const isDialogLoading = rangeEnabled ? rangeGraphLoading : baseLoading;
   const handleTableSortingChange = useCallback((updater: Updater<SortingState>) => {
@@ -324,7 +341,16 @@ export default function MonitoringDetailsModal({
       <DialogContent className="w-[95vw] max-w-7xl max-h-[95vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>{nomLieu}</DialogTitle>
-          <p className="text-sm text-muted-foreground">{t("sensor", { serial: sondeNumeroSerie })}</p>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">{t("sensor", { serial: sondeNumeroSerie })}</p>
+            {gsoRssi || gsoTension || batteryPercent !== null && batteryPercent !== undefined ? (
+              <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                {gsoRssi ? <span>{t("gso.rssi", { value: gsoRssi })}</span> : null}
+                {batteryPercent !== null && batteryPercent !== undefined ? <span>{t("wireless.battery", { value: batteryPercent })}</span> : null}
+                {gsoTension ? <span>{t("gso.tension", { value: gsoTension })}</span> : null}
+              </div>
+            ) : null}
+          </div>
         </DialogHeader>
 
         {isDialogLoading ? (

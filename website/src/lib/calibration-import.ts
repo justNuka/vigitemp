@@ -1,4 +1,5 @@
 import type { Prisma } from "@/generated/@prisma-db-main/client";
+import { normalizeImportedGsoSerial } from "@/lib/sensor-naming";
 
 export type CalibrationMeasureData = {
   Numero_Ordre: number;
@@ -162,9 +163,10 @@ export function parseCalibrationXml(xml: string, fileName = ""): ParsedCalibrati
   const calibrationBlock = getTagValueAny(xml, TAG_SETS.block);
   const uncertaintyRaw = (calibrationBlock ? getTagValue(calibrationBlock, "INCERTITUDE") : null) ?? (etalonBlock ? getTagValue(etalonBlock, "INCERTITUDE") : null) ?? getTagValue(xml, "INCERTITUDE");
   const uncertainty = parseNumber(uncertaintyRaw);
-  const sensorNumber = calibrationBlock
+  const sensorNumberRaw = calibrationBlock
     ? getTagValueAny(calibrationBlock, TAG_SETS.sensor)
     : getTagValueAny(xml, TAG_SETS.sensor);
+  const sensorNumber = sensorNumberRaw ? normalizeImportedGsoSerial(sensorNumberRaw) : null;
 
   const moyenneEtalon = parseNumber(getTagValueAny(xml, ["MOYENNE_ETALON", "MOY_ETALON"]));
   const moyenneSonde = parseNumber(getTagValueAny(xml, ["MOYENNE_SONDE", "MOY_SONDE"]));

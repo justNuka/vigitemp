@@ -21,7 +21,7 @@ export const GET = withAuthLogging(async (_req: NextRequest, ctx) => {
     const [activeLocations, disabledLocations, activeAlarms, alertSensors] = await Promise.all([
       prisma.t_lieu.count({ where: applyAccessFilter({ Est_Archive: false, Lieu_Etat: "S" }, lieuAccessFilter) }),
       prisma.t_lieu.count({ where: applyAccessFilter({ Est_Archive: false, Lieu_Etat: "D" }, lieuAccessFilter) }),
-      prisma.t_alarme.count({ where: applyAccessFilter({ Est_Acquittee: false }, alarmAccessFilter) }),
+      prisma.t_alarme.count({ where: applyAccessFilter({ Est_Acquittee: false, Date_Heure_Fin: null }, alarmAccessFilter) }),
       prisma.t_lieu.count({
         where: applyAccessFilter(
           {
