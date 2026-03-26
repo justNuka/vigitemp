@@ -109,7 +109,7 @@ export function VigilogConfigurationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl border-border/60 bg-white shadow-sm">
+      <DialogContent className="max-w-3xl border-border/60 bg-white shadow-sm dark:bg-popover dark:text-popover-foreground">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? t("config.dialog.editTitle") : t("config.dialog.createTitle")}

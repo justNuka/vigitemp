@@ -128,7 +128,7 @@ export function ServiceHubPageClient() {
         <section className="px-4 pb-20">
           <div className="mx-auto max-w-4xl">
             <BlurFade>
-              <div className="rounded-3xl border border-border/60 bg-white/90 p-8 shadow-sm dark:bg-card/80">
+              <div className="rounded-3xl border border-border/60 bg-white/95 p-8 shadow-sm dark:bg-card/90">
                 <p className="text-xs uppercase tracking-[0.3em] text-primary mb-4">
                   {t("servicesHub.highlights.eyebrow")}
                 </p>
@@ -142,7 +142,7 @@ export function ServiceHubPageClient() {
                   {highlights.map((item) => (
                     <div
                       key={item}
-                      className="rounded-2xl bg-white/90 px-4 py-3 text-sm text-foreground border border-border/40 dark:bg-background/70"
+                      className="rounded-2xl bg-white/90 px-4 py-3 text-sm text-foreground border border-border/40 dark:bg-card/80"
                     >
                       {item}
                     </div>
@@ -162,7 +162,7 @@ export function ServiceHubPageClient() {
                 <BlurFade key={card.key} delay={delay} duration={0.45}>
                   <MagicCard
                     className="h-full rounded-2xl p-6 border border-border/60 shadow-sm"
-                    surfaceClassName="bg-white/95 dark:bg-card/80"
+                    surfaceClassName="bg-white/95 dark:bg-card/90"
                     gradientColor="hsl(var(--primary) / 0.12)"
                     gradientFrom="hsl(var(--primary) / 0.35)"
                     gradientTo="hsl(var(--primary) / 0.08)"

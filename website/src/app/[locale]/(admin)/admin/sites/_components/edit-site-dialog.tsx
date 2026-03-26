@@ -51,7 +51,7 @@ export function EditSiteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-white dark:bg-card">
+      <DialogContent className="sm:max-w-md bg-white dark:bg-popover dark:text-popover-foreground">
         <DialogHeader>
           <DialogTitle>{t('edit_title')}</DialogTitle>
           <DialogDescription>{t('edit_description')}</DialogDescription>

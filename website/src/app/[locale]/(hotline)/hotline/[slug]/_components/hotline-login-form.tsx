@@ -64,7 +64,7 @@ export function HotlineLoginForm({ slug, username }: HotlineLoginFormProps) {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md bg-white dark:bg-popover/95">
       <CardHeader>
         <CardTitle>{t("title")}</CardTitle>
       </CardHeader>
@@ -78,6 +78,7 @@ export function HotlineLoginForm({ slug, username }: HotlineLoginFormProps) {
             <Label htmlFor="hotline-user">{t("fields.username_label")}</Label>
             <Input
               id="hotline-user"
+              className="bg-white dark:bg-card"
               {...register("username")}
               autoComplete="username"
               placeholder={t("fields.username_placeholder")}
@@ -94,6 +95,7 @@ export function HotlineLoginForm({ slug, username }: HotlineLoginFormProps) {
             <Label htmlFor="hotline-password">{t("fields.password_label")}</Label>
             <Input
               id="hotline-password"
+              className="bg-white dark:bg-card"
               type="password"
               {...register("password")}
               autoComplete="current-password"

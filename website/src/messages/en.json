@@ -3810,10 +3810,16 @@
     },
     "actions": {
       "logout": "Sign out",
+      "logout_hotline": "Sign out to hotline portal",
+      "logout_site": "Sign out to main site",
       "loading": "Loading...",
       "check_loading": "Checking...",
       "check_now": "Check now",
       "refresh": "Refresh"
+    },
+    "session": {
+      "account": "User",
+      "unknown_user": "Unknown user"
     },
     "status": {
       "ok": "OK",

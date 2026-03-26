@@ -41,7 +41,7 @@ export function TimezoneSettingsCard({
   const value = timezoneSetting?.value || 'Europe/Paris';
 
   return (
-    <Card className="border-border/60 bg-white dark:bg-card">
+    <Card className="border-border/60 bg-white dark:bg-popover dark:text-popover-foreground">
       <CardHeader>
         <CardTitle>{t('timezone.title')}</CardTitle>
         <CardDescription>{t('timezone.description')}</CardDescription>

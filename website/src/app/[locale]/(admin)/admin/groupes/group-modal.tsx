@@ -106,7 +106,7 @@ export function GroupModal({ open, onOpenChange, group, isEditing }: GroupModalP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-125 bg-white dark:bg-card">
+      <DialogContent className="sm:max-w-125 bg-white dark:bg-popover dark:text-popover-foreground">
         <DialogHeader>
           <DialogTitle>{isEditing ? t('title_edit') : t('title_create')}</DialogTitle>
         </DialogHeader>

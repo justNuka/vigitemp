@@ -64,7 +64,7 @@ export function NotificationsSettingsCard({
   const isSavingRecipients = recipientsSetting ? loadingKeys.has(recipientsSetting.key) : false;
 
   return (
-    <Card className="border-border/60 bg-white dark:bg-card">
+    <Card className="border-border/60 bg-white dark:bg-popover dark:text-popover-foreground">
       <CardHeader>
         <CardTitle>{t("notifications.title")}</CardTitle>
         <CardDescription>{t("notifications.description")}</CardDescription>

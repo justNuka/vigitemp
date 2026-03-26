@@ -8,7 +8,7 @@ export function PasswordPolicyCard() {
   const t = useTranslations('adminSettings');
 
   return (
-    <Card className="border-border/60 bg-white dark:bg-card">
+    <Card className="border-border/60 bg-white dark:bg-popover dark:text-popover-foreground">
       <CardHeader>
         <CardTitle>{t('password_policy.title')}</CardTitle>
         <CardDescription>{t('password_policy.description')}</CardDescription>

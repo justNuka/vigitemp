@@ -233,7 +233,7 @@ export function ActuatorModal({ open, onOpenChange, actuator, isEditing }: Props
 
     <Dialog open={open} onOpenChange={onOpenChange}>
 
-      <DialogContent key={contentKey} className="sm:max-w-125 bg-white dark:bg-card">
+      <DialogContent key={contentKey} className="sm:max-w-125 bg-white dark:bg-popover dark:text-popover-foreground">
 
         <DialogHeader>
 

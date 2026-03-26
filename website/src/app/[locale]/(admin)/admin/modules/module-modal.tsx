@@ -141,7 +141,7 @@ export function ModuleModal({ open, onOpenChange, module, onSuccess }: ModuleMod
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-white dark:bg-card">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-white dark:bg-popover dark:text-popover-foreground">
         <DialogHeader>
           <DialogTitle>{isEditing ? t('title_edit') : t('title_create')}</DialogTitle>
           <DialogDescription>

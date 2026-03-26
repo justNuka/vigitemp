@@ -193,7 +193,7 @@ export function LocationFormDialog({
             </Tabs>
 
             {hasChanges && (
-              <div className="sticky bottom-0 z-20 flex justify-end gap-2 border-t bg-white/95 py-3 backdrop-blur dark:bg-card/95">
+              <div className="sticky bottom-0 z-20 flex justify-end gap-2 border-t bg-white/95 py-3 backdrop-blur dark:bg-popover/95">
                 <Button variant="outline" onClick={onCancel} className="gap-2" type="button">
                   <X className="h-4 w-4" />
                   {tCommon('cancel')}

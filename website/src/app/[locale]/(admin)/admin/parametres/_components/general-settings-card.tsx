@@ -42,8 +42,8 @@ export function GeneralSettingsCard({
   };
 
   return (
-    <Card className="border-border/60 bg-white dark:bg-card">
-      <CardHeader className="bg-background border-b border-border/40">
+    <Card className="border-border/60 bg-white dark:bg-popover dark:text-popover-foreground">
+      <CardHeader className="bg-white/90 border-b border-border/50 dark:bg-card/90">
         <CardTitle className="flex items-center gap-2 text-base">
           <Settings2 className="h-4 w-4 text-primary" />
           {t('general.title')}

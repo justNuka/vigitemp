@@ -2,8 +2,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export function MonitoringCardSkeleton() {
   return (
-    <div className="relative w-full bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-      <div className="px-3 py-2 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700">
+    <div className="relative w-full overflow-hidden rounded-lg bg-white shadow-md dark:bg-card/95 dark:shadow-black/20">
+      <div className="border-b border-border/60 bg-muted/35 px-3 py-2 dark:bg-muted/25">
         <div className="space-y-2">
           <Skeleton className="h-3 w-24" />
           <Skeleton className="h-3 w-36" />

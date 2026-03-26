@@ -145,7 +145,7 @@ const vigilogActionButtonSecondaryShadowClass =
 const vigilogComboboxButtonClass =
   "border-sky-200 bg-sky-50/80 text-sky-950 hover:bg-sky-100/90"
 const vigilogComboboxPopoverClass =
-  "border-sky-200 bg-white/98"
+  "border-border/60 bg-white/95 dark:bg-white/95 dark:bg-card/95"
 const vigilogBlueActionButtonClass =
   "border-sky-200 bg-sky-50/80 text-sky-950 hover:bg-sky-100/90 shadow-[0_3px_10px_rgba(14,165,233,0.12)]"
 const vigilogBluePrimaryButtonClass =
@@ -992,7 +992,7 @@ export function VigilogPageClient() {
       <div className="relative min-h-screen bg-background">
         <DotPattern className="opacity-30" />
         <div className="relative z-10 flex min-h-screen items-center justify-center">
-          <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/90 px-5 py-4 shadow-sm">
+          <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-white/90 dark:bg-white/95 dark:bg-card/95 px-5 py-4 shadow-sm">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
             <span className="text-sm text-muted-foreground">{t("common.loading")}</span>
           </div>
@@ -1006,7 +1006,7 @@ export function VigilogPageClient() {
       <div className="relative min-h-screen bg-background">
         <DotPattern className="opacity-30" />
         <main className="relative z-10 mx-auto flex min-h-screen max-w-5xl items-center px-6 py-10">
-          <Card className="w-full border-border/60 bg-card/95 shadow-sm">
+          <Card className="w-full border-border/60 bg-white/95 dark:bg-card/95 shadow-sm">
             <CardHeader>
               <CardTitle>{t("forbidden.title")}</CardTitle>
               <CardDescription>{t("forbidden.description")}</CardDescription>
@@ -1031,7 +1031,7 @@ export function VigilogPageClient() {
       <main className="relative z-10 px-6 py-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-8">
           <section className="grid gap-4 lg:grid-cols-[1.8fr_1fr]">
-            <Card className="border-border/60 bg-card/95 shadow-sm">
+            <Card className="border-border/60 bg-white/95 dark:bg-card/95 shadow-sm">
               <CardHeader>
                 <p className="text-xs uppercase tracking-[0.3em] text-primary">{t("hero.eyebrow")}</p>
                 <CardTitle className="text-3xl">{t("hero.title")}</CardTitle>
@@ -1040,7 +1040,7 @@ export function VigilogPageClient() {
             </Card>
 
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-              <Card className="border-border/60 bg-card/95 shadow-sm">
+              <Card className="border-border/60 bg-white/95 dark:bg-card/95 shadow-sm">
                 <CardHeader className="pb-3">
                   <CardDescription>{t("stats.configurations")}</CardDescription>
                   <CardTitle className="flex items-center gap-2 text-2xl">
@@ -1049,7 +1049,7 @@ export function VigilogPageClient() {
                   </CardTitle>
                 </CardHeader>
               </Card>
-              <Card className="border-border/60 bg-card/95 shadow-sm">
+              <Card className="border-border/60 bg-white/95 dark:bg-card/95 shadow-sm">
                 <CardHeader className="pb-3">
                   <CardDescription>{t("stats.pending")}</CardDescription>
                   <CardTitle className="flex items-center gap-2 text-2xl">
@@ -1058,7 +1058,7 @@ export function VigilogPageClient() {
                   </CardTitle>
                 </CardHeader>
               </Card>
-              <Card className="border-border/60 bg-card/95 shadow-sm">
+              <Card className="border-border/60 bg-white/95 dark:bg-card/95 shadow-sm">
                 <CardHeader className="pb-3">
                   <CardDescription>{t("stats.alarms")}</CardDescription>
                   <CardTitle className="flex items-center gap-2 text-2xl">
@@ -1081,7 +1081,7 @@ export function VigilogPageClient() {
 
             <TabsContent value="movements" className="mt-6 space-y-6">
               <div className="grid gap-6 xl:grid-cols-2">
-                <Card className="border-border/60 bg-card/95 shadow-sm">
+                <Card className="border-border/60 bg-white/95 dark:bg-card/95 shadow-sm">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Flag className="h-5 w-5 text-primary" />
@@ -1315,7 +1315,7 @@ export function VigilogPageClient() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="border-border/60 bg-card/95 shadow-sm">
+                <Card className="border-border/60 bg-white/95 dark:bg-card/95 shadow-sm">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <PackageCheck className="h-5 w-5 text-primary" />
@@ -1452,7 +1452,7 @@ export function VigilogPageClient() {
             </TabsContent>
 
             <TabsContent value="usage" className="mt-6 space-y-6">
-              <Card className="border-border/60 bg-card/95 shadow-sm">
+              <Card className="border-border/60 bg-white/95 dark:bg-card/95 shadow-sm">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileCog className="h-5 w-5 text-primary" />
@@ -1604,7 +1604,7 @@ export function VigilogPageClient() {
 
               <div className="grid gap-4 xl:grid-cols-2">
                 {configurations.map((configuration) => (
-                  <Card key={configuration.id} className="border-border/60 bg-card/95 shadow-sm">
+                  <Card key={configuration.id} className="border-border/60 bg-white/95 dark:bg-card/95 shadow-sm">
                     <CardHeader className="gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div className="space-y-2">
                         <CardTitle className="text-lg">{configuration.name}</CardTitle>
@@ -1735,7 +1735,7 @@ export function VigilogPageClient() {
 
               <div className="grid gap-4 xl:grid-cols-2">
                 {loggers.map((logger) => (
-                  <Card key={logger.id} className="border-border/60 bg-card/95 shadow-sm">
+                  <Card key={logger.id} className="border-border/60 bg-white/95 dark:bg-card/95 shadow-sm">
                     <CardHeader className="gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div className="space-y-2">
                         <CardTitle className="text-lg">
@@ -1846,7 +1846,7 @@ export function VigilogPageClient() {
                       value={historySearch}
                       onChange={(event) => setHistorySearch(event.target.value)}
                       placeholder={t("history.placeholders.search")}
-                      className="h-11 w-full min-w-0 border-border/60 bg-white shadow-sm lg:min-w-[360px]"
+                      className="h-11 w-full min-w-0 border-border/60 bg-white shadow-sm dark:bg-popover/95 lg:min-w-[360px]"
                     />
                   </div>
                   <div className="space-y-2">
@@ -1872,7 +1872,7 @@ export function VigilogPageClient() {
                 </div>
               </div>
 
-              <Card className="border-border/60 bg-card/95 shadow-sm">
+              <Card className="border-border/60 bg-white/95 dark:bg-card/95 shadow-sm">
                 <CardContent className="pt-6">
                   <TanStackTable
                     columns={historyColumns}
@@ -1884,7 +1884,7 @@ export function VigilogPageClient() {
                     pageSize={8}
                     showPagination={filteredHistory.length > 8}
                     maxHeight="36rem"
-                    containerClassName="border-border/60 bg-white"
+                    containerClassName="border-border/60 bg-white dark:bg-card/95"
                     headerClassName="!bg-sidebar !text-sidebar-foreground"
                     headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
                     tableClassName="border-separate border-spacing-0 bg-transparent [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150"
@@ -1925,7 +1925,7 @@ export function VigilogPageClient() {
           if (!open) setDepartureDialogState({ mode: "closed" })
         }}
       >
-        <DialogContent className="max-w-lg border-border/60 bg-white shadow-sm">
+        <DialogContent className="max-w-lg border-border/60 bg-white shadow-sm dark:bg-popover dark:text-popover-foreground">
           <DialogHeader>
             <DialogTitle>{t("departurePreparation.title")}</DialogTitle>
             <DialogDescription>
@@ -2011,7 +2011,7 @@ export function VigilogPageClient() {
           if (!open) setReceiveDialogState({ mode: "closed" })
         }}
       >
-        <DialogContent className="max-w-lg border-border/60 bg-white shadow-sm">
+        <DialogContent className="max-w-lg border-border/60 bg-white shadow-sm dark:bg-popover dark:text-popover-foreground">
           <DialogHeader>
             <DialogTitle>{t("receivePreparation.title")}</DialogTitle>
             <DialogDescription>{t("receivePreparation.runningDescription")}</DialogDescription>
@@ -2112,7 +2112,7 @@ export function VigilogPageClient() {
           }
         }}
       >
-        <DialogContent className="max-w-xl border-border/60 bg-white shadow-sm">
+        <DialogContent className="max-w-xl border-border/60 bg-white shadow-sm dark:bg-popover dark:text-popover-foreground">
           <DialogHeader>
             <DialogTitle>{t("history.actions.acknowledge")}</DialogTitle>
             <DialogDescription>
@@ -2172,7 +2172,7 @@ export function VigilogPageClient() {
           }
         }}
       >
-        <DialogContent className="max-w-xl border-border/60 bg-white shadow-sm">
+        <DialogContent className="max-w-xl border-border/60 bg-white shadow-sm dark:bg-popover dark:text-popover-foreground">
           <DialogHeader>
             <DialogTitle>{t("cancelTour.title")}</DialogTitle>
             <DialogDescription>

@@ -125,7 +125,7 @@ export function ModulesClient() {
         animate="visible"
       >
         <Card>
-          <CardHeader className="bg-background border-b border-border/40 pb-3">
+          <CardHeader className="border-b border-border/50 bg-white/90 pb-3 dark:bg-card/90">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Cpu className="h-4 w-4 text-primary" />
@@ -184,7 +184,7 @@ export function ModulesClient() {
 
         {selectedModuleId && (
           <Card>
-            <CardHeader className="bg-background border-b border-border/40 pb-3">
+            <CardHeader className="border-b border-border/50 bg-white/90 pb-3 dark:bg-card/90">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Thermometer className="h-4 w-4 text-primary" />
                 {t('associated.title', { count: sondes?.length || 0 })}

@@ -33,7 +33,7 @@ export function MessagingSettingsCard({
   if (!enabledSetting) return null;
 
   return (
-    <Card className="border-border/60 bg-white dark:bg-card">
+    <Card className="border-border/60 bg-white dark:bg-popover dark:text-popover-foreground">
       <CardHeader>
         <CardTitle>{t("messaging.title")}</CardTitle>
         <CardDescription>{t("messaging.description")}</CardDescription>

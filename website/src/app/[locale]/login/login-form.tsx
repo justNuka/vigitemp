@@ -301,7 +301,7 @@ export function LoginForm() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: dur, ease, delay: shouldReduceMotion ? 0 : 0.38 }}
           >
-            <Card className="bg-background/70 backdrop-blur-xl border border-border/50 shadow-2xl">
+            <Card className="border border-border/60 bg-white shadow-2xl dark:bg-card">
               <CardHeader>
                 <CardTitle>{t("card.title")}</CardTitle>
                 <CardDescription>

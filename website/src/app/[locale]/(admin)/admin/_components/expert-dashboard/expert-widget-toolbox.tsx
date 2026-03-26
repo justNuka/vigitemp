@@ -29,7 +29,7 @@ export function ExpertWidgetToolbox({
             type="button"
             draggable
             unselectable="on"
-            className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+            className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100 dark:border-border dark:bg-popover dark:hover:bg-accent"
             onClick={() => onAddWidget(widget.id)}
             onDragStart={(event) => {
               event.dataTransfer.setData("text/plain", widget.id)

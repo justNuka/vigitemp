@@ -133,7 +133,7 @@ export function MultiSelectFilter({
           id={dropdownId}
           role="listbox"
           aria-multiselectable="true"
-          className="absolute top-full left-0 right-0 z-50 mt-2 border border-slate-200 bg-white rounded-md shadow-md p-2 dark:border-slate-700 dark:bg-slate-900"
+          className="absolute top-full left-0 right-0 z-50 mt-2 rounded-md border border-border bg-white p-2 shadow-md dark:bg-popover dark:text-popover-foreground"
         >
           {enableSearch && (
             <div className="mb-3">
@@ -149,7 +149,7 @@ export function MultiSelectFilter({
             </div>
           )}
           {selectedLabels.length > 0 && (
-            <div className="mb-3 pb-3 border-b flex flex-wrap gap-1">
+            <div className="mb-3 flex flex-wrap gap-1 border-b border-border/60 pb-3">
               {selectedLabels.map((label) => (
                 <Badge
                   key={label}
@@ -200,7 +200,7 @@ export function MultiSelectFilter({
           </div>
 
           {selectedIds.length > 0 && (
-            <div className="mt-3 pt-3 border-t flex gap-2">
+            <div className="mt-3 flex gap-2 border-t border-border/60 pt-3">
               <Button type="button" size="sm" variant="ghost" className="flex-1" onClick={handleClear}>
                 {t('actions.clear')}
               </Button>

@@ -56,7 +56,7 @@ export function SurveillanceHeaderControls({
   ]
 
   return (
-    <div className="flex flex-col gap-4 w-full rounded-lg border border-slate-200 bg-white/80 p-3 dark:border-slate-800 dark:bg-slate-900/60">
+    <div className="flex w-full flex-col gap-4 rounded-lg border border-border/60 bg-white/85 p-3 shadow-sm dark:bg-card/95 dark:shadow-black/20">
       <SurveillanceFilters onFilterChange={onFilterChange} sites={sites} groups={groups} />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <SurveillanceViewTabs value={viewMode} onChange={onViewModeChange} graphsLabel={graphsLabel} treeLabel={treeLabel} />
@@ -66,7 +66,7 @@ export function SurveillanceHeaderControls({
               variant="secondary"
               size="sm"
               onClick={onToggleOrder}
-              className="gap-2 border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 dark:border-primary/50 dark:bg-primary/15 dark:text-primary-foreground/90"
+              className="gap-2 border border-primary/35 bg-primary/8 text-primary hover:bg-primary/14 dark:border-primary/40 dark:bg-primary/12 dark:text-primary-foreground"
               data-testid="button-toggle-surveillance-order"
             >
               <ArrowUpDown className="h-4 w-4" />
@@ -78,7 +78,7 @@ export function SurveillanceHeaderControls({
               variant="outline"
               size="sm"
               onClick={onOpenOverlay}
-              className="gap-2 border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 dark:border-primary/50 dark:bg-primary/15 dark:text-primary-foreground/90"
+              className="gap-2 border-primary/35 bg-primary/8 text-primary hover:bg-primary/14 dark:border-primary/40 dark:bg-primary/12 dark:text-primary-foreground"
               data-testid="button-open-overlay-curves"
             >
               <Layers3 className="h-4 w-4" />
@@ -90,7 +90,7 @@ export function SurveillanceHeaderControls({
               variant="outline"
               size="sm"
               onClick={onRefresh}
-              className="gap-2 border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 dark:border-primary/50 dark:bg-primary/15 dark:text-primary-foreground/90"
+              className="gap-2 border-primary/35 bg-primary/8 text-primary hover:bg-primary/14 dark:border-primary/40 dark:bg-primary/12 dark:text-primary-foreground"
               disabled={isRefreshing}
               data-testid="button-refresh-surveillance"
             >

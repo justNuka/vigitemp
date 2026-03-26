@@ -147,7 +147,7 @@ export function VigilogLoggerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl border-border/60 bg-white shadow-sm">
+      <DialogContent className="max-w-3xl border-border/60 bg-white shadow-sm dark:bg-popover dark:text-popover-foreground">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? t("loggers.dialog.editTitle") : t("loggers.dialog.createTitle")}

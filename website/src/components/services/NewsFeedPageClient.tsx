@@ -100,7 +100,7 @@ export function NewsFeedPageClient() {
           </div>
 
           <BlurFade delay={200}>
-            <div className="mt-12 rounded-2xl border border-border/60 bg-card/80 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="mt-12 rounded-2xl border border-border/60 bg-white/90 dark:bg-card/90 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-foreground">
                   {t("servicesNews.note.title")}

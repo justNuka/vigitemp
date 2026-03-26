@@ -43,7 +43,7 @@ export function AlarmDetailsDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-3xl max-h-[92dvh] overflow-y-auto border-border bg-card shadow-2xl">
+        <DialogContent className="sm:max-w-3xl max-h-[92dvh] overflow-y-auto border-border bg-white shadow-2xl dark:bg-popover dark:text-popover-foreground">
           <DialogHeader className="pb-3 border-b border-border/50">
             <DialogTitle className="flex items-center gap-3">
               <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-destructive/10 text-destructive shrink-0">
@@ -59,7 +59,7 @@ export function AlarmDetailsDialog({
             ) : null}
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-2 p-4 bg-muted/40 rounded-xl border border-border/50">
+            <div className="grid gap-3 rounded-xl border border-border/50 bg-muted/30 p-4 dark:bg-muted/20 md:grid-cols-2">
               <div><p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.type_label')}</p><p className="text-sm font-medium">{alarmTypeLabel}</p></div>
               <div><p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.last_value_label')}</p><p className="text-sm font-mono font-semibold text-primary">{selectedAlarm?.sensor.currentValue ?? selectedAlarm?.value ?? '-'} {selectedAlarm?.sensor.unit}</p></div>
               <div><p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.start_label')}</p><p className="text-sm font-medium">{formattedStart}</p></div>
@@ -73,7 +73,7 @@ export function AlarmDetailsDialog({
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-4 py-3">
+            <div className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-border bg-muted/15 px-4 py-3 dark:bg-muted/10">
               <div className="space-y-0.5">
                 <p className="text-sm font-medium">{t('dialog.graph_label')}</p>
                 <p className="text-xs text-muted-foreground">{t('dialog.graph_hint')}</p>

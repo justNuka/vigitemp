@@ -50,7 +50,7 @@ export function HardwareOrderResultDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent draggable={false} className="max-w-md rounded-3xl p-0">
-        <div className="overflow-hidden rounded-3xl border border-border/60 bg-card">
+        <div className="overflow-hidden rounded-3xl border border-border/60 bg-white dark:bg-popover">
           <div
             className={
               isPositive

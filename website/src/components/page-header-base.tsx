@@ -42,7 +42,7 @@ export function PageHeaderBase({
     <LazyMotion features={domAnimation}>
       <header
         className={cn(
-          "sticky top-0 z-40 flex flex-col gap-4 border-b border-slate-200/80 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80 px-4 py-3 md:px-6 dark:border-border dark:bg-card/95 shadow-sm",
+          "sticky top-0 z-40 flex flex-col gap-4 border-b border-border/60 bg-background/95 px-4 py-3 shadow-sm backdrop-blur supports-backdrop-filter:bg-background/80 md:px-6 dark:border-border dark:bg-card/95",
           className
         )}
       >

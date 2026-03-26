@@ -45,6 +45,7 @@ export function LoginCredentialsForm({
           type="text"
           {...register("username")}
           placeholder={translations.usernamePlaceholder}
+          className="bg-white dark:bg-white"
           autoFocus
           autoComplete="username"
           aria-invalid={!!usernameError}
@@ -64,6 +65,7 @@ export function LoginCredentialsForm({
           type="password"
           {...register("password")}
           placeholder={translations.passwordPlaceholder}
+          className="bg-white dark:bg-white"
           autoComplete="current-password"
           aria-invalid={!!passwordError}
           aria-describedby={passwordError ? "password-error" : undefined}

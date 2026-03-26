@@ -285,7 +285,7 @@ export function MonitoringGraphTab({
           {preAlarmSup !== null && guidePositions.preSup !== null && (
             <>
               <div className="absolute w-full border-t border-red-500/70 border-dotted" style={{ top: `${guidePositions.preSup}px` }} />
-              <div className="absolute right-4 text-[11px] font-medium text-red-500 bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-sm" style={{ top: `${guidePositions.preSup}px`, transform: "translateY(-50%)" }}>
+              <div className="absolute right-4 text-[11px] font-medium text-red-500 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-sm" style={{ top: `${guidePositions.preSup}px`, transform: "translateY(-50%)" }}>
                 {locale === "fr" ? `Pre-sup: ${preAlarmSup}${unite}` : `Pre-high: ${preAlarmSup}${unite}`}
               </div>
             </>
@@ -293,7 +293,7 @@ export function MonitoringGraphTab({
           {consigneSup !== null && guidePositions.sup !== null && (
             <>
               <div className="absolute w-full border-t-2 border-red-500 border-dashed" style={{ top: `${guidePositions.sup}px` }} />
-              <div className="absolute right-4 text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.sup}px`, transform: "translateY(-50%)" }}>
+              <div className="absolute right-4 text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.sup}px`, transform: "translateY(-50%)" }}>
                 {t("guides.max", { value: consigneSup, unit: unite })}
               </div>
             </>
@@ -301,7 +301,7 @@ export function MonitoringGraphTab({
           {consigne !== null && guidePositions.consigne !== null && (
             <>
               <div className="absolute w-full border-t-2 border-gray-900 dark:border-white" style={{ top: `${guidePositions.consigne}px` }} />
-              <div className="absolute right-4 text-xs font-medium text-gray-900 dark:text-white bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.consigne}px`, transform: "translateY(-50%)" }}>
+              <div className="absolute right-4 text-xs font-medium text-gray-900 dark:text-popover-foreground bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.consigne}px`, transform: "translateY(-50%)" }}>
                 {t("guides.target", { value: consigne, unit: unite })}
               </div>
             </>
@@ -309,7 +309,7 @@ export function MonitoringGraphTab({
           {preAlarmInf !== null && guidePositions.preInf !== null && (
             <>
               <div className="absolute w-full border-t border-blue-500/70 border-dotted" style={{ top: `${guidePositions.preInf}px` }} />
-              <div className="absolute right-4 text-[11px] font-medium text-blue-600 dark:text-blue-300 bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-sm" style={{ top: `${guidePositions.preInf}px`, transform: "translateY(-50%)" }}>
+              <div className="absolute right-4 text-[11px] font-medium text-blue-600 dark:text-blue-300 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-sm" style={{ top: `${guidePositions.preInf}px`, transform: "translateY(-50%)" }}>
                 {locale === "fr" ? `Pre-inf: ${preAlarmInf}${unite}` : `Pre-low: ${preAlarmInf}${unite}`}
               </div>
             </>
@@ -317,7 +317,7 @@ export function MonitoringGraphTab({
           {consigneInf !== null && guidePositions.inf !== null && (
             <>
               <div className="absolute w-full border-t-2 border-red-500 border-dashed" style={{ top: `${guidePositions.inf}px` }} />
-              <div className="absolute right-4 text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-gray-800/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.inf}px`, transform: "translateY(-50%)" }}>
+              <div className="absolute right-4 text-xs font-medium text-red-600 dark:text-red-400 bg-white/95 dark:bg-popover/95 px-2 py-1 rounded shadow-md" style={{ top: `${guidePositions.inf}px`, transform: "translateY(-50%)" }}>
                 {t("guides.min", { value: consigneInf, unit: unite })}
               </div>
             </>

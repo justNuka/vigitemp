@@ -256,7 +256,7 @@ export function PasswordRulesSettings() {
           </div>
 
           {rules?.cfr21_enabled && (
-            <div className="flex items-center justify-between p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/20">
+            <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/10 p-4 dark:border-primary/25 dark:bg-primary/10">
               <div className="flex-1">
                 <Label className="font-medium">
                   {t("cfr21.expiry.label")}

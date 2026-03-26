@@ -24,7 +24,7 @@ export function ExpertWidgetCard({
   badge?: ReactNode
 }) {
   return (
-    <Card className="h-full overflow-hidden border-slate-200 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+    <Card className="h-full overflow-hidden border-slate-200 bg-white/95 shadow-sm dark:border-border dark:bg-card/95">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">

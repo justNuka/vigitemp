@@ -43,5 +43,7 @@ async function HotlineGate({ slug, locale }: { slug: string; locale: string }) {
     redirect(`/${locale}/hotline/${slug}/login`)
   }
 
-  return <HotlineDashboard slug={slug} />
+  const session = accessSession ?? refreshSession
+
+  return <HotlineDashboard slug={slug} username={session?.username ?? null} />
 }

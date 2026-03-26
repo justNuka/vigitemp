@@ -359,7 +359,7 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-[78rem] overflow-hidden border-border/60 bg-white px-6 shadow-sm">
+      <DialogContent className="max-h-[90vh] max-w-[78rem] overflow-hidden border-border/60 bg-white px-6 shadow-sm dark:bg-popover dark:text-popover-foreground">
         <DialogHeader>
           <DialogTitle>{t("detail.title")}</DialogTitle>
           <DialogDescription>
@@ -495,7 +495,7 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
                     {guidePositions.high !== null ? (
                       <>
                         <div
-                          className="absolute right-4 rounded bg-white/95 px-2 py-1 text-xs font-medium text-red-600 shadow-md"
+                          className="absolute right-4 rounded bg-white/95 dark:bg-popover/95 px-2 py-1 text-xs font-medium text-red-600 shadow-md"
                           style={{ top: `${guidePositions.high}px`, transform: "translateY(-50%)" }}
                         >
                           {t("detail.chart.highGuide", { value: formatNumber(tournee.highLimit) })}
@@ -504,7 +504,7 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
                     ) : null}
                     {guidePositions.target !== null ? (
                       <div
-                        className="absolute right-4 rounded bg-white/95 px-2 py-1 text-xs font-medium text-gray-900 shadow-md"
+                        className="absolute right-4 rounded bg-white/95 dark:bg-popover/95 px-2 py-1 text-xs font-medium text-gray-900 shadow-md"
                         style={{ top: `${guidePositions.target}px`, transform: "translateY(-50%)" }}
                       >
                         {t("detail.chart.targetGuide", { value: formatNumber(tournee.target) })}
@@ -512,7 +512,7 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
                     ) : null}
                     {guidePositions.low !== null ? (
                       <div
-                        className="absolute right-4 rounded bg-white/95 px-2 py-1 text-xs font-medium text-amber-600 shadow-md"
+                        className="absolute right-4 rounded bg-white/95 dark:bg-popover/95 px-2 py-1 text-xs font-medium text-amber-600 shadow-md"
                         style={{ top: `${guidePositions.low}px`, transform: "translateY(-50%)" }}
                       >
                         {t("detail.chart.lowGuide", { value: formatNumber(tournee.lowLimit) })}
@@ -525,7 +525,7 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
               )}
             </div>
 
-            <div className="rounded-xl border border-slate-200/80 bg-white/65 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+            <div className="rounded-xl border border-slate-200/80 bg-white/75 dark:bg-muted/15 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <h3 className="font-medium text-foreground">{t("detail.measuresTitle")}</h3>
                 <Button
@@ -548,7 +548,7 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
                 pageSize={10}
                 maxHeight="420px"
                 emptyMessage={t("detail.emptyMeasures")}
-                containerClassName="border-border/60 bg-white/40"
+                containerClassName="border-border/60 bg-white/60 dark:bg-card/80"
                 headerClassName="!bg-sidebar !text-sidebar-foreground"
                 headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
                 tableClassName="border-separate border-spacing-0 bg-transparent [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0 [&_tbody_tr]:transition-colors [&_tbody_tr]:duration-150"

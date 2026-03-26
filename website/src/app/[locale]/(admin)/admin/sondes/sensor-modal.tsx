@@ -136,7 +136,7 @@ export function SensorModal({ open, onOpenChange, sensor, isEditing }: SensorMod
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent key={contentKey} className="sm:max-w-125 bg-white dark:bg-card">
+      <DialogContent key={contentKey} className="sm:max-w-125 bg-white dark:bg-popover dark:text-popover-foreground">
         <DialogHeader>
           <DialogTitle>{isEdit ? t('title_edit') : t('title_create')}</DialogTitle>
         </DialogHeader>

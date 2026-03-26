@@ -25,7 +25,7 @@ export async function generateMetadata({
 function SettingsLoadingSkeleton() {
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <Card className="p-6 bg-white/50 dark:bg-card">
+      <Card className="border-border/60 bg-white/85 p-6 shadow-sm dark:bg-card/95 dark:shadow-black/20">
         <Skeleton className="h-6 w-32 mb-4" />
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (

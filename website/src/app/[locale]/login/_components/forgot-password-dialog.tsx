@@ -53,7 +53,7 @@ export function ForgotPasswordDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="bg-white dark:bg-card">
         <DialogHeader>
           <DialogTitle>{translations.title}</DialogTitle>
           <DialogDescription>{translations.description}</DialogDescription>
@@ -82,6 +82,7 @@ export function ForgotPasswordDialog({
                 type="email"
                 {...register("email")}
                 placeholder={translations.emailPlaceholder}
+                className="bg-white dark:bg-white"
                 autoFocus
                 disabled={isSubmitting}
                 autoComplete="email"

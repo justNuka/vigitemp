@@ -35,25 +35,25 @@ export function DashboardHeader({ stats }: { stats: Stats }) {
   const t = useTranslations("dashboard");
   const [activeAlarms, setActiveAlarms] = useState(stats.activeAlarms);
   const cardBaseClass =
-    "relative overflow-hidden bg-linear-to-br from-foreground/90 to-foreground/80 text-white border border-foreground/10 shadow-[0_12px_24px_-16px_rgba(15,23,42,0.7)] dark:from-card dark:to-muted/30 dark:text-card-foreground dark:border-border";
-  const cardTitleClass = "text-white/70 dark:text-muted-foreground";
-  const cardValueClass = "text-white dark:text-foreground";
+    "relative overflow-hidden border border-border/60 bg-linear-to-br from-white to-slate-50 text-slate-900 shadow-[0_12px_24px_-16px_rgba(15,23,42,0.12)] dark:from-card dark:to-muted/45 dark:text-card-foreground dark:border-border dark:shadow-[0_18px_38px_-24px_rgba(0,0,0,0.55)]";
+  const cardTitleClass = "text-slate-500 dark:text-muted-foreground";
+  const cardValueClass = "text-slate-950 dark:text-foreground";
   const cardVariants = {
     info: {
       border: "border-l-8 border-l-sky-400",
-      icon: "bg-sky-500/25 text-sky-300 ring-1 ring-sky-400/30",
+      icon: "bg-sky-500/12 text-sky-600 ring-1 ring-sky-300/50 dark:bg-sky-500/18 dark:text-sky-300 dark:ring-sky-500/30",
     },
     danger: {
       border: "border-l-8 border-l-red-500",
-      icon: "bg-red-500/25 text-red-300 ring-1 ring-red-400/30",
+      icon: "bg-red-500/12 text-red-600 ring-1 ring-red-300/50 dark:bg-red-500/18 dark:text-red-300 dark:ring-red-500/30",
     },
     muted: {
       border: "border-l-8 border-l-slate-400",
-      icon: "bg-slate-500/25 text-slate-300 ring-1 ring-slate-400/30",
+      icon: "bg-slate-500/12 text-slate-600 ring-1 ring-slate-300/60 dark:bg-slate-500/18 dark:text-slate-300 dark:ring-slate-500/30",
     },
     warning: {
       border: "border-l-8 border-l-amber-400",
-      icon: "bg-amber-500/25 text-amber-300 ring-1 ring-amber-400/30",
+      icon: "bg-amber-500/12 text-amber-700 ring-1 ring-amber-300/60 dark:bg-amber-500/18 dark:text-amber-300 dark:ring-amber-500/30",
     },
   };
 
@@ -79,7 +79,7 @@ export function DashboardHeader({ stats }: { stats: Stats }) {
         title={t("title")}
         description={t("description")}
         activeAlarms={activeAlarms}
-        className="bg-white/80 border-slate-200 dark:bg-background/95 dark:border-border"
+        className="bg-white/85 border-border/60 dark:bg-background/95 dark:border-border"
       />
 
       <section aria-label={t("stats_section_label")} className="p-4 md:p-6 pb-0">

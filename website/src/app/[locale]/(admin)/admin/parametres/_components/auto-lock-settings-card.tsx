@@ -52,7 +52,7 @@ export function AutoLockSettingsCard() {
   };
 
   return (
-    <Card className="border-border/60 bg-white dark:bg-card">
+    <Card className="border-border/60 bg-white dark:bg-popover dark:text-popover-foreground">
       <CardHeader>
         <CardTitle>{t('security.title')}</CardTitle>
         <CardDescription>{t('security.description')}</CardDescription>

@@ -109,7 +109,7 @@ export function PlanningRuleFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-      <DialogContent className="sm:max-w-lg bg-white dark:bg-card">
+      <DialogContent className="sm:max-w-lg bg-white dark:bg-popover dark:text-popover-foreground">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CalendarClock className="h-4 w-4 text-primary" />

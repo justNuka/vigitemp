@@ -44,7 +44,7 @@ export function HardwareCatalogToc({ items, title }: { items: TocItem[]; title: 
 
   return (
     <nav className="hidden xl:flex fixed left-6 top-1/2 z-50 -translate-y-1/2 flex-col gap-1">
-      <div className="rounded-xl border border-border/70 bg-white/85 p-4 shadow-lg backdrop-blur dark:border-slate-800 dark:bg-slate-950/80 dark:shadow-[0_18px_60px_-35px_rgba(2,6,23,0.95)]">
+      <div className="rounded-xl border border-border/70 bg-white/85 p-4 shadow-lg backdrop-blur dark:border-border dark:bg-popover/95 dark:shadow-[0_18px_60px_-35px_rgba(0,0,0,0.72)]">
         <p className="mb-3 px-2 text-[10px] uppercase tracking-widest text-muted-foreground">
           {title}
         </p>

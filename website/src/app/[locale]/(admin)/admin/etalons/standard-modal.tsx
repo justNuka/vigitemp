@@ -183,7 +183,7 @@ export function StandardModal({ open, onOpenChange, standard, isEditing }: Props
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-150 max-h-[90vh] overflow-y-auto bg-white dark:bg-card">
+        <DialogContent className="sm:max-w-150 max-h-[90vh] overflow-y-auto bg-white dark:bg-popover dark:text-popover-foreground">
           <DialogHeader>
             <DialogTitle>{isEditing ? t('title_edit') : t('title_create')}</DialogTitle>
           </DialogHeader>

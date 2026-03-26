@@ -294,57 +294,56 @@
 
   .dark {
     /* Palette - Mode Dark */
-    --background: 217 25% 8%;
-    --foreground: 0 0% 95%;
+    --background: 218 24% 10%;
+    --foreground: 210 20% 96%;
 
-    --card: 217 20% 12%;
-    --card-foreground: 0 0% 95%;
+    --card: 220 20% 14%;
+    --card-foreground: 210 20% 96%;
 
-    --popover: 217 20% 12%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 220 22% 15%;
+    --popover-foreground: 210 20% 96%;
 
     /* Bleu principal VigiSensys (#26A5DA) */
-    --primary: 198 71% 50%;
+    --primary: 198 71% 56%;
     --primary-foreground: var(--sidebar-foreground);
 
-    /* Sage plus foncé pour le dark mode */
-    --secondary: 72 25% 25%;
-    --secondary-foreground: 0 0% 95%;
+    /* Surfaces secondaires plus neutres et lisibles */
+    --secondary: 218 18% 18%;
+    --secondary-foreground: 210 20% 96%;
 
-    --muted: 217 20% 18%;
-    --muted-foreground: 217 15% 65%;
+    --muted: 218 18% 17%;
+    --muted-foreground: 217 14% 72%;
 
-    /* Teal ajusté pour le dark mode */
-    --accent: 174 48% 55%;
-    --accent-foreground: 0 0% 95%;
+    /* Accent l?g?rement d?satur? pour ?viter l'effet dat? */
+    --accent: 198 40% 20%;
+    --accent-foreground: 210 20% 96%;
 
-    /* Mauve pour destructive en dark mode */
-    --destructive: 340 62% 55%;
-    --destructive-foreground: 0 0% 95%;
+    --destructive: 0 68% 56%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 217 20% 22%;
-    --input: 217 20% 22%;
+    --border: 218 16% 24%;
+    --input: 218 16% 24%;
     --ring: var(--sidebar-ring);
 
-    /* Sidebar colors - Dark mode (même que light pour cohérence) */
-    --sidebar: 217 27% 10%;           /* #14181F */
+    /* Sidebar colors - Dark mode */
+    --sidebar: 217 27% 10%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-accent: 217 27% 18%;    /* Plus clair pour hover/active */
+    --sidebar-accent: 217 27% 18%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 217 27% 15%;
     --sidebar-ring: 217 91% 65%;
 
     /* Charts avec palette (dark mode) */
-    --chart-1: 217 91% 65%; /* Blue MC2 */
-    --chart-2: 38 92% 55%;  /* Yellow légèrement plus clair */
-    --chart-3: 174 58% 65%; /* Teal */
-    --chart-4: 72 39% 65%;  /* Sage */
-    --chart-5: 340 36% 62%; /* Mauve plus clair */
-    --control-ghost-bg: 198 55% 19%;
-    --control-ghost-bg-hover: 198 55% 24%;
-    --control-ghost-bg-active: 198 55% 29%;
-    --control-ghost-border: 198 60% 42%;
-    --control-ghost-foreground: 198 85% 72%;
+    --chart-1: 217 91% 65%;
+    --chart-2: 38 92% 55%;
+    --chart-3: 174 58% 65%;
+    --chart-4: 72 39% 65%;
+    --chart-5: 340 36% 62%;
+    --control-ghost-bg: 198 42% 18%;
+    --control-ghost-bg-hover: 198 44% 22%;
+    --control-ghost-bg-active: 198 46% 26%;
+    --control-ghost-border: 198 48% 36%;
+    --control-ghost-foreground: 198 78% 74%;
     --control-ghost-ring: 198 71% 60%;
   }
   .theme {

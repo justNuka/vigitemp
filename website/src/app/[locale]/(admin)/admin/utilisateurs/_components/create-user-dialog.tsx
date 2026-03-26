@@ -137,7 +137,7 @@ export function CreateUserDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto bg-white dark:bg-card">
+      <DialogContent className="max-h-[90vh] overflow-y-auto bg-white dark:bg-popover dark:text-popover-foreground">
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>{t("description")}</DialogDescription>

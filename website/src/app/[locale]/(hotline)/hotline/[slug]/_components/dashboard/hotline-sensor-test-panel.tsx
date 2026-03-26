@@ -329,7 +329,7 @@ export function HotlineSensorTestPanel() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-white dark:bg-popover/95">
         <CardHeader>
           <CardTitle>Test manuel de sonde</CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -374,7 +374,7 @@ export function HotlineSensorTestPanel() {
             </Field>
           </div>
 
-          <div className="rounded-md border border-border/60 bg-muted/20 p-4">
+          <div className="rounded-md border border-border/60 bg-muted/20 p-4 dark:bg-muted/15">
             <div className="mb-3 text-sm font-medium">Override manuel de connexion</div>
             <div className="mb-3 text-xs text-muted-foreground">
               Laissez vide pour utiliser la base du serveur C#. Renseignez au minimum le port COM pour tester une sonde non encore creee en base.
@@ -468,9 +468,9 @@ export function HotlineSensorTestPanel() {
 
           {showGspFields ? (
             <>
-              <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+              <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground dark:bg-muted/15">
                 <div className="mb-1 font-medium">Commande envoyée</div>
-                <code className="block whitespace-pre-wrap rounded bg-white px-2 py-1 font-mono text-[11px]">
+                <code className="block whitespace-pre-wrap rounded bg-white px-2 py-1 font-mono text-[11px] text-foreground dark:bg-card">
                   {JSON.stringify(commandPreview)}
                 </code>
               </div>
@@ -606,11 +606,11 @@ export function HotlineSensorTestPanel() {
                       />
                     </Field>
                   )}
-                  <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                  <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-xs text-muted-foreground dark:bg-muted/15">
                     <div className="mb-1 font-medium">Préfixes disponibles</div>
                     <div className="font-mono">TEMP, FTEM, DD-H, DCAL, DETA, DCON, MEMO, ED-H, ECAL, EETA, ECON, CHAN</div>
-                    <div className="mt-1 text-slate-600">Pour les commandes avec séparateur, utiliser `-` et non `/`.</div>
-                    <div className="mt-1 text-slate-600">Les payloads sont séparés de la commande par un espace.</div>
+                    <div className="mt-1 text-muted-foreground">Pour les commandes avec séparateur, utiliser `-` et non `/`.</div>
+                    <div className="mt-1 text-muted-foreground">Les payloads sont séparés de la commande par un espace.</div>
                   </div>
                 </div>
               ) : null}
@@ -639,7 +639,7 @@ export function HotlineSensorTestPanel() {
       </Card>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
-        <Card>
+        <Card className="bg-white dark:bg-popover/95">
           <CardHeader>
             <CardTitle>Résultats</CardTitle>
           </CardHeader>
@@ -673,7 +673,7 @@ export function HotlineSensorTestPanel() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white dark:bg-popover/95">
           <CardHeader>
             <CardTitle>Trames TX/RX</CardTitle>
           </CardHeader>
@@ -734,7 +734,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 function HelpLine({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="flex gap-2 rounded-md border border-amber-200/70 bg-white/70 p-2 text-xs text-amber-900">
+    <div className="flex gap-2 rounded-md border border-amber-200/70 bg-white/70 p-2 text-xs text-amber-900 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200">
       <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
       <div>
         <div className="font-medium">{title}</div>
@@ -764,7 +764,7 @@ function SectionTitleWithInfo({ title, description }: { title: string; descripti
 
 function ResultItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border bg-muted/20 px-3 py-2">
+    <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 dark:bg-muted/15">
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="text-sm font-medium">{value}</div>
     </div>
@@ -787,7 +787,7 @@ function parseOptionalInteger(value: string) {
 
 function ResultRssiItem({ value }: { value: string }) {
   return (
-    <div className="rounded-md border bg-muted/20 px-3 py-2">
+    <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2 dark:bg-muted/15">
       <div className="text-xs uppercase tracking-wide text-muted-foreground">Signal</div>
       <div className="mt-1 flex min-h-6 items-center">
         <TooltipProvider>

@@ -47,7 +47,7 @@ export function CreateSiteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-white dark:bg-card">
+      <DialogContent className="sm:max-w-md bg-white dark:bg-popover dark:text-popover-foreground">
         <DialogHeader>
           <DialogTitle>{t('create_title')}</DialogTitle>
           <DialogDescription>{t('create_description')}</DialogDescription>

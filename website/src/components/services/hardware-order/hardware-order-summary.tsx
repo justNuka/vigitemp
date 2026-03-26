@@ -151,7 +151,7 @@ export function HardwareOrderSummary({
   const renderItem = (item: SummaryItem) => (
     <div
       key={item.materialId}
-      className="rounded-2xl border border-border/70 bg-background/70 px-4 py-4 dark:border-slate-700 dark:bg-slate-900/80"
+      className="rounded-2xl border border-border/70 bg-background/70 px-4 py-4 dark:border-border dark:bg-card/90"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -189,7 +189,7 @@ export function HardwareOrderSummary({
     <aside
       className={cn(
         "max-h-[calc(100vh-8rem)] overflow-y-auto rounded-[2rem] border border-border/60 bg-card/95 p-6 shadow-[0_20px_80px_-45px_rgba(15,23,42,0.4)] backdrop-blur",
-        "dark:border-slate-800 dark:bg-slate-950/90 dark:shadow-[0_20px_90px_-45px_rgba(2,6,23,0.98)]",
+        "dark:border-border dark:bg-popover/95 dark:shadow-[0_20px_90px_-45px_rgba(0,0,0,0.75)]",
         className,
       )}
     >
@@ -216,7 +216,7 @@ export function HardwareOrderSummary({
           </div>
         ) : (
           groupedItems.map((group) => (
-            <div key={group.rawGamme} className="space-y-4 rounded-2xl border border-border/70 bg-muted/15 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+            <div key={group.rawGamme} className="space-y-4 rounded-2xl border border-border/70 bg-muted/15 p-4 dark:border-border dark:bg-card/85">
               <div className="border-b border-border/60 pb-2">
                 <p className="text-xs uppercase tracking-[0.2em] text-primary">
                   {renderGammeLabel(group.gamme)}
@@ -302,7 +302,7 @@ export function HardwareOrderSummary({
         />
       </div>
 
-      <div className="mt-6 rounded-2xl border border-border/70 bg-muted/25 px-4 py-4 text-sm dark:border-slate-800 dark:bg-slate-900/65">
+      <div className="mt-6 rounded-2xl border border-border/70 bg-muted/25 px-4 py-4 text-sm dark:border-border dark:bg-muted/20">
         <div className="flex items-start gap-3">
           <Mail className="mt-0.5 h-4 w-4 text-primary" />
           <div className="space-y-1">

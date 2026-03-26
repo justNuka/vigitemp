@@ -1,14 +1,16 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { AlertTriangle, Database, MessageSquareText, Server } from "lucide-react"
+import { AlertTriangle, Database, LogOut, MessageSquareText, Server, UserRound } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Terminal } from "@/components/magicui/terminal"
 import { isFeatureEnabled } from "@/lib/feature-flags"
 import { getJson, isUnauthorizedError, postJson } from "@/lib/http"
@@ -45,7 +47,7 @@ type HotlineRequestError = {
   ip?: string
 }
 
-type HotlineDashboardProps = { slug: string }
+type HotlineDashboardProps = { slug: string; username: string | null }
 
 function formatStatus(t: ReturnType<typeof useTranslations>, status: HealthStatus) {
   return status === 'ok' ? t('status.ok') : status === 'error' ? t('status.error') : t('status.unknown')
@@ -56,7 +58,7 @@ function statusBadgeClass(status: HealthStatus) {
     ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/30'
     : status === 'error'
       ? 'bg-red-500/15 text-red-600 dark:text-red-300 border-red-500/30'
-      : 'bg-slate-500/10 text-slate-600 dark:text-slate-300 border-slate-500/30'
+      : 'bg-slate-500/10 text-slate-600 dark:text-slate-200 border-slate-500/30'
 }
 
 function getLogLineClass(line: string) {
@@ -71,7 +73,7 @@ function formatRequestErrorLine(item: HotlineRequestError) {
   return `[${item.timestamp}] [${item.id}] ${item.method} ${item.path} -> ${item.statusCode} | ${item.message}`
 }
 
-export function HotlineDashboard({ slug }: HotlineDashboardProps) {
+export function HotlineDashboard({ slug, username }: HotlineDashboardProps) {
   const router = useRouter()
   const params = useParams()
   const locale = typeof params?.locale === 'string' ? params.locale : 'fr'
@@ -95,9 +97,9 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
     return Number.isFinite(parsed) && parsed > 0 ? parsed : 200
   }, [logLimit])
 
-  const handleLogout = async () => {
+  const handleLogout = async (target: 'hotline' | 'site') => {
     await postJson('/api/hotline/logout', {})
-    router.replace(`/${locale}/login`)
+    router.replace(target === 'hotline' ? `/${locale}/hotline/${slug}/login` : `/${locale}/login`)
   }
 
   const guardUnauthorized = (error: unknown) => {
@@ -161,7 +163,7 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
   }, [])
 
   return (
-    <div className="flex w-full flex-1 flex-col gap-6 rounded-xl border border-border/60 bg-gradient-to-b from-[#26A5DA]/5 via-transparent to-transparent p-4 md:p-6">
+    <div className="flex w-full flex-1 flex-col gap-6 rounded-2xl border border-border/60 bg-white/95 p-4 shadow-sm dark:bg-card/95 dark:shadow-black/25 md:p-6">
       {isFeatureEnabled('enableAgentSecretAlert') && agentSecretStatus && agentSecretStatus.status !== 'ok' ? (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
@@ -170,21 +172,45 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
         </Alert>
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">{t('title')}</h1>
           <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
-          <div className="mt-2 inline-flex items-center rounded-md border border-[#26A5DA]/30 bg-[#26A5DA]/10 px-2 py-1 text-xs text-[#0E7490] dark:text-[#67E8F9]">{t('health.banner')}</div>
+          <div className="mt-2 inline-flex items-center rounded-md border border-primary/20 bg-primary/10 px-2 py-1 text-xs text-primary dark:border-primary/25 dark:bg-primary/10 dark:text-primary">{t('health.banner')}</div>
         </div>
-        <Button variant="outline" onClick={handleLogout}>{t('actions.logout')}</Button>
+        <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-white/90 px-3 py-2 shadow-sm dark:bg-popover/95">
+          <div className="hidden items-center gap-2 text-sm text-muted-foreground sm:inline-flex">
+            <UserRound className="h-4 w-4" />
+            <span className="font-medium text-foreground">{username || t('session.unknown_user')}</span>
+          </div>
+          <ThemeToggle />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <UserRound className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('session.account')}</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleLogout('hotline')}>
+                <LogOut className="mr-2 h-4 w-4" />
+                {t('actions.logout_hotline')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleLogout('site')}>
+                <LogOut className="mr-2 h-4 w-4" />
+                {t('actions.logout_site')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="bg-[#26A5DA]/15 p-1">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-white hover:bg-[#26A5DA]/20">{t('tabs.overview')}</TabsTrigger>
-          <TabsTrigger value="logs" className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-white hover:bg-[#26A5DA]/20">{t('tabs.logs')}</TabsTrigger>
-          <TabsTrigger value="sensor_test" className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-white hover:bg-[#26A5DA]/20">{t('tabs.sensor_test')}</TabsTrigger>
-          <TabsTrigger value="request_errors" className="data-[state=active]:bg-[#26A5DA] data-[state=active]:text-white hover:bg-[#26A5DA]/20">{t('tabs.request_errors')}</TabsTrigger>
+        <TabsList className="border border-border/60 bg-primary/10 p-1 dark:bg-primary/12">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-primary/15 dark:data-[state=active]:bg-primary dark:data-[state=active]:text-primary-foreground dark:hover:bg-primary/15">{t('tabs.overview')}</TabsTrigger>
+          <TabsTrigger value="logs" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-primary/15 dark:data-[state=active]:bg-primary dark:data-[state=active]:text-primary-foreground dark:hover:bg-primary/15">{t('tabs.logs')}</TabsTrigger>
+          <TabsTrigger value="sensor_test" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-primary/15 dark:data-[state=active]:bg-primary dark:data-[state=active]:text-primary-foreground dark:hover:bg-primary/15">{t('tabs.sensor_test')}</TabsTrigger>
+          <TabsTrigger value="request_errors" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-primary/15 dark:data-[state=active]:bg-primary dark:data-[state=active]:text-primary-foreground dark:hover:bg-primary/15">{t('tabs.request_errors')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">
@@ -194,7 +220,7 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
             <HotlineHealthCard title={t('health.db_mesure')} status={formatStatus(t, health?.dbMesure || 'unknown')} loading={loadingHealth} icon={Database} statusLabel={t('actions.loading')} badgeClassName={statusBadgeClass(health?.dbMesure || 'unknown')} />
             <HotlineHealthCard title={t('health.db_chat')} status={formatStatus(t, health?.dbChat || 'unknown')} loading={loadingHealth} icon={MessageSquareText} statusLabel={t('actions.loading')} badgeClassName={statusBadgeClass(health?.dbChat || 'unknown')} />
           </div>
-          <div className="mt-4"><Button variant="secondary" onClick={loadHealth} disabled={loadingHealth}>{loadingHealth ? t('actions.check_loading') : t('actions.check_now')}</Button></div>
+          <div className="mt-4"><Button variant="outline" onClick={loadHealth} disabled={loadingHealth}>{loadingHealth ? t('actions.check_loading') : t('actions.check_now')}</Button></div>
         </TabsContent>
 
         <TabsContent value="logs" className="mt-4 space-y-4">
@@ -229,7 +255,7 @@ export function HotlineDashboard({ slug }: HotlineDashboardProps) {
         </TabsContent>
 
         <TabsContent value="request_errors" className="mt-4 space-y-4">
-          <Card>
+          <Card className="bg-white dark:bg-popover/95">
             <CardHeader><CardTitle className="text-base">{t('request_errors.title')}</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <div className="flex justify-end"><Button onClick={loadRequestErrors} disabled={loadingRequestErrors}>{loadingRequestErrors ? t('actions.loading') : t('actions.refresh')}</Button></div>

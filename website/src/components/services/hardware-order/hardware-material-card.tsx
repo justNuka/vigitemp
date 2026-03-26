@@ -65,7 +65,7 @@ export function HardwareMaterialCard({
   const descriptionLines = material.Descriptif.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
 
   return (
-    <article className="group overflow-hidden rounded-3xl border border-border/60 bg-card/90 shadow-[0_18px_70px_-50px_rgba(15,23,42,0.45)] transition-transform duration-200 hover:-translate-y-0.5 dark:border-slate-800 dark:bg-slate-900/90 dark:shadow-[0_18px_90px_-55px_rgba(2,6,23,0.95)]">
+    <article className="group overflow-hidden rounded-3xl border border-border/60 bg-card/90 shadow-[0_18px_70px_-50px_rgba(15,23,42,0.45)] transition-transform duration-200 hover:-translate-y-0.5 dark:border-border dark:bg-card/95 dark:shadow-[0_18px_70px_-50px_rgba(0,0,0,0.6)]">
       <div id={anchorId} className="scroll-mt-28" />
       <div className="flex flex-col lg:flex-row">
         <div className="relative flex min-h-52 w-full items-center justify-center overflow-hidden bg-[linear-gradient(180deg,rgba(25,145,201,0.14),rgba(15,23,42,0.02))] dark:bg-[linear-gradient(180deg,rgba(25,145,201,0.16),rgba(15,23,42,0.38))] lg:w-56">
@@ -77,7 +77,7 @@ export function HardwareMaterialCard({
               className="relative z-10 h-full max-h-44 w-auto object-contain p-6"
             />
           ) : (
-            <div className="relative z-10 flex h-20 w-20 items-center justify-center rounded-3xl bg-white/80 text-primary shadow-sm dark:bg-slate-950/70 dark:text-cyan-300 dark:shadow-[0_12px_30px_-20px_rgba(8,47,73,0.9)]">
+            <div className="relative z-10 flex h-20 w-20 items-center justify-center rounded-3xl bg-white/80 text-primary shadow-sm dark:bg-popover/90 dark:text-cyan-300 dark:shadow-[0_12px_30px_-20px_rgba(0,0,0,0.55)]">
               <Icon className="h-10 w-10" />
             </div>
           )}
@@ -88,7 +88,7 @@ export function HardwareMaterialCard({
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge className="bg-primary/10 text-primary hover:bg-primary/10 dark:bg-cyan-500/15 dark:text-cyan-300 dark:hover:bg-cyan-500/15">{gammeLabel}</Badge>
-                <Badge variant="secondary" className="dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-100">{typeLabel}</Badge>
+                <Badge variant="secondary" className="dark:border-border dark:bg-popover/85 dark:text-foreground">{typeLabel}</Badge>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
@@ -111,7 +111,7 @@ export function HardwareMaterialCard({
                 <p className="leading-relaxed">—</p>
               )}
             </div>
-            <div className="flex min-w-[180px] flex-col items-stretch gap-2 rounded-2xl border border-border/60 bg-muted/30 px-4 py-4 dark:border-slate-700 dark:bg-slate-800/55">
+            <div className="flex min-w-[180px] flex-col items-stretch gap-2 rounded-2xl border border-border/60 bg-muted/30 px-4 py-4 dark:border-border dark:bg-muted/20">
               <p className="text-center text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 {quantityLabel}
               </p>

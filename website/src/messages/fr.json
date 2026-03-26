@@ -3820,11 +3820,17 @@
       "request_errors": "Erreurs API"
     },
     "actions": {
-      "logout": "Déconnexion",
+      "logout": "D?connexion",
+      "logout_hotline": "D?connexion vers le portail hotline",
+      "logout_site": "D?connexion vers le site",
       "loading": "Chargement...",
-      "check_loading": "Vérification...",
-      "check_now": "Vérifier maintenant",
+      "check_loading": "V?rification...",
+      "check_now": "V?rifier maintenant",
       "refresh": "Actualiser"
+    },
+    "session": {
+      "account": "Utilisateur",
+      "unknown_user": "Utilisateur inconnu"
     },
     "status": {
       "ok": "OK",

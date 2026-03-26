@@ -23,7 +23,7 @@ export function HotlineLogsPanel({
   lineClassName: (line: string) => string
 }) {
   return (
-    <Card>
+    <Card className="bg-white dark:bg-popover/95">
       <CardHeader>
         <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
@@ -63,14 +63,14 @@ export function HotlineLogsFilters({
   labels: Record<string, string>
 }) {
   return (
-    <Card>
+    <Card className="bg-white dark:bg-popover/95">
       <CardHeader>
         <CardTitle className="text-base">{labels.filterTitle}</CardTitle>
       </CardHeader>
       <CardContent className="grid gap-4 md:grid-cols-4">
         <div className="space-y-2">
           <Label htmlFor="log-source">{labels.source}</Label>
-          <select id="log-source" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={logSource} onChange={(event) => setLogSource(event.target.value as typeof logSource)}>
+          <select id="log-source" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm dark:bg-card" value={logSource} onChange={(event) => setLogSource(event.target.value as typeof logSource)}>
             <option value="web">{labels.web}</option>
             <option value="server">{labels.server}</option>
             <option value="web-service-error">{labels.webServiceError}</option>
@@ -87,7 +87,7 @@ export function HotlineLogsFilters({
           <Input id="log-limit" value={logLimit} onChange={(event) => setLogLimit(event.target.value)} />
         </div>
         <div className="flex items-end">
-          <Button className="w-full" onClick={onRefresh} disabled={loading}>{loading ? labels.loading : labels.refresh}</Button>
+          <Button variant="outline" className="w-full" onClick={onRefresh} disabled={loading}>{loading ? labels.loading : labels.refresh}</Button>
         </div>
       </CardContent>
     </Card>
