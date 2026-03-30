@@ -6,13 +6,19 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { validateLicense } from "@/lib/license-server"
 import { log } from "@/lib/logger"
-import { buildSensorSerialsFromInput, extractProbeAddressFromSerial } from "@/lib/sensor-naming"
+import { buildSensorSerialsFromInput, extractProbeAddressFromSerial, getSensorFamilyFromSerial } from "@/lib/sensor-naming"
 import { z } from "zod"
 
 export const GET = withAuthLogging(async (_req: NextRequest) => {
   try {
     const sondes = await prisma.t_sonde.findMany({
       include: {
+        t_sonde_etat: {
+          select: {
+            Etat_Sonde: true,
+            Etat_Libelle: true,
+          },
+        },
         t_lieu: {
           select: {
             Nom_Lieu: true,
@@ -56,8 +62,10 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
       Port_Serie: sonde.Port_Serie,
       // Sonde_Type may not be in the generated Prisma type for t_sonde; access via type assertion.
       Sonde_Type: (sonde as { Sonde_Type?: string | null }).Sonde_Type ?? null,
-      Surveillance_Etat: sonde.Surveillance_Etat,
-      Surveillance_Etat_Libelle: sonde.Surveillance_Etat,
+      Famille_Sonde: getSensorFamilyFromSerial(sonde.Sonde_Numero_Serie),
+      Est_Sonde_GSO: sonde.Est_Sonde_GSO,
+      Surveillance_Etat: sonde.Surveillance_Etat ?? sonde.t_sonde_etat?.Etat_Sonde ?? null,
+      Surveillance_Etat_Libelle: sonde.t_sonde_etat?.Etat_Libelle ?? sonde.Surveillance_Etat ?? null,
       Id_Module: sonde.Id_Module,
       Sonde_Offset: sonde.Sonde_Offset,
       Lieu: sonde.t_lieu[0]?.Nom_Lieu || null,
@@ -85,9 +93,20 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
     const body = await req.json()
     const data = createSensorSchema.parse(body)
     const { ip } = getRequestContext(req)
+    const typeCode = data.sondeType.trim().toUpperCase()
 
-    const creation = buildSensorSerialsFromInput(data.sondeType, data.serieNum)
+    const sensorType = await prisma.t_sonde_type.findUnique({
+      where: { Sonde_Type: typeCode },
+      select: { Sonde_Type: true, Famille_Sonde: true },
+    })
+
+    if (!sensorType?.Sonde_Type) {
+      return apiError(400, "invalid_sensor_type", "Type de sonde introuvable")
+    }
+
+    const creation = buildSensorSerialsFromInput(sensorType.Sonde_Type, data.serieNum)
     const serialsToCreate = Array.from(new Set(creation.serials))
+    const isGsoFamily = sensorType.Famille_Sonde === "GSO"
 
     const license = await validateLicense()
     if (!license.ok) {
@@ -155,7 +174,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
             Port_Serie: portSerie,
             Sonde_Offset: data.sondeOffset ?? 0,
             Surveillance_Etat: "D",
-            Est_Sonde_GSO: creation.isGso,
+            Est_Sonde_GSO: isGsoFamily,
           },
         }),
       ),
@@ -168,6 +187,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
         moduleId: item.Id_Module,
         offset: item.Sonde_Offset,
         estGso: item.Est_Sonde_GSO,
+        familleSonde: sensorType.Famille_Sonde,
       })
     }
 
@@ -179,6 +199,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
           Sonde_Numero_Serie: item.Sonde_Numero_Serie,
           Adresse_Sonde: item.Adresse_Sonde,
           Est_Sonde_GSO: item.Est_Sonde_GSO,
+          Famille_Sonde: sensorType.Famille_Sonde,
         })),
       },
       { status: 201 },

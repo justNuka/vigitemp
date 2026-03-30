@@ -131,14 +131,14 @@ export function BellButton({ currentUserId }: { currentUserId?: number }) {
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="flex items-center justify-between px-4 py-3 border-b">
+      <PopoverContent className="w-80 overflow-hidden border-border/70 bg-popover text-popover-foreground shadow-xl" align="end">
+        <div className="flex items-center justify-between border-b border-border/70 bg-background/70 px-4 py-3 backdrop-blur-sm dark:bg-slate-950/70">
           <span className="font-semibold text-sm">{t("bell.title")}</span>
           {unreadConvs.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+              className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground dark:text-slate-300 dark:hover:text-white"
               onClick={markAllRead}
               disabled={isMarkingAllRead}
             >
@@ -148,12 +148,12 @@ export function BellButton({ currentUserId }: { currentUserId?: number }) {
         </div>
 
         {unreadConvs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center gap-2 py-8 text-muted-foreground dark:text-slate-300">
             <Bell className="h-8 w-8 opacity-30" />
             <p className="text-sm">{t("bell.empty")}</p>
           </div>
         ) : (
-          <ScrollArea className="h-72">
+          <ScrollArea className="h-72 bg-popover">
             <div className="py-1">
               {unreadConvs.map((conv, index) => (
                 <div key={conv.id}>
@@ -161,10 +161,10 @@ export function BellButton({ currentUserId }: { currentUserId?: number }) {
                     // next-intl's typed Link doesn't support query params natively; cast is safe here
                     href={`/messages?conv=${conv.id}` as never}
                     onClick={() => setOpen(false)}
-                    className="flex items-start gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer"
+                    className="flex cursor-pointer items-start gap-3 px-4 py-3 transition-colors hover:bg-muted/60 dark:hover:bg-slate-800/70"
                   >
                     <Avatar className="h-9 w-9 shrink-0 mt-0.5">
-                      <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                      <AvatarFallback className="bg-primary text-xs text-primary-foreground">
                         {getInitials(conv.name)}
                       </AvatarFallback>
                     </Avatar>
@@ -172,13 +172,13 @@ export function BellButton({ currentUserId }: { currentUserId?: number }) {
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-semibold truncate flex-1">{conv.name}</p>
                         {conv.lastMessage && (
-                          <span className="text-xs text-muted-foreground shrink-0">
+                          <span className="shrink-0 text-xs text-muted-foreground dark:text-slate-400">
                             {formatTime(conv.lastMessage.createdAt)}
                           </span>
                         )}
                       </div>
                       {conv.lastMessage?.content && (
-                        <p className="text-xs text-muted-foreground truncate mt-0.5">
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground dark:text-slate-400">
                           {conv.lastMessage.content}
                         </p>
                       )}
@@ -193,7 +193,7 @@ export function BellButton({ currentUserId }: { currentUserId?: number }) {
         )}
 
         <Separator />
-        <div className="px-4 py-2">
+        <div className="bg-background/70 px-4 py-2 dark:bg-slate-950/70">
           <Link
             href="/messages"
             onClick={() => setOpen(false)}

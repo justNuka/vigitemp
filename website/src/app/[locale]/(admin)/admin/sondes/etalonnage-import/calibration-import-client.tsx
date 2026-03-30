@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TanStackTable } from "@/components/data-table/tanstack-table";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import StepperCalibrationFileUpload, {
   type CalibrationImportResult,
   type CalibrationInsertData,
@@ -58,8 +59,9 @@ export function CalibrationImportClient() {
   const [rows, setRows] = useState<CalibrationImportRow[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [stepperSessionKey, setStepperSessionKey] = useState(0);
-  const [editRowId, setEditRowId] = useState<string | null>(null);
+  const [editRowIds, setEditRowIds] = useState<string[]>([]);
   const [editValidityDays, setEditValidityDays] = useState<string>("");
+  const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
 
   const handleUploadResult = (result: CalibrationImportResult) => {
     const dateText =
@@ -73,57 +75,77 @@ export function CalibrationImportClient() {
       (typeof result.dateValidity === "string" ? result.dateValidity : null);
 
     setRows((prev) => {
-      if (prev.some((row) => row.id === result.id)) return prev;
-      return [
-        {
-          id: result.id,
-          file: result.file,
-          sensor: result.sensor,
-          dateText,
-          dateValidityText,
-          uncertainty: result.uncertainty,
-          errJustesse: result.insertData.Err_Justesse ?? null,
-          insertData: result.insertData,
-          persisted: false,
-        },
-        ...prev,
-      ];
+      const nextRow: CalibrationImportRow = {
+        id: result.id,
+        file: result.file,
+        sensor: result.sensor,
+        dateText,
+        dateValidityText,
+        uncertainty: result.uncertainty,
+        errJustesse: result.insertData.Err_Justesse ?? null,
+        insertData: result.insertData,
+        persisted: false,
+      };
+      const deduped = prev.filter((row) => !(row.file == result.file && row.sensor === result.sensor && !row.persisted));
+      return [nextRow, ...deduped];
     });
   };
 
-  const openEdit = (row: CalibrationImportRow) => {
-    setEditRowId(row.id);
-    setEditValidityDays(row.insertData.Duree_Validite_Jours?.toString() ?? "");
+  const openEdit = (rowIds: string[]) => {
+    const targets = rowIds.filter((id) => rows.some((row) => row.id === id && !row.persisted));
+    if (targets.length === 0) return;
+    const sourceRow = rows.find((row) => row.id === targets[0]) ?? null;
+    setEditRowIds(targets);
+    setEditValidityDays(sourceRow?.insertData.Duree_Validite_Jours?.toString() ?? "");
   };
 
   const closeEdit = () => {
-    setEditRowId(null);
+    setEditRowIds([]);
     setEditValidityDays("");
   };
 
   const applyEdit = () => {
-    if (!editRowId) return;
+    if (editRowIds.length === 0) return;
+    const nextValue =
+      editValidityDays.trim() === ""
+        ? null
+        : Number.isFinite(Number(editValidityDays))
+          ? Math.max(1, Math.trunc(Number(editValidityDays)))
+          : null;
+
     setRows((prev) =>
-      prev.map((row) => {
-        if (row.id !== editRowId) return row;
-        return {
-          ...row,
-          insertData: {
-            ...row.insertData,
-            Duree_Validite_Jours:
-              editValidityDays.trim() === ""
-                ? null
-                : Number.isFinite(Number(editValidityDays))
-                  ? Math.max(1, Math.trunc(Number(editValidityDays)))
-                  : null,
-          },
-        };
-      }),
+      prev.map((row) =>
+        !editRowIds.includes(row.id)
+          ? row
+          : {
+              ...row,
+              insertData: {
+                ...row.insertData,
+                Duree_Validite_Jours: nextValue,
+              },
+            },
+      ),
     );
     closeEdit();
   };
 
   const pendingRows = useMemo(() => rows.filter((row) => !row.persisted), [rows]);
+  const allPendingIds = useMemo(() => pendingRows.map((row) => row.id), [pendingRows]);
+  const allPendingSelected = allPendingIds.length > 0 && allPendingIds.every((id) => selectedRowIds.includes(id));
+
+  const toggleSelected = (rowId: string, checked: boolean) => {
+    setSelectedRowIds((prev) => checked ? [...new Set([...prev, rowId])] : prev.filter((id) => id !== rowId));
+  };
+
+  const toggleSelectAll = (checked: boolean) => {
+    setSelectedRowIds(checked ? allPendingIds : []);
+  };
+
+  const handleClearRows = () => {
+    setRows([]);
+    setSelectedRowIds([]);
+    closeEdit();
+  };
 
   const handleSaveToDb = async () => {
     if (isSaving) return;
@@ -163,6 +185,7 @@ export function CalibrationImportClient() {
       }
 
       setRows([]);
+      setSelectedRowIds([]);
       setOpen(false);
       setStepperSessionKey((prev) => prev + 1);
       closeEdit();
@@ -176,6 +199,24 @@ export function CalibrationImportClient() {
   };
 
   const columns: ColumnDef<CalibrationImportRow>[] = [
+    {
+      id: "select",
+      header: () => (
+        <Checkbox
+          checked={allPendingSelected}
+          onCheckedChange={(checked) => toggleSelectAll(Boolean(checked))}
+          aria-label={t("actions.select_all")}
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={selectedRowIds.includes(row.original.id)}
+          onCheckedChange={(checked) => toggleSelected(row.original.id, Boolean(checked))}
+          aria-label={t("actions.select_row")}
+          disabled={row.original.persisted}
+        />
+      ),
+    },
     {
       accessorKey: "file",
       header: t("table.columns.file"),
@@ -215,7 +256,7 @@ export function CalibrationImportClient() {
       id: "actions",
       header: t("table.columns.actions"),
       cell: ({ row }) => (
-        <Button size="sm" variant="outline" onClick={() => openEdit(row.original)} disabled={row.original.persisted}>
+        <Button size="sm" variant="outline" onClick={() => openEdit([row.original.id])} disabled={row.original.persisted}>
           {t("actions.edit")}
         </Button>
       ),
@@ -245,7 +286,13 @@ export function CalibrationImportClient() {
             tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_thead_th:last-child]:!border-r-0"
           />
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => openEdit(selectedRowIds)} disabled={selectedRowIds.length === 0}>
+              {t("actions.edit_selection")}
+            </Button>
+            <Button variant="outline" onClick={handleClearRows} disabled={rows.length === 0 || isSaving}>
+              {t("actions.clear_list")}
+            </Button>
             <Button className="gap-2" onClick={handleSaveToDb} disabled={pendingRows.length === 0 || isSaving}>
               {isSaving ? t("actions.saving_to_db") : t("actions.save_to_db")}
             </Button>
@@ -269,7 +316,7 @@ export function CalibrationImportClient() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!editRowId} onOpenChange={(openState) => (!openState ? closeEdit() : null)}>
+      <Dialog open={editRowIds.length > 0} onOpenChange={(openState) => (!openState ? closeEdit() : null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{t("edit.title")}</DialogTitle>
@@ -284,6 +331,7 @@ export function CalibrationImportClient() {
                 value={editValidityDays}
                 onChange={(event) => setEditValidityDays(event.target.value)}
               />
+              <p className="text-xs text-muted-foreground">{t("edit.batch_helper", { count: editRowIds.length })}</p>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={closeEdit}>{t("actions.cancel")}</Button>

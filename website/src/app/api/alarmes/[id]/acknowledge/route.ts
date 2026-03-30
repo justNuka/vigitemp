@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { log } from "@/lib/logger"
+import { getPublicAppUrl } from "@/lib/public-app-url"
 import { getRequestContext } from "@/lib/api-logger"
 import { withAnyAuthorizationLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
@@ -178,7 +179,7 @@ export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_
       ackStep = "send_mail"
       try {
         const defaultUrl = `/${"fr"}/alarmes`
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+        const baseUrl = getPublicAppUrl(req)
         const alarmUrl = `${baseUrl}${defaultUrl}`
 
         await sendAlarmEventEmails({

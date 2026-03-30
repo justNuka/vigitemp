@@ -5,6 +5,7 @@ import { getRequestContext, withLogging } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { routing } from "@/i18n/routing"
 import { log } from "@/lib/logger"
+import { getPublicAppUrl } from "@/lib/public-app-url"
 import { randomUUID } from "crypto"
 import { revalidateTag } from "next/cache"
 import { sendAlarmEventEmails } from "@/lib/alarm-email"
@@ -221,7 +222,7 @@ export const POST = withLogging(async (req: NextRequest) => {
   let url = validated.data.url
   const alarmId = validated.data.alarmId
   const defaultUrl = `/${routing.defaultLocale}/alarmes`
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  const baseUrl = getPublicAppUrl(req)
   const formatDateTime = (value?: Date | null) =>
     value
       ? new Intl.DateTimeFormat("fr-FR", {
@@ -296,7 +297,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       locationLabel = [siteName, lieuName].filter(Boolean).join(" / ")
       title ??= "Alarme Vigitemp"
       const alarmType =
-        alarm.Type === "H" ? "Alarme haute" : alarm.Type === "B" ? "Alarme basse" : alarm.Type === "N" ? "Non r?ponse" : "Alarme"
+        alarm.Type === "H" ? "Alarme haute" : alarm.Type === "B" ? "Alarme basse" : alarm.Type === "N" ? "Non réponse" : "Alarme"
       alarmTypeCode = alarm.Type ?? undefined
       const valueLabel = `${alarm.Valeur ?? "N/A"}${alarm.Unite ?? "°C"}`
       alarmTypeLabel = alarmType
@@ -347,7 +348,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     }
   }
 
-  title ??= "Alarme Vigitemp"
+  title ??= "Alarme VigiSensys"
   messageBody ??= "Une alarme a été déclenchée."
   url ??= defaultUrl
 
@@ -464,6 +465,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     attempted: emailResult.attempted,
     sent: emailResult.sent,
     skipped: emailResult.skipped,
+    usedSystemFallback: emailResult.usedSystemFallback ?? false,
   })
 
   log.audit("CC", {
@@ -481,6 +483,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       emailAttempted: emailResult.attempted,
       emailSent: emailResult.sent,
       emailSkipped: emailResult.skipped,
+      emailUsedSystemFallback: emailResult.usedSystemFallback ?? false,
     },
     success: true,
   })
@@ -497,6 +500,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     emailAttempted: emailResult.attempted,
     emailSent: emailResult.sent,
     emailSkipped: emailResult.skipped,
+    emailUsedSystemFallback: emailResult.usedSystemFallback ?? false,
   })
 })
 

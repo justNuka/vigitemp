@@ -41,6 +41,7 @@ export const PATCH = withAuthLogging(
           Date_Heure_Etalonnage: true,
           Date_Validite: true,
           Duree_Validite_Jours: true,
+          Valide: true,
           Sonde_Numero_Serie: true,
         },
       });
@@ -64,6 +65,7 @@ export const PATCH = withAuthLogging(
           Id_Etalonnage: true,
           Date_Validite: true,
           Duree_Validite_Jours: true,
+          Valide: true,
         },
       });
 

@@ -8,9 +8,9 @@ export const parseRssiValue = (value?: string | null) => {
 
 export const getRssiLevel = (dbm: number | null) => {
   if (dbm === null) return 0
-  if (dbm >= -60) return 5
-  if (dbm >= -70) return 4
-  if (dbm >= -80) return 3
-  if (dbm >= -90) return 2
+  if (dbm >= -70) return 5
+  if (dbm >= -80) return 4
+  if (dbm >= -90) return 3
+  if (dbm >= -100) return 2
   return 1
 }

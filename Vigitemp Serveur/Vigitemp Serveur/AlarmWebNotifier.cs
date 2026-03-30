@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Globalization;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -55,54 +54,53 @@ namespace Vigitemp_Serveur
                 }
 
                 var url = Combine(BaseUrl, "/api/alarmes/dispatch");
-                var title = alarms.Count == 1 ? "Alarme Vigitemp" : $"Alarmes Vigitemp ({alarms.Count})";
-
-                var lines = new List<string>();
-                var maxLines = Math.Min(alarms.Count, 5);
-                for (int i = 0; i < maxLines; i++)
+                var tasks = new List<Task>();
+                foreach (var alarm in alarms)
                 {
-                    var alarm = alarms[i];
-                    var type = string.IsNullOrWhiteSpace(alarm.Type) ? "?" : alarm.Type;
-                    var valueText = alarm.Valeur.HasValue
-                        ? alarm.Valeur.Value.ToString("0.##", CultureInfo.InvariantCulture)
-                        : "-";
-                    var unite = string.IsNullOrWhiteSpace(alarm.Unite) ? "" : (" " + alarm.Unite);
-                    lines.Add($"Lieu {alarm.IdLieu} ({type}) {valueText}{unite}".Trim());
+                    if (alarm == null || alarm.IdAlarme <= 0) continue;
+
+                    var capturedAlarm = alarm;
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        try
+                        {
+                            var payload =
+                                "{" +
+                                "\"alarmId\":" + capturedAlarm.IdAlarme + "," +
+                                "\"eventType\":\"triggered\"" +
+                                "}";
+
+                            var req = new HttpRequestMessage(HttpMethod.Post, url);
+                            req.Headers.Add("x-vigitemp-secret", Secret);
+                            req.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+                            VigitempServeur.Log(
+                                "AlarmWebNotifier: envoi notification web triggered " +
+                                "alarmId=" + capturedAlarm.IdAlarme +
+                                " idLieu=" + capturedAlarm.IdLieu +
+                                " url=" + url);
+
+                            var response = await _http.SendAsync(req);
+                            var statusCode = (int)response.StatusCode;
+                            if (statusCode < 200 || statusCode >= 300)
+                                VigitempServeur.Log(
+                                    "AlarmWebNotifier: WARNING reponse non-2xx triggered (status=" + statusCode + ") " +
+                                    "idLieu=" + capturedAlarm.IdLieu +
+                                    " alarmId=" + capturedAlarm.IdAlarme);
+                            else
+                                VigitempServeur.Log(
+                                    "AlarmWebNotifier: notification triggered envoyee (status=" + statusCode + ") " +
+                                    "idLieu=" + capturedAlarm.IdLieu +
+                                    " alarmId=" + capturedAlarm.IdAlarme);
+                        }
+                        catch (Exception ex)
+                        {
+                            VigitempServeur.Log("AlarmWebNotifier: echec triggered alarm " + capturedAlarm.IdAlarme + ": " + ex.Message);
+                        }
+                    }));
                 }
 
-                if (alarms.Count > maxLines)
-                {
-                    lines.Add($"et {alarms.Count - maxLines} autre(s)...");
-                }
-
-                var body = string.Join("\n", lines);
-
-                var payload =
-                    "{" +
-                    "\"title\":\"" + EscapeJson(title) + "\"," +
-                    "\"body\":\"" + EscapeJson(body) + "\"," +
-                    "\"url\":\"/surveillance\"" +
-                    "}";
-
-                var req = new HttpRequestMessage(HttpMethod.Post, url);
-                req.Headers.Add("x-vigitemp-secret", Secret);
-                req.Content = new StringContent(payload, Encoding.UTF8, "application/json");
-
-                VigitempServeur.Log(
-                    "AlarmWebNotifier: envoi notification web batch " +
-                    "count=" + alarms.Count +
-                    " url=" + url);
-
-                var response = await _http.SendAsync(req);
-                var statusCode = (int)response.StatusCode;
-                if (statusCode < 200 || statusCode >= 300)
-                    VigitempServeur.Log(
-                        "AlarmWebNotifier: WARNING reponse non-2xx batch (status=" + statusCode + ") " +
-                        "count=" + alarms.Count);
-                else
-                    VigitempServeur.Log(
-                        "AlarmWebNotifier: notification batch envoyee (status=" + statusCode + ") " +
-                        "count=" + alarms.Count);
+                await Task.WhenAll(tasks);
             }
             catch (Exception ex)
             {

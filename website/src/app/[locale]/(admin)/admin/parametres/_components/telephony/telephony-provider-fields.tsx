@@ -21,7 +21,7 @@ export function TelephonyProviderFields({
   if (draft.provider === "none") return null
 
   return (
-    <div className="rounded-xl border bg-background/85 p-4">
+    <div className="rounded-xl border border-border/60 bg-white p-4 shadow-sm dark:bg-card">
       <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">{copy.providerDesc[draft.provider]}</div>
 
       {draft.provider === "twilio" ? <TwilioFields draft={draft} copy={copy} setField={setField} /> : null}
@@ -34,9 +34,9 @@ export function TelephonyProviderFields({
           <Label>{copy.notes}</Label>
           <Textarea value={draft.notes} onChange={(e) => setField("notes", e.target.value)} rows={5} placeholder={copy.notesPlaceholder} />
         </div>
-        <div className="rounded-lg border bg-muted/30 p-4">
+        <div className="rounded-lg border border-primary/20 bg-primary/10 p-4 dark:border-primary/25 dark:bg-primary/12">
           <div className="mb-3 text-sm font-medium">{copy.summary}</div>
-          <div className="space-y-2 text-sm text-muted-foreground">
+          <div className="space-y-2 text-sm text-foreground/85 dark:text-primary-foreground/90">
             {summary.length > 0 ? summary.map((line) => <p key={line}>{line}</p>) : <p>{copy.emptySummary}</p>}
           </div>
         </div>

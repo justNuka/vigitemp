@@ -7,7 +7,7 @@ import { withAuthLogging } from "@/lib/api-wrappers";
 import { log } from "@/lib/logger";
 import {
   extractProbeAddressFromSerial,
-  isGsoType,
+  extractTypeCodeFromSerial,
   normalizeImportedGsoSerial,
 } from "@/lib/sensor-naming";
 
@@ -161,11 +161,34 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
     let invalidatedEtalonnages = 0;
     let invalidatedEtalonnageMeasures = 0;
 
+    const serialTypeCodes = Array.from(new Set(serials.map((serial) => extractTypeCodeFromSerial(serial))));
+    const sensorTypeFamilies = serialTypeCodes.length > 0
+      ? await prisma.t_sonde_type.findMany({
+          where: { Sonde_Type: { in: serialTypeCodes } },
+          select: { Sonde_Type: true, Famille_Sonde: true },
+        })
+      : [];
+    const familyByType = new Map(
+      sensorTypeFamilies
+        .filter((row) => row.Sonde_Type)
+        .map((row) => [row.Sonde_Type as string, row.Famille_Sonde]),
+    );
+    const isGsoSerial = (serial: string) => familyByType.get(extractTypeCodeFromSerial(serial)) === "GSO";
+
     await prisma.$transaction(async (tx) => {
+      const gsoSerials = serials.filter((serial) => isGsoSerial(serial));
+
+      if (gsoSerials.length > 0) {
+        await tx.t_sonde.updateMany({
+          where: { Sonde_Numero_Serie: { in: gsoSerials } },
+          data: { Est_Sonde_GSO: true },
+        });
+      }
+
       if (serialsToCreate.length > 0) {
         await tx.t_sonde.createMany({
           data: serialsToCreate.map((serial) => {
-            const gso = isGsoType(serial);
+            const gso = isGsoSerial(serial);
             return {
               Sonde_Numero_Serie: serial,
               Adresse_Sonde: extractProbeAddressFromSerial(serial),

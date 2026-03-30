@@ -222,6 +222,10 @@
           "status": "Affichage par statut",
           "alphabetical": "Affichage par ordre alphabétique"
         }
+      },
+      "search": {
+        "label": "Recherche par lieu",
+        "placeholder": "Rechercher un lieu ou un numéro de série"
       }
     },
     "tabs": {
@@ -357,8 +361,9 @@
         "dashboard_refresh": "Intervalle de rafraîchissement (s)",
         "surveillance_refresh": "Rafraîchissement surveillance (s)",
         "show_null_non_response": "Afficher les non-réponses (valeur nulle)",
-        "etalonnage_warning_days": "Alerte validite etalonnage (jours)",
-        "global_language": "Langue globale des emails"
+        "etalonnage_warning_days": "Alerte validité étalonnage (jours)",
+        "global_language": "Langue globale des emails",
+        "audit_graph_openings": "Audit trail à l'ouverture des graphiques"
       },
       "refresh_options": {
         "5": "5 secondes",
@@ -419,6 +424,7 @@
       "email_toggle": "Activer les emails d'alarme",
       "acknowledged_toggle": "Recevoir les emails d'acquittement",
       "ended_toggle": "Recevoir les emails d'alarme terminée",
+      "fallback_toggle": "Utiliser les emails systeme si aucun destinataire lieu",
       "cc_recipients_label": "Emails en copie (tous les emails système)",
       "cc_recipients_placeholder": "ex: support@mc2-info.com\nadmin@client.fr",
       "cc_recipients_helper": "Un email par ligne, ou séparés par virgule/point-virgule.",
@@ -626,7 +632,8 @@
       "na": "-",
       "cancel": "Annuler",
       "confirm": "Acquitter",
-      "confirming": "Acquittement..."
+      "confirming": "Acquittement...",
+      "type_ended": "Alarme termin?e"
     },
     "status": {
       "active": "En cours",
@@ -648,23 +655,23 @@
   "alarmAckHistoryPage": {
     "title": "Historique d'acquittement des alarmes",
     "shortTitle": "Historique acquittements",
-    "description": "Qui a acquitt? quelle alarme, quand et avec quel commentaire.",
+    "description": "Qui a acquitté quelle alarme, quand et avec quel commentaire.",
     "meta": {
       "title": "Historique d'acquittement - VigiSensys",
-      "description": "Historique des acquittements d'alarmes r?serv? ? la m?trologie"
+      "description": "Historique des acquittements d'alarmes réservé à la métrologie"
     },
     "actions": {
       "refresh": "Actualiser",
       "apply": "Filtrer",
-      "reset": "R?initialiser"
+      "reset": "Réinitialiser"
     },
-    "helper": "Les acquittements sont journalis?s depuis l'audit technique des alarmes.",
-    "emptyTitle": "Aucun acquittement trouv?",
-    "empty": "Aucun acquittement d'alarme n'a ?t? trouv? pour le p?rim?tre accessible.",
+    "helper": "Les acquittements sont journalisés depuis l'audit technique des alarmes.",
+    "emptyTitle": "Aucun acquittement trouvé",
+    "empty": "Aucun acquittement d'alarme n'a été trouvé pour le périmètre accessible.",
     "filters": {
       "site": "Site",
       "type": "Type",
-      "dateFrom": "Date de d?but",
+      "dateFrom": "Date de début",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types"
@@ -678,17 +685,17 @@
         "sensor": "Sonde",
         "type": "Type",
         "value": "Valeur",
-        "period": "P?riode d'alarme",
+        "period": "Période d'alarme",
         "comment": "Commentaire"
       },
       "period": {
-        "start": "D?but :",
+        "start": "Début :",
         "end": "Fin :"
       },
       "type": {
-        "high": "D?passement haut",
-        "low": "D?passement bas",
-        "no_response": "Non r?ponse"
+        "high": "Dépassement haut",
+        "low": "Dépassement bas",
+        "no_response": "Non réponse"
       }
     }
   },
@@ -839,8 +846,10 @@
         "lower_min": "Minimum",
         "lower_pre_enable": "Activation consigne inf pré-alarme",
         "lower_pre_label": "Pré-alarme inf.",
-        "retrigger_delay_measures": "Temporisation redeclenchement (mesures)",
-        "module_select": "Module"
+        "retrigger_delay_measures": "Temporisation redéclenchement (mesures)",
+        "module_select": "Module",
+        "enabled": "Activ?",
+        "disabled": "D?sactiv?"
       },
       "placeholders": {
         "name": "Ex: Stockage A",
@@ -1948,7 +1957,8 @@
           "operator": "Opérateur",
           "incertitude": "Incertitude",
           "validity_days": "Validité (jours)",
-          "actions": "Actions"
+          "actions": "Actions",
+          "validated_at": "Valid? le"
         },
         "validity_status": {
           "valid_days": "Valide (encore {days} jours)",
@@ -1975,7 +1985,9 @@
       "saving_to_db": "Insertion en base...",
       "edit": "Modifier",
       "cancel": "Annuler",
-      "apply": "Appliquer"
+      "apply": "Appliquer",
+      "clear_list": "Vider la liste",
+      "remove": "Supprimer la ligne"
     },
     "filters": {
       "site": "Site",
@@ -2120,7 +2132,11 @@
       "saving_to_db": "Insertion en base...",
       "edit": "Modifier",
       "cancel": "Annuler",
-      "apply": "Appliquer"
+      "apply": "Appliquer",
+      "clear_list": "Vider la liste",
+      "edit_selection": "Modifier la s?lection",
+      "select_all": "S?lectionner tout",
+      "select_row": "S?lectionner la ligne"
     },
     "filters": {
       "site": "Site",
@@ -2154,7 +2170,8 @@
       "title": "Modifier les données",
       "operator": "Opérateur",
       "unit": "Unité",
-      "validity_days": "Validite (jours)"
+      "validity_days": "Validite (jours)",
+      "batch_helper": "Modification appliqu?e ? {count} ?talonnage(s)."
     },
     "toast": {
       "save_success": "{count} ligne(s) insérée(s) en base.",
@@ -2188,7 +2205,7 @@
     "steps": {
       "upload": "Importer les fichiers",
       "review": "Vérifier les données",
-      "create": "Pr?parer les ?talonnages"
+      "create": "Préparer les étalonnages"
     },
     "status": {
       "in_progress": "En cours",
@@ -2232,7 +2249,7 @@
       "process_done": "Traitement terminé. {count} fichier(s) importé(s).",
       "process_errors": "{count} fichier(s) n'ont pas pu être importé(s).",
       "process_result": "Réussis : {success} Échecs : {failed}",
-      "processing_hint": "La fen?tre se fermera automatiquement quand le traitement sera termin?."
+      "processing_hint": "La fenêtre se fermera automatiquement quand le traitement sera terminé."
     }
   },
   "standardsPage": {
@@ -2247,7 +2264,7 @@
     "filters": {
       "site": "Site",
       "type": "Type",
-      "dateFrom": "Date de d?but",
+      "dateFrom": "Date de début",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types"
@@ -3820,12 +3837,12 @@
       "request_errors": "Erreurs API"
     },
     "actions": {
-      "logout": "D?connexion",
-      "logout_hotline": "D?connexion vers le portail hotline",
-      "logout_site": "D?connexion vers le site",
+      "logout": "Déconnexion",
+      "logout_hotline": "Déconnexion vers le portail hotline",
+      "logout_site": "Déconnexion vers le site",
       "loading": "Chargement...",
-      "check_loading": "V?rification...",
-      "check_now": "V?rifier maintenant",
+      "check_loading": "Vérification...",
+      "check_now": "Vérifier maintenant",
       "refresh": "Actualiser"
     },
     "session": {

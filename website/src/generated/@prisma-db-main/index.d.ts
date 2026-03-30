@@ -296,14 +296,6 @@ export const t_commande_materiel_Statut_Commande: {
 
 export type t_commande_materiel_Statut_Commande = (typeof t_commande_materiel_Statut_Commande)[keyof typeof t_commande_materiel_Statut_Commande]
 
-
-export const t_lieu_planning_audit_backup_20260324_Type: {
-  ACTIVATION: 'ACTIVATION',
-  RETOUR_BASE: 'RETOUR_BASE'
-};
-
-export type t_lieu_planning_audit_backup_20260324_Type = (typeof t_lieu_planning_audit_backup_20260324_Type)[keyof typeof t_lieu_planning_audit_backup_20260324_Type]
-
 }
 
 export type t_lieu_planning_audit_Type = $Enums.t_lieu_planning_audit_Type
@@ -317,10 +309,6 @@ export const t_commande_materiel_Mode_Transmission: typeof $Enums.t_commande_mat
 export type t_commande_materiel_Statut_Commande = $Enums.t_commande_materiel_Statut_Commande
 
 export const t_commande_materiel_Statut_Commande: typeof $Enums.t_commande_materiel_Statut_Commande
-
-export type t_lieu_planning_audit_backup_20260324_Type = $Enums.t_lieu_planning_audit_backup_20260324_Type
-
-export const t_lieu_planning_audit_backup_20260324_Type: typeof $Enums.t_lieu_planning_audit_backup_20260324_Type
 
 /**
  * ##  Prisma Client ʲˢ
@@ -16236,6 +16224,7 @@ export namespace Prisma {
     Sonde_Numero_Serie: string | null
     Date_Validite: Date | null
     Duree_Validite_Jours: number | null
+    Valide: Date | null
     Operateur: string | null
     Etalon_Numero_Serie: string | null
     Date_Certif: Date | null
@@ -16256,6 +16245,7 @@ export namespace Prisma {
     Sonde_Numero_Serie: string | null
     Date_Validite: Date | null
     Duree_Validite_Jours: number | null
+    Valide: Date | null
     Operateur: string | null
     Etalon_Numero_Serie: string | null
     Date_Certif: Date | null
@@ -16276,6 +16266,7 @@ export namespace Prisma {
     Sonde_Numero_Serie: number
     Date_Validite: number
     Duree_Validite_Jours: number
+    Valide: number
     Operateur: number
     Etalon_Numero_Serie: number
     Date_Certif: number
@@ -16318,6 +16309,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: true
     Date_Validite?: true
     Duree_Validite_Jours?: true
+    Valide?: true
     Operateur?: true
     Etalon_Numero_Serie?: true
     Date_Certif?: true
@@ -16338,6 +16330,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: true
     Date_Validite?: true
     Duree_Validite_Jours?: true
+    Valide?: true
     Operateur?: true
     Etalon_Numero_Serie?: true
     Date_Certif?: true
@@ -16358,6 +16351,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: true
     Date_Validite?: true
     Duree_Validite_Jours?: true
+    Valide?: true
     Operateur?: true
     Etalon_Numero_Serie?: true
     Date_Certif?: true
@@ -16465,6 +16459,7 @@ export namespace Prisma {
     Sonde_Numero_Serie: string | null
     Date_Validite: Date | null
     Duree_Validite_Jours: number | null
+    Valide: Date | null
     Operateur: string | null
     Etalon_Numero_Serie: string | null
     Date_Certif: Date | null
@@ -16504,6 +16499,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: boolean
     Date_Validite?: boolean
     Duree_Validite_Jours?: boolean
+    Valide?: boolean
     Operateur?: boolean
     Etalon_Numero_Serie?: boolean
     Date_Certif?: boolean
@@ -16526,6 +16522,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: boolean
     Date_Validite?: boolean
     Duree_Validite_Jours?: boolean
+    Valide?: boolean
     Operateur?: boolean
     Etalon_Numero_Serie?: boolean
     Date_Certif?: boolean
@@ -16540,7 +16537,7 @@ export namespace Prisma {
     Err_Justesse?: boolean
   }
 
-  export type t_etalonnageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Etalonnage" | "Date_Heure_Etalonnage" | "Sonde_Numero_Serie" | "Date_Validite" | "Duree_Validite_Jours" | "Operateur" | "Etalon_Numero_Serie" | "Date_Certif" | "Organisme" | "Num_Certif" | "Unite" | "Incertitude" | "Moyenne_Etalon" | "Moyenne_Sonde" | "Repetabilite" | "Id_Bain" | "Err_Justesse", ExtArgs["result"]["t_etalonnage"]>
+  export type t_etalonnageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Etalonnage" | "Date_Heure_Etalonnage" | "Sonde_Numero_Serie" | "Date_Validite" | "Duree_Validite_Jours" | "Valide" | "Operateur" | "Etalon_Numero_Serie" | "Date_Certif" | "Organisme" | "Num_Certif" | "Unite" | "Incertitude" | "Moyenne_Etalon" | "Moyenne_Sonde" | "Repetabilite" | "Id_Bain" | "Err_Justesse", ExtArgs["result"]["t_etalonnage"]>
 
   export type $t_etalonnagePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "t_etalonnage"
@@ -16551,6 +16548,7 @@ export namespace Prisma {
       Sonde_Numero_Serie: string | null
       Date_Validite: Date | null
       Duree_Validite_Jours: number | null
+      Valide: Date | null
       Operateur: string | null
       Etalon_Numero_Serie: string | null
       Date_Certif: Date | null
@@ -16937,6 +16935,7 @@ export namespace Prisma {
     readonly Sonde_Numero_Serie: FieldRef<"t_etalonnage", 'String'>
     readonly Date_Validite: FieldRef<"t_etalonnage", 'DateTime'>
     readonly Duree_Validite_Jours: FieldRef<"t_etalonnage", 'Int'>
+    readonly Valide: FieldRef<"t_etalonnage", 'DateTime'>
     readonly Operateur: FieldRef<"t_etalonnage", 'String'>
     readonly Etalon_Numero_Serie: FieldRef<"t_etalonnage", 'String'>
     readonly Date_Certif: FieldRef<"t_etalonnage", 'DateTime'>
@@ -36423,6 +36422,7 @@ export namespace Prisma {
     Libelle_Sonde_Type: string | null
     Est_Gestion_Relais: boolean | null
     Est_Double_Capteur: boolean | null
+    Famille_Sonde: string | null
   }
 
   export type T_sonde_typeMaxAggregateOutputType = {
@@ -36431,6 +36431,7 @@ export namespace Prisma {
     Libelle_Sonde_Type: string | null
     Est_Gestion_Relais: boolean | null
     Est_Double_Capteur: boolean | null
+    Famille_Sonde: string | null
   }
 
   export type T_sonde_typeCountAggregateOutputType = {
@@ -36439,6 +36440,7 @@ export namespace Prisma {
     Libelle_Sonde_Type: number
     Est_Gestion_Relais: number
     Est_Double_Capteur: number
+    Famille_Sonde: number
     _all: number
   }
 
@@ -36457,6 +36459,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: true
     Est_Gestion_Relais?: true
     Est_Double_Capteur?: true
+    Famille_Sonde?: true
   }
 
   export type T_sonde_typeMaxAggregateInputType = {
@@ -36465,6 +36468,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: true
     Est_Gestion_Relais?: true
     Est_Double_Capteur?: true
+    Famille_Sonde?: true
   }
 
   export type T_sonde_typeCountAggregateInputType = {
@@ -36473,6 +36477,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: true
     Est_Gestion_Relais?: true
     Est_Double_Capteur?: true
+    Famille_Sonde?: true
     _all?: true
   }
 
@@ -36568,6 +36573,7 @@ export namespace Prisma {
     Libelle_Sonde_Type: string | null
     Est_Gestion_Relais: boolean | null
     Est_Double_Capteur: boolean
+    Famille_Sonde: string
     _count: T_sonde_typeCountAggregateOutputType | null
     _avg: T_sonde_typeAvgAggregateOutputType | null
     _sum: T_sonde_typeSumAggregateOutputType | null
@@ -36595,6 +36601,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: boolean
     Est_Gestion_Relais?: boolean
     Est_Double_Capteur?: boolean
+    Famille_Sonde?: boolean
   }, ExtArgs["result"]["t_sonde_type"]>
 
 
@@ -36605,9 +36612,10 @@ export namespace Prisma {
     Libelle_Sonde_Type?: boolean
     Est_Gestion_Relais?: boolean
     Est_Double_Capteur?: boolean
+    Famille_Sonde?: boolean
   }
 
-  export type t_sonde_typeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Sonde_Type" | "Sonde_Type" | "Libelle_Sonde_Type" | "Est_Gestion_Relais" | "Est_Double_Capteur", ExtArgs["result"]["t_sonde_type"]>
+  export type t_sonde_typeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Sonde_Type" | "Sonde_Type" | "Libelle_Sonde_Type" | "Est_Gestion_Relais" | "Est_Double_Capteur" | "Famille_Sonde", ExtArgs["result"]["t_sonde_type"]>
 
   export type $t_sonde_typePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "t_sonde_type"
@@ -36618,6 +36626,7 @@ export namespace Prisma {
       Libelle_Sonde_Type: string | null
       Est_Gestion_Relais: boolean | null
       Est_Double_Capteur: boolean
+      Famille_Sonde: string
     }, ExtArgs["result"]["t_sonde_type"]>
     composites: {}
   }
@@ -36992,6 +37001,7 @@ export namespace Prisma {
     readonly Libelle_Sonde_Type: FieldRef<"t_sonde_type", 'String'>
     readonly Est_Gestion_Relais: FieldRef<"t_sonde_type", 'Boolean'>
     readonly Est_Double_Capteur: FieldRef<"t_sonde_type", 'Boolean'>
+    readonly Famille_Sonde: FieldRef<"t_sonde_type", 'String'>
   }
     
 
@@ -59729,6 +59739,7 @@ export namespace Prisma {
     Sonde_Numero_Serie: 'Sonde_Numero_Serie',
     Date_Validite: 'Date_Validite',
     Duree_Validite_Jours: 'Duree_Validite_Jours',
+    Valide: 'Valide',
     Operateur: 'Operateur',
     Etalon_Numero_Serie: 'Etalon_Numero_Serie',
     Date_Certif: 'Date_Certif',
@@ -60034,7 +60045,8 @@ export namespace Prisma {
     Sonde_Type: 'Sonde_Type',
     Libelle_Sonde_Type: 'Libelle_Sonde_Type',
     Est_Gestion_Relais: 'Est_Gestion_Relais',
-    Est_Double_Capteur: 'Est_Double_Capteur'
+    Est_Double_Capteur: 'Est_Double_Capteur',
+    Famille_Sonde: 'Famille_Sonde'
   };
 
   export type T_sonde_typeScalarFieldEnum = (typeof T_sonde_typeScalarFieldEnum)[keyof typeof T_sonde_typeScalarFieldEnum]
@@ -60645,7 +60657,8 @@ export namespace Prisma {
 
   export const t_sonde_typeOrderByRelevanceFieldEnum: {
     Sonde_Type: 'Sonde_Type',
-    Libelle_Sonde_Type: 'Libelle_Sonde_Type'
+    Libelle_Sonde_Type: 'Libelle_Sonde_Type',
+    Famille_Sonde: 'Famille_Sonde'
   };
 
   export type t_sonde_typeOrderByRelevanceFieldEnum = (typeof t_sonde_typeOrderByRelevanceFieldEnum)[keyof typeof t_sonde_typeOrderByRelevanceFieldEnum]
@@ -61808,6 +61821,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: StringNullableFilter<"t_etalonnage"> | string | null
     Date_Validite?: DateTimeNullableFilter<"t_etalonnage"> | Date | string | null
     Duree_Validite_Jours?: IntNullableFilter<"t_etalonnage"> | number | null
+    Valide?: DateTimeNullableFilter<"t_etalonnage"> | Date | string | null
     Operateur?: StringNullableFilter<"t_etalonnage"> | string | null
     Etalon_Numero_Serie?: StringNullableFilter<"t_etalonnage"> | string | null
     Date_Certif?: DateTimeNullableFilter<"t_etalonnage"> | Date | string | null
@@ -61828,6 +61842,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: SortOrderInput | SortOrder
     Date_Validite?: SortOrderInput | SortOrder
     Duree_Validite_Jours?: SortOrderInput | SortOrder
+    Valide?: SortOrderInput | SortOrder
     Operateur?: SortOrderInput | SortOrder
     Etalon_Numero_Serie?: SortOrderInput | SortOrder
     Date_Certif?: SortOrderInput | SortOrder
@@ -61852,6 +61867,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: StringNullableFilter<"t_etalonnage"> | string | null
     Date_Validite?: DateTimeNullableFilter<"t_etalonnage"> | Date | string | null
     Duree_Validite_Jours?: IntNullableFilter<"t_etalonnage"> | number | null
+    Valide?: DateTimeNullableFilter<"t_etalonnage"> | Date | string | null
     Operateur?: StringNullableFilter<"t_etalonnage"> | string | null
     Etalon_Numero_Serie?: StringNullableFilter<"t_etalonnage"> | string | null
     Date_Certif?: DateTimeNullableFilter<"t_etalonnage"> | Date | string | null
@@ -61872,6 +61888,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: SortOrderInput | SortOrder
     Date_Validite?: SortOrderInput | SortOrder
     Duree_Validite_Jours?: SortOrderInput | SortOrder
+    Valide?: SortOrderInput | SortOrder
     Operateur?: SortOrderInput | SortOrder
     Etalon_Numero_Serie?: SortOrderInput | SortOrder
     Date_Certif?: SortOrderInput | SortOrder
@@ -61900,6 +61917,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: StringNullableWithAggregatesFilter<"t_etalonnage"> | string | null
     Date_Validite?: DateTimeNullableWithAggregatesFilter<"t_etalonnage"> | Date | string | null
     Duree_Validite_Jours?: IntNullableWithAggregatesFilter<"t_etalonnage"> | number | null
+    Valide?: DateTimeNullableWithAggregatesFilter<"t_etalonnage"> | Date | string | null
     Operateur?: StringNullableWithAggregatesFilter<"t_etalonnage"> | string | null
     Etalon_Numero_Serie?: StringNullableWithAggregatesFilter<"t_etalonnage"> | string | null
     Date_Certif?: DateTimeNullableWithAggregatesFilter<"t_etalonnage"> | Date | string | null
@@ -63453,6 +63471,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: StringNullableFilter<"t_sonde_type"> | string | null
     Est_Gestion_Relais?: BoolNullableFilter<"t_sonde_type"> | boolean | null
     Est_Double_Capteur?: BoolFilter<"t_sonde_type"> | boolean
+    Famille_Sonde?: StringFilter<"t_sonde_type"> | string
   }
 
   export type t_sonde_typeOrderByWithRelationInput = {
@@ -63461,6 +63480,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: SortOrderInput | SortOrder
     Est_Gestion_Relais?: SortOrderInput | SortOrder
     Est_Double_Capteur?: SortOrder
+    Famille_Sonde?: SortOrder
     _relevance?: t_sonde_typeOrderByRelevanceInput
   }
 
@@ -63473,6 +63493,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: StringNullableFilter<"t_sonde_type"> | string | null
     Est_Gestion_Relais?: BoolNullableFilter<"t_sonde_type"> | boolean | null
     Est_Double_Capteur?: BoolFilter<"t_sonde_type"> | boolean
+    Famille_Sonde?: StringFilter<"t_sonde_type"> | string
   }, "Id_Sonde_Type" | "Sonde_Type">
 
   export type t_sonde_typeOrderByWithAggregationInput = {
@@ -63481,6 +63502,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: SortOrderInput | SortOrder
     Est_Gestion_Relais?: SortOrderInput | SortOrder
     Est_Double_Capteur?: SortOrder
+    Famille_Sonde?: SortOrder
     _count?: t_sonde_typeCountOrderByAggregateInput
     _avg?: t_sonde_typeAvgOrderByAggregateInput
     _max?: t_sonde_typeMaxOrderByAggregateInput
@@ -63497,6 +63519,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: StringNullableWithAggregatesFilter<"t_sonde_type"> | string | null
     Est_Gestion_Relais?: BoolNullableWithAggregatesFilter<"t_sonde_type"> | boolean | null
     Est_Double_Capteur?: BoolWithAggregatesFilter<"t_sonde_type"> | boolean
+    Famille_Sonde?: StringWithAggregatesFilter<"t_sonde_type"> | string
   }
 
   export type t_utilisateurWhereInput = {
@@ -66326,6 +66349,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: string | null
     Date_Validite?: Date | string | null
     Duree_Validite_Jours?: number | null
+    Valide?: Date | string | null
     Operateur?: string | null
     Etalon_Numero_Serie?: string | null
     Date_Certif?: Date | string | null
@@ -66346,6 +66370,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: string | null
     Date_Validite?: Date | string | null
     Duree_Validite_Jours?: number | null
+    Valide?: Date | string | null
     Operateur?: string | null
     Etalon_Numero_Serie?: string | null
     Date_Certif?: Date | string | null
@@ -66365,6 +66390,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Validite?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Duree_Validite_Jours?: NullableIntFieldUpdateOperationsInput | number | null
+    Valide?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Operateur?: NullableStringFieldUpdateOperationsInput | string | null
     Etalon_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Certif?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -66385,6 +66411,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Validite?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Duree_Validite_Jours?: NullableIntFieldUpdateOperationsInput | number | null
+    Valide?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Operateur?: NullableStringFieldUpdateOperationsInput | string | null
     Etalon_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Certif?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -66405,6 +66432,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: string | null
     Date_Validite?: Date | string | null
     Duree_Validite_Jours?: number | null
+    Valide?: Date | string | null
     Operateur?: string | null
     Etalon_Numero_Serie?: string | null
     Date_Certif?: Date | string | null
@@ -66424,6 +66452,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Validite?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Duree_Validite_Jours?: NullableIntFieldUpdateOperationsInput | number | null
+    Valide?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Operateur?: NullableStringFieldUpdateOperationsInput | string | null
     Etalon_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Certif?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -66444,6 +66473,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Validite?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Duree_Validite_Jours?: NullableIntFieldUpdateOperationsInput | number | null
+    Valide?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Operateur?: NullableStringFieldUpdateOperationsInput | string | null
     Etalon_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Certif?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -68095,6 +68125,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: string | null
     Est_Gestion_Relais?: boolean | null
     Est_Double_Capteur?: boolean
+    Famille_Sonde?: string
   }
 
   export type t_sonde_typeUncheckedCreateInput = {
@@ -68103,6 +68134,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: string | null
     Est_Gestion_Relais?: boolean | null
     Est_Double_Capteur?: boolean
+    Famille_Sonde?: string
   }
 
   export type t_sonde_typeUpdateInput = {
@@ -68110,6 +68142,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Gestion_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Double_Capteur?: BoolFieldUpdateOperationsInput | boolean
+    Famille_Sonde?: StringFieldUpdateOperationsInput | string
   }
 
   export type t_sonde_typeUncheckedUpdateInput = {
@@ -68118,6 +68151,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Gestion_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Double_Capteur?: BoolFieldUpdateOperationsInput | boolean
+    Famille_Sonde?: StringFieldUpdateOperationsInput | string
   }
 
   export type t_sonde_typeCreateManyInput = {
@@ -68126,6 +68160,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: string | null
     Est_Gestion_Relais?: boolean | null
     Est_Double_Capteur?: boolean
+    Famille_Sonde?: string
   }
 
   export type t_sonde_typeUpdateManyMutationInput = {
@@ -68133,6 +68168,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Gestion_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Double_Capteur?: BoolFieldUpdateOperationsInput | boolean
+    Famille_Sonde?: StringFieldUpdateOperationsInput | string
   }
 
   export type t_sonde_typeUncheckedUpdateManyInput = {
@@ -68141,6 +68177,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Gestion_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Double_Capteur?: BoolFieldUpdateOperationsInput | boolean
+    Famille_Sonde?: StringFieldUpdateOperationsInput | string
   }
 
   export type t_utilisateurCreateInput = {
@@ -70982,6 +71019,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: SortOrder
     Date_Validite?: SortOrder
     Duree_Validite_Jours?: SortOrder
+    Valide?: SortOrder
     Operateur?: SortOrder
     Etalon_Numero_Serie?: SortOrder
     Date_Certif?: SortOrder
@@ -71012,6 +71050,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: SortOrder
     Date_Validite?: SortOrder
     Duree_Validite_Jours?: SortOrder
+    Valide?: SortOrder
     Operateur?: SortOrder
     Etalon_Numero_Serie?: SortOrder
     Date_Certif?: SortOrder
@@ -71032,6 +71071,7 @@ export namespace Prisma {
     Sonde_Numero_Serie?: SortOrder
     Date_Validite?: SortOrder
     Duree_Validite_Jours?: SortOrder
+    Valide?: SortOrder
     Operateur?: SortOrder
     Etalon_Numero_Serie?: SortOrder
     Date_Certif?: SortOrder
@@ -72413,6 +72453,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: SortOrder
     Est_Gestion_Relais?: SortOrder
     Est_Double_Capteur?: SortOrder
+    Famille_Sonde?: SortOrder
   }
 
   export type t_sonde_typeAvgOrderByAggregateInput = {
@@ -72425,6 +72466,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: SortOrder
     Est_Gestion_Relais?: SortOrder
     Est_Double_Capteur?: SortOrder
+    Famille_Sonde?: SortOrder
   }
 
   export type t_sonde_typeMinOrderByAggregateInput = {
@@ -72433,6 +72475,7 @@ export namespace Prisma {
     Libelle_Sonde_Type?: SortOrder
     Est_Gestion_Relais?: SortOrder
     Est_Double_Capteur?: SortOrder
+    Famille_Sonde?: SortOrder
   }
 
   export type t_sonde_typeSumOrderByAggregateInput = {

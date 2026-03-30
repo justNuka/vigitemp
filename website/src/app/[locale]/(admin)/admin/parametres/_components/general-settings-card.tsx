@@ -38,12 +38,13 @@ export function GeneralSettingsCard({
     'dashboard:surveillance_refresh': t('general.labels.surveillance_refresh'),
     'dashboard:show_null_non_response': t('general.labels.show_null_non_response'),
     'dashboard:etalonnage_warning_days': t('general.labels.etalonnage_warning_days'),
+    'dashboard:audit_graph_openings': t('general.labels.audit_graph_openings'),
     'general:global_language': t('general.labels.global_language'),
   };
 
   return (
     <Card className="border-border/60 bg-white dark:bg-popover dark:text-popover-foreground">
-      <CardHeader className="bg-white/90 border-b border-border/50 dark:bg-card/90">
+      <CardHeader className="bg-white/90 border-b rounded-r-2xl rounded-t-2xl border-border/50 dark:bg-card/90">
         <CardTitle className="flex items-center gap-2 text-base">
           <Settings2 className="h-4 w-4 text-primary" />
           {t('general.title')}

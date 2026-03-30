@@ -26,6 +26,9 @@ interface AdjustmentImportTableCardProps<Row extends Record<string, any>> {
   onSave: () => void
   saveLabel: string
   disabled: boolean
+  onClear?: () => void
+  clearLabel?: string
+  clearDisabled?: boolean
 }
 
 export function AdjustmentImportTableCard<Row extends Record<string, any>>({
@@ -46,6 +49,9 @@ export function AdjustmentImportTableCard<Row extends Record<string, any>>({
   onSave,
   saveLabel,
   disabled,
+  onClear,
+  clearLabel,
+  clearDisabled,
 }: AdjustmentImportTableCardProps<Row>) {
   return (
     <Card>
@@ -88,7 +94,12 @@ export function AdjustmentImportTableCard<Row extends Record<string, any>>({
           <div>{summaryExistingLabel}: {existingAssigned}</div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          {onClear && clearLabel ? (
+            <Button variant="outline" onClick={onClear} disabled={clearDisabled}>
+              {clearLabel}
+            </Button>
+          ) : null}
           <Button className="gap-2" onClick={onSave} disabled={disabled}>{saveLabel}</Button>
         </div>
       </CardContent>

@@ -171,6 +171,12 @@ export default function SharedImportStepper<TImportResult>({
     [t],
   )
 
+  const stepCompletion = useMemo(() => ({
+    1: currentStep > 1 || (currentStep === 1 && canProceed),
+    2: currentStep > 2 || (currentStep === 2 && validationResults.length > 0 && summary.error === 0),
+    3: processState === "done" && processStats.failed === 0,
+  }), [canProceed, currentStep, processState, processStats.failed, summary.error, validationResults.length])
+
   return (
     <Stepper
       value={currentStep}
@@ -179,28 +185,38 @@ export default function SharedImportStepper<TImportResult>({
       className="space-y-6 flex flex-col h-full min-h-0 overflow-hidden"
     >
       <StepperNav className="gap-6 mb-6 justify-center w-full">
-        {steps.map((step, index) => (
-          <StepperItem key={step.title} step={index + 1} className="relative flex-1 flex-col items-center">
-            <StepperTrigger className="flex flex-col items-center justify-center gap-2.5 grow text-center" asChild>
-              <StepperIndicator className="size-9 border-2 flex items-center justify-center transition-colors duration-300 data-[state=completed]:bg-emerald-500 data-[state=completed]:text-emerald-50 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:border-border data-[state=inactive]:text-muted-foreground">
-                <span className="relative inline-flex size-4 items-center justify-center">
-                  <Check className="absolute left-1/2 top-2.5 size-4 -translate-x-1/2 -translate-y-[55%] opacity-0 scale-50 transition-all duration-300 group-data-[state=completed]/step:opacity-100 group-data-[state=completed]/step:scale-100 text-emerald-50" />
-                  <step.icon className="absolute left-1/2 top-2.5 size-4 -translate-x-1/2 -translate-y-[55%] opacity-100 scale-100 transition-all duration-300 group-data-[state=completed]/step:opacity-0 group-data-[state=completed]/step:scale-75 group-data-[state=active]/step:text-primary-foreground group-data-[state=inactive]/step:text-muted-foreground" />
-                </span>
-              </StepperIndicator>
-              <div className="flex flex-col items-center gap-1">
-                <div className="text-[10px] font-semibold uppercase text-muted-foreground">{t("step_label", { step: index + 1 })}</div>
-                <StepperTitle className="text-center text-base font-semibold group-data-[state=inactive]/step:text-muted-foreground">{step.title}</StepperTitle>
-                <div>
-                  <Badge variant="primary" className="hidden group-data-[state=active]/step:inline-flex">{t("status.in_progress")}</Badge>
-                  <Badge variant="success" size="sm" className="hidden group-data-[state=completed]/step:inline-flex">{t("status.completed")}</Badge>
-                  <Badge variant="secondary" size="sm" className="hidden group-data-[state=inactive]/step:inline-flex text-muted-foreground">{t("status.pending")}</Badge>
+        {steps.map((step, index) => {
+          const stepNumber = index + 1
+          const isCompleted = stepCompletion[stepNumber as 1 | 2 | 3]
+          const isActive = currentStep === stepNumber && !isCompleted
+          const statusBadge = isCompleted ? "completed" : isActive ? "active" : "pending"
+
+          return (
+            <StepperItem key={step.title} step={stepNumber} className="relative flex-1 flex-col items-center">
+              <StepperTrigger className="flex flex-col items-center justify-center gap-2.5 grow text-center" asChild>
+                <StepperIndicator className={`size-9 border-2 flex items-center justify-center transition-colors duration-300 ${isCompleted ? 'border-emerald-500 bg-emerald-500 text-emerald-50' : isActive ? 'border-primary bg-primary text-primary-foreground' : 'bg-transparent border-border text-muted-foreground'}`}>
+                  <span className="relative inline-flex size-4 items-center justify-center">
+                    {isCompleted ? (
+                      <Check className="size-4 text-emerald-50" />
+                    ) : (
+                      <step.icon className={`size-4 ${isActive ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
+                    )}
+                  </span>
+                </StepperIndicator>
+                <div className="flex flex-col items-center gap-1">
+                  <div className="text-[10px] font-semibold uppercase text-muted-foreground">{t("step_label", { step: stepNumber })}</div>
+                  <StepperTitle className="text-center text-base font-semibold text-foreground">{step.title}</StepperTitle>
+                  <div>
+                    {statusBadge === 'active' ? <Badge variant="primary">{t("status.in_progress")}</Badge> : null}
+                    {statusBadge === 'completed' ? <Badge variant="success" size="sm">{t("status.completed")}</Badge> : null}
+                    {statusBadge === 'pending' ? <Badge variant="secondary" size="sm" className="text-muted-foreground">{t("status.pending")}</Badge> : null}
+                  </div>
                 </div>
-              </div>
-            </StepperTrigger>
-            {steps.length > index + 1 ? <StepperSeparator className="absolute top-4.5 left-[calc(55%+1.125rem)] w-[calc(100%-2.25rem)] h-0.5 bg-muted-foreground/30 group-data-[state=completed]/step:bg-emerald-500" /> : null}
-          </StepperItem>
-        ))}
+              </StepperTrigger>
+              {steps.length > stepNumber ? <StepperSeparator className={`absolute top-4.5 left-[calc(55%+1.125rem)] w-[calc(100%-2.25rem)] h-0.5 ${isCompleted ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`} /> : null}
+            </StepperItem>
+          )
+        })}
       </StepperNav>
 
       <StepperPanel className="text-sm flex-1 min-h-0 overflow-y-auto pr-2 pb-10 pt-2">

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { parseAdjustmentXml } from "@/lib/adjustment-import";
 import { log } from "@/lib/logger";
 import { decodeXmlBytes } from "@/lib/xml-decoding";
-import { extractProbeAddressFromSerial, isGsoType } from "@/lib/sensor-naming";
+import { extractProbeAddressFromSerial, extractTypeCodeFromSerial } from "@/lib/sensor-naming";
 
 const isXmlFile = (file: File) => {
   const name = file.name.toLowerCase();
@@ -62,17 +62,30 @@ export const POST = async (req: NextRequest) => {
     const parsed = parseAdjustmentXml(xml, file.name);
 
     const serial = parsed.data.Sonde_Numero_Serie?.trim() ?? null;
-    if (serial && isGsoType(serial)) {
+    if (serial) {
+      const sensorType = await prisma.t_sonde_type.findUnique({
+        where: { Sonde_Type: extractTypeCodeFromSerial(serial) },
+        select: { Famille_Sonde: true },
+      });
+      const isGsoFamily = sensorType?.Famille_Sonde === "GSO";
+
       await prisma.t_sonde.createMany({
         data: [{
           Sonde_Numero_Serie: serial,
           Adresse_Sonde: extractProbeAddressFromSerial(serial),
-          Est_Sonde_GSO: true,
+          Est_Sonde_GSO: isGsoFamily,
           Surveillance_Etat: "D",
           Sonde_Offset: 0,
         }],
         skipDuplicates: true,
       });
+
+      if (isGsoFamily) {
+        await prisma.t_sonde.updateMany({
+          where: { Sonde_Numero_Serie: serial },
+          data: { Est_Sonde_GSO: true },
+        });
+      }
     }
 
     const created = await prisma.t_ajustage.create({

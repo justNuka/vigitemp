@@ -98,7 +98,7 @@ $agentProjectPath = Join-Path $agentRoot "Vigitemp agent\Vigitemp Agent.csproj"
 $installerPayloadRoot = Join-Path $agentRoot "VigitempAgentInstaller\Payload"
 
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
-    $OutputDir = Join-Path $repoRoot "..\VigiSensys\2 - installation\3 - VigiSensys Agent"
+    $OutputDir = Join-Path $repoRoot "..\VigiSensys\2 - installation\3-agent"
 }
 
 if ([string]::IsNullOrWhiteSpace($InstallerProjectPath)) {

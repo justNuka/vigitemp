@@ -43,7 +43,10 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
     () => availableSensors.find((sensor) => sensor.Sonde_Numero_Serie === formData.Sonde_Numero_Serie),
     [availableSensors, formData.Sonde_Numero_Serie],
   )
-  const isGsoSensor = selectedSensor?.Sonde_Type?.toUpperCase() === 'GSO'
+  const isGsoSensor = Boolean(
+    selectedSensor?.Est_Sonde_GSO ||
+    selectedSensor?.Famille_Sonde === 'GSO',
+  )
   const hasSondeSelected = Boolean(formData.Sonde_Numero_Serie)
 
   useEffect(() => {

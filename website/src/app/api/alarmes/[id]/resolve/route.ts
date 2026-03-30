@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { log } from "@/lib/logger"
+import { getPublicAppUrl } from "@/lib/public-app-url"
 import { getRequestContext } from "@/lib/api-logger"
 import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
@@ -43,7 +44,7 @@ export const POST = withAuthLogging(
       })
 
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+        const baseUrl = getPublicAppUrl(req)
         const alarmUrl = `${baseUrl}/fr/alarmes`
         await sendAlarmEventEmails({
           eventType: "ended",

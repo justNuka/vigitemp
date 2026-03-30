@@ -11,6 +11,7 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
       select: {
         Sonde_Type: true,
         Libelle_Sonde_Type: true,
+        Famille_Sonde: true,
       },
       orderBy: {
         Sonde_Type: "asc",

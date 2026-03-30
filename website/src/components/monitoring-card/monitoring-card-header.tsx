@@ -16,7 +16,7 @@ const HEADER_GRADIENT_MAP: Record<string, string> = {
   "bg-red-700 dark:bg-red-700":       "bg-linear-to-br from-red-600 to-red-800",
   "bg-amber-300 dark:bg-amber-300":   "bg-linear-to-br from-amber-200 to-amber-400",
   "bg-violet-600 dark:bg-violet-700": "bg-linear-to-br from-violet-500 to-violet-700 dark:from-violet-600 dark:to-violet-800",
-  "bg-primary":                        "bg-linear-to-br from-primary/90 to-primary",
+  "bg-sky-400 dark:bg-sky-500":        "bg-linear-to-br from-sky-300 via-sky-400 to-sky-500 dark:from-sky-400 dark:via-sky-500 dark:to-sky-600",
 }
 
 interface MonitoringCardHeaderProps {
@@ -87,7 +87,7 @@ export function MonitoringCardHeader({
 
   return (
     <div
-      className={`px-3 py-2 relative ${resolvedHeaderBg} border-b-2 ${headerBorderClassName} ${canAcknowledge ? 'cursor-pointer' : ''}`}
+      className={`px-3 py-2 relative overflow-hidden ${resolvedHeaderBg} border-b-2 ${headerBorderClassName} ${canAcknowledge ? 'cursor-pointer' : ''}`}
       onClick={() => canAcknowledge && onAcknowledge()}
       onKeyDown={(event) => {
         if (!canAcknowledge) return
@@ -100,6 +100,10 @@ export function MonitoringCardHeader({
       tabIndex={canAcknowledge ? 0 : undefined}
       aria-label={canAcknowledge ? t('acknowledge.button') : undefined}
     >
+      <span
+        className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-white/20 via-white/8 to-transparent"
+        aria-hidden="true"
+      />
       {(status === 'critical' || status === 'technical') && isSurveillanceActive && (
         <span
           className="absolute top-2 right-10 h-2 w-2 rounded-full bg-white/80 animate-pulse pointer-events-none"
@@ -124,7 +128,7 @@ export function MonitoringCardHeader({
           <div className="flex min-w-0 items-start gap-2">
             <UITooltip>
               <TooltipTrigger asChild>
-                <div className="line-clamp-2 break-words text-[15px] leading-tight font-semibold cursor-help">
+                <div className={`line-clamp-2 break-words text-[15px] leading-tight font-semibold ${locationComment ? 'cursor-help' : ''}`}>
                   {sondeNumeroSerie ? `${nomLieu} - ${sondeNumeroSerie}` : nomLieu}
                 </div>
               </TooltipTrigger>
@@ -142,10 +146,17 @@ export function MonitoringCardHeader({
             </div>
           ) : null}
           {alarmDisabledLabel ? (
-            <div className={`inline-flex items-center max-w-full gap-1.5 rounded-full text-[11px] font-medium px-2.5 py-1 ${alarmBadgeClassName}`}>
-              <PowerOff className="h-3 w-3" />
-              <span className="truncate">{alarmDisabledLabel}</span>
-            </div>
+            <UITooltip>
+              <TooltipTrigger asChild>
+                <div className={`inline-flex items-center max-w-full gap-1.5 rounded-full text-[11px] font-medium px-2.5 py-1 cursor-help ${alarmBadgeClassName}`}>
+                  <PowerOff className="h-3 w-3" />
+                  <span className="truncate">{alarmDisabledLabel}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap break-words">
+                <p className="text-xs">{alarmDisabledLabel}</p>
+              </TooltipContent>
+            </UITooltip>
           ) : null}
         </div>
 

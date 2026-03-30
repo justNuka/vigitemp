@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import { useAppAccess } from "@/components/access/app-access-provider";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type AlarmStatus = "active" | "acknowledged" | "resolved";
 
@@ -29,6 +30,9 @@ export function AlarmsPageClient({ alarms, stats, initialStatus }: Props) {
   const t = useTranslations("alarmsPage");
   const tAckHistory = useTranslations("alarmAckHistoryPage");
   const { hasPermission } = useAppAccess();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [statusFilter, setStatusFilter] = useState<AlarmStatus>(initialStatus);
   const [localStats, setLocalStats] = useState(stats);
   const canViewAckHistory = hasPermission("METROLOGY_WORK_ACCESS");
@@ -37,8 +41,16 @@ export function AlarmsPageClient({ alarms, stats, initialStatus }: Props) {
     setLocalStats(stats);
   }, [stats]);
 
-  // Filter alarms based on current status
-  const filteredAlarms = alarms.filter((alarm) => alarm.status === statusFilter);
+  useEffect(() => {
+    setStatusFilter(initialStatus);
+  }, [initialStatus]);
+
+  const handleStatusChange = (nextStatus: AlarmStatus) => {
+    setStatusFilter(nextStatus);
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.set("status", nextStatus);
+    router.replace(`${pathname}?${nextParams.toString()}`);
+  };
 
   return (
     <div className="flex flex-col min-h-full">
@@ -58,10 +70,10 @@ export function AlarmsPageClient({ alarms, stats, initialStatus }: Props) {
       </PageHeader>
 
       <AlarmsClient
-        alarms={filteredAlarms}
+        alarms={alarms}
         statusFilter={statusFilter}
         stats={localStats}
-        onStatusChange={setStatusFilter}
+        onStatusChange={handleStatusChange}
         onStatsChange={setLocalStats}
       />
     </div>

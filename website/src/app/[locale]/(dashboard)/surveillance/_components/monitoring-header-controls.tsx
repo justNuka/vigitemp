@@ -51,7 +51,7 @@ export function SurveillanceHeaderControls({
     { key: "warning", label: tStatus("warning"), dotClassName: "bg-amber-500" },
     { key: "technical", label: t("legend.technical_alarm"), dotClassName: "bg-black" },
     { key: "ended", label: tStatus("ended"), dotClassName: "bg-violet-600" },
-    { key: "ok", label: tStatus("ok"), dotClassName: "bg-primary" },
+    { key: "ok", label: tStatus("ok"), dotClassName: "bg-sky-400" },
     { key: "inactive", label: tStatus("inactive"), dotClassName: "bg-slate-500" },
   ]
 

@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { stripLocalePrefix } from "@/i18n/pathnames";
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import Image from "next/image";
@@ -31,7 +32,7 @@ export function LanguageSwitcher() {
 
   const handleLanguageChange = (newLanguage: Language) => {
     const search = typeof window !== "undefined" ? window.location.search : "";
-    const href = `${pathname || "/"}${search}`;
+    const href = `${stripLocalePrefix(pathname || "/")}${search}`;
     router.push(href, { locale: newLanguage });
   };
 

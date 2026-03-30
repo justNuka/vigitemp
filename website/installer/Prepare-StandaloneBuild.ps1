@@ -31,7 +31,7 @@ if ([string]::IsNullOrWhiteSpace($SourcePath)) {
     $SourcePath = $websiteRoot.Path
 }
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
-    $OutputDir = Join-Path $repoRoot "..\VigiSensys\2 - installation\2 - VigiSensys Serveur Web"
+    $OutputDir = Join-Path $repoRoot "..\VigiSensys\2 - installation\2-web"
 }
 
 if (-not (Test-Path (Join-Path $SourcePath "package.json"))) {

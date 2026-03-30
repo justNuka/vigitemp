@@ -48,6 +48,8 @@ namespace Vigitemp_Serveur
         // l'heure locale du serveur de base de données.
         // Ne pas remplacer par DateTime.UtcNow sans aligner le fuseau horaire MySQL.
         private DateTime _lastAlarmEndPollLocal = DateTime.MinValue;
+        private readonly ConcurrentDictionary<int, DateTime> _endedAlarmDispatchById =
+            new ConcurrentDictionary<int, DateTime>();
         private readonly ConcurrentDictionary<int, (bool flag, DateTime expiry)> _retriggerFlagCache =
             new ConcurrentDictionary<int, (bool, DateTime)>();
 
@@ -532,11 +534,43 @@ namespace Vigitemp_Serveur
 
             EnsureAlarmEndCursorInitialized();
 
+            var pollNow = DateTime.Now;
             var queryFrom = _lastAlarmEndPollLocal.AddSeconds(-10);
             var ended = GetDatabase().getEndedAlarmsSince(_idServer, queryFrom, _alarmPollMaxBatch);
-            _lastAlarmEndPollLocal = DateTime.Now;
+            _lastAlarmEndPollLocal = pollNow;
 
             if (ended == null || ended.Count == 0)
+            {
+                return;
+            }
+
+            var dedupeCutoff = pollNow.AddHours(-12);
+            foreach (var item in _endedAlarmDispatchById.ToArray())
+            {
+                if (item.Value < dedupeCutoff)
+                {
+                    _endedAlarmDispatchById.TryRemove(item.Key, out _);
+                }
+            }
+
+            var filtered = new List<AlarmNotificationItem>();
+            foreach (var alarm in ended)
+            {
+                if (alarm == null || alarm.IdAlarme <= 0)
+                {
+                    continue;
+                }
+
+                if (_endedAlarmDispatchById.TryGetValue(alarm.IdAlarme, out var sentAt) && sentAt >= dedupeCutoff)
+                {
+                    continue;
+                }
+
+                _endedAlarmDispatchById[alarm.IdAlarme] = pollNow;
+                filtered.Add(alarm);
+            }
+
+            if (filtered.Count == 0)
             {
                 return;
             }
@@ -544,7 +578,7 @@ namespace Vigitemp_Serveur
             // Legacy agent endpoint (/alarm?action=hide) is deprecated.
             // End-of-alarm handling is now done by web dispatch and email flow.
 
-            _ = AlarmWebNotifier.NotifyEndedAlarmBatchAsync(ended);
+            _ = AlarmWebNotifier.NotifyEndedAlarmBatchAsync(filtered);
         }
 
         public void Start()

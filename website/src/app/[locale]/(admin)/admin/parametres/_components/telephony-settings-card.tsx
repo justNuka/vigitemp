@@ -68,14 +68,11 @@ export function TelephonySettingsCard() {
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <span className="font-medium">{copy.frontOnly}.</span> {copy.warning}
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2 md:items-end">
           <div className="space-y-2">
-            <div className="flex items-center justify-between rounded-lg border bg-background/80 px-3 py-2">
-              <Label htmlFor="telephony-enabled">{copy.enabled}</Label>
+            <Label htmlFor="telephony-enabled">{copy.enabled}</Label>
+            <div className="flex h-10 items-center justify-between rounded-lg border border-border/60 bg-white px-3 shadow-sm dark:bg-card">
+              <span className="text-sm font-medium">{copy.enabled}</span>
               <Switch id="telephony-enabled" checked={draft.enabled} onCheckedChange={(checked) => setField("enabled", checked)} />
             </div>
           </div>

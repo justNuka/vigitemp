@@ -231,7 +231,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
 
         const alarmDisabled = location.Notification_Active === false
         const surveillanceDisabled = location.Lieu_Etat === "D"
-        const isGso = location.t_sonde?.Est_Sonde_GSO ?? location.Sonde_Numero_Serie?.startsWith("GSO")
+        const isGso = location.t_sonde?.Est_Sonde_GSO ?? location.Est_Lieu_GSO ?? false
         const unit = location.Derniere_Unite ?? "°C"
         const decimals = location.Derniere_Nb_Decimal ?? null
 
@@ -278,6 +278,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
             consigneInfPreAlarme: location.Consigne_Inf_Pre_Alarme ?? null,
             estConsigneInfPreAlarmeActive: location.Est_Consigne_Inf_Pre_Alarme_Active ?? false,
             comment: location.Commentaire ?? null,
+            sondeNumeroSerie: location.Sonde_Numero_Serie ?? null,
             isGso: isGso ?? null,
             gsoRssi: location.Derniere_Val_Rssi ?? null,
             batteryPercent: location.Derniere_Val_Batterie ?? null,

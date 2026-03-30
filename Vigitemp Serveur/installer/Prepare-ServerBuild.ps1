@@ -29,7 +29,7 @@ $installerProject = Join-Path $serverRoot "VigitempServerInstaller\VigitempServe
 $prereqInstallerProject = Join-Path $serverRoot "VigitempPrereqInstaller\VigitempPrereqInstaller.csproj"
 
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
-    $OutputDir = Join-Path $repoRoot "..\VigiSensys\2 - installation\1 - VigiSensys Serveur"
+    $OutputDir = Join-Path $repoRoot "..\VigiSensys\2 - installation\1-serveur"
 }
 
 if (-not $SkipBuild) {

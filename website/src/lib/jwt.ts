@@ -62,14 +62,14 @@ export function verifyRefreshToken(token: string): JWTPayload | null {
 }
 
 /**
- * V?rifie et d?code un token JWT (compat: access token)
+ * Vérifie et décode un token JWT (compat: access token)
  */
 export function verifyToken(token: string): JWTPayload | null {
   return verifyAccessToken(token);
 }
 
 /**
- * D?code un token sans v?rification (utile debug)
+ * Décode un token sans vérification (utile pour le débogage)
  */
 export function decodeToken(token: string): JWTPayload | null {
   try {

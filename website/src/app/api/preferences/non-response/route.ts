@@ -15,12 +15,12 @@ export const GET = withAuthLogging(async () => {
     });
   } catch (error) {
     log.error("preferences/non-response", "non_response_preference_fetch_error", { error: error });
-    return apiError(500, "preference_fetch_failed", "Impossible de charger le param?tre global.");
+    return apiError(500, "preference_fetch_failed", "Impossible de charger le paramètre global.");
   }
 });
 
 async function methodNotAllowed(_req: NextRequest) {
-  return apiError(405, "method_not_allowed", "La pr?f?rence est d?sormais globale et en lecture seule ici.");
+  return apiError(405, "method_not_allowed", "La préférence est désormais globale et en lecture seule ici.");
 }
 
 export const PUT = withAuthLogging(methodNotAllowed);

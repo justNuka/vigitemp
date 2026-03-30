@@ -126,6 +126,7 @@ export default function MonitoringDetailsModal({
   const [zoomBounds, setZoomBounds] = useState<ZoomBounds | null>(null);
   const [tableSorting, setTableSorting] = useState<SortingState>([]);
   const chartRef = useRef<ChartJS<"line"> | null>(null);
+  const graphAuditKeyRef = useRef<string | null>(null);
   const showNullNonResponse = Boolean(controlledShowNullNonResponse);
 
   useEffect(() => {
@@ -133,6 +134,25 @@ export default function MonitoringDetailsModal({
       setDateRange(initialRange);
     }
   }, [initialRange]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      graphAuditKeyRef.current = null;
+      return;
+    }
+
+    const auditKey = `${idLieu}`;
+    if (graphAuditKeyRef.current === auditKey) return;
+    graphAuditKeyRef.current = auditKey;
+
+    void fetch(`/api/lieux/${idLieu}/graph-open`, {
+      method: "POST",
+      credentials: "include",
+      cache: "no-store",
+    }).catch(() => {
+      // Best effort: the modal must keep opening even if audit fails.
+    });
+  }, [idLieu, isOpen]);
 
   const effectiveRange = useMemo(() => {
     if (!dateRange?.from) return null;

@@ -346,17 +346,19 @@ export default function SharedFileUpload({
               onRemove={removeUploadById}
             />
 
-            <UploadStatusSection
-              title={t("sections.failed")}
-              icon={<AlertTriangle className="mr-2 size-4 text-destructive" />}
-              items={erroredUploads}
-              emptyMessage={t("placeholders.failed")}
-              removeLabel={t("remove")}
-              maxHeightClassName="max-h-40 min-h-12"
-              showProgress={false}
-              showErrorLabel={t("errors.label")}
-              onRemove={removeUploadById}
-            />
+            {erroredUploads.length > 0 ? (
+              <UploadStatusSection
+                title={t("sections.failed")}
+                icon={<AlertTriangle className="mr-2 size-4 text-destructive" />}
+                items={erroredUploads}
+                emptyMessage={t("placeholders.failed")}
+                removeLabel={t("remove")}
+                maxHeightClassName="max-h-40 min-h-12"
+                showProgress={false}
+                showErrorLabel={t("errors.label")}
+                onRemove={removeUploadById}
+              />
+            ) : null}
           </div>
         )}
       </div>

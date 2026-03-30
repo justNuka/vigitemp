@@ -1,5 +1,5 @@
 ﻿import { prisma, prismaMesure } from "@/lib/prisma";
-import { isEmailEnabled, sendEmail, type EmailAttachment } from "@/lib/email";
+import { getSystemEmailCcRecipients, isEmailEnabled, isSystemEmailFallbackEnabled, sendEmail, type EmailAttachment } from "@/lib/email";
 import { log } from "@/lib/logger";
 import AlarmEventNotificationEmail from "../../emails/alarm-event-notification";
 import { PNG } from "pngjs";
@@ -70,8 +70,14 @@ async function isAlarmEventTypeEnabled(eventType: AlarmEmailEventType) {
 }
 
 async function getAlarmEmailRecipients(idLieu?: number | null) {
+  const fallbackEnabled = await isSystemEmailFallbackEnabled();
+  const systemRecipients = fallbackEnabled ? await getSystemEmailCcRecipients() : [];
+
   if (!idLieu) {
-    return { recipients: [], skipped: "no_lieu" as const };
+    if (systemRecipients.length > 0) {
+      return { recipients: systemRecipients, skipped: null as null, usedSystemFallback: true };
+    }
+    return { recipients: [], skipped: "no_lieu" as const, usedSystemFallback: false };
   }
 
   const location = await prisma.t_lieu.findUnique({
@@ -98,7 +104,11 @@ async function getAlarmEmailRecipients(idLieu?: number | null) {
   );
 
   if (userIds.length === 0) {
-    return { recipients: [], skipped: "no_recipients_for_lieu" as const };
+    if (systemRecipients.length > 0) {
+    return { recipients: systemRecipients, skipped: null as null, usedSystemFallback: true };
+  }
+
+  return { recipients: [], skipped: "no_recipients_for_lieu" as const, usedSystemFallback: false };
   }
 
   const users = await prisma.t_utilisateur.findMany({
@@ -125,12 +135,17 @@ async function getAlarmEmailRecipients(idLieu?: number | null) {
     .filter((email): email is string => !!email);
 
   if (recipients.length === 0) {
-    return { recipients: [], skipped: "no_valid_emails" as const };
+    if (systemRecipients.length > 0) {
+    return { recipients: systemRecipients, skipped: null as null, usedSystemFallback: true };
+  }
+
+  return { recipients: [], skipped: "no_valid_emails" as const, usedSystemFallback: false };
   }
 
   return {
     recipients: Array.from(new Set(recipients)),
     skipped: null as null,
+    usedSystemFallback: false,
   };
 }
 
@@ -464,5 +479,10 @@ export async function sendAlarmEventEmails(input: SendAlarmEventEmailInput) {
   );
 
   const sent = results.filter(Boolean).length;
-  return { attempted: recipients.length, sent, skipped: null as null };
+  return {
+    attempted: recipients.length,
+    sent,
+    skipped: null as null,
+    usedSystemFallback: recipientsState.usedSystemFallback,
+  };
 }

@@ -53,6 +53,7 @@ export default function StepperFileUpload({ onUploadResult, onFinish }: StepperF
       validateRootTag={(rootTag) => rootTag.includes("CALIBRAGE") || rootTag.includes("AJUSTAGE")}
       onUploadResult={onUploadResult}
       onFinish={onFinish}
+      closeOnProcessSuccess
     />
   );
 }

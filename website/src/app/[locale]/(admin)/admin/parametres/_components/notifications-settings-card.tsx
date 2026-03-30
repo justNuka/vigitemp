@@ -54,6 +54,10 @@ export function NotificationsSettingsCard({
     () => settings.find((setting) => setting.key === "notifications:alarm_email_ended"),
     [settings],
   );
+  const fallbackToggle = useMemo(
+    () => settings.find((setting) => setting.key === "notifications:alarm_email_fallback_to_system"),
+    [settings],
+  );
 
   const [recipients, setRecipients] = useState(() => normalizeRecipients(recipientsSetting?.value ?? ""));
 
@@ -108,6 +112,20 @@ export function NotificationsSettingsCard({
               checked={endedToggle.value === "true"}
               onCheckedChange={() => onToggle(endedToggle.key, endedToggle.value)}
               isLoading={loadingKeys.has(endedToggle.key)}
+            />
+          </div>
+        ) : null}
+
+        {fallbackToggle ? (
+          <div className="flex items-center justify-between">
+            <Label htmlFor={fallbackToggle.key} className="flex-1">
+              {t("notifications.fallback_toggle")}
+            </Label>
+            <SwitchWithLoading
+              id={fallbackToggle.key}
+              checked={fallbackToggle.value === "true"}
+              onCheckedChange={() => onToggle(fallbackToggle.key, fallbackToggle.value)}
+              isLoading={loadingKeys.has(fallbackToggle.key)}
             />
           </div>
         ) : null}

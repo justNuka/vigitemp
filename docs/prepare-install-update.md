@@ -24,9 +24,9 @@ Depuis la racine du repo :
 
 Sorties attendues :
 
-- serveur : `..\VigiSensys\2 - installation\1 - VigiSensys Serveur`
-- site web : `..\VigiSensys\2 - installation\2 - VigiSensys Serveur Web`
-- agent : `..\VigiSensys\2 - installation\3 - VigiSensys Agent`
+- serveur : `..\VigiSensys\2 - installation\1-serveur`
+- site web : `..\VigiSensys\2 - installation\2-web`
+- agent : `..\VigiSensys\2 - installation\3-agent`
 
 ### Serveur seul
 

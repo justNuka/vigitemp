@@ -117,11 +117,11 @@ export function getStatusTheme(
         label: labels.ok,
         Icon: CheckCircle2,
         textClassName: "text-black",
-        softBgClassName: "bg-primary/10 dark:bg-primary/20",
-        headerBgClassName: "bg-primary",
-        headerBorderClassName: "border-primary",
-        headerTextClassName: "text-black",
-        badgeClassName: "bg-primary text-black hover:bg-primary/90",
+        softBgClassName: "bg-sky-100/80 dark:bg-sky-900/30",
+        headerBgClassName: "bg-sky-400 dark:bg-sky-500",
+        headerBorderClassName: "border-sky-500 dark:border-sky-600",
+        headerTextClassName: "text-slate-950 dark:text-slate-950",
+        badgeClassName: "bg-sky-400 text-slate-950 hover:bg-sky-500 dark:bg-sky-500 dark:hover:bg-sky-400",
       }
   }
 }

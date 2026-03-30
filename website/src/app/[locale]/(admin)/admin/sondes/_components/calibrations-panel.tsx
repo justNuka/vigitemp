@@ -21,6 +21,7 @@ export type CalibrationRow = {
   Date_Heure_Etalonnage: Date | null;
   Date_Validite: Date | null;
   Duree_Validite_Jours: number | null;
+  Valide: Date | null;
   Operateur: string | null;
   Incertitude: string | null;
 };
@@ -168,6 +169,11 @@ export function CalibrationsPanel({
       accessorKey: 'Duree_Validite_Jours',
       header: t('panels.calibrations.columns.validity_days'),
       cell: ({ row }) => row.original.Duree_Validite_Jours ?? '-',
+    },
+    {
+      accessorKey: 'Valide',
+      header: t('panels.calibrations.columns.validated_at'),
+      cell: ({ row }) => formatDateTimeFr(row.original.Valide, timezone, localeTag),
     },
     {
       accessorKey: 'Operateur',

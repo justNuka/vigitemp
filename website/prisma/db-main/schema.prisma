@@ -218,6 +218,7 @@ model t_etalonnage {
   Sonde_Numero_Serie    String?   @db.VarChar(50)
   Date_Validite         DateTime? @db.Date
   Duree_Validite_Jours  Int?
+  Valide                DateTime? @db.DateTime(0)
   Operateur             String?   @db.VarChar(255)
   Etalon_Numero_Serie   String?   @db.VarChar(50)
   Date_Certif           DateTime? @db.Date
@@ -572,6 +573,7 @@ model t_sonde_type {
   Libelle_Sonde_Type String?  @db.VarChar(50)
   Est_Gestion_Relais Boolean?
   Est_Double_Capteur Boolean  @default(false)
+  Famille_Sonde      String   @default("CLASSIC") @db.VarChar(16)
 }
 
 model t_utilisateur {
@@ -756,10 +758,10 @@ model t_lieu_planning_audit {
   Date_Heure_Fin_Changement        DateTime?                  @db.DateTime(0)
   Type                             t_lieu_planning_audit_Type
   Planning_Regle_Id                Int?
-  Consigne_Avant                   Float?
+  Consigne_Avant                   Float?                     @db.Float
   Tolerance_Surveillance_Sup_Avant Float?                     @db.Float
   Tolerance_Surveillance_Inf_Avant Float?                     @db.Float
-  Consigne_Apres                   Float?
+  Consigne_Apres                   Float?                     @db.Float
   Tolerance_Surveillance_Sup_Apres Float?                     @db.Float
   Tolerance_Surveillance_Inf_Apres Float?                     @db.Float
 
@@ -948,23 +950,6 @@ model t_vigilog_tournee {
   @@index([Statut], map: "IDX_t_vigilog_tournee_statut")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-model t_lieu_planning_audit_backup_20260324 {
-  Id_Audit           Int                                        @default(0)
-  Id_Lieu            Int
-  Timestamp          DateTime                                   @default(now()) @db.DateTime(0)
-  Type               t_lieu_planning_audit_backup_20260324_Type
-  Planning_Regle_Id  Int?
-  Consigne_Avant     Float?
-  Consigne_Sup_Avant Float?
-  Consigne_Inf_Avant Float?
-  Consigne_Apres     Float?
-  Consigne_Sup_Apres Float?
-  Consigne_Inf_Apres Float?
-
-  @@ignore
-}
-
 enum t_lieu_planning_audit_Type {
   PLAN_APPLY
 }
@@ -978,9 +963,4 @@ enum t_commande_materiel_Statut_Commande {
   BROUILLON
   ENVOYEE
   PREPAREE
-}
-
-enum t_lieu_planning_audit_backup_20260324_Type {
-  ACTIVATION
-  RETOUR_BASE
 }

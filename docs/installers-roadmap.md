@@ -52,7 +52,7 @@ Il ne doit pas :
 
 - `website/installer/Prepare-StandaloneBuild.ps1`
   - build
-  - copie du package offline dans `VigiSensys/2 - installation/2 - VigiSensys Serveur Web`
+  - copie du package offline dans `VigiSensys/2 - installation/2-web`
 - futur `website/installer/bootstrapper/`
   - EXE unique
   - payload embarque du package prepare

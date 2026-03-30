@@ -145,6 +145,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
             Sonde_Numero_Serie: data.Sonde_Numero_Serie,
             Date_Validite: dateValiditeFinale,
             Duree_Validite_Jours: dureeValiditeJours,
+            Valide: new Date(),
             Operateur: data.Operateur,
             Etalon_Numero_Serie: data.Etalon_Numero_Serie,
             Date_Certif: dateCertif,

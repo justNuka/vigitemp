@@ -25,6 +25,7 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
         Date_Heure_Etalonnage: true,
         Date_Validite: true,
         Duree_Validite_Jours: true,
+        Valide: true,
         Sonde_Numero_Serie: true,
         Operateur: true,
         Unite: true,

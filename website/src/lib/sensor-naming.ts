@@ -2,6 +2,13 @@ const DUAL_GSO_TYPES = new Set(["SOIH", "SOEH"]);
 const SINGLE_TEMPERATURE_GSO_TYPES = new Set(["SOIT", "SOET"]);
 const PREFIX_STRIPPED_ADDRESS_TYPES = new Set(["IN", "IE", "IP", "IC", "IH", "EN"]);
 
+const GSO_TYPE_CODES = new Set(["GSO", "SOIT", "SOIH", "SOET", "SOEH"]);
+const GSP_TYPE_CODES = new Set([
+  "GSP", "SPNB", "SPNG", "SPPS", "SPAL", "SPPC", "SPAU", "SPCF", "SPMI",
+  "SPCO", "SPHY", "SPTH", "SPDI", "SPAT", "SPLU", "SP01", "SP42", "SPOF",
+  "SPXB", "SPXG", "SPXP", "SPFB", "SPFG", "SPFP",
+]);
+
 const normalizeType = (value: string) => value.trim().toUpperCase().replace(/-+$/g, "");
 const normalizeSerial = (value: string) => value.trim().toUpperCase();
 
@@ -27,9 +34,12 @@ export const extractProbeAddressFromSerial = (serial: string) => {
 
   if (isGsoType(type)) {
     if (SINGLE_TEMPERATURE_GSO_TYPES.has(type)) {
-      return `${stripGsoSuffix(gsoAddress)}-T`;
+      return stripGsoSuffix(gsoAddress);
     }
-    return gsoAddress;
+    if (isDualGsoType(type)) {
+      return gsoAddress;
+    }
+    return stripGsoSuffix(gsoAddress);
   }
 
   if (PREFIX_STRIPPED_ADDRESS_TYPES.has(type) && normalized.length > type.length) {
@@ -115,4 +125,24 @@ export const buildSensorSerialsFromInput = (rawType: string, rawSerieNum: string
     isGso: true,
     serials: [`${type}-${address}`],
   };
+};
+
+
+export const extractTypeCodeFromSerial = (serial: string) => {
+  const normalized = normalizeSerial(serial);
+  const dashIndex = normalized.indexOf("-");
+  return dashIndex > 0 ? normalizeType(normalized.slice(0, dashIndex)) : normalizeType(normalized);
+};
+
+export const getSensorFamilyFromTypeCode = (rawType: string | null | undefined) => {
+  if (!rawType) return "CLASSIC" as const;
+  const type = normalizeType(rawType);
+  if (GSO_TYPE_CODES.has(type)) return "GSO" as const;
+  if (GSP_TYPE_CODES.has(type)) return "GSP" as const;
+  return "CLASSIC" as const;
+};
+
+export const getSensorFamilyFromSerial = (serial: string | null | undefined) => {
+  if (!serial) return "CLASSIC" as const;
+  return getSensorFamilyFromTypeCode(extractTypeCodeFromSerial(serial));
 };

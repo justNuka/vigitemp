@@ -86,6 +86,7 @@ export function SensorsClient() {
     Operateur: etal.Operateur,
     Incertitude: etal.Incertitude === null || etal.Incertitude === undefined ? null : String(etal.Incertitude),
     Duree_Validite_Jours: etal.Duree_Validite_Jours ?? null,
+    Valide: etal.Valide ? new Date(etal.Valide) : null,
   }));
 
   if (sensorsLoading) {

@@ -76,7 +76,7 @@ async function getEmailConfig(): Promise<EmailConfig> {
   return config;
 }
 
-async function getSystemEmailCcRecipients(): Promise<string[]> {
+export async function getSystemEmailCcRecipients(): Promise<string[]> {
   const setting = await prisma.t_parametre.findFirst({
     where: {
       OR: [
@@ -167,4 +167,20 @@ export async function sendEmail({
 export async function isEmailEnabled(): Promise<boolean> {
   const config = await getEmailConfig();
   return config.enabled && !!config.host && !!config.user && !!config.password;
+}
+
+export async function isSystemEmailFallbackEnabled(): Promise<boolean> {
+  const setting = await prisma.t_parametre.findFirst({
+    where: {
+      OR: [
+        { Section: "notifications", Mot_Cle: "alarm_email_fallback_to_system" },
+        { Section: "NOTIFICATIONS", Mot_Cle: "ALARM_EMAIL_FALLBACK_TO_SYSTEM" },
+      ],
+    },
+    select: { Valeur: true },
+  });
+
+  if (!setting?.Valeur) return false;
+  const normalized = setting.Valeur.trim().toLowerCase();
+  return ["true", "1", "on", "yes"].includes(normalized);
 }

@@ -12,11 +12,13 @@ const DEFAULT_SETTINGS = [
   { key: "notifications:alarm_email_recipients", value: "", label: "CC recipients" },
   { key: "notifications:alarm_email_acknowledged", value: "true", label: "Acknowledgement emails" },
   { key: "notifications:alarm_email_ended", value: "true", label: "Ended alarm emails" },
+  { key: "notifications:alarm_email_fallback_to_system", value: "false", label: "Fallback to system recipients" },
   { key: "alarms:sound", value: "true", label: "Alarm sound" },
   { key: "dashboard:refresh", value: "30", label: "Dashboard refresh interval" },
   { key: "dashboard:surveillance_refresh", value: "15", label: "Surveillance refresh interval" },
   { key: "dashboard:show_null_non_response", value: "false", label: "Show null non-response" },
   { key: "dashboard:etalonnage_warning_days", value: "30", label: "Calibration warning days" },
+  { key: "dashboard:audit_graph_openings", value: "false", label: "Audit trail on graph opening" },
   { key: "messaging:enabled", value: "true", label: "Internal messaging" },
 ];
 

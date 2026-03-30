@@ -32,6 +32,7 @@ const NOTIFICATION_SETTING_KEYS = new Set([
   "notifications:alarm_email_recipients",
   "notifications:alarm_email_acknowledged",
   "notifications:alarm_email_ended",
+  "notifications:alarm_email_fallback_to_system",
 ]);
 
 const MESSAGING_SETTING_KEY = "messaging:enabled";
@@ -64,11 +65,13 @@ function getTranslatedLabel(t: ReturnType<typeof useTranslations>, setting: Sett
     "notifications:alarm_email_recipients": t("notifications.cc_recipients_label"),
     "notifications:alarm_email_acknowledged": t("notifications.acknowledged_toggle"),
     "notifications:alarm_email_ended": t("notifications.ended_toggle"),
+    "notifications:alarm_email_fallback_to_system": t("notifications.fallback_toggle"),
     "alarms:sound": t("general.labels.alarms_sound"),
     "dashboard:refresh": t("general.labels.dashboard_refresh"),
     "dashboard:surveillance_refresh": t("general.labels.surveillance_refresh"),
     "dashboard:show_null_non_response": t("general.labels.show_null_non_response"),
     "dashboard:etalonnage_warning_days": t("general.labels.etalonnage_warning_days"),
+    "dashboard:audit_graph_openings": t("general.labels.audit_graph_openings"),
     "messaging:enabled": t("messaging.toggle_label"),
   };
 

@@ -4,6 +4,7 @@ import { getJson } from "@/lib/http";
 export interface SensorType {
   Sonde_Type: string;
   Libelle_Sonde_Type: string | null;
+  Famille_Sonde: "CLASSIC" | "GSO" | "GSP" | string;
 }
 
 async function fetchSensorTypes(): Promise<SensorType[]> {

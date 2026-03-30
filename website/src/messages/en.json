@@ -426,6 +426,10 @@
           "status": "Display by status",
           "alphabetical": "Display alphabetically"
         }
+      },
+      "search": {
+        "label": "Search by location",
+        "placeholder": "Search by location or serial number"
       }
     },
     "tabs": {
@@ -581,7 +585,9 @@
         "lower_pre_enable": "Enable lower pre-alarm",
         "lower_pre_label": "Lower pre-alarm",
         "retrigger_delay_measures": "Retrigger delay (measures)",
-        "module_select": "Module"
+        "module_select": "Module",
+        "enabled": "Enabled",
+        "disabled": "Disabled"
       },
       "placeholders": {
         "name": "e.g. Storage A",
@@ -1625,7 +1631,8 @@
         "surveillance_refresh": "Surveillance refresh interval (s)",
         "show_null_non_response": "Show no-response values (null)",
         "etalonnage_warning_days": "Calibration validity alert (days)",
-        "global_language": "Global email language"
+        "global_language": "Global email language",
+        "audit_graph_openings": "Audit trail on graph opening"
       },
       "refresh_options": {
         "5": "5 seconds",
@@ -1686,6 +1693,7 @@
       "email_toggle": "Enable alarm emails",
       "acknowledged_toggle": "Receive alarm acknowledgement emails",
       "ended_toggle": "Receive ended alarm emails",
+      "fallback_toggle": "Use system emails when no location recipient exists",
       "cc_recipients_label": "CC emails (all system emails)",
       "cc_recipients_placeholder": "e.g. support@mc2-info.com\nadmin@client.com",
       "cc_recipients_helper": "One email per line, or separated by comma/semicolon.",
@@ -1918,7 +1926,8 @@
           "operator": "Operator",
           "incertitude": "Uncertainty",
           "validity_days": "Validity (days)",
-          "actions": "Actions"
+          "actions": "Actions",
+          "validated_at": "Validated at"
         },
         "actions": {
           "delete": "Delete",
@@ -1963,7 +1972,9 @@
       "saving_to_db": "Inserting into database...",
       "edit": "Edit",
       "cancel": "Cancel",
-      "apply": "Apply"
+      "apply": "Apply",
+      "clear_list": "Clear list",
+      "remove": "Remove row"
     },
     "filters": {
       "site": "Site",
@@ -2108,7 +2119,11 @@
       "saving_to_db": "Inserting into database...",
       "edit": "Edit",
       "cancel": "Cancel",
-      "apply": "Apply"
+      "apply": "Apply",
+      "clear_list": "Clear list",
+      "edit_selection": "Edit selection",
+      "select_all": "Select all",
+      "select_row": "Select row"
     },
     "filters": {
       "site": "Site",
@@ -2142,7 +2157,8 @@
       "title": "Edit data",
       "operator": "Operator",
       "unit": "Unit",
-      "validity_days": "Validity (days)"
+      "validity_days": "Validity (days)",
+      "batch_helper": "Apply this change to {count} calibration(s)."
     },
     "toast": {
       "save_success": "{count} row(s) inserted into database.",

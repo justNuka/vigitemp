@@ -6,6 +6,7 @@ export interface Calibration {
   Date_Heure_Etalonnage: string | null;
   Date_Validite: string | null;
   Duree_Validite_Jours: number | null;
+  Valide: string | null;
   Sonde_Numero_Serie: string | null;
   Operateur: string | null;
   Incertitude: number | null;

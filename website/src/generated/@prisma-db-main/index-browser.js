@@ -270,6 +270,7 @@ exports.Prisma.T_etalonnageScalarFieldEnum = {
   Sonde_Numero_Serie: 'Sonde_Numero_Serie',
   Date_Validite: 'Date_Validite',
   Duree_Validite_Jours: 'Duree_Validite_Jours',
+  Valide: 'Valide',
   Operateur: 'Operateur',
   Etalon_Numero_Serie: 'Etalon_Numero_Serie',
   Date_Certif: 'Date_Certif',
@@ -518,7 +519,8 @@ exports.Prisma.T_sonde_typeScalarFieldEnum = {
   Sonde_Type: 'Sonde_Type',
   Libelle_Sonde_Type: 'Libelle_Sonde_Type',
   Est_Gestion_Relais: 'Est_Gestion_Relais',
-  Est_Double_Capteur: 'Est_Double_Capteur'
+  Est_Double_Capteur: 'Est_Double_Capteur',
+  Famille_Sonde: 'Famille_Sonde'
 };
 
 exports.Prisma.T_utilisateurScalarFieldEnum = {
@@ -985,7 +987,8 @@ exports.Prisma.t_etat_surveillanceOrderByRelevanceFieldEnum = {
 
 exports.Prisma.t_sonde_typeOrderByRelevanceFieldEnum = {
   Sonde_Type: 'Sonde_Type',
-  Libelle_Sonde_Type: 'Libelle_Sonde_Type'
+  Libelle_Sonde_Type: 'Libelle_Sonde_Type',
+  Famille_Sonde: 'Famille_Sonde'
 };
 
 exports.Prisma.t_utilisateurOrderByRelevanceFieldEnum = {
