@@ -305,12 +305,6 @@ exports.Prisma.T_liaison_profil_autorisationScalarFieldEnum = {
   Id_Autorisation: 'Id_Autorisation'
 };
 
-exports.Prisma.T_liaison_sonde_type_mesureScalarFieldEnum = {
-  Id_Liaison: 'Id_Liaison',
-  Sonde_Type: 'Sonde_Type',
-  Sonde_Type_Mesure: 'Sonde_Type_Mesure'
-};
-
 exports.Prisma.T_liaison_utilisateur_groupeScalarFieldEnum = {
   Id_Liaison_u_g: 'Id_Liaison_u_g',
   Id_Utilisateur: 'Id_Utilisateur',
@@ -331,8 +325,6 @@ exports.Prisma.T_lieu_groupeScalarFieldEnum = {
 
 exports.Prisma.T_lieuScalarFieldEnum = {
   Id_Lieu: 'Id_Lieu',
-  Id_Groupe1: 'Id_Groupe1',
-  Id_Groupe2: 'Id_Groupe2',
   Id_Site: 'Id_Site',
   Nom_Lieu: 'Nom_Lieu',
   Sonde_Numero_Serie: 'Sonde_Numero_Serie',
@@ -619,17 +611,6 @@ exports.Prisma.T_etalon_typeScalarFieldEnum = {
   Resolution: 'Resolution'
 };
 
-exports.Prisma.T_sonde_type_mesureScalarFieldEnum = {
-  Id_Sonde_Type_Mesure: 'Id_Sonde_Type_Mesure',
-  Sonde_Type_Mesure: 'Sonde_Type_Mesure',
-  Libelle_Sonde_Type_Mesure: 'Libelle_Sonde_Type_Mesure',
-  Est_Flag_Relais: 'Est_Flag_Relais',
-  Est_Flag_Affiche_Information: 'Est_Flag_Affiche_Information',
-  Unite_Mesure: 'Unite_Mesure',
-  Libelle_Unite_Mesure: 'Libelle_Unite_Mesure',
-  Reserve_MC2: 'Reserve_MC2'
-};
-
 exports.Prisma.T_mem_gsoScalarFieldEnum = {
   id: 'id',
   last_sonde: 'last_sonde',
@@ -900,11 +881,6 @@ exports.Prisma.t_groupeOrderByRelevanceFieldEnum = {
   Numero_Regroupement: 'Numero_Regroupement'
 };
 
-exports.Prisma.t_liaison_sonde_type_mesureOrderByRelevanceFieldEnum = {
-  Sonde_Type: 'Sonde_Type',
-  Sonde_Type_Mesure: 'Sonde_Type_Mesure'
-};
-
 exports.Prisma.t_lieuOrderByRelevanceFieldEnum = {
   Nom_Lieu: 'Nom_Lieu',
   Sonde_Numero_Serie: 'Sonde_Numero_Serie',
@@ -1048,14 +1024,6 @@ exports.Prisma.t_etalon_typeOrderByRelevanceFieldEnum = {
   Descriptif: 'Descriptif'
 };
 
-exports.Prisma.t_sonde_type_mesureOrderByRelevanceFieldEnum = {
-  Sonde_Type_Mesure: 'Sonde_Type_Mesure',
-  Libelle_Sonde_Type_Mesure: 'Libelle_Sonde_Type_Mesure',
-  Unite_Mesure: 'Unite_Mesure',
-  Libelle_Unite_Mesure: 'Libelle_Unite_Mesure',
-  Reserve_MC2: 'Reserve_MC2'
-};
-
 exports.Prisma.t_mem_gsoOrderByRelevanceFieldEnum = {
   last_sonde: 'last_sonde'
 };
@@ -1141,7 +1109,6 @@ exports.Prisma.ModelName = {
   t_etalonnage_mesure: 't_etalonnage_mesure',
   t_groupe: 't_groupe',
   t_liaison_profil_autorisation: 't_liaison_profil_autorisation',
-  t_liaison_sonde_type_mesure: 't_liaison_sonde_type_mesure',
   t_liaison_utilisateur_groupe: 't_liaison_utilisateur_groupe',
   t_liaison_utilisateur_site: 't_liaison_utilisateur_site',
   t_lieu_groupe: 't_lieu_groupe',
@@ -1166,7 +1133,6 @@ exports.Prisma.ModelName = {
   t_ancien_mot_de_passe: 't_ancien_mot_de_passe',
   t_commentaire_acquittement_alarme: 't_commentaire_acquittement_alarme',
   t_etalon_type: 't_etalon_type',
-  t_sonde_type_mesure: 't_sonde_type_mesure',
   t_mem_gso: 't_mem_gso',
   t_sonde_etat: 't_sonde_etat',
   t_lieu_mail_tel: 't_lieu_mail_tel',

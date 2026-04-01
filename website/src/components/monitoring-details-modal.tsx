@@ -30,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLieuMeasurements } from "@/hooks/useLieuMeasurements";
 import { useLieuMeasurementsPaged } from "@/hooks/useLieuMeasurementsPaged";
 import { calculateYDomain, getMeasureSummary, sortMeasuresChronologically } from "@/lib/measurements";
+import { cn } from "@/lib/utils";
 import type { MeasureData } from "@/lib/measurements";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend, Filler);
@@ -172,6 +173,16 @@ export default function MonitoringDetailsModal({
   }, [effectiveRange]);
 
   const rangeEnabled = Boolean(explicitRangeStart && explicitRangeEnd);
+
+
+  const selectedRangeLabel = useMemo(() => {
+    if (!effectiveRange?.from) return null;
+    const formatter = new Intl.DateTimeFormat(localeTag, { dateStyle: "medium" });
+    const fromLabel = formatter.format(effectiveRange.from);
+    const toLabel = formatter.format(effectiveRange.to ?? effectiveRange.from);
+    if (fromLabel === toLabel) return fromLabel;
+    return `${fromLabel} -> ${toLabel}`;
+  }, [effectiveRange, localeTag]);
 
   const { data: rangeGraphData, isLoading: rangeGraphLoading } = useMonitoringRangeMeasurements(idLieu, {
     enabled: isOpen && rangeEnabled,
@@ -348,6 +359,7 @@ export default function MonitoringDetailsModal({
   }, [idLieu, isOpen, rangeEnabled, explicitRangeStart, explicitRangeEnd]);
 
   const isDialogLoading = rangeEnabled ? rangeGraphLoading : baseLoading;
+  const expandedHistoryLayout = rangeEnabled && (activeTab === "graph" || activeTab === "table");
   const handleTableSortingChange = useCallback((updater: Updater<SortingState>) => {
     setTableSorting((prev) => {
       const next = typeof updater === "function" ? updater(prev) : updater;
@@ -358,7 +370,10 @@ export default function MonitoringDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-7xl max-h-[95vh] overflow-y-auto overflow-x-hidden">
+      <DialogContent className={cn(
+        "w-[95vw] max-h-[95vh] overflow-y-auto overflow-x-hidden transition-all duration-300 ease-out",
+        expandedHistoryLayout ? "max-w-[98vw] h-[96vh]" : "max-w-7xl",
+      )}>
         <DialogHeader>
           <DialogTitle>{nomLieu}</DialogTitle>
           <div className="space-y-1">
@@ -381,7 +396,7 @@ export default function MonitoringDetailsModal({
         ) : (
           <div className="space-y-4">
             <div className="flex w-full flex-wrap items-center justify-between gap-3">
-              <div className="min-w-65 flex-1">
+              <div className="min-w-65 flex-1 space-y-2">
                 <DateRangePicker
                   allowEmpty
                   onUpdate={({ range }) => {
@@ -397,6 +412,11 @@ export default function MonitoringDetailsModal({
                   matchTriggerWidth={false}
                   popoverClassName="w-[min(980px,calc(100vw-2rem))]"
                 />
+                {selectedRangeLabel ? (
+                  <p className="text-sm text-muted-foreground">
+                    {t("filters.selected_range", { range: selectedRangeLabel })}
+                  </p>
+                ) : null}
               </div>
             </div>
 
@@ -413,7 +433,7 @@ export default function MonitoringDetailsModal({
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="graph">
+              <TabsContent value="graph" className={cn(expandedHistoryLayout && "space-y-6") }>
                 <MonitoringGraphTab
                   chartRef={chartRef}
                   orderedData={orderedData}
@@ -434,6 +454,15 @@ export default function MonitoringDetailsModal({
                   captureZoomBounds={captureZoomBounds}
                   t={t}
                 />
+                {rangeEnabled ? (
+                  <div className="rounded-xl border border-border/60 bg-card/80 p-4 shadow-sm">
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                      <h3 className="text-sm font-semibold text-foreground">{t("tabs.audit")}</h3>
+                      <span className="text-xs text-muted-foreground">{t("audit.search_placeholder")}</span>
+                    </div>
+                    <MonitoringAuditTab logs={auditLogs} isLoading={auditLoading} error={auditError} t={t} />
+                  </div>
+                ) : null}
               </TabsContent>
 
               <TabsContent value="table">
@@ -453,6 +482,15 @@ export default function MonitoringDetailsModal({
                   rangeEnabled={rangeEnabled}
                   t={t}
                 />
+                {rangeEnabled ? (
+                  <div className="rounded-xl border border-border/60 bg-card/80 p-4 shadow-sm">
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                      <h3 className="text-sm font-semibold text-foreground">{t("tabs.audit")}</h3>
+                      <span className="text-xs text-muted-foreground">{t("audit.search_placeholder")}</span>
+                    </div>
+                    <MonitoringAuditTab logs={auditLogs} isLoading={auditLoading} error={auditError} t={t} />
+                  </div>
+                ) : null}
               </TabsContent>
 
               <TabsContent value="audit">

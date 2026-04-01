@@ -68,8 +68,6 @@ const createLieuSchema = z.object({
   Observations_Info: z.string().nullable().optional(),
   Id_Site: z.number().nullable().optional(),
   GroupIds: z.array(z.number()).optional(),
-  Id_Groupe1: z.number().nullable().optional(),
-  Id_Groupe2: z.number().nullable().optional(),
   Sonde_Numero_Serie: z.string().nullable().optional(),
   Id_Module: z.number().nullable().optional(),
   Consigne: z.number().nullable().optional(),
@@ -143,8 +141,6 @@ export const GET = withLogging(async (req: NextRequest) => {
             t_groupe: { select: { Id_Groupe: true, Nom_Groupe: true, Numero_Regroupement: true } },
           },
         },
-        t_groupe1: { select: { Nom_Groupe: true } },
-        t_groupe2: { select: { Nom_Groupe: true } },
         t_site: { select: { Libelle_Site: true } },
         t_sonde: { select: { Sonde_Numero_Serie: true, Id_Module: true } },
         t_lieu_mail_tel: {
@@ -190,6 +186,7 @@ export const GET = withLogging(async (req: NextRequest) => {
         lieu?.Frequence === null || lieu?.Frequence === undefined
           ? lieu?.Frequence
           : Number(lieu.Frequence) / 60,
+      GroupIds: (lieu?.t_lieu_groupe ?? []).map((lg) => lg.Id_Groupe),
       MailingContacts: (lieu?.t_lieu_mail_tel ?? []).map((contact, index) => ({
         Id_Tel_Num: contact.Id_Mail_Tel,
         Numero_Ordre: contact.Ordre_Contact ?? index + 1,
@@ -225,11 +222,7 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     const groupIds = Array.from(
       new Set(
-        [
-          ...(validated.GroupIds ?? []),
-          validated.Id_Groupe1 ?? undefined,
-          validated.Id_Groupe2 ?? undefined,
-        ].filter((v): v is number => typeof v === "number" && !Number.isNaN(v)),
+        [...(validated.GroupIds ?? [])].filter((v): v is number => typeof v === "number" && !Number.isNaN(v)),
       ),
     )
 
@@ -250,9 +243,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       }
     }
 
-    const group1Id = groupIds[0] ?? validated.Id_Groupe1 ?? null
     const mailingContacts = normalizeMailingContacts(validated.MailingContacts)
-    const group2Id = groupIds[1] ?? validated.Id_Groupe2 ?? null
     const dateCreation = new Date()
     dateCreation.setHours(0, 0, 0, 0)
     const [dbNowRow] = await prisma.$queryRaw<Array<{ nowAt: Date }>>`SELECT NOW() AS nowAt`
@@ -343,20 +334,6 @@ export const POST = withLogging(async (req: NextRequest) => {
           ? {
               t_sonde: {
                 connect: { Sonde_Numero_Serie: sondeNumeroSerie },
-              },
-            }
-          : {}),
-        ...(group1Id
-          ? {
-              t_groupe1: {
-                connect: { Id_Groupe: group1Id },
-              },
-            }
-          : {}),
-        ...(group2Id
-          ? {
-              t_groupe2: {
-                connect: { Id_Groupe: group2Id },
               },
             }
           : {}),

@@ -56,8 +56,6 @@ export const locationFormSchema = z.object({
   Lieu_Etat: z.string().optional().nullable(),
   Id_Site: z.number().optional().nullable(),
   GroupIds: z.array(z.number()).optional(),
-  Id_Groupe1: z.number().optional().nullable(),
-  Id_Groupe2: z.number().optional().nullable(),
   Sonde_Numero_Serie: z.string().optional().nullable(),
   Id_Module: z.number().optional().nullable(),
   Consigne: z.number().optional().nullable(),

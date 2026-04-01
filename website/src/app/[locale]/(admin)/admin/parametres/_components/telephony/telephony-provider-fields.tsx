@@ -97,8 +97,11 @@ function OvhFields({ draft, copy, setField }: { draft: TelephonyDraft; copy: Tel
       <Field label={copy.ovh.applicationSecret} value={draft.ovhApplicationSecret} onChange={(value) => setField("ovhApplicationSecret", value)} placeholder="AS..." type="password" />
       <Field label={copy.ovh.consumerKey} value={draft.ovhConsumerKey} onChange={(value) => setField("ovhConsumerKey", value)} placeholder="CK..." type="password" />
       <Field label={copy.ovh.billingAccount} value={draft.ovhBillingAccount} onChange={(value) => setField("ovhBillingAccount", value)} placeholder={copy.placeholders.billingAccount} />
+      <Field label={copy.ovh.serviceName} value={draft.ovhServiceName} onChange={(value) => setField("ovhServiceName", value)} placeholder={copy.placeholders.serviceName} />
+      <Field label={copy.ovh.click2CallUserId} value={draft.ovhClick2CallUserId} onChange={(value) => setField("ovhClick2CallUserId", value)} placeholder={copy.placeholders.click2CallUserId} />
+      <Field label={copy.ovh.click2CallLogin} value={draft.ovhClick2CallLogin} onChange={(value) => setField("ovhClick2CallLogin", value)} placeholder={copy.placeholders.click2CallLogin} />
       <div className="space-y-2 md:col-span-2">
-        <Field label={copy.ovh.serviceName} value={draft.ovhServiceName} onChange={(value) => setField("ovhServiceName", value)} placeholder={copy.placeholders.serviceName} />
+        <Field label={copy.ovh.click2CallPassword} value={draft.ovhClick2CallPassword} onChange={(value) => setField("ovhClick2CallPassword", value)} placeholder={copy.placeholders.password} type="password" />
       </div>
     </div>
   )

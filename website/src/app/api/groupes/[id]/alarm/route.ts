@@ -38,9 +38,7 @@ export const PATCH = withAuthLogging(
           Est_Archive: false,
           OR: [
             { t_lieu_groupe: { some: { Id_Groupe: groupId } } },
-            { Id_Groupe1: groupId },
-            { Id_Groupe2: groupId },
-          ],
+                      ],
         },
         select: { Id_Lieu: true },
       })

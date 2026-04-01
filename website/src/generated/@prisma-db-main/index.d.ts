@@ -84,11 +84,6 @@ export type t_groupe = $Result.DefaultSelection<Prisma.$t_groupePayload>
  */
 export type t_liaison_profil_autorisation = $Result.DefaultSelection<Prisma.$t_liaison_profil_autorisationPayload>
 /**
- * Model t_liaison_sonde_type_mesure
- * 
- */
-export type t_liaison_sonde_type_mesure = $Result.DefaultSelection<Prisma.$t_liaison_sonde_type_mesurePayload>
-/**
  * Model t_liaison_utilisateur_groupe
  * 
  */
@@ -208,11 +203,6 @@ export type t_commentaire_acquittement_alarme = $Result.DefaultSelection<Prisma.
  * 
  */
 export type t_etalon_type = $Result.DefaultSelection<Prisma.$t_etalon_typePayload>
-/**
- * Model t_sonde_type_mesure
- * 
- */
-export type t_sonde_type_mesure = $Result.DefaultSelection<Prisma.$t_sonde_type_mesurePayload>
 /**
  * Model t_mem_gso
  * 
@@ -568,16 +558,6 @@ export class PrismaClient<
   get t_liaison_profil_autorisation(): Prisma.t_liaison_profil_autorisationDelegate<ExtArgs, ClientOptions>;
 
   /**
-   * `prisma.t_liaison_sonde_type_mesure`: Exposes CRUD operations for the **t_liaison_sonde_type_mesure** model.
-    * Example usage:
-    * ```ts
-    * // Fetch zero or more T_liaison_sonde_type_mesures
-    * const t_liaison_sonde_type_mesures = await prisma.t_liaison_sonde_type_mesure.findMany()
-    * ```
-    */
-  get t_liaison_sonde_type_mesure(): Prisma.t_liaison_sonde_type_mesureDelegate<ExtArgs, ClientOptions>;
-
-  /**
    * `prisma.t_liaison_utilisateur_groupe`: Exposes CRUD operations for the **t_liaison_utilisateur_groupe** model.
     * Example usage:
     * ```ts
@@ -816,16 +796,6 @@ export class PrismaClient<
     * ```
     */
   get t_etalon_type(): Prisma.t_etalon_typeDelegate<ExtArgs, ClientOptions>;
-
-  /**
-   * `prisma.t_sonde_type_mesure`: Exposes CRUD operations for the **t_sonde_type_mesure** model.
-    * Example usage:
-    * ```ts
-    * // Fetch zero or more T_sonde_type_mesures
-    * const t_sonde_type_mesures = await prisma.t_sonde_type_mesure.findMany()
-    * ```
-    */
-  get t_sonde_type_mesure(): Prisma.t_sonde_type_mesureDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.t_mem_gso`: Exposes CRUD operations for the **t_mem_gso** model.
@@ -1384,7 +1354,6 @@ export namespace Prisma {
     t_etalonnage_mesure: 't_etalonnage_mesure',
     t_groupe: 't_groupe',
     t_liaison_profil_autorisation: 't_liaison_profil_autorisation',
-    t_liaison_sonde_type_mesure: 't_liaison_sonde_type_mesure',
     t_liaison_utilisateur_groupe: 't_liaison_utilisateur_groupe',
     t_liaison_utilisateur_site: 't_liaison_utilisateur_site',
     t_lieu_groupe: 't_lieu_groupe',
@@ -1409,7 +1378,6 @@ export namespace Prisma {
     t_ancien_mot_de_passe: 't_ancien_mot_de_passe',
     t_commentaire_acquittement_alarme: 't_commentaire_acquittement_alarme',
     t_etalon_type: 't_etalon_type',
-    t_sonde_type_mesure: 't_sonde_type_mesure',
     t_mem_gso: 't_mem_gso',
     t_sonde_etat: 't_sonde_etat',
     t_lieu_mail_tel: 't_lieu_mail_tel',
@@ -1436,7 +1404,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "t_actionneur" | "t_alarme" | "t_alarme_histo" | "t_alarme_message" | "t_autorisation" | "t_milieu" | "t_ajustage" | "t_certif" | "t_certif_mesure" | "t_etalon" | "t_etalonnage" | "t_etalonnage_mesure" | "t_groupe" | "t_liaison_profil_autorisation" | "t_liaison_sonde_type_mesure" | "t_liaison_utilisateur_groupe" | "t_liaison_utilisateur_site" | "t_lieu_groupe" | "t_lieu" | "t_module" | "t_module_type" | "t_parametre" | "t_pdf" | "t_plan" | "t_postes_clients" | "t_profil" | "t_site" | "t_sonde" | "t_etat_surveillance" | "t_sonde_type" | "t_utilisateur" | "t_notification" | "t_notification_delivery" | "t_notification_event" | "liste_clients" | "t_actionneur_type" | "t_ancien_mot_de_passe" | "t_commentaire_acquittement_alarme" | "t_etalon_type" | "t_sonde_type_mesure" | "t_mem_gso" | "t_sonde_etat" | "t_lieu_mail_tel" | "t_lieu_planning_audit" | "t_lieu_planning_regle" | "t_materiel" | "t_commande_materiel" | "t_commande_materiel_ligne" | "t_vigilog_configuration" | "t_vigilog" | "t_vigilog_tournee"
+      modelProps: "t_actionneur" | "t_alarme" | "t_alarme_histo" | "t_alarme_message" | "t_autorisation" | "t_milieu" | "t_ajustage" | "t_certif" | "t_certif_mesure" | "t_etalon" | "t_etalonnage" | "t_etalonnage_mesure" | "t_groupe" | "t_liaison_profil_autorisation" | "t_liaison_utilisateur_groupe" | "t_liaison_utilisateur_site" | "t_lieu_groupe" | "t_lieu" | "t_module" | "t_module_type" | "t_parametre" | "t_pdf" | "t_plan" | "t_postes_clients" | "t_profil" | "t_site" | "t_sonde" | "t_etat_surveillance" | "t_sonde_type" | "t_utilisateur" | "t_notification" | "t_notification_delivery" | "t_notification_event" | "liste_clients" | "t_actionneur_type" | "t_ancien_mot_de_passe" | "t_commentaire_acquittement_alarme" | "t_etalon_type" | "t_mem_gso" | "t_sonde_etat" | "t_lieu_mail_tel" | "t_lieu_planning_audit" | "t_lieu_planning_regle" | "t_materiel" | "t_commande_materiel" | "t_commande_materiel_ligne" | "t_vigilog_configuration" | "t_vigilog" | "t_vigilog_tournee"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2361,72 +2329,6 @@ export namespace Prisma {
           count: {
             args: Prisma.t_liaison_profil_autorisationCountArgs<ExtArgs>
             result: $Utils.Optional<T_liaison_profil_autorisationCountAggregateOutputType> | number
-          }
-        }
-      }
-      t_liaison_sonde_type_mesure: {
-        payload: Prisma.$t_liaison_sonde_type_mesurePayload<ExtArgs>
-        fields: Prisma.t_liaison_sonde_type_mesureFieldRefs
-        operations: {
-          findUnique: {
-            args: Prisma.t_liaison_sonde_type_mesureFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_liaison_sonde_type_mesurePayload> | null
-          }
-          findUniqueOrThrow: {
-            args: Prisma.t_liaison_sonde_type_mesureFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_liaison_sonde_type_mesurePayload>
-          }
-          findFirst: {
-            args: Prisma.t_liaison_sonde_type_mesureFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_liaison_sonde_type_mesurePayload> | null
-          }
-          findFirstOrThrow: {
-            args: Prisma.t_liaison_sonde_type_mesureFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_liaison_sonde_type_mesurePayload>
-          }
-          findMany: {
-            args: Prisma.t_liaison_sonde_type_mesureFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_liaison_sonde_type_mesurePayload>[]
-          }
-          create: {
-            args: Prisma.t_liaison_sonde_type_mesureCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_liaison_sonde_type_mesurePayload>
-          }
-          createMany: {
-            args: Prisma.t_liaison_sonde_type_mesureCreateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          delete: {
-            args: Prisma.t_liaison_sonde_type_mesureDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_liaison_sonde_type_mesurePayload>
-          }
-          update: {
-            args: Prisma.t_liaison_sonde_type_mesureUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_liaison_sonde_type_mesurePayload>
-          }
-          deleteMany: {
-            args: Prisma.t_liaison_sonde_type_mesureDeleteManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateMany: {
-            args: Prisma.t_liaison_sonde_type_mesureUpdateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          upsert: {
-            args: Prisma.t_liaison_sonde_type_mesureUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_liaison_sonde_type_mesurePayload>
-          }
-          aggregate: {
-            args: Prisma.T_liaison_sonde_type_mesureAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateT_liaison_sonde_type_mesure>
-          }
-          groupBy: {
-            args: Prisma.t_liaison_sonde_type_mesureGroupByArgs<ExtArgs>
-            result: $Utils.Optional<T_liaison_sonde_type_mesureGroupByOutputType>[]
-          }
-          count: {
-            args: Prisma.t_liaison_sonde_type_mesureCountArgs<ExtArgs>
-            result: $Utils.Optional<T_liaison_sonde_type_mesureCountAggregateOutputType> | number
           }
         }
       }
@@ -4014,72 +3916,6 @@ export namespace Prisma {
           }
         }
       }
-      t_sonde_type_mesure: {
-        payload: Prisma.$t_sonde_type_mesurePayload<ExtArgs>
-        fields: Prisma.t_sonde_type_mesureFieldRefs
-        operations: {
-          findUnique: {
-            args: Prisma.t_sonde_type_mesureFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_sonde_type_mesurePayload> | null
-          }
-          findUniqueOrThrow: {
-            args: Prisma.t_sonde_type_mesureFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_sonde_type_mesurePayload>
-          }
-          findFirst: {
-            args: Prisma.t_sonde_type_mesureFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_sonde_type_mesurePayload> | null
-          }
-          findFirstOrThrow: {
-            args: Prisma.t_sonde_type_mesureFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_sonde_type_mesurePayload>
-          }
-          findMany: {
-            args: Prisma.t_sonde_type_mesureFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_sonde_type_mesurePayload>[]
-          }
-          create: {
-            args: Prisma.t_sonde_type_mesureCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_sonde_type_mesurePayload>
-          }
-          createMany: {
-            args: Prisma.t_sonde_type_mesureCreateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          delete: {
-            args: Prisma.t_sonde_type_mesureDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_sonde_type_mesurePayload>
-          }
-          update: {
-            args: Prisma.t_sonde_type_mesureUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_sonde_type_mesurePayload>
-          }
-          deleteMany: {
-            args: Prisma.t_sonde_type_mesureDeleteManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateMany: {
-            args: Prisma.t_sonde_type_mesureUpdateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          upsert: {
-            args: Prisma.t_sonde_type_mesureUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$t_sonde_type_mesurePayload>
-          }
-          aggregate: {
-            args: Prisma.T_sonde_type_mesureAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateT_sonde_type_mesure>
-          }
-          groupBy: {
-            args: Prisma.t_sonde_type_mesureGroupByArgs<ExtArgs>
-            result: $Utils.Optional<T_sonde_type_mesureGroupByOutputType>[]
-          }
-          count: {
-            args: Prisma.t_sonde_type_mesureCountArgs<ExtArgs>
-            result: $Utils.Optional<T_sonde_type_mesureCountAggregateOutputType> | number
-          }
-        }
-      }
       t_mem_gso: {
         payload: Prisma.$t_mem_gsoPayload<ExtArgs>
         fields: Prisma.t_mem_gsoFieldRefs
@@ -4928,7 +4764,6 @@ export namespace Prisma {
     t_etalonnage_mesure?: t_etalonnage_mesureOmit
     t_groupe?: t_groupeOmit
     t_liaison_profil_autorisation?: t_liaison_profil_autorisationOmit
-    t_liaison_sonde_type_mesure?: t_liaison_sonde_type_mesureOmit
     t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeOmit
     t_liaison_utilisateur_site?: t_liaison_utilisateur_siteOmit
     t_lieu_groupe?: t_lieu_groupeOmit
@@ -4953,7 +4788,6 @@ export namespace Prisma {
     t_ancien_mot_de_passe?: t_ancien_mot_de_passeOmit
     t_commentaire_acquittement_alarme?: t_commentaire_acquittement_alarmeOmit
     t_etalon_type?: t_etalon_typeOmit
-    t_sonde_type_mesure?: t_sonde_type_mesureOmit
     t_mem_gso?: t_mem_gsoOmit
     t_sonde_etat?: t_sonde_etatOmit
     t_lieu_mail_tel?: t_lieu_mail_telOmit
@@ -5108,15 +4942,11 @@ export namespace Prisma {
 
   export type T_groupeCountOutputType = {
     t_liaison_utilisateur_groupe: number
-    t_lieux_groupe1: number
-    t_lieux_groupe2: number
     t_lieu_groupe: number
   }
 
   export type T_groupeCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     t_liaison_utilisateur_groupe?: boolean | T_groupeCountOutputTypeCountT_liaison_utilisateur_groupeArgs
-    t_lieux_groupe1?: boolean | T_groupeCountOutputTypeCountT_lieux_groupe1Args
-    t_lieux_groupe2?: boolean | T_groupeCountOutputTypeCountT_lieux_groupe2Args
     t_lieu_groupe?: boolean | T_groupeCountOutputTypeCountT_lieu_groupeArgs
   }
 
@@ -5136,20 +4966,6 @@ export namespace Prisma {
    */
   export type T_groupeCountOutputTypeCountT_liaison_utilisateur_groupeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: t_liaison_utilisateur_groupeWhereInput
-  }
-
-  /**
-   * T_groupeCountOutputType without action
-   */
-  export type T_groupeCountOutputTypeCountT_lieux_groupe1Args<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: t_lieuWhereInput
-  }
-
-  /**
-   * T_groupeCountOutputType without action
-   */
-  export type T_groupeCountOutputTypeCountT_lieux_groupe2Args<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: t_lieuWhereInput
   }
 
   /**
@@ -18392,8 +18208,6 @@ export namespace Prisma {
     Numero_Regroupement?: boolean
     Est_Archive?: boolean
     t_liaison_utilisateur_groupe?: boolean | t_groupe$t_liaison_utilisateur_groupeArgs<ExtArgs>
-    t_lieux_groupe1?: boolean | t_groupe$t_lieux_groupe1Args<ExtArgs>
-    t_lieux_groupe2?: boolean | t_groupe$t_lieux_groupe2Args<ExtArgs>
     t_lieu_groupe?: boolean | t_groupe$t_lieu_groupeArgs<ExtArgs>
     _count?: boolean | T_groupeCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["t_groupe"]>
@@ -18410,8 +18224,6 @@ export namespace Prisma {
   export type t_groupeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Groupe" | "Nom_Groupe" | "Numero_Regroupement" | "Est_Archive", ExtArgs["result"]["t_groupe"]>
   export type t_groupeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     t_liaison_utilisateur_groupe?: boolean | t_groupe$t_liaison_utilisateur_groupeArgs<ExtArgs>
-    t_lieux_groupe1?: boolean | t_groupe$t_lieux_groupe1Args<ExtArgs>
-    t_lieux_groupe2?: boolean | t_groupe$t_lieux_groupe2Args<ExtArgs>
     t_lieu_groupe?: boolean | t_groupe$t_lieu_groupeArgs<ExtArgs>
     _count?: boolean | T_groupeCountOutputTypeDefaultArgs<ExtArgs>
   }
@@ -18420,8 +18232,6 @@ export namespace Prisma {
     name: "t_groupe"
     objects: {
       t_liaison_utilisateur_groupe: Prisma.$t_liaison_utilisateur_groupePayload<ExtArgs>[]
-      t_lieux_groupe1: Prisma.$t_lieuPayload<ExtArgs>[]
-      t_lieux_groupe2: Prisma.$t_lieuPayload<ExtArgs>[]
       t_lieu_groupe: Prisma.$t_lieu_groupePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -18770,8 +18580,6 @@ export namespace Prisma {
   export interface Prisma__t_groupeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     t_liaison_utilisateur_groupe<T extends t_groupe$t_liaison_utilisateur_groupeArgs<ExtArgs> = {}>(args?: Subset<T, t_groupe$t_liaison_utilisateur_groupeArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_liaison_utilisateur_groupePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    t_lieux_groupe1<T extends t_groupe$t_lieux_groupe1Args<ExtArgs> = {}>(args?: Subset<T, t_groupe$t_lieux_groupe1Args<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_lieuPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    t_lieux_groupe2<T extends t_groupe$t_lieux_groupe2Args<ExtArgs> = {}>(args?: Subset<T, t_groupe$t_lieux_groupe2Args<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_lieuPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     t_lieu_groupe<T extends t_groupe$t_lieu_groupeArgs<ExtArgs> = {}>(args?: Subset<T, t_groupe$t_lieu_groupeArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_lieu_groupePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -19170,54 +18978,6 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: T_liaison_utilisateur_groupeScalarFieldEnum | T_liaison_utilisateur_groupeScalarFieldEnum[]
-  }
-
-  /**
-   * t_groupe.t_lieux_groupe1
-   */
-  export type t_groupe$t_lieux_groupe1Args<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_lieu
-     */
-    select?: t_lieuSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_lieu
-     */
-    omit?: t_lieuOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: t_lieuInclude<ExtArgs> | null
-    where?: t_lieuWhereInput
-    orderBy?: t_lieuOrderByWithRelationInput | t_lieuOrderByWithRelationInput[]
-    cursor?: t_lieuWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: T_lieuScalarFieldEnum | T_lieuScalarFieldEnum[]
-  }
-
-  /**
-   * t_groupe.t_lieux_groupe2
-   */
-  export type t_groupe$t_lieux_groupe2Args<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_lieu
-     */
-    select?: t_lieuSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_lieu
-     */
-    omit?: t_lieuOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: t_lieuInclude<ExtArgs> | null
-    where?: t_lieuWhereInput
-    orderBy?: t_lieuOrderByWithRelationInput | t_lieuOrderByWithRelationInput[]
-    cursor?: t_lieuWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: T_lieuScalarFieldEnum | T_lieuScalarFieldEnum[]
   }
 
   /**
@@ -20198,900 +19958,6 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: t_liaison_profil_autorisationInclude<ExtArgs> | null
-  }
-
-
-  /**
-   * Model t_liaison_sonde_type_mesure
-   */
-
-  export type AggregateT_liaison_sonde_type_mesure = {
-    _count: T_liaison_sonde_type_mesureCountAggregateOutputType | null
-    _avg: T_liaison_sonde_type_mesureAvgAggregateOutputType | null
-    _sum: T_liaison_sonde_type_mesureSumAggregateOutputType | null
-    _min: T_liaison_sonde_type_mesureMinAggregateOutputType | null
-    _max: T_liaison_sonde_type_mesureMaxAggregateOutputType | null
-  }
-
-  export type T_liaison_sonde_type_mesureAvgAggregateOutputType = {
-    Id_Liaison: number | null
-  }
-
-  export type T_liaison_sonde_type_mesureSumAggregateOutputType = {
-    Id_Liaison: number | null
-  }
-
-  export type T_liaison_sonde_type_mesureMinAggregateOutputType = {
-    Id_Liaison: number | null
-    Sonde_Type: string | null
-    Sonde_Type_Mesure: string | null
-  }
-
-  export type T_liaison_sonde_type_mesureMaxAggregateOutputType = {
-    Id_Liaison: number | null
-    Sonde_Type: string | null
-    Sonde_Type_Mesure: string | null
-  }
-
-  export type T_liaison_sonde_type_mesureCountAggregateOutputType = {
-    Id_Liaison: number
-    Sonde_Type: number
-    Sonde_Type_Mesure: number
-    _all: number
-  }
-
-
-  export type T_liaison_sonde_type_mesureAvgAggregateInputType = {
-    Id_Liaison?: true
-  }
-
-  export type T_liaison_sonde_type_mesureSumAggregateInputType = {
-    Id_Liaison?: true
-  }
-
-  export type T_liaison_sonde_type_mesureMinAggregateInputType = {
-    Id_Liaison?: true
-    Sonde_Type?: true
-    Sonde_Type_Mesure?: true
-  }
-
-  export type T_liaison_sonde_type_mesureMaxAggregateInputType = {
-    Id_Liaison?: true
-    Sonde_Type?: true
-    Sonde_Type_Mesure?: true
-  }
-
-  export type T_liaison_sonde_type_mesureCountAggregateInputType = {
-    Id_Liaison?: true
-    Sonde_Type?: true
-    Sonde_Type_Mesure?: true
-    _all?: true
-  }
-
-  export type T_liaison_sonde_type_mesureAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which t_liaison_sonde_type_mesure to aggregate.
-     */
-    where?: t_liaison_sonde_type_mesureWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of t_liaison_sonde_type_mesures to fetch.
-     */
-    orderBy?: t_liaison_sonde_type_mesureOrderByWithRelationInput | t_liaison_sonde_type_mesureOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the start position
-     */
-    cursor?: t_liaison_sonde_type_mesureWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` t_liaison_sonde_type_mesures from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` t_liaison_sonde_type_mesures.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Count returned t_liaison_sonde_type_mesures
-    **/
-    _count?: true | T_liaison_sonde_type_mesureCountAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to average
-    **/
-    _avg?: T_liaison_sonde_type_mesureAvgAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to sum
-    **/
-    _sum?: T_liaison_sonde_type_mesureSumAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the minimum value
-    **/
-    _min?: T_liaison_sonde_type_mesureMinAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the maximum value
-    **/
-    _max?: T_liaison_sonde_type_mesureMaxAggregateInputType
-  }
-
-  export type GetT_liaison_sonde_type_mesureAggregateType<T extends T_liaison_sonde_type_mesureAggregateArgs> = {
-        [P in keyof T & keyof AggregateT_liaison_sonde_type_mesure]: P extends '_count' | 'count'
-      ? T[P] extends true
-        ? number
-        : GetScalarType<T[P], AggregateT_liaison_sonde_type_mesure[P]>
-      : GetScalarType<T[P], AggregateT_liaison_sonde_type_mesure[P]>
-  }
-
-
-
-
-  export type t_liaison_sonde_type_mesureGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: t_liaison_sonde_type_mesureWhereInput
-    orderBy?: t_liaison_sonde_type_mesureOrderByWithAggregationInput | t_liaison_sonde_type_mesureOrderByWithAggregationInput[]
-    by: T_liaison_sonde_type_mesureScalarFieldEnum[] | T_liaison_sonde_type_mesureScalarFieldEnum
-    having?: t_liaison_sonde_type_mesureScalarWhereWithAggregatesInput
-    take?: number
-    skip?: number
-    _count?: T_liaison_sonde_type_mesureCountAggregateInputType | true
-    _avg?: T_liaison_sonde_type_mesureAvgAggregateInputType
-    _sum?: T_liaison_sonde_type_mesureSumAggregateInputType
-    _min?: T_liaison_sonde_type_mesureMinAggregateInputType
-    _max?: T_liaison_sonde_type_mesureMaxAggregateInputType
-  }
-
-  export type T_liaison_sonde_type_mesureGroupByOutputType = {
-    Id_Liaison: number
-    Sonde_Type: string | null
-    Sonde_Type_Mesure: string | null
-    _count: T_liaison_sonde_type_mesureCountAggregateOutputType | null
-    _avg: T_liaison_sonde_type_mesureAvgAggregateOutputType | null
-    _sum: T_liaison_sonde_type_mesureSumAggregateOutputType | null
-    _min: T_liaison_sonde_type_mesureMinAggregateOutputType | null
-    _max: T_liaison_sonde_type_mesureMaxAggregateOutputType | null
-  }
-
-  type GetT_liaison_sonde_type_mesureGroupByPayload<T extends t_liaison_sonde_type_mesureGroupByArgs> = Prisma.PrismaPromise<
-    Array<
-      PickEnumerable<T_liaison_sonde_type_mesureGroupByOutputType, T['by']> &
-        {
-          [P in ((keyof T) & (keyof T_liaison_sonde_type_mesureGroupByOutputType))]: P extends '_count'
-            ? T[P] extends boolean
-              ? number
-              : GetScalarType<T[P], T_liaison_sonde_type_mesureGroupByOutputType[P]>
-            : GetScalarType<T[P], T_liaison_sonde_type_mesureGroupByOutputType[P]>
-        }
-      >
-    >
-
-
-  export type t_liaison_sonde_type_mesureSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    Id_Liaison?: boolean
-    Sonde_Type?: boolean
-    Sonde_Type_Mesure?: boolean
-  }, ExtArgs["result"]["t_liaison_sonde_type_mesure"]>
-
-
-
-  export type t_liaison_sonde_type_mesureSelectScalar = {
-    Id_Liaison?: boolean
-    Sonde_Type?: boolean
-    Sonde_Type_Mesure?: boolean
-  }
-
-  export type t_liaison_sonde_type_mesureOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Liaison" | "Sonde_Type" | "Sonde_Type_Mesure", ExtArgs["result"]["t_liaison_sonde_type_mesure"]>
-
-  export type $t_liaison_sonde_type_mesurePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "t_liaison_sonde_type_mesure"
-    objects: {}
-    scalars: $Extensions.GetPayloadResult<{
-      Id_Liaison: number
-      Sonde_Type: string | null
-      Sonde_Type_Mesure: string | null
-    }, ExtArgs["result"]["t_liaison_sonde_type_mesure"]>
-    composites: {}
-  }
-
-  type t_liaison_sonde_type_mesureGetPayload<S extends boolean | null | undefined | t_liaison_sonde_type_mesureDefaultArgs> = $Result.GetResult<Prisma.$t_liaison_sonde_type_mesurePayload, S>
-
-  type t_liaison_sonde_type_mesureCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<t_liaison_sonde_type_mesureFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: T_liaison_sonde_type_mesureCountAggregateInputType | true
-    }
-
-  export interface t_liaison_sonde_type_mesureDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['t_liaison_sonde_type_mesure'], meta: { name: 't_liaison_sonde_type_mesure' } }
-    /**
-     * Find zero or one T_liaison_sonde_type_mesure that matches the filter.
-     * @param {t_liaison_sonde_type_mesureFindUniqueArgs} args - Arguments to find a T_liaison_sonde_type_mesure
-     * @example
-     * // Get one T_liaison_sonde_type_mesure
-     * const t_liaison_sonde_type_mesure = await prisma.t_liaison_sonde_type_mesure.findUnique({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUnique<T extends t_liaison_sonde_type_mesureFindUniqueArgs>(args: SelectSubset<T, t_liaison_sonde_type_mesureFindUniqueArgs<ExtArgs>>): Prisma__t_liaison_sonde_type_mesureClient<$Result.GetResult<Prisma.$t_liaison_sonde_type_mesurePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find one T_liaison_sonde_type_mesure that matches the filter or throw an error with `error.code='P2025'`
-     * if no matches were found.
-     * @param {t_liaison_sonde_type_mesureFindUniqueOrThrowArgs} args - Arguments to find a T_liaison_sonde_type_mesure
-     * @example
-     * // Get one T_liaison_sonde_type_mesure
-     * const t_liaison_sonde_type_mesure = await prisma.t_liaison_sonde_type_mesure.findUniqueOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUniqueOrThrow<T extends t_liaison_sonde_type_mesureFindUniqueOrThrowArgs>(args: SelectSubset<T, t_liaison_sonde_type_mesureFindUniqueOrThrowArgs<ExtArgs>>): Prisma__t_liaison_sonde_type_mesureClient<$Result.GetResult<Prisma.$t_liaison_sonde_type_mesurePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first T_liaison_sonde_type_mesure that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {t_liaison_sonde_type_mesureFindFirstArgs} args - Arguments to find a T_liaison_sonde_type_mesure
-     * @example
-     * // Get one T_liaison_sonde_type_mesure
-     * const t_liaison_sonde_type_mesure = await prisma.t_liaison_sonde_type_mesure.findFirst({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirst<T extends t_liaison_sonde_type_mesureFindFirstArgs>(args?: SelectSubset<T, t_liaison_sonde_type_mesureFindFirstArgs<ExtArgs>>): Prisma__t_liaison_sonde_type_mesureClient<$Result.GetResult<Prisma.$t_liaison_sonde_type_mesurePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first T_liaison_sonde_type_mesure that matches the filter or
-     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {t_liaison_sonde_type_mesureFindFirstOrThrowArgs} args - Arguments to find a T_liaison_sonde_type_mesure
-     * @example
-     * // Get one T_liaison_sonde_type_mesure
-     * const t_liaison_sonde_type_mesure = await prisma.t_liaison_sonde_type_mesure.findFirstOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirstOrThrow<T extends t_liaison_sonde_type_mesureFindFirstOrThrowArgs>(args?: SelectSubset<T, t_liaison_sonde_type_mesureFindFirstOrThrowArgs<ExtArgs>>): Prisma__t_liaison_sonde_type_mesureClient<$Result.GetResult<Prisma.$t_liaison_sonde_type_mesurePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find zero or more T_liaison_sonde_type_mesures that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {t_liaison_sonde_type_mesureFindManyArgs} args - Arguments to filter and select certain fields only.
-     * @example
-     * // Get all T_liaison_sonde_type_mesures
-     * const t_liaison_sonde_type_mesures = await prisma.t_liaison_sonde_type_mesure.findMany()
-     * 
-     * // Get first 10 T_liaison_sonde_type_mesures
-     * const t_liaison_sonde_type_mesures = await prisma.t_liaison_sonde_type_mesure.findMany({ take: 10 })
-     * 
-     * // Only select the `Id_Liaison`
-     * const t_liaison_sonde_type_mesureWithId_LiaisonOnly = await prisma.t_liaison_sonde_type_mesure.findMany({ select: { Id_Liaison: true } })
-     * 
-     */
-    findMany<T extends t_liaison_sonde_type_mesureFindManyArgs>(args?: SelectSubset<T, t_liaison_sonde_type_mesureFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_liaison_sonde_type_mesurePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
-
-    /**
-     * Create a T_liaison_sonde_type_mesure.
-     * @param {t_liaison_sonde_type_mesureCreateArgs} args - Arguments to create a T_liaison_sonde_type_mesure.
-     * @example
-     * // Create one T_liaison_sonde_type_mesure
-     * const T_liaison_sonde_type_mesure = await prisma.t_liaison_sonde_type_mesure.create({
-     *   data: {
-     *     // ... data to create a T_liaison_sonde_type_mesure
-     *   }
-     * })
-     * 
-     */
-    create<T extends t_liaison_sonde_type_mesureCreateArgs>(args: SelectSubset<T, t_liaison_sonde_type_mesureCreateArgs<ExtArgs>>): Prisma__t_liaison_sonde_type_mesureClient<$Result.GetResult<Prisma.$t_liaison_sonde_type_mesurePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Create many T_liaison_sonde_type_mesures.
-     * @param {t_liaison_sonde_type_mesureCreateManyArgs} args - Arguments to create many T_liaison_sonde_type_mesures.
-     * @example
-     * // Create many T_liaison_sonde_type_mesures
-     * const t_liaison_sonde_type_mesure = await prisma.t_liaison_sonde_type_mesure.createMany({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     *     
-     */
-    createMany<T extends t_liaison_sonde_type_mesureCreateManyArgs>(args?: SelectSubset<T, t_liaison_sonde_type_mesureCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Delete a T_liaison_sonde_type_mesure.
-     * @param {t_liaison_sonde_type_mesureDeleteArgs} args - Arguments to delete one T_liaison_sonde_type_mesure.
-     * @example
-     * // Delete one T_liaison_sonde_type_mesure
-     * const T_liaison_sonde_type_mesure = await prisma.t_liaison_sonde_type_mesure.delete({
-     *   where: {
-     *     // ... filter to delete one T_liaison_sonde_type_mesure
-     *   }
-     * })
-     * 
-     */
-    delete<T extends t_liaison_sonde_type_mesureDeleteArgs>(args: SelectSubset<T, t_liaison_sonde_type_mesureDeleteArgs<ExtArgs>>): Prisma__t_liaison_sonde_type_mesureClient<$Result.GetResult<Prisma.$t_liaison_sonde_type_mesurePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Update one T_liaison_sonde_type_mesure.
-     * @param {t_liaison_sonde_type_mesureUpdateArgs} args - Arguments to update one T_liaison_sonde_type_mesure.
-     * @example
-     * // Update one T_liaison_sonde_type_mesure
-     * const t_liaison_sonde_type_mesure = await prisma.t_liaison_sonde_type_mesure.update({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    update<T extends t_liaison_sonde_type_mesureUpdateArgs>(args: SelectSubset<T, t_liaison_sonde_type_mesureUpdateArgs<ExtArgs>>): Prisma__t_liaison_sonde_type_mesureClient<$Result.GetResult<Prisma.$t_liaison_sonde_type_mesurePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Delete zero or more T_liaison_sonde_type_mesures.
-     * @param {t_liaison_sonde_type_mesureDeleteManyArgs} args - Arguments to filter T_liaison_sonde_type_mesures to delete.
-     * @example
-     * // Delete a few T_liaison_sonde_type_mesures
-     * const { count } = await prisma.t_liaison_sonde_type_mesure.deleteMany({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     * 
-     */
-    deleteMany<T extends t_liaison_sonde_type_mesureDeleteManyArgs>(args?: SelectSubset<T, t_liaison_sonde_type_mesureDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more T_liaison_sonde_type_mesures.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {t_liaison_sonde_type_mesureUpdateManyArgs} args - Arguments to update one or more rows.
-     * @example
-     * // Update many T_liaison_sonde_type_mesures
-     * const t_liaison_sonde_type_mesure = await prisma.t_liaison_sonde_type_mesure.updateMany({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    updateMany<T extends t_liaison_sonde_type_mesureUpdateManyArgs>(args: SelectSubset<T, t_liaison_sonde_type_mesureUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Create or update one T_liaison_sonde_type_mesure.
-     * @param {t_liaison_sonde_type_mesureUpsertArgs} args - Arguments to update or create a T_liaison_sonde_type_mesure.
-     * @example
-     * // Update or create a T_liaison_sonde_type_mesure
-     * const t_liaison_sonde_type_mesure = await prisma.t_liaison_sonde_type_mesure.upsert({
-     *   create: {
-     *     // ... data to create a T_liaison_sonde_type_mesure
-     *   },
-     *   update: {
-     *     // ... in case it already exists, update
-     *   },
-     *   where: {
-     *     // ... the filter for the T_liaison_sonde_type_mesure we want to update
-     *   }
-     * })
-     */
-    upsert<T extends t_liaison_sonde_type_mesureUpsertArgs>(args: SelectSubset<T, t_liaison_sonde_type_mesureUpsertArgs<ExtArgs>>): Prisma__t_liaison_sonde_type_mesureClient<$Result.GetResult<Prisma.$t_liaison_sonde_type_mesurePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-
-    /**
-     * Count the number of T_liaison_sonde_type_mesures.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {t_liaison_sonde_type_mesureCountArgs} args - Arguments to filter T_liaison_sonde_type_mesures to count.
-     * @example
-     * // Count the number of T_liaison_sonde_type_mesures
-     * const count = await prisma.t_liaison_sonde_type_mesure.count({
-     *   where: {
-     *     // ... the filter for the T_liaison_sonde_type_mesures we want to count
-     *   }
-     * })
-    **/
-    count<T extends t_liaison_sonde_type_mesureCountArgs>(
-      args?: Subset<T, t_liaison_sonde_type_mesureCountArgs>,
-    ): Prisma.PrismaPromise<
-      T extends $Utils.Record<'select', any>
-        ? T['select'] extends true
-          ? number
-          : GetScalarType<T['select'], T_liaison_sonde_type_mesureCountAggregateOutputType>
-        : number
-    >
-
-    /**
-     * Allows you to perform aggregations operations on a T_liaison_sonde_type_mesure.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {T_liaison_sonde_type_mesureAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
-     * @example
-     * // Ordered by age ascending
-     * // Where email contains prisma.io
-     * // Limited to the 10 users
-     * const aggregations = await prisma.user.aggregate({
-     *   _avg: {
-     *     age: true,
-     *   },
-     *   where: {
-     *     email: {
-     *       contains: "prisma.io",
-     *     },
-     *   },
-     *   orderBy: {
-     *     age: "asc",
-     *   },
-     *   take: 10,
-     * })
-    **/
-    aggregate<T extends T_liaison_sonde_type_mesureAggregateArgs>(args: Subset<T, T_liaison_sonde_type_mesureAggregateArgs>): Prisma.PrismaPromise<GetT_liaison_sonde_type_mesureAggregateType<T>>
-
-    /**
-     * Group by T_liaison_sonde_type_mesure.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {t_liaison_sonde_type_mesureGroupByArgs} args - Group by arguments.
-     * @example
-     * // Group by city, order by createdAt, get count
-     * const result = await prisma.user.groupBy({
-     *   by: ['city', 'createdAt'],
-     *   orderBy: {
-     *     createdAt: true
-     *   },
-     *   _count: {
-     *     _all: true
-     *   },
-     * })
-     * 
-    **/
-    groupBy<
-      T extends t_liaison_sonde_type_mesureGroupByArgs,
-      HasSelectOrTake extends Or<
-        Extends<'skip', Keys<T>>,
-        Extends<'take', Keys<T>>
-      >,
-      OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: t_liaison_sonde_type_mesureGroupByArgs['orderBy'] }
-        : { orderBy?: t_liaison_sonde_type_mesureGroupByArgs['orderBy'] },
-      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
-      ByFields extends MaybeTupleToUnion<T['by']>,
-      ByValid extends Has<ByFields, OrderFields>,
-      HavingFields extends GetHavingFields<T['having']>,
-      HavingValid extends Has<ByFields, HavingFields>,
-      ByEmpty extends T['by'] extends never[] ? True : False,
-      InputErrors extends ByEmpty extends True
-      ? `Error: "by" must not be empty.`
-      : HavingValid extends False
-      ? {
-          [P in HavingFields]: P extends ByFields
-            ? never
-            : P extends string
-            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
-            : [
-                Error,
-                'Field ',
-                P,
-                ` in "having" needs to be provided in "by"`,
-              ]
-        }[HavingFields]
-      : 'take' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "take", you also need to provide "orderBy"'
-      : 'skip' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "skip", you also need to provide "orderBy"'
-      : ByValid extends True
-      ? {}
-      : {
-          [P in OrderFields]: P extends ByFields
-            ? never
-            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-        }[OrderFields]
-    >(args: SubsetIntersection<T, t_liaison_sonde_type_mesureGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetT_liaison_sonde_type_mesureGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
-  /**
-   * Fields of the t_liaison_sonde_type_mesure model
-   */
-  readonly fields: t_liaison_sonde_type_mesureFieldRefs;
-  }
-
-  /**
-   * The delegate class that acts as a "Promise-like" for t_liaison_sonde_type_mesure.
-   * Why is this prefixed with `Prisma__`?
-   * Because we want to prevent naming conflicts as mentioned in
-   * https://github.com/prisma/prisma-client-js/issues/707
-   */
-  export interface Prisma__t_liaison_sonde_type_mesureClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
-    readonly [Symbol.toStringTag]: "PrismaPromise"
-    /**
-     * Attaches callbacks for the resolution and/or rejection of the Promise.
-     * @param onfulfilled The callback to execute when the Promise is resolved.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of which ever callback is executed.
-     */
-    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
-    /**
-     * Attaches a callback for only the rejection of the Promise.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of the callback.
-     */
-    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
-    /**
-     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
-     * resolved value cannot be modified from the callback.
-     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
-     * @returns A Promise for the completion of the callback.
-     */
-    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
-  }
-
-
-
-
-  /**
-   * Fields of the t_liaison_sonde_type_mesure model
-   */
-  interface t_liaison_sonde_type_mesureFieldRefs {
-    readonly Id_Liaison: FieldRef<"t_liaison_sonde_type_mesure", 'Int'>
-    readonly Sonde_Type: FieldRef<"t_liaison_sonde_type_mesure", 'String'>
-    readonly Sonde_Type_Mesure: FieldRef<"t_liaison_sonde_type_mesure", 'String'>
-  }
-    
-
-  // Custom InputTypes
-  /**
-   * t_liaison_sonde_type_mesure findUnique
-   */
-  export type t_liaison_sonde_type_mesureFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_liaison_sonde_type_mesure
-     */
-    select?: t_liaison_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_liaison_sonde_type_mesure
-     */
-    omit?: t_liaison_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * Filter, which t_liaison_sonde_type_mesure to fetch.
-     */
-    where: t_liaison_sonde_type_mesureWhereUniqueInput
-  }
-
-  /**
-   * t_liaison_sonde_type_mesure findUniqueOrThrow
-   */
-  export type t_liaison_sonde_type_mesureFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_liaison_sonde_type_mesure
-     */
-    select?: t_liaison_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_liaison_sonde_type_mesure
-     */
-    omit?: t_liaison_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * Filter, which t_liaison_sonde_type_mesure to fetch.
-     */
-    where: t_liaison_sonde_type_mesureWhereUniqueInput
-  }
-
-  /**
-   * t_liaison_sonde_type_mesure findFirst
-   */
-  export type t_liaison_sonde_type_mesureFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_liaison_sonde_type_mesure
-     */
-    select?: t_liaison_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_liaison_sonde_type_mesure
-     */
-    omit?: t_liaison_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * Filter, which t_liaison_sonde_type_mesure to fetch.
-     */
-    where?: t_liaison_sonde_type_mesureWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of t_liaison_sonde_type_mesures to fetch.
-     */
-    orderBy?: t_liaison_sonde_type_mesureOrderByWithRelationInput | t_liaison_sonde_type_mesureOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for t_liaison_sonde_type_mesures.
-     */
-    cursor?: t_liaison_sonde_type_mesureWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` t_liaison_sonde_type_mesures from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` t_liaison_sonde_type_mesures.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of t_liaison_sonde_type_mesures.
-     */
-    distinct?: T_liaison_sonde_type_mesureScalarFieldEnum | T_liaison_sonde_type_mesureScalarFieldEnum[]
-  }
-
-  /**
-   * t_liaison_sonde_type_mesure findFirstOrThrow
-   */
-  export type t_liaison_sonde_type_mesureFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_liaison_sonde_type_mesure
-     */
-    select?: t_liaison_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_liaison_sonde_type_mesure
-     */
-    omit?: t_liaison_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * Filter, which t_liaison_sonde_type_mesure to fetch.
-     */
-    where?: t_liaison_sonde_type_mesureWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of t_liaison_sonde_type_mesures to fetch.
-     */
-    orderBy?: t_liaison_sonde_type_mesureOrderByWithRelationInput | t_liaison_sonde_type_mesureOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for t_liaison_sonde_type_mesures.
-     */
-    cursor?: t_liaison_sonde_type_mesureWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` t_liaison_sonde_type_mesures from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` t_liaison_sonde_type_mesures.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of t_liaison_sonde_type_mesures.
-     */
-    distinct?: T_liaison_sonde_type_mesureScalarFieldEnum | T_liaison_sonde_type_mesureScalarFieldEnum[]
-  }
-
-  /**
-   * t_liaison_sonde_type_mesure findMany
-   */
-  export type t_liaison_sonde_type_mesureFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_liaison_sonde_type_mesure
-     */
-    select?: t_liaison_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_liaison_sonde_type_mesure
-     */
-    omit?: t_liaison_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * Filter, which t_liaison_sonde_type_mesures to fetch.
-     */
-    where?: t_liaison_sonde_type_mesureWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of t_liaison_sonde_type_mesures to fetch.
-     */
-    orderBy?: t_liaison_sonde_type_mesureOrderByWithRelationInput | t_liaison_sonde_type_mesureOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for listing t_liaison_sonde_type_mesures.
-     */
-    cursor?: t_liaison_sonde_type_mesureWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` t_liaison_sonde_type_mesures from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` t_liaison_sonde_type_mesures.
-     */
-    skip?: number
-    distinct?: T_liaison_sonde_type_mesureScalarFieldEnum | T_liaison_sonde_type_mesureScalarFieldEnum[]
-  }
-
-  /**
-   * t_liaison_sonde_type_mesure create
-   */
-  export type t_liaison_sonde_type_mesureCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_liaison_sonde_type_mesure
-     */
-    select?: t_liaison_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_liaison_sonde_type_mesure
-     */
-    omit?: t_liaison_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * The data needed to create a t_liaison_sonde_type_mesure.
-     */
-    data?: XOR<t_liaison_sonde_type_mesureCreateInput, t_liaison_sonde_type_mesureUncheckedCreateInput>
-  }
-
-  /**
-   * t_liaison_sonde_type_mesure createMany
-   */
-  export type t_liaison_sonde_type_mesureCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to create many t_liaison_sonde_type_mesures.
-     */
-    data: t_liaison_sonde_type_mesureCreateManyInput | t_liaison_sonde_type_mesureCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * t_liaison_sonde_type_mesure update
-   */
-  export type t_liaison_sonde_type_mesureUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_liaison_sonde_type_mesure
-     */
-    select?: t_liaison_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_liaison_sonde_type_mesure
-     */
-    omit?: t_liaison_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * The data needed to update a t_liaison_sonde_type_mesure.
-     */
-    data: XOR<t_liaison_sonde_type_mesureUpdateInput, t_liaison_sonde_type_mesureUncheckedUpdateInput>
-    /**
-     * Choose, which t_liaison_sonde_type_mesure to update.
-     */
-    where: t_liaison_sonde_type_mesureWhereUniqueInput
-  }
-
-  /**
-   * t_liaison_sonde_type_mesure updateMany
-   */
-  export type t_liaison_sonde_type_mesureUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to update t_liaison_sonde_type_mesures.
-     */
-    data: XOR<t_liaison_sonde_type_mesureUpdateManyMutationInput, t_liaison_sonde_type_mesureUncheckedUpdateManyInput>
-    /**
-     * Filter which t_liaison_sonde_type_mesures to update
-     */
-    where?: t_liaison_sonde_type_mesureWhereInput
-    /**
-     * Limit how many t_liaison_sonde_type_mesures to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * t_liaison_sonde_type_mesure upsert
-   */
-  export type t_liaison_sonde_type_mesureUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_liaison_sonde_type_mesure
-     */
-    select?: t_liaison_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_liaison_sonde_type_mesure
-     */
-    omit?: t_liaison_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * The filter to search for the t_liaison_sonde_type_mesure to update in case it exists.
-     */
-    where: t_liaison_sonde_type_mesureWhereUniqueInput
-    /**
-     * In case the t_liaison_sonde_type_mesure found by the `where` argument doesn't exist, create a new t_liaison_sonde_type_mesure with this data.
-     */
-    create: XOR<t_liaison_sonde_type_mesureCreateInput, t_liaison_sonde_type_mesureUncheckedCreateInput>
-    /**
-     * In case the t_liaison_sonde_type_mesure was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<t_liaison_sonde_type_mesureUpdateInput, t_liaison_sonde_type_mesureUncheckedUpdateInput>
-  }
-
-  /**
-   * t_liaison_sonde_type_mesure delete
-   */
-  export type t_liaison_sonde_type_mesureDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_liaison_sonde_type_mesure
-     */
-    select?: t_liaison_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_liaison_sonde_type_mesure
-     */
-    omit?: t_liaison_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * Filter which t_liaison_sonde_type_mesure to delete.
-     */
-    where: t_liaison_sonde_type_mesureWhereUniqueInput
-  }
-
-  /**
-   * t_liaison_sonde_type_mesure deleteMany
-   */
-  export type t_liaison_sonde_type_mesureDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which t_liaison_sonde_type_mesures to delete
-     */
-    where?: t_liaison_sonde_type_mesureWhereInput
-    /**
-     * Limit how many t_liaison_sonde_type_mesures to delete.
-     */
-    limit?: number
-  }
-
-  /**
-   * t_liaison_sonde_type_mesure without action
-   */
-  export type t_liaison_sonde_type_mesureDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_liaison_sonde_type_mesure
-     */
-    select?: t_liaison_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_liaison_sonde_type_mesure
-     */
-    omit?: t_liaison_sonde_type_mesureOmit<ExtArgs> | null
   }
 
 
@@ -24021,8 +22887,6 @@ export namespace Prisma {
 
   export type T_lieuAvgAggregateOutputType = {
     Id_Lieu: number | null
-    Id_Groupe1: number | null
-    Id_Groupe2: number | null
     Id_Site: number | null
     Consigne: number | null
     Consigne_Base: number | null
@@ -24069,8 +22933,6 @@ export namespace Prisma {
 
   export type T_lieuSumAggregateOutputType = {
     Id_Lieu: number | null
-    Id_Groupe1: number | null
-    Id_Groupe2: number | null
     Id_Site: number | null
     Consigne: number | null
     Consigne_Base: number | null
@@ -24117,8 +22979,6 @@ export namespace Prisma {
 
   export type T_lieuMinAggregateOutputType = {
     Id_Lieu: number | null
-    Id_Groupe1: number | null
-    Id_Groupe2: number | null
     Id_Site: number | null
     Nom_Lieu: string | null
     Sonde_Numero_Serie: string | null
@@ -24205,8 +23065,6 @@ export namespace Prisma {
 
   export type T_lieuMaxAggregateOutputType = {
     Id_Lieu: number | null
-    Id_Groupe1: number | null
-    Id_Groupe2: number | null
     Id_Site: number | null
     Nom_Lieu: string | null
     Sonde_Numero_Serie: string | null
@@ -24293,8 +23151,6 @@ export namespace Prisma {
 
   export type T_lieuCountAggregateOutputType = {
     Id_Lieu: number
-    Id_Groupe1: number
-    Id_Groupe2: number
     Id_Site: number
     Nom_Lieu: number
     Sonde_Numero_Serie: number
@@ -24383,8 +23239,6 @@ export namespace Prisma {
 
   export type T_lieuAvgAggregateInputType = {
     Id_Lieu?: true
-    Id_Groupe1?: true
-    Id_Groupe2?: true
     Id_Site?: true
     Consigne?: true
     Consigne_Base?: true
@@ -24431,8 +23285,6 @@ export namespace Prisma {
 
   export type T_lieuSumAggregateInputType = {
     Id_Lieu?: true
-    Id_Groupe1?: true
-    Id_Groupe2?: true
     Id_Site?: true
     Consigne?: true
     Consigne_Base?: true
@@ -24479,8 +23331,6 @@ export namespace Prisma {
 
   export type T_lieuMinAggregateInputType = {
     Id_Lieu?: true
-    Id_Groupe1?: true
-    Id_Groupe2?: true
     Id_Site?: true
     Nom_Lieu?: true
     Sonde_Numero_Serie?: true
@@ -24567,8 +23417,6 @@ export namespace Prisma {
 
   export type T_lieuMaxAggregateInputType = {
     Id_Lieu?: true
-    Id_Groupe1?: true
-    Id_Groupe2?: true
     Id_Site?: true
     Nom_Lieu?: true
     Sonde_Numero_Serie?: true
@@ -24655,8 +23503,6 @@ export namespace Prisma {
 
   export type T_lieuCountAggregateInputType = {
     Id_Lieu?: true
-    Id_Groupe1?: true
-    Id_Groupe2?: true
     Id_Site?: true
     Nom_Lieu?: true
     Sonde_Numero_Serie?: true
@@ -24830,8 +23676,6 @@ export namespace Prisma {
 
   export type T_lieuGroupByOutputType = {
     Id_Lieu: number
-    Id_Groupe1: number | null
-    Id_Groupe2: number | null
     Id_Site: number | null
     Nom_Lieu: string | null
     Sonde_Numero_Serie: string | null
@@ -24937,8 +23781,6 @@ export namespace Prisma {
 
   export type t_lieuSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     Id_Lieu?: boolean
-    Id_Groupe1?: boolean
-    Id_Groupe2?: boolean
     Id_Site?: boolean
     Nom_Lieu?: boolean
     Sonde_Numero_Serie?: boolean
@@ -25023,8 +23865,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: boolean
     t_alarme?: boolean | t_lieu$t_alarmeArgs<ExtArgs>
     t_alarme_histo?: boolean | t_lieu$t_alarme_histoArgs<ExtArgs>
-    t_groupe1?: boolean | t_lieu$t_groupe1Args<ExtArgs>
-    t_groupe2?: boolean | t_lieu$t_groupe2Args<ExtArgs>
     t_etat_surveillance?: boolean | t_lieu$t_etat_surveillanceArgs<ExtArgs>
     t_pdf?: boolean | t_lieu$t_pdfArgs<ExtArgs>
     t_plan?: boolean | t_lieu$t_planArgs<ExtArgs>
@@ -25040,8 +23880,6 @@ export namespace Prisma {
 
   export type t_lieuSelectScalar = {
     Id_Lieu?: boolean
-    Id_Groupe1?: boolean
-    Id_Groupe2?: boolean
     Id_Site?: boolean
     Nom_Lieu?: boolean
     Sonde_Numero_Serie?: boolean
@@ -25126,12 +23964,10 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: boolean
   }
 
-  export type t_lieuOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Lieu" | "Id_Groupe1" | "Id_Groupe2" | "Id_Site" | "Nom_Lieu" | "Sonde_Numero_Serie" | "Adresse_Sonde" | "Consigne" | "Consigne_Base" | "Observations_Info" | "Consigne_Sup" | "Consigne_Sup_Base" | "Tolerance_Surveillance_Sup" | "Tolerance_Surveillance_Sup_Base" | "Est_Consigne_Sup_Active" | "Consigne_Sup_Pre_Alarme" | "Est_Consigne_Sup_Pre_Alarme_Active" | "Consigne_Inf" | "Consigne_Inf_Base" | "Tolerance_Surveillance_Inf" | "Tolerance_Surveillance_Inf_Base" | "Est_Consigne_Inf_Active" | "Consigne_Inf_Pre_Alarme" | "Est_Consigne_Inf_Pre_Alarme_Active" | "Frequence" | "Lieu_Etat" | "Retard_Alarme_Haut" | "Retard_Alarme_Bas" | "Id_Plan" | "Position_Plan_X" | "Position_Plan_Y" | "Date_Creation" | "Est_Archive" | "Est_Tel_Actif" | "Tel_Code" | "Tel_Son_Lieu" | "Id_Actionneur" | "Est_Mode_Serotheque" | "Coef_Sensibilite" | "Id_PDF" | "Est_DataLogger" | "EMT" | "EMT_Choix_Mode" | "EMT_Sonde" | "Retard_Alarme_Changement_Consigne" | "Derniere_Date_Heure" | "Derniere_Valeur" | "Derniere_Unite" | "Derniere_Nb_Decimal" | "Est_Lieu_En_Alarme" | "Est_Lieu_Alarme_Terminee_Non_Acquittee" | "Est_Lieu_Alarme_Terminee_Non_Acquittee_T1" | "Est_Lieu_En_Pre_Alarme" | "Id_Alarme" | "Lieu_Etat_N1" | "Derniere_Date_Etalonnage" | "Derniere_Erreur_Justesse" | "Derniere_Incertitude" | "Retard_Non_Reponse" | "Date_Heure_Derniere_Reponse" | "Date_Heure_Derniere_Reponse_Recue_OK" | "Est_Correction_Ej" | "Derive" | "Est_Correction_derive" | "Derniere_Valeur_Null" | "Type_Lieu" | "Date_Heure_Dernier_Acquittement_En_Cours" | "Date_Heure_Last_Update_EVT_GSO" | "Date_Heure_Reactivation_Alarme" | "Notification_Active" | "Commentaire" | "Infos_Modifiees_Depuis_Derniere_Mesure" | "Date_Heure_Reactivation_Surveillance" | "Date_Heure_Surveillance_On" | "Date_Heure_Surveillance_Off" | "Derniere_Val_Rssi" | "Derniere_Val_Batterie" | "Derniere_Val_Tension" | "Est_Lieu_GSO" | "Est_Son_Alarme_Active" | "Planning_Actif" | "Planning_Source_Regle_Id" | "Planning_Derniere_Maj" | "Est_Redeclenchement_Immediat" | "Nb_Mesures_Temporisation_Redeclenchement", ExtArgs["result"]["t_lieu"]>
+  export type t_lieuOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Lieu" | "Id_Site" | "Nom_Lieu" | "Sonde_Numero_Serie" | "Adresse_Sonde" | "Consigne" | "Consigne_Base" | "Observations_Info" | "Consigne_Sup" | "Consigne_Sup_Base" | "Tolerance_Surveillance_Sup" | "Tolerance_Surveillance_Sup_Base" | "Est_Consigne_Sup_Active" | "Consigne_Sup_Pre_Alarme" | "Est_Consigne_Sup_Pre_Alarme_Active" | "Consigne_Inf" | "Consigne_Inf_Base" | "Tolerance_Surveillance_Inf" | "Tolerance_Surveillance_Inf_Base" | "Est_Consigne_Inf_Active" | "Consigne_Inf_Pre_Alarme" | "Est_Consigne_Inf_Pre_Alarme_Active" | "Frequence" | "Lieu_Etat" | "Retard_Alarme_Haut" | "Retard_Alarme_Bas" | "Id_Plan" | "Position_Plan_X" | "Position_Plan_Y" | "Date_Creation" | "Est_Archive" | "Est_Tel_Actif" | "Tel_Code" | "Tel_Son_Lieu" | "Id_Actionneur" | "Est_Mode_Serotheque" | "Coef_Sensibilite" | "Id_PDF" | "Est_DataLogger" | "EMT" | "EMT_Choix_Mode" | "EMT_Sonde" | "Retard_Alarme_Changement_Consigne" | "Derniere_Date_Heure" | "Derniere_Valeur" | "Derniere_Unite" | "Derniere_Nb_Decimal" | "Est_Lieu_En_Alarme" | "Est_Lieu_Alarme_Terminee_Non_Acquittee" | "Est_Lieu_Alarme_Terminee_Non_Acquittee_T1" | "Est_Lieu_En_Pre_Alarme" | "Id_Alarme" | "Lieu_Etat_N1" | "Derniere_Date_Etalonnage" | "Derniere_Erreur_Justesse" | "Derniere_Incertitude" | "Retard_Non_Reponse" | "Date_Heure_Derniere_Reponse" | "Date_Heure_Derniere_Reponse_Recue_OK" | "Est_Correction_Ej" | "Derive" | "Est_Correction_derive" | "Derniere_Valeur_Null" | "Type_Lieu" | "Date_Heure_Dernier_Acquittement_En_Cours" | "Date_Heure_Last_Update_EVT_GSO" | "Date_Heure_Reactivation_Alarme" | "Notification_Active" | "Commentaire" | "Infos_Modifiees_Depuis_Derniere_Mesure" | "Date_Heure_Reactivation_Surveillance" | "Date_Heure_Surveillance_On" | "Date_Heure_Surveillance_Off" | "Derniere_Val_Rssi" | "Derniere_Val_Batterie" | "Derniere_Val_Tension" | "Est_Lieu_GSO" | "Est_Son_Alarme_Active" | "Planning_Actif" | "Planning_Source_Regle_Id" | "Planning_Derniere_Maj" | "Est_Redeclenchement_Immediat" | "Nb_Mesures_Temporisation_Redeclenchement", ExtArgs["result"]["t_lieu"]>
   export type t_lieuInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     t_alarme?: boolean | t_lieu$t_alarmeArgs<ExtArgs>
     t_alarme_histo?: boolean | t_lieu$t_alarme_histoArgs<ExtArgs>
-    t_groupe1?: boolean | t_lieu$t_groupe1Args<ExtArgs>
-    t_groupe2?: boolean | t_lieu$t_groupe2Args<ExtArgs>
     t_etat_surveillance?: boolean | t_lieu$t_etat_surveillanceArgs<ExtArgs>
     t_pdf?: boolean | t_lieu$t_pdfArgs<ExtArgs>
     t_plan?: boolean | t_lieu$t_planArgs<ExtArgs>
@@ -25148,8 +23984,6 @@ export namespace Prisma {
     objects: {
       t_alarme: Prisma.$t_alarmePayload<ExtArgs>[]
       t_alarme_histo: Prisma.$t_alarme_histoPayload<ExtArgs>[]
-      t_groupe1: Prisma.$t_groupePayload<ExtArgs> | null
-      t_groupe2: Prisma.$t_groupePayload<ExtArgs> | null
       t_etat_surveillance: Prisma.$t_etat_surveillancePayload<ExtArgs> | null
       t_pdf: Prisma.$t_pdfPayload<ExtArgs> | null
       t_plan: Prisma.$t_planPayload<ExtArgs> | null
@@ -25161,8 +23995,6 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       Id_Lieu: number
-      Id_Groupe1: number | null
-      Id_Groupe2: number | null
       Id_Site: number | null
       Nom_Lieu: string | null
       Sonde_Numero_Serie: string | null
@@ -25587,8 +24419,6 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     t_alarme<T extends t_lieu$t_alarmeArgs<ExtArgs> = {}>(args?: Subset<T, t_lieu$t_alarmeArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_alarmePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     t_alarme_histo<T extends t_lieu$t_alarme_histoArgs<ExtArgs> = {}>(args?: Subset<T, t_lieu$t_alarme_histoArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_alarme_histoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    t_groupe1<T extends t_lieu$t_groupe1Args<ExtArgs> = {}>(args?: Subset<T, t_lieu$t_groupe1Args<ExtArgs>>): Prisma__t_groupeClient<$Result.GetResult<Prisma.$t_groupePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-    t_groupe2<T extends t_lieu$t_groupe2Args<ExtArgs> = {}>(args?: Subset<T, t_lieu$t_groupe2Args<ExtArgs>>): Prisma__t_groupeClient<$Result.GetResult<Prisma.$t_groupePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     t_etat_surveillance<T extends t_lieu$t_etat_surveillanceArgs<ExtArgs> = {}>(args?: Subset<T, t_lieu$t_etat_surveillanceArgs<ExtArgs>>): Prisma__t_etat_surveillanceClient<$Result.GetResult<Prisma.$t_etat_surveillancePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     t_pdf<T extends t_lieu$t_pdfArgs<ExtArgs> = {}>(args?: Subset<T, t_lieu$t_pdfArgs<ExtArgs>>): Prisma__t_pdfClient<$Result.GetResult<Prisma.$t_pdfPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     t_plan<T extends t_lieu$t_planArgs<ExtArgs> = {}>(args?: Subset<T, t_lieu$t_planArgs<ExtArgs>>): Prisma__t_planClient<$Result.GetResult<Prisma.$t_planPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
@@ -25627,8 +24457,6 @@ export namespace Prisma {
    */
   interface t_lieuFieldRefs {
     readonly Id_Lieu: FieldRef<"t_lieu", 'Int'>
-    readonly Id_Groupe1: FieldRef<"t_lieu", 'Int'>
-    readonly Id_Groupe2: FieldRef<"t_lieu", 'Int'>
     readonly Id_Site: FieldRef<"t_lieu", 'Int'>
     readonly Nom_Lieu: FieldRef<"t_lieu", 'String'>
     readonly Sonde_Numero_Serie: FieldRef<"t_lieu", 'String'>
@@ -26099,44 +24927,6 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: T_alarme_histoScalarFieldEnum | T_alarme_histoScalarFieldEnum[]
-  }
-
-  /**
-   * t_lieu.t_groupe1
-   */
-  export type t_lieu$t_groupe1Args<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_groupe
-     */
-    select?: t_groupeSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_groupe
-     */
-    omit?: t_groupeOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: t_groupeInclude<ExtArgs> | null
-    where?: t_groupeWhereInput
-  }
-
-  /**
-   * t_lieu.t_groupe2
-   */
-  export type t_lieu$t_groupe2Args<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_groupe
-     */
-    select?: t_groupeSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_groupe
-     */
-    omit?: t_groupeOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: t_groupeInclude<ExtArgs> | null
-    where?: t_groupeWhereInput
   }
 
   /**
@@ -46583,955 +45373,6 @@ export namespace Prisma {
 
 
   /**
-   * Model t_sonde_type_mesure
-   */
-
-  export type AggregateT_sonde_type_mesure = {
-    _count: T_sonde_type_mesureCountAggregateOutputType | null
-    _avg: T_sonde_type_mesureAvgAggregateOutputType | null
-    _sum: T_sonde_type_mesureSumAggregateOutputType | null
-    _min: T_sonde_type_mesureMinAggregateOutputType | null
-    _max: T_sonde_type_mesureMaxAggregateOutputType | null
-  }
-
-  export type T_sonde_type_mesureAvgAggregateOutputType = {
-    Id_Sonde_Type_Mesure: number | null
-  }
-
-  export type T_sonde_type_mesureSumAggregateOutputType = {
-    Id_Sonde_Type_Mesure: number | null
-  }
-
-  export type T_sonde_type_mesureMinAggregateOutputType = {
-    Id_Sonde_Type_Mesure: number | null
-    Sonde_Type_Mesure: string | null
-    Libelle_Sonde_Type_Mesure: string | null
-    Est_Flag_Relais: boolean | null
-    Est_Flag_Affiche_Information: boolean | null
-    Unite_Mesure: string | null
-    Libelle_Unite_Mesure: string | null
-    Reserve_MC2: string | null
-  }
-
-  export type T_sonde_type_mesureMaxAggregateOutputType = {
-    Id_Sonde_Type_Mesure: number | null
-    Sonde_Type_Mesure: string | null
-    Libelle_Sonde_Type_Mesure: string | null
-    Est_Flag_Relais: boolean | null
-    Est_Flag_Affiche_Information: boolean | null
-    Unite_Mesure: string | null
-    Libelle_Unite_Mesure: string | null
-    Reserve_MC2: string | null
-  }
-
-  export type T_sonde_type_mesureCountAggregateOutputType = {
-    Id_Sonde_Type_Mesure: number
-    Sonde_Type_Mesure: number
-    Libelle_Sonde_Type_Mesure: number
-    Est_Flag_Relais: number
-    Est_Flag_Affiche_Information: number
-    Unite_Mesure: number
-    Libelle_Unite_Mesure: number
-    Reserve_MC2: number
-    _all: number
-  }
-
-
-  export type T_sonde_type_mesureAvgAggregateInputType = {
-    Id_Sonde_Type_Mesure?: true
-  }
-
-  export type T_sonde_type_mesureSumAggregateInputType = {
-    Id_Sonde_Type_Mesure?: true
-  }
-
-  export type T_sonde_type_mesureMinAggregateInputType = {
-    Id_Sonde_Type_Mesure?: true
-    Sonde_Type_Mesure?: true
-    Libelle_Sonde_Type_Mesure?: true
-    Est_Flag_Relais?: true
-    Est_Flag_Affiche_Information?: true
-    Unite_Mesure?: true
-    Libelle_Unite_Mesure?: true
-    Reserve_MC2?: true
-  }
-
-  export type T_sonde_type_mesureMaxAggregateInputType = {
-    Id_Sonde_Type_Mesure?: true
-    Sonde_Type_Mesure?: true
-    Libelle_Sonde_Type_Mesure?: true
-    Est_Flag_Relais?: true
-    Est_Flag_Affiche_Information?: true
-    Unite_Mesure?: true
-    Libelle_Unite_Mesure?: true
-    Reserve_MC2?: true
-  }
-
-  export type T_sonde_type_mesureCountAggregateInputType = {
-    Id_Sonde_Type_Mesure?: true
-    Sonde_Type_Mesure?: true
-    Libelle_Sonde_Type_Mesure?: true
-    Est_Flag_Relais?: true
-    Est_Flag_Affiche_Information?: true
-    Unite_Mesure?: true
-    Libelle_Unite_Mesure?: true
-    Reserve_MC2?: true
-    _all?: true
-  }
-
-  export type T_sonde_type_mesureAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which t_sonde_type_mesure to aggregate.
-     */
-    where?: t_sonde_type_mesureWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of t_sonde_type_mesures to fetch.
-     */
-    orderBy?: t_sonde_type_mesureOrderByWithRelationInput | t_sonde_type_mesureOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the start position
-     */
-    cursor?: t_sonde_type_mesureWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` t_sonde_type_mesures from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` t_sonde_type_mesures.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Count returned t_sonde_type_mesures
-    **/
-    _count?: true | T_sonde_type_mesureCountAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to average
-    **/
-    _avg?: T_sonde_type_mesureAvgAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to sum
-    **/
-    _sum?: T_sonde_type_mesureSumAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the minimum value
-    **/
-    _min?: T_sonde_type_mesureMinAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the maximum value
-    **/
-    _max?: T_sonde_type_mesureMaxAggregateInputType
-  }
-
-  export type GetT_sonde_type_mesureAggregateType<T extends T_sonde_type_mesureAggregateArgs> = {
-        [P in keyof T & keyof AggregateT_sonde_type_mesure]: P extends '_count' | 'count'
-      ? T[P] extends true
-        ? number
-        : GetScalarType<T[P], AggregateT_sonde_type_mesure[P]>
-      : GetScalarType<T[P], AggregateT_sonde_type_mesure[P]>
-  }
-
-
-
-
-  export type t_sonde_type_mesureGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: t_sonde_type_mesureWhereInput
-    orderBy?: t_sonde_type_mesureOrderByWithAggregationInput | t_sonde_type_mesureOrderByWithAggregationInput[]
-    by: T_sonde_type_mesureScalarFieldEnum[] | T_sonde_type_mesureScalarFieldEnum
-    having?: t_sonde_type_mesureScalarWhereWithAggregatesInput
-    take?: number
-    skip?: number
-    _count?: T_sonde_type_mesureCountAggregateInputType | true
-    _avg?: T_sonde_type_mesureAvgAggregateInputType
-    _sum?: T_sonde_type_mesureSumAggregateInputType
-    _min?: T_sonde_type_mesureMinAggregateInputType
-    _max?: T_sonde_type_mesureMaxAggregateInputType
-  }
-
-  export type T_sonde_type_mesureGroupByOutputType = {
-    Id_Sonde_Type_Mesure: number
-    Sonde_Type_Mesure: string | null
-    Libelle_Sonde_Type_Mesure: string | null
-    Est_Flag_Relais: boolean | null
-    Est_Flag_Affiche_Information: boolean | null
-    Unite_Mesure: string | null
-    Libelle_Unite_Mesure: string | null
-    Reserve_MC2: string | null
-    _count: T_sonde_type_mesureCountAggregateOutputType | null
-    _avg: T_sonde_type_mesureAvgAggregateOutputType | null
-    _sum: T_sonde_type_mesureSumAggregateOutputType | null
-    _min: T_sonde_type_mesureMinAggregateOutputType | null
-    _max: T_sonde_type_mesureMaxAggregateOutputType | null
-  }
-
-  type GetT_sonde_type_mesureGroupByPayload<T extends t_sonde_type_mesureGroupByArgs> = Prisma.PrismaPromise<
-    Array<
-      PickEnumerable<T_sonde_type_mesureGroupByOutputType, T['by']> &
-        {
-          [P in ((keyof T) & (keyof T_sonde_type_mesureGroupByOutputType))]: P extends '_count'
-            ? T[P] extends boolean
-              ? number
-              : GetScalarType<T[P], T_sonde_type_mesureGroupByOutputType[P]>
-            : GetScalarType<T[P], T_sonde_type_mesureGroupByOutputType[P]>
-        }
-      >
-    >
-
-
-  export type t_sonde_type_mesureSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    Id_Sonde_Type_Mesure?: boolean
-    Sonde_Type_Mesure?: boolean
-    Libelle_Sonde_Type_Mesure?: boolean
-    Est_Flag_Relais?: boolean
-    Est_Flag_Affiche_Information?: boolean
-    Unite_Mesure?: boolean
-    Libelle_Unite_Mesure?: boolean
-    Reserve_MC2?: boolean
-  }, ExtArgs["result"]["t_sonde_type_mesure"]>
-
-
-
-  export type t_sonde_type_mesureSelectScalar = {
-    Id_Sonde_Type_Mesure?: boolean
-    Sonde_Type_Mesure?: boolean
-    Libelle_Sonde_Type_Mesure?: boolean
-    Est_Flag_Relais?: boolean
-    Est_Flag_Affiche_Information?: boolean
-    Unite_Mesure?: boolean
-    Libelle_Unite_Mesure?: boolean
-    Reserve_MC2?: boolean
-  }
-
-  export type t_sonde_type_mesureOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Sonde_Type_Mesure" | "Sonde_Type_Mesure" | "Libelle_Sonde_Type_Mesure" | "Est_Flag_Relais" | "Est_Flag_Affiche_Information" | "Unite_Mesure" | "Libelle_Unite_Mesure" | "Reserve_MC2", ExtArgs["result"]["t_sonde_type_mesure"]>
-
-  export type $t_sonde_type_mesurePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "t_sonde_type_mesure"
-    objects: {}
-    scalars: $Extensions.GetPayloadResult<{
-      Id_Sonde_Type_Mesure: number
-      Sonde_Type_Mesure: string | null
-      Libelle_Sonde_Type_Mesure: string | null
-      Est_Flag_Relais: boolean | null
-      Est_Flag_Affiche_Information: boolean | null
-      Unite_Mesure: string | null
-      Libelle_Unite_Mesure: string | null
-      Reserve_MC2: string | null
-    }, ExtArgs["result"]["t_sonde_type_mesure"]>
-    composites: {}
-  }
-
-  type t_sonde_type_mesureGetPayload<S extends boolean | null | undefined | t_sonde_type_mesureDefaultArgs> = $Result.GetResult<Prisma.$t_sonde_type_mesurePayload, S>
-
-  type t_sonde_type_mesureCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<t_sonde_type_mesureFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: T_sonde_type_mesureCountAggregateInputType | true
-    }
-
-  export interface t_sonde_type_mesureDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['t_sonde_type_mesure'], meta: { name: 't_sonde_type_mesure' } }
-    /**
-     * Find zero or one T_sonde_type_mesure that matches the filter.
-     * @param {t_sonde_type_mesureFindUniqueArgs} args - Arguments to find a T_sonde_type_mesure
-     * @example
-     * // Get one T_sonde_type_mesure
-     * const t_sonde_type_mesure = await prisma.t_sonde_type_mesure.findUnique({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUnique<T extends t_sonde_type_mesureFindUniqueArgs>(args: SelectSubset<T, t_sonde_type_mesureFindUniqueArgs<ExtArgs>>): Prisma__t_sonde_type_mesureClient<$Result.GetResult<Prisma.$t_sonde_type_mesurePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find one T_sonde_type_mesure that matches the filter or throw an error with `error.code='P2025'`
-     * if no matches were found.
-     * @param {t_sonde_type_mesureFindUniqueOrThrowArgs} args - Arguments to find a T_sonde_type_mesure
-     * @example
-     * // Get one T_sonde_type_mesure
-     * const t_sonde_type_mesure = await prisma.t_sonde_type_mesure.findUniqueOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUniqueOrThrow<T extends t_sonde_type_mesureFindUniqueOrThrowArgs>(args: SelectSubset<T, t_sonde_type_mesureFindUniqueOrThrowArgs<ExtArgs>>): Prisma__t_sonde_type_mesureClient<$Result.GetResult<Prisma.$t_sonde_type_mesurePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first T_sonde_type_mesure that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {t_sonde_type_mesureFindFirstArgs} args - Arguments to find a T_sonde_type_mesure
-     * @example
-     * // Get one T_sonde_type_mesure
-     * const t_sonde_type_mesure = await prisma.t_sonde_type_mesure.findFirst({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirst<T extends t_sonde_type_mesureFindFirstArgs>(args?: SelectSubset<T, t_sonde_type_mesureFindFirstArgs<ExtArgs>>): Prisma__t_sonde_type_mesureClient<$Result.GetResult<Prisma.$t_sonde_type_mesurePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first T_sonde_type_mesure that matches the filter or
-     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {t_sonde_type_mesureFindFirstOrThrowArgs} args - Arguments to find a T_sonde_type_mesure
-     * @example
-     * // Get one T_sonde_type_mesure
-     * const t_sonde_type_mesure = await prisma.t_sonde_type_mesure.findFirstOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirstOrThrow<T extends t_sonde_type_mesureFindFirstOrThrowArgs>(args?: SelectSubset<T, t_sonde_type_mesureFindFirstOrThrowArgs<ExtArgs>>): Prisma__t_sonde_type_mesureClient<$Result.GetResult<Prisma.$t_sonde_type_mesurePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find zero or more T_sonde_type_mesures that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {t_sonde_type_mesureFindManyArgs} args - Arguments to filter and select certain fields only.
-     * @example
-     * // Get all T_sonde_type_mesures
-     * const t_sonde_type_mesures = await prisma.t_sonde_type_mesure.findMany()
-     * 
-     * // Get first 10 T_sonde_type_mesures
-     * const t_sonde_type_mesures = await prisma.t_sonde_type_mesure.findMany({ take: 10 })
-     * 
-     * // Only select the `Id_Sonde_Type_Mesure`
-     * const t_sonde_type_mesureWithId_Sonde_Type_MesureOnly = await prisma.t_sonde_type_mesure.findMany({ select: { Id_Sonde_Type_Mesure: true } })
-     * 
-     */
-    findMany<T extends t_sonde_type_mesureFindManyArgs>(args?: SelectSubset<T, t_sonde_type_mesureFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_sonde_type_mesurePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
-
-    /**
-     * Create a T_sonde_type_mesure.
-     * @param {t_sonde_type_mesureCreateArgs} args - Arguments to create a T_sonde_type_mesure.
-     * @example
-     * // Create one T_sonde_type_mesure
-     * const T_sonde_type_mesure = await prisma.t_sonde_type_mesure.create({
-     *   data: {
-     *     // ... data to create a T_sonde_type_mesure
-     *   }
-     * })
-     * 
-     */
-    create<T extends t_sonde_type_mesureCreateArgs>(args: SelectSubset<T, t_sonde_type_mesureCreateArgs<ExtArgs>>): Prisma__t_sonde_type_mesureClient<$Result.GetResult<Prisma.$t_sonde_type_mesurePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Create many T_sonde_type_mesures.
-     * @param {t_sonde_type_mesureCreateManyArgs} args - Arguments to create many T_sonde_type_mesures.
-     * @example
-     * // Create many T_sonde_type_mesures
-     * const t_sonde_type_mesure = await prisma.t_sonde_type_mesure.createMany({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     *     
-     */
-    createMany<T extends t_sonde_type_mesureCreateManyArgs>(args?: SelectSubset<T, t_sonde_type_mesureCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Delete a T_sonde_type_mesure.
-     * @param {t_sonde_type_mesureDeleteArgs} args - Arguments to delete one T_sonde_type_mesure.
-     * @example
-     * // Delete one T_sonde_type_mesure
-     * const T_sonde_type_mesure = await prisma.t_sonde_type_mesure.delete({
-     *   where: {
-     *     // ... filter to delete one T_sonde_type_mesure
-     *   }
-     * })
-     * 
-     */
-    delete<T extends t_sonde_type_mesureDeleteArgs>(args: SelectSubset<T, t_sonde_type_mesureDeleteArgs<ExtArgs>>): Prisma__t_sonde_type_mesureClient<$Result.GetResult<Prisma.$t_sonde_type_mesurePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Update one T_sonde_type_mesure.
-     * @param {t_sonde_type_mesureUpdateArgs} args - Arguments to update one T_sonde_type_mesure.
-     * @example
-     * // Update one T_sonde_type_mesure
-     * const t_sonde_type_mesure = await prisma.t_sonde_type_mesure.update({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    update<T extends t_sonde_type_mesureUpdateArgs>(args: SelectSubset<T, t_sonde_type_mesureUpdateArgs<ExtArgs>>): Prisma__t_sonde_type_mesureClient<$Result.GetResult<Prisma.$t_sonde_type_mesurePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Delete zero or more T_sonde_type_mesures.
-     * @param {t_sonde_type_mesureDeleteManyArgs} args - Arguments to filter T_sonde_type_mesures to delete.
-     * @example
-     * // Delete a few T_sonde_type_mesures
-     * const { count } = await prisma.t_sonde_type_mesure.deleteMany({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     * 
-     */
-    deleteMany<T extends t_sonde_type_mesureDeleteManyArgs>(args?: SelectSubset<T, t_sonde_type_mesureDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more T_sonde_type_mesures.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {t_sonde_type_mesureUpdateManyArgs} args - Arguments to update one or more rows.
-     * @example
-     * // Update many T_sonde_type_mesures
-     * const t_sonde_type_mesure = await prisma.t_sonde_type_mesure.updateMany({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    updateMany<T extends t_sonde_type_mesureUpdateManyArgs>(args: SelectSubset<T, t_sonde_type_mesureUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Create or update one T_sonde_type_mesure.
-     * @param {t_sonde_type_mesureUpsertArgs} args - Arguments to update or create a T_sonde_type_mesure.
-     * @example
-     * // Update or create a T_sonde_type_mesure
-     * const t_sonde_type_mesure = await prisma.t_sonde_type_mesure.upsert({
-     *   create: {
-     *     // ... data to create a T_sonde_type_mesure
-     *   },
-     *   update: {
-     *     // ... in case it already exists, update
-     *   },
-     *   where: {
-     *     // ... the filter for the T_sonde_type_mesure we want to update
-     *   }
-     * })
-     */
-    upsert<T extends t_sonde_type_mesureUpsertArgs>(args: SelectSubset<T, t_sonde_type_mesureUpsertArgs<ExtArgs>>): Prisma__t_sonde_type_mesureClient<$Result.GetResult<Prisma.$t_sonde_type_mesurePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-
-    /**
-     * Count the number of T_sonde_type_mesures.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {t_sonde_type_mesureCountArgs} args - Arguments to filter T_sonde_type_mesures to count.
-     * @example
-     * // Count the number of T_sonde_type_mesures
-     * const count = await prisma.t_sonde_type_mesure.count({
-     *   where: {
-     *     // ... the filter for the T_sonde_type_mesures we want to count
-     *   }
-     * })
-    **/
-    count<T extends t_sonde_type_mesureCountArgs>(
-      args?: Subset<T, t_sonde_type_mesureCountArgs>,
-    ): Prisma.PrismaPromise<
-      T extends $Utils.Record<'select', any>
-        ? T['select'] extends true
-          ? number
-          : GetScalarType<T['select'], T_sonde_type_mesureCountAggregateOutputType>
-        : number
-    >
-
-    /**
-     * Allows you to perform aggregations operations on a T_sonde_type_mesure.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {T_sonde_type_mesureAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
-     * @example
-     * // Ordered by age ascending
-     * // Where email contains prisma.io
-     * // Limited to the 10 users
-     * const aggregations = await prisma.user.aggregate({
-     *   _avg: {
-     *     age: true,
-     *   },
-     *   where: {
-     *     email: {
-     *       contains: "prisma.io",
-     *     },
-     *   },
-     *   orderBy: {
-     *     age: "asc",
-     *   },
-     *   take: 10,
-     * })
-    **/
-    aggregate<T extends T_sonde_type_mesureAggregateArgs>(args: Subset<T, T_sonde_type_mesureAggregateArgs>): Prisma.PrismaPromise<GetT_sonde_type_mesureAggregateType<T>>
-
-    /**
-     * Group by T_sonde_type_mesure.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {t_sonde_type_mesureGroupByArgs} args - Group by arguments.
-     * @example
-     * // Group by city, order by createdAt, get count
-     * const result = await prisma.user.groupBy({
-     *   by: ['city', 'createdAt'],
-     *   orderBy: {
-     *     createdAt: true
-     *   },
-     *   _count: {
-     *     _all: true
-     *   },
-     * })
-     * 
-    **/
-    groupBy<
-      T extends t_sonde_type_mesureGroupByArgs,
-      HasSelectOrTake extends Or<
-        Extends<'skip', Keys<T>>,
-        Extends<'take', Keys<T>>
-      >,
-      OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: t_sonde_type_mesureGroupByArgs['orderBy'] }
-        : { orderBy?: t_sonde_type_mesureGroupByArgs['orderBy'] },
-      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
-      ByFields extends MaybeTupleToUnion<T['by']>,
-      ByValid extends Has<ByFields, OrderFields>,
-      HavingFields extends GetHavingFields<T['having']>,
-      HavingValid extends Has<ByFields, HavingFields>,
-      ByEmpty extends T['by'] extends never[] ? True : False,
-      InputErrors extends ByEmpty extends True
-      ? `Error: "by" must not be empty.`
-      : HavingValid extends False
-      ? {
-          [P in HavingFields]: P extends ByFields
-            ? never
-            : P extends string
-            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
-            : [
-                Error,
-                'Field ',
-                P,
-                ` in "having" needs to be provided in "by"`,
-              ]
-        }[HavingFields]
-      : 'take' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "take", you also need to provide "orderBy"'
-      : 'skip' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "skip", you also need to provide "orderBy"'
-      : ByValid extends True
-      ? {}
-      : {
-          [P in OrderFields]: P extends ByFields
-            ? never
-            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-        }[OrderFields]
-    >(args: SubsetIntersection<T, t_sonde_type_mesureGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetT_sonde_type_mesureGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
-  /**
-   * Fields of the t_sonde_type_mesure model
-   */
-  readonly fields: t_sonde_type_mesureFieldRefs;
-  }
-
-  /**
-   * The delegate class that acts as a "Promise-like" for t_sonde_type_mesure.
-   * Why is this prefixed with `Prisma__`?
-   * Because we want to prevent naming conflicts as mentioned in
-   * https://github.com/prisma/prisma-client-js/issues/707
-   */
-  export interface Prisma__t_sonde_type_mesureClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
-    readonly [Symbol.toStringTag]: "PrismaPromise"
-    /**
-     * Attaches callbacks for the resolution and/or rejection of the Promise.
-     * @param onfulfilled The callback to execute when the Promise is resolved.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of which ever callback is executed.
-     */
-    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
-    /**
-     * Attaches a callback for only the rejection of the Promise.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of the callback.
-     */
-    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
-    /**
-     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
-     * resolved value cannot be modified from the callback.
-     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
-     * @returns A Promise for the completion of the callback.
-     */
-    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
-  }
-
-
-
-
-  /**
-   * Fields of the t_sonde_type_mesure model
-   */
-  interface t_sonde_type_mesureFieldRefs {
-    readonly Id_Sonde_Type_Mesure: FieldRef<"t_sonde_type_mesure", 'Int'>
-    readonly Sonde_Type_Mesure: FieldRef<"t_sonde_type_mesure", 'String'>
-    readonly Libelle_Sonde_Type_Mesure: FieldRef<"t_sonde_type_mesure", 'String'>
-    readonly Est_Flag_Relais: FieldRef<"t_sonde_type_mesure", 'Boolean'>
-    readonly Est_Flag_Affiche_Information: FieldRef<"t_sonde_type_mesure", 'Boolean'>
-    readonly Unite_Mesure: FieldRef<"t_sonde_type_mesure", 'String'>
-    readonly Libelle_Unite_Mesure: FieldRef<"t_sonde_type_mesure", 'String'>
-    readonly Reserve_MC2: FieldRef<"t_sonde_type_mesure", 'String'>
-  }
-    
-
-  // Custom InputTypes
-  /**
-   * t_sonde_type_mesure findUnique
-   */
-  export type t_sonde_type_mesureFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_sonde_type_mesure
-     */
-    select?: t_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_sonde_type_mesure
-     */
-    omit?: t_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * Filter, which t_sonde_type_mesure to fetch.
-     */
-    where: t_sonde_type_mesureWhereUniqueInput
-  }
-
-  /**
-   * t_sonde_type_mesure findUniqueOrThrow
-   */
-  export type t_sonde_type_mesureFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_sonde_type_mesure
-     */
-    select?: t_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_sonde_type_mesure
-     */
-    omit?: t_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * Filter, which t_sonde_type_mesure to fetch.
-     */
-    where: t_sonde_type_mesureWhereUniqueInput
-  }
-
-  /**
-   * t_sonde_type_mesure findFirst
-   */
-  export type t_sonde_type_mesureFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_sonde_type_mesure
-     */
-    select?: t_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_sonde_type_mesure
-     */
-    omit?: t_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * Filter, which t_sonde_type_mesure to fetch.
-     */
-    where?: t_sonde_type_mesureWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of t_sonde_type_mesures to fetch.
-     */
-    orderBy?: t_sonde_type_mesureOrderByWithRelationInput | t_sonde_type_mesureOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for t_sonde_type_mesures.
-     */
-    cursor?: t_sonde_type_mesureWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` t_sonde_type_mesures from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` t_sonde_type_mesures.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of t_sonde_type_mesures.
-     */
-    distinct?: T_sonde_type_mesureScalarFieldEnum | T_sonde_type_mesureScalarFieldEnum[]
-  }
-
-  /**
-   * t_sonde_type_mesure findFirstOrThrow
-   */
-  export type t_sonde_type_mesureFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_sonde_type_mesure
-     */
-    select?: t_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_sonde_type_mesure
-     */
-    omit?: t_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * Filter, which t_sonde_type_mesure to fetch.
-     */
-    where?: t_sonde_type_mesureWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of t_sonde_type_mesures to fetch.
-     */
-    orderBy?: t_sonde_type_mesureOrderByWithRelationInput | t_sonde_type_mesureOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for t_sonde_type_mesures.
-     */
-    cursor?: t_sonde_type_mesureWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` t_sonde_type_mesures from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` t_sonde_type_mesures.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of t_sonde_type_mesures.
-     */
-    distinct?: T_sonde_type_mesureScalarFieldEnum | T_sonde_type_mesureScalarFieldEnum[]
-  }
-
-  /**
-   * t_sonde_type_mesure findMany
-   */
-  export type t_sonde_type_mesureFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_sonde_type_mesure
-     */
-    select?: t_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_sonde_type_mesure
-     */
-    omit?: t_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * Filter, which t_sonde_type_mesures to fetch.
-     */
-    where?: t_sonde_type_mesureWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of t_sonde_type_mesures to fetch.
-     */
-    orderBy?: t_sonde_type_mesureOrderByWithRelationInput | t_sonde_type_mesureOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for listing t_sonde_type_mesures.
-     */
-    cursor?: t_sonde_type_mesureWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` t_sonde_type_mesures from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` t_sonde_type_mesures.
-     */
-    skip?: number
-    distinct?: T_sonde_type_mesureScalarFieldEnum | T_sonde_type_mesureScalarFieldEnum[]
-  }
-
-  /**
-   * t_sonde_type_mesure create
-   */
-  export type t_sonde_type_mesureCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_sonde_type_mesure
-     */
-    select?: t_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_sonde_type_mesure
-     */
-    omit?: t_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * The data needed to create a t_sonde_type_mesure.
-     */
-    data?: XOR<t_sonde_type_mesureCreateInput, t_sonde_type_mesureUncheckedCreateInput>
-  }
-
-  /**
-   * t_sonde_type_mesure createMany
-   */
-  export type t_sonde_type_mesureCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to create many t_sonde_type_mesures.
-     */
-    data: t_sonde_type_mesureCreateManyInput | t_sonde_type_mesureCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * t_sonde_type_mesure update
-   */
-  export type t_sonde_type_mesureUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_sonde_type_mesure
-     */
-    select?: t_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_sonde_type_mesure
-     */
-    omit?: t_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * The data needed to update a t_sonde_type_mesure.
-     */
-    data: XOR<t_sonde_type_mesureUpdateInput, t_sonde_type_mesureUncheckedUpdateInput>
-    /**
-     * Choose, which t_sonde_type_mesure to update.
-     */
-    where: t_sonde_type_mesureWhereUniqueInput
-  }
-
-  /**
-   * t_sonde_type_mesure updateMany
-   */
-  export type t_sonde_type_mesureUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to update t_sonde_type_mesures.
-     */
-    data: XOR<t_sonde_type_mesureUpdateManyMutationInput, t_sonde_type_mesureUncheckedUpdateManyInput>
-    /**
-     * Filter which t_sonde_type_mesures to update
-     */
-    where?: t_sonde_type_mesureWhereInput
-    /**
-     * Limit how many t_sonde_type_mesures to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * t_sonde_type_mesure upsert
-   */
-  export type t_sonde_type_mesureUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_sonde_type_mesure
-     */
-    select?: t_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_sonde_type_mesure
-     */
-    omit?: t_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * The filter to search for the t_sonde_type_mesure to update in case it exists.
-     */
-    where: t_sonde_type_mesureWhereUniqueInput
-    /**
-     * In case the t_sonde_type_mesure found by the `where` argument doesn't exist, create a new t_sonde_type_mesure with this data.
-     */
-    create: XOR<t_sonde_type_mesureCreateInput, t_sonde_type_mesureUncheckedCreateInput>
-    /**
-     * In case the t_sonde_type_mesure was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<t_sonde_type_mesureUpdateInput, t_sonde_type_mesureUncheckedUpdateInput>
-  }
-
-  /**
-   * t_sonde_type_mesure delete
-   */
-  export type t_sonde_type_mesureDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_sonde_type_mesure
-     */
-    select?: t_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_sonde_type_mesure
-     */
-    omit?: t_sonde_type_mesureOmit<ExtArgs> | null
-    /**
-     * Filter which t_sonde_type_mesure to delete.
-     */
-    where: t_sonde_type_mesureWhereUniqueInput
-  }
-
-  /**
-   * t_sonde_type_mesure deleteMany
-   */
-  export type t_sonde_type_mesureDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which t_sonde_type_mesures to delete
-     */
-    where?: t_sonde_type_mesureWhereInput
-    /**
-     * Limit how many t_sonde_type_mesures to delete.
-     */
-    limit?: number
-  }
-
-  /**
-   * t_sonde_type_mesure without action
-   */
-  export type t_sonde_type_mesureDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_sonde_type_mesure
-     */
-    select?: t_sonde_type_mesureSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_sonde_type_mesure
-     */
-    omit?: t_sonde_type_mesureOmit<ExtArgs> | null
-  }
-
-
-  /**
    * Model t_mem_gso
    */
 
@@ -59786,15 +57627,6 @@ export namespace Prisma {
   export type T_liaison_profil_autorisationScalarFieldEnum = (typeof T_liaison_profil_autorisationScalarFieldEnum)[keyof typeof T_liaison_profil_autorisationScalarFieldEnum]
 
 
-  export const T_liaison_sonde_type_mesureScalarFieldEnum: {
-    Id_Liaison: 'Id_Liaison',
-    Sonde_Type: 'Sonde_Type',
-    Sonde_Type_Mesure: 'Sonde_Type_Mesure'
-  };
-
-  export type T_liaison_sonde_type_mesureScalarFieldEnum = (typeof T_liaison_sonde_type_mesureScalarFieldEnum)[keyof typeof T_liaison_sonde_type_mesureScalarFieldEnum]
-
-
   export const T_liaison_utilisateur_groupeScalarFieldEnum: {
     Id_Liaison_u_g: 'Id_Liaison_u_g',
     Id_Utilisateur: 'Id_Utilisateur',
@@ -59824,8 +57656,6 @@ export namespace Prisma {
 
   export const T_lieuScalarFieldEnum: {
     Id_Lieu: 'Id_Lieu',
-    Id_Groupe1: 'Id_Groupe1',
-    Id_Groupe2: 'Id_Groupe2',
     Id_Site: 'Id_Site',
     Nom_Lieu: 'Nom_Lieu',
     Sonde_Numero_Serie: 'Sonde_Numero_Serie',
@@ -60175,20 +58005,6 @@ export namespace Prisma {
   export type T_etalon_typeScalarFieldEnum = (typeof T_etalon_typeScalarFieldEnum)[keyof typeof T_etalon_typeScalarFieldEnum]
 
 
-  export const T_sonde_type_mesureScalarFieldEnum: {
-    Id_Sonde_Type_Mesure: 'Id_Sonde_Type_Mesure',
-    Sonde_Type_Mesure: 'Sonde_Type_Mesure',
-    Libelle_Sonde_Type_Mesure: 'Libelle_Sonde_Type_Mesure',
-    Est_Flag_Relais: 'Est_Flag_Relais',
-    Est_Flag_Affiche_Information: 'Est_Flag_Affiche_Information',
-    Unite_Mesure: 'Unite_Mesure',
-    Libelle_Unite_Mesure: 'Libelle_Unite_Mesure',
-    Reserve_MC2: 'Reserve_MC2'
-  };
-
-  export type T_sonde_type_mesureScalarFieldEnum = (typeof T_sonde_type_mesureScalarFieldEnum)[keyof typeof T_sonde_type_mesureScalarFieldEnum]
-
-
   export const T_mem_gsoScalarFieldEnum: {
     id: 'id',
     last_sonde: 'last_sonde',
@@ -60534,14 +58350,6 @@ export namespace Prisma {
   export type t_groupeOrderByRelevanceFieldEnum = (typeof t_groupeOrderByRelevanceFieldEnum)[keyof typeof t_groupeOrderByRelevanceFieldEnum]
 
 
-  export const t_liaison_sonde_type_mesureOrderByRelevanceFieldEnum: {
-    Sonde_Type: 'Sonde_Type',
-    Sonde_Type_Mesure: 'Sonde_Type_Mesure'
-  };
-
-  export type t_liaison_sonde_type_mesureOrderByRelevanceFieldEnum = (typeof t_liaison_sonde_type_mesureOrderByRelevanceFieldEnum)[keyof typeof t_liaison_sonde_type_mesureOrderByRelevanceFieldEnum]
-
-
   export const t_lieuOrderByRelevanceFieldEnum: {
     Nom_Lieu: 'Nom_Lieu',
     Sonde_Numero_Serie: 'Sonde_Numero_Serie',
@@ -60746,17 +58554,6 @@ export namespace Prisma {
   };
 
   export type t_etalon_typeOrderByRelevanceFieldEnum = (typeof t_etalon_typeOrderByRelevanceFieldEnum)[keyof typeof t_etalon_typeOrderByRelevanceFieldEnum]
-
-
-  export const t_sonde_type_mesureOrderByRelevanceFieldEnum: {
-    Sonde_Type_Mesure: 'Sonde_Type_Mesure',
-    Libelle_Sonde_Type_Mesure: 'Libelle_Sonde_Type_Mesure',
-    Unite_Mesure: 'Unite_Mesure',
-    Libelle_Unite_Mesure: 'Libelle_Unite_Mesure',
-    Reserve_MC2: 'Reserve_MC2'
-  };
-
-  export type t_sonde_type_mesureOrderByRelevanceFieldEnum = (typeof t_sonde_type_mesureOrderByRelevanceFieldEnum)[keyof typeof t_sonde_type_mesureOrderByRelevanceFieldEnum]
 
 
   export const t_mem_gsoOrderByRelevanceFieldEnum: {
@@ -61995,8 +59792,6 @@ export namespace Prisma {
     Numero_Regroupement?: StringNullableFilter<"t_groupe"> | string | null
     Est_Archive?: BoolNullableFilter<"t_groupe"> | boolean | null
     t_liaison_utilisateur_groupe?: T_liaison_utilisateur_groupeListRelationFilter
-    t_lieux_groupe1?: T_lieuListRelationFilter
-    t_lieux_groupe2?: T_lieuListRelationFilter
     t_lieu_groupe?: T_lieu_groupeListRelationFilter
   }
 
@@ -62006,8 +59801,6 @@ export namespace Prisma {
     Numero_Regroupement?: SortOrderInput | SortOrder
     Est_Archive?: SortOrderInput | SortOrder
     t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeOrderByRelationAggregateInput
-    t_lieux_groupe1?: t_lieuOrderByRelationAggregateInput
-    t_lieux_groupe2?: t_lieuOrderByRelationAggregateInput
     t_lieu_groupe?: t_lieu_groupeOrderByRelationAggregateInput
     _relevance?: t_groupeOrderByRelevanceInput
   }
@@ -62021,8 +59814,6 @@ export namespace Prisma {
     Numero_Regroupement?: StringNullableFilter<"t_groupe"> | string | null
     Est_Archive?: BoolNullableFilter<"t_groupe"> | boolean | null
     t_liaison_utilisateur_groupe?: T_liaison_utilisateur_groupeListRelationFilter
-    t_lieux_groupe1?: T_lieuListRelationFilter
-    t_lieux_groupe2?: T_lieuListRelationFilter
     t_lieu_groupe?: T_lieu_groupeListRelationFilter
   }, "Id_Groupe" | "Nom_Groupe">
 
@@ -62092,51 +59883,6 @@ export namespace Prisma {
     NOT?: t_liaison_profil_autorisationScalarWhereWithAggregatesInput | t_liaison_profil_autorisationScalarWhereWithAggregatesInput[]
     Id_Profil?: IntWithAggregatesFilter<"t_liaison_profil_autorisation"> | number
     Id_Autorisation?: IntWithAggregatesFilter<"t_liaison_profil_autorisation"> | number
-  }
-
-  export type t_liaison_sonde_type_mesureWhereInput = {
-    AND?: t_liaison_sonde_type_mesureWhereInput | t_liaison_sonde_type_mesureWhereInput[]
-    OR?: t_liaison_sonde_type_mesureWhereInput[]
-    NOT?: t_liaison_sonde_type_mesureWhereInput | t_liaison_sonde_type_mesureWhereInput[]
-    Id_Liaison?: IntFilter<"t_liaison_sonde_type_mesure"> | number
-    Sonde_Type?: StringNullableFilter<"t_liaison_sonde_type_mesure"> | string | null
-    Sonde_Type_Mesure?: StringNullableFilter<"t_liaison_sonde_type_mesure"> | string | null
-  }
-
-  export type t_liaison_sonde_type_mesureOrderByWithRelationInput = {
-    Id_Liaison?: SortOrder
-    Sonde_Type?: SortOrderInput | SortOrder
-    Sonde_Type_Mesure?: SortOrderInput | SortOrder
-    _relevance?: t_liaison_sonde_type_mesureOrderByRelevanceInput
-  }
-
-  export type t_liaison_sonde_type_mesureWhereUniqueInput = Prisma.AtLeast<{
-    Id_Liaison?: number
-    AND?: t_liaison_sonde_type_mesureWhereInput | t_liaison_sonde_type_mesureWhereInput[]
-    OR?: t_liaison_sonde_type_mesureWhereInput[]
-    NOT?: t_liaison_sonde_type_mesureWhereInput | t_liaison_sonde_type_mesureWhereInput[]
-    Sonde_Type?: StringNullableFilter<"t_liaison_sonde_type_mesure"> | string | null
-    Sonde_Type_Mesure?: StringNullableFilter<"t_liaison_sonde_type_mesure"> | string | null
-  }, "Id_Liaison">
-
-  export type t_liaison_sonde_type_mesureOrderByWithAggregationInput = {
-    Id_Liaison?: SortOrder
-    Sonde_Type?: SortOrderInput | SortOrder
-    Sonde_Type_Mesure?: SortOrderInput | SortOrder
-    _count?: t_liaison_sonde_type_mesureCountOrderByAggregateInput
-    _avg?: t_liaison_sonde_type_mesureAvgOrderByAggregateInput
-    _max?: t_liaison_sonde_type_mesureMaxOrderByAggregateInput
-    _min?: t_liaison_sonde_type_mesureMinOrderByAggregateInput
-    _sum?: t_liaison_sonde_type_mesureSumOrderByAggregateInput
-  }
-
-  export type t_liaison_sonde_type_mesureScalarWhereWithAggregatesInput = {
-    AND?: t_liaison_sonde_type_mesureScalarWhereWithAggregatesInput | t_liaison_sonde_type_mesureScalarWhereWithAggregatesInput[]
-    OR?: t_liaison_sonde_type_mesureScalarWhereWithAggregatesInput[]
-    NOT?: t_liaison_sonde_type_mesureScalarWhereWithAggregatesInput | t_liaison_sonde_type_mesureScalarWhereWithAggregatesInput[]
-    Id_Liaison?: IntWithAggregatesFilter<"t_liaison_sonde_type_mesure"> | number
-    Sonde_Type?: StringNullableWithAggregatesFilter<"t_liaison_sonde_type_mesure"> | string | null
-    Sonde_Type_Mesure?: StringNullableWithAggregatesFilter<"t_liaison_sonde_type_mesure"> | string | null
   }
 
   export type t_liaison_utilisateur_groupeWhereInput = {
@@ -62296,8 +60042,6 @@ export namespace Prisma {
     OR?: t_lieuWhereInput[]
     NOT?: t_lieuWhereInput | t_lieuWhereInput[]
     Id_Lieu?: IntFilter<"t_lieu"> | number
-    Id_Groupe1?: IntNullableFilter<"t_lieu"> | number | null
-    Id_Groupe2?: IntNullableFilter<"t_lieu"> | number | null
     Id_Site?: IntNullableFilter<"t_lieu"> | number | null
     Nom_Lieu?: StringNullableFilter<"t_lieu"> | string | null
     Sonde_Numero_Serie?: StringNullableFilter<"t_lieu"> | string | null
@@ -62382,8 +60126,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: IntNullableFilter<"t_lieu"> | number | null
     t_alarme?: T_alarmeListRelationFilter
     t_alarme_histo?: T_alarme_histoListRelationFilter
-    t_groupe1?: XOR<T_groupeNullableScalarRelationFilter, t_groupeWhereInput> | null
-    t_groupe2?: XOR<T_groupeNullableScalarRelationFilter, t_groupeWhereInput> | null
     t_etat_surveillance?: XOR<T_etat_surveillanceNullableScalarRelationFilter, t_etat_surveillanceWhereInput> | null
     t_pdf?: XOR<T_pdfNullableScalarRelationFilter, t_pdfWhereInput> | null
     t_plan?: XOR<T_planNullableScalarRelationFilter, t_planWhereInput> | null
@@ -62396,8 +60138,6 @@ export namespace Prisma {
 
   export type t_lieuOrderByWithRelationInput = {
     Id_Lieu?: SortOrder
-    Id_Groupe1?: SortOrderInput | SortOrder
-    Id_Groupe2?: SortOrderInput | SortOrder
     Id_Site?: SortOrderInput | SortOrder
     Nom_Lieu?: SortOrderInput | SortOrder
     Sonde_Numero_Serie?: SortOrderInput | SortOrder
@@ -62482,8 +60222,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: SortOrderInput | SortOrder
     t_alarme?: t_alarmeOrderByRelationAggregateInput
     t_alarme_histo?: t_alarme_histoOrderByRelationAggregateInput
-    t_groupe1?: t_groupeOrderByWithRelationInput
-    t_groupe2?: t_groupeOrderByWithRelationInput
     t_etat_surveillance?: t_etat_surveillanceOrderByWithRelationInput
     t_pdf?: t_pdfOrderByWithRelationInput
     t_plan?: t_planOrderByWithRelationInput
@@ -62500,8 +60238,6 @@ export namespace Prisma {
     AND?: t_lieuWhereInput | t_lieuWhereInput[]
     OR?: t_lieuWhereInput[]
     NOT?: t_lieuWhereInput | t_lieuWhereInput[]
-    Id_Groupe1?: IntNullableFilter<"t_lieu"> | number | null
-    Id_Groupe2?: IntNullableFilter<"t_lieu"> | number | null
     Id_Site?: IntNullableFilter<"t_lieu"> | number | null
     Nom_Lieu?: StringNullableFilter<"t_lieu"> | string | null
     Sonde_Numero_Serie?: StringNullableFilter<"t_lieu"> | string | null
@@ -62586,8 +60322,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: IntNullableFilter<"t_lieu"> | number | null
     t_alarme?: T_alarmeListRelationFilter
     t_alarme_histo?: T_alarme_histoListRelationFilter
-    t_groupe1?: XOR<T_groupeNullableScalarRelationFilter, t_groupeWhereInput> | null
-    t_groupe2?: XOR<T_groupeNullableScalarRelationFilter, t_groupeWhereInput> | null
     t_etat_surveillance?: XOR<T_etat_surveillanceNullableScalarRelationFilter, t_etat_surveillanceWhereInput> | null
     t_pdf?: XOR<T_pdfNullableScalarRelationFilter, t_pdfWhereInput> | null
     t_plan?: XOR<T_planNullableScalarRelationFilter, t_planWhereInput> | null
@@ -62600,8 +60334,6 @@ export namespace Prisma {
 
   export type t_lieuOrderByWithAggregationInput = {
     Id_Lieu?: SortOrder
-    Id_Groupe1?: SortOrderInput | SortOrder
-    Id_Groupe2?: SortOrderInput | SortOrder
     Id_Site?: SortOrderInput | SortOrder
     Nom_Lieu?: SortOrderInput | SortOrder
     Sonde_Numero_Serie?: SortOrderInput | SortOrder
@@ -62696,8 +60428,6 @@ export namespace Prisma {
     OR?: t_lieuScalarWhereWithAggregatesInput[]
     NOT?: t_lieuScalarWhereWithAggregatesInput | t_lieuScalarWhereWithAggregatesInput[]
     Id_Lieu?: IntWithAggregatesFilter<"t_lieu"> | number
-    Id_Groupe1?: IntNullableWithAggregatesFilter<"t_lieu"> | number | null
-    Id_Groupe2?: IntNullableWithAggregatesFilter<"t_lieu"> | number | null
     Id_Site?: IntNullableWithAggregatesFilter<"t_lieu"> | number | null
     Nom_Lieu?: StringNullableWithAggregatesFilter<"t_lieu"> | string | null
     Sonde_Numero_Serie?: StringNullableWithAggregatesFilter<"t_lieu"> | string | null
@@ -64193,76 +61923,6 @@ export namespace Prisma {
     Est_Saisie_Module?: BoolNullableWithAggregatesFilter<"t_etalon_type"> | boolean | null
     Est_Sonde_Externe?: BoolNullableWithAggregatesFilter<"t_etalon_type"> | boolean | null
     Resolution?: FloatNullableWithAggregatesFilter<"t_etalon_type"> | number | null
-  }
-
-  export type t_sonde_type_mesureWhereInput = {
-    AND?: t_sonde_type_mesureWhereInput | t_sonde_type_mesureWhereInput[]
-    OR?: t_sonde_type_mesureWhereInput[]
-    NOT?: t_sonde_type_mesureWhereInput | t_sonde_type_mesureWhereInput[]
-    Id_Sonde_Type_Mesure?: IntFilter<"t_sonde_type_mesure"> | number
-    Sonde_Type_Mesure?: StringNullableFilter<"t_sonde_type_mesure"> | string | null
-    Libelle_Sonde_Type_Mesure?: StringNullableFilter<"t_sonde_type_mesure"> | string | null
-    Est_Flag_Relais?: BoolNullableFilter<"t_sonde_type_mesure"> | boolean | null
-    Est_Flag_Affiche_Information?: BoolNullableFilter<"t_sonde_type_mesure"> | boolean | null
-    Unite_Mesure?: StringNullableFilter<"t_sonde_type_mesure"> | string | null
-    Libelle_Unite_Mesure?: StringNullableFilter<"t_sonde_type_mesure"> | string | null
-    Reserve_MC2?: StringNullableFilter<"t_sonde_type_mesure"> | string | null
-  }
-
-  export type t_sonde_type_mesureOrderByWithRelationInput = {
-    Id_Sonde_Type_Mesure?: SortOrder
-    Sonde_Type_Mesure?: SortOrderInput | SortOrder
-    Libelle_Sonde_Type_Mesure?: SortOrderInput | SortOrder
-    Est_Flag_Relais?: SortOrderInput | SortOrder
-    Est_Flag_Affiche_Information?: SortOrderInput | SortOrder
-    Unite_Mesure?: SortOrderInput | SortOrder
-    Libelle_Unite_Mesure?: SortOrderInput | SortOrder
-    Reserve_MC2?: SortOrderInput | SortOrder
-    _relevance?: t_sonde_type_mesureOrderByRelevanceInput
-  }
-
-  export type t_sonde_type_mesureWhereUniqueInput = Prisma.AtLeast<{
-    Id_Sonde_Type_Mesure?: number
-    Sonde_Type_Mesure?: string
-    AND?: t_sonde_type_mesureWhereInput | t_sonde_type_mesureWhereInput[]
-    OR?: t_sonde_type_mesureWhereInput[]
-    NOT?: t_sonde_type_mesureWhereInput | t_sonde_type_mesureWhereInput[]
-    Libelle_Sonde_Type_Mesure?: StringNullableFilter<"t_sonde_type_mesure"> | string | null
-    Est_Flag_Relais?: BoolNullableFilter<"t_sonde_type_mesure"> | boolean | null
-    Est_Flag_Affiche_Information?: BoolNullableFilter<"t_sonde_type_mesure"> | boolean | null
-    Unite_Mesure?: StringNullableFilter<"t_sonde_type_mesure"> | string | null
-    Libelle_Unite_Mesure?: StringNullableFilter<"t_sonde_type_mesure"> | string | null
-    Reserve_MC2?: StringNullableFilter<"t_sonde_type_mesure"> | string | null
-  }, "Id_Sonde_Type_Mesure" | "Sonde_Type_Mesure">
-
-  export type t_sonde_type_mesureOrderByWithAggregationInput = {
-    Id_Sonde_Type_Mesure?: SortOrder
-    Sonde_Type_Mesure?: SortOrderInput | SortOrder
-    Libelle_Sonde_Type_Mesure?: SortOrderInput | SortOrder
-    Est_Flag_Relais?: SortOrderInput | SortOrder
-    Est_Flag_Affiche_Information?: SortOrderInput | SortOrder
-    Unite_Mesure?: SortOrderInput | SortOrder
-    Libelle_Unite_Mesure?: SortOrderInput | SortOrder
-    Reserve_MC2?: SortOrderInput | SortOrder
-    _count?: t_sonde_type_mesureCountOrderByAggregateInput
-    _avg?: t_sonde_type_mesureAvgOrderByAggregateInput
-    _max?: t_sonde_type_mesureMaxOrderByAggregateInput
-    _min?: t_sonde_type_mesureMinOrderByAggregateInput
-    _sum?: t_sonde_type_mesureSumOrderByAggregateInput
-  }
-
-  export type t_sonde_type_mesureScalarWhereWithAggregatesInput = {
-    AND?: t_sonde_type_mesureScalarWhereWithAggregatesInput | t_sonde_type_mesureScalarWhereWithAggregatesInput[]
-    OR?: t_sonde_type_mesureScalarWhereWithAggregatesInput[]
-    NOT?: t_sonde_type_mesureScalarWhereWithAggregatesInput | t_sonde_type_mesureScalarWhereWithAggregatesInput[]
-    Id_Sonde_Type_Mesure?: IntWithAggregatesFilter<"t_sonde_type_mesure"> | number
-    Sonde_Type_Mesure?: StringNullableWithAggregatesFilter<"t_sonde_type_mesure"> | string | null
-    Libelle_Sonde_Type_Mesure?: StringNullableWithAggregatesFilter<"t_sonde_type_mesure"> | string | null
-    Est_Flag_Relais?: BoolNullableWithAggregatesFilter<"t_sonde_type_mesure"> | boolean | null
-    Est_Flag_Affiche_Information?: BoolNullableWithAggregatesFilter<"t_sonde_type_mesure"> | boolean | null
-    Unite_Mesure?: StringNullableWithAggregatesFilter<"t_sonde_type_mesure"> | string | null
-    Libelle_Unite_Mesure?: StringNullableWithAggregatesFilter<"t_sonde_type_mesure"> | string | null
-    Reserve_MC2?: StringNullableWithAggregatesFilter<"t_sonde_type_mesure"> | string | null
   }
 
   export type t_mem_gsoWhereInput = {
@@ -66546,8 +64206,6 @@ export namespace Prisma {
     Numero_Regroupement?: string | null
     Est_Archive?: boolean | null
     t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeCreateNestedManyWithoutT_groupeInput
-    t_lieux_groupe1?: t_lieuCreateNestedManyWithoutT_groupe1Input
-    t_lieux_groupe2?: t_lieuCreateNestedManyWithoutT_groupe2Input
     t_lieu_groupe?: t_lieu_groupeCreateNestedManyWithoutT_groupeInput
   }
 
@@ -66557,8 +64215,6 @@ export namespace Prisma {
     Numero_Regroupement?: string | null
     Est_Archive?: boolean | null
     t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUncheckedCreateNestedManyWithoutT_groupeInput
-    t_lieux_groupe1?: t_lieuUncheckedCreateNestedManyWithoutT_groupe1Input
-    t_lieux_groupe2?: t_lieuUncheckedCreateNestedManyWithoutT_groupe2Input
     t_lieu_groupe?: t_lieu_groupeUncheckedCreateNestedManyWithoutT_groupeInput
   }
 
@@ -66567,8 +64223,6 @@ export namespace Prisma {
     Numero_Regroupement?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
     t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUpdateManyWithoutT_groupeNestedInput
-    t_lieux_groupe1?: t_lieuUpdateManyWithoutT_groupe1NestedInput
-    t_lieux_groupe2?: t_lieuUpdateManyWithoutT_groupe2NestedInput
     t_lieu_groupe?: t_lieu_groupeUpdateManyWithoutT_groupeNestedInput
   }
 
@@ -66578,8 +64232,6 @@ export namespace Prisma {
     Numero_Regroupement?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
     t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUncheckedUpdateManyWithoutT_groupeNestedInput
-    t_lieux_groupe1?: t_lieuUncheckedUpdateManyWithoutT_groupe1NestedInput
-    t_lieux_groupe2?: t_lieuUncheckedUpdateManyWithoutT_groupe2NestedInput
     t_lieu_groupe?: t_lieu_groupeUncheckedUpdateManyWithoutT_groupeNestedInput
   }
 
@@ -66635,45 +64287,6 @@ export namespace Prisma {
   export type t_liaison_profil_autorisationUncheckedUpdateManyInput = {
     Id_Profil?: IntFieldUpdateOperationsInput | number
     Id_Autorisation?: IntFieldUpdateOperationsInput | number
-  }
-
-  export type t_liaison_sonde_type_mesureCreateInput = {
-    Sonde_Type?: string | null
-    Sonde_Type_Mesure?: string | null
-  }
-
-  export type t_liaison_sonde_type_mesureUncheckedCreateInput = {
-    Id_Liaison?: number
-    Sonde_Type?: string | null
-    Sonde_Type_Mesure?: string | null
-  }
-
-  export type t_liaison_sonde_type_mesureUpdateInput = {
-    Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
-    Sonde_Type_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-  }
-
-  export type t_liaison_sonde_type_mesureUncheckedUpdateInput = {
-    Id_Liaison?: IntFieldUpdateOperationsInput | number
-    Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
-    Sonde_Type_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-  }
-
-  export type t_liaison_sonde_type_mesureCreateManyInput = {
-    Id_Liaison?: number
-    Sonde_Type?: string | null
-    Sonde_Type_Mesure?: string | null
-  }
-
-  export type t_liaison_sonde_type_mesureUpdateManyMutationInput = {
-    Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
-    Sonde_Type_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-  }
-
-  export type t_liaison_sonde_type_mesureUncheckedUpdateManyInput = {
-    Id_Liaison?: IntFieldUpdateOperationsInput | number
-    Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
-    Sonde_Type_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type t_liaison_utilisateur_groupeCreateInput = {
@@ -66872,8 +64485,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: number | null
     t_alarme?: t_alarmeCreateNestedManyWithoutT_lieuInput
     t_alarme_histo?: t_alarme_histoCreateNestedManyWithoutT_lieuInput
-    t_groupe1?: t_groupeCreateNestedOneWithoutT_lieux_groupe1Input
-    t_groupe2?: t_groupeCreateNestedOneWithoutT_lieux_groupe2Input
     t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_lieuInput
     t_pdf?: t_pdfCreateNestedOneWithoutT_lieuInput
     t_plan?: t_planCreateNestedOneWithoutT_lieuInput
@@ -66886,8 +64497,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedCreateInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -67057,8 +64666,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
     t_alarme?: t_alarmeUpdateManyWithoutT_lieuNestedInput
     t_alarme_histo?: t_alarme_histoUpdateManyWithoutT_lieuNestedInput
-    t_groupe1?: t_groupeUpdateOneWithoutT_lieux_groupe1NestedInput
-    t_groupe2?: t_groupeUpdateOneWithoutT_lieux_groupe2NestedInput
     t_etat_surveillance?: t_etat_surveillanceUpdateOneWithoutT_lieuNestedInput
     t_pdf?: t_pdfUpdateOneWithoutT_lieuNestedInput
     t_plan?: t_planUpdateOneWithoutT_lieuNestedInput
@@ -67071,8 +64678,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
@@ -67164,8 +64769,6 @@ export namespace Prisma {
 
   export type t_lieuCreateManyInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -67332,8 +64935,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateManyInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
@@ -68872,80 +66473,6 @@ export namespace Prisma {
     Est_Saisie_Module?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Sonde_Externe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Resolution?: NullableFloatFieldUpdateOperationsInput | number | null
-  }
-
-  export type t_sonde_type_mesureCreateInput = {
-    Sonde_Type_Mesure?: string | null
-    Libelle_Sonde_Type_Mesure?: string | null
-    Est_Flag_Relais?: boolean | null
-    Est_Flag_Affiche_Information?: boolean | null
-    Unite_Mesure?: string | null
-    Libelle_Unite_Mesure?: string | null
-    Reserve_MC2?: string | null
-  }
-
-  export type t_sonde_type_mesureUncheckedCreateInput = {
-    Id_Sonde_Type_Mesure?: number
-    Sonde_Type_Mesure?: string | null
-    Libelle_Sonde_Type_Mesure?: string | null
-    Est_Flag_Relais?: boolean | null
-    Est_Flag_Affiche_Information?: boolean | null
-    Unite_Mesure?: string | null
-    Libelle_Unite_Mesure?: string | null
-    Reserve_MC2?: string | null
-  }
-
-  export type t_sonde_type_mesureUpdateInput = {
-    Sonde_Type_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-    Libelle_Sonde_Type_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-    Est_Flag_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Est_Flag_Affiche_Information?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Unite_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-    Libelle_Unite_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-    Reserve_MC2?: NullableStringFieldUpdateOperationsInput | string | null
-  }
-
-  export type t_sonde_type_mesureUncheckedUpdateInput = {
-    Id_Sonde_Type_Mesure?: IntFieldUpdateOperationsInput | number
-    Sonde_Type_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-    Libelle_Sonde_Type_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-    Est_Flag_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Est_Flag_Affiche_Information?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Unite_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-    Libelle_Unite_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-    Reserve_MC2?: NullableStringFieldUpdateOperationsInput | string | null
-  }
-
-  export type t_sonde_type_mesureCreateManyInput = {
-    Id_Sonde_Type_Mesure?: number
-    Sonde_Type_Mesure?: string | null
-    Libelle_Sonde_Type_Mesure?: string | null
-    Est_Flag_Relais?: boolean | null
-    Est_Flag_Affiche_Information?: boolean | null
-    Unite_Mesure?: string | null
-    Libelle_Unite_Mesure?: string | null
-    Reserve_MC2?: string | null
-  }
-
-  export type t_sonde_type_mesureUpdateManyMutationInput = {
-    Sonde_Type_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-    Libelle_Sonde_Type_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-    Est_Flag_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Est_Flag_Affiche_Information?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Unite_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-    Libelle_Unite_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-    Reserve_MC2?: NullableStringFieldUpdateOperationsInput | string | null
-  }
-
-  export type t_sonde_type_mesureUncheckedUpdateManyInput = {
-    Id_Sonde_Type_Mesure?: IntFieldUpdateOperationsInput | number
-    Sonde_Type_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-    Libelle_Sonde_Type_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-    Est_Flag_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Est_Flag_Affiche_Information?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Unite_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-    Libelle_Unite_Mesure?: NullableStringFieldUpdateOperationsInput | string | null
-    Reserve_MC2?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type t_mem_gsoCreateInput = {
@@ -71142,12 +68669,6 @@ export namespace Prisma {
     none?: t_liaison_utilisateur_groupeWhereInput
   }
 
-  export type T_lieuListRelationFilter = {
-    every?: t_lieuWhereInput
-    some?: t_lieuWhereInput
-    none?: t_lieuWhereInput
-  }
-
   export type T_lieu_groupeListRelationFilter = {
     every?: t_lieu_groupeWhereInput
     some?: t_lieu_groupeWhereInput
@@ -71155,10 +68676,6 @@ export namespace Prisma {
   }
 
   export type t_liaison_utilisateur_groupeOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
-  export type t_lieuOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -71239,38 +68756,6 @@ export namespace Prisma {
   export type t_liaison_profil_autorisationSumOrderByAggregateInput = {
     Id_Profil?: SortOrder
     Id_Autorisation?: SortOrder
-  }
-
-  export type t_liaison_sonde_type_mesureOrderByRelevanceInput = {
-    fields: t_liaison_sonde_type_mesureOrderByRelevanceFieldEnum | t_liaison_sonde_type_mesureOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
-  export type t_liaison_sonde_type_mesureCountOrderByAggregateInput = {
-    Id_Liaison?: SortOrder
-    Sonde_Type?: SortOrder
-    Sonde_Type_Mesure?: SortOrder
-  }
-
-  export type t_liaison_sonde_type_mesureAvgOrderByAggregateInput = {
-    Id_Liaison?: SortOrder
-  }
-
-  export type t_liaison_sonde_type_mesureMaxOrderByAggregateInput = {
-    Id_Liaison?: SortOrder
-    Sonde_Type?: SortOrder
-    Sonde_Type_Mesure?: SortOrder
-  }
-
-  export type t_liaison_sonde_type_mesureMinOrderByAggregateInput = {
-    Id_Liaison?: SortOrder
-    Sonde_Type?: SortOrder
-    Sonde_Type_Mesure?: SortOrder
-  }
-
-  export type t_liaison_sonde_type_mesureSumOrderByAggregateInput = {
-    Id_Liaison?: SortOrder
   }
 
   export type T_groupeNullableScalarRelationFilter = {
@@ -71469,8 +68954,6 @@ export namespace Prisma {
 
   export type t_lieuCountOrderByAggregateInput = {
     Id_Lieu?: SortOrder
-    Id_Groupe1?: SortOrder
-    Id_Groupe2?: SortOrder
     Id_Site?: SortOrder
     Nom_Lieu?: SortOrder
     Sonde_Numero_Serie?: SortOrder
@@ -71557,8 +69040,6 @@ export namespace Prisma {
 
   export type t_lieuAvgOrderByAggregateInput = {
     Id_Lieu?: SortOrder
-    Id_Groupe1?: SortOrder
-    Id_Groupe2?: SortOrder
     Id_Site?: SortOrder
     Consigne?: SortOrder
     Consigne_Base?: SortOrder
@@ -71605,8 +69086,6 @@ export namespace Prisma {
 
   export type t_lieuMaxOrderByAggregateInput = {
     Id_Lieu?: SortOrder
-    Id_Groupe1?: SortOrder
-    Id_Groupe2?: SortOrder
     Id_Site?: SortOrder
     Nom_Lieu?: SortOrder
     Sonde_Numero_Serie?: SortOrder
@@ -71693,8 +69172,6 @@ export namespace Prisma {
 
   export type t_lieuMinOrderByAggregateInput = {
     Id_Lieu?: SortOrder
-    Id_Groupe1?: SortOrder
-    Id_Groupe2?: SortOrder
     Id_Site?: SortOrder
     Nom_Lieu?: SortOrder
     Sonde_Numero_Serie?: SortOrder
@@ -71781,8 +69258,6 @@ export namespace Prisma {
 
   export type t_lieuSumOrderByAggregateInput = {
     Id_Lieu?: SortOrder
-    Id_Groupe1?: SortOrder
-    Id_Groupe2?: SortOrder
     Id_Site?: SortOrder
     Consigne?: SortOrder
     Consigne_Base?: SortOrder
@@ -72035,7 +69510,17 @@ export namespace Prisma {
     none?: t_commande_materielWhereInput
   }
 
+  export type T_lieuListRelationFilter = {
+    every?: t_lieuWhereInput
+    some?: t_lieuWhereInput
+    none?: t_lieuWhereInput
+  }
+
   export type t_commande_materielOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type t_lieuOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -72994,53 +70479,6 @@ export namespace Prisma {
 
   export type t_etalon_typeSumOrderByAggregateInput = {
     Resolution?: SortOrder
-  }
-
-  export type t_sonde_type_mesureOrderByRelevanceInput = {
-    fields: t_sonde_type_mesureOrderByRelevanceFieldEnum | t_sonde_type_mesureOrderByRelevanceFieldEnum[]
-    sort: SortOrder
-    search: string
-  }
-
-  export type t_sonde_type_mesureCountOrderByAggregateInput = {
-    Id_Sonde_Type_Mesure?: SortOrder
-    Sonde_Type_Mesure?: SortOrder
-    Libelle_Sonde_Type_Mesure?: SortOrder
-    Est_Flag_Relais?: SortOrder
-    Est_Flag_Affiche_Information?: SortOrder
-    Unite_Mesure?: SortOrder
-    Libelle_Unite_Mesure?: SortOrder
-    Reserve_MC2?: SortOrder
-  }
-
-  export type t_sonde_type_mesureAvgOrderByAggregateInput = {
-    Id_Sonde_Type_Mesure?: SortOrder
-  }
-
-  export type t_sonde_type_mesureMaxOrderByAggregateInput = {
-    Id_Sonde_Type_Mesure?: SortOrder
-    Sonde_Type_Mesure?: SortOrder
-    Libelle_Sonde_Type_Mesure?: SortOrder
-    Est_Flag_Relais?: SortOrder
-    Est_Flag_Affiche_Information?: SortOrder
-    Unite_Mesure?: SortOrder
-    Libelle_Unite_Mesure?: SortOrder
-    Reserve_MC2?: SortOrder
-  }
-
-  export type t_sonde_type_mesureMinOrderByAggregateInput = {
-    Id_Sonde_Type_Mesure?: SortOrder
-    Sonde_Type_Mesure?: SortOrder
-    Libelle_Sonde_Type_Mesure?: SortOrder
-    Est_Flag_Relais?: SortOrder
-    Est_Flag_Affiche_Information?: SortOrder
-    Unite_Mesure?: SortOrder
-    Libelle_Unite_Mesure?: SortOrder
-    Reserve_MC2?: SortOrder
-  }
-
-  export type t_sonde_type_mesureSumOrderByAggregateInput = {
-    Id_Sonde_Type_Mesure?: SortOrder
   }
 
   export type t_mem_gsoOrderByRelevanceInput = {
@@ -74132,20 +71570,6 @@ export namespace Prisma {
     connect?: t_liaison_utilisateur_groupeWhereUniqueInput | t_liaison_utilisateur_groupeWhereUniqueInput[]
   }
 
-  export type t_lieuCreateNestedManyWithoutT_groupe1Input = {
-    create?: XOR<t_lieuCreateWithoutT_groupe1Input, t_lieuUncheckedCreateWithoutT_groupe1Input> | t_lieuCreateWithoutT_groupe1Input[] | t_lieuUncheckedCreateWithoutT_groupe1Input[]
-    connectOrCreate?: t_lieuCreateOrConnectWithoutT_groupe1Input | t_lieuCreateOrConnectWithoutT_groupe1Input[]
-    createMany?: t_lieuCreateManyT_groupe1InputEnvelope
-    connect?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-  }
-
-  export type t_lieuCreateNestedManyWithoutT_groupe2Input = {
-    create?: XOR<t_lieuCreateWithoutT_groupe2Input, t_lieuUncheckedCreateWithoutT_groupe2Input> | t_lieuCreateWithoutT_groupe2Input[] | t_lieuUncheckedCreateWithoutT_groupe2Input[]
-    connectOrCreate?: t_lieuCreateOrConnectWithoutT_groupe2Input | t_lieuCreateOrConnectWithoutT_groupe2Input[]
-    createMany?: t_lieuCreateManyT_groupe2InputEnvelope
-    connect?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-  }
-
   export type t_lieu_groupeCreateNestedManyWithoutT_groupeInput = {
     create?: XOR<t_lieu_groupeCreateWithoutT_groupeInput, t_lieu_groupeUncheckedCreateWithoutT_groupeInput> | t_lieu_groupeCreateWithoutT_groupeInput[] | t_lieu_groupeUncheckedCreateWithoutT_groupeInput[]
     connectOrCreate?: t_lieu_groupeCreateOrConnectWithoutT_groupeInput | t_lieu_groupeCreateOrConnectWithoutT_groupeInput[]
@@ -74158,20 +71582,6 @@ export namespace Prisma {
     connectOrCreate?: t_liaison_utilisateur_groupeCreateOrConnectWithoutT_groupeInput | t_liaison_utilisateur_groupeCreateOrConnectWithoutT_groupeInput[]
     createMany?: t_liaison_utilisateur_groupeCreateManyT_groupeInputEnvelope
     connect?: t_liaison_utilisateur_groupeWhereUniqueInput | t_liaison_utilisateur_groupeWhereUniqueInput[]
-  }
-
-  export type t_lieuUncheckedCreateNestedManyWithoutT_groupe1Input = {
-    create?: XOR<t_lieuCreateWithoutT_groupe1Input, t_lieuUncheckedCreateWithoutT_groupe1Input> | t_lieuCreateWithoutT_groupe1Input[] | t_lieuUncheckedCreateWithoutT_groupe1Input[]
-    connectOrCreate?: t_lieuCreateOrConnectWithoutT_groupe1Input | t_lieuCreateOrConnectWithoutT_groupe1Input[]
-    createMany?: t_lieuCreateManyT_groupe1InputEnvelope
-    connect?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-  }
-
-  export type t_lieuUncheckedCreateNestedManyWithoutT_groupe2Input = {
-    create?: XOR<t_lieuCreateWithoutT_groupe2Input, t_lieuUncheckedCreateWithoutT_groupe2Input> | t_lieuCreateWithoutT_groupe2Input[] | t_lieuUncheckedCreateWithoutT_groupe2Input[]
-    connectOrCreate?: t_lieuCreateOrConnectWithoutT_groupe2Input | t_lieuCreateOrConnectWithoutT_groupe2Input[]
-    createMany?: t_lieuCreateManyT_groupe2InputEnvelope
-    connect?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
   }
 
   export type t_lieu_groupeUncheckedCreateNestedManyWithoutT_groupeInput = {
@@ -74193,34 +71603,6 @@ export namespace Prisma {
     update?: t_liaison_utilisateur_groupeUpdateWithWhereUniqueWithoutT_groupeInput | t_liaison_utilisateur_groupeUpdateWithWhereUniqueWithoutT_groupeInput[]
     updateMany?: t_liaison_utilisateur_groupeUpdateManyWithWhereWithoutT_groupeInput | t_liaison_utilisateur_groupeUpdateManyWithWhereWithoutT_groupeInput[]
     deleteMany?: t_liaison_utilisateur_groupeScalarWhereInput | t_liaison_utilisateur_groupeScalarWhereInput[]
-  }
-
-  export type t_lieuUpdateManyWithoutT_groupe1NestedInput = {
-    create?: XOR<t_lieuCreateWithoutT_groupe1Input, t_lieuUncheckedCreateWithoutT_groupe1Input> | t_lieuCreateWithoutT_groupe1Input[] | t_lieuUncheckedCreateWithoutT_groupe1Input[]
-    connectOrCreate?: t_lieuCreateOrConnectWithoutT_groupe1Input | t_lieuCreateOrConnectWithoutT_groupe1Input[]
-    upsert?: t_lieuUpsertWithWhereUniqueWithoutT_groupe1Input | t_lieuUpsertWithWhereUniqueWithoutT_groupe1Input[]
-    createMany?: t_lieuCreateManyT_groupe1InputEnvelope
-    set?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-    disconnect?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-    delete?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-    connect?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-    update?: t_lieuUpdateWithWhereUniqueWithoutT_groupe1Input | t_lieuUpdateWithWhereUniqueWithoutT_groupe1Input[]
-    updateMany?: t_lieuUpdateManyWithWhereWithoutT_groupe1Input | t_lieuUpdateManyWithWhereWithoutT_groupe1Input[]
-    deleteMany?: t_lieuScalarWhereInput | t_lieuScalarWhereInput[]
-  }
-
-  export type t_lieuUpdateManyWithoutT_groupe2NestedInput = {
-    create?: XOR<t_lieuCreateWithoutT_groupe2Input, t_lieuUncheckedCreateWithoutT_groupe2Input> | t_lieuCreateWithoutT_groupe2Input[] | t_lieuUncheckedCreateWithoutT_groupe2Input[]
-    connectOrCreate?: t_lieuCreateOrConnectWithoutT_groupe2Input | t_lieuCreateOrConnectWithoutT_groupe2Input[]
-    upsert?: t_lieuUpsertWithWhereUniqueWithoutT_groupe2Input | t_lieuUpsertWithWhereUniqueWithoutT_groupe2Input[]
-    createMany?: t_lieuCreateManyT_groupe2InputEnvelope
-    set?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-    disconnect?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-    delete?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-    connect?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-    update?: t_lieuUpdateWithWhereUniqueWithoutT_groupe2Input | t_lieuUpdateWithWhereUniqueWithoutT_groupe2Input[]
-    updateMany?: t_lieuUpdateManyWithWhereWithoutT_groupe2Input | t_lieuUpdateManyWithWhereWithoutT_groupe2Input[]
-    deleteMany?: t_lieuScalarWhereInput | t_lieuScalarWhereInput[]
   }
 
   export type t_lieu_groupeUpdateManyWithoutT_groupeNestedInput = {
@@ -74249,34 +71631,6 @@ export namespace Prisma {
     update?: t_liaison_utilisateur_groupeUpdateWithWhereUniqueWithoutT_groupeInput | t_liaison_utilisateur_groupeUpdateWithWhereUniqueWithoutT_groupeInput[]
     updateMany?: t_liaison_utilisateur_groupeUpdateManyWithWhereWithoutT_groupeInput | t_liaison_utilisateur_groupeUpdateManyWithWhereWithoutT_groupeInput[]
     deleteMany?: t_liaison_utilisateur_groupeScalarWhereInput | t_liaison_utilisateur_groupeScalarWhereInput[]
-  }
-
-  export type t_lieuUncheckedUpdateManyWithoutT_groupe1NestedInput = {
-    create?: XOR<t_lieuCreateWithoutT_groupe1Input, t_lieuUncheckedCreateWithoutT_groupe1Input> | t_lieuCreateWithoutT_groupe1Input[] | t_lieuUncheckedCreateWithoutT_groupe1Input[]
-    connectOrCreate?: t_lieuCreateOrConnectWithoutT_groupe1Input | t_lieuCreateOrConnectWithoutT_groupe1Input[]
-    upsert?: t_lieuUpsertWithWhereUniqueWithoutT_groupe1Input | t_lieuUpsertWithWhereUniqueWithoutT_groupe1Input[]
-    createMany?: t_lieuCreateManyT_groupe1InputEnvelope
-    set?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-    disconnect?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-    delete?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-    connect?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-    update?: t_lieuUpdateWithWhereUniqueWithoutT_groupe1Input | t_lieuUpdateWithWhereUniqueWithoutT_groupe1Input[]
-    updateMany?: t_lieuUpdateManyWithWhereWithoutT_groupe1Input | t_lieuUpdateManyWithWhereWithoutT_groupe1Input[]
-    deleteMany?: t_lieuScalarWhereInput | t_lieuScalarWhereInput[]
-  }
-
-  export type t_lieuUncheckedUpdateManyWithoutT_groupe2NestedInput = {
-    create?: XOR<t_lieuCreateWithoutT_groupe2Input, t_lieuUncheckedCreateWithoutT_groupe2Input> | t_lieuCreateWithoutT_groupe2Input[] | t_lieuUncheckedCreateWithoutT_groupe2Input[]
-    connectOrCreate?: t_lieuCreateOrConnectWithoutT_groupe2Input | t_lieuCreateOrConnectWithoutT_groupe2Input[]
-    upsert?: t_lieuUpsertWithWhereUniqueWithoutT_groupe2Input | t_lieuUpsertWithWhereUniqueWithoutT_groupe2Input[]
-    createMany?: t_lieuCreateManyT_groupe2InputEnvelope
-    set?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-    disconnect?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-    delete?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-    connect?: t_lieuWhereUniqueInput | t_lieuWhereUniqueInput[]
-    update?: t_lieuUpdateWithWhereUniqueWithoutT_groupe2Input | t_lieuUpdateWithWhereUniqueWithoutT_groupe2Input[]
-    updateMany?: t_lieuUpdateManyWithWhereWithoutT_groupe2Input | t_lieuUpdateManyWithWhereWithoutT_groupe2Input[]
-    deleteMany?: t_lieuScalarWhereInput | t_lieuScalarWhereInput[]
   }
 
   export type t_lieu_groupeUncheckedUpdateManyWithoutT_groupeNestedInput = {
@@ -74425,18 +71779,6 @@ export namespace Prisma {
     connect?: t_alarme_histoWhereUniqueInput | t_alarme_histoWhereUniqueInput[]
   }
 
-  export type t_groupeCreateNestedOneWithoutT_lieux_groupe1Input = {
-    create?: XOR<t_groupeCreateWithoutT_lieux_groupe1Input, t_groupeUncheckedCreateWithoutT_lieux_groupe1Input>
-    connectOrCreate?: t_groupeCreateOrConnectWithoutT_lieux_groupe1Input
-    connect?: t_groupeWhereUniqueInput
-  }
-
-  export type t_groupeCreateNestedOneWithoutT_lieux_groupe2Input = {
-    create?: XOR<t_groupeCreateWithoutT_lieux_groupe2Input, t_groupeUncheckedCreateWithoutT_lieux_groupe2Input>
-    connectOrCreate?: t_groupeCreateOrConnectWithoutT_lieux_groupe2Input
-    connect?: t_groupeWhereUniqueInput
-  }
-
   export type t_etat_surveillanceCreateNestedOneWithoutT_lieuInput = {
     create?: XOR<t_etat_surveillanceCreateWithoutT_lieuInput, t_etat_surveillanceUncheckedCreateWithoutT_lieuInput>
     connectOrCreate?: t_etat_surveillanceCreateOrConnectWithoutT_lieuInput
@@ -74553,26 +71895,6 @@ export namespace Prisma {
     update?: t_alarme_histoUpdateWithWhereUniqueWithoutT_lieuInput | t_alarme_histoUpdateWithWhereUniqueWithoutT_lieuInput[]
     updateMany?: t_alarme_histoUpdateManyWithWhereWithoutT_lieuInput | t_alarme_histoUpdateManyWithWhereWithoutT_lieuInput[]
     deleteMany?: t_alarme_histoScalarWhereInput | t_alarme_histoScalarWhereInput[]
-  }
-
-  export type t_groupeUpdateOneWithoutT_lieux_groupe1NestedInput = {
-    create?: XOR<t_groupeCreateWithoutT_lieux_groupe1Input, t_groupeUncheckedCreateWithoutT_lieux_groupe1Input>
-    connectOrCreate?: t_groupeCreateOrConnectWithoutT_lieux_groupe1Input
-    upsert?: t_groupeUpsertWithoutT_lieux_groupe1Input
-    disconnect?: t_groupeWhereInput | boolean
-    delete?: t_groupeWhereInput | boolean
-    connect?: t_groupeWhereUniqueInput
-    update?: XOR<XOR<t_groupeUpdateToOneWithWhereWithoutT_lieux_groupe1Input, t_groupeUpdateWithoutT_lieux_groupe1Input>, t_groupeUncheckedUpdateWithoutT_lieux_groupe1Input>
-  }
-
-  export type t_groupeUpdateOneWithoutT_lieux_groupe2NestedInput = {
-    create?: XOR<t_groupeCreateWithoutT_lieux_groupe2Input, t_groupeUncheckedCreateWithoutT_lieux_groupe2Input>
-    connectOrCreate?: t_groupeCreateOrConnectWithoutT_lieux_groupe2Input
-    upsert?: t_groupeUpsertWithoutT_lieux_groupe2Input
-    disconnect?: t_groupeWhereInput | boolean
-    delete?: t_groupeWhereInput | boolean
-    connect?: t_groupeWhereUniqueInput
-    update?: XOR<XOR<t_groupeUpdateToOneWithWhereWithoutT_lieux_groupe2Input, t_groupeUpdateWithoutT_lieux_groupe2Input>, t_groupeUncheckedUpdateWithoutT_lieux_groupe2Input>
   }
 
   export type t_etat_surveillanceUpdateOneWithoutT_lieuNestedInput = {
@@ -76964,8 +74286,6 @@ export namespace Prisma {
     Est_Redeclenchement_Immediat?: boolean
     Nb_Mesures_Temporisation_Redeclenchement?: number | null
     t_alarme_histo?: t_alarme_histoCreateNestedManyWithoutT_lieuInput
-    t_groupe1?: t_groupeCreateNestedOneWithoutT_lieux_groupe1Input
-    t_groupe2?: t_groupeCreateNestedOneWithoutT_lieux_groupe2Input
     t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_lieuInput
     t_pdf?: t_pdfCreateNestedOneWithoutT_lieuInput
     t_plan?: t_planCreateNestedOneWithoutT_lieuInput
@@ -76978,8 +74298,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedCreateWithoutT_alarmeInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -77196,8 +74514,6 @@ export namespace Prisma {
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
     t_alarme_histo?: t_alarme_histoUpdateManyWithoutT_lieuNestedInput
-    t_groupe1?: t_groupeUpdateOneWithoutT_lieux_groupe1NestedInput
-    t_groupe2?: t_groupeUpdateOneWithoutT_lieux_groupe2NestedInput
     t_etat_surveillance?: t_etat_surveillanceUpdateOneWithoutT_lieuNestedInput
     t_pdf?: t_pdfUpdateOneWithoutT_lieuNestedInput
     t_plan?: t_planUpdateOneWithoutT_lieuNestedInput
@@ -77210,8 +74526,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateWithoutT_alarmeInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
@@ -77410,8 +74724,6 @@ export namespace Prisma {
     Est_Redeclenchement_Immediat?: boolean
     Nb_Mesures_Temporisation_Redeclenchement?: number | null
     t_alarme?: t_alarmeCreateNestedManyWithoutT_lieuInput
-    t_groupe1?: t_groupeCreateNestedOneWithoutT_lieux_groupe1Input
-    t_groupe2?: t_groupeCreateNestedOneWithoutT_lieux_groupe2Input
     t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_lieuInput
     t_pdf?: t_pdfCreateNestedOneWithoutT_lieuInput
     t_plan?: t_planCreateNestedOneWithoutT_lieuInput
@@ -77424,8 +74736,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedCreateWithoutT_alarme_histoInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -77609,8 +74919,6 @@ export namespace Prisma {
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
     Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
     t_alarme?: t_alarmeUpdateManyWithoutT_lieuNestedInput
-    t_groupe1?: t_groupeUpdateOneWithoutT_lieux_groupe1NestedInput
-    t_groupe2?: t_groupeUpdateOneWithoutT_lieux_groupe2NestedInput
     t_etat_surveillance?: t_etat_surveillanceUpdateOneWithoutT_lieuNestedInput
     t_pdf?: t_pdfUpdateOneWithoutT_lieuNestedInput
     t_plan?: t_planUpdateOneWithoutT_lieuNestedInput
@@ -77623,8 +74931,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateWithoutT_alarme_histoInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
@@ -77774,392 +75080,6 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type t_lieuCreateWithoutT_groupe1Input = {
-    Nom_Lieu?: string | null
-    Adresse_Sonde?: string | null
-    Consigne?: number | null
-    Consigne_Base?: number | null
-    Observations_Info?: string | null
-    Consigne_Sup?: number | null
-    Consigne_Sup_Base?: number | null
-    Tolerance_Surveillance_Sup?: number | null
-    Tolerance_Surveillance_Sup_Base?: number | null
-    Est_Consigne_Sup_Active?: boolean | null
-    Consigne_Sup_Pre_Alarme?: number | null
-    Est_Consigne_Sup_Pre_Alarme_Active?: boolean | null
-    Consigne_Inf?: number | null
-    Consigne_Inf_Base?: number | null
-    Tolerance_Surveillance_Inf?: number | null
-    Tolerance_Surveillance_Inf_Base?: number | null
-    Est_Consigne_Inf_Active?: boolean | null
-    Consigne_Inf_Pre_Alarme?: number | null
-    Est_Consigne_Inf_Pre_Alarme_Active?: boolean | null
-    Frequence?: number | null
-    Retard_Alarme_Haut?: number | null
-    Retard_Alarme_Bas?: number | null
-    Position_Plan_X?: bigint | number | null
-    Position_Plan_Y?: bigint | number | null
-    Date_Creation?: Date | string | null
-    Est_Archive?: boolean | null
-    Est_Tel_Actif?: boolean | null
-    Tel_Code?: string | null
-    Tel_Son_Lieu?: string | null
-    Id_Actionneur?: number | null
-    Est_Mode_Serotheque?: boolean | null
-    Coef_Sensibilite?: number | null
-    Est_DataLogger?: boolean | null
-    EMT?: number | null
-    EMT_Choix_Mode?: number | null
-    EMT_Sonde?: number | null
-    Retard_Alarme_Changement_Consigne?: number | null
-    Derniere_Date_Heure?: Date | string | null
-    Derniere_Valeur?: number | null
-    Derniere_Unite?: string | null
-    Derniere_Nb_Decimal?: number | null
-    Est_Lieu_En_Alarme?: number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee?: number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee_T1?: number | null
-    Est_Lieu_En_Pre_Alarme?: number | null
-    Id_Alarme?: number | null
-    Lieu_Etat_N1?: string | null
-    Derniere_Date_Etalonnage?: Date | string | null
-    Derniere_Erreur_Justesse?: number | null
-    Derniere_Incertitude?: number | null
-    Retard_Non_Reponse?: number | null
-    Date_Heure_Derniere_Reponse?: Date | string | null
-    Date_Heure_Derniere_Reponse_Recue_OK?: Date | string | null
-    Est_Correction_Ej?: number | null
-    Derive?: number | null
-    Est_Correction_derive?: boolean | null
-    Derniere_Valeur_Null?: number | null
-    Type_Lieu?: string | null
-    Date_Heure_Dernier_Acquittement_En_Cours?: Date | string | null
-    Date_Heure_Last_Update_EVT_GSO?: Date | string | null
-    Date_Heure_Reactivation_Alarme?: Date | string | null
-    Notification_Active?: boolean
-    Commentaire?: string | null
-    Infos_Modifiees_Depuis_Derniere_Mesure?: boolean
-    Date_Heure_Reactivation_Surveillance?: Date | string | null
-    Date_Heure_Surveillance_On?: Date | string | null
-    Date_Heure_Surveillance_Off?: Date | string | null
-    Derniere_Val_Rssi?: string | null
-    Derniere_Val_Batterie?: number | null
-    Derniere_Val_Tension?: string | null
-    Est_Lieu_GSO?: boolean | null
-    Est_Son_Alarme_Active?: boolean
-    Planning_Actif?: boolean
-    Planning_Source_Regle_Id?: number | null
-    Planning_Derniere_Maj?: Date | string | null
-    Est_Redeclenchement_Immediat?: boolean
-    Nb_Mesures_Temporisation_Redeclenchement?: number | null
-    t_alarme?: t_alarmeCreateNestedManyWithoutT_lieuInput
-    t_alarme_histo?: t_alarme_histoCreateNestedManyWithoutT_lieuInput
-    t_groupe2?: t_groupeCreateNestedOneWithoutT_lieux_groupe2Input
-    t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_lieuInput
-    t_pdf?: t_pdfCreateNestedOneWithoutT_lieuInput
-    t_plan?: t_planCreateNestedOneWithoutT_lieuInput
-    t_site?: t_siteCreateNestedOneWithoutT_lieuInput
-    t_sonde?: t_sondeCreateNestedOneWithoutT_lieuInput
-    t_lieu_groupe?: t_lieu_groupeCreateNestedManyWithoutT_lieuInput
-    t_lieu_mail_tel?: t_lieu_mail_telCreateNestedManyWithoutT_lieuInput
-    t_lieu_planning_regle?: t_lieu_planning_regleCreateNestedManyWithoutT_lieuInput
-  }
-
-  export type t_lieuUncheckedCreateWithoutT_groupe1Input = {
-    Id_Lieu?: number
-    Id_Groupe2?: number | null
-    Id_Site?: number | null
-    Nom_Lieu?: string | null
-    Sonde_Numero_Serie?: string | null
-    Adresse_Sonde?: string | null
-    Consigne?: number | null
-    Consigne_Base?: number | null
-    Observations_Info?: string | null
-    Consigne_Sup?: number | null
-    Consigne_Sup_Base?: number | null
-    Tolerance_Surveillance_Sup?: number | null
-    Tolerance_Surveillance_Sup_Base?: number | null
-    Est_Consigne_Sup_Active?: boolean | null
-    Consigne_Sup_Pre_Alarme?: number | null
-    Est_Consigne_Sup_Pre_Alarme_Active?: boolean | null
-    Consigne_Inf?: number | null
-    Consigne_Inf_Base?: number | null
-    Tolerance_Surveillance_Inf?: number | null
-    Tolerance_Surveillance_Inf_Base?: number | null
-    Est_Consigne_Inf_Active?: boolean | null
-    Consigne_Inf_Pre_Alarme?: number | null
-    Est_Consigne_Inf_Pre_Alarme_Active?: boolean | null
-    Frequence?: number | null
-    Lieu_Etat?: string | null
-    Retard_Alarme_Haut?: number | null
-    Retard_Alarme_Bas?: number | null
-    Id_Plan?: number | null
-    Position_Plan_X?: bigint | number | null
-    Position_Plan_Y?: bigint | number | null
-    Date_Creation?: Date | string | null
-    Est_Archive?: boolean | null
-    Est_Tel_Actif?: boolean | null
-    Tel_Code?: string | null
-    Tel_Son_Lieu?: string | null
-    Id_Actionneur?: number | null
-    Est_Mode_Serotheque?: boolean | null
-    Coef_Sensibilite?: number | null
-    Id_PDF?: number | null
-    Est_DataLogger?: boolean | null
-    EMT?: number | null
-    EMT_Choix_Mode?: number | null
-    EMT_Sonde?: number | null
-    Retard_Alarme_Changement_Consigne?: number | null
-    Derniere_Date_Heure?: Date | string | null
-    Derniere_Valeur?: number | null
-    Derniere_Unite?: string | null
-    Derniere_Nb_Decimal?: number | null
-    Est_Lieu_En_Alarme?: number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee?: number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee_T1?: number | null
-    Est_Lieu_En_Pre_Alarme?: number | null
-    Id_Alarme?: number | null
-    Lieu_Etat_N1?: string | null
-    Derniere_Date_Etalonnage?: Date | string | null
-    Derniere_Erreur_Justesse?: number | null
-    Derniere_Incertitude?: number | null
-    Retard_Non_Reponse?: number | null
-    Date_Heure_Derniere_Reponse?: Date | string | null
-    Date_Heure_Derniere_Reponse_Recue_OK?: Date | string | null
-    Est_Correction_Ej?: number | null
-    Derive?: number | null
-    Est_Correction_derive?: boolean | null
-    Derniere_Valeur_Null?: number | null
-    Type_Lieu?: string | null
-    Date_Heure_Dernier_Acquittement_En_Cours?: Date | string | null
-    Date_Heure_Last_Update_EVT_GSO?: Date | string | null
-    Date_Heure_Reactivation_Alarme?: Date | string | null
-    Notification_Active?: boolean
-    Commentaire?: string | null
-    Infos_Modifiees_Depuis_Derniere_Mesure?: boolean
-    Date_Heure_Reactivation_Surveillance?: Date | string | null
-    Date_Heure_Surveillance_On?: Date | string | null
-    Date_Heure_Surveillance_Off?: Date | string | null
-    Derniere_Val_Rssi?: string | null
-    Derniere_Val_Batterie?: number | null
-    Derniere_Val_Tension?: string | null
-    Est_Lieu_GSO?: boolean | null
-    Est_Son_Alarme_Active?: boolean
-    Planning_Actif?: boolean
-    Planning_Source_Regle_Id?: number | null
-    Planning_Derniere_Maj?: Date | string | null
-    Est_Redeclenchement_Immediat?: boolean
-    Nb_Mesures_Temporisation_Redeclenchement?: number | null
-    t_alarme?: t_alarmeUncheckedCreateNestedManyWithoutT_lieuInput
-    t_alarme_histo?: t_alarme_histoUncheckedCreateNestedManyWithoutT_lieuInput
-    t_lieu_groupe?: t_lieu_groupeUncheckedCreateNestedManyWithoutT_lieuInput
-    t_lieu_mail_tel?: t_lieu_mail_telUncheckedCreateNestedManyWithoutT_lieuInput
-    t_lieu_planning_regle?: t_lieu_planning_regleUncheckedCreateNestedManyWithoutT_lieuInput
-  }
-
-  export type t_lieuCreateOrConnectWithoutT_groupe1Input = {
-    where: t_lieuWhereUniqueInput
-    create: XOR<t_lieuCreateWithoutT_groupe1Input, t_lieuUncheckedCreateWithoutT_groupe1Input>
-  }
-
-  export type t_lieuCreateManyT_groupe1InputEnvelope = {
-    data: t_lieuCreateManyT_groupe1Input | t_lieuCreateManyT_groupe1Input[]
-    skipDuplicates?: boolean
-  }
-
-  export type t_lieuCreateWithoutT_groupe2Input = {
-    Nom_Lieu?: string | null
-    Adresse_Sonde?: string | null
-    Consigne?: number | null
-    Consigne_Base?: number | null
-    Observations_Info?: string | null
-    Consigne_Sup?: number | null
-    Consigne_Sup_Base?: number | null
-    Tolerance_Surveillance_Sup?: number | null
-    Tolerance_Surveillance_Sup_Base?: number | null
-    Est_Consigne_Sup_Active?: boolean | null
-    Consigne_Sup_Pre_Alarme?: number | null
-    Est_Consigne_Sup_Pre_Alarme_Active?: boolean | null
-    Consigne_Inf?: number | null
-    Consigne_Inf_Base?: number | null
-    Tolerance_Surveillance_Inf?: number | null
-    Tolerance_Surveillance_Inf_Base?: number | null
-    Est_Consigne_Inf_Active?: boolean | null
-    Consigne_Inf_Pre_Alarme?: number | null
-    Est_Consigne_Inf_Pre_Alarme_Active?: boolean | null
-    Frequence?: number | null
-    Retard_Alarme_Haut?: number | null
-    Retard_Alarme_Bas?: number | null
-    Position_Plan_X?: bigint | number | null
-    Position_Plan_Y?: bigint | number | null
-    Date_Creation?: Date | string | null
-    Est_Archive?: boolean | null
-    Est_Tel_Actif?: boolean | null
-    Tel_Code?: string | null
-    Tel_Son_Lieu?: string | null
-    Id_Actionneur?: number | null
-    Est_Mode_Serotheque?: boolean | null
-    Coef_Sensibilite?: number | null
-    Est_DataLogger?: boolean | null
-    EMT?: number | null
-    EMT_Choix_Mode?: number | null
-    EMT_Sonde?: number | null
-    Retard_Alarme_Changement_Consigne?: number | null
-    Derniere_Date_Heure?: Date | string | null
-    Derniere_Valeur?: number | null
-    Derniere_Unite?: string | null
-    Derniere_Nb_Decimal?: number | null
-    Est_Lieu_En_Alarme?: number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee?: number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee_T1?: number | null
-    Est_Lieu_En_Pre_Alarme?: number | null
-    Id_Alarme?: number | null
-    Lieu_Etat_N1?: string | null
-    Derniere_Date_Etalonnage?: Date | string | null
-    Derniere_Erreur_Justesse?: number | null
-    Derniere_Incertitude?: number | null
-    Retard_Non_Reponse?: number | null
-    Date_Heure_Derniere_Reponse?: Date | string | null
-    Date_Heure_Derniere_Reponse_Recue_OK?: Date | string | null
-    Est_Correction_Ej?: number | null
-    Derive?: number | null
-    Est_Correction_derive?: boolean | null
-    Derniere_Valeur_Null?: number | null
-    Type_Lieu?: string | null
-    Date_Heure_Dernier_Acquittement_En_Cours?: Date | string | null
-    Date_Heure_Last_Update_EVT_GSO?: Date | string | null
-    Date_Heure_Reactivation_Alarme?: Date | string | null
-    Notification_Active?: boolean
-    Commentaire?: string | null
-    Infos_Modifiees_Depuis_Derniere_Mesure?: boolean
-    Date_Heure_Reactivation_Surveillance?: Date | string | null
-    Date_Heure_Surveillance_On?: Date | string | null
-    Date_Heure_Surveillance_Off?: Date | string | null
-    Derniere_Val_Rssi?: string | null
-    Derniere_Val_Batterie?: number | null
-    Derniere_Val_Tension?: string | null
-    Est_Lieu_GSO?: boolean | null
-    Est_Son_Alarme_Active?: boolean
-    Planning_Actif?: boolean
-    Planning_Source_Regle_Id?: number | null
-    Planning_Derniere_Maj?: Date | string | null
-    Est_Redeclenchement_Immediat?: boolean
-    Nb_Mesures_Temporisation_Redeclenchement?: number | null
-    t_alarme?: t_alarmeCreateNestedManyWithoutT_lieuInput
-    t_alarme_histo?: t_alarme_histoCreateNestedManyWithoutT_lieuInput
-    t_groupe1?: t_groupeCreateNestedOneWithoutT_lieux_groupe1Input
-    t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_lieuInput
-    t_pdf?: t_pdfCreateNestedOneWithoutT_lieuInput
-    t_plan?: t_planCreateNestedOneWithoutT_lieuInput
-    t_site?: t_siteCreateNestedOneWithoutT_lieuInput
-    t_sonde?: t_sondeCreateNestedOneWithoutT_lieuInput
-    t_lieu_groupe?: t_lieu_groupeCreateNestedManyWithoutT_lieuInput
-    t_lieu_mail_tel?: t_lieu_mail_telCreateNestedManyWithoutT_lieuInput
-    t_lieu_planning_regle?: t_lieu_planning_regleCreateNestedManyWithoutT_lieuInput
-  }
-
-  export type t_lieuUncheckedCreateWithoutT_groupe2Input = {
-    Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Site?: number | null
-    Nom_Lieu?: string | null
-    Sonde_Numero_Serie?: string | null
-    Adresse_Sonde?: string | null
-    Consigne?: number | null
-    Consigne_Base?: number | null
-    Observations_Info?: string | null
-    Consigne_Sup?: number | null
-    Consigne_Sup_Base?: number | null
-    Tolerance_Surveillance_Sup?: number | null
-    Tolerance_Surveillance_Sup_Base?: number | null
-    Est_Consigne_Sup_Active?: boolean | null
-    Consigne_Sup_Pre_Alarme?: number | null
-    Est_Consigne_Sup_Pre_Alarme_Active?: boolean | null
-    Consigne_Inf?: number | null
-    Consigne_Inf_Base?: number | null
-    Tolerance_Surveillance_Inf?: number | null
-    Tolerance_Surveillance_Inf_Base?: number | null
-    Est_Consigne_Inf_Active?: boolean | null
-    Consigne_Inf_Pre_Alarme?: number | null
-    Est_Consigne_Inf_Pre_Alarme_Active?: boolean | null
-    Frequence?: number | null
-    Lieu_Etat?: string | null
-    Retard_Alarme_Haut?: number | null
-    Retard_Alarme_Bas?: number | null
-    Id_Plan?: number | null
-    Position_Plan_X?: bigint | number | null
-    Position_Plan_Y?: bigint | number | null
-    Date_Creation?: Date | string | null
-    Est_Archive?: boolean | null
-    Est_Tel_Actif?: boolean | null
-    Tel_Code?: string | null
-    Tel_Son_Lieu?: string | null
-    Id_Actionneur?: number | null
-    Est_Mode_Serotheque?: boolean | null
-    Coef_Sensibilite?: number | null
-    Id_PDF?: number | null
-    Est_DataLogger?: boolean | null
-    EMT?: number | null
-    EMT_Choix_Mode?: number | null
-    EMT_Sonde?: number | null
-    Retard_Alarme_Changement_Consigne?: number | null
-    Derniere_Date_Heure?: Date | string | null
-    Derniere_Valeur?: number | null
-    Derniere_Unite?: string | null
-    Derniere_Nb_Decimal?: number | null
-    Est_Lieu_En_Alarme?: number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee?: number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee_T1?: number | null
-    Est_Lieu_En_Pre_Alarme?: number | null
-    Id_Alarme?: number | null
-    Lieu_Etat_N1?: string | null
-    Derniere_Date_Etalonnage?: Date | string | null
-    Derniere_Erreur_Justesse?: number | null
-    Derniere_Incertitude?: number | null
-    Retard_Non_Reponse?: number | null
-    Date_Heure_Derniere_Reponse?: Date | string | null
-    Date_Heure_Derniere_Reponse_Recue_OK?: Date | string | null
-    Est_Correction_Ej?: number | null
-    Derive?: number | null
-    Est_Correction_derive?: boolean | null
-    Derniere_Valeur_Null?: number | null
-    Type_Lieu?: string | null
-    Date_Heure_Dernier_Acquittement_En_Cours?: Date | string | null
-    Date_Heure_Last_Update_EVT_GSO?: Date | string | null
-    Date_Heure_Reactivation_Alarme?: Date | string | null
-    Notification_Active?: boolean
-    Commentaire?: string | null
-    Infos_Modifiees_Depuis_Derniere_Mesure?: boolean
-    Date_Heure_Reactivation_Surveillance?: Date | string | null
-    Date_Heure_Surveillance_On?: Date | string | null
-    Date_Heure_Surveillance_Off?: Date | string | null
-    Derniere_Val_Rssi?: string | null
-    Derniere_Val_Batterie?: number | null
-    Derniere_Val_Tension?: string | null
-    Est_Lieu_GSO?: boolean | null
-    Est_Son_Alarme_Active?: boolean
-    Planning_Actif?: boolean
-    Planning_Source_Regle_Id?: number | null
-    Planning_Derniere_Maj?: Date | string | null
-    Est_Redeclenchement_Immediat?: boolean
-    Nb_Mesures_Temporisation_Redeclenchement?: number | null
-    t_alarme?: t_alarmeUncheckedCreateNestedManyWithoutT_lieuInput
-    t_alarme_histo?: t_alarme_histoUncheckedCreateNestedManyWithoutT_lieuInput
-    t_lieu_groupe?: t_lieu_groupeUncheckedCreateNestedManyWithoutT_lieuInput
-    t_lieu_mail_tel?: t_lieu_mail_telUncheckedCreateNestedManyWithoutT_lieuInput
-    t_lieu_planning_regle?: t_lieu_planning_regleUncheckedCreateNestedManyWithoutT_lieuInput
-  }
-
-  export type t_lieuCreateOrConnectWithoutT_groupe2Input = {
-    where: t_lieuWhereUniqueInput
-    create: XOR<t_lieuCreateWithoutT_groupe2Input, t_lieuUncheckedCreateWithoutT_groupe2Input>
-  }
-
-  export type t_lieuCreateManyT_groupe2InputEnvelope = {
-    data: t_lieuCreateManyT_groupe2Input | t_lieuCreateManyT_groupe2Input[]
-    skipDuplicates?: boolean
-  }
-
   export type t_lieu_groupeCreateWithoutT_groupeInput = {
     t_lieu: t_lieuCreateNestedOneWithoutT_lieu_groupeInput
   }
@@ -78201,129 +75121,6 @@ export namespace Prisma {
     Id_Liaison_u_g?: IntFilter<"t_liaison_utilisateur_groupe"> | number
     Id_Utilisateur?: IntFilter<"t_liaison_utilisateur_groupe"> | number
     Id_Groupe?: IntNullableFilter<"t_liaison_utilisateur_groupe"> | number | null
-  }
-
-  export type t_lieuUpsertWithWhereUniqueWithoutT_groupe1Input = {
-    where: t_lieuWhereUniqueInput
-    update: XOR<t_lieuUpdateWithoutT_groupe1Input, t_lieuUncheckedUpdateWithoutT_groupe1Input>
-    create: XOR<t_lieuCreateWithoutT_groupe1Input, t_lieuUncheckedCreateWithoutT_groupe1Input>
-  }
-
-  export type t_lieuUpdateWithWhereUniqueWithoutT_groupe1Input = {
-    where: t_lieuWhereUniqueInput
-    data: XOR<t_lieuUpdateWithoutT_groupe1Input, t_lieuUncheckedUpdateWithoutT_groupe1Input>
-  }
-
-  export type t_lieuUpdateManyWithWhereWithoutT_groupe1Input = {
-    where: t_lieuScalarWhereInput
-    data: XOR<t_lieuUpdateManyMutationInput, t_lieuUncheckedUpdateManyWithoutT_groupe1Input>
-  }
-
-  export type t_lieuScalarWhereInput = {
-    AND?: t_lieuScalarWhereInput | t_lieuScalarWhereInput[]
-    OR?: t_lieuScalarWhereInput[]
-    NOT?: t_lieuScalarWhereInput | t_lieuScalarWhereInput[]
-    Id_Lieu?: IntFilter<"t_lieu"> | number
-    Id_Groupe1?: IntNullableFilter<"t_lieu"> | number | null
-    Id_Groupe2?: IntNullableFilter<"t_lieu"> | number | null
-    Id_Site?: IntNullableFilter<"t_lieu"> | number | null
-    Nom_Lieu?: StringNullableFilter<"t_lieu"> | string | null
-    Sonde_Numero_Serie?: StringNullableFilter<"t_lieu"> | string | null
-    Adresse_Sonde?: StringNullableFilter<"t_lieu"> | string | null
-    Consigne?: FloatNullableFilter<"t_lieu"> | number | null
-    Consigne_Base?: FloatNullableFilter<"t_lieu"> | number | null
-    Observations_Info?: StringNullableFilter<"t_lieu"> | string | null
-    Consigne_Sup?: FloatNullableFilter<"t_lieu"> | number | null
-    Consigne_Sup_Base?: FloatNullableFilter<"t_lieu"> | number | null
-    Tolerance_Surveillance_Sup?: FloatNullableFilter<"t_lieu"> | number | null
-    Tolerance_Surveillance_Sup_Base?: FloatNullableFilter<"t_lieu"> | number | null
-    Est_Consigne_Sup_Active?: BoolNullableFilter<"t_lieu"> | boolean | null
-    Consigne_Sup_Pre_Alarme?: FloatNullableFilter<"t_lieu"> | number | null
-    Est_Consigne_Sup_Pre_Alarme_Active?: BoolNullableFilter<"t_lieu"> | boolean | null
-    Consigne_Inf?: FloatNullableFilter<"t_lieu"> | number | null
-    Consigne_Inf_Base?: FloatNullableFilter<"t_lieu"> | number | null
-    Tolerance_Surveillance_Inf?: FloatNullableFilter<"t_lieu"> | number | null
-    Tolerance_Surveillance_Inf_Base?: FloatNullableFilter<"t_lieu"> | number | null
-    Est_Consigne_Inf_Active?: BoolNullableFilter<"t_lieu"> | boolean | null
-    Consigne_Inf_Pre_Alarme?: FloatNullableFilter<"t_lieu"> | number | null
-    Est_Consigne_Inf_Pre_Alarme_Active?: BoolNullableFilter<"t_lieu"> | boolean | null
-    Frequence?: IntNullableFilter<"t_lieu"> | number | null
-    Lieu_Etat?: StringNullableFilter<"t_lieu"> | string | null
-    Retard_Alarme_Haut?: IntNullableFilter<"t_lieu"> | number | null
-    Retard_Alarme_Bas?: IntNullableFilter<"t_lieu"> | number | null
-    Id_Plan?: IntNullableFilter<"t_lieu"> | number | null
-    Position_Plan_X?: BigIntNullableFilter<"t_lieu"> | bigint | number | null
-    Position_Plan_Y?: BigIntNullableFilter<"t_lieu"> | bigint | number | null
-    Date_Creation?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
-    Est_Archive?: BoolNullableFilter<"t_lieu"> | boolean | null
-    Est_Tel_Actif?: BoolNullableFilter<"t_lieu"> | boolean | null
-    Tel_Code?: StringNullableFilter<"t_lieu"> | string | null
-    Tel_Son_Lieu?: StringNullableFilter<"t_lieu"> | string | null
-    Id_Actionneur?: IntNullableFilter<"t_lieu"> | number | null
-    Est_Mode_Serotheque?: BoolNullableFilter<"t_lieu"> | boolean | null
-    Coef_Sensibilite?: IntNullableFilter<"t_lieu"> | number | null
-    Id_PDF?: IntNullableFilter<"t_lieu"> | number | null
-    Est_DataLogger?: BoolNullableFilter<"t_lieu"> | boolean | null
-    EMT?: FloatNullableFilter<"t_lieu"> | number | null
-    EMT_Choix_Mode?: IntNullableFilter<"t_lieu"> | number | null
-    EMT_Sonde?: FloatNullableFilter<"t_lieu"> | number | null
-    Retard_Alarme_Changement_Consigne?: IntNullableFilter<"t_lieu"> | number | null
-    Derniere_Date_Heure?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
-    Derniere_Valeur?: FloatNullableFilter<"t_lieu"> | number | null
-    Derniere_Unite?: StringNullableFilter<"t_lieu"> | string | null
-    Derniere_Nb_Decimal?: IntNullableFilter<"t_lieu"> | number | null
-    Est_Lieu_En_Alarme?: IntNullableFilter<"t_lieu"> | number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee?: IntNullableFilter<"t_lieu"> | number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee_T1?: IntNullableFilter<"t_lieu"> | number | null
-    Est_Lieu_En_Pre_Alarme?: IntNullableFilter<"t_lieu"> | number | null
-    Id_Alarme?: IntNullableFilter<"t_lieu"> | number | null
-    Lieu_Etat_N1?: StringNullableFilter<"t_lieu"> | string | null
-    Derniere_Date_Etalonnage?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
-    Derniere_Erreur_Justesse?: FloatNullableFilter<"t_lieu"> | number | null
-    Derniere_Incertitude?: FloatNullableFilter<"t_lieu"> | number | null
-    Retard_Non_Reponse?: IntNullableFilter<"t_lieu"> | number | null
-    Date_Heure_Derniere_Reponse?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
-    Date_Heure_Derniere_Reponse_Recue_OK?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
-    Est_Correction_Ej?: IntNullableFilter<"t_lieu"> | number | null
-    Derive?: FloatNullableFilter<"t_lieu"> | number | null
-    Est_Correction_derive?: BoolNullableFilter<"t_lieu"> | boolean | null
-    Derniere_Valeur_Null?: IntNullableFilter<"t_lieu"> | number | null
-    Type_Lieu?: StringNullableFilter<"t_lieu"> | string | null
-    Date_Heure_Dernier_Acquittement_En_Cours?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
-    Date_Heure_Last_Update_EVT_GSO?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
-    Date_Heure_Reactivation_Alarme?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
-    Notification_Active?: BoolFilter<"t_lieu"> | boolean
-    Commentaire?: StringNullableFilter<"t_lieu"> | string | null
-    Infos_Modifiees_Depuis_Derniere_Mesure?: BoolFilter<"t_lieu"> | boolean
-    Date_Heure_Reactivation_Surveillance?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
-    Date_Heure_Surveillance_On?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
-    Date_Heure_Surveillance_Off?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
-    Derniere_Val_Rssi?: StringNullableFilter<"t_lieu"> | string | null
-    Derniere_Val_Batterie?: IntNullableFilter<"t_lieu"> | number | null
-    Derniere_Val_Tension?: StringNullableFilter<"t_lieu"> | string | null
-    Est_Lieu_GSO?: BoolNullableFilter<"t_lieu"> | boolean | null
-    Est_Son_Alarme_Active?: BoolFilter<"t_lieu"> | boolean
-    Planning_Actif?: BoolFilter<"t_lieu"> | boolean
-    Planning_Source_Regle_Id?: IntNullableFilter<"t_lieu"> | number | null
-    Planning_Derniere_Maj?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
-    Est_Redeclenchement_Immediat?: BoolFilter<"t_lieu"> | boolean
-    Nb_Mesures_Temporisation_Redeclenchement?: IntNullableFilter<"t_lieu"> | number | null
-  }
-
-  export type t_lieuUpsertWithWhereUniqueWithoutT_groupe2Input = {
-    where: t_lieuWhereUniqueInput
-    update: XOR<t_lieuUpdateWithoutT_groupe2Input, t_lieuUncheckedUpdateWithoutT_groupe2Input>
-    create: XOR<t_lieuCreateWithoutT_groupe2Input, t_lieuUncheckedCreateWithoutT_groupe2Input>
-  }
-
-  export type t_lieuUpdateWithWhereUniqueWithoutT_groupe2Input = {
-    where: t_lieuWhereUniqueInput
-    data: XOR<t_lieuUpdateWithoutT_groupe2Input, t_lieuUncheckedUpdateWithoutT_groupe2Input>
-  }
-
-  export type t_lieuUpdateManyWithWhereWithoutT_groupe2Input = {
-    where: t_lieuScalarWhereInput
-    data: XOR<t_lieuUpdateManyMutationInput, t_lieuUncheckedUpdateManyWithoutT_groupe2Input>
   }
 
   export type t_lieu_groupeUpsertWithWhereUniqueWithoutT_groupeInput = {
@@ -78438,8 +75235,6 @@ export namespace Prisma {
     Nom_Groupe?: string | null
     Numero_Regroupement?: string | null
     Est_Archive?: boolean | null
-    t_lieux_groupe1?: t_lieuCreateNestedManyWithoutT_groupe1Input
-    t_lieux_groupe2?: t_lieuCreateNestedManyWithoutT_groupe2Input
     t_lieu_groupe?: t_lieu_groupeCreateNestedManyWithoutT_groupeInput
   }
 
@@ -78448,8 +75243,6 @@ export namespace Prisma {
     Nom_Groupe?: string | null
     Numero_Regroupement?: string | null
     Est_Archive?: boolean | null
-    t_lieux_groupe1?: t_lieuUncheckedCreateNestedManyWithoutT_groupe1Input
-    t_lieux_groupe2?: t_lieuUncheckedCreateNestedManyWithoutT_groupe2Input
     t_lieu_groupe?: t_lieu_groupeUncheckedCreateNestedManyWithoutT_groupeInput
   }
 
@@ -78543,8 +75336,6 @@ export namespace Prisma {
     Nom_Groupe?: NullableStringFieldUpdateOperationsInput | string | null
     Numero_Regroupement?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    t_lieux_groupe1?: t_lieuUpdateManyWithoutT_groupe1NestedInput
-    t_lieux_groupe2?: t_lieuUpdateManyWithoutT_groupe2NestedInput
     t_lieu_groupe?: t_lieu_groupeUpdateManyWithoutT_groupeNestedInput
   }
 
@@ -78553,8 +75344,6 @@ export namespace Prisma {
     Nom_Groupe?: NullableStringFieldUpdateOperationsInput | string | null
     Numero_Regroupement?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    t_lieux_groupe1?: t_lieuUncheckedUpdateManyWithoutT_groupe1NestedInput
-    t_lieux_groupe2?: t_lieuUncheckedUpdateManyWithoutT_groupe2NestedInput
     t_lieu_groupe?: t_lieu_groupeUncheckedUpdateManyWithoutT_groupeNestedInput
   }
 
@@ -78843,8 +75632,6 @@ export namespace Prisma {
     Numero_Regroupement?: string | null
     Est_Archive?: boolean | null
     t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeCreateNestedManyWithoutT_groupeInput
-    t_lieux_groupe1?: t_lieuCreateNestedManyWithoutT_groupe1Input
-    t_lieux_groupe2?: t_lieuCreateNestedManyWithoutT_groupe2Input
   }
 
   export type t_groupeUncheckedCreateWithoutT_lieu_groupeInput = {
@@ -78853,8 +75640,6 @@ export namespace Prisma {
     Numero_Regroupement?: string | null
     Est_Archive?: boolean | null
     t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUncheckedCreateNestedManyWithoutT_groupeInput
-    t_lieux_groupe1?: t_lieuUncheckedCreateNestedManyWithoutT_groupe1Input
-    t_lieux_groupe2?: t_lieuUncheckedCreateNestedManyWithoutT_groupe2Input
   }
 
   export type t_groupeCreateOrConnectWithoutT_lieu_groupeInput = {
@@ -78942,8 +75727,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: number | null
     t_alarme?: t_alarmeCreateNestedManyWithoutT_lieuInput
     t_alarme_histo?: t_alarme_histoCreateNestedManyWithoutT_lieuInput
-    t_groupe1?: t_groupeCreateNestedOneWithoutT_lieux_groupe1Input
-    t_groupe2?: t_groupeCreateNestedOneWithoutT_lieux_groupe2Input
     t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_lieuInput
     t_pdf?: t_pdfCreateNestedOneWithoutT_lieuInput
     t_plan?: t_planCreateNestedOneWithoutT_lieuInput
@@ -78955,8 +75738,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedCreateWithoutT_lieu_groupeInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -79066,8 +75847,6 @@ export namespace Prisma {
     Numero_Regroupement?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
     t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUpdateManyWithoutT_groupeNestedInput
-    t_lieux_groupe1?: t_lieuUpdateManyWithoutT_groupe1NestedInput
-    t_lieux_groupe2?: t_lieuUpdateManyWithoutT_groupe2NestedInput
   }
 
   export type t_groupeUncheckedUpdateWithoutT_lieu_groupeInput = {
@@ -79076,8 +75855,6 @@ export namespace Prisma {
     Numero_Regroupement?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
     t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUncheckedUpdateManyWithoutT_groupeNestedInput
-    t_lieux_groupe1?: t_lieuUncheckedUpdateManyWithoutT_groupe1NestedInput
-    t_lieux_groupe2?: t_lieuUncheckedUpdateManyWithoutT_groupe2NestedInput
   }
 
   export type t_lieuUpsertWithoutT_lieu_groupeInput = {
@@ -79171,8 +75948,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
     t_alarme?: t_alarmeUpdateManyWithoutT_lieuNestedInput
     t_alarme_histo?: t_alarme_histoUpdateManyWithoutT_lieuNestedInput
-    t_groupe1?: t_groupeUpdateOneWithoutT_lieux_groupe1NestedInput
-    t_groupe2?: t_groupeUpdateOneWithoutT_lieux_groupe2NestedInput
     t_etat_surveillance?: t_etat_surveillanceUpdateOneWithoutT_lieuNestedInput
     t_pdf?: t_pdfUpdateOneWithoutT_lieuNestedInput
     t_plan?: t_planUpdateOneWithoutT_lieuNestedInput
@@ -79184,8 +75959,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateWithoutT_lieu_groupeInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
@@ -79364,54 +76137,6 @@ export namespace Prisma {
   export type t_alarme_histoCreateManyT_lieuInputEnvelope = {
     data: t_alarme_histoCreateManyT_lieuInput | t_alarme_histoCreateManyT_lieuInput[]
     skipDuplicates?: boolean
-  }
-
-  export type t_groupeCreateWithoutT_lieux_groupe1Input = {
-    Nom_Groupe?: string | null
-    Numero_Regroupement?: string | null
-    Est_Archive?: boolean | null
-    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeCreateNestedManyWithoutT_groupeInput
-    t_lieux_groupe2?: t_lieuCreateNestedManyWithoutT_groupe2Input
-    t_lieu_groupe?: t_lieu_groupeCreateNestedManyWithoutT_groupeInput
-  }
-
-  export type t_groupeUncheckedCreateWithoutT_lieux_groupe1Input = {
-    Id_Groupe?: number
-    Nom_Groupe?: string | null
-    Numero_Regroupement?: string | null
-    Est_Archive?: boolean | null
-    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUncheckedCreateNestedManyWithoutT_groupeInput
-    t_lieux_groupe2?: t_lieuUncheckedCreateNestedManyWithoutT_groupe2Input
-    t_lieu_groupe?: t_lieu_groupeUncheckedCreateNestedManyWithoutT_groupeInput
-  }
-
-  export type t_groupeCreateOrConnectWithoutT_lieux_groupe1Input = {
-    where: t_groupeWhereUniqueInput
-    create: XOR<t_groupeCreateWithoutT_lieux_groupe1Input, t_groupeUncheckedCreateWithoutT_lieux_groupe1Input>
-  }
-
-  export type t_groupeCreateWithoutT_lieux_groupe2Input = {
-    Nom_Groupe?: string | null
-    Numero_Regroupement?: string | null
-    Est_Archive?: boolean | null
-    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeCreateNestedManyWithoutT_groupeInput
-    t_lieux_groupe1?: t_lieuCreateNestedManyWithoutT_groupe1Input
-    t_lieu_groupe?: t_lieu_groupeCreateNestedManyWithoutT_groupeInput
-  }
-
-  export type t_groupeUncheckedCreateWithoutT_lieux_groupe2Input = {
-    Id_Groupe?: number
-    Nom_Groupe?: string | null
-    Numero_Regroupement?: string | null
-    Est_Archive?: boolean | null
-    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUncheckedCreateNestedManyWithoutT_groupeInput
-    t_lieux_groupe1?: t_lieuUncheckedCreateNestedManyWithoutT_groupe1Input
-    t_lieu_groupe?: t_lieu_groupeUncheckedCreateNestedManyWithoutT_groupeInput
-  }
-
-  export type t_groupeCreateOrConnectWithoutT_lieux_groupe2Input = {
-    where: t_groupeWhereUniqueInput
-    create: XOR<t_groupeCreateWithoutT_lieux_groupe2Input, t_groupeUncheckedCreateWithoutT_lieux_groupe2Input>
   }
 
   export type t_etat_surveillanceCreateWithoutT_lieuInput = {
@@ -79704,66 +76429,6 @@ export namespace Prisma {
     Est_Mail_Envoye?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
     Est_Tel_Acquittee?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
     Date_Heure_Acquittement?: DateTimeNullableFilter<"t_alarme_histo"> | Date | string | null
-  }
-
-  export type t_groupeUpsertWithoutT_lieux_groupe1Input = {
-    update: XOR<t_groupeUpdateWithoutT_lieux_groupe1Input, t_groupeUncheckedUpdateWithoutT_lieux_groupe1Input>
-    create: XOR<t_groupeCreateWithoutT_lieux_groupe1Input, t_groupeUncheckedCreateWithoutT_lieux_groupe1Input>
-    where?: t_groupeWhereInput
-  }
-
-  export type t_groupeUpdateToOneWithWhereWithoutT_lieux_groupe1Input = {
-    where?: t_groupeWhereInput
-    data: XOR<t_groupeUpdateWithoutT_lieux_groupe1Input, t_groupeUncheckedUpdateWithoutT_lieux_groupe1Input>
-  }
-
-  export type t_groupeUpdateWithoutT_lieux_groupe1Input = {
-    Nom_Groupe?: NullableStringFieldUpdateOperationsInput | string | null
-    Numero_Regroupement?: NullableStringFieldUpdateOperationsInput | string | null
-    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUpdateManyWithoutT_groupeNestedInput
-    t_lieux_groupe2?: t_lieuUpdateManyWithoutT_groupe2NestedInput
-    t_lieu_groupe?: t_lieu_groupeUpdateManyWithoutT_groupeNestedInput
-  }
-
-  export type t_groupeUncheckedUpdateWithoutT_lieux_groupe1Input = {
-    Id_Groupe?: IntFieldUpdateOperationsInput | number
-    Nom_Groupe?: NullableStringFieldUpdateOperationsInput | string | null
-    Numero_Regroupement?: NullableStringFieldUpdateOperationsInput | string | null
-    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUncheckedUpdateManyWithoutT_groupeNestedInput
-    t_lieux_groupe2?: t_lieuUncheckedUpdateManyWithoutT_groupe2NestedInput
-    t_lieu_groupe?: t_lieu_groupeUncheckedUpdateManyWithoutT_groupeNestedInput
-  }
-
-  export type t_groupeUpsertWithoutT_lieux_groupe2Input = {
-    update: XOR<t_groupeUpdateWithoutT_lieux_groupe2Input, t_groupeUncheckedUpdateWithoutT_lieux_groupe2Input>
-    create: XOR<t_groupeCreateWithoutT_lieux_groupe2Input, t_groupeUncheckedCreateWithoutT_lieux_groupe2Input>
-    where?: t_groupeWhereInput
-  }
-
-  export type t_groupeUpdateToOneWithWhereWithoutT_lieux_groupe2Input = {
-    where?: t_groupeWhereInput
-    data: XOR<t_groupeUpdateWithoutT_lieux_groupe2Input, t_groupeUncheckedUpdateWithoutT_lieux_groupe2Input>
-  }
-
-  export type t_groupeUpdateWithoutT_lieux_groupe2Input = {
-    Nom_Groupe?: NullableStringFieldUpdateOperationsInput | string | null
-    Numero_Regroupement?: NullableStringFieldUpdateOperationsInput | string | null
-    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUpdateManyWithoutT_groupeNestedInput
-    t_lieux_groupe1?: t_lieuUpdateManyWithoutT_groupe1NestedInput
-    t_lieu_groupe?: t_lieu_groupeUpdateManyWithoutT_groupeNestedInput
-  }
-
-  export type t_groupeUncheckedUpdateWithoutT_lieux_groupe2Input = {
-    Id_Groupe?: IntFieldUpdateOperationsInput | number
-    Nom_Groupe?: NullableStringFieldUpdateOperationsInput | string | null
-    Numero_Regroupement?: NullableStringFieldUpdateOperationsInput | string | null
-    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUncheckedUpdateManyWithoutT_groupeNestedInput
-    t_lieux_groupe1?: t_lieuUncheckedUpdateManyWithoutT_groupe1NestedInput
-    t_lieu_groupe?: t_lieu_groupeUncheckedUpdateManyWithoutT_groupeNestedInput
   }
 
   export type t_etat_surveillanceUpsertWithoutT_lieuInput = {
@@ -80125,8 +76790,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: number | null
     t_alarme?: t_alarmeCreateNestedManyWithoutT_lieuInput
     t_alarme_histo?: t_alarme_histoCreateNestedManyWithoutT_lieuInput
-    t_groupe1?: t_groupeCreateNestedOneWithoutT_lieux_groupe1Input
-    t_groupe2?: t_groupeCreateNestedOneWithoutT_lieux_groupe2Input
     t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_lieuInput
     t_plan?: t_planCreateNestedOneWithoutT_lieuInput
     t_site?: t_siteCreateNestedOneWithoutT_lieuInput
@@ -80138,8 +76801,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedCreateWithoutT_pdfInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -80288,6 +76949,95 @@ export namespace Prisma {
     data: XOR<t_lieuUpdateManyMutationInput, t_lieuUncheckedUpdateManyWithoutT_pdfInput>
   }
 
+  export type t_lieuScalarWhereInput = {
+    AND?: t_lieuScalarWhereInput | t_lieuScalarWhereInput[]
+    OR?: t_lieuScalarWhereInput[]
+    NOT?: t_lieuScalarWhereInput | t_lieuScalarWhereInput[]
+    Id_Lieu?: IntFilter<"t_lieu"> | number
+    Id_Site?: IntNullableFilter<"t_lieu"> | number | null
+    Nom_Lieu?: StringNullableFilter<"t_lieu"> | string | null
+    Sonde_Numero_Serie?: StringNullableFilter<"t_lieu"> | string | null
+    Adresse_Sonde?: StringNullableFilter<"t_lieu"> | string | null
+    Consigne?: FloatNullableFilter<"t_lieu"> | number | null
+    Consigne_Base?: FloatNullableFilter<"t_lieu"> | number | null
+    Observations_Info?: StringNullableFilter<"t_lieu"> | string | null
+    Consigne_Sup?: FloatNullableFilter<"t_lieu"> | number | null
+    Consigne_Sup_Base?: FloatNullableFilter<"t_lieu"> | number | null
+    Tolerance_Surveillance_Sup?: FloatNullableFilter<"t_lieu"> | number | null
+    Tolerance_Surveillance_Sup_Base?: FloatNullableFilter<"t_lieu"> | number | null
+    Est_Consigne_Sup_Active?: BoolNullableFilter<"t_lieu"> | boolean | null
+    Consigne_Sup_Pre_Alarme?: FloatNullableFilter<"t_lieu"> | number | null
+    Est_Consigne_Sup_Pre_Alarme_Active?: BoolNullableFilter<"t_lieu"> | boolean | null
+    Consigne_Inf?: FloatNullableFilter<"t_lieu"> | number | null
+    Consigne_Inf_Base?: FloatNullableFilter<"t_lieu"> | number | null
+    Tolerance_Surveillance_Inf?: FloatNullableFilter<"t_lieu"> | number | null
+    Tolerance_Surveillance_Inf_Base?: FloatNullableFilter<"t_lieu"> | number | null
+    Est_Consigne_Inf_Active?: BoolNullableFilter<"t_lieu"> | boolean | null
+    Consigne_Inf_Pre_Alarme?: FloatNullableFilter<"t_lieu"> | number | null
+    Est_Consigne_Inf_Pre_Alarme_Active?: BoolNullableFilter<"t_lieu"> | boolean | null
+    Frequence?: IntNullableFilter<"t_lieu"> | number | null
+    Lieu_Etat?: StringNullableFilter<"t_lieu"> | string | null
+    Retard_Alarme_Haut?: IntNullableFilter<"t_lieu"> | number | null
+    Retard_Alarme_Bas?: IntNullableFilter<"t_lieu"> | number | null
+    Id_Plan?: IntNullableFilter<"t_lieu"> | number | null
+    Position_Plan_X?: BigIntNullableFilter<"t_lieu"> | bigint | number | null
+    Position_Plan_Y?: BigIntNullableFilter<"t_lieu"> | bigint | number | null
+    Date_Creation?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
+    Est_Archive?: BoolNullableFilter<"t_lieu"> | boolean | null
+    Est_Tel_Actif?: BoolNullableFilter<"t_lieu"> | boolean | null
+    Tel_Code?: StringNullableFilter<"t_lieu"> | string | null
+    Tel_Son_Lieu?: StringNullableFilter<"t_lieu"> | string | null
+    Id_Actionneur?: IntNullableFilter<"t_lieu"> | number | null
+    Est_Mode_Serotheque?: BoolNullableFilter<"t_lieu"> | boolean | null
+    Coef_Sensibilite?: IntNullableFilter<"t_lieu"> | number | null
+    Id_PDF?: IntNullableFilter<"t_lieu"> | number | null
+    Est_DataLogger?: BoolNullableFilter<"t_lieu"> | boolean | null
+    EMT?: FloatNullableFilter<"t_lieu"> | number | null
+    EMT_Choix_Mode?: IntNullableFilter<"t_lieu"> | number | null
+    EMT_Sonde?: FloatNullableFilter<"t_lieu"> | number | null
+    Retard_Alarme_Changement_Consigne?: IntNullableFilter<"t_lieu"> | number | null
+    Derniere_Date_Heure?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
+    Derniere_Valeur?: FloatNullableFilter<"t_lieu"> | number | null
+    Derniere_Unite?: StringNullableFilter<"t_lieu"> | string | null
+    Derniere_Nb_Decimal?: IntNullableFilter<"t_lieu"> | number | null
+    Est_Lieu_En_Alarme?: IntNullableFilter<"t_lieu"> | number | null
+    Est_Lieu_Alarme_Terminee_Non_Acquittee?: IntNullableFilter<"t_lieu"> | number | null
+    Est_Lieu_Alarme_Terminee_Non_Acquittee_T1?: IntNullableFilter<"t_lieu"> | number | null
+    Est_Lieu_En_Pre_Alarme?: IntNullableFilter<"t_lieu"> | number | null
+    Id_Alarme?: IntNullableFilter<"t_lieu"> | number | null
+    Lieu_Etat_N1?: StringNullableFilter<"t_lieu"> | string | null
+    Derniere_Date_Etalonnage?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
+    Derniere_Erreur_Justesse?: FloatNullableFilter<"t_lieu"> | number | null
+    Derniere_Incertitude?: FloatNullableFilter<"t_lieu"> | number | null
+    Retard_Non_Reponse?: IntNullableFilter<"t_lieu"> | number | null
+    Date_Heure_Derniere_Reponse?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
+    Date_Heure_Derniere_Reponse_Recue_OK?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
+    Est_Correction_Ej?: IntNullableFilter<"t_lieu"> | number | null
+    Derive?: FloatNullableFilter<"t_lieu"> | number | null
+    Est_Correction_derive?: BoolNullableFilter<"t_lieu"> | boolean | null
+    Derniere_Valeur_Null?: IntNullableFilter<"t_lieu"> | number | null
+    Type_Lieu?: StringNullableFilter<"t_lieu"> | string | null
+    Date_Heure_Dernier_Acquittement_En_Cours?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
+    Date_Heure_Last_Update_EVT_GSO?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
+    Date_Heure_Reactivation_Alarme?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
+    Notification_Active?: BoolFilter<"t_lieu"> | boolean
+    Commentaire?: StringNullableFilter<"t_lieu"> | string | null
+    Infos_Modifiees_Depuis_Derniere_Mesure?: BoolFilter<"t_lieu"> | boolean
+    Date_Heure_Reactivation_Surveillance?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
+    Date_Heure_Surveillance_On?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
+    Date_Heure_Surveillance_Off?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
+    Derniere_Val_Rssi?: StringNullableFilter<"t_lieu"> | string | null
+    Derniere_Val_Batterie?: IntNullableFilter<"t_lieu"> | number | null
+    Derniere_Val_Tension?: StringNullableFilter<"t_lieu"> | string | null
+    Est_Lieu_GSO?: BoolNullableFilter<"t_lieu"> | boolean | null
+    Est_Son_Alarme_Active?: BoolFilter<"t_lieu"> | boolean
+    Planning_Actif?: BoolFilter<"t_lieu"> | boolean
+    Planning_Source_Regle_Id?: IntNullableFilter<"t_lieu"> | number | null
+    Planning_Derniere_Maj?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
+    Est_Redeclenchement_Immediat?: BoolFilter<"t_lieu"> | boolean
+    Nb_Mesures_Temporisation_Redeclenchement?: IntNullableFilter<"t_lieu"> | number | null
+  }
+
   export type t_actionneurCreateWithoutT_planInput = {
     Num_Serie?: string | null
     Est_Etat?: boolean | null
@@ -80419,8 +77169,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: number | null
     t_alarme?: t_alarmeCreateNestedManyWithoutT_lieuInput
     t_alarme_histo?: t_alarme_histoCreateNestedManyWithoutT_lieuInput
-    t_groupe1?: t_groupeCreateNestedOneWithoutT_lieux_groupe1Input
-    t_groupe2?: t_groupeCreateNestedOneWithoutT_lieux_groupe2Input
     t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_lieuInput
     t_pdf?: t_pdfCreateNestedOneWithoutT_lieuInput
     t_site?: t_siteCreateNestedOneWithoutT_lieuInput
@@ -80432,8 +77180,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedCreateWithoutT_planInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -80797,8 +77543,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: number | null
     t_alarme?: t_alarmeCreateNestedManyWithoutT_lieuInput
     t_alarme_histo?: t_alarme_histoCreateNestedManyWithoutT_lieuInput
-    t_groupe1?: t_groupeCreateNestedOneWithoutT_lieux_groupe1Input
-    t_groupe2?: t_groupeCreateNestedOneWithoutT_lieux_groupe2Input
     t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_lieuInput
     t_pdf?: t_pdfCreateNestedOneWithoutT_lieuInput
     t_plan?: t_planCreateNestedOneWithoutT_lieuInput
@@ -80810,8 +77554,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedCreateWithoutT_siteInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
     Adresse_Sonde?: string | null
@@ -81291,8 +78033,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: number | null
     t_alarme?: t_alarmeCreateNestedManyWithoutT_lieuInput
     t_alarme_histo?: t_alarme_histoCreateNestedManyWithoutT_lieuInput
-    t_groupe1?: t_groupeCreateNestedOneWithoutT_lieux_groupe1Input
-    t_groupe2?: t_groupeCreateNestedOneWithoutT_lieux_groupe2Input
     t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_lieuInput
     t_pdf?: t_pdfCreateNestedOneWithoutT_lieuInput
     t_plan?: t_planCreateNestedOneWithoutT_lieuInput
@@ -81304,8 +78044,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedCreateWithoutT_sondeInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Adresse_Sonde?: string | null
@@ -81580,8 +78318,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: number | null
     t_alarme?: t_alarmeCreateNestedManyWithoutT_lieuInput
     t_alarme_histo?: t_alarme_histoCreateNestedManyWithoutT_lieuInput
-    t_groupe1?: t_groupeCreateNestedOneWithoutT_lieux_groupe1Input
-    t_groupe2?: t_groupeCreateNestedOneWithoutT_lieux_groupe2Input
     t_pdf?: t_pdfCreateNestedOneWithoutT_lieuInput
     t_plan?: t_planCreateNestedOneWithoutT_lieuInput
     t_site?: t_siteCreateNestedOneWithoutT_lieuInput
@@ -81593,8 +78329,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedCreateWithoutT_etat_surveillanceInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -83395,8 +80129,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: number | null
     t_alarme?: t_alarmeCreateNestedManyWithoutT_lieuInput
     t_alarme_histo?: t_alarme_histoCreateNestedManyWithoutT_lieuInput
-    t_groupe1?: t_groupeCreateNestedOneWithoutT_lieux_groupe1Input
-    t_groupe2?: t_groupeCreateNestedOneWithoutT_lieux_groupe2Input
     t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_lieuInput
     t_pdf?: t_pdfCreateNestedOneWithoutT_lieuInput
     t_plan?: t_planCreateNestedOneWithoutT_lieuInput
@@ -83408,8 +80140,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedCreateWithoutT_lieu_mail_telInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -83594,8 +80324,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
     t_alarme?: t_alarmeUpdateManyWithoutT_lieuNestedInput
     t_alarme_histo?: t_alarme_histoUpdateManyWithoutT_lieuNestedInput
-    t_groupe1?: t_groupeUpdateOneWithoutT_lieux_groupe1NestedInput
-    t_groupe2?: t_groupeUpdateOneWithoutT_lieux_groupe2NestedInput
     t_etat_surveillance?: t_etat_surveillanceUpdateOneWithoutT_lieuNestedInput
     t_pdf?: t_pdfUpdateOneWithoutT_lieuNestedInput
     t_plan?: t_planUpdateOneWithoutT_lieuNestedInput
@@ -83607,8 +80335,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateWithoutT_lieu_mail_telInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
@@ -83777,8 +80503,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: number | null
     t_alarme?: t_alarmeCreateNestedManyWithoutT_lieuInput
     t_alarme_histo?: t_alarme_histoCreateNestedManyWithoutT_lieuInput
-    t_groupe1?: t_groupeCreateNestedOneWithoutT_lieux_groupe1Input
-    t_groupe2?: t_groupeCreateNestedOneWithoutT_lieux_groupe2Input
     t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_lieuInput
     t_pdf?: t_pdfCreateNestedOneWithoutT_lieuInput
     t_plan?: t_planCreateNestedOneWithoutT_lieuInput
@@ -83790,8 +80514,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedCreateWithoutT_lieu_planning_regleInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -83976,8 +80698,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
     t_alarme?: t_alarmeUpdateManyWithoutT_lieuNestedInput
     t_alarme_histo?: t_alarme_histoUpdateManyWithoutT_lieuNestedInput
-    t_groupe1?: t_groupeUpdateOneWithoutT_lieux_groupe1NestedInput
-    t_groupe2?: t_groupeUpdateOneWithoutT_lieux_groupe2NestedInput
     t_etat_surveillance?: t_etat_surveillanceUpdateOneWithoutT_lieuNestedInput
     t_pdf?: t_pdfUpdateOneWithoutT_lieuNestedInput
     t_plan?: t_planUpdateOneWithoutT_lieuNestedInput
@@ -83989,8 +80709,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateWithoutT_lieu_planning_regleInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
@@ -85810,180 +82528,6 @@ export namespace Prisma {
     Id_Utilisateur: number
   }
 
-  export type t_lieuCreateManyT_groupe1Input = {
-    Id_Lieu?: number
-    Id_Groupe2?: number | null
-    Id_Site?: number | null
-    Nom_Lieu?: string | null
-    Sonde_Numero_Serie?: string | null
-    Adresse_Sonde?: string | null
-    Consigne?: number | null
-    Consigne_Base?: number | null
-    Observations_Info?: string | null
-    Consigne_Sup?: number | null
-    Consigne_Sup_Base?: number | null
-    Tolerance_Surveillance_Sup?: number | null
-    Tolerance_Surveillance_Sup_Base?: number | null
-    Est_Consigne_Sup_Active?: boolean | null
-    Consigne_Sup_Pre_Alarme?: number | null
-    Est_Consigne_Sup_Pre_Alarme_Active?: boolean | null
-    Consigne_Inf?: number | null
-    Consigne_Inf_Base?: number | null
-    Tolerance_Surveillance_Inf?: number | null
-    Tolerance_Surveillance_Inf_Base?: number | null
-    Est_Consigne_Inf_Active?: boolean | null
-    Consigne_Inf_Pre_Alarme?: number | null
-    Est_Consigne_Inf_Pre_Alarme_Active?: boolean | null
-    Frequence?: number | null
-    Lieu_Etat?: string | null
-    Retard_Alarme_Haut?: number | null
-    Retard_Alarme_Bas?: number | null
-    Id_Plan?: number | null
-    Position_Plan_X?: bigint | number | null
-    Position_Plan_Y?: bigint | number | null
-    Date_Creation?: Date | string | null
-    Est_Archive?: boolean | null
-    Est_Tel_Actif?: boolean | null
-    Tel_Code?: string | null
-    Tel_Son_Lieu?: string | null
-    Id_Actionneur?: number | null
-    Est_Mode_Serotheque?: boolean | null
-    Coef_Sensibilite?: number | null
-    Id_PDF?: number | null
-    Est_DataLogger?: boolean | null
-    EMT?: number | null
-    EMT_Choix_Mode?: number | null
-    EMT_Sonde?: number | null
-    Retard_Alarme_Changement_Consigne?: number | null
-    Derniere_Date_Heure?: Date | string | null
-    Derniere_Valeur?: number | null
-    Derniere_Unite?: string | null
-    Derniere_Nb_Decimal?: number | null
-    Est_Lieu_En_Alarme?: number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee?: number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee_T1?: number | null
-    Est_Lieu_En_Pre_Alarme?: number | null
-    Id_Alarme?: number | null
-    Lieu_Etat_N1?: string | null
-    Derniere_Date_Etalonnage?: Date | string | null
-    Derniere_Erreur_Justesse?: number | null
-    Derniere_Incertitude?: number | null
-    Retard_Non_Reponse?: number | null
-    Date_Heure_Derniere_Reponse?: Date | string | null
-    Date_Heure_Derniere_Reponse_Recue_OK?: Date | string | null
-    Est_Correction_Ej?: number | null
-    Derive?: number | null
-    Est_Correction_derive?: boolean | null
-    Derniere_Valeur_Null?: number | null
-    Type_Lieu?: string | null
-    Date_Heure_Dernier_Acquittement_En_Cours?: Date | string | null
-    Date_Heure_Last_Update_EVT_GSO?: Date | string | null
-    Date_Heure_Reactivation_Alarme?: Date | string | null
-    Notification_Active?: boolean
-    Commentaire?: string | null
-    Infos_Modifiees_Depuis_Derniere_Mesure?: boolean
-    Date_Heure_Reactivation_Surveillance?: Date | string | null
-    Date_Heure_Surveillance_On?: Date | string | null
-    Date_Heure_Surveillance_Off?: Date | string | null
-    Derniere_Val_Rssi?: string | null
-    Derniere_Val_Batterie?: number | null
-    Derniere_Val_Tension?: string | null
-    Est_Lieu_GSO?: boolean | null
-    Est_Son_Alarme_Active?: boolean
-    Planning_Actif?: boolean
-    Planning_Source_Regle_Id?: number | null
-    Planning_Derniere_Maj?: Date | string | null
-    Est_Redeclenchement_Immediat?: boolean
-    Nb_Mesures_Temporisation_Redeclenchement?: number | null
-  }
-
-  export type t_lieuCreateManyT_groupe2Input = {
-    Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Site?: number | null
-    Nom_Lieu?: string | null
-    Sonde_Numero_Serie?: string | null
-    Adresse_Sonde?: string | null
-    Consigne?: number | null
-    Consigne_Base?: number | null
-    Observations_Info?: string | null
-    Consigne_Sup?: number | null
-    Consigne_Sup_Base?: number | null
-    Tolerance_Surveillance_Sup?: number | null
-    Tolerance_Surveillance_Sup_Base?: number | null
-    Est_Consigne_Sup_Active?: boolean | null
-    Consigne_Sup_Pre_Alarme?: number | null
-    Est_Consigne_Sup_Pre_Alarme_Active?: boolean | null
-    Consigne_Inf?: number | null
-    Consigne_Inf_Base?: number | null
-    Tolerance_Surveillance_Inf?: number | null
-    Tolerance_Surveillance_Inf_Base?: number | null
-    Est_Consigne_Inf_Active?: boolean | null
-    Consigne_Inf_Pre_Alarme?: number | null
-    Est_Consigne_Inf_Pre_Alarme_Active?: boolean | null
-    Frequence?: number | null
-    Lieu_Etat?: string | null
-    Retard_Alarme_Haut?: number | null
-    Retard_Alarme_Bas?: number | null
-    Id_Plan?: number | null
-    Position_Plan_X?: bigint | number | null
-    Position_Plan_Y?: bigint | number | null
-    Date_Creation?: Date | string | null
-    Est_Archive?: boolean | null
-    Est_Tel_Actif?: boolean | null
-    Tel_Code?: string | null
-    Tel_Son_Lieu?: string | null
-    Id_Actionneur?: number | null
-    Est_Mode_Serotheque?: boolean | null
-    Coef_Sensibilite?: number | null
-    Id_PDF?: number | null
-    Est_DataLogger?: boolean | null
-    EMT?: number | null
-    EMT_Choix_Mode?: number | null
-    EMT_Sonde?: number | null
-    Retard_Alarme_Changement_Consigne?: number | null
-    Derniere_Date_Heure?: Date | string | null
-    Derniere_Valeur?: number | null
-    Derniere_Unite?: string | null
-    Derniere_Nb_Decimal?: number | null
-    Est_Lieu_En_Alarme?: number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee?: number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee_T1?: number | null
-    Est_Lieu_En_Pre_Alarme?: number | null
-    Id_Alarme?: number | null
-    Lieu_Etat_N1?: string | null
-    Derniere_Date_Etalonnage?: Date | string | null
-    Derniere_Erreur_Justesse?: number | null
-    Derniere_Incertitude?: number | null
-    Retard_Non_Reponse?: number | null
-    Date_Heure_Derniere_Reponse?: Date | string | null
-    Date_Heure_Derniere_Reponse_Recue_OK?: Date | string | null
-    Est_Correction_Ej?: number | null
-    Derive?: number | null
-    Est_Correction_derive?: boolean | null
-    Derniere_Valeur_Null?: number | null
-    Type_Lieu?: string | null
-    Date_Heure_Dernier_Acquittement_En_Cours?: Date | string | null
-    Date_Heure_Last_Update_EVT_GSO?: Date | string | null
-    Date_Heure_Reactivation_Alarme?: Date | string | null
-    Notification_Active?: boolean
-    Commentaire?: string | null
-    Infos_Modifiees_Depuis_Derniere_Mesure?: boolean
-    Date_Heure_Reactivation_Surveillance?: Date | string | null
-    Date_Heure_Surveillance_On?: Date | string | null
-    Date_Heure_Surveillance_Off?: Date | string | null
-    Derniere_Val_Rssi?: string | null
-    Derniere_Val_Batterie?: number | null
-    Derniere_Val_Tension?: string | null
-    Est_Lieu_GSO?: boolean | null
-    Est_Son_Alarme_Active?: boolean
-    Planning_Actif?: boolean
-    Planning_Source_Regle_Id?: number | null
-    Planning_Derniere_Maj?: Date | string | null
-    Est_Redeclenchement_Immediat?: boolean
-    Nb_Mesures_Temporisation_Redeclenchement?: number | null
-  }
-
   export type t_lieu_groupeCreateManyT_groupeInput = {
     Id_Lieu: number
   }
@@ -86000,546 +82544,6 @@ export namespace Prisma {
   export type t_liaison_utilisateur_groupeUncheckedUpdateManyWithoutT_groupeInput = {
     Id_Liaison_u_g?: IntFieldUpdateOperationsInput | number
     Id_Utilisateur?: IntFieldUpdateOperationsInput | number
-  }
-
-  export type t_lieuUpdateWithoutT_groupe1Input = {
-    Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
-    Consigne?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Observations_Info?: NullableStringFieldUpdateOperationsInput | string | null
-    Consigne_Sup?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Sup_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Sup?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Sup_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Sup_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Sup_Pre_Alarme?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Sup_Pre_Alarme_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Inf?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Inf_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Inf?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Inf_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Inf_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Inf_Pre_Alarme?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Inf_Pre_Alarme_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Frequence?: NullableIntFieldUpdateOperationsInput | number | null
-    Retard_Alarme_Haut?: NullableIntFieldUpdateOperationsInput | number | null
-    Retard_Alarme_Bas?: NullableIntFieldUpdateOperationsInput | number | null
-    Position_Plan_X?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    Position_Plan_Y?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    Date_Creation?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Est_Tel_Actif?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Tel_Code?: NullableStringFieldUpdateOperationsInput | string | null
-    Tel_Son_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Actionneur?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Mode_Serotheque?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Coef_Sensibilite?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_DataLogger?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    EMT?: NullableFloatFieldUpdateOperationsInput | number | null
-    EMT_Choix_Mode?: NullableIntFieldUpdateOperationsInput | number | null
-    EMT_Sonde?: NullableFloatFieldUpdateOperationsInput | number | null
-    Retard_Alarme_Changement_Consigne?: NullableIntFieldUpdateOperationsInput | number | null
-    Derniere_Date_Heure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
-    Derniere_Unite?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Nb_Decimal?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_En_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee_T1?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_En_Pre_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Lieu_Etat_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Date_Etalonnage?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Erreur_Justesse?: NullableFloatFieldUpdateOperationsInput | number | null
-    Derniere_Incertitude?: NullableFloatFieldUpdateOperationsInput | number | null
-    Retard_Non_Reponse?: NullableIntFieldUpdateOperationsInput | number | null
-    Date_Heure_Derniere_Reponse?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Derniere_Reponse_Recue_OK?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Correction_Ej?: NullableIntFieldUpdateOperationsInput | number | null
-    Derive?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Correction_derive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Derniere_Valeur_Null?: NullableIntFieldUpdateOperationsInput | number | null
-    Type_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Dernier_Acquittement_En_Cours?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Last_Update_EVT_GSO?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Reactivation_Alarme?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Notification_Active?: BoolFieldUpdateOperationsInput | boolean
-    Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Infos_Modifiees_Depuis_Derniere_Mesure?: BoolFieldUpdateOperationsInput | boolean
-    Date_Heure_Reactivation_Surveillance?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
-    Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
-    Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
-    Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
-    Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
-    t_alarme?: t_alarmeUpdateManyWithoutT_lieuNestedInput
-    t_alarme_histo?: t_alarme_histoUpdateManyWithoutT_lieuNestedInput
-    t_groupe2?: t_groupeUpdateOneWithoutT_lieux_groupe2NestedInput
-    t_etat_surveillance?: t_etat_surveillanceUpdateOneWithoutT_lieuNestedInput
-    t_pdf?: t_pdfUpdateOneWithoutT_lieuNestedInput
-    t_plan?: t_planUpdateOneWithoutT_lieuNestedInput
-    t_site?: t_siteUpdateOneWithoutT_lieuNestedInput
-    t_sonde?: t_sondeUpdateOneWithoutT_lieuNestedInput
-    t_lieu_groupe?: t_lieu_groupeUpdateManyWithoutT_lieuNestedInput
-    t_lieu_mail_tel?: t_lieu_mail_telUpdateManyWithoutT_lieuNestedInput
-    t_lieu_planning_regle?: t_lieu_planning_regleUpdateManyWithoutT_lieuNestedInput
-  }
-
-  export type t_lieuUncheckedUpdateWithoutT_groupe1Input = {
-    Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
-    Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
-    Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
-    Consigne?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Observations_Info?: NullableStringFieldUpdateOperationsInput | string | null
-    Consigne_Sup?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Sup_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Sup?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Sup_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Sup_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Sup_Pre_Alarme?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Sup_Pre_Alarme_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Inf?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Inf_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Inf?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Inf_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Inf_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Inf_Pre_Alarme?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Inf_Pre_Alarme_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Frequence?: NullableIntFieldUpdateOperationsInput | number | null
-    Lieu_Etat?: NullableStringFieldUpdateOperationsInput | string | null
-    Retard_Alarme_Haut?: NullableIntFieldUpdateOperationsInput | number | null
-    Retard_Alarme_Bas?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Plan?: NullableIntFieldUpdateOperationsInput | number | null
-    Position_Plan_X?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    Position_Plan_Y?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    Date_Creation?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Est_Tel_Actif?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Tel_Code?: NullableStringFieldUpdateOperationsInput | string | null
-    Tel_Son_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Actionneur?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Mode_Serotheque?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Coef_Sensibilite?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_PDF?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_DataLogger?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    EMT?: NullableFloatFieldUpdateOperationsInput | number | null
-    EMT_Choix_Mode?: NullableIntFieldUpdateOperationsInput | number | null
-    EMT_Sonde?: NullableFloatFieldUpdateOperationsInput | number | null
-    Retard_Alarme_Changement_Consigne?: NullableIntFieldUpdateOperationsInput | number | null
-    Derniere_Date_Heure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
-    Derniere_Unite?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Nb_Decimal?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_En_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee_T1?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_En_Pre_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Lieu_Etat_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Date_Etalonnage?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Erreur_Justesse?: NullableFloatFieldUpdateOperationsInput | number | null
-    Derniere_Incertitude?: NullableFloatFieldUpdateOperationsInput | number | null
-    Retard_Non_Reponse?: NullableIntFieldUpdateOperationsInput | number | null
-    Date_Heure_Derniere_Reponse?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Derniere_Reponse_Recue_OK?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Correction_Ej?: NullableIntFieldUpdateOperationsInput | number | null
-    Derive?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Correction_derive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Derniere_Valeur_Null?: NullableIntFieldUpdateOperationsInput | number | null
-    Type_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Dernier_Acquittement_En_Cours?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Last_Update_EVT_GSO?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Reactivation_Alarme?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Notification_Active?: BoolFieldUpdateOperationsInput | boolean
-    Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Infos_Modifiees_Depuis_Derniere_Mesure?: BoolFieldUpdateOperationsInput | boolean
-    Date_Heure_Reactivation_Surveillance?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
-    Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
-    Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
-    Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
-    Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
-    t_alarme?: t_alarmeUncheckedUpdateManyWithoutT_lieuNestedInput
-    t_alarme_histo?: t_alarme_histoUncheckedUpdateManyWithoutT_lieuNestedInput
-    t_lieu_groupe?: t_lieu_groupeUncheckedUpdateManyWithoutT_lieuNestedInput
-    t_lieu_mail_tel?: t_lieu_mail_telUncheckedUpdateManyWithoutT_lieuNestedInput
-    t_lieu_planning_regle?: t_lieu_planning_regleUncheckedUpdateManyWithoutT_lieuNestedInput
-  }
-
-  export type t_lieuUncheckedUpdateManyWithoutT_groupe1Input = {
-    Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
-    Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
-    Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
-    Consigne?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Observations_Info?: NullableStringFieldUpdateOperationsInput | string | null
-    Consigne_Sup?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Sup_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Sup?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Sup_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Sup_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Sup_Pre_Alarme?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Sup_Pre_Alarme_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Inf?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Inf_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Inf?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Inf_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Inf_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Inf_Pre_Alarme?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Inf_Pre_Alarme_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Frequence?: NullableIntFieldUpdateOperationsInput | number | null
-    Lieu_Etat?: NullableStringFieldUpdateOperationsInput | string | null
-    Retard_Alarme_Haut?: NullableIntFieldUpdateOperationsInput | number | null
-    Retard_Alarme_Bas?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Plan?: NullableIntFieldUpdateOperationsInput | number | null
-    Position_Plan_X?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    Position_Plan_Y?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    Date_Creation?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Est_Tel_Actif?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Tel_Code?: NullableStringFieldUpdateOperationsInput | string | null
-    Tel_Son_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Actionneur?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Mode_Serotheque?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Coef_Sensibilite?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_PDF?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_DataLogger?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    EMT?: NullableFloatFieldUpdateOperationsInput | number | null
-    EMT_Choix_Mode?: NullableIntFieldUpdateOperationsInput | number | null
-    EMT_Sonde?: NullableFloatFieldUpdateOperationsInput | number | null
-    Retard_Alarme_Changement_Consigne?: NullableIntFieldUpdateOperationsInput | number | null
-    Derniere_Date_Heure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
-    Derniere_Unite?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Nb_Decimal?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_En_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee_T1?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_En_Pre_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Lieu_Etat_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Date_Etalonnage?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Erreur_Justesse?: NullableFloatFieldUpdateOperationsInput | number | null
-    Derniere_Incertitude?: NullableFloatFieldUpdateOperationsInput | number | null
-    Retard_Non_Reponse?: NullableIntFieldUpdateOperationsInput | number | null
-    Date_Heure_Derniere_Reponse?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Derniere_Reponse_Recue_OK?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Correction_Ej?: NullableIntFieldUpdateOperationsInput | number | null
-    Derive?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Correction_derive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Derniere_Valeur_Null?: NullableIntFieldUpdateOperationsInput | number | null
-    Type_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Dernier_Acquittement_En_Cours?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Last_Update_EVT_GSO?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Reactivation_Alarme?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Notification_Active?: BoolFieldUpdateOperationsInput | boolean
-    Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Infos_Modifiees_Depuis_Derniere_Mesure?: BoolFieldUpdateOperationsInput | boolean
-    Date_Heure_Reactivation_Surveillance?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
-    Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
-    Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
-    Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
-    Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
-  }
-
-  export type t_lieuUpdateWithoutT_groupe2Input = {
-    Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
-    Consigne?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Observations_Info?: NullableStringFieldUpdateOperationsInput | string | null
-    Consigne_Sup?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Sup_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Sup?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Sup_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Sup_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Sup_Pre_Alarme?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Sup_Pre_Alarme_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Inf?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Inf_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Inf?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Inf_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Inf_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Inf_Pre_Alarme?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Inf_Pre_Alarme_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Frequence?: NullableIntFieldUpdateOperationsInput | number | null
-    Retard_Alarme_Haut?: NullableIntFieldUpdateOperationsInput | number | null
-    Retard_Alarme_Bas?: NullableIntFieldUpdateOperationsInput | number | null
-    Position_Plan_X?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    Position_Plan_Y?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    Date_Creation?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Est_Tel_Actif?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Tel_Code?: NullableStringFieldUpdateOperationsInput | string | null
-    Tel_Son_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Actionneur?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Mode_Serotheque?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Coef_Sensibilite?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_DataLogger?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    EMT?: NullableFloatFieldUpdateOperationsInput | number | null
-    EMT_Choix_Mode?: NullableIntFieldUpdateOperationsInput | number | null
-    EMT_Sonde?: NullableFloatFieldUpdateOperationsInput | number | null
-    Retard_Alarme_Changement_Consigne?: NullableIntFieldUpdateOperationsInput | number | null
-    Derniere_Date_Heure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
-    Derniere_Unite?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Nb_Decimal?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_En_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee_T1?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_En_Pre_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Lieu_Etat_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Date_Etalonnage?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Erreur_Justesse?: NullableFloatFieldUpdateOperationsInput | number | null
-    Derniere_Incertitude?: NullableFloatFieldUpdateOperationsInput | number | null
-    Retard_Non_Reponse?: NullableIntFieldUpdateOperationsInput | number | null
-    Date_Heure_Derniere_Reponse?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Derniere_Reponse_Recue_OK?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Correction_Ej?: NullableIntFieldUpdateOperationsInput | number | null
-    Derive?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Correction_derive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Derniere_Valeur_Null?: NullableIntFieldUpdateOperationsInput | number | null
-    Type_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Dernier_Acquittement_En_Cours?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Last_Update_EVT_GSO?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Reactivation_Alarme?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Notification_Active?: BoolFieldUpdateOperationsInput | boolean
-    Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Infos_Modifiees_Depuis_Derniere_Mesure?: BoolFieldUpdateOperationsInput | boolean
-    Date_Heure_Reactivation_Surveillance?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
-    Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
-    Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
-    Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
-    Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
-    t_alarme?: t_alarmeUpdateManyWithoutT_lieuNestedInput
-    t_alarme_histo?: t_alarme_histoUpdateManyWithoutT_lieuNestedInput
-    t_groupe1?: t_groupeUpdateOneWithoutT_lieux_groupe1NestedInput
-    t_etat_surveillance?: t_etat_surveillanceUpdateOneWithoutT_lieuNestedInput
-    t_pdf?: t_pdfUpdateOneWithoutT_lieuNestedInput
-    t_plan?: t_planUpdateOneWithoutT_lieuNestedInput
-    t_site?: t_siteUpdateOneWithoutT_lieuNestedInput
-    t_sonde?: t_sondeUpdateOneWithoutT_lieuNestedInput
-    t_lieu_groupe?: t_lieu_groupeUpdateManyWithoutT_lieuNestedInput
-    t_lieu_mail_tel?: t_lieu_mail_telUpdateManyWithoutT_lieuNestedInput
-    t_lieu_planning_regle?: t_lieu_planning_regleUpdateManyWithoutT_lieuNestedInput
-  }
-
-  export type t_lieuUncheckedUpdateWithoutT_groupe2Input = {
-    Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
-    Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
-    Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
-    Consigne?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Observations_Info?: NullableStringFieldUpdateOperationsInput | string | null
-    Consigne_Sup?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Sup_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Sup?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Sup_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Sup_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Sup_Pre_Alarme?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Sup_Pre_Alarme_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Inf?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Inf_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Inf?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Inf_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Inf_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Inf_Pre_Alarme?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Inf_Pre_Alarme_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Frequence?: NullableIntFieldUpdateOperationsInput | number | null
-    Lieu_Etat?: NullableStringFieldUpdateOperationsInput | string | null
-    Retard_Alarme_Haut?: NullableIntFieldUpdateOperationsInput | number | null
-    Retard_Alarme_Bas?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Plan?: NullableIntFieldUpdateOperationsInput | number | null
-    Position_Plan_X?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    Position_Plan_Y?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    Date_Creation?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Est_Tel_Actif?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Tel_Code?: NullableStringFieldUpdateOperationsInput | string | null
-    Tel_Son_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Actionneur?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Mode_Serotheque?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Coef_Sensibilite?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_PDF?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_DataLogger?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    EMT?: NullableFloatFieldUpdateOperationsInput | number | null
-    EMT_Choix_Mode?: NullableIntFieldUpdateOperationsInput | number | null
-    EMT_Sonde?: NullableFloatFieldUpdateOperationsInput | number | null
-    Retard_Alarme_Changement_Consigne?: NullableIntFieldUpdateOperationsInput | number | null
-    Derniere_Date_Heure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
-    Derniere_Unite?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Nb_Decimal?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_En_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee_T1?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_En_Pre_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Lieu_Etat_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Date_Etalonnage?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Erreur_Justesse?: NullableFloatFieldUpdateOperationsInput | number | null
-    Derniere_Incertitude?: NullableFloatFieldUpdateOperationsInput | number | null
-    Retard_Non_Reponse?: NullableIntFieldUpdateOperationsInput | number | null
-    Date_Heure_Derniere_Reponse?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Derniere_Reponse_Recue_OK?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Correction_Ej?: NullableIntFieldUpdateOperationsInput | number | null
-    Derive?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Correction_derive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Derniere_Valeur_Null?: NullableIntFieldUpdateOperationsInput | number | null
-    Type_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Dernier_Acquittement_En_Cours?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Last_Update_EVT_GSO?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Reactivation_Alarme?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Notification_Active?: BoolFieldUpdateOperationsInput | boolean
-    Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Infos_Modifiees_Depuis_Derniere_Mesure?: BoolFieldUpdateOperationsInput | boolean
-    Date_Heure_Reactivation_Surveillance?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
-    Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
-    Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
-    Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
-    Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
-    t_alarme?: t_alarmeUncheckedUpdateManyWithoutT_lieuNestedInput
-    t_alarme_histo?: t_alarme_histoUncheckedUpdateManyWithoutT_lieuNestedInput
-    t_lieu_groupe?: t_lieu_groupeUncheckedUpdateManyWithoutT_lieuNestedInput
-    t_lieu_mail_tel?: t_lieu_mail_telUncheckedUpdateManyWithoutT_lieuNestedInput
-    t_lieu_planning_regle?: t_lieu_planning_regleUncheckedUpdateManyWithoutT_lieuNestedInput
-  }
-
-  export type t_lieuUncheckedUpdateManyWithoutT_groupe2Input = {
-    Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
-    Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
-    Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
-    Consigne?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Observations_Info?: NullableStringFieldUpdateOperationsInput | string | null
-    Consigne_Sup?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Sup_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Sup?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Sup_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Sup_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Sup_Pre_Alarme?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Sup_Pre_Alarme_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Inf?: NullableFloatFieldUpdateOperationsInput | number | null
-    Consigne_Inf_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Inf?: NullableFloatFieldUpdateOperationsInput | number | null
-    Tolerance_Surveillance_Inf_Base?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Inf_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Consigne_Inf_Pre_Alarme?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Consigne_Inf_Pre_Alarme_Active?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Frequence?: NullableIntFieldUpdateOperationsInput | number | null
-    Lieu_Etat?: NullableStringFieldUpdateOperationsInput | string | null
-    Retard_Alarme_Haut?: NullableIntFieldUpdateOperationsInput | number | null
-    Retard_Alarme_Bas?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Plan?: NullableIntFieldUpdateOperationsInput | number | null
-    Position_Plan_X?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    Position_Plan_Y?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-    Date_Creation?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Est_Tel_Actif?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Tel_Code?: NullableStringFieldUpdateOperationsInput | string | null
-    Tel_Son_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Actionneur?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Mode_Serotheque?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Coef_Sensibilite?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_PDF?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_DataLogger?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    EMT?: NullableFloatFieldUpdateOperationsInput | number | null
-    EMT_Choix_Mode?: NullableIntFieldUpdateOperationsInput | number | null
-    EMT_Sonde?: NullableFloatFieldUpdateOperationsInput | number | null
-    Retard_Alarme_Changement_Consigne?: NullableIntFieldUpdateOperationsInput | number | null
-    Derniere_Date_Heure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
-    Derniere_Unite?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Nb_Decimal?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_En_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_Alarme_Terminee_Non_Acquittee_T1?: NullableIntFieldUpdateOperationsInput | number | null
-    Est_Lieu_En_Pre_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Alarme?: NullableIntFieldUpdateOperationsInput | number | null
-    Lieu_Etat_N1?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Date_Etalonnage?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Erreur_Justesse?: NullableFloatFieldUpdateOperationsInput | number | null
-    Derniere_Incertitude?: NullableFloatFieldUpdateOperationsInput | number | null
-    Retard_Non_Reponse?: NullableIntFieldUpdateOperationsInput | number | null
-    Date_Heure_Derniere_Reponse?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Derniere_Reponse_Recue_OK?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Correction_Ej?: NullableIntFieldUpdateOperationsInput | number | null
-    Derive?: NullableFloatFieldUpdateOperationsInput | number | null
-    Est_Correction_derive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Derniere_Valeur_Null?: NullableIntFieldUpdateOperationsInput | number | null
-    Type_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Dernier_Acquittement_En_Cours?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Last_Update_EVT_GSO?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Reactivation_Alarme?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Notification_Active?: BoolFieldUpdateOperationsInput | boolean
-    Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
-    Infos_Modifiees_Depuis_Derniere_Mesure?: BoolFieldUpdateOperationsInput | boolean
-    Date_Heure_Reactivation_Surveillance?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Surveillance_On?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Surveillance_Off?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Derniere_Val_Rssi?: NullableStringFieldUpdateOperationsInput | string | null
-    Derniere_Val_Batterie?: NullableIntFieldUpdateOperationsInput | number | null
-    Derniere_Val_Tension?: NullableStringFieldUpdateOperationsInput | string | null
-    Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
-    Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
-    Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type t_lieu_groupeUpdateWithoutT_groupeInput = {
@@ -86832,8 +82836,6 @@ export namespace Prisma {
 
   export type t_lieuCreateManyT_pdfInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -87040,8 +83042,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
     t_alarme?: t_alarmeUpdateManyWithoutT_lieuNestedInput
     t_alarme_histo?: t_alarme_histoUpdateManyWithoutT_lieuNestedInput
-    t_groupe1?: t_groupeUpdateOneWithoutT_lieux_groupe1NestedInput
-    t_groupe2?: t_groupeUpdateOneWithoutT_lieux_groupe2NestedInput
     t_etat_surveillance?: t_etat_surveillanceUpdateOneWithoutT_lieuNestedInput
     t_plan?: t_planUpdateOneWithoutT_lieuNestedInput
     t_site?: t_siteUpdateOneWithoutT_lieuNestedInput
@@ -87053,8 +83053,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateWithoutT_pdfInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
@@ -87145,8 +83143,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateManyWithoutT_pdfInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
@@ -87253,8 +83249,6 @@ export namespace Prisma {
 
   export type t_lieuCreateManyT_planInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -87480,8 +83474,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
     t_alarme?: t_alarmeUpdateManyWithoutT_lieuNestedInput
     t_alarme_histo?: t_alarme_histoUpdateManyWithoutT_lieuNestedInput
-    t_groupe1?: t_groupeUpdateOneWithoutT_lieux_groupe1NestedInput
-    t_groupe2?: t_groupeUpdateOneWithoutT_lieux_groupe2NestedInput
     t_etat_surveillance?: t_etat_surveillanceUpdateOneWithoutT_lieuNestedInput
     t_pdf?: t_pdfUpdateOneWithoutT_lieuNestedInput
     t_site?: t_siteUpdateOneWithoutT_lieuNestedInput
@@ -87493,8 +83485,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateWithoutT_planInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
@@ -87585,8 +83575,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateManyWithoutT_planInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
@@ -87751,8 +83739,6 @@ export namespace Prisma {
 
   export type t_lieuCreateManyT_siteInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
     Adresse_Sonde?: string | null
@@ -88015,8 +84001,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
     t_alarme?: t_alarmeUpdateManyWithoutT_lieuNestedInput
     t_alarme_histo?: t_alarme_histoUpdateManyWithoutT_lieuNestedInput
-    t_groupe1?: t_groupeUpdateOneWithoutT_lieux_groupe1NestedInput
-    t_groupe2?: t_groupeUpdateOneWithoutT_lieux_groupe2NestedInput
     t_etat_surveillance?: t_etat_surveillanceUpdateOneWithoutT_lieuNestedInput
     t_pdf?: t_pdfUpdateOneWithoutT_lieuNestedInput
     t_plan?: t_planUpdateOneWithoutT_lieuNestedInput
@@ -88028,8 +84012,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateWithoutT_siteInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
@@ -88120,8 +84102,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateManyWithoutT_siteInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
@@ -88451,8 +84431,6 @@ export namespace Prisma {
 
   export type t_lieuCreateManyT_sondeInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Adresse_Sonde?: string | null
@@ -88616,8 +84594,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
     t_alarme?: t_alarmeUpdateManyWithoutT_lieuNestedInput
     t_alarme_histo?: t_alarme_histoUpdateManyWithoutT_lieuNestedInput
-    t_groupe1?: t_groupeUpdateOneWithoutT_lieux_groupe1NestedInput
-    t_groupe2?: t_groupeUpdateOneWithoutT_lieux_groupe2NestedInput
     t_etat_surveillance?: t_etat_surveillanceUpdateOneWithoutT_lieuNestedInput
     t_pdf?: t_pdfUpdateOneWithoutT_lieuNestedInput
     t_plan?: t_planUpdateOneWithoutT_lieuNestedInput
@@ -88629,8 +84605,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateWithoutT_sondeInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
@@ -88721,8 +84695,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateManyWithoutT_sondeInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
@@ -88808,8 +84780,6 @@ export namespace Prisma {
 
   export type t_lieuCreateManyT_etat_surveillanceInput = {
     Id_Lieu?: number
-    Id_Groupe1?: number | null
-    Id_Groupe2?: number | null
     Id_Site?: number | null
     Nom_Lieu?: string | null
     Sonde_Numero_Serie?: string | null
@@ -88993,8 +84963,6 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
     t_alarme?: t_alarmeUpdateManyWithoutT_lieuNestedInput
     t_alarme_histo?: t_alarme_histoUpdateManyWithoutT_lieuNestedInput
-    t_groupe1?: t_groupeUpdateOneWithoutT_lieux_groupe1NestedInput
-    t_groupe2?: t_groupeUpdateOneWithoutT_lieux_groupe2NestedInput
     t_pdf?: t_pdfUpdateOneWithoutT_lieuNestedInput
     t_plan?: t_planUpdateOneWithoutT_lieuNestedInput
     t_site?: t_siteUpdateOneWithoutT_lieuNestedInput
@@ -89006,8 +84974,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateWithoutT_etat_surveillanceInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
@@ -89098,8 +85064,6 @@ export namespace Prisma {
 
   export type t_lieuUncheckedUpdateManyWithoutT_etat_surveillanceInput = {
     Id_Lieu?: IntFieldUpdateOperationsInput | number
-    Id_Groupe1?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_Groupe2?: NullableIntFieldUpdateOperationsInput | number | null
     Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
     Nom_Lieu?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null

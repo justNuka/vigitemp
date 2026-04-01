@@ -64,7 +64,7 @@ export function MonitoringGraphTab({
   const xAxisLabels = orderedData.map((point) => point.DateHeureMesureIso ?? point.DateHeureMesure)
 
   return (
-    <div className="space-y-4 pt-4 h-[68vh]">
+    <div className="space-y-4 pt-4 min-h-[68vh]">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm text-muted-foreground">
           {t("chart.measure_count", { count: graphMeasureCount })}
@@ -76,7 +76,7 @@ export function MonitoringGraphTab({
         </div>
       </div>
 
-      <div className="relative h-[60vh]">
+      <div className="relative h-[calc(100vh-23rem)] min-h-[60vh]">
         <Line
           ref={chartRef}
           data={{

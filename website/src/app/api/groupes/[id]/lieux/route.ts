@@ -25,9 +25,7 @@ export const GET = withLogging(
           Est_Archive: false,
           OR: [
             { t_lieu_groupe: { some: { Id_Groupe: groupeId } } },
-            { Id_Groupe1: groupeId },
-            { Id_Groupe2: groupeId },
-          ],
+                      ],
         },
         select: {
           Id_Lieu: true,

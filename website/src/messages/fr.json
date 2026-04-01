@@ -558,7 +558,8 @@
       "dateFrom": "Date de début",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
-      "allTypes": "Tous les types"
+      "allTypes": "Tous les types",
+      "selected_range": "Plage s?lectionn?e : {range}"
     },
     "toast": {
       "na": "-",
@@ -674,7 +675,8 @@
       "dateFrom": "Date de début",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
-      "allTypes": "Tous les types"
+      "allTypes": "Tous les types",
+      "selected_range": "Plage s?lectionn?e : {range}"
     },
     "table": {
       "search": "Rechercher un acquittement...",
@@ -1158,7 +1160,8 @@
       "dateFrom": "Date de d?but",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
-      "allTypes": "Tous les types"
+      "allTypes": "Tous les types",
+      "selected_range": "Plage s?lectionn?e : {range}"
     },
     "table": {
       "columns": {
@@ -1276,7 +1279,8 @@
       "dateFrom": "Date de d?but",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
-      "allTypes": "Tous les types"
+      "allTypes": "Tous les types",
+      "selected_range": "Plage s?lectionn?e : {range}"
     },
     "table": {
       "title": "Commentaires",
@@ -1330,7 +1334,8 @@
       "dateFrom": "Date de d?but",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
-      "allTypes": "Tous les types"
+      "allTypes": "Tous les types",
+      "selected_range": "Plage s?lectionn?e : {range}"
     },
     "table": {
       "title": "Sondes",
@@ -1433,6 +1438,7 @@
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
+      "selected_range": "Plage s?lectionn?e : {range}",
       "code_all": "Tous les codes",
       "code_placeholder": "Code action"
     },
@@ -1631,7 +1637,8 @@
       "dateFrom": "Date de d?but",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
-      "allTypes": "Tous les types"
+      "allTypes": "Tous les types",
+      "selected_range": "Plage s?lectionn?e : {range}"
     },
     "table": {
       "simTitle": "Alarmes simulées ({count})",
@@ -1687,6 +1694,10 @@
       "mc2_label": "Réservé MC2"
     },
     "authorizations_title": "Autorisations",
+    "actions": {
+      "check_all": "Tout cocher",
+      "uncheck_all": "Tout d?cocher"
+    },
     "submit_create": "Créer",
     "submit_update": "Mettre à jour",
     "submit_creating": "Création...",
@@ -1832,7 +1843,8 @@
       "dateFrom": "Date de d?but",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
-      "allTypes": "Tous les types"
+      "allTypes": "Tous les types",
+      "selected_range": "Plage s?lectionn?e : {range}"
     },
     "table": {
       "columns": {
@@ -1887,7 +1899,8 @@
       "dateFrom": "Date de d?but",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
-      "allTypes": "Tous les types"
+      "allTypes": "Tous les types",
+      "selected_range": "Plage s?lectionn?e : {range}"
     },
     "table": {
       "columns": {
@@ -1995,7 +2008,8 @@
       "dateFrom": "Date de d?but",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
-      "allTypes": "Tous les types"
+      "allTypes": "Tous les types",
+      "selected_range": "Plage s?lectionn?e : {range}"
     },
     "table": {
       "title": "Fichiers d'ajustage/calibrage",
@@ -2144,7 +2158,8 @@
       "dateFrom": "Date de d?but",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
-      "allTypes": "Tous les types"
+      "allTypes": "Tous les types",
+      "selected_range": "Plage s?lectionn?e : {range}"
     },
     "table": {
       "title": "Fichiers d'étalonnage",
@@ -2267,7 +2282,8 @@
       "dateFrom": "Date de début",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
-      "allTypes": "Tous les types"
+      "allTypes": "Tous les types",
+      "selected_range": "Plage s?lectionn?e : {range}"
     },
     "table": {
       "columns": {
@@ -2519,7 +2535,8 @@
       "dateFrom": "Date de d?but",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
-      "allTypes": "Tous les types"
+      "allTypes": "Tous les types",
+      "selected_range": "Plage s?lectionn?e : {range}"
     },
     "table": {
       "columns": {
@@ -2654,7 +2671,8 @@
       "dateFrom": "Date de d?but",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
-      "allTypes": "Tous les types"
+      "allTypes": "Tous les types",
+      "selected_range": "Plage s?lectionn?e : {range}"
     },
     "table": {
       "columns": {
@@ -3219,7 +3237,8 @@
         "dateFrom": "Date de d?but",
         "dateTo": "Date de fin",
         "allSites": "Tous les sites",
-        "allTypes": "Tous les types"
+        "allTypes": "Tous les types",
+      "selected_range": "Plage s?lectionn?e : {range}"
       },
       "table": {
         "feature": "Fonctionnalité",

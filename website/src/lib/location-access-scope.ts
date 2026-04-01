@@ -48,11 +48,7 @@ export function buildLieuAccessFilter(scope: UserLocationScope): WhereInput | nu
     or.push({ Id_Site: { in: scope.siteIds } })
   }
   if (scope.groupIds.length > 0) {
-    or.push(
-      { Id_Groupe1: { in: scope.groupIds } },
-      { Id_Groupe2: { in: scope.groupIds } },
-      { t_lieu_groupe: { some: { Id_Groupe: { in: scope.groupIds } } } },
-    )
+    or.push({ t_lieu_groupe: { some: { Id_Groupe: { in: scope.groupIds } } } })
   }
 
   return or.length > 0 ? { OR: or } : null

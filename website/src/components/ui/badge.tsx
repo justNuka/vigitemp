@@ -17,7 +17,7 @@ const badgeVariants = cva(
         success:
           'bg-[var(--color-success-accent,var(--color-green-500))] text-[var(--color-success-foreground,var(--color-white))]',
         warning:
-          'bg-[var(--color-warning-accent,var(--color-yellow-500))] text-[var(--color-warning-foreground,var(--color-white))]',
+          'bg-[var(--color-warning-accent,var(--color-yellow-400))] text-[var(--color-warning-foreground,var(--color-yellow-950))] dark:bg-[color:rgba(251,191,36,0.28)] dark:text-[color:rgb(254,243,199)]',
         info: 'bg-[var(--color-info-accent,var(--color-violet-500))] text-[var(--color-info-foreground,var(--color-white))]',
         destructive:
           "border-transparent bg-destructive text-destructive-foreground shadow-xs",

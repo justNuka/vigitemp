@@ -15,12 +15,12 @@ export function AlarmStatusBadge({ status }: { status: string }) {
     acknowledged: {
       label: t('status.acknowledged'),
       variant: 'outline',
-      className: 'border-amber-400 bg-amber-50 text-amber-700 dark:border-amber-500/50 dark:bg-amber-500/10 dark:text-amber-400',
+      className: 'border-amber-400 bg-amber-50 text-amber-700 dark:border-amber-300/60 dark:bg-amber-300/20 dark:text-amber-100',
     },
     resolved: {
       label: t('status.resolved'),
       variant: 'outline',
-      className: 'border-green-400 bg-green-50 text-green-700 dark:border-green-500/50 dark:bg-green-500/10 dark:text-green-400',
+      className: 'border-green-400 bg-green-50 text-green-700 dark:border-emerald-300/60 dark:bg-emerald-300/20 dark:text-emerald-100',
     },
   }
 

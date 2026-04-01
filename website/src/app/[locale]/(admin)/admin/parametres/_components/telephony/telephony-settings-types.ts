@@ -18,6 +18,9 @@ export type TelephonyDraft = {
   ovhConsumerKey: string
   ovhBillingAccount: string
   ovhServiceName: string
+  ovhClick2CallUserId: string
+  ovhClick2CallLogin: string
+  ovhClick2CallPassword: string
   keyyoClientId: string
   keyyoClientSecret: string
   keyyoAccessToken: string
@@ -45,6 +48,13 @@ export type TelephonyCopy = {
   localSaved: string
   summary: string
   emptySummary: string
+  saveServer: string
+  testConnection: string
+  createClick2CallUser: string
+  testCall: string
+  testNumber: string
+  testNumberPlaceholder: string
+  userCreated: string
   providerLabel: Record<ProviderId, string>
   providerDesc: Record<ProviderId, string>
   placeholders: {
@@ -56,9 +66,11 @@ export type TelephonyCopy = {
     accessToken: string
     refreshToken: string
     lineIdentifier: string
+    click2CallLogin: string
+    click2CallUserId: string
   }
   twilio: Record<"apiKey" | "authToken" | "accountSid" | "apiKeySid" | "apiKeySecret" | "authTokenField" | "fromNumber", string>
-  ovh: Record<"endpoint" | "applicationKey" | "applicationSecret" | "consumerKey" | "billingAccount" | "serviceName", string>
+  ovh: Record<"endpoint" | "applicationKey" | "applicationSecret" | "consumerKey" | "billingAccount" | "serviceName" | "click2CallUserId" | "click2CallLogin" | "click2CallPassword", string>
   keyyo: Record<"clientId" | "clientSecret" | "accessToken" | "refreshToken" | "lineId", string>
   asterisk: Record<"baseUrl" | "username" | "password" | "appName", string>
 }

@@ -92,9 +92,7 @@ export const DELETE = withLogging(
         where: {
           Est_Archive: false,
           OR: [
-            { Id_Groupe1: id },
-            { Id_Groupe2: id },
-            { t_lieu_groupe: { some: { Id_Groupe: id } } },
+                        { t_lieu_groupe: { some: { Id_Groupe: id } } },
           ],
         },
       })

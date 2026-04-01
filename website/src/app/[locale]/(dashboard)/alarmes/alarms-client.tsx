@@ -218,10 +218,10 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
     },
     {
       id: "lastValue",
-      header: () => <div className="text-right">{t("table.columns.last_value")}</div>,
+      header: () => <div className="text-right">{t("table.columns.triggered_value")}</div>,
       cell: ({ row }) => {
         const alarm = row.original;
-        const value = alarm.sensor.currentValue ?? alarm.value ?? null;
+        const value = alarm.value ?? alarm.sensor.currentValue ?? null;
         return <div className="text-right font-mono font-medium">{value !== null ? `${value.toFixed(1)} ${alarm.sensor.unit}` : "-"}</div>;
       },
     },
@@ -260,12 +260,12 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
                 <MessageSquare className="h-4 w-4" />
                 <span className="sr-only">{alarm.comment}</span>
               </Button>
-            ) : null}
+             ) : null}
             {canAcknowledgeAlarm && alarm.status === "active" ? (
-              <Button variant="outline" size="sm" onClick={() => {
+              <Button variant="outline" size="sm" className="gap-2 border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 hover:text-amber-900 dark:border-amber-300/60 dark:bg-amber-300/20 dark:text-amber-100 dark:hover:bg-amber-300/30" onClick={() => {
                 const fullAlarm = alarms.find((item) => item.id === alarm.id);
                 if (fullAlarm) setSelectedAlarm(fullAlarm);
-              }} data-testid={`button-acknowledge-${alarm.id}`} className="gap-2">
+              }} data-testid={`button-acknowledge-${alarm.id}`}>
                 {t("table.actions.acknowledge")}
               </Button>
             ) : null}

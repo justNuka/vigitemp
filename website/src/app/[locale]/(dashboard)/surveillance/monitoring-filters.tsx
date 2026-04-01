@@ -90,74 +90,74 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:flex-wrap">
-      <MultiSelectFilter
-        label={t('sites.label')}
-        options={sites?.map((site) => ({ id: site.id, label: site.name })) || []}
-        selectedIds={filters.siteIds || []}
-        onChange={(selectedIds) => handleSiteChange((selectedIds || []) as number[])}
-        placeholder={t('sites.placeholder')}
-        tone="default"
-      />
-
-      <MultiSelectFilter
-        label={t('groups.label')}
-        options={
-          groups?.map((group) => ({
-            id: group.id,
-            label: group.name,
-            disabled: disabledGroupIds.has(group.id),
-          })) || []
-        }
-        selectedIds={filters.groupIds || []}
-        onChange={(selectedIds) => {
-          const groupIds = (selectedIds || [])
-            .map((id) => (typeof id === "string" ? parseInt(id, 10) : id))
-            .filter((id): id is number => typeof id === "number" && !Number.isNaN(id))
-
-          setFilters((prev) => ({
-            ...prev,
-            groupIds: allowedGroupIds ? groupIds.filter((id) => allowedGroupIds.has(id)) : groupIds,
-          }))
-        }}
-        placeholder={t('groups.placeholder')}
-        tone="default"
-      />
-
-      <div className="w-full lg:max-w-sm">
-        <div className="space-y-2">
-          <Input
-            value={filters.searchTerm}
-            onChange={(event) => {
-              const value = event.target.value
-              setFilters((prev) => ({ ...prev, searchTerm: value }))
-            }}
-            placeholder={t('search.placeholder')}
-            aria-label={t('search.label')}
-          />
-        </div>
+    <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+      <div className="xl:col-span-3">
+        <MultiSelectFilter
+          label={t('sites.label')}
+          options={sites?.map((site) => ({ id: site.id, label: site.name })) || []}
+          selectedIds={filters.siteIds || []}
+          onChange={(selectedIds) => handleSiteChange((selectedIds || []) as number[])}
+          placeholder={t('sites.placeholder')}
+          tone="default"
+        />
       </div>
 
-      <div className="w-full lg:max-w-xs">
-        <div className="space-y-2">
-          <Select
-            value={filters.sortMode}
-            onValueChange={(value) => {
-              setFilters((prev) => ({
-                ...prev,
-                sortMode: (value === 'alphabetical' ? 'alphabetical' : 'status') as SurveillanceSortMode,
-              }))
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t('sort.placeholder')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="status">{t('sort.options.status')}</SelectItem>
-              <SelectItem value="alphabetical">{t('sort.options.alphabetical')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="xl:col-span-3">
+        <MultiSelectFilter
+          label={t('groups.label')}
+          options={
+            groups?.map((group) => ({
+              id: group.id,
+              label: group.name,
+              disabled: disabledGroupIds.has(group.id),
+            })) || []
+          }
+          selectedIds={filters.groupIds || []}
+          onChange={(selectedIds) => {
+            const groupIds = (selectedIds || [])
+              .map((id) => (typeof id === "string" ? parseInt(id, 10) : id))
+              .filter((id): id is number => typeof id === "number" && !Number.isNaN(id))
+
+            setFilters((prev) => ({
+              ...prev,
+              groupIds: allowedGroupIds ? groupIds.filter((id) => allowedGroupIds.has(id)) : groupIds,
+            }))
+          }}
+          placeholder={t('groups.placeholder')}
+          tone="default"
+        />
+      </div>
+
+      <div className="xl:col-span-4">
+        <Input
+          value={filters.searchTerm}
+          onChange={(event) => {
+            const value = event.target.value
+            setFilters((prev) => ({ ...prev, searchTerm: value }))
+          }}
+          placeholder={t('search.placeholder')}
+          aria-label={t('search.label')}
+        />
+      </div>
+
+      <div className="xl:col-span-2">
+        <Select
+          value={filters.sortMode}
+          onValueChange={(value) => {
+            setFilters((prev) => ({
+              ...prev,
+              sortMode: (value === 'alphabetical' ? 'alphabetical' : 'status') as SurveillanceSortMode,
+            }))
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={t('sort.placeholder')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="status">{t('sort.options.status')}</SelectItem>
+            <SelectItem value="alphabetical">{t('sort.options.alphabetical')}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   )

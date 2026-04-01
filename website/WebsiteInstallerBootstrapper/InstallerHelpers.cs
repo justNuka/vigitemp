@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
@@ -55,14 +55,23 @@ internal static class InstallerHelpers
 
     public static void CopyDirectory(string sourceDir, string destDir)
     {
-        Directory.CreateDirectory(destDir);
-        foreach (var dir in Directory.GetDirectories(sourceDir, "*", SearchOption.AllDirectories))
+        var normalizedSource = Path.GetFullPath(sourceDir)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var normalizedDest = Path.GetFullPath(destDir)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        Directory.CreateDirectory(normalizedDest);
+
+        foreach (var dir in Directory.GetDirectories(normalizedSource, "*", SearchOption.AllDirectories))
         {
-            Directory.CreateDirectory(dir.Replace(sourceDir, destDir));
+            var relative = Path.GetRelativePath(normalizedSource, dir);
+            Directory.CreateDirectory(Path.Combine(normalizedDest, relative));
         }
-        foreach (var file in Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories))
+
+        foreach (var file in Directory.GetFiles(normalizedSource, "*", SearchOption.AllDirectories))
         {
-            var target = file.Replace(sourceDir, destDir);
+            var relative = Path.GetRelativePath(normalizedSource, file);
+            var target = Path.Combine(normalizedDest, relative);
             var parent = Path.GetDirectoryName(target);
             if (!string.IsNullOrWhiteSpace(parent))
             {

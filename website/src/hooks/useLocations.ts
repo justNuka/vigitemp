@@ -15,8 +15,6 @@ export interface LocationRow {
   Id_Lieu: number;
   Nom_Lieu: string | null;
   Type_Lieu: string | null;
-  Id_Groupe1: number | null;
-  Id_Groupe2: number | null;
   GroupIds?: number[];
   Id_Site: number | null;
   Sonde_Numero_Serie: string | null;
@@ -52,8 +50,6 @@ export interface LocationRow {
   Corriger_Erreur_Justesse: boolean | null;
   Prendre_En_Compte_Derive: boolean | null;
   MailingContacts?: LocationMailingContactRow[];
-  t_groupe1?: { Nom_Groupe: string | null } | null;
-  t_groupe2?: { Nom_Groupe: string | null } | null;
   t_lieu_groupe?: {
     Id_Groupe: number;
     t_groupe?: {

@@ -91,12 +91,7 @@ export function LocationsTable({
           .map((lg) => lg.t_groupe?.Nom_Groupe)
           .filter((n): n is string => !!n);
 
-        const legacy = [row.original.t_groupe1?.Nom_Groupe, row.original.t_groupe2?.Nom_Groupe].filter(
-          (n): n is string => !!n
-        );
-
-        const display = names.length > 0 ? names : legacy;
-        return display.length > 0 ? display.join(', ') : t('placeholders.na');
+        return names.length > 0 ? names.join(', ') : t('placeholders.na');
       },
     },
     {

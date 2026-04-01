@@ -262,8 +262,6 @@ model t_groupe {
   Numero_Regroupement          String?                        @db.VarChar(1)
   Est_Archive                  Boolean?                       @default(false)
   t_liaison_utilisateur_groupe t_liaison_utilisateur_groupe[]
-  t_lieux_groupe1              t_lieu[]                       @relation("groupe1")
-  t_lieux_groupe2              t_lieu[]                       @relation("groupe2")
   t_lieu_groupe                t_lieu_groupe[]
 
   @@index([Numero_Regroupement], map: "IDX_Numero_Regroupement")
@@ -278,12 +276,6 @@ model t_liaison_profil_autorisation {
   @@id([Id_Profil, Id_Autorisation])
   @@index([Id_Autorisation], map: "IDX_IdAutorisation")
   @@index([Id_Profil], map: "IDX_IdProfil")
-}
-
-model t_liaison_sonde_type_mesure {
-  Id_Liaison        Int     @id @default(autoincrement())
-  Sonde_Type        String? @db.VarChar(50)
-  Sonde_Type_Mesure String? @db.VarChar(50)
 }
 
 model t_liaison_utilisateur_groupe {
@@ -325,8 +317,6 @@ model t_lieu_groupe {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model t_lieu {
   Id_Lieu                                   Int                     @id @default(autoincrement())
-  Id_Groupe1                                Int?
-  Id_Groupe2                                Int?
   Id_Site                                   Int?
   Nom_Lieu                                  String?                 @db.VarChar(30)
   Sonde_Numero_Serie                        String?                 @db.VarChar(50)
@@ -411,8 +401,6 @@ model t_lieu {
   Nb_Mesures_Temporisation_Redeclenchement  Int?                    @default(0)
   t_alarme                                  t_alarme[]              @relation("lieu_alarme")
   t_alarme_histo                            t_alarme_histo[]        @relation("lieu_alarme_histo")
-  t_groupe1                                 t_groupe?               @relation("groupe1", fields: [Id_Groupe1], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE1_LIEU")
-  t_groupe2                                 t_groupe?               @relation("groupe2", fields: [Id_Groupe2], references: [Id_Groupe], onDelete: NoAction, onUpdate: NoAction, map: "FK_GROUPE2_LIEU")
   t_etat_surveillance                       t_etat_surveillance?    @relation(fields: [Lieu_Etat], references: [Surveillance_Etat], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ETAT_SURVEILLANCE")
   t_pdf                                     t_pdf?                  @relation(fields: [Id_PDF], references: [Id_PDF], onDelete: NoAction, onUpdate: NoAction, map: "FK_PDF_LIEU")
   t_plan                                    t_plan?                 @relation(fields: [Id_Plan], references: [Id_Plan], onDelete: NoAction, onUpdate: NoAction, map: "FK_PLAN_LIEU")
@@ -422,8 +410,6 @@ model t_lieu {
   t_lieu_mail_tel                           t_lieu_mail_tel[]
   t_lieu_planning_regle                     t_lieu_planning_regle[]
 
-  @@index([Id_Groupe1], map: "IDX_Id_Groupe1")
-  @@index([Id_Groupe2], map: "IDX_Id_Groupe2")
   @@index([Id_PDF], map: "IDX_Id_PDF")
   @@index([Id_Site], map: "IDX_Id_Site")
   @@index([Est_Archive], map: "IDX_Est_Archive")
@@ -709,17 +695,6 @@ model t_etalon_type {
   Est_Saisie_Module Boolean? @default(false)
   Est_Sonde_Externe Boolean? @default(false)
   Resolution        Float?   @db.Float
-}
-
-model t_sonde_type_mesure {
-  Id_Sonde_Type_Mesure         Int      @id @default(autoincrement())
-  Sonde_Type_Mesure            String?  @unique(map: "Sonde_Type_Mesure") @db.VarChar(50)
-  Libelle_Sonde_Type_Mesure    String?  @db.VarChar(255)
-  Est_Flag_Relais              Boolean?
-  Est_Flag_Affiche_Information Boolean?
-  Unite_Mesure                 String?  @db.VarChar(20)
-  Libelle_Unite_Mesure         String?  @db.VarChar(50)
-  Reserve_MC2                  String?  @db.VarChar(50)
 }
 
 model t_mem_gso {

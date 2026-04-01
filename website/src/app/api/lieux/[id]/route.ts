@@ -68,8 +68,6 @@ const updateLieuSchema = z.object({
   Observations_Info: z.string().nullable().optional(),
   Id_Site: z.number().nullable().optional(),
   GroupIds: z.array(z.number()).optional(),
-  Id_Groupe1: z.number().nullable().optional(),
-  Id_Groupe2: z.number().nullable().optional(),
   Sonde_Numero_Serie: z.string().nullable().optional(),
   Id_Module: z.number().nullable().optional(),
   Consigne: z.number().nullable().optional(),
@@ -158,19 +156,13 @@ export const PATCH = withLogging(
       const validated = updateLieuSchema.parse(body)
 
       const shouldUpdateGroups =
-        Object.prototype.hasOwnProperty.call(body, "GroupIds") ||
-        Object.prototype.hasOwnProperty.call(body, "Id_Groupe1") ||
-        Object.prototype.hasOwnProperty.call(body, "Id_Groupe2")
+        Object.prototype.hasOwnProperty.call(body, "GroupIds")
 
       const shouldArchive = validated.Est_Archive === true
       const groupIds = shouldUpdateGroups
         ? Array.from(
             new Set(
-              [
-                ...(validated.GroupIds ?? []),
-                validated.Id_Groupe1 ?? undefined,
-                validated.Id_Groupe2 ?? undefined,
-              ].filter((v): v is number => typeof v === "number" && !Number.isNaN(v)),
+              [...(validated.GroupIds ?? [])].filter((v): v is number => typeof v === "number" && !Number.isNaN(v)),
             ),
           )
         : undefined
@@ -181,8 +173,6 @@ export const PATCH = withLogging(
         Id_Site,
         Sonde_Numero_Serie,
         Id_Module,
-        Id_Groupe1,
-        Id_Groupe2,
         surveillanceDurationMinutes,
         MailingContacts,
         EMT_Mode,
@@ -353,9 +343,6 @@ export const PATCH = withLogging(
           Nb_Mesures_Temporisation_Redeclenchement: current?.Nb_Mesures_Temporisation_Redeclenchement,
         }
 
-        const group1Id = groupIds?.[0] ?? null
-        const group2Id = groupIds?.[1] ?? null
-
         let nextEstLieuGso: boolean | undefined
         let nextAdresseSonde: string | null | undefined
 
@@ -427,16 +414,6 @@ export const PATCH = withLogging(
             ? Sonde_Numero_Serie
               ? { t_sonde: { connect: { Sonde_Numero_Serie } } }
               : { t_sonde: { disconnect: true } }
-            : {}),
-          ...(groupIds !== undefined
-            ? {
-                t_groupe1: group1Id
-                  ? { connect: { Id_Groupe: group1Id } }
-                  : { disconnect: true },
-                t_groupe2: group2Id
-                  ? { connect: { Id_Groupe: group2Id } }
-                  : { disconnect: true },
-              }
             : {}),
         }
 

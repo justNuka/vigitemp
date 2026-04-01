@@ -148,6 +148,16 @@ export function ProfileDialog({
     form.setValue('authorizations', next, { shouldDirty: true });
   };
 
+  const toggleAuthorizationSection = (authIds: number[], checked: boolean) => {
+    const current = new Set(form.getValues('authorizations') || []);
+    if (checked) {
+      authIds.forEach((authId) => current.add(authId));
+    } else {
+      authIds.forEach((authId) => current.delete(authId));
+    }
+    form.setValue('authorizations', Array.from(current), { shouldDirty: true });
+  };
+
   const selectedAuthorizations = form.watch('authorizations') || [];
   const profileName = form.watch('name');
   const memoryKey = `profile-form:${mode}:${initialValues.name || 'new'}`;
@@ -224,10 +234,23 @@ export function ProfileDialog({
             <div>
               <Label className="mb-3 block">{t('authorizations_title')}</Label>
               <div className="space-y-4">
-                {groupAuthorizationsByModule(authorizations, domainLabels).map(([module, auths]) => (
+                {groupAuthorizationsByModule(authorizations, domainLabels).map(([module, auths]) => {
+                  const sectionIds = auths.map((auth) => auth.id);
+                  const selectedCount = sectionIds.filter((id) => selectedAuthorizations.includes(id)).length;
+                  const allSelected = sectionIds.length > 0 && selectedCount === sectionIds.length;
+                  const partiallySelected = selectedCount > 0 && selectedCount < sectionIds.length;
+
+                  return (
                   <Card key={module}>
-                    <CardHeader className="pb-3">
+                    <CardHeader className="flex flex-row items-start justify-between gap-4 pb-3">
                       <CardTitle className="text-sm font-medium">{module}</CardTitle>
+                      <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                        <Checkbox
+                          checked={allSelected ? true : partiallySelected ? 'indeterminate' : false}
+                          onCheckedChange={(checked) => toggleAuthorizationSection(sectionIds, checked === true)}
+                        />
+                        <span>{allSelected ? t('actions.uncheck_all') : t('actions.check_all')}</span>
+                      </label>
                     </CardHeader>
                     <CardContent className="space-y-2">
                       {auths.map((auth) => (
@@ -263,7 +286,8 @@ export function ProfileDialog({
                       ))}
                     </CardContent>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

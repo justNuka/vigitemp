@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Text;
@@ -9,252 +8,224 @@ namespace VigitempWebInstaller;
 
 public sealed class MainForm : Form
 {
-    private readonly Label _titleLabel;
-    private readonly Label _descriptionLabel;
-    private readonly Label _statusLabel;
-    private readonly TextBox _logTextBox;
-    private readonly Button _installButton;
-    private readonly Button _closeButton;
+    private static readonly Color AppBackground = Color.FromArgb(245, 247, 251);
+    private static readonly Color CardBackground = Color.White;
+    private static readonly Color Accent = Color.FromArgb(14, 116, 144);
+    private static readonly Color TextPrimary = Color.FromArgb(15, 23, 42);
+    private static readonly Color TextMuted = Color.FromArgb(71, 85, 105);
+    private static readonly Color Border = Color.FromArgb(203, 213, 225);
+
+    private readonly Settings _s = Settings.Default();
+    private readonly TabControl _tabs = new() { Dock = DockStyle.Fill };
+    private readonly Label _step = new() { Left = 24, Top = 116, Width = 900, Height = 22, ForeColor = TextMuted };
+    private readonly FlowLayoutPanel _progress = new() { Left = 24, Top = 142, Width = 920, Height = 36, Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top, WrapContents = false, BackColor = AppBackground };
+    private readonly Button _back = new() { Text = "Précédent", Width = 120, Height = 38, Left = 24, Top = 666, Anchor = AnchorStyles.Left | AnchorStyles.Bottom };
+    private readonly Button _next = new() { Text = "Suivant", Width = 120, Height = 38, Left = 154, Top = 666, Anchor = AnchorStyles.Left | AnchorStyles.Bottom };
+    private readonly Button _install = new() { Text = "Installer", Width = 140, Height = 38, Left = 734, Top = 666, Anchor = AnchorStyles.Right | AnchorStyles.Bottom };
+    private readonly Button _close = new() { Text = "Fermer", Width = 120, Height = 38, Left = 884, Top = 666, Anchor = AnchorStyles.Right | AnchorStyles.Bottom };
+    private readonly TextBox _summary = new() { Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Dock = DockStyle.Top, Height = 190, Font = new Font("Consolas", 9F), BackColor = Color.FromArgb(248, 250, 252), ForeColor = TextPrimary, BorderStyle = BorderStyle.FixedSingle };
+    private readonly Label _status = new() { Text = "Etat : prêt", Dock = DockStyle.Top, Height = 30, Padding = new Padding(0, 8, 0, 0), ForeColor = Accent, Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold) };
+    private readonly TextBox _log = new() { Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Both, WordWrap = false, Dock = DockStyle.Fill, Font = new Font("Consolas", 9F), BackColor = Color.FromArgb(15, 23, 42), ForeColor = Color.FromArgb(226, 232, 240), BorderStyle = BorderStyle.FixedSingle };
+    private readonly Label[] _progressBadges = new Label[5];
     private bool _running;
+
+    private readonly TextBox installDir; private readonly TextBox serviceName; private readonly TextBox port; private readonly TextBox websiteBaseUrl; private readonly TextBox appBaseUrl;
+    private readonly ComboBox dbProvider; private readonly TextBox dbHost; private readonly TextBox dbPort; private readonly TextBox dbUser; private readonly TextBox dbPassword; private readonly TextBox dbMain; private readonly TextBox dbMeasure; private readonly TextBox dbChat; private readonly TextBox cacheTtl;
+    private readonly TextBox logsDir; private readonly TextBox licensePath; private readonly TextBox publicKeyPath; private readonly TextBox agentPrivateKeyPath;
+    private readonly TextBox agentPort; private readonly TextBox agentTimeoutMs; private readonly TextBox agentActiveWindowMinutes; private readonly TextBox hotlineServerHost; private readonly TextBox hotlineServerPort; private readonly TextBox hotlineServerTimeoutMs; private readonly TextBox hotlineAccessTokenTtl; private readonly TextBox hotlineRefreshTokenTtl; private readonly TextBox allowedDevOrigins; private readonly TextBox cspConnectSrc; private readonly TextBox dispatchSecret;
 
     public MainForm()
     {
         Text = "Installation du site VigiSensys";
         StartPosition = FormStartPosition.CenterScreen;
-        Width = 900;
-        Height = 640;
-        MinimumSize = new Size(900, 640);
-        Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
+        Width = 980;
+        Height = 760;
+        MinimumSize = new Size(980, 760);
+        Font = new Font("Segoe UI", 9F);
+        BackColor = AppBackground;
 
-        _titleLabel = new Label { AutoSize = true, Font = new Font("Segoe UI Semibold", 18F, FontStyle.Bold, GraphicsUnit.Point), Text = "Installateur du site VigiSensys", Location = new Point(24, 20) };
-        _descriptionLabel = new Label { AutoSize = false, Width = 820, Height = 52, Location = new Point(24, 62), Text = "Installe le site Next.js standalone depuis le package offline et crée le service Windows." };
-        _statusLabel = new Label { AutoSize = false, Width = 820, Height = 22, Location = new Point(24, 122), Text = "Etat : pret" };
-        _logTextBox = new TextBox { Location = new Point(24, 154), Width = 820, Height = 388, Multiline = true, ScrollBars = ScrollBars.Both, ReadOnly = true, WordWrap = false, Font = new Font("Consolas", 9F, FontStyle.Regular, GraphicsUnit.Point) };
-        _installButton = new Button { Text = "Lancer l'installation", Width = 170, Height = 36, Location = new Point(24, 560) };
-        _closeButton = new Button { Text = "Fermer", Width = 120, Height = 36, Location = new Point(724, 560) };
-        _installButton.Click += async (_, _) => await RunInstallAsync();
-        _closeButton.Click += (_, _) => Close();
+        Controls.AddRange(new Control[]
+        {
+            new Panel { Left = 0, Top = 0, Width = 980, Height = 100, Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top, BackColor = TextPrimary },
+            new Label { AutoSize = true, Font = new Font("Segoe UI Semibold", 18F, FontStyle.Bold), ForeColor = Color.White, BackColor = TextPrimary, Text = "Installateur du site VigiSensys", Location = new Point(24, 20) },
+            new Label { Width = 900, Height = 44, Location = new Point(24, 56), ForeColor = Color.FromArgb(226, 232, 240), BackColor = TextPrimary, Text = "Renseignez les paramètres d'installation, relisez le résumé, puis lancez l'installation. Vous pouvez revenir en arrière avant l'exécution." },
+            _step, _progress, _tabs, _back, _next, _install, _close
+        });
 
-        Controls.AddRange(new Control[] { _titleLabel, _descriptionLabel, _statusLabel, _logTextBox, _installButton, _closeButton });
+        _tabs.Left = 24;
+        _tabs.Top = 188;
+        _tabs.Width = 920;
+        _tabs.Height = 460;
+        _tabs.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
+        _tabs.Appearance = TabAppearance.FlatButtons;
+        _tabs.ItemSize = new Size(0, 1);
+        _tabs.SizeMode = TabSizeMode.Fixed;
+        _tabs.Padding = new Point(0, 0);
+        _tabs.DrawMode = TabDrawMode.OwnerDrawFixed;
+        _tabs.DrawItem += (_, _) => { };
+
+        TextBox T(string v = "", bool pwd = false) => new() { Dock = DockStyle.Fill, Text = v ?? string.Empty, UseSystemPasswordChar = pwd, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.White, ForeColor = TextPrimary };
+        Button BrowseFolder(TextBox tb) { var b = SecondaryButton("Parcourir", 110); b.Click += (_, _) => { using var d = new FolderBrowserDialog(); if (Directory.Exists(tb.Text)) d.InitialDirectory = tb.Text; if (d.ShowDialog(this) == DialogResult.OK) tb.Text = d.SelectedPath; }; return b; }
+        Button BrowseFile(TextBox tb, string filter) { var b = SecondaryButton("Parcourir", 110); b.Click += (_, _) => { using var d = new OpenFileDialog { Filter = filter }; var dir = Path.GetDirectoryName(tb.Text); if (!string.IsNullOrWhiteSpace(dir) && Directory.Exists(dir)) d.InitialDirectory = dir; d.FileName = Path.GetFileName(tb.Text); if (d.ShowDialog(this) == DialogResult.OK) tb.Text = d.FileName; }; return b; }
+        Panel Field(string label, Control input, Control action = null)
+        {
+            var p = new Panel { Dock = DockStyle.Top, Height = 84, Padding = new Padding(0, 0, 0, 12), BackColor = CardBackground };
+            var l = new Label { Text = label, Dock = DockStyle.Top, Height = 22, ForeColor = TextPrimary, Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold) };
+            var t = new TableLayoutPanel { Dock = DockStyle.Top, Height = 38, ColumnCount = action == null ? 1 : 2, RowCount = 1, BackColor = CardBackground };
+            t.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            if (action != null) t.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 118F));
+            if (input is ComboBox combo) { combo.FlatStyle = FlatStyle.Flat; combo.BackColor = Color.White; combo.ForeColor = TextPrimary; }
+            t.Controls.Add(input, 0, 0);
+            if (action != null) t.Controls.Add(action, 1, 0);
+            p.Controls.Add(t);
+            p.Controls.Add(l);
+            return p;
+        }
+        TableLayoutPanel StepPanel() { var t = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, AutoScroll = true, BackColor = CardBackground }; t.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F)); return t; }
+        TabPage Page(string title, Control content) { var p = new TabPage(title) { BackColor = CardBackground }; content.Dock = DockStyle.Fill; content.Padding = new Padding(20); p.Controls.Add(content); return p; }
+
+        installDir = T(_s.InstallDir); serviceName = T(_s.ServiceName); port = T(_s.Port); websiteBaseUrl = T(_s.WebsiteBaseUrl); appBaseUrl = T(_s.AppBaseUrl);
+        dbProvider = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList }; dbProvider.Items.AddRange(new object[] { "mysql", "mssql" }); dbProvider.SelectedItem = _s.DbProvider; dbProvider.FlatStyle = FlatStyle.Flat; dbProvider.BackColor = Color.White; dbProvider.ForeColor = TextPrimary;
+        dbHost = T(_s.DbHost); dbPort = T(_s.DbPort); dbUser = T(_s.DbUser); dbPassword = T(_s.DbPassword, true); dbMain = T(_s.DbMain); dbMeasure = T(_s.DbMeasure); dbChat = T(_s.DbChat); cacheTtl = T(_s.CacheTtl);
+        logsDir = T(_s.LogsDir); licensePath = T(_s.LicensePath); publicKeyPath = T(_s.PublicKeyPath); agentPrivateKeyPath = T(_s.AgentPrivateKeyPath);
+        agentPort = T(_s.AgentPort); agentTimeoutMs = T(_s.AgentTimeoutMs); agentActiveWindowMinutes = T(_s.AgentActiveWindowMinutes); hotlineServerHost = T(_s.HotlineServerHost); hotlineServerPort = T(_s.HotlineServerPort); hotlineServerTimeoutMs = T(_s.HotlineServerTimeoutMs); hotlineAccessTokenTtl = T(_s.HotlineAccessTokenTtl); hotlineRefreshTokenTtl = T(_s.HotlineRefreshTokenTtl); allowedDevOrigins = T(_s.AllowedDevOrigins); cspConnectSrc = T(_s.CspConnectSrc); dispatchSecret = T(_s.DispatchSecret);
+
+        dbProvider.SelectedIndexChanged += (_, _) =>
+        {
+            var mssql = string.Equals(dbProvider.SelectedItem?.ToString(), "mssql", StringComparison.OrdinalIgnoreCase);
+            if (string.IsNullOrWhiteSpace(dbPort.Text) || dbPort.Text is "3306" or "1433") dbPort.Text = mssql ? "1433" : "3306";
+            if (string.IsNullOrWhiteSpace(dbUser.Text) || dbUser.Text is "root" or "sa") dbUser.Text = mssql ? "sa" : "root";
+        };
+
+        var general = StepPanel(); foreach (var c in new Control[] { Field("Dossier d'installation", installDir, BrowseFolder(installDir)), Field("Nom du service Windows", serviceName), Field("Port HTTP", port), Field("URL publique du site", websiteBaseUrl), Field("URL applicative publique", appBaseUrl) }) general.Controls.Add(c);
+        var database = StepPanel(); foreach (var c in new Control[] { Field("Type de BDD", dbProvider), Field("Hôte BDD", dbHost), Field("Port BDD", dbPort), Field("Utilisateur BDD", dbUser), Field("Mot de passe BDD", dbPassword), Field("BDD principale", dbMain), Field("BDD mesures", dbMeasure), Field("BDD chat", dbChat), Field("Cache TTL (secondes)", cacheTtl) }) database.Controls.Add(c);
+        var security = StepPanel(); foreach (var c in new Control[] { Field("Dossier des logs", logsDir, BrowseFolder(logsDir)), Field("Fichier licence (.vtlic)", licensePath, BrowseFile(licensePath, "Licence (*.vtlic)|*.vtlic|Tous les fichiers (*.*)|*.*")), Field("Clé publique licence (.pem)", publicKeyPath, BrowseFile(publicKeyPath, "PEM (*.pem)|*.pem|Tous les fichiers (*.*)|*.*")), Field("Clé privée agent (.pem)", agentPrivateKeyPath, BrowseFile(agentPrivateKeyPath, "PEM (*.pem)|*.pem|Tous les fichiers (*.*)|*.*")) }) security.Controls.Add(c);
+        var advanced = StepPanel(); foreach (var c in new Control[] { Field("Port agent local", agentPort), Field("Timeout agent local (ms)", agentTimeoutMs), Field("Fenêtre active agent (minutes)", agentActiveWindowMinutes), Field("Hôte serveur hotline", hotlineServerHost), Field("Port serveur hotline", hotlineServerPort), Field("Timeout hotline (ms)", hotlineServerTimeoutMs), Field("TTL access hotline (minutes)", hotlineAccessTokenTtl), Field("TTL refresh hotline (minutes)", hotlineRefreshTokenTtl), Field("Origins dev autorisés (CSV, optionnel)", allowedDevOrigins), Field("CSP connect-src supplémentaires (CSV, optionnel)", cspConnectSrc), Field("Secret dispatch alarmes (laisser vide pour reprendre/générer)", dispatchSecret) }) advanced.Controls.Add(c);
+        var installPanel = new Panel { Padding = new Padding(20), BackColor = CardBackground };
+        installPanel.Controls.Add(_log); installPanel.Controls.Add(_status); installPanel.Controls.Add(_summary); installPanel.Controls.Add(new Label { Text = "Résumé avant installation", Dock = DockStyle.Top, Height = 24, ForeColor = TextPrimary, Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold) });
+
+        _tabs.TabPages.AddRange(new[] { Page("Général", general), Page("Base de données", database), Page("Fichiers et sécurité", security), Page("Paramètres avancés", advanced), Page("Résumé et installation", installPanel) });
+        for (var i = 0; i < _progressBadges.Length; i++) { _progressBadges[i] = StepBadge(); _progress.Controls.Add(_progressBadges[i]); }
+
+        StylePrimaryButton(_next);
+        StylePrimaryButton(_install);
+        StyleSecondaryButton(_back);
+        StyleSecondaryButton(_close);
+
+        _back.Click += (_, _) => Go(_tabs.SelectedIndex - 1);
+        _next.Click += (_, _) => Go(_tabs.SelectedIndex + 1);
+        _install.Click += async (_, _) => await InstallAsync();
+        _close.Click += (_, _) => Close();
+        Go(0);
     }
 
-    private async System.Threading.Tasks.Task RunInstallAsync()
+    private Label StepBadge() => new() { AutoSize = false, Width = 176, Height = 32, Margin = new Padding(0, 0, 8, 0), TextAlign = ContentAlignment.MiddleCenter, Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold), BackColor = Color.White, ForeColor = TextMuted, BorderStyle = BorderStyle.FixedSingle };
+    private Button SecondaryButton(string text, int width) { var b = new Button { Text = text, Width = width, Height = 34 }; StyleSecondaryButton(b); return b; }
+    private void StylePrimaryButton(Button button) { button.FlatStyle = FlatStyle.Flat; button.FlatAppearance.BorderSize = 0; button.BackColor = Accent; button.ForeColor = Color.White; button.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold); }
+    private void StyleSecondaryButton(Button button) { button.FlatStyle = FlatStyle.Flat; button.FlatAppearance.BorderColor = Border; button.FlatAppearance.BorderSize = 1; button.BackColor = Color.White; button.ForeColor = TextPrimary; button.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold); }
+
+    private void Persist()
     {
-        if (_running)
+        _s.InstallDir = installDir.Text.Trim(); _s.ServiceName = serviceName.Text.Trim(); _s.Port = port.Text.Trim(); _s.WebsiteBaseUrl = websiteBaseUrl.Text.Trim(); _s.AppBaseUrl = appBaseUrl.Text.Trim();
+        _s.DbProvider = string.Equals(dbProvider.SelectedItem?.ToString(), "mssql", StringComparison.OrdinalIgnoreCase) ? "mssql" : "mysql"; _s.DbHost = dbHost.Text.Trim(); _s.DbPort = dbPort.Text.Trim(); _s.DbUser = dbUser.Text.Trim(); _s.DbPassword = dbPassword.Text; _s.DbMain = dbMain.Text.Trim(); _s.DbMeasure = dbMeasure.Text.Trim(); _s.DbChat = dbChat.Text.Trim(); _s.CacheTtl = cacheTtl.Text.Trim();
+        _s.LogsDir = logsDir.Text.Trim(); _s.LicensePath = licensePath.Text.Trim(); _s.PublicKeyPath = publicKeyPath.Text.Trim(); _s.AgentPrivateKeyPath = agentPrivateKeyPath.Text.Trim();
+        _s.AgentPort = agentPort.Text.Trim(); _s.AgentTimeoutMs = agentTimeoutMs.Text.Trim(); _s.AgentActiveWindowMinutes = agentActiveWindowMinutes.Text.Trim(); _s.HotlineServerHost = hotlineServerHost.Text.Trim(); _s.HotlineServerPort = hotlineServerPort.Text.Trim(); _s.HotlineServerTimeoutMs = hotlineServerTimeoutMs.Text.Trim(); _s.HotlineAccessTokenTtl = hotlineAccessTokenTtl.Text.Trim(); _s.HotlineRefreshTokenTtl = hotlineRefreshTokenTtl.Text.Trim(); _s.AllowedDevOrigins = allowedDevOrigins.Text.Trim(); _s.CspConnectSrc = cspConnectSrc.Text.Trim(); _s.DispatchSecret = dispatchSecret.Text.Trim();
+    }
+
+    private bool Valid(int idx)
+    {
+        Persist();
+        string m = null;
+        if (idx == 0) { if (string.IsNullOrWhiteSpace(_s.InstallDir)) m = "Le dossier d'installation est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.ServiceName)) m = "Le nom du service Windows est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.Port)) m = "Le port HTTP est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.WebsiteBaseUrl)) m = "L'URL publique du site est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.AppBaseUrl)) m = "L'URL applicative publique est obligatoire."; }
+        else if (idx == 1) { if (string.IsNullOrWhiteSpace(_s.DbHost)) m = "L'hôte BDD est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.DbPort)) m = "Le port BDD est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.DbUser)) m = "L'utilisateur BDD est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.DbMain) || string.IsNullOrWhiteSpace(_s.DbMeasure) || string.IsNullOrWhiteSpace(_s.DbChat)) m = "Les noms de bases sont obligatoires."; else if (string.IsNullOrWhiteSpace(_s.CacheTtl)) m = "Le cache TTL est obligatoire."; }
+        else if (idx == 2) { if (string.IsNullOrWhiteSpace(_s.LogsDir)) m = "Le dossier des logs est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.LicensePath) || !File.Exists(_s.LicensePath)) m = "Le fichier licence est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.PublicKeyPath) || !File.Exists(_s.PublicKeyPath)) m = "La clé publique licence est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.AgentPrivateKeyPath) || !File.Exists(_s.AgentPrivateKeyPath)) m = "La clé privée agent est obligatoire."; }
+        else if (idx == 3) { if (string.IsNullOrWhiteSpace(_s.AgentPort)) m = "Le port agent local est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.AgentTimeoutMs)) m = "Le timeout agent local est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.AgentActiveWindowMinutes)) m = "La fenêtre active agent est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.HotlineServerHost)) m = "L'hôte hotline est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.HotlineServerPort)) m = "Le port hotline est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.HotlineServerTimeoutMs)) m = "Le timeout hotline est obligatoire."; else if (string.IsNullOrWhiteSpace(_s.HotlineAccessTokenTtl) || string.IsNullOrWhiteSpace(_s.HotlineRefreshTokenTtl)) m = "Les TTL hotline sont obligatoires."; }
+        if (m != null) { MessageBox.Show(m, "Configuration incomplète", MessageBoxButtons.OK, MessageBoxIcon.Warning); return false; }
+        return true;
+    }
+
+    private void Go(int idx)
+    {
+        if (_running || idx < 0 || idx >= _tabs.TabPages.Count) return;
+        if (idx > _tabs.SelectedIndex && !Valid(_tabs.SelectedIndex)) return;
+        _tabs.SelectedIndex = idx;
+        Persist();
+        if (idx == 4) RefreshSummary();
+        var titles = new[] { "Général", "Base de données", "Fichiers et sécurité", "Paramètres avancés", "Résumé et installation" };
+        _step.Text = $"Étape {idx + 1} / {titles.Length} - {titles[idx]}";
+        _back.Enabled = idx > 0;
+        _next.Enabled = idx < 4;
+        _install.Enabled = idx == 4;
+        for (var i = 0; i < _progressBadges.Length; i++)
         {
-            return;
+            _progressBadges[i].Text = $"{i + 1}. {titles[i]}";
+            _progressBadges[i].BackColor = i == idx ? Accent : i < idx ? Color.FromArgb(220, 252, 231) : Color.White;
+            _progressBadges[i].ForeColor = i == idx ? Color.White : i < idx ? Color.FromArgb(22, 101, 52) : TextMuted;
         }
+    }
 
-        var startupDir = AppContext.BaseDirectory;
-        var standaloneEntry = Path.Combine(startupDir, ".next", "standalone", "server.js");
-        if (!File.Exists(standaloneEntry))
-        {
-            MessageBox.Show($"Build standalone introuvable : {standaloneEntry}", "Installation impossible", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
-        }
+    private void RefreshSummary()
+    {
+        Persist();
+        var sb = new StringBuilder();
+        sb.AppendLine("Général"); sb.AppendLine($"- Dossier d'installation : {_s.InstallDir}"); sb.AppendLine($"- Service Windows : {_s.ServiceName}"); sb.AppendLine($"- Port HTTP : {_s.Port}"); sb.AppendLine($"- URL site : {_s.WebsiteBaseUrl}"); sb.AppendLine($"- URL applicative : {_s.AppBaseUrl}"); sb.AppendLine();
+        sb.AppendLine("Base de données"); sb.AppendLine($"- Provider : {_s.DbProvider}"); sb.AppendLine($"- Hôte : {_s.DbHost}:{_s.DbPort}"); sb.AppendLine($"- Utilisateur : {_s.DbUser}"); sb.AppendLine($"- BDD principale : {_s.DbMain}"); sb.AppendLine($"- BDD mesures : {_s.DbMeasure}"); sb.AppendLine($"- BDD chat : {_s.DbChat}"); sb.AppendLine();
+        sb.AppendLine("Fichiers et sécurité"); sb.AppendLine($"- Logs : {_s.LogsDir}"); sb.AppendLine($"- Licence : {_s.LicensePath}"); sb.AppendLine($"- Clé publique : {_s.PublicKeyPath}"); sb.AppendLine($"- Clé privée agent : {_s.AgentPrivateKeyPath}"); sb.AppendLine();
+        sb.AppendLine("Avancé"); sb.AppendLine($"- Agent : {_s.AgentPort} / {_s.AgentTimeoutMs} ms / {_s.AgentActiveWindowMinutes} min"); sb.AppendLine($"- Hotline : {_s.HotlineServerHost}:{_s.HotlineServerPort} / {_s.HotlineServerTimeoutMs} ms"); sb.AppendLine($"- TTL hotline : access {_s.HotlineAccessTokenTtl} min / refresh {_s.HotlineRefreshTokenTtl} min"); sb.AppendLine($"- Origins dev : {_s.AllowedDevOrigins}"); sb.AppendLine($"- CSP connect-src : {_s.CspConnectSrc}"); sb.AppendLine($"- Secret dispatch : {(string.IsNullOrWhiteSpace(_s.DispatchSecret) ? "généré / repris automatiquement" : "fourni manuellement")}");
+        _summary.Text = sb.ToString();
+    }
 
-        var installDir = InstallerHelpers.PromptText(this, "Installation web", "Dossier d'installation", Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), @"Vigitemp\website"));
-        if (string.IsNullOrWhiteSpace(installDir)) return;
-        var serviceName = InstallerHelpers.PromptText(this, "Installation web", "Nom du service Windows", "VigitempWeb"); if (string.IsNullOrWhiteSpace(serviceName)) return;
-        var port = InstallerHelpers.PromptText(this, "Installation web", "Port HTTP", "3000"); if (string.IsNullOrWhiteSpace(port)) return;
-        var websiteBaseUrl = InstallerHelpers.PromptText(this, "Installation web", "URL publique du site", $"http://127.0.0.1:{port}/"); if (string.IsNullOrWhiteSpace(websiteBaseUrl)) return;
-        var appBaseUrl = InstallerHelpers.PromptText(this, "Installation web", "URL applicative publique", websiteBaseUrl); if (string.IsNullOrWhiteSpace(appBaseUrl)) return;
-        var dbProvider = InstallerHelpers.PromptText(this, "Installation web", "Type de BDD (mysql/mssql)", "mysql") ?? "mysql";
-        if (!string.Equals(dbProvider, "mssql", StringComparison.OrdinalIgnoreCase)) dbProvider = "mysql";
-        var dbPortDefault = dbProvider == "mssql" ? "1433" : "3306";
-        var dbUserDefault = dbProvider == "mssql" ? "sa" : "root";
-        var dbHost = InstallerHelpers.PromptText(this, "Installation web", "Hôte BDD", "127.0.0.1"); if (dbHost == null) return;
-        var dbPort = InstallerHelpers.PromptText(this, "Installation web", "Port BDD", dbPortDefault); if (dbPort == null) return;
-        var dbUser = InstallerHelpers.PromptText(this, "Installation web", "Utilisateur BDD", dbUserDefault); if (dbUser == null) return;
-        var dbPassword = InstallerHelpers.PromptText(this, "Installation web", "Mot de passe BDD", "", password: true); if (dbPassword == null) return;
-        var dbMain = InstallerHelpers.PromptText(this, "Installation web", "Nom BDD principale", "vigi_main"); if (dbMain == null) return;
-        var dbMeasure = InstallerHelpers.PromptText(this, "Installation web", "Nom BDD mesures", "vigi_mesures"); if (dbMeasure == null) return;
-        var dbChat = InstallerHelpers.PromptText(this, "Installation web", "Nom BDD chat", "vigi_chat"); if (dbChat == null) return;
-        var cacheTtl = InstallerHelpers.PromptText(this, "Installation web", "Cache TTL (secondes)", "30"); if (cacheTtl == null) return;
-
-        var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        var logsDir = InstallerHelpers.PromptText(this, "Installation web", "Dossier des logs", Path.Combine(programData, @"Vigitemp\web-logs")); if (logsDir == null) return;
-        var licensePath = InstallerHelpers.PromptFile(this, "Choisir la licence site (.vtlic)", "Licence (*.vtlic)|*.vtlic|Tous les fichiers (*.*)|*.*", Path.Combine(programData, @"Vigitemp\licenses\license.vtlic")); if (string.IsNullOrWhiteSpace(licensePath)) return;
-        var publicKeyPath = InstallerHelpers.PromptFile(this, "Choisir la clé publique licence (.pem)", "PEM (*.pem)|*.pem|Tous les fichiers (*.*)|*.*", Path.Combine(programData, @"Vigitemp\license_keys\public_key.pem")); if (string.IsNullOrWhiteSpace(publicKeyPath)) return;
-        var agentPrivateKeyPath = InstallerHelpers.PromptFile(this, "Choisir la clé privée agent (.pem)", "PEM (*.pem)|*.pem|Tous les fichiers (*.*)|*.*", Path.Combine(programData, @"Vigitemp\license_keys\agent_secret_private.pem")); if (string.IsNullOrWhiteSpace(agentPrivateKeyPath)) return;
-        var agentPort = InstallerHelpers.PromptText(this, "Installation web", "Port agent local", "8000"); if (agentPort == null) return;
-        var agentTimeoutMs = InstallerHelpers.PromptText(this, "Installation web", "Timeout agent local (ms)", "1500"); if (agentTimeoutMs == null) return;
-        var agentActiveWindowMinutes = InstallerHelpers.PromptText(this, "Installation web", "Fen?tre active agent (minutes)", "15"); if (agentActiveWindowMinutes == null) return;
-        var hotlineServerHost = InstallerHelpers.PromptText(this, "Installation web", "H?te serveur hotline", "127.0.0.1"); if (hotlineServerHost == null) return;
-        var hotlineServerPort = InstallerHelpers.PromptText(this, "Installation web", "Port serveur hotline", "5310"); if (hotlineServerPort == null) return;
-        var hotlineServerTimeoutMs = InstallerHelpers.PromptText(this, "Installation web", "Timeout hotline (ms)", "10000"); if (hotlineServerTimeoutMs == null) return;
-        var hotlineAccessTokenTtl = InstallerHelpers.PromptText(this, "Installation web", "TTL access hotline (minutes)", "15"); if (hotlineAccessTokenTtl == null) return;
-        var hotlineRefreshTokenTtl = InstallerHelpers.PromptText(this, "Installation web", "TTL refresh hotline (minutes)", "120"); if (hotlineRefreshTokenTtl == null) return;
-        var allowedDevOrigins = InstallerHelpers.PromptText(this, "Installation web", "Origins dev autoris?es (CSV, optionnel)", ""); if (allowedDevOrigins == null) return;
-        var cspConnectSrc = InstallerHelpers.PromptText(this, "Installation web", "CSP connect-src suppl?mentaires (CSV, optionnel)", "http://127.0.0.1:8000,http://localhost:8000"); if (cspConnectSrc == null) return;
-        var dispatchSecret = InstallerHelpers.PromptText(this, "Installation web", "Secret dispatch alarmes (laisser vide pour reprendre/g?n?rer)", "") ?? string.Empty;
-
-        var nodePath = InstallerHelpers.FindNodeOnPath();
-        if (string.IsNullOrWhiteSpace(nodePath))
-        {
-            MessageBox.Show("Node.js est introuvable dans le PATH. Installez d'abord les prérequis.", "Installation impossible", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return;
-        }
+    private async System.Threading.Tasks.Task InstallAsync()
+    {
+        if (_running || !Valid(4)) return;
+        var src = AppContext.BaseDirectory;
+        var standalone = Path.Combine(src, ".next", "standalone", "server.js");
+        if (!File.Exists(standalone)) { MessageBox.Show($"Build standalone introuvable : {standalone}", "Installation impossible", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
+        var node = InstallerHelpers.FindNodeOnPath();
+        if (string.IsNullOrWhiteSpace(node)) { MessageBox.Show("Node.js est introuvable dans le PATH. Installez d'abord les prérequis.", "Installation impossible", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
 
         _running = true;
-        _installButton.Enabled = false;
-        _logTextBox.Clear();
+        _back.Enabled = _next.Enabled = _install.Enabled = _close.Enabled = false;
+        _log.Clear();
         SetStatus("Etat : installation en cours...");
-        AppendLog($"[INFO] Source package: {startupDir}");
-
+        AppendLog($"[INFO] Source package: {src}");
         try
         {
-            Directory.CreateDirectory(installDir);
-            InstallerHelpers.CopyDirectory(startupDir, installDir);
-            Directory.CreateDirectory(logsDir);
-            AppendLog("[OK] Fichiers copiés.");
-
-            var winswSource = Path.Combine(installDir, "winsw.exe");
-            if (!File.Exists(winswSource)) throw new FileNotFoundException("winsw.exe introuvable dans le package", winswSource);
-            var winswExe = Path.Combine(installDir, serviceName + ".exe");
-            File.Copy(winswSource, winswExe, true);
-            var winswXml = Path.Combine(installDir, serviceName + ".xml");
-
-            var dispatchSecretFile = Path.Combine(programData, "Vigitemp", "shared-secrets", "alarm-dispatch-secret.txt");
-            var dispatchSecretDir = Path.GetDirectoryName(dispatchSecretFile);
-            if (!string.IsNullOrWhiteSpace(dispatchSecretDir)) Directory.CreateDirectory(dispatchSecretDir);
-            if (string.IsNullOrWhiteSpace(dispatchSecret) && File.Exists(dispatchSecretFile))
-            {
-                dispatchSecret = File.ReadAllText(dispatchSecretFile).Trim();
-            }
-            if (string.IsNullOrWhiteSpace(dispatchSecret))
-            {
-                dispatchSecret = InstallerHelpers.GenerateSecret();
-            }
-            File.WriteAllText(dispatchSecretFile, dispatchSecret);
-
-            var jwtSecret = InstallerHelpers.GenerateSecret();
-            var hotlineJwtSecret = InstallerHelpers.GenerateSecret();
-            var agentSharedSecret = InstallerHelpers.GenerateSecret();
-            var envPath = Path.Combine(installDir, ".next", "standalone", ".env");
-            var envDir = Path.GetDirectoryName(envPath);
-            if (!string.IsNullOrWhiteSpace(envDir)) Directory.CreateDirectory(envDir);
-
-            string databaseUrl;
-            string databaseMesuresUrl;
-            string databaseChatUrl;
-            if (dbProvider == "mssql")
-            {
-                databaseUrl = $"sqlserver://{dbUser}:{dbPassword}@{dbHost}:{dbPort};database={dbMain};encrypt=false;trustServerCertificate=true";
-                databaseMesuresUrl = $"sqlserver://{dbUser}:{dbPassword}@{dbHost}:{dbPort};database={dbMeasure};encrypt=false;trustServerCertificate=true";
-                databaseChatUrl = $"sqlserver://{dbUser}:{dbPassword}@{dbHost}:{dbPort};database={dbChat};encrypt=false;trustServerCertificate=true";
-            }
-            else
-            {
-                const string mysqlQuery = "allowPublicKeyRetrieval=true";
-                databaseUrl = $"mysql://{Uri.EscapeDataString(dbUser)}:{Uri.EscapeDataString(dbPassword)}@{dbHost}:{dbPort}/{dbMain}?{mysqlQuery}";
-                databaseMesuresUrl = $"mysql://{Uri.EscapeDataString(dbUser)}:{Uri.EscapeDataString(dbPassword)}@{dbHost}:{dbPort}/{dbMeasure}?{mysqlQuery}";
-                databaseChatUrl = $"mysql://{Uri.EscapeDataString(dbUser)}:{Uri.EscapeDataString(dbPassword)}@{dbHost}:{dbPort}/{dbChat}?{mysqlQuery}";
-            }
-
-            var envBuilder = new StringBuilder();
-            envBuilder.AppendLine($"DATABASE_URL=\"{databaseUrl}\"");
-            envBuilder.AppendLine($"DATABASE_MESURES_URL=\"{databaseMesuresUrl}\"");
-            envBuilder.AppendLine($"DATABASE_CHAT_URL=\"{databaseChatUrl}\"");
-            envBuilder.AppendLine($"DATABASE_PROVIDER=\"{dbProvider}\"");
-            envBuilder.AppendLine($"NEXT_PUBLIC_API_BASE_URL=\"{websiteBaseUrl}\"");
-            envBuilder.AppendLine($"NEXT_PUBLIC_APP_URL=\"{appBaseUrl}\"");
-            envBuilder.AppendLine($"NEXT_PUBLIC_CACHE_TTL={cacheTtl}");
-            envBuilder.AppendLine($"VIGITEMP_LICENSE_PATH=\"{licensePath}\"");
-            envBuilder.AppendLine($"VIGITEMP_LICENSE_PUBLIC_KEY_PATH=\"{publicKeyPath}\"");
-            envBuilder.AppendLine($"VIGITEMP_AGENT_SECRET_PRIVATE_KEY_PATH=\"{agentPrivateKeyPath}\"");
-            envBuilder.AppendLine($"VIGITEMP_AGENT_PORT={agentPort}");
-            envBuilder.AppendLine($"VIGITEMP_AGENT_TIMEOUT_MS={agentTimeoutMs}");
-            envBuilder.AppendLine($"VIGITEMP_AGENT_ACTIVE_WINDOW_MINUTES={agentActiveWindowMinutes}");
-            envBuilder.AppendLine($"VIGITEMP_AGENT_SECRET=\"{agentSharedSecret}\"");
-            envBuilder.AppendLine($"VIGITEMP_ALARM_DISPATCH_SECRET=\"{dispatchSecret}\"");
-            envBuilder.AppendLine($"VIGITEMP_SURVEILLANCE_DISPATCH_SECRET=\"{dispatchSecret}\"");
-            envBuilder.AppendLine($"VIGITEMP_LOGS_DIR=\"{logsDir}\"");
-            envBuilder.AppendLine("VIGITEMP_ALLOWED_DEV_ORIGINS=\"\"");
-            envBuilder.AppendLine("VIGITEMP_CSP_CONNECT_SRC=\"http://127.0.0.1:8000,http://localhost:8000\"");
-            envBuilder.AppendLine($"JWT_SECRET=\"{jwtSecret}\"");
-            envBuilder.AppendLine("HOTLINE_SERVER_HOST=\"127.0.0.1\"");
-            envBuilder.AppendLine($"HOTLINE_SERVER_PORT={hotlineServerPort}");
-            envBuilder.AppendLine($"HOTLINE_SERVER_TIMEOUT_MS={hotlineServerTimeoutMs}");
-            envBuilder.AppendLine($"HOTLINE_JWT_SECRET=\"{hotlineJwtSecret}\"");
-            envBuilder.AppendLine($"HOTLINE_ACCESS_TOKEN_TTL_MINUTES={hotlineAccessTokenTtl}");
-            envBuilder.AppendLine($"HOTLINE_REFRESH_TOKEN_TTL_MINUTES={hotlineRefreshTokenTtl}");
-            envBuilder.AppendLine("NODE_ENV=production");
-            File.WriteAllText(envPath, envBuilder.ToString());
-            AppendLog("[OK] Fichier .env généré.");
-
-            if (InstallerHelpers.ServiceExists(serviceName))
-            {
-                var confirm = MessageBox.Show($"Le service {serviceName} existe déjà. Le réinstaller ?", "Service existant", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (confirm != DialogResult.Yes) throw new InvalidOperationException("Installation annulée.");
-                InstallerHelpers.RemoveService(serviceName, winswExe, AppendLog);
-            }
-
+            Directory.CreateDirectory(_s.InstallDir); InstallerHelpers.CopyDirectory(src, _s.InstallDir); Directory.CreateDirectory(_s.LogsDir); AppendLog("[OK] Fichiers copiés.");
+            var winswSource = Path.Combine(_s.InstallDir, "winsw.exe"); if (!File.Exists(winswSource)) throw new FileNotFoundException("winsw.exe introuvable dans le package", winswSource); var winswExe = Path.Combine(_s.InstallDir, _s.ServiceName + ".exe"); File.Copy(winswSource, winswExe, true); var winswXml = Path.Combine(_s.InstallDir, _s.ServiceName + ".xml");
+            var pd = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData); var dispatchFile = Path.Combine(pd, "Vigitemp", "shared-secrets", "alarm-dispatch-secret.txt"); Directory.CreateDirectory(Path.GetDirectoryName(dispatchFile)!); var dispatch = _s.DispatchSecret; if (string.IsNullOrWhiteSpace(dispatch) && File.Exists(dispatchFile)) dispatch = File.ReadAllText(dispatchFile).Trim(); if (string.IsNullOrWhiteSpace(dispatch)) dispatch = InstallerHelpers.GenerateSecret(); File.WriteAllText(dispatchFile, dispatch);
+            var envPath = Path.Combine(_s.InstallDir, ".next", "standalone", ".env"); Directory.CreateDirectory(Path.GetDirectoryName(envPath)!); var jwt = InstallerHelpers.GenerateSecret(); var hotlineJwt = InstallerHelpers.GenerateSecret(); var agentSecret = InstallerHelpers.GenerateSecret(); string dbUrl, dbMesures, dbChatUrl;
+            if (_s.DbProvider == "mssql") { dbUrl = $"sqlserver://{_s.DbUser}:{_s.DbPassword}@{_s.DbHost}:{_s.DbPort};database={_s.DbMain};encrypt=false;trustServerCertificate=true"; dbMesures = $"sqlserver://{_s.DbUser}:{_s.DbPassword}@{_s.DbHost}:{_s.DbPort};database={_s.DbMeasure};encrypt=false;trustServerCertificate=true"; dbChatUrl = $"sqlserver://{_s.DbUser}:{_s.DbPassword}@{_s.DbHost}:{_s.DbPort};database={_s.DbChat};encrypt=false;trustServerCertificate=true"; }
+            else { const string q = "allowPublicKeyRetrieval=true"; dbUrl = $"mysql://{Uri.EscapeDataString(_s.DbUser)}:{Uri.EscapeDataString(_s.DbPassword)}@{_s.DbHost}:{_s.DbPort}/{_s.DbMain}?{q}"; dbMesures = $"mysql://{Uri.EscapeDataString(_s.DbUser)}:{Uri.EscapeDataString(_s.DbPassword)}@{_s.DbHost}:{_s.DbPort}/{_s.DbMeasure}?{q}"; dbChatUrl = $"mysql://{Uri.EscapeDataString(_s.DbUser)}:{Uri.EscapeDataString(_s.DbPassword)}@{_s.DbHost}:{_s.DbPort}/{_s.DbChat}?{q}"; }
+            var env = new StringBuilder(); env.AppendLine($"DATABASE_URL=\"{dbUrl}\""); env.AppendLine($"DATABASE_MESURES_URL=\"{dbMesures}\""); env.AppendLine($"DATABASE_CHAT_URL=\"{dbChatUrl}\""); env.AppendLine($"DATABASE_PROVIDER=\"{_s.DbProvider}\""); env.AppendLine($"NEXT_PUBLIC_API_BASE_URL=\"{_s.WebsiteBaseUrl}\""); env.AppendLine($"NEXT_PUBLIC_APP_URL=\"{_s.AppBaseUrl}\""); env.AppendLine($"NEXT_PUBLIC_CACHE_TTL={_s.CacheTtl}"); env.AppendLine($"VIGITEMP_LICENSE_PATH=\"{_s.LicensePath}\""); env.AppendLine($"VIGITEMP_LICENSE_PUBLIC_KEY_PATH=\"{_s.PublicKeyPath}\""); env.AppendLine($"VIGITEMP_AGENT_SECRET_PRIVATE_KEY_PATH=\"{_s.AgentPrivateKeyPath}\""); env.AppendLine($"VIGITEMP_AGENT_PORT={_s.AgentPort}"); env.AppendLine($"VIGITEMP_AGENT_TIMEOUT_MS={_s.AgentTimeoutMs}"); env.AppendLine($"VIGITEMP_AGENT_ACTIVE_WINDOW_MINUTES={_s.AgentActiveWindowMinutes}"); env.AppendLine($"VIGITEMP_AGENT_SECRET=\"{agentSecret}\""); env.AppendLine($"VIGITEMP_ALARM_DISPATCH_SECRET=\"{dispatch}\""); env.AppendLine($"VIGITEMP_SURVEILLANCE_DISPATCH_SECRET=\"{dispatch}\""); env.AppendLine($"VIGITEMP_LOGS_DIR=\"{_s.LogsDir}\""); env.AppendLine($"VIGITEMP_ALLOWED_DEV_ORIGINS=\"{_s.AllowedDevOrigins}\""); env.AppendLine($"VIGITEMP_CSP_CONNECT_SRC=\"{_s.CspConnectSrc}\""); env.AppendLine($"JWT_SECRET=\"{jwt}\""); env.AppendLine($"HOTLINE_SERVER_HOST=\"{_s.HotlineServerHost}\""); env.AppendLine($"HOTLINE_SERVER_PORT={_s.HotlineServerPort}"); env.AppendLine($"HOTLINE_SERVER_TIMEOUT_MS={_s.HotlineServerTimeoutMs}"); env.AppendLine($"HOTLINE_JWT_SECRET=\"{hotlineJwt}\""); env.AppendLine($"HOTLINE_ACCESS_TOKEN_TTL_MINUTES={_s.HotlineAccessTokenTtl}"); env.AppendLine($"HOTLINE_REFRESH_TOKEN_TTL_MINUTES={_s.HotlineRefreshTokenTtl}"); env.AppendLine("NODE_ENV=production"); File.WriteAllText(envPath, env.ToString()); AppendLog("[OK] Fichier .env généré.");
+            if (InstallerHelpers.ServiceExists(_s.ServiceName)) { var confirm = MessageBox.Show($"Le service {_s.ServiceName} existe déjà. Le réinstaller ?", "Service existant", MessageBoxButtons.YesNo, MessageBoxIcon.Question); if (confirm != DialogResult.Yes) throw new InvalidOperationException("Installation annulée."); InstallerHelpers.RemoveService(_s.ServiceName, winswExe, AppendLog); }
             var xml = $@"<service>
-  <id>{serviceName}</id>
-  <name>{serviceName}</name>
+  <id>{_s.ServiceName}</id>
+  <name>{_s.ServiceName}</name>
   <description>VigiSensys Next.js website</description>
-  <executable>{nodePath}</executable>
+  <executable>{node}</executable>
   <arguments>.next\standalone\server.js</arguments>
-  <workingdirectory>{installDir}</workingdirectory>
-  <log mode=""roll-by-size"">
-    <sizeThreshold>10240</sizeThreshold>
-    <keepFiles>8</keepFiles>
-  </log>
+  <workingdirectory>{_s.InstallDir}</workingdirectory>
+  <log mode=""roll-by-size""><sizeThreshold>10240</sizeThreshold><keepFiles>8</keepFiles></log>
   <resetfailure>1 day</resetfailure>
   <onfailure action=""restart"" delay=""60000"" />
   <env name=""NODE_ENV"" value=""production"" />
-  <env name=""PORT"" value=""{port}"" />
+  <env name=""PORT"" value=""{_s.Port}"" />
   <env name=""HOSTNAME"" value=""0.0.0.0"" />
 </service>";
-            File.WriteAllText(winswXml, xml);
-            InstallerHelpers.RunProcess(winswExe, "install", installDir, AppendLog);
-            InstallerHelpers.RunProcess(winswExe, "start", installDir, AppendLog);
-
-            var version = string.Empty;
-            var packageJson = Path.Combine(installDir, "package.json");
-            if (File.Exists(packageJson))
-            {
-                version = FileVersionInfo.GetVersionInfo(winswExe).ProductVersion ?? string.Empty;
-            }
-            InstallerHelpers.WriteRegistryInfo(installDir, version);
-
-            SetStatus("Etat : installation terminee avec succes");
-            AppendLog("[OK] Installation terminee.");
-            MessageBox.Show("Installation du site terminee. Verifiez le service Windows si nécessaire.", "Installation terminee", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            File.WriteAllText(winswXml, xml); InstallerHelpers.RunProcess(winswExe, "install", _s.InstallDir, AppendLog); InstallerHelpers.RunProcess(winswExe, "start", _s.InstallDir, AppendLog); InstallerHelpers.WriteRegistryInfo(_s.InstallDir, string.Empty);
+            SetStatus("Etat : installation terminée avec succès"); AppendLog("[OK] Installation terminée."); MessageBox.Show("Installation du site terminée. Vérifiez le service Windows si nécessaire.", "Installation terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
-        catch (Exception ex)
-        {
-            SetStatus("Etat : installation en erreur");
-            AppendLog("[ERROR] " + ex.Message);
-            MessageBox.Show(ex.Message, "Installation impossible", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-        finally
-        {
-            _running = false;
-            _installButton.Enabled = true;
-        }
+        catch (Exception ex) { SetStatus("Etat : installation en erreur"); AppendLog("[ERROR] " + ex.Message); MessageBox.Show(ex.Message, "Installation impossible", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        finally { _running = false; Go(_tabs.SelectedIndex); _close.Enabled = true; }
     }
 
-    private void SetStatus(string status)
+    private void SetStatus(string text) { if (InvokeRequired) { BeginInvoke(new Action<string>(SetStatus), text); return; } _status.Text = text; }
+    private void AppendLog(string line) { if (InvokeRequired) { BeginInvoke(new Action<string>(AppendLog), line); return; } _log.AppendText(line + Environment.NewLine); }
+
+    private sealed class Settings
     {
-        if (InvokeRequired)
-        {
-            BeginInvoke(new Action<string>(SetStatus), status);
-            return;
-        }
-
-        _statusLabel.Text = status;
-    }
-
-    private void AppendLog(string line)
-    {
-        if (InvokeRequired)
-        {
-            BeginInvoke(new Action<string>(AppendLog), line);
-            return;
-        }
-
-        _logTextBox.AppendText(line + Environment.NewLine);
+        public string InstallDir, ServiceName, Port, WebsiteBaseUrl, AppBaseUrl, DbProvider, DbHost, DbPort, DbUser, DbPassword, DbMain, DbMeasure, DbChat, CacheTtl, LogsDir, LicensePath, PublicKeyPath, AgentPrivateKeyPath, AgentPort, AgentTimeoutMs, AgentActiveWindowMinutes, HotlineServerHost, HotlineServerPort, HotlineServerTimeoutMs, HotlineAccessTokenTtl, HotlineRefreshTokenTtl, AllowedDevOrigins, CspConnectSrc, DispatchSecret;
+        public static Settings Default() { var pd = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData); const string p = "3000"; return new Settings { InstallDir = Path.Combine(pd, @"Vigitemp\website"), ServiceName = "VigitempWeb", Port = p, WebsiteBaseUrl = $"http://127.0.0.1:{p}/", AppBaseUrl = $"http://127.0.0.1:{p}/", DbProvider = "mysql", DbHost = "127.0.0.1", DbPort = "3306", DbUser = "root", DbPassword = string.Empty, DbMain = "vigi_main", DbMeasure = "vigi_mesures", DbChat = "vigi_chat", CacheTtl = "30", LogsDir = Path.Combine(pd, @"Vigitemp\web-logs"), LicensePath = Path.Combine(pd, @"Vigitemp\licenses\license.vtlic"), PublicKeyPath = Path.Combine(pd, @"Vigitemp\license_keys\public_key.pem"), AgentPrivateKeyPath = Path.Combine(pd, @"Vigitemp\license_keys\agent_secret_private.pem"), AgentPort = "8000", AgentTimeoutMs = "1500", AgentActiveWindowMinutes = "15", HotlineServerHost = "127.0.0.1", HotlineServerPort = "5310", HotlineServerTimeoutMs = "10000", HotlineAccessTokenTtl = "15", HotlineRefreshTokenTtl = "120", AllowedDevOrigins = string.Empty, CspConnectSrc = "http://127.0.0.1:8000,http://localhost:8000", DispatchSecret = string.Empty }; }
     }
 }

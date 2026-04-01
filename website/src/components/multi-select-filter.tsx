@@ -200,12 +200,9 @@ export function MultiSelectFilter({
           </div>
 
           {selectedIds.length > 0 && (
-            <div className="mt-3 flex gap-2 border-t border-border/60 pt-3">
-              <Button type="button" size="sm" variant="ghost" className="flex-1" onClick={handleClear}>
+            <div className="mt-3 flex border-t border-border/60 pt-3">
+              <Button type="button" size="sm" variant="ghost" className="w-full" onClick={handleClear}>
                 {t('actions.clear')}
-              </Button>
-              <Button type="button" size="sm" className="flex-1" onClick={() => setIsOpen(false)}>
-                {t('actions.apply')}
               </Button>
             </div>
           )}

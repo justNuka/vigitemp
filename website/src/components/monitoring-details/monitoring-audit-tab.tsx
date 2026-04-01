@@ -70,7 +70,7 @@ export function MonitoringAuditTab({ logs, isLoading, error, t }: MonitoringAudi
   }
 
   return (
-    <div className="space-y-4 pt-4 h-140">
+    <div className="space-y-4 pt-2">
       <TanStackTable
         columns={columns}
         data={data}
@@ -82,6 +82,7 @@ export function MonitoringAuditTab({ logs, isLoading, error, t }: MonitoringAudi
         headerClassName="!bg-sidebar !text-sidebar-foreground"
         headerCellClassName="!bg-sidebar !text-sidebar-foreground !border-r !border-white/25 hover:!bg-sidebar-accent/80"
         tableClassName="border-separate border-spacing-0 [&_thead_th]:!border-r [&_thead_th]:!border-white/25 [&_tbody_td]:!border-b [&_tbody_td]:!border-border"
+        maxHeight="24rem"
       />
     </div>
   )

@@ -66,8 +66,6 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       }
       where.OR = [
         { t_lieu_groupe: { some: { Id_Groupe: { in: allowedGroupIds } } } },
-        { Id_Groupe1: { in: allowedGroupIds } },
-        { Id_Groupe2: { in: allowedGroupIds } },
       ]
     }
 
@@ -80,8 +78,6 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
         accessOr.push({
           OR: [
             { t_lieu_groupe: { some: { Id_Groupe: { in: assignedGroupIds } } } },
-            { Id_Groupe1: { in: assignedGroupIds } },
-            { Id_Groupe2: { in: assignedGroupIds } },
           ],
         })
       }
@@ -97,8 +93,6 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       include: {
         t_sonde: { select: { Est_Sonde_GSO: true } },
         t_site: { select: { Libelle_Site: true } },
-        t_groupe1: { select: { Nom_Groupe: true } },
-        t_groupe2: { select: { Nom_Groupe: true } },
         t_lieu_groupe: { include: { t_groupe: { select: { Id_Groupe: true, Nom_Groupe: true } } } },
       },
       skip,
@@ -286,11 +280,11 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
             siteId: location.Id_Site,
             groupIds: locationGroupIds,
             groupNames,
-            groupId1: location.Id_Groupe1 ?? locationGroupIds[0] ?? null,
-            groupId2: location.Id_Groupe2 ?? locationGroupIds[1] ?? null,
+            groupId1: locationGroupIds[0] ?? null,
+            groupId2: locationGroupIds[1] ?? null,
             site: location.t_site?.Libelle_Site ?? "",
-            groupName1: location.t_groupe1?.Nom_Groupe ?? null,
-            groupName2: location.t_groupe2?.Nom_Groupe ?? null,
+            groupName1: groups[0]?.Nom_Groupe ?? null,
+            groupName2: groups[1]?.Nom_Groupe ?? null,
           },
         }
       })

@@ -270,8 +270,6 @@ export const POST = withLogging(async (req: NextRequest) => {
             Retard_Alarme_Haut: true,
             Retard_Alarme_Bas: true,
             t_site: { select: { Libelle_Site: true } },
-            t_groupe1: { select: { Nom_Groupe: true } },
-            t_groupe2: { select: { Nom_Groupe: true } },
             t_lieu_groupe: { select: { t_groupe: { select: { Nom_Groupe: true } } } },
           },
         },
@@ -287,8 +285,6 @@ export const POST = withLogging(async (req: NextRequest) => {
       const sensorSerial = alarm.t_lieu?.Sonde_Numero_Serie ?? ""
       sondeLabel = sensorSerial || undefined
       const groupNames = [
-        alarm.t_lieu?.t_groupe1?.Nom_Groupe,
-        alarm.t_lieu?.t_groupe2?.Nom_Groupe,
         ...(alarm.t_lieu?.t_lieu_groupe?.map((g) => g.t_groupe?.Nom_Groupe) ?? []),
       ]
         .filter((name, idx, arr) => name && arr.indexOf(name) === idx)
