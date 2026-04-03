@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using VigitempAgent.Properties;
@@ -13,6 +14,7 @@ namespace VigitempAgent
         private readonly Label _userValue = new Label();
         private readonly Label _expiryValue = new Label();
         private readonly Label _urlValue = new Label();
+        private readonly Label _versionValue = new Label();
         private readonly Timer _refreshTimer = new Timer();
 
         public StatusForm(Func<string> getSiteWebUrl)
@@ -26,18 +28,18 @@ namespace VigitempAgent
             MaximizeBox = false;
             MinimizeBox = false;
             ShowInTaskbar = true;
-            ClientSize = new Size(420, 210);
+            ClientSize = new Size(420, 236);
 
             var root = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 Padding = new Padding(12),
                 ColumnCount = 2,
-                RowCount = 5,
+                RowCount = 6,
             };
             root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 140));
             root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            for (var i = 0; i < 4; i++)
+            for (var i = 0; i < 5; i++)
             {
                 root.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));
             }
@@ -47,11 +49,13 @@ namespace VigitempAgent
             var userLabel = new Label { Text = "Utilisateur:", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
             var expiryLabel = new Label { Text = "Expiration:", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
             var urlLabel = new Label { Text = "Portail:", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
+            var versionLabel = new Label { Text = "Version:", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
 
             ConfigureValueLabel(_statusValue);
             ConfigureValueLabel(_userValue);
             ConfigureValueLabel(_expiryValue);
             ConfigureValueLabel(_urlValue);
+            ConfigureValueLabel(_versionValue);
 
             _urlValue.AutoEllipsis = true;
 
@@ -63,6 +67,8 @@ namespace VigitempAgent
             root.Controls.Add(_expiryValue, 1, 2);
             root.Controls.Add(urlLabel, 0, 3);
             root.Controls.Add(_urlValue, 1, 3);
+            root.Controls.Add(versionLabel, 0, 4);
+            root.Controls.Add(_versionValue, 1, 4);
 
             var buttons = new FlowLayoutPanel
             {
@@ -81,7 +87,7 @@ namespace VigitempAgent
             buttons.Controls.Add(closeBtn);
             buttons.Controls.Add(refreshBtn);
 
-            root.Controls.Add(buttons, 0, 4);
+            root.Controls.Add(buttons, 0, 5);
             root.SetColumnSpan(buttons, 2);
 
             Controls.Add(root);
@@ -133,6 +139,9 @@ namespace VigitempAgent
                 _userValue.Text = connected
                     ? (!string.IsNullOrWhiteSpace(session?.Username) ? session.Username : (!string.IsNullOrWhiteSpace(session?.UserId) ? session.UserId : "-"))
                     : "-";
+
+                var version = FileVersionInfo.GetVersionInfo(Application.ExecutablePath).ProductVersion;
+                _versionValue.Text = string.IsNullOrWhiteSpace(version) ? Application.ProductVersion : version;
 
                 if (connected && session?.ExpiresAtUtc.HasValue == true)
                 {

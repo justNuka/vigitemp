@@ -22,6 +22,7 @@ namespace VigitempAgent
         private System.Windows.Forms.Timer sessionTimer;
         private DateTime lastNoSessionTipUtc = DateTime.MinValue;
         private DateTime lastExpiryTipUtc = DateTime.MinValue;
+        private DateTime lastHeartbeatUtc = DateTime.MinValue;
         private string lastAlarmUrl;
         private NotificationTracking lastNotificationTracking;
         private bool lastNotificationClicked;
@@ -42,6 +43,7 @@ namespace VigitempAgent
         {
             Timeout = TimeSpan.FromSeconds(3)
         };
+        private static readonly TimeSpan HeartbeatInterval = TimeSpan.FromMinutes(5);
         private readonly object _notifLock = new object();
 
         private static (string url, bool explicitOverride) ResolveSiteWebUrl()
@@ -208,6 +210,15 @@ namespace VigitempAgent
                 {
                     AgentLog.Error("CheckSessionAndNotify failed.", ex);
                 }
+
+                try
+                {
+                    _ = SendHeartbeatIfDueAsync();
+                }
+                catch (Exception ex)
+                {
+                    AgentLog.Error("SendHeartbeatIfDueAsync scheduling failed.", ex);
+                }
             };
             sessionTimer.Start();
 
@@ -218,6 +229,15 @@ namespace VigitempAgent
             catch (Exception ex)
             {
                 AgentLog.Error("Initial CheckSessionAndNotify failed.", ex);
+            }
+
+            try
+            {
+                _ = SendHeartbeatIfDueAsync(force: true);
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("Initial SendHeartbeatIfDueAsync scheduling failed.", ex);
             }
 
             try
@@ -427,6 +447,49 @@ namespace VigitempAgent
             catch (Exception ex)
             {
                 AgentLog.Error("SendNotificationEvent failed.", ex);
+            }
+        }
+
+        private async Task SendHeartbeatIfDueAsync(bool force = false)
+        {
+            if (!SessionStore.HasValidSession()) return;
+            if (string.IsNullOrWhiteSpace(SITEWEB_URL)) return;
+            if (string.IsNullOrWhiteSpace(AGENT_SECRET)) return;
+
+            var nowUtc = DateTime.UtcNow;
+            if (!force && nowUtc - lastHeartbeatUtc < HeartbeatInterval)
+            {
+                return;
+            }
+
+            lastHeartbeatUtc = nowUtc;
+            var session = SessionStore.Get();
+            var endpoint = SITEWEB_URL.TrimEnd('/') + "/api/notifications/agent-heartbeat";
+            var payload = "{" +
+                         "\"machineName\":\"" + JsonEscape(Environment.MachineName) + "\"," +
+                         "\"ip\":\"" + JsonEscape(GetLocalIPAddress()) + "\"," +
+                         "\"userId\":\"" + JsonEscape(session != null ? session.UserId : null) + "\"," +
+                         "\"username\":\"" + JsonEscape(session != null ? session.Username : null) + "\"" +
+                         "}";
+
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
+                {
+                    Content = new StringContent(payload, Encoding.UTF8, "application/json")
+                };
+                request.Headers.Add("x-vigitemp-agent-secret", AGENT_SECRET);
+
+                var response = await NotificationClient.SendAsync(request).ConfigureAwait(false);
+                if (!response.IsSuccessStatusCode)
+                {
+                    AgentLog.Error("Agent heartbeat failed with HTTP status " + (int)response.StatusCode + ".", null);
+                }
+                response.Dispose();
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("SendHeartbeatIfDueAsync failed.", ex);
             }
         }
 

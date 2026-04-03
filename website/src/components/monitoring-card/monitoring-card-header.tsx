@@ -140,10 +140,19 @@ export function MonitoringCardHeader({
             </UITooltip>
           </div>
           {surveillanceDisabledLabel ? (
-            <div className={`inline-flex items-center max-w-full gap-1.5 rounded-full text-[11px] font-medium px-2.5 py-1 ${alarmBadgeClassName}`}>
-              <PowerOff className="h-3 w-3" />
-              <span className="truncate">{surveillanceDisabledLabel}</span>
-            </div>
+            <UITooltip>
+              <TooltipTrigger asChild>
+                <div className={`inline-flex items-center max-w-full gap-1.5 rounded-full text-[11px] font-medium px-2.5 py-1 ${locationComment ? 'cursor-help ' : ''}${alarmBadgeClassName}`}>
+                  <PowerOff className="h-3 w-3" />
+                  <span className="truncate">{surveillanceDisabledLabel}</span>
+                </div>
+              </TooltipTrigger>
+              {locationComment ? (
+                <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap break-words">
+                  <p className="text-xs">{locationComment}</p>
+                </TooltipContent>
+              ) : null}
+            </UITooltip>
           ) : null}
           {alarmDisabledLabel ? (
             <UITooltip>

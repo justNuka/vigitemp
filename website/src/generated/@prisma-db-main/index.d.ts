@@ -5315,6 +5315,37 @@ export namespace Prisma {
 
 
   /**
+   * Count Type T_sonde_typeCountOutputType
+   */
+
+  export type T_sonde_typeCountOutputType = {
+    t_sonde: number
+  }
+
+  export type T_sonde_typeCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    t_sonde?: boolean | T_sonde_typeCountOutputTypeCountT_sondeArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * T_sonde_typeCountOutputType without action
+   */
+  export type T_sonde_typeCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the T_sonde_typeCountOutputType
+     */
+    select?: T_sonde_typeCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * T_sonde_typeCountOutputType without action
+   */
+  export type T_sonde_typeCountOutputTypeCountT_sondeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: t_sondeWhereInput
+  }
+
+
+  /**
    * Count Type T_utilisateurCountOutputType
    */
 
@@ -33044,6 +33075,7 @@ export namespace Prisma {
     Id_Sonde: number | null
     Adresse_Sonde: string | null
     Sonde_Numero_Serie: string | null
+    Sonde_Type: string | null
     Est_Sonde_GSO: boolean | null
     Port_Serie: string | null
     Surveillance_Etat: string | null
@@ -33065,6 +33097,7 @@ export namespace Prisma {
     Id_Sonde: number | null
     Adresse_Sonde: string | null
     Sonde_Numero_Serie: string | null
+    Sonde_Type: string | null
     Est_Sonde_GSO: boolean | null
     Port_Serie: string | null
     Surveillance_Etat: string | null
@@ -33086,6 +33119,7 @@ export namespace Prisma {
     Id_Sonde: number
     Adresse_Sonde: number
     Sonde_Numero_Serie: number
+    Sonde_Type: number
     Est_Sonde_GSO: number
     Port_Serie: number
     Surveillance_Etat: number
@@ -33129,6 +33163,7 @@ export namespace Prisma {
     Id_Sonde?: true
     Adresse_Sonde?: true
     Sonde_Numero_Serie?: true
+    Sonde_Type?: true
     Est_Sonde_GSO?: true
     Port_Serie?: true
     Surveillance_Etat?: true
@@ -33150,6 +33185,7 @@ export namespace Prisma {
     Id_Sonde?: true
     Adresse_Sonde?: true
     Sonde_Numero_Serie?: true
+    Sonde_Type?: true
     Est_Sonde_GSO?: true
     Port_Serie?: true
     Surveillance_Etat?: true
@@ -33171,6 +33207,7 @@ export namespace Prisma {
     Id_Sonde?: true
     Adresse_Sonde?: true
     Sonde_Numero_Serie?: true
+    Sonde_Type?: true
     Est_Sonde_GSO?: true
     Port_Serie?: true
     Surveillance_Etat?: true
@@ -33279,6 +33316,7 @@ export namespace Prisma {
     Id_Sonde: number
     Adresse_Sonde: string | null
     Sonde_Numero_Serie: string | null
+    Sonde_Type: string | null
     Est_Sonde_GSO: boolean
     Port_Serie: string | null
     Surveillance_Etat: string
@@ -33319,6 +33357,7 @@ export namespace Prisma {
     Id_Sonde?: boolean
     Adresse_Sonde?: boolean
     Sonde_Numero_Serie?: boolean
+    Sonde_Type?: boolean
     Est_Sonde_GSO?: boolean
     Port_Serie?: boolean
     Surveillance_Etat?: boolean
@@ -33337,6 +33376,7 @@ export namespace Prisma {
     t_lieu?: boolean | t_sonde$t_lieuArgs<ExtArgs>
     t_sonde_etat?: boolean | t_sonde$t_sonde_etatArgs<ExtArgs>
     t_etat_surveillance?: boolean | t_etat_surveillanceDefaultArgs<ExtArgs>
+    t_sonde_type?: boolean | t_sonde$t_sonde_typeArgs<ExtArgs>
     _count?: boolean | T_sondeCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["t_sonde"]>
 
@@ -33346,6 +33386,7 @@ export namespace Prisma {
     Id_Sonde?: boolean
     Adresse_Sonde?: boolean
     Sonde_Numero_Serie?: boolean
+    Sonde_Type?: boolean
     Est_Sonde_GSO?: boolean
     Port_Serie?: boolean
     Surveillance_Etat?: boolean
@@ -33363,11 +33404,12 @@ export namespace Prisma {
     Sonde_Offset?: boolean
   }
 
-  export type t_sondeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Sonde" | "Adresse_Sonde" | "Sonde_Numero_Serie" | "Est_Sonde_GSO" | "Port_Serie" | "Surveillance_Etat" | "Id_Module" | "Relai_1" | "Relai_2" | "Relai_3" | "Relai_4" | "Frequence_Mesure" | "Frequence_Recup" | "Est_Sonde_Reformee" | "Etat_Sonde_N1" | "Id_Serveur" | "Id_Sonde_Etat" | "Sonde_Offset", ExtArgs["result"]["t_sonde"]>
+  export type t_sondeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Sonde" | "Adresse_Sonde" | "Sonde_Numero_Serie" | "Sonde_Type" | "Est_Sonde_GSO" | "Port_Serie" | "Surveillance_Etat" | "Id_Module" | "Relai_1" | "Relai_2" | "Relai_3" | "Relai_4" | "Frequence_Mesure" | "Frequence_Recup" | "Est_Sonde_Reformee" | "Etat_Sonde_N1" | "Id_Serveur" | "Id_Sonde_Etat" | "Sonde_Offset", ExtArgs["result"]["t_sonde"]>
   export type t_sondeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     t_lieu?: boolean | t_sonde$t_lieuArgs<ExtArgs>
     t_sonde_etat?: boolean | t_sonde$t_sonde_etatArgs<ExtArgs>
     t_etat_surveillance?: boolean | t_etat_surveillanceDefaultArgs<ExtArgs>
+    t_sonde_type?: boolean | t_sonde$t_sonde_typeArgs<ExtArgs>
     _count?: boolean | T_sondeCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -33377,11 +33419,13 @@ export namespace Prisma {
       t_lieu: Prisma.$t_lieuPayload<ExtArgs>[]
       t_sonde_etat: Prisma.$t_sonde_etatPayload<ExtArgs> | null
       t_etat_surveillance: Prisma.$t_etat_surveillancePayload<ExtArgs>
+      t_sonde_type: Prisma.$t_sonde_typePayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       Id_Sonde: number
       Adresse_Sonde: string | null
       Sonde_Numero_Serie: string | null
+      Sonde_Type: string | null
       Est_Sonde_GSO: boolean
       Port_Serie: string | null
       Surveillance_Etat: string
@@ -33740,6 +33784,7 @@ export namespace Prisma {
     t_lieu<T extends t_sonde$t_lieuArgs<ExtArgs> = {}>(args?: Subset<T, t_sonde$t_lieuArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_lieuPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     t_sonde_etat<T extends t_sonde$t_sonde_etatArgs<ExtArgs> = {}>(args?: Subset<T, t_sonde$t_sonde_etatArgs<ExtArgs>>): Prisma__t_sonde_etatClient<$Result.GetResult<Prisma.$t_sonde_etatPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     t_etat_surveillance<T extends t_etat_surveillanceDefaultArgs<ExtArgs> = {}>(args?: Subset<T, t_etat_surveillanceDefaultArgs<ExtArgs>>): Prisma__t_etat_surveillanceClient<$Result.GetResult<Prisma.$t_etat_surveillancePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    t_sonde_type<T extends t_sonde$t_sonde_typeArgs<ExtArgs> = {}>(args?: Subset<T, t_sonde$t_sonde_typeArgs<ExtArgs>>): Prisma__t_sonde_typeClient<$Result.GetResult<Prisma.$t_sonde_typePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -33772,6 +33817,7 @@ export namespace Prisma {
     readonly Id_Sonde: FieldRef<"t_sonde", 'Int'>
     readonly Adresse_Sonde: FieldRef<"t_sonde", 'String'>
     readonly Sonde_Numero_Serie: FieldRef<"t_sonde", 'String'>
+    readonly Sonde_Type: FieldRef<"t_sonde", 'String'>
     readonly Est_Sonde_GSO: FieldRef<"t_sonde", 'Boolean'>
     readonly Port_Serie: FieldRef<"t_sonde", 'String'>
     readonly Surveillance_Etat: FieldRef<"t_sonde", 'String'>
@@ -34170,6 +34216,25 @@ export namespace Prisma {
      */
     include?: t_sonde_etatInclude<ExtArgs> | null
     where?: t_sonde_etatWhereInput
+  }
+
+  /**
+   * t_sonde.t_sonde_type
+   */
+  export type t_sonde$t_sonde_typeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_sonde_type
+     */
+    select?: t_sonde_typeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_sonde_type
+     */
+    omit?: t_sonde_typeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_sonde_typeInclude<ExtArgs> | null
+    where?: t_sonde_typeWhereInput
   }
 
   /**
@@ -35392,6 +35457,8 @@ export namespace Prisma {
     Est_Gestion_Relais?: boolean
     Est_Double_Capteur?: boolean
     Famille_Sonde?: boolean
+    t_sonde?: boolean | t_sonde_type$t_sondeArgs<ExtArgs>
+    _count?: boolean | T_sonde_typeCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["t_sonde_type"]>
 
 
@@ -35406,10 +35473,16 @@ export namespace Prisma {
   }
 
   export type t_sonde_typeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Sonde_Type" | "Sonde_Type" | "Libelle_Sonde_Type" | "Est_Gestion_Relais" | "Est_Double_Capteur" | "Famille_Sonde", ExtArgs["result"]["t_sonde_type"]>
+  export type t_sonde_typeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    t_sonde?: boolean | t_sonde_type$t_sondeArgs<ExtArgs>
+    _count?: boolean | T_sonde_typeCountOutputTypeDefaultArgs<ExtArgs>
+  }
 
   export type $t_sonde_typePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "t_sonde_type"
-    objects: {}
+    objects: {
+      t_sonde: Prisma.$t_sondePayload<ExtArgs>[]
+    }
     scalars: $Extensions.GetPayloadResult<{
       Id_Sonde_Type: number
       Sonde_Type: string | null
@@ -35757,6 +35830,7 @@ export namespace Prisma {
    */
   export interface Prisma__t_sonde_typeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    t_sonde<T extends t_sonde_type$t_sondeArgs<ExtArgs> = {}>(args?: Subset<T, t_sonde_type$t_sondeArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_sondePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -35809,6 +35883,10 @@ export namespace Prisma {
      */
     omit?: t_sonde_typeOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_sonde_typeInclude<ExtArgs> | null
+    /**
      * Filter, which t_sonde_type to fetch.
      */
     where: t_sonde_typeWhereUniqueInput
@@ -35827,6 +35905,10 @@ export namespace Prisma {
      */
     omit?: t_sonde_typeOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_sonde_typeInclude<ExtArgs> | null
+    /**
      * Filter, which t_sonde_type to fetch.
      */
     where: t_sonde_typeWhereUniqueInput
@@ -35844,6 +35926,10 @@ export namespace Prisma {
      * Omit specific fields from the t_sonde_type
      */
     omit?: t_sonde_typeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_sonde_typeInclude<ExtArgs> | null
     /**
      * Filter, which t_sonde_type to fetch.
      */
@@ -35893,6 +35979,10 @@ export namespace Prisma {
      */
     omit?: t_sonde_typeOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_sonde_typeInclude<ExtArgs> | null
+    /**
      * Filter, which t_sonde_type to fetch.
      */
     where?: t_sonde_typeWhereInput
@@ -35941,6 +36031,10 @@ export namespace Prisma {
      */
     omit?: t_sonde_typeOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_sonde_typeInclude<ExtArgs> | null
+    /**
      * Filter, which t_sonde_types to fetch.
      */
     where?: t_sonde_typeWhereInput
@@ -35984,6 +36078,10 @@ export namespace Prisma {
      */
     omit?: t_sonde_typeOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_sonde_typeInclude<ExtArgs> | null
+    /**
      * The data needed to create a t_sonde_type.
      */
     data?: XOR<t_sonde_typeCreateInput, t_sonde_typeUncheckedCreateInput>
@@ -36012,6 +36110,10 @@ export namespace Prisma {
      * Omit specific fields from the t_sonde_type
      */
     omit?: t_sonde_typeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_sonde_typeInclude<ExtArgs> | null
     /**
      * The data needed to update a t_sonde_type.
      */
@@ -36053,6 +36155,10 @@ export namespace Prisma {
      */
     omit?: t_sonde_typeOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_sonde_typeInclude<ExtArgs> | null
+    /**
      * The filter to search for the t_sonde_type to update in case it exists.
      */
     where: t_sonde_typeWhereUniqueInput
@@ -36079,6 +36185,10 @@ export namespace Prisma {
      */
     omit?: t_sonde_typeOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_sonde_typeInclude<ExtArgs> | null
+    /**
      * Filter which t_sonde_type to delete.
      */
     where: t_sonde_typeWhereUniqueInput
@@ -36099,6 +36209,30 @@ export namespace Prisma {
   }
 
   /**
+   * t_sonde_type.t_sonde
+   */
+  export type t_sonde_type$t_sondeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_sonde
+     */
+    select?: t_sondeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_sonde
+     */
+    omit?: t_sondeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_sondeInclude<ExtArgs> | null
+    where?: t_sondeWhereInput
+    orderBy?: t_sondeOrderByWithRelationInput | t_sondeOrderByWithRelationInput[]
+    cursor?: t_sondeWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: T_sondeScalarFieldEnum | T_sondeScalarFieldEnum[]
+  }
+
+  /**
    * t_sonde_type without action
    */
   export type t_sonde_typeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -36110,6 +36244,10 @@ export namespace Prisma {
      * Omit specific fields from the t_sonde_type
      */
     omit?: t_sonde_typeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_sonde_typeInclude<ExtArgs> | null
   }
 
 
@@ -57841,6 +57979,7 @@ export namespace Prisma {
     Id_Sonde: 'Id_Sonde',
     Adresse_Sonde: 'Adresse_Sonde',
     Sonde_Numero_Serie: 'Sonde_Numero_Serie',
+    Sonde_Type: 'Sonde_Type',
     Est_Sonde_GSO: 'Est_Sonde_GSO',
     Port_Serie: 'Port_Serie',
     Surveillance_Etat: 'Surveillance_Etat',
@@ -58443,6 +58582,7 @@ export namespace Prisma {
   export const t_sondeOrderByRelevanceFieldEnum: {
     Adresse_Sonde: 'Adresse_Sonde',
     Sonde_Numero_Serie: 'Sonde_Numero_Serie',
+    Sonde_Type: 'Sonde_Type',
     Port_Serie: 'Port_Serie',
     Surveillance_Etat: 'Surveillance_Etat',
     Relai_1: 'Relai_1',
@@ -61019,6 +61159,7 @@ export namespace Prisma {
     Id_Sonde?: IntFilter<"t_sonde"> | number
     Adresse_Sonde?: StringNullableFilter<"t_sonde"> | string | null
     Sonde_Numero_Serie?: StringNullableFilter<"t_sonde"> | string | null
+    Sonde_Type?: StringNullableFilter<"t_sonde"> | string | null
     Est_Sonde_GSO?: BoolFilter<"t_sonde"> | boolean
     Port_Serie?: StringNullableFilter<"t_sonde"> | string | null
     Surveillance_Etat?: StringFilter<"t_sonde"> | string
@@ -61037,12 +61178,14 @@ export namespace Prisma {
     t_lieu?: T_lieuListRelationFilter
     t_sonde_etat?: XOR<T_sonde_etatNullableScalarRelationFilter, t_sonde_etatWhereInput> | null
     t_etat_surveillance?: XOR<T_etat_surveillanceScalarRelationFilter, t_etat_surveillanceWhereInput>
+    t_sonde_type?: XOR<T_sonde_typeNullableScalarRelationFilter, t_sonde_typeWhereInput> | null
   }
 
   export type t_sondeOrderByWithRelationInput = {
     Id_Sonde?: SortOrder
     Adresse_Sonde?: SortOrderInput | SortOrder
     Sonde_Numero_Serie?: SortOrderInput | SortOrder
+    Sonde_Type?: SortOrderInput | SortOrder
     Est_Sonde_GSO?: SortOrder
     Port_Serie?: SortOrderInput | SortOrder
     Surveillance_Etat?: SortOrder
@@ -61061,6 +61204,7 @@ export namespace Prisma {
     t_lieu?: t_lieuOrderByRelationAggregateInput
     t_sonde_etat?: t_sonde_etatOrderByWithRelationInput
     t_etat_surveillance?: t_etat_surveillanceOrderByWithRelationInput
+    t_sonde_type?: t_sonde_typeOrderByWithRelationInput
     _relevance?: t_sondeOrderByRelevanceInput
   }
 
@@ -61071,6 +61215,7 @@ export namespace Prisma {
     OR?: t_sondeWhereInput[]
     NOT?: t_sondeWhereInput | t_sondeWhereInput[]
     Adresse_Sonde?: StringNullableFilter<"t_sonde"> | string | null
+    Sonde_Type?: StringNullableFilter<"t_sonde"> | string | null
     Est_Sonde_GSO?: BoolFilter<"t_sonde"> | boolean
     Port_Serie?: StringNullableFilter<"t_sonde"> | string | null
     Surveillance_Etat?: StringFilter<"t_sonde"> | string
@@ -61089,12 +61234,14 @@ export namespace Prisma {
     t_lieu?: T_lieuListRelationFilter
     t_sonde_etat?: XOR<T_sonde_etatNullableScalarRelationFilter, t_sonde_etatWhereInput> | null
     t_etat_surveillance?: XOR<T_etat_surveillanceScalarRelationFilter, t_etat_surveillanceWhereInput>
+    t_sonde_type?: XOR<T_sonde_typeNullableScalarRelationFilter, t_sonde_typeWhereInput> | null
   }, "Id_Sonde" | "Sonde_Numero_Serie">
 
   export type t_sondeOrderByWithAggregationInput = {
     Id_Sonde?: SortOrder
     Adresse_Sonde?: SortOrderInput | SortOrder
     Sonde_Numero_Serie?: SortOrderInput | SortOrder
+    Sonde_Type?: SortOrderInput | SortOrder
     Est_Sonde_GSO?: SortOrder
     Port_Serie?: SortOrderInput | SortOrder
     Surveillance_Etat?: SortOrder
@@ -61124,6 +61271,7 @@ export namespace Prisma {
     Id_Sonde?: IntWithAggregatesFilter<"t_sonde"> | number
     Adresse_Sonde?: StringNullableWithAggregatesFilter<"t_sonde"> | string | null
     Sonde_Numero_Serie?: StringNullableWithAggregatesFilter<"t_sonde"> | string | null
+    Sonde_Type?: StringNullableWithAggregatesFilter<"t_sonde"> | string | null
     Est_Sonde_GSO?: BoolWithAggregatesFilter<"t_sonde"> | boolean
     Port_Serie?: StringNullableWithAggregatesFilter<"t_sonde"> | string | null
     Surveillance_Etat?: StringWithAggregatesFilter<"t_sonde"> | string
@@ -61202,6 +61350,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: BoolNullableFilter<"t_sonde_type"> | boolean | null
     Est_Double_Capteur?: BoolFilter<"t_sonde_type"> | boolean
     Famille_Sonde?: StringFilter<"t_sonde_type"> | string
+    t_sonde?: T_sondeListRelationFilter
   }
 
   export type t_sonde_typeOrderByWithRelationInput = {
@@ -61211,6 +61360,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: SortOrderInput | SortOrder
     Est_Double_Capteur?: SortOrder
     Famille_Sonde?: SortOrder
+    t_sonde?: t_sondeOrderByRelationAggregateInput
     _relevance?: t_sonde_typeOrderByRelevanceInput
   }
 
@@ -61224,6 +61374,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: BoolNullableFilter<"t_sonde_type"> | boolean | null
     Est_Double_Capteur?: BoolFilter<"t_sonde_type"> | boolean
     Famille_Sonde?: StringFilter<"t_sonde_type"> | string
+    t_sonde?: T_sondeListRelationFilter
   }, "Id_Sonde_Type" | "Sonde_Type">
 
   export type t_sonde_typeOrderByWithAggregationInput = {
@@ -65547,12 +65698,14 @@ export namespace Prisma {
     t_lieu?: t_lieuCreateNestedManyWithoutT_sondeInput
     t_sonde_etat?: t_sonde_etatCreateNestedOneWithoutT_sondeInput
     t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_sondeInput
+    t_sonde_type?: t_sonde_typeCreateNestedOneWithoutT_sondeInput
   }
 
   export type t_sondeUncheckedCreateInput = {
     Id_Sonde?: number
     Adresse_Sonde?: string | null
     Sonde_Numero_Serie?: string | null
+    Sonde_Type?: string | null
     Est_Sonde_GSO?: boolean
     Port_Serie?: string | null
     Surveillance_Etat?: string
@@ -65590,12 +65743,14 @@ export namespace Prisma {
     t_lieu?: t_lieuUpdateManyWithoutT_sondeNestedInput
     t_sonde_etat?: t_sonde_etatUpdateOneWithoutT_sondeNestedInput
     t_etat_surveillance?: t_etat_surveillanceUpdateOneRequiredWithoutT_sondeNestedInput
+    t_sonde_type?: t_sonde_typeUpdateOneWithoutT_sondeNestedInput
   }
 
   export type t_sondeUncheckedUpdateInput = {
     Id_Sonde?: IntFieldUpdateOperationsInput | number
     Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
+    Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Sonde_GSO?: BoolFieldUpdateOperationsInput | boolean
     Port_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Surveillance_Etat?: StringFieldUpdateOperationsInput | string
@@ -65618,6 +65773,7 @@ export namespace Prisma {
     Id_Sonde?: number
     Adresse_Sonde?: string | null
     Sonde_Numero_Serie?: string | null
+    Sonde_Type?: string | null
     Est_Sonde_GSO?: boolean
     Port_Serie?: string | null
     Surveillance_Etat?: string
@@ -65657,6 +65813,7 @@ export namespace Prisma {
     Id_Sonde?: IntFieldUpdateOperationsInput | number
     Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
+    Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Sonde_GSO?: BoolFieldUpdateOperationsInput | boolean
     Port_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Surveillance_Etat?: StringFieldUpdateOperationsInput | string
@@ -65727,6 +65884,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: boolean | null
     Est_Double_Capteur?: boolean
     Famille_Sonde?: string
+    t_sonde?: t_sondeCreateNestedManyWithoutT_sonde_typeInput
   }
 
   export type t_sonde_typeUncheckedCreateInput = {
@@ -65736,6 +65894,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: boolean | null
     Est_Double_Capteur?: boolean
     Famille_Sonde?: string
+    t_sonde?: t_sondeUncheckedCreateNestedManyWithoutT_sonde_typeInput
   }
 
   export type t_sonde_typeUpdateInput = {
@@ -65744,6 +65903,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Double_Capteur?: BoolFieldUpdateOperationsInput | boolean
     Famille_Sonde?: StringFieldUpdateOperationsInput | string
+    t_sonde?: t_sondeUpdateManyWithoutT_sonde_typeNestedInput
   }
 
   export type t_sonde_typeUncheckedUpdateInput = {
@@ -65753,6 +65913,7 @@ export namespace Prisma {
     Est_Gestion_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Double_Capteur?: BoolFieldUpdateOperationsInput | boolean
     Famille_Sonde?: StringFieldUpdateOperationsInput | string
+    t_sonde?: t_sondeUncheckedUpdateManyWithoutT_sonde_typeNestedInput
   }
 
   export type t_sonde_typeCreateManyInput = {
@@ -69779,6 +69940,11 @@ export namespace Prisma {
     isNot?: t_etat_surveillanceWhereInput
   }
 
+  export type T_sonde_typeNullableScalarRelationFilter = {
+    is?: t_sonde_typeWhereInput | null
+    isNot?: t_sonde_typeWhereInput | null
+  }
+
   export type t_sondeOrderByRelevanceInput = {
     fields: t_sondeOrderByRelevanceFieldEnum | t_sondeOrderByRelevanceFieldEnum[]
     sort: SortOrder
@@ -69789,6 +69955,7 @@ export namespace Prisma {
     Id_Sonde?: SortOrder
     Adresse_Sonde?: SortOrder
     Sonde_Numero_Serie?: SortOrder
+    Sonde_Type?: SortOrder
     Est_Sonde_GSO?: SortOrder
     Port_Serie?: SortOrder
     Surveillance_Etat?: SortOrder
@@ -69820,6 +69987,7 @@ export namespace Prisma {
     Id_Sonde?: SortOrder
     Adresse_Sonde?: SortOrder
     Sonde_Numero_Serie?: SortOrder
+    Sonde_Type?: SortOrder
     Est_Sonde_GSO?: SortOrder
     Port_Serie?: SortOrder
     Surveillance_Etat?: SortOrder
@@ -69841,6 +70009,7 @@ export namespace Prisma {
     Id_Sonde?: SortOrder
     Adresse_Sonde?: SortOrder
     Sonde_Numero_Serie?: SortOrder
+    Sonde_Type?: SortOrder
     Est_Sonde_GSO?: SortOrder
     Port_Serie?: SortOrder
     Surveillance_Etat?: SortOrder
@@ -72506,6 +72675,12 @@ export namespace Prisma {
     connect?: t_etat_surveillanceWhereUniqueInput
   }
 
+  export type t_sonde_typeCreateNestedOneWithoutT_sondeInput = {
+    create?: XOR<t_sonde_typeCreateWithoutT_sondeInput, t_sonde_typeUncheckedCreateWithoutT_sondeInput>
+    connectOrCreate?: t_sonde_typeCreateOrConnectWithoutT_sondeInput
+    connect?: t_sonde_typeWhereUniqueInput
+  }
+
   export type t_lieuUncheckedCreateNestedManyWithoutT_sondeInput = {
     create?: XOR<t_lieuCreateWithoutT_sondeInput, t_lieuUncheckedCreateWithoutT_sondeInput> | t_lieuCreateWithoutT_sondeInput[] | t_lieuUncheckedCreateWithoutT_sondeInput[]
     connectOrCreate?: t_lieuCreateOrConnectWithoutT_sondeInput | t_lieuCreateOrConnectWithoutT_sondeInput[]
@@ -72551,6 +72726,16 @@ export namespace Prisma {
     upsert?: t_etat_surveillanceUpsertWithoutT_sondeInput
     connect?: t_etat_surveillanceWhereUniqueInput
     update?: XOR<XOR<t_etat_surveillanceUpdateToOneWithWhereWithoutT_sondeInput, t_etat_surveillanceUpdateWithoutT_sondeInput>, t_etat_surveillanceUncheckedUpdateWithoutT_sondeInput>
+  }
+
+  export type t_sonde_typeUpdateOneWithoutT_sondeNestedInput = {
+    create?: XOR<t_sonde_typeCreateWithoutT_sondeInput, t_sonde_typeUncheckedCreateWithoutT_sondeInput>
+    connectOrCreate?: t_sonde_typeCreateOrConnectWithoutT_sondeInput
+    upsert?: t_sonde_typeUpsertWithoutT_sondeInput
+    disconnect?: t_sonde_typeWhereInput | boolean
+    delete?: t_sonde_typeWhereInput | boolean
+    connect?: t_sonde_typeWhereUniqueInput
+    update?: XOR<XOR<t_sonde_typeUpdateToOneWithWhereWithoutT_sondeInput, t_sonde_typeUpdateWithoutT_sondeInput>, t_sonde_typeUncheckedUpdateWithoutT_sondeInput>
   }
 
   export type t_lieuUncheckedUpdateManyWithoutT_sondeNestedInput = {
@@ -72648,6 +72833,48 @@ export namespace Prisma {
     connect?: t_sondeWhereUniqueInput | t_sondeWhereUniqueInput[]
     update?: t_sondeUpdateWithWhereUniqueWithoutT_etat_surveillanceInput | t_sondeUpdateWithWhereUniqueWithoutT_etat_surveillanceInput[]
     updateMany?: t_sondeUpdateManyWithWhereWithoutT_etat_surveillanceInput | t_sondeUpdateManyWithWhereWithoutT_etat_surveillanceInput[]
+    deleteMany?: t_sondeScalarWhereInput | t_sondeScalarWhereInput[]
+  }
+
+  export type t_sondeCreateNestedManyWithoutT_sonde_typeInput = {
+    create?: XOR<t_sondeCreateWithoutT_sonde_typeInput, t_sondeUncheckedCreateWithoutT_sonde_typeInput> | t_sondeCreateWithoutT_sonde_typeInput[] | t_sondeUncheckedCreateWithoutT_sonde_typeInput[]
+    connectOrCreate?: t_sondeCreateOrConnectWithoutT_sonde_typeInput | t_sondeCreateOrConnectWithoutT_sonde_typeInput[]
+    createMany?: t_sondeCreateManyT_sonde_typeInputEnvelope
+    connect?: t_sondeWhereUniqueInput | t_sondeWhereUniqueInput[]
+  }
+
+  export type t_sondeUncheckedCreateNestedManyWithoutT_sonde_typeInput = {
+    create?: XOR<t_sondeCreateWithoutT_sonde_typeInput, t_sondeUncheckedCreateWithoutT_sonde_typeInput> | t_sondeCreateWithoutT_sonde_typeInput[] | t_sondeUncheckedCreateWithoutT_sonde_typeInput[]
+    connectOrCreate?: t_sondeCreateOrConnectWithoutT_sonde_typeInput | t_sondeCreateOrConnectWithoutT_sonde_typeInput[]
+    createMany?: t_sondeCreateManyT_sonde_typeInputEnvelope
+    connect?: t_sondeWhereUniqueInput | t_sondeWhereUniqueInput[]
+  }
+
+  export type t_sondeUpdateManyWithoutT_sonde_typeNestedInput = {
+    create?: XOR<t_sondeCreateWithoutT_sonde_typeInput, t_sondeUncheckedCreateWithoutT_sonde_typeInput> | t_sondeCreateWithoutT_sonde_typeInput[] | t_sondeUncheckedCreateWithoutT_sonde_typeInput[]
+    connectOrCreate?: t_sondeCreateOrConnectWithoutT_sonde_typeInput | t_sondeCreateOrConnectWithoutT_sonde_typeInput[]
+    upsert?: t_sondeUpsertWithWhereUniqueWithoutT_sonde_typeInput | t_sondeUpsertWithWhereUniqueWithoutT_sonde_typeInput[]
+    createMany?: t_sondeCreateManyT_sonde_typeInputEnvelope
+    set?: t_sondeWhereUniqueInput | t_sondeWhereUniqueInput[]
+    disconnect?: t_sondeWhereUniqueInput | t_sondeWhereUniqueInput[]
+    delete?: t_sondeWhereUniqueInput | t_sondeWhereUniqueInput[]
+    connect?: t_sondeWhereUniqueInput | t_sondeWhereUniqueInput[]
+    update?: t_sondeUpdateWithWhereUniqueWithoutT_sonde_typeInput | t_sondeUpdateWithWhereUniqueWithoutT_sonde_typeInput[]
+    updateMany?: t_sondeUpdateManyWithWhereWithoutT_sonde_typeInput | t_sondeUpdateManyWithWhereWithoutT_sonde_typeInput[]
+    deleteMany?: t_sondeScalarWhereInput | t_sondeScalarWhereInput[]
+  }
+
+  export type t_sondeUncheckedUpdateManyWithoutT_sonde_typeNestedInput = {
+    create?: XOR<t_sondeCreateWithoutT_sonde_typeInput, t_sondeUncheckedCreateWithoutT_sonde_typeInput> | t_sondeCreateWithoutT_sonde_typeInput[] | t_sondeUncheckedCreateWithoutT_sonde_typeInput[]
+    connectOrCreate?: t_sondeCreateOrConnectWithoutT_sonde_typeInput | t_sondeCreateOrConnectWithoutT_sonde_typeInput[]
+    upsert?: t_sondeUpsertWithWhereUniqueWithoutT_sonde_typeInput | t_sondeUpsertWithWhereUniqueWithoutT_sonde_typeInput[]
+    createMany?: t_sondeCreateManyT_sonde_typeInputEnvelope
+    set?: t_sondeWhereUniqueInput | t_sondeWhereUniqueInput[]
+    disconnect?: t_sondeWhereUniqueInput | t_sondeWhereUniqueInput[]
+    delete?: t_sondeWhereUniqueInput | t_sondeWhereUniqueInput[]
+    connect?: t_sondeWhereUniqueInput | t_sondeWhereUniqueInput[]
+    update?: t_sondeUpdateWithWhereUniqueWithoutT_sonde_typeInput | t_sondeUpdateWithWhereUniqueWithoutT_sonde_typeInput[]
+    updateMany?: t_sondeUpdateManyWithWhereWithoutT_sonde_typeInput | t_sondeUpdateManyWithWhereWithoutT_sonde_typeInput[]
     deleteMany?: t_sondeScalarWhereInput | t_sondeScalarWhereInput[]
   }
 
@@ -76239,12 +76466,14 @@ export namespace Prisma {
     Sonde_Offset?: number
     t_sonde_etat?: t_sonde_etatCreateNestedOneWithoutT_sondeInput
     t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_sondeInput
+    t_sonde_type?: t_sonde_typeCreateNestedOneWithoutT_sondeInput
   }
 
   export type t_sondeUncheckedCreateWithoutT_lieuInput = {
     Id_Sonde?: number
     Adresse_Sonde?: string | null
     Sonde_Numero_Serie?: string | null
+    Sonde_Type?: string | null
     Est_Sonde_GSO?: boolean
     Port_Serie?: string | null
     Surveillance_Etat?: string
@@ -76566,12 +76795,14 @@ export namespace Prisma {
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
     t_sonde_etat?: t_sonde_etatUpdateOneWithoutT_sondeNestedInput
     t_etat_surveillance?: t_etat_surveillanceUpdateOneRequiredWithoutT_sondeNestedInput
+    t_sonde_type?: t_sonde_typeUpdateOneWithoutT_sondeNestedInput
   }
 
   export type t_sondeUncheckedUpdateWithoutT_lieuInput = {
     Id_Sonde?: IntFieldUpdateOperationsInput | number
     Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
+    Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Sonde_GSO?: BoolFieldUpdateOperationsInput | boolean
     Port_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Surveillance_Etat?: StringFieldUpdateOperationsInput | string
@@ -78176,6 +78407,28 @@ export namespace Prisma {
     create: XOR<t_etat_surveillanceCreateWithoutT_sondeInput, t_etat_surveillanceUncheckedCreateWithoutT_sondeInput>
   }
 
+  export type t_sonde_typeCreateWithoutT_sondeInput = {
+    Sonde_Type?: string | null
+    Libelle_Sonde_Type?: string | null
+    Est_Gestion_Relais?: boolean | null
+    Est_Double_Capteur?: boolean
+    Famille_Sonde?: string
+  }
+
+  export type t_sonde_typeUncheckedCreateWithoutT_sondeInput = {
+    Id_Sonde_Type?: number
+    Sonde_Type?: string | null
+    Libelle_Sonde_Type?: string | null
+    Est_Gestion_Relais?: boolean | null
+    Est_Double_Capteur?: boolean
+    Famille_Sonde?: string
+  }
+
+  export type t_sonde_typeCreateOrConnectWithoutT_sondeInput = {
+    where: t_sonde_typeWhereUniqueInput
+    create: XOR<t_sonde_typeCreateWithoutT_sondeInput, t_sonde_typeUncheckedCreateWithoutT_sondeInput>
+  }
+
   export type t_lieuUpsertWithWhereUniqueWithoutT_sondeInput = {
     where: t_lieuWhereUniqueInput
     update: XOR<t_lieuUpdateWithoutT_sondeInput, t_lieuUncheckedUpdateWithoutT_sondeInput>
@@ -78236,6 +78489,34 @@ export namespace Prisma {
     Surveillance_Etat?: NullableStringFieldUpdateOperationsInput | string | null
     Surveillance_Etat_Libelle?: NullableStringFieldUpdateOperationsInput | string | null
     t_lieu?: t_lieuUncheckedUpdateManyWithoutT_etat_surveillanceNestedInput
+  }
+
+  export type t_sonde_typeUpsertWithoutT_sondeInput = {
+    update: XOR<t_sonde_typeUpdateWithoutT_sondeInput, t_sonde_typeUncheckedUpdateWithoutT_sondeInput>
+    create: XOR<t_sonde_typeCreateWithoutT_sondeInput, t_sonde_typeUncheckedCreateWithoutT_sondeInput>
+    where?: t_sonde_typeWhereInput
+  }
+
+  export type t_sonde_typeUpdateToOneWithWhereWithoutT_sondeInput = {
+    where?: t_sonde_typeWhereInput
+    data: XOR<t_sonde_typeUpdateWithoutT_sondeInput, t_sonde_typeUncheckedUpdateWithoutT_sondeInput>
+  }
+
+  export type t_sonde_typeUpdateWithoutT_sondeInput = {
+    Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
+    Libelle_Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
+    Est_Gestion_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Est_Double_Capteur?: BoolFieldUpdateOperationsInput | boolean
+    Famille_Sonde?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type t_sonde_typeUncheckedUpdateWithoutT_sondeInput = {
+    Id_Sonde_Type?: IntFieldUpdateOperationsInput | number
+    Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
+    Libelle_Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
+    Est_Gestion_Relais?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Est_Double_Capteur?: BoolFieldUpdateOperationsInput | boolean
+    Famille_Sonde?: StringFieldUpdateOperationsInput | string
   }
 
   export type t_lieuCreateWithoutT_etat_surveillanceInput = {
@@ -78445,12 +78726,14 @@ export namespace Prisma {
     Sonde_Offset?: number
     t_lieu?: t_lieuCreateNestedManyWithoutT_sondeInput
     t_sonde_etat?: t_sonde_etatCreateNestedOneWithoutT_sondeInput
+    t_sonde_type?: t_sonde_typeCreateNestedOneWithoutT_sondeInput
   }
 
   export type t_sondeUncheckedCreateWithoutT_etat_surveillanceInput = {
     Id_Sonde?: number
     Adresse_Sonde?: string | null
     Sonde_Numero_Serie?: string | null
+    Sonde_Type?: string | null
     Est_Sonde_GSO?: boolean
     Port_Serie?: string | null
     Id_Module?: number | null
@@ -78517,6 +78800,7 @@ export namespace Prisma {
     Id_Sonde?: IntFilter<"t_sonde"> | number
     Adresse_Sonde?: StringNullableFilter<"t_sonde"> | string | null
     Sonde_Numero_Serie?: StringNullableFilter<"t_sonde"> | string | null
+    Sonde_Type?: StringNullableFilter<"t_sonde"> | string | null
     Est_Sonde_GSO?: BoolFilter<"t_sonde"> | boolean
     Port_Serie?: StringNullableFilter<"t_sonde"> | string | null
     Surveillance_Etat?: StringFilter<"t_sonde"> | string
@@ -78532,6 +78816,75 @@ export namespace Prisma {
     Id_Serveur?: IntNullableFilter<"t_sonde"> | number | null
     Id_Sonde_Etat?: IntNullableFilter<"t_sonde"> | number | null
     Sonde_Offset?: FloatFilter<"t_sonde"> | number
+  }
+
+  export type t_sondeCreateWithoutT_sonde_typeInput = {
+    Adresse_Sonde?: string | null
+    Sonde_Numero_Serie?: string | null
+    Est_Sonde_GSO?: boolean
+    Port_Serie?: string | null
+    Id_Module?: number | null
+    Relai_1?: string | null
+    Relai_2?: string | null
+    Relai_3?: string | null
+    Relai_4?: string | null
+    Frequence_Mesure?: number | null
+    Frequence_Recup?: number | null
+    Est_Sonde_Reformee?: boolean | null
+    Etat_Sonde_N1?: string | null
+    Id_Serveur?: number | null
+    Sonde_Offset?: number
+    t_lieu?: t_lieuCreateNestedManyWithoutT_sondeInput
+    t_sonde_etat?: t_sonde_etatCreateNestedOneWithoutT_sondeInput
+    t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_sondeInput
+  }
+
+  export type t_sondeUncheckedCreateWithoutT_sonde_typeInput = {
+    Id_Sonde?: number
+    Adresse_Sonde?: string | null
+    Sonde_Numero_Serie?: string | null
+    Est_Sonde_GSO?: boolean
+    Port_Serie?: string | null
+    Surveillance_Etat?: string
+    Id_Module?: number | null
+    Relai_1?: string | null
+    Relai_2?: string | null
+    Relai_3?: string | null
+    Relai_4?: string | null
+    Frequence_Mesure?: number | null
+    Frequence_Recup?: number | null
+    Est_Sonde_Reformee?: boolean | null
+    Etat_Sonde_N1?: string | null
+    Id_Serveur?: number | null
+    Id_Sonde_Etat?: number | null
+    Sonde_Offset?: number
+    t_lieu?: t_lieuUncheckedCreateNestedManyWithoutT_sondeInput
+  }
+
+  export type t_sondeCreateOrConnectWithoutT_sonde_typeInput = {
+    where: t_sondeWhereUniqueInput
+    create: XOR<t_sondeCreateWithoutT_sonde_typeInput, t_sondeUncheckedCreateWithoutT_sonde_typeInput>
+  }
+
+  export type t_sondeCreateManyT_sonde_typeInputEnvelope = {
+    data: t_sondeCreateManyT_sonde_typeInput | t_sondeCreateManyT_sonde_typeInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type t_sondeUpsertWithWhereUniqueWithoutT_sonde_typeInput = {
+    where: t_sondeWhereUniqueInput
+    update: XOR<t_sondeUpdateWithoutT_sonde_typeInput, t_sondeUncheckedUpdateWithoutT_sonde_typeInput>
+    create: XOR<t_sondeCreateWithoutT_sonde_typeInput, t_sondeUncheckedCreateWithoutT_sonde_typeInput>
+  }
+
+  export type t_sondeUpdateWithWhereUniqueWithoutT_sonde_typeInput = {
+    where: t_sondeWhereUniqueInput
+    data: XOR<t_sondeUpdateWithoutT_sonde_typeInput, t_sondeUncheckedUpdateWithoutT_sonde_typeInput>
+  }
+
+  export type t_sondeUpdateManyWithWhereWithoutT_sonde_typeInput = {
+    where: t_sondeScalarWhereInput
+    data: XOR<t_sondeUpdateManyMutationInput, t_sondeUncheckedUpdateManyWithoutT_sonde_typeInput>
   }
 
   export type t_ancien_mot_de_passeCreateWithoutT_utilisateurInput = {
@@ -80000,12 +80353,14 @@ export namespace Prisma {
     Sonde_Offset?: number
     t_lieu?: t_lieuCreateNestedManyWithoutT_sondeInput
     t_etat_surveillance?: t_etat_surveillanceCreateNestedOneWithoutT_sondeInput
+    t_sonde_type?: t_sonde_typeCreateNestedOneWithoutT_sondeInput
   }
 
   export type t_sondeUncheckedCreateWithoutT_sonde_etatInput = {
     Id_Sonde?: number
     Adresse_Sonde?: string | null
     Sonde_Numero_Serie?: string | null
+    Sonde_Type?: string | null
     Est_Sonde_GSO?: boolean
     Port_Serie?: string | null
     Surveillance_Etat?: string
@@ -84867,6 +85222,7 @@ export namespace Prisma {
     Id_Sonde?: number
     Adresse_Sonde?: string | null
     Sonde_Numero_Serie?: string | null
+    Sonde_Type?: string | null
     Est_Sonde_GSO?: boolean
     Port_Serie?: string | null
     Id_Module?: number | null
@@ -85165,12 +85521,14 @@ export namespace Prisma {
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
     t_lieu?: t_lieuUpdateManyWithoutT_sondeNestedInput
     t_sonde_etat?: t_sonde_etatUpdateOneWithoutT_sondeNestedInput
+    t_sonde_type?: t_sonde_typeUpdateOneWithoutT_sondeNestedInput
   }
 
   export type t_sondeUncheckedUpdateWithoutT_etat_surveillanceInput = {
     Id_Sonde?: IntFieldUpdateOperationsInput | number
     Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
+    Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Sonde_GSO?: BoolFieldUpdateOperationsInput | boolean
     Port_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Id_Module?: NullableIntFieldUpdateOperationsInput | number | null
@@ -85192,8 +85550,94 @@ export namespace Prisma {
     Id_Sonde?: IntFieldUpdateOperationsInput | number
     Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
+    Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Sonde_GSO?: BoolFieldUpdateOperationsInput | boolean
     Port_Serie?: NullableStringFieldUpdateOperationsInput | string | null
+    Id_Module?: NullableIntFieldUpdateOperationsInput | number | null
+    Relai_1?: NullableStringFieldUpdateOperationsInput | string | null
+    Relai_2?: NullableStringFieldUpdateOperationsInput | string | null
+    Relai_3?: NullableStringFieldUpdateOperationsInput | string | null
+    Relai_4?: NullableStringFieldUpdateOperationsInput | string | null
+    Frequence_Mesure?: NullableIntFieldUpdateOperationsInput | number | null
+    Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
+    Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
+    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Sonde_Etat?: NullableIntFieldUpdateOperationsInput | number | null
+    Sonde_Offset?: FloatFieldUpdateOperationsInput | number
+  }
+
+  export type t_sondeCreateManyT_sonde_typeInput = {
+    Id_Sonde?: number
+    Adresse_Sonde?: string | null
+    Sonde_Numero_Serie?: string | null
+    Est_Sonde_GSO?: boolean
+    Port_Serie?: string | null
+    Surveillance_Etat?: string
+    Id_Module?: number | null
+    Relai_1?: string | null
+    Relai_2?: string | null
+    Relai_3?: string | null
+    Relai_4?: string | null
+    Frequence_Mesure?: number | null
+    Frequence_Recup?: number | null
+    Est_Sonde_Reformee?: boolean | null
+    Etat_Sonde_N1?: string | null
+    Id_Serveur?: number | null
+    Id_Sonde_Etat?: number | null
+    Sonde_Offset?: number
+  }
+
+  export type t_sondeUpdateWithoutT_sonde_typeInput = {
+    Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
+    Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
+    Est_Sonde_GSO?: BoolFieldUpdateOperationsInput | boolean
+    Port_Serie?: NullableStringFieldUpdateOperationsInput | string | null
+    Id_Module?: NullableIntFieldUpdateOperationsInput | number | null
+    Relai_1?: NullableStringFieldUpdateOperationsInput | string | null
+    Relai_2?: NullableStringFieldUpdateOperationsInput | string | null
+    Relai_3?: NullableStringFieldUpdateOperationsInput | string | null
+    Relai_4?: NullableStringFieldUpdateOperationsInput | string | null
+    Frequence_Mesure?: NullableIntFieldUpdateOperationsInput | number | null
+    Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
+    Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
+    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Sonde_Offset?: FloatFieldUpdateOperationsInput | number
+    t_lieu?: t_lieuUpdateManyWithoutT_sondeNestedInput
+    t_sonde_etat?: t_sonde_etatUpdateOneWithoutT_sondeNestedInput
+    t_etat_surveillance?: t_etat_surveillanceUpdateOneRequiredWithoutT_sondeNestedInput
+  }
+
+  export type t_sondeUncheckedUpdateWithoutT_sonde_typeInput = {
+    Id_Sonde?: IntFieldUpdateOperationsInput | number
+    Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
+    Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
+    Est_Sonde_GSO?: BoolFieldUpdateOperationsInput | boolean
+    Port_Serie?: NullableStringFieldUpdateOperationsInput | string | null
+    Surveillance_Etat?: StringFieldUpdateOperationsInput | string
+    Id_Module?: NullableIntFieldUpdateOperationsInput | number | null
+    Relai_1?: NullableStringFieldUpdateOperationsInput | string | null
+    Relai_2?: NullableStringFieldUpdateOperationsInput | string | null
+    Relai_3?: NullableStringFieldUpdateOperationsInput | string | null
+    Relai_4?: NullableStringFieldUpdateOperationsInput | string | null
+    Frequence_Mesure?: NullableIntFieldUpdateOperationsInput | number | null
+    Frequence_Recup?: NullableIntFieldUpdateOperationsInput | number | null
+    Est_Sonde_Reformee?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Etat_Sonde_N1?: NullableStringFieldUpdateOperationsInput | string | null
+    Id_Serveur?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Sonde_Etat?: NullableIntFieldUpdateOperationsInput | number | null
+    Sonde_Offset?: FloatFieldUpdateOperationsInput | number
+    t_lieu?: t_lieuUncheckedUpdateManyWithoutT_sondeNestedInput
+  }
+
+  export type t_sondeUncheckedUpdateManyWithoutT_sonde_typeInput = {
+    Id_Sonde?: IntFieldUpdateOperationsInput | number
+    Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
+    Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
+    Est_Sonde_GSO?: BoolFieldUpdateOperationsInput | boolean
+    Port_Serie?: NullableStringFieldUpdateOperationsInput | string | null
+    Surveillance_Etat?: StringFieldUpdateOperationsInput | string
     Id_Module?: NullableIntFieldUpdateOperationsInput | number | null
     Relai_1?: NullableStringFieldUpdateOperationsInput | string | null
     Relai_2?: NullableStringFieldUpdateOperationsInput | string | null
@@ -86209,6 +86653,7 @@ export namespace Prisma {
     Id_Sonde?: number
     Adresse_Sonde?: string | null
     Sonde_Numero_Serie?: string | null
+    Sonde_Type?: string | null
     Est_Sonde_GSO?: boolean
     Port_Serie?: string | null
     Surveillance_Etat?: string
@@ -86243,12 +86688,14 @@ export namespace Prisma {
     Sonde_Offset?: FloatFieldUpdateOperationsInput | number
     t_lieu?: t_lieuUpdateManyWithoutT_sondeNestedInput
     t_etat_surveillance?: t_etat_surveillanceUpdateOneRequiredWithoutT_sondeNestedInput
+    t_sonde_type?: t_sonde_typeUpdateOneWithoutT_sondeNestedInput
   }
 
   export type t_sondeUncheckedUpdateWithoutT_sonde_etatInput = {
     Id_Sonde?: IntFieldUpdateOperationsInput | number
     Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
+    Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Sonde_GSO?: BoolFieldUpdateOperationsInput | boolean
     Port_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Surveillance_Etat?: StringFieldUpdateOperationsInput | string
@@ -86270,6 +86717,7 @@ export namespace Prisma {
     Id_Sonde?: IntFieldUpdateOperationsInput | number
     Adresse_Sonde?: NullableStringFieldUpdateOperationsInput | string | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
+    Sonde_Type?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Sonde_GSO?: BoolFieldUpdateOperationsInput | boolean
     Port_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Surveillance_Etat?: StringFieldUpdateOperationsInput | string

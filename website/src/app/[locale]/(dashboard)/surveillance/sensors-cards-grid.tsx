@@ -74,6 +74,7 @@ export function SensorsCardsGrid({
   const sortedSensors = sortSensors(sensors, sortMode)
   const disabledSensors = sortedSensors.filter((sensor) => sensor.location.surveillanceDisabled)
   const activeSensors = sortedSensors.filter((sensor) => !sensor.location.surveillanceDisabled)
+  const countLocations = (items: SensorWithLocation[]) => new Set(items.map((sensor) => Number(sensor.location.id ?? sensor.id)).filter((id) => Number.isFinite(id))).size
 
   const renderSection = (
     title: string,
@@ -142,14 +143,14 @@ export function SensorsCardsGrid({
     <div className="p-4 md:p-6 flex flex-col gap-8 animate-fade-in">
       <div style={{ order: disabledFirst ? 2 : 1 }}>
         {renderSection(
-          t("grid.active_title"),
+          `${t("grid.active_title")} (${countLocations(activeSensors)})`,
           <Power className="h-5 w-5 text-sky-500" />,
           activeSensors,
         )}
       </div>
       <div style={{ order: disabledFirst ? 1 : 2 }}>
         {renderSection(
-          t("grid.disabled_title"),
+          `${t("grid.disabled_title")} (${countLocations(disabledSensors)})`,
           <PowerOff className="h-5 w-5 text-slate-400" />,
           disabledSensors,
           true,

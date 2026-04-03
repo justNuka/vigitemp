@@ -1,4 +1,4 @@
-﻿const AGENT_URLS = ["http://127.0.0.1:8000", "http://localhost:8000"] as const;
+const AGENT_URLS = ["http://127.0.0.1:8000", "http://localhost:8000"] as const;
 
 function createTimeoutSignal(timeoutMs: number): AbortSignal {
   const controller = new AbortController();
@@ -14,14 +14,40 @@ function createToken(): string {
 }
 
 async function browserAgentFetch(path: string, init: RequestInit): Promise<Response> {
-  return fetch(`/api/agent/proxy${path}`, init);
+  let lastError: Error | null = null;
+
+  for (const baseUrl of AGENT_URLS) {
+    try {
+      const res = await fetch(`${baseUrl}${path}`, {
+        ...init,
+        mode: "cors",
+      });
+      if (res.ok || res.status === 204) {
+        return res;
+      }
+      lastError = new Error(`Agent local request failed: ${res.status}`);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
+  }
+
+  try {
+    const res = await fetch(`/api/agent/proxy${path}`, init);
+    if (res.ok || res.status === 204) {
+      return res;
+    }
+    lastError = new Error(`Agent proxy request failed: ${res.status}`);
+  } catch (error) {
+    lastError = error instanceof Error ? error : new Error(String(error));
+  }
+
+  throw lastError ?? new Error("Agent request failed");
 }
 
 async function tryAgentFetch(path: string, init: RequestInit): Promise<void> {
   if (typeof window !== "undefined") {
-    const res = await browserAgentFetch(path, init);
-    if (res.ok || res.status === 204) return;
-    throw new Error(`Agent proxy request failed: ${res.status}`);
+    await browserAgentFetch(path, init);
+    return;
   }
 
   for (const baseUrl of AGENT_URLS) {
@@ -39,10 +65,7 @@ async function tryAgentFetch(path: string, init: RequestInit): Promise<void> {
 async function tryAgentFetchJson<T>(path: string, init: RequestInit): Promise<T> {
   if (typeof window !== "undefined") {
     const res = await browserAgentFetch(path, init);
-    if (res.ok) {
-      return (await res.json()) as T;
-    }
-    throw new Error(`Agent proxy request failed: ${res.status}`);
+    return (await res.json()) as T;
   }
 
   for (const baseUrl of AGENT_URLS) {
@@ -76,7 +99,7 @@ export async function setAgentSession(input: {
       username: input.username,
       expiresAtUtc,
     }),
-    signal: createTimeoutSignal(800),
+    signal: createTimeoutSignal(1200),
   });
 }
 
@@ -86,20 +109,20 @@ export async function setAgentSecret(secret: string): Promise<void> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ secret }),
-    signal: createTimeoutSignal(800),
+    signal: createTimeoutSignal(1200),
   });
 }
 
 export async function clearAgentSession(): Promise<void> {
   await tryAgentFetch("/session", {
     method: "DELETE",
-    signal: createTimeoutSignal(800),
+    signal: createTimeoutSignal(1200),
   });
 }
 
 export async function getAgentInfo(): Promise<{ machineName: string; ip?: string }> {
   return tryAgentFetchJson<{ machineName: string; ip?: string }>("/info", {
     method: "GET",
-    signal: createTimeoutSignal(800),
+    signal: createTimeoutSignal(1200),
   });
 }

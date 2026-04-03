@@ -63,15 +63,17 @@ export const POST = async (req: NextRequest) => {
 
     const serial = parsed.data.Sonde_Numero_Serie?.trim() ?? null;
     if (serial) {
+      const typeCode = extractTypeCodeFromSerial(serial);
       const sensorType = await prisma.t_sonde_type.findUnique({
-        where: { Sonde_Type: extractTypeCodeFromSerial(serial) },
-        select: { Famille_Sonde: true },
+        where: { Sonde_Type: typeCode },
+        select: { Sonde_Type: true, Famille_Sonde: true },
       });
       const isGsoFamily = sensorType?.Famille_Sonde === "GSO";
 
       await prisma.t_sonde.createMany({
         data: [{
           Sonde_Numero_Serie: serial,
+          Sonde_Type: sensorType?.Sonde_Type ?? typeCode,
           Adresse_Sonde: extractProbeAddressFromSerial(serial),
           Est_Sonde_GSO: isGsoFamily,
           Surveillance_Etat: "D",
@@ -80,12 +82,13 @@ export const POST = async (req: NextRequest) => {
         skipDuplicates: true,
       });
 
-      if (isGsoFamily) {
-        await prisma.t_sonde.updateMany({
-          where: { Sonde_Numero_Serie: serial },
-          data: { Est_Sonde_GSO: true },
-        });
-      }
+      await prisma.t_sonde.updateMany({
+        where: { Sonde_Numero_Serie: serial },
+        data: {
+          Sonde_Type: sensorType?.Sonde_Type ?? typeCode,
+          Est_Sonde_GSO: isGsoFamily,
+        },
+      });
     }
 
     const created = await prisma.t_ajustage.create({

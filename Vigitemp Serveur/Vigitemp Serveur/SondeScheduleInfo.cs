@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Vigitemp_Serveur
 {
@@ -10,6 +10,8 @@ namespace Vigitemp_Serveur
         public string PortSerie { get; set; }
         public string ModuleNumeroSerie { get; set; }
         public string SondeNumeroSerie { get; set; }
+        public string SondeType { get; set; }
+        public string FamilleSonde { get; set; }
         public string AdresseSonde { get; set; }
         public int FrequenceSecondes { get; set; }
         public DateTime? DerniereDateHeure { get; set; }

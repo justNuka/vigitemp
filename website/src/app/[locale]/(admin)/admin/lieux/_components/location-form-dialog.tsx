@@ -188,6 +188,15 @@ export function LocationFormDialog({
                 <LocationFormTabPlanning
                   idLieu={resolvedForm.watch('Id_Lieu') ?? null}
                   emtParams={emtParamsForPlanning}
+                  onGoToGeneral={() => setActiveTab('general')}
+                  baseSetpoints={{
+                    consigne: resolvedForm.watch('Consigne') ?? null,
+                    consigneSup: resolvedForm.watch('Consigne_Sup') ?? null,
+                    consigneInf: resolvedForm.watch('Consigne_Inf') ?? null,
+                    frequence: resolvedForm.watch('Frequence') ?? null,
+                    retardAlarmeHaut: resolvedForm.watch('Retard_Alarme_Haut') ?? null,
+                    retardAlarmeBas: resolvedForm.watch('Retard_Alarme_Bas') ?? null,
+                  }}
                 />
               </TabsContent>
             </Tabs>

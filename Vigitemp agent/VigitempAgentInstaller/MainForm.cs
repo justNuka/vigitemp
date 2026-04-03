@@ -10,6 +10,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
 
 namespace VigitempAgentInstaller
 {
@@ -33,6 +34,7 @@ namespace VigitempAgentInstaller
         private bool _installationRunning;
         private string _workingDirectory;
         private string _agentExecutablePath;
+        private string _portalUrl;
 
         public MainForm(bool uninstallMode)
         {
@@ -228,8 +230,17 @@ namespace VigitempAgentInstaller
 
                 if (_mode == InstallerMode.Install)
                 {
+                    var configuredPortalUrl = GetExistingPortalUrl() ?? "http://127.0.0.1:3000";
+                    var portalInput = PromptPortalUrl(configuredPortalUrl);
+                    if (portalInput == null)
+                    {
+                        return;
+                    }
+
+                    _portalUrl = portalInput;
+
                     var driverPromptResult = MessageBox.Show(
-                        "Avant de continuer, debranchez tous les USB Interface Cradles du poste.\r\n\r\nReconnectez-les seulement une fois l'installation du driver terminee.\r\n\r\nCliquez sur OK pour lancer l'installation, ou sur Annuler pour revenir.",
+                        "Avant de continuer, debranchez tous les USB Interface Cradles du poste.\r\n\r\nReconnectez-les seulement une fois l'installation du driver terminee.\r\n\r\nPortail configure : " + _portalUrl + "\r\n\r\nCliquez sur OK pour lancer l'installation, ou sur Annuler pour revenir.",
                         "Preparation de l'installation",
                         MessageBoxButtons.OKCancel,
                         MessageBoxIcon.Information);
@@ -316,8 +327,9 @@ namespace VigitempAgentInstaller
                     var sourceDirectory = Path.Combine(_workingDirectory, "agent");
                     CopyDirectory(sourceDirectory, _installDirectory);
                     CopySetupExecutableToInstallDirectory();
+                    ApplyPortalUrlToInstalledConfig();
                     await Task.CompletedTask;
-                    return "Fichiers copies vers " + _installDirectory;
+                    return "Fichiers copies vers " + _installDirectory + " (portail : " + _portalUrl + ")";
                 });
 
                 await RunStepAsync("driver", async () =>
@@ -721,6 +733,188 @@ namespace VigitempAgentInstaller
                     subDirectory,
                     Path.Combine(destinationDirectory, Path.GetFileName(subDirectory)));
             }
+        }
+
+        private string GetExistingPortalUrl()
+        {
+            var installedConfig = Path.Combine(_installDirectory, AgentExeName + ".config");
+            if (File.Exists(installedConfig))
+            {
+                var value = ReadAppSetting(installedConfig, "VigitempSiteWebUrl");
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    return value;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(_workingDirectory))
+            {
+                var extractedConfig = Path.Combine(_workingDirectory, "agent", AgentExeName + ".config");
+                if (File.Exists(extractedConfig))
+                {
+                    var value = ReadAppSetting(extractedConfig, "VigitempSiteWebUrl");
+                    if (!string.IsNullOrWhiteSpace(value))
+                    {
+                        return value;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private string PromptPortalUrl(string defaultValue)
+        {
+            using (var dialog = new Form())
+            {
+                dialog.Text = "Configuration du portail";
+                dialog.StartPosition = FormStartPosition.CenterParent;
+                dialog.FormBorderStyle = FormBorderStyle.FixedDialog;
+                dialog.MaximizeBox = false;
+                dialog.MinimizeBox = false;
+                dialog.ClientSize = new Size(560, 170);
+
+                var label = new Label
+                {
+                    Left = 16,
+                    Top = 16,
+                    Width = 520,
+                    Height = 40,
+                    Text = "Renseignez l'URL du portail VigiSensys utilisee par l'agent.\r\n\r\nExemple : http://192.168.63.189:3000",
+                };
+
+                var textBox = new TextBox
+                {
+                    Left = 16,
+                    Top = 68,
+                    Width = 520,
+                    Text = defaultValue ?? string.Empty,
+                };
+
+                var okButton = new Button
+                {
+                    Text = "OK",
+                    Left = 370,
+                    Top = 112,
+                    Width = 80,
+                    DialogResult = DialogResult.OK,
+                };
+
+                var cancelButton = new Button
+                {
+                    Text = "Annuler",
+                    Left = 456,
+                    Top = 112,
+                    Width = 80,
+                    DialogResult = DialogResult.Cancel,
+                };
+
+                dialog.Controls.Add(label);
+                dialog.Controls.Add(textBox);
+                dialog.Controls.Add(okButton);
+                dialog.Controls.Add(cancelButton);
+                dialog.AcceptButton = okButton;
+                dialog.CancelButton = cancelButton;
+
+                while (dialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    var normalized = NormalizePortalUrl(textBox.Text);
+                    if (normalized != null)
+                    {
+                        return normalized;
+                    }
+
+                    MessageBox.Show(
+                        dialog,
+                        "Saisissez une URL valide de type http://adresse-ip:3000",
+                        "URL portail invalide",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                }
+            }
+
+            return null;
+        }
+
+        private static string NormalizePortalUrl(string input)
+        {
+            var candidate = (input ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(candidate))
+            {
+                return null;
+            }
+
+            if (!candidate.Contains("://"))
+            {
+                candidate = "http://" + candidate;
+            }
+
+            if (!Uri.TryCreate(candidate, UriKind.Absolute, out var uri))
+            {
+                return null;
+            }
+
+            if (!string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            var builder = new UriBuilder(uri)
+            {
+                Path = string.Empty,
+                Query = string.Empty,
+                Fragment = string.Empty,
+            };
+            if (uri.IsDefaultPort)
+            {
+                builder.Port = 3000;
+            }
+            return builder.Uri.ToString().TrimEnd('/');
+        }
+
+        private void ApplyPortalUrlToInstalledConfig()
+        {
+            var configPath = Path.Combine(_installDirectory, AgentExeName + ".config");
+            if (!File.Exists(configPath))
+            {
+                throw new FileNotFoundException("Configuration agent introuvable apres copie.", configPath);
+            }
+
+            WriteAppSetting(configPath, "VigitempSiteWebUrl", _portalUrl);
+        }
+
+        private static string ReadAppSetting(string configPath, string key)
+        {
+            var xml = new XmlDocument();
+            xml.Load(configPath);
+            var node = xml.SelectSingleNode("/configuration/appSettings/add[@key='" + key + "']") as XmlElement;
+            return node?.GetAttribute("value");
+        }
+
+        private static void WriteAppSetting(string configPath, string key, string value)
+        {
+            var xml = new XmlDocument();
+            xml.PreserveWhitespace = true;
+            xml.Load(configPath);
+
+            var appSettings = xml.SelectSingleNode("/configuration/appSettings");
+            if (appSettings == null)
+            {
+                appSettings = xml.CreateElement("appSettings");
+                xml.DocumentElement?.AppendChild(appSettings);
+            }
+
+            var node = appSettings.SelectSingleNode("add[@key='" + key + "']") as XmlElement;
+            if (node == null)
+            {
+                node = xml.CreateElement("add");
+                node.SetAttribute("key", key);
+                appSettings.AppendChild(node);
+            }
+
+            node.SetAttribute("value", value ?? string.Empty);
+            xml.Save(configPath);
         }
 
         private static void StopRunningAgent()

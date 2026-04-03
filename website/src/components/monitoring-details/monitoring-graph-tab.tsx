@@ -71,10 +71,12 @@ export function MonitoringGraphTab({
         </span>
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" size="sm" onClick={resetChartZoom}>
-            {locale === "fr" ? "Reinitialiser zoom" : "Reset zoom"}
+            {t("chart.reset_zoom")}
           </Button>
         </div>
       </div>
+
+      <p className="text-xs text-muted-foreground">{t("chart.drag_zoom_hint")}</p>
 
       <div className="relative h-[calc(100vh-23rem)] min-h-[60vh]">
         <Line

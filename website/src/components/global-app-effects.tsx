@@ -80,6 +80,12 @@ export function GlobalAppEffects() {
     if (!currentUser) return
 
     const eventSource = new EventSource(alarmStreamUrl)
+    const stopAlarmAudio = () => {
+      const audio = alarmAudioRef.current
+      if (!audio) return
+      audio.pause()
+      audio.currentTime = 0
+    }
 
     const onAlarm = (event: MessageEvent) => {
       try {
@@ -110,9 +116,13 @@ export function GlobalAppEffects() {
           description: t("alarm.toast.description", { value }),
           duration: Infinity,
           dismissible: true,
+          onDismiss: stopAlarmAudio,
           action: {
             label: t("alarm.toast.action"),
-            onClick: () => router.push("/surveillance"),
+            onClick: () => {
+              stopAlarmAudio()
+              router.push("/surveillance")
+            },
           },
         })
 
@@ -143,6 +153,7 @@ export function GlobalAppEffects() {
       eventSource.removeEventListener("alarm", onAlarm)
       eventSource.removeEventListener("error", onError)
       eventSource.close()
+      stopAlarmAudio()
     }
   }, [alarmStreamUrl, currentUser, router, t])
 

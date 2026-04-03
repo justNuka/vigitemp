@@ -33,6 +33,7 @@ public sealed class MainForm : Form
     private readonly ComboBox dbProvider; private readonly TextBox dbHost; private readonly TextBox dbPort; private readonly TextBox dbUser; private readonly TextBox dbPassword; private readonly TextBox dbMain; private readonly TextBox dbMeasure; private readonly TextBox dbChat; private readonly TextBox cacheTtl;
     private readonly TextBox logsDir; private readonly TextBox licensePath; private readonly TextBox publicKeyPath; private readonly TextBox agentPrivateKeyPath;
     private readonly TextBox agentPort; private readonly TextBox agentTimeoutMs; private readonly TextBox agentActiveWindowMinutes; private readonly TextBox hotlineServerHost; private readonly TextBox hotlineServerPort; private readonly TextBox hotlineServerTimeoutMs; private readonly TextBox hotlineAccessTokenTtl; private readonly TextBox hotlineRefreshTokenTtl; private readonly TextBox allowedDevOrigins; private readonly TextBox cspConnectSrc; private readonly TextBox dispatchSecret;
+    private readonly Button detectFilesButton;
 
     public MainForm()
     {
@@ -64,7 +65,7 @@ public sealed class MainForm : Form
         _tabs.DrawMode = TabDrawMode.OwnerDrawFixed;
         _tabs.DrawItem += (_, _) => { };
 
-        TextBox T(string v = "", bool pwd = false) => new() { Dock = DockStyle.Fill, Text = v ?? string.Empty, UseSystemPasswordChar = pwd, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.White, ForeColor = TextPrimary };
+        TextBox T(string v = "", bool pwd = false, string placeholder = "") => new() { Dock = DockStyle.Fill, Text = v ?? string.Empty, UseSystemPasswordChar = pwd, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.White, ForeColor = TextPrimary, PlaceholderText = placeholder ?? string.Empty };
         Button BrowseFolder(TextBox tb) { var b = SecondaryButton("Parcourir", 110); b.Click += (_, _) => { using var d = new FolderBrowserDialog(); if (Directory.Exists(tb.Text)) d.InitialDirectory = tb.Text; if (d.ShowDialog(this) == DialogResult.OK) tb.Text = d.SelectedPath; }; return b; }
         Button BrowseFile(TextBox tb, string filter) { var b = SecondaryButton("Parcourir", 110); b.Click += (_, _) => { using var d = new OpenFileDialog { Filter = filter }; var dir = Path.GetDirectoryName(tb.Text); if (!string.IsNullOrWhiteSpace(dir) && Directory.Exists(dir)) d.InitialDirectory = dir; d.FileName = Path.GetFileName(tb.Text); if (d.ShowDialog(this) == DialogResult.OK) tb.Text = d.FileName; }; return b; }
         Panel Field(string label, Control input, Control action = null)
@@ -84,11 +85,12 @@ public sealed class MainForm : Form
         TableLayoutPanel StepPanel() { var t = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, AutoScroll = true, BackColor = CardBackground }; t.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F)); return t; }
         TabPage Page(string title, Control content) { var p = new TabPage(title) { BackColor = CardBackground }; content.Dock = DockStyle.Fill; content.Padding = new Padding(20); p.Controls.Add(content); return p; }
 
-        installDir = T(_s.InstallDir); serviceName = T(_s.ServiceName); port = T(_s.Port); websiteBaseUrl = T(_s.WebsiteBaseUrl); appBaseUrl = T(_s.AppBaseUrl);
+        installDir = T(_s.InstallDir, placeholder: @"C:\ProgramData\Vigitemp\website"); serviceName = T(_s.ServiceName, placeholder: "VigitempWeb"); port = T(_s.Port, placeholder: "3000"); websiteBaseUrl = T(_s.WebsiteBaseUrl, placeholder: "http://127.0.0.1:3000/"); appBaseUrl = T(_s.AppBaseUrl, placeholder: "http://127.0.0.1:3000/");
         dbProvider = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList }; dbProvider.Items.AddRange(new object[] { "mysql", "mssql" }); dbProvider.SelectedItem = _s.DbProvider; dbProvider.FlatStyle = FlatStyle.Flat; dbProvider.BackColor = Color.White; dbProvider.ForeColor = TextPrimary;
-        dbHost = T(_s.DbHost); dbPort = T(_s.DbPort); dbUser = T(_s.DbUser); dbPassword = T(_s.DbPassword, true); dbMain = T(_s.DbMain); dbMeasure = T(_s.DbMeasure); dbChat = T(_s.DbChat); cacheTtl = T(_s.CacheTtl);
-        logsDir = T(_s.LogsDir); licensePath = T(_s.LicensePath); publicKeyPath = T(_s.PublicKeyPath); agentPrivateKeyPath = T(_s.AgentPrivateKeyPath);
-        agentPort = T(_s.AgentPort); agentTimeoutMs = T(_s.AgentTimeoutMs); agentActiveWindowMinutes = T(_s.AgentActiveWindowMinutes); hotlineServerHost = T(_s.HotlineServerHost); hotlineServerPort = T(_s.HotlineServerPort); hotlineServerTimeoutMs = T(_s.HotlineServerTimeoutMs); hotlineAccessTokenTtl = T(_s.HotlineAccessTokenTtl); hotlineRefreshTokenTtl = T(_s.HotlineRefreshTokenTtl); allowedDevOrigins = T(_s.AllowedDevOrigins); cspConnectSrc = T(_s.CspConnectSrc); dispatchSecret = T(_s.DispatchSecret);
+        dbHost = T(_s.DbHost, placeholder: "127.0.0.1"); dbPort = T(_s.DbPort, placeholder: "3306"); dbUser = T(_s.DbUser, placeholder: "root"); dbPassword = T(_s.DbPassword, true, placeholder: "Mot de passe BDD"); dbMain = T(_s.DbMain, placeholder: "vigi_main"); dbMeasure = T(_s.DbMeasure, placeholder: "vigi_mesures"); dbChat = T(_s.DbChat, placeholder: "vigi_chat"); cacheTtl = T(_s.CacheTtl, placeholder: "30");
+        logsDir = T(_s.LogsDir, placeholder: @"C:\ProgramData\Vigitemp\web-logs"); licensePath = T(_s.LicensePath, placeholder: "Chemin du fichier .vtlic"); publicKeyPath = T(_s.PublicKeyPath, placeholder: "Chemin de public_key.pem"); agentPrivateKeyPath = T(_s.AgentPrivateKeyPath, placeholder: "Chemin de agent_secret_private.pem");
+        detectFilesButton = SecondaryButton("D?tecter les fichiers", 170); detectFilesButton.Click += (_, _) => DetectSecurityFiles();
+        agentPort = T(_s.AgentPort, placeholder: "8000"); agentTimeoutMs = T(_s.AgentTimeoutMs, placeholder: "1500"); agentActiveWindowMinutes = T(_s.AgentActiveWindowMinutes, placeholder: "15"); hotlineServerHost = T(_s.HotlineServerHost, placeholder: "127.0.0.1"); hotlineServerPort = T(_s.HotlineServerPort, placeholder: "5310"); hotlineServerTimeoutMs = T(_s.HotlineServerTimeoutMs, placeholder: "10000"); hotlineAccessTokenTtl = T(_s.HotlineAccessTokenTtl, placeholder: "15"); hotlineRefreshTokenTtl = T(_s.HotlineRefreshTokenTtl, placeholder: "120"); allowedDevOrigins = T(_s.AllowedDevOrigins, placeholder: "http://localhost:3000"); cspConnectSrc = T(_s.CspConnectSrc, placeholder: "http://127.0.0.1:8000,http://localhost:8000"); dispatchSecret = T(_s.DispatchSecret, placeholder: "Laisser vide pour reprise automatique");
 
         dbProvider.SelectedIndexChanged += (_, _) =>
         {
@@ -116,13 +118,53 @@ public sealed class MainForm : Form
         _next.Click += (_, _) => Go(_tabs.SelectedIndex + 1);
         _install.Click += async (_, _) => await InstallAsync();
         _close.Click += (_, _) => Close();
+        DetectSecurityFiles();
         Go(0);
     }
 
     private Label StepBadge() => new() { AutoSize = false, Width = 176, Height = 32, Margin = new Padding(0, 0, 8, 0), TextAlign = ContentAlignment.MiddleCenter, Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold), BackColor = Color.White, ForeColor = TextMuted, BorderStyle = BorderStyle.FixedSingle };
     private Button SecondaryButton(string text, int width) { var b = new Button { Text = text, Width = width, Height = 34 }; StyleSecondaryButton(b); return b; }
-    private void StylePrimaryButton(Button button) { button.FlatStyle = FlatStyle.Flat; button.FlatAppearance.BorderSize = 0; button.BackColor = Accent; button.ForeColor = Color.White; button.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold); }
+    private void ApplyPrimaryButtonState(Button button) { if (button.Enabled) { button.BackColor = Accent; button.ForeColor = Color.White; } else { button.BackColor = Color.FromArgb(103, 232, 249); button.ForeColor = Color.White; } }
+    private void StylePrimaryButton(Button button) { button.FlatStyle = FlatStyle.Flat; button.FlatAppearance.BorderSize = 0; button.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold); button.EnabledChanged += (_, _) => ApplyPrimaryButtonState(button); ApplyPrimaryButtonState(button); }
     private void StyleSecondaryButton(Button button) { button.FlatStyle = FlatStyle.Flat; button.FlatAppearance.BorderColor = Border; button.FlatAppearance.BorderSize = 1; button.BackColor = Color.White; button.ForeColor = TextPrimary; button.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold); }
+
+    private void DetectSecurityFiles()
+    {
+        var startupDir = AppContext.BaseDirectory;
+        if (string.IsNullOrWhiteSpace(licensePath.Text) || !File.Exists(licensePath.Text))
+        {
+            var detected = InstallerHelpers.FindFirstMatchingFile(startupDir, "license.vtlic");
+            if (string.IsNullOrWhiteSpace(detected))
+            {
+                detected = FindFirstByPattern(startupDir, "*.vtlic");
+            }
+            if (!string.IsNullOrWhiteSpace(detected)) licensePath.Text = detected;
+        }
+        if (string.IsNullOrWhiteSpace(publicKeyPath.Text) || !File.Exists(publicKeyPath.Text))
+        {
+            var detected = InstallerHelpers.FindFirstMatchingFile(startupDir, "public_key.pem");
+            if (!string.IsNullOrWhiteSpace(detected)) publicKeyPath.Text = detected;
+        }
+        if (string.IsNullOrWhiteSpace(agentPrivateKeyPath.Text) || !File.Exists(agentPrivateKeyPath.Text))
+        {
+            var detected = InstallerHelpers.FindFirstMatchingFile(startupDir, "agent_secret_private.pem");
+            if (!string.IsNullOrWhiteSpace(detected)) agentPrivateKeyPath.Text = detected;
+        }
+        var sharedDir = InstallerHelpers.GetSharedArtifactsDirectory(startupDir);
+        AppendLog($"[INFO] Secrets partag?s: {sharedDir}");
+    }
+
+    private static string FindFirstByPattern(string startupDir, string pattern)
+    {
+        var current = new DirectoryInfo(Path.GetFullPath(startupDir));
+        while (current != null)
+        {
+            var match = Directory.GetFiles(current.FullName, pattern, SearchOption.TopDirectoryOnly);
+            if (match.Length > 0) return match[0];
+            current = current.Parent;
+        }
+        return null;
+    }
 
     private void Persist()
     {
@@ -193,8 +235,13 @@ public sealed class MainForm : Form
         {
             Directory.CreateDirectory(_s.InstallDir); InstallerHelpers.CopyDirectory(src, _s.InstallDir); Directory.CreateDirectory(_s.LogsDir); AppendLog("[OK] Fichiers copiés.");
             var winswSource = Path.Combine(_s.InstallDir, "winsw.exe"); if (!File.Exists(winswSource)) throw new FileNotFoundException("winsw.exe introuvable dans le package", winswSource); var winswExe = Path.Combine(_s.InstallDir, _s.ServiceName + ".exe"); File.Copy(winswSource, winswExe, true); var winswXml = Path.Combine(_s.InstallDir, _s.ServiceName + ".xml");
-            var pd = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData); var dispatchFile = Path.Combine(pd, "Vigitemp", "shared-secrets", "alarm-dispatch-secret.txt"); Directory.CreateDirectory(Path.GetDirectoryName(dispatchFile)!); var dispatch = _s.DispatchSecret; if (string.IsNullOrWhiteSpace(dispatch) && File.Exists(dispatchFile)) dispatch = File.ReadAllText(dispatchFile).Trim(); if (string.IsNullOrWhiteSpace(dispatch)) dispatch = InstallerHelpers.GenerateSecret(); File.WriteAllText(dispatchFile, dispatch);
-            var envPath = Path.Combine(_s.InstallDir, ".next", "standalone", ".env"); Directory.CreateDirectory(Path.GetDirectoryName(envPath)!); var jwt = InstallerHelpers.GenerateSecret(); var hotlineJwt = InstallerHelpers.GenerateSecret(); var agentSecret = InstallerHelpers.GenerateSecret(); string dbUrl, dbMesures, dbChatUrl;
+            var sharedSecretsDir = InstallerHelpers.GetSharedArtifactsDirectory(src);
+            AppendLog($"[INFO] Secrets partag?s utilis?s: {sharedSecretsDir}");
+            var dispatch = InstallerHelpers.GetOrCreateSharedSecret(src, "alarm-dispatch-secret.txt", _s.DispatchSecret);
+            var jwt = InstallerHelpers.GetOrCreateSharedSecret(src, "web-jwt-secret.txt");
+            var hotlineJwt = InstallerHelpers.GetOrCreateSharedSecret(src, "hotline-jwt-secret.txt");
+            var agentSecret = InstallerHelpers.GetOrCreateSharedSecret(src, "agent-runtime-secret.txt");
+            var envPath = Path.Combine(_s.InstallDir, ".next", "standalone", ".env"); Directory.CreateDirectory(Path.GetDirectoryName(envPath)!); string dbUrl, dbMesures, dbChatUrl;
             if (_s.DbProvider == "mssql") { dbUrl = $"sqlserver://{_s.DbUser}:{_s.DbPassword}@{_s.DbHost}:{_s.DbPort};database={_s.DbMain};encrypt=false;trustServerCertificate=true"; dbMesures = $"sqlserver://{_s.DbUser}:{_s.DbPassword}@{_s.DbHost}:{_s.DbPort};database={_s.DbMeasure};encrypt=false;trustServerCertificate=true"; dbChatUrl = $"sqlserver://{_s.DbUser}:{_s.DbPassword}@{_s.DbHost}:{_s.DbPort};database={_s.DbChat};encrypt=false;trustServerCertificate=true"; }
             else { const string q = "allowPublicKeyRetrieval=true"; dbUrl = $"mysql://{Uri.EscapeDataString(_s.DbUser)}:{Uri.EscapeDataString(_s.DbPassword)}@{_s.DbHost}:{_s.DbPort}/{_s.DbMain}?{q}"; dbMesures = $"mysql://{Uri.EscapeDataString(_s.DbUser)}:{Uri.EscapeDataString(_s.DbPassword)}@{_s.DbHost}:{_s.DbPort}/{_s.DbMeasure}?{q}"; dbChatUrl = $"mysql://{Uri.EscapeDataString(_s.DbUser)}:{Uri.EscapeDataString(_s.DbPassword)}@{_s.DbHost}:{_s.DbPort}/{_s.DbChat}?{q}"; }
             var env = new StringBuilder(); env.AppendLine($"DATABASE_URL=\"{dbUrl}\""); env.AppendLine($"DATABASE_MESURES_URL=\"{dbMesures}\""); env.AppendLine($"DATABASE_CHAT_URL=\"{dbChatUrl}\""); env.AppendLine($"DATABASE_PROVIDER=\"{_s.DbProvider}\""); env.AppendLine($"NEXT_PUBLIC_API_BASE_URL=\"{_s.WebsiteBaseUrl}\""); env.AppendLine($"NEXT_PUBLIC_APP_URL=\"{_s.AppBaseUrl}\""); env.AppendLine($"NEXT_PUBLIC_CACHE_TTL={_s.CacheTtl}"); env.AppendLine($"VIGITEMP_LICENSE_PATH=\"{_s.LicensePath}\""); env.AppendLine($"VIGITEMP_LICENSE_PUBLIC_KEY_PATH=\"{_s.PublicKeyPath}\""); env.AppendLine($"VIGITEMP_AGENT_SECRET_PRIVATE_KEY_PATH=\"{_s.AgentPrivateKeyPath}\""); env.AppendLine($"VIGITEMP_AGENT_PORT={_s.AgentPort}"); env.AppendLine($"VIGITEMP_AGENT_TIMEOUT_MS={_s.AgentTimeoutMs}"); env.AppendLine($"VIGITEMP_AGENT_ACTIVE_WINDOW_MINUTES={_s.AgentActiveWindowMinutes}"); env.AppendLine($"VIGITEMP_AGENT_SECRET=\"{agentSecret}\""); env.AppendLine($"VIGITEMP_ALARM_DISPATCH_SECRET=\"{dispatch}\""); env.AppendLine($"VIGITEMP_SURVEILLANCE_DISPATCH_SECRET=\"{dispatch}\""); env.AppendLine($"VIGITEMP_LOGS_DIR=\"{_s.LogsDir}\""); env.AppendLine($"VIGITEMP_ALLOWED_DEV_ORIGINS=\"{_s.AllowedDevOrigins}\""); env.AppendLine($"VIGITEMP_CSP_CONNECT_SRC=\"{_s.CspConnectSrc}\""); env.AppendLine($"JWT_SECRET=\"{jwt}\""); env.AppendLine($"HOTLINE_SERVER_HOST=\"{_s.HotlineServerHost}\""); env.AppendLine($"HOTLINE_SERVER_PORT={_s.HotlineServerPort}"); env.AppendLine($"HOTLINE_SERVER_TIMEOUT_MS={_s.HotlineServerTimeoutMs}"); env.AppendLine($"HOTLINE_JWT_SECRET=\"{hotlineJwt}\""); env.AppendLine($"HOTLINE_ACCESS_TOKEN_TTL_MINUTES={_s.HotlineAccessTokenTtl}"); env.AppendLine($"HOTLINE_REFRESH_TOKEN_TTL_MINUTES={_s.HotlineRefreshTokenTtl}"); env.AppendLine("NODE_ENV=production"); File.WriteAllText(envPath, env.ToString()); AppendLog("[OK] Fichier .env généré.");
@@ -213,7 +260,7 @@ public sealed class MainForm : Form
   <env name=""PORT"" value=""{_s.Port}"" />
   <env name=""HOSTNAME"" value=""0.0.0.0"" />
 </service>";
-            File.WriteAllText(winswXml, xml); InstallerHelpers.RunProcess(winswExe, "install", _s.InstallDir, AppendLog); InstallerHelpers.RunProcess(winswExe, "start", _s.InstallDir, AppendLog); InstallerHelpers.WriteRegistryInfo(_s.InstallDir, string.Empty);
+            File.WriteAllText(winswXml, xml); InstallerHelpers.RunProcess(winswExe, "install", _s.InstallDir, AppendLog); InstallerHelpers.RunProcess(winswExe, "start", _s.InstallDir, AppendLog); var uninstallScriptPath = InstallerHelpers.WriteWebUninstallScript(_s.InstallDir, _s.ServiceName); var displayIconPath = InstallerHelpers.WriteInstalledDisplayIcon(_s.InstallDir, "VigiSensysWeb", Application.ExecutablePath) ?? winswExe; InstallerHelpers.WriteRegistryInfo(_s.InstallDir, string.Empty, _s.ServiceName, displayIconPath, uninstallScriptPath);
             SetStatus("Etat : installation terminée avec succès"); AppendLog("[OK] Installation terminée."); MessageBox.Show("Installation du site terminée. Vérifiez le service Windows si nécessaire.", "Installation terminée", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex) { SetStatus("Etat : installation en erreur"); AppendLog("[ERROR] " + ex.Message); MessageBox.Show(ex.Message, "Installation impossible", MessageBoxButtons.OK, MessageBoxIcon.Error); }

@@ -519,6 +519,7 @@ model t_sonde {
   Id_Sonde            Int                 @id @default(autoincrement())
   Adresse_Sonde       String?             @db.VarChar(50)
   Sonde_Numero_Serie  String?             @unique(map: "Numero_serie") @db.VarChar(50)
+  Sonde_Type          String?             @db.VarChar(50)
   Est_Sonde_GSO       Boolean             @default(false)
   Port_Serie          String?             @db.VarChar(10)
   Surveillance_Etat   String              @default("D") @map("Etat_Sonde") @db.VarChar(1)
@@ -537,8 +538,10 @@ model t_sonde {
   t_lieu              t_lieu[]
   t_sonde_etat        t_sonde_etat?       @relation(fields: [Id_Sonde_Etat], references: [Id_Sonde_Etat], onDelete: NoAction, onUpdate: NoAction, map: "FK_SONDE_ETAT")
   t_etat_surveillance t_etat_surveillance @relation(fields: [Surveillance_Etat], references: [Surveillance_Etat], onDelete: NoAction, onUpdate: NoAction, map: "FK_SONDE_ETAT_SURVEILLANCE")
+  t_sonde_type        t_sonde_type?       @relation(fields: [Sonde_Type], references: [Sonde_Type], onDelete: NoAction, onUpdate: NoAction, map: "FK_SONDE_SONDE_TYPE")
 
   @@index([Adresse_Sonde], map: "IDX_Adresse_Sonde")
+  @@index([Sonde_Type], map: "IDX_Sonde_Type")
   @@index([Surveillance_Etat], map: "IDX_Etat_Sonde")
   @@index([Port_Serie], map: "IDX_Port_Serie")
   @@index([Id_Module], map: "IDX_Id_Module")
@@ -554,12 +557,13 @@ model t_etat_surveillance {
 }
 
 model t_sonde_type {
-  Id_Sonde_Type      Int      @id @default(autoincrement())
-  Sonde_Type         String?  @unique(map: "Sonde_Type") @db.VarChar(50)
-  Libelle_Sonde_Type String?  @db.VarChar(50)
+  Id_Sonde_Type      Int       @id @default(autoincrement())
+  Sonde_Type         String?   @unique(map: "Sonde_Type") @db.VarChar(50)
+  Libelle_Sonde_Type String?   @db.VarChar(50)
   Est_Gestion_Relais Boolean?
-  Est_Double_Capteur Boolean  @default(false)
-  Famille_Sonde      String   @default("CLASSIC") @db.VarChar(16)
+  Est_Double_Capteur Boolean   @default(false)
+  Famille_Sonde      String    @default("CLASSIC") @db.VarChar(16)
+  t_sonde            t_sonde[]
 }
 
 model t_utilisateur {

@@ -173,15 +173,20 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
         .filter((row) => row.Sonde_Type)
         .map((row) => [row.Sonde_Type as string, row.Famille_Sonde]),
     );
-    const isGsoSerial = (serial: string) => familyByType.get(extractTypeCodeFromSerial(serial)) === "GSO";
+    const getSerialTypeCode = (serial: string) => extractTypeCodeFromSerial(serial);
+    const isGsoSerial = (serial: string) => familyByType.get(getSerialTypeCode(serial)) === "GSO";
 
     await prisma.$transaction(async (tx) => {
       const gsoSerials = serials.filter((serial) => isGsoSerial(serial));
 
-      if (gsoSerials.length > 0) {
+      for (const serial of serials) {
+        const typeCode = getSerialTypeCode(serial);
         await tx.t_sonde.updateMany({
-          where: { Sonde_Numero_Serie: { in: gsoSerials } },
-          data: { Est_Sonde_GSO: true },
+          where: { Sonde_Numero_Serie: serial },
+          data: {
+            Sonde_Type: typeCode,
+            Est_Sonde_GSO: familyByType.get(typeCode) === "GSO",
+          },
         });
       }
 
@@ -191,6 +196,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
             const gso = isGsoSerial(serial);
             return {
               Sonde_Numero_Serie: serial,
+              Sonde_Type: getSerialTypeCode(serial),
               Adresse_Sonde: extractProbeAddressFromSerial(serial),
               Est_Sonde_GSO: gso,
               Surveillance_Etat: "D",

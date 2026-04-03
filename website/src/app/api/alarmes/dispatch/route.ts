@@ -11,7 +11,7 @@ import { revalidateTag } from "next/cache"
 import { sendAlarmEventEmails } from "@/lib/alarm-email"
 
 const AGENT_PORT = Number.parseInt(process.env.VIGITEMP_AGENT_PORT ?? "8000", 10)
-const AGENT_TIMEOUT_MS = Number.parseInt(process.env.VIGITEMP_AGENT_TIMEOUT_MS ?? "1500", 10)
+const AGENT_TIMEOUT_MS = Number.parseInt(process.env.VIGITEMP_AGENT_TIMEOUT_MS ?? "5000", 10)
 const AGENT_ACTIVE_WINDOW_MINUTES = Number.parseInt(
   process.env.VIGITEMP_AGENT_ACTIVE_WINDOW_MINUTES ?? "15",
   10,
@@ -109,7 +109,12 @@ async function dispatchAgentNotifications(
     } catch (error) {
       failed += 1
       const now = new Date()
-      const errorMessage = error instanceof Error ? error.message : String(error)
+      const errorMessage =
+        error instanceof Error
+          ? error.name === "AbortError"
+            ? `agent_timeout_${AGENT_TIMEOUT_MS}ms`
+            : error.message
+          : String(error)
       await prisma.$transaction([
         prisma.t_notification_delivery.update({
           where: { Id_Delivery: deliveryId },

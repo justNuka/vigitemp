@@ -125,6 +125,7 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
                     <div className={isGsoSensor ? 'cursor-not-allowed' : ''}>
                       <Input
                         type="number"
+                        min={1}
                         step="any"
                         {...register('Frequence', { setValueAs: toOptionalNumber })}
                         placeholder={t('placeholders.frequency')}
@@ -187,7 +188,7 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
                 </div>
                 <div className="space-y-2">
                   <Label>{t('labels.alarm_delay_minutes')}</Label>
-                  <Input type="number" step="any" {...register('Retard_Alarme_Haut', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.delay')} />
+                  <Input type="number" min={1} step="any" {...register('Retard_Alarme_Haut', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.delay')} />
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -218,7 +219,7 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
                 </div>
                 <div className="space-y-2">
                   <Label>{t('labels.alarm_delay_minutes')}</Label>
-                  <Input type="number" step="any" {...register('Retard_Alarme_Bas', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.delay')} />
+                  <Input type="number" min={1} step="any" {...register('Retard_Alarme_Bas', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.delay')} />
                 </div>
               </div>
               <div className="flex items-center gap-2">

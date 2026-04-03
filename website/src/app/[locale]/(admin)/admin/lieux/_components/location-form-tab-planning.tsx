@@ -54,6 +54,15 @@ interface LocationFormTabPlanningProps {
   emtParams: LieuEmtParams
   onAddRule?: () => void
   onEditRule?: (regle: PlanningRegleResponse) => void
+  onGoToGeneral?: () => void
+  baseSetpoints?: {
+    consigne: number | null
+    consigneSup: number | null
+    consigneInf: number | null
+    frequence: number | null
+    retardAlarmeHaut: number | null
+    retardAlarmeBas: number | null
+  }
 }
 
 export function LocationFormTabPlanning({
@@ -61,6 +70,8 @@ export function LocationFormTabPlanning({
   emtParams,
   onAddRule,
   onEditRule,
+  onGoToGeneral,
+  baseSetpoints,
 }: LocationFormTabPlanningProps) {
   const t = useTranslations("lieux.planning")
   const tCommon = useTranslations("common")
@@ -185,7 +196,16 @@ export function LocationFormTabPlanning({
           ))}
         </div>
       ) : regles.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t("noRules")}</p>
+        <div className="rounded-lg border border-dashed border-primary/30 bg-muted/20 p-4">
+          <p className="text-sm text-muted-foreground">{t("noRules")}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {onGoToGeneral ? (
+              <Button type="button" variant="outline" size="sm" onClick={onGoToGeneral}>
+                {t("backToBaseSetpoints")}
+              </Button>
+            ) : null}
+          </div>
+        </div>
       ) : (
         <div className="space-y-2">
           {regles.map((regle) => (
@@ -299,6 +319,7 @@ export function LocationFormTabPlanning({
           editRegle={editRegle}
           emtParams={emtParams}
           initialValues={initialValues}
+          baseSetpoints={baseSetpoints}
         />
       )}
 

@@ -413,3 +413,4 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
     </main>
   );
 }
+

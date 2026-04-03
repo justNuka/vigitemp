@@ -47,6 +47,30 @@ function addConsigneGuards(data: any, ctx: z.RefinementCtx) {
       message: "La frequence de mesure est requise.",
     })
   }
+
+  if (data.Frequence !== null && data.Frequence !== undefined && Number(data.Frequence) <= 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Frequence"],
+      message: "La frequence de mesure doit etre strictement superieure a 0.",
+    })
+  }
+
+  if (data.Retard_Alarme_Haut !== null && data.Retard_Alarme_Haut !== undefined && Number(data.Retard_Alarme_Haut) <= 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Retard_Alarme_Haut"],
+      message: "Le retard d'alarme haut doit etre strictement superieur a 0.",
+    })
+  }
+
+  if (data.Retard_Alarme_Bas !== null && data.Retard_Alarme_Bas !== undefined && Number(data.Retard_Alarme_Bas) <= 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Retard_Alarme_Bas"],
+      message: "Le retard d'alarme bas doit etre strictement superieur a 0.",
+    })
+  }
 }
 
 export const locationFormSchema = z.object({

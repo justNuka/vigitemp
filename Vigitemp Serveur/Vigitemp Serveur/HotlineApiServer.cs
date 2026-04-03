@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.IO.Ports;
@@ -152,6 +153,12 @@ namespace Vigitemp_Serveur
                     return;
                 }
 
+                if (string.Equals(path, "/api/hotline/version", StringComparison.OrdinalIgnoreCase))
+                {
+                    HandleVersion(context.Request, response);
+                    return;
+                }
+
                 WriteJson(response, 404, new { ok = false, error = "not_found", message = "Not found" });
             }
             catch (Exception ex)
@@ -209,6 +216,24 @@ namespace Vigitemp_Serveur
             var testRequest = ParseSensorTestRequest(payload);
             var result = ExecuteSensorTest(testRequest);
             WriteJson(response, result.Success ? 200 : 400, new { ok = result.Success, data = result, message = result.Error });
+        }
+
+
+        private void HandleVersion(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            if (!string.Equals(request.HttpMethod, "GET", StringComparison.OrdinalIgnoreCase))
+            {
+                WriteJson(response, 405, new { ok = false, error = "method_not_allowed", message = "Method not allowed" });
+                return;
+            }
+
+            var version = FileVersionInfo.GetVersionInfo(typeof(VigitempServeur).Assembly.Location).ProductVersion;
+            if (string.IsNullOrWhiteSpace(version))
+            {
+                version = typeof(VigitempServeur).Assembly.GetName().Version?.ToString() ?? string.Empty;
+            }
+
+            WriteJson(response, 200, new { ok = true, data = new { version } });
         }
 
         private static SensorTestRequest ParseSensorTestRequest(JObject payload)
@@ -342,7 +367,8 @@ namespace Vigitemp_Serveur
         private static void ProbeGsp(SensorTestResult result, SensorTestRequest request, string portName, string address)
         {
             var gsp = request.Gsp ?? new GspSensorTestRequest();
-            var target = GspProtocol.NormalizeCommandTarget(request.Serial);
+            var targetSource = string.IsNullOrWhiteSpace(address) ? request.Serial : address;
+            var target = GspProtocol.NormalizeCommandTarget(targetSource);
 
             using (var port = CreatePort(portName, request))
             {

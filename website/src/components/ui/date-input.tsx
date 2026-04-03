@@ -257,7 +257,7 @@ const DateInput: React.FC<DateInputProps> = ({ value, onChange, allowEmpty = fal
     }
 
   return (
-    <div className="flex border rounded-lg items-center text-sm px-1">
+    <div className="flex items-center rounded-lg border border-input bg-background px-1 text-sm text-foreground dark:border-border dark:bg-slate-950/70 dark:text-slate-100">
       {inputOrder.map((field, index) => {
         const config = field === 'month'
           ? { ref: monthRef, max: 12, maxLength: 2, width: 'w-6' }
@@ -281,7 +281,7 @@ const DateInput: React.FC<DateInputProps> = ({ value, onChange, allowEmpty = fal
                 }
               }}
               onBlur={handleBlur(field)}
-              className={`p-0 outline-none ${config.width} border-none text-center`}
+              className={`border-none bg-transparent p-0 text-center outline-none placeholder:text-muted-foreground/70 ${config.width}`}
               placeholder={placeholders[field]}
             />
             {index < inputOrder.length - 1 && (

@@ -170,6 +170,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
           data: {
             Adresse_Sonde: extractProbeAddressFromSerial(serial),
             Sonde_Numero_Serie: serial,
+            Sonde_Type: sensorType.Sonde_Type,
             Id_Module: data.moduleId ?? null,
             Port_Serie: portSerie,
             Sonde_Offset: data.sondeOffset ?? 0,

@@ -39,6 +39,7 @@ import { isStandardOrExpert } from "@/lib/license-access";
 import { getInitialsForAvatar, resolveAvatarSrc } from "@/lib/avatar-library";
 import { useMessagingEnabled } from "@/hooks/useMessagingEnabled";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
+import { WEB_APP_VERSION } from "@/lib/app-version";
 
 import { CurrentUser } from "@/lib/types";
 import { useLocale } from "next-intl";
@@ -127,6 +128,7 @@ export function AdminSidebar({ currentUser, onLogout, activeAlarms = 0 }: AdminS
         <span className="inline-flex items-center rounded-md bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20 mt-2">
           {t("badge")}
         </span>
+        <span className="mt-2 text-[11px] font-medium text-sidebar-foreground/65">v{WEB_APP_VERSION}</span>
       </SidebarHeader>
 
       <SidebarSeparator />

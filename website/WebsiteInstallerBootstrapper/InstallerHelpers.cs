@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Windows.Forms;
@@ -10,6 +12,10 @@ namespace VigitempWebInstaller;
 
 internal static class InstallerHelpers
 {
+    private const string UninstallRegistryKeyName = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VigiSensysWeb";
+    private const string ProductDisplayName = "VigiSensys Web";
+    private const string ProductPublisher = "VigiSensys";
+
     public static string PromptText(IWin32Window owner, string title, string label, string defaultValue = "", bool password = false)
     {
         using var form = new Form();
@@ -46,6 +52,59 @@ internal static class InstallerHelpers
         return dialog.ShowDialog(owner) == DialogResult.OK ? dialog.FileName : null;
     }
 
+
+    public static string GetSharedArtifactsDirectory(string startupDir)
+    {
+        var normalizedStartup = Path.GetFullPath(startupDir)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var packageDir = new DirectoryInfo(normalizedStartup);
+        var root = packageDir.Parent ?? packageDir;
+        var sharedDir = Path.Combine(root.FullName, "shared-secrets");
+        Directory.CreateDirectory(sharedDir);
+        return sharedDir;
+    }
+
+    public static string GetOrCreateSharedSecret(string startupDir, string fileName, string providedValue = null, int byteLength = 32)
+    {
+        var sharedDir = GetSharedArtifactsDirectory(startupDir);
+        var secretPath = Path.Combine(sharedDir, fileName);
+        var secretValue = string.IsNullOrWhiteSpace(providedValue)
+            ? (File.Exists(secretPath) ? File.ReadAllText(secretPath).Trim() : null)
+            : providedValue.Trim();
+
+        if (string.IsNullOrWhiteSpace(secretValue))
+        {
+            secretValue = GenerateSecret(byteLength);
+        }
+
+        File.WriteAllText(secretPath, secretValue + Environment.NewLine, Encoding.UTF8);
+        return secretValue;
+    }
+
+    public static string FindFirstMatchingFile(string startupDir, params string[] fileNames)
+    {
+        if (fileNames == null || fileNames.Length == 0)
+        {
+            return null;
+        }
+
+        var current = new DirectoryInfo(Path.GetFullPath(startupDir));
+        while (current != null)
+        {
+            foreach (var fileName in fileNames)
+            {
+                var candidate = Path.Combine(current.FullName, fileName);
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
+            }
+
+            current = current.Parent;
+        }
+
+        return null;
+    }
     public static string GenerateSecret(int byteLength = 32)
     {
         var bytes = new byte[byteLength];
@@ -154,11 +213,85 @@ internal static class InstallerHelpers
         System.Threading.Thread.Sleep(1500);
     }
 
-    public static void WriteRegistryInfo(string installPath, string version)
+    public static string WriteWebUninstallScript(string installPath, string serviceName)
+    {
+        Directory.CreateDirectory(installPath);
+        var scriptPath = Path.Combine(installPath, "Uninstall-VigiSensysWeb.ps1");
+        var script = $@"Param(
+    [string]$ServiceName = ""{serviceName}"",
+    [string]$InstallDir = ""{installPath}"",
+    [switch]$Force
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = ""Stop""
+
+if (-not $Force) {{
+    $answer = Read-Host ""Supprimer le service et les fichiers web ? (y/n) [y]""
+    if ([string]::IsNullOrWhiteSpace($answer)) {{ $answer = ""y"" }}
+    if ($answer -ne ""y"") {{ exit 1 }}
+}}
+
+try {{ Stop-Service -Name $ServiceName -Force -ErrorAction SilentlyContinue }} catch {{ }}
+$serviceExe = Join-Path $InstallDir ($ServiceName + "".exe"")
+if (Test-Path $serviceExe) {{
+    try {{ & $serviceExe stop | Out-Null }} catch {{ }}
+    try {{ & $serviceExe uninstall | Out-Null }} catch {{ }}
+}} else {{
+    & sc.exe delete $ServiceName | Out-Null
+}}
+
+if (Test-Path $InstallDir) {{
+    Remove-Item -LiteralPath $InstallDir -Recurse -Force
+}}
+
+try {{ Remove-Item -Path ""HKLM:\SOFTWARE\Vigitemp\Web"" -Recurse -Force -ErrorAction SilentlyContinue }} catch {{ }}
+try {{ Remove-Item -Path ""HKLM:\{UninstallRegistryKeyName}"" -Recurse -Force -ErrorAction SilentlyContinue }} catch {{ }}
+";
+        File.WriteAllText(scriptPath, script, new UTF8Encoding(false));
+        return scriptPath;
+    }
+
+    public static string WriteInstalledDisplayIcon(string installPath, string productKeyName, string sourceExecutablePath = null)
+    {
+        Directory.CreateDirectory(installPath);
+        var iconPath = Path.Combine(installPath, $"{productKeyName}.ico");
+        var iconSource = string.IsNullOrWhiteSpace(sourceExecutablePath) ? Application.ExecutablePath : sourceExecutablePath;
+        using var icon = Icon.ExtractAssociatedIcon(iconSource);
+        if (icon == null)
+        {
+            return null;
+        }
+
+        using var stream = File.Create(iconPath);
+        icon.Save(stream);
+        return iconPath;
+    }
+
+    public static void WriteRegistryInfo(string installPath, string version, string serviceName, string displayIconPath, string uninstallScriptPath)
     {
         using var key = Registry.LocalMachine.CreateSubKey(@"SOFTWARE\Vigitemp\Web");
         key?.SetValue("InstallPath", installPath, RegistryValueKind.String);
         key?.SetValue("Version", version ?? string.Empty, RegistryValueKind.String);
         key?.SetValue("LastInstalledUtc", DateTime.UtcNow.ToString("o"), RegistryValueKind.String);
+
+        using var uninstallKey = Registry.LocalMachine.CreateSubKey(UninstallRegistryKeyName);
+        uninstallKey?.SetValue("DisplayName", ProductDisplayName, RegistryValueKind.String);
+        uninstallKey?.SetValue("DisplayVersion", version ?? string.Empty, RegistryValueKind.String);
+        uninstallKey?.SetValue("Publisher", ProductPublisher, RegistryValueKind.String);
+        uninstallKey?.SetValue("InstallLocation", installPath, RegistryValueKind.String);
+        if (!string.IsNullOrWhiteSpace(displayIconPath)) uninstallKey?.SetValue("DisplayIcon", displayIconPath, RegistryValueKind.String);
+        var uninstallCommand =
+            $"powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"{uninstallScriptPath}\" -ServiceName \"{serviceName}\" -InstallDir \"{installPath}\"";
+        var quietUninstallCommand = uninstallCommand + " -Force";
+        uninstallKey?.SetValue("UninstallString", uninstallCommand, RegistryValueKind.String);
+        uninstallKey?.SetValue("QuietUninstallString", quietUninstallCommand, RegistryValueKind.String);
+        uninstallKey?.SetValue("NoModify", 1, RegistryValueKind.DWord);
+        uninstallKey?.SetValue("NoRepair", 1, RegistryValueKind.DWord);
+        if (Directory.Exists(installPath))
+        {
+            var sizeKb = Math.Max(1L, (new DirectoryInfo(installPath).EnumerateFiles("*", SearchOption.AllDirectories).Sum(f => f.Length) + 1023L) / 1024L);
+            uninstallKey?.SetValue("EstimatedSize", (int)Math.Min(int.MaxValue, sizeKb), RegistryValueKind.DWord);
+        }
     }
 }

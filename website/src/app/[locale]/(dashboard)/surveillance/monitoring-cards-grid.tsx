@@ -314,6 +314,8 @@ export function MonitoringCardsGrid({
 
   const groupedDisabled = groupSensorsBySiteAndGroup(disabledSensors, groupingLabels, sortMode)
 
+  const countLocations = (items: SensorWithLocation[]) => new Set(items.map((sensor) => Number(sensor.location.id ?? sensor.id)).filter((id) => Number.isFinite(id))).size
+
 
 
 
@@ -326,7 +328,7 @@ export function MonitoringCardsGrid({
       key: "active",
 
 
-      title: t("grid.active_title"),
+      title: `${t("grid.active_title")} (${countLocations(activeSensors)})`,
 
 
       icon: <Power className="h-5 w-5 text-sky-500" />,
@@ -353,7 +355,7 @@ export function MonitoringCardsGrid({
       key: "disabled",
 
 
-      title: t("grid.disabled_title"),
+      title: `${t("grid.disabled_title")} (${countLocations(disabledSensors)})`,
 
 
       icon: <PowerOff className="h-5 w-5 text-slate-400" />,

@@ -483,6 +483,7 @@ exports.Prisma.T_sondeScalarFieldEnum = {
   Id_Sonde: 'Id_Sonde',
   Adresse_Sonde: 'Adresse_Sonde',
   Sonde_Numero_Serie: 'Sonde_Numero_Serie',
+  Sonde_Type: 'Sonde_Type',
   Est_Sonde_GSO: 'Est_Sonde_GSO',
   Port_Serie: 'Port_Serie',
   Surveillance_Etat: 'Surveillance_Etat',
@@ -947,6 +948,7 @@ exports.Prisma.t_siteOrderByRelevanceFieldEnum = {
 exports.Prisma.t_sondeOrderByRelevanceFieldEnum = {
   Adresse_Sonde: 'Adresse_Sonde',
   Sonde_Numero_Serie: 'Sonde_Numero_Serie',
+  Sonde_Type: 'Sonde_Type',
   Port_Serie: 'Port_Serie',
   Surveillance_Etat: 'Surveillance_Etat',
   Relai_1: 'Relai_1',

@@ -188,7 +188,7 @@ export const DateRangePicker: FC<DateRangePickerProps> & { filePath: string } = 
               setIsOpen(false)
             }}
             variant="ghost"
-            className="text-red-600 hover:text-red-700 bg-red-500/10 hover:bg-red-500/20"
+            className="bg-red-500/10 text-red-600 hover:bg-red-500/20 hover:text-red-700 dark:bg-red-500/15 dark:text-red-300 dark:hover:bg-red-500/20 dark:hover:text-red-200"
           >
             {t('cancel')}
           </Button>

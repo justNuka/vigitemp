@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -33,6 +33,13 @@ namespace Vigitemp_Serveur.sensors
 
     internal static class GspProtocol
     {
+        private static readonly string[] GspTypePrefixes =
+        {
+            "SPNB", "SPNG", "SPPS", "SPAL", "SPPC", "SPAU", "SPCF", "SPMI",
+            "SPCO", "SPHY", "SPTH", "SPDI", "SPAT", "SPLU", "SP01", "SP42",
+            "SPOF", "SPXB", "SPXG", "SPXP", "SPFB", "SPFG", "SPFP", "GSP",
+        };
+
         internal static List<KeyValuePair<string, string>> BuildConfigurationCommands(
             string channel,
             SondeMetrologySettings metrology,
@@ -117,10 +124,27 @@ namespace Vigitemp_Serveur.sensors
                 return string.Empty;
             }
 
-            var trimmed = serialNumber.Trim();
-            return trimmed.StartsWith("GSP", StringComparison.OrdinalIgnoreCase) && trimmed.Length > 3
-                ? trimmed.Substring(3)
-                : trimmed;
+            var trimmed = serialNumber.Trim().ToUpperInvariant();
+            foreach (var prefix in GspTypePrefixes.OrderByDescending(item => item.Length))
+            {
+                if (trimmed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && trimmed.Length > prefix.Length)
+                {
+                    return trimmed.Substring(prefix.Length);
+                }
+            }
+
+            return trimmed;
+        }
+
+        internal static bool IsGspSerial(string serialNumber)
+        {
+            if (string.IsNullOrWhiteSpace(serialNumber))
+            {
+                return false;
+            }
+
+            var trimmed = serialNumber.Trim().ToUpperInvariant();
+            return GspTypePrefixes.Any(prefix => trimmed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
         }
 
         internal static IEnumerable<string> BuildCandidateCommands(string command)

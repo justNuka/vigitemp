@@ -81,6 +81,8 @@ namespace Vigitemp_Serveur
         {
             public int IdLieu { get; set; }
             public string Serial { get; set; }
+            public string SondeType { get; set; }
+            public string FamilleSonde { get; set; }
             public string Adresse { get; set; }
             public string Port { get; set; }
             public string Module { get; set; }
@@ -930,9 +932,9 @@ namespace Vigitemp_Serveur
 
             VigitempServeur.Log("--------------------ID SERVEUR : " + _idServer + "---CAPTEUR : " + serial + "--------------------");
             VigitempServeur.Log("Ouverture du port " + schedule.Port + " pour la sonde " + serial);
-            var sensorType = serial.StartsWith("GSP", StringComparison.OrdinalIgnoreCase)
+            var sensorType = string.Equals(schedule.FamilleSonde, "GSP", StringComparison.OrdinalIgnoreCase)
                 ? "GSP"
-                : serial.Substring(0, 2);
+                : (GspProtocol.IsGspSerial(serial) ? "GSP" : serial.Substring(0, 2));
 
             switch (sensorType)
             {
@@ -1039,7 +1041,7 @@ namespace Vigitemp_Serveur
                         }
 
                         //recuperer infos du lieu
-                        (string arr_portSerie, string arr_sondeNumeroSerie, string arr_sondeAdresse, string arr_moduleNumeroSerie) = GetDatabase().getInfosByIdLieu(idLieu);
+                        (string arr_portSerie, string arr_sondeNumeroSerie, string arr_sondeType, string arr_familleSonde, string arr_sondeAdresse, string arr_moduleNumeroSerie) = GetDatabase().getInfosByIdLieu(idLieu);
 
                         if (string.IsNullOrEmpty(arr_sondeNumeroSerie) || arr_sondeNumeroSerie.Length < 2)
                         {
@@ -1047,9 +1049,9 @@ namespace Vigitemp_Serveur
                             continue;
                         }
                         VigitempServeur.Log("Ouverture du port " + arr_portSerie + " pour la sonde " + arr_sondeNumeroSerie);
-                        var sensorType = arr_sondeNumeroSerie.StartsWith("GSP", StringComparison.OrdinalIgnoreCase)
+                        var sensorType = string.Equals(arr_familleSonde, "GSP", StringComparison.OrdinalIgnoreCase)
                             ? "GSP"
-                            : arr_sondeNumeroSerie.Substring(0, 2);
+                            : (GspProtocol.IsGspSerial(arr_sondeNumeroSerie) ? "GSP" : arr_sondeNumeroSerie.Substring(0, 2));
 
                         Sensor sensor = null;
                         switch (sensorType)
@@ -1221,10 +1223,12 @@ namespace Vigitemp_Serveur
             {
                 IdLieu = info.IdLieu,
                 Serial = info.SondeNumeroSerie,
+                SondeType = info.SondeType,
+                FamilleSonde = info.FamilleSonde,
                 Adresse = info.AdresseSonde,
                 Port = info.PortSerie,
                 Module = info.ModuleNumeroSerie,
-                ConfigDirty = info.InfosModifiees || info.SondeNumeroSerie.StartsWith("GSP", StringComparison.OrdinalIgnoreCase),
+                ConfigDirty = info.InfosModifiees || string.Equals(info.FamilleSonde, "GSP", StringComparison.OrdinalIgnoreCase) || GspProtocol.IsGspSerial(info.SondeNumeroSerie),
                 FrequencySeconds = info.FrequenceSecondes,
                 LastMeasure = lastMeasure,
                 NextDue = ComputeNextDue(now, lastMeasure, info.FrequenceSecondes)

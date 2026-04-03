@@ -26,6 +26,14 @@ export interface PlanningRuleFormDialogProps {
   editRegle?: PlanningRegleResponse | null
   emtParams: LieuEmtParams
   initialValues?: PlanningRegleFormValues | null
+  baseSetpoints?: {
+    consigne: number | null
+    consigneSup: number | null
+    consigneInf: number | null
+    frequence: number | null
+    retardAlarmeHaut: number | null
+    retardAlarmeBas: number | null
+  }
 }
 
 export function PlanningRuleFormDialog({
@@ -36,6 +44,7 @@ export function PlanningRuleFormDialog({
   editRegle,
   emtParams,
   initialValues,
+  baseSetpoints,
 }: PlanningRuleFormDialogProps) {
   const tCommon = useTranslations("common")
   const tDialog = useTranslations("lieux.planning.dialog")
@@ -145,6 +154,18 @@ export function PlanningRuleFormDialog({
             <div className="rounded-md bg-muted/30 p-3 space-y-4">
               <PlanningRuleThresholdFields form={form} tDialog={tDialog} />
             </div>
+
+            {baseSetpoints ? (
+              <div className="rounded-md border bg-muted/40 p-3 text-sm">
+                <p className="font-medium">{tDialog("baseSetpointsTitle")}</p>
+                <div className="mt-2 grid grid-cols-2 gap-3 text-muted-foreground">
+                  <span>{tDialog("baseSetpoint", { value: baseSetpoints.consigne ?? "?" })}</span>
+                  <span>{tDialog("baseFrequency", { value: baseSetpoints.frequence ?? "?" })}</span>
+                  <span>{tDialog("baseUpper", { value: baseSetpoints.consigneSup ?? "?", delay: baseSetpoints.retardAlarmeHaut ?? "?" })}</span>
+                  <span>{tDialog("baseLower", { value: baseSetpoints.consigneInf ?? "?", delay: baseSetpoints.retardAlarmeBas ?? "?" })}</span>
+                </div>
+              </div>
+            ) : null}
 
             {!isEdit ? (
               <div className="rounded-md border border-dashed border-primary/30 bg-primary/5 p-3">

@@ -45,6 +45,7 @@ import { getInitialsForAvatar, resolveAvatarSrc } from "@/lib/avatar-library";
 import { useMessagingEnabled } from "@/hooks/useMessagingEnabled";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { hasAuthorizationCode } from "@/lib/permissions";
+import { WEB_APP_VERSION } from "@/lib/app-version";
 
 interface NavItem {
   href: "/" | "/surveillance" | "/alarmes" | "/messages" | "/vigilog" | "/profil" | "/admin";
@@ -149,6 +150,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
         <span className="inline-flex items-center rounded-md bg-amber-300/20 px-3 py-1 text-xs font-bold text-amber-200 ring-1 ring-inset ring-amber-300/40 mt-2">
           {licenseLabel}
         </span>
+        <span className="mt-2 text-[11px] font-medium text-sidebar-foreground/65">v{WEB_APP_VERSION}</span>
       </SidebarHeader>
 
       <SidebarSeparator />

@@ -19,6 +19,11 @@ const DEFAULT_PUBLIC_KEY_PATH = path.join(
 const FALLBACK_PUBLIC_KEY_PATH = path.join(PROGRAM_DATA, "Vigitemp", "public_key.pem")
 const DEFAULT_PRIVATE_KEY_PATH = path.join(PROGRAM_DATA, "Vigitemp", "agent_secret_private.pem")
 
+function resolveConfiguredAgentSecret() {
+  const configured = process.env.VIGITEMP_AGENT_SECRET?.trim()
+  return configured ? configured : null
+}
+
 function base64UrlToBuffer(input: string) {
   let base64 = input.replace(/-/g, "+").replace(/_/g, "/")
   switch (base64.length % 4) {
@@ -126,6 +131,11 @@ export const GET = withLogging(async (req: NextRequest) => {
   const user = getAuthenticatedUser(req)
   if (!user) {
     return apiError(401, "unauthorized", "Non authentifié")
+  }
+
+  const configuredSecret = resolveConfiguredAgentSecret()
+  if (configuredSecret) {
+    return apiOk({ secret: configuredSecret })
   }
 
   try {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO.Ports;
@@ -48,7 +48,7 @@ namespace Vigitemp_Serveur.sensors
         {
             _frequencySeconds = Math.Max(0, frequencySeconds);
             _synchronizeConfiguration = synchronizeConfiguration;
-            _commandTarget = GspProtocol.NormalizeCommandTarget(p_sondeSerialNumber);
+            _commandTarget = GspProtocol.NormalizeCommandTarget(string.IsNullOrWhiteSpace(p_sondeAdresse) ? p_sondeSerialNumber : p_sondeAdresse);
         }
 
         protected override bool ShouldApplyMetrology => false;

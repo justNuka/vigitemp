@@ -26,6 +26,8 @@ type HotlineHealth = {
   dbMain: HealthStatus
   dbMesure: HealthStatus
   dbChat: HealthStatus
+  webVersion?: string | null
+  serverVersion?: string | null
 }
 
 type HotlineLogs = {
@@ -176,7 +178,11 @@ export function HotlineDashboard({ slug, username }: HotlineDashboardProps) {
         <div>
           <h1 className="text-2xl font-semibold">{t('title')}</h1>
           <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
-          <div className="mt-2 inline-flex items-center rounded-md border border-primary/20 bg-primary/10 px-2 py-1 text-xs text-primary dark:border-primary/25 dark:bg-primary/10 dark:text-primary">{t('health.banner')}</div>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center rounded-md border border-primary/20 bg-primary/10 px-2 py-1 text-xs text-primary dark:border-primary/25 dark:bg-primary/10 dark:text-primary">{t('health.banner')}</div>
+            <div className="inline-flex items-center rounded-md border border-border/60 bg-background/80 px-2 py-1 text-xs text-muted-foreground">Web v{health?.webVersion || '-'}</div>
+            <div className="inline-flex items-center rounded-md border border-border/60 bg-background/80 px-2 py-1 text-xs text-muted-foreground">Serveur v{health?.serverVersion || '-'}</div>
+          </div>
         </div>
         <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-white/90 px-3 py-2 shadow-sm dark:bg-popover/95">
           <div className="hidden items-center gap-2 text-sm text-muted-foreground sm:inline-flex">

@@ -70,9 +70,47 @@ export function computeSurveillanceStats({
   total: number
   activeAlarms: number
 }): Stats {
-  const ok = sensors.filter((s) => s.status === "ok").length
-  const warning = sensors.filter((s) => s.status === "warning" || s.status === "ended").length
-  const critical = sensors.filter((s) => s.status === "critical" || s.status === "technical").length
+  const priority: Record<SensorWithLocation["status"], number> = {
+    critical: 0,
+    technical: 1,
+    warning: 2,
+    ended: 3,
+    ok: 4,
+  }
+  const locationStates = new Map<number, { isActive: boolean; status: SensorWithLocation["status"] }>()
+
+  for (const sensor of sensors) {
+    const locationId = Number(sensor.location.id ?? sensor.id)
+    if (!Number.isFinite(locationId)) continue
+
+    const nextState = {
+      isActive: !sensor.location.surveillanceDisabled,
+      status: sensor.status,
+    }
+    const current = locationStates.get(locationId)
+
+    if (!current) {
+      locationStates.set(locationId, nextState)
+      continue
+    }
+
+    if (current.isActive !== nextState.isActive) {
+      if (nextState.isActive) {
+        locationStates.set(locationId, nextState)
+      }
+      continue
+    }
+
+    if (priority[nextState.status] < priority[current.status]) {
+      locationStates.set(locationId, nextState)
+    }
+  }
+
+  const locations = Array.from(locationStates.values())
+  const activeLocations = locations.filter((location) => location.isActive)
+  const ok = activeLocations.filter((location) => location.status === "ok").length
+  const warning = activeLocations.filter((location) => location.status === "warning" || location.status === "ended").length
+  const critical = activeLocations.filter((location) => location.status === "critical" || location.status === "technical").length
 
   return { total, ok, warning, critical, activeAlarms }
 }

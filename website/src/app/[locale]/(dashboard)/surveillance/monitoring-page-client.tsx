@@ -126,9 +126,11 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     return ids.size;
   }, [allSensors, initialStats?.activeAlarms]);
 
+  const visibleLocationCount = useMemo(() => new Set(visibleSensors.map((sensor) => Number(sensor.location.id ?? sensor.id)).filter((id) => Number.isFinite(id))).size, [visibleSensors]);
+
   const visibleStats = computeSurveillanceStats({
     sensors: visibleSensors,
-    total: paginatedData.total,
+    total: visibleLocationCount,
     activeAlarms: activeAlarmsCount,
   });
 
