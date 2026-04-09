@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Plus, Pencil, Thermometer } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import { useAppAccess } from "@/components/access/app-access-provider";
 
 import { useSensors } from "@/hooks/useSensors";
 import { useAdjustments } from "@/hooks/useAdjustments";
@@ -11,6 +12,7 @@ import { useCalibrations } from "@/hooks/useCalibrations";
 import { fetchJson, getJson } from "@/lib/http";
 
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "@/i18n/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,12 +28,14 @@ import { SensorsTable, toSensorRows } from "./_components/sensors-table";
 export function SensorsClient() {
   const queryClient = useQueryClient();
   const t = useTranslations('sensorsPage');
+  const { isPack } = useAppAccess();
   const didPrefetchRef = useRef(false);
   const [selectedSensorId, setSelectedSensorId] = useState<number | null>(null);
   const [selectedAdjustmentId, setSelectedAdjustmentId] = useState<number | null>(null);
   const [selectedCalibrationId, setSelectedCalibrationId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [statusTab, setStatusTab] = useState<"active" | "archived">("active");
 
   const { data: sensors, isLoading: sensorsLoading } = useSensors();
   const selectedSensor = sensors?.find((s) => s.Id_Sonde === selectedSensorId);
@@ -69,7 +73,11 @@ export function SensorsClient() {
     retry: false,
   });
 
-  const sensorsTableData = toSensorRows(sensors || []);
+  const activeSensors = (sensors || []).filter((sensor) => !sensor.Est_Sonde_Reformee);
+  const archivedSensors = (sensors || []).filter((sensor) => Boolean(sensor.Est_Sonde_Reformee));
+  const displayedSensors = statusTab === "active" ? activeSensors : archivedSensors;
+
+  const sensorsTableData = toSensorRows(displayedSensors);
 
   const adjustmentsTableData: AdjustmentRow[] = (adjustments || []).map((calib) => ({
     Id_Ajustage: calib.Id_Ajustage,
@@ -116,7 +124,7 @@ export function SensorsClient() {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
               <Thermometer className="h-4 w-4 text-primary" />
-              {t('title_with_count', { count: sensors?.length || 0 })}
+              {t('title_with_count', { count: displayedSensors.length })}
             </CardTitle>
             <div className="flex gap-2">
               <Button size="sm" className="gap-2" asChild>
@@ -152,24 +160,49 @@ export function SensorsClient() {
           </div>
         </CardHeader>
         <CardContent className="p-2 md:p-4 xl:p-4">
-          <SensorsTable
-            sensors={sensorsTableData}
-            isLoading={sensorsLoading}
-            selectedSensorId={selectedSensorId}
-            onSelectSensor={(id) => {
-              setSelectedSensorId(id);
+          <Tabs
+            value={statusTab}
+            onValueChange={(value) => {
+              setStatusTab(value as "active" | "archived");
+              setSelectedSensorId(null);
               setSelectedAdjustmentId(null);
               setSelectedCalibrationId(null);
             }}
-            warningWindowDays={etalonnageWarningDays}
-            onEditSensor={(id) => {
-              setSelectedSensorId(id);
-              setSelectedAdjustmentId(null);
-              setSelectedCalibrationId(null);
-              setIsEditing(true);
-              setIsModalOpen(true);
-            }}
-          />
+            className="space-y-4"
+          >
+            <TabsList className="grid w-full max-w-md grid-cols-2 bg-primary/10 text-primary">
+              <TabsTrigger
+                value="active"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                {t('tabs.active', { count: activeSensors.length })}
+              </TabsTrigger>
+              <TabsTrigger
+                value="archived"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                {t('tabs.archived', { count: archivedSensors.length })}
+              </TabsTrigger>
+            </TabsList>
+            <SensorsTable
+              sensors={sensorsTableData}
+              isLoading={sensorsLoading}
+              selectedSensorId={selectedSensorId}
+              onSelectSensor={(id) => {
+                setSelectedSensorId(id);
+                setSelectedAdjustmentId(null);
+                setSelectedCalibrationId(null);
+              }}
+              warningWindowDays={etalonnageWarningDays}
+              onEditSensor={(id) => {
+                setSelectedSensorId(id);
+                setSelectedAdjustmentId(null);
+                setSelectedCalibrationId(null);
+                setIsEditing(true);
+                setIsModalOpen(true);
+              }}
+            />
+          </Tabs>
         </CardContent>
       </Card>
 
@@ -193,7 +226,13 @@ export function SensorsClient() {
         />
       </div>
 
-      <SensorModal open={isModalOpen} onOpenChange={setIsModalOpen} sensor={selectedSensor || null} isEditing={isEditing} />
+      <SensorModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        sensor={selectedSensor || null}
+        isEditing={isEditing}
+        isPack={isPack}
+      />
       </m.div>
     </LazyMotion>
   );

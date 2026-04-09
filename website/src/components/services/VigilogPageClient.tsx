@@ -250,9 +250,10 @@ export function VigilogPageClient() {
   const tournees = tourneesData?.tournees ?? []
 
   useEffect(() => {
-    if (!selectedConfigurationId && configurations.length > 0) {
-      const firstActiveConfiguration = configurations.find((configuration) => configuration.active)
-      setSelectedConfigurationId(String((firstActiveConfiguration ?? configurations[0]).id))
+    if (!selectedConfigurationId) return
+    const stillExists = configurations.some((configuration) => String(configuration.id) === selectedConfigurationId)
+    if (!stillExists) {
+      setSelectedConfigurationId("")
     }
   }, [configurations, selectedConfigurationId])
 
@@ -992,7 +993,7 @@ export function VigilogPageClient() {
       <div className="relative min-h-screen bg-background">
         <DotPattern className="opacity-30" />
         <div className="relative z-10 flex min-h-screen items-center justify-center">
-          <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-white/90 dark:bg-white/95 dark:bg-card/95 px-5 py-4 shadow-sm">
+          <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-white/90 dark:bg-white/95 px-5 py-4 shadow-sm">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
             <span className="text-sm text-muted-foreground">{t("common.loading")}</span>
           </div>
@@ -1039,7 +1040,7 @@ export function VigilogPageClient() {
               </CardHeader>
             </Card>
 
-            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
               <Card className="border-border/60 bg-white/95 dark:bg-card/95 shadow-sm">
                 <CardHeader className="pb-3">
                   <CardDescription>{t("stats.configurations")}</CardDescription>
@@ -1067,11 +1068,20 @@ export function VigilogPageClient() {
                   </CardTitle>
                 </CardHeader>
               </Card>
+              <Card className="border-border/60 bg-white/95 dark:bg-card/95 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardDescription>{t("stats.occasionalUsage")}</CardDescription>
+                  <CardTitle className="flex items-center gap-2 text-2xl">
+                    <PackageCheck className="h-5 w-5 text-primary" />
+                    {tourneesData?.stats.totalCount ?? 0}
+                  </CardTitle>
+                </CardHeader>
+              </Card>
             </div>
           </section>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5 bg-primary/10 text-primary md:w-[920px]">
+            <TabsList className="grid w-full grid-cols-5 bg-primary/10 text-primary md:w-230">
               <TabsTrigger value="movements">{t("tabs.movements")}</TabsTrigger>
               <TabsTrigger value="usage">{t("tabs.usage")}</TabsTrigger>
               <TabsTrigger value="configurations">{t("tabs.configurations")}</TabsTrigger>
@@ -1846,7 +1856,7 @@ export function VigilogPageClient() {
                       value={historySearch}
                       onChange={(event) => setHistorySearch(event.target.value)}
                       placeholder={t("history.placeholders.search")}
-                      className="h-11 w-full min-w-0 border-border/60 bg-white shadow-sm dark:bg-popover/95 lg:min-w-[360px]"
+                      className="h-11 w-full min-w-0 border-border/60 bg-white shadow-sm dark:bg-popover/95 lg:min-w-90"
                     />
                   </div>
                   <div className="space-y-2">

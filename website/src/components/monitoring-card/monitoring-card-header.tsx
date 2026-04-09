@@ -1,4 +1,4 @@
-import { PowerOff } from 'lucide-react'
+import { CircleHelp, PowerOff } from 'lucide-react'
 
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { getTypeIcon } from '@/lib/lieu-types'
@@ -82,6 +82,8 @@ export function MonitoringCardHeader({
   const HeaderIcon = headerTheme.Icon
   const typeIconInfo = lieuType ? getTypeIcon(lieuType, 'w-4 h-4') : null
   const alarmBadgeClassName = isSurveillanceActive ? 'bg-black/15 text-white ring-1 ring-white/15 backdrop-blur-sm' : 'bg-white/20 text-white ring-1 ring-white/20'
+  const hasActiveAlarmCode = isSurveillanceActive && Boolean(effectiveAlarmType)
+  const alarmCodeLabel = effectiveAlarmType ?? '—'
 
   const resolvedHeaderBg = HEADER_GRADIENT_MAP[headerBgClassName] ?? headerBgClassName
 
@@ -104,12 +106,6 @@ export function MonitoringCardHeader({
         className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-white/20 via-white/8 to-transparent"
         aria-hidden="true"
       />
-      {(status === 'critical' || status === 'technical') && isSurveillanceActive && (
-        <span
-          className="absolute top-2 right-10 h-2 w-2 rounded-full bg-white/80 animate-pulse pointer-events-none"
-          aria-hidden="true"
-        />
-      )}
       <div className="flex items-start justify-between gap-2">
         <div className={`${headerTextClassName} min-w-0 flex-1 text-xs font-medium space-y-1`}>
           <TooltipProvider>
@@ -128,7 +124,7 @@ export function MonitoringCardHeader({
           <div className="flex min-w-0 items-start gap-2">
             <UITooltip>
               <TooltipTrigger asChild>
-                <div className={`line-clamp-2 break-words text-[15px] leading-tight font-semibold ${locationComment ? 'cursor-help' : ''}`}>
+                <div className={`line-clamp-2 wrap-break-word text-[15px] leading-tight font-semibold ${locationComment ? 'cursor-help' : ''}`}>
                   {sondeNumeroSerie ? `${nomLieu} - ${sondeNumeroSerie}` : nomLieu}
                 </div>
               </TooltipTrigger>
@@ -148,7 +144,7 @@ export function MonitoringCardHeader({
                 </div>
               </TooltipTrigger>
               {locationComment ? (
-                <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap break-words">
+                <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap wrap-break-word">
                   <p className="text-xs">{locationComment}</p>
                 </TooltipContent>
               ) : null}
@@ -162,7 +158,7 @@ export function MonitoringCardHeader({
                   <span className="truncate">{alarmDisabledLabel}</span>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap break-words">
+              <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap wrap-break-word">
                 <p className="text-xs">{alarmDisabledLabel}</p>
               </TooltipContent>
             </UITooltip>
@@ -171,24 +167,30 @@ export function MonitoringCardHeader({
 
         <TooltipProvider>
           <div className={`${headerTextClassName} shrink-0 mt-0.5 flex flex-col items-center gap-1.5`}>
+            <div className="flex min-h-4 items-center justify-center gap-1.5">
+              <span
+                className={`h-2 w-2 rounded-full ${hasActiveAlarmCode ? 'bg-white/90 animate-pulse' : 'bg-white/40'}`}
+                aria-hidden="true"
+              />
+              <UITooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold tracking-wide ${hasActiveAlarmCode ? 'bg-black/20 text-white ring-1 ring-white/20' : 'bg-white/15 text-white/90 ring-1 ring-white/20'}`}
+                  >
+                    {alarmCodeLabel}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">{hasActiveAlarmCode ? (effectiveAlarmType === 'H' ? t('alarmTypes.high') : effectiveAlarmType === 'B' ? t('alarmTypes.low') : effectiveAlarmType === 'T' ? t('alarmTypes.ended') : t('alarmTypes.no_response')) : t('status.ok')}</p>
+                </TooltipContent>
+              </UITooltip>
+            </div>
             <UITooltip>
               <TooltipTrigger asChild>
                 <div><HeaderIcon className="w-4 h-4" /></div>
               </TooltipTrigger>
               <TooltipContent><p className="text-xs">{headerStatusLabel}</p></TooltipContent>
             </UITooltip>
-            {effectiveAlarmType ? (
-              <UITooltip>
-                <TooltipTrigger asChild>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ${effectiveAlarmType === 'H' ? 'bg-red-700 text-white' : effectiveAlarmType === 'B' ? 'bg-blue-700 text-white' : effectiveAlarmType === 'T' ? 'bg-violet-600 text-white' : 'bg-black text-white'}`}>
-                    {effectiveAlarmType}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">{effectiveAlarmType === 'H' ? t('alarmTypes.high') : effectiveAlarmType === 'B' ? t('alarmTypes.low') : effectiveAlarmType === 'T' ? t('alarmTypes.ended') : t('alarmTypes.no_response')}</p>
-                </TooltipContent>
-              </UITooltip>
-            ) : null}
             {typeIconInfo?.icon ? (
               <UITooltip>
                 <TooltipTrigger asChild>
@@ -197,6 +199,16 @@ export function MonitoringCardHeader({
                 <TooltipContent><p className="text-xs">{typeIconInfo.label}</p></TooltipContent>
               </UITooltip>
             ) : null}
+            <UITooltip>
+              <TooltipTrigger asChild>
+                <div className="cursor-help">
+                  <CircleHelp className="h-3.5 w-3.5" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs whitespace-pre-wrap wrap-break-word">
+                <p className="text-xs">{locationComment || t('observations.empty')}</p>
+              </TooltipContent>
+            </UITooltip>
           </div>
         </TooltipProvider>
       </div>

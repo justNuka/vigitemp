@@ -14,6 +14,12 @@ const DAY_FULL_KEYS = {
   7: "dialog.days.7",
 } as const
 
+function formatDayRange(t: (key: string) => string, startDay: number, endDay: number) {
+  const startLabel = t(DAY_FULL_KEYS[startDay as keyof typeof DAY_FULL_KEYS])
+  const endLabel = t(DAY_FULL_KEYS[endDay as keyof typeof DAY_FULL_KEYS])
+  return startDay === endDay ? startLabel : `${startLabel} - ${endLabel}`
+}
+
 interface WeeklyPlanningViewProps {
   regles: PlanningRegleResponse[]
   onSelectRegle?: (regle: PlanningRegleResponse) => void
@@ -73,9 +79,8 @@ export function WeeklyPlanningView({ regles, onSelectRegle }: WeeklyPlanningView
           <div key={regle.Id_Regle} className="space-y-1">
             <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
               <span className="truncate font-medium text-foreground">
-                {t(DAY_FULL_KEYS[regle.Jour_Debut as keyof typeof DAY_FULL_KEYS])} - {t(DAY_FULL_KEYS[regle.Jour_Fin as keyof typeof DAY_FULL_KEYS])}
+                {formatDayRange(t, regle.Jour_Debut, regle.Jour_Fin)}
               </span>
-              <span className="shrink-0">#{regle.Id_Regle}</span>
             </div>
             <div className="grid grid-cols-7 gap-1">
               {Array.from({ length: 7 }).map((_, index) => {
@@ -92,7 +97,7 @@ export function WeeklyPlanningView({ regles, onSelectRegle }: WeeklyPlanningView
                     type="button"
                     onClick={() => onSelectRegle?.(regle)}
                     className={getCellClasses(regle, day)}
-                    title={`${t(DAY_FULL_KEYS[regle.Jour_Debut as keyof typeof DAY_FULL_KEYS])} - ${t(DAY_FULL_KEYS[regle.Jour_Fin as keyof typeof DAY_FULL_KEYS])} | ${regle.Heure_Debut}-${regle.Heure_Fin}`}
+                    title={`${formatDayRange(t, regle.Jour_Debut, regle.Jour_Fin)} | ${regle.Heure_Debut}-${regle.Heure_Fin}`}
                   >
                     <span className="truncate">{getSegmentLabel(regle, day)}</span>
                   </button>

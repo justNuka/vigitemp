@@ -20,8 +20,8 @@ export function ExpertAdminDashboard({ metrics }: Props) {
   const [isEditMode, setIsEditMode] = useState(false)
 
   const allWidgetDefs = useMemo(
-    () => DEFAULT_WIDGETS.filter((widget) => (widget.id !== "etalons" ? true : !metrics.hideStandards)),
-    [metrics.hideStandards],
+    () => DEFAULT_WIDGETS.filter((widget) => widget.id !== "etalons"),
+    [],
   )
   const defaultWidgetIds = useMemo(() => allWidgetDefs.map((widget) => widget.id), [allWidgetDefs])
   const [widgetIds, setWidgetIds] = useState<WidgetId[]>(defaultWidgetIds)

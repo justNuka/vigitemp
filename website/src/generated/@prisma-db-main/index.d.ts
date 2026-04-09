@@ -306,7 +306,9 @@ export const t_commande_materiel_Statut_Commande: typeof $Enums.t_commande_mater
  * Type-safe database client for TypeScript & Node.js
  * @example
  * ```
- * const prisma = new PrismaClient()
+ * const prisma = new PrismaClient({
+ *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
+ * })
  * // Fetch zero or more T_actionneurs
  * const t_actionneurs = await prisma.t_actionneur.findMany()
  * ```
@@ -327,7 +329,9 @@ export class PrismaClient<
    * Type-safe database client for TypeScript & Node.js
    * @example
    * ```
-   * const prisma = new PrismaClient()
+   * const prisma = new PrismaClient({
+   *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
+   * })
    * // Fetch zero or more T_actionneurs
    * const t_actionneurs = await prisma.t_actionneur.findMany()
    * ```
@@ -956,8 +960,8 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 7.4.1
-   * Query Engine version: 55ae170b1ced7fc6ed07a15f110549408c501bb3
+   * Prisma Client JS version: 7.7.0
+   * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
    */
   export type PrismaVersion = {
     client: string
@@ -6693,6 +6697,11 @@ export namespace Prisma {
      * Skip the first `n` t_actionneurs.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_actionneurs.
+     */
     distinct?: T_actionneurScalarFieldEnum | T_actionneurScalarFieldEnum[]
   }
 
@@ -7818,6 +7827,11 @@ export namespace Prisma {
      * Skip the first `n` t_alarmes.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_alarmes.
+     */
     distinct?: T_alarmeScalarFieldEnum | T_alarmeScalarFieldEnum[]
   }
 
@@ -8968,6 +8982,11 @@ export namespace Prisma {
      * Skip the first `n` t_alarme_histos.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_alarme_histos.
+     */
     distinct?: T_alarme_histoScalarFieldEnum | T_alarme_histoScalarFieldEnum[]
   }
 
@@ -9912,6 +9931,11 @@ export namespace Prisma {
      * Skip the first `n` t_alarme_messages.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_alarme_messages.
+     */
     distinct?: T_alarme_messageScalarFieldEnum | T_alarme_messageScalarFieldEnum[]
   }
 
@@ -10846,6 +10870,11 @@ export namespace Prisma {
      * Skip the first `n` t_autorisations.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_autorisations.
+     */
     distinct?: T_autorisationScalarFieldEnum | T_autorisationScalarFieldEnum[]
   }
 
@@ -11847,6 +11876,11 @@ export namespace Prisma {
      * Skip the first `n` t_milieus.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_milieus.
+     */
     distinct?: T_milieuScalarFieldEnum | T_milieuScalarFieldEnum[]
   }
 
@@ -13002,6 +13036,11 @@ export namespace Prisma {
      * Skip the first `n` t_ajustages.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_ajustages.
+     */
     distinct?: T_ajustageScalarFieldEnum | T_ajustageScalarFieldEnum[]
   }
 
@@ -13944,6 +13983,11 @@ export namespace Prisma {
      * Skip the first `n` t_certifs.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_certifs.
+     */
     distinct?: T_certifScalarFieldEnum | T_certifScalarFieldEnum[]
   }
 
@@ -14883,6 +14927,11 @@ export namespace Prisma {
      * Skip the first `n` t_certif_mesures.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_certif_mesures.
+     */
     distinct?: T_certif_mesureScalarFieldEnum | T_certif_mesureScalarFieldEnum[]
   }
 
@@ -15888,6 +15937,11 @@ export namespace Prisma {
      * Skip the first `n` t_etalons.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_etalons.
+     */
     distinct?: T_etalonScalarFieldEnum | T_etalonScalarFieldEnum[]
   }
 
@@ -16971,6 +17025,11 @@ export namespace Prisma {
      * Skip the first `n` t_etalonnages.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_etalonnages.
+     */
     distinct?: T_etalonnageScalarFieldEnum | T_etalonnageScalarFieldEnum[]
   }
 
@@ -17903,6 +17962,11 @@ export namespace Prisma {
      * Skip the first `n` t_etalonnage_mesures.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_etalonnage_mesures.
+     */
     distinct?: T_etalonnage_mesureScalarFieldEnum | T_etalonnage_mesureScalarFieldEnum[]
   }
 
@@ -18841,6 +18905,11 @@ export namespace Prisma {
      * Skip the first `n` t_groupes.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_groupes.
+     */
     distinct?: T_groupeScalarFieldEnum | T_groupeScalarFieldEnum[]
   }
 
@@ -19827,6 +19896,11 @@ export namespace Prisma {
      * Skip the first `n` t_liaison_profil_autorisations.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_liaison_profil_autorisations.
+     */
     distinct?: T_liaison_profil_autorisationScalarFieldEnum | T_liaison_profil_autorisationScalarFieldEnum[]
   }
 
@@ -20780,6 +20854,11 @@ export namespace Prisma {
      * Skip the first `n` t_liaison_utilisateur_groupes.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_liaison_utilisateur_groupes.
+     */
     distinct?: T_liaison_utilisateur_groupeScalarFieldEnum | T_liaison_utilisateur_groupeScalarFieldEnum[]
   }
 
@@ -21763,6 +21842,11 @@ export namespace Prisma {
      * Skip the first `n` t_liaison_utilisateur_sites.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_liaison_utilisateur_sites.
+     */
     distinct?: T_liaison_utilisateur_siteScalarFieldEnum | T_liaison_utilisateur_siteScalarFieldEnum[]
   }
 
@@ -22739,6 +22823,11 @@ export namespace Prisma {
      * Skip the first `n` t_lieu_groupes.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_lieu_groupes.
+     */
     distinct?: T_lieu_groupeScalarFieldEnum | T_lieu_groupeScalarFieldEnum[]
   }
 
@@ -24766,6 +24855,11 @@ export namespace Prisma {
      * Skip the first `n` t_lieus.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_lieus.
+     */
     distinct?: T_lieuScalarFieldEnum | T_lieuScalarFieldEnum[]
   }
 
@@ -26044,6 +26138,11 @@ export namespace Prisma {
      * Skip the first `n` t_modules.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_modules.
+     */
     distinct?: T_moduleScalarFieldEnum | T_moduleScalarFieldEnum[]
   }
 
@@ -26949,6 +27048,11 @@ export namespace Prisma {
      * Skip the first `n` t_module_types.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_module_types.
+     */
     distinct?: T_module_typeScalarFieldEnum | T_module_typeScalarFieldEnum[]
   }
 
@@ -27831,6 +27935,11 @@ export namespace Prisma {
      * Skip the first `n` t_parametres.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_parametres.
+     */
     distinct?: T_parametreScalarFieldEnum | T_parametreScalarFieldEnum[]
   }
 
@@ -28758,6 +28867,11 @@ export namespace Prisma {
      * Skip the first `n` t_pdfs.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_pdfs.
+     */
     distinct?: T_pdfScalarFieldEnum | T_pdfScalarFieldEnum[]
   }
 
@@ -29764,6 +29878,11 @@ export namespace Prisma {
      * Skip the first `n` t_plans.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_plans.
+     */
     distinct?: T_planScalarFieldEnum | T_planScalarFieldEnum[]
   }
 
@@ -30799,6 +30918,11 @@ export namespace Prisma {
      * Skip the first `n` t_postes_clients.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_postes_clients.
+     */
     distinct?: T_postes_clientsScalarFieldEnum | T_postes_clientsScalarFieldEnum[]
   }
 
@@ -31013,6 +31137,7 @@ export namespace Prisma {
     Profil_Utilisateur: string | null
     Commentaire: string | null
     Est_MC2: boolean | null
+    Est_Archive: boolean | null
   }
 
   export type T_profilMaxAggregateOutputType = {
@@ -31020,6 +31145,7 @@ export namespace Prisma {
     Profil_Utilisateur: string | null
     Commentaire: string | null
     Est_MC2: boolean | null
+    Est_Archive: boolean | null
   }
 
   export type T_profilCountAggregateOutputType = {
@@ -31027,6 +31153,7 @@ export namespace Prisma {
     Profil_Utilisateur: number
     Commentaire: number
     Est_MC2: number
+    Est_Archive: number
     _all: number
   }
 
@@ -31044,6 +31171,7 @@ export namespace Prisma {
     Profil_Utilisateur?: true
     Commentaire?: true
     Est_MC2?: true
+    Est_Archive?: true
   }
 
   export type T_profilMaxAggregateInputType = {
@@ -31051,6 +31179,7 @@ export namespace Prisma {
     Profil_Utilisateur?: true
     Commentaire?: true
     Est_MC2?: true
+    Est_Archive?: true
   }
 
   export type T_profilCountAggregateInputType = {
@@ -31058,6 +31187,7 @@ export namespace Prisma {
     Profil_Utilisateur?: true
     Commentaire?: true
     Est_MC2?: true
+    Est_Archive?: true
     _all?: true
   }
 
@@ -31152,6 +31282,7 @@ export namespace Prisma {
     Profil_Utilisateur: string | null
     Commentaire: string | null
     Est_MC2: boolean | null
+    Est_Archive: boolean | null
     _count: T_profilCountAggregateOutputType | null
     _avg: T_profilAvgAggregateOutputType | null
     _sum: T_profilSumAggregateOutputType | null
@@ -31178,6 +31309,7 @@ export namespace Prisma {
     Profil_Utilisateur?: boolean
     Commentaire?: boolean
     Est_MC2?: boolean
+    Est_Archive?: boolean
     t_liaison_profil_autorisation?: boolean | t_profil$t_liaison_profil_autorisationArgs<ExtArgs>
     _count?: boolean | T_profilCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["t_profil"]>
@@ -31189,9 +31321,10 @@ export namespace Prisma {
     Profil_Utilisateur?: boolean
     Commentaire?: boolean
     Est_MC2?: boolean
+    Est_Archive?: boolean
   }
 
-  export type t_profilOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Profil" | "Profil_Utilisateur" | "Commentaire" | "Est_MC2", ExtArgs["result"]["t_profil"]>
+  export type t_profilOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Profil" | "Profil_Utilisateur" | "Commentaire" | "Est_MC2" | "Est_Archive", ExtArgs["result"]["t_profil"]>
   export type t_profilInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     t_liaison_profil_autorisation?: boolean | t_profil$t_liaison_profil_autorisationArgs<ExtArgs>
     _count?: boolean | T_profilCountOutputTypeDefaultArgs<ExtArgs>
@@ -31207,6 +31340,7 @@ export namespace Prisma {
       Profil_Utilisateur: string | null
       Commentaire: string | null
       Est_MC2: boolean | null
+      Est_Archive: boolean | null
     }, ExtArgs["result"]["t_profil"]>
     composites: {}
   }
@@ -31581,6 +31715,7 @@ export namespace Prisma {
     readonly Profil_Utilisateur: FieldRef<"t_profil", 'String'>
     readonly Commentaire: FieldRef<"t_profil", 'String'>
     readonly Est_MC2: FieldRef<"t_profil", 'Boolean'>
+    readonly Est_Archive: FieldRef<"t_profil", 'Boolean'>
   }
     
 
@@ -31777,6 +31912,11 @@ export namespace Prisma {
      * Skip the first `n` t_profils.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_profils.
+     */
     distinct?: T_profilScalarFieldEnum | T_profilScalarFieldEnum[]
   }
 
@@ -31988,7 +32128,6 @@ export namespace Prisma {
 
   export type T_siteMinAggregateOutputType = {
     Id_Site: number | null
-    Code_Site: string | null
     Libelle_Site: string | null
     Commentaire: string | null
     Est_Archive: boolean | null
@@ -31996,7 +32135,6 @@ export namespace Prisma {
 
   export type T_siteMaxAggregateOutputType = {
     Id_Site: number | null
-    Code_Site: string | null
     Libelle_Site: string | null
     Commentaire: string | null
     Est_Archive: boolean | null
@@ -32004,7 +32142,6 @@ export namespace Prisma {
 
   export type T_siteCountAggregateOutputType = {
     Id_Site: number
-    Code_Site: number
     Libelle_Site: number
     Commentaire: number
     Est_Archive: number
@@ -32022,7 +32159,6 @@ export namespace Prisma {
 
   export type T_siteMinAggregateInputType = {
     Id_Site?: true
-    Code_Site?: true
     Libelle_Site?: true
     Commentaire?: true
     Est_Archive?: true
@@ -32030,7 +32166,6 @@ export namespace Prisma {
 
   export type T_siteMaxAggregateInputType = {
     Id_Site?: true
-    Code_Site?: true
     Libelle_Site?: true
     Commentaire?: true
     Est_Archive?: true
@@ -32038,7 +32173,6 @@ export namespace Prisma {
 
   export type T_siteCountAggregateInputType = {
     Id_Site?: true
-    Code_Site?: true
     Libelle_Site?: true
     Commentaire?: true
     Est_Archive?: true
@@ -32133,7 +32267,6 @@ export namespace Prisma {
 
   export type T_siteGroupByOutputType = {
     Id_Site: number
-    Code_Site: string | null
     Libelle_Site: string | null
     Commentaire: string | null
     Est_Archive: boolean | null
@@ -32160,7 +32293,6 @@ export namespace Prisma {
 
   export type t_siteSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     Id_Site?: boolean
-    Code_Site?: boolean
     Libelle_Site?: boolean
     Commentaire?: boolean
     Est_Archive?: boolean
@@ -32175,13 +32307,12 @@ export namespace Prisma {
 
   export type t_siteSelectScalar = {
     Id_Site?: boolean
-    Code_Site?: boolean
     Libelle_Site?: boolean
     Commentaire?: boolean
     Est_Archive?: boolean
   }
 
-  export type t_siteOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Site" | "Code_Site" | "Libelle_Site" | "Commentaire" | "Est_Archive", ExtArgs["result"]["t_site"]>
+  export type t_siteOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Site" | "Libelle_Site" | "Commentaire" | "Est_Archive", ExtArgs["result"]["t_site"]>
   export type t_siteInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     t_liaison_utilisateur_site?: boolean | t_site$t_liaison_utilisateur_siteArgs<ExtArgs>
     t_lieu?: boolean | t_site$t_lieuArgs<ExtArgs>
@@ -32200,7 +32331,6 @@ export namespace Prisma {
     }
     scalars: $Extensions.GetPayloadResult<{
       Id_Site: number
-      Code_Site: string | null
       Libelle_Site: string | null
       Commentaire: string | null
       Est_Archive: boolean | null
@@ -32578,7 +32708,6 @@ export namespace Prisma {
    */
   interface t_siteFieldRefs {
     readonly Id_Site: FieldRef<"t_site", 'Int'>
-    readonly Code_Site: FieldRef<"t_site", 'String'>
     readonly Libelle_Site: FieldRef<"t_site", 'String'>
     readonly Commentaire: FieldRef<"t_site", 'String'>
     readonly Est_Archive: FieldRef<"t_site", 'Boolean'>
@@ -32778,6 +32907,11 @@ export namespace Prisma {
      * Skip the first `n` t_sites.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_sites.
+     */
     distinct?: T_siteScalarFieldEnum | T_siteScalarFieldEnum[]
   }
 
@@ -34029,6 +34163,11 @@ export namespace Prisma {
      * Skip the first `n` t_sondes.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_sondes.
+     */
     distinct?: T_sondeScalarFieldEnum | T_sondeScalarFieldEnum[]
   }
 
@@ -35038,6 +35177,11 @@ export namespace Prisma {
      * Skip the first `n` t_etat_surveillances.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_etat_surveillances.
+     */
     distinct?: T_etat_surveillanceScalarFieldEnum | T_etat_surveillanceScalarFieldEnum[]
   }
 
@@ -36062,6 +36206,11 @@ export namespace Prisma {
      * Skip the first `n` t_sonde_types.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_sonde_types.
+     */
     distinct?: T_sonde_typeScalarFieldEnum | T_sonde_typeScalarFieldEnum[]
   }
 
@@ -37267,6 +37416,11 @@ export namespace Prisma {
      * Skip the first `n` t_utilisateurs.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_utilisateurs.
+     */
     distinct?: T_utilisateurScalarFieldEnum | T_utilisateurScalarFieldEnum[]
   }
 
@@ -38528,6 +38682,11 @@ export namespace Prisma {
      * Skip the first `n` t_notifications.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_notifications.
+     */
     distinct?: T_notificationScalarFieldEnum | T_notificationScalarFieldEnum[]
   }
 
@@ -39641,6 +39800,11 @@ export namespace Prisma {
      * Skip the first `n` t_notification_deliveries.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_notification_deliveries.
+     */
     distinct?: T_notification_deliveryScalarFieldEnum | T_notification_deliveryScalarFieldEnum[]
   }
 
@@ -40651,6 +40815,11 @@ export namespace Prisma {
      * Skip the first `n` t_notification_events.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_notification_events.
+     */
     distinct?: T_notification_eventScalarFieldEnum | T_notification_eventScalarFieldEnum[]
   }
 
@@ -41587,6 +41756,11 @@ export namespace Prisma {
      * Skip the first `n` liste_clients.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of liste_clients.
+     */
     distinct?: Liste_clientsScalarFieldEnum | Liste_clientsScalarFieldEnum[]
   }
 
@@ -42525,6 +42699,11 @@ export namespace Prisma {
      * Skip the first `n` t_actionneur_types.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_actionneur_types.
+     */
     distinct?: T_actionneur_typeScalarFieldEnum | T_actionneur_typeScalarFieldEnum[]
   }
 
@@ -43505,6 +43684,11 @@ export namespace Prisma {
      * Skip the first `n` t_ancien_mot_de_passes.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_ancien_mot_de_passes.
+     */
     distinct?: T_ancien_mot_de_passeScalarFieldEnum | T_ancien_mot_de_passeScalarFieldEnum[]
   }
 
@@ -44438,6 +44622,11 @@ export namespace Prisma {
      * Skip the first `n` t_commentaire_acquittement_alarmes.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_commentaire_acquittement_alarmes.
+     */
     distinct?: T_commentaire_acquittement_alarmeScalarFieldEnum | T_commentaire_acquittement_alarmeScalarFieldEnum[]
   }
 
@@ -45365,6 +45554,11 @@ export namespace Prisma {
      * Skip the first `n` t_etalon_types.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_etalon_types.
+     */
     distinct?: T_etalon_typeScalarFieldEnum | T_etalon_typeScalarFieldEnum[]
   }
 
@@ -46285,6 +46479,11 @@ export namespace Prisma {
      * Skip the first `n` t_mem_gsos.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_mem_gsos.
+     */
     distinct?: T_mem_gsoScalarFieldEnum | T_mem_gsoScalarFieldEnum[]
   }
 
@@ -47208,6 +47407,11 @@ export namespace Prisma {
      * Skip the first `n` t_sonde_etats.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_sonde_etats.
+     */
     distinct?: T_sonde_etatScalarFieldEnum | T_sonde_etatScalarFieldEnum[]
   }
 
@@ -48218,6 +48422,11 @@ export namespace Prisma {
      * Skip the first `n` t_lieu_mail_tels.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_lieu_mail_tels.
+     */
     distinct?: T_lieu_mail_telScalarFieldEnum | T_lieu_mail_telScalarFieldEnum[]
   }
 
@@ -49293,6 +49502,11 @@ export namespace Prisma {
      * Skip the first `n` t_lieu_planning_audits.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_lieu_planning_audits.
+     */
     distinct?: T_lieu_planning_auditScalarFieldEnum | T_lieu_planning_auditScalarFieldEnum[]
   }
 
@@ -50397,6 +50611,11 @@ export namespace Prisma {
      * Skip the first `n` t_lieu_planning_regles.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_lieu_planning_regles.
+     */
     distinct?: T_lieu_planning_regleScalarFieldEnum | T_lieu_planning_regleScalarFieldEnum[]
   }
 
@@ -51384,6 +51603,11 @@ export namespace Prisma {
      * Skip the first `n` t_materiels.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_materiels.
+     */
     distinct?: T_materielScalarFieldEnum | T_materielScalarFieldEnum[]
   }
 
@@ -52466,6 +52690,11 @@ export namespace Prisma {
      * Skip the first `n` t_commande_materiels.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_commande_materiels.
+     */
     distinct?: T_commande_materielScalarFieldEnum | T_commande_materielScalarFieldEnum[]
   }
 
@@ -53532,6 +53761,11 @@ export namespace Prisma {
      * Skip the first `n` t_commande_materiel_lignes.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_commande_materiel_lignes.
+     */
     distinct?: T_commande_materiel_ligneScalarFieldEnum | T_commande_materiel_ligneScalarFieldEnum[]
   }
 
@@ -54680,6 +54914,11 @@ export namespace Prisma {
      * Skip the first `n` t_vigilog_configurations.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_vigilog_configurations.
+     */
     distinct?: T_vigilog_configurationScalarFieldEnum | T_vigilog_configurationScalarFieldEnum[]
   }
 
@@ -55822,6 +56061,11 @@ export namespace Prisma {
      * Skip the first `n` t_vigilogs.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_vigilogs.
+     */
     distinct?: T_vigilogScalarFieldEnum | T_vigilogScalarFieldEnum[]
   }
 
@@ -57283,6 +57527,11 @@ export namespace Prisma {
      * Skip the first `n` t_vigilog_tournees.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_vigilog_tournees.
+     */
     distinct?: T_vigilog_tourneeScalarFieldEnum | T_vigilog_tourneeScalarFieldEnum[]
   }
 
@@ -57958,7 +58207,8 @@ export namespace Prisma {
     Id_Profil: 'Id_Profil',
     Profil_Utilisateur: 'Profil_Utilisateur',
     Commentaire: 'Commentaire',
-    Est_MC2: 'Est_MC2'
+    Est_MC2: 'Est_MC2',
+    Est_Archive: 'Est_Archive'
   };
 
   export type T_profilScalarFieldEnum = (typeof T_profilScalarFieldEnum)[keyof typeof T_profilScalarFieldEnum]
@@ -57966,7 +58216,6 @@ export namespace Prisma {
 
   export const T_siteScalarFieldEnum: {
     Id_Site: 'Id_Site',
-    Code_Site: 'Code_Site',
     Libelle_Site: 'Libelle_Site',
     Commentaire: 'Commentaire',
     Est_Archive: 'Est_Archive'
@@ -58571,7 +58820,6 @@ export namespace Prisma {
 
 
   export const t_siteOrderByRelevanceFieldEnum: {
-    Code_Site: 'Code_Site',
     Libelle_Site: 'Libelle_Site',
     Commentaire: 'Commentaire'
   };
@@ -61040,6 +61288,7 @@ export namespace Prisma {
     Profil_Utilisateur?: StringNullableFilter<"t_profil"> | string | null
     Commentaire?: StringNullableFilter<"t_profil"> | string | null
     Est_MC2?: BoolNullableFilter<"t_profil"> | boolean | null
+    Est_Archive?: BoolNullableFilter<"t_profil"> | boolean | null
     t_liaison_profil_autorisation?: T_liaison_profil_autorisationListRelationFilter
   }
 
@@ -61048,6 +61297,7 @@ export namespace Prisma {
     Profil_Utilisateur?: SortOrderInput | SortOrder
     Commentaire?: SortOrderInput | SortOrder
     Est_MC2?: SortOrderInput | SortOrder
+    Est_Archive?: SortOrderInput | SortOrder
     t_liaison_profil_autorisation?: t_liaison_profil_autorisationOrderByRelationAggregateInput
     _relevance?: t_profilOrderByRelevanceInput
   }
@@ -61060,6 +61310,7 @@ export namespace Prisma {
     NOT?: t_profilWhereInput | t_profilWhereInput[]
     Commentaire?: StringNullableFilter<"t_profil"> | string | null
     Est_MC2?: BoolNullableFilter<"t_profil"> | boolean | null
+    Est_Archive?: BoolNullableFilter<"t_profil"> | boolean | null
     t_liaison_profil_autorisation?: T_liaison_profil_autorisationListRelationFilter
   }, "Id_Profil" | "Profil_Utilisateur">
 
@@ -61068,6 +61319,7 @@ export namespace Prisma {
     Profil_Utilisateur?: SortOrderInput | SortOrder
     Commentaire?: SortOrderInput | SortOrder
     Est_MC2?: SortOrderInput | SortOrder
+    Est_Archive?: SortOrderInput | SortOrder
     _count?: t_profilCountOrderByAggregateInput
     _avg?: t_profilAvgOrderByAggregateInput
     _max?: t_profilMaxOrderByAggregateInput
@@ -61083,6 +61335,7 @@ export namespace Prisma {
     Profil_Utilisateur?: StringNullableWithAggregatesFilter<"t_profil"> | string | null
     Commentaire?: StringNullableWithAggregatesFilter<"t_profil"> | string | null
     Est_MC2?: BoolNullableWithAggregatesFilter<"t_profil"> | boolean | null
+    Est_Archive?: BoolNullableWithAggregatesFilter<"t_profil"> | boolean | null
   }
 
   export type t_siteWhereInput = {
@@ -61090,7 +61343,6 @@ export namespace Prisma {
     OR?: t_siteWhereInput[]
     NOT?: t_siteWhereInput | t_siteWhereInput[]
     Id_Site?: IntFilter<"t_site"> | number
-    Code_Site?: StringNullableFilter<"t_site"> | string | null
     Libelle_Site?: StringNullableFilter<"t_site"> | string | null
     Commentaire?: StringNullableFilter<"t_site"> | string | null
     Est_Archive?: BoolNullableFilter<"t_site"> | boolean | null
@@ -61102,7 +61354,6 @@ export namespace Prisma {
 
   export type t_siteOrderByWithRelationInput = {
     Id_Site?: SortOrder
-    Code_Site?: SortOrderInput | SortOrder
     Libelle_Site?: SortOrderInput | SortOrder
     Commentaire?: SortOrderInput | SortOrder
     Est_Archive?: SortOrderInput | SortOrder
@@ -61115,7 +61366,6 @@ export namespace Prisma {
 
   export type t_siteWhereUniqueInput = Prisma.AtLeast<{
     Id_Site?: number
-    Code_Site?: string
     AND?: t_siteWhereInput | t_siteWhereInput[]
     OR?: t_siteWhereInput[]
     NOT?: t_siteWhereInput | t_siteWhereInput[]
@@ -61126,11 +61376,10 @@ export namespace Prisma {
     t_lieu?: T_lieuListRelationFilter
     t_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_site?: T_vigilog_tourneeListRelationFilter
     t_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_site?: T_vigilog_tourneeListRelationFilter
-  }, "Id_Site" | "Code_Site">
+  }, "Id_Site">
 
   export type t_siteOrderByWithAggregationInput = {
     Id_Site?: SortOrder
-    Code_Site?: SortOrderInput | SortOrder
     Libelle_Site?: SortOrderInput | SortOrder
     Commentaire?: SortOrderInput | SortOrder
     Est_Archive?: SortOrderInput | SortOrder
@@ -61146,7 +61395,6 @@ export namespace Prisma {
     OR?: t_siteScalarWhereWithAggregatesInput[]
     NOT?: t_siteScalarWhereWithAggregatesInput | t_siteScalarWhereWithAggregatesInput[]
     Id_Site?: IntWithAggregatesFilter<"t_site"> | number
-    Code_Site?: StringNullableWithAggregatesFilter<"t_site"> | string | null
     Libelle_Site?: StringNullableWithAggregatesFilter<"t_site"> | string | null
     Commentaire?: StringNullableWithAggregatesFilter<"t_site"> | string | null
     Est_Archive?: BoolNullableWithAggregatesFilter<"t_site"> | boolean | null
@@ -65564,6 +65812,7 @@ export namespace Prisma {
     Profil_Utilisateur?: string | null
     Commentaire?: string | null
     Est_MC2?: boolean | null
+    Est_Archive?: boolean | null
     t_liaison_profil_autorisation?: t_liaison_profil_autorisationCreateNestedManyWithoutT_profilInput
   }
 
@@ -65572,6 +65821,7 @@ export namespace Prisma {
     Profil_Utilisateur?: string | null
     Commentaire?: string | null
     Est_MC2?: boolean | null
+    Est_Archive?: boolean | null
     t_liaison_profil_autorisation?: t_liaison_profil_autorisationUncheckedCreateNestedManyWithoutT_profilInput
   }
 
@@ -65579,6 +65829,7 @@ export namespace Prisma {
     Profil_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_MC2?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
     t_liaison_profil_autorisation?: t_liaison_profil_autorisationUpdateManyWithoutT_profilNestedInput
   }
 
@@ -65587,6 +65838,7 @@ export namespace Prisma {
     Profil_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_MC2?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
     t_liaison_profil_autorisation?: t_liaison_profil_autorisationUncheckedUpdateManyWithoutT_profilNestedInput
   }
 
@@ -65595,12 +65847,14 @@ export namespace Prisma {
     Profil_Utilisateur?: string | null
     Commentaire?: string | null
     Est_MC2?: boolean | null
+    Est_Archive?: boolean | null
   }
 
   export type t_profilUpdateManyMutationInput = {
     Profil_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_MC2?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type t_profilUncheckedUpdateManyInput = {
@@ -65608,10 +65862,10 @@ export namespace Prisma {
     Profil_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_MC2?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type t_siteCreateInput = {
-    Code_Site?: string | null
     Libelle_Site?: string | null
     Commentaire?: string | null
     Est_Archive?: boolean | null
@@ -65623,7 +65877,6 @@ export namespace Prisma {
 
   export type t_siteUncheckedCreateInput = {
     Id_Site?: number
-    Code_Site?: string | null
     Libelle_Site?: string | null
     Commentaire?: string | null
     Est_Archive?: boolean | null
@@ -65634,7 +65887,6 @@ export namespace Prisma {
   }
 
   export type t_siteUpdateInput = {
-    Code_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Libelle_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -65646,7 +65898,6 @@ export namespace Prisma {
 
   export type t_siteUncheckedUpdateInput = {
     Id_Site?: IntFieldUpdateOperationsInput | number
-    Code_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Libelle_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -65658,14 +65909,12 @@ export namespace Prisma {
 
   export type t_siteCreateManyInput = {
     Id_Site?: number
-    Code_Site?: string | null
     Libelle_Site?: string | null
     Commentaire?: string | null
     Est_Archive?: boolean | null
   }
 
   export type t_siteUpdateManyMutationInput = {
-    Code_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Libelle_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -65673,7 +65922,6 @@ export namespace Prisma {
 
   export type t_siteUncheckedUpdateManyInput = {
     Id_Site?: IntFieldUpdateOperationsInput | number
-    Code_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Libelle_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -69837,6 +70085,7 @@ export namespace Prisma {
     Profil_Utilisateur?: SortOrder
     Commentaire?: SortOrder
     Est_MC2?: SortOrder
+    Est_Archive?: SortOrder
   }
 
   export type t_profilAvgOrderByAggregateInput = {
@@ -69848,6 +70097,7 @@ export namespace Prisma {
     Profil_Utilisateur?: SortOrder
     Commentaire?: SortOrder
     Est_MC2?: SortOrder
+    Est_Archive?: SortOrder
   }
 
   export type t_profilMinOrderByAggregateInput = {
@@ -69855,6 +70105,7 @@ export namespace Prisma {
     Profil_Utilisateur?: SortOrder
     Commentaire?: SortOrder
     Est_MC2?: SortOrder
+    Est_Archive?: SortOrder
   }
 
   export type t_profilSumOrderByAggregateInput = {
@@ -69889,7 +70140,6 @@ export namespace Prisma {
 
   export type t_siteCountOrderByAggregateInput = {
     Id_Site?: SortOrder
-    Code_Site?: SortOrder
     Libelle_Site?: SortOrder
     Commentaire?: SortOrder
     Est_Archive?: SortOrder
@@ -69901,7 +70151,6 @@ export namespace Prisma {
 
   export type t_siteMaxOrderByAggregateInput = {
     Id_Site?: SortOrder
-    Code_Site?: SortOrder
     Libelle_Site?: SortOrder
     Commentaire?: SortOrder
     Est_Archive?: SortOrder
@@ -69909,7 +70158,6 @@ export namespace Prisma {
 
   export type t_siteMinOrderByAggregateInput = {
     Id_Site?: SortOrder
-    Code_Site?: SortOrder
     Libelle_Site?: SortOrder
     Commentaire?: SortOrder
     Est_Archive?: SortOrder
@@ -75396,6 +75644,7 @@ export namespace Prisma {
     Profil_Utilisateur?: string | null
     Commentaire?: string | null
     Est_MC2?: boolean | null
+    Est_Archive?: boolean | null
   }
 
   export type t_profilUncheckedCreateWithoutT_liaison_profil_autorisationInput = {
@@ -75403,6 +75652,7 @@ export namespace Prisma {
     Profil_Utilisateur?: string | null
     Commentaire?: string | null
     Est_MC2?: boolean | null
+    Est_Archive?: boolean | null
   }
 
   export type t_profilCreateOrConnectWithoutT_liaison_profil_autorisationInput = {
@@ -75449,6 +75699,7 @@ export namespace Prisma {
     Profil_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_MC2?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type t_profilUncheckedUpdateWithoutT_liaison_profil_autorisationInput = {
@@ -75456,6 +75707,7 @@ export namespace Prisma {
     Profil_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_MC2?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
   }
 
   export type t_groupeCreateWithoutT_liaison_utilisateur_groupeInput = {
@@ -75651,7 +75903,6 @@ export namespace Prisma {
   }
 
   export type t_siteCreateWithoutT_liaison_utilisateur_siteInput = {
-    Code_Site?: string | null
     Libelle_Site?: string | null
     Commentaire?: string | null
     Est_Archive?: boolean | null
@@ -75662,7 +75913,6 @@ export namespace Prisma {
 
   export type t_siteUncheckedCreateWithoutT_liaison_utilisateur_siteInput = {
     Id_Site?: number
-    Code_Site?: string | null
     Libelle_Site?: string | null
     Commentaire?: string | null
     Est_Archive?: boolean | null
@@ -75758,7 +76008,6 @@ export namespace Prisma {
   }
 
   export type t_siteUpdateWithoutT_liaison_utilisateur_siteInput = {
-    Code_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Libelle_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -75769,7 +76018,6 @@ export namespace Prisma {
 
   export type t_siteUncheckedUpdateWithoutT_liaison_utilisateur_siteInput = {
     Id_Site?: IntFieldUpdateOperationsInput | number
-    Code_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Libelle_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -76423,7 +76671,6 @@ export namespace Prisma {
   }
 
   export type t_siteCreateWithoutT_lieuInput = {
-    Code_Site?: string | null
     Libelle_Site?: string | null
     Commentaire?: string | null
     Est_Archive?: boolean | null
@@ -76434,7 +76681,6 @@ export namespace Prisma {
 
   export type t_siteUncheckedCreateWithoutT_lieuInput = {
     Id_Site?: number
-    Code_Site?: string | null
     Libelle_Site?: string | null
     Commentaire?: string | null
     Est_Archive?: boolean | null
@@ -76746,7 +76992,6 @@ export namespace Prisma {
   }
 
   export type t_siteUpdateWithoutT_lieuInput = {
-    Code_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Libelle_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -76757,7 +77002,6 @@ export namespace Prisma {
 
   export type t_siteUncheckedUpdateWithoutT_lieuInput = {
     Id_Site?: IntFieldUpdateOperationsInput | number
-    Code_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Libelle_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -82130,7 +82374,6 @@ export namespace Prisma {
   }
 
   export type t_siteCreateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_siteInput = {
-    Code_Site?: string | null
     Libelle_Site?: string | null
     Commentaire?: string | null
     Est_Archive?: boolean | null
@@ -82141,7 +82384,6 @@ export namespace Prisma {
 
   export type t_siteUncheckedCreateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_siteInput = {
     Id_Site?: number
-    Code_Site?: string | null
     Libelle_Site?: string | null
     Commentaire?: string | null
     Est_Archive?: boolean | null
@@ -82156,7 +82398,6 @@ export namespace Prisma {
   }
 
   export type t_siteCreateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_siteInput = {
-    Code_Site?: string | null
     Libelle_Site?: string | null
     Commentaire?: string | null
     Est_Archive?: boolean | null
@@ -82167,7 +82408,6 @@ export namespace Prisma {
 
   export type t_siteUncheckedCreateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_siteInput = {
     Id_Site?: number
-    Code_Site?: string | null
     Libelle_Site?: string | null
     Commentaire?: string | null
     Est_Archive?: boolean | null
@@ -82493,7 +82733,6 @@ export namespace Prisma {
   }
 
   export type t_siteUpdateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_siteInput = {
-    Code_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Libelle_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -82504,7 +82743,6 @@ export namespace Prisma {
 
   export type t_siteUncheckedUpdateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_ArriveeTot_siteInput = {
     Id_Site?: IntFieldUpdateOperationsInput | number
-    Code_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Libelle_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -82525,7 +82763,6 @@ export namespace Prisma {
   }
 
   export type t_siteUpdateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_siteInput = {
-    Code_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Libelle_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -82536,7 +82773,6 @@ export namespace Prisma {
 
   export type t_siteUncheckedUpdateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Site_DepartTot_siteInput = {
     Id_Site?: IntFieldUpdateOperationsInput | number
-    Code_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Libelle_Site?: NullableStringFieldUpdateOperationsInput | string | null
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null

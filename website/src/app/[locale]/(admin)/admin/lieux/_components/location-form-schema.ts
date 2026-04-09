@@ -10,6 +10,30 @@ const mailingContactSchema = z.object({
 
 
 function addConsigneGuards(data: any, ctx: z.RefinementCtx) {
+  if (data.Id_Site === null || data.Id_Site === undefined) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Id_Site"],
+      message: "Le site est requis.",
+    })
+  }
+
+  if (!data.Sonde_Numero_Serie && data.Lieu_Etat !== "D") {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Lieu_Etat"],
+      message: "Sans sonde, la surveillance doit ?tre d?sactiv?e.",
+    })
+  }
+
+  if (data.Sonde_Numero_Serie && (data.Lieu_Etat === null || data.Lieu_Etat === undefined || data.Lieu_Etat === "")) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Lieu_Etat"],
+      message: "Le mode de surveillance est requis.",
+    })
+  }
+
   const hasConsigne = data.Consigne !== null && data.Consigne !== undefined
   const hasSup = data.Consigne_Sup !== null && data.Consigne_Sup !== undefined
   const hasInf = data.Consigne_Inf !== null && data.Consigne_Inf !== undefined
@@ -20,7 +44,7 @@ function addConsigneGuards(data: any, ctx: z.RefinementCtx) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Sup"],
-      message: "La consigne sup doit etre strictement superieure a la consigne.",
+      message: "La consigne sup?rieure doit ?tre strictement sup?rieure ? la consigne.",
     })
   }
 
@@ -28,7 +52,7 @@ function addConsigneGuards(data: any, ctx: z.RefinementCtx) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Inf"],
-      message: "La consigne inf doit etre strictement inferieure a la consigne.",
+      message: "La consigne inf?rieure doit ?tre strictement inf?rieure ? la consigne.",
     })
   }
 
@@ -36,7 +60,7 @@ function addConsigneGuards(data: any, ctx: z.RefinementCtx) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Inf"],
-      message: "La consigne inf doit etre strictement inferieure a la consigne sup.",
+      message: "La consigne inf?rieure doit ?tre strictement inf?rieure ? la consigne sup?rieure.",
     })
   }
 
@@ -44,7 +68,7 @@ function addConsigneGuards(data: any, ctx: z.RefinementCtx) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Frequence"],
-      message: "La frequence de mesure est requise.",
+      message: "La fr?quence de mesure est requise.",
     })
   }
 
@@ -52,7 +76,7 @@ function addConsigneGuards(data: any, ctx: z.RefinementCtx) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Frequence"],
-      message: "La frequence de mesure doit etre strictement superieure a 0.",
+      message: "La fr?quence de mesure doit ?tre strictement sup?rieure ? 0.",
     })
   }
 
@@ -60,7 +84,7 @@ function addConsigneGuards(data: any, ctx: z.RefinementCtx) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Retard_Alarme_Haut"],
-      message: "Le retard d'alarme haut doit etre strictement superieur a 0.",
+      message: "Le retard d'alarme haut doit ?tre strictement sup?rieur ? 0.",
     })
   }
 
@@ -68,15 +92,14 @@ function addConsigneGuards(data: any, ctx: z.RefinementCtx) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Retard_Alarme_Bas"],
-      message: "Le retard d'alarme bas doit etre strictement superieur a 0.",
+      message: "Le retard d'alarme bas doit ?tre strictement sup?rieur ? 0.",
     })
   }
 }
 
 export const locationFormSchema = z.object({
   Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(50),
-  Type_Lieu: z.string().optional().nullable(),
-  Commentaire: z.string().optional().nullable(),
+    Commentaire: z.string().optional().nullable(),
   Lieu_Etat: z.string().optional().nullable(),
   Id_Site: z.number().optional().nullable(),
   GroupIds: z.array(z.number()).optional(),

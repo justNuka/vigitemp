@@ -1,11 +1,11 @@
 import { z } from "zod"
 import type { EmtMode } from "@/lib/emt"
 
-export const planningRegleCreateSchema = z.object({
+const planningRegleBaseSchema = z.object({
   Actif: z.boolean().default(true),
-  Jour_Debut: z.number().int().min(1).max(7),
+  Jour_Debut: z.number().int().min(1).max(7).optional(),
   Heure_Debut: z.string().regex(/^\d{2}:\d{2}$/, "Format HH:MM requis"),
-  Jour_Fin: z.number().int().min(1).max(7),
+  Jour_Fin: z.number().int().min(1).max(7).optional(),
   Heure_Fin: z.string().regex(/^\d{2}:\d{2}$/, "Format HH:MM requis"),
   Consigne: z.number().nullable().optional(),
   Consigne_Sup: z.number().nullable().optional(),
@@ -14,7 +14,16 @@ export const planningRegleCreateSchema = z.object({
   Retard_Alarme_Changement_Consigne: z.number().int().min(0).nullable().optional(),
 })
 
-export const planningRegleUpdateSchema = planningRegleCreateSchema.partial()
+export const planningRegleCreateSchema = planningRegleBaseSchema.superRefine((data, ctx) => {
+  if (data.Jour_Debut === undefined) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["Jour_Debut"], message: "Jour de d?but requis" })
+  }
+  if (data.Jour_Fin === undefined) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["Jour_Fin"], message: "Jour de fin requis" })
+  }
+})
+
+export const planningRegleUpdateSchema = planningRegleBaseSchema.partial()
 
 export type PlanningRegleCreate = z.infer<typeof planningRegleCreateSchema>
 export type PlanningRegleUpdate = z.infer<typeof planningRegleUpdateSchema>

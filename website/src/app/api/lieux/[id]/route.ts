@@ -28,8 +28,68 @@ const STANDARD_METROLOGY_FIELDS = [
   "Derive",
 ] as const
 
+type ChangedFieldEntry = {
+  field: string
+  from: unknown
+  to: unknown
+}
+
+const AUDIT_FIELD_LABELS: Record<string, string> = {
+  Nom_Lieu: "Nom du lieu",
+  Commentaire: "Commentaire",
+  Observations_Info: "Observations",
+  Id_Site: "Site",
+  Sonde_Numero_Serie: "Sensor",
+  Consigne: "Consigne",
+  Frequence: "Fréquence (min)",
+  Consigne_Sup: "Consigne supérieure",
+  Consigne_Inf: "Consigne inférieure",
+  Retard_Alarme_Haut: "Retard alarme haut",
+  Retard_Alarme_Bas: "Retard alarme bas",
+  Nb_Mesures_Temporisation_Redeclenchement: "Temporisation de redéclenchement",
+}
+
+function formatAuditValue(value: unknown): string {
+  if (value === null || value === undefined || value === "") return "-"
+  if (typeof value === "boolean") return value ? "Oui" : "Non"
+  if (typeof value === "number" || typeof value === "bigint") return String(value)
+  if (value instanceof Date) return value.toISOString()
+  if (Array.isArray(value)) {
+    return value.length > 0 ? value.map((item) => formatAuditValue(item)).join(", ") : "-"
+  }
+  if (typeof value === "object") {
+    try {
+      return JSON.stringify(value)
+    } catch {
+      return String(value)
+    }
+  }
+  return String(value)
+}
+
+function buildMultiFieldAuditReason(changes: ChangedFieldEntry[], actionComment?: string): string {
+  const lines = changes.map((change) => {
+    const label = AUDIT_FIELD_LABELS[change.field] ?? change.field
+    return `- ${label}: ${formatAuditValue(change.from)} -> ${formatAuditValue(change.to)}`
+  })
+
+  const changesBlock = ["Modifications:", ...lines].join("\n")
+  if (actionComment && actionComment.trim().length > 0) {
+    return `${actionComment.trim()}\n\n${changesBlock}`
+  }
+  return changesBlock
+}
+
 
 function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) {
+  if (data.Id_Site === null || data.Id_Site === undefined) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Id_Site"],
+      message: "Le site est requis.",
+    })
+  }
+
   const hasConsigne = data.Consigne !== null && data.Consigne !== undefined
   const hasSup = data.Consigne_Sup !== null && data.Consigne_Sup !== undefined
   const hasInf = data.Consigne_Inf !== null && data.Consigne_Inf !== undefined
@@ -40,7 +100,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Sup"],
-      message: "La consigne sup doit etre strictement superieure a la consigne.",
+      message: "La consigne sup?rieure doit ?tre strictement sup?rieure ? la consigne.",
     })
   }
 
@@ -48,7 +108,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Inf"],
-      message: "La consigne inf doit etre strictement inferieure a la consigne.",
+      message: "La consigne inf?rieure doit ?tre strictement inf?rieure ? la consigne.",
     })
   }
 
@@ -56,7 +116,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Inf"],
-      message: "La consigne inf doit etre strictement inferieure a la consigne sup.",
+      message: "La consigne inf?rieure doit ?tre strictement inf?rieure ? la consigne sup?rieure.",
     })
   }
 }
@@ -96,6 +156,7 @@ const updateLieuSchema = z.object({
   Derive: z.number().nullable().optional(),
   MailingContacts: z.array(mailingContactSchema).optional(),
   Est_Son_Alarme_Active: z.boolean().optional(),
+  Commentaire_Action: z.string().trim().max(500).nullable().optional(),
 }).superRefine(addConsigneGuards)
 
 
@@ -182,11 +243,14 @@ export const PATCH = withLogging(
         Erreur_Justesse,
         Incertitude,
         Derive,
+        Commentaire_Action,
         ...lieuPatchRest
       } = validated
       // Cast to Record<string, unknown> so derived DB columns (_Base, EMT_*, Est_Correction_*)
       // can be added without TypeScript narrowing to the Zod schema type.
       const lieuPatch: Record<string, unknown> = { ...lieuPatchRest }
+
+      const actionComment = typeof Commentaire_Action === "string" ? Commentaire_Action.trim() : ""
 
       if (Object.prototype.hasOwnProperty.call(validated, "Frequence")) {
         const value = validated.Frequence
@@ -379,21 +443,23 @@ export const PATCH = withLogging(
           lieuPatch.Observations_Info = normalizedObservation
         }
 
-        const surveillanceStateHasChanged = applyLieuEtat && current?.Lieu_Etat !== Lieu_Etat
+        const effectiveLieuEtat = hasSondeNumeroSerie && !Sonde_Numero_Serie ? "D" : Lieu_Etat
+        const shouldApplySurveillanceState = applyLieuEtat || (hasSondeNumeroSerie && !Sonde_Numero_Serie)
+        const surveillanceStateHasChanged = shouldApplySurveillanceState && current?.Lieu_Etat !== effectiveLieuEtat
 
         const baseData = {
           ...lieuPatch,
-          ...(applyLieuEtat
+          ...(shouldApplySurveillanceState
             ? {
-                t_etat_surveillance: Lieu_Etat
-                  ? { connect: { Surveillance_Etat: Lieu_Etat } }
+                t_etat_surveillance: effectiveLieuEtat
+                  ? { connect: { Surveillance_Etat: effectiveLieuEtat } }
                   : { disconnect: true },
                 Date_Heure_Reactivation_Surveillance:
-                  Lieu_Etat === "D" ? surveillanceReactivationAt : null,
+                  effectiveLieuEtat === "D" ? surveillanceReactivationAt : null,
                 ...(surveillanceStateHasChanged
                   ? {
-                      Date_Heure_Surveillance_On: Lieu_Etat === "S" ? surveillanceStateChangedAt : current?.Date_Heure_Surveillance_On,
-                      Date_Heure_Surveillance_Off: Lieu_Etat === "D" ? surveillanceStateChangedAt : null,
+                      Date_Heure_Surveillance_On: effectiveLieuEtat === "S" ? surveillanceStateChangedAt : current?.Date_Heure_Surveillance_On,
+                      Date_Heure_Surveillance_Off: effectiveLieuEtat === "D" ? surveillanceStateChangedAt : null,
                     }
                   : {}),
               }
@@ -552,12 +618,14 @@ export const PATCH = withLogging(
       }
 
       if (hasLieuEtat && user && typeof Lieu_Etat === "string" && previousLieuEtat !== Lieu_Etat) {
-        const reason =
+        const baseReason =
           Lieu_Etat === "D"
             ? shouldScheduleSurveillanceReactivation
               ? `Désactivation ${surveillanceDurationMinutes} min`
               : "Désactivation manuelle"
             : "Réactivation manuelle"
+
+        const reason = actionComment || baseReason
 
         log.audit(Lieu_Etat === "D" ? "DES" : "ACT", {
           user: user.username,
@@ -574,66 +642,47 @@ export const PATCH = withLogging(
       const hasSoundField = Object.prototype.hasOwnProperty.call(validated, "Est_Son_Alarme_Active")
       if (hasSoundField && user && validated.Est_Son_Alarme_Active !== undefined && previousSoundActive !== validated.Est_Son_Alarme_Active) {
         if (validated.Est_Son_Alarme_Active) {
-          log.lieu.soundOn(lieuName ?? String(lieuId), lieuId, user.username, user.userId, ip)
-        } else {
-          log.lieu.soundOff(lieuName ?? String(lieuId), lieuId, user.username, user.userId, ip)
-        }
-      }
-
-      // Log field changes using existing audit codes where they have a specific meaning.
-      if (user) {
-        const handledFields = new Set<string>()
-
-        if (Object.prototype.hasOwnProperty.call(body, "Sonde_Numero_Serie") && previousValues.Sonde_Numero_Serie !== Sonde_Numero_Serie) {
-          log.config.changeSensor(
+          log.lieu.soundOn(
             lieuName ?? String(lieuId),
             lieuId,
             user.username,
             user.userId,
             ip,
-            String(previousValues.Sonde_Numero_Serie ?? ""),
-            String(Sonde_Numero_Serie ?? ""),
+            actionComment || undefined,
           )
-          handledFields.add("Sonde_Numero_Serie")
-        }
-
-        if (Object.prototype.hasOwnProperty.call(body, "Frequence") && previousValues.Frequence !== validated.Frequence) {
-          log.config.changeFrequency(
-            `Lieu: ${lieuName ?? lieuId}`,
+        } else {
+          log.lieu.soundOff(
+            lieuName ?? String(lieuId),
             lieuId,
             user.username,
             user.userId,
             ip,
-            previousValues.Frequence,
-            validated.Frequence,
+            actionComment || undefined,
           )
-          handledFields.add("Frequence")
+        }
+      }
+
+      // Log field changes using existing audit codes where they have a specific meaning.
+      if (user) {
+        const changedFieldsEntries: ChangedFieldEntry[] = []
+
+        const trackChange = (field: string, fromValue: unknown, toValue: unknown) => {
+          if (fromValue !== toValue) {
+            changedFieldsEntries.push({ field, from: fromValue, to: toValue })
+          }
         }
 
-        if (Object.prototype.hasOwnProperty.call(body, "Retard_Alarme_Haut") && previousValues.Retard_Alarme_Haut !== validated.Retard_Alarme_Haut) {
-          log.config.changeAlarmDelay(
-            `Lieu: ${lieuName ?? lieuId} (Haut)`,
-            lieuId,
-            user.username,
-            user.userId,
-            ip,
-            previousValues.Retard_Alarme_Haut,
-            validated.Retard_Alarme_Haut,
-          )
-          handledFields.add("Retard_Alarme_Haut")
+        if (Object.prototype.hasOwnProperty.call(body, "Sonde_Numero_Serie")) {
+          trackChange("Sonde_Numero_Serie", previousValues.Sonde_Numero_Serie, Sonde_Numero_Serie)
         }
-
-        if (Object.prototype.hasOwnProperty.call(body, "Retard_Alarme_Bas") && previousValues.Retard_Alarme_Bas !== validated.Retard_Alarme_Bas) {
-          log.config.changeAlarmDelay(
-            `Lieu: ${lieuName ?? lieuId} (Bas)`,
-            lieuId,
-            user.username,
-            user.userId,
-            ip,
-            previousValues.Retard_Alarme_Bas,
-            validated.Retard_Alarme_Bas,
-          )
-          handledFields.add("Retard_Alarme_Bas")
+        if (Object.prototype.hasOwnProperty.call(body, "Frequence")) {
+          trackChange("Frequence", previousValues.Frequence, validated.Frequence)
+        }
+        if (Object.prototype.hasOwnProperty.call(body, "Retard_Alarme_Haut")) {
+          trackChange("Retard_Alarme_Haut", previousValues.Retard_Alarme_Haut, validated.Retard_Alarme_Haut)
+        }
+        if (Object.prototype.hasOwnProperty.call(body, "Retard_Alarme_Bas")) {
+          trackChange("Retard_Alarme_Bas", previousValues.Retard_Alarme_Bas, validated.Retard_Alarme_Bas)
         }
 
         const TRACKED_FIELDS = [
@@ -647,18 +696,87 @@ export const PATCH = withLogging(
           "Nb_Mesures_Temporisation_Redeclenchement",
         ] as const
 
-        const changedFields: Record<string, unknown> = {}
         for (const field of TRACKED_FIELDS) {
-          if (handledFields.has(field)) continue
           if (Object.prototype.hasOwnProperty.call(body, field) && previousValues[field] !== undefined) {
             const newValue = (validated as Record<string, unknown>)[field]
-            if (previousValues[field] !== newValue) {
-              changedFields[field] = { from: previousValues[field], to: newValue }
-            }
+            trackChange(field, previousValues[field], newValue)
           }
         }
-        if (Object.keys(changedFields).length > 0) {
-          log.data.update("Lieu", lieuId, user.username, user.userId, ip, changedFields)
+
+        if (changedFieldsEntries.length === 1) {
+          const singleChange = changedFieldsEntries[0]
+
+          if (singleChange.field === "Sonde_Numero_Serie") {
+            log.config.changeSensor(
+              lieuName ?? String(lieuId),
+              lieuId,
+              user.username,
+              user.userId,
+              ip,
+              String(singleChange.from ?? ""),
+              String(singleChange.to ?? ""),
+            )
+          } else if (singleChange.field === "Frequence") {
+            log.config.changeFrequency(
+              `Lieu: ${lieuName ?? lieuId}`,
+              lieuId,
+              user.username,
+              user.userId,
+              ip,
+              singleChange.from,
+              singleChange.to,
+            )
+          } else if (singleChange.field === "Retard_Alarme_Haut") {
+            log.config.changeAlarmDelay(
+              `Lieu: ${lieuName ?? lieuId} (Haut)`,
+              lieuId,
+              user.username,
+              user.userId,
+              ip,
+              singleChange.from,
+              singleChange.to,
+            )
+          } else if (singleChange.field === "Retard_Alarme_Bas") {
+            log.config.changeAlarmDelay(
+              `Lieu: ${lieuName ?? lieuId} (Bas)`,
+              lieuId,
+              user.username,
+              user.userId,
+              ip,
+              singleChange.from,
+              singleChange.to,
+            )
+          } else {
+            log.data.update(
+              "Lieu",
+              lieuId,
+              user.username,
+              user.userId,
+              ip,
+              {
+                [singleChange.field]: {
+                  from: singleChange.from,
+                  to: singleChange.to,
+                },
+              },
+              actionComment || undefined,
+            )
+          }
+        } else if (changedFieldsEntries.length > 1) {
+          const changedFields = changedFieldsEntries.reduce<Record<string, unknown>>((acc, entry) => {
+            acc[entry.field] = { from: entry.from, to: entry.to }
+            return acc
+          }, {})
+
+          log.data.update(
+            "Lieu",
+            lieuId,
+            user.username,
+            user.userId,
+            ip,
+            changedFields,
+            buildMultiFieldAuditReason(changedFieldsEntries, actionComment || undefined),
+          )
         }
       }
 
@@ -732,7 +850,7 @@ export const PATCH = withLogging(
         return apiError(400, "invalid_module", "Module introuvable")
       }
       if (error instanceof z.ZodError) {
-        return apiError(400, "validation_error", "Invalid input", { issues: error.issues })
+        return apiError(400, "validation_error", "Validation impossible", { issues: error.issues })
       }
       log.error("lieux", "lieu_update_error", { error: error });
       const errorDetail = error instanceof Error ? error.message : String(error)

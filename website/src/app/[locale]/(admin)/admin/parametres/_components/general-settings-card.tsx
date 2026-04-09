@@ -17,7 +17,7 @@ type Setting = {
 type GeneralSettingsCardProps = {
   settings: Setting[];
   loadingKeys: Set<string>;
-  onToggle: (key: string, currentValue: string) => void;
+  onToggle: (key: string) => void;
   onRefreshIntervalChange: (key: string, newValue: string) => void;
   onNumericSettingChange: (key: string, newValue: string) => void;
 };
@@ -53,7 +53,7 @@ export function GeneralSettingsCard({
       </CardHeader>
       <CardContent className="divide-y divide-border/40">
         {settings.map((setting) => (
-          <div key={setting.key} className="flex items-center justify-between py-4">
+          <div key={setting.key} className="flex items-center justify-between py-4 gap-3">
             <Label htmlFor={setting.key} className="flex-1">
               {labelMap[setting.key] ?? setting.label}
             </Label>
@@ -73,7 +73,7 @@ export function GeneralSettingsCard({
                   <SelectItem value="15">{t('general.refresh_options.15')}</SelectItem>
                   <SelectItem value="30">{t('general.refresh_options.30')}</SelectItem>
                   <SelectItem value="60">{t('general.refresh_options.60')}</SelectItem>
-                  {setting.key === "dashboard:refresh" ? (
+                  {setting.key === 'dashboard:refresh' ? (
                     <SelectItem value="0">{t('general.refresh_options.manual')}</SelectItem>
                   ) : null}
                 </SelectContent>
@@ -93,52 +93,63 @@ export function GeneralSettingsCard({
                 </SelectContent>
               </Select>
             ) : setting.key === 'dashboard:etalonnage_warning_days' ? (
-              <div className="flex items-center gap-2">
-                <Select
-                  value={["7", "15", "30", "45", "60", "90"].includes(setting.value) ? setting.value : "custom"}
-                  onValueChange={(value) => {
-                    if (value !== "custom") onNumericSettingChange(setting.key, value);
-                  }}
-                  disabled={loadingKeys.has(setting.key)}
-                >
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="7">{t('general.warning_days_options.7')}</SelectItem>
-                    <SelectItem value="15">{t('general.warning_days_options.15')}</SelectItem>
-                    <SelectItem value="30">{t('general.warning_days_options.30')}</SelectItem>
-                    <SelectItem value="45">{t('general.warning_days_options.45')}</SelectItem>
-                    <SelectItem value="60">{t('general.warning_days_options.60')}</SelectItem>
-                    <SelectItem value="90">{t('general.warning_days_options.90')}</SelectItem>
-                    <SelectItem value="custom">{t('general.warning_days_options.custom')}</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="number"
-                  min={1}
-                  className="w-28"
-                  defaultValue={setting.value}
-                  disabled={loadingKeys.has(setting.key)}
-                  onBlur={(event) => {
-                    const value = Number(event.target.value);
-                    if (!Number.isFinite(value) || value <= 0) return;
-                    onNumericSettingChange(setting.key, String(Math.trunc(value)));
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key !== 'Enter') return;
-                    const target = event.target as HTMLInputElement;
-                    const value = Number(target.value);
-                    if (!Number.isFinite(value) || value <= 0) return;
-                    onNumericSettingChange(setting.key, String(Math.trunc(value)));
-                  }}
-                />
-              </div>
+              (() => {
+                const isPresetValue = ['7', '15', '30', '45', '60', '90'].includes(setting.value);
+                const selectValue = isPresetValue ? setting.value : 'custom';
+                const customInputEnabled = selectValue === 'custom';
+
+                return (
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={selectValue}
+                      onValueChange={(value) => {
+                        if (value !== 'custom') onNumericSettingChange(setting.key, value);
+                      }}
+                      disabled={loadingKeys.has(setting.key)}
+                    >
+                      <SelectTrigger className="w-40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="7">{t('general.warning_days_options.7')}</SelectItem>
+                        <SelectItem value="15">{t('general.warning_days_options.15')}</SelectItem>
+                        <SelectItem value="30">{t('general.warning_days_options.30')}</SelectItem>
+                        <SelectItem value="45">{t('general.warning_days_options.45')}</SelectItem>
+                        <SelectItem value="60">{t('general.warning_days_options.60')}</SelectItem>
+                        <SelectItem value="90">{t('general.warning_days_options.90')}</SelectItem>
+                        <SelectItem value="custom">{t('general.warning_days_options.custom')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="number"
+                      min={1}
+                      className="w-28"
+                      value={customInputEnabled ? setting.value : ''}
+                      placeholder={customInputEnabled ? t('general.warning_days_options.custom') : ''}
+                      disabled={loadingKeys.has(setting.key) || !customInputEnabled}
+                      onChange={() => undefined}
+                      onBlur={(event) => {
+                        if (!customInputEnabled) return;
+                        const value = Number(event.target.value);
+                        if (!Number.isFinite(value) || value <= 0) return;
+                        onNumericSettingChange(setting.key, String(Math.trunc(value)));
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key !== 'Enter' || !customInputEnabled) return;
+                        const target = event.target as HTMLInputElement;
+                        const value = Number(target.value);
+                        if (!Number.isFinite(value) || value <= 0) return;
+                        onNumericSettingChange(setting.key, String(Math.trunc(value)));
+                      }}
+                    />
+                  </div>
+                );
+              })()
             ) : (
               <SwitchWithLoading
                 id={setting.key}
                 checked={setting.value === 'true'}
-                onCheckedChange={() => onToggle(setting.key, setting.value)}
+                onCheckedChange={() => onToggle(setting.key)}
                 isLoading={loadingKeys.has(setting.key)}
               />
             )}

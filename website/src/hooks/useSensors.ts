@@ -9,11 +9,14 @@ export interface Sensor {
   Surveillance_Etat: string | null;
   Surveillance_Etat_Libelle: string | null;
   Id_Module: number | null;
+  Module_Libelle?: string | null;
+  Module_Port?: string | null;
   Sonde_Offset: number | null;
   Lieu: string | null;
   Sonde_Type?: string | null;
   Famille_Sonde?: "CLASSIC" | "GSO" | "GSP" | string | null;
   Date_Validite_Etalonnage?: string | Date | null;
+  Est_Sonde_Reformee?: boolean | null;
 }
 
 type Paginated<T> = {

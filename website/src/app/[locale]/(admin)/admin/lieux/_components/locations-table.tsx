@@ -138,23 +138,35 @@ export function LocationsTable({
       cell: ({ row }) =>
         row.original.Frequence === null || row.original.Frequence === undefined
           ? t('placeholders.na')
-          : t('frequency_value', { count: Math.round(row.original.Frequence) }),
+          : `${Math.round(row.original.Frequence)} min`,
     },
     {
-      accessorKey: 'Consigne_Sup',
-      header: t('columns.max'),
+      id: 'planning',
+      header: t('columns.planning'),
+      cell: ({ row }) => {
+        const count = row.original.Planning_Regles_Count ?? 0;
+        return count > 0 ? t('planning_value', { count }) : t('placeholders.na');
+      },
     },
     {
-      accessorKey: 'Consigne_Inf',
-      header: t('columns.min'),
+      id: 'tolerances',
+      header: t('columns.tolerances'),
+      cell: ({ row }) => {
+        const sup = row.original.Consigne_Sup;
+        const inf = row.original.Consigne_Inf;
+        if (sup === null && inf === null) return t('placeholders.na');
+        return `Sup: ${sup ?? '-'} / Inf: ${inf ?? '-'}`;
+      },
     },
     {
-      accessorKey: 'Retard_Alarme_Haut',
-      header: t('columns.alarm_delay_high'),
-    },
-    {
-      accessorKey: 'Retard_Alarme_Bas',
-      header: t('columns.alarm_delay_low'),
+      id: 'alarm_delays',
+      header: t('columns.alarm_delays'),
+      cell: ({ row }) => {
+        const high = row.original.Retard_Alarme_Haut;
+        const low = row.original.Retard_Alarme_Bas;
+        if (high === null && low === null) return t('placeholders.na');
+        return `Haut: ${high ?? '-'} / Bas: ${low ?? '-'}`;
+      },
     },
   ];
 

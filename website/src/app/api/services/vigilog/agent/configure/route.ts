@@ -53,7 +53,23 @@ export const POST = withAnyAuthorizationLogging(VIGILOG_ACCESS_CODES, async (req
 
     return apiOk(response)
   } catch (error) {
-    log.error("services/vigilog/agent/configure", "vigilog_agent_configure_failed", { error })
-    return apiError(503, "vigilog_agent_configure_failed", "Impossible de parametrer le logger VigiLog")
+    const rawMessage = error instanceof Error ? error.message : ""
+
+    let userMessage = "Impossible de parametrer le logger VigiLog"
+    if (rawMessage.includes("status 401")) {
+      userMessage = "Acces refuse par l'agent local (401). Verifiez la configuration de securite de l'agent."
+    } else if (rawMessage.includes("Agent unavailable")) {
+      userMessage = "Agent local indisponible (port 8000). Verifiez que Vigitemp Agent est lance."
+    } else if (rawMessage.trim().length > 0) {
+      userMessage = rawMessage
+    }
+
+    log.error("services/vigilog/agent/configure", "vigilog_agent_configure_failed", {
+      errorMessage: rawMessage || null,
+      errorName: error instanceof Error ? error.name : null,
+      errorStack: error instanceof Error ? error.stack : null,
+    })
+
+    return apiError(503, "vigilog_agent_configure_failed", userMessage)
   }
 })

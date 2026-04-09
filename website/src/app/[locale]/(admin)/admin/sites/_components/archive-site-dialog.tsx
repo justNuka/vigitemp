@@ -37,7 +37,7 @@ export function ArchiveSiteDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>{t('archive_title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            {t('archive_description', { code: site?.Code_Site || '' })}
+            {t('archive_description', { code: site?.Libelle_Site || '' })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

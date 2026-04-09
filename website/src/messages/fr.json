@@ -63,7 +63,7 @@
       "title": "Fuseau horaire",
       "description": "Définir le fuseau horaire d'affichage",
       "label": "Fuseau horaire",
-      "helper": "L'affichage des dates s'adaptera à  ce fuseau horaire."
+      "helper": "L'affichage des dates s'adaptera à ce fuseau horaire."
     }
   },
   "dock": {
@@ -201,10 +201,10 @@
   },
   "surveillance": {
     "title": "Surveillance",
-    "description": "Suivi en temps réel des sondes et capteurs",
+    "description": "Suivi en temps réel des lieux surveillés et de leurs mesures",
     "meta": {
       "title": "Surveillance - VigiSensys",
-      "description": "Suivi en temps réel des sondes et capteurs"
+      "description": "Suivi en temps réel des lieux surveillés et de leurs mesures"
     },
     "filters": {
       "sites": {
@@ -241,6 +241,13 @@
       "location_not_found": "Lieu introuvable",
       "location_updated": "Lieu modifié avec succès",
       "location_update_error": "Erreur lors de la modification du lieu"
+    },
+    "action_comment": {
+      "location_prompt": "Commentaire optionnel pour cette action de paramétrage :",
+      "surveillance_disable_prompt": "Commentaire optionnel pour la désactivation de la surveillance :",
+      "surveillance_enable_prompt": "Commentaire optionnel pour la réactivation de la surveillance :",
+      "alarms_disable_prompt": "Commentaire optionnel pour la désactivation des notifications d'alarme :",
+      "alarms_enable_prompt": "Commentaire optionnel pour la réactivation des notifications d'alarme :"
     },
     "overlay": {
       "button": "Superposer des courbes",
@@ -282,7 +289,11 @@
       "disabled_locations": "Surveillance coupée",
       "active_alarms_warning": "Attention requise",
       "active_alarms_ok": "Tout est normal",
-      "alert_sensors": "Pré-alarmes + alarmes"
+      "alert_sensors": "Pré-alarmes + alarmes",
+      "total_locations": "Nombre total de lieux affichés",
+      "ok_locations": "Lieux sans alarme active",
+      "alert_locations": "Lieux en pré-alarme ou en alarme",
+      "critical_locations": "Lieux en alarme critique ou non-réponse"
     },
     "status": {
       "active": "Surveillance active",
@@ -326,7 +337,8 @@
       "confirm": "Confirmer"
     },
     "legend": {
-      "technical_alarm": "Alarme technique"
+      "technical_alarm": "Alarme technique",
+      "pre_alarm_threshold": "Seuil pré-alarme"
     }
   },
   "surveillanceStatus": {
@@ -347,9 +359,10 @@
   },
   "adminSettings": {
     "toast": {
-      "update_success": "Paramètre mis à  jour",
-      "update_error": "Erreur lors de la mise à  jour",
-      "refresh_interval": "Intervalle de rafraà®chissement : {label}"
+      "update_success": "Paramètre mis à jour",
+      "update_error": "Erreur lors de la mise à jour",
+      "refresh_interval": "Intervalle de rafraîchissement : {label}",
+      "changes_discarded": "Les modifications locales ont été annulées."
     },
     "general": {
       "title": "Général",
@@ -358,12 +371,12 @@
         "notifications_email": "Notifications par email",
         "notifications_sms": "Notifications SMS",
         "alarms_sound": "Son des alarmes",
-        "dashboard_refresh": "Intervalle de rafraà®chissement (s)",
-        "surveillance_refresh": "Rafraà®chissement surveillance (s)",
+        "dashboard_refresh": "Intervalle de rafraîchissement (s)",
+        "surveillance_refresh": "Rafraîchissement surveillance (s)",
         "show_null_non_response": "Afficher les non-réponses (valeur nulle)",
         "etalonnage_warning_days": "Alerte validité étalonnage (jours)",
         "global_language": "Langue globale des emails",
-        "audit_graph_openings": "Audit trail à  l'ouverture des graphiques"
+        "audit_graph_openings": "Audit trail à l'ouverture des graphiques"
       },
       "refresh_options": {
         "5": "5 secondes",
@@ -375,7 +388,7 @@
         "custom": "{seconds} secondes"
       },
       "language_options": {
-        "fr": "Franà§ais",
+        "fr": "Français",
         "en": "English"
       },
       "warning_days_options": {
@@ -391,14 +404,15 @@
     "timezone": {
       "title": "Fuseau horaire",
       "description": "Définir le fuseau horaire d'affichage",
+      "enabled_label": "Activer le fuseau horaire",
       "label": "Fuseau horaire",
-      "helper": "L'affichage des dates s'adaptera à  ce fuseau horaire."
+      "helper": "L'affichage des dates s'adaptera à ce fuseau horaire."
     },
     "security": {
       "title": "Sécurité",
       "description": "Paramètres de sécurité et de session",
       "auto_lock": {
-        "label": "Verrouillage automatique",
+        "label": "Déconnexion automatique",
         "helper": "Déconnexion automatique après une période d'inactivité"
       },
       "inactivity": {
@@ -413,9 +427,9 @@
         "60": "1 heure"
       },
       "toast": {
-        "enabled": "Verrouillage automatique activé ({minutes} min)",
-        "disabled": "Verrouillage automatique désactivé",
-        "duration": "Durée d'inactivité définie à  {minutes} minutes"
+        "enabled": "Déconnexion automatique activée ({minutes} min)",
+        "disabled": "Déconnexion automatique désactivée",
+        "duration": "Durée d'inactivité définie à {minutes} minutes"
       }
     },
     "notifications": {
@@ -484,7 +498,7 @@
       },
       "toasts": {
         "fetch_error": "Erreur lors du chargement de la configuration",
-        "update_success": "Configuration SMTP mise à  jour avec succès",
+        "update_success": "Configuration SMTP mise à jour avec succès",
         "update_error": "Erreur serveur",
         "test_success": "Email de test envoyé",
         "test_error": "Erreur serveur"
@@ -503,6 +517,12 @@
       "title": "Messagerie interne",
       "description": "Activer la messagerie interne entre utilisateurs (Standard/Expert uniquement)",
       "toggle_label": "Activer la messagerie"
+    },
+    "pending_changes": {
+      "title": "Des modifications ne sont pas encore enregistrées",
+      "description": "Les paramètres ne seront appliqués qu'après validation.",
+      "cancel": "Annuler",
+      "save": "Enregistrer"
     }
   },
   "alarmsPage": {
@@ -521,14 +541,14 @@
     "titles": {
       "active": "Alarmes actives",
       "acknowledged": "Alarmes acquittées",
-      "resolved": "Alarmes à  acquitter",
+      "resolved": "Alarmes à acquitter",
       "location_label": "Lieu",
       "sensor_label": "Sonde",
       "type_label": "Type d'alarme",
       "type_high": "Dépassement haut",
       "type_low": "Dépassement bas",
       "type_no_response": "Non réponse",
-      "type_ended": "Alarme termin?e",
+      "type_ended": "Alarme terminée",
       "type_other": "Autre",
       "start_label": "Début alarme",
       "end_label": "Fin alarme",
@@ -559,7 +579,7 @@
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage s?lectionn?e : {range}"
+      "selected_range": "Plage s&électionné : {range}"
     },
     "toast": {
       "na": "-",
@@ -596,8 +616,8 @@
     "empty_state": {
       "active_title": "Aucune alarme active",
       "acknowledged_title": "Aucune alarme acquittée",
-      "resolved_title": "Aucune alarme à  acquitter",
-      "active_description": "Tout est sous contrà´le - Aucune alarme en cours",
+      "resolved_title": "Aucune alarme à acquitter",
+      "active_description": "Tout est sous contrôle - Aucune alarme en cours",
       "other_description": "Aucune alarme dans cette catégorie pour le moment"
     },
     "dialog": {
@@ -634,12 +654,12 @@
       "cancel": "Annuler",
       "confirm": "Acquitter",
       "confirming": "Acquittement...",
-      "type_ended": "Alarme termin?e"
+      "type_ended": "Alarme terminée"
     },
     "status": {
       "active": "En cours",
       "acknowledged": "Acquittée",
-      "resolved": "Terminée (à  acquitter)"
+      "resolved": "Terminée (à acquitter)"
     },
     "fallback": {
       "unknown_unit": "Unité inconnue",
@@ -659,7 +679,7 @@
     "description": "Qui a acquitté quelle alarme, quand et avec quel commentaire.",
     "meta": {
       "title": "Historique d'acquittement - VigiSensys",
-      "description": "Historique des acquittements d'alarmes réservé à  la métrologie"
+      "description": "Historique des acquittements d'alarmes réservé à la métrologie"
     },
     "actions": {
       "refresh": "Actualiser",
@@ -676,19 +696,22 @@
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage s?lectionn?e : {range}"
+      "selected_range": "Plage s&électionné : {range}",
+      "location": "Lieu",
+      "allLocations": "Tous les lieux"
     },
     "table": {
-      "search": "Rechercher un acquittement...",
+      "search": "Rechercher par lieu ou utilisateur...",
       "columns": {
         "acknowledgedAt": "Date d'acquittement",
         "acknowledgedBy": "Utilisateur",
         "location": "Site / Lieu",
         "sensor": "Sonde",
-        "type": "Type",
+        "type": "Type d'alarme",
         "value": "Valeur",
         "period": "Période d'alarme",
-        "comment": "Commentaire"
+        "comment": "Commentaire",
+        "duration": "Durée"
       },
       "period": {
         "start": "Début :",
@@ -697,16 +720,17 @@
       "type": {
         "high": "Dépassement haut",
         "low": "Dépassement bas",
-        "no_response": "Non réponse"
+        "no_response": "Non réponse",
+        "sector": "Secteur / alimentation"
       }
     }
   },
   "adminAlarmsPage": {
     "title": "Gestion des alarmes (admin)",
-    "description": "Suivi et traitement des alarmes cà´té administration",
+    "description": "Suivi et traitement des alarmes côté administration",
     "meta": {
       "title": "Alarmes admin - VigiSensys",
-      "description": "Gestion des alarmes cà´té administration"
+      "description": "Gestion des alarmes côté administration"
     }
   },
   "auditPage": {
@@ -722,7 +746,9 @@
     "count": "{count, plural, one {{count} lieu} other {{count} lieux}}",
     "tabs": {
       "all": "Tous ({count})",
-      "unassigned": "Sans sonde ({count})"
+      "unassigned": "Sans sonde ({count})",
+      "active": "Actifs ({count})",
+      "archived": "Archivés ({count})"
     },
     "actions": {
       "new": "Nouveau",
@@ -731,7 +757,7 @@
     },
     "toast": {
       "create_success": "Lieu créé avec succès",
-      "create_no_sensor": "Lieu créé sans sonde. Pensez à  l'affecter plus tard.",
+      "create_no_sensor": "Lieu créé sans sonde. Pensez à l'affecter plus tard.",
       "create_error": "Erreur lors de la création du lieu",
       "update_success": "Lieu modifié avec succès",
       "update_error": "Erreur lors de la modification du lieu",
@@ -775,7 +801,10 @@
       "max": "Max",
       "min": "Min",
       "alarm_delay_high": "Retard alarme haut",
-      "alarm_delay_low": "Retard alarme bas"
+      "alarm_delay_low": "Retard alarme bas",
+      "planning": "Planning consigne",
+      "tolerances": "Tolérances",
+      "alarm_delays": "Retards d'alarme"
     },
     "status": {
       "active": "Surveillance active",
@@ -809,7 +838,11 @@
         "planning": "Planning"
       },
       "submit": {
-        "saving": "Enregistrement..."
+        "saving": "Enregistrement...",
+        "save_and_close": "Enregistrer et fermer",
+        "save_and_stay": "Enregistrer et rester",
+        "cancel_and_close": "Annuler et fermer",
+        "cancel_and_stay": "Annuler et rester"
       },
       "temporary_memory": {
         "save": "Sauvegarder pour plus tard",
@@ -817,7 +850,8 @@
         "clear": "Vider le formulaire",
         "saved": "Brouillon disponible"
       },
-      "current_location_label": "Lieu en cours :"
+      "current_location_label": "Lieu en cours :",
+      "unsaved_changes_confirm": "Des modifications non enregistrées seront perdues. Fermer quand même ?"
     },
     "general": {
       "sections": {
@@ -826,7 +860,6 @@
       },
       "labels": {
         "name": "Nom du lieu",
-        "type": "Type de lieu",
         "comment": "Observations / Commentaires",
         "monitoring": "Surveillance",
         "monitoring_enable": "Activer la surveillance",
@@ -850,12 +883,12 @@
         "lower_pre_label": "Pré-alarme inf.",
         "retrigger_delay_measures": "Temporisation redéclenchement (mesures)",
         "module_select": "Module",
-        "enabled": "Activ?",
-        "disabled": "D?sactiv?"
+        "enabled": "Activé",
+        "disabled": "Désactivé",
+        "observations": "Observations"
       },
       "placeholders": {
         "name": "Ex: Stockage A",
-        "type": "Sélectionner un type",
         "comment": "Notes...",
         "site": "Choisir un site",
         "site_search": "Rechercher un site...",
@@ -872,7 +905,8 @@
         "retrigger_delay_measures": "0",
         "module": "Choisir un module",
         "module_search": "Rechercher un module...",
-        "module_empty": "Aucun module"
+        "module_empty": "Aucun module",
+        "observations": "Observations sur le lieu..."
       },
       "type_options": {
         "etuve": "Étuve",
@@ -883,11 +917,14 @@
       },
       "options": {
         "no_sensor": "Aucune sonde",
-        "no_module": "Aucun module"
+        "no_module": "Aucun module",
+        "category_sensors": "Sondes",
+        "category_standard_sensors": "Sondes étalons"
       },
       "tooltips": {
-        "frequency_gso": "Fréquence fixée à  15 min pour les sondes GSO.",
-        "retrigger_delay_measures": "Nombre de mesures hors tolérances à  ignorer avant un nouveau déclenchement apres acquittement ou alarme terminée."
+        "frequency_gso": "Fréquence fixée à 15 min pour les sondes GSO.",
+        "retrigger_delay_measures": "Nombre de mesures hors tolérances à ignorer avant un nouveau déclenchement apres acquittement ou alarme terminée.",
+        "monitoring_requires_sensor": "Sans sonde sélectionnée, la surveillance est désactivée automatiquement."
       },
       "group_fallback": "Groupe {id}",
       "planning_lock": {
@@ -923,10 +960,10 @@
       },
       "emt": {
         "title": "EMT (Erreur Maximale Tolérée)",
-        "decimals_placeholder": "Nombre à  2 décimales",
+        "decimals_placeholder": "Nombre à 2 décimales",
         "option": {
           "quart": {
-            "title": "Les EMT obéissent à  la règle du quart",
+            "title": "Les EMT obéissent à la règle du quart",
             "description": "L'EMT de la sonde de surveillance est fixée par défaut au quart de l'EMT"
           },
           "manuel": {
@@ -955,10 +992,14 @@
         "order": "Ordre",
         "user": "Utilisateur",
         "via_mail": "Via mail",
-        "via_phone": "Via téléphone"
+        "via_phone": "Via téléphone",
+        "priority": "Priorité"
       },
       "placeholders": {
         "user": "Sélectionner un utilisateur"
+      },
+      "helpers": {
+        "phone_coming_soon": "Le contact par téléphone sera disponible dans une prochaine mise à jour."
       }
     }
   },
@@ -998,7 +1039,7 @@
         "labelConsigneSup": "Consigne sup. (optionnel)",
         "labelConsigneInf": "Consigne inf. (optionnel)",
         "labelPriorite": "Priorité",
-        "hintPriorite": "Plus la priorit? est ?lev?e, plus cette r?gle prend le dessus quand des plages se chevauchent.",
+        "hintPriorite": "Plus la priorité est élevée, plus cette règle prend le dessus quand des plages se chevauchent.",
         "labelActif": "Règle active",
         "placeholderJour": "Sélectionner un jour",
         "placeholderNumeric": "Valeur numérique",
@@ -1026,30 +1067,37 @@
         "emtModeUncertainties": "Incertitudes",
         "emtModeSansObjet": "Sans objet",
         "labelRetardChangementConsigne": "Retard changement consigne (min)",
-        "repeatEachDayLabel": "Repeter la regle chaque jour couvert",
-        "repeatEachDayHint": "Cree automatiquement une regle par jour sur la plage choisie en conservant les horaires et consignes.",
-        "repeatSuccess": "{count, plural, one {# regle creee} other {# regles creees}}",
+        "repeatEachDayLabel": "Répéter la règle chaque jour couvert",
+        "repeatEachDayHint": "Crée automatiquement une regle par jour sur la plage choisie en conservant les horaires et consignes.",
+        "repeatSuccess": "{count, plural, one {# regle créée} other {# regles créees}}",
         "placeholderRetardChangementConsigne": "0",
         "temporaryMemory": {
           "save": "Sauvegarder pour plus tard",
           "restore": "Restaurer le brouillon",
           "clear": "Vider le formulaire",
           "saved": "Brouillon disponible"
-        }
+        },
+        "baseSetpointsTitle": "Consignes de base actuelles",
+        "baseSetpoint": "Consigne : {value}",
+        "baseFrequency": "Fréquence : {value} min",
+        "baseUpper": "Consigne sup : {value} - retard : {delay} min",
+        "baseLower": "Consigne inf : {value} - retard : {delay} min"
       },
       "deleteConfirm": {
         "title": "Supprimer la règle",
         "description": "Que faire des consignes après suppression ?",
         "optionBase": "Restaurer les consignes de base",
         "optionRegle": "Appliquer les consignes de cette règle comme nouvelles valeurs de base",
-        "ruleValues": "ConsigneÂ : {consigne}  |  SupÂ : {sup}  |  InfÂ : {inf}",
+        "ruleValues": "Consigne: {consigne}  |  Sup: {sup}  |  Inf: {inf}",
         "errorDelete": "Erreur lors de la suppression de la règle."
       },
-      "retardChangementConsigne": "Retard changement consigne"
+      "retardChangementConsigne": "Retard changement consigne",
+      "backToBaseSetpoints": "Retour aux consignes de base",
+      "backToBaseSetPoints": "Retour aux consignes de base"
     }
   },
   "modulesPage": {
-    "title": "Modules ({count})",
+    "title": "Gestion des modules",
     "actions": {
       "new": "Nouveau",
       "edit": "Modifier",
@@ -1057,29 +1105,34 @@
     },
     "associated": {
       "title": "Matériel associé ({count})",
-      "empty": "Aucun matériel associé à  ce module"
+      "empty": "Aucun matériel associé à ce module"
     },
     "archive": {
       "title": "Archiver le module",
-      "description": "Êtes-vous sà»r de vouloir archiver ce module ? Cette action ne peut pas être annulée.",
+      "description": "Êtes-vous sûr de vouloir archiver ce module ? Cette action ne peut pas être annulée.",
       "confirm": "Archiver"
     },
     "archive_blocked": {
       "title": "Archivage impossible",
-      "default": "Ce module est encore lié à  d'autres éléments.",
-      "detail": "{count, plural, one {Ce module est lié à  {count} sonde.} other {Ce module est lié à  {count} sondes.}}"
+      "default": "Ce module est encore lié à d'autres éléments.",
+      "detail": "{count, plural, one {Ce module est lié à {count} sonde.} other {Ce module est lié à {count} sondes.}}"
     },
     "toast": {
       "archive_success": "Module archivé avec succès",
       "archive_error": "Erreur lors de l'archivage"
     },
-    "description": "Gestion des modules"
+    "description": "Gestion des modules",
+    "tabs": {
+      "active": "Actifs ({count})",
+      "archived": "Archivés ({count})"
+    },
+    "count": "{count, plural, one {# module} other {# modules}}"
   },
   "modulesForm": {
     "title_create": "Créer un nouveau module",
     "title_edit": "Modifier le module",
     "description_create": "Remplissez les informations du module",
-    "description_edit": "Mettez à  jour les informations du module",
+    "description_edit": "Mettez à jour les informations du module",
     "fields": {
       "serial_label": "Numéro de série",
       "serial_placeholder": "ex: MOD-001",
@@ -1136,7 +1189,7 @@
       "port": "Port série",
       "status": "État"
     },
-    "empty": "Aucun matériel associé à  ce module"
+    "empty": "Aucun matériel associé à ce module"
   },
   "moduleAssociatedSensors": {
     "columns": {
@@ -1157,11 +1210,11 @@
     "filters": {
       "site": "Site",
       "type": "Type",
-      "dateFrom": "Date de d?but",
+      "dateFrom": "Date de début",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage s?lectionn?e : {range}"
+      "selected_range": "Plage s&électionné : {range}"
     },
     "table": {
       "columns": {
@@ -1170,7 +1223,7 @@
         "comment": "Commentaire",
         "status": "État"
       },
-      "search_placeholder": "NÂ° série, type...",
+      "search_placeholder": "N° série, type...",
       "empty": "Aucun actionneur trouvé"
     },
     "status": {
@@ -1179,7 +1232,7 @@
     },
     "archive": {
       "title": "Confirmer l'archivage",
-      "description": "Êtes-vous sà»r de vouloir archiver cet actionneur ? Cette action ne pourra pas être annulée.",
+      "description": "Êtes-vous sûr de vouloir archiver cet actionneur ? Cette action ne pourra pas être annulée.",
       "confirm": "Archiver"
     },
     "toast": {
@@ -1211,7 +1264,7 @@
     },
     "submit": {
       "create": "Créer",
-      "update": "Mettre à  jour"
+      "update": "Mettre à jour"
     },
     "toast": {
       "save_success": "Actionneur modifié avec succès",
@@ -1223,20 +1276,20 @@
     "title": "Outils",
     "description": "Outils de gestion et diagnostic du système",
     "tabs": {
-      "test_connection": "Test de connexion",
+      "test_connection": "Test de sonde",
       "comments": "Commentaires",
       "config": "Config",
       "monitoring": "Surveillance",
       "standard_reader": "Lecture étalon"
     },
     "placeholders": {
-      "config": "Onglet Config à  venir...",
-      "monitoring": "Onglet Surveillance à  venir..."
+      "config": "Onglet Config à venir...",
+      "monitoring": "Onglet Surveillance à venir..."
     },
     "standard_reader": {
       "title": "Lecture sonde étalon",
       "description": "Assigner une sonde étalon avec certificat pour les relevés de l'outil.",
-      "helper": "Seuls les étalons créés avec des informations de certificat sont proposés à  l'assignation.",
+      "helper": "Seuls les étalons créés avec des informations de certificat sont proposés à l'assignation.",
       "select_label": "Sonde étalon assignable",
       "select_placeholder": "Sélectionner une sonde étalon",
       "eligible_count": "{count, plural, one {{count} étalon éligible} other {{count} étalons éligibles}}",
@@ -1262,7 +1315,7 @@
       "empty": "Aucune sonde étalon n'est assignée pour le moment.",
       "toasts": {
         "assign_success": "Sonde étalon assignée.",
-        "assign_error": "Erreur lors de la mise à  jour de l'assignation.",
+        "assign_error": "Erreur lors de la mise à jour de l'assignation.",
         "clear_success": "Assignation retirée."
       }
     }
@@ -1276,11 +1329,11 @@
     "filters": {
       "site": "Site",
       "type": "Type",
-      "dateFrom": "Date de d?but",
+      "dateFrom": "Date de début",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage s?lectionn?e : {range}"
+      "selected_range": "Plage s&électionné : {range}"
     },
     "table": {
       "title": "Commentaires",
@@ -1331,11 +1384,11 @@
     "filters": {
       "site": "Site",
       "type": "Type",
-      "dateFrom": "Date de d?but",
+      "dateFrom": "Date de début",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage s?lectionn?e : {range}"
+      "selected_range": "Plage s&électionné : {range}"
     },
     "table": {
       "title": "Sondes",
@@ -1360,11 +1413,6 @@
         "signal": "Signal lu",
         "response_rate": "Taux réponse"
       },
-      "status": {
-        "ok": "OK",
-        "warning": "Attention",
-        "error": "Erreur"
-      },
       "aria": {
         "select_all": "Sélectionner toutes les sondes",
         "select_one": "Sélectionner {serial}"
@@ -1377,6 +1425,16 @@
       "last_7days": "Derniers 7 jours",
       "selected_sensors": "Sondes sélectionnées",
       "selected_over_total": "sur {total}"
+    },
+    "launch_dialog": {
+      "title": "Priorité sur la surveillance",
+      "description": "Le test de sonde prend temporairement la priorité sur la surveillance pour les sondes sélectionnées. Choisissez une durée maximale avant de lancer le test.",
+      "duration_label": "Durée maximale du test",
+      "duration_placeholder": "Sélectionner une durée",
+      "duration_option": "{count, plural, one {{count} minute} other {{count} minutes}}",
+      "recommended": "recommandé",
+      "cancel": "Annuler",
+      "confirm": "Lancer le test"
     }
   },
   "audit": {
@@ -1393,10 +1451,11 @@
       "refreshed": "Données actualisées"
     },
     "filter": {
-      "user": "Utilisateur",
       "dateFrom": "Du",
       "dateTo": "Au",
-      "clearFilters": "Effacer les filtres"
+      "clearFilters": "Effacer les filtres",
+      "action": "Action",
+      "today_limit_hint": "Affichage du jour en cours. Pour une période plus precise, ajustez les dates. La liste reste limitée à 100 entrées."
     },
     "expandedDetails": "Détails complets",
     "actions": {
@@ -1434,11 +1493,11 @@
     "filters": {
       "site": "Site",
       "type": "Type",
-      "dateFrom": "Date de d?but",
+      "dateFrom": "Date de début",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage s?lectionn?e : {range}",
+      "selected_range": "Plage sélectionnée : {range}",
       "code_all": "Tous les codes",
       "code_placeholder": "Code action"
     },
@@ -1447,8 +1506,7 @@
         "timestamp": "Date / Heure",
         "action": "Action",
         "user": "Utilisateur",
-        "details": "Détails",
-        "target": "Cible"
+        "details": "Détails"
       },
       "system": "Système",
       "empty_value": "-"
@@ -1484,8 +1542,8 @@
       "clear": "Retirer",
       "save": "Enregistrer",
       "saving": "Enregistrement...",
-      "saved": "Avatar mis à  jour",
-      "save_error": "Erreur lors de la mise à  jour de l'avatar",
+      "saved": "Avatar mis à jour",
+      "save_error": "Erreur lors de la mise à jour de l'avatar",
       "upload_error": "Erreur lors de l'import de l'avatar",
       "crop_title": "Recadrer l'avatar",
       "crop_cancel": "Annuler",
@@ -1517,7 +1575,7 @@
     },
     "rules": {
       "loading": "Chargement des règles de mot de passe...",
-      "title": "Règles à  respecter :"
+      "title": "Règles à respecter :"
     },
     "match": {
       "ok": "Les mots de passe correspondent",
@@ -1544,7 +1602,7 @@
   },
   "profileCfr21": {
     "title": "Conformité CFR21 activée",
-    "description": "Votre compte est soumis à  la norme CFR21. Vous devez changer votre mot de passe régulièrement.",
+    "description": "Votre compte est soumis à la norme CFR21. Vous devez changer votre mot de passe régulièrement.",
     "non_reuseable": "Les anciens mots de passe ne peuvent pas être réutilisés.",
     "last_change_label": "Dernière modification du mot de passe :",
     "never": "Jamais",
@@ -1617,7 +1675,7 @@
       "newTolerancesTitle": "Nouvelles tolérances",
       "newToleranceSup": "Nouvelle tolérance sup.",
       "newToleranceInf": "Nouvelle tolérance inf.",
-      "validationError": "La tolérance inférieure doit être strictement inférieure à  la tolérance supérieure.",
+      "validationError": "La tolérance inférieure doit être strictement inférieure à la tolérance supérieure.",
       "resetButton": "Réinitialiser aux valeurs actuelles"
     },
     "chart": {
@@ -1634,11 +1692,11 @@
     "filters": {
       "site": "Site",
       "type": "Type",
-      "dateFrom": "Date de d?but",
+      "dateFrom": "Date de début",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage s?lectionn?e : {range}"
+      "selected_range": "Plage sélectionnée : {range}"
     },
     "table": {
       "simTitle": "Alarmes simulées ({count})",
@@ -1655,14 +1713,15 @@
     "export": {
       "button": "Exporter",
       "csv": "Exporter CSV (alarmes)",
-      "image": "Exporter le graphique"
+      "image": "Exporter le graphique",
+      "pdf": "Exporter PDF"
     },
     "save": {
       "button": "Enregistrer l'analyse",
       "dialogTitle": "Enregistrer dans l'audit",
-      "dialogDescription": "Cette analyse sera consignée dans l'audit trail du système.",
+      "dialogDescription": "Cette analyse sera consignée dans le journal d'audit du système.",
       "commentLabel": "Conclusion / commentaire",
-      "commentPlaceholder": "Ex : Lieu [nom] - Nouvelles tolérances : +XÂ°C / -YÂ°C - N alarmes simulées. Impact jugé acceptable car...",
+      "commentPlaceholder": "Ex : Lieu [nom] - Nouvelles tolérances : +X°C / -Y°C - N alarmes simulées. Impact jugé acceptable car...",
       "cancel": "Annuler",
       "confirm": "Enregistrer",
       "success": "Analyse enregistrée avec succès",
@@ -1673,10 +1732,12 @@
     "toast": {
       "create_success": "Profil créé avec succès",
       "create_error": "Erreur lors de la création",
-      "update_success": "Profil mis à  jour avec succès",
-      "update_error": "Erreur lors de la mise à  jour",
+      "update_success": "Profil mis à jour avec succès",
+      "update_error": "Erreur lors de la mise à jour",
       "delete_success": "Profil supprimé avec succès",
-      "delete_error": "Erreur lors de la suppression"
+      "delete_error": "Erreur lors de la suppression",
+      "archive_success": "Profil archivé avec succès",
+      "archive_error": "Erreur lors de l'archivage"
     },
     "title": "Gestion des profils",
     "description": "Administration des profils et autorisations"
@@ -1696,12 +1757,12 @@
     "authorizations_title": "Autorisations",
     "actions": {
       "check_all": "Tout cocher",
-      "uncheck_all": "Tout d?cocher"
+      "uncheck_all": "Tout décocher"
     },
     "submit_create": "Créer",
-    "submit_update": "Mettre à  jour",
+    "submit_update": "Mettre à jour",
     "submit_creating": "Création...",
-    "submit_updating": "Mise à  jour...",
+    "submit_updating": "Mise à jour...",
     "validation": {
       "name_required": "Le nom du profil est requis"
     },
@@ -1711,7 +1772,14 @@
       "monitoring": "Surveillance",
       "vigilog": "VigiLog",
       "other": "Autres"
-    }
+    },
+    "tabs": {
+      "authorizations": "Autorisations",
+      "users": "Utilisateurs affectés"
+    },
+    "users_title": "Utilisateurs affectés à ce profil",
+    "users_empty": "Aucun utilisateur disponible.",
+    "users_current_profile": "Actuellement affecté à {profile}"
   },
   "groupsDialog": {
     "title_create": "Créer un groupe",
@@ -1734,6 +1802,18 @@
       "create_success": "Groupe créé avec succès",
       "update_success": "Groupe modifié avec succès",
       "save_error": "Erreur lors de la sauvegarde du groupe"
+    },
+    "tabs": {
+      "general": "Création du groupe",
+      "users": "Utilisateurs affectés"
+    },
+    "users": {
+      "title": "Utilisateurs du groupe",
+      "empty": "Aucun utilisateur disponible."
+    },
+    "actions": {
+      "check_all": "Tout cocher",
+      "uncheck_all": "Tout décocher"
     }
   },
   "sensorsDialog": {
@@ -1751,10 +1831,11 @@
       "module_empty": "Aucun module",
       "offset_label": "Offset sonde",
       "offset_placeholder": "0",
-      "offset_hint": "Laissez vide pour utiliser 0."
+      "offset_hint": "Laissez vide pour utiliser 0.",
+      "offset_unavailable_pack": "Fonction indisponible avec la licence Pack."
     },
     "submit_create": "Ajouter",
-    "submit_update": "Mettre à  jour",
+    "submit_update": "Mettre à jour",
     "validation": {
       "type_required": "Type de sonde requis",
       "serial_invalid": "Numéro de série invalide",
@@ -1762,7 +1843,7 @@
     },
     "toast": {
       "invalid_sensor": "Sonde invalide",
-      "update_success": "Sonde mise à  jour",
+      "update_success": "Sonde mise à jour",
       "create_success": "Sonde créée",
       "save_error": "Erreur serveur"
     }
@@ -1771,7 +1852,7 @@
     "title_create": "Créer un étalon",
     "title_edit": "Modifier l'étalon",
     "submit_create": "Créer",
-    "submit_update": "Mettre à  jour",
+    "submit_update": "Mettre à jour",
     "submit_saving": "Enregistrement...",
     "sections": {
       "info": "Informations de l'étalon",
@@ -1808,17 +1889,17 @@
       "add": "Nouveau",
       "delete": "Supprimer",
       "delete_title": "Supprimer la mesure",
-      "delete_description": "Êtes-vous sà»r de vouloir supprimer ce point de mesure ?",
+      "delete_description": "Êtes-vous sûr de vouloir supprimer ce point de mesure ?",
       "columns": {
         "point": "Point",
-        "reference": "TÂ° référence",
-        "value": "TÂ° lue",
+        "reference": "T° référence",
+        "value": "T° lue",
         "incertitude": "Incertitude"
       }
     },
     "toast": {
       "create_success": "Étalon créé avec succès",
-      "update_success": "Étalon mis à  jour avec succès",
+      "update_success": "Étalon mis à jour avec succès",
       "save_error": "Erreur lors de la sauvegarde"
     },
     "validation": {
@@ -1830,7 +1911,8 @@
     "count": "{count, plural, one {# groupe} other {# groupes}}",
     "regroupement": {
       "one": "Regroupement 1",
-      "two": "Regroupement 2"
+      "two": "Regroupement 2",
+      "all": "Tous les regroupements"
     },
     "actions": {
       "new": "Nouveau",
@@ -1840,18 +1922,19 @@
     "filters": {
       "site": "Site",
       "type": "Type",
-      "dateFrom": "Date de d?but",
+      "dateFrom": "Date de début",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage s?lectionn?e : {range}"
+      "selected_range": "Plage sélectionnée : {range}"
     },
     "table": {
       "columns": {
         "number": "Numéro",
         "name": "Nom du groupe",
         "regroupement": "Regroupement",
-        "locations": "Lieux"
+        "locations": "Nombre de lieux",
+        "users": "Utilisateurs"
       },
       "search_placeholder": "Numéro, nom, regroupement...",
       "empty": "Aucun groupe"
@@ -1884,6 +1967,10 @@
     "meta": {
       "title": "Groupes - VigiSensys",
       "description": "Gestion des groupes de lieux"
+    },
+    "tabs": {
+      "active": "Actifs ({count})",
+      "archived": "Archivés ({count})"
     }
   },
   "sensorsPage": {
@@ -1896,11 +1983,11 @@
     "filters": {
       "site": "Site",
       "type": "Type",
-      "dateFrom": "Date de d?but",
+      "dateFrom": "Date de début",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage s?lectionn?e : {range}"
+      "selected_range": "Plage sélectionnée : {range}"
     },
     "table": {
       "columns": {
@@ -1910,14 +1997,14 @@
         "module": "Module",
         "state": "État",
         "location": "Lieu",
-        "calibration_validity": "Validité ajustage"
+        "calibration_validity": "Validité étalonnage"
       },
-      "search_placeholder": "Adresse, NÂ° série, lieu...",
+      "search_placeholder": "Adresse, N° série, lieu...",
       "empty": "Aucune sonde"
     },
     "calibration_validity": {
       "ok": "OK ({days} j)",
-      "expiring": "Bientà´t expiré ({days} j)",
+      "expiring": "Bientôt expiré ({days} j)",
       "expired": "Expiré ({days} j)"
     },
     "status": {
@@ -1960,8 +2047,8 @@
           "cancel": "Annuler",
           "save": "Enregistrer",
           "saving": "Enregistrement...",
-          "saved": "Durée de validité mise à  jour.",
-          "save_error": "Erreur lors de la mise à  jour de la durée de validité.",
+          "saved": "Durée de validité mise à jour.",
+          "save_error": "Erreur lors de la mise à jour de la durée de validité.",
           "invalid_days": "Veuillez entrer un nombre de jours valide."
         },
         "columns": {
@@ -1971,7 +2058,7 @@
           "incertitude": "Incertitude",
           "validity_days": "Validité (jours)",
           "actions": "Actions",
-          "validated_at": "Valid? le"
+          "validated_at": "Validé le"
         },
         "validity_status": {
           "valid_days": "Valide (encore {days} jours)",
@@ -1984,7 +2071,11 @@
     },
     "description": "Gestion des sondes, calibrages et étalonnages",
     "loading": "Chargement...",
-    "title_with_count": "Gestion des sondes ({count, plural, one {# sonde} other {# sondes}})"
+    "title_with_count": "Gestion des sondes ({count, plural, one {# sonde} other {# sondes}})",
+    "tabs": {
+      "active": "Actives ({count})",
+      "archived": "Archivées ({count})"
+    }
   },
   "sensorAdjustmentImport": {
     "page": {
@@ -2005,11 +2096,11 @@
     "filters": {
       "site": "Site",
       "type": "Type",
-      "dateFrom": "Date de d?but",
+      "dateFrom": "Date de début",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage s?lectionn?e : {range}"
+      "selected_range": "Plage sélectionnée : {range}"
     },
     "table": {
       "title": "Fichiers d'ajustage/calibrage",
@@ -2034,7 +2125,7 @@
       "select_module": "Sélectionner un module"
     },
     "tooltips": {
-      "existing_assigned": "Module déjà  affecté à  cette sonde. Pour affecter cette sonde à  un nouveau module, rendez-vous sur la page de gestion des sondes et modifiez celle-ci.",
+      "existing_assigned": "Module déjà affecté à cette sonde. Pour affecter cette sonde à un nouveau module, rendez-vous sur la page de gestion des sondes et modifiez celle-ci.",
       "created_on_import": "Sonde créée durant l'import d'ajustage. Le module sélectionné dans le menu déroulant est affecté automatiquement. Pour en affecter un autre, rendez-vous sur la page de gestion des sondes."
     },
     "modal": {
@@ -2050,15 +2141,15 @@
     "toast": {
       "save_success": "{count} ligne(s) insérée(s) en base.",
       "save_error": "Erreur lors de l'insertion en base.",
-      "save_skipped": "{count} ligne(s) ignorée(s) car déjà  présentes.",
-      "no_pending": "Aucune ligne à  insérer.",
-      "confirm_adjustment_overwrite": "Des ajustages existent déjà  pour {count} sonde(s). Ils seront remplacés:",
-      "confirm_offset_clear": "Un offset est présent sur {count} sonde(s). Il sera remis à  0:",
+      "save_skipped": "{count} ligne(s) ignorée(s) car déjà présentes.",
+      "no_pending": "Aucune ligne à insérer.",
+      "confirm_adjustment_overwrite": "Des ajustages existent déjà pour {count} sonde(s). Ils seront remplacés:",
+      "confirm_offset_clear": "Un offset est présent sur {count} sonde(s). Il sera remis à 0:",
       "overwrite_done": "Ajustages remplacés pour {count} sonde(s).",
-      "offsets_cleared": "Offsets remis à  0 pour {count} sonde(s).",
+      "offsets_cleared": "Offsets remis à 0 pour {count} sonde(s).",
       "module_required": "Veuillez sélectionner un module.",
-      "created_sensors_from_adjustment": "Sondes créées suite à  l'ajustage : {count}",
-      "existing_sensors_with_module": "Sondes existantes déjà  affectées à  un module : {count}"
+      "created_sensors_from_adjustment": "Sondes créées suite à l'ajustage : {count}",
+      "existing_sensors_with_module": "Sondes existantes déjà affectées à un module : {count}"
     }
   },
   "sensorAdjustmentUpload": {
@@ -2102,12 +2193,12 @@
       "finish": "Fermer"
     },
     "placeholders": {
-      "review": "Étape de vérification à  venir.",
-      "create": "Étape de création à  venir."
+      "review": "Étape de vérification à venir.",
+      "create": "Étape de création à venir."
     },
     "validation": {
       "description": "Vérification du format XML et de l'encodage.",
-      "empty": "Aucun fichier à  vérifier.",
+      "empty": "Aucun fichier à vérifier.",
       "encoding": "Encodage détecté : {encoding}",
       "status": {
         "ok": "Format valide",
@@ -2136,46 +2227,61 @@
     "page": {
       "title": "Import d'étalonnage",
       "description": "Importer des fichiers XML pour créer des étalonnages",
-      "back_to_admin": "Retour à  l'administration",
+      "back_to_admin": "Retour à l'administration",
       "blocked_title": "Import d'étalonnage indisponible",
       "blocked_description": "Cette page n'est pas disponible avec votre licence actuelle."
     },
     "actions": {
       "import": "Importer des fichiers",
-      "save_to_db": "Insérer en base",
-      "saving_to_db": "Insertion en base...",
+      "save_to_db": "Valider l'import",
+      "saving_to_db": "Validation de l'import...",
       "edit": "Modifier",
       "cancel": "Annuler",
       "apply": "Appliquer",
       "clear_list": "Vider la liste",
-      "edit_selection": "Modifier la s?lection",
-      "select_all": "S?lectionner tout",
-      "select_row": "S?lectionner la ligne"
+      "delete_selection": "Supprimer la sélection",
+      "edit_selection": "Modifier la sélection",
+      "select_all": "Sélectionner tout",
+      "select_row": "Sélectionner la ligne",
+      "show_details": "Afficher les détails",
+      "hide_details": "Masquer les détails",
+      "view_reference_measures": "Mesures étalon"
     },
     "filters": {
       "site": "Site",
       "type": "Type",
-      "dateFrom": "Date de d?but",
+      "dateFrom": "Date de début",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage s?lectionn?e : {range}"
+      "selected_range": "Plage sélectionnée : {range}"
     },
     "table": {
       "title": "Fichiers d'étalonnage",
       "columns": {
         "file": "Fichier",
         "sensor": "Sonde",
+        "calibration_name": "Nom d'étalonnage",
         "date": "Date",
         "date_validity": "Date de validité",
         "operator": "Opérateur",
         "unit": "Unité",
         "uncertainty": "Incertitude",
         "actions": "Actions",
-        "validity_days": "Validite (jours)",
+        "details": "Détails",
+        "validity_days": "Validité (jours)",
         "err_justesse": "Erreur de justesse"
       },
-      "empty": "Veuillez importer un ou plusieurs fichier(s) d'étalonnage..."
+      "details": {
+        "operator": "Opérateur",
+        "unit": "Unité",
+        "reference_sensor": "Sonde étalon",
+        "certificate": "Certificat",
+        "organization": "Organisme",
+        "measure_count": "Nombre de mesures"
+      },
+      "empty": "Veuillez importer un ou plusieurs fichier(s) d'étalonnage...",
+      "sensor_missing": "Sonde introuvable en base"
     },
     "modal": {
       "title": "Importer un fichier d'étalonnage",
@@ -2185,14 +2291,35 @@
       "title": "Modifier les données",
       "operator": "Opérateur",
       "unit": "Unité",
-      "validity_days": "Validite (jours)",
-      "batch_helper": "Modification appliqu?e ? {count} ?talonnage(s)."
+      "validity_days": "Validité (jours)",
+      "calibration_name": "Nom d'étalonnage (facultatif)",
+      "calibration_name_helper": "Laissez vide pour ne pas nommer cet étalonnage.",
+      "batch_helper": "Modification appliquée à {count} étalonnage(s)."
+    },
+    "measures": {
+      "title": "Mesures étalon",
+      "description": "Mesures étalon importées pour la sonde {sensor}",
+      "empty": "Aucune mesure étalon n'est disponible pour cet étalonnage.",
+      "columns": {
+        "order": "Ordre",
+        "reference": "Mesure étalon",
+        "sensor": "Mesure sonde"
+      }
+    },
+    "recap": {
+      "save_hint": "{count} étalonnage(s) sont prêts. Cliquez sur \"Valider l'import\" pour les enregistrer en base."
+    },
+    "clear_confirm": {
+      "title": "Confirmer la suppression",
+      "description_selected": "Supprimer les {count} étalonnage(s) sélectionnés de la liste ?",
+      "description_all": "Vider toute la liste d'import ?"
     },
     "toast": {
       "save_success": "{count} ligne(s) insérée(s) en base.",
       "save_error": "Erreur lors de l'insertion en base.",
-      "save_skipped": "{count} ligne(s) ignorée(s) car déjà  présentes.",
-      "no_pending": "Aucune ligne à  insérer."
+      "save_skipped": "{count} ligne(s) ignorée(s) car déjà présentes.",
+      "no_pending": "Aucune ligne à insérer.",
+      "missing_sensor": "{count} étalonnage(s) référencent une sonde qui n'existe pas encore en base."
     }
   },
   "sensorCalibrationUpload": {
@@ -2236,12 +2363,12 @@
       "finish": "Fermer"
     },
     "placeholders": {
-      "review": "Étape de vérification à  venir.",
-      "create": "Étape de création à  venir."
+      "review": "Étape de vérification à venir.",
+      "create": "Étape de création à venir."
     },
     "validation": {
       "description": "Vérification du format XML et de l'encodage.",
-      "empty": "Aucun fichier à  vérifier.",
+      "empty": "Aucun fichier à vérifier.",
       "encoding": "Encodage détecté : {encoding}",
       "status": {
         "ok": "Format valide",
@@ -2283,7 +2410,7 @@
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage s?lectionn?e : {range}"
+      "selected_range": "Plage sélectionnée : {range}"
     },
     "table": {
       "columns": {
@@ -2291,7 +2418,7 @@
         "certificate_date": "Date certificat",
         "state": "État actuel"
       },
-      "search_placeholder": "NÂ° série, état...",
+      "search_placeholder": "N° série, état...",
       "empty": "Aucun étalon trouvé"
     },
     "state": {
@@ -2304,7 +2431,7 @@
     },
     "archive": {
       "title": "Confirmer l'archivage",
-      "description": "Êtes-vous sà»r de vouloir archiver cet étalon ? Cette action ne pourra pas être annulée.",
+      "description": "Êtes-vous sûr de vouloir archiver cet étalon ? Cette action ne pourra pas être annulée.",
       "cancel": "Annuler",
       "confirm": "Archiver"
     },
@@ -2321,8 +2448,8 @@
       "archive": "Archiver"
     },
     "archive_blocked_title": "Archivage impossible",
-    "archive_blocked_fallback": "Ce site est encore lié à  d'autres éléments.",
-    "archive_blocked_detail": "{count, plural, one {Ce site est lié à  # lieu.} other {Ce site est lié à  # lieux.}}",
+    "archive_blocked_fallback": "Ce site est encore lié à d'autres éléments.",
+    "archive_blocked_detail": "{count, plural, one {Ce site est lié à # lieu.} other {Ce site est lié à # lieux.}}",
     "errors": {
       "no_site_selected": "Aucun site sélectionné"
     },
@@ -2334,7 +2461,11 @@
       "archive_success": "Site archivé avec succès",
       "archive_error": "Erreur lors de l'archivage du site"
     },
-    "description": "Créez, modifiez et archivez les sites de votre infrastructure"
+    "description": "Créez, modifiez et archivez les sites de votre infrastructure",
+    "tabs": {
+      "active": "Actifs ({count})",
+      "archived": "Archivés ({count})"
+    }
   },
   "sitesDialog": {
     "create_title": "Créer un nouveau site",
@@ -2342,7 +2473,7 @@
     "edit_title": "Modifier le site",
     "edit_description": "Modifiez les informations du site",
     "archive_title": "Archiver le site",
-    "archive_description": "Êtes-vous sà»r de vouloir archiver le site {code} ? Cette action ne peut être annulée.",
+    "archive_description": "Êtes-vous sûr de vouloir archiver le site {code} ? Cette action ne peut être annulée.",
     "submit_create": "Créer",
     "submit_creating": "Création...",
     "submit_updating": "Modification...",
@@ -2351,14 +2482,27 @@
     "fields": {
       "code_label": "Code site",
       "code_placeholder": "Ex: SITE01",
-      "label_label": "Libellé site",
+      "label_label": "Nom du site",
       "label_placeholder": "Ex: Site principal",
       "comment_label": "Commentaires",
       "comment_placeholder": "Ajouter des commentaires..."
     },
     "validation": {
       "code_required": "Code site requis",
-      "label_required": "Libellé site requis"
+      "label_required": "Nom du site requis"
+    },
+    "tabs": {
+      "general": "Création du site",
+      "users": "Utilisateurs affectés"
+    },
+    "users": {
+      "title": "Utilisateurs du site",
+      "empty": "Aucun utilisateur disponible.",
+      "assigned": "Déjà affecté à ce site"
+    },
+    "actions": {
+      "check_all": "Tout cocher",
+      "uncheck_all": "Tout décocher"
     }
   },
   "audio": {
@@ -2370,14 +2514,14 @@
     "not_found_badge": "Erreur 404",
     "not_found_title": "Page introuvable",
     "not_found_description": "La page que vous recherchez n'existe pas ou a été déplacée.",
-    "back_home": "Retour à  l'accueil",
+    "back_home": "Retour à l'accueil",
     "retry": "Réessayer",
     "system_status": "Statut système",
     "monitoring_live": "Surveillance en cours",
     "connected": "Connecté",
     "forbidden_badge": "Accès restreint",
     "forbidden_title": "Accès refusé",
-    "forbidden_description": "Vous n'avez pas l'autorisation d'accéder à  cette page.",
+    "forbidden_description": "Vous n'avez pas l'autorisation d'accéder à cette page.",
     "forbidden_helper": "Si vous pensez qu'il s'agit d'une erreur, contactez un administrateur.",
     "server_error_badge": "Incident détecté",
     "server_error_title": "Erreur serveur",
@@ -2386,7 +2530,7 @@
   },
   "login": {
     "title": "Connexion",
-    "subtitle": "Accédez à  votre système de surveillance environnementale",
+    "subtitle": "Accédez à votre système de surveillance environnementale",
     "card": {
       "title": "Authentification",
       "description": "Entrez vos identifiants pour accéder au système",
@@ -2449,13 +2593,18 @@
       },
       "redirect_error": "Erreur lors de la redirection",
       "security_error": "Erreur de sécurité"
+    },
+    "expiry_warning_dialog": {
+      "title": "Changement de mot de passe bientôt requis",
+      "description": "Votre mot de passe devra être changé dans {count, plural, one {{count} jour} other {{count} jours}}.",
+      "continue": "Continuer"
     }
   },
   "resetPassword": {
     "invalid_link": {
       "title": "Lien invalide",
-      "description": "Le lien de réinitialisation est invalide ou incomplet. Veuillez utiliser le lien complet reà§u par email.",
-      "back": "Retour à  la connexion"
+      "description": "Le lien de réinitialisation est invalide ou incomplet. Veuillez utiliser le lien complet reçu par email.",
+      "back": "Retour à la connexion"
     },
     "success": {
       "title": "Mot de passe réinitialisé !",
@@ -2480,7 +2629,7 @@
       "password_mismatch": "Les mots de passe ne correspondent pas"
     },
     "errors": {
-      "missing_token": "Token manquant. Veuillez utiliser le lien complet reà§u par email.",
+      "missing_token": "Token manquant. Veuillez utiliser le lien complet reçu par email.",
       "rules_not_met": "Veuillez respecter toutes les règles de mot de passe.",
       "generic": "Une erreur est survenue. Veuillez réessayer."
     }
@@ -2494,7 +2643,7 @@
       "link": "Validation du lien..."
     },
     "actions": {
-      "back_to_login": "Retour à  la connexion",
+      "back_to_login": "Retour à la connexion",
       "submit": "Changer le mot de passe",
       "submitting": "Changement en cours..."
     },
@@ -2532,18 +2681,18 @@
     "filters": {
       "site": "Site",
       "type": "Type",
-      "dateFrom": "Date de d?but",
+      "dateFrom": "Date de début",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage s?lectionn?e : {range}"
+      "selected_range": "Plage sélectionnée : {range}"
     },
     "table": {
       "columns": {
         "type": "Type",
         "location_sensor": "Lieu / Sonde",
         "last_value": "Dernière valeur",
-        "triggered_value": "Valeur qui a d?clench?",
+        "triggered_value": "Valeur qui a déclenché",
         "thresholds": "Consignes sup/inf",
         "triggered": "Déclenchée",
         "status": "Statut",
@@ -2563,11 +2712,11 @@
     "active_alarms": {
       "title": "Alarmes actives",
       "view_all": "Toutes les alarmes",
-      "empty": "Aucune alarme active - Tout est sous contrà´le"
+      "empty": "Aucune alarme active - Tout est sous contrôle"
     },
     "trend": {
       "title": "Tendance des alarmes",
-      "subtitle": "Dernières 24h",
+      "subtitle": "Derniers 7j",
       "count": "{count} alarme(s)",
       "details": "Détails"
     },
@@ -2587,6 +2736,29 @@
       "active": "Active",
       "acknowledged": "Acquittée",
       "resolved": "Résolue"
+    },
+    "trend_by_location": {
+      "title": "Alarmes par lieu",
+      "description": "Vue consolidée des alarmes des 7 derniers jours, regroupées par lieu.",
+      "search_placeholder": "Rechercher un lieu ou un site...",
+      "empty": "Aucune alarme trouvée sur la période.",
+      "columns": {
+        "location": "Lieu",
+        "total": "Alarmes 7j",
+        "active": "Actives",
+        "types": "Répartition",
+        "last_triggered": "Dernière alarme"
+      },
+      "stats": {
+        "locations": "Lieux concernés",
+        "total_alarms": "Alarmes sur 7 jours",
+        "active_locations": "Lieux avec alarmes actives",
+        "active_locations_help": "Au moins une alarme encore ouverte"
+      },
+      "meta": {
+        "title": "Alarmes par lieu",
+        "description": "Visualisation des alarmes regroupées par lieu sur les 7 derniers jours."
+      }
     }
   },
   "profilesTable": {
@@ -2606,22 +2778,27 @@
     "actions": {
       "new": "Nouveau profil",
       "edit": "Modifier",
-      "delete": "Supprimer"
+      "delete": "Supprimer",
+      "archive": "Archiver"
     },
     "placeholders": {
       "na": "-"
     },
     "search_placeholder": "Nom du profil...",
-    "empty": "Aucun profil trouvé"
+    "empty": "Aucun profil trouvé",
+    "tabs": {
+      "active": "Actifs ({count})",
+      "archived": "Archivés ({count})"
+    }
   },
   "deleteProfileDialog": {
-    "title": "Supprimer le profil",
-    "description": "Êtes-vous sà»r de vouloir supprimer le profil \"{name}\" ?",
-    "blocked": "Attention : {count, plural, one {# utilisateur utilise} other {# utilisateurs utilisent}} ce profil. La suppression est impossible.",
+    "title": "Archiver le profil",
+    "description": "Êtes-vous sûr de vouloir archiver le profil \"{name}\" ?",
+    "blocked": "Attention : {count, plural, one {# utilisateur utilise} other {# utilisateurs utilisent}} ce profil. L'archivage est impossible.",
     "actions": {
       "cancel": "Annuler",
-      "delete": "Supprimer",
-      "deleting": "Suppression..."
+      "delete": "Archiver",
+      "deleting": "Archivage..."
     }
   },
   "userAccessDialog": {
@@ -2669,11 +2846,11 @@
     "filters": {
       "site": "Site",
       "type": "Type",
-      "dateFrom": "Date de d?but",
+      "dateFrom": "Date de début",
       "dateTo": "Date de fin",
       "allSites": "Tous les sites",
       "allTypes": "Tous les types",
-      "selected_range": "Plage s?lectionn?e : {range}"
+      "selected_range": "Plage sélectionnée : {range}"
     },
     "table": {
       "columns": {
@@ -2681,7 +2858,18 @@
         "value": "VALEUR",
         "lower_threshold": "CONSIGNE INF",
         "upper_threshold": "CONSIGNE SUP",
-        "status": "STATUT"
+        "status": "STATUT",
+        "serial": "Numéro de série"
+      },
+      "multi_tabs": {
+        "button": "Export multi-onglets",
+        "button_loading": "Export...",
+        "presentation_sheet": "Présentation",
+        "measurements_sheet": "Mesures",
+        "presentation_columns": {
+          "label": "Champ",
+          "value": "Valeur"
+        }
       },
       "status": {
         "out_of_range": "Hors limites",
@@ -2691,12 +2879,46 @@
       "empty": "Aucune mesure",
       "empty_with_range": "Veuillez sélectionner 2 dates pour voir les mesures"
     },
+    "export": {
+      "defaults": {
+        "not_available": "Non disponible",
+        "no_range": "Aucune plage sélectionnée"
+      },
+      "state": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "presentation": {
+        "location": "Lieu",
+        "sensor_serial": "Numéro de série sonde",
+        "selected_range": "Plage sélectionnée",
+        "surveillance": "Surveillance",
+        "unit": "Unité",
+        "upper_threshold": "Consigne supérieure",
+        "target_threshold": "Consigne",
+        "lower_threshold": "Consigne inférieure",
+        "pre_alarm_upper": "Pré-alarme supérieure",
+        "pre_alarm_lower": "Pré-alarme inférieure",
+        "battery": "Batterie",
+        "rssi": "RSSI",
+        "voltage": "Tension",
+        "graph_points": "Points du graphique",
+        "table_measurements": "Mesures du tableau",
+        "last_measure_time": "Date/heure dernière mesure",
+        "last_measure_value": "Dernière valeur"
+      }
+    },
     "chart": {
       "over_high": "Zone dépassement haut",
       "over_low": "Zone dépassement bas",
       "measures": "Mesures ({unit})",
+      "audit_markers": "Audits",
+      "audit_marker_count": "{count} événement(s) d'audit",
+      "show_audit_markers": "Afficher les audits sur le graphique",
       "show_no_response": "Afficher les non-réponses",
-      "measure_count": "Mesures dans le graphique: {count}"
+      "measure_count": "Mesures dans le graphique: {count}",
+      "drag_zoom_hint": "Molette pour zoomer, glisser pour se déplacer, double-clic pour réinitialiser.",
+      "reset_zoom": "Réinitialiser le zoom"
     },
     "tooltip": {
       "value": "Valeur: {value}{unit}",
@@ -2760,24 +2982,24 @@
       "title": "Paramètres CFR21 (conformité réglementaire)",
       "enabled": {
         "label": "Norme CFR21 activée",
-        "helper": "Active les contrà´les de conformité réglementaire (expiration et historique des mots de passe)"
+        "helper": "Active les contrôles de conformité réglementaire (expiration et historique des mots de passe)"
       },
       "expiry": {
         "label": "Durée de validité des mots de passe",
-        "helper": "Les mots de passe expirent après {days} jours conformément à  la norme CFR21",
+        "helper": "Les mots de passe expirent après {days} jours conformément à la norme CFR21",
         "value": "{days} jours"
       }
     },
     "toast": {
-      "save_success": "Règles de mot de passe mises à  jour avec succès",
+      "save_success": "Règles de mot de passe mises à jour avec succès",
       "save_error": "Erreur lors de la sauvegarde des règles",
-      "cfr21_success": "Paramètre CFR21 mis à  jour",
-      "cfr21_error": "Erreur lors de la mise à  jour CFR21"
+      "cfr21_success": "Paramètre CFR21 mis à jour",
+      "cfr21_error": "Erreur lors de la mise à jour CFR21"
     }
   },
   "versionChangelog": {
     "title": "Nouvelle version {version}",
-    "description": "Nouveautés principales et changements à  connaà®tre.",
+    "description": "Nouveautés principales et changements à connaître.",
     "sections": {
       "upgrade": {
         "title": "Upgrade de licence",
@@ -2789,7 +3011,7 @@
       "services": {
         "title": "Services MC2",
         "items": {
-          "0": "Nouveau hub Services MC2 avec accès à  l'upgrade, au matériel et aux actualités."
+          "0": "Nouveau hub Services MC2 avec accès à l'upgrade, au matériel et aux actualités."
         }
       }
     }
@@ -2807,7 +3029,7 @@
     },
     "hero": {
       "eyebrow": "Services MC2",
-      "title": "Accédez à ",
+      "title": "Accédez à",
       "titleHighlight": "nos services",
       "subtitle": "Upgrade, matériel et actualités pour aller plus loin avec VigiSensys.",
       "ctaPrimary": "Upgrade de licence",
@@ -2818,7 +3040,7 @@
       "title": "Votre hub professionnel pour vos besoins",
       "subtitle": "Nous centralisons l'upgrade, le matériel et l'information pour accélérer vos projets.",
       "items": {
-        "0": "Licences et options adaptées à  vos sites",
+        "0": "Licences et options adaptées à vos sites",
         "1": "Matériel validé pour les déploiements VigiSensys",
         "2": "Actualités, releases et bonnes pratiques"
       }
@@ -2826,7 +3048,7 @@
     "cards": {
       "upgrade": {
         "title": "Upgrade de licence",
-        "description": "Passez à  VigiSensys Standard et débloquez la métrologie avancée.",
+        "description": "Passez à VigiSensys Standard et débloquez la métrologie avancée.",
         "tag": "Licences",
         "cta": "Découvrir l'upgrade"
       },
@@ -2867,7 +3089,7 @@
     },
     "contact": {
       "title": "Transmission commerciale",
-      "smtpDescription": "Le PDF est joint automatiquement à  l'email envoyé au service commercial MC2.",
+      "smtpDescription": "Le PDF est joint automatiquement à l'email envoyé au service commercial MC2.",
       "mailtoDescription": "Si aucun serveur mail n'est configuré, le PDF est préparé et votre messagerie locale s'ouvre avec un mail pré-rempli.",
       "footer": "La demande est transmise directement au service commercial MC2."
     },
@@ -2890,7 +3112,7 @@
       "customerNumberEmpty": "Non renseigné",
       "totalReferences": "Références",
       "emailDelivery": "Envoi par mail avec PDF en pièce jointe",
-      "mailtoDelivery": "Préparation manuelle par mailto avec PDF à  joindre",
+      "mailtoDelivery": "Préparation manuelle par mailto avec PDF à joindre",
       "kindModule": "Module",
       "kindSensor": "Sonde"
     },
@@ -2920,7 +3142,7 @@
         "successTitle": "Demande envoyée",
         "failureTitle": "Envoi impossible",
         "preparedTitle": "Demande préparée",
-        "countdown": "Le téléchargement du PDF d?marrera automatiquement dans {seconds} seconde(s).",
+        "countdown": "Le téléchargement du PDF démarrera automatiquement dans {seconds} seconde(s).",
         "downloadHint": "Si le téléchargement n'a pas commencé, utilisez le bouton ci-dessous.",
         "downloadNow": "Télécharger le PDF",
         "close": "Fermer",
@@ -2962,13 +3184,13 @@
     "note": {
       "title": "Besoin d'une synthèse ?",
       "subtitle": "Nous pouvons partager un point mensuel personnalisé.",
-      "cta": "Parler à  un expert"
+      "cta": "Parler à un expert"
     }
   },
   "upgrade": {
     "meta": {
       "title": "VigiSensys | Upgrade de licence",
-      "description": "Passez à  une métrologie plus intelligente avec VigiSensys. Comparez Pack, One, Standard et Expert pour choisir le bon niveau."
+      "description": "Passez à une métrologie plus intelligente avec VigiSensys. Comparez Pack, One, Standard et Expert pour choisir le bon niveau."
     },
     "nav": {
       "pourquoi": "Pourquoi upgrader",
@@ -2996,16 +3218,16 @@
     "hero": {
       "eyebrow": "Upgrade de licence",
       "title": "VigiSensys",
-      "leadPrefix": "Passez à  une",
+      "leadPrefix": "Passez à une",
       "titleHighlight": "métrologie plus intelligente",
-      "subtitle": "Du Pack à  l'Expert, passez de la surveillance à  la métrologie avancée.",
+      "subtitle": "Du Pack à l'Expert, passez de la surveillance à la métrologie avancée.",
       "subtitleHighlights": {
         "0": "Surveillance.",
         "1": "Métrologie.",
         "2": "Conformité."
       },
       "tagline": "Vos données restent chez vous.",
-      "ctaPrimary": "Passer à  Standard",
+      "ctaPrimary": "Passer à Standard",
       "ctaSecondary": "Comparer les licences",
       "scroll": "Faites défiler pour découvrir"
     },
@@ -3069,7 +3291,7 @@
           "description": "Détection instantanée des écarts"
         },
         "2": {
-          "title": "Traà§abilité métrologique",
+          "title": "Traçabilité métrologique",
           "description": "Historique complet et auditable"
         },
         "3": {
@@ -3082,10 +3304,10 @@
       "eyebrow": "Pourquoi upgrader",
       "titleLine1": "Passez d'une surveillance",
       "titleHighlight": "\"constat\"",
-      "typewriter": "à  une métrologie",
+      "typewriter": "à une métrologie",
       "flip": {
         "0": "sécurisée",
-        "1": "maà®trisée",
+        "1": "maîtrisée",
         "2": "tracée"
       },
       "subtitle": "Quatre licences, un chemin clair vers la métrologie avancée.",
@@ -3107,7 +3329,7 @@
         },
         "3": {
           "title": "Qualité & conformité",
-          "description": "CFR 21 part 11, traà§abilité et résultats d'étalonnage.",
+          "description": "CFR 21 part 11, traçabilité et résultats d'étalonnage.",
           "badge": "Standard"
         },
         "4": {
@@ -3196,7 +3418,7 @@
         "title": "Pourquoi c'est sécurisé",
         "items": {
           "0": "Données chez vous uniquement",
-          "1": "Contrà´le d'accès granulaire",
+          "1": "Contrôle d'accès granulaire",
           "2": "Logs et audit complets"
         }
       },
@@ -3219,10 +3441,10 @@
         "cardTitle": "Plan du site",
         "title": "Cartographie des sondes",
         "description": "Visualisez vos lieux critiques en un coup d'Å“il.",
-        "imageAlt": "Aperà§u cartographie des sondes"
+        "imageAlt": "Aperçu cartographie des sondes"
       },
       "features": {
-        "0": "Associez chaque sonde à  un lieu",
+        "0": "Associez chaque sonde à un lieu",
         "1": "Visualisez les zones critiques",
         "2": "Retrouvez rapidement l'origine d'une alarme"
       },
@@ -3231,15 +3453,15 @@
     "licenses": {
       "eyebrow": "Licences",
       "title": "Tableau comparatif des licences",
-      "subtitle": "Choisissez le niveau qui correspond à  vos besoins.",
+      "subtitle": "Choisissez le niveau qui correspond à vos besoins.",
       "filters": {
         "site": "Site",
         "type": "Type",
-        "dateFrom": "Date de d?but",
+        "dateFrom": "Date de début",
         "dateTo": "Date de fin",
         "allSites": "Tous les sites",
         "allTypes": "Tous les types",
-      "selected_range": "Plage s?lectionn?e : {range}"
+        "selected_range": "Plage sélectionnée : {range}"
       },
       "table": {
         "feature": "Fonctionnalité",
@@ -3294,14 +3516,14 @@
       "titleHighlight": "Standard",
       "titleSuffix": " : ce que vous obtenez concrètement",
       "subtitle": "Un socle complet de métrologie, conformité et pilotage.",
-      "preview": "Aperà§u {title}",
+      "preview": "Aperçu {title}",
       "blocks": {
         "0": {
           "title": "EMT par lieu + conformité",
           "bullets": {
             "0": "Définition des EMT par lieu",
             "1": "CFR 21 part 11",
-            "2": "Traà§abilité complète",
+            "2": "Traçabilité complète",
             "3": "Paramétrage qualité centralisé"
           }
         },
@@ -3335,14 +3557,14 @@
       }
     },
     "expert": {
-      "badge": "Bientà´t disponible",
+      "badge": "Bientôt disponible",
       "titleHighlight": "Expert",
       "titleSuffix": " : la plateforme intelligente",
       "subtitle": "Toutes les fonctionnalités Standard + automatisation, IA et pilotage expert.",
       "cards": {
         "0": {
           "title": "Calcul d'incertitude",
-          "description": "Paramétrage du calcul et traà§abilité complète."
+          "description": "Paramétrage du calcul et traçabilité complète."
         },
         "1": {
           "title": "Étalonnage multi-point",
@@ -3362,7 +3584,7 @@
     "faq": {
       "eyebrow": "Sécurité & On-Premise",
       "title": "Questions fréquentes",
-      "subtitle": "Tout ce que vous devez savoir avant de passer à  Standard.",
+      "subtitle": "Tout ce que vous devez savoir avant de passer à Standard.",
       "items": {
         "0": {
           "question": "Les données sortent-elles de notre site ?",
@@ -3374,23 +3596,23 @@
         },
         "2": {
           "question": "Comment se passe l'upgrade ?",
-          "answer": "Simple : nouvelle clé de licence et éventuel redémarrage des services. Vous pouvez passer de Pack à  One, Standard ou Expert sans perte de données."
+          "answer": "Simple : nouvelle clé de licence et éventuel redémarrage des services. Vous pouvez passer de Pack à One, Standard ou Expert sans perte de données."
         },
         "3": {
           "question": "Quel support MC2 est disponible ?",
           "answer": "Support technique, interventions sur site, formation. Options personnalisables selon vos besoins."
         },
         "4": {
-          "question": "Quelle est la politique de mises à  jour ?",
-          "answer": "Mises à  jour incluses dans la licence active. Déploiement contrà´lé par vos équipes IT, à  votre rythme."
+          "question": "Quelle est la politique de mises à jour ?",
+          "answer": "Mises à jour incluses dans la licence active. Déploiement contrôlé par vos équipes IT, à votre rythme."
         }
       }
     },
     "contact": {
-      "title": "Prêt à  passer à  la métrologie avancée ?",
+      "title": "Prêt à passer à la métrologie avancée ?",
       "subtitle": "Contactez-nous pour une démonstration ou un devis personnalisé.",
       "ctaPrimary": "Demander un devis",
-      "ctaSecondary": "Parler à  un expert",
+      "ctaSecondary": "Parler à un expert",
       "labels": {
         "email": "Email",
         "phone": "Téléphone",
@@ -3470,7 +3692,8 @@
     "surveillance": {
       "active": "En surveillance",
       "disabled": "Surveillance désactivée",
-      "disabled_until": "Surveillance désactivée jusqu'au {date}"
+      "disabled_until": "Surveillance désactivée jusqu'au {date}",
+      "disabled_since": "Surveillance désactivée depuis le {date}"
     },
     "alarms": {
       "disabled": "Alarmes désactivées",
@@ -3483,7 +3706,9 @@
       "measures": "Mesures ({unit})",
       "target": "Consigne ({unit})",
       "upper_threshold": "Consigne sup. ({unit})",
-      "lower_threshold": "Consigne inf. ({unit})"
+      "lower_threshold": "Consigne inf. ({unit})",
+      "upper_pre_alarm": "Pré-alarme sup. ({unit})",
+      "lower_pre_alarm": "Pré-alarme inf. ({unit})"
     },
     "mobile": {
       "graph_in_details_title": "Graphique disponible dans le détail",
@@ -3558,6 +3783,9 @@
       "comment_placeholder": "Ajouter un commentaire (optionnel)",
       "cancel": "Annuler",
       "confirm": "Acquitter"
+    },
+    "observations": {
+      "empty": "Aucune observation"
     }
   },
   "adminDashboard": {
@@ -3598,7 +3826,7 @@
       "access": "Accéder"
     },
     "loading": "Chargement des données...",
-    "updating": "Mise à  jour...",
+    "updating": "Mise à jour...",
     "pagination": {
       "page": "Page {page} sur {pages}",
       "page_size_label": "Taille de page",
@@ -3677,9 +3905,9 @@
       }
     },
     "unassigned": {
-      "title": "Sondes sans lieu actif",
-      "description": "{count, plural, one {# sonde non affectée à  un lieu actif} other {# sondes non affectées à  un lieu actif}}",
-      "empty": "Aucune sonde sans lieu actif",
+      "title": "Sondes sans lieu",
+      "description": "{count, plural, one {# sonde sans lieu actif} other {# sondes sans lieu actif}}",
+      "empty": "Aucune sonde sans lieu",
       "columns": {
         "sensor": "Sonde",
         "type": "Type",
@@ -3700,26 +3928,26 @@
         "connectedUsers": "Utilisateurs connectes",
         "systemLogs": "Journal d'audit",
         "backups": "Sauvegardes",
-        "unassigned": "Sondes non affectees",
+        "unassigned": "Sondes sans lieu",
         "etalons": "Etalons"
       }
     },
     "actions": {
-      "open_page": "Accéder à  la page"
+      "open_page": "Accéder à la page"
     },
     "summary": {
       "alarms_title": "Alarmes",
-      "alarms_description": "En cours: {inProgress} â€¢ En attente d'acquittement: {pending}",
+      "alarms_description": "En cours: {inProgress} - En attente d'acquittement: {pending}",
       "alarms_helper": "Alarmes en attente d'acquittement: {pending}"
     }
   },
   "cacheControls": {
-    "title": "Contrà´les cache",
+    "title": "Contrôles cache",
     "last_revalidated": "Dernière invalidation : {time}",
     "status_active": "Cache actif - données ultra rapides",
     "actions": {
-      "refresh": "Rafraà®chir",
-      "refresh_title": "Rafraà®chir les données depuis le cache",
+      "refresh": "Rafraîchir",
+      "refresh_title": "Rafraîchir les données depuis le cache",
       "invalidate": "Invalider cache",
       "invalidate_title": "Invalider le cache et recharger depuis la base"
     }
@@ -3729,7 +3957,7 @@
       "badge": "{count, plural, one {# alarme} other {# alarmes}}",
       "banner": "{count, plural, one {# alarme active} other {# alarmes actives}}",
       "view": "Voir les alarmes",
-      "already_here": "Vous êtes déjà  sur la page des alarmes"
+      "already_here": "Vous êtes déjà sur la page des alarmes"
     }
   },
   "alarmsTanstack": {
@@ -3743,7 +3971,11 @@
       "all": "Tous",
       "high": "Haut",
       "low": "Bas",
-      "no_response": "Non réponse"
+      "no_response": "Non réponse",
+      "all_sites": "Tous les sites",
+      "all_locations": "Tous les lieux",
+      "site_placeholder": "Filtrer par site",
+      "location_placeholder": "Filtrer par lieu"
     },
     "acknowledge_success": "Alarme acquittée avec succès",
     "acknowledge_error": "Erreur lors de l'acquittement",
@@ -3762,7 +3994,10 @@
       "status": "État",
       "count_30": "Alarmes 30j",
       "end": "Fin alarme",
-      "acknowledged": "Acquittée"
+      "acknowledged": "Acquittée",
+      "triggered_value": "Valeur de déclenchement",
+      "period": "Début / fin",
+      "duration": "Durée"
     },
     "status": {
       "awaiting_ack": "En attente d'acquittement",
@@ -3779,6 +4014,19 @@
       "na": "-",
       "acknowledged": "Acquittée",
       "not_acknowledged": "Non acquittée"
+    },
+    "bulk": {
+      "select_visible": "Sélectionner les alarmes visibles",
+      "select_one": "Sélectionner cette alarme",
+      "acknowledge_selected": "Acquitter la sélection ({count})",
+      "dialog_title": "Acquitter plusieurs alarmes",
+      "dialog_description": "Cette action acquittera {count} alarme(s) sélectionnée(s).",
+      "comment_label": "Commentaire",
+      "confirm": "Acquitter la sélection",
+      "confirming": "Acquittement...",
+      "success": "{count} alarme(s) acquittée(s).",
+      "partial_success": "{success} alarme(s) sur {total} ont été acquittées.",
+      "error": "Impossible d'acquitter la sélection."
     }
   },
   "globalAppEffects": {
@@ -3815,6 +4063,14 @@
     "empty": "Aucun résultat",
     "results": "{count} résultat(s)",
     "export": "Exporter",
+    "export_count_prompt": {
+      "message": "Combien de mesures exporter ? (1 à {max})",
+      "invalid": "Valeur invalide. Entrez un nombre entre 1 et {max}."
+    },
+    "export_columns": {
+      "title": "Colonnes à exporter",
+      "at_least_one": "Sélectionnez au moins une colonne."
+    },
     "print": "Imprimer",
     "pagination": {
       "summary": "Page {current} sur {total} - Total: {count}",
@@ -3930,8 +4186,8 @@
   },
   "sitesTable": {
     "columns": {
-      "site": "Site",
-      "description": "Description",
+      "site": "Code site",
+      "description": "Nom du site",
       "comments": "Commentaires"
     },
     "placeholders": {
@@ -4039,6 +4295,10 @@
       "min_lowercase": "Au moins {count} minuscule{count, plural, one {} other {s}}",
       "min_numbers": "Au moins {count} chiffre{count, plural, one {} other {s}}",
       "min_special": "Au moins {count} caractère spécial{count, plural, one {} other {ux}}"
+    },
+    "tabs": {
+      "active": "Actifs ({count})",
+      "archived": "Archivés ({count})"
     }
   },
   "createUserDialog": {
@@ -4114,10 +4374,10 @@
       "load_more": "Charger les messages précédents",
       "send_error": "Échec de l'envoi du message",
       "load_more_error": "Impossible de charger les messages précédents",
-      "pdf_preview_unavailable": "Aperà§u indisponible. Ouvrir le fichier pour le consulter.",
-      "spreadsheet_preview_unavailable": "Aperà§u du tableur indisponible. Télécharger le fichier pour le consulter.",
-      "text_preview_unavailable": "Aperà§u du fichier texte indisponible.",
-      "office_preview_unavailable": "Aperà§u non disponible pour ce format Office.",
+      "pdf_preview_unavailable": "Aperçu indisponible. Ouvrir le fichier pour le consulter.",
+      "spreadsheet_preview_unavailable": "Aperçu du tableur indisponible. Télécharger le fichier pour le consulter.",
+      "text_preview_unavailable": "Aperçu du fichier texte indisponible.",
+      "office_preview_unavailable": "Aperçu non disponible pour ce format Office.",
       "status_sent": "Envoyé",
       "status_read": "Lu",
       "open_details": "Voir les détails"
@@ -4152,7 +4412,7 @@
     "details": {
       "sheet_title": "Détails",
       "user_profile_title": "Profil",
-      "member_since": "Membre depuis",
+      "member_since": "Conversation rejointe depuis",
       "joined_conversation": "A rejoint le",
       "members_section": "Membres",
       "documents_section": "Documents partagés",
@@ -4205,7 +4465,7 @@
       },
       "actions": {
         "test": "Tester",
-        "open_tool": "Accéder à  {title}"
+        "open_tool": "Accéder à {title}"
       },
       "guide": {
         "title": "Comment utiliser les tests de performance ?",
@@ -4348,7 +4608,7 @@
       },
       "cache_tags": {
         "title": "Cache tags utilisés",
-        "users": "Liste complète des utilisateurs avec leurs rà´les"
+        "users": "Liste complète des utilisateurs avec leurs rôles"
       },
       "stats": {
         "total": "Total",
@@ -4379,14 +4639,15 @@
       "news": "Actualites MC2"
     },
     "hero": {
-      "eyebrow": "Transport contrà´le",
+      "eyebrow": "Transport contrôle",
       "title": "Pilotage VigiLog",
       "description": "Préparez les configurations de VigiLog, lancez les tournées au départ, réceptionnez les retours et suivez les alarmes."
     },
     "stats": {
       "configurations": "Configurations",
       "pending": "En attente de réception",
-      "alarms": "Tournées en alarme"
+      "alarms": "Tournées en alarme",
+      "occasionalUsage": "Usages ponctuels"
     },
     "tabs": {
       "movements": "Départ / Arrivée",
@@ -4405,14 +4666,14 @@
       "loading": "Chargement...",
       "cancel": "Annuler",
       "disabled": "Désactivé",
-      "updatedAt": "Dernière mise à  jour",
+      "updatedAt": "Dernière mise à jour",
       "noDescription": "Aucune description",
       "frequencyBadge": "{count} min",
       "delayBadge": "Retard {count} min"
     },
     "departure": {
       "title": "Départ",
-      "description": "Sélectionnez une configuration, les sites et le VigiLog à  préparer avant transport.",
+      "description": "Sélectionnez une configuration, les sites et le VigiLog à préparer avant transport.",
       "fields": {
         "configuration": "Configuration",
         "loggerSerial": "Numéro de série VigiLog",
@@ -4438,7 +4699,7 @@
       },
       "loggerRegistered": {
         "title": "VigiLog enregistré",
-        "description": "Le VigiLog {serial} est deja enregistré dans le registre."
+        "description": "Le VigiLog {serial} est déjà enregistré dans le registre."
       },
       "loggerUnknown": {
         "title": "VigiLog non enregistré",
@@ -4457,7 +4718,7 @@
         "errorTitle": "État du VigiLog indisponible",
         "errorDescription": "Impossible de vérifier l'état de la base VigiLog.",
         "busyTitle": "Communication avec le VigiLog en cours",
-        "busyDescription": "La base est deja utilisee pour une operation VigiLog. Patientez jusqu'à  la fin de la préparation ou de la lecture.",
+        "busyDescription": "La base est déjà utilisée pour une operation VigiLog. Patientez jusqu'à la fin de la préparation ou de la lecture.",
         "optionalHint": "La création de tournée reste possible sans base USB. La préparation du VigiLog sur base est une action distincte."
       }
     },
@@ -4513,7 +4774,7 @@
       "placeholders": {
         "note": "Informations utiles pour cet usage ponctuel"
       },
-      "noteHint": "Cette note est informative cà´té interface. Elle n'est pas enregistrée en base pour l'instant.",
+      "noteHint": "Cette note est informative côté interface. Elle n'est pas enregistrée en base pour l'instant.",
       "actions": {
         "prepare": "Préparer le VigiLog"
       }
@@ -4585,7 +4846,7 @@
         "details": "Détails",
         "cancelTour": "Annuler la tournée"
       },
-      "empty": "Aucune tournée à  afficher.",
+      "empty": "Aucune tournée à afficher.",
       "alarm": "Alarme sur {duration}",
       "traffic": {
         "vert": "Vert",
@@ -4595,13 +4856,13 @@
       "status": {
         "all": "Tous",
         "pendingReception": "En attente de réception",
-        "received": "Reà§ue",
+        "received": "Reçue",
         "analysed": "Analysée",
         "acknowledged": "Acquittée",
         "cancelled": "Annulée",
         "en_attente_reception": "En attente de réception",
         "analysee": "Analysée",
-        "recue": "Reà§ue",
+        "recue": "Reçue",
         "acquittee": "Acquittée",
         "annulee": "Annulée"
       }
@@ -4612,7 +4873,7 @@
         "description": "La configuration VigiLog a ete créée."
       },
       "configurationUpdated": {
-        "title": "Configuration mise à  jour",
+        "title": "Configuration mise à jour",
         "description": "La configuration VigiLog a été modifiée."
       },
       "configurationError": {
@@ -4638,7 +4899,7 @@
       },
       "receiveSuccess": {
         "title": "Réception validée",
-        "description": "La tournée a été marquée comme reà§ue."
+        "description": "La tournée a été marquée comme reçue."
       },
       "receiveError": {
         "title": "Réception impossible",
@@ -4674,12 +4935,12 @@
         "description": "Le VigiLog {serial} a été ajouté."
       },
       "loggerUpdated": {
-        "title": "VigiLog mis à  jour",
-        "description": "Le VigiLog {serial} a été mis à  jour."
+        "title": "VigiLog mis à jour",
+        "description": "Le VigiLog {serial} a été mis à jour."
       },
       "loggerError": {
         "title": "Opération impossible",
-        "description": "Le VigiLog n'a pas pu être enregistré ou mis à  jour."
+        "description": "Le VigiLog n'a pas pu être enregistré ou mis à jour."
       },
       "cancelSuccess": {
         "title": "Tournée annulee",
@@ -4691,7 +4952,7 @@
       },
       "receiveSuccessEmpty": {
         "title": "Réception validée sans mesure",
-        "description": "La tournée a été reà§ue, mais aucune mesure n'a été importée depuis le VigiLog."
+        "description": "La tournée a été reçue, mais aucune mesure n'a été importée depuis le VigiLog."
       }
     },
     "detail": {
@@ -4750,7 +5011,7 @@
     },
     "loggers": {
       "title": "Registre des VigiLog",
-      "description": "Gérez les VigiLog enregistrés et mettez à  jour leur étalonnage sans historique.",
+      "description": "Gérez les VigiLog enregistrés et mettez à jour leur étalonnage sans historique.",
       "emptyTitle": "Aucun VigiLog enregistré",
       "emptyDescription": "Ajoutez un VigiLog pour pouvoir l'identifier rapidement lors des tournées.",
       "states": {
@@ -4758,7 +5019,7 @@
         "inactive": "Inactif"
       },
       "fields": {
-        "serial": "Numéro de série",
+        "serial": "Numéro de série constructeur",
         "model": "Modèle",
         "label": "Libellé",
         "active": "VigiLog actif",
@@ -4784,7 +5045,7 @@
       },
       "dialog": {
         "createTitle": "Ajouter un VigiLog",
-        "editTitle": "Mettre à  jour le VigiLog",
+        "editTitle": "Mettre à jour le VigiLog",
         "description": "Renseignez les infos du VigiLog, et, si besoin, l'étalonnage.",
         "activeHint": "Un VigiLog inactif reste dans l'historique mais n'est plus proposé au départ d'une tournée."
       }
@@ -4833,4 +5094,3 @@
     }
   }
 }
-

@@ -7,21 +7,22 @@ import { log } from "@/lib/logger"
 export const GET = withAuthLogging(async (req: NextRequest) => {
   try {
     const searchParams = req.nextUrl.searchParams
-    const limit = parseInt(searchParams.get("limit") || "500")
+    const limit = parseInt(searchParams.get("limit") || "100")
     const codeFilter = searchParams.get("code")
-    const user = searchParams.get("user") || undefined
     const dateFrom = searchParams.get("dateFrom") || undefined
     const dateTo = searchParams.get("dateTo") || undefined
+
+    const startDate = dateFrom ? new Date(`${dateFrom}T00:00:00`) : undefined
+    const endDate = dateTo ? new Date(`${dateTo}T23:59:59.999`) : undefined
 
     const logs = await prismaMesure.tm_journal.findMany({
       where: {
         ...(codeFilter ? { Code_Journal: codeFilter } : {}),
-        ...(user ? { Nom_Utilisateur: { contains: user } } : {}),
         ...(dateFrom || dateTo
           ? {
               Date_Heure_Journal: {
-                ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
-                ...(dateTo ? { lte: new Date(dateTo) } : {}),
+                ...(startDate ? { gte: startDate } : {}),
+                ...(endDate ? { lte: endDate } : {}),
               },
             }
           : {}),

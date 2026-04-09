@@ -160,11 +160,11 @@ export function ConversationDetailsSheet({
                     {attachmentsData.attachments.map((att) => (
                       <div
                         key={att.id}
-                        className="flex items-center gap-2 rounded-md p-2 hover:bg-muted/60 transition-colors"
+                        className="flex items-start gap-2 rounded-md border border-border/60 bg-muted/30 p-2 transition-colors hover:bg-muted/50"
                       >
                         {getFileIcon(att.mimeType)}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm truncate">{att.fileName}</p>
+                          <p className="break-words text-sm leading-5 whitespace-normal">{att.fileName}</p>
                           <p className="text-xs text-muted-foreground">
                             {formatBytes(att.size)} · {formatDate(att.uploadedAt)}
                           </p>

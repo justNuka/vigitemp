@@ -76,6 +76,7 @@ export function CreateUserDialog({
   onSubmit,
 }: Props) {
   const t = useTranslations("createUserDialog");
+  const tForm = useTranslations("userForm");
   const tCommon = useTranslations("common");
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
@@ -377,9 +378,16 @@ export function CreateUserDialog({
             <UserPhoneField control={form.control} />
             <UserAvatarField control={form.control} />
 
-            <UserSitesField control={form.control} sites={sites} isLoading={sitesLoading} />
+            <div className="rounded-lg border border-border/60 bg-muted/20 p-4 space-y-4">
+              <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-900">
+                {tForm("infos.default_visibility")}
+              </div>
 
-            <UserGroupsField control={form.control} groups={groups} isLoading={groupsLoading} />
+              <div className="grid gap-4 md:grid-cols-2">
+                <UserSitesField control={form.control} sites={sites} isLoading={sitesLoading} />
+                <UserGroupsField control={form.control} groups={groups} isLoading={groupsLoading} />
+              </div>
+            </div>
 
             <UserExpiryFields control={form.control} enabled={hasExpiryDate} />
 

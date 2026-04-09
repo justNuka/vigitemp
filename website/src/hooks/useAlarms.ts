@@ -3,7 +3,10 @@ import { getJson, isUnauthorizedError } from "@/lib/http";
 
 type AlarmListItem = {
   id: number;
+  locationId?: number | null;
   locationName?: string;
+  siteId?: number | null;
+  siteName?: string | null;
   type: "high" | "low" | "no-response" | "temperature";
   status: "active" | "acknowledged" | "resolved";
   timestamp: string;
@@ -17,6 +20,9 @@ type AlarmListItem = {
 
 export interface Alarm {
   Id_Alarme: number;
+  Id_Lieu: number | null;
+  Id_Site: number | null;
+  Libelle_Site: string | null;
   Libelle_Lieu: string | null;
   Date_Heure_Debut: string | null;
   Est_Alarme_Vrai: boolean | null;
@@ -31,18 +37,33 @@ export interface Alarm {
   Count_30_Days: number | null;
 }
 
+type AlarmFilterOption = { id: number; name: string };
+
 type Paginated<T> = {
   data: T[];
   pagination: { page: number; limit: number; total: number; pages: number };
+  filters?: { sites: AlarmFilterOption[]; lieux: AlarmFilterOption[] };
 };
 
-export async function fetchAlarmsPage(page: number, limit: number): Promise<Paginated<Alarm>> {
+export async function fetchAlarmsPage(
+  page: number,
+  limit: number,
+  siteId?: string,
+  locationId?: string,
+): Promise<Paginated<Alarm>> {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (siteId && siteId !== "all") params.set("siteId", siteId);
+  if (locationId && locationId !== "all") params.set("locationId", locationId);
+
   const response = await getJson<Paginated<AlarmListItem>>(
-    `/api/alarmes?page=${page}&limit=${limit}`,
+    `/api/alarmes?${params.toString()}`,
   );
 
   const data = (response.data ?? []).map((item) => ({
     Id_Alarme: item.id,
+    Id_Lieu: item.locationId ?? null,
+    Id_Site: item.siteId ?? null,
+    Libelle_Site: item.siteName ?? null,
     Libelle_Lieu: item.locationName ?? null,
     Date_Heure_Debut: item.timestamp ?? null,
     Est_Alarme_Vrai: item.status === "resolved" ? false : true,
@@ -57,13 +78,23 @@ export async function fetchAlarmsPage(page: number, limit: number): Promise<Pagi
     Count_30_Days: item.count30Days ?? null,
   }));
 
-  return { data, pagination: response.pagination };
+  return { data, pagination: response.pagination, filters: response.filters };
 }
 
-export function useAlarms({ page = 1, limit = 15 }: { page?: number; limit?: number } = {}) {
+export function useAlarms({
+  page = 1,
+  limit = 15,
+  siteId = "all",
+  locationId = "all",
+}: {
+  page?: number;
+  limit?: number;
+  siteId?: string;
+  locationId?: string;
+} = {}) {
   return useQuery({
-    queryKey: ["alarms", page, limit],
-    queryFn: () => fetchAlarmsPage(page, limit),
+    queryKey: ["alarms", page, limit, siteId, locationId],
+    queryFn: () => fetchAlarmsPage(page, limit, siteId, locationId),
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60000),
   });
 }

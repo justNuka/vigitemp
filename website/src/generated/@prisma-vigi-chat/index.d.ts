@@ -40,7 +40,9 @@ export type t_message_attachment = $Result.DefaultSelection<Prisma.$t_message_at
  * Type-safe database client for TypeScript & Node.js
  * @example
  * ```
- * const prisma = new PrismaClient()
+ * const prisma = new PrismaClient({
+ *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
+ * })
  * // Fetch zero or more T_conversations
  * const t_conversations = await prisma.t_conversation.findMany()
  * ```
@@ -61,7 +63,9 @@ export class PrismaClient<
    * Type-safe database client for TypeScript & Node.js
    * @example
    * ```
-   * const prisma = new PrismaClient()
+   * const prisma = new PrismaClient({
+   *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
+   * })
    * // Fetch zero or more T_conversations
    * const t_conversations = await prisma.t_conversation.findMany()
    * ```
@@ -240,8 +244,8 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 7.4.1
-   * Query Engine version: 55ae170b1ced7fc6ed07a15f110549408c501bb3
+   * Prisma Client JS version: 7.7.0
+   * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
    */
   export type PrismaVersion = {
     client: string
@@ -1977,6 +1981,11 @@ export namespace Prisma {
      * Skip the first `n` t_conversations.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_conversations.
+     */
     distinct?: T_conversationScalarFieldEnum | T_conversationScalarFieldEnum[]
   }
 
@@ -3000,6 +3009,11 @@ export namespace Prisma {
      * Skip the first `n` t_conversation_participants.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_conversation_participants.
+     */
     distinct?: T_conversation_participantScalarFieldEnum | T_conversation_participantScalarFieldEnum[]
   }
 
@@ -3999,6 +4013,11 @@ export namespace Prisma {
      * Skip the first `n` t_messages.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_messages.
+     */
     distinct?: T_messageScalarFieldEnum | T_messageScalarFieldEnum[]
   }
 
@@ -5016,6 +5035,11 @@ export namespace Prisma {
      * Skip the first `n` t_message_attachments.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_message_attachments.
+     */
     distinct?: T_message_attachmentScalarFieldEnum | T_message_attachmentScalarFieldEnum[]
   }
 

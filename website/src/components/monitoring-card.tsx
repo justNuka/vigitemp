@@ -51,6 +51,9 @@ interface MonitoringCardProps {
   estConsigneInfPreAlarmeActive?: boolean | null
   locationComment?: string | null
   surveillanceDisabled: boolean
+  surveillanceDisabledSince?: Date | string | null
+  surveillanceDisabledBy?: string | null
+  surveillanceDisabledComment?: string | null
   isGso?: boolean | null
   gsoRssi?: string | null
   batteryPercent?: number | null
@@ -90,6 +93,9 @@ export default function MonitoringCard({
   estConsigneInfPreAlarmeActive,
   locationComment,
   surveillanceDisabled,
+  surveillanceDisabledSince = null,
+  surveillanceDisabledBy = null,
+  surveillanceDisabledComment = null,
   isGso,
   gsoRssi,
   batteryPercent,
@@ -144,7 +150,7 @@ export default function MonitoringCard({
         id: `live-${idLieu}-${liveMeasurementDate.toISOString()}`,
         Valeur: currentValue,
         Nb_Decimal: template?.Nb_Decimal ?? null,
-        Unite: template?.Unite ?? "?C",
+        Unite: template?.Unite ?? "°C",
         DateHeureMesure: dateLabel,
         DateHeureMesureIso: liveMeasurementDate.toISOString(),
         DateHeureMesureXaxis: timeLabel,
@@ -220,7 +226,20 @@ export default function MonitoringCard({
     [consigne, consigneInf, consigneSup, previewData],
   )
 
-  const surveillanceDisabledLabel = useMemo(() => (!isSurveillanceActive ? t('surveillance.disabled') : null), [isSurveillanceActive, t])
+  const surveillanceDisabledLabel = useMemo(() => {
+    if (isSurveillanceActive) return null
+    if (!surveillanceDisabledSince) return t('surveillance.disabled')
+    const date = new Date(surveillanceDisabledSince)
+    if (Number.isNaN(date.getTime())) return t('surveillance.disabled')
+    const formattedDate = formatDbDateTime(date, { withSeconds: false })
+    if (surveillanceDisabledBy) {
+      return t('surveillance.disabled_since_by', {
+        date: formattedDate,
+        user: surveillanceDisabledBy,
+      })
+    }
+    return t('surveillance.disabled_since', { date: formattedDate })
+  }, [isSurveillanceActive, surveillanceDisabledBy, surveillanceDisabledSince, t])
   const alarmDisabledLabel = useMemo(() => {
     if (isAlarmActive) return null
     if (!alarmDisabledUntil) return t('alarms.disabled')
@@ -247,8 +266,8 @@ export default function MonitoringCard({
     return Math.round(frequence / 60)
   }, [frequence, isGso])
 
-  const chartDatasets = useMemo(
-    () => [
+  const chartDatasets = useMemo(() => {
+    const datasets = [
       {
         label: t('chart.upper_threshold', { unit: unite }),
         data: previewData.map((point) => point.Consigne_Sup),
@@ -287,21 +306,63 @@ export default function MonitoringCard({
         borderDash: [6, 4],
         order: 0,
       },
-      {
-        label: t('chart.measures', { unit: unite }),
-        data: previewData.map((point) => point.Valeur),
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        borderWidth: 2,
+    ]
+
+    if (estConsigneSupPreAlarmeActive && consigneSupPreAlarme !== null && consigneSupPreAlarme !== undefined) {
+      datasets.push({
+        label: t('chart.upper_pre_alarm', { unit: unite }),
+        data: previewData.map(() => consigneSupPreAlarme),
+        borderColor: 'rgba(245, 158, 11, 0.8)',
+        backgroundColor: 'transparent',
+        borderWidth: 1.25,
         fill: false,
-        tension: 0.4,
+        tension: 0,
         pointRadius: 0,
-        pointHoverRadius: 4,
-        order: 1,
-      },
-    ],
-    [previewData, t, unite],
-  )
+        pointHoverRadius: 0,
+        borderDash: [2, 3],
+        order: 0,
+      })
+    }
+
+    if (estConsigneInfPreAlarmeActive && consigneInfPreAlarme !== null && consigneInfPreAlarme !== undefined) {
+      datasets.push({
+        label: t('chart.lower_pre_alarm', { unit: unite }),
+        data: previewData.map(() => consigneInfPreAlarme),
+        borderColor: 'rgba(245, 158, 11, 0.8)',
+        backgroundColor: 'transparent',
+        borderWidth: 1.25,
+        fill: false,
+        tension: 0,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        borderDash: [2, 3],
+        order: 0,
+      })
+    }
+
+    datasets.push({
+      label: t('chart.measures', { unit: unite }),
+      data: previewData.map((point) => point.Valeur),
+      borderColor: '#3b82f6',
+      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+      borderWidth: 2,
+      fill: false,
+      tension: 0.4,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      order: 1,
+    })
+
+    return datasets
+  }, [
+    consigneInfPreAlarme,
+    consigneSupPreAlarme,
+    estConsigneInfPreAlarmeActive,
+    estConsigneSupPreAlarmeActive,
+    previewData,
+    t,
+    unite,
+  ])
 
   const formattedConsigne = useMemo(() => formatMeasureValue(consigne, decimals, localeTag), [consigne, decimals, localeTag])
   const formattedConsigneSup = useMemo(() => formatMeasureValue(consigneSup, decimals, localeTag), [consigneSup, decimals, localeTag])
@@ -403,9 +464,19 @@ export default function MonitoringCard({
               <div className="mt-auto space-y-3 text-sm border-t border-border pt-3">
                 {lastDateTime ? (
                   <>
-                    <div className={`flex items-center justify-between gap-2 text-[12px] font-semibold ${contentTextClassName}`}>
-                      <span className="min-w-0 flex-1 truncate">{t('last_measure.label', { value: formattedLastValue ? `${formattedLastValue}${unite}` : lastMeasureText })}</span>
-                      <span className="shrink-0 text-xs font-semibold">{lastDateTime}</span>
+                    <div className={`flex flex-col gap-1 text-[12px] font-semibold ${contentTextClassName}`}>
+                      <UITooltip>
+                        <TooltipTrigger asChild>
+                          <span className="min-w-0 truncate cursor-help">
+                            {t('last_measure.label', { value: formattedLastValue ? `${formattedLastValue}${unite}` : lastMeasureText })}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                          <p className="text-xs">{t('last_measure.label', { value: formattedLastValue ? `${formattedLastValue}${unite}` : lastMeasureText })}</p>
+                          <p className="text-xs text-muted-foreground">{lastDateTime}</p>
+                        </TooltipContent>
+                      </UITooltip>
+                      <span className="text-[11px] font-medium text-muted-foreground">{lastDateTime}</span>
                     </div>
                     {hasWirelessMetrics ? (
                       <div className={`flex flex-wrap items-center justify-center gap-4 text-[11px] ${contentTextClassName}`}>
@@ -440,7 +511,12 @@ export default function MonitoringCard({
               </div>
             </>
           ) : (
-            <div className={`text-sm font-medium ${contentTextClassName}`}>{t('surveillance.disabled')}</div>
+            <div className={`space-y-1 text-sm ${contentTextClassName}`}>
+              <div className="font-medium">{surveillanceDisabledLabel ?? t('surveillance.disabled')}</div>
+              {surveillanceDisabledComment || locationComment ? (
+                <p className="line-clamp-3 text-xs text-muted-foreground">{surveillanceDisabledComment ?? locationComment}</p>
+              ) : null}
+            </div>
           )}
 
           <div className={`mt-4 border-t border-border pt-3 ${isSurveillanceActive ? '' : 'border-white/20'}`}>
@@ -448,7 +524,7 @@ export default function MonitoringCard({
               <div className="flex justify-center gap-4">
                 <UITooltip>
                   <TooltipTrigger asChild>
-                    <button onClick={(event) => { event.stopPropagation(); setIsModalOpen(true) }} className={`p-1.5 rounded-md transition-colors ${actionButtonClassName}`}>
+                    <button onClick={(event) => { event.stopPropagation(); setIsModalOpen(true) }} className={`p-1 rounded-md transition-colors ${actionButtonClassName}`}>
                       <FileText className={`w-4 h-4 ${actionIconClassName}`} />
                     </button>
                   </TooltipTrigger>
@@ -457,7 +533,7 @@ export default function MonitoringCard({
 
                 <UITooltip>
                   <TooltipTrigger asChild>
-                    <button onClick={(event) => { event.stopPropagation(); setActionType('surveillance'); setShowConfirmModal(true) }} className={`p-1.5 rounded-md transition-colors ${actionButtonClassName} ${isSurveillanceActive ? 'text-red-600' : 'text-green-600 dark:text-green-400'}`}>
+                    <button onClick={(event) => { event.stopPropagation(); setActionType('surveillance'); setShowConfirmModal(true) }} className={`p-1 rounded-md transition-colors ${actionButtonClassName} ${isSurveillanceActive ? 'text-red-600' : 'text-green-600 dark:text-green-400'}`}>
                       {isSurveillanceActive ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
                     </button>
                   </TooltipTrigger>
@@ -466,7 +542,8 @@ export default function MonitoringCard({
 
                 <UITooltip>
                   <TooltipTrigger asChild>
-                    <button onClick={(event) => event.stopPropagation()} className={`p-1.5 rounded-md transition-colors ${actionButtonClassName}`}>
+                    {/* Localisation is display-only for now; keep click isolated to avoid opening the details modal by mistake. */}
+                    <button onClick={(event) => event.stopPropagation()} className={`p-1 rounded-md transition-colors ${actionButtonClassName}`}>
                       <MapPin className={`w-4 h-4 ${actionIconClassName}`} />
                     </button>
                   </TooltipTrigger>
@@ -478,7 +555,7 @@ export default function MonitoringCard({
                     <span>
                       <button
                         onClick={(event) => { event.stopPropagation(); onEditLocation?.(idLieu) }}
-                        className={`p-1.5 rounded-md transition-colors ${actionButtonClassName} ${canEditLocation ? "" : "cursor-not-allowed opacity-40"}`}
+                        className={`p-1 rounded-md transition-colors ${actionButtonClassName} ${canEditLocation ? "" : "cursor-not-allowed opacity-40"}`}
                         disabled={!canEditLocation}
                       >
                         <Settings className={`w-4 h-4 ${actionIconClassName}`} />

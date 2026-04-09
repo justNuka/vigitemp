@@ -27,7 +27,6 @@ interface User {
 
 interface Site {
   Id_Site: number;
-  Code_Site?: string;
   Libelle_Site?: string;
   Est_Archive?: boolean;
 }

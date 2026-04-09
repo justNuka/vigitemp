@@ -11,6 +11,7 @@ interface MiniChartProps {
   maxThreshold?: number;
   className?: string;
   height?: number;
+  showScale?: boolean;
 }
 
 export function MiniChart({
@@ -19,6 +20,7 @@ export function MiniChart({
   maxThreshold,
   className,
   height = 60,
+  showScale = false,
 }: MiniChartProps) {
   const t = useTranslations("miniChart");
   const locale = useLocale();
@@ -90,7 +92,11 @@ export function MiniChart({
     );
   }
 
-  const { points, pathData, areaPath, displayMin, displayRange } = chartData;
+  const { points, pathData, areaPath, displayMin, displayMax, displayRange } = chartData;
+  const formatScaleValue = (value: number) => {
+    if (Number.isInteger(value)) return String(value)
+    return value.toFixed(1)
+  }
   const showDenseLabels = xLabels.length > 2;
   const hasXLabels = xLabels.length > 0;
   const chartHeight = hasXLabels ? Math.max(height - 20, 40) : height;
@@ -109,6 +115,12 @@ export function MiniChart({
 
   return (
     <div className={cn("relative", className)} style={{ height }}>
+      {showScale ? (
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 flex flex-col justify-between py-1 text-[10px] text-muted-foreground">
+          <span className="rounded bg-background/80 px-1 py-0.5 shadow-sm">{formatScaleValue(displayMax)}</span>
+          <span className="rounded bg-background/80 px-1 py-0.5 shadow-sm">{formatScaleValue(displayMin)}</span>
+        </div>
+      ) : null}
       <div style={{ height: chartHeight }}>
         <svg
         viewBox="0 0 100 100"

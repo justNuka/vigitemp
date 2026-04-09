@@ -83,7 +83,7 @@ export function LocationFormTabTelephony({ users }: Props) {
               return (
                 <div key={field.id} className="grid grid-cols-12 gap-3 rounded-md border p-3 items-end">
                   <div className="col-span-2 space-y-2">
-                    <Label>{t("labels.order")}</Label>
+                    <Label>{t("labels.priority")}</Label>
                     <Input
                       type="number"
                       min={1}
@@ -137,15 +137,15 @@ export function LocationFormTabTelephony({ users }: Props) {
                       />
                       {t("labels.via_mail")}
                     </label>
-                    <label className="flex items-center gap-2 text-sm">
+                    <label className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Checkbox
                         checked={!!current?.Est_Via_Telephone}
-                        onCheckedChange={(checked) =>
-                          setValue(`MailingContacts.${index}.Est_Via_Telephone`, !!checked, { shouldDirty: true, shouldTouch: true })
-                        }
+                        disabled
+                        aria-disabled
                       />
                       {t("labels.via_phone")}
                     </label>
+                    <p className="col-span-2 text-xs text-muted-foreground">{t('helpers.phone_coming_soon')}</p>
                     {user?.email ? (
                       <p className="text-xs text-muted-foreground col-span-2 truncate">{user.email}</p>
                     ) : null}

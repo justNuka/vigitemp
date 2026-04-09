@@ -84,6 +84,7 @@ export const POST = async (req: NextRequest) => {
       id: randomUUID(),
       file: file.name,
       sensor: parsed.summary.sensor,
+      calibrationName: parsed.summary.calibrationName,
       date: parsed.summary.date,
       dateText: parsed.summary.dateText,
       dateValidity: parsed.summary.dateValidity,

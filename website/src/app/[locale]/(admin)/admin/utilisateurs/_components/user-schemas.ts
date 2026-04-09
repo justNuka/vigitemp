@@ -7,7 +7,7 @@ export const createUserSchema = z
     passwordConfirm: z.string().min(1, "La confirmation est requise"),
     nom: z.string().min(1, "Le nom est requis"),
     prenom: z.string().min(1, "Le pr\u00E9nom est requis"),
-    email: z.string().email("Email invalide"),
+    email: z.string().email("Email invalide").or(z.literal("")),
     profileId: z.string().min(1, "Le profil est requis"),
     telephone: z.string().optional(),
     siteIds: z.array(z.number()).optional(),
@@ -29,7 +29,7 @@ export const editUserSchema = z
   .object({
     nom: z.string().min(1, "Le nom est requis"),
     prenom: z.string().min(1, "Le pr\u00E9nom est requis"),
-    email: z.string().email("Email invalide"),
+    email: z.string().email("Email invalide").or(z.literal("")),
     profileId: z.string().min(1, "Le profil est requis"),
     telephone: z.string().optional(),
     siteIds: z.array(z.number()).optional(),

@@ -94,9 +94,9 @@ function buildAnnotations(
   if (newSup !== null) {
     annotations["line-new-sup"] = {
       type: "line",
-      borderColor: "rgba(249,115,22,1)",
-      borderWidth: 2,
-      borderDash: [6, 3],
+      borderColor: "rgba(249,115,22,0.95)",
+      borderWidth: 3,
+      borderDash: [10, 6],
       yMin: newSup,
       yMax: newSup,
     }
@@ -105,9 +105,9 @@ function buildAnnotations(
   if (newInf !== null) {
     annotations["line-new-inf"] = {
       type: "line",
-      borderColor: "rgba(249,115,22,1)",
-      borderWidth: 2,
-      borderDash: [6, 3],
+      borderColor: "rgba(249,115,22,0.95)",
+      borderWidth: 3,
+      borderDash: [10, 6],
       yMin: newInf,
       yMax: newInf,
     }
@@ -161,6 +161,7 @@ export function ImpactChart({
 }: ImpactChartProps) {
   const t = useTranslations("impactAnalysis")
   const locale = useLocale()
+  const localeTag = locale.toLowerCase().startsWith("fr") ? "fr-FR" : locale
 
   const chartRef = useRef<ChartJS<"line"> | null>(null)
   const [zoomBounds, setZoomBounds] = useState<ZoomBounds | null>(null)
@@ -255,6 +256,8 @@ export function ImpactChart({
   )
 
   const pointRadius = measurements.length > 200 ? 0 : 2
+  const pointHoverRadius = measurements.length > 200 ? 4 : 6
+  const pointHitRadius = measurements.length > 200 ? 10 : 12
 
   const chartData = {
     labels,
@@ -266,6 +269,8 @@ export function ImpactChart({
         backgroundColor: "rgba(59,130,246,0.1)",
         borderWidth: 1.5,
         pointRadius,
+        pointHoverRadius,
+        pointHitRadius,
         tension: 0.1,
         fill: false,
       },
@@ -286,7 +291,7 @@ export function ImpactChart({
               const label = labels[index]
               if (!label) return ""
               try {
-                return new Date(label).toLocaleString(locale, {
+                return new Date(label).toLocaleString(localeTag, {
                   month: "2-digit",
                   day: "2-digit",
                   hour: "2-digit",
@@ -308,7 +313,7 @@ export function ImpactChart({
               const label = labels[index]
               if (!label) return ""
               try {
-                return new Date(label).toLocaleString(locale, {
+                return new Date(label).toLocaleString(localeTag, {
                   month: "2-digit",
                   day: "2-digit",
                   hour: "2-digit",
@@ -324,6 +329,10 @@ export function ImpactChart({
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      mode: "index" as const,
+      intersect: false,
+    },
     plugins: {
       legend: {
         display: false,
@@ -333,6 +342,21 @@ export function ImpactChart({
       },
       tooltip: {
         callbacks: {
+          title: (items: Array<{ label?: string }>) => {
+            const label = items[0]?.label
+            if (!label) return ""
+            try {
+              return new Date(label).toLocaleString(localeTag, {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            } catch {
+              return label
+            }
+          },
           label: (context: { parsed: { y: number | null } }) => {
             const y = context.parsed.y
             if (y === null) return ""

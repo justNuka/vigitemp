@@ -18,13 +18,8 @@ export function SitesTable({ sites, isLoading, selectedSiteId, onSelectSite, onE
 
   const columns: ColumnDef<SiteAdmin>[] = [
     {
-      accessorKey: 'Code_Site',
-      header: t('columns.site'),
-      cell: ({ row }) => row.getValue('Code_Site') || t('placeholders.na'),
-    },
-    {
       accessorKey: 'Libelle_Site',
-      header: t('columns.description'),
+      header: t('columns.site'),
       cell: ({ row }) => row.getValue('Libelle_Site') || t('placeholders.na'),
     },
     {
@@ -47,7 +42,7 @@ export function SitesTable({ sites, isLoading, selectedSiteId, onSelectSite, onE
     <TanStackTable<SiteAdmin>
       columns={columns}
       data={sites}
-      searchField={['Code_Site', 'Libelle_Site', 'Commentaire']}
+      searchField={['Libelle_Site', 'Commentaire']}
       searchPlaceholder={t('search_placeholder')}
       pageSize={10}
       isLoading={isLoading}

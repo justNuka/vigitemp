@@ -55,7 +55,7 @@ export const POST = withAuthLogging(
           alarmTypeCode: alarm.Type,
           triggeredAt: alarm.Date_Heure_Debut_Alarme_Vrai ?? alarm.Date_Heure_Debut,
           endedAt: alarm.Date_Heure_Fin,
-          lastValue: alarm.Valeur != null ? `${alarm.Valeur}${alarm.Unite ?? "?C"}` : undefined,
+          lastValue: alarm.Valeur != null ? `${alarm.Valeur}${alarm.Unite ?? "°C"}` : undefined,
           details: "Alarme terminée",
           alarmUrl,
           idLieu: alarm.t_lieu?.Id_Lieu,

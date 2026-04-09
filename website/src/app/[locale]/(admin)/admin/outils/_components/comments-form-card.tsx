@@ -8,7 +8,7 @@ import type { Control, FieldErrors, UseFormRegister } from "react-hook-form"
 import { Controller } from "react-hook-form"
 import { useTranslations } from 'next-intl'
 
-import type { AuditCode } from "./audit-comments-types"
+import { sanitizeAuditCommentLabel, type AuditCode } from "./audit-comments-types"
 
 type CommentsFormCardProps = {
   auditCodes: AuditCode[]
@@ -57,8 +57,8 @@ export function CommentsFormCard({
                   onValueChange={field.onChange}
                   options={auditCodes.map((code) => ({
                     value: code.Code_Journal,
-                    label: `${code.Code_Journal}${code.Commentaire ? ` - ${code.Commentaire}` : ""}`,
-                    searchText: `${code.Code_Journal} ${code.Commentaire ?? ""}`,
+                    label: `${code.Code_Journal}${sanitizeAuditCommentLabel(code.Commentaire) ? ` - ${sanitizeAuditCommentLabel(code.Commentaire)}` : ""}`,
+                    searchText: `${code.Code_Journal} ${sanitizeAuditCommentLabel(code.Commentaire)}`,
                   }))}
                   placeholder={t('placeholders.type')}
                   searchPlaceholder={t('placeholders.type_search')}

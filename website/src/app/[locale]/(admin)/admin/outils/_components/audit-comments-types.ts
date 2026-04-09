@@ -9,3 +9,9 @@ export type AuditComment = {
   text: string
 }
 
+
+
+export function sanitizeAuditCommentLabel(label: string | null | undefined): string {
+  if (!label) return ""
+  return label.replace(/%[12]/g, "").replace(/\s{2,}/g, " ").trim()
+}

@@ -160,7 +160,7 @@ export function LocationFormTabMetrology() {
           </div>
           <div className="space-y-2">
             <Label>{t('setpoints.upper_tolerance')}</Label>
-            <Input disabled value={formData.Tolerance_Surveillance_Sup ?? ''} className="bg-muted" />
+            <Input disabled value={formData.Est_Consigne_Sup_Active ? (formData.Tolerance_Surveillance_Sup ?? '') : ''} className="bg-muted" />
           </div>
 
           <div className="space-y-2">
@@ -178,7 +178,7 @@ export function LocationFormTabMetrology() {
           </div>
           <div className="space-y-2">
             <Label>{t('setpoints.lower_tolerance')}</Label>
-            <Input disabled value={formData.Tolerance_Surveillance_Inf ?? ''} className="bg-muted" />
+            <Input disabled value={formData.Est_Consigne_Inf_Active ? (formData.Tolerance_Surveillance_Inf ?? '') : ''} className="bg-muted" />
           </div>
         </div>
 

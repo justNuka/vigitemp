@@ -193,7 +193,7 @@ export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_
           endedAt: alarm.Date_Heure_Fin,
           acknowledgedAt,
           acknowledgedBy: ctx.user.username,
-          lastValue: alarm.Valeur != null ? `${alarm.Valeur}${alarm.Unite ?? "?C"}` : undefined,
+          lastValue: alarm.Valeur != null ? `${alarm.Valeur}${alarm.Unite ?? "°C"}` : undefined,
           details: comment || "Acquittement utilisateur",
           alarmUrl,
           idLieu: alarm.t_lieu?.Id_Lieu,

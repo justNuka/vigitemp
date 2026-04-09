@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useRouter } from '@/i18n/navigation'
 import { useAuthorizations, useProfiles, type Profile } from '@/hooks/useProfiles'
@@ -18,13 +18,25 @@ export function ProfilesClient() {
   const tCommon = useTranslations('common')
   const didPrefetchRef = useRef(false)
   const { data: profiles = [], isLoading: profilesLoading } = useProfiles()
+  const [statusTab, setStatusTab] = useState<'active' | 'archived'>('active')
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null)
-  const shouldLoadAuthorizations = isCreateOpen || isEditOpen
-  const { data: authorizations = [], isLoading: authorizationsLoading } = useAuthorizations(shouldLoadAuthorizations)
+  const activeProfiles = profiles.filter((profile) => !profile.estArchive)
+  const archivedProfiles = profiles.filter((profile) => Boolean(profile.estArchive))
+  const displayedProfiles = statusTab === 'active' ? activeProfiles : archivedProfiles
+  const selectedDisplayedProfile = selectedProfile
+    ? displayedProfiles.find((profile) => profile.id === selectedProfile.id) ?? null
+    : null
+  const shouldLoadDialogData = isCreateOpen || isEditOpen
+  const { data: authorizations = [], isLoading: authorizationsLoading } = useAuthorizations(shouldLoadDialogData)
+  const { data: users = [], isLoading: usersLoading } = useQuery({
+    queryKey: ['users', 'profiles-dialog'],
+    queryFn: () => getJson<Array<{ id: number; username: string; displayName: string; role: string | null }>>('/api/utilisateurs'),
+    enabled: shouldLoadDialogData,
+  })
 
   const defaultProfileValues: ProfileFormData = useMemo(
     () => ({
@@ -32,6 +44,7 @@ export function ProfilesClient() {
       description: '',
       mc2: false,
       authorizations: [],
+      assignedUserIds: [],
     }),
     [],
   )
@@ -78,12 +91,12 @@ export function ProfilesClient() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profiles'] })
       router.refresh()
-      toast.success(t('toast.delete_success'))
+      toast.success(t('toast.archive_success'))
       setIsDeleteOpen(false)
       setSelectedProfile(null)
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : t('toast.delete_error'))
+      toast.error(error instanceof Error ? error.message : t('toast.archive_error'))
     },
   })
 
@@ -104,28 +117,35 @@ export function ProfilesClient() {
 
   const handleCreate = (data: ProfileFormData) => createMutation.mutate(data)
   const handleUpdate = (data: ProfileFormData) => {
-    if (!selectedProfile) return
-    updateMutation.mutate({ id: selectedProfile.id, data })
+    if (!selectedDisplayedProfile) return
+    updateMutation.mutate({ id: selectedDisplayedProfile.id, data })
   }
   const handleDelete = () => {
-    if (!selectedProfile) return
-    deleteMutation.mutate(selectedProfile.id)
+    if (!selectedDisplayedProfile) return
+    deleteMutation.mutate(selectedDisplayedProfile.id)
   }
 
-  if (profilesLoading || authorizationsLoading) {
+  if (profilesLoading || authorizationsLoading || usersLoading) {
     return <div className="p-6">{tCommon('loading')}</div>
   }
 
   return (
     <main className="flex-1 p-4 md:p-6 space-y-6">
       <ProfilesTable
-        profiles={profiles}
+        profiles={displayedProfiles}
         isLoading={profilesLoading}
-        selectedProfileId={selectedProfile?.id}
+        selectedProfileId={selectedDisplayedProfile?.id}
         onSelectProfile={setSelectedProfile}
         onEdit={openEditDialog}
         onDelete={openDeleteDialog}
         onCreate={openCreateDialog}
+        statusTab={statusTab}
+        activeCount={activeProfiles.length}
+        archivedCount={archivedProfiles.length}
+        onStatusTabChange={(value) => {
+          setStatusTab(value)
+          setSelectedProfile(null)
+        }}
       />
 
       <ProfileDialog
@@ -133,6 +153,12 @@ export function ProfilesClient() {
         mode="create"
         initialValues={defaultProfileValues}
         authorizations={authorizations}
+        users={users.map((user) => ({
+          id: user.id,
+          username: user.username,
+          displayName: user.displayName,
+          profile: user.role,
+        }))}
         isSubmitting={createMutation.isPending}
         onCancel={() => setIsCreateOpen(false)}
         onSubmit={handleCreate}
@@ -142,12 +168,21 @@ export function ProfilesClient() {
         open={isEditOpen}
         mode="edit"
         initialValues={{
-          name: selectedProfile?.name || '',
-          description: selectedProfile?.description || '',
-          mc2: selectedProfile?.mc2 || false,
-          authorizations: selectedProfile?.authorizations.map((a) => a.id) || [],
+          name: selectedDisplayedProfile?.name || '',
+          description: selectedDisplayedProfile?.description || '',
+          mc2: selectedDisplayedProfile?.mc2 || false,
+          authorizations: selectedDisplayedProfile?.authorizations.map((a) => a.id) || [],
+          assignedUserIds: users
+            .filter((user) => user.role === (selectedDisplayedProfile?.name || ''))
+            .map((user) => user.id),
         }}
         authorizations={authorizations}
+        users={users.map((user) => ({
+          id: user.id,
+          username: user.username,
+          displayName: user.displayName,
+          profile: user.role,
+        }))}
         isSubmitting={updateMutation.isPending}
         onCancel={() => setIsEditOpen(false)}
         onSubmit={handleUpdate}
@@ -156,7 +191,7 @@ export function ProfilesClient() {
       <DeleteProfileDialog
         open={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
-        profile={selectedProfile}
+        profile={selectedDisplayedProfile}
         isDeleting={deleteMutation.isPending}
         onDelete={handleDelete}
       />

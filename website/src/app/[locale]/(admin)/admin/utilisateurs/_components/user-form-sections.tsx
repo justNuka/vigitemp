@@ -18,11 +18,11 @@ import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessa
 
 import type { GroupOption, ProfileOption, SiteOption } from "./user-option-types"
 
-export function UserNameFields<T extends { prenom: string; nom: string }>({
+export function UserNameFields({
   control,
   order = "first-last",
 }: {
-  control: Control<T>
+  control: Control<any>
   order?: "first-last" | "last-first"
 }) {
   const t = useTranslations("userForm")
@@ -67,7 +67,7 @@ export function UserNameFields<T extends { prenom: string; nom: string }>({
   )
 }
 
-export function UserEmailField<T extends { email: string }>({ control }: { control: Control<T> }) {
+export function UserEmailField({ control }: { control: Control<any> }) {
   const t = useTranslations("userForm")
   return (
     <FormField
@@ -77,7 +77,7 @@ export function UserEmailField<T extends { email: string }>({ control }: { contr
         <FormItem>
           <FormLabel>{t("fields.email_label")}</FormLabel>
           <FormControl>
-            <Input type="email" placeholder={t("placeholders.email")} {...field} />
+            <Input type="email" placeholder={t("placeholders.email")} {...field} value={field.value ?? ""} />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -86,7 +86,7 @@ export function UserEmailField<T extends { email: string }>({ control }: { contr
   )
 }
 
-export function UserUsernameField<T extends { username: string }>({ control }: { control: Control<T> }) {
+export function UserUsernameField({ control }: { control: Control<any> }) {
   const t = useTranslations("userForm")
   return (
     <FormField
@@ -105,7 +105,7 @@ export function UserUsernameField<T extends { username: string }>({ control }: {
   )
 }
 
-export function UserPhoneField<T extends { telephone?: string }>({ control }: { control: Control<T> }) {
+export function UserPhoneField({ control }: { control: Control<any> }) {
   const t = useTranslations("userForm")
   return (
     <FormField
@@ -124,13 +124,13 @@ export function UserPhoneField<T extends { telephone?: string }>({ control }: { 
   )
 }
 
-export function UserProfileField<T extends { profileId: string }>({
+export function UserProfileField({
   control,
   profiles,
   isLoading,
   description,
 }: {
-  control: Control<T>
+  control: Control<any>
   profiles?: ProfileOption[]
   isLoading: boolean
   description?: string
@@ -168,12 +168,12 @@ export function UserProfileField<T extends { profileId: string }>({
   )
 }
 
-export function UserSitesField<T extends { siteIds?: number[] }>({
+export function UserSitesField({
   control,
   sites,
   isLoading,
 }: {
-  control: Control<T>
+  control: Control<any>
   sites?: SiteOption[]
   isLoading: boolean
 }) {
@@ -185,7 +185,7 @@ export function UserSitesField<T extends { siteIds?: number[] }>({
       render={({ field }) => (
         <FormItem>
           <FormLabel>{t("fields.sites_label")}</FormLabel>
-          <div className="space-y-2">
+          <div className="max-h-48 space-y-2 overflow-y-auto rounded-md border bg-background p-3">
             {isLoading ? (
               <p className="text-sm text-muted-foreground">{t("actions.loading")}</p>
             ) : (
@@ -209,9 +209,6 @@ export function UserSitesField<T extends { siteIds?: number[] }>({
               ))
             )}
           </div>
-          <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-900">
-            {t("infos.default_visibility")}
-          </div>
           <FormMessage />
         </FormItem>
       )}
@@ -219,12 +216,12 @@ export function UserSitesField<T extends { siteIds?: number[] }>({
   )
 }
 
-export function UserGroupsField<T extends { groupeIds?: number[] }>({
+export function UserGroupsField({
   control,
   groups,
   isLoading,
 }: {
-  control: Control<T>
+  control: Control<any>
   groups?: GroupOption[]
   isLoading: boolean
 }) {
@@ -236,7 +233,7 @@ export function UserGroupsField<T extends { groupeIds?: number[] }>({
       render={({ field }) => (
         <FormItem>
           <FormLabel>{t("fields.groups_label")}</FormLabel>
-          <div className="space-y-2">
+          <div className="max-h-48 space-y-2 overflow-y-auto rounded-md border bg-background p-3">
             {isLoading ? (
               <p className="text-sm text-muted-foreground">{t("actions.loading")}</p>
             ) : (
@@ -262,9 +259,6 @@ export function UserGroupsField<T extends { groupeIds?: number[] }>({
               ))
             )}
           </div>
-          <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-900">
-            {t("infos.default_visibility")}
-          </div>
           <FormMessage />
         </FormItem>
       )}
@@ -272,11 +266,11 @@ export function UserGroupsField<T extends { groupeIds?: number[] }>({
   )
 }
 
-export function UserExpiryFields<T extends { hasExpiryDate: boolean; expiryDate?: Date }>({
+export function UserExpiryFields({
   control,
   enabled,
 }: {
-  control: Control<T>
+  control: Control<any>
   enabled: boolean
 }) {
   const t = useTranslations("userForm")

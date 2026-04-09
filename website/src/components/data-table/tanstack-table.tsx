@@ -12,7 +12,7 @@ import {
   type Updater,
   useReactTable,
 } from '@tanstack/react-table';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { LazyMotion, domAnimation, m } from 'motion/react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -32,12 +32,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ChevronDown, ChevronUp, ChevronsUpDown, Download, Inbox, Printer } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronsUpDown, Download, Inbox } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -71,6 +74,8 @@ export interface TanStackTableProps<TData> {
   enableExport?: boolean;
   enablePrint?: boolean;
   exportFormats?: Array<"csv" | "xlsx" | "pdf">;
+  promptExportCount?: boolean;
+  enableExportColumnSelection?: boolean;
   manualPagination?: boolean;
   manualSorting?: boolean;
   pageCount?: number;
@@ -126,8 +131,10 @@ export function TanStackTable<TData extends Record<string, any>>({
   exportFileName = "export",
   exportExcludeColumnIds = ["actions", "action", "select"],
   enableExport = true,
-  enablePrint = true,
+  enablePrint = false,
   exportFormats = ["csv", "xlsx", "pdf"],
+  promptExportCount = false,
+  enableExportColumnSelection = false,
   manualPagination = false,
   manualSorting = false,
   pageCount,
@@ -232,16 +239,54 @@ export function TanStackTable<TData extends Record<string, any>>({
     return table.getPrePaginationRowModel().rows;
   }, [table]);
 
-  const exportHeaders = useMemo(() => {
-    return exportableColumns.map((col) => {
-      const metaLabel = (col.columnDef as any)?.meta?.exportLabel as string | undefined;
-      if (metaLabel) return metaLabel;
+  const [selectedExportColumnIds, setSelectedExportColumnIds] = useState<string[]>([]);
 
-      const header = col.columnDef.header;
-      if (typeof header === "string") return header;
-      return col.id;
-    });
+  const availableExportColumnIds = useMemo(() => {
+    return exportableColumns.map((col) => col.id);
   }, [exportableColumns]);
+
+  const selectedExportColumns = useMemo(() => {
+    if (!enableExportColumnSelection || selectedExportColumnIds.length === 0) {
+      return exportableColumns;
+    }
+
+    const selectedIds = new Set(selectedExportColumnIds);
+    const selectedColumns = exportableColumns.filter((col) => selectedIds.has(col.id));
+
+    return selectedColumns.length > 0 ? selectedColumns : exportableColumns;
+  }, [enableExportColumnSelection, exportableColumns, selectedExportColumnIds]);
+
+  useEffect(() => {
+    if (!enableExportColumnSelection) {
+      return;
+    }
+
+    setSelectedExportColumnIds((current) => {
+      if (availableExportColumnIds.length === 0) {
+        return [];
+      }
+
+      if (current.length === 0) {
+        return availableExportColumnIds;
+      }
+
+      const next = current.filter((id) => availableExportColumnIds.includes(id));
+      return next.length > 0 ? next : availableExportColumnIds;
+    });
+  }, [enableExportColumnSelection, availableExportColumnIds]);
+
+  function getExportColumnLabel(column: (typeof exportableColumns)[number]) {
+    const metaLabel = (column.columnDef as any)?.meta?.exportLabel as string | undefined;
+    if (metaLabel) return metaLabel;
+
+    const header = column.columnDef.header;
+    if (typeof header === "string") return header;
+    return column.id;
+  }
+
+  const exportHeaders = useMemo(() => {
+    return selectedExportColumns.map((col) => getExportColumnLabel(col));
+  }, [selectedExportColumns]);
 
   function formatExportValue(value: unknown): string {
     if (value == null) return "";
@@ -257,11 +302,65 @@ export function TanStackTable<TData extends Record<string, any>>({
     return String(value);
   }
 
-  function buildExportMatrix() {
-    const body = exportRows.map((row) => {
-      return exportableColumns.map((col) => formatExportValue(row.getValue(col.id)));
+  function resolveRowsToExport() {
+    if (!promptExportCount) {
+      return exportRows;
+    }
+
+    if (exportRows.length === 0) {
+      return exportRows;
+    }
+
+    const userInput = window.prompt(
+      t('export_count_prompt.message', { max: exportRows.length }),
+      String(exportRows.length)
+    );
+
+    if (userInput === null) {
+      return null;
+    }
+
+    const parsedCount = Number.parseInt(userInput.trim(), 10);
+    if (!Number.isFinite(parsedCount) || parsedCount < 1 || parsedCount > exportRows.length) {
+      window.alert(t('export_count_prompt.invalid', { max: exportRows.length }));
+      return null;
+    }
+
+    return exportRows.slice(0, parsedCount);
+  }
+
+  function buildExportMatrixForRows(rowsToExport: typeof exportRows) {
+    const body = rowsToExport.map((row) => {
+      return selectedExportColumns.map((col) => formatExportValue(row.getValue(col.id)));
     });
     return { headers: exportHeaders, rows: body };
+  }
+
+  function isExportColumnSelected(columnId: string) {
+    if (!enableExportColumnSelection || selectedExportColumnIds.length === 0) {
+      return true;
+    }
+    return selectedExportColumnIds.includes(columnId);
+  }
+
+  function toggleExportColumn(columnId: string, checked: boolean) {
+    setSelectedExportColumnIds((current) => {
+      const normalizedCurrent = current.length > 0 ? current : availableExportColumnIds;
+
+      if (checked) {
+        if (normalizedCurrent.includes(columnId)) {
+          return normalizedCurrent;
+        }
+        return [...normalizedCurrent, columnId];
+      }
+
+      const next = normalizedCurrent.filter((id) => id !== columnId);
+      if (next.length === 0) {
+        window.alert(t('export_columns.at_least_one'));
+        return normalizedCurrent;
+      }
+      return next;
+    });
   }
 
   function downloadBlob(blob: Blob, filename: string) {
@@ -276,7 +375,10 @@ export function TanStackTable<TData extends Record<string, any>>({
   }
 
   function exportCsv() {
-    const { headers, rows } = buildExportMatrix();
+    const rowsToExport = resolveRowsToExport();
+    if (!rowsToExport) return;
+
+    const { headers, rows } = buildExportMatrixForRows(rowsToExport);
     const delimiter = ";";
     const escape = (value: string) => {
       const needsQuotes = value.includes("\"") || value.includes("\n") || value.includes("\r") || value.includes(delimiter);
@@ -294,7 +396,10 @@ export function TanStackTable<TData extends Record<string, any>>({
   }
 
   async function exportExcel() {
-    const { headers, rows } = buildExportMatrix();
+    const rowsToExport = resolveRowsToExport();
+    if (!rowsToExport) return;
+
+    const { headers, rows } = buildExportMatrixForRows(rowsToExport);
     const xlsx = await import("xlsx");
 
     const worksheet = xlsx.utils.aoa_to_sheet([headers, ...rows]);
@@ -309,7 +414,10 @@ export function TanStackTable<TData extends Record<string, any>>({
   }
 
   async function exportPdf() {
-    const { headers, rows } = buildExportMatrix();
+    const rowsToExport = resolveRowsToExport();
+    if (!rowsToExport) return;
+
+    const { headers, rows } = buildExportMatrixForRows(rowsToExport);
 
     const jsPDFModule = await import("jspdf");
     const autoTable = (await import("jspdf-autotable")).default;
@@ -326,48 +434,7 @@ export function TanStackTable<TData extends Record<string, any>>({
     doc.save(`${exportFileName}.pdf`);
   }
 
-  function printTableOnly() {
-    const { headers, rows } = buildExportMatrix();
-    const html = `
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>${exportFileName}</title>
-    <style>
-      body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 16px; }
-      h1 { font-size: 16px; margin: 0 0 12px 0; }
-      table { width: 100%; border-collapse: collapse; }
-      th, td { border: 1px solid #e5e7eb; padding: 6px 8px; font-size: 12px; text-align: left; vertical-align: top; }
-      thead th { background: #f3f4f6; }
-      @media print { body { padding: 0; } h1 { margin-bottom: 8px; } }
-    </style>
-  </head>
-  <body>
-    <h1>${exportFileName}</h1>
-    <table>
-      <thead>
-        <tr>${headers.map((h) => `<th>${String(h)}</th>`).join("")}</tr>
-      </thead>
-      <tbody>
-        ${rows
-          .map((r) => `<tr>${r.map((c) => `<td>${String(c).replace(/</g, "&lt;")}</td>`).join("")}</tr>`)
-          .join("")}
-      </tbody>
-    </table>
-  </body>
-</html>
-`.trim();
 
-    const w = window.open("", "_blank", "noopener,noreferrer");
-    if (!w) return;
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
-    w.focus();
-    w.print();
-    w.close();
-  }
 
   return (
     <div className="space-y-4 w-full">
@@ -412,20 +479,24 @@ export function TanStackTable<TData extends Record<string, any>>({
                     {exportFormats.includes("pdf") ? (
                       <DropdownMenuItem onClick={() => void exportPdf()}>PDF</DropdownMenuItem>
                     ) : null}
+                    {enableExportColumnSelection && exportableColumns.length > 0 ? (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>{t('export_columns.title')}</DropdownMenuLabel>
+                        {exportableColumns.map((column) => (
+                          <DropdownMenuCheckboxItem
+                            key={`export-column-${column.id}`}
+                            checked={isExportColumnSelected(column.id)}
+                            onCheckedChange={(checked) => toggleExportColumn(column.id, checked === true)}
+                            onSelect={(event) => event.preventDefault()}
+                          >
+                            {getExportColumnLabel(column)}
+                          </DropdownMenuCheckboxItem>
+                        ))}
+                      </>
+                    ) : null}
                   </DropdownMenuContent>
                 </DropdownMenu>
-              )}
-
-              {enablePrint && (
-                <Button
-                  size="sm"
-                  variant="outline" className="gap-2"
-                  disabled={isLoading}
-                  onClick={printTableOnly}
-                >
-                  <Printer className="h-4 w-4" />
-                  {t('print')}
-                </Button>
               )}
 
               {toolbarRight}

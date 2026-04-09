@@ -40,7 +40,7 @@ export default function OutilsPage() {
           defaultValue="test-connexion"
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-5 bg-primary/10 text-primary">
+          <TabsList className="grid w-full grid-cols-3 bg-primary/10 text-primary">
             <TabsTrigger
               value="test-connexion"
               className="hover:text-primary hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
@@ -59,18 +59,6 @@ export default function OutilsPage() {
             >
               {t('tabs.standard_reader')}
             </TabsTrigger>
-            <TabsTrigger
-              value="config"
-              className="hover:text-primary hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              {t('tabs.config')}
-            </TabsTrigger>
-            <TabsTrigger
-              value="surveillance"
-              className="hover:text-primary hover:bg-primary/10 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              {t('tabs.monitoring')}
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="test-connexion" className="mt-6">
@@ -85,15 +73,7 @@ export default function OutilsPage() {
             {activeTab === "lecture-etalon" ? <StandardReaderTab /> : null}
           </TabsContent>
 
-          <TabsContent value="config" className="mt-6">
-            <div className="py-12 text-center text-muted-foreground">{t('placeholders.config')}</div>
-          </TabsContent>
 
-          <TabsContent value="surveillance" className="mt-6">
-            <div className="py-12 text-center text-muted-foreground">
-              {t('placeholders.monitoring')}
-            </div>
-          </TabsContent>
         </Tabs>
       </main>
     </>

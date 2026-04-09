@@ -53,7 +53,7 @@ export const GET = withAnyAuthorizationLogging(
       const skip = (page - 1) * limit
       const q = searchParams.get("q")?.trim() || ""
       const type = searchParams.get("type")?.trim().toUpperCase() || ""
-      const siteId = parseInt(searchParams.get("siteId") || "", 10)
+      const lieuId = parseInt(searchParams.get("lieuId") || "", 10)
       const dateFrom = searchParams.get("dateFrom")?.trim() || ""
       const dateTo = searchParams.get("dateTo")?.trim() || ""
 
@@ -67,21 +67,7 @@ export const GET = withAnyAuthorizationLogging(
       }
 
       const accessibleLieuWhere = accessibleLieuIds ? { Id_Lieu: { in: accessibleLieuIds } } : {}
-      const siteFilteredLieuIds =
-        Number.isFinite(siteId) && siteId > 0
-          ? (
-              await prisma.t_lieu.findMany({
-                where: {
-                  ...accessibleLieuWhere,
-                  Id_Site: siteId,
-                },
-                select: { Id_Lieu: true },
-              })
-            ).map((item) => item.Id_Lieu)
-          : accessibleLieuIds
-
-      const finalLieuIds =
-        Number.isFinite(siteId) && siteId > 0 ? siteFilteredLieuIds : accessibleLieuIds
+      const finalLieuIds = Number.isFinite(lieuId) && lieuId > 0 ? [lieuId] : accessibleLieuIds
 
       const where = {
         Code_Journal: "ACQ",
@@ -98,14 +84,14 @@ export const GET = withAnyAuthorizationLogging(
           ? {
               OR: [
                 { Nom_Utilisateur: { contains: q } },
-                { Commentaire: { contains: q } },
-                { Commentaire_Utilisateur: { contains: q } },
+                { t_lieu: { is: { Nom_Lieu: { contains: q } } } },
+                { Nom_Utilisateur: { contains: q } },
               ],
             }
           : {}),
       }
 
-      const [totalWithoutType, rawRows] = await Promise.all([
+      const [totalWithoutType, rawRows, lieuOptionsRows] = await Promise.all([
         type ? Promise.resolve(0) : prismaMesure.tm_journal.count({ where }),
         prismaMesure.tm_journal.findMany({
           where,
@@ -119,6 +105,11 @@ export const GET = withAnyAuthorizationLogging(
             Commentaire_Utilisateur: true,
             Id_Lieu: true,
           },
+        }),
+        prisma.t_lieu.findMany({
+          where: accessibleLieuWhere,
+          select: { Id_Lieu: true, Nom_Lieu: true },
+          orderBy: { Nom_Lieu: "asc" },
         }),
       ])
 
@@ -173,6 +164,11 @@ export const GET = withAnyAuthorizationLogging(
             t_site: { select: { Libelle_Site: true } },
           },
         }),
+        prisma.t_lieu.findMany({
+          where: accessibleLieuWhere,
+          select: { Id_Lieu: true, Nom_Lieu: true },
+          orderBy: { Nom_Lieu: "asc" },
+        }),
       ])
 
       const lieuMap = new Map(lieux.map((lieu) => [lieu.Id_Lieu, lieu]))
@@ -192,6 +188,10 @@ export const GET = withAnyAuthorizationLogging(
             ? `${histo.Valeur}${histo.Unite ? ` ${histo.Unite}` : ""}`
             : null
 
+        const endDate = row.Date_Heure_Journal ?? histo?.Date_Heure_Acquittement ?? histo?.Date_Heure_Fin ?? null
+        const startDate = histo?.Date_Heure_Debut ?? null
+        const durationMs = startDate && endDate ? Math.max(endDate.getTime() - startDate.getTime(), 0) : null
+
         return {
           id: String(row.Id_Journal),
           alarmId,
@@ -204,6 +204,7 @@ export const GET = withAnyAuthorizationLogging(
           siteName: lieu?.t_site?.Libelle_Site?.trim() || null,
           locationName: lieu?.Nom_Lieu?.trim() || null,
           sensorSerial: histo?.Sonde_Numero_Serie?.trim() || lieu?.Sonde_Numero_Serie?.trim() || null,
+          durationMs,
           alarmType: normalizeAlarmType(histo?.Type),
           alarmValue: value,
           triggeredAt: histo?.Date_Heure_Debut?.toISOString() || null,
@@ -217,17 +218,11 @@ export const GET = withAnyAuthorizationLogging(
       const pages = Math.max(Math.ceil(total / limit), 1)
       const data = type ? filteredData.slice(skip, skip + limit) : filteredData
 
-      const sites = Array.from(
-        new Map(
-          siteOptionsRows
-            .filter((row) => typeof row.Id_Site === "number" && row.t_site?.Libelle_Site)
-            .map((row) => [row.Id_Site as number, { id: row.Id_Site as number, name: row.t_site!.Libelle_Site! }]),
-        ).values(),
-      ).sort((a, b) => a.name.localeCompare(b.name, "fr"))
+      const lieuxOptions = lieuOptionsRows.map((lieu) => ({ id: lieu.Id_Lieu, name: lieu.Nom_Lieu || `Lieu ${lieu.Id_Lieu}` }))
 
       return apiOk({
         data,
-        filters: { sites },
+        filters: { lieux: lieuxOptions },
         pagination: { page, limit, total, pages },
       })
     } catch (error) {

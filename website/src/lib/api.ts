@@ -197,8 +197,8 @@ export type SensorWithLocation = {
   unit: string;
   decimals?: number | null;
   currentValue: number | null;
-  minThreshold: number;
-  maxThreshold: number;
+  minThreshold: number | null;
+  maxThreshold: number | null;
   lastMeasurement: Date | null;
   isActive: boolean;
   location: Location;
@@ -213,8 +213,8 @@ export type AlarmWithDetails = {
   sensorId: string;
   locationId: string;
   type: "high" | "low" | "no-response" | "ended";
-  value: number;
-  threshold: number;
+  value: number | null;
+  threshold: number | null;
   status: "active" | "acknowledged" | "resolved";
   triggeredAt: Date;
   acknowledgedAt: Date | null;
@@ -245,6 +245,9 @@ export type Location = {
   comment?: string | null;
   lieuEtat?: string | null;
   surveillanceDisabled?: boolean;
+  surveillanceDisabledSince?: Date | null;
+  surveillanceDisabledBy?: string | null;
+  surveillanceDisabledComment?: string | null;
   lieuType?: string | null;
   alarmId?: number | null;
   isGso?: boolean | null;
@@ -268,8 +271,8 @@ export type Sensor = {
   type: string;
   unit: string;
   locationId: string;
-  minThreshold: number;
-  maxThreshold: number;
+  minThreshold: number | null;
+  maxThreshold: number | null;
   currentValue: number | null;
   measurementFrequency: number;
   alarmDelay: number;
@@ -282,8 +285,8 @@ export type Alarm = {
   sensorId: string;
   locationId: string;
   type: "high" | "low" | "no-response";
-  value: number;
-  threshold: number;
+  value: number | null;
+  threshold: number | null;
   status: "active" | "acknowledged" | "resolved";
   triggeredAt: Date;
   acknowledgedAt: Date | null;

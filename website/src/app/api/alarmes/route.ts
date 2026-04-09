@@ -13,7 +13,9 @@ import { log } from "@/lib/logger"
 const alarmsQuerySchema = z.object({
   status: z.enum(["active", "acknowledged", "resolved"]).optional(),
   page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(15),
+  limit: z.coerce.number().int().min(1).max(200).default(15),
+  siteId: z.coerce.number().int().positive().optional(),
+  locationId: z.coerce.number().int().positive().optional(),
 })
 
 
@@ -38,15 +40,19 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
       status: req.nextUrl.searchParams.get("status") ?? undefined,
       page: req.nextUrl.searchParams.get("page") ?? undefined,
       limit: req.nextUrl.searchParams.get("limit") ?? undefined,
+      siteId: req.nextUrl.searchParams.get("siteId") ?? undefined,
+      locationId: req.nextUrl.searchParams.get("locationId") ?? undefined,
     })
     if (!queryParsed.success) {
       return apiError(400, "validation_error", "Paramètres invalides", {
         details: queryParsed.error.issues,
       })
     }
-    const { status, page, limit } = queryParsed.data
+    const { status, page, limit, siteId, locationId } = queryParsed.data
 
     const baseWhere: Record<string, unknown> = {}
+
+    if (siteId) baseWhere.Id_Lieu = undefined
 
     if (status === "active") {
 
@@ -64,6 +70,17 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
       baseWhere.Date_Heure_Fin = { not: null }
 
+    }
+
+    if (locationId) {
+      baseWhere.Id_Lieu = locationId
+    }
+
+    if (siteId) {
+      baseWhere.t_lieu = {
+        ...(typeof baseWhere.t_lieu === "object" && baseWhere.t_lieu ? (baseWhere.t_lieu as Record<string, unknown>) : {}),
+        Id_Site: siteId,
+      }
     }
 
 
@@ -92,7 +109,16 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
               Id_Lieu: true,
 
+              Id_Site: true,
+
               Nom_Lieu: true,
+
+              t_site: {
+                select: {
+                  Id_Site: true,
+                  Libelle_Site: true,
+                },
+              },
 
               Derniere_Valeur: true,
 
@@ -278,6 +304,10 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
         locationName: alarm.t_lieu?.Nom_Lieu || "Unknown",
 
+        siteId: alarm.t_lieu?.t_site?.Id_Site || alarm.t_lieu?.Id_Site || null,
+
+        siteName: alarm.t_lieu?.t_site?.Libelle_Site || null,
+
         type: alarmType,
 
         severity:
@@ -322,7 +352,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
         unit,
 
-        currentValue: alarm.t_lieu?.Derniere_Valeur ?? alarm.Valeur ?? null,
+        currentValue: alarm.Type === "N" ? null : (alarm.Valeur ?? alarm.t_lieu?.Derniere_Valeur ?? null),
 
         count30Days: countsByLieu.get(alarm.t_lieu?.Id_Lieu ?? 0) ?? 0,
 
@@ -332,11 +362,34 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
 
 
+    const [siteOptions, lieuOptions] = await Promise.all([
+      prisma.t_lieu.findMany({
+        where: applyAccessFilter(siteId ? { Id_Site: siteId } : {}, accessFilter),
+        select: { Id_Site: true, t_site: { select: { Libelle_Site: true } } },
+        distinct: ["Id_Site"],
+        orderBy: { Id_Site: "asc" },
+      }),
+      prisma.t_lieu.findMany({
+        where: applyAccessFilter(siteId ? { Id_Site: siteId } : {}, accessFilter),
+        select: { Id_Lieu: true, Nom_Lieu: true },
+        orderBy: { Nom_Lieu: "asc" },
+      }),
+    ])
+
     return apiOk(
 
       {
 
         data: formatted,
+
+        filters: {
+          sites: siteOptions
+            .filter((row) => row.Id_Site && row.t_site?.Libelle_Site)
+            .map((row) => ({ id: row.Id_Site as number, name: row.t_site?.Libelle_Site as string })),
+          lieux: lieuOptions
+            .filter((row) => row.Id_Lieu && row.Nom_Lieu)
+            .map((row) => ({ id: row.Id_Lieu, name: row.Nom_Lieu as string })),
+        },
 
         pagination: {
 

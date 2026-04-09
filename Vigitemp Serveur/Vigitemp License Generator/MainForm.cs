@@ -254,7 +254,7 @@ namespace Vigitemp_License_Generator
                 inputTable,
                 "Clé publique instance (RSA)",
                 _txtInstancePublicKey,
-                "Clé publique RSA optionnelle pour lier la licence à  une instance.\nLaisser vide si aucune liaison n'est requise."
+                "Clé publique RSA optionnelle pour lier la licence à une instance.\nLaisser vide si aucune liaison n'est requise."
             );
 
             _txtAgentSecretPublicKey = new TextBox { Width = 520, Multiline = true, Height = 80, ScrollBars = ScrollBars.Vertical };
@@ -286,7 +286,7 @@ namespace Vigitemp_License_Generator
                 inputTable,
                 "Secret agent (RSA)",
                 agentSecretKeyPanel,
-                "Génère une paire RSA dédiée au secret agent.\nLa clé publique est collée ci-dessus, la clé privée reste à  déposer sur le serveur web."
+                "Génère une paire RSA dédiée au secret agent.\nLa clé publique est collée ci-dessus, la clé privée reste à déposer sur le serveur web."
             );
 
             _txtAgentSecretPrivateKeyPath = new TextBox { Width = 520, ReadOnly = true };
@@ -1085,7 +1085,7 @@ namespace Vigitemp_License_Generator
         {
             if (string.IsNullOrWhiteSpace(text))
             {
-                MessageBox.Show("Aucune donnée à  copier.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Aucune donnée à copier.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 

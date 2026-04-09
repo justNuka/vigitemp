@@ -31,7 +31,6 @@ export const GET = withAdminLogging(
           t_site: {
             select: {
               Id_Site: true,
-              Code_Site: true,
               Libelle_Site: true,
               Est_Archive: true,
             },
@@ -42,7 +41,6 @@ export const GET = withAdminLogging(
 
       const formattedSites = sites.map((liaison) => ({
         Id_Site: liaison.t_site?.Id_Site,
-        Code_Site: liaison.t_site?.Code_Site,
         Libelle_Site: liaison.t_site?.Libelle_Site,
         Est_Archive: liaison.t_site?.Est_Archive,
         Date_Affectation: liaison.Date_Affectation,
@@ -109,7 +107,6 @@ export const POST = withAdminLogging(
           t_site: {
             select: {
               Id_Site: true,
-              Code_Site: true,
               Libelle_Site: true,
             },
           },
@@ -128,7 +125,6 @@ export const POST = withAdminLogging(
         message: "Site assigned to user successfully",
         site: {
           id_Site: liaison.t_site?.Id_Site,
-          code_Site: liaison.t_site?.Code_Site,
           libelle_Site: liaison.t_site?.Libelle_Site,
           assignedAt: liaison.Date_Affectation,
         },

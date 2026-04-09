@@ -32,8 +32,8 @@ const sensorColors: Record<string, string> = {
   pressure: "text-primary",
 };
 
-function getValueTrend(current: number | null, min: number, max: number): "up" | "down" | "stable" {
-  if (!current) return "stable";
+function getValueTrend(current: number | null, min: number | null, max: number | null): "up" | "down" | "stable" {
+  if (current === null || min === null || max === null) return "stable";
   const range = max - min;
   const midpoint = min + range / 2;
   const diff = current - midpoint;
@@ -48,8 +48,12 @@ export function SensorCard({ sensor, onClick, className }: SensorCardProps) {
 
   const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
 
-  const isOutOfRange = sensor.currentValue !== null && (
-    sensor.currentValue < sensor.minThreshold || sensor.currentValue > sensor.maxThreshold
+  const hasThresholds = sensor.minThreshold !== null && sensor.maxThreshold !== null;
+  const minThreshold = sensor.minThreshold;
+  const maxThreshold = sensor.maxThreshold;
+
+  const isOutOfRange = hasThresholds && sensor.currentValue !== null && minThreshold !== null && maxThreshold !== null && (
+    sensor.currentValue < minThreshold || sensor.currentValue > maxThreshold
   );
 
   const badgeStatus: "ok" | "warning" | "critical" =
@@ -110,10 +114,10 @@ export function SensorCard({ sensor, onClick, className }: SensorCardProps) {
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-3">
               <span className="text-muted-foreground">
-                Min: <span className="font-medium text-foreground">{sensor.minThreshold}{sensor.unit}</span>
+                Min: <span className="font-medium text-foreground">{sensor.minThreshold !== null ? `${sensor.minThreshold}${sensor.unit}` : "-"}</span>
               </span>
               <span className="text-muted-foreground">
-                Max: <span className="font-medium text-foreground">{sensor.maxThreshold}{sensor.unit}</span>
+                Max: <span className="font-medium text-foreground">{sensor.maxThreshold !== null ? `${sensor.maxThreshold}${sensor.unit}` : "-"}</span>
               </span>
             </div>
           </div>
@@ -134,13 +138,13 @@ export function SensorCard({ sensor, onClick, className }: SensorCardProps) {
 
 interface ThresholdBarProps {
   value: number | null;
-  min: number;
-  max: number;
+  min: number | null;
+  max: number | null;
   status: "ok" | "warning" | "critical";
 }
 
 function ThresholdBar({ value, min, max, status }: ThresholdBarProps) {
-  if (value === null) return null;
+  if (value === null || min === null || max === null) return null;
 
   const range = max - min;
   const buffer = range * 0.2;

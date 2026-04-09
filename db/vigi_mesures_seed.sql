@@ -153,6 +153,7 @@ CREATE TABLE `tm_mesure_calibrage_etalon` (
 DROP TABLE IF EXISTS `tm_mesure_etalon`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
+-- Mesures brutes remontees par un etalon de reference.
 CREATE TABLE `tm_mesure_etalon` (
   `Id_Mesure_Etalon` int NOT NULL AUTO_INCREMENT,
   `Id_Serveur_BDD` int NOT NULL DEFAULT '0',
@@ -172,6 +173,7 @@ CREATE TABLE `tm_mesure_etalon` (
 DROP TABLE IF EXISTS `tm_mesure_etalonnage`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
+-- Mesures de campagne d'etalonnage d'une sonde (sonde etalonnee vs etalon).
 CREATE TABLE `tm_mesure_etalonnage` (
   `Id_Mesure_Etalonnage` int NOT NULL AUTO_INCREMENT,
   `Id_Serveur_BDD` int NOT NULL DEFAULT '0',

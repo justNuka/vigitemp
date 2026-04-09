@@ -390,7 +390,15 @@ export const log = {
       }),
     
     // CC - Changement sur un élément (modification)
-    update: (resource: string, resourceId: number | string, user: string, userId: number, ip: string, changes?: Record<string, unknown>) =>
+    update: (
+      resource: string,
+      resourceId: number | string,
+      user: string,
+      userId: number,
+      ip: string,
+      changes?: Record<string, unknown>,
+      reason?: string,
+    ) =>
       log.audit("CC", {
         user,
         userId,
@@ -398,6 +406,7 @@ export const log = {
         resource: `${resource} (Modification)`,
         resourceId,
         changes: { action: "update", ...changes },
+        reason,
       }),
     
     // CC - Changement sur un élément (suppression/archive)
@@ -559,21 +568,23 @@ export const log = {
 
   // Logs de lieu (son d'alarme)
   lieu: {
-    soundOn: (lieuName: string, lieuId: number, user: string, userId: number, ip: string) =>
+    soundOn: (lieuName: string, lieuId: number, user: string, userId: number, ip: string, reason?: string) =>
       log.audit("SONS", {
         user,
         userId,
         ip,
         resource: `Lieu: ${lieuName}`,
         resourceId: lieuId,
+        reason,
       }),
-    soundOff: (lieuName: string, lieuId: number, user: string, userId: number, ip: string) =>
+    soundOff: (lieuName: string, lieuId: number, user: string, userId: number, ip: string, reason?: string) =>
       log.audit("SOND", {
         user,
         userId,
         ip,
         resource: `Lieu: ${lieuName}`,
         resourceId: lieuId,
+        reason,
       }),
   },
 

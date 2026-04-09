@@ -6,6 +6,7 @@ import { log } from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 
 const DEFAULT_SETTINGS = [
+  { key: "general:timezone_enabled", value: "true", label: "Enable timezone" },
   { key: "general:timezone", value: "Europe/Paris", label: "Timezone" },
   { key: "general:global_language", value: "fr", label: "Global language" },
   { key: "notifications:email", value: "true", label: "Email notifications" },

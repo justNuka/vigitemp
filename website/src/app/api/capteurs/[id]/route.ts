@@ -26,7 +26,6 @@ export const GET = withAuthLogging(
           t_site: {
             select: {
               Id_Site: true,
-              Code_Site: true,
               Libelle_Site: true,
             },
           },
@@ -73,10 +72,7 @@ export const GET = withAuthLogging(
         lastUpdate: lieu.Derniere_Date_Heure?.toISOString() || new Date().toISOString(),
         location: {
           id: lieu.Id_Site || 0,
-          name:
-            lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
-              ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
-              : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || "Unknown",
+          name: lieu.t_site?.Libelle_Site || "Unknown",
         },
         minThreshold: lieu.Tolerance_Surveillance_Inf ?? lieu.Consigne_Inf,
         maxThreshold: lieu.Tolerance_Surveillance_Sup ?? lieu.Consigne_Sup,
@@ -111,7 +107,6 @@ export const PATCH = withAuthLogging(
           t_site: {
             select: {
               Id_Site: true,
-              Code_Site: true,
               Libelle_Site: true,
             },
           },
@@ -159,10 +154,7 @@ export const PATCH = withAuthLogging(
         status,
         location: {
           id: lieu.Id_Site || 0,
-          name:
-            lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
-              ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
-              : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || "Unknown",
+          name: lieu.t_site?.Libelle_Site || "Unknown",
         },
       })
     } catch (error) {

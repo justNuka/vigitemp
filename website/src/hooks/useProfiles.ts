@@ -6,6 +6,7 @@ export interface Profile {
   name: string;
   description: string | null;
   mc2: boolean | null;
+  estArchive?: boolean | null;
   userCount: number;
   authorizations: Authorization[];
 }

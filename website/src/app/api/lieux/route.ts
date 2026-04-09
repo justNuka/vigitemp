@@ -30,6 +30,14 @@ const STANDARD_METROLOGY_FIELDS = [
 
 
 function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) {
+  if (data.Id_Site === null || data.Id_Site === undefined) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Id_Site"],
+      message: "Le site est requis.",
+    })
+  }
+
   const hasConsigne = data.Consigne !== null && data.Consigne !== undefined
   const hasSup = data.Consigne_Sup !== null && data.Consigne_Sup !== undefined
   const hasInf = data.Consigne_Inf !== null && data.Consigne_Inf !== undefined
@@ -40,7 +48,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Sup"],
-      message: "La consigne sup doit etre strictement superieure a la consigne.",
+      message: "La consigne sup?rieure doit ?tre strictement sup?rieure ? la consigne.",
     })
   }
 
@@ -48,7 +56,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Inf"],
-      message: "La consigne inf doit etre strictement inferieure a la consigne.",
+      message: "La consigne inf?rieure doit ?tre strictement inf?rieure ? la consigne.",
     })
   }
 
@@ -56,7 +64,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Inf"],
-      message: "La consigne inf doit etre strictement inferieure a la consigne sup.",
+      message: "La consigne inf?rieure doit ?tre strictement inf?rieure ? la consigne sup?rieure.",
     })
   }
 }
@@ -133,8 +141,14 @@ export const GET = withLogging(async (req: NextRequest) => {
     const scope = await getUserLocationScope(user.userId)
     const lieuAccessFilter = buildLieuAccessFilter(scope)
 
+    const planningCounts = await prisma.t_lieu_planning_regle.groupBy({
+      by: ["Id_Lieu"],
+      _count: { Id_Regle: true },
+    })
+    const planningCountByLieu = new Map(planningCounts.map((item) => [item.Id_Lieu, item._count.Id_Regle]))
+
     const lieux = await prisma.t_lieu.findMany({
-      where: applyAccessFilter({ Est_Archive: false }, lieuAccessFilter),
+      where: applyAccessFilter({}, lieuAccessFilter),
       include: {
         t_lieu_groupe: {
           include: {
@@ -187,6 +201,7 @@ export const GET = withLogging(async (req: NextRequest) => {
           ? lieu?.Frequence
           : Number(lieu.Frequence) / 60,
       GroupIds: (lieu?.t_lieu_groupe ?? []).map((lg) => lg.Id_Groupe),
+      Planning_Regles_Count: planningCountByLieu.get(lieu.Id_Lieu) ?? 0,
       MailingContacts: (lieu?.t_lieu_mail_tel ?? []).map((contact, index) => ({
         Id_Tel_Num: contact.Id_Mail_Tel,
         Numero_Ordre: contact.Ordre_Contact ?? index + 1,
@@ -226,8 +241,8 @@ export const POST = withLogging(async (req: NextRequest) => {
       ),
     )
 
-    const lieuEtat = validated.Lieu_Etat ?? "D"
     const sondeNumeroSerie = validated.Sonde_Numero_Serie?.trim() || null
+    const lieuEtat = sondeNumeroSerie ? (validated.Lieu_Etat ?? "D") : "D"
     const hasIdModule = Object.prototype.hasOwnProperty.call(validated, "Id_Module")
 
     let estLieuGso = false
@@ -425,7 +440,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     return apiOk(normalized, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return apiError(400, "validation_error", "Invalid input", { issues: error.issues })
+      return apiError(400, "validation_error", "Validation impossible", { issues: error.issues })
     }
     log.error("lieux", "lieu_create_error", { error: error });
     return apiError(500, "lieu_create_failed", "Erreur lors de la création du lieu")

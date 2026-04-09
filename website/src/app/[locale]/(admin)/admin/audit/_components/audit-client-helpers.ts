@@ -11,8 +11,6 @@ export interface AuditLogRow {
   action: string
   userId: string | null
   details: string | null
-  targetType: string | null
-  targetId: string | null
 }
 
 type ParsedDetails = {
@@ -147,8 +145,6 @@ export function toAuditTableData(logs: AuditLog[]): AuditLogRow[] {
     action: log.action,
     userId: log.userId,
     details: log.details,
-    targetType: log.targetType,
-    targetId: log.targetId,
   }))
 }
 

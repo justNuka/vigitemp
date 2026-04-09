@@ -15,9 +15,7 @@ export const GET = withLogging(async (req: NextRequest) => {
     const { searchParams } = new URL(req.url)
     const regroupement = searchParams.get("regroupement")
 
-    const where: Record<string, unknown> = {
-      Est_Archive: false,
-    }
+    const where: Record<string, unknown> = {}
 
     if (regroupement) {
       where.Numero_Regroupement = regroupement
@@ -34,6 +32,10 @@ export const GET = withLogging(async (req: NextRequest) => {
           where: { t_lieu: { Est_Archive: false } },
           select: { Id_Lieu: true },
         },
+        t_liaison_utilisateur_groupe: {
+          where: { t_utilisateur: { Est_Archive: false } },
+          select: { Id_Utilisateur: true },
+        },
       },
       orderBy: {
         Nom_Groupe: "asc",
@@ -46,6 +48,7 @@ export const GET = withLogging(async (req: NextRequest) => {
       Numero_Regroupement: groupe.Numero_Regroupement,
       Est_Archive: groupe.Est_Archive,
       nombre_lieux: groupe.t_lieu_groupe.length,
+      nombre_utilisateurs: groupe.t_liaison_utilisateur_groupe.length,
     }))
 
     return apiOk(groupesWithCounts)
@@ -87,6 +90,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       Numero_Regroupement: groupe.Numero_Regroupement,
       Est_Archive: groupe.Est_Archive,
       nombre_lieux: 0,
+      nombre_utilisateurs: 0,
     })
   } catch (error) {
     log.error("groupes", "groupe_creation_error", { error: error });

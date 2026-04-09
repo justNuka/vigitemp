@@ -8,6 +8,12 @@ import { getGlobalNonResponseDefault } from "@/lib/non-response-preference"
 import { canUserAccessLieu } from "@/lib/location-access-scope"
 import { log } from "@/lib/logger"
 
+function normalizeDisplayUnit(unit: string | null | undefined): string {
+  const normalized = unit?.trim()
+  if (!normalized) return "°C"
+  return normalized.toUpperCase() === "C" ? "°C" : normalized
+}
+
 export const GET = withAuthLogging(
   async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ idLieu: string }> }) => {
     try {
@@ -144,6 +150,10 @@ export const GET = withAuthLogging(
             Tolerance_Surveillance_Inf: true,
             Derniere_Nb_Decimal: true,
             Type_Lieu: true,
+            Derniere_Unite: true,
+            Sonde_Numero_Serie: true,
+            Est_Consigne_Sup_Active: true,
+            Est_Consigne_Inf_Active: true,
           },
         }),
         usePagination
@@ -158,10 +168,28 @@ export const GET = withAuthLogging(
 
       const measurements = primaryMeasurements
 
-      const consigneSupLieu =
-        lieu?.Tolerance_Surveillance_Sup ?? lieu?.Consigne_Sup ?? null
+      const calibration = lieu?.Sonde_Numero_Serie
+        ? await prisma.t_etalonnage.findFirst({
+            where: {
+              Sonde_Numero_Serie: lieu.Sonde_Numero_Serie,
+              Unite: { not: null },
+            },
+            orderBy: [
+              { Date_Heure_Etalonnage: "desc" },
+              { Id_Etalonnage: "desc" },
+            ],
+            select: { Unite: true },
+          })
+        : null
+
+            const consigneSupLieu =
+        lieu?.Est_Consigne_Sup_Active === false
+          ? null
+          : lieu?.Tolerance_Surveillance_Sup ?? lieu?.Consigne_Sup ?? null
       const consigneInfLieu =
-        lieu?.Tolerance_Surveillance_Inf ?? lieu?.Consigne_Inf ?? null
+        lieu?.Est_Consigne_Inf_Active === false
+          ? null
+          : lieu?.Tolerance_Surveillance_Inf ?? lieu?.Consigne_Inf ?? null
       const consigneLieu = lieu?.Consigne ?? null
       const decimalsLieu = lieu?.Derniere_Nb_Decimal ?? null
 
@@ -185,7 +213,7 @@ export const GET = withAuthLogging(
               : decimalsLieu !== null
                 ? Number(decimalsLieu)
                 : null,
-          Unite: m.Unite || "\u00B0C",
+          Unite: normalizeDisplayUnit(calibration?.Unite ?? lieu?.Derniere_Unite ?? m.Unite),
           DateHeureMesure: dateDisplay,
           DateHeureMesureIso: dateHeure.toISOString(),
           DateHeureMesureXaxis: dateXaxis,

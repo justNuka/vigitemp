@@ -134,9 +134,9 @@ export const POST = withLogging(
       const regleData: Prisma.t_lieu_planning_regleUncheckedCreateInput = {
         Id_Lieu: idLieu,
         Actif: validated.Actif,
-        Jour_Debut: validated.Jour_Debut,
+        Jour_Debut: validated.Jour_Debut!,
         Heure_Debut: new Date(`1970-01-01T${validated.Heure_Debut}:00Z`),
-        Jour_Fin: validated.Jour_Fin,
+        Jour_Fin: validated.Jour_Fin!,
         Heure_Fin: new Date(`1970-01-01T${validated.Heure_Fin}:00Z`),
         Consigne: validated.Consigne ?? null,
         Consigne_Sup: validated.Consigne_Sup ?? null,

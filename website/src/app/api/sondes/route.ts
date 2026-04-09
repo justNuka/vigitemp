@@ -35,6 +35,24 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
       .map((sonde) => sonde.Sonde_Numero_Serie)
       .filter((serial): serial is string => Boolean(serial))
 
+    const moduleIds = Array.from(
+      new Set(sondes.map((sonde) => sonde.Id_Module).filter((value): value is number => typeof value === "number")),
+    )
+
+    const modules = moduleIds.length
+      ? await prisma.t_module.findMany({
+          where: { Id_Module: { in: moduleIds } },
+          select: {
+            Id_Module: true,
+            Module_Numero_Serie: true,
+            Emplacement: true,
+            Port_Serie: true,
+          },
+        })
+      : []
+
+    const moduleById = new Map(modules.map((module) => [module.Id_Module, module]))
+
     const latestEtalonnages = serials.length
       ? await prisma.t_etalonnage.findMany({
           where: { Sonde_Numero_Serie: { in: serials } },
@@ -67,7 +85,16 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
       Surveillance_Etat: sonde.Surveillance_Etat ?? sonde.t_sonde_etat?.Etat_Sonde ?? null,
       Surveillance_Etat_Libelle: sonde.t_sonde_etat?.Etat_Libelle ?? sonde.Surveillance_Etat ?? null,
       Id_Module: sonde.Id_Module,
+      Module_Libelle:
+        (typeof sonde.Id_Module === "number" ? moduleById.get(sonde.Id_Module)?.Module_Numero_Serie : null) ??
+        (typeof sonde.Id_Module === "number" ? moduleById.get(sonde.Id_Module)?.Emplacement : null) ??
+        null,
+      Module_Port:
+        (typeof sonde.Id_Module === "number" ? moduleById.get(sonde.Id_Module)?.Port_Serie : null) ??
+        sonde.Port_Serie ??
+        null,
       Sonde_Offset: sonde.Sonde_Offset,
+      Est_Sonde_Reformee: sonde.Est_Sonde_Reformee ?? null,
       Lieu: sonde.t_lieu[0]?.Nom_Lieu || null,
       Date_Validite_Etalonnage: sonde.Sonde_Numero_Serie
         ? latestValidityBySerial.get(sonde.Sonde_Numero_Serie) ?? null
@@ -114,7 +141,9 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
     }
 
     const edition = (license.edition || "one").trim().toLowerCase()
-    if (edition === "pack") {
+    const isPackEdition = edition === "pack"
+
+    if (isPackEdition) {
       const limit = typeof license.maxSensors === "number" ? license.maxSensors : null
       if (!limit || limit <= 0) {
         return apiError(403, "license_pack_limit_invalid", "Limite de sondes invalide pour la licence Pack")
@@ -137,6 +166,8 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
         )
       }
     }
+
+    const effectiveOffset = isPackEdition ? 0 : data.sondeOffset ?? 0
 
     const existing = await prisma.t_sonde.findMany({
       where: { Sonde_Numero_Serie: { in: serialsToCreate } },
@@ -173,7 +204,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
             Sonde_Type: sensorType.Sonde_Type,
             Id_Module: data.moduleId ?? null,
             Port_Serie: portSerie,
-            Sonde_Offset: data.sondeOffset ?? 0,
+            Sonde_Offset: effectiveOffset,
             Surveillance_Etat: "D",
             Est_Sonde_GSO: isGsoFamily,
           },
@@ -187,6 +218,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
         adresse: item.Adresse_Sonde,
         moduleId: item.Id_Module,
         offset: item.Sonde_Offset,
+        requestedOffset: data.sondeOffset ?? null,
         estGso: item.Est_Sonde_GSO,
         familleSonde: sensorType.Famille_Sonde,
       })

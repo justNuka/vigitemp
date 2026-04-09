@@ -469,26 +469,6 @@ export const POST = withLogging(async (req: NextRequest) => {
     usedSystemFallback: emailResult.usedSystemFallback ?? false,
   })
 
-  log.audit("CC", {
-    user: "DISPATCH_SERVICE",
-    userId: 0,
-    ip,
-    resource: "Dispatch alarme",
-    resourceId: alarmId ?? undefined,
-    changes: {
-      eventType,
-      lieuId: lieuId ?? null,
-      typeAlarme: alarmTypeCode ?? alarmTypeLabel ?? null,
-      agentTargets: agentResult.attempted,
-      agentFailed: agentResult.failed,
-      emailAttempted: emailResult.attempted,
-      emailSent: emailResult.sent,
-      emailSkipped: emailResult.skipped,
-      emailUsedSystemFallback: emailResult.usedSystemFallback ?? false,
-    },
-    success: true,
-  })
-
   revalidateTag("dashboard-active-alarms", "default")
   revalidateTag("dashboard-stats", "default")
   revalidateTag("dashboard-critical-sensors", "default")

@@ -381,7 +381,7 @@ export function HotlineSensorTestPanel() {
             </div>
             <div className="grid gap-4 sm:grid-cols-1">
               <Field label="Port COM">
-                <Input value={manualPort} onChange={(e) => setManualPort(e.target.value)} placeholder="COM101" />
+                <Input value={manualPort} onChange={(e) => setManualPort(e.target.value)} placeholder="COMXXX" />
               </Field>
             </div>
             <div className="mt-4">

@@ -9,6 +9,7 @@ interface Props {
   regroupement: string
   onRegroupementChange: (value: string) => void
   canEdit: boolean
+  canArchive: boolean
   onNew: () => void
   onEdit: () => void
   onArchive: () => void
@@ -21,6 +22,7 @@ export function GroupsActions({
   onNew,
   onEdit,
   onArchive,
+  canArchive,
 }: Props) {
   const t = useTranslations('groupsPage')
 
@@ -31,6 +33,7 @@ export function GroupsActions({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
+          <SelectItem value="all">{t('regroupement.all')}</SelectItem>
           <SelectItem value="1">{t('regroupement.one')}</SelectItem>
           <SelectItem value="2">{t('regroupement.two')}</SelectItem>
         </SelectContent>
@@ -43,7 +46,7 @@ export function GroupsActions({
         <Pencil className="h-4 w-4" />
         {t('actions.edit')}
       </Button>
-      <Button onClick={onArchive} disabled={!canEdit} variant="outline" size="sm" className="gap-2">
+      <Button onClick={onArchive} disabled={!canArchive} variant="outline" size="sm" className="gap-2">
         <Archive className="h-4 w-4" />
         {t('actions.archive')}
       </Button>

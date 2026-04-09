@@ -31,16 +31,17 @@ interface Props {
 }
 
 interface ActiveFilters {
-  user: string;
   dateFrom: string;
   dateTo: string;
   code: string;
 }
 
-const EMPTY_FILTERS: ActiveFilters = { user: "", dateFrom: "", dateTo: "", code: "" };
+function formatDateInput(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
 
 function hasActiveFilters(filters: ActiveFilters): boolean {
-  return !!(filters.user || filters.dateFrom || filters.dateTo || (filters.code && filters.code !== "all"));
+  return !!(filters.dateFrom || filters.dateTo || (filters.code && filters.code !== "all"));
 }
 
 export function AuditClient({ logs: initialLogs }: Props) {
@@ -52,24 +53,21 @@ export function AuditClient({ logs: initialLogs }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [codeFilter, setCodeFilter] = useState<string>("all");
   const [codesOpen, setCodesOpen] = useState(false);
-  const [userFilter, setUserFilter] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateFrom, setDateFrom] = useState(() => formatDateInput(new Date()));
+  const [dateTo, setDateTo] = useState(() => formatDateInput(new Date()));
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
 
   const activeFilters: ActiveFilters = useMemo(() => ({
-    user: userFilter,
     dateFrom,
     dateTo,
     code: codeFilter,
-  }), [userFilter, dateFrom, dateTo, codeFilter]);
+  }), [dateFrom, dateTo, codeFilter]);
 
   const filtersActive = hasActiveFilters(activeFilters);
 
   const queryParams = useMemo(() => {
     const params = new URLSearchParams();
     if (activeFilters.code && activeFilters.code !== "all") params.set("code", activeFilters.code);
-    if (activeFilters.user) params.set("user", activeFilters.user);
     if (activeFilters.dateFrom) params.set("dateFrom", activeFilters.dateFrom);
     if (activeFilters.dateTo) params.set("dateTo", activeFilters.dateTo);
     return params.toString();
@@ -105,7 +103,6 @@ export function AuditClient({ logs: initialLogs }: Props) {
   };
 
   const clearFilters = () => {
-    setUserFilter("");
     setDateFrom("");
     setDateTo("");
     setCodeFilter("all");
@@ -261,23 +258,6 @@ export function AuditClient({ logs: initialLogs }: Props) {
         );
       },
     },
-    {
-      accessorKey: "targetId",
-      header: t("table.columns.target"),
-      cell: ({ row }) => {
-        const targetType = row.original.targetType;
-        const targetId = row.getValue("targetId") as string | null;
-        if (targetType && targetId) {
-          return (
-            <span className="text-sm">
-              <span className="text-muted-foreground capitalize">{targetType}:</span>{" "}
-              <span className="font-mono text-xs">{targetId}</span>
-            </span>
-          );
-        }
-        return <span className="text-muted-foreground">{t("table.empty_value")}</span>;
-      },
-    },
   ];
 
   const tableData = useMemo(() => toAuditTableData(filteredLogs), [filteredLogs]);
@@ -294,13 +274,16 @@ export function AuditClient({ logs: initialLogs }: Props) {
         <CardHeader className="flex flex-row items-center justify-between space-y-0 flex-wrap gap-2">
           <div>
             <CardTitle>{t("latest_activity")}</CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">{summary}</p>
+            <div className="mt-1 space-y-1">
+              <p className="text-sm text-muted-foreground">{summary}</p>
+              <p className="text-xs text-muted-foreground">{t("filter.today_limit_hint")}</p>
+            </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
             <Select value={codeFilter} onValueChange={setCodeFilter} onOpenChange={setCodesOpen}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder={t("all_codes")} />
+                <SelectValue placeholder={t("filter.action")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t("all_codes")}</SelectItem>
@@ -312,13 +295,6 @@ export function AuditClient({ logs: initialLogs }: Props) {
                 ))}
               </SelectContent>
             </Select>
-
-            <Input
-              placeholder={t("filter.user")}
-              value={userFilter}
-              onChange={(e) => setUserFilter(e.target.value)}
-              className="w-40"
-            />
 
             <Input
               type="date"

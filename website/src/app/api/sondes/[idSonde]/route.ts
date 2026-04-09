@@ -5,6 +5,7 @@ import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { getRequestContext } from "@/lib/api-logger"
 import { apiError, apiOk } from "@/lib/api-response"
 import { auditRouteUpdate } from "@/lib/audit-route"
+import { validateLicense } from "@/lib/license-server"
 import { prisma } from "@/lib/prisma"
 import { log } from "@/lib/logger"
 
@@ -31,6 +32,21 @@ export const PATCH = withAuthLogging(
       const existing = await prisma.t_sonde.findUnique({ where: { Id_Sonde: id } })
       if (!existing) {
         return apiError(404, "not_found", "Sonde introuvable")
+      }
+
+      const license = await validateLicense()
+      const isPackEdition = license.ok && (license.edition || "one").trim().toLowerCase() === "pack"
+
+      if (isPackEdition && data.sondeOffset !== undefined) {
+        const requestedOffset = data.sondeOffset ?? 0
+        const existingOffset = existing.Sonde_Offset ?? 0
+        if (Number(requestedOffset) !== Number(existingOffset)) {
+          return apiError(
+            403,
+            "license_pack_offset_forbidden",
+            "L'offset sonde n'est pas disponible avec la licence Pack",
+          )
+        }
       }
 
       const nextModuleId = data.moduleId === undefined ? existing.Id_Module : data.moduleId

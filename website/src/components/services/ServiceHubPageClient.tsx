@@ -8,7 +8,7 @@ import { DotPattern } from "@/components/ui/dot-pattern";
 import { MagicCard } from "@/components/ui/magic-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpRight, ShoppingCart, Megaphone, Truck } from "lucide-react";
+import { ArrowUpRight, ShoppingCart, Megaphone } from "lucide-react";
 import { useTheme } from "next-themes";
 import { ServicesNavbar } from "@/components/services/ServicesNavbar";
 import { Link } from "@/i18n/navigation";
@@ -16,7 +16,6 @@ import { Link } from "@/i18n/navigation";
 const cardIcons = {
   upgrade: ArrowUpRight,
   hardware: ShoppingCart,
-  vigilog: Truck,
   news: Megaphone,
 };
 
@@ -53,14 +52,6 @@ export function ServiceHubPageClient() {
       description: t("servicesHub.cards.hardware.description"),
       tag: t("servicesHub.cards.hardware.tag"),
       cta: t("servicesHub.cards.hardware.cta"),
-    },
-    {
-      key: "vigilog",
-      href: "/vigilog",
-      title: t("servicesHub.cards.vigilog.title"),
-      description: t("servicesHub.cards.vigilog.description"),
-      tag: t("servicesHub.cards.vigilog.tag"),
-      cta: t("servicesHub.cards.vigilog.cta"),
     },
     {
       key: "news",

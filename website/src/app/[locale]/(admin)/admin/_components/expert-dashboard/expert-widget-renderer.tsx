@@ -6,6 +6,13 @@ import type { Metrics, WidgetId } from "./expert-dashboard-types"
 
 type Translate = (key: string, values?: Record<string, string | number>) => string
 
+function formatLocalDateForQuery(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
 export function renderExpertWidget({
   id,
   locale,
@@ -66,13 +73,16 @@ export function renderExpertWidget({
   }
 
   if (id === "systemLogs") {
+    const today = formatLocalDateForQuery(new Date())
+    const auditHref = `/admin/audit?dateFrom=${today}&dateTo=${today}`
+
     return (
       <ExpertWidgetCard
         title={t("system_logs.title")}
-        description={t("system_logs.description", { count: 50, total: metrics.systemLogsTotal })}
+        description={t("system_logs.description", { count: 100, total: metrics.systemLogsTotal })}
         value={String(metrics.systemLogsTotal)}
         helper={`${t("system_logs.columns.action")}: ${metrics.latestAuditAction}`}
-        href="/admin/audit"
+        href={auditHref}
         hrefLabel={accessLabel}
         icon={<BookOpen className="h-5 w-5 text-emerald-600" />}
       />

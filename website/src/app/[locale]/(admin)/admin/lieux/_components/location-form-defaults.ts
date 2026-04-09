@@ -5,7 +5,7 @@ export function getDefaultLocationFormData(): LocationFormData {
     Nom_Lieu: '',
     Type_Lieu: '',
     Commentaire: '',
-    Lieu_Etat: 'D',
+    Lieu_Etat: null,
     Id_Site: null,
     GroupIds: [],
     Sonde_Numero_Serie: null,

@@ -15,6 +15,7 @@ export interface LocationRow {
   Id_Lieu: number;
   Nom_Lieu: string | null;
   Type_Lieu: string | null;
+  Est_Archive?: boolean | null;
   GroupIds?: number[];
   Id_Site: number | null;
   Sonde_Numero_Serie: string | null;
@@ -45,6 +46,7 @@ export interface LocationRow {
   Erreur_Justesse: number | null;
   Incertitude: number | null;
   Derive: number | null;
+  Planning_Regles_Count?: number | null;
   EMT_Mode: string | null;
   EMT_Valeur: number | null;
   Corriger_Erreur_Justesse: boolean | null;

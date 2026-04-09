@@ -3,6 +3,7 @@
 import { Combobox } from '@/components/ui/combobox'
 import { Label } from '@/components/ui/label'
 import { Controller, useFormContext } from 'react-hook-form'
+import { useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 
 import type { AvailableSensor } from '@/hooks/useAvailableSensors'
@@ -14,13 +15,66 @@ export function LocationSensorSection({
   availableSensors,
   modules,
   hasSondeSelected,
+  standardSensorSerials,
 }: {
   availableSensors: AvailableSensor[]
   modules: Module[]
   hasSondeSelected: boolean
+  standardSensorSerials: string[]
 }) {
   const t = useTranslations('locationsForm.general')
   const { control } = useFormContext<LocationFormData>()
+  const standardSerialSet = useMemo(() => new Set(standardSensorSerials), [standardSensorSerials])
+
+  const sensorOptions = useMemo(() => {
+    const standardEntries: { value: string; label: string; searchText: string }[] = []
+    const regularEntries: { value: string; label: string; searchText: string }[] = []
+
+    for (const sensor of availableSensors) {
+      const serial = sensor.Sonde_Numero_Serie || ''
+      if (!serial) continue
+
+      const option = {
+        value: serial,
+        label: serial,
+        searchText: serial,
+      }
+
+      if (standardSerialSet.has(serial)) {
+        standardEntries.push(option)
+      } else {
+        regularEntries.push(option)
+      }
+    }
+
+    return [
+      { value: '', label: t('options.no_sensor'), searchText: t('options.no_sensor') },
+      ...(regularEntries.length > 0
+        ? [
+            {
+              value: '__group_sensors__',
+              label: t('options.category_sensors'),
+              searchText: t('options.category_sensors'),
+              disabled: true,
+              className: 'font-semibold text-muted-foreground',
+            },
+            ...regularEntries,
+          ]
+        : []),
+      ...(standardEntries.length > 0
+        ? [
+            {
+              value: '__group_standard_sensors__',
+              label: t('options.category_standard_sensors'),
+              searchText: t('options.category_standard_sensors'),
+              disabled: true,
+              className: 'font-semibold text-muted-foreground',
+            },
+            ...standardEntries,
+          ]
+        : []),
+    ]
+  }, [availableSensors, standardSerialSet, t])
 
   return (
     <div className="border p-4 rounded-lg space-y-4 mt-6">
@@ -39,14 +93,7 @@ export function LocationSensorSection({
                 placeholder={t('placeholders.sensor')}
                 searchPlaceholder={t('placeholders.sensor_search')}
                 emptyMessage={t('placeholders.sensor_empty')}
-                options={[
-                  { value: '', label: t('options.no_sensor'), searchText: t('options.no_sensor') },
-                  ...availableSensors.map((sensor) => ({
-                    value: sensor.Sonde_Numero_Serie || '',
-                    label: sensor.Sonde_Numero_Serie || '',
-                    searchText: sensor.Sonde_Numero_Serie || '',
-                  })),
-                ]}
+                options={sensorOptions}
               />
             )}
           />

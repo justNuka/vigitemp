@@ -49,6 +49,12 @@ const DAY_KEYS = {
   7: "dialog.days.7",
 } as const
 
+function formatRuleDayRange(t: (key: string) => string, startDay: number, endDay: number) {
+  const startLabel = startDay in DAY_KEYS ? t(DAY_KEYS[startDay as keyof typeof DAY_KEYS]) : String(startDay)
+  const endLabel = endDay in DAY_KEYS ? t(DAY_KEYS[endDay as keyof typeof DAY_KEYS]) : String(endDay)
+  return startDay === endDay ? startLabel : `${startLabel} ? ${endLabel}`
+}
+
 interface LocationFormTabPlanningProps {
   idLieu: number | null // null when creating a new lieu (not yet saved)
   emtParams: LieuEmtParams
@@ -159,7 +165,7 @@ export function LocationFormTabPlanning({
         <div className="flex items-center gap-2">
           {preview?.regleActive ? (
             <Badge variant="default" className="bg-green-600">
-              {t("activeStatus")} #{preview.regleActive.Id_Regle}
+              {t("activeStatus")}
             </Badge>
           ) : (
             <Badge variant="secondary">

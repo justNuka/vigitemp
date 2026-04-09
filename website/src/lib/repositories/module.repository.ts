@@ -10,11 +10,12 @@ export type ModuleWithDetails = {
   Id_Serveur: number | null
   sondes_count: number
   Est_Module_GSO: boolean
+  Archive: number | null
 }
 
 export const ModuleRepository = {
   /**
-   * Returns all non-archived modules with sonde count and type label.
+   * Returns all modules with sonde count and type label.
    * Uses batch queries to avoid N+1 (1 groupBy + 1 findMany instead of 2N queries).
    */
   async findAllWithDetails(): Promise<ModuleWithDetails[]> {
@@ -26,11 +27,10 @@ export const ModuleRepository = {
         Port_Serie: true,
         Emplacement: true,
         Id_Serveur: true,
+        Archive: true,
         Est_Module_GSO: true,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma schema mismatch: Est_Module_GSO not yet in generated types
       } as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma schema mismatch: Archive is numeric (0/1), not boolean in generated types
-      where: { Archive: 0 } as any,
       orderBy: { Module_Numero_Serie: "asc" },
     })
 
@@ -73,6 +73,7 @@ export const ModuleRepository = {
       Id_Serveur: module.Id_Serveur,
       sondes_count: countByModule.get(module.Id_Module) ?? 0,
       Est_Module_GSO: module.Est_Module_GSO ?? false,
+      Archive: module.Archive ?? 0,
     }))
   },
 

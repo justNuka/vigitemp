@@ -18,6 +18,8 @@ const updateProfileSchema = z.object({
   description: z.string().optional(),
   mc2: z.boolean().optional(),
   authorizations: z.array(z.number()).optional(),
+  assignedUserIds: z.array(z.number()).optional(),
+  estArchive: z.boolean().optional(),
 })
 
 export const GET = withAuthorizationLogging(
@@ -33,8 +35,16 @@ export const GET = withAuthorizationLogging(
 
       const profile = await prisma.t_profil.findUnique({
         where: { Id_Profil: profileId },
-        include: {
-          t_liaison_profil_autorisation: { include: { t_autorisation: true } },
+        select: {
+          Id_Profil: true,
+          Profil_Utilisateur: true,
+          Commentaire: true,
+          Est_MC2: true,
+          t_liaison_profil_autorisation: {
+            select: {
+              t_autorisation: true,
+            },
+          },
         },
       })
 
@@ -52,6 +62,7 @@ export const GET = withAuthorizationLogging(
         name: profile.Profil_Utilisateur,
         description: profile.Commentaire,
         mc2: profile.Est_MC2,
+        estArchive: false,
         userCount: users.length,
         users: users.map((u) => ({
           id: u.Id_Utilisateur,
@@ -93,7 +104,16 @@ export const PATCH = withAuthorizationLogging(
 
       const existing = await prisma.t_profil.findUnique({
         where: { Id_Profil: profileId },
-        include: { t_liaison_profil_autorisation: true },
+        select: {
+          Profil_Utilisateur: true,
+          Commentaire: true,
+          Est_MC2: true,
+          t_liaison_profil_autorisation: {
+            select: {
+              Id_Autorisation: true,
+            },
+          },
+        },
       })
       if (!existing) {
         return apiError(404, "not_found", "Profil non trouvé")
@@ -126,11 +146,57 @@ export const PATCH = withAuthorizationLogging(
         }
       }
 
+      const targetProfileName = data.name ?? existing.Profil_Utilisateur
+      if (data.assignedUserIds !== undefined) {
+        await prisma.t_utilisateur.updateMany({
+          where: { Profil_Utilisateur: existing.Profil_Utilisateur },
+          data: { Profil_Utilisateur: null },
+        })
+
+        if (data.assignedUserIds.length > 0) {
+          await prisma.t_utilisateur.updateMany({
+            where: { Id_Utilisateur: { in: data.assignedUserIds } },
+            data: { Profil_Utilisateur: targetProfileName },
+          })
+        }
+      } else if (data.name !== undefined && data.name !== existing.Profil_Utilisateur) {
+        await prisma.t_utilisateur.updateMany({
+          where: { Profil_Utilisateur: existing.Profil_Utilisateur },
+          data: { Profil_Utilisateur: targetProfileName },
+        })
+      }
+
       const updatedProfile = await prisma.t_profil.findUnique({
         where: { Id_Profil: profileId },
-        include: {
-          t_liaison_profil_autorisation: { include: { t_autorisation: true } },
+        select: {
+          Id_Profil: true,
+          Profil_Utilisateur: true,
+          Commentaire: true,
+          Est_MC2: true,
+          t_liaison_profil_autorisation: {
+            select: {
+              Id_Autorisation: true,
+              t_autorisation: {
+                select: {
+                  Id_Autorisation: true,
+                  Code_Autorisation: true,
+                  Libelle_Autorisation: true,
+                },
+              },
+            },
+          },
         },
+      })
+
+      const usersBeforeUpdate = data.assignedUserIds !== undefined
+        ? await prisma.t_utilisateur.findMany({
+            where: { Profil_Utilisateur: existing.Profil_Utilisateur },
+            select: { Id_Utilisateur: true },
+          })
+        : []
+      const usersAfterUpdate = await prisma.t_utilisateur.findMany({
+        where: { Profil_Utilisateur: updatedProfile!.Profil_Utilisateur },
+        select: { Id_Utilisateur: true },
       })
 
       auditRouteUpdate(req, ctx.user, {
@@ -141,12 +207,14 @@ export const PATCH = withAuthorizationLogging(
           Commentaire: existing.Commentaire,
           Est_MC2: existing.Est_MC2,
           authorizations: existing.t_liaison_profil_autorisation?.map?.((item: any) => item.Id_Autorisation) ?? undefined,
+          assignedUserIds: data.assignedUserIds !== undefined ? usersBeforeUpdate.map((user) => user.Id_Utilisateur) : undefined,
         },
         after: {
           Profil_Utilisateur: updatedProfile!.Profil_Utilisateur,
           Commentaire: updatedProfile!.Commentaire,
           Est_MC2: updatedProfile!.Est_MC2,
           authorizations: updatedProfile!.t_liaison_profil_autorisation.map((item) => item.Id_Autorisation),
+          assignedUserIds: data.assignedUserIds !== undefined ? usersAfterUpdate.map((user) => user.Id_Utilisateur) : undefined,
         },
       })
 
@@ -155,6 +223,7 @@ export const PATCH = withAuthorizationLogging(
         name: updatedProfile!.Profil_Utilisateur,
         description: updatedProfile!.Commentaire,
         mc2: updatedProfile!.Est_MC2,
+        estArchive: false,
         authorizations: updatedProfile!.t_liaison_profil_autorisation.map((liaison) => ({
           id: liaison.t_autorisation.Id_Autorisation,
           code: liaison.t_autorisation.Code_Autorisation,
@@ -201,16 +270,28 @@ export const DELETE = withAuthorizationLogging(
         })
       }
 
-      await prisma.t_liaison_profil_autorisation.deleteMany({
-        where: { Id_Profil: profileId },
-      })
-      await prisma.t_profil.delete({ where: { Id_Profil: profileId } })
+      try {
+        await prisma.t_profil.update({
+          where: { Id_Profil: profileId },
+          data: { Est_Archive: true },
+        })
+      } catch (archiveError: unknown) {
+        const maybePrismaError = archiveError as { code?: string }
+        if (maybePrismaError?.code === "P2022") {
+          return apiError(
+            409,
+            "archive_unsupported",
+            "Archivage indisponible: la colonne Est_Archive est absente de la table t_profil."
+          )
+        }
+        throw archiveError
+      }
 
       auditRouteDelete(req, ctx.user, {
         resource: "Profil",
         resourceId: profileId,
-        reason: `Suppression du profil ${profile.Profil_Utilisateur}`,
-        data: { Profil_Utilisateur: profile.Profil_Utilisateur },
+        reason: `Archivage du profil ${profile.Profil_Utilisateur}`,
+        data: { Profil_Utilisateur: profile.Profil_Utilisateur, Est_Archive: true },
       })
 
       return apiOk({ success: true })

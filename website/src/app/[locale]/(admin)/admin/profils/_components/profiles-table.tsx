@@ -4,6 +4,7 @@ import type { Profile } from '@/hooks/useProfiles';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TanStackTable } from '@/components/data-table/tanstack-table';
 import type { ColumnDef } from '@tanstack/react-table';
 import { CheckCircle2, Edit, Plus, Shield, Trash2, Users } from 'lucide-react';
@@ -26,6 +27,10 @@ type ProfilesTableProps = {
   onEdit: (profile: Profile) => void;
   onDelete: (profile: Profile) => void;
   onCreate: () => void;
+  statusTab: "active" | "archived";
+  activeCount: number;
+  archivedCount: number;
+  onStatusTabChange: (value: "active" | "archived") => void;
 };
 
 export function ProfilesTable({
@@ -36,6 +41,10 @@ export function ProfilesTable({
   onEdit,
   onDelete,
   onCreate,
+  statusTab,
+  activeCount,
+  archivedCount,
+  onStatusTabChange,
 }: ProfilesTableProps) {
   const t = useTranslations('profilesTable');
 
@@ -104,6 +113,7 @@ export function ProfilesTable({
               size="icon"
               onClick={() => onEdit(profile)}
               title={t('actions.edit')}
+              disabled={statusTab === "archived"}
               className="text-primary"
             >
               <Edit className="h-4 w-4" />
@@ -112,8 +122,9 @@ export function ProfilesTable({
               variant="outline"
               size="icon"
               onClick={() => onDelete(profile)}
-              title={t('actions.delete')}
-              className="bg-destructive/10 hover:bg-destructive/20 border-destructive/30"
+              title={t('actions.archive')}
+              disabled={statusTab === "archived"}
+              className="bg-destructive/10 hover:bg-destructive/20 border-destructive/30 disabled:opacity-50"
             >
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
@@ -139,10 +150,22 @@ export function ProfilesTable({
           <CardTitle>{t('title')}</CardTitle>
           <CardDescription>{t('description')}</CardDescription>
         </div>
-        <Button className="gap-2" onClick={onCreate}>
+        <div className="flex flex-col items-stretch gap-3 md:items-end">
+          <Tabs value={statusTab} onValueChange={(value) => onStatusTabChange(value as "active" | "archived")}>
+            <TabsList className="grid w-full min-w-[18rem] grid-cols-2 bg-primary/10 text-primary">
+              <TabsTrigger value="active" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                {t('tabs.active', { count: activeCount })}
+              </TabsTrigger>
+              <TabsTrigger value="archived" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                {t('tabs.archived', { count: archivedCount })}
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Button className="gap-2" onClick={onCreate}>
           <Plus className="h-4 w-4" />
           {t('actions.new')}
         </Button>
+        </div>
       </CardHeader>
       <CardContent className="p-2 md:p-4 xl:p-4">
         <TanStackTable

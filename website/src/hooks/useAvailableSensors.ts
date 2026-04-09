@@ -19,11 +19,25 @@ export function useAvailableSensors(selectedSondeNumeroSerie?: string | null, en
   return useQuery({
     queryKey: ["available-sensors", selectedSondeNumeroSerie ?? null],
     queryFn: async () => {
-      const data = await fetchJson<any[]>("/api/sondes")
-      return data.filter((sensor: any) => {
-        if (!sensor?.Lieu) return true
-        return selectedSondeNumeroSerie && sensor.Sonde_Numero_Serie === selectedSondeNumeroSerie
-      }) as AvailableSensor[]
+      const [unassigned, allSensors] = await Promise.all([
+        fetchJson<{ data?: any[] }>("/api/sondes/unassigned?limit=500"),
+        selectedSondeNumeroSerie ? fetchJson<any[]>("/api/sondes") : Promise.resolve([]),
+      ])
+
+      const unassignedSensors = Array.isArray(unassigned?.data) ? unassigned.data : []
+      const selectedSensor = selectedSondeNumeroSerie
+        ? (allSensors as any[]).find((sensor) => sensor?.Sonde_Numero_Serie === selectedSondeNumeroSerie)
+        : null
+
+      const merged = [...unassignedSensors, ...(selectedSensor ? [selectedSensor] : [])]
+      const bySerial = new Map<string, any>()
+      for (const sensor of merged) {
+        const serial = sensor?.Sonde_Numero_Serie
+        if (!serial) continue
+        if (!bySerial.has(serial)) bySerial.set(serial, sensor)
+      }
+
+      return Array.from(bySerial.values()) as AvailableSensor[]
     },
     enabled,
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 60_000),

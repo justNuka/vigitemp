@@ -47,9 +47,10 @@ interface SensorModalProps {
   onOpenChange: (open: boolean) => void;
   sensor?: Sensor | null;
   isEditing?: boolean;
+  isPack?: boolean;
 }
 
-export function SensorModal({ open, onOpenChange, sensor, isEditing }: SensorModalProps) {
+export function SensorModal({ open, onOpenChange, sensor, isEditing, isPack = false }: SensorModalProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const t = useTranslations('sensorsDialog');
@@ -80,6 +81,8 @@ export function SensorModal({ open, onOpenChange, sensor, isEditing }: SensorMod
 
   const { data: sensorTypes, isLoading: sensorTypesLoading } = useSensorTypes(open);
   const { data: modules, isLoading: modulesLoading } = useModules(open);
+
+  const availableSensorTypes = (sensorTypes ?? []).filter((type) => !["GSO", "GSP"].includes(type.Sonde_Type));
   const memoryKey = `sensor-form:${isEdit ? sensor?.Id_Sonde ?? sensor?.Sonde_Numero_Serie ?? "edit" : "new"}`;
 
   useEffect(() => {
@@ -110,18 +113,32 @@ export function SensorModal({ open, onOpenChange, sensor, isEditing }: SensorMod
           return;
         }
 
-        await patchJson(`/api/sondes/${sensor.Id_Sonde}`, {
+        const payload: { moduleId: number | null; sondeOffset?: number } = {
           moduleId: moduleIdValue,
-          sondeOffset: sondeOffsetValue,
-        });
+        };
+        if (!isPack) {
+          payload.sondeOffset = sondeOffsetValue;
+        }
+
+        await patchJson(`/api/sondes/${sensor.Id_Sonde}`, payload);
         toast.success(t('toast.update_success'));
       } else {
-        await postJson(`/api/sondes`, {
+        const payload: {
+          sondeType: string;
+          serieNum: string;
+          moduleId: number | null;
+          sondeOffset?: number;
+        } = {
           sondeType: values.sondeType,
           serieNum: values.serieNum,
           moduleId: moduleIdValue,
-          sondeOffset: sondeOffsetValue,
-        });
+        };
+
+        if (!isPack) {
+          payload.sondeOffset = sondeOffsetValue;
+        }
+
+        await postJson(`/api/sondes`, payload);
         toast.success(t('toast.create_success'));
       }
 
@@ -166,8 +183,8 @@ export function SensorModal({ open, onOpenChange, sensor, isEditing }: SensorMod
                         <SelectValue placeholder={t('fields.type_placeholder')} />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      {sensorTypes?.map((type) => (
+                    <SelectContent position="item-aligned" className="max-h-72">
+                      {availableSensorTypes.map((type) => (
                         <SelectItem key={type.Sonde_Type} value={type.Sonde_Type}>
                           {type.Sonde_Type} ({type.Libelle_Sonde_Type || "-"})
                         </SelectItem>
@@ -247,7 +264,9 @@ export function SensorModal({ open, onOpenChange, sensor, isEditing }: SensorMod
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('fields.offset_label')}</FormLabel>
-                  <p className="text-xs text-muted-foreground">{t('fields.offset_hint')}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isPack ? t('fields.offset_unavailable_pack') : t('fields.offset_hint')}
+                  </p>
                   <FormControl>
                     <Input
                       id="sonde-offset"
@@ -255,6 +274,8 @@ export function SensorModal({ open, onOpenChange, sensor, isEditing }: SensorMod
                       step="0.01"
                       placeholder={t('fields.offset_placeholder')}
                       value={field.value ?? ""}
+                      disabled={isPack}
+                      className={isPack ? "bg-muted opacity-70" : undefined}
                       onChange={(e) => {
                         const raw = e.target.value;
                         if (raw === "") {

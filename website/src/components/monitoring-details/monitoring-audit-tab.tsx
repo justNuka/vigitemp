@@ -23,16 +23,30 @@ type AuditRow = {
   details: string
 }
 
+function sanitizeAuditText(value: string | null | undefined) {
+  if (!value) return "-"
+  const normalized = value
+    .replace(/%[12]/g, "")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.replace(/[ \t]{2,}/g, " ").trim())
+    .join("\n")
+    .trim()
+
+  return normalized || "-"
+}
+
+
 export function MonitoringAuditTab({ logs, isLoading, error, t }: MonitoringAuditTabProps) {
   const data = useMemo<AuditRow[]>(() => {
     return logs.map((log) => ({
       id: log.id,
       code: log.code || "-",
-      label: log.label || "-",
+      label: sanitizeAuditText(log.label),
       dateIso: log.timestamp ?? "",
       dateLabel: log.timestamp ? formatDbDateTime(log.timestamp) : "-",
       user: log.user || "-",
-      details: log.commentaireUtilisateur || log.commentaire || "-",
+      details: sanitizeAuditText(log.commentaireUtilisateur || log.commentaire),
     }))
   }, [logs])
 
@@ -61,7 +75,7 @@ export function MonitoringAuditTab({ logs, isLoading, error, t }: MonitoringAudi
     {
       accessorKey: "details",
       header: t("audit.columns.details"),
-      cell: ({ row }) => <span className="text-muted-foreground">{row.original.details}</span>,
+      cell: ({ row }) => <span className="text-muted-foreground whitespace-pre-line wrap-break-word">{row.original.details}</span>,
     },
   ], [t])
 

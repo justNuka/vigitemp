@@ -162,7 +162,11 @@
       "disabled_locations": "Monitoring off",
       "active_alarms_warning": "Action required",
       "active_alarms_ok": "All good",
-      "alert_sensors": "Pre-alarms + alarms"
+      "alert_sensors": "Pre-alarms + alarms",
+      "total_locations": "Total number of displayed locations",
+      "ok_locations": "Locations without active alarm",
+      "alert_locations": "Locations in pre-alarm or alarm",
+      "critical_locations": "Locations in critical alarm or no response"
     },
     "one": {
       "title": "Dashboard",
@@ -365,19 +369,22 @@
       "dateTo": "End date",
       "allSites": "All sites",
       "allTypes": "All types",
-      "selected_range": "Selected range: {range}"
+      "selected_range": "Selected range: {range}",
+      "location": "Location",
+      "allLocations": "All locations"
     },
     "table": {
-      "search": "Search acknowledgments...",
+      "search": "Search by location or user...",
       "columns": {
         "acknowledgedAt": "Acknowledged at",
         "acknowledgedBy": "User",
         "location": "Site / Location",
         "sensor": "Sensor",
-        "type": "Type",
+        "type": "Alarm type",
         "value": "Value",
         "period": "Alarm period",
-        "comment": "Comment"
+        "comment": "Comment",
+        "duration": "Duration"
       },
       "period": {
         "start": "Start:",
@@ -386,7 +393,8 @@
       "type": {
         "high": "High threshold",
         "low": "Low threshold",
-        "no_response": "No response"
+        "no_response": "No response",
+        "sector": "Power / mains"
       }
     }
   },
@@ -408,10 +416,10 @@
   },
   "surveillance": {
     "title": "Monitoring",
-    "description": "Real-time monitoring of sensors and sensors",
+    "description": "Live monitoring of monitored locations and their measurements",
     "meta": {
       "title": "Monitoring - VigiSensys",
-      "description": "Real-time monitoring of sensors and sensors"
+      "description": "Live monitoring of monitored locations and their measurements"
     },
     "filters": {
       "sites": {
@@ -448,6 +456,13 @@
       "location_not_found": "Location not found",
       "location_updated": "Location updated successfully",
       "location_update_error": "Error while updating location"
+    },
+    "action_comment": {
+      "location_prompt": "Optional comment for this configuration action:",
+      "surveillance_disable_prompt": "Optional comment for disabling monitoring:",
+      "surveillance_enable_prompt": "Optional comment for re-enabling monitoring:",
+      "alarms_disable_prompt": "Optional comment for disabling alarm notifications:",
+      "alarms_enable_prompt": "Optional comment for re-enabling alarm notifications:"
     },
     "overlay": {
       "button": "Overlay curves",
@@ -488,7 +503,11 @@
       "disabled_locations": "Monitoring off",
       "active_alarms_warning": "Action required",
       "active_alarms_ok": "All good",
-      "alert_sensors": "Pre-alarms + alarms"
+      "alert_sensors": "Pre-alarms + alarms",
+      "total_locations": "Total number of displayed locations",
+      "ok_locations": "Locations without active alarm",
+      "alert_locations": "Locations in pre-alarm or alarm",
+      "critical_locations": "Locations in critical alarm or no response"
     },
     "status": {
       "active": "Monitoring active",
@@ -508,6 +527,7 @@
     "frequency_value": "Every {count} min",
     "search_placeholder": "Search locations...",
     "empty": "No locations found",
+    "planning_value": "{count} rule{count, plural, one {} other {s}}",
     "empty_state": {
       "title": "No sensors",
       "description": "No data available at the moment."
@@ -532,7 +552,8 @@
       "confirm": "Confirm"
     },
     "legend": {
-      "technical_alarm": "Technical alarm"
+      "technical_alarm": "Technical alarm",
+      "pre_alarm_threshold": "Pre-alarm threshold"
     }
   },
   "locationsForm": {
@@ -548,7 +569,11 @@
         "planning": "Planning"
       },
       "submit": {
-        "saving": "Saving..."
+        "saving": "Saving...",
+        "save_and_close": "Save and close",
+        "save_and_stay": "Save and stay",
+        "cancel_and_close": "Cancel and close",
+        "cancel_and_stay": "Cancel and stay"
       },
       "temporary_memory": {
         "save": "Save for later",
@@ -556,7 +581,8 @@
         "clear": "Clear form",
         "saved": "Draft available"
       },
-      "current_location_label": "Current location:"
+      "current_location_label": "Current location:",
+      "unsaved_changes_confirm": "Unsaved changes will be lost. Close anyway?"
     },
     "general": {
       "sections": {
@@ -565,7 +591,6 @@
       },
       "labels": {
         "name": "Location name",
-        "type": "Location type",
         "comment": "Notes / Comments",
         "monitoring": "Monitoring",
         "monitoring_enable": "Enable monitoring",
@@ -590,11 +615,11 @@
         "retrigger_delay_measures": "Retrigger delay (measures)",
         "module_select": "Module",
         "enabled": "Enabled",
-        "disabled": "Disabled"
+        "disabled": "Disabled",
+        "observations": "Observations"
       },
       "placeholders": {
         "name": "e.g. Storage A",
-        "type": "Select a type",
         "comment": "Notes...",
         "site": "Choose a site",
         "site_search": "Search a site...",
@@ -611,7 +636,8 @@
         "retrigger_delay_measures": "0",
         "module": "Select a module",
         "module_search": "Search a module...",
-        "module_empty": "No module"
+        "module_empty": "No module",
+        "observations": "Location observations..."
       },
       "type_options": {
         "etuve": "Incubator",
@@ -622,11 +648,14 @@
       },
       "options": {
         "no_sensor": "No sensor",
-        "no_module": "No module"
+        "no_module": "No module",
+        "category_sensors": "Sensors",
+        "category_standard_sensors": "Standard sensors"
       },
       "tooltips": {
         "frequency_gso": "Frequency is fixed to 15 minutes for GSO sensors.",
-        "retrigger_delay_measures": "Number of out-of-tolerance measures to ignore before triggering a new alarm after acknowledge or alarm end."
+        "retrigger_delay_measures": "Number of out-of-tolerance measures to ignore before triggering a new alarm after acknowledge or alarm end.",
+        "monitoring_requires_sensor": "Without a selected sensor, monitoring is automatically disabled."
       },
       "group_fallback": "Group {id}",
       "planning_lock": {
@@ -694,10 +723,14 @@
         "order": "Order",
         "user": "User",
         "via_mail": "By email",
-        "via_phone": "By phone"
+        "via_phone": "By phone",
+        "priority": "Priority"
       },
       "placeholders": {
         "user": "Select a user"
+      },
+      "helpers": {
+        "phone_coming_soon": "Phone contact will be available in a future update."
       }
     }
   },
@@ -790,11 +823,12 @@
         "ruleValues": "Setpoint: {consigne}  |  Sup: {sup}  |  Inf: {inf}",
         "errorDelete": "Error deleting the rule."
       },
-      "retardChangementConsigne": "Setpoint change delay"
+      "retardChangementConsigne": "Setpoint change delay",
+      "backToBaseSetPoints": "Back to base setpoints"
     }
   },
   "modulesPage": {
-    "title": "Modules ({count})",
+    "title": "Module management",
     "actions": {
       "new": "New",
       "edit": "Edit",
@@ -818,7 +852,12 @@
       "archive_success": "Module archived successfully",
       "archive_error": "Error while archiving"
     },
-    "description": "Module management"
+    "description": "Module management",
+    "tabs": {
+      "active": "Active ({count})",
+      "archived": "Archived ({count})"
+    },
+    "count": "{count, plural, one {# module} other {# modules}}"
   },
   "modulesForm": {
     "title_create": "Create a new module",
@@ -1098,30 +1137,24 @@
       "columns": {
         "sensor": "Sensor",
         "module": "Module",
-        "relay1": "Relay 1",
-        "relay2": "Relay 2",
-        "relay3": "Relay 3",
-        "relay4": "Relay 4",
         "signal": "Read signal",
-        "response_rate": "Response rate"
-      },
-      "status": {
-        "ok": "OK",
-        "warning": "Warning",
-        "error": "Error"
+        "response_rate": "Response rate",
+        "location": "Location"
       },
       "aria": {
         "select_all": "Select all sensors",
         "select_one": "Select {serial}"
       }
     },
-    "stats": {
-      "global_response_rate": "Global response rate",
-      "sensor_count": "{count, plural, one {{count} sensor} other {{count} sensors}}",
-      "measurement_count": "Measurement count",
-      "last_7days": "Last 7 days",
-      "selected_sensors": "Selected sensors",
-      "selected_over_total": "out of {total}"
+    "launch_dialog": {
+      "title": "Monitoring priority override",
+      "description": "The sensor test temporarily takes priority over monitoring for the selected sensors. Choose a maximum duration before starting the test.",
+      "duration_label": "Maximum test duration",
+      "duration_placeholder": "Select a duration",
+      "duration_option": "{count, plural, one {{count} minute} other {{count} minutes}}",
+      "recommended": "recommended",
+      "cancel": "Cancel",
+      "confirm": "Start test"
     }
   },
   "audit": {
@@ -1138,10 +1171,11 @@
       "refreshed": "Data refreshed"
     },
     "filter": {
-      "user": "User",
       "dateFrom": "From",
       "dateTo": "To",
-      "clearFilters": "Clear filters"
+      "clearFilters": "Clear filters",
+      "action": "Action",
+      "today_limit_hint": "Showing the current day. Adjust the dates for a more precise period. The list stays limited to 100 entries."
     },
     "expandedDetails": "Full details",
     "actions": {
@@ -1185,8 +1219,7 @@
         "timestamp": "Date / Time",
         "action": "Action",
         "user": "User",
-        "details": "Details",
-        "target": "Target"
+        "details": "Details"
       },
       "system": "System",
       "empty_value": "-"
@@ -1393,14 +1426,15 @@
     "export": {
       "button": "Export",
       "csv": "Export CSV (alarms)",
-      "image": "Export chart"
+      "image": "Export chart",
+      "pdf": "Export PDF"
     },
     "save": {
       "button": "Save analysis",
       "dialogTitle": "Save to audit trail",
-      "dialogDescription": "This analysis will be logged in the system audit trail.",
+      "dialogDescription": "This analysis will be logged in the system audit journal.",
       "commentLabel": "Conclusion / comment",
-      "commentPlaceholder": "E.g.: Location [name] - New tolerances: +XÂ°C / -YÂ°C - N simulated alarms. Impact deemed acceptable because...",
+      "commentPlaceholder": "E.g.: Location [name] - New tolerances: +X°C / -Y°C - N simulated alarms. Impact deemed acceptable because...",
       "cancel": "Cancel",
       "confirm": "Save",
       "success": "Analysis saved successfully",
@@ -1414,7 +1448,9 @@
       "update_success": "Profile updated successfully",
       "update_error": "Error while updating profile",
       "delete_success": "Profile deleted successfully",
-      "delete_error": "Error while deleting profile"
+      "delete_error": "Error while deleting profile",
+      "archive_success": "Profile archived successfully",
+      "archive_error": "Error while archiving profile"
     },
     "title": "Profile management",
     "description": "Manage profiles and authorizations"
@@ -1449,7 +1485,14 @@
       "monitoring": "Monitoring",
       "vigilog": "VigiLog",
       "other": "Other"
-    }
+    },
+    "tabs": {
+      "authorizations": "Authorizations",
+      "users": "Assigned users"
+    },
+    "users_title": "Users assigned to this profile",
+    "users_empty": "No users available.",
+    "users_current_profile": "Currently assigned to {profile}"
   },
   "groupsDialog": {
     "title_create": "Create group",
@@ -1472,6 +1515,18 @@
       "create_success": "Group created successfully",
       "update_success": "Group updated successfully",
       "save_error": "Error while saving group"
+    },
+    "tabs": {
+      "general": "Group details",
+      "users": "Assigned users"
+    },
+    "users": {
+      "title": "Group users",
+      "empty": "No users available."
+    },
+    "actions": {
+      "check_all": "Check all",
+      "uncheck_all": "Uncheck all"
     }
   },
   "sensorsDialog": {
@@ -1489,7 +1544,8 @@
       "module_empty": "No module",
       "offset_label": "Sensor offset",
       "offset_placeholder": "0",
-      "offset_hint": "Leave empty to use 0."
+      "offset_hint": "Leave empty to use 0.",
+      "offset_unavailable_pack": "Feature unavailable with the Pack license."
     },
     "submit_create": "Add",
     "submit_update": "Update",
@@ -1549,8 +1605,8 @@
       "delete_description": "Are you sure you want to delete this measurement point?",
       "columns": {
         "point": "Point",
-        "reference": "Reference TÂ°",
-        "value": "Measured TÂ°",
+        "reference": "Reference T°",
+        "value": "Measured T°",
         "incertitude": "Uncertainty"
       }
     },
@@ -1568,7 +1624,8 @@
     "count": "{count, plural, one {# group} other {# groups}}",
     "regroupement": {
       "one": "Grouping 1",
-      "two": "Grouping 2"
+      "two": "Grouping 2",
+      "all": "All groupings"
     },
     "actions": {
       "new": "New",
@@ -1589,7 +1646,8 @@
         "number": "Number",
         "name": "Group name",
         "regroupement": "Grouping",
-        "locations": "Locations"
+        "locations": "Location count",
+        "users": "Users"
       },
       "search_placeholder": "Number, name, grouping...",
       "empty": "No groups"
@@ -1622,6 +1680,10 @@
     "meta": {
       "title": "Groups - VigiSensys",
       "description": "Location group management"
+    },
+    "tabs": {
+      "active": "Active ({count})",
+      "archived": "Archived ({count})"
     }
   },
   "adminSettingsPage": {
@@ -1636,7 +1698,8 @@
     "toast": {
       "update_success": "Setting updated",
       "update_error": "Failed to update",
-      "refresh_interval": "Refresh interval: {label}"
+      "refresh_interval": "Refresh interval: {label}",
+      "changes_discarded": "Local changes were discarded."
     },
     "general": {
       "title": "General",
@@ -1650,7 +1713,7 @@
         "show_null_non_response": "Show no-response values (null)",
         "etalonnage_warning_days": "Calibration validity alert (days)",
         "global_language": "Global email language",
-        "audit_graph_openings": "Audit trail on graph opening"
+        "audit_graph_openings": "Audit log trace when viewing charts"
       },
       "refresh_options": {
         "5": "5 seconds",
@@ -1678,6 +1741,7 @@
     "timezone": {
       "title": "Time zone",
       "description": "Set the display time zone",
+      "enabled_label": "Enable time zone",
       "label": "Time zone",
       "helper": "Date displays will adapt to this time zone."
     },
@@ -1790,6 +1854,12 @@
       "title": "Internal messaging",
       "description": "Enable internal messaging between users (Standard/Expert only)",
       "toggle_label": "Enable messaging"
+    },
+    "pending_changes": {
+      "title": "There are unsaved changes",
+      "description": "Settings will only be applied after confirmation.",
+      "cancel": "Cancel",
+      "save": "Save"
     }
   },
   "adminAlarmsPage": {
@@ -1805,7 +1875,9 @@
     "count": "{count, plural, one {{count} location} other {{count} locations}}",
     "tabs": {
       "all": "All ({count})",
-      "unassigned": "Without sensor ({count})"
+      "unassigned": "Without sensor ({count})",
+      "active": "Active ({count})",
+      "archived": "Archived ({count})"
     },
     "actions": {
       "new": "New",
@@ -1858,7 +1930,10 @@
       "max": "Max",
       "min": "Min",
       "alarm_delay_high": "High alarm delay",
-      "alarm_delay_low": "Low alarm delay"
+      "alarm_delay_low": "Low alarm delay",
+      "planning": "Setpoint planning",
+      "tolerances": "Tolerances",
+      "alarm_delays": "Alarm delays"
     },
     "placeholders": {
       "na": "N/A",
@@ -1874,6 +1949,7 @@
     "frequency_value": "Every {count} min",
     "search_placeholder": "Search locations...",
     "empty": "No locations found",
+    "planning_value": "{count} rule{count, plural, one {} other {s}}",
     "status": {
       "active": "Monitoring active",
       "disabled": "Monitoring disabled"
@@ -1977,7 +2053,11 @@
     },
     "description": "Manage sensors, calibrations and verifications",
     "loading": "Loading...",
-    "title_with_count": "Sensor management ({count, plural, one {# sensor} other {# sensors}})"
+    "title_with_count": "Sensor management ({count, plural, one {# sensor} other {# sensors}})",
+    "tabs": {
+      "active": "Active ({count})",
+      "archived": "Archived ({count})"
+    }
   },
   "sensorAdjustmentImport": {
     "page": {
@@ -2122,7 +2202,7 @@
       "processing": "Processing files... ({processed}/{total})",
       "process_done": "Processing finished. {count} file(s) imported.",
       "process_errors": "{count} file(s) could not be imported.",
-      "process_result": "Success: {success} â€¢ Failed: {failed}"
+      "process_result": "Success: {success} - Failed: {failed}"
     }
   },
   "sensorCalibrationImport": {
@@ -2135,15 +2215,19 @@
     },
     "actions": {
       "import": "Import files",
-      "save_to_db": "Insert into database",
-      "saving_to_db": "Inserting into database...",
+      "save_to_db": "Validate import",
+      "saving_to_db": "Validating import...",
       "edit": "Edit",
       "cancel": "Cancel",
       "apply": "Apply",
       "clear_list": "Clear list",
+      "delete_selection": "Delete selection",
       "edit_selection": "Edit selection",
       "select_all": "Select all",
-      "select_row": "Select row"
+      "select_row": "Select row",
+      "show_details": "Show details",
+      "hide_details": "Hide details",
+      "view_reference_measures": "Reference measures"
     },
     "filters": {
       "site": "Site",
@@ -2159,6 +2243,7 @@
       "columns": {
         "file": "File",
         "sensor": "Sensor",
+        "calibration_name": "Calibration name",
         "date": "Date",
         "date_validity": "Validity date",
         "operator": "Operator",
@@ -2166,9 +2251,19 @@
         "unit": "Unit",
         "uncertainty": "Uncertainty",
         "actions": "Actions",
+        "details": "Details",
         "err_justesse": "Accuracy error"
       },
-      "empty": "Please import one or more calibration file(s)..."
+      "details": {
+        "operator": "Operator",
+        "unit": "Unit",
+        "reference_sensor": "Reference sensor",
+        "certificate": "Certificate",
+        "organization": "Organization",
+        "measure_count": "Measure count"
+      },
+      "empty": "Please import one or more calibration file(s)...",
+      "sensor_missing": "Sensor not found in database"
     },
     "modal": {
       "title": "Import a calibration file",
@@ -2179,13 +2274,34 @@
       "operator": "Operator",
       "unit": "Unit",
       "validity_days": "Validity (days)",
+      "calibration_name": "Calibration name (optional)",
+      "calibration_name_helper": "Leave blank if you do not want to name this calibration.",
       "batch_helper": "Apply this change to {count} calibration(s)."
+    },
+    "measures": {
+      "title": "Reference measures",
+      "description": "Reference measures imported for sensor {sensor}",
+      "empty": "No reference measure is available for this calibration.",
+      "columns": {
+        "order": "Order",
+        "reference": "Reference measure",
+        "sensor": "Sensor measure"
+      }
+    },
+    "recap": {
+      "save_hint": "{count} calibration(s) are ready. Click \"Validate import\" to save them to the database."
+    },
+    "clear_confirm": {
+      "title": "Confirm deletion",
+      "description_selected": "Delete the {count} selected calibration(s) from the list?",
+      "description_all": "Clear the entire import list?"
     },
     "toast": {
       "save_success": "{count} row(s) inserted into database.",
       "save_error": "Failed to insert into database.",
       "save_skipped": "{count} row(s) skipped because already existing.",
-      "no_pending": "No row to insert."
+      "no_pending": "No row to insert.",
+      "missing_sensor": "{count} calibration(s) reference a sensor that does not exist yet in the database."
     }
   },
   "sensorCalibrationUpload": {
@@ -2327,7 +2443,11 @@
       "archive_success": "Site archived successfully",
       "archive_error": "Error while archiving site"
     },
-    "description": "Create, edit and archive sites in your infrastructure"
+    "description": "Create, edit and archive sites in your infrastructure",
+    "tabs": {
+      "active": "Active ({count})",
+      "archived": "Archived ({count})"
+    }
   },
   "sitesDialog": {
     "create_title": "Create a new site",
@@ -2344,14 +2464,27 @@
     "fields": {
       "code_label": "Site code",
       "code_placeholder": "e.g., SITE01",
-      "label_label": "Site label",
+      "label_label": "Site name",
       "label_placeholder": "e.g., Main site",
       "comment_label": "Comments",
       "comment_placeholder": "Add comments..."
     },
     "validation": {
       "code_required": "Site code is required",
-      "label_required": "Site label is required"
+      "label_required": "Site name is required"
+    },
+    "tabs": {
+      "general": "Site details",
+      "users": "Assigned users"
+    },
+    "users": {
+      "title": "Site users",
+      "empty": "No users available.",
+      "assigned": "Already assigned to this site"
+    },
+    "actions": {
+      "check_all": "Check all",
+      "uncheck_all": "Uncheck all"
     }
   },
   "audio": {
@@ -2442,6 +2575,11 @@
       },
       "redirect_error": "Redirection error",
       "security_error": "Security error"
+    },
+    "expiry_warning_dialog": {
+      "title": "Password change required soon",
+      "description": "Your password will need to be changed in {count, plural, one {{count} day} other {{count} days}}.",
+      "continue": "Continue"
     }
   },
   "resetPassword": {
@@ -2579,6 +2717,29 @@
       "active": "Active",
       "acknowledged": "Acknowledged",
       "resolved": "Resolved"
+    },
+    "trend_by_location": {
+      "title": "Alarms by location",
+      "description": "Consolidated view of alarms from the last 7 days, grouped by location.",
+      "search_placeholder": "Search a location or site...",
+      "empty": "No alarms found for this period.",
+      "columns": {
+        "location": "Location",
+        "total": "7d alarms",
+        "active": "Active",
+        "types": "Breakdown",
+        "last_triggered": "Last alarm"
+      },
+      "stats": {
+        "locations": "Affected locations",
+        "total_alarms": "Alarms over 7 days",
+        "active_locations": "Locations with active alarms",
+        "active_locations_help": "At least one alarm still open"
+      },
+      "meta": {
+        "title": "Alarms by location",
+        "description": "Overview of alarms grouped by location over the last 7 days."
+      }
     }
   },
   "profilesTable": {
@@ -2598,22 +2759,27 @@
     "actions": {
       "new": "New profile",
       "edit": "Edit",
-      "delete": "Delete"
+      "delete": "Delete",
+      "archive": "Archive"
     },
     "placeholders": {
       "na": "-"
     },
     "search_placeholder": "Profile name...",
-    "empty": "No profiles found"
+    "empty": "No profiles found",
+    "tabs": {
+      "active": "Active ({count})",
+      "archived": "Archived ({count})"
+    }
   },
   "deleteProfileDialog": {
-    "title": "Delete profile",
-    "description": "Are you sure you want to delete the profile \"{name}\"?",
-    "blocked": "Warning: {count, plural, one {# user uses} other {# users use}} this profile. Deletion is not possible.",
+    "title": "Archive profile",
+    "description": "Are you sure you want to archive the profile \"{name}\"?",
+    "blocked": "Warning: {count, plural, one {# user uses} other {# users use}} this profile. Archiving is not possible.",
     "actions": {
       "cancel": "Cancel",
-      "delete": "Delete",
-      "deleting": "Deleting..."
+      "delete": "Archive",
+      "deleting": "Archiving..."
     }
   },
   "userAccessDialog": {
@@ -2673,7 +2839,18 @@
         "value": "VALUE",
         "lower_threshold": "LOWER LIMIT",
         "upper_threshold": "UPPER LIMIT",
-        "status": "STATUS"
+        "status": "STATUS",
+        "serial": "Serial number"
+      },
+      "multi_tabs": {
+        "button": "Multi-tab export",
+        "button_loading": "Export...",
+        "presentation_sheet": "Presentation",
+        "measurements_sheet": "Measurements",
+        "presentation_columns": {
+          "label": "Field",
+          "value": "Value"
+        }
       },
       "status": {
         "out_of_range": "Out of range",
@@ -2683,12 +2860,46 @@
       "empty": "No measurements",
       "empty_with_range": "Please select two dates to view measurements"
     },
+    "export": {
+      "defaults": {
+        "not_available": "Not available",
+        "no_range": "No selected range"
+      },
+      "state": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "presentation": {
+        "location": "Location",
+        "sensor_serial": "Sensor serial number",
+        "selected_range": "Selected range",
+        "surveillance": "Monitoring",
+        "unit": "Unit",
+        "upper_threshold": "Upper threshold",
+        "target_threshold": "Target threshold",
+        "lower_threshold": "Lower threshold",
+        "pre_alarm_upper": "Upper pre-alarm",
+        "pre_alarm_lower": "Lower pre-alarm",
+        "battery": "Battery",
+        "rssi": "RSSI",
+        "voltage": "Voltage",
+        "graph_points": "Chart points",
+        "table_measurements": "Table measurements",
+        "last_measure_time": "Last measurement time",
+        "last_measure_value": "Last value"
+      }
+    },
     "chart": {
       "over_high": "Upper exceedance zone",
       "over_low": "Lower exceedance zone",
       "measures": "Measurements ({unit})",
+      "audit_markers": "Audits",
+      "audit_marker_count": "{count} audit event(s)",
+      "show_audit_markers": "Show audits on chart",
       "show_no_response": "Show no-response values",
-      "measure_count": "Points in chart: {count}"
+      "measure_count": "Points in chart: {count}",
+      "drag_zoom_hint": "Use the wheel to zoom, drag to pan, and double-click to reset.",
+      "reset_zoom": "Reset zoom"
     },
     "tooltip": {
       "value": "Value: {value}{unit}",
@@ -3231,7 +3442,7 @@
         "dateTo": "End date",
         "allSites": "All sites",
         "allTypes": "All types",
-      "selected_range": "Selected range: {range}"
+        "selected_range": "Selected range: {range}"
       },
       "table": {
         "feature": "Feature",
@@ -3462,7 +3673,9 @@
     "surveillance": {
       "active": "Monitoring",
       "disabled": "Monitoring disabled",
-      "disabled_until": "Monitoring disabled until {date}"
+      "disabled_until": "Monitoring disabled until {date}",
+      "disabled_since": "Monitoring disabled since {date}",
+      "disabled_since_by": "Monitoring disabled since {date} by {user}"
     },
     "alarms": {
       "disabled": "Alarms disabled",
@@ -3475,7 +3688,9 @@
       "measures": "Measurements ({unit})",
       "target": "Target ({unit})",
       "upper_threshold": "Upper threshold ({unit})",
-      "lower_threshold": "Lower threshold ({unit})"
+      "lower_threshold": "Lower threshold ({unit})",
+      "upper_pre_alarm": "Upper pre-alarm ({unit})",
+      "lower_pre_alarm": "Lower pre-alarm ({unit})"
     },
     "mobile": {
       "graph_in_details_title": "Chart available in details",
@@ -3551,6 +3766,9 @@
       "comment_placeholder": "Add a comment (optional)",
       "cancel": "Cancel",
       "confirm": "Acknowledge"
+    },
+    "observations": {
+      "empty": "No observation"
     }
   },
   "adminDashboard": {
@@ -3670,9 +3888,9 @@
       }
     },
     "unassigned": {
-      "title": "Unassigned active sensors",
-      "description": "{count, plural, one {# sensor not assigned to an active location} other {# sensors not assigned to an active location}}",
-      "empty": "No sensors without an active location",
+      "title": "Sensors without location",
+      "description": "{count, plural, one {# sensor without an active location} other {# sensors without an active location}}",
+      "empty": "No sensors without location",
       "columns": {
         "sensor": "Sensor",
         "type": "Type",
@@ -3693,7 +3911,7 @@
         "connectedUsers": "Connected users",
         "systemLogs": "Audit log",
         "backups": "Backups",
-        "unassigned": "Unassigned sensors",
+        "unassigned": "Sensors without location",
         "etalons": "Standards"
       }
     },
@@ -3702,7 +3920,7 @@
     },
     "summary": {
       "alarms_title": "Alarms",
-      "alarms_description": "In progress: {inProgress} â€¢ Pending acknowledgement: {pending}",
+      "alarms_description": "In progress: {inProgress} - Pending acknowledgement: {pending}",
       "alarms_helper": "Alarms pending acknowledgement: {pending}"
     }
   },
@@ -3736,7 +3954,11 @@
       "all": "All",
       "high": "High",
       "low": "Low",
-      "no_response": "No response"
+      "no_response": "No response",
+      "all_sites": "All sites",
+      "all_locations": "All locations",
+      "site_placeholder": "Filter by site",
+      "location_placeholder": "Filter by location"
     },
     "acknowledge_success": "Alarm acknowledged successfully",
     "acknowledge_error": "Failed to acknowledge alarm",
@@ -3755,7 +3977,10 @@
       "status": "Status",
       "count_30": "Alarms 30d",
       "end": "Alarm end",
-      "acknowledged": "Acknowledged"
+      "acknowledged": "Acknowledged",
+      "triggered_value": "Triggering value",
+      "period": "Start / end",
+      "duration": "Duration"
     },
     "status": {
       "awaiting_ack": "Awaiting acknowledgment",
@@ -3772,6 +3997,19 @@
       "na": "-",
       "acknowledged": "Acknowledged",
       "not_acknowledged": "Not acknowledged"
+    },
+    "bulk": {
+      "select_visible": "Select visible alarms",
+      "select_one": "Select this alarm",
+      "acknowledge_selected": "Acknowledge selection ({count})",
+      "dialog_title": "Acknowledge multiple alarms",
+      "dialog_description": "This will acknowledge {count} selected alarm(s).",
+      "comment_label": "Comment",
+      "confirm": "Acknowledge selection",
+      "confirming": "Acknowledging...",
+      "success": "{count} alarm(s) acknowledged.",
+      "partial_success": "{success} alarm(s) out of {total} were acknowledged.",
+      "error": "Unable to acknowledge the selection."
     }
   },
   "globalAppEffects": {
@@ -3808,6 +4046,14 @@
     "empty": "No results",
     "results": "{count} result(s)",
     "export": "Export",
+    "export_count_prompt": {
+      "message": "How many measurements should be exported? (1 to {max})",
+      "invalid": "Invalid value. Enter a number between 1 and {max}."
+    },
+    "export_columns": {
+      "title": "Columns to export",
+      "at_least_one": "Select at least one column."
+    },
     "print": "Print",
     "pagination": {
       "summary": "Page {current} of {total} - Total: {count}",
@@ -3923,8 +4169,8 @@
   },
   "sitesTable": {
     "columns": {
-      "site": "Site",
-      "description": "Description",
+      "site": "Site code",
+      "description": "Site name",
       "comments": "Comments"
     },
     "placeholders": {
@@ -4032,6 +4278,10 @@
       "min_lowercase": "At least {count} lowercase letter{count, plural, one {} other {s}}",
       "min_numbers": "At least {count} digit{count, plural, one {} other {s}}",
       "min_special": "At least {count} special character{count, plural, one {} other {s}}"
+    },
+    "tabs": {
+      "active": "Active ({count})",
+      "archived": "Archived ({count})"
     }
   },
   "createUserDialog": {
@@ -4145,7 +4395,7 @@
     "details": {
       "sheet_title": "Details",
       "user_profile_title": "Profile",
-      "member_since": "Member since",
+      "member_since": "Conversation joined since",
       "joined_conversation": "Joined on",
       "members_section": "Members",
       "documents_section": "Shared documents",
@@ -4287,7 +4537,7 @@
       },
       "stats": {
         "total_events": "Total events",
-        "last_24h": "Last 24h"
+        "last_24h": "Last 7 days"
       },
       "logs": {
         "count": "{count} recent event{count, plural, one {} other {s}}",
@@ -4379,7 +4629,8 @@
     "stats": {
       "configurations": "Configurations",
       "pending": "Pending arrivals",
-      "alarms": "Runs in alarm"
+      "alarms": "Runs in alarm",
+      "occasionalUsage": "Occasional uses"
     },
     "tabs": {
       "movements": "Departure / Arrival",
@@ -4751,7 +5002,7 @@
         "inactive": "Inactive"
       },
       "fields": {
-        "serial": "Serial number",
+        "serial": "Manufacturer serial number",
         "model": "Model",
         "label": "Label",
         "active": "Active VigiLog",

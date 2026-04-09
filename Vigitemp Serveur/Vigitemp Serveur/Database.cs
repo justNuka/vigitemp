@@ -648,7 +648,7 @@ namespace Vigitemp_Serveur
                         // Cr?ation d'une commande SQL en fonction de l'objet connection
                         MySqlCommand cmd_vigitemp = this.connection_vigitemp.CreateCommand();
 
-                        // Requ?te SQL - Ajout de IdSonde ? la s?lection
+                        // Requ?te SQL - Ajout de IdSonde ? la sÃ©lection
                         cmd_vigitemp.CommandText = "SELECT Frequence, Consigne, " +
                                                     "Tolerance_Surveillance_Sup as Consigne_Sup, " +
                                                     "Tolerance_Surveillance_Inf as Consigne_Inf, " +
@@ -1431,9 +1431,9 @@ namespace Vigitemp_Serveur
                         ensureCmd.ExecuteNonQuery();
                     }
 
-                    // NOTE: La séquence UPDATE+SELECT LAST_INSERT_ID() + INSERT est atomique
-                    // du point de vue de cette instance Database car toutes les méthodes
-                    // utilisent le même lock(_lock). En mode multi-serveur, chaque ThreadServeur
+                    // NOTE: La sï¿½quence UPDATE+SELECT LAST_INSERT_ID() + INSERT est atomique
+                    // du point de vue de cette instance Database car toutes les mï¿½thodes
+                    // utilisent le mï¿½me lock(_lock). En mode multi-serveur, chaque ThreadServeur
                     // a sa propre instance Database, donc son propre lock.
                     int nextId;
                     using (var updateCmd = this.connection_vigitemp_mesure.CreateCommand())

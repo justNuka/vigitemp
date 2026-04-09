@@ -10,6 +10,7 @@ import { log } from "@/lib/logger"
 const alarmToggleSchema = z.object({
   disabled: z.boolean(),
   durationMinutes: z.number().int().positive().nullable().optional(),
+  commentaireAction: z.string().trim().max(500).nullable().optional(),
 })
 
 export const PATCH = withAuthLogging(
@@ -23,6 +24,7 @@ export const PATCH = withAuthLogging(
       }
 
       const payload = alarmToggleSchema.parse(await req.json())
+      const actionComment = typeof payload.commentaireAction === "string" ? payload.commentaireAction.trim() : ""
       const durationMinutes =
         payload.disabled && payload.durationMinutes && payload.durationMinutes > 0
           ? payload.durationMinutes
@@ -45,7 +47,7 @@ export const PATCH = withAuthLogging(
         disabled: { from: !payload.disabled, to: payload.disabled },
         durationMinutes: { from: null, to: durationMinutes },
         reactivationAt: { from: null, to: reactivationAt?.toISOString() ?? null },
-      })
+      }, actionComment || undefined)
 
       return apiOk({
         id: updated.Id_Lieu,

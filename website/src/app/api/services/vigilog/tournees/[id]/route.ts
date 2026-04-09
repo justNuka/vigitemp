@@ -6,10 +6,9 @@ import { log } from "@/lib/logger"
 import { prisma, prismaMesure } from "@/lib/prisma"
 import { VIGILOG_ACCESS_CODES } from "../../_shared"
 
-function formatSiteName(site: { Code_Site: string | null; Libelle_Site: string | null } | null | undefined) {
+function formatSiteName(site: { Libelle_Site: string | null } | null | undefined) {
   if (!site) return null
-  if (site.Code_Site && site.Libelle_Site) return `${site.Code_Site} - ${site.Libelle_Site}`
-  return site.Code_Site || site.Libelle_Site || null
+  return site.Libelle_Site || null
 }
 
 function formatUserLabel(user: {
@@ -71,10 +70,10 @@ export const GET = withAnyAuthorizationLogging(
             Date_Heure_Creation: true,
             Date_Heure_Maj: true,
             t_site_t_vigilog_tournee_Id_Site_DepartTot_site: {
-              select: { Id_Site: true, Code_Site: true, Libelle_Site: true },
+              select: { Id_Site: true, Libelle_Site: true },
             },
             t_site_t_vigilog_tournee_Id_Site_ArriveeTot_site: {
-              select: { Id_Site: true, Code_Site: true, Libelle_Site: true },
+              select: { Id_Site: true, Libelle_Site: true },
             },
             t_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur: {
               select: { Login: true, Prenom: true, Nom: true },

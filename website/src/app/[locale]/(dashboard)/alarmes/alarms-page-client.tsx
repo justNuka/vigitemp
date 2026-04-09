@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { History } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { AlarmsClient } from "./alarms-client";
@@ -34,6 +34,7 @@ export function AlarmsPageClient({ alarms, stats, initialStatus }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [statusFilter, setStatusFilter] = useState<AlarmStatus>(initialStatus);
+  const [, startTransition] = useTransition();
   const [localStats, setLocalStats] = useState(stats);
   const canViewAckHistory = hasPermission("METROLOGY_WORK_ACCESS");
 
@@ -49,7 +50,10 @@ export function AlarmsPageClient({ alarms, stats, initialStatus }: Props) {
     setStatusFilter(nextStatus);
     const nextParams = new URLSearchParams(searchParams.toString());
     nextParams.set("status", nextStatus);
-    router.replace(`${pathname}?${nextParams.toString()}`);
+    startTransition(() => {
+      router.replace(`${pathname}?${nextParams.toString()}`);
+      router.refresh();
+    });
   };
 
   return (

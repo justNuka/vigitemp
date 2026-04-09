@@ -17,7 +17,7 @@ const createUserSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   nom: z.string().min(1, "Nom requis"),
   prenom: z.string().min(1, "Prénom requis"),
-  email: z.string().email("Email invalide"),
+  email: z.union([z.literal(""), z.string().email("Email invalide")]).optional().transform((value) => value || undefined),
   profileId: z.string().min(1, "Profil requis"),
   telephone: z.string().optional(),
   expiryDate: z
@@ -78,7 +78,7 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: HandlerContex
         Mot_De_Passe: hashedPassword,
         Prenom: data.prenom,
         Nom: data.nom,
-        Adresse_Email: data.email,
+        Adresse_Email: data.email || null,
         Tel_Num_Mobile: data.telephone || null,
         Profil_Utilisateur: data.profileId,
         Est_Archive: false,

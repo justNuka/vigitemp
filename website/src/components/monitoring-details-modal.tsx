@@ -125,10 +125,29 @@ export default function MonitoringDetailsModal({
   });
   const [activeTab, setActiveTab] = useState<"graph" | "table" | "audit">("graph");
   const [zoomBounds, setZoomBounds] = useState<ZoomBounds | null>(null);
+  const [showGraphAudits, setShowGraphAudits] = useState(true);
   const [tableSorting, setTableSorting] = useState<SortingState>([]);
   const chartRef = useRef<ChartJS<"line"> | null>(null);
   const graphAuditKeyRef = useRef<string | null>(null);
   const showNullNonResponse = Boolean(controlledShowNullNonResponse);
+
+  useEffect(() => {
+    if (!isOpen || typeof window === "undefined") return;
+    const hasSelectedRange = Boolean(initialRange?.from || dateRange?.from);
+    window.dispatchEvent(
+      new CustomEvent("vigitemp:surveillance-range-lock", {
+        detail: { active: hasSelectedRange },
+      }),
+    );
+
+    return () => {
+      window.dispatchEvent(
+        new CustomEvent("vigitemp:surveillance-range-lock", {
+          detail: { active: false },
+        }),
+      );
+    };
+  }, [dateRange, initialRange, isOpen]);
 
   useEffect(() => {
     if (initialRange) {
@@ -183,6 +202,16 @@ export default function MonitoringDetailsModal({
     if (fromLabel === toLabel) return fromLabel;
     return `${fromLabel} -> ${toLabel}`;
   }, [effectiveRange, localeTag]);
+
+  const exportFileName = useMemo(() => {
+    const baseName = nomLieu.trim().length > 0 ? nomLieu.trim() : `lieu-${idLieu}`;
+    const suffix = selectedRangeLabel ?? new Intl.DateTimeFormat(localeTag, { dateStyle: "short" }).format(new Date());
+    return `${baseName}-${suffix}`
+      .replace(/[\/:*?"<>|]+/g, "-")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  }, [idLieu, localeTag, nomLieu, selectedRangeLabel]);
 
   const { data: rangeGraphData, isLoading: rangeGraphLoading } = useMonitoringRangeMeasurements(idLieu, {
     enabled: isOpen && rangeEnabled,
@@ -253,6 +282,61 @@ export default function MonitoringDetailsModal({
     [initialConsigne, initialConsigneInf, initialConsigneSup, initialUnite, orderedData],
   );
 
+  const numberFormatter = useMemo(() => new Intl.NumberFormat(localeTag), [localeTag]);
+
+  const presentationRows = useMemo(() => {
+    const notAvailable = t("export.defaults.not_available");
+    const formatThreshold = (value: number | null) => (value === null ? notAvailable : `${value}${unite}`);
+    const measurementsCount = Math.max(totalRows, orderedHistoryData.length);
+
+    return [
+      { label: t("export.presentation.location"), value: nomLieu },
+      { label: t("export.presentation.sensor_serial"), value: sondeNumeroSerie },
+      { label: t("export.presentation.selected_range"), value: selectedRangeLabel ?? t("export.defaults.no_range") },
+      {
+        label: t("export.presentation.surveillance"),
+        value: isSurveillanceActive ? t("export.state.active") : t("export.state.inactive"),
+      },
+      { label: t("export.presentation.unit"), value: unite || notAvailable },
+      { label: t("export.presentation.upper_threshold"), value: formatThreshold(consigneSup) },
+      { label: t("export.presentation.target_threshold"), value: formatThreshold(consigne) },
+      { label: t("export.presentation.lower_threshold"), value: formatThreshold(consigneInf) },
+      { label: t("export.presentation.pre_alarm_upper"), value: formatThreshold(preAlarmSup) },
+      { label: t("export.presentation.pre_alarm_lower"), value: formatThreshold(preAlarmInf) },
+      {
+        label: t("export.presentation.battery"),
+        value: batteryPercent !== null && batteryPercent !== undefined ? `${batteryPercent}%` : notAvailable,
+      },
+      { label: t("export.presentation.rssi"), value: gsoRssi ?? notAvailable },
+      { label: t("export.presentation.voltage"), value: gsoTension ?? notAvailable },
+      { label: t("export.presentation.graph_points"), value: numberFormatter.format(orderedData.length) },
+      { label: t("export.presentation.table_measurements"), value: numberFormatter.format(measurementsCount) },
+      { label: t("export.presentation.last_measure_time"), value: summary.lastDateTime || notAvailable },
+      { label: t("export.presentation.last_measure_value"), value: summary.lastMeasureText || notAvailable },
+    ];
+  }, [
+    batteryPercent,
+    consigne,
+    consigneInf,
+    consigneSup,
+    gsoRssi,
+    gsoTension,
+    isSurveillanceActive,
+    nomLieu,
+    numberFormatter,
+    orderedData.length,
+    orderedHistoryData.length,
+    preAlarmInf,
+    preAlarmSup,
+    selectedRangeLabel,
+    summary.lastDateTime,
+    summary.lastMeasureText,
+    sondeNumeroSerie,
+    t,
+    totalRows,
+    unite,
+  ]);
+
   const { consigneSup, consigneInf, consigne, unite } = summary;
   const preAlarmSup =
     estConsigneSupPreAlarmeActive && initialConsigneSupPreAlarme !== null && initialConsigneSupPreAlarme !== undefined
@@ -306,8 +390,13 @@ export default function MonitoringDetailsModal({
     setTableSorting([]);
   }, [idLieu, isOpen, rangeEnabled]);
 
+  const shouldLoadAuditLogs =
+    isOpen &&
+    (activeTab === "audit" || (activeTab === "graph" && showGraphAudits)) &&
+    (isSurveillanceActive || rangeEnabled);
+
   const { logs: auditLogs, isLoading: auditLoading, error: auditError, reset: resetAuditState } = useMonitoringAuditLogs(idLieu, {
-    enabled: isOpen && activeTab === "audit" && (isSurveillanceActive || rangeEnabled),
+    enabled: shouldLoadAuditLogs,
     errorMessage: t("audit.error"),
   });
 
@@ -394,9 +483,9 @@ export default function MonitoringDetailsModal({
             <Skeleton className="h-100 w-full" />
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="flex min-h-0 flex-1 flex-col gap-4">
             <div className="flex w-full flex-wrap items-center justify-between gap-3">
-              <div className="min-w-65 flex-1 space-y-2">
+              <div className="w-full max-w-5xl flex-1 space-y-2">
                 <DateRangePicker
                   allowEmpty
                   onUpdate={({ range }) => {
@@ -410,7 +499,7 @@ export default function MonitoringDetailsModal({
                   locale={localeTag}
                   showCompare={false}
                   matchTriggerWidth={false}
-                  popoverClassName="w-[min(980px,calc(100vw-2rem))]"
+                  popoverClassName="w-[min(1280px,calc(100vw-1rem))]"
                 />
                 {selectedRangeLabel ? (
                   <p className="text-sm text-muted-foreground">
@@ -420,7 +509,7 @@ export default function MonitoringDetailsModal({
               </div>
             </div>
 
-            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "graph" | "table" | "audit")} className="w-full">
+            <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "graph" | "table" | "audit")} className="flex min-h-0 w-full flex-1 flex-col">
               <TabsList className="grid w-full grid-cols-3 bg-primary/10 text-primary">
                 <TabsTrigger value="graph" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                   {t("tabs.graph")}
@@ -438,6 +527,10 @@ export default function MonitoringDetailsModal({
                   chartRef={chartRef}
                   orderedData={orderedData}
                   graphMeasureCount={orderedData.length}
+                  isRangeSelected={rangeEnabled}
+                  auditLogs={auditLogs}
+                  showAuditMarkers={showGraphAudits}
+                  onShowAuditMarkersChange={setShowGraphAudits}
                   measuresLabel={measuresLabel}
                   locale={locale}
                   unite={unite}
@@ -454,20 +547,14 @@ export default function MonitoringDetailsModal({
                   captureZoomBounds={captureZoomBounds}
                   t={t}
                 />
-                {rangeEnabled ? (
-                  <div className="rounded-xl border border-border/60 bg-card/80 p-4 shadow-sm">
-                    <div className="mb-3 flex items-center justify-between gap-2">
-                      <h3 className="text-sm font-semibold text-foreground">{t("tabs.audit")}</h3>
-                      <span className="text-xs text-muted-foreground">{t("audit.search_placeholder")}</span>
-                    </div>
-                    <MonitoringAuditTab logs={auditLogs} isLoading={auditLoading} error={auditError} t={t} />
-                  </div>
-                ) : null}
               </TabsContent>
 
-              <TabsContent value="table">
+              <TabsContent value="table" className="flex min-h-0 flex-1 flex-col">
                 <MonitoringTableTab
                   tableMeasurements={orderedHistoryData}
+                  nomLieu={nomLieu}
+                  sondeNumeroSerie={sondeNumeroSerie}
+                  exportFileName={exportFileName}
                   unite={unite}
                   consigneSup={consigneSup}
                   consigneInf={consigneInf}
@@ -480,17 +567,9 @@ export default function MonitoringDetailsModal({
                   onSortingChange={handleTableSortingChange}
                   isSurveillanceActive={isSurveillanceActive}
                   rangeEnabled={rangeEnabled}
+                  presentationRows={presentationRows}
                   t={t}
                 />
-                {rangeEnabled ? (
-                  <div className="rounded-xl border border-border/60 bg-card/80 p-4 shadow-sm">
-                    <div className="mb-3 flex items-center justify-between gap-2">
-                      <h3 className="text-sm font-semibold text-foreground">{t("tabs.audit")}</h3>
-                      <span className="text-xs text-muted-foreground">{t("audit.search_placeholder")}</span>
-                    </div>
-                    <MonitoringAuditTab logs={auditLogs} isLoading={auditLoading} error={auditError} t={t} />
-                  </div>
-                ) : null}
               </TabsContent>
 
               <TabsContent value="audit">

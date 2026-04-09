@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { LazyMotion, domAnimation, m } from "motion/react";
@@ -23,6 +23,7 @@ import { getDefaultLocationFormData } from "@/app/[locale]/(admin)/admin/lieux/_
 import type { LocationFormData } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-types";
 import { useAvailableSensors } from "@/hooks/useAvailableSensors";
 import { cn } from "@/lib/utils";
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useGroups } from "@/hooks/useGroups";
 import { useModules } from "@/hooks/useModules";
 import { useLocations } from "@/hooks/useLocations";
@@ -57,7 +58,9 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const [disabledFirst, setDisabledFirst] = useState(true);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [showNullNonResponse] = useState(initialShowNullNonResponse);
+  const [isRangeSelectionActive, setIsRangeSelectionActive] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const performRefreshRef = useRef<(silent?: boolean) => Promise<void>>(async () => undefined);
   const queryClient = useQueryClient();
 
   const { data: locations = [] } = useLocations();
@@ -91,7 +94,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const { data: mailingUsers = [] } = useUsersForMailing(shouldLoadLocationFormData);
 
   const { data, isFetching, fetchNextPage, hasNextPage, forceRefresh } = usePaginatedSensors({ limit: 50 });
-  useSurveillanceLiveUpdates({ enabled: true, limit: 50 });
+  useSurveillanceLiveUpdates({ enabled: !isRangeSelectionActive, limit: 50 });
 
   const paginatedData = useMemo(() => {
     const pages = data?.pages ?? [];
@@ -172,17 +175,36 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     await performRefresh(false);
   }, [performRefresh]);
 
+  useEffect(() => {
+    performRefreshRef.current = performRefresh;
+  }, [performRefresh]);
+
+
+  useEffect(() => {
+    const handleRangeLock = (event: Event) => {
+      const customEvent = event as CustomEvent<{ active?: boolean }>;
+      setIsRangeSelectionActive(customEvent.detail?.active === true);
+    };
+
+    window.addEventListener("vigitemp:surveillance-range-lock", handleRangeLock as EventListener);
+    return () => window.removeEventListener("vigitemp:surveillance-range-lock", handleRangeLock as EventListener);
+  }, []);
 
   useEffect(() => {
     const interval = Number.isFinite(refreshIntervalSeconds) ? refreshIntervalSeconds : 15;
-    if (interval <= 0) return;
+    if (interval <= 0 || isRangeSelectionActive) return;
 
     const timer = window.setInterval(() => {
       void performRefresh(true);
     }, interval * 1000);
 
     return () => window.clearInterval(timer);
-  }, [performRefresh, refreshIntervalSeconds]);
+  }, [isRangeSelectionActive, performRefresh, refreshIntervalSeconds]);
+
+  useEffect(() => {
+    if (isRangeSelectionActive) return;
+    void performRefreshRef.current(true);
+  }, [isRangeSelectionActive]);
 
   useEffect(() => {
     const pages = data?.pages ?? [];
@@ -249,6 +271,19 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
 
   const handleSurveillanceToggle = useCallback(
     async (idLieu: number, action: "surveillance" | "alarms", newState: boolean, durationMinutes?: number | null) => {
+      const promptKey =
+        action === "surveillance"
+          ? newState
+            ? "action_comment.surveillance_enable_prompt"
+            : "action_comment.surveillance_disable_prompt"
+          : newState
+            ? "action_comment.alarms_enable_prompt"
+            : "action_comment.alarms_disable_prompt"
+
+      const rawComment = typeof window === "undefined" ? "" : window.prompt(t(promptKey), "")
+      if (rawComment === null) return
+      const actionComment = rawComment.trim()
+
       if (action === "surveillance") {
         const nextEtat = newState ? "S" : "D"
         try {
@@ -258,6 +293,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
             body: JSON.stringify({
               Lieu_Etat: nextEtat,
               surveillanceDurationMinutes: newState ? null : durationMinutes ?? null,
+              Commentaire_Action: actionComment || null,
             }),
           })
 
@@ -280,6 +316,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
           body: JSON.stringify({
             disabled: !newState,
             durationMinutes: newState ? null : durationMinutes ?? null,
+            commentaireAction: actionComment || null,
           }),
         })
 
@@ -297,37 +334,10 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
         console.error("Error toggling alarms:", error)
       }
     },
-    [updateAlarmCache, updateSensorsCache],
+    [t, updateAlarmCache, updateSensorsCache],
   );
 
-  const handleGroupSurveillanceToggle = useCallback(
-    async (groupId: number, newState: boolean, durationMinutes?: number | null) => {
-      try {
-        const res = await fetch(`/api/groupes/${groupId}/alarm`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            disabled: !newState,
-            durationMinutes: newState ? null : durationMinutes ?? null,
-          }),
-        })
 
-        const payload = await res.json().catch(() => null)
-        if (!res.ok) {
-          console.error("Group alarm toggle failed", payload ?? (await res.text()))
-        } else if (payload?.ok && payload.data?.lieuIds) {
-          updateAlarmCache(
-            payload.data.lieuIds,
-            payload.data.alarmDisabled === true,
-            payload.data.alarmDisabledUntil ? new Date(payload.data.alarmDisabledUntil) : null,
-          )
-        }
-      } catch (error) {
-        console.error("Error toggling group surveillance:", error)
-      }
-    },
-    [updateAlarmCache],
-  );
 
 
   // Important: do not auto-load all pages. The sentinel can be visible without any user scroll,
@@ -346,26 +356,48 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
         <m.div variants={fadeInUp} initial="hidden" animate="visible">
           {/* Stats bar */}
           <div className="px-4 md:px-6 pt-3 pb-0">
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1 font-medium text-muted-foreground hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-default">
-                {t("stats.total", { count: visibleStats.total })}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 font-medium text-green-700 dark:bg-green-500/10 dark:text-green-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-default">
-                <span className="h-2 w-2 rounded-full bg-green-500" aria-hidden="true" />
-                {t("stats.ok", { count: visibleStats.ok })}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-default">
-                <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
-                {t("stats.warning", { count: visibleStats.warning })}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-default">
-                <span
-                  className={cn("h-2 w-2 rounded-full bg-red-500", visibleStats.critical > 0 && "animate-pulse")}
-                  aria-hidden="true"
-                />
-                {t("stats.critical", { count: visibleStats.critical })}
-              </span>
-            </div>
+            <TooltipProvider>
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-3 py-1 font-medium text-sky-700 dark:bg-sky-500/10 dark:text-sky-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
+                      {t("stats.total", { count: visibleStats.total })}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent><p className="text-xs">{t("stats_descriptions.total_locations")}</p></TooltipContent>
+                </UITooltip>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 font-medium text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
+                      <span className="h-2 w-2 rounded-full bg-blue-500" aria-hidden="true" />
+                      {t("stats.ok", { count: visibleStats.ok })}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent><p className="text-xs">{t("stats_descriptions.ok_locations")}</p></TooltipContent>
+                </UITooltip>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
+                      <span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
+                      {t("stats.warning", { count: visibleStats.warning })}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent><p className="text-xs">{t("stats_descriptions.alert_locations")}</p></TooltipContent>
+                </UITooltip>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 font-medium text-red-700 dark:bg-red-500/10 dark:text-red-400 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 cursor-help">
+                      <span
+                        className={cn("h-2 w-2 rounded-full bg-red-500", visibleStats.critical > 0 && "animate-pulse")}
+                        aria-hidden="true"
+                      />
+                      {t("stats.critical", { count: visibleStats.critical })}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent><p className="text-xs">{t("stats_descriptions.critical_locations")}</p></TooltipContent>
+                </UITooltip>
+              </div>
+            </TooltipProvider>
           </div>
 
           <div className="px-4 md:px-6 py-4">
@@ -391,7 +423,6 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                 sensors={visibleSensors}
                 disabledFirst={disabledFirst}
                 onSurveillanceToggle={handleSurveillanceToggle}
-                onGroupSurveillanceToggle={handleGroupSurveillanceToggle}
                 onEditLocation={handleOpenLocationEdit}
                 isLoading={isFetching && visibleSensors.length === 0}
                 showNullNonResponse={showNullNonResponse}
@@ -426,12 +457,6 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
             </>
           )}
 
-          <div className="flex items-center justify-between text-sm text-muted-foreground pt-4">
-            <p>
-              {t("footer.count", { count: visibleSensors.length })}
-              {filtersActive ? t("footer.total", { total: allSensors.length }) : null}
-            </p>
-          </div>
         </m.div>
       </LazyMotion>
 

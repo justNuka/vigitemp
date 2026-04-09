@@ -24,12 +24,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 7.4.1
- * Query Engine version: 55ae170b1ced7fc6ed07a15f110549408c501bb3
+ * Prisma Client JS version: 7.7.0
+ * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
  */
 Prisma.prismaVersion = {
-  client: "7.4.1",
-  engine: "55ae170b1ced7fc6ed07a15f110549408c501bb3"
+  client: "7.7.0",
+  engine: "75cbdc1eb7150937890ad5465d861175c6624711"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -468,12 +468,12 @@ exports.Prisma.T_profilScalarFieldEnum = {
   Id_Profil: 'Id_Profil',
   Profil_Utilisateur: 'Profil_Utilisateur',
   Commentaire: 'Commentaire',
-  Est_MC2: 'Est_MC2'
+  Est_MC2: 'Est_MC2',
+  Est_Archive: 'Est_Archive'
 };
 
 exports.Prisma.T_siteScalarFieldEnum = {
   Id_Site: 'Id_Site',
-  Code_Site: 'Code_Site',
   Libelle_Site: 'Libelle_Site',
   Commentaire: 'Commentaire',
   Est_Archive: 'Est_Archive'
@@ -940,7 +940,6 @@ exports.Prisma.t_profilOrderByRelevanceFieldEnum = {
 };
 
 exports.Prisma.t_siteOrderByRelevanceFieldEnum = {
-  Code_Site: 'Code_Site',
   Libelle_Site: 'Libelle_Site',
   Commentaire: 'Commentaire'
 };

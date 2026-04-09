@@ -51,12 +51,17 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
       ],
     }
 
+    const impactAlarmFilter = {
+      Est_Alarme_Vrai: true,
+      Type: { in: ["H", "B"] },
+      ...dateFilter,
+    }
+
     const [activeAlarms, histoAlarms] = await Promise.all([
       prisma.t_alarme.findMany({
         where: {
           Id_Lieu: idLieu,
-          Est_Alarme_Vrai: true,
-          ...dateFilter,
+          ...impactAlarmFilter,
         },
         select: {
           Id_Alarme: true,
@@ -69,8 +74,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
       prisma.t_alarme_histo.findMany({
         where: {
           Id_Lieu: idLieu,
-          Est_Alarme_Vrai: true,
-          ...dateFilter,
+          ...impactAlarmFilter,
         },
         select: {
           Id_Alarme: true,

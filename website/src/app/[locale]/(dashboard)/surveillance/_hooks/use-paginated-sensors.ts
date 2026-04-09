@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
-import { useRef } from "react"
+import { useCallback, useRef } from "react"
 
 import type { SensorWithLocation } from "@/lib/api"
 import { getJson } from "@/lib/http"
@@ -76,7 +76,7 @@ export function usePaginatedSensors({
     retry: false,
   })
 
-  const forceRefresh = async () => {
+  const forceRefresh = useCallback(async () => {
     bypassCacheRef.current = true
     try {
       await queryClient.removeQueries({ queryKey: ["capteurs", "paginated", limit, "page"] })
@@ -84,7 +84,7 @@ export function usePaginatedSensors({
     } finally {
       bypassCacheRef.current = false
     }
-  }
+  }, [limit, query.refetch, queryClient])
 
   return {
     ...query,

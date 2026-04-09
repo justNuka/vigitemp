@@ -126,7 +126,7 @@ export function PasswordRulesSettings() {
               id="min_length"
               type="number"
               min={4}
-              max={128}
+              max={24}
               value={editedRules.min_length}
               onChange={(e) => handleChange("min_length", e.target.value)}
               disabled={isSaving}

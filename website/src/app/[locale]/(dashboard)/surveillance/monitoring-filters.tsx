@@ -42,7 +42,7 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
       return {
         siteIds: Array.isArray(parsed.siteIds) ? parsed.siteIds : [],
         groupIds: Array.isArray(parsed.groupIds) ? parsed.groupIds : [],
-        searchTerm: typeof parsed.searchTerm === "string" ? parsed.searchTerm : "",
+        searchTerm: "",
         sortMode: parsed.sortMode === "alphabetical" ? "alphabetical" : "status",
       }
     } catch {
@@ -65,7 +65,8 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
   }, [allowedGroupIds, groups])
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filters))
+    const persistedFilters = { ...filters, searchTerm: "" }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(persistedFilters))
     onFilterChange(filters)
   }, [filters, onFilterChange])
 
@@ -78,13 +79,21 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
     })
   }, [allowedGroupIds])
 
+  useEffect(() => {
+    if (sites.length === 0) return
+    setFilters((prev) => {
+      if (prev.siteIds.length > 0) return prev
+      return { ...prev, siteIds: [sites[0].id] }
+    })
+  }, [sites])
+
   const handleSiteChange = (selectedIds: number[]) => {
-    const nextSiteIds = selectedIds || []
-    const nextAllowed = buildAllowedGroupIdSet(groups, nextSiteIds)
+    const normalizedSiteIds = selectedIds && selectedIds.length > 0 ? selectedIds : sites.length > 0 ? [sites[0].id] : []
+    const nextAllowed = buildAllowedGroupIdSet(groups, normalizedSiteIds)
 
     setFilters((prev) => ({
       ...prev,
-      siteIds: nextSiteIds,
+      siteIds: normalizedSiteIds,
       groupIds: nextAllowed ? prev.groupIds.filter((id) => nextAllowed.has(id)) : prev.groupIds,
     }))
   }

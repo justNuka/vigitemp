@@ -3,9 +3,6 @@
 
 
 
-import { useState } from "react"
-
-
 import { Power, PowerOff } from "lucide-react"
 
 
@@ -23,7 +20,6 @@ import { useAppTimezone } from "@/components/timezone-provider"
 import { SurveillanceEmptyState } from "./_components/monitoring-empty-state"
 
 
-import { MonitoringGroupToggleDialog, type MonitoringGroupModalState } from "./_components/monitoring-group-toggle-dialog"
 
 
 import { MonitoringSiteSection } from "./_components/monitoring-site-section"
@@ -71,7 +67,6 @@ interface MonitoringCardsGridProps {
   ) => void
 
 
-  onGroupSurveillanceToggle?: (groupId: number, newState: boolean, durationMinutes?: number | null) => void
 
 
   onEditLocation?: (idLieu: number) => void
@@ -192,7 +187,6 @@ export function MonitoringCardsGrid({
   onSurveillanceToggle,
 
 
-  onGroupSurveillanceToggle,
 
 
   onEditLocation,
@@ -218,12 +212,6 @@ export function MonitoringCardsGrid({
 
 
   const { value: expandedGroups, toggle: toggleGroup } = usePersistentStringSet("surveillance-expanded-groups")
-
-
-  const [groupModal, setGroupModal] = useState<MonitoringGroupModalState | null>(null)
-
-
-  const [groupDisableDuration, setGroupDisableDuration] = useState("60")
 
 
 
@@ -444,28 +432,6 @@ export function MonitoringCardsGrid({
                     t={t}
 
 
-                    onOpenGroupModal={
-
-
-                      section.disabledView
-
-
-                        ? undefined
-
-
-                        : (modal) => {
-
-
-                            setGroupDisableDuration("60")
-
-
-                            setGroupModal(modal)
-
-
-                          }
-
-
-                    }
 
 
                     onSurveillanceToggle={handleSurveillanceToggle}
@@ -507,72 +473,6 @@ export function MonitoringCardsGrid({
       })}
 
 
-
-
-      <MonitoringGroupToggleDialog
-
-
-        modal={groupModal}
-
-
-        disableDuration={groupDisableDuration}
-
-
-        onDisableDurationChange={setGroupDisableDuration}
-
-
-        onClose={() => setGroupModal(null)}
-
-
-        onConfirm={() => {
-
-
-          if (!groupModal || !onGroupSurveillanceToggle) {
-
-
-            setGroupModal(null)
-
-
-            return
-
-
-          }
-
-
-          const newState = !groupModal.isActive
-
-
-          const durationMinutes =
-
-
-            newState === false
-
-
-              ? groupDisableDuration === "manual"
-
-
-                ? null
-
-
-                : Number(groupDisableDuration)
-
-
-              : null
-
-
-          onGroupSurveillanceToggle(groupModal.groupId, newState, durationMinutes)
-
-
-          setGroupModal(null)
-
-
-        }}
-
-
-        t={t}
-
-
-      />
 
 
     </div>

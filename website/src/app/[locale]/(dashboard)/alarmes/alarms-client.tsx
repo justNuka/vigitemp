@@ -51,8 +51,8 @@ interface AlarmRow {
   type: AlarmRowType;
   location: AlarmWithDetails["location"];
   sensor: AlarmWithDetails["sensor"];
-  value: number;
-  threshold: number;
+  value: number | null;
+  threshold: number | null;
   triggeredAt: string | Date;
   status: string;
   comment: string | null;
@@ -221,7 +221,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
       header: () => <div className="text-right">{t("table.columns.triggered_value")}</div>,
       cell: ({ row }) => {
         const alarm = row.original;
-        const value = alarm.value ?? alarm.sensor.currentValue ?? null;
+        const value = alarm.type === "no-response" ? null : (alarm.value ?? alarm.sensor.currentValue ?? null);
         return <div className="text-right font-mono font-medium">{value !== null ? `${value.toFixed(1)} ${alarm.sensor.unit}` : "-"}</div>;
       },
     },

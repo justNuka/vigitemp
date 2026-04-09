@@ -15,6 +15,7 @@ import { useGroupUsers } from '@/hooks/useGroupUsers';
 import { deleteJson, getJson, HttpError } from "@/lib/http";
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Layers } from 'lucide-react';
 import {
   AlertDialog,
@@ -36,21 +37,26 @@ export function GroupsClient() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const t = useTranslations('groupsPage');
-  const [regroupement, setRegroupement] = useState('1');
+  const [regroupement, setRegroupement] = useState('all');
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [archiveBlockedOpen, setArchiveBlockedOpen] = useState(false);
   const [archiveBlockedMessage, setArchiveBlockedMessage] = useState<string | null>(null);
+  const [statusTab, setStatusTab] = useState<'active' | 'archived'>('active');
 
   const { data: groups = [], isLoading } = useGroups(regroupement);
-  const { data: locations = [] } = useGroupLocations(selectedGroup?.Id_Groupe);
-  const { data: users = [] } = useGroupUsers(selectedGroup?.Id_Groupe);
+  const activeGroups = groups.filter((group) => !group.Est_Archive);
+  const archivedGroups = groups.filter((group) => Boolean(group.Est_Archive));
+  const displayedGroups = statusTab === 'active' ? activeGroups : archivedGroups;
+  const selectedDisplayedGroup = selectedGroup ? displayedGroups.find((group) => group.Id_Groupe === selectedGroup.Id_Groupe) ?? null : null;
+  const { data: locations = [] } = useGroupLocations(selectedDisplayedGroup?.Id_Groupe);
+  const { data: users = [] } = useGroupUsers(selectedDisplayedGroup?.Id_Groupe);
 
   useEffect(() => {
-    if (!selectedGroup?.Id_Groupe) return;
-    const groupId = selectedGroup.Id_Groupe;
+    if (!selectedDisplayedGroup?.Id_Groupe) return;
+    const groupId = selectedDisplayedGroup.Id_Groupe;
     void queryClient.prefetchQuery({
       queryKey: ["groupLocations", groupId],
       queryFn: () => getJson(`/api/groupes/${groupId}/lieux`),
@@ -59,7 +65,7 @@ export function GroupsClient() {
       queryKey: ["groupUsers", groupId],
       queryFn: () => getJson(`/api/groupes/${groupId}/utilisateurs`),
     });
-  }, [queryClient, selectedGroup?.Id_Groupe]);
+  }, [queryClient, selectedDisplayedGroup?.Id_Groupe]);
 
   const handleNew = () => {
     setSelectedGroup(null);
@@ -68,16 +74,16 @@ export function GroupsClient() {
   };
 
   const handleEdit = () => {
-    if (!selectedGroup) return;
+    if (!selectedDisplayedGroup) return;
     setIsEditing(true);
     setModalOpen(true);
   };
 
   const handleArchive = async () => {
-    if (!selectedGroup) return;
+    if (!selectedDisplayedGroup) return;
 
     try {
-      await deleteJson(`/api/groupes/${selectedGroup.Id_Groupe}`);
+      await deleteJson(`/api/groupes/${selectedDisplayedGroup.Id_Groupe}`);
       toast.success(t('toast.archive_success'));
       setSelectedGroup(null);
       await queryClient.invalidateQueries({ queryKey: ["groups"] });
@@ -104,39 +110,58 @@ export function GroupsClient() {
               {t('title')}
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {t('count', { count: groups.length })}
+              {t('count', { count: displayedGroups.length })}
             </p>
           </div>
           <GroupsActions
             regroupement={regroupement}
             onRegroupementChange={setRegroupement}
-            canEdit={!!selectedGroup}
+            canEdit={!!selectedDisplayedGroup && statusTab === 'active'}
+            canArchive={!!selectedDisplayedGroup && statusTab === 'active'}
             onNew={handleNew}
             onEdit={handleEdit}
             onArchive={() => setArchiveConfirmOpen(true)}
           />
         </CardHeader>
         <CardContent>
+          <Tabs
+            value={statusTab}
+            onValueChange={(value) => {
+              setStatusTab(value as 'active' | 'archived');
+              setSelectedGroup(null);
+            }}
+            className="space-y-4"
+          >
+            <TabsList className="grid w-full max-w-md grid-cols-2 bg-primary/10 text-primary">
+              <TabsTrigger value="active" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                {t('tabs.active', { count: activeGroups.length })}
+              </TabsTrigger>
+              <TabsTrigger value="archived" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                {t('tabs.archived', { count: archivedGroups.length })}
+              </TabsTrigger>
+            </TabsList>
           <GroupsTable
-            groups={groups}
+            groups={displayedGroups}
             isLoading={isLoading}
-            selectedGroupId={selectedGroup?.Id_Groupe ?? null}
+            selectedGroupId={selectedDisplayedGroup?.Id_Groupe ?? null}
             onSelectGroup={setSelectedGroup}
             onEditGroup={(group) => {
+              if (statusTab === 'archived') return;
               setSelectedGroup(group);
               setIsEditing(true);
               setModalOpen(true);
             }}
           />
+          </Tabs>
         </CardContent>
       </Card>
 
       <div className="grid grid-cols-2 gap-6 mb-12">
-        <GroupLocationsPanel groupSelected={!!selectedGroup} locations={locations} />
-        <GroupUsersPanel groupSelected={!!selectedGroup} users={users} />
+        <GroupLocationsPanel groupSelected={!!selectedDisplayedGroup} locations={locations} />
+        <GroupUsersPanel groupSelected={!!selectedDisplayedGroup} users={users} />
       </div>
 
-      <GroupModal open={modalOpen} onOpenChange={setModalOpen} group={selectedGroup} isEditing={isEditing} />
+      <GroupModal open={modalOpen} onOpenChange={setModalOpen} group={selectedDisplayedGroup} isEditing={isEditing} />
       </m.main>
     </LazyMotion>
   );

@@ -39,12 +39,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 7.4.1
- * Query Engine version: 55ae170b1ced7fc6ed07a15f110549408c501bb3
+ * Prisma Client JS version: 7.7.0
+ * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
  */
 Prisma.prismaVersion = {
-  client: "7.4.1",
-  engine: "55ae170b1ced7fc6ed07a15f110549408c501bb3"
+  client: "7.7.0",
+  engine: "75cbdc1eb7150937890ad5465d861175c6624711"
 }
 
 Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError;
@@ -166,8 +166,8 @@ exports.Prisma.ModelName = {
  */
 const config = {
   "previewFeatures": [],
-  "clientVersion": "7.4.1",
-  "engineVersion": "55ae170b1ced7fc6ed07a15f110549408c501bb3",
+  "clientVersion": "7.7.0",
+  "engineVersion": "75cbdc1eb7150937890ad5465d861175c6624711",
   "activeProvider": "mysql",
   "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../../src/generated/@prisma-vigi-chat\"\n}\n\ndatasource db {\n  provider = \"mysql\"\n}\n\nmodel t_conversation {\n  Id_Conversation Int                          @id @default(autoincrement())\n  Type            String                       @db.VarChar(10)\n  Titre           String?                      @db.VarChar(128)\n  DM_Key          String?                      @unique @db.VarChar(64)\n  Date_Creation   DateTime                     @default(now()) @db.DateTime(0)\n  participants    t_conversation_participant[]\n  messages        t_message[]\n\n  @@index([Type])\n  @@index([Date_Creation])\n}\n\nmodel t_conversation_participant {\n  Id_Participant   Int            @id @default(autoincrement())\n  Id_Conversation  Int\n  Id_Utilisateur   Int\n  Last_Read_Msg_Id Int?\n  Date_Ajout       DateTime       @default(now()) @db.DateTime(0)\n  conversation     t_conversation @relation(fields: [Id_Conversation], references: [Id_Conversation], onDelete: Cascade)\n\n  @@unique([Id_Conversation, Id_Utilisateur])\n  @@index([Id_Utilisateur])\n}\n\nmodel t_message {\n  Id_Message        Int                    @id @default(autoincrement())\n  Id_Conversation   Int\n  Sender_Id         Int\n  Contenu           String                 @db.Text\n  Date_Creation     DateTime               @default(now()) @db.DateTime(0)\n  Date_Modification DateTime?              @db.DateTime(0)\n  Date_Suppression  DateTime?              @db.DateTime(0)\n  conversation      t_conversation         @relation(fields: [Id_Conversation], references: [Id_Conversation], onDelete: Cascade)\n  attachments       t_message_attachment[]\n\n  @@index([Id_Conversation, Id_Message])\n  @@index([Date_Creation])\n}\n\nmodel t_message_attachment {\n  Id_Attachment Int       @id @default(autoincrement())\n  Id_Message    Int\n  File_Name     String    @db.VarChar(255)\n  File_Path     String    @db.VarChar(512)\n  File_Size     Int\n  Mime_Type     String    @db.VarChar(128)\n  Date_Upload   DateTime  @default(now()) @db.DateTime(0)\n  message       t_message @relation(fields: [Id_Message], references: [Id_Message], onDelete: Cascade)\n\n  @@index([Id_Message])\n}\n"
 }

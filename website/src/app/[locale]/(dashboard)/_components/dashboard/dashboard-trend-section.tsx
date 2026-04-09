@@ -33,7 +33,7 @@ export function DashboardTrendSection({
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-4">
-          <MiniChart measurements={trendMeasurements} height={120} className="rounded-lg overflow-hidden" />
+          <MiniChart measurements={trendMeasurements} height={120} showScale className="rounded-lg overflow-hidden pr-10" />
           <div className="mt-4 flex items-center justify-between text-sm">
             <div className="flex flex-col">
               <span className="text-2xl font-bold text-foreground tabular-nums">
@@ -43,7 +43,7 @@ export function DashboardTrendSection({
                 {t("trend.count", { count: "" }).trim()}
               </span>
             </div>
-            <Link href="/surveillance">
+            <Link href="/alarmes/par-lieu">
               <Button variant="ghost" size="sm" className="gap-1 -mr-2 text-primary hover:text-primary/80">
                 {t("trend.details")}
                 <ArrowRight className="h-4 w-4" />

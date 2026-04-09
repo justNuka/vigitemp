@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import type { ColumnDef } from "@tanstack/react-table"
-import { Filter, History, RefreshCw, RotateCcw } from "lucide-react"
+import { History, RefreshCw, RotateCcw, Search } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { useAppAccess } from "@/components/access/app-access-provider"
@@ -33,6 +33,7 @@ type AckHistoryItem = {
   siteName: string | null
   locationName: string | null
   sensorSerial: string | null
+  durationMs: number | null
   alarmType: string | null
   alarmValue: string | null
   triggeredAt: string | null
@@ -42,7 +43,7 @@ type AckHistoryItem = {
 type Paginated<T> = {
   data: T[]
   filters?: {
-    sites: Array<{ id: number; name: string }>
+    lieux: Array<{ id: number; name: string }>
   }
   pagination: {
     page: number
@@ -60,6 +61,8 @@ function formatAlarmType(t: ReturnType<typeof useTranslations>, type: string | n
       return t("table.type.low")
     case "NO_RESPONSE":
       return t("table.type.no_response")
+    case "SECTOR":
+      return t("table.type.sector")
     default:
       return type || "-"
   }
@@ -72,14 +75,14 @@ export function AlarmAcknowledgmentHistoryClient() {
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 })
   const [draftFilters, setDraftFilters] = useState({
     q: "",
-    siteId: "all",
+    lieuId: "all",
     dateFrom: "",
     dateTo: "",
     type: "all",
   })
   const [appliedFilters, setAppliedFilters] = useState({
     q: "",
-    siteId: "all",
+    lieuId: "all",
     dateFrom: "",
     dateTo: "",
     type: "all",
@@ -94,7 +97,7 @@ export function AlarmAcknowledgmentHistoryClient() {
       limit: String(limit),
     })
     if (appliedFilters.q.trim()) params.set("q", appliedFilters.q.trim())
-    if (appliedFilters.siteId !== "all") params.set("siteId", appliedFilters.siteId)
+    if (appliedFilters.lieuId !== "all") params.set("lieuId", appliedFilters.lieuId)
     if (appliedFilters.dateFrom) params.set("dateFrom", appliedFilters.dateFrom)
     if (appliedFilters.dateTo) params.set("dateTo", appliedFilters.dateTo)
     if (appliedFilters.type !== "all") params.set("type", appliedFilters.type)
@@ -144,10 +147,18 @@ export function AlarmAcknowledgmentHistoryClient() {
         ),
       },
       {
-        accessorKey: "sensorSerial",
-        header: t("table.columns.sensor"),
-        meta: { exportLabel: t("table.columns.sensor") },
-        cell: ({ row }) => row.original.sensorSerial || "-",
+        id: "duration",
+        accessorFn: (row) => row.durationMs ?? -1,
+        header: t("table.columns.duration"),
+        meta: { exportLabel: t("table.columns.duration") },
+        cell: ({ row }) => {
+          const durationMs = row.original.durationMs;
+          if (durationMs === null || durationMs < 0) return "-";
+          const totalMinutes = Math.max(Math.floor(durationMs / 60000), 0);
+          const hours = Math.floor(totalMinutes / 60);
+          const minutes = totalMinutes % 60;
+          return hours > 0 ? `${hours}h ${minutes}min` : `${minutes}min`;
+        },
       },
       {
         accessorKey: "alarmType",
@@ -199,23 +210,12 @@ export function AlarmAcknowledgmentHistoryClient() {
 
   const data = query.data?.data ?? []
   const paginationMeta = query.data?.pagination
-  const siteOptions = query.data?.filters?.sites ?? []
-
-  const applyFilters = () => {
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }))
-    setAppliedFilters({
-      q: draftFilters.q,
-      siteId: draftFilters.siteId,
-      dateFrom: draftFilters.dateFrom,
-      dateTo: draftFilters.dateTo,
-      type: draftFilters.type,
-    })
-  }
+  const lieuOptions = query.data?.filters?.lieux ?? []
 
   const resetFilters = () => {
     const cleared = {
       q: "",
-      siteId: "all",
+      lieuId: "all",
       dateFrom: "",
       dateTo: "",
       type: "all",
@@ -224,7 +224,7 @@ export function AlarmAcknowledgmentHistoryClient() {
     setDraftFilters(cleared)
     setAppliedFilters({
       q: "",
-      siteId: "all",
+      lieuId: "all",
       dateFrom: "",
       dateTo: "",
       type: "all",
@@ -237,16 +237,6 @@ export function AlarmAcknowledgmentHistoryClient() {
         title={t("title")}
         description={t("description")}
       >
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => query.refetch()}
-          disabled={query.isFetching}
-          className="gap-2"
-        >
-          <RefreshCw className={cn("h-4 w-4", query.isFetching && "animate-spin")} />
-          {t("actions.refresh")}
-        </Button>
       </PageHeader>
 
       <div className="p-4 md:p-6">
@@ -262,32 +252,37 @@ export function AlarmAcknowledgmentHistoryClient() {
               exportFormats={["csv", "pdf"]}
               toolbarRight={
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="relative min-w-[14rem]">
+                  <div className="relative min-w-[16rem]">
                     <Input
                       value={draftFilters.q}
-                      onChange={(event) =>
-                        setDraftFilters((prev) => ({ ...prev, q: event.target.value }))
-                      }
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                        setDraftFilters((prev) => ({ ...prev, q: value }));
+                        setAppliedFilters((prev) => ({ ...prev, q: value }));
+                      }}
                       placeholder={t("table.search")}
-                      className="pr-10"
+                      className="pl-10"
                     />
-                    <Filter className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   </div>
 
                   <Select
-                    value={draftFilters.siteId}
-                    onValueChange={(value) =>
-                      setDraftFilters((prev) => ({ ...prev, siteId: value }))
-                    }
+                    value={draftFilters.lieuId}
+                    onValueChange={(value) => {
+                      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                      setDraftFilters((prev) => ({ ...prev, lieuId: value }));
+                      setAppliedFilters((prev) => ({ ...prev, lieuId: value }));
+                    }}
                   >
                     <SelectTrigger className="w-[14rem]">
-                      <SelectValue placeholder={t("filters.site")} />
+                      <SelectValue placeholder={t("filters.location")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{t("filters.allSites")}</SelectItem>
-                      {siteOptions.map((site) => (
-                        <SelectItem key={site.id} value={String(site.id)}>
-                          {site.name}
+                      <SelectItem value="all">{t("filters.allLocations")}</SelectItem>
+                      {lieuOptions.map((lieu) => (
+                        <SelectItem key={lieu.id} value={String(lieu.id)}>
+                          {lieu.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -295,9 +290,11 @@ export function AlarmAcknowledgmentHistoryClient() {
 
                   <Select
                     value={draftFilters.type}
-                    onValueChange={(value) =>
-                      setDraftFilters((prev) => ({ ...prev, type: value }))
-                    }
+                    onValueChange={(value) => {
+                      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                      setDraftFilters((prev) => ({ ...prev, type: value }));
+                      setAppliedFilters((prev) => ({ ...prev, type: value }));
+                    }}
                   >
                     <SelectTrigger className="w-[12rem]">
                       <SelectValue placeholder={t("filters.type")} />
@@ -307,15 +304,19 @@ export function AlarmAcknowledgmentHistoryClient() {
                       <SelectItem value="HIGH">{t("table.type.high")}</SelectItem>
                       <SelectItem value="LOW">{t("table.type.low")}</SelectItem>
                       <SelectItem value="NO_RESPONSE">{t("table.type.no_response")}</SelectItem>
+                      <SelectItem value="SECTOR">{t("table.type.sector")}</SelectItem>
                     </SelectContent>
                   </Select>
 
                   <Input
                     type="date"
                     value={draftFilters.dateFrom}
-                    onChange={(event) =>
-                      setDraftFilters((prev) => ({ ...prev, dateFrom: event.target.value }))
-                    }
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                      setDraftFilters((prev) => ({ ...prev, dateFrom: value }));
+                      setAppliedFilters((prev) => ({ ...prev, dateFrom: value }));
+                    }}
                     className="w-[11rem]"
                     aria-label={t("filters.dateFrom")}
                   />
@@ -323,16 +324,19 @@ export function AlarmAcknowledgmentHistoryClient() {
                   <Input
                     type="date"
                     value={draftFilters.dateTo}
-                    onChange={(event) =>
-                      setDraftFilters((prev) => ({ ...prev, dateTo: event.target.value }))
-                    }
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+                      setDraftFilters((prev) => ({ ...prev, dateTo: value }));
+                      setAppliedFilters((prev) => ({ ...prev, dateTo: value }));
+                    }}
                     className="w-[11rem]"
                     aria-label={t("filters.dateTo")}
                   />
 
-                  <Button variant="outline" size="sm" onClick={applyFilters} className="gap-2">
-                    <Filter className="h-4 w-4" />
-                    {t("actions.apply")}
+                  <Button variant="outline" size="sm" onClick={() => query.refetch()} disabled={query.isFetching} className="gap-2">
+                    <RefreshCw className={cn("h-4 w-4", query.isFetching && "animate-spin")} />
+                    {t("actions.refresh")}
                   </Button>
 
                   <Button variant="ghost" size="sm" onClick={resetFilters} className="gap-2">

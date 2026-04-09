@@ -39,6 +39,11 @@ export function GroupsTable({ groups, isLoading, selectedGroupId, onSelectGroup,
       header: t('table.columns.locations'),
       cell: ({ row }) => <div className="text-right font-medium">{row.getValue('nombre_lieux')}</div>,
     },
+    {
+      accessorKey: 'nombre_utilisateurs',
+      header: t('table.columns.users'),
+      cell: ({ row }) => <div className="text-right font-medium">{row.original.nombre_utilisateurs ?? 0}</div>,
+    },
   ];
 
   return (

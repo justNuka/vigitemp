@@ -60,20 +60,6 @@ export const POST = withLogging(async (req: NextRequest) => {
 
   const delivered = getSurveillanceClientCount()
 
-  log.audit("CC", {
-    user: "DISPATCH_SERVICE",
-    userId: 0,
-    ip,
-    resource: "Dispatch surveillance",
-    resourceId: validated.data.idLieu,
-    changes: {
-      status: validated.data.status ?? null,
-      currentValue: validated.data.currentValue ?? null,
-      delivered,
-    },
-    success: true,
-  })
-
   return apiOk({ delivered })
 })
 

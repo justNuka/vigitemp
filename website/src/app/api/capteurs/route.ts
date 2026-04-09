@@ -50,7 +50,6 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: HandlerContext)
         t_site: {
           select: {
             Id_Site: true,
-            Code_Site: true,
             Libelle_Site: true,
           },
         },
@@ -67,14 +66,8 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: HandlerContext)
       lastUpdate: lieu.Derniere_Date_Heure?.toISOString() || new Date().toISOString(),
       location: {
         id: lieu.Id_Site || 0,
-        name:
-          lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
-            ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
-            : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || "Unknown",
-        siteGroup:
-          lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
-            ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
-            : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || null,
+        name: lieu.t_site?.Libelle_Site || "Unknown",
+        siteGroup: lieu.t_site?.Libelle_Site || null,
       },
       minThreshold: lieu.Tolerance_Surveillance_Inf ?? lieu.Consigne_Inf,
       maxThreshold: lieu.Tolerance_Surveillance_Sup ?? lieu.Consigne_Sup,
@@ -109,7 +102,6 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
         t_site: {
           select: {
             Id_Site: true,
-            Code_Site: true,
             Libelle_Site: true,
           },
         },
@@ -130,10 +122,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
         status: "ok",
         location: {
           id: lieu.t_site?.Id_Site || 0,
-          name:
-            lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
-              ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
-              : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || "Unknown",
+          name: lieu.t_site?.Libelle_Site || "Unknown",
         },
       },
       { status: 201 },

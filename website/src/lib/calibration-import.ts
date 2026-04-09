@@ -11,6 +11,7 @@ export type CalibrationImportSummary = {
   id?: number;
   file: string;
   sensor: string | null;
+  calibrationName: string | null;
   date: Date | null;
   dateText: string | null;
   operator: string | null;
@@ -33,6 +34,7 @@ const TAG_SETS = {
   dateValidity: ["DATE_VALIDITE", "DATE_VALIDITY"],
   sensor: ["NUM_SONDE", "SONDE_NUMERO_SERIE", "SONDE", "ADRESSE_SONDE"],
   block: ["ETALONNAGE_SONDE", "CALIBRAGE_SONDE", "AJUSTAGE_SONDE"],
+  calibrationName: ["NOM_ETALONNAGE", "NOM_ETALONAGE", "NOM_CALIBRAGE", "NOM_AJUSTAGE", "LIBELLE_ETALONNAGE"],
 };
 
 const trimText = (value: string | null | undefined) => {
@@ -152,6 +154,7 @@ export function parseCalibrationXml(xml: string, fileName = ""): ParsedCalibrati
   const dateValidityText = formatDateText(dateValidityParts);
 
   const operator = getTagValue(xml, "OPERATEUR");
+  const calibrationName = getTagValueAny(xml, TAG_SETS.calibrationName);
 
   const etalonBlock = getTagBlock(xml, "ETALON");
   const etalonNumero = etalonBlock ? getTagValue(etalonBlock, "NUM_SERIE") : null;
@@ -202,6 +205,7 @@ export function parseCalibrationXml(xml: string, fileName = ""): ParsedCalibrati
     summary: {
       file: fileName,
       sensor: sensorNumber,
+      calibrationName,
       date,
       dateText,
       operator,

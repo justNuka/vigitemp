@@ -6,6 +6,7 @@ import type { Module } from '@/hooks/useModules';
 import type { SiteSimple } from '@/hooks/useSites';
 import type { MailingUser } from '@/hooks/useUsersForMailing';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { TemporaryMemoryControls } from '@/components/form/temporary-memory-controls';
 import {
   Dialog,
@@ -17,17 +18,19 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLicense } from "@/components/license/license-provider";
 import { isStandardOrExpert } from "@/lib/license-access";
-import { Check, X } from "lucide-react";
+import { Check, ChevronDown, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { FormProvider, type UseFormReturn, useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { showFormValidationToast } from '@/lib/form-toast';
 
 import type { EmtMode } from "@/lib/emt"
 import type { LieuEmtParams } from "@/lib/planning-regle-schema"
 import type { LocationFormData, LocationFormMode } from './location-form-types';
 import { getDefaultLocationFormData } from "./location-form-defaults";
+import { locationFormSchema } from './location-form-schema';
 import { LocationFormTabGeneral } from './location-form-tab-general';
 import { LocationFormTabMetrology } from './location-form-tab-metrology';
 import { LocationFormTabTelephony } from './location-form-tab-telephony';
@@ -75,10 +78,52 @@ export function LocationFormDialog({
   });
   const resolvedForm = form ?? internalForm;
   const hasChanges = open && resolvedForm.formState.isDirty;
-  const handleSubmit = resolvedForm.handleSubmit(onSubmit, (errors) => showFormValidationToast(errors));
+  const submitAndStay = resolvedForm.handleSubmit(async (values) => {
+    resolvedForm.clearErrors();
+    const validation = locationFormSchema.safeParse(values);
+    if (!validation.success) {
+      for (const issue of validation.error.issues) {
+        const [field] = issue.path;
+        if (typeof field === 'string') {
+          resolvedForm.setError(field as keyof LocationFormData, {
+            type: 'manual',
+            message: issue.message,
+          });
+        }
+      }
+      toast.error(validation.error.issues[0]?.message ?? tCommon('error'));
+      return;
+    }
+    await onSubmit(values);
+  }, (errors) => showFormValidationToast(errors));
+
+  const submitAndClose = resolvedForm.handleSubmit(async (values) => {
+    resolvedForm.clearErrors();
+    const validation = locationFormSchema.safeParse(values);
+    if (!validation.success) {
+      for (const issue of validation.error.issues) {
+        const [field] = issue.path;
+        if (typeof field === 'string') {
+          resolvedForm.setError(field as keyof LocationFormData, {
+            type: 'manual',
+            message: issue.message,
+          });
+        }
+      }
+      toast.error(validation.error.issues[0]?.message ?? tCommon('error'));
+      return;
+    }
+    await onSubmit(values);
+    onCancel();
+  }, (errors) => showFormValidationToast(errors));
   const memoryKey = `location-form:${mode}:${resolvedForm.watch('Id_Lieu') ?? 'new'}`;
   const resetValues = (resolvedForm.getValues() as LocationFormData) ?? getDefaultLocationFormData();
   const [activeTab, setActiveTab] = useState<string>('general');
+
+  const confirmCloseIfDirty = () => {
+    if (!hasChanges) return true;
+    return window.confirm(t('unsaved_changes_confirm'));
+  };
 
   useEffect(() => {
     if (!open || form || !formData) return;
@@ -113,7 +158,7 @@ export function LocationFormDialog({
     <Dialog
       open={open}
       onOpenChange={(nextOpen) => {
-        if (!nextOpen) onCancel();
+        if (!nextOpen && confirmCloseIfDirty()) onCancel();
       }}
     >
       <DialogContent className="max-w-4xl xl:max-w-5xl max-h-[96vh] overflow-y-auto bg-white p-0 dark:bg-card">
@@ -123,18 +168,20 @@ export function LocationFormDialog({
         </DialogHeader>
 
         <FormProvider {...resolvedForm}>
-          <form onSubmit={handleSubmit} className="space-y-4 px-6 pb-6">
-            <TemporaryMemoryControls
-              form={resolvedForm}
-              storageKey={memoryKey}
-              resetValues={resetValues}
-              labels={{
-                save: t('temporary_memory.save'),
-                restore: t('temporary_memory.restore'),
-                clear: t('temporary_memory.clear'),
-                saved: t('temporary_memory.saved'),
-              }}
-            />
+          <form onSubmit={(event) => { event.preventDefault(); void submitAndStay(); }} className="space-y-4 px-6 pb-6">
+            {!isEdit ? (
+              <TemporaryMemoryControls
+                form={resolvedForm}
+                storageKey={memoryKey}
+                resetValues={resetValues}
+                labels={{
+                  save: t('temporary_memory.save'),
+                  restore: t('temporary_memory.restore'),
+                  clear: t('temporary_memory.clear'),
+                  saved: t('temporary_memory.saved'),
+                }}
+              />
+            ) : null}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               {isEdit && resolvedForm.watch('Nom_Lieu') ? (
                 <div className="mb-3 rounded-md border border-sky-200 bg-sky-50 px-4 py-2 text-sm text-sky-900 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-100">
@@ -203,14 +250,41 @@ export function LocationFormDialog({
 
             {hasChanges && (
               <div className="sticky bottom-0 z-20 flex justify-end gap-2 border-t bg-white/95 py-3 backdrop-blur dark:bg-popover/95">
-                <Button variant="outline" onClick={onCancel} className="gap-2" type="button">
-                  <X className="h-4 w-4" />
-                  {tCommon('cancel')}
-                </Button>
-                <Button type="submit" disabled={isSubmitting} className="gap-2">
-                  <Check className="h-4 w-4" />
-                  {isSubmitting ? t('submit.saving') : tCommon('save')}
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="gap-2" type="button" disabled={isSubmitting}>
+                      <X className="h-4 w-4" />
+                      {tCommon('cancel')}
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => { if (confirmCloseIfDirty()) onCancel(); }}>
+                      {t('submit.cancel_and_close')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => resolvedForm.reset()}>
+                      {t('submit.cancel_and_stay')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" disabled={isSubmitting} className="gap-2">
+                      <Check className="h-4 w-4" />
+                      {isSubmitting ? t('submit.saving') : tCommon('save')}
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => void submitAndClose()}>
+                      {t('submit.save_and_close')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => void submitAndStay()}>
+                      {t('submit.save_and_stay')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             )}
           </form>

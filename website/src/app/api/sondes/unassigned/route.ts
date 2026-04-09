@@ -3,6 +3,7 @@ import { NextRequest } from "next/server"
 import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
+import { getSensorFamilyFromSerial } from "@/lib/sensor-naming"
 import { log } from "@/lib/logger"
 
 /**
@@ -19,6 +20,10 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
 
     const where = {
       t_lieu: { none: { Est_Archive: false } },
+      OR: [
+        { Est_Sonde_Reformee: false },
+        { Est_Sonde_Reformee: null },
+      ],
     }
 
     const total = await prisma.t_sonde.count({ where })
@@ -39,6 +44,7 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
         Sonde_Numero_Serie: true,
         Id_Module: true,
         Sonde_Offset: true,
+        Est_Sonde_GSO: true,
       },
       orderBy: {
         Sonde_Numero_Serie: "asc",
@@ -54,6 +60,8 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
       Id_Module: sonde.Id_Module,
       Sonde_Offset: sonde.Sonde_Offset,
       Sonde_Type: null,
+      Famille_Sonde: getSensorFamilyFromSerial(sonde.Sonde_Numero_Serie),
+      Est_Sonde_GSO: sonde.Est_Sonde_GSO ?? null,
       Lieu: null,
       Port_Serie: null,
       Surveillance_Etat: null,

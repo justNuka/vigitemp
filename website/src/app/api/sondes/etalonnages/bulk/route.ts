@@ -18,6 +18,7 @@ const nullableNumericTextSchema = z.union([z.string(), z.number()]).nullable();
 const rowSchema = z.object({
   id: z.string().min(1),
   file: z.string().min(1),
+  calibrationName: z.string().max(255).nullable().optional(),
   insertData: z.object({
     Date_Heure_Etalonnage: z.string().nullable(),
     Sonde_Numero_Serie: z.string().nullable(),
@@ -82,6 +83,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
       userId: ctx.user.userId,
       ip,
       files: validated.rows.length,
+      namedCalibrations: validated.rows.filter((row) => !!row.calibrationName?.trim()).length,
     });
 
     const duplicateFiles = validated.rows
@@ -197,6 +199,10 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
         skipped: skippedIds.length,
         serials: serials.slice(0, 10),
         fileNames: validated.rows.slice(0, 10).map((row) => row.file),
+        calibrationNames: validated.rows
+          .map((row) => row.calibrationName?.trim() || null)
+          .filter((name): name is string => !!name)
+          .slice(0, 10),
       },
       success: true,
     });

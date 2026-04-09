@@ -111,7 +111,7 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
         </div>
       ) : (
       <fieldset className="space-y-4 flex flex-col"> 
-        <div className="space-y-3 pb-3 border-b order-2">
+        <div className="space-y-3 border-y pt-3 pb-3 order-2">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>{t('labels.setpoint')}</Label>

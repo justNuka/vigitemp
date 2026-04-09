@@ -22,10 +22,17 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: HandlerContext)
     if (fullUser.Profil_Utilisateur) {
       const profil = await prisma.t_profil.findUnique({
         where: { Profil_Utilisateur: fullUser.Profil_Utilisateur },
-        include: {
+        select: {
+          Id_Profil: true,
           t_liaison_profil_autorisation: {
-            include: {
-              t_autorisation: true,
+            select: {
+              t_autorisation: {
+                select: {
+                  Id_Autorisation: true,
+                  Code_Autorisation: true,
+                  Libelle_Autorisation: true,
+                },
+              },
             },
           },
         },

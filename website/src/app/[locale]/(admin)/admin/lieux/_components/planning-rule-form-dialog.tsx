@@ -70,6 +70,9 @@ export function PlanningRuleFormDialog({
   const watchedConsigne = form.watch("Consigne")
   const watchedConsigneSup = form.watch("Consigne_Sup")
   const watchedConsigneInf = form.watch("Consigne_Inf")
+  const watchedJourDebut = form.watch("Jour_Debut")
+  const watchedJourFin = form.watch("Jour_Fin")
+  const canRepeatAcrossDays = !isEdit && watchedJourDebut !== undefined && watchedJourDebut === watchedJourFin
 
   const emtPreview = useMemo(
     () =>
@@ -167,7 +170,7 @@ export function PlanningRuleFormDialog({
               </div>
             ) : null}
 
-            {!isEdit ? (
+            {canRepeatAcrossDays ? (
               <div className="rounded-md border border-dashed border-primary/30 bg-primary/5 p-3">
                 <label className="flex cursor-pointer items-start gap-3">
                   <Checkbox checked={repeatEachDay} onCheckedChange={(checked) => setRepeatEachDay(checked === true)} />

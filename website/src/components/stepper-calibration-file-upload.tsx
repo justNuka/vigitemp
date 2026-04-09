@@ -28,6 +28,7 @@ export type CalibrationImportResult = {
   id: string;
   file: string;
   sensor: string | null;
+  calibrationName?: string | null;
   date: string | Date | null;
   dateText?: string | null;
   dateValidity?: string | Date | null;

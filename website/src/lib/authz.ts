@@ -17,9 +17,17 @@ const getUserProfile = cache(async (userId: number) => {
 
   return prisma.t_profil.findUnique({
     where: { Profil_Utilisateur: user.Profil_Utilisateur },
-    include: {
+    select: {
+      Profil_Utilisateur: true,
       t_liaison_profil_autorisation: {
-        include: { t_autorisation: true },
+        select: {
+          Id_Autorisation: true,
+          t_autorisation: {
+            select: {
+              Code_Autorisation: true,
+            },
+          },
+        },
       },
     },
   })

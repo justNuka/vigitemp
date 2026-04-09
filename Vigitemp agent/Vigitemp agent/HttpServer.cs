@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Web;
 using System.Windows.Forms;
@@ -21,6 +22,7 @@ namespace VigitempAgent
     class HttpServer
     {
         public static volatile HttpListener listener;
+        private static int _resourceAssemblyResolverRegistered;
 
         public static string url_localhost = "http://127.0.0.1:8000/";
 
@@ -1033,6 +1035,8 @@ namespace VigitempAgent
                     return;
                 }
 
+                EnsureResourceAssemblyResolver();
+
                 Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
                 Application.ThreadException += (_, e) =>
                 {
@@ -1090,6 +1094,38 @@ namespace VigitempAgent
             }
 
 
+        }
+
+        private static void EnsureResourceAssemblyResolver()
+        {
+            if (System.Threading.Interlocked.Exchange(ref _resourceAssemblyResolverRegistered, 1) == 1)
+            {
+                return;
+            }
+
+            AppDomain.CurrentDomain.AssemblyResolve += (_, e) =>
+            {
+                try
+                {
+                    var requested = new AssemblyName(e.Name);
+                    if (!string.Equals(requested.Name, "System.Resources.Extensions", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return null;
+                    }
+
+                    var assemblyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "System.Resources.Extensions.dll");
+                    if (!File.Exists(assemblyPath))
+                    {
+                        return null;
+                    }
+
+                    return Assembly.LoadFrom(assemblyPath);
+                }
+                catch
+                {
+                    return null;
+                }
+            };
         }
     }
 }

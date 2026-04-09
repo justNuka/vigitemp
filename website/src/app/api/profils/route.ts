@@ -17,6 +17,7 @@ const createProfileSchema = z.object({
   description: z.string().optional(),
   mc2: z.boolean().optional().default(false),
   authorizations: z.array(z.number()).optional().default([]),
+  assignedUserIds: z.array(z.number()).optional().default([]),
 })
 
 /**
@@ -26,9 +27,14 @@ const createProfileSchema = z.object({
 export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextRequest) => {
   try {
     const profiles = await prisma.t_profil.findMany({
-      include: {
+      select: {
+        Id_Profil: true,
+        Profil_Utilisateur: true,
+        Commentaire: true,
         t_liaison_profil_autorisation: {
-          include: { t_autorisation: true },
+          select: {
+            t_autorisation: true,
+          },
         },
       },
       orderBy: { Profil_Utilisateur: "asc" },
@@ -44,6 +50,7 @@ export const GET = withAuthorizationLogging("GERER_PROFIL", async (_req: NextReq
           id: profile.Id_Profil,
           name: profile.Profil_Utilisateur,
           description: profile.Commentaire,
+          estArchive: false,
           userCount,
           authorizations: profile.t_liaison_profil_autorisation.map((liaison) => ({
             id: liaison.t_autorisation.Id_Autorisation,
@@ -79,6 +86,7 @@ export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextReq
 
     const existing = await prisma.t_profil.findUnique({
       where: { Profil_Utilisateur: data.name },
+      select: { Id_Profil: true },
     })
     if (existing) {
       return apiError(400, "duplicate", "Un profil avec ce nom existe déjà")
@@ -97,16 +105,31 @@ export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextReq
       })
     }
 
+    if (data.assignedUserIds.length > 0) {
+      await prisma.t_utilisateur.updateMany({
+        where: { Id_Utilisateur: { in: data.assignedUserIds } },
+        data: { Profil_Utilisateur: data.name },
+      })
+    }
+
     const completeProfile = await prisma.t_profil.findUnique({
       where: { Id_Profil: profile.Id_Profil },
-      include: {
-        t_liaison_profil_autorisation: { include: { t_autorisation: true } },
+      select: {
+        Id_Profil: true,
+        Profil_Utilisateur: true,
+        Commentaire: true,
+        t_liaison_profil_autorisation: {
+          select: {
+            t_autorisation: true,
+          },
+        },
       },
     })
 
     log.data.create("Profil", profile.Id_Profil, ctx.user.username, ctx.user.userId, ip, {
       name: data.name,
       authorizationCount: data.authorizations.length,
+      assignedUserCount: data.assignedUserIds.length,
       mc2: data.mc2,
     })
 
@@ -115,6 +138,7 @@ export const POST = withAuthorizationLogging("GERER_PROFIL", async (req: NextReq
         id: completeProfile!.Id_Profil,
         name: completeProfile!.Profil_Utilisateur,
         description: completeProfile!.Commentaire,
+        estArchive: false,
         authorizations: completeProfile!.t_liaison_profil_autorisation.map((liaison) => ({
           id: liaison.t_autorisation.Id_Autorisation,
           code: liaison.t_autorisation.Code_Autorisation,

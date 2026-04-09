@@ -7,11 +7,13 @@ export interface Group {
   Numero_Regroupement: string | null;
   Est_Archive: boolean | null;
   nombre_lieux: number;
+  nombre_utilisateurs?: number;
 }
 
 async function fetchGroups(regroupement?: string): Promise<Group[]> {
-  const url = regroupement
-    ? `/api/groupes?regroupement=${encodeURIComponent(regroupement)}`
+  const normalizedRegroupement = regroupement && regroupement !== "all" ? regroupement : undefined;
+  const url = normalizedRegroupement
+    ? `/api/groupes?regroupement=${encodeURIComponent(normalizedRegroupement)}`
     : "/api/groupes";
 
   return getJson<Group[]>(url);

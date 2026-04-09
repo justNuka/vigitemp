@@ -15,7 +15,7 @@ type Setting = {
 type MessagingSettingsCardProps = {
   settings: Setting[];
   loadingKeys: Set<string>;
-  onToggle: (key: string, currentValue: string) => void;
+  onToggle: (key: string) => void;
 };
 
 export function MessagingSettingsCard({
@@ -46,7 +46,7 @@ export function MessagingSettingsCard({
           <SwitchWithLoading
             id={enabledSetting.key}
             checked={enabledSetting.value === "true"}
-            onCheckedChange={() => onToggle(enabledSetting.key, enabledSetting.value)}
+            onCheckedChange={() => onToggle(enabledSetting.key)}
             isLoading={loadingKeys.has(enabledSetting.key)}
           />
         </div>

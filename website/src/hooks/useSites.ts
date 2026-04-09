@@ -3,7 +3,6 @@ import { getJson, isUnauthorizedError } from "@/lib/http";
 
 export interface SiteAdmin {
   Id_Site: number;
-  Code_Site: string | null;
   Libelle_Site: string | null;
   Commentaire: string | null;
   Est_Archive: boolean | null;

@@ -32,8 +32,8 @@ export function enumerateDaysInclusive(startDay: number, endDay: number): number
 }
 
 export function expandPlanningRuleForDailyRepeat(data: PlanningRegleCreate): PlanningRegleCreate[] {
-  const coveredStartDays = enumerateDaysInclusive(data.Jour_Debut, data.Jour_Fin)
-  const span = getDaySpan(data.Jour_Debut, data.Jour_Fin)
+  const coveredStartDays = enumerateDaysInclusive(data.Jour_Debut!, data.Jour_Fin!)
+  const span = getDaySpan(data.Jour_Debut!, data.Jour_Fin!)
 
   return coveredStartDays.map((startDay) => ({
     ...data,
@@ -45,9 +45,9 @@ export function expandPlanningRuleForDailyRepeat(data: PlanningRegleCreate): Pla
 export function getDefaultPlanningRuleValues(): PlanningRegleFormValues {
   return {
     Actif: true,
-    Jour_Debut: 1,
+    Jour_Debut: undefined,
     Heure_Debut: "08:00",
-    Jour_Fin: 5,
+    Jour_Fin: undefined,
     Heure_Fin: "18:00",
     Consigne: null,
     Consigne_Sup: null,

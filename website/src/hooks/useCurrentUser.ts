@@ -5,11 +5,12 @@ import { getJson, isAuthDisconnected } from "@/lib/http";
 export function useCurrentUser(options?: { enabled?: boolean }) {
   const queryClient = useQueryClient()
   const queryKey = ["me"] as const
-  const hasCachedData = queryClient.getQueryData(queryKey) !== undefined
-  const enabled = (options?.enabled ?? true) && !hasCachedData && !isAuthDisconnected()
+  const cachedData = queryClient.getQueryData<CurrentUser>(queryKey)
+  const enabled = (options?.enabled ?? true) && !isAuthDisconnected()
 
   return useQuery<CurrentUser>({
     queryKey,
+    initialData: cachedData,
     queryFn: async () => {
       return getJson<CurrentUser>("/api/me");
     },

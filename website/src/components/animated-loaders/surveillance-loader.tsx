@@ -374,7 +374,7 @@ function SectionHeader({
 
 export default function SurveillanceLoader({
   textToDisplay = "Chargement de la surveillance",
-  description = "Suivi en temps reel des sondes et capteurs",
+  description = "Suivi en temps réel des lieux surveillés et de leurs mesures",
   speed = 1,
   showBrand = true,
   className = "",

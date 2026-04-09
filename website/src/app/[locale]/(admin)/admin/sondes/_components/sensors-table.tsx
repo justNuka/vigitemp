@@ -19,6 +19,8 @@ export type SensorRow = {
   Sonde_Numero_Serie: string | null;
   Port_Serie: string | null;
   Id_Module: number | null;
+  Module_Libelle: string | null;
+  Module_Port: string | null;
   Surveillance_Etat: string | null;
   Surveillance_Etat_Libelle: string | null;
   Lieu: string | null;
@@ -150,8 +152,14 @@ export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSen
       header: t('table.columns.module'),
       cell: ({ row }) => {
         const item = row.original;
-        const moduleDisplay = item.Port_Serie ? `${item.Id_Module || '-'} (${item.Port_Serie})` : item.Id_Module || '-';
-        return <span>{moduleDisplay}</span>;
+        const rawPort = item.Module_Port ?? item.Port_Serie ?? null;
+        const normalizedPort = rawPort
+          ? /^COM/i.test(rawPort)
+            ? rawPort.toUpperCase()
+            : `COM${rawPort}`
+          : null;
+        const moduleName = item.Module_Libelle || (item.Id_Module ? `Module ${item.Id_Module}` : '-');
+        return <span>{normalizedPort ? `${moduleName} (${normalizedPort})` : moduleName}</span>;
       },
     },
     {
@@ -247,6 +255,8 @@ export function toSensorRows(sensors: Sensor[]): SensorRow[] {
     Sonde_Numero_Serie: s.Sonde_Numero_Serie,
     Port_Serie: s.Port_Serie,
     Id_Module: s.Id_Module,
+    Module_Libelle: s.Module_Libelle ?? null,
+    Module_Port: s.Module_Port ?? null,
     Surveillance_Etat: s.Surveillance_Etat,
     Surveillance_Etat_Libelle: s.Surveillance_Etat_Libelle,
     Lieu: s.Lieu,

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using System.Text;
 using System.Windows.Forms;
+using MySql.Data.MySqlClient;
 using VigitempAgent.Properties;
 
 namespace VigitempAgent
@@ -167,6 +168,10 @@ namespace VigitempAgent
                     SITEWEB_URL = url;
                 }
                 database.CloseConnexion();
+            }
+            catch (MySqlException ex) when (ex.Number == 1045)
+            {
+                AgentLog.Info("Database init skipped (auth failed). Configurez Vigi.Db.Password dans VigitempAgent.exe.config si vous souhaitez activer la synchro DB de l'agent.");
             }
             catch (Exception ex)
             {

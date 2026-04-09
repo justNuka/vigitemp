@@ -7,7 +7,6 @@ import { log } from "@/lib/logger"
 import { apiError, apiOk } from "@/lib/api-response"
 
 const createSiteSchema = z.object({
-  Code_Site: z.string().min(1, "Code site requis").max(20),
   Libelle_Site: z.string().min(1, "Libellé site requis").max(50),
   Commentaire: z.string().max(200).nullable().optional(),
 })
@@ -35,10 +34,7 @@ export const GET = withLogging(async (req: NextRequest) => {
 
     const formattedSites = sites.map((site) => ({
       id: site.Id_Site,
-      name:
-        site.Code_Site && site.Libelle_Site
-          ? `${site.Code_Site} - ${site.Libelle_Site}`
-          : site.Code_Site || site.Libelle_Site || "Sans nom",
+      name: site.Libelle_Site || "Sans nom",
     }))
 
     return apiOk(formattedSites)
@@ -62,7 +58,6 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     const site = await prisma.t_site.create({
       data: {
-        Code_Site: validated.Code_Site,
         Libelle_Site: validated.Libelle_Site,
         Commentaire: validated.Commentaire || null,
         Est_Archive: false,
@@ -70,7 +65,6 @@ export const POST = withLogging(async (req: NextRequest) => {
     })
 
     log.data.create("Site", site.Id_Site, user.username, user.userId, getClientIp(req), {
-      code: site.Code_Site,
       libelle: site.Libelle_Site,
     })
 

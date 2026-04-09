@@ -298,8 +298,8 @@ export function AdjustmentImportClient() {
         emptyMessage={t("table.empty")}
         createdSensors={summaryCounts.createdSensors}
         existingAssigned={summaryCounts.existingAssigned}
-        summaryCreatedLabel="Sondes cr??es suite ? l'ajustage"
-        summaryExistingLabel="Sondes existantes d?j? affect?es ? un module"
+        summaryCreatedLabel="Sondes créées suite à l'ajustage"
+        summaryExistingLabel="Sondes existantes déjà affectées à un module"
         onSave={handleSaveToDb}
         saveLabel={isSaving ? t("actions.saving_to_db") : t("actions.save_to_db")}
         disabled={pendingRows.length === 0 || isSaving || !selectedModuleNumericId}

@@ -20,6 +20,13 @@ export function useSurveillanceLocationEditor({
   const [isEditLocationOpen, setIsEditLocationOpen] = useState(false)
   const [isLocationSaving, setIsLocationSaving] = useState(false)
 
+  const askOptionalComment = useCallback(() => {
+    if (typeof window === "undefined") return ""
+    const response = window.prompt(t("action_comment.location_prompt"), "")
+    if (response === null) return null
+    return response.trim()
+  }, [t])
+
   const handleOpenLocationEdit = useCallback((idLieu: number) => {
     const location = locations.find((item) => item.Id_Lieu === idLieu)
     if (!location) {
@@ -33,11 +40,15 @@ export function useSurveillanceLocationEditor({
 
   const handleEditLocationSubmit = useCallback(async (values: LocationFormData) => {
     if (!selectedLocationId) return
+    const actionComment = askOptionalComment()
+    if (actionComment === null) return
+
     setIsLocationSaving(true)
     try {
       await patchJson(`/api/lieux/${selectedLocationId}`, {
         ...values,
         Sonde_Numero_Serie: values.Sonde_Numero_Serie ? values.Sonde_Numero_Serie : null,
+        Commentaire_Action: actionComment || null,
       })
       await queryClient.invalidateQueries({ queryKey: ['locations'] })
       await queryClient.invalidateQueries({ queryKey: ['capteurs', 'paginated', 100] })
@@ -49,7 +60,7 @@ export function useSurveillanceLocationEditor({
     } finally {
       setIsLocationSaving(false)
     }
-  }, [queryClient, selectedLocationId, t])
+  }, [askOptionalComment, queryClient, selectedLocationId, t])
 
   const closeEditor = useCallback(() => {
     setSelectedLocationId(null)

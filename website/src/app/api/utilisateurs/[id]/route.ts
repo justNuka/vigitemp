@@ -13,7 +13,7 @@ import { getUserAvatarValue, setUserAvatarValue } from "@/lib/user-avatar-db"
 const updateUserSchema = z.object({
   nom: z.string().optional(),
   prenom: z.string().optional(),
-  email: z.string().email().optional(),
+  email: z.union([z.literal(""), z.string().email()]).optional().transform((value) => value || undefined),
   telephone: z.string().optional(),
   password: z.string().min(6).optional(),
   profileId: z.string().optional(),
@@ -78,13 +78,13 @@ export const PATCH = withAdminLogging(
       if (data.password) {
         updateData.Mot_De_Passe = await bcrypt.hash(data.password, 10)
         updateData.Date_Derniere_Modification_MDP = new Date()
-        updateData.Est_Mot_De_Passe_Temporaire = false
+        updateData.Est_Mot_De_Passe_Temporaire = true
       }
 
       if (data.profileId) updateData.Profil_Utilisateur = data.profileId
       if (data.nom) updateData.Nom = data.nom
       if (data.prenom) updateData.Prenom = data.prenom
-      if (data.email) updateData.Adresse_Email = data.email
+      if (data.email !== undefined) updateData.Adresse_Email = data.email || null
       if (data.telephone !== undefined) updateData.Tel_Num_Mobile = data.telephone || null
       if (data.expiryDate !== undefined) updateData.Date_Validite = data.expiryDate
       if (data.reactivate) updateData.Est_Archive = false

@@ -1,6 +1,6 @@
 import type { ColumnDef } from "@tanstack/react-table"
 
-import type { AuditCode, AuditComment } from "./audit-comments-types"
+import { sanitizeAuditCommentLabel, type AuditCode, type AuditComment } from "./audit-comments-types"
 
 type BuildAuditCommentColumnsParams = {
   auditCodes: AuditCode[]
@@ -23,7 +23,7 @@ export function buildAuditCommentColumns({
         return (
           <div>
             <p className="font-medium">{row.original.type}</p>
-            <p className="text-xs text-muted-foreground">{code?.Commentaire}</p>
+            <p className="text-xs text-muted-foreground">{sanitizeAuditCommentLabel(code?.Commentaire)}</p>
           </div>
         )
       },

@@ -11,6 +11,7 @@ export interface Module {
   Id_Serveur: number | null;
   Est_Module_GSO?: boolean | null;
   sondes_count: number;
+  Archive?: number | null;
 }
 
 export interface Sonde {

@@ -251,7 +251,7 @@ function TrendPanel({ speed }: { speed: number }) {
           Tendance des alarmes
         </span>
       </div>
-      <div className="text-[10px] text-muted-foreground mb-4">Dernieres 24h</div>
+      <div className="text-[10px] text-muted-foreground mb-4">Derniers 7j</div>
       {/* Animated mini chart lines */}
       <div className="flex-1 flex items-end gap-1 min-h-15">
         {Array.from({ length: 12 }, (_, i) => (

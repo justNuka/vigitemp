@@ -500,12 +500,14 @@ model t_profil {
   Profil_Utilisateur            String?                         @unique(map: "Profil_ProfilUtilisateur_IDX") @db.VarChar(50)
   Commentaire                   String?                         @db.VarChar(100)
   Est_MC2                       Boolean?                        @default(false)
+  Est_Archive                   Boolean?                        @default(false)
   t_liaison_profil_autorisation t_liaison_profil_autorisation[]
+
+  @@index([Est_Archive], map: "IDX_Est_Archive")
 }
 
 model t_site {
   Id_Site                                                     Int                          @id @default(autoincrement())
-  Code_Site                                                   String?                      @unique(map: "CodeSite_IDX") @db.VarChar(20)
   Libelle_Site                                                String?                      @db.VarChar(50)
   Commentaire                                                 String?                      @db.VarChar(200)
   Est_Archive                                                 Boolean?                     @default(false)

@@ -57,7 +57,7 @@ export function SensorsCardsGrid({
             <Power className="h-5 w-5 text-sky-500" />
             {t("grid.active_title")}
           </div>
-          <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
+          <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(260px,1fr))] justify-start">
             {Array.from({ length: 8 }).map((_, i) => (
               <MonitoringCardSkeleton key={`skeleton-${i}`} />
             ))}
@@ -92,7 +92,7 @@ export function SensorsCardsGrid({
           {title === t("grid.disabled_title") ? t("grid.disabled_empty") : t("grid.empty_title")}
         </div>
       ) : (
-        <div className={`grid gap-4 ${isDisabledSection ? "grid-cols-[repeat(auto-fill,minmax(250px,305px))] justify-start" : "grid-cols-[repeat(auto-fit,minmax(260px,1fr))]"}`}>
+        <div className={`grid gap-4 justify-start ${isDisabledSection ? "grid-cols-[repeat(auto-fill,minmax(250px,1fr))]" : "grid-cols-[repeat(auto-fill,minmax(260px,1fr))]"}`}>
           {items.map((sensor) => {
             const groupName =
               sensor.location.groupNames && sensor.location.groupNames.length > 0

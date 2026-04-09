@@ -1,7 +1,7 @@
 ﻿"use client";
 import { showFormValidationToast } from "@/lib/form-toast"
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { LazyMotion, domAnimation, m, useReducedMotion } from "motion/react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
@@ -14,6 +14,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { toast } from "sonner";
@@ -39,6 +48,7 @@ type LoginResponse = {
   profile: string;
   authorizations: string[];
   token: string;
+  passwordExpiryWarningDays?: number | null;
 };
 
 type AuthApiErrorPayload = {
@@ -58,6 +68,8 @@ export function LoginForm() {
   const licenseLabel = formatLicenseLabel(license, tCommon);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [showPasswordExpiryWarning, setShowPasswordExpiryWarning] = useState(false);
+  const [pendingLoginResponse, setPendingLoginResponse] = useState<LoginResponse | null>(null);
   const shouldReduceMotion = useReducedMotion();
   const ease = [0.22, 1, 0.36, 1] as const;
   const dur = shouldReduceMotion ? 0 : 0.5;
@@ -171,46 +183,13 @@ export function LoginForm() {
       }
     },
     onSuccess: async (data: LoginResponse) => {
-      clearDisconnectReason();
-      toast.success(t("toasts.login_success"));
-
-      try {
-        await setAgentSession({
-          userId: String(data.id),
-          username: data.displayName || data.username,
-        });
-
-        const secretRes = await fetch("/api/agent/secret", { method: "GET" });
-        if (secretRes.ok) {
-          const payload = (await secretRes.json()) as { secret?: string };
-          if (payload.secret) {
-            await setAgentSecret(payload.secret);
-          }
-        }
-      } catch {
-        // Agent not installed/running: ignore
+      if (data.passwordExpiryWarningDays && data.passwordExpiryWarningDays > 0) {
+        setPendingLoginResponse(data);
+        setShowPasswordExpiryWarning(true);
+        return;
       }
 
-      const getRedirectTarget = (userCanAccessDashboard: boolean) => {
-        if (fromParam) {
-          const trimmed = fromParam.trim();
-          if (!trimmed.startsWith("/")) return "/";
-          if (trimmed.startsWith("//")) return "/";
-          return trimmed;
-        }
-        if (!userCanAccessDashboard) return "/surveillance";
-        return "/";
-      };
-
-      let canAccessDashboard = true;
-      try {
-        const me = await getJson<CurrentUser>("/api/me");
-        canAccessDashboard = hasPermission(me, "DASHBOARD_USER_ACCESS");
-      } catch {
-        // fallback on default redirect
-      }
-
-      router.push(getRedirectTarget(canAccessDashboard));
+      await finalizeLogin(data);
     },
     onError: (error: Error) => {
       if (error.message !== "password_change_required") {
@@ -241,6 +220,49 @@ export function LoginForm() {
   const handleResetPasswordSubmit = (values: ResetFormValues) => {
     resetPasswordMutation.mutate(values.email);
   };
+
+  const finalizeLogin = useCallback(async (data: LoginResponse) => {
+    clearDisconnectReason();
+    toast.success(t("toasts.login_success"));
+
+    try {
+      await setAgentSession({
+        userId: String(data.id),
+        username: data.displayName || data.username,
+      });
+
+      const secretRes = await fetch("/api/agent/secret", { method: "GET" });
+      if (secretRes.ok) {
+        const payload = (await secretRes.json()) as { secret?: string };
+        if (payload.secret) {
+          await setAgentSecret(payload.secret);
+        }
+      }
+    } catch {
+      // Agent not installed/running: ignore
+    }
+
+    const getRedirectTarget = (userCanAccessDashboard: boolean) => {
+      if (fromParam) {
+        const trimmed = fromParam.trim();
+        if (!trimmed.startsWith("/")) return "/";
+        if (trimmed.startsWith("//")) return "/";
+        return trimmed;
+      }
+      if (!userCanAccessDashboard) return "/surveillance";
+      return "/";
+    };
+
+    let canAccessDashboard = true;
+    try {
+      const me = await getJson<CurrentUser>("/api/me");
+      canAccessDashboard = hasPermission(me, "DASHBOARD_USER_ACCESS");
+    } catch {
+      // fallback on default redirect
+    }
+
+    router.push(getRedirectTarget(canAccessDashboard));
+  }, [fromParam, router, t]);
 
   const handleCloseForgotPassword = () => {
     setShowForgotPassword(false);
@@ -347,6 +369,39 @@ export function LoginForm() {
         <p className="relative z-10 w-full text-center text-xs text-muted-foreground/70 pb-4">
           Vigi<span className="font-semibold">Sensys</span> - MC2 Lab
         </p>
+
+        <AlertDialog
+          open={showPasswordExpiryWarning}
+          onOpenChange={(open) => {
+            if (!open) return;
+            setShowPasswordExpiryWarning(open);
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("expiry_warning_dialog.title")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("expiry_warning_dialog.description", {
+                  count: pendingLoginResponse?.passwordExpiryWarningDays ?? 0,
+                })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction
+                onClick={() => {
+                  const response = pendingLoginResponse;
+                  setShowPasswordExpiryWarning(false);
+                  setPendingLoginResponse(null);
+                  if (response) {
+                    void finalizeLogin(response);
+                  }
+                }}
+              >
+                {t("expiry_warning_dialog.continue")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <ForgotPasswordDialog
           open={showForgotPassword}

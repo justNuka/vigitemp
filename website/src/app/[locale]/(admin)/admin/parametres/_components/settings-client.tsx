@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { Button } from "@/components/ui/button";
 import { useLicense } from "@/components/license/license-provider";
 import { isStandardOrExpert } from "@/lib/license-access";
 
@@ -38,27 +39,9 @@ const NOTIFICATION_SETTING_KEYS = new Set([
 const MESSAGING_SETTING_KEY = "messaging:enabled";
 const SURVEILLANCE_REFRESH_KEY = "dashboard:surveillance_refresh";
 
-function getRefreshIntervalLabel(t: ReturnType<typeof useTranslations>, value: string) {
-  switch (value) {
-    case "0":
-      return t("general.refresh_options.manual");
-    case "5":
-      return t("general.refresh_options.5");
-    case "10":
-      return t("general.refresh_options.10");
-    case "15":
-      return t("general.refresh_options.15");
-    case "30":
-      return t("general.refresh_options.30");
-    case "60":
-      return t("general.refresh_options.60");
-    default:
-      return t("general.refresh_options.custom", { seconds: value });
-  }
-}
-
 function getTranslatedLabel(t: ReturnType<typeof useTranslations>, setting: Setting) {
   const translatedLabels: Record<string, string> = {
+    "general:timezone_enabled": t("timezone.enabled_label"),
     "general:timezone": t("timezone.label"),
     "general:global_language": t("general.labels.global_language"),
     "notifications:email": t("notifications.email_toggle"),
@@ -83,7 +66,8 @@ export function SettingsClient({ settings: initialSettings }: Props) {
   const { license } = useLicense();
   const canEditSurveillanceRefresh = isStandardOrExpert(license);
   const [smtpModalOpen, setSmtpModalOpen] = useState(false);
-  const { settings, loadingKeys, persist, toggle } = useSettingsEditor(initialSettings);
+  const { settings, loadingKeys, hasPendingChanges, setDraftValue, toggleDraft, discardChanges, saveChanges } =
+    useSettingsEditor(initialSettings);
 
   const localizedSettings = useMemo(
     () => settings.map((setting) => ({ ...setting, label: getTranslatedLabel(t, setting) })),
@@ -102,24 +86,35 @@ export function SettingsClient({ settings: initialSettings }: Props) {
 
   return (
     <main className="flex-1 space-y-6 p-4 md:p-6 animate-fade-in">
+      {hasPendingChanges ? (
+        <div className="sticky top-4 z-20 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 shadow-sm backdrop-blur">
+          <div>
+            <p className="text-sm font-medium">{t("pending_changes.title")}</p>
+            <p className="text-xs text-muted-foreground">{t("pending_changes.description")}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" onClick={discardChanges} disabled={loadingKeys.size > 0}>
+              {t("pending_changes.cancel")}
+            </Button>
+            <Button type="button" onClick={saveChanges} disabled={loadingKeys.size > 0}>
+              {t("pending_changes.save")}
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       <GeneralSettingsCard
         settings={generalSettings}
         loadingKeys={loadingKeys}
-        onToggle={(key) => toggle(key)}
-        onRefreshIntervalChange={(key, value) =>
-          persist(key, value, {
-            successMessage: t("toast.refresh_interval", { label: getRefreshIntervalLabel(t, value) }),
-            fallbackValue: "30",
-            notifyStorage: true,
-          })
-        }
-        onNumericSettingChange={(key, value) => persist(key, value)}
+        onToggle={toggleDraft}
+        onRefreshIntervalChange={setDraftValue}
+        onNumericSettingChange={setDraftValue}
       />
 
       <TimezoneSettingsCard
         settings={localizedSettings}
         loadingKeys={loadingKeys}
-        onTimezoneChange={(key, value) => persist(key, value)}
+        onTimezoneChange={setDraftValue}
       />
 
       <AutoLockSettingsCard />
@@ -128,15 +123,15 @@ export function SettingsClient({ settings: initialSettings }: Props) {
       <NotificationsSettingsCard
         settings={notificationSettings}
         loadingKeys={loadingKeys}
-        onToggle={(key) => toggle(key)}
-        onSaveRecipients={(key, value) => persist(key, value)}
+        onToggle={toggleDraft}
+        onRecipientsChange={setDraftValue}
       />
 
       {isStandardOrExpert(license) ? (
         <MessagingSettingsCard
           settings={messagingSettings}
           loadingKeys={loadingKeys}
-          onToggle={(key) => toggle(key)}
+          onToggle={toggleDraft}
         />
       ) : null}
 

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserPlus, Users } from "lucide-react";
 import { usersApi, type CreateUserInput, type User } from "@/lib/api";
 import { toast } from "sonner";
@@ -44,6 +45,11 @@ export function UsersClient({ users }: Props) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [statusTab, setStatusTab] = useState<"active" | "archived">("active");
+
+  const activeUsers = users.filter((user) => user.isActive);
+  const archivedUsers = users.filter((user) => !user.isActive);
+  const displayedUsers = statusTab === "active" ? activeUsers : archivedUsers;
 
   const shouldLoadFormData = isCreateDialogOpen || isEditDialogOpen;
   const { data: rules, isLoading: rulesLoading } = usePasswordRules(shouldLoadFormData);
@@ -234,7 +240,7 @@ export function UsersClient({ users }: Props) {
               {t("title")}
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {t("count", { count: users.length })}
+              {t("count", { count: displayedUsers.length })}
             </p>
           </div>
           <Button className="gap-2" onClick={() => setIsCreateDialogOpen(true)}>
@@ -243,13 +249,36 @@ export function UsersClient({ users }: Props) {
           </Button>
         </CardHeader>
         <CardContent className="p-2 md:p-4 xl:p-4">
-          <UsersTable
-            users={users}
-            selectedUserId={selectedUser?.id ?? null}
-            onEditUser={handleEditUser}
-            onSelectUser={setSelectedUser}
-            onDoubleClickUser={handleEditUser}
-          />
+          <Tabs
+            value={statusTab}
+            onValueChange={(value) => {
+              setStatusTab(value as "active" | "archived");
+              setSelectedUser(null);
+            }}
+            className="space-y-4"
+          >
+            <TabsList className="grid w-full max-w-md grid-cols-2 bg-primary/10 text-primary">
+              <TabsTrigger
+                value="active"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                {t("tabs.active", { count: activeUsers.length })}
+              </TabsTrigger>
+              <TabsTrigger
+                value="archived"
+                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                {t("tabs.archived", { count: archivedUsers.length })}
+              </TabsTrigger>
+            </TabsList>
+            <UsersTable
+              users={displayedUsers}
+              selectedUserId={selectedUser?.id ?? null}
+              onEditUser={handleEditUser}
+              onSelectUser={setSelectedUser}
+              onDoubleClickUser={handleEditUser}
+            />
+          </Tabs>
         </CardContent>
       </Card>
       </m.main>

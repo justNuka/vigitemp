@@ -48,8 +48,18 @@ export function LocationsClient() {
   const [isArchiveOpen, setIsArchiveOpen] = useState(false)
   const [isCreateNoSondeOpen, setIsCreateNoSondeOpen] = useState(false)
   const [pendingCreate, setPendingCreate] = useState<LocationFormData | null>(null)
+  const [statusTab, setStatusTab] = useState<'active' | 'archived'>('active')
   const [tabFilter, setTabFilter] = useState<'all' | 'unassigned'>('all')
   const shouldLoadFormData = isCreateOpen || isEditOpen
+  const activeLocations = locations.filter((location) => !location.Est_Archive)
+  const archivedLocations = locations.filter((location) => Boolean(location.Est_Archive))
+  const statusFilteredLocations = statusTab === 'active' ? activeLocations : archivedLocations
+  const displayedLocations = tabFilter === 'unassigned'
+    ? statusFilteredLocations.filter((location) => !location.Sonde_Numero_Serie)
+    : statusFilteredLocations
+  const selectedDisplayedLocation = selectedLocation
+    ? displayedLocations.find((location) => location.Id_Lieu === selectedLocation.Id_Lieu) ?? null
+    : null
 
   const form = useForm<LocationFormData>({
     defaultValues: getDefaultLocationFormData(),
@@ -86,7 +96,7 @@ export function LocationsClient() {
   const normalizePayload = (data: LocationFormData, forceInactive = false): Partial<LocationRow> => ({
     ...data,
     Sonde_Numero_Serie: data.Sonde_Numero_Serie ? data.Sonde_Numero_Serie : null,
-    ...(forceInactive ? { Lieu_Etat: 'D' } : {}),
+    Lieu_Etat: forceInactive || !data.Sonde_Numero_Serie ? 'D' : data.Lieu_Etat ?? null,
   })
 
   const createMutation = useMutation({
@@ -108,17 +118,17 @@ export function LocationsClient() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: Partial<LocationRow>) => {
-      if (!selectedLocation?.Id_Lieu) throw new Error(t('errors.no_location_selected'))
-      return patchJson(`/api/lieux/${selectedLocation.Id_Lieu}`, data)
+      if (!selectedDisplayedLocation?.Id_Lieu) throw new Error(t('errors.no_location_selected'))
+      return patchJson(`/api/lieux/${selectedDisplayedLocation.Id_Lieu}`, data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
       router.refresh()
       toast.success(t('toast.update_success'))
-      if (selectedLocation?.Id_Lieu) {
+      if (selectedDisplayedLocation?.Id_Lieu) {
         window.dispatchEvent(
           new CustomEvent('vigitemp:lieu-updated', {
-            detail: { idLieu: selectedLocation.Id_Lieu },
+            detail: { idLieu: selectedDisplayedLocation.Id_Lieu },
           }),
         )
       }
@@ -132,8 +142,8 @@ export function LocationsClient() {
 
   const archiveMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedLocation?.Id_Lieu) throw new Error(t('errors.no_location_selected'))
-      return patchJson(`/api/lieux/${selectedLocation.Id_Lieu}`, { Est_Archive: true })
+      if (!selectedDisplayedLocation?.Id_Lieu) throw new Error(t('errors.no_location_selected'))
+      return patchJson(`/api/lieux/${selectedDisplayedLocation.Id_Lieu}`, { Est_Archive: true })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
@@ -148,9 +158,9 @@ export function LocationsClient() {
   })
 
   const handleEdit = () => {
-    if (!selectedLocation) return
+    if (!selectedDisplayedLocation) return
 
-    form.reset(mapLocationToFormData(selectedLocation))
+    form.reset(mapLocationToFormData(selectedDisplayedLocation))
     setIsEditOpen(true)
   }
 
@@ -170,11 +180,11 @@ export function LocationsClient() {
               {t('title')}
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {t('count', { count: locations.length })}
+              {t('count', { count: displayedLocations.length })}
             </p>
           </div>
           <LocationsActions
-            canEdit={!!selectedLocation}
+            canEdit={!!selectedDisplayedLocation && statusTab === 'active'}
             onCreate={() => {
               resetForm()
               setIsCreateOpen(true)
@@ -184,32 +194,47 @@ export function LocationsClient() {
           />
         </CardHeader>
         <CardContent>
+          <Tabs
+            value={statusTab}
+            onValueChange={(val) => {
+              setStatusTab(val as 'active' | 'archived')
+              setSelectedLocation(null)
+              setTabFilter('all')
+            }}
+            className='mb-3 space-y-3'
+          >
+            <TabsList className="grid w-full max-w-md grid-cols-2 bg-primary/10 text-primary">
+              <TabsTrigger value="active" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                {t('tabs.active', { count: activeLocations.length })}
+              </TabsTrigger>
+              <TabsTrigger value="archived" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                {t('tabs.archived', { count: archivedLocations.length })}
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
           <Tabs value={tabFilter} onValueChange={(val) => setTabFilter(val as 'all' | 'unassigned')} className='mb-3'>
             <TabsList className="grid w-full grid-cols-2 bg-primary/10 text-primary md:w-auto">
               <TabsTrigger
                 value="all"
                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                {t('tabs.all', { count: locations.length })}
+                {t('tabs.all', { count: statusFilteredLocations.length })}
               </TabsTrigger>
               <TabsTrigger
                 value="unassigned"
                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                {t('tabs.unassigned', { count: locations.filter((l) => !l.Sonde_Numero_Serie).length })}
+                {t('tabs.unassigned', { count: statusFilteredLocations.filter((l) => !l.Sonde_Numero_Serie).length })}
               </TabsTrigger>
             </TabsList>
           </Tabs>
           <LocationsTable
-            locations={
-              tabFilter === 'unassigned'
-                ? locations.filter((location) => !location.Sonde_Numero_Serie)
-                : locations
-            }
+            locations={displayedLocations}
             isLoading={isLoading}
-            selectedLocationId={selectedLocation?.Id_Lieu}
+            selectedLocationId={selectedDisplayedLocation?.Id_Lieu}
             onSelectLocation={(location) => setSelectedLocation(location)}
             onEditLocation={(location) => {
+              if (statusTab === 'archived') return
               setSelectedLocation(location)
               form.reset(mapLocationToFormData(location))
               setIsEditOpen(true)

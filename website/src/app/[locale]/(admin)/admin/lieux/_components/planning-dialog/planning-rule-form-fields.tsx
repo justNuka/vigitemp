@@ -80,7 +80,7 @@ export function PlanningRuleScheduleFields({
           render={({ field }) => (
             <FormItem>
               <FormLabel>{tDialog("labelJourDebut")}</FormLabel>
-              <Select value={String(field.value)} onValueChange={(val) => field.onChange(Number(val))}>
+              <Select value={field.value != null ? String(field.value) : undefined} onValueChange={(val) => field.onChange(Number(val))}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder={tDialog("placeholderJour")} />
@@ -121,7 +121,7 @@ export function PlanningRuleScheduleFields({
           render={({ field }) => (
             <FormItem>
               <FormLabel>{tDialog("labelJourFin")}</FormLabel>
-              <Select value={String(field.value)} onValueChange={(val) => field.onChange(Number(val))}>
+              <Select value={field.value != null ? String(field.value) : undefined} onValueChange={(val) => field.onChange(Number(val))}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder={tDialog("placeholderJour")} />

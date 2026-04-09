@@ -12,6 +12,7 @@ import { Archive, Pencil, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   AlertDialog,
@@ -22,7 +23,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { useSites, type SiteAdmin } from '@/hooks/useSites'
-import { HttpError, patchJson, postJson } from '@/lib/http'
+import { deleteJson, getJson, HttpError, patchJson, postJson } from '@/lib/http'
 
 import { SitesTable } from './_components/sites-table'
 import { CreateSiteDialog } from './_components/create-site-dialog'
@@ -49,13 +50,18 @@ export function SitesClient() {
   const [isArchiveAlertOpen, setIsArchiveAlertOpen] = useState(false)
   const [archiveBlockedOpen, setArchiveBlockedOpen] = useState(false)
   const [archiveBlockedMessage, setArchiveBlockedMessage] = useState<string | null>(null)
+  const [statusTab, setStatusTab] = useState<'active' | 'archived'>('active')
+
+  const activeSites = sites.filter((site) => !site.Est_Archive)
+  const archivedSites = sites.filter((site) => Boolean(site.Est_Archive))
+  const displayedSites = statusTab === 'active' ? activeSites : archivedSites
 
   const createForm = useForm<CreateSiteInput>({
     resolver: zodResolver(createSiteSchema(tDialog)),
     defaultValues: {
-      Code_Site: '',
       Libelle_Site: '',
       Commentaire: null,
+      assignedUserIds: [],
     },
   })
 
@@ -64,13 +70,23 @@ export function SitesClient() {
     defaultValues: {
       Libelle_Site: '',
       Commentaire: null,
+      assignedUserIds: [],
     },
   })
 
   const createMutation = useMutation({
-    mutationFn: async (data: CreateSiteInput) => postJson('/api/sites', data),
+    mutationFn: async (data: CreateSiteInput) => {
+      const created = await postJson<{ Id_Site: number }>('/api/sites', data)
+      const siteId = created.Id_Site
+      if (siteId && data.assignedUserIds.length > 0) {
+        await Promise.all(data.assignedUserIds.map((userId) => postJson(`/api/utilisateurs/${userId}/sites`, { siteId })))
+      }
+      return created
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sites'] })
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({ queryKey: ['siteUsers'] })
       router.refresh()
       toast.success(t('toast.create_success'))
       setIsCreateOpen(false)
@@ -84,10 +100,24 @@ export function SitesClient() {
   const updateMutation = useMutation({
     mutationFn: async (data: EditSiteInput) => {
       if (!selectedSite?.Id_Site) throw new Error(t('errors.no_site_selected'))
-      return patchJson(`/api/sites/${selectedSite.Id_Site}`, data)
+      await patchJson(`/api/sites/${selectedSite.Id_Site}`, data)
+      const currentAssigned = await getJson<Array<{ Id_Utilisateur: number }>>(`/api/sites/${selectedSite.Id_Site}/utilisateurs`)
+      const currentIds = currentAssigned.map((user) => user.Id_Utilisateur)
+      const nextIds = data.assignedUserIds
+      const currentSet = new Set(currentIds)
+      const nextSet = new Set(nextIds)
+      const toAdd = nextIds.filter((userId) => !currentSet.has(userId))
+      const toRemove = currentIds.filter((userId) => !nextSet.has(userId))
+      await Promise.all([
+        ...toAdd.map((userId) => postJson(`/api/utilisateurs/${userId}/sites`, { siteId: selectedSite.Id_Site })),
+        ...toRemove.map((userId) => deleteJson(`/api/utilisateurs/${userId}/sites/${selectedSite.Id_Site}`)),
+      ])
+      return { ok: true }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sites'] })
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({ queryKey: ['siteUsers'] })
       router.refresh()
       toast.success(t('toast.update_success'))
       setIsEditOpen(false)
@@ -130,6 +160,7 @@ export function SitesClient() {
     editForm.reset({
       Libelle_Site: selectedSite.Libelle_Site || '',
       Commentaire: selectedSite.Commentaire,
+      assignedUserIds: [],
     })
     setIsEditOpen(true)
   }
@@ -147,7 +178,7 @@ export function SitesClient() {
             <div>
               <CardTitle>{t('title')}</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                {t('count', { count: sites.length })}
+                {t('count', { count: displayedSites.length })}
               </p>
             </div>
             <div className="flex gap-2">
@@ -163,7 +194,7 @@ export function SitesClient() {
                 onClick={() => setIsArchiveAlertOpen(true)}
                 variant="outline"
                 size="sm"
-                disabled={!selectedSite}
+                disabled={!selectedSite || statusTab === 'archived'}
                 className="gap-2"
               >
                 <Archive className="h-4 w-4" />
@@ -172,20 +203,45 @@ export function SitesClient() {
             </div>
           </CardHeader>
           <CardContent>
-            <SitesTable
-              sites={sites}
-              isLoading={isLoading}
-              selectedSiteId={selectedSite?.Id_Site}
-              onSelectSite={setSelectedSite}
-              onEditSite={(site) => {
-                setSelectedSite(site)
-                editForm.reset({
-                  Libelle_Site: site.Libelle_Site || '',
-                  Commentaire: site.Commentaire,
-                })
-                setIsEditOpen(true)
+            <Tabs
+              value={statusTab}
+              onValueChange={(value) => {
+                setStatusTab(value as 'active' | 'archived')
+                setSelectedSite(null)
               }}
-            />
+              className="space-y-4"
+            >
+              <TabsList className="grid w-full max-w-md grid-cols-2 bg-primary/10 text-primary">
+                <TabsTrigger
+                  value="active"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  {t('tabs.active', { count: activeSites.length })}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="archived"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  {t('tabs.archived', { count: archivedSites.length })}
+                </TabsTrigger>
+              </TabsList>
+              <SitesTable
+                sites={displayedSites}
+                isLoading={isLoading}
+                selectedSiteId={selectedSite?.Id_Site}
+                onSelectSite={setSelectedSite}
+                onEditSite={(site) => {
+                  if (statusTab === 'archived') return
+                  setSelectedSite(site)
+                  editForm.reset({
+                    Libelle_Site: site.Libelle_Site || '',
+                    Commentaire: site.Commentaire,
+                    assignedUserIds: [],
+                  })
+                  setIsEditOpen(true)
+                }}
+              />
+            </Tabs>
           </CardContent>
         </Card>
 

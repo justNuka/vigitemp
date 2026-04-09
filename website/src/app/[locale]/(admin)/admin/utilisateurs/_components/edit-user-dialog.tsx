@@ -80,6 +80,7 @@ export function EditUserDialog({
   onReactivate,
 }: Props) {
   const t = useTranslations("editUserDialog");
+  const tForm = useTranslations("userForm");
   const tCommon = useTranslations("common");
   const userId = user?.id;
   const isArchived = Boolean(user && !user.isActive);
@@ -191,9 +192,15 @@ export function EditUserDialog({
             <UserProfileField control={editForm.control} profiles={profiles} isLoading={profilesLoading} />
             <UserAvatarField control={editForm.control} />
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <UserSitesField control={editForm.control} sites={sites} isLoading={sitesLoading} />
-              <UserGroupsField control={editForm.control} groups={groups} isLoading={groupsLoading} />
+            <div className="rounded-lg border border-border/60 bg-muted/20 p-4 space-y-4">
+              <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-900">
+                {tForm("infos.default_visibility")}
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <UserSitesField control={editForm.control} sites={sites} isLoading={sitesLoading} />
+                <UserGroupsField control={editForm.control} groups={groups} isLoading={groupsLoading} />
+              </div>
             </div>
 
             <UserExpiryFields control={editForm.control} enabled={hasEditExpiryDate} />

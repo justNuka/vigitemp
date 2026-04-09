@@ -248,7 +248,8 @@ export async function ServerAlarms(status?: AlarmStatus) {
 
 
 
-    const unit = alarm.Unite?.trim() || t("fallback.unknown_unit");
+    const rawUnit = alarm.Unite?.trim() || t("fallback.unknown_unit");
+    const unit = rawUnit.toUpperCase() === "C" ? "°C" : rawUnit;
 
 
 
@@ -269,7 +270,7 @@ export async function ServerAlarms(status?: AlarmStatus) {
     type: alarmType,
 
 
-    value: alarm.Valeur || 0,
+    value: alarm.Type === "N" ? null : (alarm.Valeur ?? null),
 
 
     threshold: thresholdValue,
@@ -314,10 +315,10 @@ export async function ServerAlarms(status?: AlarmStatus) {
       currentValue: alarm.t_lieu?.Derniere_Valeur ?? alarm.Valeur ?? null,
 
 
-      minThreshold: consigneInf ?? 0,
+      minThreshold: consigneInf,
 
 
-      maxThreshold: consigneSup ?? 0,
+      maxThreshold: consigneSup,
 
 
       hasThresholds: hasConfiguredThresholds,

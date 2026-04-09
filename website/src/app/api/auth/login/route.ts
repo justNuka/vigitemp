@@ -85,6 +85,8 @@ export const POST = withLogging(async (req: NextRequest) => {
       cfr21Params.find((p) => p.Mot_Cle === "VALIDITE_MOT_DE_PASSE_JOURS")?.Valeur || "90",
     )
 
+    let passwordExpiryWarningDays: number | null = null
+
     if (expiryEnabled && expiryDays > 0 && user.Date_Derniere_Modification_MDP) {
       const daysSinceLastChange = Math.floor(
         (Date.now() - new Date(user.Date_Derniere_Modification_MDP).getTime()) /
@@ -100,6 +102,11 @@ export const POST = withLogging(async (req: NextRequest) => {
             requirePasswordChange: true,
           },
         )
+      }
+
+      const daysRemaining = expiryDays - daysSinceLastChange
+      if (daysRemaining > 0 && daysRemaining <= 7) {
+        passwordExpiryWarningDays = daysRemaining
       }
     }
 
@@ -134,6 +141,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       profile: user.Profil_Utilisateur || "user",
       authorizations,
       token,
+      passwordExpiryWarningDays,
     }
 
     const response = apiOk(userData)

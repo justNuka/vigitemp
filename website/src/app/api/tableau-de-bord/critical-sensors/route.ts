@@ -25,7 +25,6 @@ export const GET = withAuthLogging(async (_req: NextRequest, ctx) => {
         t_site: {
           select: {
             Id_Site: true,
-            Code_Site: true,
             Libelle_Site: true,
           },
         },
@@ -34,10 +33,7 @@ export const GET = withAuthLogging(async (_req: NextRequest, ctx) => {
 
     const formatted = locations.map((location) => {
       const status = location.Est_Lieu_En_Alarme === 1 ? ("critical" as const) : ("warning" as const)
-      const siteLabel =
-        location.t_site?.Code_Site && location.t_site?.Libelle_Site
-          ? `${location.t_site.Code_Site} - ${location.t_site.Libelle_Site}`
-          : location.t_site?.Code_Site || location.t_site?.Libelle_Site || "Unknown"
+      const siteLabel = location.t_site?.Libelle_Site || "Unknown"
 
       return {
         id: String(location.Id_Lieu),

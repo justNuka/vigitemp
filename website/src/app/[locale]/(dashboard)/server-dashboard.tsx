@@ -273,9 +273,6 @@ export async function ServerCriticalSensors() {
           Id_Site: true,
 
 
-          Code_Site: true,
-
-
           Libelle_Site: true,
 
 
@@ -345,25 +342,13 @@ export async function ServerCriticalSensors() {
       id: lieu.Id_Site?.toString() || "0",
 
 
-      name: lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
-
-
-        ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
-
-
-        : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || t("fallback.unassigned_site"),
+      name: lieu.t_site?.Libelle_Site || t("fallback.unassigned_site"),
 
 
       description: null,
 
 
-      siteGroup: lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
-
-
-        ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
-
-
-        : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || null,
+      siteGroup: lieu.t_site?.Libelle_Site || null,
 
 
       isActive: true,
@@ -514,9 +499,6 @@ export async function ServerActiveAlarms() {
 
 
               Id_Site: true,
-
-
-              Code_Site: true,
 
 
               Libelle_Site: true,
@@ -675,25 +657,13 @@ export async function ServerActiveAlarms() {
       id: alarm.t_lieu?.Id_Lieu.toString() || "0",
 
 
-      name: alarm.t_lieu?.t_site?.Code_Site && alarm.t_lieu?.t_site?.Libelle_Site
-
-
-        ? `${alarm.t_lieu.t_site.Code_Site} - ${alarm.t_lieu.t_site.Libelle_Site}`
-
-
-        : alarm.t_lieu?.t_site?.Code_Site || alarm.t_lieu?.t_site?.Libelle_Site || t("fallback.unassigned_site"),
+      name: alarm.t_lieu?.t_site?.Libelle_Site || t("fallback.unassigned_site"),
 
 
       description: null,
 
 
-      siteGroup: alarm.t_lieu?.t_site?.Code_Site && alarm.t_lieu?.t_site?.Libelle_Site
-
-
-        ? `${alarm.t_lieu.t_site.Code_Site} - ${alarm.t_lieu.t_site.Libelle_Site}`
-
-
-        : alarm.t_lieu?.t_site?.Code_Site || alarm.t_lieu?.t_site?.Libelle_Site || null,
+      siteGroup: alarm.t_lieu?.t_site?.Libelle_Site || null,
 
 
       isActive: true,
@@ -779,9 +749,6 @@ export async function ServerSensorOverview() {
 
 
           Id_Site: true,
-
-
-          Code_Site: true,
 
 
           Libelle_Site: true,
@@ -958,25 +925,13 @@ export async function ServerSensorOverview() {
         id: lieu.Id_Site?.toString() || "0",
 
 
-        name: lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
-
-
-          ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
-
-
-          : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || t("fallback.unassigned_site"),
+        name: lieu.t_site?.Libelle_Site || t("fallback.unassigned_site"),
 
 
         description: null,
 
 
-        siteGroup: lieu.t_site?.Code_Site && lieu.t_site?.Libelle_Site
-
-
-          ? `${lieu.t_site.Code_Site} - ${lieu.t_site.Libelle_Site}`
-
-
-          : lieu.t_site?.Code_Site || lieu.t_site?.Libelle_Site || null,
+        siteGroup: lieu.t_site?.Libelle_Site || null,
 
 
         isActive: true,

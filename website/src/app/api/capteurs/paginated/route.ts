@@ -189,6 +189,41 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       lastMeasurementRows.map((row) => [row.Id_Lieu, row]),
     )
 
+    const disabledLocationIds = locations
+      .filter((location) => location.Lieu_Etat === "D")
+      .map((location) => location.Id_Lieu)
+
+    const disabledAuditRows = disabledLocationIds.length
+      ? await prismaMesure.tm_journal.findMany({
+          where: {
+            Id_Lieu: { in: disabledLocationIds },
+            Code_Journal: "DES",
+          },
+          select: {
+            Id_Lieu: true,
+            Nom_Utilisateur: true,
+            Commentaire_Utilisateur: true,
+            Date_Heure_Journal: true,
+          },
+          orderBy: [{ Date_Heure_Journal: "desc" }, { Id_Journal: "desc" }],
+        })
+      : []
+
+    const disabledAuditByLieu = new Map<number, {
+      disabledBy: string | null
+      disabledComment: string | null
+      disabledAt: Date | null
+    }>()
+
+    for (const auditRow of disabledAuditRows) {
+      if (!auditRow.Id_Lieu || disabledAuditByLieu.has(auditRow.Id_Lieu)) continue
+      disabledAuditByLieu.set(auditRow.Id_Lieu, {
+        disabledBy: auditRow.Nom_Utilisateur?.trim() || null,
+        disabledComment: auditRow.Commentaire_Utilisateur?.trim() || null,
+        disabledAt: auditRow.Date_Heure_Journal ?? null,
+      })
+    }
+
     const sensorsWithMeasurements = locations.map((location) => {
         const groups = (location.t_lieu_groupe || [])
           .map((lg) => lg.t_groupe)
@@ -198,6 +233,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
         const groupNames = groups.map((g) => g.Nom_Groupe).filter((n): n is string => !!n)
 
         const lastMeasurement = lastMeasurementByLieu.get(location.Id_Lieu) ?? null
+        const disabledAudit = disabledAuditByLieu.get(location.Id_Lieu) ?? null
 
         const hasEndedFlag =
           location.Est_Lieu_Alarme_Terminee_Non_Acquittee === 1 ||
@@ -226,8 +262,17 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
         const alarmDisabled = location.Notification_Active === false
         const surveillanceDisabled = location.Lieu_Etat === "D"
         const isGso = location.t_sonde?.Est_Sonde_GSO ?? location.Est_Lieu_GSO ?? false
-        const unit = location.Derniere_Unite ?? "°C"
+        const rawUnit = location.Derniere_Unite?.trim() || "°C"
+        const unit = rawUnit.toUpperCase() === "C" ? "°C" : rawUnit
         const decimals = location.Derniere_Nb_Decimal ?? null
+        const minThreshold =
+          location.Est_Consigne_Inf_Active === false
+            ? null
+            : location.Tolerance_Surveillance_Inf ?? location.Consigne_Inf ?? null
+        const maxThreshold =
+          location.Est_Consigne_Sup_Active === false
+            ? null
+            : location.Tolerance_Surveillance_Sup ?? location.Consigne_Sup ?? null
 
           const alarmDelayMinutes =
             location.Retard_Alarme_Haut ??
@@ -245,8 +290,8 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
           unit,
           decimals,
           currentValue: lastMeasurement?.Valeur ?? null,
-          minThreshold: location.Tolerance_Surveillance_Inf ?? location.Consigne_Inf ?? 0,
-          maxThreshold: location.Tolerance_Surveillance_Sup ?? location.Consigne_Sup ?? 25,
+          minThreshold,
+          maxThreshold,
           lastMeasurement: lastMeasurement?.Date_Heure_Mesure ?? null,
           isActive: !location.Est_Archive,
           status,
@@ -261,6 +306,9 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
             alarmDisabledUntil: location.Date_Heure_Reactivation_Alarme ?? null,
             lieuEtat: location.Lieu_Etat ?? null,
             surveillanceDisabled,
+            surveillanceDisabledSince: location.Date_Heure_Surveillance_Off ?? disabledAudit?.disabledAt ?? null,
+            surveillanceDisabledBy: disabledAudit?.disabledBy ?? null,
+            surveillanceDisabledComment: disabledAudit?.disabledComment ?? null,
             lieuType: location.Type_Lieu ?? null,
             alarmId,
             alarmDelayMinutes,

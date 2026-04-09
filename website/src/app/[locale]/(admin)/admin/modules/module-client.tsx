@@ -11,6 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useModules, useModuleSondes } from "@/hooks/useModules";
 import { deleteJson, getJson, HttpError } from "@/lib/http";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -41,6 +42,7 @@ export function ModulesClient() {
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [archiveBlockedOpen, setArchiveBlockedOpen] = useState(false);
   const [archiveBlockedMessage, setArchiveBlockedMessage] = useState<string | null>(null);
+  const [statusTab, setStatusTab] = useState<"active" | "archived">("active");
 
   const { data: modules, isLoading: modulesLoading, refetch: refetchModules } = useModules();
   const { data: sondes, isLoading: sondesLoading } = useModuleSondes(selectedModuleId);
@@ -56,9 +58,12 @@ export function ModulesClient() {
     });
   }, [modulesLoading, queryClient]);
 
-  const selectedModule = selectedModuleId ? modules?.find((m) => m.Id_Module === selectedModuleId) : null;
+  const activeModules = (modules || []).filter((module) => !module.Archive);
+  const archivedModules = (modules || []).filter((module) => Boolean(module.Archive));
+  const displayedModules = statusTab === "active" ? activeModules : archivedModules;
+  const selectedModule = selectedModuleId ? displayedModules.find((m) => m.Id_Module === selectedModuleId) : null;
 
-  const modulesTableData: ModuleRow[] = (modules || []).map((m) => ({
+  const modulesTableData: ModuleRow[] = displayedModules.map((m) => ({
     Id_Module: m.Id_Module,
     Libelle_Type_Module: m.Libelle_Type_Module,
     Module_Numero_Serie: m.Module_Numero_Serie,
@@ -127,10 +132,13 @@ export function ModulesClient() {
         <Card>
           <CardHeader className="border-b border-border/50 bg-white/90 pb-3 dark:bg-card/90">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Cpu className="h-4 w-4 text-primary" />
-                {t('title', { count: modules?.length || 0 })}
-              </CardTitle>
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Cpu className="h-4 w-4 text-primary" />
+                  {t('title')}
+                </CardTitle>
+                <p className="mt-1 text-sm text-muted-foreground">{t('count', { count: displayedModules.length })}</p>
+              </div>
               <div className="flex gap-2">
                 <Button
                   size="sm"
@@ -146,7 +154,7 @@ export function ModulesClient() {
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={!selectedModuleId}
+                  disabled={!selectedModuleId || statusTab === "archived"}
                   className="gap-2"
                   onClick={() => {
                     setIsEditMode(true);
@@ -164,21 +172,46 @@ export function ModulesClient() {
             </div>
           </CardHeader>
           <CardContent className="p-2 md:p-4 xl:p-4">
-            <ModulesTable
-              modules={modulesTableData}
-              isLoading={modulesLoading}
-              selectedModuleId={selectedModuleId}
-              onSelectModule={(moduleId) => {
-                setSelectedModuleId(moduleId);
+            <Tabs
+              value={statusTab}
+              onValueChange={(value) => {
+                setStatusTab(value as "active" | "archived");
+                setSelectedModuleId(null);
                 setSelectedSondeId(null);
               }}
-              onEditModule={(moduleId) => {
-                setSelectedModuleId(moduleId);
-                setSelectedSondeId(null);
-                setIsEditMode(true);
-                setIsModalOpen(true);
-              }}
-            />
+              className="space-y-4"
+            >
+              <TabsList className="grid w-full max-w-md grid-cols-2 bg-primary/10 text-primary">
+                <TabsTrigger
+                  value="active"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  {t('tabs.active', { count: activeModules.length })}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="archived"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  {t('tabs.archived', { count: archivedModules.length })}
+                </TabsTrigger>
+              </TabsList>
+              <ModulesTable
+                modules={modulesTableData}
+                isLoading={modulesLoading}
+                selectedModuleId={selectedModuleId}
+                onSelectModule={(moduleId) => {
+                  setSelectedModuleId(moduleId);
+                  setSelectedSondeId(null);
+                }}
+                onEditModule={(moduleId) => {
+                  if (statusTab === "archived") return;
+                  setSelectedModuleId(moduleId);
+                  setSelectedSondeId(null);
+                  setIsEditMode(true);
+                  setIsModalOpen(true);
+                }}
+              />
+            </Tabs>
           </CardContent>
         </Card>
 

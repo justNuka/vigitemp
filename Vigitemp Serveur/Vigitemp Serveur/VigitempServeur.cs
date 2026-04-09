@@ -28,6 +28,7 @@ namespace Vigitemp_Serveur
         private HotlineApiServer _hotlineApi;
         private volatile bool _powerSuspendRequested;
         private long _lastResumeSuspendAtUtcTicks;
+        private bool _offsetDisabledForPack;
 
         private readonly object _workersLock = new object();
         private readonly Dictionary<int, (ThreadServeur worker, CancellationTokenSource cts)> _workers =
@@ -261,7 +262,7 @@ namespace Vigitemp_Serveur
                 if (_workers.ContainsKey(idServeur)) return;
 
                 var cts = new CancellationTokenSource();
-                var worker = new ThreadServeur(cts.Token, idServeur);
+                var worker = new ThreadServeur(cts.Token, idServeur, _offsetDisabledForPack);
                 worker.Start();
                 _workers[idServeur] = (worker, cts);
             }
@@ -360,6 +361,12 @@ namespace Vigitemp_Serveur
                 $"edition={licenseResult.Edition} " +
                 $"concurrent={licenseResult.ConcurrentAccess} " +
                 $"expires={licenseResult.ExpiresAtUtc?.ToString("yyyy-MM-dd") ?? "none"}");
+
+            _offsetDisabledForPack = string.Equals(licenseResult.Edition, "pack", StringComparison.OrdinalIgnoreCase);
+            if (_offsetDisabledForPack)
+            {
+                VigitempServeur.Log("Mode licence Pack: application de l'offset des sondes desactivee.");
+            }
 
             Thread.Sleep(2000);
             SyncWorkersWithDatabase();

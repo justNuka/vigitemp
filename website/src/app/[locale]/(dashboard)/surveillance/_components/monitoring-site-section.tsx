@@ -1,8 +1,7 @@
-import { Building2, ChevronDown, Power, Users } from "lucide-react"
+import { Building2, ChevronDown, Users } from "lucide-react"
 import { LazyMotion, domAnimation, m } from "motion/react"
 
 import MonitoringCard from "@/components/monitoring-card"
-import { Button } from "@/components/ui/button"
 import { countStatus } from "@/lib/surveillance-status"
 import type { SensorWithLocation } from "@/lib/api"
 
@@ -12,7 +11,6 @@ import { sortSensors, type SurveillanceSortMode } from "../_helpers/monitoring-d
 import { formatAlarmes, formatGroupes, formatPreAlarmes, formatSondes } from "../_helpers/monitoring-labels"
 import { SurveillanceTreeStatsBadges } from "./monitoring-tree-stats-badges"
 import { buildMonitoringCardProps } from "./monitoring-card-props"
-import type { MonitoringGroupModalState } from "./monitoring-group-toggle-dialog"
 
 type Translate = (key: string, values?: Record<string, string>) => string
 
@@ -27,7 +25,6 @@ type MonitoringSiteSectionProps = {
   locale: string
   timezone?: string
   t: Translate
-  onOpenGroupModal?: (modal: MonitoringGroupModalState) => void
   onSurveillanceToggle?: (
     idLieu: number,
     action: "surveillance" | "alarms",
@@ -82,7 +79,6 @@ export function MonitoringSiteSection({
   locale,
   timezone,
   t,
-  onOpenGroupModal,
   onSurveillanceToggle,
   onEditLocation,
   showNullNonResponse,
@@ -170,25 +166,6 @@ export function MonitoringSiteSection({
                         {t("grid.disabled_badge")}
                       </span>
                     ) : null}
-                    {group.groupId !== null ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="ml-2 h-8 w-8"
-                        title={groupDisabled ? t("group_modal.toggle_enable") : t("group_modal.toggle_disable")}
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          onOpenGroupModal?.({
-                            groupId: group.groupId!,
-                            groupName: group.groupName,
-                            isActive: !groupDisabled,
-                          })
-                        }}
-                      >
-                        <Power className="h-4 w-4" />
-                      </Button>
-                    ) : null}
                   </button>
                 )}
 
@@ -196,8 +173,8 @@ export function MonitoringSiteSection({
                   <m.div
                     className={`grid gap-4 justify-start ${
                       disabledView
-                        ? "grid-cols-[repeat(auto-fill,minmax(250px,305px))]"
-                        : "grid-cols-[repeat(auto-fill,minmax(260px,320px))]"
+                        ? "grid-cols-[repeat(auto-fill,minmax(250px,1fr))]"
+                        : "grid-cols-[repeat(auto-fill,minmax(260px,1fr))]"
                     }`}
                     variants={staggerContainer}
                     initial="hidden"

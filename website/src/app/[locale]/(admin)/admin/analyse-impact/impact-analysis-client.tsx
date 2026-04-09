@@ -200,6 +200,70 @@ export function ImpactAnalysisClient() {
     link.click()
   }, [lieu])
 
+  const handleExportPdf = useCallback(async () => {
+    if (!lieu) return
+
+    const { jsPDF } = await import("jspdf")
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
+    const chart = chartRef.current
+    const chartDataUrl = chart ? chart.toBase64Image("image/png", 1) : null
+
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const margin = 14
+    let y = 16
+
+    const writeLine = (label: string, value: string) => {
+      doc.setFont("helvetica", "bold")
+      doc.text(label, margin, y)
+      doc.setFont("helvetica", "normal")
+      doc.text(value || "-", margin + 52, y)
+      y += 6
+    }
+
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(16)
+    doc.text(t("title"), margin, y)
+    y += 8
+
+    doc.setFont("helvetica", "normal")
+    doc.setFontSize(10)
+    doc.text(`${lieu.nom} - ${new Date().toLocaleString(locale === "fr" ? "fr-FR" : locale)}`, margin, y)
+    y += 10
+
+    doc.setFontSize(11)
+    writeLine(t("summary.consigne"), lieu.consigne !== null ? `${lieu.consigne} ${lieu.unit}` : "-")
+    writeLine(t("summary.toleranceSup"), actualSup !== null ? `${actualSup} ${lieu.unit}` : "-")
+    writeLine(t("summary.toleranceInf"), actualInf !== null ? `${actualInf} ${lieu.unit}` : "-")
+    writeLine(t("summary.newToleranceSup"), newSupNum !== null ? `${newSupNum} ${lieu.unit}` : "-")
+    writeLine(t("summary.newToleranceInf"), newInfNum !== null ? `${newInfNum} ${lieu.unit}` : "-")
+    writeLine(t("summary.measureCount"), String(measurements.length))
+    writeLine(t("table.simTitle", { count: simZones.length }), String(simZones.length))
+    writeLine(t("table.realTitle", { count: realAlarms.length }), String(realAlarms.length))
+
+    if (chartDataUrl) {
+      y += 4
+      doc.setDrawColor(220, 220, 220)
+      doc.roundedRect(margin, y, pageWidth - margin * 2, 86, 3, 3)
+      doc.addImage(chartDataUrl, "PNG", margin + 3, y + 3, pageWidth - margin * 2 - 6, 80)
+      y += 94
+    }
+
+    doc.setFont("helvetica", "bold")
+    doc.text(t("table.realTitle", { count: realAlarms.length }), margin, y)
+    y += 6
+    doc.setFont("helvetica", "normal")
+
+    for (const alarm of realAlarms.slice(0, 10)) {
+      const start = alarm.Date_Heure_Debut ? new Date(alarm.Date_Heure_Debut).toLocaleString(locale === "fr" ? "fr-FR" : locale) : "-"
+      const end = alarm.Date_Heure_Fin ? new Date(alarm.Date_Heure_Fin).toLocaleString(locale === "fr" ? "fr-FR" : locale) : "-"
+      doc.text(`${alarm.Type ?? "-"} | ${start} -> ${end}`, margin, y)
+      y += 5
+      if (y > 280) break
+    }
+
+    doc.save(`analyse-impact-${lieu.nom.replace(/[^a-zA-Z0-9-_]+/g, "-")}.pdf`)
+  }, [actualInf, actualSup, lieu, locale, measurements.length, newInfNum, newSupNum, realAlarms, simZones.length, t])
+
   return (
     <div className="flex flex-col pb-6">
       <LieuDateSelector
@@ -253,6 +317,9 @@ export function ImpactAnalysisClient() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleExportImage}>
                   {t("export.image")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void handleExportPdf()}>
+                  {t("export.pdf")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

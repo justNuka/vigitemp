@@ -60,12 +60,12 @@ export type tm_mesure_calibrage = $Result.DefaultSelection<Prisma.$tm_mesure_cal
 export type tm_mesure_calibrage_etalon = $Result.DefaultSelection<Prisma.$tm_mesure_calibrage_etalonPayload>
 /**
  * Model tm_mesure_etalon
- * 
+ * Mesures brutes remontees par un etalon (reference etalon).
  */
 export type tm_mesure_etalon = $Result.DefaultSelection<Prisma.$tm_mesure_etalonPayload>
 /**
  * Model tm_mesure_etalonnage
- * 
+ * Mesures de campagne d'etalonnage d'une sonde (sonde etalonnee vs etalon).
  */
 export type tm_mesure_etalonnage = $Result.DefaultSelection<Prisma.$tm_mesure_etalonnagePayload>
 /**
@@ -105,7 +105,9 @@ export type tm_vigilog_mesure = $Result.DefaultSelection<Prisma.$tm_vigilog_mesu
  * Type-safe database client for TypeScript & Node.js
  * @example
  * ```
- * const prisma = new PrismaClient()
+ * const prisma = new PrismaClient({
+ *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
+ * })
  * // Fetch zero or more Tm_graphiques
  * const tm_graphiques = await prisma.tm_graphique.findMany()
  * ```
@@ -126,7 +128,9 @@ export class PrismaClient<
    * Type-safe database client for TypeScript & Node.js
    * @example
    * ```
-   * const prisma = new PrismaClient()
+   * const prisma = new PrismaClient({
+   *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
+   * })
    * // Fetch zero or more Tm_graphiques
    * const tm_graphiques = await prisma.tm_graphique.findMany()
    * ```
@@ -435,8 +439,8 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 7.4.1
-   * Query Engine version: 55ae170b1ced7fc6ed07a15f110549408c501bb3
+   * Prisma Client JS version: 7.7.0
+   * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
    */
   export type PrismaVersion = {
     client: string
@@ -3144,6 +3148,11 @@ export namespace Prisma {
      * Skip the first `n` tm_graphiques.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_graphiques.
+     */
     distinct?: Tm_graphiqueScalarFieldEnum | Tm_graphiqueScalarFieldEnum[]
   }
 
@@ -4112,6 +4121,11 @@ export namespace Prisma {
      * Skip the first `n` tm_journals.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_journals.
+     */
     distinct?: Tm_journalScalarFieldEnum | Tm_journalScalarFieldEnum[]
   }
 
@@ -4961,6 +4975,11 @@ export namespace Prisma {
      * Skip the first `n` tm_journal_codes.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_journal_codes.
+     */
     distinct?: Tm_journal_codeScalarFieldEnum | Tm_journal_codeScalarFieldEnum[]
   }
 
@@ -5859,6 +5878,11 @@ export namespace Prisma {
      * Skip the first `n` tm_compteur_id_tables.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_compteur_id_tables.
+     */
     distinct?: Tm_compteur_id_tableScalarFieldEnum | Tm_compteur_id_tableScalarFieldEnum[]
   }
 
@@ -7014,6 +7038,11 @@ export namespace Prisma {
      * Skip the first `n` tm_mesures.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_mesures.
+     */
     distinct?: Tm_mesuresScalarFieldEnum | Tm_mesuresScalarFieldEnum[]
   }
 
@@ -7956,6 +7985,11 @@ export namespace Prisma {
      * Skip the first `n` tm_mesures_gsos.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_mesures_gsos.
+     */
     distinct?: Tm_mesures_gsoScalarFieldEnum | Tm_mesures_gsoScalarFieldEnum[]
   }
 
@@ -8939,6 +8973,11 @@ export namespace Prisma {
      * Skip the first `n` tm_journal_histos.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_journal_histos.
+     */
     distinct?: Tm_journal_histoScalarFieldEnum | Tm_journal_histoScalarFieldEnum[]
   }
 
@@ -9893,6 +9932,11 @@ export namespace Prisma {
      * Skip the first `n` tm_mesure_calibrages.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_mesure_calibrages.
+     */
     distinct?: Tm_mesure_calibrageScalarFieldEnum | Tm_mesure_calibrageScalarFieldEnum[]
   }
 
@@ -10847,6 +10891,11 @@ export namespace Prisma {
      * Skip the first `n` tm_mesure_calibrage_etalons.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_mesure_calibrage_etalons.
+     */
     distinct?: Tm_mesure_calibrage_etalonScalarFieldEnum | Tm_mesure_calibrage_etalonScalarFieldEnum[]
   }
 
@@ -11797,6 +11846,11 @@ export namespace Prisma {
      * Skip the first `n` tm_mesure_etalons.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_mesure_etalons.
+     */
     distinct?: Tm_mesure_etalonScalarFieldEnum | Tm_mesure_etalonScalarFieldEnum[]
   }
 
@@ -12751,6 +12805,11 @@ export namespace Prisma {
      * Skip the first `n` tm_mesure_etalonnages.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_mesure_etalonnages.
+     */
     distinct?: Tm_mesure_etalonnageScalarFieldEnum | Tm_mesure_etalonnageScalarFieldEnum[]
   }
 
@@ -13862,6 +13921,11 @@ export namespace Prisma {
      * Skip the first `n` tm_mesures_histos.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_mesures_histos.
+     */
     distinct?: Tm_mesures_histoScalarFieldEnum | Tm_mesures_histoScalarFieldEnum[]
   }
 
@@ -14831,6 +14895,11 @@ export namespace Prisma {
      * Skip the first `n` tm_mesures_tests.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_mesures_tests.
+     */
     distinct?: Tm_mesures_testScalarFieldEnum | Tm_mesures_testScalarFieldEnum[]
   }
 
@@ -15800,6 +15869,11 @@ export namespace Prisma {
      * Skip the first `n` tm_mesures_test_etalons.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_mesures_test_etalons.
+     */
     distinct?: Tm_mesures_test_etalonScalarFieldEnum | Tm_mesures_test_etalonScalarFieldEnum[]
   }
 
@@ -16731,6 +16805,11 @@ export namespace Prisma {
      * Skip the first `n` tm_mode_degrades.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_mode_degrades.
+     */
     distinct?: Tm_mode_degradeScalarFieldEnum | Tm_mode_degradeScalarFieldEnum[]
   }
 
@@ -17647,6 +17726,11 @@ export namespace Prisma {
      * Skip the first `n` tm_parametres.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_parametres.
+     */
     distinct?: Tm_parametreScalarFieldEnum | Tm_parametreScalarFieldEnum[]
   }
 
@@ -18630,6 +18714,11 @@ export namespace Prisma {
      * Skip the first `n` tm_vigilog_mesures.
      */
     skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_vigilog_mesures.
+     */
     distinct?: Tm_vigilog_mesureScalarFieldEnum | Tm_vigilog_mesureScalarFieldEnum[]
   }
 

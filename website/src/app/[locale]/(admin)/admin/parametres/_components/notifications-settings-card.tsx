@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { SwitchWithLoading } from "@/components/ui/switch-with-loading";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 
 type Setting = {
@@ -17,8 +16,8 @@ type Setting = {
 type NotificationsSettingsCardProps = {
   settings: Setting[];
   loadingKeys: Set<string>;
-  onToggle: (key: string, currentValue: string) => void;
-  onSaveRecipients: (key: string, value: string) => void;
+  onToggle: (key: string) => void;
+  onRecipientsChange: (key: string, value: string) => void;
 };
 
 function normalizeRecipients(raw: string) {
@@ -29,12 +28,11 @@ function normalizeRecipients(raw: string) {
     .join("\n");
 }
 
-
 export function NotificationsSettingsCard({
   settings,
   loadingKeys,
   onToggle,
-  onSaveRecipients,
+  onRecipientsChange,
 }: NotificationsSettingsCardProps) {
   const t = useTranslations("adminSettings");
 
@@ -65,8 +63,6 @@ export function NotificationsSettingsCard({
     setRecipients(normalizeRecipients(recipientsSetting?.value ?? ""));
   }, [recipientsSetting?.value]);
 
-  const isSavingRecipients = recipientsSetting ? loadingKeys.has(recipientsSetting.key) : false;
-
   return (
     <Card className="border-border/60 bg-white dark:bg-popover dark:text-popover-foreground">
       <CardHeader>
@@ -82,7 +78,7 @@ export function NotificationsSettingsCard({
             <SwitchWithLoading
               id={emailToggle.key}
               checked={emailToggle.value === "true"}
-              onCheckedChange={() => onToggle(emailToggle.key, emailToggle.value)}
+              onCheckedChange={() => onToggle(emailToggle.key)}
               isLoading={loadingKeys.has(emailToggle.key)}
             />
           </div>
@@ -96,7 +92,7 @@ export function NotificationsSettingsCard({
             <SwitchWithLoading
               id={acknowledgedToggle.key}
               checked={acknowledgedToggle.value === "true"}
-              onCheckedChange={() => onToggle(acknowledgedToggle.key, acknowledgedToggle.value)}
+              onCheckedChange={() => onToggle(acknowledgedToggle.key)}
               isLoading={loadingKeys.has(acknowledgedToggle.key)}
             />
           </div>
@@ -110,7 +106,7 @@ export function NotificationsSettingsCard({
             <SwitchWithLoading
               id={endedToggle.key}
               checked={endedToggle.value === "true"}
-              onCheckedChange={() => onToggle(endedToggle.key, endedToggle.value)}
+              onCheckedChange={() => onToggle(endedToggle.key)}
               isLoading={loadingKeys.has(endedToggle.key)}
             />
           </div>
@@ -124,7 +120,7 @@ export function NotificationsSettingsCard({
             <SwitchWithLoading
               id={fallbackToggle.key}
               checked={fallbackToggle.value === "true"}
-              onCheckedChange={() => onToggle(fallbackToggle.key, fallbackToggle.value)}
+              onCheckedChange={() => onToggle(fallbackToggle.key)}
               isLoading={loadingKeys.has(fallbackToggle.key)}
             />
           </div>
@@ -136,20 +132,16 @@ export function NotificationsSettingsCard({
             <Textarea
               id="alarm-email-recipients"
               value={recipients}
-              onChange={(event) => setRecipients(event.target.value)}
+              onChange={(event) => {
+                const nextRecipients = event.target.value;
+                setRecipients(nextRecipients);
+                onRecipientsChange(recipientsSetting.key, normalizeRecipients(nextRecipients));
+              }}
               rows={5}
               placeholder={t("notifications.cc_recipients_placeholder")}
+              disabled={loadingKeys.has(recipientsSetting.key)}
             />
             <p className="text-xs text-muted-foreground">{t("notifications.cc_recipients_helper")}</p>
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                disabled={isSavingRecipients}
-                onClick={() => onSaveRecipients(recipientsSetting.key, normalizeRecipients(recipients))}
-              >
-                {t("notifications.save_button")}
-              </Button>
-            </div>
           </div>
         ) : null}
       </CardContent>

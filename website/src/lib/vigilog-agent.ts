@@ -13,6 +13,8 @@ function createTimeoutSignal(timeoutMs: number): AbortSignal {
 
 async function fetchAgentJson<T>(path: string, init: RequestInit, timeoutMs = 3000): Promise<T> {
   let lastStatus: number | null = null
+  let lastDetails: string | null = null
+  let lastError: Error | null = null
 
   for (const baseUrl of AGENT_URLS) {
     try {
@@ -23,18 +25,37 @@ async function fetchAgentJson<T>(path: string, init: RequestInit, timeoutMs = 30
 
       if (!response.ok) {
         lastStatus = response.status
+
+        try {
+          const payload = (await response.json()) as { details?: string; message?: string; error?: string }
+          const detail = payload?.details || payload?.message || payload?.error
+          if (typeof detail === "string" && detail.trim().length > 0) {
+            lastDetails = detail.trim()
+          }
+        } catch {
+          // ignore malformed/non-json response body
+        }
+
         continue
       }
 
       return (await response.json()) as T
-    } catch {
-      // try next URL
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error("Agent unavailable")
     }
   }
 
   if (lastStatus != null) {
+    if (lastDetails) {
+      throw new Error(`Agent request failed with status ${lastStatus}: ${lastDetails}`)
+    }
     throw new Error(`Agent request failed with status ${lastStatus}`)
   }
+
+  if (lastError) {
+    throw lastError
+  }
+
   throw new Error("Agent unavailable")
 }
 

@@ -168,6 +168,7 @@ model tm_mesure_calibrage_etalon {
   @@index([Valeur_Brute], map: "IDX_Valeur_Brute")
 }
 
+/// Mesures brutes remontees par un etalon (reference etalon).
 model tm_mesure_etalon {
   Id_Mesure_Etalon    Int      @default(autoincrement())
   Id_Serveur_BDD      Int      @default(0)
@@ -185,6 +186,7 @@ model tm_mesure_etalon {
   @@index([Valeur_Brute], map: "IDX_Valeur_Brute")
 }
 
+/// Mesures de campagne d'etalonnage d'une sonde (sonde etalonnee vs etalon).
 model tm_mesure_etalonnage {
   Id_Mesure_Etalonnage Int       @default(autoincrement())
   Id_Serveur_BDD       Int       @default(0)

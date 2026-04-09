@@ -38,6 +38,7 @@ namespace Vigitemp_Serveur
         private readonly int _schedulerTickMs = GetSettingInt("Vigitemp.Scheduler.TickMs", 5000);
         private readonly bool _logScheduler = GetSettingBool("Vigitemp.Scheduler.Log", true);
         private readonly bool _logMetrologyDetailed = GetSettingBool("Vigitemp.Metrology.LogDetailed", false);
+        private readonly bool _offsetDisabledForPack;
         private readonly int _alarmPollSeconds = GetSettingInt("Vigitemp.Alarms.PollSeconds", 15);
         private readonly int _alarmPollMaxBatch = GetSettingInt("Vigitemp.Alarms.PollMaxBatch", 50);
         private readonly object _alarmPollLock = new object();
@@ -111,10 +112,11 @@ namespace Vigitemp_Serveur
             public DateTime? RecoverUntilProbeDateTime { get; set; }
         }
 
-        public ThreadServeur(CancellationToken obj, int p_idServer)
+        public ThreadServeur(CancellationToken obj, int p_idServer, bool offsetDisabledForPack = false)
         {
             this.m_cts = obj;
             this._idServer = p_idServer;
+            this._offsetDisabledForPack = offsetDisabledForPack;
         }
 
         public bool LogMetrologyDetailed => _logMetrologyDetailed;
@@ -326,6 +328,10 @@ namespace Vigitemp_Serveur
             }
 
             var fromDb = GetDatabase().getSondeMetrologyBySerialNumber(serialNumber) ?? new SondeMetrologySettings();
+            if (_offsetDisabledForPack)
+            {
+                fromDb.Offset = null;
+            }
             _sondeMetrologyCache[serialNumber] = new CachedMetrology(fromDb, DateTime.UtcNow);
             return fromDb;
         }
@@ -361,10 +367,12 @@ namespace Vigitemp_Serveur
                 return;
             }
 
+            var effectiveOffset = _offsetDisabledForPack ? (double?)null : row.SondeOffset;
+
             _sondeMetrologyCache[row.SondeNumeroSerie] = new CachedMetrology(new SondeMetrologySettings
             {
                 IdLieu = row.IdLieu,
-                Offset = row.SondeOffset,
+                Offset = effectiveOffset,
                 HasAjustage = row.HasAjustage,
                 CoeffX = row.CoeffX,
                 CoeffConstant = row.CoeffConstant,
@@ -383,7 +391,7 @@ namespace Vigitemp_Serveur
                     $"Metrology cache update serial={row.SondeNumeroSerie} idLieu={row.IdLieu} " +
                     $"mode={row.EmtChoixMode?.ToString() ?? "null"} corrEJ={row.ApplyCorrectionEj} " +
                     $"hasAjustage={row.HasAjustage} coeffX={row.CoeffX} coeffC={row.CoeffConstant} " +
-                    $"offset={(row.SondeOffset.HasValue ? row.SondeOffset.Value.ToString(CultureInfo.InvariantCulture) : "null")} " +
+                    $"offset={(effectiveOffset.HasValue ? effectiveOffset.Value.ToString(CultureInfo.InvariantCulture) : "null")} " +
                     $"hasEtalonnage={row.HasEtalonnage} errJustesse={(row.ErrJustesse.HasValue ? row.ErrJustesse.Value.ToString(CultureInfo.InvariantCulture) : "null")} " +
                     $"corrJustesse={(row.CorrectionJustesse.HasValue ? row.CorrectionJustesse.Value.ToString(CultureInfo.InvariantCulture) : "null")} " +
                     $"incertitude={(row.Incertitude.HasValue ? row.Incertitude.Value.ToString(CultureInfo.InvariantCulture) : "null")}");

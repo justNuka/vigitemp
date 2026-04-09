@@ -1,21 +1,21 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFormContext, Controller } from 'react-hook-form'
 import { useTranslations } from 'next-intl'
 
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { TabsContent } from '@/components/ui/tabs'
 import type { AvailableSensor } from '@/hooks/useAvailableSensors'
 import type { Group } from '@/hooks/useGroups'
 import type { Module } from '@/hooks/useModules'
 import type { SiteSimple } from '@/hooks/useSites'
+import { useStandards } from '@/hooks/useStandards'
 
 import { LocationGeneralSettingsSection } from './general-tab/location-general-settings-section'
-import { toOptionalNumber } from './general-tab/location-form-parsers'
 import { LocationSensorSection } from './general-tab/location-sensor-section'
 import { LocationSetpointsSection } from './general-tab/location-setpoints-section'
 import type { LocationFormData } from './location-form-types'
@@ -30,6 +30,7 @@ type Props = {
 
 export function LocationFormTabGeneral({ sites, groups, availableSensors, modules, onGoToPlanning }: Props) {
   const t = useTranslations('locationsForm.general')
+  const { data: standards = [] } = useStandards()
   const {
     register,
     control,
@@ -37,6 +38,7 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
     watch,
     formState: { errors },
   } = useFormContext<LocationFormData>()
+  const autoDisabledMonitoringRef = useRef(false)
 
   const formData = watch()
   const selectedSensor = useMemo(
@@ -48,6 +50,13 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
     selectedSensor?.Famille_Sonde === 'GSO',
   )
   const hasSondeSelected = Boolean(formData.Sonde_Numero_Serie)
+  const standardSensorSerials = useMemo(
+    () =>
+      standards
+        .filter((standard) => !standard.Est_Archive && !!standard.Etalon_Numero_Serie)
+        .map((standard) => standard.Etalon_Numero_Serie as string),
+    [standards],
+  )
 
   useEffect(() => {
     if (!isGsoSensor) return
@@ -57,14 +66,24 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
   useEffect(() => {
     if (!formData.Sonde_Numero_Serie) {
       setValue('Id_Module', null)
+      if (formData.Lieu_Etat !== 'D') {
+        setValue('Lieu_Etat', 'D', { shouldDirty: true })
+        autoDisabledMonitoringRef.current = true
+      }
       return
     }
+
     setValue('Id_Module', selectedSensor?.Id_Module ?? null)
-  }, [formData.Sonde_Numero_Serie, selectedSensor?.Id_Module, setValue])
+
+    if (autoDisabledMonitoringRef.current && formData.Lieu_Etat === 'D') {
+      setValue('Lieu_Etat', null, { shouldDirty: true })
+      autoDisabledMonitoringRef.current = false
+    }
+  }, [formData.Lieu_Etat, formData.Sonde_Numero_Serie, selectedSensor?.Id_Module, setValue])
 
   return (
     <TabsContent value="general" className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         <div className="space-y-2">
           <Label>{t('labels.name')}</Label>
           <Input
@@ -80,40 +99,23 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
           )}
         </div>
         <div className="space-y-2">
-          <Label>{t('labels.type')}</Label>
-          <Controller
-            control={control}
-            name="Type_Lieu"
-            render={({ field }) => (
-              <Select value={field.value || ''} onValueChange={field.onChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t('placeholders.type')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="etuve">{t('type_options.etuve')}</SelectItem>
-                  <SelectItem value="bain_marie">{t('type_options.bain_marie')}</SelectItem>
-                  <SelectItem value="ambiance">{t('type_options.ambiance')}</SelectItem>
-                  <SelectItem value="frigo_congel">{t('type_options.frigo_congel')}</SelectItem>
-                  <SelectItem value="autre">{t('type_options.autre')}</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
+          <Label>{t('labels.observations')}</Label>
+          <Textarea
+            {...register('Observations_Info')}
+            placeholder={t('placeholders.observations')}
+            className="min-h-23 resize-y"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>{t('labels.comment')}</Label>
-          <Input {...register('Commentaire')} placeholder={t('placeholders.comment')} />
-        </div>
-        <div className="space-y-2">
           <Label>{t('labels.monitoring')}</Label>
           <Controller
             control={control}
             name="Lieu_Etat"
             render={({ field }) => (
-              <RadioGroup value={field.value || 'S'} onValueChange={field.onChange} className="grid gap-2">
+              <RadioGroup value={field.value ?? ''} onValueChange={field.onChange} className="grid gap-2" disabled={!hasSondeSelected}>
                 <label className="flex items-center gap-2">
                   <RadioGroupItem value="S" />
                   <span>{t('labels.monitoring_enable')}</span>
@@ -125,11 +127,18 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
               </RadioGroup>
             )}
           />
+          {errors.Lieu_Etat?.message ? <p className="text-sm text-destructive">{String(errors.Lieu_Etat.message)}</p> : null}
+          {!hasSondeSelected ? <p className="text-xs text-muted-foreground">{t('tooltips.monitoring_requires_sensor')}</p> : null}
         </div>
       </div>
 
       <LocationGeneralSettingsSection sites={sites} groups={groups} />
-      <LocationSensorSection availableSensors={availableSensors} modules={modules} hasSondeSelected={hasSondeSelected} />
+      <LocationSensorSection
+        availableSensors={availableSensors}
+        modules={modules}
+        hasSondeSelected={hasSondeSelected}
+        standardSensorSerials={standardSensorSerials}
+      />
       <LocationSetpointsSection isGsoSensor={isGsoSensor} idLieu={formData.Id_Lieu ?? null} onGoToPlanning={onGoToPlanning} />
     </TabsContent>
   )
