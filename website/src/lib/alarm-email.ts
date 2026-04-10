@@ -165,8 +165,12 @@ export function mapAlarmTypeLabel(type: string | null | undefined, locale: AppLa
       return locale === "en" ? "LOW ALARM" : "ALARME BASSE";
     case "N":
       return locale === "en" ? "NO RESPONSE" : "NON REPONSE";
+    case "S":
+      return locale === "en" ? "POWER / MAINS" : "SECTEUR / ALIMENTATION";
     case "T":
       return locale === "en" ? "ENDED ALARM" : "ALARME TERMINEE";
+    case "GSP_BATTERY":
+      return locale === "en" ? "GSP LOW BATTERY" : "BATTERIE FAIBLE GSP";
     default:
       return locale === "en" ? "OTHER" : "AUTRE";
   }

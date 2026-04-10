@@ -28,7 +28,7 @@ export type AcknowledgeDialogAlarm = {
   locationId: string;
   locationName: string;
   sensorName: string;
-  type?: "high" | "low" | "no-response" | "ended";
+  type?: "high" | "low" | "no-response" | "sector" | "ended";
   currentValue?: number | null;
   value?: number | null;
   unit?: string | null;
@@ -43,7 +43,7 @@ type AlarmDetailPayload = {
   locationId: number | null
   locationName: string | null
   sensorName: string | null
-  type?: "high" | "low" | "no-response" | "ended"
+  type?: "high" | "low" | "no-response" | "sector" | "ended"
   currentValue?: number | null
   value?: number | null
   unit?: string | null
@@ -213,6 +213,8 @@ export function AlarmAcknowledgeDialog({
         return t("dialog.type_low");
       case "no-response":
         return t("dialog.type_no_response");
+      case "sector":
+        return t("dialog.type_sector");
       case "ended":
         return t("dialog.type_ended");
       default:

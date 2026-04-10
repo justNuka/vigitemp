@@ -9,6 +9,7 @@ import { clearLocationCache } from "@/lib/measurement-cache"
 import { extractAddressFromSerial, isGsoType } from "@/lib/sensor-naming"
 import { computeEmt, emtModeFromDb, emtModeToDb } from "@/lib/emt"
 import { requireStandardOrExpertIfFieldsUsed } from "@/lib/license-guards"
+import { isSurveillanceActionCommentRequired } from "@/lib/action-comment-policy"
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -82,7 +83,8 @@ function buildMultiFieldAuditReason(changes: ChangedFieldEntry[], actionComment?
 
 
 function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) {
-  if (data.Id_Site === null || data.Id_Site === undefined) {
+  const hasIdSite = Object.prototype.hasOwnProperty.call(data, "Id_Site")
+  if (hasIdSite && (data.Id_Site === null || data.Id_Site === undefined)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Id_Site"],
@@ -90,11 +92,21 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     })
   }
 
+  const hasSonde = Object.prototype.hasOwnProperty.call(data, "Sonde_Numero_Serie")
+  const hasLieuEtat = Object.prototype.hasOwnProperty.call(data, "Lieu_Etat")
+  if (hasSonde && !data.Sonde_Numero_Serie && hasLieuEtat && data.Lieu_Etat !== "D") {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Lieu_Etat"],
+      message: "Sans sonde, la surveillance doit être désactivée.",
+    })
+  }
+
   const hasConsigne = data.Consigne !== null && data.Consigne !== undefined
   const hasSup = data.Consigne_Sup !== null && data.Consigne_Sup !== undefined
   const hasInf = data.Consigne_Inf !== null && data.Consigne_Inf !== undefined
-  const supActive = data.Est_Consigne_Sup_Active ?? hasSup
-  const infActive = data.Est_Consigne_Inf_Active ?? hasInf
+  const supActive = (typeof data.Est_Consigne_Sup_Active === "boolean" ? data.Est_Consigne_Sup_Active : hasSup)
+  const infActive = (typeof data.Est_Consigne_Inf_Active === "boolean" ? data.Est_Consigne_Inf_Active : hasInf)
 
   if (hasConsigne && supActive && hasSup && Number(data.Consigne_Sup) <= Number(data.Consigne)) {
     ctx.addIssue({
@@ -117,6 +129,30 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Inf"],
       message: "La consigne inf?rieure doit ?tre strictement inf?rieure ? la consigne sup?rieure.",
+    })
+  }
+
+  if (Object.prototype.hasOwnProperty.call(data, "Frequence") && data.Frequence !== null && data.Frequence !== undefined && Number(data.Frequence) <= 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Frequence"],
+      message: "La fréquence de mesure doit être strictement supérieure à 0.",
+    })
+  }
+
+  if (Object.prototype.hasOwnProperty.call(data, "Retard_Alarme_Haut") && data.Retard_Alarme_Haut !== null && data.Retard_Alarme_Haut !== undefined && Number(data.Retard_Alarme_Haut) <= 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Retard_Alarme_Haut"],
+      message: "Le retard d'alarme haut doit être strictement supérieur à 0.",
+    })
+  }
+
+  if (Object.prototype.hasOwnProperty.call(data, "Retard_Alarme_Bas") && data.Retard_Alarme_Bas !== null && data.Retard_Alarme_Bas !== undefined && Number(data.Retard_Alarme_Bas) <= 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Retard_Alarme_Bas"],
+      message: "Le retard d'alarme bas doit être strictement supérieur à 0.",
     })
   }
 }
@@ -251,6 +287,13 @@ export const PATCH = withLogging(
       const lieuPatch: Record<string, unknown> = { ...lieuPatchRest }
 
       const actionComment = typeof Commentaire_Action === "string" ? Commentaire_Action.trim() : ""
+      const shouldCheckActionComment = Object.prototype.hasOwnProperty.call(body, "Commentaire_Action")
+      if (shouldCheckActionComment) {
+        const requireActionComment = await isSurveillanceActionCommentRequired()
+        if (requireActionComment && actionComment.length === 0) {
+          return apiError(400, "missing_action_comment", "Le commentaire est obligatoire pour cette action")
+        }
+      }
 
       if (Object.prototype.hasOwnProperty.call(validated, "Frequence")) {
         const value = validated.Frequence

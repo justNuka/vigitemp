@@ -243,11 +243,17 @@
       "location_update_error": "Erreur lors de la modification du lieu"
     },
     "action_comment": {
-      "location_prompt": "Commentaire optionnel pour cette action de paramétrage :",
-      "surveillance_disable_prompt": "Commentaire optionnel pour la désactivation de la surveillance :",
-      "surveillance_enable_prompt": "Commentaire optionnel pour la réactivation de la surveillance :",
-      "alarms_disable_prompt": "Commentaire optionnel pour la désactivation des notifications d'alarme :",
-      "alarms_enable_prompt": "Commentaire optionnel pour la réactivation des notifications d'alarme :"
+      "location_prompt_optional": "Commentaire optionnel pour cette action de paramétrage :",
+      "location_prompt_required": "Commentaire obligatoire pour cette action de paramétrage :",
+      "surveillance_disable_prompt_optional": "Commentaire optionnel pour la désactivation de la surveillance :",
+      "surveillance_disable_prompt_required": "Commentaire obligatoire pour la désactivation de la surveillance :",
+      "surveillance_enable_prompt_optional": "Commentaire optionnel pour la réactivation de la surveillance :",
+      "surveillance_enable_prompt_required": "Commentaire obligatoire pour la réactivation de la surveillance :",
+      "alarms_disable_prompt_optional": "Commentaire optionnel pour la désactivation des notifications d'alarme :",
+      "alarms_disable_prompt_required": "Commentaire obligatoire pour la désactivation des notifications d'alarme :",
+      "alarms_enable_prompt_optional": "Commentaire optionnel pour la réactivation des notifications d'alarme :",
+      "alarms_enable_prompt_required": "Commentaire obligatoire pour la réactivation des notifications d'alarme :",
+      "required_error": "Le commentaire est obligatoire pour cette action."
     },
     "overlay": {
       "button": "Superposer des courbes",
@@ -376,7 +382,8 @@
         "show_null_non_response": "Afficher les non-réponses (valeur nulle)",
         "etalonnage_warning_days": "Alerte validité étalonnage (jours)",
         "global_language": "Langue globale des emails",
-        "audit_graph_openings": "Audit trail à l'ouverture des graphiques"
+        "audit_graph_openings": "Audit trail à l'ouverture des graphiques",
+        "require_action_comment": "Commentaire obligatoire pour les actions de paramétrage (surveillance)"
       },
       "refresh_options": {
         "5": "5 secondes",
@@ -442,6 +449,10 @@
       "cc_recipients_label": "Emails en copie (tous les emails système)",
       "cc_recipients_placeholder": "ex: support@mc2-info.com\nadmin@client.fr",
       "cc_recipients_helper": "Un email par ligne, ou séparés par virgule/point-virgule.",
+      "gsp_battery_notify_percent_label": "Seuil notification batterie GSP (%)",
+      "gsp_battery_notify_percent_helper": "Notification agent quand la batterie est inférieure ou égale à ce seuil.",
+      "gsp_battery_email_percent_label": "Seuil email batterie GSP (%)",
+      "gsp_battery_email_percent_helper": "Email envoyé quand la batterie est inférieure ou égale à ce seuil (doit être <= seuil notification).",
       "save_button": "Enregistrer"
     },
     "password_policy": {
@@ -572,6 +583,7 @@
       "high": "Haut",
       "low": "Bas",
       "no_response": "Non réponse",
+      "sector": "Secteur / alimentation",
       "ended": "Terminée",
       "site": "Site",
       "type": "Type",
@@ -628,6 +640,7 @@
       "type_high": "Dépassement haut",
       "type_low": "Dépassement bas",
       "type_no_response": "Non réponse",
+      "type_sector": "Secteur / alimentation",
       "type_other": "Autre",
       "last_value_label": "Dernière valeur",
       "start_label": "Début alarme",
@@ -668,6 +681,7 @@
     },
     "messages": {
       "no_response": "Alarme non réponse",
+      "sector": "Alarme coupure secteur",
       "high": "Alarme haute - {value} C",
       "low": "Alarme basse - {value} C",
       "temperature": "Alarme température - {value} C"
@@ -3687,6 +3701,7 @@
       "high": "Alarme haute",
       "low": "Alarme basse",
       "no_response": "Non réponse",
+      "sector": "Secteur / alimentation",
       "ended": "Alarme terminée"
     },
     "surveillance": {
@@ -3972,6 +3987,7 @@
       "high": "Haut",
       "low": "Bas",
       "no_response": "Non réponse",
+      "sector": "Secteur / alimentation",
       "all_sites": "Tous les sites",
       "all_locations": "Tous les lieux",
       "site_placeholder": "Filtrer par site",

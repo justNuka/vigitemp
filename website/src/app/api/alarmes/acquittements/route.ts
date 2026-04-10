@@ -34,6 +34,8 @@ function normalizeAlarmType(type: string | null | undefined) {
       return "HIGH"
     case "B":
       return "LOW"
+    case "S":
+      return "SECTOR"
     case "N":
     case "T":
       return "NO_RESPONSE"

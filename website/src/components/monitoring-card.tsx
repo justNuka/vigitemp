@@ -38,7 +38,7 @@ interface MonitoringCardProps {
   siteName: string
   groupName: string
   status: SensorStatus
-  alarmType?: 'H' | 'B' | 'N' | 'T' | null
+  alarmType?: 'H' | 'B' | 'N' | 'S' | 'T' | null
   alarmDisabled: boolean
   alarmDisabledUntil: Date | string | null
   alarmDelayMinutes: number | null
@@ -392,6 +392,8 @@ export default function MonitoringCard({
               ? 'low'
               : effectiveAlarmType === 'N'
                 ? 'no-response'
+                : effectiveAlarmType === 'S'
+                  ? 'sector'
                 : effectiveStatus === 'ended' || effectiveAlarmType === 'T'
                   ? 'ended'
                   : undefined,

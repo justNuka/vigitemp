@@ -9,7 +9,7 @@ const mailingContactSchema = z.object({
 });
 
 
-function addConsigneGuards(data: any, ctx: z.RefinementCtx) {
+function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) {
   if (data.Id_Site === null || data.Id_Site === undefined) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -37,8 +37,8 @@ function addConsigneGuards(data: any, ctx: z.RefinementCtx) {
   const hasConsigne = data.Consigne !== null && data.Consigne !== undefined
   const hasSup = data.Consigne_Sup !== null && data.Consigne_Sup !== undefined
   const hasInf = data.Consigne_Inf !== null && data.Consigne_Inf !== undefined
-  const supActive = data.Est_Consigne_Sup_Active ?? hasSup
-  const infActive = data.Est_Consigne_Inf_Active ?? hasInf
+  const supActive = (typeof data.Est_Consigne_Sup_Active === "boolean" ? data.Est_Consigne_Sup_Active : hasSup)
+  const infActive = (typeof data.Est_Consigne_Inf_Active === "boolean" ? data.Est_Consigne_Inf_Active : hasInf)
 
   if (hasConsigne && supActive && hasSup && Number(data.Consigne_Sup) <= Number(data.Consigne)) {
     ctx.addIssue({

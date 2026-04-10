@@ -14,6 +14,8 @@ function mapAlarmType(type: string | null | undefined) {
       return "low" as const
     case "N":
       return "no-response" as const
+    case "S":
+      return "sector" as const
     case "T":
       return "ended" as const
     default:

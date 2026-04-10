@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SwitchWithLoading } from "@/components/ui/switch-with-loading";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +27,14 @@ function normalizeRecipients(raw: string) {
     .map((item) => item.trim())
     .filter(Boolean)
     .join("\n");
+}
+
+function sanitizePercent(raw: string) {
+  const numeric = Number.parseInt(raw, 10)
+  if (!Number.isFinite(numeric)) return null
+  if (numeric < 1) return "1"
+  if (numeric > 100) return "100"
+  return String(numeric)
 }
 
 export function NotificationsSettingsCard({
@@ -54,6 +63,14 @@ export function NotificationsSettingsCard({
   );
   const fallbackToggle = useMemo(
     () => settings.find((setting) => setting.key === "notifications:alarm_email_fallback_to_system"),
+    [settings],
+  );
+  const gspNotifyThresholdSetting = useMemo(
+    () => settings.find((setting) => setting.key === "notifications:gsp_battery_notify_percent"),
+    [settings],
+  );
+  const gspEmailThresholdSetting = useMemo(
+    () => settings.find((setting) => setting.key === "notifications:gsp_battery_email_percent"),
     [settings],
   );
 
@@ -142,6 +159,66 @@ export function NotificationsSettingsCard({
               disabled={loadingKeys.has(recipientsSetting.key)}
             />
             <p className="text-xs text-muted-foreground">{t("notifications.cc_recipients_helper")}</p>
+          </div>
+        ) : null}
+
+        {gspNotifyThresholdSetting ? (
+          <div className="space-y-2">
+            <Label htmlFor="gsp-battery-notify-threshold">{t("notifications.gsp_battery_notify_percent_label")}</Label>
+            <Input
+              id="gsp-battery-notify-threshold"
+              type="number"
+              min={1}
+              max={100}
+              value={gspNotifyThresholdSetting.value}
+              disabled={loadingKeys.has(gspNotifyThresholdSetting.key)}
+              onChange={(event) => {
+                onRecipientsChange(gspNotifyThresholdSetting.key, event.target.value)
+              }}
+              onBlur={(event) => {
+                const sanitized = sanitizePercent(event.target.value)
+                if (!sanitized) return
+                onRecipientsChange(gspNotifyThresholdSetting.key, sanitized)
+              }}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") return
+                const target = event.target as HTMLInputElement
+                const sanitized = sanitizePercent(target.value)
+                if (!sanitized) return
+                onRecipientsChange(gspNotifyThresholdSetting.key, sanitized)
+              }}
+            />
+            <p className="text-xs text-muted-foreground">{t("notifications.gsp_battery_notify_percent_helper")}</p>
+          </div>
+        ) : null}
+
+        {gspEmailThresholdSetting ? (
+          <div className="space-y-2">
+            <Label htmlFor="gsp-battery-email-threshold">{t("notifications.gsp_battery_email_percent_label")}</Label>
+            <Input
+              id="gsp-battery-email-threshold"
+              type="number"
+              min={1}
+              max={100}
+              value={gspEmailThresholdSetting.value}
+              disabled={loadingKeys.has(gspEmailThresholdSetting.key)}
+              onChange={(event) => {
+                onRecipientsChange(gspEmailThresholdSetting.key, event.target.value)
+              }}
+              onBlur={(event) => {
+                const sanitized = sanitizePercent(event.target.value)
+                if (!sanitized) return
+                onRecipientsChange(gspEmailThresholdSetting.key, sanitized)
+              }}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter") return
+                const target = event.target as HTMLInputElement
+                const sanitized = sanitizePercent(target.value)
+                if (!sanitized) return
+                onRecipientsChange(gspEmailThresholdSetting.key, sanitized)
+              }}
+            />
+            <p className="text-xs text-muted-foreground">{t("notifications.gsp_battery_email_percent_helper")}</p>
           </div>
         ) : null}
       </CardContent>

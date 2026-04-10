@@ -38,11 +38,27 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     })
   }
 
+  if (!data.Sonde_Numero_Serie && data.Lieu_Etat !== "D") {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Lieu_Etat"],
+      message: "Sans sonde, la surveillance doit être désactivée.",
+    })
+  }
+
+  if (data.Sonde_Numero_Serie && (data.Lieu_Etat === null || data.Lieu_Etat === undefined || data.Lieu_Etat === "")) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Lieu_Etat"],
+      message: "Le mode de surveillance est requis.",
+    })
+  }
+
   const hasConsigne = data.Consigne !== null && data.Consigne !== undefined
   const hasSup = data.Consigne_Sup !== null && data.Consigne_Sup !== undefined
   const hasInf = data.Consigne_Inf !== null && data.Consigne_Inf !== undefined
-  const supActive = data.Est_Consigne_Sup_Active ?? hasSup
-  const infActive = data.Est_Consigne_Inf_Active ?? hasInf
+  const supActive = (typeof data.Est_Consigne_Sup_Active === "boolean" ? data.Est_Consigne_Sup_Active : hasSup)
+  const infActive = (typeof data.Est_Consigne_Inf_Active === "boolean" ? data.Est_Consigne_Inf_Active : hasInf)
 
   if (hasConsigne && supActive && hasSup && Number(data.Consigne_Sup) <= Number(data.Consigne)) {
     ctx.addIssue({
@@ -65,6 +81,54 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Inf"],
       message: "La consigne inf?rieure doit ?tre strictement inf?rieure ? la consigne sup?rieure.",
+    })
+  }
+
+  if (supActive && !hasSup) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Consigne_Sup"],
+      message: "La consigne supérieure est requise quand le seuil haut est actif.",
+    })
+  }
+
+  if (infActive && !hasInf) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Consigne_Inf"],
+      message: "La consigne inférieure est requise quand le seuil bas est actif.",
+    })
+  }
+
+  if ((hasConsigne || supActive || infActive) && (data.Frequence === null || data.Frequence === undefined)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Frequence"],
+      message: "La fréquence de mesure est requise.",
+    })
+  }
+
+  if (data.Frequence !== null && data.Frequence !== undefined && Number(data.Frequence) <= 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Frequence"],
+      message: "La fréquence de mesure doit être strictement supérieure à 0.",
+    })
+  }
+
+  if (data.Retard_Alarme_Haut !== null && data.Retard_Alarme_Haut !== undefined && Number(data.Retard_Alarme_Haut) <= 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Retard_Alarme_Haut"],
+      message: "Le retard d'alarme haut doit être strictement supérieur à 0.",
+    })
+  }
+
+  if (data.Retard_Alarme_Bas !== null && data.Retard_Alarme_Bas !== undefined && Number(data.Retard_Alarme_Bas) <= 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Retard_Alarme_Bas"],
+      message: "Le retard d'alarme bas doit être strictement supérieur à 0.",
     })
   }
 }

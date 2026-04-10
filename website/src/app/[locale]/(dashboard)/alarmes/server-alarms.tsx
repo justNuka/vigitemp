@@ -213,7 +213,7 @@ export async function ServerAlarms(status?: AlarmStatus) {
 
 
       ? "high"
-
+ 
 
       : alarm.Type === "B"
 
@@ -221,7 +221,13 @@ export async function ServerAlarms(status?: AlarmStatus) {
         ? "low"
 
 
-          : "no-response") as "high" | "low" | "no-response";
+        : alarm.Type === "N"
+
+
+          ? "no-response"
+
+
+          : "sector") as "high" | "low" | "no-response" | "sector";
 
 
 
@@ -270,7 +276,7 @@ export async function ServerAlarms(status?: AlarmStatus) {
     type: alarmType,
 
 
-    value: alarm.Type === "N" ? null : (alarm.Valeur ?? null),
+    value: alarm.Type === "N" || alarm.Type === "S" ? null : (alarm.Valeur ?? null),
 
 
     threshold: thresholdValue,

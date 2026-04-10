@@ -321,15 +321,15 @@ R?gles de suivi:
 - [x] `Moyen` Lors des actions de param?trage, demander un commentaire optionnel.
 - [x] `Moyen` Afficher ce commentaire dans la colonne commentaire.
 - [x] `Moyen` Si plusieurs infos changent, les auditer dans une seule ligne BDD avec affichage multi-lignes propre.
-- [ ] `Moyen` Param?tre admin pour imposer ou non le commentaire.
+- [x] `Moyen` Param?tre admin pour imposer ou non le commentaire.
 
 #### Alarmes m?tier li?es ? la surveillance
-- [ ] `Lourd` Ajouter l'alarme `coupure secteur / coupure alimentation`.
-- [ ] `Lourd` Pour `IE/IP`, interpr?ter `B` / `BAT` dans la trame.
-- [ ] `Moyen` Int?grer ce type dans les tris et pages alarmes.
-- [ ] `Moyen` Pour GSP, notifier si batterie < 50%.
-- [ ] `Moyen` Pour GSP, mail si batterie < 25%.
-- [ ] `Moyen` Ajouter ces seuils en param?tres.
+- [x] `Lourd` Ajouter l'alarme `coupure secteur / coupure alimentation`.
+- [x] `Lourd` Pour `IE/IP`, interpr?ter `B` / `BAT` dans la trame.
+- [x] `Moyen` Int?grer ce type dans les tris et pages alarmes.
+- [x] `Moyen` Pour GSP, notifier si batterie < 50%.
+- [x] `Moyen` Pour GSP, mail si batterie < 25%.
+- [x] `Moyen` Ajouter ces seuils en param?tres.
 - [ ] `? cadrer` Voir avec Nico la possibilit? d'une valeur neutralisant les alarmes d'une sonde.
 
 #### Templates
@@ -362,7 +362,7 @@ R?gles de suivi:
 - [x] `Rapide` Revoir le message serveur.
 - [x] `Rapide` GSO = fr?quence forc?e ? 15 min.
 - [x] `Rapide` Ajouter le trait visuel au-dessus de consigne.
-- [ ] `Moyen` Revoir l'ensemble des v?rifications de valeurs.
+- [x] `Moyen` Revoir l'ensemble des v?rifications de valeurs.
 
 #### ?talonnage
 - [ ] `Lourd` G?rer le multi-?talonnage.

@@ -450,8 +450,6 @@ namespace Vigitemp_Serveur
                 {
                     StartWorker(idServeur);
                 }
-
-
                 //suppression des serveur qui ne sont plus utilis?s par les sondes
                 int[] currentIds;
                 lock (_workersLock)
@@ -470,6 +468,42 @@ namespace Vigitemp_Serveur
             catch (Exception ex)
             {
                 VigitempServeur.Log("VigitempServeur.Process error: " + ex);
+            }
+        }
+
+        private void SetPowerAlarmStateForAllLocations(bool isActive, string sourceEvent)
+        {
+            try
+            {
+                var processedLieuIds = new HashSet<int>();
+                var updatedCount = 0;
+
+                using (IDatabaseProvider db = DatabaseFactory.Create())
+                {
+                    var serverIds = db.getDistinctIdServeur();
+                    foreach (var serverId in serverIds)
+                    {
+                        var activeSondes = db.getSondesActivesByServeur(serverId);
+                        foreach (var sonde in activeSondes)
+                        {
+                            if (sonde == null || sonde.IdLieu <= 0) continue;
+                            if (!processedLieuIds.Add(sonde.IdLieu)) continue;
+
+                            if (db.setPowerAlarm(sonde.IdLieu, sonde.SondeNumeroSerie, isActive))
+                            {
+                                updatedCount++;
+                            }
+                        }
+                    }
+                }
+
+                VigitempServeur.Log(
+                    "Power sector alarm state=" + (isActive ? "active" : "resolved") +
+                    " applied on " + updatedCount + " locations (event=" + sourceEvent + ").");
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("SetPowerAlarmStateForAllLocations failed: " + ex.Message);
             }
         }
 
@@ -496,6 +530,7 @@ namespace Vigitemp_Serveur
             if (powerStatus == PowerBroadcastStatus.QuerySuspend)
             {
                 _powerSuspendRequested = true;
+                SetPowerAlarmStateForAllLocations(true, "QuerySuspend");
                 VigitempServeur.Log("QuerySuspend detecte: le service reste actif mais differe les traitements non essentiels.");
                 return true;
             }
@@ -503,6 +538,7 @@ namespace Vigitemp_Serveur
             if (powerStatus == PowerBroadcastStatus.Suspend)
             {
                 _powerSuspendRequested = true;
+                SetPowerAlarmStateForAllLocations(true, "Suspend");
                 VigitempServeur.Log("Suspend detecte: mise en pause logique des traitements periodiques.");
                 return true;
             }
@@ -511,12 +547,14 @@ namespace Vigitemp_Serveur
             {
                 _powerSuspendRequested = false;
                 Interlocked.Exchange(ref _lastResumeSuspendAtUtcTicks, DateTime.UtcNow.Ticks);
+                SetPowerAlarmStateForAllLocations(false, "ResumeSuspend");
                 VigitempServeur.Log("ResumeSuspend detecte: reprise differee pendant 15 secondes pour stabilisation.");
                 return true;
             }
 
             if (powerStatus == PowerBroadcastStatus.BatteryLow)
             {
+                SetPowerAlarmStateForAllLocations(true, "BatteryLow");
                 VigitempServeur.Log("BatteryLow detecte.");
                 return true;
             }

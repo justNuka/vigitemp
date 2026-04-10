@@ -1227,6 +1227,36 @@ namespace Vigitemp_Serveur
             }
         }
 
+        public string getParameterValue(string section, string motCle)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (!EnsureConnected())
+                    {
+                        return null;
+                    }
+
+                    using (var cmd = CreateCommand(
+                        _connectionMain,
+                        "SELECT TOP 1 Valeur FROM t_parametre " +
+                        "WHERE UPPER(Section) = UPPER(@section) AND UPPER(Mot_Cle) = UPPER(@motCle);"))
+                    {
+                        cmd.Parameters.AddWithValue("@section", section ?? string.Empty);
+                        cmd.Parameters.AddWithValue("@motCle", motCle ?? string.Empty);
+                        var result = cmd.ExecuteScalar();
+                        return result == null || result == DBNull.Value ? null : result.ToString();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("(getParameterValue MSSQL) SQL Erreur: " + ex.Message);
+                    return null;
+                }
+            }
+        }
+
         public (double value, string unit, bool hasValue) getLastMeasureWithUnit(int idLieu)
         {
             lock (_lock)
@@ -1473,6 +1503,16 @@ namespace Vigitemp_Serveur
 
         public bool setNonResponseAlarm(int idLieu, string sondeNumeroSerie, bool isActive)
         {
+            return setTechnicalAlarm(idLieu, sondeNumeroSerie, "N", isActive, "setNonResponseAlarm MSSQL");
+        }
+
+        public bool setPowerAlarm(int idLieu, string sondeNumeroSerie, bool isActive)
+        {
+            return setTechnicalAlarm(idLieu, sondeNumeroSerie, "S", isActive, "setPowerAlarm MSSQL");
+        }
+
+        private bool setTechnicalAlarm(int idLieu, string sondeNumeroSerie, string alarmType, bool isActive, string logContext)
+        {
             lock (_lock)
             {
                 try
@@ -1489,10 +1529,11 @@ namespace Vigitemp_Serveur
                         using (var cmdCheck = CreateCommand(
                             _connectionMain,
                             "SELECT TOP 1 Id_Alarme FROM t_alarme " +
-                            "WHERE Id_Lieu = @idLieu AND Type = 'N' AND Date_Heure_Fin IS NULL " +
+                            "WHERE Id_Lieu = @idLieu AND Type = @type AND Date_Heure_Fin IS NULL " +
                             "ORDER BY Date_Heure_Debut DESC;"))
                         {
                             cmdCheck.Parameters.AddWithValue("@idLieu", idLieu);
+                            cmdCheck.Parameters.AddWithValue("@type", alarmType);
                             var existing = cmdCheck.ExecuteScalar();
 
                             if (existing == null || existing == DBNull.Value)
@@ -1503,9 +1544,10 @@ namespace Vigitemp_Serveur
                                     "(Date_Heure_Debut, Valeur, Type, Est_Alarme_Vrai, Id_Lieu, Sonde_Numero_Serie, Unite, " +
                                     "Est_Acquittee, Date_Heure_Derniere_Mesure, Date_Heure_Debut_Alarme_Vrai, " +
                                     "Est_Alarme_Pour_VigiTel, Est_Mail_Envoye, Est_Tel_Acquittee) " +
-                                    "VALUES (GETDATE(), NULL, 'N', 1, @idLieu, @serie, NULL, 0, GETDATE(), GETDATE(), 0, 0, 0);"))
+                                    "VALUES (GETDATE(), NULL, @type, 1, @idLieu, @serie, NULL, 0, GETDATE(), GETDATE(), 0, 0, 0);"))
                                 {
                                     cmdInsert.Parameters.AddWithValue("@idLieu", idLieu);
+                                    cmdInsert.Parameters.AddWithValue("@type", alarmType);
                                     cmdInsert.Parameters.AddWithValue("@serie", sondeNumeroSerie ?? string.Empty);
                                     cmdInsert.ExecuteNonQuery();
                                 }
@@ -1549,9 +1591,10 @@ namespace Vigitemp_Serveur
                             _connectionMain,
                             "UPDATE t_alarme " +
                             "SET Date_Heure_Fin = GETDATE(), Est_Alarme_Vrai = 0 " +
-                            "WHERE Id_Lieu = @idLieu AND Type = 'N' AND Date_Heure_Fin IS NULL;"))
+                            "WHERE Id_Lieu = @idLieu AND Type = @type AND Date_Heure_Fin IS NULL;"))
                         {
                             cmdResolve.Parameters.AddWithValue("@idLieu", idLieu);
+                            cmdResolve.Parameters.AddWithValue("@type", alarmType);
                             updated = cmdResolve.ExecuteNonQuery();
                         }
 
@@ -1566,7 +1609,7 @@ namespace Vigitemp_Serveur
                 }
                 catch (Exception ex)
                 {
-                    VigitempServeur.Log("(setNonResponseAlarm MSSQL) SQL Erreur: " + ex.Message);
+                    VigitempServeur.Log("(" + logContext + ") SQL Erreur: " + ex.Message);
                     return false;
                 }
             }

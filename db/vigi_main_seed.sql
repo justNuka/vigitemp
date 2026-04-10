@@ -1735,3 +1735,13 @@ SELECT 'NOTIFICATIONS','EMAIL_SEND_RESOLVED','1','Activer envoi email lors fin a
 FROM DUAL WHERE NOT EXISTS (
   SELECT 1 FROM `t_parametre` WHERE `Section`='NOTIFICATIONS' AND `Mot_Cle`='EMAIL_SEND_RESOLVED'
 );
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'NOTIFICATIONS','GSP_BATTERY_NOTIFY_PERCENT','50','Seuil (%) notification batterie faible sonde GSP'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='NOTIFICATIONS' AND `Mot_Cle`='GSP_BATTERY_NOTIFY_PERCENT'
+);
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'NOTIFICATIONS','GSP_BATTERY_EMAIL_PERCENT','25','Seuil (%) envoi email batterie faible sonde GSP'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='NOTIFICATIONS' AND `Mot_Cle`='GSP_BATTERY_EMAIL_PERCENT'
+);

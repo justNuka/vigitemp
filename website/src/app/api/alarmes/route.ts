@@ -250,7 +250,11 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
               ? "no-response"
 
-              : "temperature"
+              : alarm.Type === "S"
+
+                ? "sector"
+
+                : "temperature"
 
       const unit = alarm.Unite?.trim() || "Unité inconnue"
 
@@ -260,15 +264,19 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
           ? "Alarme non réponse"
 
-          : alarm.Type === "H"
+          : alarm.Type === "S"
 
-            ? `Alarme haute - ${alarm.Valeur} C`
+            ? "Alarme coupure secteur"
 
-            : alarm.Type === "B"
+            : alarm.Type === "H"
 
-              ? `Alarme basse - ${alarm.Valeur} C`
+              ? `Alarme haute - ${alarm.Valeur} C`
 
-              : `Alarme température - ${alarm.Valeur} C`
+              : alarm.Type === "B"
+
+                ? `Alarme basse - ${alarm.Valeur} C`
+
+                : `Alarme température - ${alarm.Valeur} C`
 
 
 
@@ -312,7 +320,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
         severity:
 
-          alarm.Type === "N"
+          alarm.Type === "N" || alarm.Type === "S"
 
             ? "technical"
 
@@ -352,7 +360,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
         unit,
 
-        currentValue: alarm.Type === "N" ? null : (alarm.Valeur ?? alarm.t_lieu?.Derniere_Valeur ?? null),
+        currentValue: alarm.Type === "N" || alarm.Type === "S" ? null : (alarm.Valeur ?? alarm.t_lieu?.Derniere_Valeur ?? null),
 
         count30Days: countsByLieu.get(alarm.t_lieu?.Id_Lieu ?? 0) ?? 0,
 

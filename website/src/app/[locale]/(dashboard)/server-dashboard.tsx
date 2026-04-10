@@ -576,13 +576,19 @@ export async function ServerActiveAlarms() {
           ? ("low" as const)
 
 
-          : ("no-response" as const),
+          : alarm.Type === "N"
+
+
+            ? ("no-response" as const)
+
+
+            : ("sector" as const),
 
 
     status: alarm.Est_Acquittee ? ("acknowledged" as const) : ("active" as const),
 
 
-    value: alarm.Valeur !== null ? parseFloat(alarm.Valeur.toString()) : 0,
+    value: alarm.Type === "N" || alarm.Type === "S" ? null : (alarm.Valeur !== null ? parseFloat(alarm.Valeur.toString()) : 0),
 
 
     threshold: 0, // Pas de champ threshold direct dans t_alarme
@@ -615,7 +621,7 @@ export async function ServerActiveAlarms() {
       type: "temperature" as const,
 
 
-      status: "critical" as const,
+      status: alarm.Type === "N" || alarm.Type === "S" ? ("technical" as const) : ("critical" as const),
 
 
       currentValue: alarm.Valeur !== null ? parseFloat(alarm.Valeur.toString()) : null,
@@ -820,7 +826,7 @@ export async function ServerSensorOverview() {
 
 
 
-  const overviewAlarmTypeByLieu = new Map<number, "H" | "B" | "N">()
+  const overviewAlarmTypeByLieu = new Map<number, "H" | "B" | "N" | "S">()
 
 
   for (const alarm of overviewAlarms) {
@@ -829,7 +835,7 @@ export async function ServerSensorOverview() {
     if (!alarm.Id_Lieu) continue
 
 
-    const type = alarm.Type as "H" | "B" | "N" | null
+    const type = alarm.Type as "H" | "B" | "N" | "S" | null
 
 
     if (!type) continue
@@ -877,7 +883,7 @@ export async function ServerSensorOverview() {
           lieu.Est_Lieu_Alarme_Terminee_Non_Acquittee_T1 === 1),
 
 
-      isTechnical: alarmType === "N",
+      isTechnical: alarmType === "N" || alarmType === "S",
 
 
     });

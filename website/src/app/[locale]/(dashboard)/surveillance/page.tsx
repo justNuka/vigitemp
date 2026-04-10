@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 
 import { MonitoringCardSkeleton } from "@/components/monitoring-card-skeleton";
+import { isSurveillanceActionCommentRequired } from "@/lib/action-comment-policy";
 import { getGlobalNonResponseDefault } from "@/lib/non-response-preference";
 
 import { SurveillancePageClient } from "./monitoring-page-client";
@@ -41,11 +42,12 @@ function SensorsLoadingSkeleton() {
 export default async function SurveillancePage() {
   await connection();
 
-  const [statsData, filterOptions, refreshIntervalSeconds, showNullNonResponse] = await Promise.all([
+  const [statsData, filterOptions, refreshIntervalSeconds, showNullNonResponse, requireActionComment] = await Promise.all([
     ServerDashboardStats(),
     ServerFilterOptions(),
     ServerSurveillanceRefreshIntervalSeconds(),
     getGlobalNonResponseDefault(),
+    isSurveillanceActionCommentRequired(),
   ]);
 
   return (
@@ -57,6 +59,7 @@ export default async function SurveillancePage() {
           groups={filterOptions.groups}
           refreshIntervalSeconds={refreshIntervalSeconds}
           showNullNonResponse={showNullNonResponse}
+          requireActionComment={requireActionComment}
         />
       </Suspense>
     </div>

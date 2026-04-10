@@ -238,6 +238,67 @@ namespace Vigitemp_Serveur
             }
         }
 
+        public static async Task NotifyGspBatteryAsync(int idLieu, string sondeSerial, int batteryPercent, bool sendEmail)
+        {
+            try
+            {
+                if (idLieu <= 0)
+                {
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
+                {
+                    VigitempServeur.Log("AlarmWebNotifier: configuration manquante (BaseUrl/Secret)");
+                    return;
+                }
+
+                var url = Combine(BaseUrl, "/api/alarmes/dispatch");
+                var title = sendEmail ? "Batterie critique sonde GSP" : "Batterie faible sonde GSP";
+                var body =
+                    "Sonde " + (string.IsNullOrWhiteSpace(sondeSerial) ? "inconnue" : sondeSerial) +
+                    " : batterie " + batteryPercent + "% (lieu " + idLieu + ").";
+
+                var payload =
+                    "{" +
+                    "\"title\":\"" + EscapeJson(title) + "\"," +
+                    "\"body\":\"" + EscapeJson(body) + "\"," +
+                    "\"url\":\"/fr/alarmes\"," +
+                    "\"eventType\":\"triggered\"," +
+                    "\"idLieu\":" + idLieu + "," +
+                    "\"alarmTypeCode\":\"GSP_BATTERY\"," +
+                    "\"lastValue\":\"" + batteryPercent + "%\"," +
+                    "\"skipEmail\":" + (sendEmail ? "false" : "true") +
+                    "}";
+
+                var req = new HttpRequestMessage(HttpMethod.Post, url);
+                req.Headers.Add("x-vigitemp-secret", Secret);
+                req.Content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+                VigitempServeur.Log(
+                    "AlarmWebNotifier: envoi batterie GSP " +
+                    "idLieu=" + idLieu +
+                    " sonde=" + (sondeSerial ?? "") +
+                    " battery=" + batteryPercent +
+                    " sendEmail=" + sendEmail +
+                    " url=" + url);
+
+                var response = await _http.SendAsync(req);
+                var statusCode = (int)response.StatusCode;
+                if (statusCode < 200 || statusCode >= 300)
+                {
+                    VigitempServeur.Log(
+                        "AlarmWebNotifier: WARNING reponse non-2xx batterie GSP (status=" + statusCode + ") " +
+                        "idLieu=" + idLieu +
+                        " sonde=" + (sondeSerial ?? ""));
+                }
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("AlarmWebNotifier: echec envoi batterie GSP: " + ex.Message);
+            }
+        }
+
         private static string EscapeJson(string value)
         {
             if (string.IsNullOrEmpty(value)) return "";

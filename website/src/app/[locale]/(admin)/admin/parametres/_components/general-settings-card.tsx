@@ -39,6 +39,7 @@ export function GeneralSettingsCard({
     'dashboard:show_null_non_response': t('general.labels.show_null_non_response'),
     'dashboard:etalonnage_warning_days': t('general.labels.etalonnage_warning_days'),
     'dashboard:audit_graph_openings': t('general.labels.audit_graph_openings'),
+    'dashboard:require_action_comment': t('general.labels.require_action_comment'),
     'general:global_language': t('general.labels.global_language'),
   };
 

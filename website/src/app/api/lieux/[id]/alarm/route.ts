@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma"
 import { apiError, apiOk } from "@/lib/api-response"
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { log } from "@/lib/logger"
+import { isSurveillanceActionCommentRequired } from "@/lib/action-comment-policy"
 
 const alarmToggleSchema = z.object({
   disabled: z.boolean(),
@@ -25,6 +26,11 @@ export const PATCH = withAuthLogging(
 
       const payload = alarmToggleSchema.parse(await req.json())
       const actionComment = typeof payload.commentaireAction === "string" ? payload.commentaireAction.trim() : ""
+      const requireActionComment = await isSurveillanceActionCommentRequired()
+      if (requireActionComment && actionComment.length === 0) {
+        return apiError(400, "missing_action_comment", "Le commentaire est obligatoire pour cette action")
+      }
+
       const durationMinutes =
         payload.disabled && payload.durationMinutes && payload.durationMinutes > 0
           ? payload.durationMinutes

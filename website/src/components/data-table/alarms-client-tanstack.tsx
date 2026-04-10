@@ -22,7 +22,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslations } from "next-intl";
-import { ArrowDown, ArrowUp, Clock, RefreshCw, WifiOff } from "lucide-react";
+import { ArrowDown, ArrowUp, Clock, PowerOff, RefreshCw, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDbDateTime } from "@/lib/date-display";
 import { alarmsApi } from "@/lib/api";
@@ -37,7 +37,7 @@ import { toast } from "sonner";
 type SelectedAlarm = {
   id: string;
   locationId: string;
-  type: "high" | "low" | "no-response" | "ended" | undefined;
+  type: "high" | "low" | "no-response" | "sector" | "ended" | undefined;
   value: number | null;
   threshold: number | null;
   status: "active" | "acknowledged" | "resolved";
@@ -52,7 +52,7 @@ type SelectedAlarm = {
 
 interface AlarmRow {
   Id_Alarme: number;
-  Type: "high" | "low" | "no-response" | "temperature";
+  Type: "high" | "low" | "no-response" | "sector" | "temperature";
   Libelle_Lieu: string;
   Date_Heure_Debut: string;
   Est_Alarme_Vrai: boolean | null;
@@ -310,6 +310,14 @@ export function AlarmsClientTanStack() {
             return (
               <div className="p-1.5 rounded-md w-fit bg-[#26A5DA]/10">
                 <ArrowDown className="h-4 w-4 text-[#26A5DA]" />
+              </div>
+            );
+          }
+
+          if (type === "sector") {
+            return (
+              <div className="p-1.5 rounded-md w-fit bg-amber-100">
+                <PowerOff className="h-4 w-4 text-amber-700" />
               </div>
             );
           }
@@ -633,7 +641,7 @@ export function AlarmsClientTanStack() {
         acknowledgePending={acknowledgeMutation.isPending || isDetailLoading}
         isSubmitting={isSubmitting}
         t={tDialog}
-        alarmTypeLabel={selectedAlarm?.type === "high" ? tDialog("dialog.type_high") : selectedAlarm?.type === "low" ? tDialog("dialog.type_low") : selectedAlarm?.type === "no-response" ? tDialog("dialog.type_no_response") : tDialog("dialog.type_other")}
+        alarmTypeLabel={selectedAlarm?.type === "high" ? tDialog("dialog.type_high") : selectedAlarm?.type === "low" ? tDialog("dialog.type_low") : selectedAlarm?.type === "no-response" ? tDialog("dialog.type_no_response") : selectedAlarm?.type === "sector" ? tDialog("dialog.type_sector") : tDialog("dialog.type_other")}
         formattedStart={selectedAlarm?.triggeredAt ? formatDbDateTime(selectedAlarm.triggeredAt) : tDialog("dialog.na")}
         formattedEnd={selectedAlarm?.resolvedAt ? formatDbDateTime(selectedAlarm.resolvedAt) : tDialog("dialog.end_in_progress")}
         formattedDuration={selectedAlarm?.triggeredAt ? (() => { const s = new Date(selectedAlarm.triggeredAt); const e = selectedAlarm.resolvedAt ? new Date(selectedAlarm.resolvedAt) : new Date(); const m = Math.max(Math.floor((e.getTime()-s.getTime())/60000),0); const h = Math.floor(m/60); const mm=m%60; return h>0 ? `${h}h ${mm}min` : `${mm}min`; })() : tDialog("dialog.na")}

@@ -10,11 +10,13 @@ export function useSurveillanceLocationEditor({
   form,
   queryClient,
   t,
+  requireActionComment,
 }: {
   locations: Array<{ Id_Lieu: number }>
   form: { reset: (values: LocationFormData) => void }
   queryClient: { invalidateQueries: (args: { queryKey: unknown[] }) => Promise<unknown> }
   t: (key: string) => string
+  requireActionComment: boolean
 }) {
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null)
   const [isEditLocationOpen, setIsEditLocationOpen] = useState(false)
@@ -22,10 +24,16 @@ export function useSurveillanceLocationEditor({
 
   const askOptionalComment = useCallback(() => {
     if (typeof window === "undefined") return ""
-    const response = window.prompt(t("action_comment.location_prompt"), "")
+    const promptKey = `action_comment.location_prompt_${requireActionComment ? "required" : "optional"}`
+    const response = window.prompt(t(promptKey), "")
     if (response === null) return null
-    return response.trim()
-  }, [t])
+    const trimmed = response.trim()
+    if (requireActionComment && trimmed.length === 0) {
+      toast.error(t("action_comment.required_error"))
+      return null
+    }
+    return trimmed
+  }, [requireActionComment, t])
 
   const handleOpenLocationEdit = useCallback((idLieu: number) => {
     const location = locations.find((item) => item.Id_Lieu === idLieu)

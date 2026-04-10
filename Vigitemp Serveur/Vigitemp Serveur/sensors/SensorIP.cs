@@ -10,6 +10,20 @@ namespace Vigitemp_Serveur.sensors
     {
         private string m_regexResponseTempSensor;
 
+        private bool ContainsBatteryMarker(string response)
+        {
+            if (string.IsNullOrWhiteSpace(response) || string.IsNullOrWhiteSpace(m_sondeSerialNumber) || m_sondeSerialNumber.Length < 4)
+            {
+                return false;
+            }
+
+            var serialSuffix = Regex.Escape(m_sondeSerialNumber.Substring(m_sondeSerialNumber.Length - 4));
+            return Regex.IsMatch(
+                response,
+                @"R" + serialSuffix + @"(?:BAT|B)'",
+                RegexOptions.IgnoreCase);
+        }
+
         // Constructeur
         public SensorIP(ThreadServeur p_ths, string p_comPort, string p_sondeSerialNumber, string p_sondeAdresse) : base(p_ths, p_comPort, p_sondeSerialNumber, p_sondeAdresse)
         {
@@ -71,6 +85,7 @@ namespace Vigitemp_Serveur.sensors
                     AppendToResponse(chunk);
                 }
                 VigitempServeur.Log($"[SONDE][RX] type=IP serial={m_sondeSerialNumber} port={m_comPort} raw={m_sensor_response}");
+                var hasBatteryMarker = ContainsBatteryMarker(m_sensor_response);
                 var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
                 if (m.Groups[1].Value != "")
                 {
@@ -79,6 +94,17 @@ namespace Vigitemp_Serveur.sensors
                 }
                 else
                 {
+                    if (hasBatteryMarker)
+                    {
+                        HandleSensorPowerAlarm(true, "IP-BAT");
+                        HandleNoResponseAlarm(true);
+                        m_port.Close();
+                        pendingResults = false;
+                        m_sensor_response = "";
+                        VigitempServeur.Log($"[SONDE][DONE] type=IP serial={m_sondeSerialNumber} port={m_comPort} status=battery-flag");
+                        return;
+                    }
+
                     if (m_sensor_response.Length > 1024)
                     {
                         m_sensor_response = m_sensor_response.Substring(m_sensor_response.Length - 1024);
@@ -95,6 +121,7 @@ namespace Vigitemp_Serveur.sensors
                 var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
 
                 ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
+                HandleSensorPowerAlarm(hasBatteryMarker, hasBatteryMarker ? "IP-BAT" : "IP-NORMAL");
                 HandleNoResponseAlarm(true);
                 compareMeasuresAndLimits(correctedValue, "°C");
                 VigitempServeur.Log($"[SONDE][DONE] type=IP serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=°C raw={ToInvariantRaw(rawValue)}");

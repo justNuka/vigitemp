@@ -15,8 +15,9 @@ namespace Vigitemp_Serveur.sensors
         private const int ClockCheckIntervalHours = 6;
         private const int ClockDriftWarningSeconds = 120;
         private const int ClockDriftCriticalSeconds = 600;
-        private const int BatteryWarningPercent = 30;
-        private const int BatteryCriticalPercent = 15;
+        private const int DefaultBatteryNotifyPercent = 50;
+        private const int DefaultBatteryEmailPercent = 25;
+        private const int BatteryThresholdRefreshMinutes = 5;
 
         private const int MemoBatchReadTimeoutMsShort = 10000;
         private const int MemoBatchReadTimeoutMsMedium = 30000;
@@ -37,6 +38,9 @@ namespace Vigitemp_Serveur.sensors
         private DateTime? _lastDateTimeCheckUtc;
         private int _consecutiveTimeouts;
         private string _lastBatteryStatus;
+        private int _batteryNotifyPercent = DefaultBatteryNotifyPercent;
+        private int _batteryEmailPercent = DefaultBatteryEmailPercent;
+        private DateTime? _lastBatteryThresholdRefreshUtc;
 
         public SensorGSP(
             ThreadServeur p_ths,
@@ -400,18 +404,83 @@ namespace Vigitemp_Serveur.sensors
                 return;
             }
 
+            RefreshBatteryThresholdsIfNeeded();
+
             _lastBatteryPercent = parsed.BatteryPercent;
-            var status = parsed.BatteryPercent.Value <= BatteryCriticalPercent
+            var status = parsed.BatteryPercent.Value <= _batteryEmailPercent
                 ? "critical"
-                : parsed.BatteryPercent.Value <= BatteryWarningPercent
+                : parsed.BatteryPercent.Value <= _batteryNotifyPercent
                     ? "warning"
                     : "ok";
 
             if (!string.Equals(status, _lastBatteryStatus, StringComparison.OrdinalIgnoreCase))
             {
                 VigitempServeur.Log($"[SONDE][BAT] type=GSP serial={m_sondeSerialNumber} battery={parsed.BatteryPercent.Value} status={status}");
+                if (status == "warning")
+                {
+                    _ = AlarmWebNotifier.NotifyGspBatteryAsync(m_idLieu, m_sondeSerialNumber, parsed.BatteryPercent.Value, sendEmail: false);
+                }
+                else if (status == "critical")
+                {
+                    _ = AlarmWebNotifier.NotifyGspBatteryAsync(m_idLieu, m_sondeSerialNumber, parsed.BatteryPercent.Value, sendEmail: true);
+                }
                 _lastBatteryStatus = status;
             }
+        }
+
+        private void RefreshBatteryThresholdsIfNeeded()
+        {
+            var nowUtc = DateTime.UtcNow;
+            if (_lastBatteryThresholdRefreshUtc.HasValue &&
+                (nowUtc - _lastBatteryThresholdRefreshUtc.Value).TotalMinutes < BatteryThresholdRefreshMinutes)
+            {
+                return;
+            }
+
+            _lastBatteryThresholdRefreshUtc = nowUtc;
+
+            try
+            {
+                var notifyRaw = ths.GetDatabase().getParameterValue("NOTIFICATIONS", "GSP_BATTERY_NOTIFY_PERCENT");
+                var emailRaw = ths.GetDatabase().getParameterValue("NOTIFICATIONS", "GSP_BATTERY_EMAIL_PERCENT");
+
+                var notifyThreshold = ParsePercentSetting(notifyRaw, DefaultBatteryNotifyPercent);
+                var emailThreshold = ParsePercentSetting(emailRaw, DefaultBatteryEmailPercent);
+
+                if (emailThreshold > notifyThreshold)
+                {
+                    emailThreshold = notifyThreshold;
+                }
+
+                _batteryNotifyPercent = notifyThreshold;
+                _batteryEmailPercent = emailThreshold;
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log($"[SONDE][BAT] type=GSP serial={m_sondeSerialNumber} thresholds=error error={ex.Message}");
+                _batteryNotifyPercent = DefaultBatteryNotifyPercent;
+                _batteryEmailPercent = DefaultBatteryEmailPercent;
+            }
+        }
+
+        private static int ParsePercentSetting(string rawValue, int fallback)
+        {
+            if (string.IsNullOrWhiteSpace(rawValue))
+            {
+                return fallback;
+            }
+
+            if (!int.TryParse(rawValue.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
+            {
+                if (!int.TryParse(rawValue.Trim(), NumberStyles.Integer, CultureInfo.CurrentCulture, out value))
+                {
+                    return fallback;
+                }
+            }
+
+            if (value < 1) value = 1;
+            if (value > 100) value = 100;
+            return value;
         }
 
         private void LogSignalHealth(GspTemperatureResponse parsed)

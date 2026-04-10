@@ -245,6 +245,13 @@
       "loading": "Refreshing..."
     },
     "filters": {
+      "type_label": "Alarm type",
+      "all": "All",
+      "high": "High",
+      "low": "Low",
+      "no_response": "No response",
+      "sector": "Power / mains",
+      "ended": "Ended",
       "site": "Site",
       "type": "Type",
       "dateFrom": "Start date",
@@ -301,6 +308,7 @@
       "type_high": "High threshold",
       "type_low": "Low threshold",
       "type_no_response": "No response",
+      "type_sector": "Power / mains",
       "type_ended": "Ended alarm",
       "type_other": "Other",
       "last_value_label": "Last value",
@@ -341,6 +349,7 @@
     },
     "messages": {
       "no_response": "No-response alarm",
+      "sector": "Power outage alarm",
       "high": "High alarm - {value} C",
       "low": "Low alarm - {value} C",
       "temperature": "Temperature alarm - {value} C"
@@ -458,11 +467,17 @@
       "location_update_error": "Error while updating location"
     },
     "action_comment": {
-      "location_prompt": "Optional comment for this configuration action:",
-      "surveillance_disable_prompt": "Optional comment for disabling monitoring:",
-      "surveillance_enable_prompt": "Optional comment for re-enabling monitoring:",
-      "alarms_disable_prompt": "Optional comment for disabling alarm notifications:",
-      "alarms_enable_prompt": "Optional comment for re-enabling alarm notifications:"
+      "location_prompt_optional": "Optional comment for this configuration action:",
+      "location_prompt_required": "Required comment for this configuration action:",
+      "surveillance_disable_prompt_optional": "Optional comment for disabling monitoring:",
+      "surveillance_disable_prompt_required": "Required comment for disabling monitoring:",
+      "surveillance_enable_prompt_optional": "Optional comment for re-enabling monitoring:",
+      "surveillance_enable_prompt_required": "Required comment for re-enabling monitoring:",
+      "alarms_disable_prompt_optional": "Optional comment for disabling alarm notifications:",
+      "alarms_disable_prompt_required": "Required comment for disabling alarm notifications:",
+      "alarms_enable_prompt_optional": "Optional comment for re-enabling alarm notifications:",
+      "alarms_enable_prompt_required": "Required comment for re-enabling alarm notifications:",
+      "required_error": "A comment is required for this action."
     },
     "overlay": {
       "button": "Overlay curves",
@@ -1713,7 +1728,8 @@
         "show_null_non_response": "Show no-response values (null)",
         "etalonnage_warning_days": "Calibration validity alert (days)",
         "global_language": "Global email language",
-        "audit_graph_openings": "Audit log trace when viewing charts"
+        "audit_graph_openings": "Audit log trace when viewing charts",
+        "require_action_comment": "Require a comment for configuration actions (monitoring)"
       },
       "refresh_options": {
         "5": "5 seconds",
@@ -1779,6 +1795,10 @@
       "cc_recipients_label": "CC emails (all system emails)",
       "cc_recipients_placeholder": "e.g. support@mc2-info.com\nadmin@client.com",
       "cc_recipients_helper": "One email per line, or separated by comma/semicolon.",
+      "gsp_battery_notify_percent_label": "GSP battery notification threshold (%)",
+      "gsp_battery_notify_percent_helper": "Agent notification is sent when battery is less than or equal to this threshold.",
+      "gsp_battery_email_percent_label": "GSP battery email threshold (%)",
+      "gsp_battery_email_percent_helper": "Email is sent when battery is less than or equal to this threshold (must be <= notification threshold).",
       "save_button": "Save"
     },
     "password_policy": {
@@ -3668,6 +3688,7 @@
       "high": "High alarm",
       "low": "Low alarm",
       "no_response": "No response",
+      "sector": "Power / mains",
       "ended": "Alarm ended"
     },
     "surveillance": {
@@ -3955,6 +3976,7 @@
       "high": "High",
       "low": "Low",
       "no_response": "No response",
+      "sector": "Power / mains",
       "all_sites": "All sites",
       "all_locations": "All locations",
       "site_placeholder": "Filter by site",

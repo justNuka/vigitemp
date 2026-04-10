@@ -6,7 +6,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { formatDistanceStrict, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertTriangle, ArrowDown, ArrowUp, Bell, Clock, MessageSquare, RefreshCw, WifiOff } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, Bell, Clock, MessageSquare, PowerOff, RefreshCw, WifiOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -206,6 +206,12 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
         if (type === "no-response") {
           return <div className="p-1.5 rounded-md w-fit bg-black/10"><WifiOff className="h-4 w-4 text-black" /></div>;
         }
+        if (type === "sector") {
+          return <div className="p-1.5 rounded-md w-fit bg-amber-100"><PowerOff className="h-4 w-4 text-amber-700" /></div>;
+        }
+        if (type === "ended") {
+          return <div className="p-1.5 rounded-md w-fit bg-violet-100"><AlertTriangle className="h-4 w-4 text-violet-700" /></div>;
+        }
         const isHigh = type === "high";
         return <div className={cn("p-1.5 rounded-md w-fit", isHigh ? "bg-destructive/10" : "bg-[#26A5DA]/10")}>{isHigh ? <ArrowUp className="h-4 w-4 text-destructive" /> : <ArrowDown className="h-4 w-4 text-[#26A5DA]" />}</div>;
       },
@@ -221,7 +227,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
       header: () => <div className="text-right">{t("table.columns.triggered_value")}</div>,
       cell: ({ row }) => {
         const alarm = row.original;
-        const value = alarm.type === "no-response" ? null : (alarm.value ?? alarm.sensor.currentValue ?? null);
+        const value = alarm.type === "no-response" || alarm.type === "sector" ? null : (alarm.value ?? alarm.sensor.currentValue ?? null);
         return <div className="text-right font-mono font-medium">{value !== null ? `${value.toFixed(1)} ${alarm.sensor.unit}` : "-"}</div>;
       },
     },
@@ -304,6 +310,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
     if (selectedAlarm.type === "high") return t("dialog.type_high");
     if (selectedAlarm.type === "low") return t("dialog.type_low");
     if (selectedAlarm.type === "no-response") return t("dialog.type_no_response");
+    if (selectedAlarm.type === "sector") return t("dialog.type_sector");
     return t("dialog.type_other");
   }, [selectedAlarm, t]);
 

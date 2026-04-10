@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Filter } from 'lucide-react'
 
-export type AlarmRowType = 'high' | 'low' | 'no-response' | 'ended'
+export type AlarmRowType = 'high' | 'low' | 'no-response' | 'sector' | 'ended'
 
 export function AlarmTypeFilter({
   typeFilters,
@@ -37,6 +37,9 @@ export function AlarmTypeFilter({
         </DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem checked={typeFilters.includes('no-response')} onSelect={(e) => e.preventDefault()} onCheckedChange={(checked) => onToggleType('no-response', checked === true)}>
           {t('filters.no_response')}
+        </DropdownMenuCheckboxItem>
+        <DropdownMenuCheckboxItem checked={typeFilters.includes('sector')} onSelect={(e) => e.preventDefault()} onCheckedChange={(checked) => onToggleType('sector', checked === true)}>
+          {t('filters.sector')}
         </DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem checked={typeFilters.includes('ended')} onSelect={(e) => e.preventDefault()} onCheckedChange={(checked) => onToggleType('ended', checked === true)}>
           {t('filters.ended')}

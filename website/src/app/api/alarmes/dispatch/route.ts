@@ -186,9 +186,15 @@ async function getActiveAgentTargets() {
 
 const dispatchSchema = z.object({
   alarmId: z.number().int().positive().optional(),
+  idLieu: z.number().int().positive().optional(),
   title: z.string().min(1).optional(),
   body: z.string().min(1).optional(),
   url: z.string().min(1).optional(),
+  alarmTypeCode: z.string().min(1).optional(),
+  lastValue: z.string().min(1).optional(),
+  triggeredAt: z.string().min(1).optional(),
+  skipEmail: z.boolean().optional(),
+  skipAgent: z.boolean().optional(),
   eventType: z.enum(["triggered", "ended"]).optional(),
 })
 
@@ -255,6 +261,25 @@ export const POST = withLogging(async (req: NextRequest) => {
   let uniteLabel: string | undefined
   let lastValueLabel: string | undefined
   let lastMeasureAtLabel: string | undefined
+  const skipEmail = validated.data.skipEmail === true
+  const skipAgent = validated.data.skipAgent === true
+
+  if (validated.data.idLieu) {
+    lieuId = validated.data.idLieu
+  }
+  if (validated.data.alarmTypeCode) {
+    alarmTypeCode = validated.data.alarmTypeCode.trim()
+  }
+  if (validated.data.lastValue) {
+    lastValueLabel = validated.data.lastValue
+  }
+  if (validated.data.triggeredAt) {
+    triggeredAtLabel = validated.data.triggeredAt
+    const parsedTriggeredAt = new Date(validated.data.triggeredAt)
+    if (!Number.isNaN(parsedTriggeredAt.getTime())) {
+      triggeredAtDate = parsedTriggeredAt
+    }
+  }
 
   if (alarmId && (!title || !messageBody || !url)) {
     const alarm = await prisma.t_alarme.findUnique({
@@ -298,9 +323,19 @@ export const POST = withLogging(async (req: NextRequest) => {
       locationLabel = [siteName, lieuName].filter(Boolean).join(" / ")
       title ??= "Alarme Vigitemp"
       const alarmType =
-        alarm.Type === "H" ? "Alarme haute" : alarm.Type === "B" ? "Alarme basse" : alarm.Type === "N" ? "Non réponse" : "Alarme"
+        alarm.Type === "H"
+          ? "Alarme haute"
+          : alarm.Type === "B"
+            ? "Alarme basse"
+            : alarm.Type === "N"
+              ? "Non réponse"
+              : alarm.Type === "S"
+                ? "Coupure secteur"
+                : "Alarme"
       alarmTypeCode = alarm.Type ?? undefined
-      const valueLabel = `${alarm.Valeur ?? "N/A"}${alarm.Unite ?? "°C"}`
+      const valueLabel = alarm.Type === "H" || alarm.Type === "B"
+        ? `${alarm.Valeur ?? "N/A"}${alarm.Unite ?? "°C"}`
+        : "N/A"
       alarmTypeLabel = alarmType
       lastValueLabel = valueLabel
       triggeredAtDate = alarm.Date_Heure_Debut_Alarme_Vrai ?? alarm.Date_Heure_Debut ?? null
@@ -349,9 +384,33 @@ export const POST = withLogging(async (req: NextRequest) => {
     }
   }
 
+  if ((!locationLabel || locationLabel === "Lieu inconnu") && lieuId) {
+    const lieu = await prisma.t_lieu.findUnique({
+      where: { Id_Lieu: lieuId },
+      select: {
+        Nom_Lieu: true,
+        Sonde_Numero_Serie: true,
+        t_site: { select: { Libelle_Site: true } },
+      },
+    })
+
+    if (lieu) {
+      const siteName = lieu.t_site?.Libelle_Site ?? ""
+      const lieuName = lieu.Nom_Lieu ?? "Lieu inconnu"
+      locationLabel = [siteName, lieuName].filter(Boolean).join(" / ")
+      lieuLabel = lieuName
+      siteLabel = siteName || undefined
+      sondeLabel = lieu.Sonde_Numero_Serie ?? undefined
+    }
+  }
+
   title ??= "Alarme VigiSensys"
   messageBody ??= "Une alarme a été déclenchée."
   url ??= defaultUrl
+
+  if (!alarmTypeLabel && alarmTypeCode === "GSP_BATTERY") {
+    alarmTypeLabel = "Batterie faible GSP"
+  }
 
   const alarmUrl = url.startsWith("http")
     ? url
@@ -386,7 +445,7 @@ export const POST = withLogging(async (req: NextRequest) => {
   })
 
   let agentResult = { attempted: 0, failed: 0 }
-  if (eventType !== "ended") {
+  if (!skipAgent && eventType !== "ended") {
     const targets = await getActiveAgentTargets()
     const deliveries = await Promise.all(
       targets.map(async (target) => {
@@ -436,28 +495,31 @@ export const POST = withLogging(async (req: NextRequest) => {
     eventType,
     lieuId,
     alarmTypeCode,
+    skipAgent,
     agentTargets: agentResult.attempted,
     agentFailed: agentResult.failed,
   })
 
-  const emailResult = await sendAlarmEventEmails({
-    eventType,
-    alarmId,
-    site: siteLabel,
-    lieu: lieuLabel,
-    sonde: sondeLabel,
-    alarmTypeCode: alarmTypeCode ?? alarmTypeLabel,
-    triggeredAt: triggeredAtDate,
-    endedAt: endedAtDate,
-    lastValue: lastValueLabel,
-    details: safeMessage,
-    alarmUrl,
-    idLieu: lieuId,
-    unite: uniteLabel,
-    consigneSup: consigneSupValue,
-    consigneInf: consigneInfValue,
-    consigne: consigneValue,
-  })
+  const emailResult = skipEmail
+    ? { attempted: 0, sent: 0, skipped: "disabled_by_payload", usedSystemFallback: false }
+    : await sendAlarmEventEmails({
+        eventType,
+        alarmId,
+        site: siteLabel,
+        lieu: lieuLabel,
+        sonde: sondeLabel,
+        alarmTypeCode: alarmTypeCode ?? alarmTypeLabel,
+        triggeredAt: triggeredAtDate,
+        endedAt: endedAtDate,
+        lastValue: lastValueLabel,
+        details: safeMessage,
+        alarmUrl,
+        idLieu: lieuId,
+        unite: uniteLabel,
+        consigneSup: consigneSupValue,
+        consigneInf: consigneInfValue,
+        consigne: consigneValue,
+      })
 
   log.info("ALARM_EMAIL", "Alarm email dispatch result", {
     ip,
@@ -466,6 +528,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     attempted: emailResult.attempted,
     sent: emailResult.sent,
     skipped: emailResult.skipped,
+    skipEmail,
     usedSystemFallback: emailResult.usedSystemFallback ?? false,
   })
 

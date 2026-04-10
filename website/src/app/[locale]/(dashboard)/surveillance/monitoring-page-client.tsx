@@ -48,10 +48,11 @@ interface Props {
   groups: Group[];
   refreshIntervalSeconds: number;
   showNullNonResponse: boolean;
+  requireActionComment: boolean;
 }
 
 
-export function SurveillancePageClient({ initialStats, sites, groups, refreshIntervalSeconds, showNullNonResponse: initialShowNullNonResponse }: Props) {
+export function SurveillancePageClient({ initialStats, sites, groups, refreshIntervalSeconds, showNullNonResponse: initialShowNullNonResponse, requireActionComment }: Props) {
   const t = useTranslations("surveillance");
   const [viewMode, setViewMode] = useState<ViewMode>("graphs");
   const [filters, setFilters] = useState<FilterState>({ siteIds: [], groupIds: [], searchTerm: "", sortMode: "status" });
@@ -80,6 +81,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     form: locationForm,
     queryClient,
     t,
+    requireActionComment,
   });
 
   const watchedSensor = locationForm.watch("Sonde_Numero_Serie");
@@ -271,7 +273,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
 
   const handleSurveillanceToggle = useCallback(
     async (idLieu: number, action: "surveillance" | "alarms", newState: boolean, durationMinutes?: number | null) => {
-      const promptKey =
+      const promptKeyBase =
         action === "surveillance"
           ? newState
             ? "action_comment.surveillance_enable_prompt"
@@ -280,9 +282,14 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
             ? "action_comment.alarms_enable_prompt"
             : "action_comment.alarms_disable_prompt"
 
+      const promptKey = `${promptKeyBase}_${requireActionComment ? "required" : "optional"}`
       const rawComment = typeof window === "undefined" ? "" : window.prompt(t(promptKey), "")
       if (rawComment === null) return
       const actionComment = rawComment.trim()
+      if (requireActionComment && actionComment.length === 0) {
+        toast.error(t("action_comment.required_error"))
+        return
+      }
 
       if (action === "surveillance") {
         const nextEtat = newState ? "S" : "D"
@@ -334,7 +341,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
         console.error("Error toggling alarms:", error)
       }
     },
-    [t, updateAlarmCache, updateSensorsCache],
+    [requireActionComment, t, updateAlarmCache, updateSensorsCache],
   );
 
 

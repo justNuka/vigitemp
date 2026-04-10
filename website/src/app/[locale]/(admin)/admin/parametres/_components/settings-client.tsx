@@ -34,6 +34,8 @@ const NOTIFICATION_SETTING_KEYS = new Set([
   "notifications:alarm_email_acknowledged",
   "notifications:alarm_email_ended",
   "notifications:alarm_email_fallback_to_system",
+  "notifications:gsp_battery_notify_percent",
+  "notifications:gsp_battery_email_percent",
 ]);
 
 const MESSAGING_SETTING_KEY = "messaging:enabled";
@@ -49,12 +51,15 @@ function getTranslatedLabel(t: ReturnType<typeof useTranslations>, setting: Sett
     "notifications:alarm_email_acknowledged": t("notifications.acknowledged_toggle"),
     "notifications:alarm_email_ended": t("notifications.ended_toggle"),
     "notifications:alarm_email_fallback_to_system": t("notifications.fallback_toggle"),
+    "notifications:gsp_battery_notify_percent": t("notifications.gsp_battery_notify_percent_label"),
+    "notifications:gsp_battery_email_percent": t("notifications.gsp_battery_email_percent_label"),
     "alarms:sound": t("general.labels.alarms_sound"),
     "dashboard:refresh": t("general.labels.dashboard_refresh"),
     "dashboard:surveillance_refresh": t("general.labels.surveillance_refresh"),
     "dashboard:show_null_non_response": t("general.labels.show_null_non_response"),
     "dashboard:etalonnage_warning_days": t("general.labels.etalonnage_warning_days"),
     "dashboard:audit_graph_openings": t("general.labels.audit_graph_openings"),
+    "dashboard:require_action_comment": t("general.labels.require_action_comment"),
     "messaging:enabled": t("messaging.toggle_label"),
   };
 

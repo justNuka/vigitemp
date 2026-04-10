@@ -73,6 +73,8 @@ namespace Vigitemp_Serveur
             new ConcurrentDictionary<int, int>();
         private static readonly ConcurrentDictionary<int, int> _retriggerNoResponseWaitCountByLieu =
             new ConcurrentDictionary<int, int>();
+        private static readonly ConcurrentDictionary<int, bool> _sensorPowerAlarmStateByLieu =
+            new ConcurrentDictionary<int, bool>();
 
         // Constructeur
         public Sensor(ThreadServeur p_ths, string p_comPort, string p_sondeSerialNumber, string p_sondeAdresse)
@@ -218,6 +220,61 @@ namespace Vigitemp_Serveur
         protected double RoundMeasure(double value)
         {
             return Math.Round(value, 2, MidpointRounding.AwayFromZero);
+        }
+
+        /// <summary>
+        /// Handles power alarm transitions raised by probe frames (IE/IP battery markers).
+        /// Only clears alarms previously raised by this sensor path to avoid interfering
+        /// with other technical alarm sources.
+        /// </summary>
+        protected void HandleSensorPowerAlarm(bool isActive, string reason = null)
+        {
+            try
+            {
+                if (m_idLieu <= 0)
+                {
+                    return;
+                }
+
+                if (isActive)
+                {
+                    if (_sensorPowerAlarmStateByLieu.TryGetValue(m_idLieu, out var wasActive) && wasActive)
+                    {
+                        return;
+                    }
+
+                    if (ths.GetDatabase().setPowerAlarm(m_idLieu, m_sondeSerialNumber, true))
+                    {
+                        _sensorPowerAlarmStateByLieu[m_idLieu] = true;
+                        VigitempServeur.Log($"Alarme coupure secteur activee (trame sonde) lieu={m_idLieu} sonde={m_sondeSerialNumber} reason={reason ?? "frame-battery"}");
+                    }
+                    else
+                    {
+                        VigitempServeur.Log($"HandleSensorPowerAlarm: echec activation lieu={m_idLieu} sonde={m_sondeSerialNumber}");
+                    }
+
+                    return;
+                }
+
+                if (!_sensorPowerAlarmStateByLieu.TryGetValue(m_idLieu, out var wasSensorRaised) || !wasSensorRaised)
+                {
+                    return;
+                }
+
+                if (ths.GetDatabase().setPowerAlarm(m_idLieu, m_sondeSerialNumber, false))
+                {
+                    _sensorPowerAlarmStateByLieu[m_idLieu] = false;
+                    VigitempServeur.Log($"Alarme coupure secteur terminee (trame sonde) lieu={m_idLieu} sonde={m_sondeSerialNumber} reason={reason ?? "frame-normal"}");
+                }
+                else
+                {
+                    VigitempServeur.Log($"HandleSensorPowerAlarm: echec cloture lieu={m_idLieu} sonde={m_sondeSerialNumber}");
+                }
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("HandleSensorPowerAlarm error: " + ex);
+            }
         }
 
         private void HideAlarmOnClientAsync(string ipClient)
@@ -630,6 +687,7 @@ namespace Vigitemp_Serveur
             _retriggerLowWaitCountByLieu.TryRemove(idLieu, out _);
             _retriggerHighWaitCountByLieu.TryRemove(idLieu, out _);
             _retriggerNoResponseWaitCountByLieu.TryRemove(idLieu, out _);
+            _sensorPowerAlarmStateByLieu.TryRemove(idLieu, out _);
         }
 
         /// <summary>
