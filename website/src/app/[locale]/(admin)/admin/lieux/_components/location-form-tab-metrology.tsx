@@ -1,14 +1,18 @@
 'use client'
 
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { TabsContent } from '@/components/ui/tabs'
 import { useFormContext } from 'react-hook-form'
 import { computeEmt } from '@/lib/emt'
 import { useAdjustments } from '@/hooks/useAdjustments'
 import { useCalibrations } from '@/hooks/useCalibrations'
+import { formatDbDateTime } from '@/lib/date-display'
 import { useTranslations } from 'next-intl'
 
 import { EmtModeSection } from './metrology-tab/emt-mode-section'
@@ -29,6 +33,7 @@ export function LocationFormTabMetrology() {
   const selectedSerial = formData.Sonde_Numero_Serie ?? null
   const { data: adjustments = [] } = useAdjustments(selectedSerial)
   const { data: calibrations = [] } = useCalibrations(selectedSerial)
+  const [selectedCalibrationId, setSelectedCalibrationId] = useState<string>('')
   const latestAdjustment = adjustments[0] ?? null
   const latestCalibration = calibrations[0] ?? null
   const isDeriveForced = formData.EMT_Mode === 'quart' || formData.EMT_Mode === 'manuel'
@@ -39,6 +44,9 @@ export function LocationFormTabMetrology() {
       setValue('Unite', defaultMetrologyUnit)
       setValue('Erreur_Justesse', undefined)
       setValue('Incertitude', undefined)
+      setValue('Derniere_Date_Etalonnage', undefined)
+      setValue('Applied_Etalonnage_Id', undefined)
+      setSelectedCalibrationId('')
       return
     }
 
@@ -54,6 +62,36 @@ export function LocationFormTabMetrology() {
     selectedSerial,
     setValue,
   ])
+
+  useEffect(() => {
+    if (!selectedSerial || calibrations.length === 0) {
+      setSelectedCalibrationId('')
+      return
+    }
+
+    const currentExists = calibrations.some((cal) => String(cal.Id_Etalonnage) === selectedCalibrationId)
+    if (!currentExists) {
+      setSelectedCalibrationId(String(calibrations[0].Id_Etalonnage))
+    }
+  }, [calibrations, selectedCalibrationId, selectedSerial])
+
+  const selectedCalibration = useMemo(
+    () => calibrations.find((calibration) => String(calibration.Id_Etalonnage) === selectedCalibrationId) ?? null,
+    [calibrations, selectedCalibrationId],
+  )
+
+  const applySelectedCalibration = () => {
+    if (!selectedCalibration) return
+
+    const unit = normalizeMetrologyUnit(selectedCalibration.Unite) || defaultMetrologyUnit
+    setUserValue('Unite', unit)
+    setUserValue('Erreur_Justesse', selectedCalibration.Err_Justesse ?? undefined)
+    setUserValue('Incertitude', selectedCalibration.Incertitude ?? undefined)
+    setUserValue('Derniere_Date_Etalonnage', selectedCalibration.Date_Heure_Etalonnage ?? null)
+    setUserValue('Applied_Etalonnage_Id', selectedCalibration.Id_Etalonnage)
+
+    toast.success(t('calibration.manual_apply_success'))
+  }
 
   useEffect(() => {
     if (!isDeriveForced || formData.Prendre_En_Compte_Derive === true) return
@@ -149,6 +187,42 @@ export function LocationFormTabMetrology() {
   return (
     <TabsContent value="metrologie" className="space-y-6">
       <MetrologySensorInfoSection formData={formData} latestAdjustment={latestAdjustment} latestCalibration={latestCalibration} />
+
+      <div className="border p-4 rounded-lg space-y-4">
+        <h3 className="font-semibold">{t('calibration.manual_apply_title')}</h3>
+        {!selectedSerial ? (
+          <p className="text-sm text-muted-foreground">{t('calibration.manual_apply_no_sensor')}</p>
+        ) : calibrations.length === 0 ? (
+          <p className="text-sm text-muted-foreground">{t('calibration.manual_apply_empty')}</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto] md:items-end">
+            <div className="space-y-2">
+              <Label>{t('calibration.manual_apply_select_label')}</Label>
+              <Select
+                value={selectedCalibrationId}
+                onValueChange={(value) => {
+                  setSelectedCalibrationId(value)
+                  setValue('Applied_Etalonnage_Id', undefined)
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('calibration.manual_apply_select_placeholder')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {calibrations.map((calibration) => (
+                    <SelectItem key={calibration.Id_Etalonnage} value={String(calibration.Id_Etalonnage)}>
+                      {`${formatDbDateTime(calibration.Date_Heure_Etalonnage ?? null)} - ${calibration.Operateur ?? t('calibration.operator_unknown')}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="button" onClick={applySelectedCalibration} disabled={!selectedCalibration}>
+              {t('calibration.manual_apply_button')}
+            </Button>
+          </div>
+        )}
+      </div>
 
       <div className="border p-4 rounded-lg space-y-4 mt-6">
         <h3 className="font-semibold">{t('sections.setpoints')}</h3>

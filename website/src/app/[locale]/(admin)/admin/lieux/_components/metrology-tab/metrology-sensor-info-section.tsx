@@ -46,6 +46,17 @@ export function MetrologySensorInfoSection({
           <Input disabled value={normalizeMetrologyUnit(formData.Unite) || defaultMetrologyUnit} className="bg-muted" />
         </div>
       </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label>{t('labels.applied_calibration_date')}</Label>
+          <Input
+            disabled
+            value={formatDbDateTime(formData.Derniere_Date_Etalonnage ?? latestCalibration?.Date_Heure_Etalonnage ?? null)}
+            placeholder={t('placeholders.auto')}
+            className="bg-muted"
+          />
+        </div>
+      </div>
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label>{t('labels.accuracy_error')}</Label>

@@ -23,10 +23,27 @@ const STANDARD_METROLOGY_FIELDS = [
   "EMT_Valeur",
   "Corriger_Erreur_Justesse",
   "Prendre_En_Compte_Derive",
+  "Derniere_Date_Etalonnage",
+  "Applied_Etalonnage_Id",
+  "Unite",
   "Erreur_Justesse",
   "Incertitude",
   "Derive",
 ] as const
+
+function parseAppliedCalibrationDate(value: unknown) {
+  if (value === undefined) return undefined
+  if (value === null || value === "") return null
+  if (typeof value !== "string") throw new Error("invalid_calibration_date")
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error("invalid_calibration_date")
+  }
+
+  parsed.setHours(0, 0, 0, 0)
+  return parsed
+}
 
 
 function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) {
@@ -161,6 +178,9 @@ const createLieuSchema = z.object({
   EMT_Valeur: z.number().nullable().optional(),
   Corriger_Erreur_Justesse: z.boolean().optional(),
   Prendre_En_Compte_Derive: z.boolean().optional(),
+  Unite: z.string().nullable().optional(),
+  Derniere_Date_Etalonnage: z.string().nullable().optional(),
+  Applied_Etalonnage_Id: z.number().int().positive().nullable().optional(),
   Erreur_Justesse: z.number().nullable().optional(),
   Incertitude: z.number().nullable().optional(),
   Derive: z.number().nullable().optional(),
@@ -292,6 +312,8 @@ export const POST = withLogging(async (req: NextRequest) => {
     if (metrologyGuard) return metrologyGuard
 
     const validated = createLieuSchema.parse(body)
+    const appliedCalibrationDate = parseAppliedCalibrationDate(validated.Derniere_Date_Etalonnage)
+    const appliedCalibrationId = validated.Applied_Etalonnage_Id ?? null
     const frequencySeconds =
       validated.Frequence === undefined
         ? undefined
@@ -393,6 +415,21 @@ export const POST = withLogging(async (req: NextRequest) => {
         EMT_Sonde: emt.emtSonde,
         Est_Correction_Ej: validated.Corriger_Erreur_Justesse ? 1 : 0,
         Est_Correction_derive: includeDeriveInUncertainty,
+        ...(Object.prototype.hasOwnProperty.call(validated, "Erreur_Justesse")
+          ? { Derniere_Erreur_Justesse: validated.Erreur_Justesse ?? null }
+          : {}),
+        ...(Object.prototype.hasOwnProperty.call(validated, "Incertitude")
+          ? { Derniere_Incertitude: validated.Incertitude ?? null }
+          : {}),
+        ...(Object.prototype.hasOwnProperty.call(validated, "Derive")
+          ? { Derive: validated.Derive ?? null }
+          : {}),
+        ...(Object.prototype.hasOwnProperty.call(validated, "Unite")
+          ? { Derniere_Unite: validated.Unite ?? null }
+          : {}),
+        ...(appliedCalibrationDate !== undefined
+          ? { Derniere_Date_Etalonnage: appliedCalibrationDate }
+          : {}),
         Est_Archive: false,
         Date_Heure_Surveillance_On: surveillanceOnAt,
         Date_Heure_Surveillance_Off: surveillanceOffAt,
@@ -472,7 +509,9 @@ export const POST = withLogging(async (req: NextRequest) => {
       })
     }
 
-    log.data.create("Lieu", lieu.Id_Lieu, user.username, user.userId, getClientIp(req), {
+    const ip = getClientIp(req)
+
+    log.data.create("Lieu", lieu.Id_Lieu, user.username, user.userId, ip, {
       nom: validated.Nom_Lieu,
       sondeNumeroSerie,
       idSite: validated.Id_Site ?? null,
@@ -480,6 +519,25 @@ export const POST = withLogging(async (req: NextRequest) => {
       idModule: validated.Id_Module ?? null,
       mailingContactsCount: mailingContacts.length,
     })
+
+    if (appliedCalibrationId !== null) {
+      log.audit("ETAP", {
+        user: user.username,
+        userId: user.userId,
+        ip,
+        resource: `Lieu: ${validated.Nom_Lieu}`,
+        resourceId: lieu.Id_Lieu,
+        reason: "Application manuelle d'étalonnage",
+        details: {
+          appliedCalibrationId,
+          appliedCalibrationDate,
+          unit: validated.Unite ?? null,
+          accuracyError: validated.Erreur_Justesse ?? null,
+          uncertainty: validated.Incertitude ?? null,
+          drift: validated.Derive ?? null,
+        },
+      })
+    }
 
     const serialized = JSON.parse(
       JSON.stringify(lieu, (_, value) => (typeof value === "bigint" ? value.toString() : value)),
@@ -503,6 +561,9 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     return apiOk(normalized, { status: 201 })
   } catch (error) {
+    if (error instanceof Error && error.message === "invalid_calibration_date") {
+      return apiError(400, "invalid_calibration_date", "Date d'étalonnage invalide")
+    }
     if (error instanceof z.ZodError) {
       return apiError(400, "validation_error", "Validation impossible", { issues: error.issues })
     }

@@ -24,10 +24,27 @@ const STANDARD_METROLOGY_FIELDS = [
   "EMT_Valeur",
   "Corriger_Erreur_Justesse",
   "Prendre_En_Compte_Derive",
+  "Derniere_Date_Etalonnage",
+  "Applied_Etalonnage_Id",
+  "Unite",
   "Erreur_Justesse",
   "Incertitude",
   "Derive",
 ] as const
+
+function parseAppliedCalibrationDate(value: unknown) {
+  if (value === undefined) return undefined
+  if (value === null || value === "") return null
+  if (typeof value !== "string") throw new Error("invalid_calibration_date")
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error("invalid_calibration_date")
+  }
+
+  parsed.setHours(0, 0, 0, 0)
+  return parsed
+}
 
 type ChangedFieldEntry = {
   field: string
@@ -48,6 +65,10 @@ const AUDIT_FIELD_LABELS: Record<string, string> = {
   Retard_Alarme_Haut: "Retard alarme haut",
   Retard_Alarme_Bas: "Retard alarme bas",
   Nb_Mesures_Temporisation_Redeclenchement: "Temporisation de redéclenchement",
+  Derniere_Date_Etalonnage: "Date d'étalonnage appliquée",
+  Erreur_Justesse: "Erreur de justesse",
+  Incertitude: "Incertitude",
+  Derive: "Dérive",
 }
 
 function formatAuditValue(value: unknown): string {
@@ -187,6 +208,9 @@ const updateLieuSchema = z.object({
   EMT_Valeur: z.number().nullable().optional(),
   Corriger_Erreur_Justesse: z.boolean().optional(),
   Prendre_En_Compte_Derive: z.boolean().optional(),
+  Unite: z.string().nullable().optional(),
+  Derniere_Date_Etalonnage: z.string().nullable().optional(),
+  Applied_Etalonnage_Id: z.number().int().positive().nullable().optional(),
   Erreur_Justesse: z.number().nullable().optional(),
   Incertitude: z.number().nullable().optional(),
   Derive: z.number().nullable().optional(),
@@ -251,6 +275,8 @@ export const PATCH = withLogging(
       if (metrologyGuard) return metrologyGuard
 
       const validated = updateLieuSchema.parse(body)
+      const appliedCalibrationDate = parseAppliedCalibrationDate(validated.Derniere_Date_Etalonnage)
+      const appliedCalibrationId = validated.Applied_Etalonnage_Id ?? null
 
       const shouldUpdateGroups =
         Object.prototype.hasOwnProperty.call(body, "GroupIds")
@@ -279,6 +305,7 @@ export const PATCH = withLogging(
         Erreur_Justesse,
         Incertitude,
         Derive,
+        Applied_Etalonnage_Id,
         Commentaire_Action,
         ...lieuPatchRest
       } = validated
@@ -303,6 +330,26 @@ export const PATCH = withLogging(
       if (Object.prototype.hasOwnProperty.call(validated, "Nb_Mesures_Temporisation_Redeclenchement")) {
         const value = validated.Nb_Mesures_Temporisation_Redeclenchement
         lieuPatch.Nb_Mesures_Temporisation_Redeclenchement = value == null ? 0 : Math.max(0, Math.trunc(value))
+      }
+
+      if (Object.prototype.hasOwnProperty.call(validated, "Erreur_Justesse")) {
+        lieuPatch.Derniere_Erreur_Justesse = validated.Erreur_Justesse ?? null
+      }
+
+      if (Object.prototype.hasOwnProperty.call(validated, "Incertitude")) {
+        lieuPatch.Derniere_Incertitude = validated.Incertitude ?? null
+      }
+
+      if (Object.prototype.hasOwnProperty.call(validated, "Derive")) {
+        lieuPatch.Derive = validated.Derive ?? null
+      }
+
+      if (Object.prototype.hasOwnProperty.call(validated, "Unite")) {
+        lieuPatch.Derniere_Unite = validated.Unite ?? null
+      }
+
+      if (appliedCalibrationDate !== undefined) {
+        lieuPatch.Derniere_Date_Etalonnage = appliedCalibrationDate
       }
 
       const includeDeriveInUncertainty =
@@ -448,6 +495,10 @@ export const PATCH = withLogging(
           Retard_Alarme_Haut: current?.Retard_Alarme_Haut,
           Retard_Alarme_Bas: current?.Retard_Alarme_Bas,
           Nb_Mesures_Temporisation_Redeclenchement: current?.Nb_Mesures_Temporisation_Redeclenchement,
+          Erreur_Justesse: current?.Derniere_Erreur_Justesse,
+          Incertitude: current?.Derniere_Incertitude,
+          Derive: current?.Derive,
+          Derniere_Date_Etalonnage: current?.Derniere_Date_Etalonnage,
         }
 
         let nextEstLieuGso: boolean | undefined
@@ -705,6 +756,31 @@ export const PATCH = withLogging(
         }
       }
 
+      const hasCalibrationApplicationSignal =
+        Object.prototype.hasOwnProperty.call(body, "Applied_Etalonnage_Id") &&
+        Applied_Etalonnage_Id !== null &&
+        Applied_Etalonnage_Id !== undefined
+
+      if (user && hasCalibrationApplicationSignal) {
+        log.audit("ETAP", {
+          user: user.username,
+          userId: user.userId,
+          ip,
+          userProfile: user.profile,
+          resource: `Lieu: ${lieuName ?? lieuId}`,
+          resourceId: lieuId,
+          reason: actionComment || "Application manuelle d'étalonnage",
+          details: {
+            appliedCalibrationId,
+            appliedCalibrationDate,
+            unit: validated.Unite ?? null,
+            accuracyError: validated.Erreur_Justesse ?? null,
+            uncertainty: validated.Incertitude ?? null,
+            drift: validated.Derive ?? null,
+          },
+        })
+      }
+
       // Log field changes using existing audit codes where they have a specific meaning.
       if (user) {
         const changedFieldsEntries: ChangedFieldEntry[] = []
@@ -737,6 +813,10 @@ export const PATCH = withLogging(
           "Consigne_Sup",
           "Consigne_Inf",
           "Nb_Mesures_Temporisation_Redeclenchement",
+          "Erreur_Justesse",
+          "Incertitude",
+          "Derive",
+          "Derniere_Date_Etalonnage",
         ] as const
 
         for (const field of TRACKED_FIELDS) {
@@ -891,6 +971,9 @@ export const PATCH = withLogging(
     } catch (error) {
       if (error instanceof Error && error.message === "invalid_module") {
         return apiError(400, "invalid_module", "Module introuvable")
+      }
+      if (error instanceof Error && error.message === "invalid_calibration_date") {
+        return apiError(400, "invalid_calibration_date", "Date d'étalonnage invalide")
       }
       if (error instanceof z.ZodError) {
         return apiError(400, "validation_error", "Validation impossible", { issues: error.issues })

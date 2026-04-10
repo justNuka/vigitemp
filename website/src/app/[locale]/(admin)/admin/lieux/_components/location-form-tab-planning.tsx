@@ -52,7 +52,11 @@ const DAY_KEYS = {
 function formatRuleDayRange(t: (key: string) => string, startDay: number, endDay: number) {
   const startLabel = startDay in DAY_KEYS ? t(DAY_KEYS[startDay as keyof typeof DAY_KEYS]) : String(startDay)
   const endLabel = endDay in DAY_KEYS ? t(DAY_KEYS[endDay as keyof typeof DAY_KEYS]) : String(endDay)
-  return startDay === endDay ? startLabel : `${startLabel} ? ${endLabel}`
+  return startDay === endDay ? startLabel : `${startLabel} - ${endLabel}`
+}
+
+function formatOptionalValue(value: number | null | undefined) {
+  return value === null || value === undefined ? "-" : String(value)
 }
 
 interface LocationFormTabPlanningProps {
@@ -111,6 +115,10 @@ export function LocationFormTabPlanning({
     refetchInterval: 60_000,
   })
 
+  const activeRulesCount = regles.filter((regle) => regle.Actif).length
+  const inactiveRulesCount = regles.length - activeRulesCount
+  const currentRuleId = preview?.regleActive?.Id_Regle ?? null
+
   const confirmDelete = async () => {
     if (!deleteConfirmRegle || !idLieu) return
     setDeletingId(deleteConfirmRegle.Id_Regle)
@@ -160,20 +168,49 @@ export function LocationFormTabPlanning({
         </Button>
       </div>
 
-      {/* Current status badge */}
-      {preview !== undefined && (
-        <div className="flex items-center gap-2">
-          {preview?.regleActive ? (
-            <Badge variant="default" className="bg-green-600">
-              {t("activeStatus")}
-            </Badge>
-          ) : (
-            <Badge variant="secondary">
-              {t("baseStatus")}
-            </Badge>
-          )}
+      {/* Current status + overview */}
+      {preview !== undefined ? (
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {preview?.regleActive ? (
+              <Badge variant="default" className="bg-green-600">
+                {t("activeStatus")}
+              </Badge>
+            ) : (
+              <Badge variant="secondary">{t("baseStatus")}</Badge>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <div className="rounded-md border bg-card px-3 py-2">
+              <p className="text-xs text-muted-foreground">{t("overviewTotalRules")}</p>
+              <p className="text-lg font-semibold leading-none">{regles.length}</p>
+            </div>
+            <div className="rounded-md border bg-card px-3 py-2">
+              <p className="text-xs text-muted-foreground">{t("overviewActiveRules")}</p>
+              <p className="text-lg font-semibold leading-none text-green-700">{activeRulesCount}</p>
+            </div>
+            <div className="rounded-md border bg-card px-3 py-2">
+              <p className="text-xs text-muted-foreground">{t("overviewInactiveRules")}</p>
+              <p className="text-lg font-semibold leading-none text-amber-700">{inactiveRulesCount}</p>
+            </div>
+          </div>
+
+          {preview ? (
+            <div className="rounded-md border bg-muted/30 px-3 py-2">
+              <p className="text-sm font-medium">{t("expectedNowTitle")}</p>
+              <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted-foreground sm:grid-cols-3">
+                <span>{t("consigne")}: {formatOptionalValue(preview.consignesAttendues.consigne)}</span>
+                <span>{t("consigneSup")}: {formatOptionalValue(preview.consignesAttendues.consigneSup)}</span>
+                <span>{t("consigneInf")}: {formatOptionalValue(preview.consignesAttendues.consigneInf)}</span>
+                <span>{t("toleranceSup")}: {formatOptionalValue(preview.consignesAttendues.toleranceSup)}</span>
+                <span>{t("toleranceInf")}: {formatOptionalValue(preview.consignesAttendues.toleranceInf)}</span>
+                <span>{t("retardChangementConsigne")}: {formatOptionalValue(preview.consignesAttendues.retardChangementConsigne)} min</span>
+              </div>
+            </div>
+          ) : null}
         </div>
-      )}
+      ) : null}
 
       {/* Weekly grid view */}
       {isLoading ? (
@@ -185,6 +222,7 @@ export function LocationFormTabPlanning({
       ) : (
         <WeeklyPlanningView
           regles={regles}
+          activeRuleId={currentRuleId}
           onSelectRegle={(regle) => {
             setEditRegle(regle)
             setInitialValues(null)
@@ -217,42 +255,49 @@ export function LocationFormTabPlanning({
           {regles.map((regle) => (
             <div
               key={regle.Id_Regle}
-              className="flex items-start justify-between rounded border bg-card px-3 py-2 gap-2"
+              className={`flex items-start justify-between gap-2 rounded border bg-card px-3 py-2 ${
+                currentRuleId === regle.Id_Regle ? "border-green-500/60 bg-green-50/40" : ""
+              }`}
             >
               <div className="flex flex-col gap-0.5 min-w-0">
-                {/* Day range */}
-                <span className="text-sm font-medium">
-                  {regle.Jour_Debut in DAY_KEYS
-                    ? t(DAY_KEYS[regle.Jour_Debut as keyof typeof DAY_KEYS])
-                    : regle.Jour_Debut}
-                  {" — "}
-                  {regle.Jour_Fin in DAY_KEYS
-                    ? t(DAY_KEYS[regle.Jour_Fin as keyof typeof DAY_KEYS])
-                    : regle.Jour_Fin}
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium">
+                    {formatRuleDayRange(t, regle.Jour_Debut, regle.Jour_Fin)}
+                  </span>
+                  <Badge variant="outline" className="text-[10px]">
+                    {regle.Actif ? t("activeRuleLabel") : t("inactiveRuleLabel")}
+                  </Badge>
+                  {currentRuleId === regle.Id_Regle ? (
+                    <Badge variant="default" className="bg-green-600 text-[10px]">
+                      {t("currentRuleLabel")}
+                    </Badge>
+                  ) : null}
+                </div>
+
                 {/* Time range */}
                 <span className="text-xs text-muted-foreground">
-                  {regle.Heure_Debut} – {regle.Heure_Fin}
+                  {regle.Heure_Debut} - {regle.Heure_Fin}
                 </span>
+
                 {/* Consigne values */}
                 <div className="flex flex-wrap gap-1 mt-0.5">
                   {regle.Consigne !== null && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="rounded border bg-muted/40 px-1.5 py-0.5 text-xs text-muted-foreground">
                       {t("consigne")}: {regle.Consigne}
                     </span>
                   )}
                   {regle.Consigne_Sup !== null && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="rounded border bg-muted/40 px-1.5 py-0.5 text-xs text-muted-foreground">
                       {t("consigneSup")}: {regle.Consigne_Sup}
                     </span>
                   )}
                   {regle.Consigne_Inf !== null && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="rounded border bg-muted/40 px-1.5 py-0.5 text-xs text-muted-foreground">
                       {t("consigneInf")}: {regle.Consigne_Inf}
                     </span>
                   )}
                   {regle.Retard_Alarme_Changement_Consigne !== null && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="rounded border bg-muted/40 px-1.5 py-0.5 text-xs text-muted-foreground">
                       {t("retardChangementConsigne")}: {regle.Retard_Alarme_Changement_Consigne} min
                     </span>
                   )}

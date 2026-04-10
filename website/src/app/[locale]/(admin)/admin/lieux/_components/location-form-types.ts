@@ -3,5 +3,8 @@
 import type { LocationRow } from '@/hooks/useLocations'
 
 export type LocationFormMode = 'create' | 'edit'
-export type LocationFormData = Partial<LocationRow> & { GroupIds: number[] }
+export type LocationFormData = Partial<LocationRow> & {
+	GroupIds: number[]
+	Applied_Etalonnage_Id?: number | null
+}
 

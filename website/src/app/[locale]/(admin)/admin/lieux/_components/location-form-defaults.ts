@@ -31,6 +31,8 @@ export function getDefaultLocationFormData(): LocationFormData {
     Tolerance_Surveillance_Inf: undefined,
 
     Unite: '\u00b0C',
+    Derniere_Date_Etalonnage: undefined,
+    Applied_Etalonnage_Id: undefined,
     Erreur_Justesse: undefined,
     Incertitude: undefined,
     Derive: undefined,

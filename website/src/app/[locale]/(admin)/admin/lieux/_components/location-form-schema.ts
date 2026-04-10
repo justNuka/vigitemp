@@ -121,6 +121,7 @@ export const locationFormSchema = z.object({
   Tolerance_Surveillance_Sup: z.number().optional().nullable(),
   Tolerance_Surveillance_Inf: z.number().optional().nullable(),
   Unite: z.string().optional().nullable(),
+  Derniere_Date_Etalonnage: z.string().optional().nullable(),
   Erreur_Justesse: z.number().optional().nullable(),
   Incertitude: z.number().optional().nullable(),
   Derive: z.number().optional().nullable(),
@@ -129,6 +130,7 @@ export const locationFormSchema = z.object({
   Corriger_Erreur_Justesse: z.boolean().optional(),
   Prendre_En_Compte_Derive: z.boolean().optional(),
   MailingContacts: z.array(mailingContactSchema).optional(),
+  Applied_Etalonnage_Id: z.coerce.number().int().positive().optional().nullable(),
 }).superRefine(addConsigneGuards);
 
 export type LocationFormValues = z.infer<typeof locationFormSchema>;

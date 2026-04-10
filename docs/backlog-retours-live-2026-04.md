@@ -366,9 +366,9 @@ R?gles de suivi:
 
 #### ?talonnage
 - [ ] `Lourd` G?rer le multi-?talonnage.
-- [ ] `Moyen` Choix manuel d'un ?talonnage ? appliquer.
+- [x] `Moyen` Choix manuel d'un ?talonnage ? appliquer.
 - [ ] `Moyen` Modes standard et expert.
-- [ ] `Moyen` Audit de l'application d'?talonnage.
+- [x] `Moyen` Audit de l'application d'?talonnage.
 - [x] `Rapide` Ajouter un nom d'?talonnage non obligatoire.
 
 #### Mailing / escalade
@@ -387,7 +387,7 @@ R?gles de suivi:
 - [x] `Rapide` Exclure les sondes d?j? affect?es.
 
 ### Planning de consignes
-- [ ] `Moyen` Revoir l'affichage global.
+- [x] `Moyen` Revoir l'affichage global.
 - [x] `Rapide` Ne pas afficher `Lundi - Lundi`.
 - [x] `Rapide` Corriger les cl?s i18n list?es plus haut.
 - [x] `Rapide` Pas de jours pr?s?lectionn?s.

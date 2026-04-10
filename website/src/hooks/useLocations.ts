@@ -42,6 +42,7 @@ export interface LocationRow {
   Date_Heure_Reactivation_Alarme?: string | null;
   Tolerance_Surveillance_Sup: number | null;
   Tolerance_Surveillance_Inf: number | null;
+  Derniere_Date_Etalonnage?: string | null;
   Unite: string | null;
   Erreur_Justesse: number | null;
   Incertitude: number | null;
