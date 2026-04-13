@@ -45,7 +45,7 @@ export function LoginCredentialsForm({
           type="text"
           {...register("username")}
           placeholder={translations.usernamePlaceholder}
-          className="bg-white dark:bg-white"
+          className="bg-background text-foreground placeholder:text-muted-foreground"
           autoFocus
           autoComplete="username"
           aria-invalid={!!usernameError}
@@ -65,7 +65,7 @@ export function LoginCredentialsForm({
           type="password"
           {...register("password")}
           placeholder={translations.passwordPlaceholder}
-          className="bg-white dark:bg-white"
+          className="bg-background text-foreground placeholder:text-muted-foreground"
           autoComplete="current-password"
           aria-invalid={!!passwordError}
           aria-describedby={passwordError ? "password-error" : undefined}
@@ -85,7 +85,7 @@ export function LoginCredentialsForm({
         <button
           type="button"
           onClick={onForgotPassword}
-          className="text-sm text-blue-600 hover:underline"
+          className="text-sm text-blue-600 hover:underline dark:text-blue-400"
           disabled={isSubmitting}
         >
           {translations.forgotPassword}

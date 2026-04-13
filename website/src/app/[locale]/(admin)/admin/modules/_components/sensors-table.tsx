@@ -17,9 +17,10 @@ type SensorsTableProps = {
   isLoading: boolean;
   selectedSensorId: number | null;
   onSelectSensor: (sensorId: number) => void;
+  onEditSensor?: (sensorId: number) => void;
 };
 
-export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSensor }: SensorsTableProps) {
+export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSensor, onEditSensor }: SensorsTableProps) {
   const t = useTranslations('moduleSensorsTable');
   const columns: ColumnDef<SensorRow>[] = [
     {
@@ -55,6 +56,7 @@ export function SensorsTable({ sensors, isLoading, selectedSensorId, onSelectSen
       isLoading={isLoading}
       selectedRowId={selectedSensorId ?? undefined}
       onRowClick={(row) => onSelectSensor(row.Id_Sonde)}
+      onRowDoubleClick={(row) => onEditSensor?.(row.Id_Sonde)}
     />
   );
 }

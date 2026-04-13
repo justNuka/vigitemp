@@ -684,6 +684,11 @@
         "sensor": "Sensor",
         "setpoints": "Setpoints"
       },
+      "mode": {
+        "label": "License mode",
+        "standard": "Standard",
+        "expert": "Expert"
+      },
       "labels": {
         "serial": "Serial number",
         "state": "Status",
@@ -729,7 +734,8 @@
           },
           "uncertainties": {
             "title": "Including usage uncertainties",
-            "description": "Usage uncertainties are calculated during sensor calibration and differ for each sensor"
+            "description": "Usage uncertainties are calculated during sensor calibration and differ for each sensor",
+            "expert_only": "Available with Expert license only"
           },
           "na": "Not applicable"
         }
@@ -1853,7 +1859,8 @@
         "password": {
           "label": "Password",
           "placeholder": "********",
-          "helper": "The password is encrypted and secured"
+          "helper": "The password is encrypted and secured",
+          "hidden_helper": "The stored password is never displayed. Leave this field empty to keep it, or enter a new one."
         },
         "sender": {
           "label": "Sender address",
@@ -3767,6 +3774,7 @@
       "disable": "Disable monitoring",
       "enable": "Enable monitoring",
       "toggle": "Manage monitoring / alarms",
+      "toggle_forbidden": "You are not allowed to change monitoring state",
       "location": "Location",
       "settings": "Edit location settings",
       "settings_forbidden": "You are not allowed to edit this location"

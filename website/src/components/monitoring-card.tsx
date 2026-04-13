@@ -205,6 +205,11 @@ export default function MonitoringCard({
   }, [])
 
   const confirmSurveillanceToggle = () => {
+    if (!hasPermission('LOCATION_DISABLE_ACCESS')) {
+      setShowConfirmModal(false)
+      return
+    }
+
     const isDisabling = actionType === 'surveillance' ? isSurveillanceActive : isAlarmActive
     const durationMinutes = isDisabling ? (disableDuration === 'manual' ? null : Number(disableDuration)) : null
 
@@ -258,6 +263,7 @@ export default function MonitoringCard({
     effectiveAlarmId !== null &&
     effectiveAlarmId !== undefined &&
     (effectiveStatus === 'critical' || effectiveStatus === 'technical' || effectiveStatus === 'ended')
+  const canToggleSurveillance = hasPermission('LOCATION_DISABLE_ACCESS')
   const canEditLocation = hasPermission('LOCATION_CONFIG_ACCESS')
 
   const frequencyMinutes = useMemo(() => {
@@ -535,11 +541,24 @@ export default function MonitoringCard({
 
                 <UITooltip>
                   <TooltipTrigger asChild>
-                    <button onClick={(event) => { event.stopPropagation(); setActionType('surveillance'); setShowConfirmModal(true) }} className={`p-1 rounded-md transition-colors ${actionButtonClassName} ${isSurveillanceActive ? 'text-red-600' : 'text-green-600 dark:text-green-400'}`}>
-                      {isSurveillanceActive ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
-                    </button>
+                    <span>
+                      <button
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          if (!canToggleSurveillance) return
+                          setActionType('surveillance')
+                          setShowConfirmModal(true)
+                        }}
+                        className={`p-1 rounded-md transition-colors ${actionButtonClassName} ${isSurveillanceActive ? 'text-red-600' : 'text-green-600 dark:text-green-400'} ${canToggleSurveillance ? '' : 'cursor-not-allowed opacity-40'}`}
+                        disabled={!canToggleSurveillance}
+                      >
+                        {isSurveillanceActive ? <PowerOff className="w-4 h-4" /> : <Power className="w-4 h-4" />}
+                      </button>
+                    </span>
                   </TooltipTrigger>
-                  <TooltipContent><p className="text-xs">{t('actions.toggle')}</p></TooltipContent>
+                  <TooltipContent>
+                    <p className="text-xs">{canToggleSurveillance ? t('actions.toggle') : t('actions.toggle_forbidden')}</p>
+                  </TooltipContent>
                 </UITooltip>
 
                 <UITooltip>

@@ -54,6 +54,7 @@ const connectSrcValues = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
+    distDir: ".next",
     outputFileTracingRoot: __dirname,
     output: "standalone",
     outputFileTracingExcludes: {

@@ -3,26 +3,55 @@
 import { format } from "date-fns"
 import { enUS, fr } from "date-fns/locale"
 import { Calendar as CalendarIcon } from "lucide-react"
-import type { Control } from "react-hook-form"
+import type { Control, FieldPath, FieldValues } from "react-hook-form"
 import { useLocale, useTranslations } from "next-intl"
 
 import { cn } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 
 import type { GroupOption, ProfileOption, SiteOption } from "./user-option-types"
 
-export function UserNameFields({
+type UserFormFieldValues = FieldValues & {
+  nom?: string
+  prenom?: string
+  email?: string
+  username?: string
+  telephone?: string
+  profileId?: string
+  siteIds?: number[]
+  groupeIds?: number[]
+  hasExpiryDate?: boolean
+  expiryDate?: Date
+}
+
+function toNumberArray(value: unknown): number[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.filter((item): item is number => typeof item === "number")
+}
+
+function toDate(value: unknown): Date | undefined {
+  return value instanceof Date ? value : undefined
+}
+
+function toBoolean(value: unknown): boolean {
+  return typeof value === "boolean" ? value : false
+}
+
+export function UserNameFields<TFormValues extends UserFormFieldValues>({
   control,
   order = "first-last",
 }: {
-  control: Control<any>
+  control: Control<TFormValues>
   order?: "first-last" | "last-first"
 }) {
   const t = useTranslations("userForm")
@@ -39,12 +68,12 @@ export function UserNameFields({
     <div className="grid grid-cols-2 gap-4">
       <FormField
         control={control}
-        name={left as any}
+        name={left as FieldPath<TFormValues>}
         render={({ field }) => (
           <FormItem>
             <FormLabel>{leftLabel}</FormLabel>
             <FormControl>
-              <Input placeholder={leftPlaceholder} {...field} />
+              <Input placeholder={leftPlaceholder} {...field} value={typeof field.value === "string" ? field.value : ""} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -52,12 +81,12 @@ export function UserNameFields({
       />
       <FormField
         control={control}
-        name={right as any}
+        name={right as FieldPath<TFormValues>}
         render={({ field }) => (
           <FormItem>
             <FormLabel>{rightLabel}</FormLabel>
             <FormControl>
-              <Input placeholder={rightPlaceholder} {...field} />
+              <Input placeholder={rightPlaceholder} {...field} value={typeof field.value === "string" ? field.value : ""} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -67,17 +96,22 @@ export function UserNameFields({
   )
 }
 
-export function UserEmailField({ control }: { control: Control<any> }) {
+export function UserEmailField<TFormValues extends UserFormFieldValues>({
+  control,
+}: {
+  control: Control<TFormValues>
+}) {
   const t = useTranslations("userForm")
+
   return (
     <FormField
       control={control}
-      name={"email" as any}
+      name={"email" as FieldPath<TFormValues>}
       render={({ field }) => (
         <FormItem>
           <FormLabel>{t("fields.email_label")}</FormLabel>
           <FormControl>
-            <Input type="email" placeholder={t("placeholders.email")} {...field} value={field.value ?? ""} />
+            <Input type="email" placeholder={t("placeholders.email")} {...field} value={typeof field.value === "string" ? field.value : ""} />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -86,17 +120,27 @@ export function UserEmailField({ control }: { control: Control<any> }) {
   )
 }
 
-export function UserUsernameField({ control }: { control: Control<any> }) {
+export function UserUsernameField<TFormValues extends UserFormFieldValues>({
+  control,
+}: {
+  control: Control<TFormValues>
+}) {
   const t = useTranslations("userForm")
+
   return (
     <FormField
       control={control}
-      name={"username" as any}
+      name={"username" as FieldPath<TFormValues>}
       render={({ field }) => (
         <FormItem>
           <FormLabel>{t("fields.username_label")}</FormLabel>
           <FormControl>
-            <Input placeholder={t("placeholders.username")} autoComplete="off" {...field} />
+            <Input
+              placeholder={t("placeholders.username")}
+              autoComplete="off"
+              {...field}
+              value={typeof field.value === "string" ? field.value : ""}
+            />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -105,17 +149,22 @@ export function UserUsernameField({ control }: { control: Control<any> }) {
   )
 }
 
-export function UserPhoneField({ control }: { control: Control<any> }) {
+export function UserPhoneField<TFormValues extends UserFormFieldValues>({
+  control,
+}: {
+  control: Control<TFormValues>
+}) {
   const t = useTranslations("userForm")
+
   return (
     <FormField
       control={control}
-      name={"telephone" as any}
+      name={"telephone" as FieldPath<TFormValues>}
       render={({ field }) => (
         <FormItem>
           <FormLabel>{t("fields.phone_label")}</FormLabel>
           <FormControl>
-            <Input placeholder={t("placeholders.phone")} {...field} />
+            <Input placeholder={t("placeholders.phone")} {...field} value={typeof field.value === "string" ? field.value : ""} />
           </FormControl>
           <FormMessage />
         </FormItem>
@@ -124,26 +173,31 @@ export function UserPhoneField({ control }: { control: Control<any> }) {
   )
 }
 
-export function UserProfileField({
+export function UserProfileField<TFormValues extends UserFormFieldValues>({
   control,
   profiles,
   isLoading,
   description,
 }: {
-  control: Control<any>
+  control: Control<TFormValues>
   profiles?: ProfileOption[]
   isLoading: boolean
   description?: string
 }) {
   const t = useTranslations("userForm")
+
   return (
     <FormField
       control={control}
-      name={"profileId" as any}
+      name={"profileId" as FieldPath<TFormValues>}
       render={({ field }) => (
         <FormItem>
           <FormLabel>{t("fields.profile_label")}</FormLabel>
-          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoading}>
+          <Select
+            onValueChange={field.onChange}
+            value={typeof field.value === "string" ? field.value : ""}
+            disabled={isLoading}
+          >
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder={t("placeholders.profile")} />
@@ -154,7 +208,7 @@ export function UserProfileField({
                 <SelectItem key={profile.id} value={profile.name}>
                   {profile.name}
                   {"description" in profile && profile.description ? (
-                    <span className="text-xs text-muted-foreground ml-2">({profile.description})</span>
+                    <span className="ml-2 text-xs text-muted-foreground">({profile.description})</span>
                   ) : null}
                 </SelectItem>
               ))}
@@ -168,109 +222,121 @@ export function UserProfileField({
   )
 }
 
-export function UserSitesField({
+export function UserSitesField<TFormValues extends UserFormFieldValues>({
   control,
   sites,
   isLoading,
 }: {
-  control: Control<any>
+  control: Control<TFormValues>
   sites?: SiteOption[]
   isLoading: boolean
 }) {
   const t = useTranslations("userForm")
+
   return (
     <FormField
       control={control}
-      name={"siteIds" as any}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{t("fields.sites_label")}</FormLabel>
-          <div className="max-h-48 space-y-2 overflow-y-auto rounded-md border bg-background p-3">
-            {isLoading ? (
-              <p className="text-sm text-muted-foreground">{t("actions.loading")}</p>
-            ) : (
-              sites?.map((site) => (
-                <div key={site.id} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id={`site-${site.id}`}
-                    checked={field.value?.includes(site.id) || false}
-                    onChange={(e) => {
-                      const current = (field.value || []) as number[]
-                      const next = e.target.checked ? [...current, site.id] : current.filter((id) => id !== site.id)
-                      field.onChange(next)
-                    }}
-                    className="rounded border-gray-300"
-                  />
-                  <label htmlFor={`site-${site.id}`} className="text-sm">
-                    {site.name}
-                  </label>
-                </div>
-              ))
-            )}
-          </div>
-          <FormMessage />
-        </FormItem>
-      )}
+      name={"siteIds" as FieldPath<TFormValues>}
+      render={({ field }) => {
+        const selectedIds = toNumberArray(field.value)
+
+        return (
+          <FormItem>
+            <FormLabel>{t("fields.sites_label")}</FormLabel>
+            <div className="max-h-48 space-y-2 overflow-y-auto rounded-md border bg-background p-3">
+              {isLoading ? (
+                <p className="text-sm text-muted-foreground">{t("actions.loading")}</p>
+              ) : (
+                sites?.map((site) => (
+                  <div key={site.id} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`site-${site.id}`}
+                      checked={selectedIds.includes(site.id)}
+                      onChange={(event) => {
+                        const next = event.target.checked
+                          ? [...selectedIds, site.id]
+                          : selectedIds.filter((id) => id !== site.id)
+
+                        field.onChange(next)
+                      }}
+                      className="rounded border-gray-300"
+                    />
+                    <label htmlFor={`site-${site.id}`} className="text-sm">
+                      {site.name}
+                    </label>
+                  </div>
+                ))
+              )}
+            </div>
+            <FormMessage />
+          </FormItem>
+        )
+      }}
     />
   )
 }
 
-export function UserGroupsField({
+export function UserGroupsField<TFormValues extends UserFormFieldValues>({
   control,
   groups,
   isLoading,
 }: {
-  control: Control<any>
+  control: Control<TFormValues>
   groups?: GroupOption[]
   isLoading: boolean
 }) {
   const t = useTranslations("userForm")
+
   return (
     <FormField
       control={control}
-      name={"groupeIds" as any}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{t("fields.groups_label")}</FormLabel>
-          <div className="max-h-48 space-y-2 overflow-y-auto rounded-md border bg-background p-3">
-            {isLoading ? (
-              <p className="text-sm text-muted-foreground">{t("actions.loading")}</p>
-            ) : (
-              groups?.map((group) => (
-                <div key={group.Id_Groupe} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id={`groupe-${group.Id_Groupe}`}
-                    checked={field.value?.includes(group.Id_Groupe) || false}
-                    onChange={(e) => {
-                      const current = (field.value || []) as number[]
-                      const next = e.target.checked
-                        ? [...current, group.Id_Groupe]
-                        : current.filter((id) => id !== group.Id_Groupe)
-                      field.onChange(next)
-                    }}
-                    className="rounded border-gray-300"
-                  />
-                  <label htmlFor={`groupe-${group.Id_Groupe}`} className="text-sm">
-                    {group.Nom_Groupe ?? t("groups.fallback", { id: group.Id_Groupe })}
-                  </label>
-                </div>
-              ))
-            )}
-          </div>
-          <FormMessage />
-        </FormItem>
-      )}
+      name={"groupeIds" as FieldPath<TFormValues>}
+      render={({ field }) => {
+        const selectedIds = toNumberArray(field.value)
+
+        return (
+          <FormItem>
+            <FormLabel>{t("fields.groups_label")}</FormLabel>
+            <div className="max-h-48 space-y-2 overflow-y-auto rounded-md border bg-background p-3">
+              {isLoading ? (
+                <p className="text-sm text-muted-foreground">{t("actions.loading")}</p>
+              ) : (
+                groups?.map((group) => (
+                  <div key={group.Id_Groupe} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`groupe-${group.Id_Groupe}`}
+                      checked={selectedIds.includes(group.Id_Groupe)}
+                      onChange={(event) => {
+                        const next = event.target.checked
+                          ? [...selectedIds, group.Id_Groupe]
+                          : selectedIds.filter((id) => id !== group.Id_Groupe)
+
+                        field.onChange(next)
+                      }}
+                      className="rounded border-gray-300"
+                    />
+                    <label htmlFor={`groupe-${group.Id_Groupe}`} className="text-sm">
+                      {group.Nom_Groupe ?? t("groups.fallback", { id: group.Id_Groupe })}
+                    </label>
+                  </div>
+                ))
+              )}
+            </div>
+            <FormMessage />
+          </FormItem>
+        )
+      }}
     />
   )
 }
 
-export function UserExpiryFields({
+export function UserExpiryFields<TFormValues extends UserFormFieldValues>({
   control,
   enabled,
 }: {
-  control: Control<any>
+  control: Control<TFormValues>
   enabled: boolean
 }) {
   const t = useTranslations("userForm")
@@ -281,7 +347,7 @@ export function UserExpiryFields({
     <>
       <FormField
         control={control}
-        name={"hasExpiryDate" as any}
+        name={"hasExpiryDate" as FieldPath<TFormValues>}
         render={({ field }) => (
           <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
@@ -289,7 +355,7 @@ export function UserExpiryFields({
               <FormDescription>{t("expiry.description")}</FormDescription>
             </div>
             <FormControl>
-              <Switch checked={field.value} onCheckedChange={field.onChange} />
+              <Switch checked={toBoolean(field.value)} onCheckedChange={field.onChange} />
             </FormControl>
           </FormItem>
         )}
@@ -298,39 +364,39 @@ export function UserExpiryFields({
       {enabled ? (
         <FormField
           control={control}
-          name={"expiryDate" as any}
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>{t("expiry.date_label")}</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP", { locale: dateLocale })
-                      ) : (
-                        <span>{t("expiry.select_date")}</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
+          name={"expiryDate" as FieldPath<TFormValues>}
+          render={({ field }) => {
+            const selectedDate = toDate(field.value)
+
+            return (
+              <FormItem className="flex flex-col">
+                <FormLabel>{t("expiry.date_label")}</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={cn("w-full pl-3 text-left font-normal", !selectedDate && "text-muted-foreground")}
+                      >
+                        {selectedDate ? format(selectedDate, "PPP", { locale: dateLocale }) : <span>{t("expiry.select_date")}</span>}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={field.onChange}
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )
+          }}
         />
       ) : null}
     </>

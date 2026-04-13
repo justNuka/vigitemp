@@ -28,6 +28,7 @@ interface SMTPConfig {
   user: string;
   password: string;
   sender: string;
+  passwordConfigured?: boolean;
 }
 
 interface SMTPConfigModalProps {
@@ -37,6 +38,7 @@ interface SMTPConfigModalProps {
 
 export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordConfigured, setPasswordConfigured] = useState(false);
   const t = useTranslations("adminSettings.smtp_modal");
 
   const smtpSchema = useMemo(
@@ -49,7 +51,7 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
           .min(1, t("validation.port_range"))
           .max(65535, t("validation.port_range")),
         user: z.string().min(1, t("validation.user_required")),
-        password: z.string().min(1, t("validation.password_required")),
+        password: z.string().optional(),
         sender: z
           .string()
           .min(1, t("validation.sender_required"))
@@ -109,6 +111,7 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
       setIsLoading(true);
       const payload = await getJson<SMTPConfig>("/api/admin/configuration-smtp");
       reset(payload);
+      setPasswordConfigured(Boolean(payload.passwordConfigured));
       setTestValue("testEmail", payload.sender || payload.user || "");
     } catch (error) {
       console.error("Erreur:", error);
@@ -153,7 +156,7 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg border bg-background shadow-xl sm:rounded-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg border bg-white dark:bg-background shadow-xl sm:rounded-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>
@@ -243,6 +246,11 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
             <p className="text-xs text-muted-foreground mt-1">
               {t("fields.password.helper")}
             </p>
+            {passwordConfigured ? (
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("fields.password.hidden_helper")}
+              </p>
+            ) : null}
           </div>
 
           <div>

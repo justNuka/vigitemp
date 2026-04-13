@@ -9,7 +9,7 @@ interface SwitchWithLoadingProps
 }
 
 const SwitchWithLoading = React.forwardRef<
-  React.ElementRef<typeof SwitchPrimitives.Root>,
+  React.ComponentRef<typeof SwitchPrimitives.Root>,
   SwitchWithLoadingProps
 >(({ className, isLoading = false, disabled, ...props }, ref) => {
   const isDisabled = disabled || isLoading;

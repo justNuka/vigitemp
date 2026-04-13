@@ -4,9 +4,10 @@ import { z } from "zod"
 import { getClientIp } from "@/lib/api-logger"
 import { prisma } from "@/lib/prisma"
 import { apiError, apiOk } from "@/lib/api-response"
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withAnyAuthorizationLogging } from "@/lib/api-wrappers"
 import { log } from "@/lib/logger"
 import { isSurveillanceActionCommentRequired } from "@/lib/action-comment-policy"
+import { getPermissionAliases } from "@/lib/permissions"
 
 const alarmToggleSchema = z.object({
   disabled: z.boolean(),
@@ -14,7 +15,10 @@ const alarmToggleSchema = z.object({
   commentaireAction: z.string().trim().max(500).nullable().optional(),
 })
 
-export const PATCH = withAuthLogging(
+const LOCATION_DISABLE_CODES = getPermissionAliases("LOCATION_DISABLE_ACCESS")
+
+export const PATCH = withAnyAuthorizationLogging(
+  LOCATION_DISABLE_CODES,
   async (req: NextRequest, { user }, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { id: idParam } = await params

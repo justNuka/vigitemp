@@ -18,6 +18,7 @@ R?gles de suivi:
 ### Page de connexion
 - [x] `Rapide` Afficher un pop-up 7 jours avant l'obligation de changement de mot de passe.
 - [x] `Rapide/Moyen` Lors de la détection de la première connexion, envoie vers un mauvais lien.
+- [x] `Rapide` Dark mode sur la page de connexion à refaire (les inputs et leurs contenus très peu visibles).
 
 ### Profil utilisateur
 - [x] `Rapide` Corriger le chargement de l'avatar personnalis?.
@@ -123,6 +124,8 @@ R?gles de suivi:
 
 ### Hotline
 - [x] `Rapide` Remplacer le placeholder `COM101` par `COMXXX` dans le portail hotline.
+- [x] `Rapide` Faire en sorte de ne pas devoir obliger l'utilisateur à mettre des espaces après le numéro de sonde et le payload en `commande brute`.
+- [x] `Rapide` Envoyer config : la fréquence est en minutes
 
 ### Transversal
 - [x] `Moyen` Ajouter sur chaque page de gestion un onglet suppl?mentaire `... archiv?s` s?parant les ?l?ments actifs des ?l?ments archiv?s (utilisateurs, sondes, modules, etc.).
@@ -186,6 +189,8 @@ R?gles de suivi:
 - [x] `Rapide` `verrouillage auto` -> `d?connexion auto`.
 - [x] `Rapide` Passer le max de caract?res mot de passe ? 24.
 - [x] `Rapide` Si modif SMTP: audit + log.
+- [x] `Rapide` Modal SMTP: fond blanc en mode clair.
+- [x] `Rapide` Modal SMTP: ne jamais afficher le mot de passe stocke; laisser vide pour le conserver et autoriser la resaisie.
 
 ### Admin - sondes
 - [x] `Rapide` `validit? ajustage` -> `validit? ?talonnage`.
@@ -365,9 +370,8 @@ R?gles de suivi:
 - [x] `Moyen` Revoir l'ensemble des v?rifications de valeurs.
 
 #### ?talonnage
-- [ ] `Lourd` G?rer le multi-?talonnage.
 - [x] `Moyen` Choix manuel d'un ?talonnage ? appliquer.
-- [ ] `Moyen` Modes standard et expert.
+- [x] `Moyen` Modes standard et expert.
 - [x] `Moyen` Audit de l'application d'?talonnage.
 - [x] `Rapide` Ajouter un nom d'?talonnage non obligatoire.
 
@@ -431,7 +435,7 @@ R?gles de suivi:
 - [x] `Moyen` Acquittement multiple avec filtres lieu/site et s?lection multiple.
 
 #### M?tier
-- [ ] `Moyen` Revoir le d?clenchement des alarmes GSO par mail.
+- [x] `Moyen` Revoir le d?clenchement des alarmes GSO par mail.
 - [ ] `Lourd` Ajouter le type `secteur / alimentation`.
 - [x] `Moyen` Calculer la dur?e d'alarme m?me non termin?e.
 
@@ -517,9 +521,11 @@ R?gles de suivi:
 - [x] `Rapide` Fuseau horaire gris? quand d?sactiv?.
 - [x] `Rapide` Ne pas enregistrer ? la vol?e; bandeau annuler / enregistrer.
 - [x] `Rapide` `verrouillage auto` -> `d?connexion auto`.
-- [ ] `Moyen` Mode / profil visualisation surveillance uniquement.
+- [x] `Moyen` Mode / profil visualisation surveillance uniquement.
 - [x] `Rapide` Max mot de passe = 24.
 - [x] `Rapide` Audit + log sur modif SMTP.
+- [x] `Rapide` Modal SMTP: fond blanc en mode clair.
+- [x] `Rapide` Modal SMTP: ne jamais afficher le mot de passe stocke; laisser vide pour le conserver et autoriser la resaisie.
 
 ### Admin - sondes
 - [x] `Rapide` `validit? ajustage` -> `validit? ?talonnage`.
@@ -530,7 +536,7 @@ R?gles de suivi:
 - [x] `Rapide` Module = nom + port COM.
 
 ### Admin - modules
-- [ ] `Moyen` Double clic sur une sonde du tableau bas pour modifier uniquement le module.
+- [x] `Moyen` Double clic sur une sonde du tableau bas pour modifier uniquement le module.
 - [x] `Rapide` M?me header visuel que les autres pages.
 - [x] `Rapide` Count affich? sur la page.
 
@@ -543,7 +549,7 @@ R?gles de suivi:
 - [x] `Rapide` Retirer les relais.
 - [x] `Rapide` Ajouter `lieu` apr?s `sonde`.
 - [x] `Rapide` `signal lu` = mesure actuelle, rien si non-r?ponse.
-- [ ] `Moyen` ? la fin, proposer un r?cap des 10 derni?res mesures par sonde.
+- [x] `Moyen` ? la fin, proposer un r?cap des 10 derni?res mesures par sonde.
 - [x] `Rapide` Ne pas afficher les GSO / stats parasites.
 - [x] `Moyen` Avant test, pr?venir que la lecture prend la priorit? sur la surveillance et demander une dur?e max.
 

@@ -2,13 +2,13 @@
 
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useTranslations } from 'next-intl'
 import type { UseFormRegister } from 'react-hook-form'
 
 import type { LocationFormData } from '../location-form-types'
 
 interface EmtModeSectionProps {
+  isExpertEdition: boolean
   formData: LocationFormData
   emtPreview: { emtSonde: number | null }
   absEj: number
@@ -20,6 +20,7 @@ interface EmtModeSectionProps {
 }
 
 export function EmtModeSection({
+  isExpertEdition,
   formData,
   emtPreview,
   absEj,
@@ -70,10 +71,21 @@ export function EmtModeSection({
           </label>
 
           <label className="flex items-start gap-3 cursor-pointer">
-            <input type="radio" name="emt_mode" value="uncertainties" checked={formData.EMT_Mode === 'uncertainties'} onChange={(e) => setUserValue('EMT_Mode', e.target.value)} className="mt-1" />
+            <input
+              type="radio"
+              name="emt_mode"
+              value="uncertainties"
+              checked={formData.EMT_Mode === 'uncertainties'}
+              onChange={(e) => setUserValue('EMT_Mode', e.target.value)}
+              className="mt-1"
+              disabled={!isExpertEdition}
+            />
             <div>
               <div className="font-medium">{t('emt.option.uncertainties.title')}</div>
               <div className="text-sm text-muted-foreground">{t('emt.option.uncertainties.description')}</div>
+              {!isExpertEdition ? (
+                <div className="mt-1 text-xs text-amber-700 dark:text-amber-300">{t('emt.option.uncertainties.expert_only')}</div>
+              ) : null}
               <div className="mt-2 rounded-md border bg-muted/40 px-3 py-2 text-sm">
                 {!formData.Prendre_En_Compte_Derive && formData.Corriger_Erreur_Justesse ? (
                   <>
@@ -119,10 +131,12 @@ export function EmtModeSection({
           <Checkbox checked={formData.Corriger_Erreur_Justesse || false} onCheckedChange={(checked) => setUserValue('Corriger_Erreur_Justesse', !!checked)} />
           <span>{t('checkboxes.correct_accuracy')}</span>
         </label>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <Checkbox checked={formData.Prendre_En_Compte_Derive ?? false} onCheckedChange={(checked) => setUserValue('Prendre_En_Compte_Derive', !!checked)} disabled={isDeriveForced} />
-          <span>{t('checkboxes.include_drift')}</span>
-        </label>
+        {isExpertEdition ? (
+          <label className="flex items-center gap-2 cursor-pointer">
+            <Checkbox checked={formData.Prendre_En_Compte_Derive ?? false} onCheckedChange={(checked) => setUserValue('Prendre_En_Compte_Derive', !!checked)} disabled={isDeriveForced} />
+            <span>{t('checkboxes.include_drift')}</span>
+          </label>
+        ) : null}
       </div>
     </>
   )

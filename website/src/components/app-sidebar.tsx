@@ -44,7 +44,7 @@ import { formatLicenseLabel } from "@/lib/license-label";
 import { getInitialsForAvatar, resolveAvatarSrc } from "@/lib/avatar-library";
 import { useMessagingEnabled } from "@/hooks/useMessagingEnabled";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
-import { hasAuthorizationCode } from "@/lib/permissions";
+import { hasAuthorizationCode, hasPermission } from "@/lib/permissions";
 import { WEB_APP_VERSION } from "@/lib/app-version";
 
 interface NavItem {
@@ -89,6 +89,11 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
   const licenseLabel = useMemo(() => formatLicenseLabel(license, tCommon), [license, tCommon]);
   const messagingEnabled = useMessagingEnabled();
   const messagingUnread = useUnreadCount();
+  const canAccessDashboard = hasPermission(currentUser, "DASHBOARD_USER_ACCESS");
+  const canAccessSurveillance = hasPermission(currentUser, "SURVEILLANCE_VIEW_ACCESS") || hasAuthorizationCode(currentUser, ["ACCES_SURVEILLANCE"]);
+  const canAccessVigilog = hasAuthorizationCode(currentUser, ["ACCES_VIGILOG", "ACCES_METROLOGIE"]);
+  const canAccessMessaging = messagingEnabled && hasPermission(currentUser, "CONVERSATION_ACCESS");
+  const canAccessAdmin = hasPermission(currentUser, "DASHBOARD_ADMIN_ACCESS") || hasPermission(currentUser, "GENERAL_SETTINGS_ACCESS");
 
   useEffect(() => {
     setIsMuted(getAlarmAudioMuted());
@@ -115,9 +120,6 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
     setOpenMobile(false);
   }, [isMobile, pathname, setOpenMobile]);
 
-  // NOTE: Admin check disabled for now (rights handling will be redesigned).
-  const isAdmin = true;
-
   // Helper pour comparer pathname avec href (pathname = /fr/surveillance, href = surveillance)
   const isActive = (href: string): boolean => {
     if (href === "/") {
@@ -129,8 +131,11 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
   };
 
   const navItemsWithBadges = mainNavItems
-    .filter((item) => item.href !== "/vigilog" || hasAuthorizationCode(currentUser, ["ACCES_VIGILOG", "ACCES_METROLOGIE"]))
-    .filter((item) => item.href !== "/messages" || messagingEnabled)
+    .filter((item) => item.href !== "/" || canAccessDashboard)
+    .filter((item) => item.href !== "/surveillance" || canAccessSurveillance)
+    .filter((item) => item.href !== "/alarmes" || canAccessSurveillance)
+    .filter((item) => item.href !== "/vigilog" || canAccessVigilog)
+    .filter((item) => item.href !== "/messages" || canAccessMessaging)
     .map((item) => {
       if (item.href === "/alarmes" && activeAlarms > 0) {
         return { ...item, badge: activeAlarms, badgeVariant: "destructive" as const };
@@ -196,7 +201,7 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
         </SidebarGroup>
 
         {/* Admin Section - Only visible to admins */}
-        {isAdmin && (
+        {canAccessAdmin && (
           <SidebarGroup>
             <SidebarGroupLabel>{tGroups("administration")}</SidebarGroupLabel>
             <SidebarGroupContent>

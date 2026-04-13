@@ -1,7 +1,6 @@
 ﻿import { NextRequest } from "next/server"
-import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { getClientIp, withLogging } from "@/lib/api-logger"
+import { getClientIp } from "@/lib/api-logger"
 import { log } from "@/lib/logger"
 import { z } from "zod"
 import { apiError, apiOk } from "@/lib/api-response"
@@ -10,6 +9,8 @@ import { extractAddressFromSerial, isGsoType } from "@/lib/sensor-naming"
 import { computeEmt, emtModeFromDb, emtModeToDb } from "@/lib/emt"
 import { requireStandardOrExpertIfFieldsUsed } from "@/lib/license-guards"
 import { isSurveillanceActionCommentRequired } from "@/lib/action-comment-policy"
+import { withAnyAuthorizationLogging } from "@/lib/api-wrappers"
+import { getPermissionAliases } from "@/lib/permissions"
 
 const mailingContactSchema = z.object({
   Id_Tel_Num: z.number().optional(),
@@ -257,10 +258,16 @@ function isMissingLieuGsoColumnError(error: unknown) {
   return column.includes("Est_Lieu_GSO") || column.includes("Adresse_Sonde") || column.includes("Observations_Info")
 }
 
-export const PATCH = withLogging(
-  async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
-    const user = getAuthenticatedUser(req)
-    if (!user) return apiError(401, "unauthenticated", "Non authentifié")
+const LOCATION_UPDATE_CODES = Array.from(
+  new Set([
+    ...getPermissionAliases("LOCATION_CONFIG_ACCESS"),
+    ...getPermissionAliases("LOCATION_DISABLE_ACCESS"),
+  ]),
+)
+
+export const PATCH = withAnyAuthorizationLogging(
+  LOCATION_UPDATE_CODES,
+  async (req: NextRequest, { user }, { params }: { params: Promise<{ id: string }> }) => {
 
     try {
       const { id: idParam } = await params
@@ -476,6 +483,10 @@ export const PATCH = withLogging(
             Retard_Alarme_Haut: true,
             Retard_Alarme_Bas: true,
             Nb_Mesures_Temporisation_Redeclenchement: true,
+            Derniere_Erreur_Justesse: true,
+            Derniere_Incertitude: true,
+            Derive: true,
+            Derniere_Date_Etalonnage: true,
           },
         })
 
@@ -770,7 +781,7 @@ export const PATCH = withLogging(
           resource: `Lieu: ${lieuName ?? lieuId}`,
           resourceId: lieuId,
           reason: actionComment || "Application manuelle d'étalonnage",
-          details: {
+          changes: {
             appliedCalibrationId,
             appliedCalibrationDate,
             unit: validated.Unite ?? null,

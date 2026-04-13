@@ -9,6 +9,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 import type { JourOption, PlanningRegleFormValues } from "./planning-rule-form-helpers"
 
+type NumericPlanningRuleFieldName =
+  | "Consigne"
+  | "Consigne_Sup"
+  | "Consigne_Inf"
+  | "Priorite"
+  | "Retard_Alarme_Changement_Consigne"
+
 function NumberInputField({
   form,
   name,
@@ -18,8 +25,8 @@ function NumberInputField({
   minZero = false,
   labelAddon,
 }: {
-  form: UseFormReturn<PlanningRegleFormValues, unknown, any>
-  name: keyof PlanningRegleFormValues
+  form: UseFormReturn<PlanningRegleFormValues>
+  name: NumericPlanningRuleFieldName
   label: string
   placeholder?: string
   integer?: boolean
@@ -29,7 +36,7 @@ function NumberInputField({
   return (
     <FormField
       control={form.control}
-      name={name as any}
+      name={name}
       render={({ field }) => (
         <FormItem>
           <div className="flex items-center gap-1">
@@ -67,7 +74,7 @@ export function PlanningRuleScheduleFields({
   tDialog,
   joursOptions,
 }: {
-  form: UseFormReturn<PlanningRegleFormValues, unknown, any>
+  form: UseFormReturn<PlanningRegleFormValues>
   tDialog: (key: string) => string
   joursOptions: JourOption[]
 }) {
@@ -162,7 +169,7 @@ export function PlanningRuleThresholdFields({
   form,
   tDialog,
 }: {
-  form: UseFormReturn<PlanningRegleFormValues, unknown, any>
+  form: UseFormReturn<PlanningRegleFormValues>
   tDialog: (key: string) => string
 }) {
   return (
@@ -264,7 +271,7 @@ export function PlanningRuleActiveField({
   form,
   tDialog,
 }: {
-  form: UseFormReturn<PlanningRegleFormValues, unknown, any>
+  form: UseFormReturn<PlanningRegleFormValues>
   tDialog: (key: string) => string
 }) {
   return (

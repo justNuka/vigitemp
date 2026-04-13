@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { useModules, useModuleSondes } from "@/hooks/useModules";
+import { useSensors } from "@/hooks/useSensors";
 import { deleteJson, getJson, HttpError } from "@/lib/http";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,6 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SensorModal } from "../sondes/sensor-modal";
 
 import { ModuleModal } from "./module-modal";
 import { ModulesTable, type ModuleRow } from "./_components/modules-table";
@@ -43,9 +45,14 @@ export function ModulesClient() {
   const [archiveBlockedOpen, setArchiveBlockedOpen] = useState(false);
   const [archiveBlockedMessage, setArchiveBlockedMessage] = useState<string | null>(null);
   const [statusTab, setStatusTab] = useState<"active" | "archived">("active");
+  const [isSensorModalOpen, setIsSensorModalOpen] = useState(false);
 
   const { data: modules, isLoading: modulesLoading, refetch: refetchModules } = useModules();
   const { data: sondes, isLoading: sondesLoading } = useModuleSondes(selectedModuleId);
+  const { data: allSensors = [] } = useSensors();
+  const selectedSensor = selectedSondeId
+    ? allSensors.find((sensor) => sensor.Id_Sonde === selectedSondeId) ?? null
+    : null;
 
   useEffect(() => {
     if (modulesLoading || didPrefetchRef.current) return;
@@ -236,6 +243,10 @@ export function ModulesClient() {
                   isLoading={false}
                   selectedSensorId={selectedSondeId}
                   onSelectSensor={setSelectedSondeId}
+                  onEditSensor={(sensorId) => {
+                    setSelectedSondeId(sensorId);
+                    setIsSensorModalOpen(true);
+                  }}
                 />
               ) : (
                 <div className="text-center py-8 text-sm text-muted-foreground">{t('associated.empty')}</div>
@@ -285,6 +296,18 @@ export function ModulesClient() {
             <AlertDialogAction onClick={() => setArchiveBlockedOpen(false)}>{tCommon('confirm')}</AlertDialogAction>
           </AlertDialogContent>
         </AlertDialog>
+
+        <SensorModal
+          open={isSensorModalOpen && !!selectedSensor}
+          onOpenChange={setIsSensorModalOpen}
+          sensor={selectedSensor}
+          isEditing
+          moduleOnly
+          onSuccess={() => {
+            void refetchModules();
+            void queryClient.invalidateQueries({ queryKey: ["modules", selectedModuleId, "sondes"] });
+          }}
+        />
 
       </m.div>
     </LazyMotion>

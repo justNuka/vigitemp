@@ -1745,3 +1745,43 @@ SELECT 'NOTIFICATIONS','GSP_BATTERY_EMAIL_PERCENT','25','Seuil (%) envoi email b
 FROM DUAL WHERE NOT EXISTS (
   SELECT 1 FROM `t_parametre` WHERE `Section`='NOTIFICATIONS' AND `Mot_Cle`='GSP_BATTERY_EMAIL_PERCENT'
 );
+
+-- =====================================================================
+-- NETTOYAGE AUTORISATIONS LEGACY NON UTILISEES (2026-04-13)
+-- =====================================================================
+SET @has_tbl_aut := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_autorisation');
+SET @has_tbl_link := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_liaison_profil_autorisation');
+
+DROP TEMPORARY TABLE IF EXISTS tmp_codes_aut_legacy_remove;
+CREATE TEMPORARY TABLE tmp_codes_aut_legacy_remove (
+  code VARCHAR(50) PRIMARY KEY
+);
+
+INSERT INTO tmp_codes_aut_legacy_remove (code) VALUES
+('PARAM_EDITION_STATISTIQUES'),
+('MATERIEL_MESURE_GERER'),
+('MATERIEL_MESURE_VISUALISER'),
+('MATERIEL_ALARME_GERER'),
+('APPLICATION_QUITTER_ADMIN'),
+('MATERIEL_METROLOGIE_GERER'),
+('METROLOGIE_REALISER'),
+('METROLOGIE_VISUALISER'),
+('APPLICATION_QUITTER_METRO'),
+('APPLICATION_QUITTER_SURV'),
+('APPLICATION_QUITTER_VIGILOG'),
+('TELE_ASSISTANCE'),
+('SUPERPOSITION_COURBE');
+
+SET @sql := IF(
+  @has_tbl_aut = 1 AND @has_tbl_link = 1,
+  'DELETE l FROM `t_liaison_profil_autorisation` l JOIN `t_autorisation` a ON a.`Id_Autorisation` = l.`Id_Autorisation` JOIN tmp_codes_aut_legacy_remove c ON c.code = a.`Code_Autorisation`',
+  'SELECT 1'
+);
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SET @sql := IF(
+  @has_tbl_aut = 1,
+  'DELETE a FROM `t_autorisation` a JOIN tmp_codes_aut_legacy_remove c ON c.code = a.`Code_Autorisation`',
+  'SELECT 1'
+);
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;

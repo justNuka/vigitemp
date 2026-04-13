@@ -1933,7 +1933,7 @@ namespace Vigitemp_Serveur
                         "INNER JOIN t_sonde s ON l.Sonde_Numero_Serie = s.Sonde_Numero_Serie " +
                         "INNER JOIN t_module m ON s.Id_Module = m.Id_Module " +
                         "WHERE a.Id_Alarme > @lastId " +
-                        "AND a.Est_Alarme_Vrai = 1 " +
+                        "AND a.Date_Heure_Debut_Alarme_Vrai IS NOT NULL " +
                         "AND m.Id_Serveur = @idServeur " +
                         "ORDER BY a.Id_Alarme ASC;"))
                     {

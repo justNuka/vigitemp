@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLicense } from "@/components/license/license-provider";
-import { isStandardOrExpert } from "@/lib/license-access";
+import { isExpert, isStandardOrExpert } from "@/lib/license-access";
 import { Check, ChevronDown, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
@@ -71,6 +71,7 @@ export function LocationFormDialog({
   const isEdit = mode === 'edit';
   const { license } = useLicense();
   const hasMetrologyTabs = isStandardOrExpert(license);
+  const isExpertEdition = isExpert(license);
   const t = useTranslations('locationsForm.dialog');
   const tCommon = useTranslations('common');
   const internalForm = useForm<LocationFormData>({
@@ -229,7 +230,7 @@ export function LocationFormDialog({
                 modules={modules}
                 onGoToPlanning={() => setActiveTab('planning')}
               />
-              {hasMetrologyTabs && <LocationFormTabMetrology />}
+              {hasMetrologyTabs && <LocationFormTabMetrology isExpertEdition={isExpertEdition} />}
               {hasMetrologyTabs && <LocationFormTabTelephony users={mailingUsers} />}
               <TabsContent value="planning">
                 <LocationFormTabPlanning

@@ -42,6 +42,27 @@ type SensorTestResult = {
   }>
 }
 
+type SensorLookupItem = {
+  Id_Sonde: number
+  Sonde_Numero_Serie: string | null
+}
+
+type SensorMeasuresResponse = {
+  mesures: Array<{
+    Date_Heure_Mesure: string
+    Valeur: number | null
+    Unite: string | null
+    Est_Etat_Alarme: string | null
+  }>
+}
+
+type RecentMeasure = {
+  dateHeure: string
+  valeur: number | null
+  unite: string | null
+  etatAlarme: string | null
+}
+
 type ParsedSensorResponse = {
   tx: string[]
   rx: string[]
@@ -62,6 +83,8 @@ const GSP_ACTIONS: Array<{ value: GspAction; label: string }> = [
   { value: "read-memory", label: "Lire mémoire" },
   { value: "raw", label: "Commande brute" },
 ]
+
+const RAW_COMMAND_PREFIXES = ["DD-H", "ED-H", "TEMP", "FTEM", "DCAL", "DETA", "DCON", "MEMO", "ECAL", "EETA", "ECON", "CHAN"]
 
 export function HotlineSensorTestPanel() {
   const [submitting, setSubmitting] = useState(false)
@@ -90,7 +113,7 @@ export function HotlineSensorTestPanel() {
     accuracyError: "",
     highLimit: "",
     lowLimit: "",
-    frequencySeconds: "",
+    frequencyMinutes: "",
     alarmDelayMinutes: "",
     channel: "",
     memoryCount: "",
@@ -101,6 +124,10 @@ export function HotlineSensorTestPanel() {
     rawExactMode: false,
     rawExactCommand: "",
   })
+  const [recentMeasures, setRecentMeasures] = useState<RecentMeasure[]>([])
+  const [recentMeasuresLoading, setRecentMeasuresLoading] = useState(false)
+  const [recentMeasuresError, setRecentMeasuresError] = useState<string | null>(null)
+  const [recentMeasuresSerial, setRecentMeasuresSerial] = useState<string>("")
 
   const showGspFields = sensorType === "GSP"
   const isGspMemory = action === "read-memory"
@@ -241,6 +268,9 @@ export function HotlineSensorTestPanel() {
     return payload ? `${prefix}${rawSerial} ${payload}` : `${prefix}${rawSerial}`
   }, [gsp.rawExactCommand, gsp.rawExactMode, gsp.rawPayload, gsp.rawPrefix, gsp.rawSerial])
 
+  const normalizedRawCommandValue = useMemo(() => normalizeRawCommand(rawCommandValue), [rawCommandValue])
+  const rawCommandForSubmit = useMemo(() => ensureTrailingSpace(normalizedRawCommandValue), [normalizedRawCommandValue])
+
   const commandPreview = useMemo(() => {
     if (!showGspFields) return "Commande generee selon le protocole de la sonde selectionnee."
 
@@ -257,20 +287,29 @@ export function HotlineSensorTestPanel() {
       case "read-memory":
         return `MEMO${target} ${(gsp.memoryCount || "1")}x${gsp.memoryOffset.trim() ? `${gsp.memoryOffset}o` : ""}`
       case "raw":
-        return rawCommandValue || "Saisissez une commande GSP."
+        return normalizedRawCommandValue || "Saisissez une commande GSP."
       case "sync-config":
         return `ED-H${target}..., ECAL${target}..., EETA${target}..., ECON${target}...`
       default:
         return ""
     }
-  }, [action, gsp.memoryCount, rawCommandValue, serial, showGspFields])
+  }, [action, gsp.memoryCount, normalizedRawCommandValue, serial, showGspFields])
 
   async function submit() {
     setSubmitting(true)
     setError(null)
     setResult(null)
+    setRecentMeasures([])
+    setRecentMeasuresError(null)
+    setRecentMeasuresSerial("")
 
     try {
+      const parsedFrequencyMinutes = parseOptionalInteger(gsp.frequencyMinutes)
+      const frequencySeconds =
+        parsedFrequencyMinutes !== null && parsedFrequencyMinutes > 0
+          ? parsedFrequencyMinutes * 60
+          : null
+
       const response = await fetch("/api/hotline/sensor-test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -297,12 +336,12 @@ export function HotlineSensorTestPanel() {
                 accuracyError: parseOptionalNumber(gsp.accuracyError),
                 highLimit: parseOptionalNumber(gsp.highLimit),
                 lowLimit: parseOptionalNumber(gsp.lowLimit),
-                frequencySeconds: parseOptionalInteger(gsp.frequencySeconds),
+                frequencySeconds,
                 alarmDelayMinutes: parseOptionalInteger(gsp.alarmDelayMinutes),
                 channel: gsp.channel.trim() || undefined,
                 memoryCount: parseOptionalInteger(gsp.memoryCount),
                 memoryOffset: parseOptionalInteger(gsp.memoryOffset),
-                rawCommand: isGspRaw ? rawCommandValue : undefined,
+                rawCommand: isGspRaw ? rawCommandForSubmit : undefined,
                 listenWindowMs: parseOptionalInteger(listenWindowMs),
               }
             : undefined,
@@ -317,13 +356,73 @@ export function HotlineSensorTestPanel() {
         return
       }
 
-      setResult(json.data as SensorTestResult)
+      const nextResult = json.data as SensorTestResult
+      setResult(nextResult)
       setConsecutiveErrors(0)
+      void loadRecentMeasures(nextResult.serial || serial)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Le test a echoue")
       setConsecutiveErrors((prev) => prev + 1)
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function loadRecentMeasures(targetSerial: string) {
+    const normalizedSerial = targetSerial.trim().toUpperCase()
+    if (!normalizedSerial) {
+      return
+    }
+
+    setRecentMeasuresLoading(true)
+    setRecentMeasuresError(null)
+    setRecentMeasuresSerial(normalizedSerial)
+
+    try {
+      const sensorsResponse = await fetch("/api/sondes", { cache: "no-store" })
+      const sensorsJson = await sensorsResponse.json()
+      if (!sensorsResponse.ok || !sensorsJson?.ok || !Array.isArray(sensorsJson.data)) {
+        setRecentMeasures([])
+        setRecentMeasuresError("Impossible de recuperer les sondes pour construire le recap.")
+        return
+      }
+
+      const matchedSensor = (sensorsJson.data as SensorLookupItem[]).find(
+        (sensor) => (sensor.Sonde_Numero_Serie ?? "").trim().toUpperCase() === normalizedSerial,
+      )
+
+      if (!matchedSensor) {
+        setRecentMeasures([])
+        setRecentMeasuresError("Sonde non enregistree en base: recap indisponible.")
+        return
+      }
+
+      const measuresResponse = await fetch(`/api/sondes/${matchedSensor.Id_Sonde}/mesures`, { cache: "no-store" })
+      const measuresJson = await measuresResponse.json()
+
+      if (!measuresResponse.ok || !measuresJson?.ok || !measuresJson.data) {
+        setRecentMeasures([])
+        setRecentMeasuresError("Impossible de recuperer les mesures recentes pour cette sonde.")
+        return
+      }
+
+      const mesures = (measuresJson.data as SensorMeasuresResponse).mesures ?? []
+      const lastTen = mesures.slice(-10).reverse().map((measure) => ({
+        dateHeure: measure.Date_Heure_Mesure,
+        valeur: measure.Valeur,
+        unite: measure.Unite,
+        etatAlarme: measure.Est_Etat_Alarme,
+      }))
+
+      setRecentMeasures(lastTen)
+      if (lastTen.length === 0) {
+        setRecentMeasuresError("Aucune mesure recente disponible pour cette sonde.")
+      }
+    } catch {
+      setRecentMeasures([])
+      setRecentMeasuresError("Erreur lors de la recuperation du recap des mesures.")
+    } finally {
+      setRecentMeasuresLoading(false)
     }
   }
 
@@ -514,8 +613,8 @@ export function HotlineSensorTestPanel() {
                   <Field label="Limite basse">
                     <Input value={gsp.lowLimit} onChange={(e) => setGsp((prev) => ({ ...prev, lowLimit: e.target.value }))} />
                   </Field>
-                  <Field label="Frequence (s)">
-                    <Input value={gsp.frequencySeconds} onChange={(e) => setGsp((prev) => ({ ...prev, frequencySeconds: e.target.value }))} />
+                  <Field label="Frequence (min)">
+                    <Input value={gsp.frequencyMinutes} onChange={(e) => setGsp((prev) => ({ ...prev, frequencyMinutes: e.target.value }))} />
                   </Field>
                   <Field label="Retard alarme (min)">
                     <Input value={gsp.alarmDelayMinutes} onChange={(e) => setGsp((prev) => ({ ...prev, alarmDelayMinutes: e.target.value }))} />
@@ -630,7 +729,7 @@ export function HotlineSensorTestPanel() {
               </div>
               {isGspRaw ? (
                 <div className="mt-2">
-                  En commande brute, ajoutez un espace apres le numero de série si nécessaire pour reproduire le comportement valide.
+                  En commande brute, les espaces manquants sont corriges automatiquement avant envoi.
                 </div>
               ) : null}
             </div>
@@ -719,6 +818,47 @@ export function HotlineSensorTestPanel() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="bg-white dark:bg-popover/95">
+        <CardHeader>
+          <CardTitle>Recap des 10 dernieres mesures</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Propose a la fin du test pour la sonde connue en base.
+            {recentMeasuresSerial ? ` Sonde cible: ${recentMeasuresSerial}.` : ""}
+          </p>
+        </CardHeader>
+        <CardContent>
+          {recentMeasuresLoading ? (
+            <div className="text-sm text-muted-foreground">Chargement du recap...</div>
+          ) : null}
+
+          {!recentMeasuresLoading && recentMeasuresError ? (
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200">
+              {recentMeasuresError}
+            </div>
+          ) : null}
+
+          {!recentMeasuresLoading && !recentMeasuresError && recentMeasures.length > 0 ? (
+            <div className="space-y-2">
+              {recentMeasures.map((measure, index) => (
+                <div key={`${measure.dateHeure}-${index}`} className="grid gap-2 rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-sm md:grid-cols-[1.5fr_1fr_1fr] dark:bg-muted/15">
+                  <div className="font-medium">{formatMeasureDate(measure.dateHeure)}</div>
+                  <div>
+                    {measure.valeur !== null && measure.valeur !== undefined
+                      ? `${formatMeasureValue(measure.valeur)}${measure.unite ? ` ${measure.unite}` : ""}`
+                      : "-"}
+                  </div>
+                  <div className="text-muted-foreground">{measure.etatAlarme || "-"}</div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {!recentMeasuresLoading && !recentMeasuresError && recentMeasures.length === 0 ? (
+            <div className="text-sm text-muted-foreground">Lancez un test pour afficher le recap.</div>
+          ) : null}
+        </CardContent>
+      </Card>
     </div>
   )
 }
@@ -783,6 +923,56 @@ function parseOptionalInteger(value: string) {
   if (!trimmed) return null
   const parsed = Number.parseInt(trimmed, 10)
   return Number.isFinite(parsed) ? parsed : null
+}
+
+function formatMeasureDate(value: string) {
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) {
+    return value
+  }
+
+  return parsed.toLocaleString("fr-FR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  })
+}
+
+function formatMeasureValue(value: number) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(2)
+}
+
+function normalizeRawCommand(command: string) {
+  const compact = (command || "").trim().replace(/\s+/g, " ")
+  if (!compact) return ""
+  if (compact.includes(" ")) return compact
+
+  const upper = compact.toUpperCase()
+  const prefix = RAW_COMMAND_PREFIXES.find((candidate) => upper.startsWith(candidate))
+  if (!prefix) return compact
+
+  const rest = compact.slice(prefix.length)
+  if (!rest) return compact
+
+  const splitByNSerial = rest.match(/^(N\d+)([A-Za-z].+)$/i)
+  if (splitByNSerial) {
+    return `${prefix}${splitByNSerial[1]} ${splitByNSerial[2].trim()}`
+  }
+
+  const splitByLongSerial = rest.match(/^([A-Za-z]\d{4,})(.+)$/)
+  if (splitByLongSerial) {
+    return `${prefix}${splitByLongSerial[1]} ${splitByLongSerial[2].trim()}`
+  }
+
+  return compact
+}
+
+function ensureTrailingSpace(command: string) {
+  if (!command) return ""
+  return command.endsWith(" ") ? command : `${command} `
 }
 
 function ResultRssiItem({ value }: { value: string }) {

@@ -528,7 +528,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         resource: `Lieu: ${validated.Nom_Lieu}`,
         resourceId: lieu.Id_Lieu,
         reason: "Application manuelle d'étalonnage",
-        details: {
+        changes: {
           appliedCalibrationId,
           appliedCalibrationDate,
           unit: validated.Unite ?? null,

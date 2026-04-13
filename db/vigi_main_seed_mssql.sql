@@ -293,3 +293,41 @@ IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='NOTIFICATIONS' AND M
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='NOTIFICATIONS' AND Mot_Cle='GSP_BATTERY_EMAIL_PERCENT')
   INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('NOTIFICATIONS','GSP_BATTERY_EMAIL_PERCENT','25','Seuil (%) envoi email batterie faible sonde GSP');
 GO
+
+-- =====================================================================
+-- NETTOYAGE AUTORISATIONS LEGACY NON UTILISEES (2026-04-13)
+-- =====================================================================
+IF OBJECT_ID('dbo.t_autorisation', 'U') IS NOT NULL
+BEGIN
+  DECLARE @CodesToRemove TABLE (code NVARCHAR(50) PRIMARY KEY);
+  INSERT INTO @CodesToRemove (code) VALUES
+    (N'PARAM_EDITION_STATISTIQUES'),
+    (N'MATERIEL_MESURE_GERER'),
+    (N'MATERIEL_MESURE_VISUALISER'),
+    (N'MATERIEL_ALARME_GERER'),
+    (N'APPLICATION_QUITTER_ADMIN'),
+    (N'MATERIEL_METROLOGIE_GERER'),
+    (N'METROLOGIE_REALISER'),
+    (N'METROLOGIE_VISUALISER'),
+    (N'APPLICATION_QUITTER_METRO'),
+    (N'APPLICATION_QUITTER_SURV'),
+    (N'APPLICATION_QUITTER_VIGILOG'),
+    (N'TELE_ASSISTANCE'),
+    (N'SUPERPOSITION_COURBE');
+
+  IF OBJECT_ID('dbo.t_liaison_profil_autorisation', 'U') IS NOT NULL
+  BEGIN
+    DELETE l
+    FROM dbo.t_liaison_profil_autorisation l
+    JOIN dbo.t_autorisation a
+      ON a.Id_Autorisation = l.Id_Autorisation
+    JOIN @CodesToRemove c
+      ON c.code = a.Code_Autorisation;
+  END;
+
+  DELETE a
+  FROM dbo.t_autorisation a
+  JOIN @CodesToRemove c
+    ON c.code = a.Code_Autorisation;
+END;
+GO

@@ -487,7 +487,8 @@
         "password": {
           "label": "Mot de passe",
           "placeholder": "********",
-          "helper": "Le mot de passe est chiffré et sécurisé"
+          "helper": "Le mot de passe est chiffré et sécurisé",
+          "hidden_helper": "Le mot de passe enregistre n'est jamais affiche. Laissez vide pour le conserver, ou saisissez-en un nouveau."
         },
         "sender": {
           "label": "Adresse d'expédition",
@@ -952,6 +953,11 @@
         "sensor": "Sonde",
         "setpoints": "Consignes"
       },
+      "mode": {
+        "label": "Mode licence",
+        "standard": "Standard",
+        "expert": "Expert"
+      },
       "labels": {
         "serial": "Numéro de série",
         "state": "État",
@@ -997,7 +1003,8 @@
           },
           "uncertainties": {
             "title": "Avec prise en compte des incertitudes d'utilisation",
-            "description": "Les incertitudes d'utilisation sont calculées lors de l'étalonnage de la sonde utilisée, elles diffèrent pour chaque sonde"
+            "description": "Les incertitudes d'utilisation sont calculées lors de l'étalonnage de la sonde utilisée, elles diffèrent pour chaque sonde",
+            "expert_only": "Disponible uniquement en licence Expert"
           },
           "na": "Sans objet"
         }
@@ -3779,8 +3786,10 @@
       "disable": "Désactiver la surveillance",
       "enable": "Activer la surveillance",
       "toggle": "Gérer surveillance / alarmes",
+      "toggle_forbidden": "Vous n'avez pas l'autorisation pour modifier la surveillance",
       "location": "Localisation",
-      "settings": "Modifier les paramètres du lieu"
+      "settings": "Modifier les paramètres du lieu",
+      "settings_forbidden": "Vous n'avez pas l'autorisation pour modifier ce lieu"
     },
     "confirm": {
       "title": "Confirmation",

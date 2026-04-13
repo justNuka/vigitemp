@@ -48,9 +48,19 @@ interface SensorModalProps {
   sensor?: Sensor | null;
   isEditing?: boolean;
   isPack?: boolean;
+  moduleOnly?: boolean;
+  onSuccess?: () => void;
 }
 
-export function SensorModal({ open, onOpenChange, sensor, isEditing, isPack = false }: SensorModalProps) {
+export function SensorModal({
+  open,
+  onOpenChange,
+  sensor,
+  isEditing,
+  isPack = false,
+  moduleOnly = false,
+  onSuccess,
+}: SensorModalProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const t = useTranslations('sensorsDialog');
@@ -116,7 +126,7 @@ export function SensorModal({ open, onOpenChange, sensor, isEditing, isPack = fa
         const payload: { moduleId: number | null; sondeOffset?: number } = {
           moduleId: moduleIdValue,
         };
-        if (!isPack) {
+        if (!isPack && !moduleOnly) {
           payload.sondeOffset = sondeOffsetValue;
         }
 
@@ -146,6 +156,7 @@ export function SensorModal({ open, onOpenChange, sensor, isEditing, isPack = fa
       router.refresh();
       form.reset({ sondeType: "", serieNum: "", moduleId: "", sondeOffset: undefined });
       onOpenChange(false);
+      onSuccess?.();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('toast.save_error'));
     }
@@ -258,39 +269,41 @@ export function SensorModal({ open, onOpenChange, sensor, isEditing, isPack = fa
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="sondeOffset"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('fields.offset_label')}</FormLabel>
-                  <p className="text-xs text-muted-foreground">
-                    {isPack ? t('fields.offset_unavailable_pack') : t('fields.offset_hint')}
-                  </p>
-                  <FormControl>
-                    <Input
-                      id="sonde-offset"
-                      type="number"
-                      step="0.01"
-                      placeholder={t('fields.offset_placeholder')}
-                      value={field.value ?? ""}
-                      disabled={isPack}
-                      className={isPack ? "bg-muted opacity-70" : undefined}
-                      onChange={(e) => {
-                        const raw = e.target.value;
-                        if (raw === "") {
-                          field.onChange(undefined);
-                          return;
-                        }
-                        const parsed = Number(raw);
-                        field.onChange(Number.isFinite(parsed) ? parsed : undefined);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!moduleOnly ? (
+              <FormField
+                control={form.control}
+                name="sondeOffset"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('fields.offset_label')}</FormLabel>
+                    <p className="text-xs text-muted-foreground">
+                      {isPack ? t('fields.offset_unavailable_pack') : t('fields.offset_hint')}
+                    </p>
+                    <FormControl>
+                      <Input
+                        id="sonde-offset"
+                        type="number"
+                        step="0.01"
+                        placeholder={t('fields.offset_placeholder')}
+                        value={field.value ?? ""}
+                        disabled={isPack}
+                        className={isPack ? "bg-muted opacity-70" : undefined}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          if (raw === "") {
+                            field.onChange(undefined);
+                            return;
+                          }
+                          const parsed = Number(raw);
+                          field.onChange(Number.isFinite(parsed) ? parsed : undefined);
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

@@ -282,6 +282,16 @@ export default function MonitoringDetailsModal({
     [initialConsigne, initialConsigneInf, initialConsigneSup, initialUnite, orderedData],
   );
 
+  const { consigneSup, consigneInf, consigne, unite } = summary;
+  const preAlarmSup =
+    estConsigneSupPreAlarmeActive && initialConsigneSupPreAlarme !== null && initialConsigneSupPreAlarme !== undefined
+      ? Number(initialConsigneSupPreAlarme)
+      : null;
+  const preAlarmInf =
+    estConsigneInfPreAlarmeActive && initialConsigneInfPreAlarme !== null && initialConsigneInfPreAlarme !== undefined
+      ? Number(initialConsigneInfPreAlarme)
+      : null;
+
   const numberFormatter = useMemo(() => new Intl.NumberFormat(localeTag), [localeTag]);
 
   const presentationRows = useMemo(() => {
@@ -336,16 +346,6 @@ export default function MonitoringDetailsModal({
     totalRows,
     unite,
   ]);
-
-  const { consigneSup, consigneInf, consigne, unite } = summary;
-  const preAlarmSup =
-    estConsigneSupPreAlarmeActive && initialConsigneSupPreAlarme !== null && initialConsigneSupPreAlarme !== undefined
-      ? Number(initialConsigneSupPreAlarme)
-      : null;
-  const preAlarmInf =
-    estConsigneInfPreAlarmeActive && initialConsigneInfPreAlarme !== null && initialConsigneInfPreAlarme !== undefined
-      ? Number(initialConsigneInfPreAlarme)
-      : null;
 
   const measuresLabel = useMemo(() => t("chart.measures", { unit: unite }), [t, unite]);
   const [yMin, yMax] = useMemo(

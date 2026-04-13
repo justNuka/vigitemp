@@ -20,7 +20,11 @@ import { MetrologySensorInfoSection } from './metrology-tab/metrology-sensor-inf
 import { defaultMetrologyUnit, normalizeMetrologyUnit } from './metrology-tab/metrology-helpers'
 import type { LocationFormData } from './location-form-types'
 
-export function LocationFormTabMetrology() {
+type LocationFormTabMetrologyProps = {
+  isExpertEdition: boolean
+}
+
+export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMetrologyProps) {
   const t = useTranslations('locationsForm.metrology')
   const tGeneral = useTranslations('locationsForm.general')
   const { register, watch, setValue } = useFormContext<LocationFormData>()
@@ -97,6 +101,17 @@ export function LocationFormTabMetrology() {
     if (!isDeriveForced || formData.Prendre_En_Compte_Derive === true) return
     setValue('Prendre_En_Compte_Derive', true)
   }, [formData.Prendre_En_Compte_Derive, isDeriveForced, setValue])
+
+  useEffect(() => {
+    if (isExpertEdition) return
+
+    if (formData.EMT_Mode === 'uncertainties') {
+      setValue('EMT_Mode', 'quart')
+    }
+    if (formData.Prendre_En_Compte_Derive) {
+      setValue('Prendre_En_Compte_Derive', false)
+    }
+  }, [formData.EMT_Mode, formData.Prendre_En_Compte_Derive, isExpertEdition, setValue])
 
   useEffect(() => {
     const previousMode = previousModeRef.current
@@ -186,6 +201,11 @@ export function LocationFormTabMetrology() {
 
   return (
     <TabsContent value="metrologie" className="space-y-6">
+      <div className="rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+        <span className="font-medium">{t('mode.label')}:</span>{' '}
+        {isExpertEdition ? t('mode.expert') : t('mode.standard')}
+      </div>
+
       <MetrologySensorInfoSection formData={formData} latestAdjustment={latestAdjustment} latestCalibration={latestCalibration} />
 
       <div className="border p-4 rounded-lg space-y-4">
@@ -262,6 +282,7 @@ export function LocationFormTabMetrology() {
       </div>
 
       <EmtModeSection
+        isExpertEdition={isExpertEdition}
         formData={formData}
         emtPreview={emtPreview}
         absEj={absEj}

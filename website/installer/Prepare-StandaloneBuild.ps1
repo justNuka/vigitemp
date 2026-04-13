@@ -22,6 +22,68 @@ function Write-Log($message) {
     Write-Host "[$timestamp] $message"
 }
 
+function Remove-DirectoryWithRetry {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [int]$MaxAttempts = 5,
+        [int]$DelaySeconds = 2
+    )
+
+    if (-not (Test-Path $Path)) {
+        return $true
+    }
+
+    $lastErrorMessage = ""
+    for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+        try {
+            Remove-Item -Path $Path -Recurse -Force -ErrorAction Stop
+        } catch {
+            $lastErrorMessage = $_.Exception.Message
+        }
+
+        if (-not (Test-Path $Path)) {
+            return $true
+        }
+
+        if ($attempt -eq $MaxAttempts) {
+            Write-Log "Could not fully clean '$Path' after $MaxAttempts attempts: $lastErrorMessage"
+            return $false
+        }
+
+        Start-Sleep -Seconds $DelaySeconds
+    }
+
+    return (-not (Test-Path $Path))
+}
+
+function Invoke-Pnpm {
+    param(
+        [Parameter(Mandatory = $true)][string[]]$Arguments,
+        [switch]$CaptureOutput
+    )
+
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        if ($CaptureOutput) {
+            $commandOutput = @()
+            & $pnpmCmd.Source @Arguments 2>&1 | Tee-Object -Variable commandOutput | Out-Null
+            return [pscustomobject]@{
+                ExitCode = $LASTEXITCODE
+                Output = ($commandOutput -join [Environment]::NewLine)
+            }
+        }
+
+        & $pnpmCmd.Source @Arguments | Out-Null
+        return [pscustomobject]@{
+            ExitCode = $LASTEXITCODE
+            Output = ""
+        }
+    } finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+}
+
 $scriptRoot = $PSScriptRoot
 $websiteRoot = Resolve-Path (Join-Path $scriptRoot "..")
 $repoRoot = Resolve-Path (Join-Path $websiteRoot "..")
@@ -44,20 +106,30 @@ if ($null -eq $pnpmCmd) {
 }
 
 Push-Location $SourcePath
+$buildDistDirName = ".next"
 
 if (-not $SkipInstall) {
     Write-Log "Running pnpm install..."
-    & $pnpmCmd.Source install | Out-Null
+    $installResult = Invoke-Pnpm -Arguments @("install")
+    if ($installResult.ExitCode -ne 0) {
+        Write-Error "pnpm install failed (code $($installResult.ExitCode))."
+    }
 }
 
 if (-not $SkipApproveBuilds) {
     Write-Log "Running pnpm approve-builds (interactive)..."
-    & $pnpmCmd.Source approve-builds | Out-Null
+    $approveResult = Invoke-Pnpm -Arguments @("approve-builds")
+    if ($approveResult.ExitCode -ne 0) {
+        Write-Error "pnpm approve-builds failed (code $($approveResult.ExitCode))."
+    }
 }
 
 if (-not $SkipGenerate) {
     Write-Log "Running pnpm prisma:generate..."
-    & $pnpmCmd.Source prisma:generate | Out-Null
+    $generateResult = Invoke-Pnpm -Arguments @("prisma:generate")
+    if ($generateResult.ExitCode -ne 0) {
+        Write-Error "pnpm prisma:generate failed (code $($generateResult.ExitCode))."
+    }
 }
 
 if (-not $SkipBuild) {
@@ -78,7 +150,43 @@ if (-not $SkipBuild) {
         if (-not (Test-Path $buildLogsDir)) {
             New-Item -ItemType Directory -Force -Path $buildLogsDir | Out-Null
         }
-        & $pnpmCmd.Source build | Out-Null
+
+        $maxBuildAttempts = 3
+
+        for ($attempt = 1; $attempt -le $maxBuildAttempts; $attempt++) {
+            $nextBuildDir = Join-Path $SourcePath $buildDistDirName
+
+            if ($attempt -gt 1) {
+                Write-Log "Retrying pnpm build after EBUSY lock (attempt $attempt/$maxBuildAttempts)..."
+            }
+
+            $cleanResult = Remove-DirectoryWithRetry -Path $nextBuildDir -MaxAttempts 3 -DelaySeconds 1
+            if (-not $cleanResult) {
+                Write-Log "Continuing build attempt with partial cleanup on $buildDistDirName."
+            }
+
+            $buildResult = Invoke-Pnpm -Arguments @("build") -CaptureOutput
+            $buildExitCode = $buildResult.ExitCode
+
+            if ($buildExitCode -eq 0) {
+                break
+            }
+
+            $buildOutputText = $buildResult.Output
+            $isBusyLock = $buildOutputText -match "EBUSY" -or $buildOutputText -match "resource busy or locked"
+
+            if (-not $isBusyLock -or $attempt -eq $maxBuildAttempts) {
+                $outputTail = ($buildOutputText -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Last 12) -join [Environment]::NewLine
+                if ([string]::IsNullOrWhiteSpace($outputTail)) {
+                    Write-Error "pnpm build failed (code $buildExitCode)."
+                } else {
+                    Write-Error "pnpm build failed (code $buildExitCode). Last output lines:`n$outputTail"
+                }
+            }
+
+            Write-Log "Detected EBUSY lock during build. Waiting before retry..."
+            Start-Sleep -Seconds 2
+        }
     } finally {
         $env:VIGITEMP_SKIP_DB_ON_BUILD = $previousSkipDb
         $env:VIGITEMP_LOGS_DIR = $previousLogsDir
@@ -98,14 +206,14 @@ if ($LASTEXITCODE -ne 0) {
 
 Pop-Location
 
-$standaloneDir = Join-Path $SourcePath ".next\standalone"
-$staticDir = Join-Path $SourcePath ".next\static"
+$standaloneDir = Join-Path $SourcePath (Join-Path $buildDistDirName "standalone")
+$staticDir = Join-Path $SourcePath (Join-Path $buildDistDirName "static")
 
 if (-not (Test-Path $standaloneDir)) {
-    Write-Error "Missing .next\standalone. Make sure next.config.js has output=standalone and build succeeded."
+    Write-Error "Missing $buildDistDirName\standalone. Make sure next.config.js has output=standalone and build succeeded."
 }
 if (-not (Test-Path $staticDir)) {
-    Write-Error "Missing .next\static. Build seems incomplete."
+    Write-Error "Missing $buildDistDirName\static. Build seems incomplete."
 }
 
 Write-Log "Preparing output folder: $OutputDir"

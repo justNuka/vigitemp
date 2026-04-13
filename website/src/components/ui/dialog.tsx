@@ -15,7 +15,7 @@ const DialogPortal = DialogPrimitive.Portal
 const DialogClose = DialogPrimitive.Close
 
 const DialogOverlay = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Overlay>,
+  React.ComponentRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
@@ -34,10 +34,10 @@ type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.
 }
 
 const DialogContent = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Content>,
+  React.ComponentRef<typeof DialogPrimitive.Content>,
   DialogContentProps
 >(({ className, children, draggable = true, style, ...props }, ref) => {
-  const contentRef = React.useRef<React.ElementRef<typeof DialogPrimitive.Content> | null>(null)
+  const contentRef = React.useRef<React.ComponentRef<typeof DialogPrimitive.Content> | null>(null)
   // Fix 3: use a ref instead of state — direct DOM mutation, zero re-renders during drag
   const offsetRef = React.useRef({ x: 0, y: 0 })
   const dragStateRef = React.useRef<{
@@ -68,7 +68,7 @@ const DialogContent = React.forwardRef<
   }, [handlePointerMove])
 
   const setRefs = React.useCallback(
-    (node: React.ElementRef<typeof DialogPrimitive.Content> | null) => {
+    (node: React.ComponentRef<typeof DialogPrimitive.Content> | null) => {
       contentRef.current = node
       if (typeof ref === "function") {
         ref(node)
@@ -175,7 +175,7 @@ const DialogFooter = ({
 DialogFooter.displayName = "DialogFooter"
 
 const DialogTitle = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Title>,
+  React.ComponentRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
@@ -190,7 +190,7 @@ const DialogTitle = React.forwardRef<
 DialogTitle.displayName = DialogPrimitive.Title.displayName
 
 const DialogDescription = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Description>,
+  React.ComponentRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
