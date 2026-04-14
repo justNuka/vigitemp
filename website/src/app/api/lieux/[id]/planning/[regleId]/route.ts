@@ -233,6 +233,20 @@ export const DELETE = withLogging(
         })
       }
 
+      const [remainingRules] = await prisma.$queryRaw<Array<{ count: bigint | number }>>`
+        SELECT COUNT(*) AS count
+        FROM t_lieu_planning_regle
+        WHERE Id_Lieu = ${idLieu}
+      `
+
+      const hasAtLeastOneRule = Number(remainingRules?.count ?? 0) > 0
+
+      await prisma.$executeRaw`
+        UPDATE t_lieu
+        SET Planning_Regle_Existe = ${hasAtLeastOneRule ? 1 : 0}
+        WHERE Id_Lieu = ${idLieu}
+      `
+
       log.data.delete("Planning consigne", idRegle, user.username, user.userId, getClientIp(req),
         retainMode === "regle" ? "Suppression avec conservation des valeurs de la regle" : "Suppression simple")
 

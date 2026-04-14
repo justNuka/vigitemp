@@ -53,8 +53,8 @@ const EVENT_COLOR: Record<AlarmEventEmailProps["eventType"], string> = {
 
 const COPY: Record<Locale, Record<string, string>> = {
   fr: {
-    subjectPrefix: "[VIGITEMP]",
-    title: "Notification d'alarme Vigitemp",
+    subjectPrefix: "[VIGISENSYS]",
+    title: "Notification d'alarme VigiSensys",
     site: "Site",
     lieu: "Lieu",
     sonde: "Sonde",
@@ -72,8 +72,8 @@ const COPY: Record<Locale, Record<string, string>> = {
     brand: "Systeme de surveillance environnementale",
   },
   en: {
-    subjectPrefix: "[VIGITEMP]",
-    title: "Vigitemp alarm notification",
+    subjectPrefix: "[VIGISENSYS]",
+    title: "VigiSensys alarm notification",
     site: "Site",
     lieu: "Location",
     sonde: "Sensor",
@@ -120,7 +120,7 @@ export default function AlarmEventNotificationEmail({
       <Body style={styles.body}>
         <Container style={styles.container}>
           <Section style={{ ...styles.header, borderTop: `4px solid ${accent}` }}>
-            <Text style={styles.kicker}>VIGITEMP</Text>
+            <Text style={styles.kicker}>VIGISENSYS</Text>
             <Heading style={styles.headerTitle}>{copy.title}</Heading>
             <Text style={{ ...styles.headerSubtitle, color: accent }}>{eventLabel}</Text>
           </Section>
@@ -177,7 +177,7 @@ export default function AlarmEventNotificationEmail({
 
           <Section style={styles.footerBand}>
             <Text style={styles.footerBrand}>
-              <strong>Vigitemp</strong> - {copy.brand}
+              <strong>VigiSensys</strong> - {copy.brand}
               <br />
               <Link href="https://www.mc2lab.fr" style={styles.footerLink}>
                 MC2 Lab

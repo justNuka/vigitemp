@@ -38,25 +38,20 @@ export function ImageCropDialog({
   resetLabel = "Reinitialiser",
 }: Props) {
   const imgRef = useRef<HTMLImageElement | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [naturalSize, setNaturalSize] = useState({ width: 1, height: 1 })
   const [zoom, setZoom] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
   const dragRef = useRef<{ x: number; y: number } | null>(null)
 
-  useEffect(() => {
-    if (!file) {
-      setPreviewUrl(null)
-      return
-    }
-
-    const url = URL.createObjectURL(file)
-    setPreviewUrl(url)
-    setZoom(1)
-    setOffset({ x: 0, y: 0 })
-
-    return () => URL.revokeObjectURL(url)
+  const previewUrl = useMemo(() => {
+    if (!file) return null
+    return URL.createObjectURL(file)
   }, [file])
+
+  useEffect(() => {
+    if (!previewUrl) return
+    return () => URL.revokeObjectURL(previewUrl)
+  }, [previewUrl])
 
   const baseScale = useMemo(() => {
     const w = naturalSize.width || 1
@@ -72,12 +67,13 @@ export function ImageCropDialog({
     return { x: maxX, y: maxY }
   }, [naturalSize.height, naturalSize.width, totalScale])
 
-  useEffect(() => {
-    setOffset((current) => ({
-      x: clamp(current.x, -maxOffsets.x, maxOffsets.x),
-      y: clamp(current.y, -maxOffsets.y, maxOffsets.y),
-    }))
-  }, [maxOffsets.x, maxOffsets.y])
+  const clampedOffset = useMemo(
+    () => ({
+      x: clamp(offset.x, -maxOffsets.x, maxOffsets.x),
+      y: clamp(offset.y, -maxOffsets.y, maxOffsets.y),
+    }),
+    [maxOffsets.x, maxOffsets.y, offset.x, offset.y],
+  )
 
   const applyCrop = async () => {
     if (!file) return
@@ -92,8 +88,8 @@ export function ImageCropDialog({
 
     const srcW = SELECTION_SIZE / totalScale
     const srcH = SELECTION_SIZE / totalScale
-    const srcX = naturalSize.width / 2 - (SELECTION_SIZE / 2 + offset.x) / totalScale
-    const srcY = naturalSize.height / 2 - (SELECTION_SIZE / 2 + offset.y) / totalScale
+    const srcX = naturalSize.width / 2 - (SELECTION_SIZE / 2 + clampedOffset.x) / totalScale
+    const srcY = naturalSize.height / 2 - (SELECTION_SIZE / 2 + clampedOffset.y) / totalScale
 
     ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, SELECTION_SIZE, SELECTION_SIZE)
 
@@ -141,6 +137,7 @@ export function ImageCropDialog({
               }}
             >
               {previewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- Raw <img> is required for precise canvas crop and natural dimensions.
                 <img
                   ref={imgRef}
                   src={previewUrl}
@@ -149,6 +146,8 @@ export function ImageCropDialog({
                   onLoad={(event) => {
                     const target = event.currentTarget
                     setNaturalSize({ width: target.naturalWidth, height: target.naturalHeight })
+                    setZoom(1)
+                    setOffset({ x: 0, y: 0 })
                   }}
                   style={{
                     width: naturalSize.width,
@@ -156,7 +155,7 @@ export function ImageCropDialog({
                     position: "absolute",
                     top: "50%",
                     left: "50%",
-                    transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px)) scale(${totalScale})`,
+                    transform: `translate(calc(-50% + ${clampedOffset.x}px), calc(-50% + ${clampedOffset.y}px)) scale(${totalScale})`,
                     transformOrigin: "center center",
                     userSelect: "none",
                     pointerEvents: "none",

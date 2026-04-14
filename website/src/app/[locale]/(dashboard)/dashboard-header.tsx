@@ -58,7 +58,13 @@ export function DashboardHeader({ stats }: { stats: Stats }) {
   };
 
   useEffect(() => {
-    setActiveAlarms(stats.activeAlarms);
+    const syncTimer = window.setTimeout(() => {
+      setActiveAlarms(stats.activeAlarms);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(syncTimer);
+    };
   }, [stats.activeAlarms]);
 
   useEffect(() => {

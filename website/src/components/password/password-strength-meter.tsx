@@ -19,8 +19,8 @@ function getStrengthBarClass(score: number) {
 }
 
 export function PasswordStrengthMeter({ password }: { password: string }) {
-  if (!password) return null;
   const t = useTranslations("passwordStrength");
+  if (!password) return null;
 
   const score = calculatePasswordStrength(password);
 

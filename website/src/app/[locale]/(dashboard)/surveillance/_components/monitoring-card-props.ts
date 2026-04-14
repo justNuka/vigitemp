@@ -10,6 +10,7 @@ type SurveillanceToggleHandler = (
   action: "surveillance" | "alarms",
   newState: boolean,
   durationMinutes?: number | null,
+  actionComment?: string | null,
 ) => void
 
 export function buildMonitoringCardProps(
@@ -17,6 +18,7 @@ export function buildMonitoringCardProps(
   siteName: string,
   groupName: string,
   onSurveillanceToggle: SurveillanceToggleHandler,
+  requireActionComment: boolean,
   onEditLocation: MonitoringCardProps["onEditLocation"],
   showNullNonResponse: boolean,
 ): MonitoringCardProps {
@@ -52,8 +54,9 @@ export function buildMonitoringCardProps(
     gsoRssi: sensor.location.gsoRssi ?? null,
     batteryPercent: sensor.location.batteryPercent ?? null,
     gsoTension: sensor.location.gsoTension ?? null,
-    onSurveillanceToggle: (id, action, newState, durationMinutes) =>
-      onSurveillanceToggle(id, action, newState, durationMinutes ?? null),
+    onSurveillanceToggle: (id, action, newState, durationMinutes, actionComment) =>
+      onSurveillanceToggle(id, action, newState, durationMinutes ?? null, actionComment ?? null),
+    requireActionComment,
     onEditLocation,
     showNullNonResponse,
   }

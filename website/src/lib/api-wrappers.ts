@@ -30,7 +30,6 @@ export type HandlerContext = {
  * modifying the 40+ existing route files.
  * The `any` is confined to this single type alias and does not appear in implementations.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ApiHandler = (req: NextRequest, ctx: HandlerContext, ...args: any[]) => Promise<NextResponse>
 
 export function withAuthLogging(

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { z } from "zod"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useEffect } from "react"
 import { useTranslations } from 'next-intl'
@@ -47,7 +47,7 @@ export function EditCommentDialog({
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<EditFormValues>({
     resolver: zodResolver(editSchema),
@@ -61,7 +61,7 @@ export function EditCommentDialog({
     reset({ text: initialText })
   }, [initialText, open, reset])
 
-  const currentText = watch("text")
+  const currentText = useWatch({ control, name: "text" }) ?? ""
   const textError = errors.text?.message
 
   const onSubmit = (values: EditFormValues) => {

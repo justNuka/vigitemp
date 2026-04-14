@@ -14,7 +14,7 @@ import { postJson } from "@/lib/http"
 import { validatePassword } from "@/lib/password-validation"
 import type { PasswordRules } from "@/lib/api"
 import { z } from "zod"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useTranslations } from "next-intl"
 
@@ -44,7 +44,7 @@ export function ForcePasswordChangeForm({ username, rules }: Props) {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<ForcePasswordFormValues>({
     resolver: zodResolver(forcePasswordSchema),
@@ -55,8 +55,8 @@ export function ForcePasswordChangeForm({ username, rules }: Props) {
     },
   })
 
-  const newPassword = watch("newPassword")
-  const confirmPassword = watch("confirmPassword")
+  const newPassword = useWatch({ control, name: "newPassword" }) ?? ""
+  const confirmPassword = useWatch({ control, name: "confirmPassword" }) ?? ""
   const validation = rules ? validatePassword(newPassword, rules) : null
 
   const onSubmit = async (data: ForcePasswordFormValues) => {

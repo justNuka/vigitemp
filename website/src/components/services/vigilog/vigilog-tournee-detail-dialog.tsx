@@ -122,7 +122,7 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
   })
 
   const tournee = detail?.tournee ?? null
-  const measures = detail?.measures ?? []
+  const measures = useMemo(() => detail?.measures ?? [], [detail?.measures])
   const measuresColumns = useMemo<ColumnDef<(typeof measures)[number]>[]>(
     () => [
       {
@@ -194,7 +194,7 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
         cell: ({ row }) => row.original.details || "-",
       },
     ],
-    [locale, measures, t],
+    [locale, t],
   )
 
   const chartData = useMemo(() => {
@@ -314,18 +314,28 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
     const yScale = chart?.scales?.y
     const chartArea = chart?.chartArea
     if (!chart || !yScale || !chartArea || !tournee) {
-      setGuidePositions({ low: null, high: null, target: null })
-      return
+      const resetId = window.setTimeout(() => {
+        setGuidePositions({ low: null, high: null, target: null })
+      }, 0)
+      return () => {
+        window.clearTimeout(resetId)
+      }
     }
 
     const clamp = (value: number) => Math.max(chartArea.top, Math.min(chartArea.bottom, value))
     const toPosition = (value: number | null) => (value == null ? null : clamp(yScale.getPixelForValue(value)))
 
-    setGuidePositions({
-      low: tournee.lowLimitActive ? toPosition(tournee.lowLimit) : null,
-      high: tournee.highLimitActive ? toPosition(tournee.highLimit) : null,
-      target: toPosition(tournee.target),
-    })
+    const updateId = window.setTimeout(() => {
+      setGuidePositions({
+        low: tournee.lowLimitActive ? toPosition(tournee.lowLimit) : null,
+        high: tournee.highLimitActive ? toPosition(tournee.highLimit) : null,
+        target: toPosition(tournee.target),
+      })
+    }, 0)
+
+    return () => {
+      window.clearTimeout(updateId)
+    }
   }, [chartData, tournee])
 
   const exportMeasuresAsCsv = () => {
@@ -359,7 +369,7 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-[78rem] overflow-hidden border-border/60 bg-white px-6 shadow-sm dark:bg-popover dark:text-popover-foreground">
+      <DialogContent className="max-h-[90vh] max-w-312 overflow-hidden border-border/60 bg-white px-6 shadow-sm dark:bg-popover dark:text-popover-foreground">
         <DialogHeader>
           <DialogTitle>{t("detail.title")}</DialogTitle>
           <DialogDescription>
@@ -455,7 +465,7 @@ export function VigilogTourneeDetailDialog({ open, pending = false, detail, onOp
             <div className="rounded-xl border border-cyan-300/80 bg-cyan-100/40 p-4 shadow-[0_10px_24px_rgba(8,145,178,0.06)]">
               <h3 className="mb-3 font-medium text-foreground">{t("detail.chart.title")}</h3>
               {chartData ? (
-                <div className="relative h-[320px]">
+                <div className="relative h-80">
                   <Line
                     ref={chartRef}
                     data={chartData}

@@ -16,7 +16,6 @@ import type { BreakpointKey, GridLayouts, Props, WidgetId } from "./expert-dashb
 export function ExpertAdminDashboard({ metrics }: Props) {
   const t = useTranslations("adminDashboard")
   const locale = useLocale()
-  const [mounted, setMounted] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
 
   const allWidgetDefs = useMemo(
@@ -29,22 +28,19 @@ export function ExpertAdminDashboard({ metrics }: Props) {
   const accessLabel = t("links.access")
 
   const { containerRef, width } = useContainerWidth()
-  const widthReady = mounted && width > 0
+  const widthReady = width > 0
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted) return
-
     const resolvedWidgets = defaultWidgetIds
+    let syncTimer: number | null = null
 
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY)
       if (!raw) {
-        setWidgetIds(resolvedWidgets)
-        setLayouts(createDefaultLayouts(resolvedWidgets))
+        syncTimer = window.setTimeout(() => {
+          setWidgetIds(resolvedWidgets)
+          setLayouts(createDefaultLayouts(resolvedWidgets))
+        }, 0)
         return
       }
 
@@ -53,23 +49,29 @@ export function ExpertAdminDashboard({ metrics }: Props) {
       const missingWidgets = resolvedWidgets.filter((id) => !storedWidgets.includes(id))
       const nextWidgetIds = [...storedWidgets, ...missingWidgets]
 
-      setWidgetIds(nextWidgetIds)
-      setLayouts(normalizeLayouts(parsed.layouts || {}, resolvedWidgets))
+      syncTimer = window.setTimeout(() => {
+        setWidgetIds(nextWidgetIds)
+        setLayouts(normalizeLayouts(parsed.layouts || {}, resolvedWidgets))
+      }, 0)
     } catch {
       // Ignore invalid local storage values and keep default layout.
     }
-  }, [allWidgetDefs, defaultWidgetIds, mounted])
+
+    return () => {
+      if (syncTimer !== null) {
+        window.clearTimeout(syncTimer)
+      }
+    }
+  }, [defaultWidgetIds])
 
   useEffect(() => {
-    if (!mounted) return
-
     try {
       const nextLayouts = normalizeLayouts(layouts, widgetIds)
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ widgetIds, layouts: nextLayouts }))
     } catch {
       // Ignore local storage write errors.
     }
-  }, [layouts, mounted, widgetIds])
+  }, [layouts, widgetIds])
 
   const availableWidgets = allWidgetDefs.filter((widget) => !widgetIds.includes(widget.id))
 
@@ -115,8 +117,6 @@ export function ExpertAdminDashboard({ metrics }: Props) {
       return normalizeLayouts(next, nextWidgetIds)
     })
   }
-
-  if (!mounted) return null
 
   return (
     <div className="space-y-4 overflow-x-hidden p-6">

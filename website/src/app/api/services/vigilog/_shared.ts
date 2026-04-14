@@ -13,6 +13,7 @@ export const VIGILOG_STATUSES = [
 ] as const
 
 export const VIGILOG_TRAFFIC_LIGHTS = ["VERT", "ORANGE", "ROUGE"] as const
+export const VIGILOG_TEMP_USAGE_STATUSES = ["EN_COURS", "TERMINE"] as const
 
 const decimalSchema = z.coerce.number().finite()
 const positiveIntegerSchema = z.coerce.number().int().min(1)
@@ -91,6 +92,18 @@ export const vigilogReceiveSchema = z.object({
   ).max(20000).optional().default([]),
 })
 
+export const vigilogTemporaryUsageStartSchema = z.object({
+  Id_VigiLog_Configuration: positiveIntegerSchema,
+  Id_VigiLog: positiveIntegerSchema.nullable().optional(),
+  Numero_Serie_VigiLog: z.string().trim().min(1).max(30),
+  Nom_Lieu_Temporaire: z.string().trim().min(1).max(120),
+  Commentaire_Demarrage: z.string().trim().max(2000).nullable().optional(),
+})
+
+export const vigilogTemporaryUsageStopSchema = z.object({
+  Commentaire_Arret: z.string().trim().max(2000).nullable().optional(),
+})
+
 export const vigilogAcknowledgeSchema = z.object({
   Commentaire_Acquittement: z.string().trim().max(2000).nullable().optional(),
 })
@@ -109,6 +122,22 @@ export function buildVigilogReference(userId: number) {
   ].join("")
 
   return `VLG-${datePart}-${timePart}-${userId}`
+}
+
+export function buildVigilogTemporaryUsageReference(userId: number) {
+  const now = new Date()
+  const datePart = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("")
+  const timePart = [
+    String(now.getHours()).padStart(2, "0"),
+    String(now.getMinutes()).padStart(2, "0"),
+    String(now.getSeconds()).padStart(2, "0"),
+  ].join("")
+
+  return `VLGU-${datePart}-${timePart}-${userId}`
 }
 
 export function normalizeOptionalText(value: string | null | undefined) {

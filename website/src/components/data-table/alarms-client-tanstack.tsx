@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAppAccess } from "@/components/access/app-access-provider";
 import { fetchAlarmsPage, useAlarms } from "@/hooks/useAlarms";
@@ -116,11 +116,11 @@ export function AlarmsClientTanStack() {
     siteId: selectedSiteId,
     locationId: selectedLocationId,
   });
-  const alarms = data?.data ?? [];
+  const alarms = useMemo(() => data?.data ?? [], [data?.data]);
   const total = data?.pagination.total ?? alarms.length;
   const pageCount = data?.pagination.pages ?? 1;
   const siteOptions = data?.filters?.sites ?? [];
-  const locationOptions = data?.filters?.lieux ?? [];
+  const locationOptions = useMemo(() => data?.filters?.lieux ?? [], [data?.filters?.lieux]);
 
   const commentSchema = z.object({
     comment: z.string().max(200, tDialog("validation.comment_max", { max: 200 })).optional(),
@@ -209,10 +209,10 @@ export function AlarmsClientTanStack() {
     return () => { active = false; };
   }, [selectedAlarmId]);
 
-  const formatDateTime = (date: string | null) => {
+  const formatDateTime = useCallback((date: string | null) => {
     if (!date) return t("date.na");
     return formatDbDateTime(date);
-  };
+  }, [t]);
 
   const tableData: AlarmRow[] = alarms
     .filter((alarm) => typeFilters.length === 0 || typeFilters.includes(alarm.Type))
@@ -239,6 +239,19 @@ export function AlarmsClientTanStack() {
   const allVisibleSelected =
     selectableAlarmIds.length > 0 && selectableAlarmIds.every((id) => selectedAlarmIds.includes(id));
   const someVisibleSelected = selectableAlarmIds.some((id) => selectedAlarmIds.includes(id));
+
+  const toggleAlarmSelection = useCallback((alarmId: number, checked: boolean) => {
+    setSelectedAlarmIds((prev) =>
+      checked ? (prev.includes(alarmId) ? prev : [...prev, alarmId]) : prev.filter((id) => id !== alarmId),
+    );
+  }, []);
+
+  const toggleAllVisibleSelections = useCallback((checked: boolean) => {
+    setSelectedAlarmIds((prev) => {
+      if (checked) return Array.from(new Set([...prev, ...selectableAlarmIds]));
+      return prev.filter((id) => !selectableAlarmIds.includes(id));
+    });
+  }, [selectableAlarmIds]);
 
   useEffect(() => {
     setSelectedAlarmIds((prev) => prev.filter((id) => tableData.some((alarm) => alarm.Id_Alarme === id)));
@@ -444,11 +457,13 @@ export function AlarmsClientTanStack() {
     [
       acknowledgeMutation,
       allVisibleSelected,
+      formatDateTime,
       selectedAlarmIds,
-      selectableAlarmIds,
       someVisibleSelected,
       t,
       tButtons,
+      toggleAlarmSelection,
+      toggleAllVisibleSelections,
     ]
   );
 
@@ -468,19 +483,6 @@ export function AlarmsClientTanStack() {
       queryClient.invalidateQueries({ queryKey: ["alarms"] });
     });
   };
-
-  function toggleAlarmSelection(alarmId: number, checked: boolean) {
-    setSelectedAlarmIds((prev) =>
-      checked ? (prev.includes(alarmId) ? prev : [...prev, alarmId]) : prev.filter((id) => id !== alarmId),
-    );
-  }
-
-  function toggleAllVisibleSelections(checked: boolean) {
-    setSelectedAlarmIds((prev) => {
-      if (checked) return Array.from(new Set([...prev, ...selectableAlarmIds]));
-      return prev.filter((id) => !selectableAlarmIds.includes(id));
-    });
-  }
 
   const handleBulkAcknowledge = async () => {
     const ids = [...selectedAlarmIds];

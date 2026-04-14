@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { formatDistanceStrict, formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 import { AlertTriangle, ArrowDown, ArrowUp, Bell, Clock, MessageSquare, PowerOff, RefreshCw, WifiOff } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -92,12 +92,12 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
 
   type CommentFormValues = z.infer<typeof commentSchema>;
 
-  const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<CommentFormValues>({
+  const { register, handleSubmit, reset, control, setValue, formState: { errors, isSubmitting } } = useForm<CommentFormValues>({
     resolver: zodResolver(commentSchema),
     defaultValues: { comment: "" },
   });
 
-  const comment = watch("comment") ?? "";
+  const comment = useWatch({ control, name: "comment" }) ?? "";
 
   useEffect(() => {
     if (!selectedAlarm) return;

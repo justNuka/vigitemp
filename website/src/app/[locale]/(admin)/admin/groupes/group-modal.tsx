@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { useRouter } from '@/i18n/navigation'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { useTranslations } from 'next-intl'
 import {
   Dialog,
@@ -154,7 +154,7 @@ export function GroupModal({ open, onOpenChange, group, isEditing }: GroupModalP
 
   const isSubmitting = form.formState.isSubmitting
   const memoryKey = `group-form:${isEditing ? group?.Id_Groupe ?? 'edit' : 'new'}`
-  const assignedUserIds = form.watch('assignedUserIds') || []
+  const assignedUserIds = useWatch({ control: form.control, name: 'assignedUserIds' }) || []
   const allUserIds = users.map((user) => user.id)
   const allUsersSelected = allUserIds.length > 0 && allUserIds.every((userId) => assignedUserIds.includes(userId))
 

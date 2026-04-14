@@ -14,6 +14,7 @@ import { RssiBars } from '@/components/monitoring-card/rssi-bars'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { useLieuMeasurements } from '@/hooks/useLieuMeasurements'
@@ -65,7 +66,9 @@ interface MonitoringCardProps {
     action: 'surveillance' | 'alarms',
     newState: boolean,
     durationMinutes: number | null,
+    actionComment?: string | null,
   ) => void
+  requireActionComment?: boolean
   showNullNonResponse?: boolean
 }
 
@@ -103,6 +106,7 @@ export default function MonitoringCard({
   alarmId = null,
   onEditLocation,
   onSurveillanceToggle,
+  requireActionComment = false,
   showNullNonResponse = false,
 }: MonitoringCardProps) {
   const t = useTranslations('monitoringCard')
@@ -172,6 +176,8 @@ export default function MonitoringCard({
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [showAcknowledgeModal, setShowAcknowledgeModal] = useState(false)
   const [ackComment, setAckComment] = useState('')
+  const [actionComment, setActionComment] = useState('')
+  const [actionCommentError, setActionCommentError] = useState<string | null>(null)
   const [disableDuration, setDisableDuration] = useState<string>('60')
   const [actionType, setActionType] = useState<'surveillance' | 'alarms'>('surveillance')
   const [isSurveillanceActive, setIsSurveillanceActive] = useState(surveillanceDisabled !== undefined ? !surveillanceDisabled : lieuEtat !== 'D')
@@ -184,15 +190,27 @@ export default function MonitoringCard({
   const resolvedLieuType = lieuType ?? meta?.lieuType ?? null
 
   useEffect(() => {
-    if (surveillanceDisabled !== undefined) {
-      setIsSurveillanceActive(!surveillanceDisabled)
-      return
+    const syncTimer = window.setTimeout(() => {
+      if (surveillanceDisabled !== undefined) {
+        setIsSurveillanceActive(!surveillanceDisabled)
+        return
+      }
+      setIsSurveillanceActive(lieuEtat !== 'D')
+    }, 0)
+
+    return () => {
+      window.clearTimeout(syncTimer)
     }
-    setIsSurveillanceActive(lieuEtat !== 'D')
   }, [lieuEtat, surveillanceDisabled])
 
   useEffect(() => {
-    setIsAlarmActive(!alarmDisabled)
+    const syncTimer = window.setTimeout(() => {
+      setIsAlarmActive(!alarmDisabled)
+    }, 0)
+
+    return () => {
+      window.clearTimeout(syncTimer)
+    }
   }, [alarmDisabled])
 
   useEffect(() => {
@@ -210,19 +228,28 @@ export default function MonitoringCard({
       return
     }
 
+    const normalizedActionComment = actionComment.trim()
+    if (requireActionComment && normalizedActionComment.length === 0) {
+      const message = t('confirm.action_comment.required_error')
+      setActionCommentError(message)
+      return
+    }
+
     const isDisabling = actionType === 'surveillance' ? isSurveillanceActive : isAlarmActive
     const durationMinutes = isDisabling ? (disableDuration === 'manual' ? null : Number(disableDuration)) : null
 
     if (actionType === 'surveillance') {
       const nextState = !isSurveillanceActive
       setIsSurveillanceActive(nextState)
-      onSurveillanceToggle(idLieu, 'surveillance', nextState, durationMinutes)
+      onSurveillanceToggle(idLieu, 'surveillance', nextState, durationMinutes, normalizedActionComment || null)
     } else {
       const nextState = !isAlarmActive
       setIsAlarmActive(nextState)
-      onSurveillanceToggle(idLieu, 'alarms', nextState, durationMinutes)
+      onSurveillanceToggle(idLieu, 'alarms', nextState, durationMinutes, normalizedActionComment || null)
     }
 
+    setActionComment('')
+    setActionCommentError(null)
     setShowConfirmModal(false)
   }
 
@@ -547,6 +574,8 @@ export default function MonitoringCard({
                           event.stopPropagation()
                           if (!canToggleSurveillance) return
                           setActionType('surveillance')
+                          setActionComment('')
+                          setActionCommentError(null)
                           setShowConfirmModal(true)
                         }}
                         className={`p-1 rounded-md transition-colors ${actionButtonClassName} ${isSurveillanceActive ? 'text-red-600' : 'text-green-600 dark:text-green-400'} ${canToggleSurveillance ? '' : 'cursor-not-allowed opacity-40'}`}
@@ -595,7 +624,16 @@ export default function MonitoringCard({
         </div>
       </m.div>
 
-      <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
+      <Dialog
+        open={showConfirmModal}
+        onOpenChange={(open) => {
+          setShowConfirmModal(open)
+          if (!open) {
+            setActionComment('')
+            setActionCommentError(null)
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{t('confirm.title')}</DialogTitle>
@@ -632,6 +670,33 @@ export default function MonitoringCard({
               </Select>
             </div>
           ) : null}
+
+          <div className="space-y-2">
+            <label htmlFor={`monitoring-action-comment-${idLieu}`} className="text-sm font-medium">
+              {t('confirm.action_comment.label')}
+              {requireActionComment ? ' *' : ''}
+            </label>
+            <Textarea
+              id={`monitoring-action-comment-${idLieu}`}
+              rows={3}
+              maxLength={500}
+              value={actionComment}
+              onChange={(event) => {
+                setActionComment(event.target.value)
+                if (actionCommentError) {
+                  setActionCommentError(null)
+                }
+              }}
+              placeholder={t(
+                requireActionComment
+                  ? 'confirm.action_comment.placeholder_required'
+                  : 'confirm.action_comment.placeholder_optional',
+              )}
+            />
+            {actionCommentError ? (
+              <p className="text-xs text-destructive">{actionCommentError}</p>
+            ) : null}
+          </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowConfirmModal(false)}>{t('confirm.cancel')}</Button>

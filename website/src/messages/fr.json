@@ -866,6 +866,11 @@
         "saved": "Brouillon disponible"
       },
       "current_location_label": "Lieu en cours :",
+      "action_comment_label": "Commentaire de l'action",
+      "action_comment_placeholder_optional": "Ajouter un commentaire (optionnel)",
+      "action_comment_placeholder_required": "Ajouter un commentaire (obligatoire)",
+      "action_comment_required": "Le commentaire est obligatoire pour cette action.",
+      "unsaved_changes_title": "Modifications non enregistrées",
       "unsaved_changes_confirm": "Des modifications non enregistrées seront perdues. Fermer quand même ?"
     },
     "general": {
@@ -2178,6 +2183,13 @@
       "operator": "Opérateur",
       "unit": "Unité",
       "validity_days": "Validité (jours)"
+    },
+    "confirm_overwrite": {
+      "title": "Confirmer les modifications",
+      "description": "Cette opération va remplacer des ajustages existants et remettre à zéro certains offsets.",
+      "cancel": "Annuler",
+      "confirm": "Continuer",
+      "submitting": "Validation..."
     },
     "toast": {
       "save_success": "{count} ligne(s) insérée(s) en base.",
@@ -3724,6 +3736,9 @@
     "aria_label": "Graphique des mesures récentes"
   },
   "monitoringCard": {
+    "status": {
+      "ok": "OK"
+    },
     "alarmTypes": {
       "high": "Alarme haute",
       "low": "Alarme basse",
@@ -3815,6 +3830,12 @@
           "720": "12 heures",
           "manual": "Illimitée (manuel)"
         }
+      },
+      "action_comment": {
+        "label": "Commentaire",
+        "placeholder_optional": "Ajouter un commentaire (optionnel)",
+        "placeholder_required": "Ajouter un commentaire (obligatoire)",
+        "required_error": "Le commentaire est obligatoire pour cette action."
       },
       "cancel": "Annuler",
       "confirm": "Confirmer"
@@ -4109,8 +4130,12 @@
     "results": "{count} résultat(s)",
     "export": "Exporter",
     "export_count_prompt": {
+      "title": "Exporter des mesures",
       "message": "Combien de mesures exporter ? (1 à {max})",
-      "invalid": "Valeur invalide. Entrez un nombre entre 1 et {max}."
+      "invalid": "Valeur invalide. Entrez un nombre entre 1 et {max}.",
+      "input_label": "Nombre de mesures à exporter",
+      "cancel": "Annuler",
+      "confirm": "Exporter"
     },
     "export_columns": {
       "title": "Colonnes à exporter",
@@ -4344,6 +4369,15 @@
     "tabs": {
       "active": "Actifs ({count})",
       "archived": "Archivés ({count})"
+    },
+    "dialogs": {
+      "archive": {
+        "title": "Archiver le compte",
+        "description": "Êtes-vous sûr de vouloir archiver le compte de {username} ? Le compte sera désactivé et l'utilisateur ne pourra plus se connecter.",
+        "cancel": "Annuler",
+        "confirm": "Archiver",
+        "submitting": "Archivage..."
+      }
     }
   },
   "createUserDialog": {
@@ -4724,7 +4758,11 @@
         "loggerSerial": "Numéro de série VigiLog",
         "departureSite": "Site de départ",
         "arrivalSite": "Site d'arrivée",
-        "comment": "Commentaire"
+        "comment": "Commentaire",
+        "alreadyPrepared": "VigiLog déjà préparé"
+      },
+      "hints": {
+        "alreadyPrepared": "Si coché, la tournée est créée sans recharger la configuration sur la base."
       },
       "placeholders": {
         "configuration": "Choisir une configuration",
@@ -4772,7 +4810,11 @@
       "description": "Sélectionnez une tournée en attente, posez le VigiLog sur sa base puis validez la reception.",
       "fields": {
         "pendingTour": "Tournée en attente",
-        "comment": "Commentaire de réception"
+        "comment": "Commentaire de réception",
+        "alreadyPrepared": "VigiLog déjà préparé"
+      },
+      "hints": {
+        "alreadyPrepared": "Si décoché, la configuration sélectionnée est appliquée avant la création de tournée."
       },
       "placeholders": {
         "pendingTour": "Choisir une tournée",
@@ -4800,28 +4842,44 @@
         "noLoggerTitle": "VigiLog requis sur la base",
         "noLoggerDescription": "Posez le VigiLog attendu sur la base USB avant de valider la reception.",
         "mismatchTitle": "VigiLog detecte incorrect",
-        "mismatchDescription": "La tournée attend le VigiLog {expected}, mais la base detecte actuellement {detected}."
+        "mismatchDescription": "La tournée attend le VigiLog {expected}, mais la base detecte actuellement {detected}.",
+        "pendingLoggerTitle": "Une tournee est deja en attente pour ce VigiLog",
+        "pendingLoggerDescription": "Selectionnez la tournee existante puis validez la reception."
       },
       "actions": {
-        "submit": "Valider la reception"
+        "submit": "Valider la reception",
+        "createAtArrival": "Creer une tournee a l'arrivee"
       }
     },
     "usage": {
       "title": "Usage ponctuel",
-      "description": "Préparez un VigiLog pour un suivi temporaire sans créer de tournée.",
+      "description": "Lancez un usage temporaire avec un lieu libre, sans créer de lieu ni de sensor en base.",
       "infoTitle": "Mode hors tournée",
-      "infoDescription": "Cette action charge une configuration sur le VigiLog détecté, sans créer d'enregistrement de tournée dans l'historique.",
+      "infoDescription": "La configuration est chargée puis un usage ponctuel est ouvert avec un nom de lieu temporaire. Vous pouvez l'arrêter dès que le suivi est terminé.",
       "fields": {
         "configuration": "Configuration",
         "loggerSerial": "Numéro de série VigiLog",
+        "temporaryLocationName": "Nom du lieu temporaire",
         "note": "Note locale"
       },
       "placeholders": {
+        "temporaryLocationName": "Ex: Chambre froide provisoire B",
         "note": "Informations utiles pour cet usage ponctuel"
       },
-      "noteHint": "Cette note est informative côté interface. Elle n'est pas enregistrée en base pour l'instant.",
+      "noteHint": "Cette note est enregistrée comme commentaire de démarrage de l'usage ponctuel.",
+      "warnings": {
+        "loggerAlreadyActiveTitle": "Usage ponctuel déjà actif",
+        "loggerAlreadyActiveDescription": "Un usage ponctuel en cours existe déjà pour ce VigiLog. Arrêtez-le avant d'en démarrer un nouveau."
+      },
+      "active": {
+        "title": "Usages ponctuels actifs",
+        "empty": "Aucun usage ponctuel actif.",
+        "startedAt": "Démarré le {date}"
+      },
       "actions": {
-        "prepare": "Préparer le VigiLog"
+        "prepare": "Préparer le VigiLog",
+        "start": "Démarrer l'usage ponctuel",
+        "stop": "Arrêter"
       }
     },
     "config": {
@@ -4931,7 +4989,8 @@
       },
       "departureError": {
         "title": "Création impossible",
-        "description": "La tournée VigiLog n'a pas pu être créée."
+        "description": "La tournée VigiLog n'a pas pu être créée.",
+        "pendingLogger": "Une tournée est déjà en attente pour ce VigiLog."
       },
       "prepareSuccess": {
         "title": "VigiLog préparé",
@@ -4942,9 +5001,36 @@
         "title": "Préparation impossible",
         "description": "Le VigiLog n'a pas pu être préparé sur la base."
       },
+      "temporaryUsageStartSuccess": {
+        "title": "Usage ponctuel démarré",
+        "description": "L'usage {reference} est actif."
+      },
+      "temporaryUsageStartError": {
+        "title": "Démarrage impossible",
+        "description": "L'usage ponctuel n'a pas pu être démarré.",
+        "missingLocationName": "Renseignez un nom de lieu temporaire.",
+        "loggerAlreadyActive": "Un usage ponctuel est déjà actif pour ce VigiLog."
+      },
+      "temporaryUsageStopSuccess": {
+        "title": "Usage ponctuel arrêté",
+        "description": "L'usage ponctuel est terminé."
+      },
+      "temporaryUsageStopError": {
+        "title": "Arrêt impossible",
+        "description": "L'usage ponctuel n'a pas pu être arrêté."
+      },
       "receiveSuccess": {
         "title": "Réception validée",
         "description": "La tournée a été marquée comme reçue."
+      },
+      "arrivalCreateSuccess": {
+        "title": "Tournee creee a l'arrivee",
+        "description": "La tournee {reference} a ete creee et preselectionnee pour la reception."
+      },
+      "arrivalCreateError": {
+        "title": "Creation a l'arrivee impossible",
+        "description": "La tournee n'a pas pu etre creee depuis l'arrivee.",
+        "pendingLogger": "Une tournee est deja en attente pour ce VigiLog."
       },
       "receiveError": {
         "title": "Réception impossible",

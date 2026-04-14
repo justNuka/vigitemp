@@ -36,7 +36,6 @@ export function getClientIp(req: NextRequest): string {
  * Ajoute un identifiant d'erreur (x-vigitemp-error-id) sur les reponses en erreur.
  */
 export function withLogging(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handler: (req: NextRequest, ...args: any[]) => Promise<NextResponse>,
   options?: {
     skipLogging?: boolean;

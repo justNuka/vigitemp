@@ -7,6 +7,16 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { AdjustmentImportResult, AdjustmentInsertData } from "@/components/stepper-file-upload";
 import { useModules } from "@/hooks/useModules";
 import { useSensors } from "@/hooks/useSensors";
@@ -46,16 +56,19 @@ export function AdjustmentImportClient() {
   const [editOperator, setEditOperator] = useState("");
   const [editUnit, setEditUnit] = useState("");
   const [selectedModuleId, setSelectedModuleId] = useState<string>("");
+  const [confirmOverwriteOpen, setConfirmOverwriteOpen] = useState(false);
+  const [confirmOverwriteAdjustments, setConfirmOverwriteAdjustments] = useState<string[]>([]);
+  const [confirmOverwriteOffsets, setConfirmOverwriteOffsets] = useState<string[]>([]);
 
   const { data: modules = [] } = useModules(true);
   const { data: sensors = [] } = useSensors();
 
   const moduleById = useMemo(() => {
     const map = new Map<number, string>();
-    for (const module of modules) {
-      const id = module.Id_Module;
-      const label = module.Module_Numero_Serie || module.Libelle_Type_Module || `#${id}`;
-      const port = module.Port_Serie ? ` (${module.Port_Serie})` : "";
+    for (const moduleItem of modules) {
+      const id = moduleItem.Id_Module;
+      const label = moduleItem.Module_Numero_Serie || moduleItem.Libelle_Type_Module || `#${id}`;
+      const port = moduleItem.Port_Serie ? ` (${moduleItem.Port_Serie})` : "";
       map.set(id, `${label}${port}`);
     }
     return map;
@@ -202,7 +215,10 @@ export function AdjustmentImportClient() {
         t,
       );
 
-      if (result.cancelled) {
+      if (result.status === "confirmation_required") {
+        setConfirmOverwriteAdjustments(result.adjustmentList);
+        setConfirmOverwriteOffsets(result.offsetList);
+        setConfirmOverwriteOpen(true);
         setIsSaving(false);
         return;
       }
@@ -216,6 +232,43 @@ export function AdjustmentImportClient() {
       const message = error instanceof Error ? error.message : t("toast.save_error");
       toast.error(message || t("toast.save_error"));
       console.error("Error while saving adjustments", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleConfirmOverwrite = async () => {
+    if (isSaving || pendingRows.length === 0 || !selectedModuleNumericId) {
+      setConfirmOverwriteOpen(false);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const result = await saveAdjustmentsBulk(
+        selectedModuleNumericId,
+        pendingRows.map((row) => ({ id: row.id, file: row.file, insertData: row.insertData })),
+        t,
+        true,
+      );
+
+      if (result.status === "confirmation_required") {
+        setConfirmOverwriteAdjustments(result.adjustmentList);
+        setConfirmOverwriteOffsets(result.offsetList);
+        setConfirmOverwriteOpen(true);
+        return;
+      }
+
+      notifyBulkSaveResult(result.payload, t);
+      setRows([]);
+      setOpen(false);
+      setStepperSessionKey((prev) => prev + 1);
+      closeEdit();
+      setConfirmOverwriteOpen(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t("toast.save_error");
+      toast.error(message || t("toast.save_error"));
+      console.error("Error while confirming adjustment overwrite", error);
     } finally {
       setIsSaving(false);
     }
@@ -331,6 +384,51 @@ export function AdjustmentImportClient() {
         cancelLabel={t("actions.cancel")}
         applyLabel={t("actions.apply")}
       />
+
+      <AlertDialog
+        open={confirmOverwriteOpen}
+        onOpenChange={(open) => {
+          setConfirmOverwriteOpen(open);
+          if (!open) {
+            setConfirmOverwriteAdjustments([]);
+            setConfirmOverwriteOffsets([]);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("confirm_overwrite.title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("confirm_overwrite.description")}</AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-3 text-sm">
+            {confirmOverwriteAdjustments.length > 0 ? (
+              <div className="space-y-1">
+                <p className="font-medium">
+                  {t("toast.confirm_adjustment_overwrite", { count: confirmOverwriteAdjustments.length })}
+                </p>
+                <p className="text-muted-foreground wrap-break-word">{confirmOverwriteAdjustments.join(", ")}</p>
+              </div>
+            ) : null}
+
+            {confirmOverwriteOffsets.length > 0 ? (
+              <div className="space-y-1">
+                <p className="font-medium">
+                  {t("toast.confirm_offset_clear", { count: confirmOverwriteOffsets.length })}
+                </p>
+                <p className="text-muted-foreground wrap-break-word">{confirmOverwriteOffsets.join(", ")}</p>
+              </div>
+            ) : null}
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSaving}>{t("confirm_overwrite.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void handleConfirmOverwrite()} disabled={isSaving}>
+              {isSaving ? t("confirm_overwrite.submitting") : t("confirm_overwrite.confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

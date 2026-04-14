@@ -7,6 +7,16 @@ import type { SiteSimple } from '@/hooks/useSites';
 import type { MailingUser } from '@/hooks/useUsersForMailing';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { TemporaryMemoryControls } from '@/components/form/temporary-memory-controls';
 import {
   Dialog,
@@ -15,13 +25,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLicense } from "@/components/license/license-provider";
 import { isExpert, isStandardOrExpert } from "@/lib/license-access";
 import { Check, ChevronDown, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { FormProvider, type UseFormReturn, useForm } from 'react-hook-form';
+import { FormProvider, type UseFormReturn, useForm, useWatch } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { showFormValidationToast } from '@/lib/form-toast';
@@ -49,6 +60,8 @@ type LocationFormDialogProps = {
   modules: Module[];
   mailingUsers: MailingUser[];
   isSubmitting: boolean;
+  showActionComment?: boolean;
+  requireActionComment?: boolean;
   onCancel: () => void;
   onSubmit: (values: LocationFormData) => void | Promise<void>;
 };
@@ -65,6 +78,8 @@ export function LocationFormDialog({
   modules,
   mailingUsers,
   isSubmitting,
+  showActionComment = false,
+  requireActionComment = false,
   onCancel,
   onSubmit,
 }: LocationFormDialogProps) {
@@ -78,10 +93,35 @@ export function LocationFormDialog({
     defaultValues: formData ?? getDefaultLocationFormData(),
   });
   const resolvedForm = form ?? internalForm;
+  const internalFormValues = useWatch({ control: internalForm.control });
   const hasChanges = open && resolvedForm.formState.isDirty;
+
+  const normalizeSubmitValues = (values: LocationFormData): LocationFormData | null => {
+    if (!showActionComment) return values;
+
+    const rawComment = typeof values.Commentaire_Action === 'string' ? values.Commentaire_Action.trim() : '';
+    if (requireActionComment && rawComment.length === 0) {
+      const message = t('action_comment_required');
+      resolvedForm.setError('Commentaire_Action', {
+        type: 'manual',
+        message,
+      });
+      toast.error(message);
+      return null;
+    }
+
+    resolvedForm.clearErrors('Commentaire_Action');
+    return {
+      ...values,
+      Commentaire_Action: rawComment.length > 0 ? rawComment : null,
+    };
+  };
+
   const submitAndStay = resolvedForm.handleSubmit(async (values) => {
     resolvedForm.clearErrors();
-    const validation = locationFormSchema.safeParse(values);
+    const normalized = normalizeSubmitValues(values);
+    if (!normalized) return;
+    const validation = locationFormSchema.safeParse(normalized);
     if (!validation.success) {
       for (const issue of validation.error.issues) {
         const [field] = issue.path;
@@ -95,12 +135,14 @@ export function LocationFormDialog({
       toast.error(validation.error.issues[0]?.message ?? tCommon('error'));
       return;
     }
-    await onSubmit(values);
+    await onSubmit(normalized);
   }, (errors) => showFormValidationToast(errors));
 
   const submitAndClose = resolvedForm.handleSubmit(async (values) => {
     resolvedForm.clearErrors();
-    const validation = locationFormSchema.safeParse(values);
+    const normalized = normalizeSubmitValues(values);
+    if (!normalized) return;
+    const validation = locationFormSchema.safeParse(normalized);
     if (!validation.success) {
       for (const issue of validation.error.issues) {
         const [field] = issue.path;
@@ -114,16 +156,20 @@ export function LocationFormDialog({
       toast.error(validation.error.issues[0]?.message ?? tCommon('error'));
       return;
     }
-    await onSubmit(values);
+    await onSubmit(normalized);
     onCancel();
   }, (errors) => showFormValidationToast(errors));
   const memoryKey = `location-form:${mode}:${resolvedForm.watch('Id_Lieu') ?? 'new'}`;
   const resetValues = (resolvedForm.getValues() as LocationFormData) ?? getDefaultLocationFormData();
   const [activeTab, setActiveTab] = useState<string>('general');
+  const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
 
-  const confirmCloseIfDirty = () => {
-    if (!hasChanges) return true;
-    return window.confirm(t('unsaved_changes_confirm'));
+  const requestClose = () => {
+    if (!hasChanges) {
+      onCancel();
+      return;
+    }
+    setIsDiscardDialogOpen(true);
   };
 
   useEffect(() => {
@@ -132,12 +178,9 @@ export function LocationFormDialog({
   }, [open, form, formData, internalForm]);
 
   useEffect(() => {
-    if (!open || form || !setFormData) return;
-    const subscription = internalForm.watch((value) => {
-      setFormData(value as LocationFormData);
-    });
-    return () => subscription.unsubscribe();
-  }, [open, form, internalForm, setFormData]);
+    if (!open || form || !setFormData || !internalFormValues) return;
+    setFormData(internalFormValues as LocationFormData);
+  }, [open, form, internalFormValues, setFormData]);
 
 
   const emtParamsForPlanning: LieuEmtParams = {
@@ -159,7 +202,7 @@ export function LocationFormDialog({
     <Dialog
       open={open}
       onOpenChange={(nextOpen) => {
-        if (!nextOpen && confirmCloseIfDirty()) onCancel();
+        if (!nextOpen) requestClose();
       }}
     >
       <DialogContent className="max-w-4xl xl:max-w-5xl max-h-[96vh] overflow-y-auto bg-white p-0 dark:bg-card">
@@ -250,47 +293,88 @@ export function LocationFormDialog({
             </Tabs>
 
             {hasChanges && (
-              <div className="sticky bottom-0 z-20 flex justify-end gap-2 border-t bg-white/95 py-3 backdrop-blur dark:bg-popover/95">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="gap-2" type="button" disabled={isSubmitting}>
-                      <X className="h-4 w-4" />
-                      {tCommon('cancel')}
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => { if (confirmCloseIfDirty()) onCancel(); }}>
-                      {t('submit.cancel_and_close')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => resolvedForm.reset()}>
-                      {t('submit.cancel_and_stay')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              <div className="sticky bottom-0 z-20 space-y-3 border-t bg-white/95 py-3 backdrop-blur dark:bg-popover/95">
+                {showActionComment ? (
+                  <div className="space-y-1">
+                    <label htmlFor="location-action-comment" className="text-sm font-medium">
+                      {t('action_comment_label')}
+                      {requireActionComment ? ' *' : ''}
+                    </label>
+                    <Textarea
+                      id="location-action-comment"
+                      rows={2}
+                      maxLength={500}
+                      placeholder={t(requireActionComment ? 'action_comment_placeholder_required' : 'action_comment_placeholder_optional')}
+                      {...resolvedForm.register('Commentaire_Action')}
+                    />
+                    {resolvedForm.formState.errors.Commentaire_Action?.message ? (
+                      <p className="text-xs text-destructive">{String(resolvedForm.formState.errors.Commentaire_Action.message)}</p>
+                    ) : null}
+                  </div>
+                ) : null}
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button type="button" disabled={isSubmitting} className="gap-2">
-                      <Check className="h-4 w-4" />
-                      {isSubmitting ? t('submit.saving') : tCommon('save')}
-                      <ChevronDown className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => void submitAndClose()}>
-                      {t('submit.save_and_close')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => void submitAndStay()}>
-                      {t('submit.save_and_stay')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex justify-end gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="gap-2" type="button" disabled={isSubmitting}>
+                        <X className="h-4 w-4" />
+                        {tCommon('cancel')}
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={requestClose}>
+                        {t('submit.cancel_and_close')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => resolvedForm.reset()}>
+                        {t('submit.cancel_and_stay')}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button type="button" disabled={isSubmitting} className="gap-2">
+                        <Check className="h-4 w-4" />
+                        {isSubmitting ? t('submit.saving') : tCommon('save')}
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => void submitAndClose()}>
+                        {t('submit.save_and_close')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => void submitAndStay()}>
+                        {t('submit.save_and_stay')}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             )}
           </form>
         </FormProvider>
       </DialogContent>
+
+      <AlertDialog open={isDiscardDialogOpen} onOpenChange={setIsDiscardDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('unsaved_changes_title')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('unsaved_changes_confirm')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('submit.cancel_and_stay')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setIsDiscardDialogOpen(false);
+                onCancel();
+              }}
+            >
+              {t('submit.cancel_and_close')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

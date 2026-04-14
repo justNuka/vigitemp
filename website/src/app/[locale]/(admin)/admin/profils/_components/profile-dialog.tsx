@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import type { Authorization } from '@/hooks/useProfiles';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { showFormValidationToast } from '@/lib/form-toast';
 import { getAuthorizationDomain } from '@/lib/authorization-domain';
@@ -170,9 +170,9 @@ export function ProfileDialog({
     form.setValue('authorizations', Array.from(current), { shouldDirty: true });
   };
 
-  const selectedAuthorizations = form.watch('authorizations') || [];
-  const assignedUserIds = form.watch('assignedUserIds') || [];
-  const profileName = form.watch('name');
+  const selectedAuthorizations = useWatch({ control: form.control, name: 'authorizations' }) || [];
+  const assignedUserIds = useWatch({ control: form.control, name: 'assignedUserIds' }) || [];
+  const profileName = useWatch({ control: form.control, name: 'name' });
   const allAuthorizationIds = authorizations.map((auth) => auth.id);
   const allAuthorizationsSelected =
     allAuthorizationIds.length > 0 &&

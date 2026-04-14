@@ -59,7 +59,7 @@ const DialogContent = React.forwardRef<
     el.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`
   }, [])
 
-  const stopDragging = React.useCallback(() => {
+  const stopDragging = React.useCallback(function stopDragging() {
     dragStateRef.current = null
     window.removeEventListener("pointermove", handlePointerMove)
     window.removeEventListener("pointerup", stopDragging)

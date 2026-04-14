@@ -12,11 +12,16 @@ type BulkPayload = {
   }
 }
 
+export type AdjustmentBulkSaveResult =
+  | { status: 'saved'; payload: BulkPayload }
+  | { status: 'confirmation_required'; adjustmentList: string[]; offsetList: string[] }
+
 export async function saveAdjustmentsBulk(
   moduleId: number,
   rows: Array<{ id: string; file: string; insertData: unknown }>,
   t: TFunction,
-) {
+  confirmOverwrite = false,
+) : Promise<AdjustmentBulkSaveResult> {
   const postBulk = async (confirmOverwrite: boolean) => {
     const response = await fetch('/api/sondes/ajustages/bulk', {
       method: 'POST',
@@ -27,7 +32,7 @@ export async function saveAdjustmentsBulk(
     return { response, payload }
   }
 
-  let { response, payload } = await postBulk(false)
+  const { response, payload } = await postBulk(confirmOverwrite)
 
   if (!response.ok && payload?.error?.code === 'confirmation_required') {
     const adjustmentList = (payload?.error?.details?.sensorsWithAdjustment as string[] | undefined) ?? []
@@ -35,27 +40,18 @@ export async function saveAdjustmentsBulk(
       .map((item) => item?.Sonde_Numero_Serie)
       .filter((item): item is string => !!item)
 
-    const parts: string[] = []
-    if (adjustmentList.length > 0) {
-      parts.push(`${t('toast.confirm_adjustment_overwrite', { count: adjustmentList.length })} ${adjustmentList.join(', ')}`)
+    return {
+      status: 'confirmation_required',
+      adjustmentList,
+      offsetList,
     }
-    if (offsetList.length > 0) {
-      parts.push(`${t('toast.confirm_offset_clear', { count: offsetList.length })} ${offsetList.join(', ')}`)
-    }
-
-    const confirmed = window.confirm(parts.join('\n\n'))
-    if (!confirmed) {
-      return { cancelled: true as const }
-    }
-
-    ;({ response, payload } = await postBulk(true))
   }
 
   if (!response.ok) {
     throw new Error(payload?.error?.message || t('toast.save_error'))
   }
 
-  return { cancelled: false as const, payload: payload as BulkPayload }
+  return { status: 'saved', payload: payload as BulkPayload }
 }
 
 export function notifyBulkSaveResult(payload: BulkPayload | undefined, t: TFunction) {

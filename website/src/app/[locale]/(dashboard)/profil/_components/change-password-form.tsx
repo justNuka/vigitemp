@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 import type { PasswordRules } from '@/lib/api'
@@ -39,9 +39,9 @@ export function ChangePasswordForm({ rules, rulesLoading }: Props) {
     },
   })
 
-  const newPassword = form.watch('newPassword')
+  const newPassword = useWatch({ control: form.control, name: 'newPassword' }) ?? ''
   const validation = rules ? validatePassword(newPassword, rules) : null
-  const confirmPassword = form.watch('confirmPassword')
+  const confirmPassword = useWatch({ control: form.control, name: 'confirmPassword' }) ?? ''
   const passwordsMatch = newPassword === confirmPassword && confirmPassword.length > 0
 
   const onSubmit = async (data: ChangePasswordFormValues) => {

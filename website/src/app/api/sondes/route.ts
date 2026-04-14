@@ -185,14 +185,14 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
 
     let portSerie: string | null = null
     if (data.moduleId) {
-      const module = await prisma.t_module.findUnique({
+      const moduleRecord = await prisma.t_module.findUnique({
         where: { Id_Module: data.moduleId },
         select: { Port_Serie: true },
       })
-      if (!module) {
+      if (!moduleRecord) {
         return apiError(400, "invalid_module", "Module introuvable")
       }
-      portSerie = module.Port_Serie ?? null
+      portSerie = moduleRecord.Port_Serie ?? null
     }
 
     const created = await prisma.$transaction(

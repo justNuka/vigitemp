@@ -147,8 +147,18 @@ export const POST = withLogging(
         Retard_Alarme_Changement_Consigne: validated.Retard_Alarme_Changement_Consigne ?? null,
       }
 
-      const regle = await prisma.t_lieu_planning_regle.create({
-        data: regleData,
+      const regle = await prisma.$transaction(async (tx) => {
+        const createdRegle = await tx.t_lieu_planning_regle.create({
+          data: regleData,
+        })
+
+        await tx.$executeRaw`
+          UPDATE t_lieu
+          SET Planning_Regle_Existe = 1
+          WHERE Id_Lieu = ${idLieu}
+        `
+
+        return createdRegle
       })
 
       log.data.create("Planning consigne", regle.Id_Regle, user.username, user.userId, getClientIp(req), {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { enUS, fr } from "date-fns/locale"
 import { useQueryClient } from "@tanstack/react-query"
 import { useLocale, useTranslations } from "next-intl"
@@ -43,17 +43,21 @@ export function DashboardClient({
   const { hasPermission } = useAppAccess()
 
   const canAcknowledgeAlarm = hasPermission("ALARM_ACK_ACCESS")
-  const [localAlarms, setLocalAlarms] = useState(activeAlarms)
-  const [activeCount, setActiveCount] = useState(totalActiveAlarms)
+  const [locallyAcknowledgedIds, setLocallyAcknowledgedIds] = useState<Set<string>>(new Set())
   const [selectedAlarm, setSelectedAlarm] = useState<AlarmWithDetails | null>(null)
   const [isAcknowledging] = useState(false)
 
-  useEffect(() => {
-    setLocalAlarms(activeAlarms)
-    setActiveCount(totalActiveAlarms)
-  }, [activeAlarms, totalActiveAlarms])
+  const localAlarms = useMemo(
+    () => activeAlarms.filter((alarm) => !locallyAcknowledgedIds.has(alarm.id)),
+    [activeAlarms, locallyAcknowledgedIds],
+  )
 
-  const formatTzDateTime = (value: string | Date) => {
+  const activeCount = useMemo(
+    () => Math.max(totalActiveAlarms - locallyAcknowledgedIds.size, 0),
+    [totalActiveAlarms, locallyAcknowledgedIds],
+  )
+
+  const formatTzDateTime = useCallback((value: string | Date) => {
     const date = new Date(value)
     if (Number.isNaN(date.getTime())) return "-"
     return date.toLocaleString(localeTag, {
@@ -65,22 +69,24 @@ export function DashboardClient({
       minute: "2-digit",
       second: "2-digit",
     })
-  }
+  }, [localeTag, timezone])
 
   const handleAcknowledge = async (alarmId: string, commentValue: string) => {
     try {
       await alarmsApi.acknowledge(alarmId, commentValue)
-      setLocalAlarms((prev) => prev.filter((alarm) => alarm.id !== alarmId))
       const acknowledgedId = Number(alarmId)
       if (Number.isFinite(acknowledgedId)) {
         markAlarmAcknowledgedInPaginatedSensorsCache(queryClient, acknowledgedId)
       }
-      setActiveCount((prev) => {
-        const next = Math.max(prev - 1, 0)
+      setLocallyAcknowledgedIds((previousIds) => {
+        if (previousIds.has(alarmId)) return previousIds
+        const nextIds = new Set(previousIds)
+        nextIds.add(alarmId)
+        const nextCount = Math.max(totalActiveAlarms - nextIds.size, 0)
         if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("vigitemp:active-alarms", { detail: { count: next } }))
+          window.dispatchEvent(new CustomEvent("vigitemp:active-alarms", { detail: { count: nextCount } }))
         }
-        return next
+        return nextIds
       })
       toast.success(t("toast.ack_success"))
     } catch (error) {
@@ -103,7 +109,7 @@ export function DashboardClient({
           if (fullAlarm && canAcknowledgeAlarm) setSelectedAlarm(fullAlarm)
         },
       }),
-    [t, dateLocale, canAcknowledgeAlarm, displayedAlarms],
+    [t, dateLocale, formatTzDateTime, canAcknowledgeAlarm, displayedAlarms],
   )
 
   return (

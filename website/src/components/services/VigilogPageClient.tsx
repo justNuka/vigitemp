@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { ColumnDef } from "@tanstack/react-table"
@@ -23,6 +23,8 @@ import { VigilogTourneeDetailDialog } from "@/components/services/vigilog/vigilo
 import type {
   VigilogConfiguration,
   VigilogLogger,
+  VigilogTemporaryUsage,
+  VigilogTemporaryUsagesResponse,
   VigilogTourneeDetail,
   VigilogTournee,
   VigilogTourneesResponse,
@@ -33,6 +35,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Combobox } from "@/components/ui/combobox"
+import { Checkbox } from "@/components/ui/checkbox"
 import { DotPattern } from "@/components/ui/dot-pattern"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -55,6 +58,7 @@ import { presenceVigilogAgent, probeVigilogAgent } from "@/lib/vigilog-agent"
 const CONFIG_QUERY_KEY = ["services", "vigilog", "configurations"] as const
 const LOGGERS_QUERY_KEY = ["services", "vigilog", "loggers"] as const
 const TOURNEES_QUERY_KEY = ["services", "vigilog", "tournees"] as const
+const TEMP_USAGES_QUERY_KEY = ["services", "vigilog", "usages-ponctuels"] as const
 const AGENT_PRESENCE_QUERY_KEY = ["services", "vigilog", "agent", "presence"] as const
 const AUTO_PROBE_INTERVAL_MS = 4000
 
@@ -196,6 +200,7 @@ export function VigilogPageClient() {
   const [arrivalSiteId, setArrivalSiteId] = useState("")
   const [loggerSerial, setLoggerSerial] = useState("")
   const [departureComment, setDepartureComment] = useState("")
+  const [departureAlreadyPrepared, setDepartureAlreadyPrepared] = useState(false)
   const [detectedLogger, setDetectedLogger] = useState<{
     serial: string | null
     productId: string | null
@@ -206,6 +211,7 @@ export function VigilogPageClient() {
 
   const [receiveTourneeId, setReceiveTourneeId] = useState("")
   const [receiveComment, setReceiveComment] = useState("")
+  const [arrivalAlreadyPrepared, setArrivalAlreadyPrepared] = useState(false)
   const [departureDialogState, setDepartureDialogState] = useState<DepartureDialogState>({
     mode: "closed",
   })
@@ -215,6 +221,7 @@ export function VigilogPageClient() {
 
   const [historySearch, setHistorySearch] = useState("")
   const [historyStatus, setHistoryStatus] = useState("ALL")
+  const [temporaryLocationName, setTemporaryLocationName] = useState("")
   const [usageNote, setUsageNote] = useState("")
   const [detailTourneeId, setDetailTourneeId] = useState<number | null>(null)
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)
@@ -238,33 +245,43 @@ export function VigilogPageClient() {
     queryFn: () => getJson<VigilogTourneesResponse>("/api/services/vigilog/tournees?limit=100"),
     enabled: canAccess,
   })
+  const temporaryUsagesQuery = useQuery({
+    queryKey: TEMP_USAGES_QUERY_KEY,
+    queryFn: () =>
+      getJson<VigilogTemporaryUsagesResponse>("/api/services/vigilog/usages-ponctuels?limit=100"),
+    enabled: canAccess,
+  })
   const detailQuery = useQuery({
     queryKey: ["services", "vigilog", "tournees", detailTourneeId],
     queryFn: () => getJson<VigilogTourneeDetail>(`/api/services/vigilog/tournees/${detailTourneeId}`),
     enabled: canAccess && detailDialogOpen && detailTourneeId != null,
   })
-  const sites = sitesQuery.data ?? []
-  const configurations = configurationsQuery.data ?? []
-  const loggers = loggersQuery.data ?? []
+  const sites = useMemo(() => sitesQuery.data ?? [], [sitesQuery.data])
+  const configurations = useMemo(() => configurationsQuery.data ?? [], [configurationsQuery.data])
+  const loggers = useMemo(() => loggersQuery.data ?? [], [loggersQuery.data])
   const tourneesData = tourneesQuery.data
-  const tournees = tourneesData?.tournees ?? []
+  const tournees = useMemo(() => tourneesData?.tournees ?? [], [tourneesData?.tournees])
+  const temporaryUsagesData = temporaryUsagesQuery.data
+  const temporaryUsages = useMemo(() => temporaryUsagesData?.usages ?? [], [temporaryUsagesData?.usages])
 
-  useEffect(() => {
-    if (!selectedConfigurationId) return
+  const selectedConfigurationIdResolved = useMemo(() => {
+    if (!selectedConfigurationId) return ""
     const stillExists = configurations.some((configuration) => String(configuration.id) === selectedConfigurationId)
-    if (!stillExists) {
-      setSelectedConfigurationId("")
-    }
+    return stillExists ? selectedConfigurationId : ""
   }, [configurations, selectedConfigurationId])
 
-  useEffect(() => {
-    if (!departureSiteId && sites.length > 0) {
-      setDepartureSiteId(String(sites[0].id))
-    }
-    if (!arrivalSiteId && sites.length > 1) {
-      setArrivalSiteId(String(sites[1].id))
-    }
-  }, [arrivalSiteId, departureSiteId, sites])
+  const departureSiteIdResolved = useMemo(() => {
+    if (departureSiteId) return departureSiteId
+    if (sites.length > 0) return String(sites[0].id)
+    return ""
+  }, [departureSiteId, sites])
+
+  const arrivalSiteIdResolved = useMemo(() => {
+    if (arrivalSiteId) return arrivalSiteId
+    if (sites.length > 1) return String(sites[1].id)
+    if (sites.length > 0) return String(sites[0].id)
+    return ""
+  }, [arrivalSiteId, sites])
 
   const pendingTournees = useMemo(
     () => tournees.filter((tournee) => tournee.status === "EN_ATTENTE_RECEPTION"),
@@ -324,11 +341,36 @@ export function VigilogPageClient() {
       queryClient.invalidateQueries({ queryKey: CONFIG_QUERY_KEY }),
       queryClient.invalidateQueries({ queryKey: LOGGERS_QUERY_KEY }),
       queryClient.invalidateQueries({ queryKey: TOURNEES_QUERY_KEY }),
+      queryClient.invalidateQueries({ queryKey: TEMP_USAGES_QUERY_KEY }),
     ])
   }
 
+  const departureLoggerSerial = loggerSerial.trim()
+  const detectedLoggerSerial = detectedLogger?.serial ?? null
+  const resolvedLoggerSerial = (detectedLoggerSerial ?? loggerSerial).trim()
+  const hasPendingTourneeForDepartureLogger =
+    departureLoggerSerial.length > 0 &&
+    pendingTournees.some(
+      (tournee) => tournee.loggerSerial.trim().toLowerCase() === departureLoggerSerial.toLowerCase(),
+    )
   const matchedLoggerBySerial =
-    loggers.find((logger) => logger.serial.trim() === loggerSerial.trim()) ?? null
+    loggers.find((logger) => logger.serial.trim() === departureLoggerSerial) ?? null
+  const matchedLoggerByResolvedSerial =
+    loggers.find((logger) => logger.serial.trim() === resolvedLoggerSerial) ?? null
+  const hasPendingTourneeForResolvedLogger =
+    resolvedLoggerSerial.length > 0 &&
+    pendingTournees.some(
+      (tournee) => tournee.loggerSerial.trim().toLowerCase() === resolvedLoggerSerial.toLowerCase(),
+    )
+  const activeTemporaryUsages = useMemo(
+    () => temporaryUsages.filter((usage) => usage.status === "EN_COURS"),
+    [temporaryUsages],
+  )
+  const hasActiveTemporaryUsageForLogger =
+    departureLoggerSerial.length > 0 &&
+    activeTemporaryUsages.some(
+      (usage) => usage.loggerSerial.trim().toLowerCase() === departureLoggerSerial.toLowerCase(),
+    )
 
   const createConfigurationMutation = useMutation({
     mutationFn: (payload: Parameters<typeof postJson>[1]) =>
@@ -430,22 +472,41 @@ export function VigilogPageClient() {
 
   const createTourneeMutation = useMutation({
     mutationFn: async () => {
-      const serial = loggerSerial.trim()
-      if (!serial) {
+      if (!departureLoggerSerial) {
         throw new Error(t("feedback.loggerSerialMissing.description"))
+      }
+      if (hasPendingTourneeForDepartureLogger) {
+        throw new Error(t("feedback.departureError.pendingLogger"))
+      }
+
+      let serial = departureLoggerSerial
+      if (!departureAlreadyPrepared) {
+        const configureResult = await postJson<VigilogAgentConfigureResponse>(
+          "/api/services/vigilog/agent/configure",
+          {
+            configurationId: Number(selectedConfigurationIdResolved),
+          },
+        )
+        const configuredSerial = (configureResult.loggerSerial || "").trim()
+        if (configuredSerial) {
+          serial = configuredSerial
+          setLoggerSerial(configuredSerial)
+          setAutoDetectedSerial(configuredSerial)
+        }
       }
 
       return postJson<{ id: number; reference: string; status: string }>("/api/services/vigilog/tournees", {
-        Id_VigiLog_Configuration: Number(selectedConfigurationId),
+        Id_VigiLog_Configuration: Number(selectedConfigurationIdResolved),
         Id_VigiLog: matchedLoggerBySerial?.id ?? detectedLogger?.registeredLogger?.id ?? null,
-        Id_Site_Depart: Number(departureSiteId),
-        Id_Site_Arrivee: Number(arrivalSiteId),
+        Id_Site_Depart: Number(departureSiteIdResolved),
+        Id_Site_Arrivee: Number(arrivalSiteIdResolved),
         Numero_Serie_VigiLog: serial,
         Commentaire: departureComment.trim() || null,
       })
     },
     onSuccess: async (data) => {
       await invalidateVigilogData()
+      setDepartureAlreadyPrepared(false)
       toast({
         title: t("feedback.departureCreated.title"),
         description: t("feedback.departureCreated.description", { reference: data.reference }),
@@ -460,14 +521,72 @@ export function VigilogPageClient() {
     },
   })
 
+  const createArrivalTourneeMutation = useMutation({
+    mutationFn: async () => {
+      if (!resolvedLoggerSerial) {
+        throw new Error(t("feedback.loggerSerialMissing.description"))
+      }
+      if (hasPendingTourneeForResolvedLogger) {
+        throw new Error(t("feedback.arrivalCreateError.pendingLogger"))
+      }
+
+      let serial = resolvedLoggerSerial
+      if (!arrivalAlreadyPrepared) {
+        const configureResult = await postJson<VigilogAgentConfigureResponse>(
+          "/api/services/vigilog/agent/configure",
+          {
+            configurationId: Number(selectedConfigurationIdResolved),
+          },
+        )
+        const configuredSerial = (configureResult.loggerSerial || "").trim()
+        if (configuredSerial) {
+          serial = configuredSerial
+          setLoggerSerial(configuredSerial)
+          setAutoDetectedSerial(configuredSerial)
+        }
+      }
+
+      return postJson<{ id: number; reference: string; status: string }>("/api/services/vigilog/tournees", {
+        Id_VigiLog_Configuration: Number(selectedConfigurationIdResolved),
+        Id_VigiLog:
+          matchedLoggerByResolvedSerial?.id ??
+          detectedLogger?.registeredLogger?.id ??
+          null,
+        Id_Site_Depart: Number(departureSiteIdResolved),
+        Id_Site_Arrivee: Number(arrivalSiteIdResolved),
+        Numero_Serie_VigiLog: serial,
+        Commentaire: receiveComment.trim() || null,
+      })
+    },
+    onSuccess: async (data) => {
+      await invalidateVigilogData()
+      setReceiveTourneeId(String(data.id))
+      setArrivalAlreadyPrepared(false)
+      toast({
+        title: t("feedback.arrivalCreateSuccess.title"),
+        description: t("feedback.arrivalCreateSuccess.description", {
+          reference: data.reference,
+        }),
+      })
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: t("feedback.arrivalCreateError.title"),
+        description:
+          error instanceof Error ? error.message : t("feedback.arrivalCreateError.description"),
+      })
+    },
+  })
+
   const prepareLoggerMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedConfigurationId) {
+      if (!selectedConfigurationIdResolved) {
         throw new Error(t("feedback.prepareError.description"))
       }
 
       return postJson<VigilogAgentConfigureResponse>("/api/services/vigilog/agent/configure", {
-        configurationId: Number(selectedConfigurationId),
+        configurationId: Number(selectedConfigurationIdResolved),
       })
     },
     onSuccess: async (data) => {
@@ -503,6 +622,95 @@ export function VigilogPageClient() {
         variant: "destructive",
         title: t("feedback.prepareError.title"),
         description: error instanceof Error ? error.message : t("feedback.prepareError.description"),
+      })
+    },
+  })
+
+  const startTemporaryUsageMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedConfigurationIdResolved) {
+        throw new Error(t("feedback.prepareError.description"))
+      }
+      if (!departureLoggerSerial) {
+        throw new Error(t("feedback.loggerSerialMissing.description"))
+      }
+      if (!temporaryLocationName.trim()) {
+        throw new Error(t("feedback.temporaryUsageStartError.missingLocationName"))
+      }
+      if (hasActiveTemporaryUsageForLogger) {
+        throw new Error(t("feedback.temporaryUsageStartError.loggerAlreadyActive"))
+      }
+
+      const configureResult = await postJson<VigilogAgentConfigureResponse>(
+        "/api/services/vigilog/agent/configure",
+        {
+            configurationId: Number(selectedConfigurationIdResolved),
+        },
+      )
+      const configuredSerial = (configureResult.loggerSerial || departureLoggerSerial).trim()
+
+      const createdUsage = await postJson<{ id: number; reference: string; status: string }>(
+        "/api/services/vigilog/usages-ponctuels",
+        {
+          Id_VigiLog_Configuration: Number(selectedConfigurationIdResolved),
+          Id_VigiLog: matchedLoggerBySerial?.id ?? detectedLogger?.registeredLogger?.id ?? null,
+          Numero_Serie_VigiLog: configuredSerial,
+          Nom_Lieu_Temporaire: temporaryLocationName.trim(),
+          Commentaire_Demarrage: usageNote.trim() || null,
+        },
+      )
+
+      return { createdUsage, configuredSerial }
+    },
+    onSuccess: async ({ createdUsage, configuredSerial }) => {
+      await invalidateVigilogData()
+      setLoggerSerial(configuredSerial)
+      setAutoDetectedSerial(configuredSerial)
+      setUsageNote("")
+      setTemporaryLocationName("")
+      toast({
+        title: t("feedback.temporaryUsageStartSuccess.title"),
+        description: t("feedback.temporaryUsageStartSuccess.description", {
+          reference: createdUsage.reference,
+        }),
+      })
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: t("feedback.temporaryUsageStartError.title"),
+        description:
+          error instanceof Error
+            ? error.message
+            : t("feedback.temporaryUsageStartError.description"),
+      })
+    },
+  })
+
+  const stopTemporaryUsageMutation = useMutation({
+    mutationFn: async (usage: VigilogTemporaryUsage) =>
+      postJson<{
+        id: number
+        status: string
+        stoppedAt: string
+        clearedFromAgent: boolean
+        clearDetails: string | null
+      }>(`/api/services/vigilog/usages-ponctuels/${usage.id}/stop`, {
+        Commentaire_Arret: null,
+      }),
+    onSuccess: async () => {
+      await invalidateVigilogData()
+      toast({
+        title: t("feedback.temporaryUsageStopSuccess.title"),
+        description: t("feedback.temporaryUsageStopSuccess.description"),
+      })
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: t("feedback.temporaryUsageStopError.title"),
+        description:
+          error instanceof Error ? error.message : t("feedback.temporaryUsageStopError.description"),
       })
     },
   })
@@ -607,8 +815,13 @@ export function VigilogPageClient() {
   })
 
   const isCradleBusy =
-    prepareLoggerMutation.isPending || departureDialogState.mode === "running" || receiveMutation.isPending
-  const shouldAutoProbe = canAccess && !isCradleBusy && (activeTab === "movements" || activeTab === "loggers")
+    prepareLoggerMutation.isPending ||
+    startTemporaryUsageMutation.isPending ||
+    stopTemporaryUsageMutation.isPending ||
+    departureDialogState.mode === "running" ||
+    receiveMutation.isPending
+  const shouldAutoProbe =
+    canAccess && !isCradleBusy && (activeTab === "movements" || activeTab === "usage" || activeTab === "loggers")
   const autoPresenceQuery = useQuery({
     queryKey: AGENT_PRESENCE_QUERY_KEY,
     queryFn: async () => {
@@ -703,12 +916,12 @@ export function VigilogPageClient() {
       }
     }
 
-    if (presence.res && detectedLogger?.serial) {
+    if (presence.res && detectedLoggerSerial) {
       return {
         tone: "ready" as const,
         title: t("departure.loggerState.readyTitle"),
         description: t("departure.loggerState.readyDescription", {
-          serial: detectedLogger.serial,
+          serial: detectedLoggerSerial,
         }),
       }
     }
@@ -734,29 +947,40 @@ export function VigilogPageClient() {
       title: t("departure.loggerState.errorTitle"),
       description: presence.details || t("departure.loggerState.errorDescription"),
     }
-  }, [autoPresenceQuery.data, detectedLogger?.serial, isCradleBusy, probeMutation.isPending, t])
+  }, [autoPresenceQuery.data, detectedLoggerSerial, isCradleBusy, probeMutation.isPending, t])
 
   useEffect(() => {
     const presence = autoPresenceQuery.data
     if (!presence) return
 
     if (!presence.res) {
-      setDetectedLogger(null)
-      setAutoProbeAttempted(false)
-      setAutoDetectedSerial((currentAutoDetectedSerial) => {
-        if (!currentAutoDetectedSerial) return null
-        setLoggerSerial((currentSerial) =>
-          currentSerial.trim() === currentAutoDetectedSerial ? "" : currentSerial,
-        )
-        return null
-      })
-      return
+      const resetId = window.setTimeout(() => {
+        setDetectedLogger(null)
+        setAutoProbeAttempted(false)
+        setAutoDetectedSerial((currentAutoDetectedSerial) => {
+          if (!currentAutoDetectedSerial) return null
+          setLoggerSerial((currentSerial) =>
+            currentSerial.trim() === currentAutoDetectedSerial ? "" : currentSerial,
+          )
+          return null
+        })
+      }, 0)
+      return () => {
+        window.clearTimeout(resetId)
+      }
     }
 
     if (!autoProbeAttempted && !probeMutation.isPending && !detectedLogger?.serial) {
-      setAutoProbeAttempted(true)
-      probeMutation.mutate({ silent: true })
+      const probeId = window.setTimeout(() => {
+        setAutoProbeAttempted(true)
+        probeMutation.mutate({ silent: true })
+      }, 0)
+      return () => {
+        window.clearTimeout(probeId)
+      }
     }
+
+    return
   }, [autoPresenceQuery.data, autoProbeAttempted, detectedLogger?.serial, probeMutation])
 
   useEffect(() => {
@@ -807,7 +1031,7 @@ export function VigilogPageClient() {
   }, [receiveDialogState])
 
   const selectedConfiguration = configurations.find(
-    (configuration) => String(configuration.id) === selectedConfigurationId,
+    (configuration) => String(configuration.id) === selectedConfigurationIdResolved,
   )
   const selectedReceiveTournee = pendingTournees.find(
     (tournee) => String(tournee.id) === receiveTourneeId,
@@ -822,14 +1046,36 @@ export function VigilogPageClient() {
     loggerStatus.tone === "ready" &&
     !!detectedLogger?.serial &&
     !receiveSerialMismatch
+  const canCreateDepartureTournee =
+    !createTourneeMutation.isPending &&
+    !!selectedConfigurationIdResolved &&
+    !!departureSiteIdResolved &&
+    !!arrivalSiteIdResolved &&
+    !!departureLoggerSerial &&
+    (departureAlreadyPrepared || loggerStatus.tone === "ready") &&
+    !hasPendingTourneeForDepartureLogger
+  const canCreateTourneeAtArrival =
+    !createArrivalTourneeMutation.isPending &&
+    !!selectedConfigurationIdResolved &&
+    !!departureSiteIdResolved &&
+    !!arrivalSiteIdResolved &&
+    !!resolvedLoggerSerial &&
+    (arrivalAlreadyPrepared || loggerStatus.tone === "ready") &&
+    !hasPendingTourneeForResolvedLogger
+  const canStartTemporaryUsage =
+    !startTemporaryUsageMutation.isPending &&
+    !!selectedConfigurationIdResolved &&
+    !!departureLoggerSerial &&
+    !!temporaryLocationName.trim() &&
+    loggerStatus.tone === "ready" &&
+    !hasActiveTemporaryUsageForLogger
 
-  const openTourneeDetail = (tourneeId: number) => {
+  const openTourneeDetail = useCallback((tourneeId: number) => {
     setDetailTourneeId(tourneeId)
     setDetailDialogOpen(true)
-  }
+  }, [])
 
-  const historyColumns = useMemo<ColumnDef<VigilogTournee>[]>(
-    () => [
+  const historyColumns: ColumnDef<VigilogTournee>[] = [
       {
         accessorKey: "reference",
         header: t("history.columns.reference"),
@@ -958,9 +1204,7 @@ export function VigilogPageClient() {
           </div>
         ),
       },
-    ],
-    [acknowledgeMutation, locale, t],
-  )
+    ]
 
   const startDeparturePreparation = () => {
     setDepartureDialogState({
@@ -1073,7 +1317,7 @@ export function VigilogPageClient() {
                   <CardDescription>{t("stats.occasionalUsage")}</CardDescription>
                   <CardTitle className="flex items-center gap-2 text-2xl">
                     <PackageCheck className="h-5 w-5 text-primary" />
-                    {tourneesData?.stats.totalCount ?? 0}
+                    {temporaryUsagesData?.stats.activeCount ?? 0}
                   </CardTitle>
                 </CardHeader>
               </Card>
@@ -1104,7 +1348,7 @@ export function VigilogPageClient() {
                       <div className="space-y-2">
                         <Label>{t("departure.fields.configuration")}</Label>
                         <Combobox
-                          value={selectedConfigurationId}
+                          value={selectedConfigurationIdResolved}
                           onValueChange={setSelectedConfigurationId}
                           placeholder={t("departure.placeholders.configuration")}
                           searchPlaceholder={t("departure.placeholders.configurationSearch")}
@@ -1223,7 +1467,7 @@ export function VigilogPageClient() {
                       <div className="space-y-2">
                         <Label>{t("departure.fields.departureSite")}</Label>
                         <Combobox
-                          value={departureSiteId}
+                          value={departureSiteIdResolved}
                           onValueChange={setDepartureSiteId}
                           placeholder={t("departure.placeholders.site")}
                           searchPlaceholder={t("departure.placeholders.siteSearch")}
@@ -1241,7 +1485,7 @@ export function VigilogPageClient() {
                       <div className="space-y-2">
                         <Label>{t("departure.fields.arrivalSite")}</Label>
                         <Combobox
-                          value={arrivalSiteId}
+                          value={arrivalSiteIdResolved}
                           onValueChange={setArrivalSiteId}
                           placeholder={t("departure.placeholders.site")}
                           searchPlaceholder={t("departure.placeholders.siteSearch")}
@@ -1286,16 +1530,36 @@ export function VigilogPageClient() {
                       />
                     </div>
 
+                    <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          id="departure-already-prepared"
+                          checked={departureAlreadyPrepared}
+                          onCheckedChange={(checked) => setDepartureAlreadyPrepared(checked === true)}
+                        />
+                        <div className="space-y-1">
+                          <Label htmlFor="departure-already-prepared" className="cursor-pointer">
+                            {t("departure.fields.alreadyPrepared")}
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            {t("departure.hints.alreadyPrepared")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {hasPendingTourneeForDepartureLogger ? (
+                      <Alert className="border-amber-200 bg-amber-50 text-amber-950">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>{t("arrival.warnings.pendingLoggerTitle")}</AlertTitle>
+                        <AlertDescription>{t("arrival.warnings.pendingLoggerDescription")}</AlertDescription>
+                      </Alert>
+                    ) : null}
+
                     <div className="grid gap-3 md:grid-cols-2">
                       <Button
                         className={`w-full ${vigilogBluePrimaryButtonClass}`}
-                        disabled={
-                          createTourneeMutation.isPending ||
-                          !selectedConfigurationId ||
-                          !departureSiteId ||
-                          !arrivalSiteId ||
-                          !loggerSerial.trim()
-                        }
+                        disabled={!canCreateDepartureTournee}
                         onClick={() => createTourneeMutation.mutate()}
                       >
                         {createTourneeMutation.isPending ? (
@@ -1310,7 +1574,7 @@ export function VigilogPageClient() {
                         className={`w-full ${vigilogBlueActionButtonClass}`}
                         disabled={
                           prepareLoggerMutation.isPending ||
-                          !selectedConfigurationId ||
+                          !selectedConfigurationIdResolved ||
                           loggerStatus.tone !== "ready"
                         }
                         onClick={startDeparturePreparation}
@@ -1444,18 +1708,59 @@ export function VigilogPageClient() {
                       />
                     </div>
 
-                    <Button
-                      className={`w-full ${vigilogBluePrimaryButtonClass}`}
-                      disabled={!canSubmitReception}
-                      onClick={startReceivePreparation}
-                    >
-                      {receiveMutation.isPending ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <PackageCheck className="mr-2 h-4 w-4" />
-                      )}
-                      {t("arrival.actions.submit")}
-                    </Button>
+                    <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          id="arrival-already-prepared"
+                          checked={arrivalAlreadyPrepared}
+                          onCheckedChange={(checked) => setArrivalAlreadyPrepared(checked === true)}
+                        />
+                        <div className="space-y-1">
+                          <Label htmlFor="arrival-already-prepared" className="cursor-pointer">
+                            {t("arrival.fields.alreadyPrepared")}
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            {t("arrival.hints.alreadyPrepared")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {hasPendingTourneeForResolvedLogger ? (
+                      <Alert className="border-amber-200 bg-amber-50 text-amber-950">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>{t("arrival.warnings.pendingLoggerTitle")}</AlertTitle>
+                        <AlertDescription>{t("arrival.warnings.pendingLoggerDescription")}</AlertDescription>
+                      </Alert>
+                    ) : null}
+
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <Button
+                        className={`w-full ${vigilogBluePrimaryButtonClass}`}
+                        disabled={!canSubmitReception}
+                        onClick={startReceivePreparation}
+                      >
+                        {receiveMutation.isPending ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <PackageCheck className="mr-2 h-4 w-4" />
+                        )}
+                        {t("arrival.actions.submit")}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className={`w-full ${vigilogBlueActionButtonClass}`}
+                        disabled={!canCreateTourneeAtArrival}
+                        onClick={() => createArrivalTourneeMutation.mutate()}
+                      >
+                        {createArrivalTourneeMutation.isPending ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Truck className="mr-2 h-4 w-4" />
+                        )}
+                        {t("arrival.actions.createAtArrival")}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -1481,7 +1786,7 @@ export function VigilogPageClient() {
                     <div className="space-y-2">
                       <Label>{t("usage.fields.configuration")}</Label>
                       <Combobox
-                        value={selectedConfigurationId}
+                        value={selectedConfigurationIdResolved}
                         onValueChange={setSelectedConfigurationId}
                         placeholder={t("departure.placeholders.configuration")}
                         searchPlaceholder={t("departure.placeholders.configurationSearch")}
@@ -1554,6 +1859,16 @@ export function VigilogPageClient() {
                   ) : null}
 
                   <div className="space-y-2">
+                    <Label>{t("usage.fields.temporaryLocationName")}</Label>
+                    <Input
+                      value={temporaryLocationName}
+                      onChange={(event) => setTemporaryLocationName(event.target.value)}
+                      placeholder={t("usage.placeholders.temporaryLocationName")}
+                      maxLength={120}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label>{t("usage.fields.note")}</Label>
                     <Textarea
                       value={usageNote}
@@ -1564,23 +1879,75 @@ export function VigilogPageClient() {
                     <p className="text-xs text-muted-foreground">{t("usage.noteHint")}</p>
                   </div>
 
+                  {hasActiveTemporaryUsageForLogger ? (
+                    <Alert className="border-amber-200 bg-amber-50 text-amber-950">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle>{t("usage.warnings.loggerAlreadyActiveTitle")}</AlertTitle>
+                      <AlertDescription>{t("usage.warnings.loggerAlreadyActiveDescription")}</AlertDescription>
+                    </Alert>
+                  ) : null}
+
                   <Button
                     variant="outline"
                     className={`w-full ${vigilogBlueActionButtonClass}`}
-                    disabled={
-                      prepareLoggerMutation.isPending ||
-                      !selectedConfigurationId ||
-                      loggerStatus.tone !== "ready"
-                    }
-                    onClick={startDeparturePreparation}
+                    disabled={!canStartTemporaryUsage}
+                    onClick={() => startTemporaryUsageMutation.mutate()}
                   >
-                    {prepareLoggerMutation.isPending ? (
+                    {startTemporaryUsageMutation.isPending ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
                       <FileCog className="mr-2 h-4 w-4" />
                     )}
-                    {t("usage.actions.prepare")}
+                    {t("usage.actions.start")}
                   </Button>
+
+                  <div className="space-y-3 rounded-2xl border border-border/60 bg-muted/20 p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-sm font-semibold text-foreground">{t("usage.active.title")}</h3>
+                      <Badge className="border-sky-200 bg-sky-50 text-sky-950 hover:bg-sky-100">
+                        {activeTemporaryUsages.length}
+                      </Badge>
+                    </div>
+
+                    {activeTemporaryUsages.length > 0 ? (
+                      <div className="space-y-2">
+                        {activeTemporaryUsages.map((usage) => (
+                          <div
+                            key={usage.id}
+                            className="flex flex-col gap-3 rounded-xl border border-border/60 bg-white/90 p-3 md:flex-row md:items-center md:justify-between"
+                          >
+                            <div className="space-y-1 text-sm">
+                              <p className="font-medium text-foreground">{usage.temporaryLocationName}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {usage.configurationName} · {usage.loggerSerial}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {t("usage.active.startedAt", {
+                                  date: formatDateTime(usage.startedAt, locale),
+                                })}
+                              </p>
+                            </div>
+
+                            <Button
+                              variant="outline"
+                              className={vigilogBlueActionButtonClass}
+                              disabled={stopTemporaryUsageMutation.isPending}
+                              onClick={() => stopTemporaryUsageMutation.mutate(usage)}
+                            >
+                              {stopTemporaryUsageMutation.isPending ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : (
+                                <Circle className="mr-2 h-4 w-4" />
+                              )}
+                              {t("usage.actions.stop")}
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">{t("usage.active.empty")}</p>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import type { Dispatch, SetStateAction } from "react"
 import type { ColumnDef, SortingState, Updater } from "@tanstack/react-table"
 
@@ -78,7 +78,7 @@ export function MonitoringTableTab({
     }))
   }, [sondeNumeroSerie, tableMeasurements, unite])
 
-  const getStatusLabel = (row: TableRow): string => {
+  const getStatusLabel = useCallback((row: TableRow): string => {
     if (row.value === null) {
       return t("table.status.no_response")
     }
@@ -88,7 +88,7 @@ export function MonitoringTableTab({
       (row.consigneSup !== null && row.value > row.consigneSup)
 
     return isOutOfRange ? t("table.status.out_of_range") : t("table.status.ok")
-  }
+  }, [t])
 
   const columns = useMemo<ColumnDef<TableRow>[]>(() => [
     {
@@ -152,7 +152,7 @@ export function MonitoringTableTab({
         )
       },
     },
-  ], [t, unite])
+  ], [getStatusLabel, t, unite])
 
   const measurementRowsForExport = useMemo(() => {
     return data.map((row) => [
@@ -163,7 +163,7 @@ export function MonitoringTableTab({
       row.consigneSup !== null ? `${row.consigneSup}${unite}` : "-",
       getStatusLabel(row),
     ])
-  }, [data, t, unite])
+  }, [data, getStatusLabel, t, unite])
 
   const handleMultiTabsExport = async () => {
     if (isExportingMultiTabs) return

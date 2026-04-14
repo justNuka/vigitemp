@@ -72,19 +72,31 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
 
   useEffect(() => {
     if (!allowedGroupIds) return
-    setFilters((prev) => {
-      const nextGroupIds = prev.groupIds.filter((id) => allowedGroupIds.has(id))
-      if (nextGroupIds.length === prev.groupIds.length) return prev
-      return { ...prev, groupIds: nextGroupIds }
-    })
+    const updateId = window.setTimeout(() => {
+      setFilters((prev) => {
+        const nextGroupIds = prev.groupIds.filter((id) => allowedGroupIds.has(id))
+        if (nextGroupIds.length === prev.groupIds.length) return prev
+        return { ...prev, groupIds: nextGroupIds }
+      })
+    }, 0)
+
+    return () => {
+      window.clearTimeout(updateId)
+    }
   }, [allowedGroupIds])
 
   useEffect(() => {
     if (sites.length === 0) return
-    setFilters((prev) => {
-      if (prev.siteIds.length > 0) return prev
-      return { ...prev, siteIds: [sites[0].id] }
-    })
+    const updateId = window.setTimeout(() => {
+      setFilters((prev) => {
+        if (prev.siteIds.length > 0) return prev
+        return { ...prev, siteIds: [sites[0].id] }
+      })
+    }, 0)
+
+    return () => {
+      window.clearTimeout(updateId)
+    }
   }, [sites])
 
   const handleSiteChange = (selectedIds: number[]) => {

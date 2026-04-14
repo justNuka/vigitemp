@@ -22,6 +22,11 @@ interface SurveillanceLoaderProps {
   className?: string;
 }
 
+function pseudoRandom(seed: number) {
+  const value = Math.sin(seed * 12.9898) * 43758.5453;
+  return value - Math.floor(value);
+}
+
 /* ------------------------------------------------------------------ */
 /*  Mini chart (draws a temperature line with dashed alarm thresholds) */
 /* ------------------------------------------------------------------ */
@@ -38,11 +43,12 @@ function MiniChart({
   const points = useMemo(() => {
     if (!hasData) return [];
     const pts: { x: number; y: number }[] = [];
-    const baseTemp = -20 + Math.random() * 55;
+    const baseTemp = -20 + pseudoRandom(index + 1) * 55;
     for (let i = 0; i <= 20; i++) {
+      const localJitter = pseudoRandom((index + 1) * 100 + i) * 8;
       pts.push({
         x: (i / 20) * 100,
-        y: 50 + (baseTemp > 10 ? -1 : 1) * (Math.sin(i * 0.8 + index) * 15 + Math.random() * 8),
+        y: 50 + (baseTemp > 10 ? -1 : 1) * (Math.sin(i * 0.8 + index) * 15 + localJitter),
       });
     }
     return pts;
@@ -52,8 +58,8 @@ function MiniChart({
     .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
     .join(" ");
 
-  const highThreshold = 20 + Math.random() * 15;
-  const lowThreshold = 65 + Math.random() * 15;
+  const highThreshold = 20 + pseudoRandom(index + 201) * 15;
+  const lowThreshold = 65 + pseudoRandom(index + 301) * 15;
 
   return (
     <div className="w-full h-16 relative">

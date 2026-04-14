@@ -101,6 +101,11 @@ const CHOREOGRAPHY: ActionStep[] = [
   { type: "add", blockId: "audit", label: "Re-ajout Audit Trail", col: 0, row: 2, colSpan: 3, rowSpan: 1 },
 ];
 
+function deterministicFraction(seed: number): number {
+  const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+  return value - Math.floor(value);
+}
+
 /* ------------------------------------------------------------------ */
 /*  Cursor component                                                  */
 /* ------------------------------------------------------------------ */
@@ -245,7 +250,7 @@ function DashBlockCard({
           <motion.div
             key={i}
             className="h-1.5 rounded bg-muted"
-            style={{ width: `${50 + Math.random() * 40}%` }}
+            style={{ width: `${50 + deterministicFraction((block.col + 1) * 17 + (block.row + 1) * 11 + (i + 1) * 7) * 40}%` }}
             animate={{ opacity: [0.3, 0.6, 0.3] }}
             transition={{
               duration: 1.5,
@@ -442,7 +447,11 @@ export default function ExpertBuilderAnimation({
       return () => clearTimeout(resetTimer);
     }
 
-    const cleanup = executeStep(CHOREOGRAPHY[stepIndex]);
+    let stepCleanup: (() => void) | undefined;
+    const stepTimer = setTimeout(() => {
+      stepCleanup = executeStep(CHOREOGRAPHY[stepIndex]);
+    }, 0);
+
     const nextTimer = setTimeout(
       () => {
         setStepIndex((s) => s + 1);
@@ -451,8 +460,9 @@ export default function ExpertBuilderAnimation({
     );
 
     return () => {
+      clearTimeout(stepTimer);
       nextTimer && clearTimeout(nextTimer);
-      cleanup?.();
+      stepCleanup?.();
     };
   }, [stepIndex, speed, executeStep]);
 

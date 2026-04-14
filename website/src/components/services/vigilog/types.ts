@@ -92,6 +92,33 @@ export type VigilogTourneesResponse = {
   tournees: VigilogTournee[]
 }
 
+export type VigilogTemporaryUsage = {
+  id: number
+  reference: string
+  configurationId: number | null
+  loggerId: number | null
+  configurationName: string
+  loggerSerial: string
+  temporaryLocationName: string
+  status: "EN_COURS" | "TERMINE" | string
+  startedAt: string
+  stoppedAt: string | null
+  startComment: string | null
+  stopComment: string | null
+  createdAt: string
+  updatedAt: string | null
+  startedBy: string | null
+  stoppedBy: string | null
+}
+
+export type VigilogTemporaryUsagesResponse = {
+  stats: {
+    activeCount: number
+    totalCount: number
+  }
+  usages: VigilogTemporaryUsage[]
+}
+
 export type VigilogMeasure = {
   id: number
   order: number | null

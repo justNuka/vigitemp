@@ -89,8 +89,11 @@ export function AuditClient({ logs: initialLogs }: Props) {
     staleTime: 10 * 60 * 1000,
   });
 
-  // When server-side filters are active, use the server result; otherwise use initial logs filtered locally
-  const sourceLogs: AuditLog[] = filtersActive ? (filteredByServerLogs ?? []) : initialLogs;
+  // Keep a stable reference for downstream hooks that depend on the source dataset.
+  const sourceLogs: AuditLog[] = useMemo(
+    () => (filtersActive ? (filteredByServerLogs ?? []) : initialLogs),
+    [filtersActive, filteredByServerLogs, initialLogs],
+  );
 
   const filteredLogs = useMemo(
     () => filtersActive ? sourceLogs : filterAuditLogs(sourceLogs, codeFilter, searchQuery),

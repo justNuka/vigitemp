@@ -5,6 +5,16 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { UserPlus, Users } from "lucide-react";
 import { usersApi, type CreateUserInput, type User } from "@/lib/api";
 import { toast } from "sonner";
@@ -30,7 +40,7 @@ import {
   syncUserGroups,
   syncUserSites,
 } from "./_components/user-assignments";
-import { confirmArchiveUser, getCreateUserPayload, getUpdateUserPayload } from "./user-payloads";
+import { getCreateUserPayload, getUpdateUserPayload } from "./user-payloads";
 
 interface Props {
   users: User[];
@@ -45,6 +55,7 @@ export function UsersClient({ users }: Props) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [archiveCandidate, setArchiveCandidate] = useState<User | null>(null);
   const [statusTab, setStatusTab] = useState<"active" | "archived">("active");
 
   const activeUsers = users.filter((user) => user.isActive);
@@ -182,9 +193,7 @@ export function UsersClient({ users }: Props) {
   };
 
   const handleArchiveUser = (user: User) => {
-    if (confirmArchiveUser(user)) {
-      archiveMutation.mutate(user.id);
-    }
+    setArchiveCandidate(user);
   };
 
   const handleReactivateUser = (user: User) => {
@@ -231,6 +240,30 @@ export function UsersClient({ users }: Props) {
         onArchive={handleArchiveUser}
         onReactivate={handleReactivateUser}
       />
+
+      <AlertDialog open={!!archiveCandidate} onOpenChange={(open) => { if (!open) setArchiveCandidate(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("dialogs.archive.title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("dialogs.archive.description", { username: archiveCandidate?.username ?? "" })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("dialogs.archive.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!archiveCandidate) return;
+                archiveMutation.mutate(archiveCandidate.id);
+                setArchiveCandidate(null);
+              }}
+              disabled={archiveMutation.isPending}
+            >
+              {archiveMutation.isPending ? t("dialogs.archive.submitting") : t("dialogs.archive.confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b border-border/50 bg-white/90 dark:bg-card/90">

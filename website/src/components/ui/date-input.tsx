@@ -49,11 +49,23 @@ const DateInput: React.FC<DateInputProps> = ({ value, onChange, allowEmpty = fal
 
   useEffect(() => {
     if (!value && allowEmpty) {
-      setDate(EMPTY_DATE)
-      return
+      const syncTimer = window.setTimeout(() => {
+        setDate(EMPTY_DATE)
+      }, 0)
+
+      return () => {
+        window.clearTimeout(syncTimer)
+      }
     }
     const d = value ? new Date(value) : new Date()
-    setDate(toDateParts(d))
+
+    const syncTimer = window.setTimeout(() => {
+      setDate(toDateParts(d))
+    }, 0)
+
+    return () => {
+      window.clearTimeout(syncTimer)
+    }
   }, [allowEmpty, value])
 
   const validateDate = (field: keyof DateParts, value: number): boolean => {

@@ -30,7 +30,9 @@ type MonitoringSiteSectionProps = {
     action: "surveillance" | "alarms",
     newState: boolean,
     durationMinutes?: number | null,
+    actionComment?: string | null,
   ) => void
+  requireActionComment?: boolean
   onEditLocation?: (idLieu: number) => void
   showNullNonResponse: boolean
   sortMode: SurveillanceSortMode
@@ -80,6 +82,7 @@ export function MonitoringSiteSection({
   timezone,
   t,
   onSurveillanceToggle,
+  requireActionComment = false,
   onEditLocation,
   showNullNonResponse,
   sortMode,
@@ -87,7 +90,7 @@ export function MonitoringSiteSection({
   const isSiteExpanded = expandedSites.has(siteKey)
   const handleSurveillanceToggle =
     onSurveillanceToggle ??
-    ((_: number, __: "surveillance" | "alarms", ___: boolean, ____?: number | null) => {})
+    ((_: number, __: "surveillance" | "alarms", ___: boolean, ____?: number | null, _____?: string | null) => {})
   const siteSensors = site.groups.flatMap((group) => group.sensors)
   const siteStats = countStatus(siteSensors)
 
@@ -188,6 +191,7 @@ export function MonitoringSiteSection({
                           site.siteName ?? "",
                           group.groupName ?? "",
                           handleSurveillanceToggle,
+                          requireActionComment,
                           onEditLocation,
                           showNullNonResponse,
                         )}

@@ -50,8 +50,13 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
       setValue('Incertitude', undefined)
       setValue('Derniere_Date_Etalonnage', undefined)
       setValue('Applied_Etalonnage_Id', undefined)
-      setSelectedCalibrationId('')
-      return
+      const resetTimer = window.setTimeout(() => {
+        setSelectedCalibrationId('')
+      }, 0)
+
+      return () => {
+        window.clearTimeout(resetTimer)
+      }
     }
 
     const unit = normalizeMetrologyUnit(latestCalibration?.Unite ?? latestAdjustment?.Unite ?? defaultMetrologyUnit) || defaultMetrologyUnit
@@ -69,13 +74,24 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
 
   useEffect(() => {
     if (!selectedSerial || calibrations.length === 0) {
-      setSelectedCalibrationId('')
-      return
+      const resetTimer = window.setTimeout(() => {
+        setSelectedCalibrationId('')
+      }, 0)
+
+      return () => {
+        window.clearTimeout(resetTimer)
+      }
     }
 
     const currentExists = calibrations.some((cal) => String(cal.Id_Etalonnage) === selectedCalibrationId)
     if (!currentExists) {
-      setSelectedCalibrationId(String(calibrations[0].Id_Etalonnage))
+      const selectTimer = window.setTimeout(() => {
+        setSelectedCalibrationId(String(calibrations[0].Id_Etalonnage))
+      }, 0)
+
+      return () => {
+        window.clearTimeout(selectTimer)
+      }
     }
   }, [calibrations, selectedCalibrationId, selectedSerial])
 

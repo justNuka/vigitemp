@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 
 interface Sparkle {
@@ -16,19 +16,23 @@ interface SparklesTextProps {
   className?: string;
 }
 
-export function SparklesText({ children, className }: SparklesTextProps) {
-  const [sparkles, setSparkles] = useState<Sparkle[]>([]);
+function deterministicFraction(seed: number): number {
+  const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+  return value - Math.floor(value);
+}
 
-  useEffect(() => {
-    const generated: Sparkle[] = Array.from({ length: 6 }, (_, i) => ({
-      id: i,
-      x: `${Math.random() * 100}%`,
-      y: `${Math.random() * 100}%`,
-      size: Math.random() * 4 + 2,
-      delay: Math.random() * 2,
-    }));
-    setSparkles(generated);
-  }, []);
+export function SparklesText({ children, className }: SparklesTextProps) {
+  const sparkles = useMemo<Sparkle[]>(
+    () =>
+      Array.from({ length: 6 }, (_, i) => ({
+        id: i,
+        x: `${deterministicFraction((i + 1) * 7) * 100}%`,
+        y: `${deterministicFraction((i + 1) * 11) * 100}%`,
+        size: deterministicFraction((i + 1) * 13) * 4 + 2,
+        delay: deterministicFraction((i + 1) * 17) * 2,
+      })),
+    [],
+  );
 
   return (
     <span className={cn("relative inline-block", className)}>

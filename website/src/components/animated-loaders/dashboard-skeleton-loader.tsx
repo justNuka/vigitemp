@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { motion } from "motion/react";
 import {
   MapPin,
@@ -238,6 +239,24 @@ function AlarmRow({
 /* ------------------------------------------------------------------ */
 
 function TrendPanel({ speed }: { speed: number }) {
+  const bars = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) => {
+        const seed = i + 1;
+        const pseudoRandom = (factor: number) => {
+          const value = Math.sin(seed * factor * 12.9898) * 43758.5453;
+          return value - Math.floor(value);
+        };
+        return {
+          id: i,
+          minHeight: `${10 + pseudoRandom(1) * 20}%`,
+          maxHeight: `${30 + pseudoRandom(2) * 50}%`,
+          endHeight: `${10 + pseudoRandom(3) * 30}%`,
+        };
+      }),
+    [],
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -254,22 +273,22 @@ function TrendPanel({ speed }: { speed: number }) {
       <div className="text-[10px] text-muted-foreground mb-4">Derniers 7j</div>
       {/* Animated mini chart lines */}
       <div className="flex-1 flex items-end gap-1 min-h-15">
-        {Array.from({ length: 12 }, (_, i) => (
+        {bars.map((bar) => (
           <motion.div
-            key={i}
+            key={bar.id}
             className="flex-1 rounded-t"
             style={{ backgroundColor: "hsl(var(--primary) / 0.2)" }}
             animate={{
               height: [
-                `${10 + Math.random() * 20}%`,
-                `${30 + Math.random() * 50}%`,
-                `${10 + Math.random() * 30}%`,
+                bar.minHeight,
+                bar.maxHeight,
+                bar.endHeight,
               ],
             }}
             transition={{
               duration: 3 * speed,
               repeat: Infinity,
-              delay: i * 0.12,
+              delay: bar.id * 0.12,
               ease: "easeInOut",
             }}
           />

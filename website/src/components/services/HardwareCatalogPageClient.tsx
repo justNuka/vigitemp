@@ -208,7 +208,7 @@ export function HardwareCatalogPageClient() {
     queryFn: () => getJson<HardwareCatalogResponse>("/api/services/hardware/catalog"),
   })
 
-  const materials = catalogQuery.data?.catalog ?? []
+  const materials = useMemo(() => catalogQuery.data?.catalog ?? [], [catalogQuery.data?.catalog])
   const commercialEmail = catalogQuery.data?.commercialEmail ?? "contactsite@mc2lab.fr"
   const smtpReady = catalogQuery.data?.smtpReady ?? false
 

@@ -20,7 +20,9 @@ interface SensorsCardsGridProps {
     action: "surveillance" | "alarms",
     newState: boolean,
     durationMinutes?: number | null,
+    actionComment?: string | null,
   ) => void
+  requireActionComment?: boolean
   onEditLocation?: (idLieu: number) => void
   showNullNonResponse?: boolean
   sortMode?: SurveillanceSortMode
@@ -37,6 +39,7 @@ export function SensorsCardsGrid({
   disabledFirst = false,
   isLoading = false,
   onSurveillanceToggle,
+  requireActionComment = false,
   onEditLocation,
   showNullNonResponse = false,
   sortMode = "status",
@@ -44,7 +47,7 @@ export function SensorsCardsGrid({
   const t = useTranslations("surveillance")
   const handleSurveillanceToggle =
     onSurveillanceToggle ??
-    ((_: number, __: "surveillance" | "alarms", ___: boolean, ____: number | null) => {
+    ((_: number, __: "surveillance" | "alarms", ___: boolean, ____: number | null, _____?: string | null) => {
       // no-op
     })
 
@@ -129,6 +132,7 @@ export function SensorsCardsGrid({
                 batteryPercent={sensor.location.batteryPercent ?? null}
                 gsoTension={sensor.location.gsoTension ?? null}
                 onSurveillanceToggle={handleSurveillanceToggle}
+                requireActionComment={requireActionComment}
                 onEditLocation={onEditLocation}
                 showNullNonResponse={showNullNonResponse}
               />

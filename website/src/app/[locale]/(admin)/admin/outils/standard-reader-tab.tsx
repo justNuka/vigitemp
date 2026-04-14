@@ -55,8 +55,16 @@ export function StandardReaderTab() {
   }, [standards])
 
   useEffect(() => {
-    if (!assignedQuery.data?.value) return
-    setSelectedSerial(assignedQuery.data.value)
+    const assignedValue = assignedQuery.data?.value
+    if (!assignedValue) return
+
+    const syncTimer = window.setTimeout(() => {
+      setSelectedSerial(assignedValue)
+    }, 0)
+
+    return () => {
+      window.clearTimeout(syncTimer)
+    }
   }, [assignedQuery.data?.value])
 
   const assignedStandard = useMemo(() => {

@@ -1,8 +1,8 @@
 "use client";
 import { showFormValidationToast } from "@/lib/form-toast"
 
-import { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useMemo, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { CheckCircle2, Eye, EyeOff, RefreshCw, XCircle } from "lucide-react";
@@ -100,22 +100,14 @@ export function CreateUserDialog({
     } as CreateUserFormValues,
   });
 
-  const hasExpiryDate = form.watch("hasExpiryDate");
-  const currentPassword = form.watch("password");
+  const hasExpiryDate = useWatch({ control: form.control, name: "hasExpiryDate" });
+  const currentPassword = useWatch({ control: form.control, name: "password" }) ?? "";
   const memoryKey = "create-user-form:new";
 
   const validation = useMemo(
     () => (rules ? validatePassword(currentPassword, rules as any) : null),
     [currentPassword, rules]
   );
-
-  useEffect(() => {
-    if (!open) {
-      form.reset();
-      setShowPassword(false);
-      setShowPasswordConfirm(false);
-    }
-  }, [form, open]);
 
   const generatePassword = () => {
     if (!rules) return;
@@ -137,7 +129,17 @@ export function CreateUserDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          form.reset();
+          setShowPassword(false);
+          setShowPasswordConfirm(false);
+        }
+        onOpenChange(nextOpen);
+      }}
+    >
       <DialogContent className="max-h-[90vh] overflow-y-auto bg-white dark:bg-popover dark:text-popover-foreground">
         <DialogHeader>
           <DialogTitle>{t("title")}</DialogTitle>

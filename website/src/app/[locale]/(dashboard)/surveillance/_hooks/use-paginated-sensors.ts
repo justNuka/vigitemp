@@ -75,16 +75,17 @@ export function usePaginatedSensors({
     refetchInterval: false,
     retry: false,
   })
+  const { refetch } = query
 
   const forceRefresh = useCallback(async () => {
     bypassCacheRef.current = true
     try {
       await queryClient.removeQueries({ queryKey: ["capteurs", "paginated", limit, "page"] })
-      await query.refetch()
+      await refetch()
     } finally {
       bypassCacheRef.current = false
     }
-  }, [limit, query.refetch, queryClient])
+  }, [limit, queryClient, refetch])
 
   return {
     ...query,

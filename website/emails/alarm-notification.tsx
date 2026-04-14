@@ -30,12 +30,12 @@ export default function AlarmNotificationEmail({
   return (
     <Html>
       <Head />
-      <Preview>{`[VIGITEMP] ${title}`}</Preview>
+      <Preview>{`[VIGISENSYS] ${title}`}</Preview>
       <Body style={styles.body}>
         <Container style={styles.container}>
           <Section style={styles.header}>
-            <Text style={styles.kicker}>VIGITEMP</Text>
-            <Heading style={styles.headerTitle}>Notification d'alarme Vigitemp</Heading>
+            <Text style={styles.kicker}>VIGISENSYS</Text>
+            <Heading style={styles.headerTitle}>Notification d'alarme VigiSensys</Heading>
           </Section>
 
           <Section style={styles.content}>

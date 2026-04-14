@@ -745,6 +745,25 @@ exports.Prisma.T_vigilogScalarFieldEnum = {
   Date_Heure_Maj: 'Date_Heure_Maj'
 };
 
+exports.Prisma.T_vigilog_usage_ponctuelScalarFieldEnum = {
+  Id_VigiLog_Usage_Ponctuel: 'Id_VigiLog_Usage_Ponctuel',
+  Reference_Usage: 'Reference_Usage',
+  Id_VigiLog_Configuration: 'Id_VigiLog_Configuration',
+  Id_VigiLog: 'Id_VigiLog',
+  Nom_Configuration: 'Nom_Configuration',
+  Numero_Serie_VigiLog: 'Numero_Serie_VigiLog',
+  Nom_Lieu_Temporaire: 'Nom_Lieu_Temporaire',
+  Statut: 'Statut',
+  Id_Utilisateur_Demarrage: 'Id_Utilisateur_Demarrage',
+  Date_Heure_Demarrage: 'Date_Heure_Demarrage',
+  Commentaire_Demarrage: 'Commentaire_Demarrage',
+  Id_Utilisateur_Arret: 'Id_Utilisateur_Arret',
+  Date_Heure_Arret: 'Date_Heure_Arret',
+  Commentaire_Arret: 'Commentaire_Arret',
+  Date_Heure_Creation: 'Date_Heure_Creation',
+  Date_Heure_Maj: 'Date_Heure_Maj'
+};
+
 exports.Prisma.T_vigilog_tourneeScalarFieldEnum = {
   Id_VigiLog_Tournee: 'Id_VigiLog_Tournee',
   Reference_Tournee: 'Reference_Tournee',
@@ -1071,6 +1090,16 @@ exports.Prisma.t_vigilogOrderByRelevanceFieldEnum = {
   Commentaire: 'Commentaire'
 };
 
+exports.Prisma.t_vigilog_usage_ponctuelOrderByRelevanceFieldEnum = {
+  Reference_Usage: 'Reference_Usage',
+  Nom_Configuration: 'Nom_Configuration',
+  Numero_Serie_VigiLog: 'Numero_Serie_VigiLog',
+  Nom_Lieu_Temporaire: 'Nom_Lieu_Temporaire',
+  Statut: 'Statut',
+  Commentaire_Demarrage: 'Commentaire_Demarrage',
+  Commentaire_Arret: 'Commentaire_Arret'
+};
+
 exports.Prisma.t_vigilog_tourneeOrderByRelevanceFieldEnum = {
   Reference_Tournee: 'Reference_Tournee',
   Nom_Configuration: 'Nom_Configuration',
@@ -1144,6 +1173,7 @@ exports.Prisma.ModelName = {
   t_commande_materiel_ligne: 't_commande_materiel_ligne',
   t_vigilog_configuration: 't_vigilog_configuration',
   t_vigilog: 't_vigilog',
+  t_vigilog_usage_ponctuel: 't_vigilog_usage_ponctuel',
   t_vigilog_tournee: 't_vigilog_tournee'
 };
 

@@ -597,6 +597,11 @@
         "saved": "Draft available"
       },
       "current_location_label": "Current location:",
+      "action_comment_label": "Action comment",
+      "action_comment_placeholder_optional": "Add a comment (optional)",
+      "action_comment_placeholder_required": "Add a comment (required)",
+      "action_comment_required": "Comment is required for this action.",
+      "unsaved_changes_title": "Unsaved changes",
       "unsaved_changes_confirm": "Unsaved changes will be lost. Close anyway?"
     },
     "general": {
@@ -2167,6 +2172,13 @@
       "unit": "Unit",
       "validity_days": "Validity (days)"
     },
+    "confirm_overwrite": {
+      "title": "Confirm changes",
+      "description": "This operation will replace existing adjustments and reset some offsets.",
+      "cancel": "Cancel",
+      "confirm": "Continue",
+      "submitting": "Confirming..."
+    },
     "toast": {
       "save_success": "{count} row(s) inserted into database.",
       "save_error": "Failed to insert into database.",
@@ -3711,6 +3723,9 @@
     "aria_label": "Recent measurements chart"
   },
   "monitoringCard": {
+    "status": {
+      "ok": "OK"
+    },
     "alarmTypes": {
       "high": "High alarm",
       "low": "Low alarm",
@@ -3803,6 +3818,12 @@
           "720": "12 hours",
           "manual": "Unlimited (manual)"
         }
+      },
+      "action_comment": {
+        "label": "Comment",
+        "placeholder_optional": "Add a comment (optional)",
+        "placeholder_required": "Add a comment (required)",
+        "required_error": "Comment is required for this action."
       },
       "cancel": "Cancel",
       "confirm": "Confirm"
@@ -4097,8 +4118,12 @@
     "results": "{count} result(s)",
     "export": "Export",
     "export_count_prompt": {
+      "title": "Export measurements",
       "message": "How many measurements should be exported? (1 to {max})",
-      "invalid": "Invalid value. Enter a number between 1 and {max}."
+      "invalid": "Invalid value. Enter a number between 1 and {max}.",
+      "input_label": "Number of measurements to export",
+      "cancel": "Cancel",
+      "confirm": "Export"
     },
     "export_columns": {
       "title": "Columns to export",
@@ -4332,6 +4357,15 @@
     "tabs": {
       "active": "Active ({count})",
       "archived": "Archived ({count})"
+    },
+    "dialogs": {
+      "archive": {
+        "title": "Archive account",
+        "description": "Are you sure you want to archive {username}'s account? The account will be disabled and the user will no longer be able to sign in.",
+        "cancel": "Cancel",
+        "confirm": "Archive",
+        "submitting": "Archiving..."
+      }
     }
   },
   "createUserDialog": {
@@ -4712,7 +4746,11 @@
         "loggerSerial": "Logger serial number",
         "departureSite": "Departure site",
         "arrivalSite": "Arrival site",
-        "comment": "Comment"
+        "comment": "Comment",
+        "alreadyPrepared": "VigiLog already prepared"
+      },
+      "hints": {
+        "alreadyPrepared": "If checked, the run is created without reloading the configuration on the cradle."
       },
       "placeholders": {
         "configuration": "Choose a configuration",
@@ -4760,7 +4798,11 @@
       "description": "Select a pending run, place the logger on its base, then confirm arrival.",
       "fields": {
         "pendingTour": "Pending run",
-        "comment": "Arrival comment"
+        "comment": "Arrival comment",
+        "alreadyPrepared": "VigiLog already prepared"
+      },
+      "hints": {
+        "alreadyPrepared": "If unchecked, the selected configuration is applied before creating the run."
       },
       "placeholders": {
         "pendingTour": "Choose a run",
@@ -4788,28 +4830,44 @@
         "noLoggerTitle": "A VigiLog must be placed on the cradle",
         "noLoggerDescription": "Place the expected VigiLog on the USB cradle before confirming arrival.",
         "mismatchTitle": "Wrong VigiLog detected",
-        "mismatchDescription": "This run expects VigiLog {expected}, but the cradle currently detects {detected}."
+        "mismatchDescription": "This run expects VigiLog {expected}, but the cradle currently detects {detected}.",
+        "pendingLoggerTitle": "A run is already pending for this VigiLog",
+        "pendingLoggerDescription": "Select the existing run and confirm arrival."
       },
       "actions": {
-        "submit": "Confirm arrival"
+        "submit": "Confirm arrival",
+        "createAtArrival": "Create run at arrival"
       }
     },
     "usage": {
       "title": "Spot use",
-      "description": "Prepare a VigiLog for temporary monitoring without creating a run.",
+      "description": "Start temporary monitoring with a free-form location name, without creating a location or sensor in the database.",
       "infoTitle": "Standalone mode",
-      "infoDescription": "This action loads a configuration onto the detected VigiLog without creating a run record in history.",
+      "infoDescription": "The selected configuration is loaded, then a temporary usage session is started with a temporary location name. Stop it when monitoring is finished.",
       "fields": {
         "configuration": "Configuration",
         "loggerSerial": "Logger serial number",
+        "temporaryLocationName": "Temporary location name",
         "note": "Local note"
       },
       "placeholders": {
+        "temporaryLocationName": "Ex: Temporary cold room B",
         "note": "Useful information for this temporary use"
       },
-      "noteHint": "This note is only informational in the interface. It is not stored in the database yet.",
+      "noteHint": "This note is saved as the temporary usage start comment.",
+      "warnings": {
+        "loggerAlreadyActiveTitle": "Temporary usage already active",
+        "loggerAlreadyActiveDescription": "A temporary usage is already active for this VigiLog. Stop it before starting a new one."
+      },
+      "active": {
+        "title": "Active temporary usages",
+        "empty": "No active temporary usage.",
+        "startedAt": "Started at {date}"
+      },
       "actions": {
-        "prepare": "Prepare the VigiLog"
+        "prepare": "Prepare the VigiLog",
+        "start": "Start temporary usage",
+        "stop": "Stop"
       }
     },
     "config": {
@@ -4919,7 +4977,8 @@
       },
       "departureError": {
         "title": "Creation failed",
-        "description": "The VigiLog run could not be created."
+        "description": "The VigiLog run could not be created.",
+        "pendingLogger": "A run is already pending for this VigiLog."
       },
       "prepareSuccess": {
         "title": "VigiLog prepared",
@@ -4930,9 +4989,36 @@
         "title": "Preparation failed",
         "description": "The VigiLog could not be prepared on the cradle."
       },
+      "temporaryUsageStartSuccess": {
+        "title": "Temporary usage started",
+        "description": "Usage {reference} is now active."
+      },
+      "temporaryUsageStartError": {
+        "title": "Start failed",
+        "description": "Temporary usage could not be started.",
+        "missingLocationName": "Please provide a temporary location name.",
+        "loggerAlreadyActive": "A temporary usage is already active for this VigiLog."
+      },
+      "temporaryUsageStopSuccess": {
+        "title": "Temporary usage stopped",
+        "description": "Temporary usage is now finished."
+      },
+      "temporaryUsageStopError": {
+        "title": "Stop failed",
+        "description": "Temporary usage could not be stopped."
+      },
       "receiveSuccess": {
         "title": "Arrival confirmed",
         "description": "The run has been marked as received."
+      },
+      "arrivalCreateSuccess": {
+        "title": "Run created at arrival",
+        "description": "Run {reference} has been created and preselected for arrival confirmation."
+      },
+      "arrivalCreateError": {
+        "title": "Arrival creation failed",
+        "description": "The run could not be created from arrival.",
+        "pendingLogger": "A run is already pending for this VigiLog."
       },
       "receiveError": {
         "title": "Arrival failed",

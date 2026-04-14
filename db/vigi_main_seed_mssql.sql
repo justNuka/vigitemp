@@ -26,6 +26,7 @@ IF COL_LENGTH('dbo.t_lieu', 'Consigne_Inf_Base') IS NULL ALTER TABLE dbo.t_lieu 
 IF COL_LENGTH('dbo.t_lieu', 'Tolerance_Surveillance_Sup_Base') IS NULL ALTER TABLE dbo.t_lieu ADD Tolerance_Surveillance_Sup_Base FLOAT NULL;
 IF COL_LENGTH('dbo.t_lieu', 'Tolerance_Surveillance_Inf_Base') IS NULL ALTER TABLE dbo.t_lieu ADD Tolerance_Surveillance_Inf_Base FLOAT NULL;
 IF COL_LENGTH('dbo.t_lieu', 'Planning_Actif') IS NULL ALTER TABLE dbo.t_lieu ADD Planning_Actif BIT NOT NULL CONSTRAINT DF_t_lieu_Planning_Actif DEFAULT(0);
+IF COL_LENGTH('dbo.t_lieu', 'Planning_Regle_Existe') IS NULL ALTER TABLE dbo.t_lieu ADD Planning_Regle_Existe BIT NOT NULL CONSTRAINT DF_t_lieu_Planning_Regle_Existe DEFAULT(0);
 IF COL_LENGTH('dbo.t_lieu', 'Planning_Source_Regle_Id') IS NULL ALTER TABLE dbo.t_lieu ADD Planning_Source_Regle_Id INT NULL;
 IF COL_LENGTH('dbo.t_lieu', 'Planning_Derniere_Maj') IS NULL ALTER TABLE dbo.t_lieu ADD Planning_Derniere_Maj DATETIME NULL;
 IF COL_LENGTH('dbo.t_lieu', 'Est_Redeclenchement_Immediat') IS NULL ALTER TABLE dbo.t_lieu ADD Est_Redeclenchement_Immediat BIT NOT NULL CONSTRAINT DF_t_lieu_Est_Redeclenchement_Immediat DEFAULT(0);
@@ -33,6 +34,15 @@ IF COL_LENGTH('dbo.t_lieu', 'Nb_Mesures_Temporisation_Redeclenchement') IS NULL 
 IF COL_LENGTH('dbo.t_lieu', 'Surveillance_Etat') IS NOT NULL ALTER TABLE dbo.t_lieu DROP COLUMN Surveillance_Etat;
 IF COL_LENGTH('dbo.t_lieu', 'Consigne_Sup_Corrigee') IS NOT NULL ALTER TABLE dbo.t_lieu DROP COLUMN Consigne_Sup_Corrigee;
 IF COL_LENGTH('dbo.t_lieu', 'Consigne_Inf_Corrigee') IS NOT NULL ALTER TABLE dbo.t_lieu DROP COLUMN Consigne_Inf_Corrigee;
+IF OBJECT_ID('dbo.t_lieu_planning_regle', 'U') IS NOT NULL
+BEGIN
+  UPDATE l
+  SET Planning_Regle_Existe = CASE
+    WHEN EXISTS (SELECT 1 FROM dbo.t_lieu_planning_regle r WHERE r.Id_Lieu = l.Id_Lieu) THEN 1
+    ELSE 0
+  END
+  FROM dbo.t_lieu l;
+END;
 GO
 
 -- t_module / t_parametre / t_utilisateur
@@ -186,6 +196,39 @@ BEGIN
   );
   CREATE INDEX IDX_Id_Delivery_Event ON dbo.t_notification_event(Id_Delivery);
   CREATE INDEX IDX_Date_Event ON dbo.t_notification_event(Date_Event);
+END;
+GO
+
+-- t_vigilog_usage_ponctuel
+IF OBJECT_ID('dbo.t_vigilog_usage_ponctuel', 'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.t_vigilog_usage_ponctuel (
+    Id_VigiLog_Usage_Ponctuel INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Reference_Usage VARCHAR(50) NOT NULL,
+    Id_VigiLog_Configuration INT NULL,
+    Id_VigiLog INT NULL,
+    Nom_Configuration VARCHAR(100) NOT NULL,
+    Numero_Serie_VigiLog VARCHAR(30) NOT NULL,
+    Nom_Lieu_Temporaire VARCHAR(120) NOT NULL,
+    Statut VARCHAR(30) NOT NULL,
+    Id_Utilisateur_Demarrage INT NOT NULL,
+    Date_Heure_Demarrage DATETIME NOT NULL,
+    Commentaire_Demarrage VARCHAR(MAX) NULL,
+    Id_Utilisateur_Arret INT NULL,
+    Date_Heure_Arret DATETIME NULL,
+    Commentaire_Arret VARCHAR(MAX) NULL,
+    Date_Heure_Creation DATETIME NOT NULL CONSTRAINT DF_t_vigilog_usage_ponctuel_DateCreation DEFAULT(GETDATE()),
+    Date_Heure_Maj DATETIME NULL,
+    CONSTRAINT UK_t_vigilog_usage_ponctuel_reference UNIQUE (Reference_Usage),
+    CONSTRAINT FK_t_vigilog_usage_ponctuel_configuration FOREIGN KEY (Id_VigiLog_Configuration) REFERENCES dbo.t_vigilog_configuration(Id_VigiLog_Configuration),
+    CONSTRAINT FK_t_vigilog_usage_ponctuel_logger FOREIGN KEY (Id_VigiLog) REFERENCES dbo.t_vigilog(Id_VigiLog),
+    CONSTRAINT FK_t_vigilog_usage_ponctuel_user_start FOREIGN KEY (Id_Utilisateur_Demarrage) REFERENCES dbo.t_utilisateur(Id_Utilisateur),
+    CONSTRAINT FK_t_vigilog_usage_ponctuel_user_stop FOREIGN KEY (Id_Utilisateur_Arret) REFERENCES dbo.t_utilisateur(Id_Utilisateur)
+  );
+  CREATE INDEX IDX_t_vigilog_usage_ponctuel_statut ON dbo.t_vigilog_usage_ponctuel(Statut);
+  CREATE INDEX IDX_t_vigilog_usage_ponctuel_logger ON dbo.t_vigilog_usage_ponctuel(Numero_Serie_VigiLog);
+  CREATE INDEX IDX_t_vigilog_usage_ponctuel_started_by ON dbo.t_vigilog_usage_ponctuel(Id_Utilisateur_Demarrage);
+  CREATE INDEX IDX_t_vigilog_usage_ponctuel_stopped_by ON dbo.t_vigilog_usage_ponctuel(Id_Utilisateur_Arret);
 END;
 GO
 

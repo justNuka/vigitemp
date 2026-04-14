@@ -28,7 +28,7 @@ export function UpgradeToc({ includeComparison = true }: { includeComparison?: b
     }
 
     return () => observer.disconnect();
-  }, []);
+  }, [tocItems]);
 
   return (
     <nav className="hidden xl:flex fixed left-6 top-1/2 -translate-y-1/2 z-50 flex-col gap-1">

@@ -80,7 +80,10 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
   const { isMobile, setOpenMobile } = useSidebar();
   const locale = useLocale();
   const normalizedPathname = useMemo(() => stripLocalePrefix(pathname), [pathname]);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return getAlarmAudioMuted();
+  });
   const tSidebar = useTranslations("sidebar");
   const tGroups = useTranslations("sidebarGroups");
   const tCommon = useTranslations("common");
@@ -96,8 +99,6 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
   const canAccessAdmin = hasPermission(currentUser, "DASHBOARD_ADMIN_ACCESS") || hasPermission(currentUser, "GENERAL_SETTINGS_ACCESS");
 
   useEffect(() => {
-    setIsMuted(getAlarmAudioMuted());
-
     const syncMuted = () => setIsMuted(getAlarmAudioMuted());
     const onStorage = (event: StorageEvent) => {
       if (event.key === null || event.key === "vigitemp:alarm-audio-muted") {

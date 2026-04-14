@@ -17,7 +17,7 @@ import { SurveillanceLoadMore } from "./_components/monitoring-load-more";
 import { CurvesOverlayModal } from "./_components/curves-overlay-modal";
 import { applySurveillanceFilters, computeSurveillanceStats, type FilterState } from "./_helpers/monitoring-derived";
 import { toast } from "sonner";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { LocationFormDialog } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-dialog";
 import { getDefaultLocationFormData } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-defaults";
 import type { LocationFormData } from "@/app/[locale]/(admin)/admin/lieux/_components/location-form-types";
@@ -51,12 +51,26 @@ interface Props {
   requireActionComment: boolean;
 }
 
+const getInitialDisabledFirst = (): boolean => {
+  if (typeof document === "undefined") {
+    return true;
+  }
+
+  const match = document.cookie.match(/(?:^|; )surveillance_disabled_first=([^;]*)/);
+  if (!match) {
+    document.cookie = "surveillance_disabled_first=1; path=/; max-age=31536000";
+    return true;
+  }
+
+  return decodeURIComponent(match[1]) === "1";
+};
+
 
 export function SurveillancePageClient({ initialStats, sites, groups, refreshIntervalSeconds, showNullNonResponse: initialShowNullNonResponse, requireActionComment }: Props) {
   const t = useTranslations("surveillance");
   const [viewMode, setViewMode] = useState<ViewMode>("graphs");
   const [filters, setFilters] = useState<FilterState>({ siteIds: [], groupIds: [], searchTerm: "", sortMode: "status" });
-  const [disabledFirst, setDisabledFirst] = useState(true);
+  const [disabledFirst, setDisabledFirst] = useState<boolean>(() => getInitialDisabledFirst());
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [showNullNonResponse] = useState(initialShowNullNonResponse);
   const [isRangeSelectionActive, setIsRangeSelectionActive] = useState(false);
@@ -84,7 +98,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     requireActionComment,
   });
 
-  const watchedSensor = locationForm.watch("Sonde_Numero_Serie");
+  const watchedSensor = useWatch({ control: locationForm.control, name: "Sonde_Numero_Serie" });
   const shouldLoadLocationFormData = isEditLocationOpen;
   const { data: formSites = [] } = useSitesSimple(shouldLoadLocationFormData);
   const { data: formGroups = [] } = useGroups(undefined, shouldLoadLocationFormData);
@@ -217,16 +231,6 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     void prefetchNextSensorsPage(queryClient, last.page + 1, paginatedData.limit, paginatedSensorsPageKey);
   }, [data?.pages, paginatedData.limit, queryClient]);
 
-  useEffect(() => {
-    const match = document.cookie.match(/(?:^|; )surveillance_disabled_first=([^;]*)/);
-    if (!match) {
-      document.cookie = "surveillance_disabled_first=1; path=/; max-age=31536000";
-      setDisabledFirst(true);
-      return;
-    }
-    setDisabledFirst(decodeURIComponent(match[1]) === "1");
-  }, []);
-
   const handleToggleOrder = useCallback(() => {
     setDisabledFirst((current) => {
       const next = !current;
@@ -272,20 +276,14 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   );
 
   const handleSurveillanceToggle = useCallback(
-    async (idLieu: number, action: "surveillance" | "alarms", newState: boolean, durationMinutes?: number | null) => {
-      const promptKeyBase =
-        action === "surveillance"
-          ? newState
-            ? "action_comment.surveillance_enable_prompt"
-            : "action_comment.surveillance_disable_prompt"
-          : newState
-            ? "action_comment.alarms_enable_prompt"
-            : "action_comment.alarms_disable_prompt"
-
-      const promptKey = `${promptKeyBase}_${requireActionComment ? "required" : "optional"}`
-      const rawComment = typeof window === "undefined" ? "" : window.prompt(t(promptKey), "")
-      if (rawComment === null) return
-      const actionComment = rawComment.trim()
+    async (
+      idLieu: number,
+      action: "surveillance" | "alarms",
+      newState: boolean,
+      durationMinutes?: number | null,
+      actionCommentInput?: string | null,
+    ) => {
+      const actionComment = typeof actionCommentInput === "string" ? actionCommentInput.trim() : ""
       if (requireActionComment && actionComment.length === 0) {
         toast.error(t("action_comment.required_error"))
         return
@@ -430,6 +428,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                 sensors={visibleSensors}
                 disabledFirst={disabledFirst}
                 onSurveillanceToggle={handleSurveillanceToggle}
+                requireActionComment={requireActionComment}
                 onEditLocation={handleOpenLocationEdit}
                 isLoading={isFetching && visibleSensors.length === 0}
                 showNullNonResponse={showNullNonResponse}
@@ -449,6 +448,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                 sensors={visibleSensors}
                 disabledFirst={disabledFirst}
                 onSurveillanceToggle={handleSurveillanceToggle}
+                requireActionComment={requireActionComment}
                 onEditLocation={handleOpenLocationEdit}
                 isLoading={isFetching && visibleSensors.length === 0}
                 showNullNonResponse={showNullNonResponse}
@@ -483,6 +483,8 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
         modules={modules}
         mailingUsers={mailingUsers}
         isSubmitting={isLocationSaving}
+        showActionComment
+        requireActionComment={requireActionComment}
         onCancel={closeEditor}
         onSubmit={handleEditLocationSubmit}
       />

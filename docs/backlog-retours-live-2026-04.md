@@ -1,19 +1,19 @@
 # Backlog Retours Live - 2026-04-07/08
 
-Ce fichier centralise les retours de la journ?e de revue live.
+Ce fichier centralise les retours de la journée de revue live.
 
-R?gles de suivi:
-- `[ ]` ? faire
+Règles de suivi:
+- `[ ]` À faire
 - `[-]` en cours
 - `[x]` fait
-- priorit?: `Rapide`, `Moyen`, `Lourd`
+- priorité: `Rapide`, `Moyen`, `Lourd`
 
 ## Quick Wins Prioritaires
 
 ### Dashboard utilisateur
-- [x] `Rapide` Remplacer `derni?res 24h` par `derniers 7j`.
-- [x] `Rapide` Ajouter une ?chelle au graphique d'alarmes.
-- [x] `Moyen` Ajouter un bouton `D?tails` menant vers une page listant les alarmes par lieu.
+- [x] `Rapide` Remplacer `dernières 24h` par `derniers 7j`.
+- [x] `Rapide` Ajouter une échelle au graphique d'alarmes.
+- [x] `Moyen` Ajouter un bouton `Détails` menant vers une page listant les alarmes par lieu.
 
 ### Page de connexion
 - [x] `Rapide` Afficher un pop-up 7 jours avant l'obligation de changement de mot de passe.
@@ -21,40 +21,41 @@ R?gles de suivi:
 - [x] `Rapide` Dark mode sur la page de connexion à refaire (les inputs et leurs contenus très peu visibles).
 
 ### Profil utilisateur
-- [x] `Rapide` Corriger le chargement de l'avatar personnalis?.
+- [x] `Rapide` Corriger le chargement de l'avatar personnalisé.
 
 ### Services
 - [x] `Rapide` Supprimer le lien vers Vigilog.
 
 ### Surveillance
-- [x] `Rapide` Quand on fait une recherche sur la page de surveillance via le champ de recherche, limiter la taille des cards ? celle de base (actuellement les r?sultats vont prendre tout l'?cran).
-- [x] `Rapide` Vider le champ de recherche d?s qu'on change de page.
-- [x] `Rapide` Supprimer `x sondes affich?s`.
+- [x] `Rapide` Quand on fait une recherche sur la page de surveillance via le champ de recherche, limiter la taille des cards à celle de base (actuellement les résultats vont prendre tout l'écran).
+- [x] `Rapide` Vider le champ de recherche dès qu'on change de page.
+- [x] `Rapide` Supprimer `x sondes affichés`.
 - [x] `Rapide` Modifier la couleur du nombre de lieux en haut.
 - [x] `Rapide` Passer le statut `OK` en bleu.
 - [x] `Rapide` Ajouter un tooltip sur les stats du bandeau haut.
-- [x] `Rapide` Parler en `lieux` plut?t qu'en `sondes`.
-- [x] `Rapide` Ajouter un tooltip sur `derni?re mesure`.
-- [x] `Rapide` R?duire le padding des ic?nes sur les cards.
-- [x] `Rapide` Passer la derni?re date/heure sous la derni?re mesure.
-- [x] `Rapide` Aligner le point d'?tat sur les cards.
+- [x] `Rapide` Parler en `lieux` plutôt qu'en `sondes`.
+- [x] `Rapide` Ajouter un tooltip sur `dernière mesure`.
+- [x] `Rapide` Réduire le padding des icônes sur les cards.
+- [x] `Rapide` Passer la dernière date/heure sous la dernière mesure.
+- [x] `Rapide` Aligner le point d'état sur les cards.
 - [x] `Rapide` Remplacer le point d'exclamation par un point d'interrogation.
 - [x] `Rapide` Afficher les observations du lieu au survol.
-- [x] `Rapide` Ajouter les pr?-alarmes dans la l?gende.
-- [x] `Rapide` Tracer les pr?-alarmes sur les graphs preview.
-- [x] `Rapide` Corriger l'unit?: priorit? ?talonnage, fallback `t_lieu.Unite`, afficher `degr?s` pour `C`.
-- [x] `Rapide` Afficher sur les cards d?sactiv?es: `d?sactiv?e depuis le ... par ...` + commentaire.
+- [x] `Rapide` Ajouter les pré-alarmes dans la légende.
+- [x] `Rapide` Tracer les pré-alarmes sur les graphs preview.
+- [x] `Rapide` Corriger l'unité: priorité étalonnage, fallback `t_lieu.Unite`, afficher `degrès` pour `C`.
+- [x] `Rapide` Afficher sur les cards désactivées: `désactivée depuis le ... par ...` + commentaire.
 - [x] `Rapide` Ajouter une colonne / info `nombre de sondes sans lieu` sur dashboard admin.
-- [x] `Rapide` Supprimer le bouton `d?sactiver la surveillance d'un groupe` et le basculer en admin.
-- [x] `Rapide` Quand une plage est s?lectionn?e, d?charger les graphs derri?re puis recharger ? la fermeture.
+- [x] `Rapide` Supprimer le bouton `désactiver la surveillance d'un groupe` et le basculer en admin.
+- [x] `Rapide` Quand une plage est sélectionnée, décharger les graphs derrière puis recharger à la fermeture.
+- [ ] `Rapide/Moyen` Repasser sur le fonctionnement du bouton pour charger plus d'éléments : le count ne doit pas prendre en compte seulement ceux chargés (peu porter à confusion), et avoir 2 boutons charger plus, un pour les lieux en surveillance désactivée à rajouter -> ajuster le fonctionnement de celui des des lieux en surveillance.
 
-### Surveillance - modal d?tails / historique
+### Surveillance - modal détails / historique
 - [x] `Rapide` Corriger les traductions `monitoringDetailsModal.chart.drag_zoom_hint` et `monitoringDetailsModal.chart.reset_zoom`.
-- [x] `Rapide` Le tableau de la modal doit s'?tendre au lieu de rester fixe.
+- [x] `Rapide` Le tableau de la modal doit s'étendre au lieu de rester fixe.
 - [x] `Rapide` Fixer les headers des tables.
-- [x] `Rapide` Quand une plage est s?lectionn?e, ne pas afficher les audits dans l'onglet `tableau des mesures`.
+- [x] `Rapide` Quand une plage est sélectionnée, ne pas afficher les audits dans l'onglet `tableau des mesures`.
 - [x] `Rapide` Garder l'audit sur l'onglet graphique.
-- [x] `Rapide` Traduire le code `d?tails` dans la table d'audit.
+- [x] `Rapide` Traduire le code `détails` dans la table d'audit.
 - [x] `Rapide` Corriger la string parasite / doublon de recherche dans l'audit.
 - [x] `Rapide` Corriger la superposition lignes de tol?rance / pointill?s / infobulle.
 - [x] `Rapide` Faire porter l'infobulle de survol sur la courbe de mesures, pas sur les lignes de consigne.
@@ -436,7 +437,7 @@ R?gles de suivi:
 
 #### M?tier
 - [x] `Moyen` Revoir le d?clenchement des alarmes GSO par mail.
-- [ ] `Lourd` Ajouter le type `secteur / alimentation`.
+- [ ] `Lourd` Ajouter le type d'alarme `secteur / alimentation`.
 - [x] `Moyen` Calculer la dur?e d'alarme m?me non termin?e.
 
 #### Admin alarmes
@@ -468,14 +469,14 @@ R?gles de suivi:
 - [x] `Rapide/Moyen` Erreur lors de la configuration d'un vigilog :
 | '[2026-04-09 13:43:17.085] [ERROR] [services/vigilog/agent/configure] vigilog_agent_configure_failed {"error":{}}
 [2026-04-09 13:43:17.087] [HTTP] [HTTP] POST /api/services/vigilog/agent/configure - 503 {"user":"EBO","userId":8,"ip":"192.168.63.144","duration":671,"statusCode":503,"error":"req_b50a58a654374a2f","errorBody":"Impossible de parametrer le logger VigiLog","requestBody":{"configurationId":4}} '| 
-- [ ] `Moyen` V?rifier le d?chargement si mauvais Vigilog.
-- [ ] `Moyen` Permettre la cr?ation de tourn?e ? l'arriv?e.
+- [x] `Moyen` V?rifier le d?chargement si mauvais Vigilog.
+- [x] `Moyen` Permettre la cr?ation de tourn?e ? l'arriv?e.
 - [x] `Rapide` Ajouter une card de stats pour les usages ponctuels.
-- [ ] `Moyen` Usage ponctuel: pr?paration d'un Vigilog.
-- [ ] `Moyen` D?part/arriv?e: case `d?j? pr?par?`.
-- [ ] `Moyen` Si oui, cr?er juste la tourn?e; sinon appliquer la config.
+- [x] `Moyen` Usage ponctuel: pr?paration d'un Vigilog.
+- [x] `Moyen` D?part/arriv?e: case `d?j? pr?par?`.
+- [x] `Moyen` Si oui, cr?er juste la tourn?e; sinon appliquer la config.
 - [x] `Rapide` Ne pas choisir une config par d?faut.
-- [ ] `Lourd` Nouvel onglet `usage ponctuel` pour remplacement temporaire de sonde hors lieu existant.
+- [x] `Lourd` Nouvel onglet `usage ponctuel` pour remplacement temporaire de sonde hors lieu existant.
 - [x] `Rapide` `num?ro de s?rie` -> `num?ro de s?rie constructeur`.
 
 ### Dashboard admin

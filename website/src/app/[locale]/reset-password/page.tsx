@@ -19,7 +19,7 @@ import {
 } from "@/components/password/password-rules"
 import { postJson } from "@/lib/http"
 import { z } from "zod"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useTranslations } from "next-intl"
 
@@ -46,7 +46,7 @@ function ResetPasswordForm() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),
@@ -60,8 +60,8 @@ function ResetPasswordForm() {
 
   const effectiveRules = useMemo(() => getEffectivePasswordRules(passwordRules), [passwordRules])
 
-  const newPassword = watch("newPassword")
-  const confirmPassword = watch("confirmPassword")
+  const newPassword = useWatch({ control, name: "newPassword" }) ?? ""
+  const confirmPassword = useWatch({ control, name: "confirmPassword" }) ?? ""
 
   const ruleChecks = useMemo(
     () =>
@@ -72,7 +72,7 @@ function ResetPasswordForm() {
         includeConfirmMatch: true,
         t,
       }),
-    [confirmPassword, effectiveRules, newPassword],
+    [confirmPassword, effectiveRules, newPassword, t],
   )
 
   const allRulesValid = useMemo(() => areAllPasswordRuleChecksValid(ruleChecks), [ruleChecks])

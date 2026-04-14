@@ -1,4 +1,4 @@
-import type { CreateUserInput, User } from "@/lib/api"
+import type { CreateUserInput } from "@/lib/api"
 import type { CreateUserFormValues, EditUserFormValues } from "./_components/user-schemas"
 
 export function getCreateUserPayload(values: CreateUserFormValues) {
@@ -21,9 +21,4 @@ export function getUpdateUserPayload(values: EditUserFormValues) {
   }
 }
 
-export function confirmArchiveUser(user: User) {
-  return confirm(
-    `Êtes-vous sûr de vouloir archiver le compte de ${user.username} ? Le compte sera désactivé et l'utilisateur ne pourra plus se connecter.`,
-  )
-}
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useLocale, useTranslations } from "next-intl";
@@ -70,12 +70,16 @@ export function AlarmAcknowledgeDialog({
 }: Props) {
   const t = useTranslations("alarmsPage");
   const locale = useLocale();
-  const baseAlarm: AcknowledgeDialogAlarm = alarm ?? {
-    id: "",
-    locationId: "",
-    locationName: "",
-    sensorName: "",
-  };
+  const baseAlarm: AcknowledgeDialogAlarm = useMemo(
+    () =>
+      alarm ?? {
+        id: "",
+        locationId: "",
+        locationName: "",
+        sensorName: "",
+      },
+    [alarm],
+  );
   const [commentOptions, setCommentOptions] = useState<{ id: number; text: string }[]>([]);
   const [selectedCommentId, setSelectedCommentId] = useState<string>("");
   const [showGraph, setShowGraph] = useState(false);
@@ -95,7 +99,7 @@ export function AlarmAcknowledgeDialog({
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<CommentFormValues>({
@@ -103,17 +107,21 @@ export function AlarmAcknowledgeDialog({
     defaultValues: { comment: "" },
   });
 
-  const comment = watch("comment") ?? "";
+  const comment = useWatch({ control, name: "comment" }) ?? "";
 
   useEffect(() => {
     if (!open || !alarm) return;
     let isActive = true;
-    setSelectedCommentId("");
-    setAlarmCount30(null);
-    setShowGraph(false);
-    setAlarmDetails(null);
+    const initId = window.setTimeout(() => {
+      setSelectedCommentId("");
+      setAlarmCount30(null);
+      setShowGraph(false);
+      setAlarmDetails(null);
+      setIsCommentsLoading(true);
+      setIsStatsLoading(true);
+      setIsDetailLoading(true);
+    }, 0);
 
-    setIsCommentsLoading(true);
     fetch("/api/alarmes/commentaires-acquittement")
       .then((res) => (res.ok ? res.json() : null))
       .then((payload) => {
@@ -132,7 +140,6 @@ export function AlarmAcknowledgeDialog({
         setIsCommentsLoading(false);
       });
 
-    setIsStatsLoading(true);
     fetch(`/api/alarmes/${alarm.id}/stats`)
       .then((res) => (res.ok ? res.json() : null))
       .then((payload) => {
@@ -148,7 +155,6 @@ export function AlarmAcknowledgeDialog({
         setIsStatsLoading(false);
       });
 
-    setIsDetailLoading(true);
     fetch(`/api/alarmes/${alarm.id}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((payload) => {
@@ -166,6 +172,7 @@ export function AlarmAcknowledgeDialog({
 
     return () => {
       isActive = false;
+      window.clearTimeout(initId);
     };
   }, [open, alarm]);
 

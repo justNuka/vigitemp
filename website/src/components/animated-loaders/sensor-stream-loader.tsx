@@ -48,6 +48,11 @@ const SENSOR_UNITS = [
   "ppm",
 ];
 
+function deterministicFraction(seed: number): number {
+  const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+  return value - Math.floor(value);
+}
+
 function generateRandomValue(index: number): string {
   const ranges: [number, number][] = [
     [18, 26],
@@ -64,7 +69,7 @@ function generateRandomValue(index: number): string {
     [390, 510],
   ];
   const [min, max] = ranges[index % ranges.length];
-  const val = min + Math.random() * (max - min);
+  const val = min + deterministicFraction(index + 1) * (max - min);
   return val < 10 ? val.toFixed(2) : val < 100 ? val.toFixed(1) : val.toFixed(0);
 }
 
@@ -86,8 +91,17 @@ export default function SensorStreamLoader({
         label: SENSOR_LABELS[i % SENSOR_LABELS.length],
         value: generateRandomValue(i),
         unit: SENSOR_UNITS[i % SENSOR_UNITS.length],
-        status: Math.random() > 0.15 ? "OK" : "WARN",
+        status: deterministicFraction((i + 1) * 7) > 0.15 ? "OK" : "WARN",
       })),
+    [rowCount],
+  );
+
+  const skeletonWidths = useMemo(
+    () =>
+      Array.from({ length: rowCount }, (_, i) => {
+        const firstColumn = `${60 + deterministicFraction((i + 1) * 13) * 30}%`;
+        return [firstColumn, "60%", "40%", "50%"];
+      }),
     [rowCount],
   );
 
@@ -108,7 +122,7 @@ export default function SensorStreamLoader({
         setActiveRow(visibleRows);
         setVisibleRows((v) => v + 1);
       },
-      (180 + Math.random() * 120) * speed,
+      (180 + deterministicFraction((visibleRows + 1) * 17) * 120) * speed,
     );
     return () => clearTimeout(timer);
   }, [visibleRows, rowCount, speed]);
@@ -216,7 +230,7 @@ export default function SensorStreamLoader({
             key={`skeleton-${i}`}
             className="grid grid-cols-[1fr_100px_50px_60px] gap-2 py-1.5 border-b border-border/30 last:border-0"
           >
-            {[`${60 + Math.random() * 30}%`, "60%", "40%", "50%"].map((w, j) => (
+            {(skeletonWidths[i] ?? ["70%", "60%", "40%", "50%"]).map((w, j) => (
               <motion.div
                 key={j}
                 className={`h-3 rounded bg-muted ${j > 0 ? "ml-auto" : ""}`}

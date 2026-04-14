@@ -80,20 +80,26 @@ export function LoginForm() {
   const [loginAlertReason, setLoginAlertReason] = useState<"inactivity" | "session-expired" | null>(null);
 
   useEffect(() => {
-    if (reason === "inactivity") {
-      const canShow = consumeDisconnectReason("inactivity");
-      setLoginAlertReason(canShow ? "inactivity" : null);
-    } else if (reason === "session-expired") {
-      setLoginAlertReason("session-expired");
-    } else {
-      setLoginAlertReason(null);
-    }
+    const nextLoginAlertReason =
+      reason === "inactivity"
+        ? (consumeDisconnectReason("inactivity") ? "inactivity" : null)
+        : reason === "session-expired"
+          ? "session-expired"
+          : null;
+
+    const syncTimer = window.setTimeout(() => {
+      setLoginAlertReason(nextLoginAlertReason);
+    }, 0);
 
     if (passwordChanged === "true") {
       toast.success(t("toasts.password_changed.title"), {
         description: t("toasts.password_changed.description"),
       });
     }
+
+    return () => {
+      window.clearTimeout(syncTimer);
+    };
   }, [passwordChanged, reason, t]);
 
   useEffect(() => {

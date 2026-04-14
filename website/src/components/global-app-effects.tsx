@@ -214,7 +214,7 @@ export function GlobalAppEffects() {
       window.removeEventListener(API_ERROR_EVENT, onApiError as EventListener)
       window.removeEventListener(AUTH_STATE_EVENT, onAuthState as EventListener)
     }
-  }, [pathname, queryClient, router, t])
+  }, [pathname, queryClient, router, t, tSessionExpired])
 
   return null
 }

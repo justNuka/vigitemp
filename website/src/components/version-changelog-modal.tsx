@@ -60,7 +60,13 @@ export function VersionChangelogModal() {
   useEffect(() => {
     const seen = readCookieValue(COOKIE_NAME)
     if (seen !== RELEASE_VERSION) {
-      setOpen(true)
+      const syncTimer = window.setTimeout(() => {
+        setOpen(true)
+      }, 0)
+
+      return () => {
+        window.clearTimeout(syncTimer)
+      }
     }
   }, [])
 

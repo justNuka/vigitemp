@@ -1,6 +1,7 @@
 import React from "react";
 import _ from "lodash";
 import { Responsive, WidthProvider } from "react-grid-layout";
+import { toast } from "sonner";
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
 export default class DragFromOutsideLayout extends React.Component {
@@ -69,7 +70,7 @@ export default class DragFromOutsideLayout extends React.Component {
   };
 
   onDrop = (layout, layoutItem, _event) => {
-    alert(`Dropped element props:\n${JSON.stringify(layoutItem, ['x', 'y', 'w', 'h'], 2)}`);
+    toast.info(`Dropped element props: ${JSON.stringify(layoutItem, ["x", "y", "w", "h"], 2)}`);
   };
 
   render() {

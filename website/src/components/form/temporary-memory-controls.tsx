@@ -28,7 +28,14 @@ export function TemporaryMemoryControls<TFormValues extends FieldValues>({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    setHasStoredDraft(Boolean(window.localStorage.getItem(storageKey)));
+
+    const syncTimer = window.setTimeout(() => {
+      setHasStoredDraft(Boolean(window.localStorage.getItem(storageKey)));
+    }, 0);
+
+    return () => {
+      window.clearTimeout(syncTimer);
+    };
   }, [storageKey]);
 
   const saveDraft = () => {

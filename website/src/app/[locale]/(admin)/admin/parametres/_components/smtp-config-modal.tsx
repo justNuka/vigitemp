@@ -1,7 +1,7 @@
 "use client";
 import { showFormValidationToast } from "@/lib/form-toast"
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
   Dialog,
@@ -22,7 +22,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 
-interface SMTPConfig {
+interface SMTPConfigPayload {
   host: string;
   port: number;
   user: string;
@@ -30,6 +30,14 @@ interface SMTPConfig {
   sender: string;
   passwordConfigured?: boolean;
 }
+
+type SMTPConfigFormValues = {
+  host: string;
+  port: number;
+  user: string;
+  password?: string;
+  sender: string;
+};
 
 interface SMTPConfigModalProps {
   open: boolean;
@@ -76,7 +84,7 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<SMTPConfig>({
+  } = useForm<SMTPConfigFormValues>({
     resolver: zodResolver(smtpSchema),
     defaultValues: {
       host: "",
@@ -99,18 +107,17 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
     },
   });
 
-  // Charger la configuration a l'ouverture du modal
-  useEffect(() => {
-    if (open) {
-      fetchConfig();
-    }
-  }, [open]);
-
-  const fetchConfig = async () => {
+  const fetchConfig = useCallback(async () => {
     try {
       setIsLoading(true);
-      const payload = await getJson<SMTPConfig>("/api/admin/configuration-smtp");
-      reset(payload);
+      const payload = await getJson<SMTPConfigPayload>("/api/admin/configuration-smtp");
+      reset({
+        host: payload.host,
+        port: payload.port,
+        user: payload.user,
+        password: payload.password,
+        sender: payload.sender,
+      });
       setPasswordConfigured(Boolean(payload.passwordConfigured));
       setTestValue("testEmail", payload.sender || payload.user || "");
     } catch (error) {
@@ -119,10 +126,17 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [reset, setTestValue, t]);
+
+  // Charger la configuration a l'ouverture du modal
+  useEffect(() => {
+    if (open) {
+      void fetchConfig();
+    }
+  }, [fetchConfig, open]);
 
   const updateMutation = useMutation({
-    mutationFn: async (newConfig: SMTPConfig) => {
+    mutationFn: async (newConfig: SMTPConfigFormValues) => {
       return putJson<{ message: string }>("/api/admin/configuration-smtp", newConfig);
     },
     onSuccess: () => {
@@ -146,7 +160,7 @@ export function SMTPConfigModal({ open, onOpenChange }: SMTPConfigModalProps) {
     },
   });
 
-  const onSubmit = (data: SMTPConfig) => {
+  const onSubmit = (data: SMTPConfigFormValues) => {
     updateMutation.mutate(data);
   };
 

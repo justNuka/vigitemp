@@ -56,16 +56,16 @@ export const PATCH = withAuthLogging(
         if (nextModuleId === null) {
           nextPortSerie = null
         } else {
-          const module = await prisma.t_module.findUnique({
+          const moduleRecord = await prisma.t_module.findUnique({
             where: { Id_Module: nextModuleId },
             select: { Port_Serie: true },
           })
 
-          if (!module) {
+          if (!moduleRecord) {
             return apiError(400, "invalid_module", "Module introuvable")
           }
 
-          nextPortSerie = module.Port_Serie ?? null
+          nextPortSerie = moduleRecord.Port_Serie ?? null
         }
       }
 

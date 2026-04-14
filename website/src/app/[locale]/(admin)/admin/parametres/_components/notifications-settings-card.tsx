@@ -77,7 +77,13 @@ export function NotificationsSettingsCard({
   const [recipients, setRecipients] = useState(() => normalizeRecipients(recipientsSetting?.value ?? ""));
 
   useEffect(() => {
-    setRecipients(normalizeRecipients(recipientsSetting?.value ?? ""));
+    const syncTimer = window.setTimeout(() => {
+      setRecipients(normalizeRecipients(recipientsSetting?.value ?? ""));
+    }, 0);
+
+    return () => {
+      window.clearTimeout(syncTimer);
+    };
   }, [recipientsSetting?.value]);
 
   return (

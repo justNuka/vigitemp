@@ -22,19 +22,6 @@ export function useSurveillanceLocationEditor({
   const [isEditLocationOpen, setIsEditLocationOpen] = useState(false)
   const [isLocationSaving, setIsLocationSaving] = useState(false)
 
-  const askOptionalComment = useCallback(() => {
-    if (typeof window === "undefined") return ""
-    const promptKey = `action_comment.location_prompt_${requireActionComment ? "required" : "optional"}`
-    const response = window.prompt(t(promptKey), "")
-    if (response === null) return null
-    const trimmed = response.trim()
-    if (requireActionComment && trimmed.length === 0) {
-      toast.error(t("action_comment.required_error"))
-      return null
-    }
-    return trimmed
-  }, [requireActionComment, t])
-
   const handleOpenLocationEdit = useCallback((idLieu: number) => {
     const location = locations.find((item) => item.Id_Lieu === idLieu)
     if (!location) {
@@ -48,8 +35,11 @@ export function useSurveillanceLocationEditor({
 
   const handleEditLocationSubmit = useCallback(async (values: LocationFormData) => {
     if (!selectedLocationId) return
-    const actionComment = askOptionalComment()
-    if (actionComment === null) return
+    const actionComment = typeof values.Commentaire_Action === "string" ? values.Commentaire_Action.trim() : ""
+    if (requireActionComment && actionComment.length === 0) {
+      toast.error(t("action_comment.required_error"))
+      return
+    }
 
     setIsLocationSaving(true)
     try {
@@ -68,7 +58,7 @@ export function useSurveillanceLocationEditor({
     } finally {
       setIsLocationSaving(false)
     }
-  }, [askOptionalComment, queryClient, selectedLocationId, t])
+  }, [queryClient, requireActionComment, selectedLocationId, t])
 
   const closeEditor = useCallback(() => {
     setSelectedLocationId(null)

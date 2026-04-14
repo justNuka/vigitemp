@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { AnimatePresence, LazyMotion, domAnimation, m, useReducedMotion } from "motion/react"
 import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
@@ -33,8 +33,7 @@ export default function SharedImportStepper<TImportResult>({
 }: SharedImportStepperProps<TImportResult>) {
   const t = useTranslations(stepperNamespace)
   const [currentStep, setCurrentStep] = useState(1)
-  const directionRef = useRef(0)
-  const prevStepRef = useRef(currentStep)
+  const [direction, setDirection] = useState(0)
   const prefersReducedMotion = useReducedMotion()
   const [canProceed, setCanProceed] = useState(false)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
@@ -46,6 +45,13 @@ export default function SharedImportStepper<TImportResult>({
 
   const handleFilesSelected = useCallback((files: File[]) => {
     setSelectedFiles((prev) => [...prev, ...files])
+  }, [])
+
+  const handleStepChange = useCallback((nextStep: number) => {
+    setCurrentStep((prev) => {
+      setDirection(nextStep > prev ? 1 : -1)
+      return nextStep
+    })
   }, [])
 
   const runValidation = useCallback(async () => {
@@ -76,28 +82,37 @@ export default function SharedImportStepper<TImportResult>({
   }, [selectedFiles, validateRootTag, invalidRootError, t])
 
   useEffect(() => {
-    directionRef.current = currentStep > prevStepRef.current ? 1 : -1
-    prevStepRef.current = currentStep
-  }, [currentStep])
-
-  useEffect(() => {
     const counts = buildNameCounts(uploads)
-    setSelectedFiles((prev) => {
-      const next = filterFilesByUploadNames(prev, counts)
-      return next.length === prev.length ? prev : next
-    })
-    setValidationResults((prev) => {
-      const next = filterValidationByUploadNames(prev, counts)
-      return next.length === prev.length ? prev : next
-    })
+    const syncId = window.setTimeout(() => {
+      setSelectedFiles((prev) => {
+        const next = filterFilesByUploadNames(prev, counts)
+        return next.length === prev.length ? prev : next
+      })
+      setValidationResults((prev) => {
+        const next = filterValidationByUploadNames(prev, counts)
+        return next.length === prev.length ? prev : next
+      })
+    }, 0)
+
+    return () => {
+      window.clearTimeout(syncId)
+    }
   }, [uploads])
 
   useEffect(() => {
-    if (currentStep === 2) void runValidation()
-    if (currentStep === 3) {
-      setProcessState("idle")
-      setProcessError(null)
-      setProcessStats({ processed: 0, success: 0, failed: 0 })
+    const stepId = window.setTimeout(() => {
+      if (currentStep === 2) {
+        void runValidation()
+      }
+      if (currentStep === 3) {
+        setProcessState("idle")
+        setProcessError(null)
+        setProcessStats({ processed: 0, success: 0, failed: 0 })
+      }
+    }, 0)
+
+    return () => {
+      window.clearTimeout(stepId)
     }
   }, [currentStep, runValidation])
 
@@ -180,7 +195,7 @@ export default function SharedImportStepper<TImportResult>({
   return (
     <Stepper
       value={currentStep}
-      onValueChange={setCurrentStep}
+      onValueChange={handleStepChange}
       indicators={{ loading: <LoaderCircleIcon className="size-4 animate-spin" /> }}
       className="space-y-6 flex flex-col h-full min-h-0 overflow-hidden"
     >
@@ -225,9 +240,9 @@ export default function SharedImportStepper<TImportResult>({
             <m.div
               data-step-content
               key={currentStep}
-              initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: directionRef.current * 20 }}
+              initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: direction * 20 }}
               animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-              exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: directionRef.current * -20 }}
+              exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: direction * -20 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
               className="w-full min-h-full"
             >
@@ -253,7 +268,7 @@ export default function SharedImportStepper<TImportResult>({
 
       <div className="mt-auto flex shrink-0 items-center justify-between gap-2.5 border-t pt-4">
         {currentStep > 1 ? (
-          <Button variant="outline" onClick={() => setCurrentStep((prev) => prev - 1)}>
+          <Button variant="outline" onClick={() => handleStepChange(currentStep - 1)}>
             {t("actions.previous")}
           </Button>
         ) : (
@@ -273,7 +288,7 @@ export default function SharedImportStepper<TImportResult>({
                       else void handleProcess()
                       return
                     }
-                    setCurrentStep((prev) => prev + 1)
+                    handleStepChange(currentStep + 1)
                   }}
                   disabled={(currentStep === 1 && !canProceed) || (currentStep === 3 && processState === "running") || (currentStep === 3 && validResults.length === 0)}
                 >

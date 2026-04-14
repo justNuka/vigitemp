@@ -2,7 +2,7 @@
 import { showFormValidationToast } from "@/lib/form-toast"
 
 import { useEffect, useMemo, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 
@@ -99,7 +99,7 @@ export function EditUserDialog({
     } as EditUserFormValues,
   });
 
-  const hasEditExpiryDate = editForm.watch("hasExpiryDate");
+  const hasEditExpiryDate = useWatch({ control: editForm.control, name: "hasExpiryDate" });
   const didInitRef = useRef(false);
 
   const { data: assignedSites, isLoading: assignedSitesLoading } = useQuery({

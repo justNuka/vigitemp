@@ -569,37 +569,39 @@ model t_sonde_type {
 }
 
 model t_utilisateur {
-  Id_Utilisateur                                                                         Int                            @id @default(autoincrement())
-  Login                                                                                  String?                        @unique(map: "Login") @db.VarChar(64)
-  Mot_De_Passe                                                                           String?                        @db.VarChar(60)
-  Date_Validite                                                                          DateTime?                      @db.Date
-  Date_Creation                                                                          DateTime?                      @db.Date
-  Est_Archive                                                                            Boolean?                       @default(false)
-  Profil_Utilisateur                                                                     String?                        @db.VarChar(50)
-  Date_Heure_Derniere_Connexion                                                          DateTime?                      @db.DateTime(0)
-  Adresse_IP_Connexion                                                                   String?                        @db.VarChar(50)
-  Nom_Machine_Connexion                                                                  String?                        @db.VarChar(50)
-  Id_Site                                                                                Int?
-  Nom                                                                                    String?                        @db.VarChar(50)
-  Prenom                                                                                 String?                        @db.VarChar(50)
-  Tel_Num_Fixe                                                                           String?                        @db.VarChar(50)
-  Tel_Num_Mobile                                                                         String?                        @db.VarChar(50)
-  Adresse_Email                                                                          String?                        @db.VarChar(100)
-  Date_Derniere_Modification_MDP                                                         DateTime?                      @db.DateTime(0)
-  Reset_Password_Token                                                                   String?                        @db.VarChar(255)
-  Reset_Password_Expires                                                                 DateTime?                      @db.DateTime(0)
-  Est_Mot_De_Passe_Temporaire                                                            Boolean?                       @default(false)
-  Avatar_Utilisateur                                                                     String?                        @db.VarChar(512)
-  t_ancien_mot_de_passe                                                                  t_ancien_mot_de_passe[]
-  t_commande_materiel                                                                    t_commande_materiel[]
-  t_liaison_utilisateur_groupe                                                           t_liaison_utilisateur_groupe[]
-  t_liaison_utilisateur_site                                                             t_liaison_utilisateur_site[]
-  t_notification_delivery                                                                t_notification_delivery[]
-  t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur t_vigilog_configuration[]      @relation("t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur")
-  t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur      t_vigilog_configuration[]      @relation("t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur")
-  t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur         t_vigilog_tournee[]            @relation("t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur")
-  t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur              t_vigilog_tournee[]            @relation("t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur")
-  t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur               t_vigilog_tournee[]            @relation("t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur")
+  Id_Utilisateur                                                                            Int                            @id @default(autoincrement())
+  Login                                                                                     String?                        @unique(map: "Login") @db.VarChar(64)
+  Mot_De_Passe                                                                              String?                        @db.VarChar(60)
+  Date_Validite                                                                             DateTime?                      @db.Date
+  Date_Creation                                                                             DateTime?                      @db.Date
+  Est_Archive                                                                               Boolean?                       @default(false)
+  Profil_Utilisateur                                                                        String?                        @db.VarChar(50)
+  Date_Heure_Derniere_Connexion                                                             DateTime?                      @db.DateTime(0)
+  Adresse_IP_Connexion                                                                      String?                        @db.VarChar(50)
+  Nom_Machine_Connexion                                                                     String?                        @db.VarChar(50)
+  Id_Site                                                                                   Int?
+  Nom                                                                                       String?                        @db.VarChar(50)
+  Prenom                                                                                    String?                        @db.VarChar(50)
+  Tel_Num_Fixe                                                                              String?                        @db.VarChar(50)
+  Tel_Num_Mobile                                                                            String?                        @db.VarChar(50)
+  Adresse_Email                                                                             String?                        @db.VarChar(100)
+  Date_Derniere_Modification_MDP                                                            DateTime?                      @db.DateTime(0)
+  Reset_Password_Token                                                                      String?                        @db.VarChar(255)
+  Reset_Password_Expires                                                                    DateTime?                      @db.DateTime(0)
+  Est_Mot_De_Passe_Temporaire                                                               Boolean?                       @default(false)
+  Avatar_Utilisateur                                                                        String?                        @db.VarChar(512)
+  t_ancien_mot_de_passe                                                                     t_ancien_mot_de_passe[]
+  t_commande_materiel                                                                       t_commande_materiel[]
+  t_liaison_utilisateur_groupe                                                              t_liaison_utilisateur_groupe[]
+  t_liaison_utilisateur_site                                                                t_liaison_utilisateur_site[]
+  t_notification_delivery                                                                   t_notification_delivery[]
+  t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur    t_vigilog_configuration[]      @relation("t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur")
+  t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur         t_vigilog_configuration[]      @relation("t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur")
+  t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur     t_vigilog_usage_ponctuel[]     @relation("t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur")
+  t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur t_vigilog_usage_ponctuel[]     @relation("t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur")
+  t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur            t_vigilog_tournee[]            @relation("t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur")
+  t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur                 t_vigilog_tournee[]            @relation("t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur")
+  t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur                  t_vigilog_tournee[]            @relation("t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur")
 
   @@index([Est_Archive], map: "IDX_Est_Archive")
   @@index([Profil_Utilisateur], map: "IDX_Profil_Utilisateur")
@@ -825,26 +827,27 @@ model t_commande_materiel_ligne {
 }
 
 model t_vigilog_configuration {
-  Id_VigiLog_Configuration                                                     Int                 @id @default(autoincrement())
-  Nom_Configuration                                                            String              @unique(map: "UK_t_vigilog_configuration_nom") @db.VarChar(100)
-  Description_Configuration                                                    String?             @db.VarChar(255)
-  Consigne                                                                     Decimal?            @db.Decimal(10, 2)
-  Limite_Basse_Active                                                          Boolean             @default(false)
-  Limite_Basse                                                                 Decimal?            @db.Decimal(10, 2)
-  Limite_Haute_Active                                                          Boolean             @default(false)
-  Limite_Haute                                                                 Decimal?            @db.Decimal(10, 2)
+  Id_VigiLog_Configuration                                                     Int                        @id @default(autoincrement())
+  Nom_Configuration                                                            String                     @unique(map: "UK_t_vigilog_configuration_nom") @db.VarChar(100)
+  Description_Configuration                                                    String?                    @db.VarChar(255)
+  Consigne                                                                     Decimal?                   @db.Decimal(10, 2)
+  Limite_Basse_Active                                                          Boolean                    @default(false)
+  Limite_Basse                                                                 Decimal?                   @db.Decimal(10, 2)
+  Limite_Haute_Active                                                          Boolean                    @default(false)
+  Limite_Haute                                                                 Decimal?                   @db.Decimal(10, 2)
   Frequence_Min                                                                Int
   Retard_Alarme_Min                                                            Int
-  Delai_Demarrage_Min                                                          Int                 @default(0)
-  Autorise_Arret_Bouton_Stop                                                   Boolean             @default(true)
-  Reinitialise_Avec_Bouton_Start                                               Boolean             @default(true)
-  Actif                                                                        Boolean             @default(true)
+  Delai_Demarrage_Min                                                          Int                        @default(0)
+  Autorise_Arret_Bouton_Stop                                                   Boolean                    @default(true)
+  Reinitialise_Avec_Bouton_Start                                               Boolean                    @default(true)
+  Actif                                                                        Boolean                    @default(true)
   Id_Utilisateur_Creation                                                      Int?
-  Date_Heure_Creation                                                          DateTime            @default(now()) @db.DateTime(0)
+  Date_Heure_Creation                                                          DateTime                   @default(now()) @db.DateTime(0)
   Id_Utilisateur_Maj                                                           Int?
-  Date_Heure_Maj                                                               DateTime?           @db.DateTime(0)
-  t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur t_utilisateur?      @relation("t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur", fields: [Id_Utilisateur_Creation], references: [Id_Utilisateur], map: "FK_t_vigilog_configuration_user_creation")
-  t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur      t_utilisateur?      @relation("t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur", fields: [Id_Utilisateur_Maj], references: [Id_Utilisateur], map: "FK_t_vigilog_configuration_user_maj")
+  Date_Heure_Maj                                                               DateTime?                  @db.DateTime(0)
+  t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur t_utilisateur?             @relation("t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur", fields: [Id_Utilisateur_Creation], references: [Id_Utilisateur], map: "FK_t_vigilog_configuration_user_creation")
+  t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur      t_utilisateur?             @relation("t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur", fields: [Id_Utilisateur_Maj], references: [Id_Utilisateur], map: "FK_t_vigilog_configuration_user_maj")
+  t_vigilog_usage_ponctuel                                                     t_vigilog_usage_ponctuel[]
   t_vigilog_tournee                                                            t_vigilog_tournee[]
 
   @@index([Id_Utilisateur_Creation], map: "IDX_t_vigilog_configuration_user_create")
@@ -852,24 +855,53 @@ model t_vigilog_configuration {
 }
 
 model t_vigilog {
-  Id_VigiLog              Int                 @id @default(autoincrement())
-  Numero_Serie            String              @unique(map: "UK_t_vigilog_numero_serie") @db.VarChar(30)
-  Modele                  String?             @db.VarChar(50)
-  Libelle                 String?             @db.VarChar(100)
-  Actif                   Boolean             @default(true)
-  Date_Etalonnage         DateTime?           @db.DateTime(0)
-  Date_Validite           DateTime?           @db.Date
-  Duree_Validite_Jours    Int?
-  Err_Justesse            Float?              @db.Float
-  Commentaire             String?             @db.Text
-  Id_Utilisateur_Creation Int?
-  Date_Heure_Creation     DateTime            @default(now()) @db.DateTime(0)
-  Id_Utilisateur_Maj      Int?
-  Date_Heure_Maj          DateTime?           @db.DateTime(0)
-  t_vigilog_tournee       t_vigilog_tournee[]
+  Id_VigiLog               Int                        @id @default(autoincrement())
+  Numero_Serie             String                     @unique(map: "UK_t_vigilog_numero_serie") @db.VarChar(30)
+  Modele                   String?                    @db.VarChar(50)
+  Libelle                  String?                    @db.VarChar(100)
+  Actif                    Boolean                    @default(true)
+  Date_Etalonnage          DateTime?                  @db.DateTime(0)
+  Date_Validite            DateTime?                  @db.Date
+  Duree_Validite_Jours     Int?
+  Err_Justesse             Float?                     @db.Float
+  Commentaire              String?                    @db.Text
+  Id_Utilisateur_Creation  Int?
+  Date_Heure_Creation      DateTime                   @default(now()) @db.DateTime(0)
+  Id_Utilisateur_Maj       Int?
+  Date_Heure_Maj           DateTime?                  @db.DateTime(0)
+  t_vigilog_tournee        t_vigilog_tournee[]
+  t_vigilog_usage_ponctuel t_vigilog_usage_ponctuel[]
 
   @@index([Actif], map: "IDX_t_vigilog_actif")
   @@index([Modele], map: "IDX_t_vigilog_modele")
+}
+
+model t_vigilog_usage_ponctuel {
+  Id_VigiLog_Usage_Ponctuel                                                      Int                      @id @default(autoincrement())
+  Reference_Usage                                                                String                   @unique(map: "UK_t_vigilog_usage_ponctuel_reference") @db.VarChar(50)
+  Id_VigiLog_Configuration                                                       Int?
+  Id_VigiLog                                                                     Int?
+  Nom_Configuration                                                              String                   @db.VarChar(100)
+  Numero_Serie_VigiLog                                                           String                   @db.VarChar(30)
+  Nom_Lieu_Temporaire                                                            String                   @db.VarChar(120)
+  Statut                                                                         String                   @db.VarChar(30)
+  Id_Utilisateur_Demarrage                                                       Int
+  Date_Heure_Demarrage                                                           DateTime                 @db.DateTime(0)
+  Commentaire_Demarrage                                                          String?                  @db.Text
+  Id_Utilisateur_Arret                                                           Int?
+  Date_Heure_Arret                                                               DateTime?                @db.DateTime(0)
+  Commentaire_Arret                                                              String?                  @db.Text
+  Date_Heure_Creation                                                            DateTime                 @default(now()) @db.DateTime(0)
+  Date_Heure_Maj                                                                 DateTime?                @db.DateTime(0)
+  t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur t_utilisateur            @relation("t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur", fields: [Id_Utilisateur_Demarrage], references: [Id_Utilisateur], map: "FK_t_vigilog_usage_ponctuel_user_start")
+  t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur     t_utilisateur?           @relation("t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur", fields: [Id_Utilisateur_Arret], references: [Id_Utilisateur], map: "FK_t_vigilog_usage_ponctuel_user_stop")
+  t_vigilog_configuration                                                        t_vigilog_configuration? @relation(fields: [Id_VigiLog_Configuration], references: [Id_VigiLog_Configuration], map: "FK_t_vigilog_usage_ponctuel_configuration")
+  t_vigilog                                                                      t_vigilog?               @relation(fields: [Id_VigiLog], references: [Id_VigiLog], map: "FK_t_vigilog_usage_ponctuel_logger")
+
+  @@index([Statut], map: "IDX_t_vigilog_usage_ponctuel_statut")
+  @@index([Numero_Serie_VigiLog], map: "IDX_t_vigilog_usage_ponctuel_logger")
+  @@index([Id_Utilisateur_Demarrage], map: "IDX_t_vigilog_usage_ponctuel_started_by")
+  @@index([Id_Utilisateur_Arret], map: "IDX_t_vigilog_usage_ponctuel_stopped_by")
 }
 
 model t_vigilog_tournee {

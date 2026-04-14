@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { LazyMotion, domAnimation, m } from "motion/react";
 import { fadeInUp } from "@/lib/motion-variants";
 
@@ -64,7 +64,7 @@ export function LocationsClient() {
   const form = useForm<LocationFormData>({
     defaultValues: getDefaultLocationFormData(),
   })
-  const watchedSensor = form.watch('Sonde_Numero_Serie')
+  const watchedSensor = useWatch({ control: form.control, name: 'Sonde_Numero_Serie' })
   const { data: sites = [] } = useSitesSimple(shouldLoadFormData)
   const { data: groups = [] } = useGroups(undefined, shouldLoadFormData)
   const { data: availableSensors = [] } = useAvailableSensors(watchedSensor, shouldLoadFormData)

@@ -1246,8 +1246,11 @@ PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Planning_Actif');
 SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Planning_Actif` TINYINT(1) NOT NULL DEFAULT 0 AFTER `Est_Lieu_GSO`', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Planning_Regle_Existe');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Planning_Regle_Existe` TINYINT(1) NOT NULL DEFAULT 0 AFTER `Planning_Actif`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Planning_Source_Regle_Id');
-SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Planning_Source_Regle_Id` INT NULL AFTER `Planning_Actif`', 'SELECT 1');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Planning_Source_Regle_Id` INT NULL AFTER `Planning_Regle_Existe`', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Planning_Derniere_Maj');
 SET @sql := IF(@has_tbl = 1 AND @has_col = 0, 'ALTER TABLE `t_lieu` ADD COLUMN `Planning_Derniere_Maj` DATETIME NULL AFTER `Planning_Source_Regle_Id`', 'SELECT 1');
@@ -1266,6 +1269,9 @@ SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'ALTER TABLE `t_lieu` DROP COLUMN 
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Consigne_Inf_Corrigee');
 SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'ALTER TABLE `t_lieu` DROP COLUMN `Consigne_Inf_Corrigee`', 'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+SET @has_col := (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 't_lieu' AND column_name = 'Planning_Regle_Existe');
+SET @sql := IF(@has_tbl = 1 AND @has_col = 1, 'UPDATE `t_lieu` l SET `Planning_Regle_Existe` = EXISTS (SELECT 1 FROM `t_lieu_planning_regle` r WHERE r.`Id_Lieu` = l.`Id_Lieu`)', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
 -- t_module
@@ -1464,6 +1470,40 @@ SET @sql := IF(@has_tbl = 0,
   'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 
+-- t_vigilog_usage_ponctuel
+SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_vigilog_usage_ponctuel');
+SET @sql := IF(@has_tbl = 0,
+  'CREATE TABLE `t_vigilog_usage_ponctuel` (\
+    `Id_VigiLog_Usage_Ponctuel` INT NOT NULL AUTO_INCREMENT,\
+    `Reference_Usage` VARCHAR(50) NOT NULL,\
+    `Id_VigiLog_Configuration` INT NULL,\
+    `Id_VigiLog` INT NULL,\
+    `Nom_Configuration` VARCHAR(100) NOT NULL,\
+    `Numero_Serie_VigiLog` VARCHAR(30) NOT NULL,\
+    `Nom_Lieu_Temporaire` VARCHAR(120) NOT NULL,\
+    `Statut` VARCHAR(30) NOT NULL,\
+    `Id_Utilisateur_Demarrage` INT NOT NULL,\
+    `Date_Heure_Demarrage` DATETIME NOT NULL,\
+    `Commentaire_Demarrage` TEXT NULL,\
+    `Id_Utilisateur_Arret` INT NULL,\
+    `Date_Heure_Arret` DATETIME NULL,\
+    `Commentaire_Arret` TEXT NULL,\
+    `Date_Heure_Creation` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,\
+    `Date_Heure_Maj` DATETIME NULL,\
+    PRIMARY KEY (`Id_VigiLog_Usage_Ponctuel`),\
+    UNIQUE KEY `UK_t_vigilog_usage_ponctuel_reference` (`Reference_Usage`),\
+    KEY `IDX_t_vigilog_usage_ponctuel_statut` (`Statut`),\
+    KEY `IDX_t_vigilog_usage_ponctuel_logger` (`Numero_Serie_VigiLog`),\
+    KEY `IDX_t_vigilog_usage_ponctuel_started_by` (`Id_Utilisateur_Demarrage`),\
+    KEY `IDX_t_vigilog_usage_ponctuel_stopped_by` (`Id_Utilisateur_Arret`),\
+    CONSTRAINT `FK_t_vigilog_usage_ponctuel_configuration` FOREIGN KEY (`Id_VigiLog_Configuration`) REFERENCES `t_vigilog_configuration` (`Id_VigiLog_Configuration`),\
+    CONSTRAINT `FK_t_vigilog_usage_ponctuel_logger` FOREIGN KEY (`Id_VigiLog`) REFERENCES `t_vigilog` (`Id_VigiLog`),\
+    CONSTRAINT `FK_t_vigilog_usage_ponctuel_user_start` FOREIGN KEY (`Id_Utilisateur_Demarrage`) REFERENCES `t_utilisateur` (`Id_Utilisateur`),\
+    CONSTRAINT `FK_t_vigilog_usage_ponctuel_user_stop` FOREIGN KEY (`Id_Utilisateur_Arret`) REFERENCES `t_utilisateur` (`Id_Utilisateur`)\
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4',
+  'SELECT 1');
+PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
 -- planning
 SET @has_tbl := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_lieu_planning_regle');
 SET @sql := IF(@has_tbl = 0,
@@ -1620,6 +1660,7 @@ BEGIN
       l.Tolerance_Surveillance_Inf        = c.Tolerance_Surveillance_Inf_Apres,
       l.Retard_Alarme_Changement_Consigne = c.Retard_Alarme_Changement_Consigne,
       l.Planning_Actif                    = 1,
+      l.Planning_Regle_Existe             = 1,
       l.Planning_Source_Regle_Id          = c.Planning_Regle_Id,
       l.Planning_Derniere_Maj             = NOW();
 
@@ -1668,6 +1709,7 @@ BEGIN
       l.Tolerance_Surveillance_Inf        = l.Tolerance_Surveillance_Inf_Base,
       l.Retard_Alarme_Changement_Consigne = NULL,
       l.Planning_Actif                    = 0,
+      l.Planning_Regle_Existe             = EXISTS (SELECT 1 FROM t_lieu_planning_regle pr WHERE pr.Id_Lieu = l.Id_Lieu),
       l.Planning_Source_Regle_Id          = NULL,
       l.Planning_Derniere_Maj             = NOW();
 

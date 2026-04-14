@@ -64,7 +64,13 @@ interface MonitoringCardsGridProps {
     durationMinutes?: number | null,
 
 
+    actionComment?: string | null,
+
+
   ) => void
+
+
+  requireActionComment?: boolean
 
 
 
@@ -187,6 +193,9 @@ export function MonitoringCardsGrid({
   onSurveillanceToggle,
 
 
+  requireActionComment = false,
+
+
 
 
   onEditLocation,
@@ -222,7 +231,7 @@ export function MonitoringCardsGrid({
     onSurveillanceToggle ??
 
 
-    ((_: number, __: "surveillance" | "alarms", ___: boolean, ____?: number | null) => {
+    ((_: number, __: "surveillance" | "alarms", ___: boolean, ____?: number | null, _____?: string | null) => {
 
 
       // no-op
@@ -435,6 +444,9 @@ export function MonitoringCardsGrid({
 
 
                     onSurveillanceToggle={handleSurveillanceToggle}
+
+
+                    requireActionComment={requireActionComment}
 
 
                     onEditLocation={onEditLocation}

@@ -315,8 +315,6 @@ const TextAnimateBase = ({
   accessible = true,
   ...props
 }: TextAnimateProps) => {
-  const MotionComponent = motion.create(Component)
-
   let segments: string[] = []
   switch (by) {
     case "word":
@@ -379,36 +377,54 @@ const TextAnimateBase = ({
         }
       : { container: defaultContainerVariants, item: defaultItemVariants }
 
+  const segmentNodes = (
+    <>
+      {accessible && <span className="sr-only">{children}</span>}
+      {segments.map((segment, i) => (
+        <motion.span
+          key={`${by}-${segment}-${i}`}
+          variants={finalVariants.item}
+          custom={i * staggerTimings[by]}
+          className={cn(
+            by === "line" ? "block" : "inline-block whitespace-pre",
+            by === "character" && "",
+            segmentClassName
+          )}
+          aria-hidden={accessible ? true : undefined}
+        >
+          {segment}
+        </motion.span>
+      ))}
+    </>
+  )
+
+  const containerProps = {
+    variants: finalVariants.container as Variants,
+    initial: "hidden" as const,
+    whileInView: startOnView ? "show" : undefined,
+    animate: startOnView ? undefined : "show",
+    exit: "exit" as const,
+    className: cn("whitespace-pre-wrap", className),
+    viewport: { once },
+    "aria-label": accessible ? children : undefined,
+    ...props,
+  }
+
+  const renderContainer = () => {
+    if (Component === "div") return <motion.div {...containerProps}>{segmentNodes}</motion.div>
+    if (Component === "span") return <motion.span {...containerProps}>{segmentNodes}</motion.span>
+    if (Component === "h1") return <motion.h1 {...containerProps}>{segmentNodes}</motion.h1>
+    if (Component === "h2") return <motion.h2 {...containerProps}>{segmentNodes}</motion.h2>
+    if (Component === "h3") return <motion.h3 {...containerProps}>{segmentNodes}</motion.h3>
+    if (Component === "h4") return <motion.h4 {...containerProps}>{segmentNodes}</motion.h4>
+    if (Component === "h5") return <motion.h5 {...containerProps}>{segmentNodes}</motion.h5>
+    if (Component === "h6") return <motion.h6 {...containerProps}>{segmentNodes}</motion.h6>
+    return <motion.p {...containerProps}>{segmentNodes}</motion.p>
+  }
+
   return (
     <AnimatePresence mode="popLayout">
-      <MotionComponent
-        variants={finalVariants.container as Variants}
-        initial="hidden"
-        whileInView={startOnView ? "show" : undefined}
-        animate={startOnView ? undefined : "show"}
-        exit="exit"
-        className={cn("whitespace-pre-wrap", className)}
-        viewport={{ once }}
-        aria-label={accessible ? children : undefined}
-        {...props}
-      >
-        {accessible && <span className="sr-only">{children}</span>}
-        {segments.map((segment, i) => (
-          <motion.span
-            key={`${by}-${segment}-${i}`}
-            variants={finalVariants.item}
-            custom={i * staggerTimings[by]}
-            className={cn(
-              by === "line" ? "block" : "inline-block whitespace-pre",
-              by === "character" && "",
-              segmentClassName
-            )}
-            aria-hidden={accessible ? true : undefined}
-          >
-            {segment}
-          </motion.span>
-        ))}
-      </MotionComponent>
+      {renderContainer()}
     </AnimatePresence>
   )
 }

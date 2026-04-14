@@ -293,7 +293,7 @@ export function HotlineSensorTestPanel() {
       default:
         return ""
     }
-  }, [action, gsp.memoryCount, normalizedRawCommandValue, serial, showGspFields])
+  }, [action, gsp.memoryCount, gsp.memoryOffset, normalizedRawCommandValue, serial, showGspFields])
 
   async function submit() {
     setSubmitting(true)

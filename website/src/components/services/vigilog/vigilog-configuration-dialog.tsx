@@ -89,7 +89,13 @@ export function VigilogConfigurationDialog({
 
   useEffect(() => {
     if (open) {
-      setForm(buildFormValue(configuration))
+      const syncTimer = window.setTimeout(() => {
+        setForm(buildFormValue(configuration))
+      }, 0)
+
+      return () => {
+        window.clearTimeout(syncTimer)
+      }
     }
   }, [configuration, open])
 

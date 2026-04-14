@@ -42,7 +42,7 @@ export default function ForcePasswordChangePage() {
     }
 
     checkToken()
-  }, [router])
+  }, [router, t])
 
   if (!username) {
     return (

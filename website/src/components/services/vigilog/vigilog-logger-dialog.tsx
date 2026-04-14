@@ -96,8 +96,14 @@ export function VigilogLoggerDialog({
 
   useEffect(() => {
     if (open) {
-      setForm(buildFormValue(logger, defaults ?? undefined))
-      setImportedCalibrationFileName("")
+      const syncTimer = window.setTimeout(() => {
+        setForm(buildFormValue(logger, defaults ?? undefined))
+        setImportedCalibrationFileName("")
+      }, 0)
+
+      return () => {
+        window.clearTimeout(syncTimer)
+      }
     }
   }, [defaults, logger, open])
 

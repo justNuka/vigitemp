@@ -27,18 +27,18 @@ type HardwareMaterialCardProps = {
   onQuantityChange: (quantity: number) => void
 }
 
-function getMaterialIcon(type: string) {
+function renderMaterialIcon(type: string, className: string) {
   switch (type) {
     case "RADIO":
-      return Radio
+      return <Radio className={className} />
     case "ETHERNET":
-      return Server
+      return <Server className={className} />
     case "ETALON":
-      return Ruler
+      return <Ruler className={className} />
     case "FILAIRE":
-      return Cable
+      return <Cable className={className} />
     default:
-      return Cpu
+      return <Cpu className={className} />
   }
 }
 
@@ -60,7 +60,6 @@ export function HardwareMaterialCard({
   anchorId,
   onQuantityChange,
 }: HardwareMaterialCardProps) {
-  const Icon = getMaterialIcon(material.Type)
   const imageSrc = normalizeImagePath(material.Chemin_Image)
   const descriptionLines = material.Descriptif.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
 
@@ -71,6 +70,7 @@ export function HardwareMaterialCard({
         <div className="relative flex min-h-52 w-full items-center justify-center overflow-hidden bg-[linear-gradient(180deg,rgba(25,145,201,0.14),rgba(15,23,42,0.02))] dark:bg-[linear-gradient(180deg,rgba(25,145,201,0.16),rgba(15,23,42,0.38))] lg:w-56">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(25,145,201,0.22),transparent_55%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_58%)]" />
           {imageSrc ? (
+            // eslint-disable-next-line @next/next/no-img-element -- Catalog images are external/static assets without next/image optimization requirements.
             <img
               src={imageSrc}
               alt={material.Designation}
@@ -78,7 +78,7 @@ export function HardwareMaterialCard({
             />
           ) : (
             <div className="relative z-10 flex h-20 w-20 items-center justify-center rounded-3xl bg-white/80 text-primary shadow-sm dark:bg-popover/90 dark:text-cyan-300 dark:shadow-[0_12px_30px_-20px_rgba(0,0,0,0.55)]">
-              <Icon className="h-10 w-10" />
+              {renderMaterialIcon(material.Type, "h-10 w-10")}
             </div>
           )}
         </div>
@@ -111,7 +111,7 @@ export function HardwareMaterialCard({
                 <p className="leading-relaxed">—</p>
               )}
             </div>
-            <div className="flex min-w-[180px] flex-col items-stretch gap-2 rounded-2xl border border-border/60 bg-muted/30 px-4 py-4 dark:border-border dark:bg-muted/20">
+            <div className="flex min-w-45 flex-col items-stretch gap-2 rounded-2xl border border-border/60 bg-muted/30 px-4 py-4 dark:border-border dark:bg-muted/20">
               <p className="text-center text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 {quantityLabel}
               </p>

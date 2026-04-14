@@ -490,14 +490,14 @@ export const POST = withLogging(async (req: NextRequest) => {
     if (sondeNumeroSerie && hasIdModule) {
       let modulePortSerie: string | null = null
       if (validated.Id_Module !== null && validated.Id_Module !== undefined) {
-        const module = await prisma.t_module.findUnique({
+        const moduleRecord = await prisma.t_module.findUnique({
           where: { Id_Module: validated.Id_Module },
           select: { Port_Serie: true },
         })
-        if (!module) {
+        if (!moduleRecord) {
           return apiError(400, "invalid_module", "Module introuvable")
         }
-        modulePortSerie = module.Port_Serie ?? null
+        modulePortSerie = moduleRecord.Port_Serie ?? null
       }
 
       await prisma.t_sonde.updateMany({

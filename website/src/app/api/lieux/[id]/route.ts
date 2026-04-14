@@ -309,6 +309,7 @@ export const PATCH = withAnyAuthorizationLogging(
         EMT_Valeur,
         Corriger_Erreur_Justesse,
         Prendre_En_Compte_Derive,
+        Unite,
         Erreur_Justesse,
         Incertitude,
         Derive,
@@ -679,14 +680,14 @@ export const PATCH = withAnyAuthorizationLogging(
           if (targetSondeNumeroSerie) {
             let modulePortSerie: string | null = null
             if (Id_Module !== null && Id_Module !== undefined) {
-              const module = await tx.t_module.findUnique({
+              const moduleRecord = await tx.t_module.findUnique({
                 where: { Id_Module },
                 select: { Port_Serie: true },
               })
-              if (!module) {
+              if (!moduleRecord) {
                 throw new Error("invalid_module")
               }
-              modulePortSerie = module.Port_Serie ?? null
+              modulePortSerie = moduleRecord.Port_Serie ?? null
             }
 
             await tx.t_sonde.updateMany({

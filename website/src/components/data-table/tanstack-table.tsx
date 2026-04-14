@@ -12,11 +12,12 @@ import {
   type Updater,
   useReactTable,
 } from '@tanstack/react-table';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { LazyMotion, domAnimation, m } from 'motion/react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import {
   Select,
   SelectContent,
@@ -43,6 +44,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export interface TanStackTableProps<TData> {
   columns: ColumnDef<TData>[];
@@ -240,6 +249,9 @@ export function TanStackTable<TData extends Record<string, any>>({
   }, [table]);
 
   const [selectedExportColumnIds, setSelectedExportColumnIds] = useState<string[]>([]);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [pendingExportFormat, setPendingExportFormat] = useState<"csv" | "xlsx" | "pdf" | null>(null);
+  const [exportCountInput, setExportCountInput] = useState("");
 
   const availableExportColumnIds = useMemo(() => {
     return exportableColumns.map((col) => col.id);
@@ -275,18 +287,18 @@ export function TanStackTable<TData extends Record<string, any>>({
     });
   }, [enableExportColumnSelection, availableExportColumnIds]);
 
-  function getExportColumnLabel(column: (typeof exportableColumns)[number]) {
+  const getExportColumnLabel = useCallback((column: (typeof exportableColumns)[number]) => {
     const metaLabel = (column.columnDef as any)?.meta?.exportLabel as string | undefined;
     if (metaLabel) return metaLabel;
 
     const header = column.columnDef.header;
     if (typeof header === "string") return header;
     return column.id;
-  }
+  }, []);
 
   const exportHeaders = useMemo(() => {
     return selectedExportColumns.map((col) => getExportColumnLabel(col));
-  }, [selectedExportColumns]);
+  }, [getExportColumnLabel, selectedExportColumns]);
 
   function formatExportValue(value: unknown): string {
     if (value == null) return "";
@@ -302,27 +314,18 @@ export function TanStackTable<TData extends Record<string, any>>({
     return String(value);
   }
 
-  function resolveRowsToExport() {
-    if (!promptExportCount) {
-      return exportRows;
-    }
-
+  function resolveRowsToExport(requestedCount?: number | null) {
     if (exportRows.length === 0) {
       return exportRows;
     }
 
-    const userInput = window.prompt(
-      t('export_count_prompt.message', { max: exportRows.length }),
-      String(exportRows.length)
-    );
-
-    if (userInput === null) {
-      return null;
+    if (!promptExportCount || requestedCount === null || requestedCount === undefined) {
+      return exportRows;
     }
 
-    const parsedCount = Number.parseInt(userInput.trim(), 10);
+    const parsedCount = Math.trunc(requestedCount);
     if (!Number.isFinite(parsedCount) || parsedCount < 1 || parsedCount > exportRows.length) {
-      window.alert(t('export_count_prompt.invalid', { max: exportRows.length }));
+      toast.error(t('export_count_prompt.invalid', { max: exportRows.length }));
       return null;
     }
 
@@ -356,11 +359,50 @@ export function TanStackTable<TData extends Record<string, any>>({
 
       const next = normalizedCurrent.filter((id) => id !== columnId);
       if (next.length === 0) {
-        window.alert(t('export_columns.at_least_one'));
+        toast.error(t('export_columns.at_least_one'));
         return normalizedCurrent;
       }
       return next;
     });
+  }
+
+  function requestExport(format: "csv" | "xlsx" | "pdf") {
+    if (promptExportCount && exportRows.length > 0) {
+      setPendingExportFormat(format);
+      setExportCountInput(String(exportRows.length));
+      setExportDialogOpen(true);
+      return;
+    }
+
+    if (format === "csv") {
+      exportCsv();
+      return;
+    }
+    if (format === "xlsx") {
+      void exportExcel();
+      return;
+    }
+    void exportPdf();
+  }
+
+  function confirmExportWithCount() {
+    if (!pendingExportFormat) return;
+    const parsedCount = Number.parseInt(exportCountInput.trim(), 10);
+    if (!Number.isFinite(parsedCount)) {
+      toast.error(t('export_count_prompt.invalid', { max: exportRows.length }));
+      return;
+    }
+
+    if (pendingExportFormat === "csv") {
+      exportCsv(parsedCount);
+    } else if (pendingExportFormat === "xlsx") {
+      void exportExcel(parsedCount);
+    } else {
+      void exportPdf(parsedCount);
+    }
+
+    setExportDialogOpen(false);
+    setPendingExportFormat(null);
   }
 
   function downloadBlob(blob: Blob, filename: string) {
@@ -374,8 +416,8 @@ export function TanStackTable<TData extends Record<string, any>>({
     URL.revokeObjectURL(url);
   }
 
-  function exportCsv() {
-    const rowsToExport = resolveRowsToExport();
+  function exportCsv(requestedCount?: number | null) {
+    const rowsToExport = resolveRowsToExport(requestedCount);
     if (!rowsToExport) return;
 
     const { headers, rows } = buildExportMatrixForRows(rowsToExport);
@@ -395,8 +437,8 @@ export function TanStackTable<TData extends Record<string, any>>({
     downloadBlob(blob, `${exportFileName}.csv`);
   }
 
-  async function exportExcel() {
-    const rowsToExport = resolveRowsToExport();
+  async function exportExcel(requestedCount?: number | null) {
+    const rowsToExport = resolveRowsToExport(requestedCount);
     if (!rowsToExport) return;
 
     const { headers, rows } = buildExportMatrixForRows(rowsToExport);
@@ -413,8 +455,8 @@ export function TanStackTable<TData extends Record<string, any>>({
     downloadBlob(blob, `${exportFileName}.xlsx`);
   }
 
-  async function exportPdf() {
-    const rowsToExport = resolveRowsToExport();
+  async function exportPdf(requestedCount?: number | null) {
+    const rowsToExport = resolveRowsToExport(requestedCount);
     if (!rowsToExport) return;
 
     const { headers, rows } = buildExportMatrixForRows(rowsToExport);
@@ -437,7 +479,8 @@ export function TanStackTable<TData extends Record<string, any>>({
 
 
   return (
-    <div className="space-y-4 w-full">
+    <>
+      <div className="space-y-4 w-full">
       {/* Barre d'outils - conditionnelle */}
       {(showSearch || enableExport || enablePrint || toolbarRight) && (
         <div className={cn("flex items-center gap-2 flex-wrap", toolbarClassName)}>
@@ -471,13 +514,13 @@ export function TanStackTable<TData extends Record<string, any>>({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     {exportFormats.includes("csv") ? (
-                      <DropdownMenuItem onClick={exportCsv}>CSV</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => requestExport("csv")}>CSV</DropdownMenuItem>
                     ) : null}
                     {exportFormats.includes("xlsx") ? (
-                      <DropdownMenuItem onClick={() => void exportExcel()}>Excel</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => requestExport("xlsx")}>Excel</DropdownMenuItem>
                     ) : null}
                     {exportFormats.includes("pdf") ? (
-                      <DropdownMenuItem onClick={() => void exportPdf()}>PDF</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => requestExport("pdf")}>PDF</DropdownMenuItem>
                     ) : null}
                     {enableExportColumnSelection && exportableColumns.length > 0 ? (
                       <>
@@ -749,7 +792,43 @@ export function TanStackTable<TData extends Record<string, any>>({
           </div>
         </div>
       )}
-    </div>
+      </div>
+
+      <Dialog
+        open={exportDialogOpen}
+        onOpenChange={(open) => {
+          setExportDialogOpen(open);
+          if (!open) {
+            setPendingExportFormat(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('export_count_prompt.title')}</DialogTitle>
+            <DialogDescription>{t('export_count_prompt.message', { max: exportRows.length })}</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Input
+              type="number"
+              min={1}
+              max={Math.max(1, exportRows.length)}
+              value={exportCountInput}
+              onChange={(event) => setExportCountInput(event.target.value)}
+              aria-label={t('export_count_prompt.input_label')}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExportDialogOpen(false)}>
+              {t('export_count_prompt.cancel')}
+            </Button>
+            <Button onClick={confirmExportWithCount}>{t('export_count_prompt.confirm')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
