@@ -127,6 +127,10 @@ export function MonitoringGraphTab({
     () => auditMarkerSeries.some((value) => value !== null),
     [auditMarkerSeries],
   )
+  const hasPlottedMeasures = useMemo(
+    () => orderedData.some((point) => typeof point.Valeur === "number"),
+    [orderedData],
+  )
 
   return (
     <div className="space-y-4 pt-4 min-h-[68vh]">
@@ -136,10 +140,10 @@ export function MonitoringGraphTab({
         </span>
         <div className="flex items-center gap-2">
           <label className="inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs text-muted-foreground">
-            <Switch checked={showAuditMarkers} onCheckedChange={onShowAuditMarkersChange} />
+            <Switch checked={showAuditMarkers} onCheckedChange={onShowAuditMarkersChange} disabled={!hasPlottedMeasures} />
             <span>{t("chart.show_audit_markers")}</span>
           </label>
-          <Button type="button" variant="outline" size="sm" onClick={resetChartZoom}>
+          <Button type="button" variant="outline" size="sm" onClick={resetChartZoom} disabled={!hasPlottedMeasures}>
             {t("chart.reset_zoom")}
           </Button>
         </div>
@@ -148,6 +152,15 @@ export function MonitoringGraphTab({
       <p className="text-xs text-muted-foreground">{t("chart.drag_zoom_hint")}</p>
 
       <div className="relative h-[calc(100vh-23rem)] min-h-[60vh]">
+        {!hasPlottedMeasures ? (
+          <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 px-6 text-center">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">{t("chart.empty_title")}</p>
+              <p className="text-xs text-muted-foreground">{t("chart.empty_description")}</p>
+            </div>
+          </div>
+        ) : (
+        <>
         <div className="absolute inset-0 z-10">
           <Line
             ref={chartRef}
@@ -445,6 +458,8 @@ export function MonitoringGraphTab({
             </>
           )}
         </div>
+        </>
+        )}
       </div>
     </div>
   )

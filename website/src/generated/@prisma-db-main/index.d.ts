@@ -23296,6 +23296,7 @@ export namespace Prisma {
     Est_Lieu_GSO: boolean | null
     Est_Son_Alarme_Active: boolean | null
     Planning_Actif: boolean | null
+    Planning_Regle_Existe: boolean | null
     Planning_Source_Regle_Id: number | null
     Planning_Derniere_Maj: Date | null
     Est_Redeclenchement_Immediat: boolean | null
@@ -23382,6 +23383,7 @@ export namespace Prisma {
     Est_Lieu_GSO: boolean | null
     Est_Son_Alarme_Active: boolean | null
     Planning_Actif: boolean | null
+    Planning_Regle_Existe: boolean | null
     Planning_Source_Regle_Id: number | null
     Planning_Derniere_Maj: Date | null
     Est_Redeclenchement_Immediat: boolean | null
@@ -23468,6 +23470,7 @@ export namespace Prisma {
     Est_Lieu_GSO: number
     Est_Son_Alarme_Active: number
     Planning_Actif: number
+    Planning_Regle_Existe: number
     Planning_Source_Regle_Id: number
     Planning_Derniere_Maj: number
     Est_Redeclenchement_Immediat: number
@@ -23648,6 +23651,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: true
     Est_Son_Alarme_Active?: true
     Planning_Actif?: true
+    Planning_Regle_Existe?: true
     Planning_Source_Regle_Id?: true
     Planning_Derniere_Maj?: true
     Est_Redeclenchement_Immediat?: true
@@ -23734,6 +23738,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: true
     Est_Son_Alarme_Active?: true
     Planning_Actif?: true
+    Planning_Regle_Existe?: true
     Planning_Source_Regle_Id?: true
     Planning_Derniere_Maj?: true
     Est_Redeclenchement_Immediat?: true
@@ -23820,6 +23825,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: true
     Est_Son_Alarme_Active?: true
     Planning_Actif?: true
+    Planning_Regle_Existe?: true
     Planning_Source_Regle_Id?: true
     Planning_Derniere_Maj?: true
     Est_Redeclenchement_Immediat?: true
@@ -23993,6 +23999,7 @@ export namespace Prisma {
     Est_Lieu_GSO: boolean | null
     Est_Son_Alarme_Active: boolean
     Planning_Actif: boolean
+    Planning_Regle_Existe: boolean
     Planning_Source_Regle_Id: number | null
     Planning_Derniere_Maj: Date | null
     Est_Redeclenchement_Immediat: boolean
@@ -24098,6 +24105,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: boolean
     Planning_Derniere_Maj?: boolean
     Est_Redeclenchement_Immediat?: boolean
@@ -24197,13 +24205,14 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: boolean
     Planning_Derniere_Maj?: boolean
     Est_Redeclenchement_Immediat?: boolean
     Nb_Mesures_Temporisation_Redeclenchement?: boolean
   }
 
-  export type t_lieuOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Lieu" | "Id_Site" | "Nom_Lieu" | "Sonde_Numero_Serie" | "Adresse_Sonde" | "Consigne" | "Consigne_Base" | "Observations_Info" | "Consigne_Sup" | "Consigne_Sup_Base" | "Tolerance_Surveillance_Sup" | "Tolerance_Surveillance_Sup_Base" | "Est_Consigne_Sup_Active" | "Consigne_Sup_Pre_Alarme" | "Est_Consigne_Sup_Pre_Alarme_Active" | "Consigne_Inf" | "Consigne_Inf_Base" | "Tolerance_Surveillance_Inf" | "Tolerance_Surveillance_Inf_Base" | "Est_Consigne_Inf_Active" | "Consigne_Inf_Pre_Alarme" | "Est_Consigne_Inf_Pre_Alarme_Active" | "Frequence" | "Lieu_Etat" | "Retard_Alarme_Haut" | "Retard_Alarme_Bas" | "Id_Plan" | "Position_Plan_X" | "Position_Plan_Y" | "Date_Creation" | "Est_Archive" | "Est_Tel_Actif" | "Tel_Code" | "Tel_Son_Lieu" | "Id_Actionneur" | "Est_Mode_Serotheque" | "Coef_Sensibilite" | "Id_PDF" | "Est_DataLogger" | "EMT" | "EMT_Choix_Mode" | "EMT_Sonde" | "Retard_Alarme_Changement_Consigne" | "Derniere_Date_Heure" | "Derniere_Valeur" | "Derniere_Unite" | "Derniere_Nb_Decimal" | "Est_Lieu_En_Alarme" | "Est_Lieu_Alarme_Terminee_Non_Acquittee" | "Est_Lieu_Alarme_Terminee_Non_Acquittee_T1" | "Est_Lieu_En_Pre_Alarme" | "Id_Alarme" | "Lieu_Etat_N1" | "Derniere_Date_Etalonnage" | "Derniere_Erreur_Justesse" | "Derniere_Incertitude" | "Retard_Non_Reponse" | "Date_Heure_Derniere_Reponse" | "Date_Heure_Derniere_Reponse_Recue_OK" | "Est_Correction_Ej" | "Derive" | "Est_Correction_derive" | "Derniere_Valeur_Null" | "Type_Lieu" | "Date_Heure_Dernier_Acquittement_En_Cours" | "Date_Heure_Last_Update_EVT_GSO" | "Date_Heure_Reactivation_Alarme" | "Notification_Active" | "Commentaire" | "Infos_Modifiees_Depuis_Derniere_Mesure" | "Date_Heure_Reactivation_Surveillance" | "Date_Heure_Surveillance_On" | "Date_Heure_Surveillance_Off" | "Derniere_Val_Rssi" | "Derniere_Val_Batterie" | "Derniere_Val_Tension" | "Est_Lieu_GSO" | "Est_Son_Alarme_Active" | "Planning_Actif" | "Planning_Source_Regle_Id" | "Planning_Derniere_Maj" | "Est_Redeclenchement_Immediat" | "Nb_Mesures_Temporisation_Redeclenchement", ExtArgs["result"]["t_lieu"]>
+  export type t_lieuOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Lieu" | "Id_Site" | "Nom_Lieu" | "Sonde_Numero_Serie" | "Adresse_Sonde" | "Consigne" | "Consigne_Base" | "Observations_Info" | "Consigne_Sup" | "Consigne_Sup_Base" | "Tolerance_Surveillance_Sup" | "Tolerance_Surveillance_Sup_Base" | "Est_Consigne_Sup_Active" | "Consigne_Sup_Pre_Alarme" | "Est_Consigne_Sup_Pre_Alarme_Active" | "Consigne_Inf" | "Consigne_Inf_Base" | "Tolerance_Surveillance_Inf" | "Tolerance_Surveillance_Inf_Base" | "Est_Consigne_Inf_Active" | "Consigne_Inf_Pre_Alarme" | "Est_Consigne_Inf_Pre_Alarme_Active" | "Frequence" | "Lieu_Etat" | "Retard_Alarme_Haut" | "Retard_Alarme_Bas" | "Id_Plan" | "Position_Plan_X" | "Position_Plan_Y" | "Date_Creation" | "Est_Archive" | "Est_Tel_Actif" | "Tel_Code" | "Tel_Son_Lieu" | "Id_Actionneur" | "Est_Mode_Serotheque" | "Coef_Sensibilite" | "Id_PDF" | "Est_DataLogger" | "EMT" | "EMT_Choix_Mode" | "EMT_Sonde" | "Retard_Alarme_Changement_Consigne" | "Derniere_Date_Heure" | "Derniere_Valeur" | "Derniere_Unite" | "Derniere_Nb_Decimal" | "Est_Lieu_En_Alarme" | "Est_Lieu_Alarme_Terminee_Non_Acquittee" | "Est_Lieu_Alarme_Terminee_Non_Acquittee_T1" | "Est_Lieu_En_Pre_Alarme" | "Id_Alarme" | "Lieu_Etat_N1" | "Derniere_Date_Etalonnage" | "Derniere_Erreur_Justesse" | "Derniere_Incertitude" | "Retard_Non_Reponse" | "Date_Heure_Derniere_Reponse" | "Date_Heure_Derniere_Reponse_Recue_OK" | "Est_Correction_Ej" | "Derive" | "Est_Correction_derive" | "Derniere_Valeur_Null" | "Type_Lieu" | "Date_Heure_Dernier_Acquittement_En_Cours" | "Date_Heure_Last_Update_EVT_GSO" | "Date_Heure_Reactivation_Alarme" | "Notification_Active" | "Commentaire" | "Infos_Modifiees_Depuis_Derniere_Mesure" | "Date_Heure_Reactivation_Surveillance" | "Date_Heure_Surveillance_On" | "Date_Heure_Surveillance_Off" | "Derniere_Val_Rssi" | "Derniere_Val_Batterie" | "Derniere_Val_Tension" | "Est_Lieu_GSO" | "Est_Son_Alarme_Active" | "Planning_Actif" | "Planning_Regle_Existe" | "Planning_Source_Regle_Id" | "Planning_Derniere_Maj" | "Est_Redeclenchement_Immediat" | "Nb_Mesures_Temporisation_Redeclenchement", ExtArgs["result"]["t_lieu"]>
   export type t_lieuInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     t_alarme?: boolean | t_lieu$t_alarmeArgs<ExtArgs>
     t_alarme_histo?: boolean | t_lieu$t_alarme_histoArgs<ExtArgs>
@@ -24312,6 +24321,7 @@ export namespace Prisma {
       Est_Lieu_GSO: boolean | null
       Est_Son_Alarme_Active: boolean
       Planning_Actif: boolean
+      Planning_Regle_Existe: boolean
       Planning_Source_Regle_Id: number | null
       Planning_Derniere_Maj: Date | null
       Est_Redeclenchement_Immediat: boolean
@@ -24774,6 +24784,7 @@ export namespace Prisma {
     readonly Est_Lieu_GSO: FieldRef<"t_lieu", 'Boolean'>
     readonly Est_Son_Alarme_Active: FieldRef<"t_lieu", 'Boolean'>
     readonly Planning_Actif: FieldRef<"t_lieu", 'Boolean'>
+    readonly Planning_Regle_Existe: FieldRef<"t_lieu", 'Boolean'>
     readonly Planning_Source_Regle_Id: FieldRef<"t_lieu", 'Int'>
     readonly Planning_Derniere_Maj: FieldRef<"t_lieu", 'DateTime'>
     readonly Est_Redeclenchement_Immediat: FieldRef<"t_lieu", 'Boolean'>
@@ -59526,6 +59537,7 @@ export namespace Prisma {
     Est_Lieu_GSO: 'Est_Lieu_GSO',
     Est_Son_Alarme_Active: 'Est_Son_Alarme_Active',
     Planning_Actif: 'Planning_Actif',
+    Planning_Regle_Existe: 'Planning_Regle_Existe',
     Planning_Source_Regle_Id: 'Planning_Source_Regle_Id',
     Planning_Derniere_Maj: 'Planning_Derniere_Maj',
     Est_Redeclenchement_Immediat: 'Est_Redeclenchement_Immediat',
@@ -61948,6 +61960,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: BoolNullableFilter<"t_lieu"> | boolean | null
     Est_Son_Alarme_Active?: BoolFilter<"t_lieu"> | boolean
     Planning_Actif?: BoolFilter<"t_lieu"> | boolean
+    Planning_Regle_Existe?: BoolFilter<"t_lieu"> | boolean
     Planning_Source_Regle_Id?: IntNullableFilter<"t_lieu"> | number | null
     Planning_Derniere_Maj?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFilter<"t_lieu"> | boolean
@@ -62044,6 +62057,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: SortOrderInput | SortOrder
     Est_Son_Alarme_Active?: SortOrder
     Planning_Actif?: SortOrder
+    Planning_Regle_Existe?: SortOrder
     Planning_Source_Regle_Id?: SortOrderInput | SortOrder
     Planning_Derniere_Maj?: SortOrderInput | SortOrder
     Est_Redeclenchement_Immediat?: SortOrder
@@ -62144,6 +62158,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: BoolNullableFilter<"t_lieu"> | boolean | null
     Est_Son_Alarme_Active?: BoolFilter<"t_lieu"> | boolean
     Planning_Actif?: BoolFilter<"t_lieu"> | boolean
+    Planning_Regle_Existe?: BoolFilter<"t_lieu"> | boolean
     Planning_Source_Regle_Id?: IntNullableFilter<"t_lieu"> | number | null
     Planning_Derniere_Maj?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFilter<"t_lieu"> | boolean
@@ -62240,6 +62255,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: SortOrderInput | SortOrder
     Est_Son_Alarme_Active?: SortOrder
     Planning_Actif?: SortOrder
+    Planning_Regle_Existe?: SortOrder
     Planning_Source_Regle_Id?: SortOrderInput | SortOrder
     Planning_Derniere_Maj?: SortOrderInput | SortOrder
     Est_Redeclenchement_Immediat?: SortOrder
@@ -62334,6 +62350,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: BoolNullableWithAggregatesFilter<"t_lieu"> | boolean | null
     Est_Son_Alarme_Active?: BoolWithAggregatesFilter<"t_lieu"> | boolean
     Planning_Actif?: BoolWithAggregatesFilter<"t_lieu"> | boolean
+    Planning_Regle_Existe?: BoolWithAggregatesFilter<"t_lieu"> | boolean
     Planning_Source_Regle_Id?: IntNullableWithAggregatesFilter<"t_lieu"> | number | null
     Planning_Derniere_Maj?: DateTimeNullableWithAggregatesFilter<"t_lieu"> | Date | string | null
     Est_Redeclenchement_Immediat?: BoolWithAggregatesFilter<"t_lieu"> | boolean
@@ -66452,6 +66469,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -66548,6 +66566,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -66633,6 +66652,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -66729,6 +66749,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -66820,6 +66841,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -66900,6 +66922,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -66986,6 +67009,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -71157,6 +71181,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: SortOrder
     Est_Son_Alarme_Active?: SortOrder
     Planning_Actif?: SortOrder
+    Planning_Regle_Existe?: SortOrder
     Planning_Source_Regle_Id?: SortOrder
     Planning_Derniere_Maj?: SortOrder
     Est_Redeclenchement_Immediat?: SortOrder
@@ -71289,6 +71314,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: SortOrder
     Est_Son_Alarme_Active?: SortOrder
     Planning_Actif?: SortOrder
+    Planning_Regle_Existe?: SortOrder
     Planning_Source_Regle_Id?: SortOrder
     Planning_Derniere_Maj?: SortOrder
     Est_Redeclenchement_Immediat?: SortOrder
@@ -71375,6 +71401,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: SortOrder
     Est_Son_Alarme_Active?: SortOrder
     Planning_Actif?: SortOrder
+    Planning_Regle_Existe?: SortOrder
     Planning_Source_Regle_Id?: SortOrder
     Planning_Derniere_Maj?: SortOrder
     Est_Redeclenchement_Immediat?: SortOrder
@@ -76791,6 +76818,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -76886,6 +76914,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -77019,6 +77048,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -77114,6 +77144,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -77229,6 +77260,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -77324,6 +77356,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -77424,6 +77457,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -77519,6 +77553,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -78247,6 +78282,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -78342,6 +78378,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -78468,6 +78505,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -78563,6 +78601,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -79310,6 +79349,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -79404,6 +79444,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -79558,6 +79599,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: BoolNullableFilter<"t_lieu"> | boolean | null
     Est_Son_Alarme_Active?: BoolFilter<"t_lieu"> | boolean
     Planning_Actif?: BoolFilter<"t_lieu"> | boolean
+    Planning_Regle_Existe?: BoolFilter<"t_lieu"> | boolean
     Planning_Source_Regle_Id?: IntNullableFilter<"t_lieu"> | number | null
     Planning_Derniere_Maj?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFilter<"t_lieu"> | boolean
@@ -79689,6 +79731,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -79783,6 +79826,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -80063,6 +80107,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -80157,6 +80202,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -80553,6 +80599,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -80647,6 +80694,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -80888,6 +80936,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -80982,6 +81031,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -82937,6 +82987,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -83032,6 +83083,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -83132,6 +83184,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -83227,6 +83280,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -83311,6 +83365,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -83406,6 +83461,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -83506,6 +83562,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -83601,6 +83658,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -86393,6 +86451,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -86516,6 +86575,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -86610,6 +86670,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -86700,6 +86761,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -86806,6 +86868,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -86948,6 +87011,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -87042,6 +87106,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -87132,6 +87197,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -87296,6 +87362,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -87475,6 +87542,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -87569,6 +87637,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -87659,6 +87728,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -87988,6 +88058,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -88068,6 +88139,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -88162,6 +88234,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -88252,6 +88325,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -88337,6 +88411,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
+    Planning_Regle_Existe?: boolean
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -88438,6 +88513,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -88532,6 +88608,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -88622,6 +88699,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean

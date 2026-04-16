@@ -9,6 +9,7 @@ namespace Vigitemp_Serveur
         public bool ApplyCorrectionEj { get; set; }
         public string PortSerie { get; set; }
         public string ModuleNumeroSerie { get; set; }
+        public int? ModuleType { get; set; }
         public string SondeNumeroSerie { get; set; }
         public string SondeType { get; set; }
         public string FamilleSonde { get; set; }

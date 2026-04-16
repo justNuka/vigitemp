@@ -161,7 +161,15 @@ export function GroupsClient() {
         <GroupUsersPanel groupSelected={!!selectedDisplayedGroup} users={users} />
       </div>
 
-      <GroupModal open={modalOpen} onOpenChange={setModalOpen} group={selectedDisplayedGroup} isEditing={isEditing} />
+      {modalOpen ? (
+        <GroupModal
+          key={isEditing ? `edit-${selectedGroup?.Id_Groupe ?? "unknown"}` : "create-group"}
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          group={selectedGroup}
+          isEditing={isEditing}
+        />
+      ) : null}
       </m.main>
     </LazyMotion>
   );

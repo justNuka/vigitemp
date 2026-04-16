@@ -1011,7 +1011,7 @@ namespace Vigitemp_Serveur
                     var cmd = connection_vigitemp.CreateCommand();
                     cmd.CommandText = "SELECT t_lieu.Id_Lieu, t_lieu.Frequence, t_lieu.Derniere_Date_Heure, " +
                                       "t_lieu.Infos_Modifiees_Depuis_Derniere_Mesure, t_lieu.EMT_Choix_Mode, t_lieu.Est_Correction_Ej, " +
-                                      "t_module.Port_Serie, t_module.Module_Numero_Serie, " +
+                                      "t_module.Port_Serie, t_module.Module_Numero_Serie, t_module.Type_Module, " +
                                       "t_sonde.Sonde_Numero_Serie, t_sonde.Sonde_Type, tt.Famille_Sonde, t_sonde.Adresse_Sonde, t_sonde.Sonde_Offset, " +
                                       "ta.Coeff_X, ta.Coeff_Constant, te.Err_Justesse, te.Incertitude, te.Date_Validite " +
                                       "FROM t_lieu " +
@@ -1078,6 +1078,7 @@ namespace Vigitemp_Serveur
                                 InfosModifiees = GetOptionalBool(reader, "Infos_Modifiees_Depuis_Derniere_Mesure", false),
                                 PortSerie = "COM" + reader["Port_Serie"].ToString(),
                                 ModuleNumeroSerie = reader["Module_Numero_Serie"].ToString(),
+                                ModuleType = GetNullableInt(reader, "Type_Module"),
                                 SondeNumeroSerie = reader["Sonde_Numero_Serie"].ToString(),
                                 SondeType = reader["Sonde_Type"] == DBNull.Value ? string.Empty : reader["Sonde_Type"].ToString(),
                                 FamilleSonde = reader["Famille_Sonde"] == DBNull.Value ? string.Empty : reader["Famille_Sonde"].ToString(),
@@ -1107,7 +1108,7 @@ namespace Vigitemp_Serveur
             }
         }
 
-        public (string portSerie, string sondeNumeroSerie, string sondeType, string familleSonde, string sondeAdresse, string moduleNumeroSerie) getInfosByIdLieu(int p_idLieu)
+        public (string portSerie, string sondeNumeroSerie, string sondeType, string familleSonde, string sondeAdresse, string moduleNumeroSerie, int? moduleType) getInfosByIdLieu(int p_idLieu)
         {
             lock (_lock)
             {
@@ -1118,18 +1119,19 @@ namespace Vigitemp_Serveur
                         string tmp_arr_familleSonde = "";
                         string tmp_arr_sondeAdresse = "";
                         string tmp_arr_moduleNumeroSerie = "";
+                        int? tmp_arr_moduleType = null;
                         string tmp_arr_portSerie = "";
 
                         // Ouverture de la connexion SQL
                         if (!EnsureConnected())
                         {
-                            return (tmp_arr_portSerie, tmp_arr_sondeNumeroSerie, tmp_arr_sondeType, tmp_arr_familleSonde, tmp_arr_sondeAdresse, tmp_arr_moduleNumeroSerie);
+                            return (tmp_arr_portSerie, tmp_arr_sondeNumeroSerie, tmp_arr_sondeType, tmp_arr_familleSonde, tmp_arr_sondeAdresse, tmp_arr_moduleNumeroSerie, tmp_arr_moduleType);
                         }
 
                         // Cr?ation d'une commande SQL en fonction de l'objet connection
                         using (var cmd_vigitemp = this.connection_vigitemp.CreateCommand())
                         {
-                            cmd_vigitemp.CommandText = "SELECT t_module.Port_Serie, t_module.Module_Numero_Serie, t_sonde.Sonde_Numero_Serie, t_sonde.Sonde_Type, tt.Famille_Sonde, t_sonde.Adresse_Sonde FROM t_lieu " +
+                            cmd_vigitemp.CommandText = "SELECT t_module.Port_Serie, t_module.Module_Numero_Serie, t_module.Type_Module, t_sonde.Sonde_Numero_Serie, t_sonde.Sonde_Type, tt.Famille_Sonde, t_sonde.Adresse_Sonde FROM t_lieu " +
                                                         "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                                                         "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
                                                         "LEFT JOIN t_sonde_type tt ON tt.Sonde_Type = t_sonde.Sonde_Type " +
@@ -1147,16 +1149,17 @@ namespace Vigitemp_Serveur
                                     tmp_arr_familleSonde = dr_lieux["Famille_Sonde"] == DBNull.Value ? string.Empty : dr_lieux["Famille_Sonde"].ToString();
                                     tmp_arr_sondeAdresse = (dr_lieux["Adresse_Sonde"].ToString());
                                     tmp_arr_moduleNumeroSerie = (dr_lieux["Module_Numero_Serie"].ToString());
+                                    tmp_arr_moduleType = dr_lieux["Type_Module"] == DBNull.Value ? (int?)null : Convert.ToInt32(dr_lieux["Type_Module"]);
                                 }
                             }
                         }
 
-                        return (tmp_arr_portSerie, tmp_arr_sondeNumeroSerie, tmp_arr_sondeType, tmp_arr_familleSonde, tmp_arr_sondeAdresse, tmp_arr_moduleNumeroSerie);
+                        return (tmp_arr_portSerie, tmp_arr_sondeNumeroSerie, tmp_arr_sondeType, tmp_arr_familleSonde, tmp_arr_sondeAdresse, tmp_arr_moduleNumeroSerie, tmp_arr_moduleType);
                     }
                 catch (Exception ex)
                 {
                     VigitempServeur.Log("(getInfosByIdLieu) SQL Erreur: " + ex);
-                    return ("", "", "", "", "", "");
+                    return ("", "", "", "", "", "", null);
                 }
             }
         }

@@ -403,6 +403,7 @@ exports.Prisma.T_lieuScalarFieldEnum = {
   Est_Lieu_GSO: 'Est_Lieu_GSO',
   Est_Son_Alarme_Active: 'Est_Son_Alarme_Active',
   Planning_Actif: 'Planning_Actif',
+  Planning_Regle_Existe: 'Planning_Regle_Existe',
   Planning_Source_Regle_Id: 'Planning_Source_Regle_Id',
   Planning_Derniere_Maj: 'Planning_Derniere_Maj',
   Est_Redeclenchement_Immediat: 'Est_Redeclenchement_Immediat',

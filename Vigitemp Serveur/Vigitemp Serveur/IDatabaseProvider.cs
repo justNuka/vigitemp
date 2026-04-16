@@ -13,7 +13,7 @@ namespace Vigitemp_Serveur
         bool AddMesureNoResponse(string p_numeroSerie, string p_unite);
         bool UpdateLieuWirelessMetrics(string p_numeroSerie, int? batteryPercent, int? rssi);
         List<SondeScheduleInfo> getSondesActivesByServeur(int idServeur);
-        (string portSerie, string sondeNumeroSerie, string sondeType, string familleSonde, string sondeAdresse, string moduleNumeroSerie) getInfosByIdLieu(int p_idLieu);
+        (string portSerie, string sondeNumeroSerie, string sondeType, string familleSonde, string sondeAdresse, string moduleNumeroSerie, int? moduleType) getInfosByIdLieu(int p_idLieu);
         List<int> getDistinctIdServeur();
         (List<int>, List<DateTime>) getLieuxAvecAlarmesEnSnooze();
         (List<int>, List<DateTime>) getLieuxAvecSurveillanceEnSnooze();

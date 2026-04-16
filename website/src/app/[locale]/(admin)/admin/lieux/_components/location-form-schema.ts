@@ -44,7 +44,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Sup"],
-      message: "La consigne sup?rieure doit ?tre strictement sup?rieure ? la consigne.",
+      message: "La consigne supérieure doit être strictement supérieure à la consigne.",
     })
   }
 
@@ -52,7 +52,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Inf"],
-      message: "La consigne inf?rieure doit ?tre strictement inf?rieure ? la consigne.",
+      message: "La consigne inférieure doit être strictement inférieure à la consigne.",
     })
   }
 
@@ -60,7 +60,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Inf"],
-      message: "La consigne inf?rieure doit ?tre strictement inf?rieure ? la consigne sup?rieure.",
+      message: "La consigne inférieure doit être strictement inférieure à la consigne supérieure.",
     })
   }
 
@@ -68,7 +68,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Frequence"],
-      message: "La fr?quence de mesure est requise.",
+      message: "La fréquence de mesure est requise.",
     })
   }
 
@@ -76,7 +76,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Frequence"],
-      message: "La fr?quence de mesure doit ?tre strictement sup?rieure ? 0.",
+      message: "La fréquence de mesure doit être strictement supérieure à 0.",
     })
   }
 
@@ -84,7 +84,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Retard_Alarme_Haut"],
-      message: "Le retard d'alarme haut doit ?tre strictement sup?rieur ? 0.",
+      message: "Le retard d'alarme haut doit être strictement supérieure à 0.",
     })
   }
 
@@ -92,7 +92,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Retard_Alarme_Bas"],
-      message: "Le retard d'alarme bas doit ?tre strictement sup?rieur ? 0.",
+      message: "Le retard d'alarme bas doit être strictement supérieure à 0.",
     })
   }
 }

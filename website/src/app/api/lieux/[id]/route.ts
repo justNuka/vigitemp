@@ -134,7 +134,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Sup"],
-      message: "La consigne sup?rieure doit ?tre strictement sup?rieure ? la consigne.",
+      message: "La consigne supérieure doit être strictement supérieure à la consigne.",
     })
   }
 
@@ -142,7 +142,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Inf"],
-      message: "La consigne inf?rieure doit ?tre strictement inf?rieure ? la consigne.",
+      message: "La consigne inférieure doit être strictement inférieure à la consigne.",
     })
   }
 
@@ -150,7 +150,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Inf"],
-      message: "La consigne inf?rieure doit ?tre strictement inf?rieure ? la consigne sup?rieure.",
+      message: "La consigne inférieure doit être strictement inférieure à la consigne supérieure.",
     })
   }
 

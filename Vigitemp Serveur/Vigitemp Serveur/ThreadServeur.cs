@@ -87,6 +87,7 @@ namespace Vigitemp_Serveur
             public string Adresse { get; set; }
             public string Port { get; set; }
             public string Module { get; set; }
+            public int? ModuleType { get; set; }
             // NOTE: ConfigDirty est accede uniquement depuis les methodes qui tiennent
             // le SemaphoreSlim(1,1) — pas de volatile requis pour cette raison.
             public bool ConfigDirty { get; set; }
@@ -940,9 +941,7 @@ namespace Vigitemp_Serveur
 
             VigitempServeur.Log("--------------------ID SERVEUR : " + _idServer + "---CAPTEUR : " + serial + "--------------------");
             VigitempServeur.Log("Ouverture du port " + schedule.Port + " pour la sonde " + serial);
-            var sensorType = string.Equals(schedule.FamilleSonde, "GSP", StringComparison.OrdinalIgnoreCase)
-                ? "GSP"
-                : (GspProtocol.IsGspSerial(serial) ? "GSP" : serial.Substring(0, 2));
+            var sensorType = ResolveSensorType(serial, schedule.SondeType, schedule.FamilleSonde, schedule.ModuleType);
 
             switch (sensorType)
             {
@@ -1005,6 +1004,46 @@ namespace Vigitemp_Serveur
             }
         }
 
+        private static string ResolveSensorType(string serial, string sondeType, string familleSonde, int? moduleType)
+        {
+            if (string.Equals(familleSonde, "GSP", StringComparison.OrdinalIgnoreCase) ||
+                GspProtocol.IsGspSerial(serial))
+            {
+                return "GSP";
+            }
+
+            var prefix = !string.IsNullOrWhiteSpace(serial) && serial.Length >= 2
+                ? serial.Substring(0, 2).ToUpperInvariant()
+                : string.Empty;
+
+            if (string.Equals(prefix, "EN", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(prefix, "HN", StringComparison.OrdinalIgnoreCase))
+            {
+                return prefix;
+            }
+
+            var normalizedSondeType = string.IsNullOrWhiteSpace(sondeType)
+                ? string.Empty
+                : sondeType.Trim().ToUpperInvariant();
+
+            if (normalizedSondeType == "E" && moduleType == 3)
+            {
+                return "EN";
+            }
+
+            if (normalizedSondeType == "H" && moduleType == 6)
+            {
+                return "HN";
+            }
+
+            if (!string.IsNullOrWhiteSpace(normalizedSondeType))
+            {
+                return normalizedSondeType;
+            }
+
+            return prefix;
+        }
+
         private void ProcessMaintenanceTick(object sender, ElapsedEventArgs e)
         {
             _ = ProcessMaintenanceTickAsync();
@@ -1049,7 +1088,7 @@ namespace Vigitemp_Serveur
                         }
 
                         //recuperer infos du lieu
-                        (string arr_portSerie, string arr_sondeNumeroSerie, string arr_sondeType, string arr_familleSonde, string arr_sondeAdresse, string arr_moduleNumeroSerie) = GetDatabase().getInfosByIdLieu(idLieu);
+                        (string arr_portSerie, string arr_sondeNumeroSerie, string arr_sondeType, string arr_familleSonde, string arr_sondeAdresse, string arr_moduleNumeroSerie, int? arr_moduleType) = GetDatabase().getInfosByIdLieu(idLieu);
 
                         if (string.IsNullOrEmpty(arr_sondeNumeroSerie) || arr_sondeNumeroSerie.Length < 2)
                         {
@@ -1057,9 +1096,7 @@ namespace Vigitemp_Serveur
                             continue;
                         }
                         VigitempServeur.Log("Ouverture du port " + arr_portSerie + " pour la sonde " + arr_sondeNumeroSerie);
-                        var sensorType = string.Equals(arr_familleSonde, "GSP", StringComparison.OrdinalIgnoreCase)
-                            ? "GSP"
-                            : (GspProtocol.IsGspSerial(arr_sondeNumeroSerie) ? "GSP" : arr_sondeNumeroSerie.Substring(0, 2));
+                        var sensorType = ResolveSensorType(arr_sondeNumeroSerie, arr_sondeType, arr_familleSonde, arr_moduleType);
 
                         Sensor sensor = null;
                         switch (sensorType)
@@ -1236,6 +1273,7 @@ namespace Vigitemp_Serveur
                 Adresse = info.AdresseSonde,
                 Port = info.PortSerie,
                 Module = info.ModuleNumeroSerie,
+                ModuleType = info.ModuleType,
                 ConfigDirty = info.InfosModifiees || string.Equals(info.FamilleSonde, "GSP", StringComparison.OrdinalIgnoreCase) || GspProtocol.IsGspSerial(info.SondeNumeroSerie),
                 FrequencySeconds = info.FrequenceSecondes,
                 LastMeasure = lastMeasure,

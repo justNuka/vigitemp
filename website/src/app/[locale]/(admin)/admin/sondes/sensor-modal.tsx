@@ -72,8 +72,20 @@ export function SensorModal({
   const sensorSchema = z.object({
     sondeType: z.string().min(1, t('validation.type_required')),
     serieNum: z.string().regex(/^(?=.*\d)[A-Z0-9-]+$/i, t('validation.serial_invalid')),
+    probeAddress: z.string().optional(),
     moduleId: z.string().optional(),
     sondeOffset: z.number({ message: t('validation.offset_invalid') }).optional(),
+  }).superRefine((value, ctx) => {
+    if (["EN", "HN"].includes((value.sondeType || "").toUpperCase())) {
+      const normalizedAddress = (value.probeAddress || "").trim().toUpperCase();
+      if (!/^[A-Z0-9-]+$/i.test(normalizedAddress)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["probeAddress"],
+          message: t('validation.address_invalid'),
+        });
+      }
+    }
   });
 
   type SensorFormValues = z.infer<typeof sensorSchema>;
@@ -83,6 +95,7 @@ export function SensorModal({
     defaultValues: {
       sondeType: "",
       serieNum: "",
+      probeAddress: "",
       moduleId: "",
       sondeOffset: undefined,
     },
@@ -92,6 +105,8 @@ export function SensorModal({
   const { data: sensorTypes, isLoading: sensorTypesLoading } = useSensorTypes(open);
   const { data: modules, isLoading: modulesLoading } = useModules(open);
 
+  const selectedType = form.watch("sondeType");
+  const requiresLegacyAddress = !isEdit && ["EN", "HN"].includes((selectedType || "").toUpperCase());
   const availableSensorTypes = (sensorTypes ?? []).filter((type) => !["GSO", "GSP"].includes(type.Sonde_Type));
   const memoryKey = `sensor-form:${isEdit ? sensor?.Id_Sonde ?? sensor?.Sonde_Numero_Serie ?? "edit" : "new"}`;
 
@@ -100,15 +115,16 @@ export function SensorModal({
 
     if (isEdit && sensor) {
       form.reset({
-        sondeType: sensor.Sonde_Numero_Serie?.split("-")[0] || "",
+        sondeType: sensor.Sonde_Type || sensor.Sonde_Numero_Serie?.split("-")[0] || "",
         serieNum: sensor.Sonde_Numero_Serie || "",
+        probeAddress: sensor.Adresse_Sonde || "",
         moduleId: sensor.Id_Module?.toString() || "",
         sondeOffset: sensor.Sonde_Offset ?? 0,
       });
       return;
     }
 
-    form.reset({ sondeType: "", serieNum: "", moduleId: "", sondeOffset: undefined });
+    form.reset({ sondeType: "", serieNum: "", probeAddress: "", moduleId: "", sondeOffset: undefined });
   }, [form, isEdit, open, sensor]);
 
   const handleSubmit = async (values: SensorFormValues) => {
@@ -136,6 +152,7 @@ export function SensorModal({
         const payload: {
           sondeType: string;
           serieNum: string;
+          probeAddress?: string | null;
           moduleId: number | null;
           sondeOffset?: number;
         } = {
@@ -143,6 +160,10 @@ export function SensorModal({
           serieNum: values.serieNum,
           moduleId: moduleIdValue,
         };
+
+        if (requiresLegacyAddress) {
+          payload.probeAddress = values.probeAddress?.trim() || null;
+        }
 
         if (!isPack) {
           payload.sondeOffset = sondeOffsetValue;
@@ -154,7 +175,7 @@ export function SensorModal({
 
       await queryClient.invalidateQueries({ queryKey: ["sensors"] });
       router.refresh();
-      form.reset({ sondeType: "", serieNum: "", moduleId: "", sondeOffset: undefined });
+      form.reset({ sondeType: "", serieNum: "", probeAddress: "", moduleId: "", sondeOffset: undefined });
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
@@ -174,7 +195,7 @@ export function SensorModal({
             <TemporaryMemoryControls
               form={form}
               storageKey={memoryKey}
-              resetValues={{ sondeType: "", serieNum: "", moduleId: "", sondeOffset: undefined }}
+              resetValues={{ sondeType: "", serieNum: "", probeAddress: "", moduleId: "", sondeOffset: undefined }}
               labels={{
                 save: tCommon('temporary_memory.save'),
                 restore: tCommon('temporary_memory.restore'),
@@ -237,6 +258,33 @@ export function SensorModal({
                 </FormItem>
               )}
             />
+
+            {requiresLegacyAddress ? (
+              <FormField
+                control={form.control}
+                name="probeAddress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('fields.address_label')}</FormLabel>
+                    <Alert className="bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
+                      <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      <AlertDescription className="text-sm text-amber-800 dark:text-amber-300">
+                        {t('fields.address_hint')}
+                      </AlertDescription>
+                    </Alert>
+                    <FormControl>
+                      <Input
+                        id="probe-address"
+                        placeholder={t('fields.address_placeholder')}
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ""))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
 
             <FormField
               control={form.control}

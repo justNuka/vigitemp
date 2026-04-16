@@ -2808,6 +2808,12 @@
         "active_locations": "Lieux avec alarmes actives",
         "active_locations_help": "Au moins une alarme encore ouverte"
       },
+      "legend": {
+        "title": "L?gende :",
+        "high": "Alarme haute",
+        "low": "Alarme basse",
+        "no_response": "Non-r?ponse"
+      },
       "meta": {
         "title": "Alarmes par lieu",
         "description": "Visualisation des alarmes regroupées par lieu sur les 7 derniers jours."
@@ -2971,7 +2977,9 @@
       "show_no_response": "Afficher les non-réponses",
       "measure_count": "Mesures dans le graphique: {count}",
       "drag_zoom_hint": "Molette pour zoomer, glisser pour se déplacer, double-clic pour réinitialiser.",
-      "reset_zoom": "Réinitialiser le zoom"
+      "reset_zoom": "Réinitialiser le zoom",
+      "empty_title": "Aucune mesure disponible",
+      "empty_description": "Aucune mesure n'est disponible sur la plage ou le contexte s?lectionn?."
     },
     "tooltip": {
       "value": "Valeur: {value}{unit}",

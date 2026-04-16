@@ -57,50 +57,50 @@ Règles de suivi:
 - [x] `Rapide` Garder l'audit sur l'onglet graphique.
 - [x] `Rapide` Traduire le code `détails` dans la table d'audit.
 - [x] `Rapide` Corriger la string parasite / doublon de recherche dans l'audit.
-- [x] `Rapide` Corriger la superposition lignes de tol?rance / pointill?s / infobulle.
+- [x] `Rapide` Corriger la superposition lignes de tolérance / pointillés / infobulle.
 - [x] `Rapide` Faire porter l'infobulle de survol sur la courbe de mesures, pas sur les lignes de consigne.
 
-### Lieux - ?dition / cr?ation
-- [x] `Rapide` Si des modifications non enregistr?es existent: bloquer clic ext?rieur / close / ?chap avec confirmation.
-- [x] `Rapide` Retirer `sauvegarder pour plus tard` et `vider le formulaire` des modals d'?dition.
-- [x] `Rapide` Garder ces boutons seulement en cr?ation.
-- [x] `Rapide` En ?dition, passer `site` ? c?t? de `groupe`.
+### Lieux - édition / création
+- [x] `Rapide` Si des modifications non enregistrées existent: bloquer clic extérieur / close / échap avec confirmation.
+- [x] `Rapide` Retirer `sauvegarder pour plus tard` et `vider le formulaire` des modals d'édition.
+- [x] `Rapide` Garder ces boutons seulement en création.
+- [x] `Rapide` En édition, passer `site` à côté de `groupe`.
 - [x] `Rapide` Supprimer `type de lieu`.
-- [x] `Rapide` Mettre `observations` ? la place et permettre d'agrandir le champ.
+- [x] `Rapide` Mettre `observations` à la place et permettre d'agrandir le champ.
 - [x] `Rapide` Site obligatoire, groupe facultatif.
-- [x] `Rapide` Si aucune sonde s?lectionn?e: surveillance d?sactiv?e obligatoire + champ gris?.
-- [x] `Rapide` Ne pas pr?remplir la surveillance en cr?ation; forcer un choix explicite.
-- [x] `Rapide` Corriger l'affichage d'une tol?rance minimale quand elle n'est pas renseign?e.
-- [x] `Rapide` Validation: consigne inf <= consigne sup et inversement, c?t? UI et serveur, revoir le message serveur.
-- [x] `Rapide` Figer la fr?quence ? `15 min` pour les GSO.
+- [x] `Rapide` Si aucune sonde sélectionnée: surveillance désactivée obligatoire + champ gris?.
+- [x] `Rapide` Ne pas préremplir la surveillance en création; forcer un choix explicite.
+- [x] `Rapide` Corriger l'affichage d'une tolérance minimale quand elle n'est pas renseignée.
+- [x] `Rapide` Validation: consigne inf <= consigne sup et inversement, côté UI et serveur, revoir le message serveur.
+- [x] `Rapide` Figer la fréquence à `15 min` pour les GSO.
 - [x] `Rapide` Ajouter un trait au-dessus de la consigne dans le bloc consignes.
-- [x] `Rapide` Remplacer `ordre` par `priorit?` dans mailing.
-- [x] `Rapide` Griser `via t?l?phone` avec mention `? venir`.
-- [x] `Rapide` Pouvoir assigner une sonde ?talon.
-- [x] `Rapide` Corriger l'unit? qui doit remonter depuis la derni?re unit? `t_lieu`.
-- [x] `Rapide` Retirer `toutes les` devant la fr?quence.
-- [x] `Rapide` Ajouter une colonne `planning consigne` indiquant s'il existe une ou plusieurs r?gles.
+- [x] `Rapide` Remplacer `ordre` par `priorité` dans mailing.
+- [x] `Rapide` Griser `via téléphone` avec mention `à venir`.
+- [x] `Rapide` Pouvoir assigner une sonde étalon.
+- [x] `Rapide` Corriger l'unité qui doit remonter depuis la dernière unité `t_lieu`.
+- [x] `Rapide` Retirer `toutes les` devant la fréquence.
+- [x] `Rapide` Ajouter une colonne `planning consigne` indiquant s'il existe une ou plusieurs règles.
 - [x] `Rapide` Fusionner les retards d'alarme dans une seule colonne.
-- [x] `Rapide` Fusionner tol?rances inf/sup dans une m?me colonne.
-- [x] `Rapide` Ne pas proposer des sondes d?j? affect?es ? un lieu, en cr?ation comme en modification.
+- [x] `Rapide` Fusionner tolérances inf/sup dans une même colonne.
+- [x] `Rapide` Ne pas proposer des sondes déjà affectées à un lieu, en création comme en modification.
 
 ### Planning de consignes
-- [x] `Rapide` Si d?but et fin sur le m?me jour, ne pas afficher `Lundi - Lundi`.
-- [x] `Rapide` Corriger les cl?s i18n:
+- [x] `Rapide` Si début et fin sur le même jour, ne pas afficher `Lundi - Lundi`.
+- [x] `Rapide` Corriger les clés i18n:
   - `lieux.planning.backToBaseSetPoints`
   - `lieux.planning.dialog.baseSetpointsTitle`
   - `lieux.planning.dialog.baseSetpoint`
   - `lieux.planning.dialog.baseFrequency`
   - `lieux.planning.dialog.baseUpper`
   - `lieux.planning.dialog.baseLower`
-- [x] `Rapide` Ne pas afficher l'id de la r?gle.
-- [x] `Rapide` Ne pas s?lectionner de jours par d?faut.
+- [x] `Rapide` Ne pas afficher l'id de la règle.
+- [x] `Rapide` Ne pas sélectionner de jours par défaut.
 
 ### Alarmes
 - [x] `Rapide` Corriger la traduction `alarmsPage.table.columns.triggered_value`.
-- [x] `Rapide` Pour les non-r?ponses, afficher `-` au lieu de `0.0`.
-- [x] `Rapide` Mettre ? jour le nombre d'alarmes apr?s acquittement.
-- [x] `Rapide` Calculer la dur?e d'alarme m?me si elle n'est pas termin?e.
+- [x] `Rapide` Pour les non-réponses, afficher `-` au lieu de `0.0`.
+- [x] `Rapide` Mettre à jour le nombre d'alarmes après acquittement.
+- [x] `Rapide` Calculer la durée d'alarme même si elle n'est pas terminée.
 
 ### Historique d'acquittement d'alarmes
 - [x] `Rapide` Faire remonter le nom du lieu.
@@ -650,3 +650,14 @@ Règles de suivi:
 [2026-04-09 14:21:37.050] [WARN] [ALARM_EMAIL] Alarm event email send failed {"eventType":"ended","alarmId":3459,"to":"e.boez@mc2lab.fr","error":"Invalid login: 535 Incorrect authentication data"}
 [2026-04-09 14:21:37.050] [INFO] [ALARM_EMAIL] Alarm email dispatch result {"ip":"192.168.63.189","alarmId":3459,"eventType":"ended","attempted":1,"sent":0,"skipped":null,"usedSystemFallback":false}
 [2026-04-09 14:21:37.051] [HTTP] [HTTP] POST /api/alarmes/dispatch - 200 {"ip":"192.168.63.189","duration":362,"statusCode":200}
+
+
+## Batch 2026-04-15 (5)
+- [x] `Rapide` Surveillance: limiter le tooltip d'observations au bouton `?` sur les cards.
+- [x] `Rapide` Surveillance modal: afficher un vrai message d'etat vide quand le graphe n'a aucune mesure.
+- [x] `Rapide` Dashboard utilisateur / Alarmes par lieu: ajouter une legende sur la repartition des alarmes.
+- [x] `Moyen` Outils > Commentaires: permettre plusieurs commentaires pour un meme type d'audit.
+- [x] `Rapide` Admin > Groupes: fiabiliser l'ouverture de creation / edition pour eviter la page d'erreur sur double clic et `Nouveau groupe`.
+
+## Batch 2026-04-16 (1)
+- [x] `Rapide` Tables avec header sticky en listes deroulantes: aligner le style sur les autres tables et rendre le header opaque pour eviter la premiere ligne visible en arriere-plan.

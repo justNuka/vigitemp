@@ -124,33 +124,15 @@ export function MonitoringCardHeader({
           </TooltipProvider>
           {groupName ? <div className="max-w-full truncate">{groupName}</div> : null}
           <div className="flex min-w-0 items-start gap-2">
-            <UITooltip>
-              <TooltipTrigger asChild>
-                <div className={`line-clamp-2 wrap-break-word text-[15px] leading-tight font-semibold ${locationComment ? 'cursor-help' : ''}`}>
-                  {sondeNumeroSerie ? `${nomLieu} - ${sondeNumeroSerie}` : nomLieu}
-                </div>
-              </TooltipTrigger>
-              {locationComment ? (
-                <TooltipContent side="top" className="max-w-sm whitespace-pre-wrap wrap-break-word">
-                  <p className="text-xs">{locationComment}</p>
-                </TooltipContent>
-              ) : null}
-            </UITooltip>
+            <div className="line-clamp-2 wrap-break-word text-[15px] leading-tight font-semibold">
+              {sondeNumeroSerie ? `${nomLieu} - ${sondeNumeroSerie}` : nomLieu}
+            </div>
           </div>
           {surveillanceDisabledLabel ? (
-            <UITooltip>
-              <TooltipTrigger asChild>
-                <div className={`inline-flex items-center max-w-full gap-1.5 rounded-full text-[11px] font-medium px-2.5 py-1 ${locationComment ? 'cursor-help ' : ''}${alarmBadgeClassName}`}>
-                  <PowerOff className="h-3 w-3" />
-                  <span className="truncate">{surveillanceDisabledLabel}</span>
-                </div>
-              </TooltipTrigger>
-              {locationComment ? (
-                <TooltipContent side="top" className="max-w-xs whitespace-pre-wrap wrap-break-word">
-                  <p className="text-xs">{locationComment}</p>
-                </TooltipContent>
-              ) : null}
-            </UITooltip>
+            <div className={`inline-flex items-center max-w-full gap-1.5 rounded-full text-[11px] font-medium px-2.5 py-1 ${alarmBadgeClassName}`}>
+              <PowerOff className="h-3 w-3" />
+              <span className="truncate">{surveillanceDisabledLabel}</span>
+            </div>
           ) : null}
           {alarmDisabledLabel ? (
             <UITooltip>

@@ -16,7 +16,6 @@ type Props = {
   groups: Group[]
 }
 
-const STORAGE_KEY = "surveillance_filters"
 
 function buildAllowedGroupIdSet(groups: Group[], selectedSiteIds: number[]) {
   if (selectedSiteIds.length === 0) return null
@@ -32,28 +31,22 @@ function buildAllowedGroupIdSet(groups: Group[], selectedSiteIds: number[]) {
 
 export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
   const t = useTranslations('surveillance.filters')
-  const [filters, setFilters] = useState<FilterState>(() => {
-    if (typeof window === "undefined") return { siteIds: [], groupIds: [], searchTerm: "", sortMode: "status" }
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (!saved) return { siteIds: [], groupIds: [], searchTerm: "", sortMode: "status" }
-
-    try {
-      const parsed = JSON.parse(saved)
-      return {
-        siteIds: Array.isArray(parsed.siteIds) ? parsed.siteIds : [],
-        groupIds: Array.isArray(parsed.groupIds) ? parsed.groupIds : [],
-        searchTerm: "",
-        sortMode: parsed.sortMode === "alphabetical" ? "alphabetical" : "status",
-      }
-    } catch {
-      return { siteIds: [], groupIds: [], searchTerm: "", sortMode: "status" }
-    }
+  const [filters, setFilters] = useState<FilterState>({
+    siteIds: [],
+    groupIds: [],
+    searchTerm: "",
+    sortMode: "status",
   })
 
   const allowedGroupIds = useMemo(
     () => buildAllowedGroupIdSet(groups, filters.siteIds),
     [groups, filters.siteIds],
   )
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    window.localStorage.removeItem("surveillance_filters")
+  }, [])
 
   const disabledGroupIds = useMemo(() => {
     const disabled = new Set<number>()
@@ -65,8 +58,6 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
   }, [allowedGroupIds, groups])
 
   useEffect(() => {
-    const persistedFilters = { ...filters, searchTerm: "" }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(persistedFilters))
     onFilterChange(filters)
   }, [filters, onFilterChange])
 
@@ -85,28 +76,14 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
     }
   }, [allowedGroupIds])
 
-  useEffect(() => {
-    if (sites.length === 0) return
-    const updateId = window.setTimeout(() => {
-      setFilters((prev) => {
-        if (prev.siteIds.length > 0) return prev
-        return { ...prev, siteIds: [sites[0].id] }
-      })
-    }, 0)
-
-    return () => {
-      window.clearTimeout(updateId)
-    }
-  }, [sites])
-
   const handleSiteChange = (selectedIds: number[]) => {
-    const normalizedSiteIds = selectedIds && selectedIds.length > 0 ? selectedIds : sites.length > 0 ? [sites[0].id] : []
+    const normalizedSiteIds = selectedIds ?? []
     const nextAllowed = buildAllowedGroupIdSet(groups, normalizedSiteIds)
 
     setFilters((prev) => ({
       ...prev,
       siteIds: normalizedSiteIds,
-      groupIds: nextAllowed ? prev.groupIds.filter((id) => nextAllowed.has(id)) : prev.groupIds,
+      groupIds: nextAllowed ? prev.groupIds.filter((id) => nextAllowed.has(id)) : [],
     }))
   }
 

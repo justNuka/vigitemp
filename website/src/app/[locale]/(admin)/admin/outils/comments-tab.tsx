@@ -11,7 +11,7 @@ import { CommentsFormCard } from "./_components/comments-form-card"
 import { CommentsTableCard } from "./_components/comments-table-card"
 import { EditCommentDialog } from "./_components/edit-comment-dialog"
 import type { AuditCode, AuditComment } from "./_components/audit-comments-types"
-import { getJson, patchJson, postJson } from "@/lib/http"
+import { deleteJson, getJson, patchJson, postJson } from "@/lib/http"
 import { useTranslations } from 'next-intl'
 import { toast } from "sonner"
 
@@ -85,18 +85,9 @@ export function CommentsTab() {
 
   const handleSave = async (values: CommentsFormValues) => {
     try {
-      await postJson("/api/audit/comments", { type: values.type, text: values.text })
+      const created = await postJson<AuditComment>("/api/audit/comments", { type: values.type, text: values.text })
 
-      setComments((prev) => {
-        const existing = prev.find((comment) => comment.type === values.type)
-        if (existing) {
-          return prev.map((comment) =>
-            comment.type === values.type ? { ...comment, text: values.text } : comment,
-          )
-        }
-        const nextId = Math.max(0, ...prev.map((item) => item.id)) + 1
-        return [...prev, { id: nextId, type: values.type, text: values.text }]
-      })
+      setComments((prev) => [created, ...prev])
       setValue("text", "")
       toast.success(t('toast.save_success'))
     } catch (error) {
@@ -109,7 +100,7 @@ export function CommentsTab() {
     if (!commentToDelete) return
 
     try {
-      await patchJson("/api/audit/comments", { type: commentToDelete.type, text: "" })
+      await deleteJson(`/api/audit/comments?id=${id}`)
 
       setComments(comments.filter((comment) => comment.id !== id))
       setSelectedCommentId(null)
@@ -123,11 +114,11 @@ export function CommentsTab() {
     if (!editingComment || !text.trim()) return
 
     try {
-      await patchJson("/api/audit/comments", { type: editingComment.type, text })
+      const updated = await patchJson<AuditComment>("/api/audit/comments", { id: editingComment.id, text })
 
       setComments(
         comments.map((comment) =>
-          comment.type === editingComment.type ? { ...comment, text } : comment,
+          comment.id === editingComment.id ? updated : comment,
         ),
       )
       setIsEditDialogOpen(false)

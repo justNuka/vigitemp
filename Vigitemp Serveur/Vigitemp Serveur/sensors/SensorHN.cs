@@ -36,7 +36,7 @@ namespace Vigitemp_Serveur.sensors
                 string sRelais1 = m_sondeAdresse; //adresse sonde
                 string sRelais2 = m_moduleSerialNumber; //adresse module 
 
-                byte[] bytestosend = checksumRequete("54", sRelais1, sRelais2);
+                byte[] bytestosend = checksumRequete("4D", sRelais1, sRelais2);
                 VigitempServeur.Log($"[SONDE][TX] type=HN serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} module={m_moduleSerialNumber} cmdHex={BitConverter.ToString(bytestosend)}");
                 m_port.Write(bytestosend, 0, bytestosend.Length);
 
@@ -48,12 +48,14 @@ namespace Vigitemp_Serveur.sensors
                     if (tmp_sw.Elapsed.TotalMilliseconds > 1000)
                     {
                         VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=retry elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
-                        m_port.Close();
-                        m_port.Open();
+                        if (!m_port.IsOpen)
+                        {
+                            m_port.Open();
+                        }
                         m_port.DiscardInBuffer();
                         m_port.DiscardOutBuffer();
                         tmp_sw.Stop();
-                        bytestosend = checksumRequete("54", sRelais1, sRelais2);
+                        bytestosend = checksumRequete("4D", sRelais1, sRelais2);
                         VigitempServeur.Log($"[SONDE][TX] type=HN serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} module={m_moduleSerialNumber} cmdHex={BitConverter.ToString(bytestosend)} (retry)");
                         m_port.Write(bytestosend, 0, bytestosend.Length);
                         tmp_sw = new Stopwatch();
@@ -210,4 +212,5 @@ namespace Vigitemp_Serveur.sensors
         }
     }
 }
+
 

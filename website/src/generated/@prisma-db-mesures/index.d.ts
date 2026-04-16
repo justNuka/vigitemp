@@ -29,6 +29,11 @@ export type tm_journal = $Result.DefaultSelection<Prisma.$tm_journalPayload>
  */
 export type tm_journal_code = $Result.DefaultSelection<Prisma.$tm_journal_codePayload>
 /**
+ * Model tm_journal_commentaire_libre
+ * 
+ */
+export type tm_journal_commentaire_libre = $Result.DefaultSelection<Prisma.$tm_journal_commentaire_librePayload>
+/**
  * Model tm_compteur_id_table
  * 
  */
@@ -249,6 +254,16 @@ export class PrismaClient<
     * ```
     */
   get tm_journal_code(): Prisma.tm_journal_codeDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.tm_journal_commentaire_libre`: Exposes CRUD operations for the **tm_journal_commentaire_libre** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Tm_journal_commentaire_libres
+    * const tm_journal_commentaire_libres = await prisma.tm_journal_commentaire_libre.findMany()
+    * ```
+    */
+  get tm_journal_commentaire_libre(): Prisma.tm_journal_commentaire_libreDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.tm_compteur_id_table`: Exposes CRUD operations for the **tm_compteur_id_table** model.
@@ -826,6 +841,7 @@ export namespace Prisma {
     tm_graphique: 'tm_graphique',
     tm_journal: 'tm_journal',
     tm_journal_code: 'tm_journal_code',
+    tm_journal_commentaire_libre: 'tm_journal_commentaire_libre',
     tm_compteur_id_table: 'tm_compteur_id_table',
     tm_mesures: 'tm_mesures',
     tm_mesures_gso: 'tm_mesures_gso',
@@ -855,7 +871,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "tm_graphique" | "tm_journal" | "tm_journal_code" | "tm_compteur_id_table" | "tm_mesures" | "tm_mesures_gso" | "tm_journal_histo" | "tm_mesure_calibrage" | "tm_mesure_calibrage_etalon" | "tm_mesure_etalon" | "tm_mesure_etalonnage" | "tm_mesures_histo" | "tm_mesures_test" | "tm_mesures_test_etalon" | "tm_mode_degrade" | "tm_parametre" | "tm_vigilog_mesure"
+      modelProps: "tm_graphique" | "tm_journal" | "tm_journal_code" | "tm_journal_commentaire_libre" | "tm_compteur_id_table" | "tm_mesures" | "tm_mesures_gso" | "tm_journal_histo" | "tm_mesure_calibrage" | "tm_mesure_calibrage_etalon" | "tm_mesure_etalon" | "tm_mesure_etalonnage" | "tm_mesures_histo" | "tm_mesures_test" | "tm_mesures_test_etalon" | "tm_mode_degrade" | "tm_parametre" | "tm_vigilog_mesure"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1054,6 +1070,72 @@ export namespace Prisma {
           count: {
             args: Prisma.tm_journal_codeCountArgs<ExtArgs>
             result: $Utils.Optional<Tm_journal_codeCountAggregateOutputType> | number
+          }
+        }
+      }
+      tm_journal_commentaire_libre: {
+        payload: Prisma.$tm_journal_commentaire_librePayload<ExtArgs>
+        fields: Prisma.tm_journal_commentaire_libreFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.tm_journal_commentaire_libreFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$tm_journal_commentaire_librePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.tm_journal_commentaire_libreFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$tm_journal_commentaire_librePayload>
+          }
+          findFirst: {
+            args: Prisma.tm_journal_commentaire_libreFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$tm_journal_commentaire_librePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.tm_journal_commentaire_libreFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$tm_journal_commentaire_librePayload>
+          }
+          findMany: {
+            args: Prisma.tm_journal_commentaire_libreFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$tm_journal_commentaire_librePayload>[]
+          }
+          create: {
+            args: Prisma.tm_journal_commentaire_libreCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$tm_journal_commentaire_librePayload>
+          }
+          createMany: {
+            args: Prisma.tm_journal_commentaire_libreCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.tm_journal_commentaire_libreDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$tm_journal_commentaire_librePayload>
+          }
+          update: {
+            args: Prisma.tm_journal_commentaire_libreUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$tm_journal_commentaire_librePayload>
+          }
+          deleteMany: {
+            args: Prisma.tm_journal_commentaire_libreDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.tm_journal_commentaire_libreUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.tm_journal_commentaire_libreUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$tm_journal_commentaire_librePayload>
+          }
+          aggregate: {
+            args: Prisma.Tm_journal_commentaire_libreAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTm_journal_commentaire_libre>
+          }
+          groupBy: {
+            args: Prisma.tm_journal_commentaire_libreGroupByArgs<ExtArgs>
+            result: $Utils.Optional<Tm_journal_commentaire_libreGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.tm_journal_commentaire_libreCountArgs<ExtArgs>
+            result: $Utils.Optional<Tm_journal_commentaire_libreCountAggregateOutputType> | number
           }
         }
       }
@@ -2092,6 +2174,7 @@ export namespace Prisma {
     tm_graphique?: tm_graphiqueOmit
     tm_journal?: tm_journalOmit
     tm_journal_code?: tm_journal_codeOmit
+    tm_journal_commentaire_libre?: tm_journal_commentaire_libreOmit
     tm_compteur_id_table?: tm_compteur_id_tableOmit
     tm_mesures?: tm_mesuresOmit
     tm_mesures_gso?: tm_mesures_gsoOmit
@@ -5122,6 +5205,927 @@ export namespace Prisma {
      * Omit specific fields from the tm_journal_code
      */
     omit?: tm_journal_codeOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model tm_journal_commentaire_libre
+   */
+
+  export type AggregateTm_journal_commentaire_libre = {
+    _count: Tm_journal_commentaire_libreCountAggregateOutputType | null
+    _avg: Tm_journal_commentaire_libreAvgAggregateOutputType | null
+    _sum: Tm_journal_commentaire_libreSumAggregateOutputType | null
+    _min: Tm_journal_commentaire_libreMinAggregateOutputType | null
+    _max: Tm_journal_commentaire_libreMaxAggregateOutputType | null
+  }
+
+  export type Tm_journal_commentaire_libreAvgAggregateOutputType = {
+    Id_Commentaire_Journal: number | null
+  }
+
+  export type Tm_journal_commentaire_libreSumAggregateOutputType = {
+    Id_Commentaire_Journal: number | null
+  }
+
+  export type Tm_journal_commentaire_libreMinAggregateOutputType = {
+    Id_Commentaire_Journal: number | null
+    Code_Journal: string | null
+    Commentaire: string | null
+    Date_Creation: Date | null
+    Date_Modification: Date | null
+  }
+
+  export type Tm_journal_commentaire_libreMaxAggregateOutputType = {
+    Id_Commentaire_Journal: number | null
+    Code_Journal: string | null
+    Commentaire: string | null
+    Date_Creation: Date | null
+    Date_Modification: Date | null
+  }
+
+  export type Tm_journal_commentaire_libreCountAggregateOutputType = {
+    Id_Commentaire_Journal: number
+    Code_Journal: number
+    Commentaire: number
+    Date_Creation: number
+    Date_Modification: number
+    _all: number
+  }
+
+
+  export type Tm_journal_commentaire_libreAvgAggregateInputType = {
+    Id_Commentaire_Journal?: true
+  }
+
+  export type Tm_journal_commentaire_libreSumAggregateInputType = {
+    Id_Commentaire_Journal?: true
+  }
+
+  export type Tm_journal_commentaire_libreMinAggregateInputType = {
+    Id_Commentaire_Journal?: true
+    Code_Journal?: true
+    Commentaire?: true
+    Date_Creation?: true
+    Date_Modification?: true
+  }
+
+  export type Tm_journal_commentaire_libreMaxAggregateInputType = {
+    Id_Commentaire_Journal?: true
+    Code_Journal?: true
+    Commentaire?: true
+    Date_Creation?: true
+    Date_Modification?: true
+  }
+
+  export type Tm_journal_commentaire_libreCountAggregateInputType = {
+    Id_Commentaire_Journal?: true
+    Code_Journal?: true
+    Commentaire?: true
+    Date_Creation?: true
+    Date_Modification?: true
+    _all?: true
+  }
+
+  export type Tm_journal_commentaire_libreAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which tm_journal_commentaire_libre to aggregate.
+     */
+    where?: tm_journal_commentaire_libreWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of tm_journal_commentaire_libres to fetch.
+     */
+    orderBy?: tm_journal_commentaire_libreOrderByWithRelationInput | tm_journal_commentaire_libreOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: tm_journal_commentaire_libreWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` tm_journal_commentaire_libres from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` tm_journal_commentaire_libres.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned tm_journal_commentaire_libres
+    **/
+    _count?: true | Tm_journal_commentaire_libreCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: Tm_journal_commentaire_libreAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: Tm_journal_commentaire_libreSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: Tm_journal_commentaire_libreMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: Tm_journal_commentaire_libreMaxAggregateInputType
+  }
+
+  export type GetTm_journal_commentaire_libreAggregateType<T extends Tm_journal_commentaire_libreAggregateArgs> = {
+        [P in keyof T & keyof AggregateTm_journal_commentaire_libre]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTm_journal_commentaire_libre[P]>
+      : GetScalarType<T[P], AggregateTm_journal_commentaire_libre[P]>
+  }
+
+
+
+
+  export type tm_journal_commentaire_libreGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: tm_journal_commentaire_libreWhereInput
+    orderBy?: tm_journal_commentaire_libreOrderByWithAggregationInput | tm_journal_commentaire_libreOrderByWithAggregationInput[]
+    by: Tm_journal_commentaire_libreScalarFieldEnum[] | Tm_journal_commentaire_libreScalarFieldEnum
+    having?: tm_journal_commentaire_libreScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: Tm_journal_commentaire_libreCountAggregateInputType | true
+    _avg?: Tm_journal_commentaire_libreAvgAggregateInputType
+    _sum?: Tm_journal_commentaire_libreSumAggregateInputType
+    _min?: Tm_journal_commentaire_libreMinAggregateInputType
+    _max?: Tm_journal_commentaire_libreMaxAggregateInputType
+  }
+
+  export type Tm_journal_commentaire_libreGroupByOutputType = {
+    Id_Commentaire_Journal: number
+    Code_Journal: string
+    Commentaire: string
+    Date_Creation: Date
+    Date_Modification: Date
+    _count: Tm_journal_commentaire_libreCountAggregateOutputType | null
+    _avg: Tm_journal_commentaire_libreAvgAggregateOutputType | null
+    _sum: Tm_journal_commentaire_libreSumAggregateOutputType | null
+    _min: Tm_journal_commentaire_libreMinAggregateOutputType | null
+    _max: Tm_journal_commentaire_libreMaxAggregateOutputType | null
+  }
+
+  type GetTm_journal_commentaire_libreGroupByPayload<T extends tm_journal_commentaire_libreGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<Tm_journal_commentaire_libreGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof Tm_journal_commentaire_libreGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], Tm_journal_commentaire_libreGroupByOutputType[P]>
+            : GetScalarType<T[P], Tm_journal_commentaire_libreGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type tm_journal_commentaire_libreSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    Id_Commentaire_Journal?: boolean
+    Code_Journal?: boolean
+    Commentaire?: boolean
+    Date_Creation?: boolean
+    Date_Modification?: boolean
+  }, ExtArgs["result"]["tm_journal_commentaire_libre"]>
+
+
+
+  export type tm_journal_commentaire_libreSelectScalar = {
+    Id_Commentaire_Journal?: boolean
+    Code_Journal?: boolean
+    Commentaire?: boolean
+    Date_Creation?: boolean
+    Date_Modification?: boolean
+  }
+
+  export type tm_journal_commentaire_libreOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Commentaire_Journal" | "Code_Journal" | "Commentaire" | "Date_Creation" | "Date_Modification", ExtArgs["result"]["tm_journal_commentaire_libre"]>
+
+  export type $tm_journal_commentaire_librePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "tm_journal_commentaire_libre"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      Id_Commentaire_Journal: number
+      Code_Journal: string
+      Commentaire: string
+      Date_Creation: Date
+      Date_Modification: Date
+    }, ExtArgs["result"]["tm_journal_commentaire_libre"]>
+    composites: {}
+  }
+
+  type tm_journal_commentaire_libreGetPayload<S extends boolean | null | undefined | tm_journal_commentaire_libreDefaultArgs> = $Result.GetResult<Prisma.$tm_journal_commentaire_librePayload, S>
+
+  type tm_journal_commentaire_libreCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<tm_journal_commentaire_libreFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: Tm_journal_commentaire_libreCountAggregateInputType | true
+    }
+
+  export interface tm_journal_commentaire_libreDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['tm_journal_commentaire_libre'], meta: { name: 'tm_journal_commentaire_libre' } }
+    /**
+     * Find zero or one Tm_journal_commentaire_libre that matches the filter.
+     * @param {tm_journal_commentaire_libreFindUniqueArgs} args - Arguments to find a Tm_journal_commentaire_libre
+     * @example
+     * // Get one Tm_journal_commentaire_libre
+     * const tm_journal_commentaire_libre = await prisma.tm_journal_commentaire_libre.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends tm_journal_commentaire_libreFindUniqueArgs>(args: SelectSubset<T, tm_journal_commentaire_libreFindUniqueArgs<ExtArgs>>): Prisma__tm_journal_commentaire_libreClient<$Result.GetResult<Prisma.$tm_journal_commentaire_librePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Tm_journal_commentaire_libre that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {tm_journal_commentaire_libreFindUniqueOrThrowArgs} args - Arguments to find a Tm_journal_commentaire_libre
+     * @example
+     * // Get one Tm_journal_commentaire_libre
+     * const tm_journal_commentaire_libre = await prisma.tm_journal_commentaire_libre.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends tm_journal_commentaire_libreFindUniqueOrThrowArgs>(args: SelectSubset<T, tm_journal_commentaire_libreFindUniqueOrThrowArgs<ExtArgs>>): Prisma__tm_journal_commentaire_libreClient<$Result.GetResult<Prisma.$tm_journal_commentaire_librePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Tm_journal_commentaire_libre that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {tm_journal_commentaire_libreFindFirstArgs} args - Arguments to find a Tm_journal_commentaire_libre
+     * @example
+     * // Get one Tm_journal_commentaire_libre
+     * const tm_journal_commentaire_libre = await prisma.tm_journal_commentaire_libre.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends tm_journal_commentaire_libreFindFirstArgs>(args?: SelectSubset<T, tm_journal_commentaire_libreFindFirstArgs<ExtArgs>>): Prisma__tm_journal_commentaire_libreClient<$Result.GetResult<Prisma.$tm_journal_commentaire_librePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Tm_journal_commentaire_libre that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {tm_journal_commentaire_libreFindFirstOrThrowArgs} args - Arguments to find a Tm_journal_commentaire_libre
+     * @example
+     * // Get one Tm_journal_commentaire_libre
+     * const tm_journal_commentaire_libre = await prisma.tm_journal_commentaire_libre.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends tm_journal_commentaire_libreFindFirstOrThrowArgs>(args?: SelectSubset<T, tm_journal_commentaire_libreFindFirstOrThrowArgs<ExtArgs>>): Prisma__tm_journal_commentaire_libreClient<$Result.GetResult<Prisma.$tm_journal_commentaire_librePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Tm_journal_commentaire_libres that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {tm_journal_commentaire_libreFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Tm_journal_commentaire_libres
+     * const tm_journal_commentaire_libres = await prisma.tm_journal_commentaire_libre.findMany()
+     * 
+     * // Get first 10 Tm_journal_commentaire_libres
+     * const tm_journal_commentaire_libres = await prisma.tm_journal_commentaire_libre.findMany({ take: 10 })
+     * 
+     * // Only select the `Id_Commentaire_Journal`
+     * const tm_journal_commentaire_libreWithId_Commentaire_JournalOnly = await prisma.tm_journal_commentaire_libre.findMany({ select: { Id_Commentaire_Journal: true } })
+     * 
+     */
+    findMany<T extends tm_journal_commentaire_libreFindManyArgs>(args?: SelectSubset<T, tm_journal_commentaire_libreFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$tm_journal_commentaire_librePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Tm_journal_commentaire_libre.
+     * @param {tm_journal_commentaire_libreCreateArgs} args - Arguments to create a Tm_journal_commentaire_libre.
+     * @example
+     * // Create one Tm_journal_commentaire_libre
+     * const Tm_journal_commentaire_libre = await prisma.tm_journal_commentaire_libre.create({
+     *   data: {
+     *     // ... data to create a Tm_journal_commentaire_libre
+     *   }
+     * })
+     * 
+     */
+    create<T extends tm_journal_commentaire_libreCreateArgs>(args: SelectSubset<T, tm_journal_commentaire_libreCreateArgs<ExtArgs>>): Prisma__tm_journal_commentaire_libreClient<$Result.GetResult<Prisma.$tm_journal_commentaire_librePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Tm_journal_commentaire_libres.
+     * @param {tm_journal_commentaire_libreCreateManyArgs} args - Arguments to create many Tm_journal_commentaire_libres.
+     * @example
+     * // Create many Tm_journal_commentaire_libres
+     * const tm_journal_commentaire_libre = await prisma.tm_journal_commentaire_libre.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends tm_journal_commentaire_libreCreateManyArgs>(args?: SelectSubset<T, tm_journal_commentaire_libreCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a Tm_journal_commentaire_libre.
+     * @param {tm_journal_commentaire_libreDeleteArgs} args - Arguments to delete one Tm_journal_commentaire_libre.
+     * @example
+     * // Delete one Tm_journal_commentaire_libre
+     * const Tm_journal_commentaire_libre = await prisma.tm_journal_commentaire_libre.delete({
+     *   where: {
+     *     // ... filter to delete one Tm_journal_commentaire_libre
+     *   }
+     * })
+     * 
+     */
+    delete<T extends tm_journal_commentaire_libreDeleteArgs>(args: SelectSubset<T, tm_journal_commentaire_libreDeleteArgs<ExtArgs>>): Prisma__tm_journal_commentaire_libreClient<$Result.GetResult<Prisma.$tm_journal_commentaire_librePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Tm_journal_commentaire_libre.
+     * @param {tm_journal_commentaire_libreUpdateArgs} args - Arguments to update one Tm_journal_commentaire_libre.
+     * @example
+     * // Update one Tm_journal_commentaire_libre
+     * const tm_journal_commentaire_libre = await prisma.tm_journal_commentaire_libre.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends tm_journal_commentaire_libreUpdateArgs>(args: SelectSubset<T, tm_journal_commentaire_libreUpdateArgs<ExtArgs>>): Prisma__tm_journal_commentaire_libreClient<$Result.GetResult<Prisma.$tm_journal_commentaire_librePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Tm_journal_commentaire_libres.
+     * @param {tm_journal_commentaire_libreDeleteManyArgs} args - Arguments to filter Tm_journal_commentaire_libres to delete.
+     * @example
+     * // Delete a few Tm_journal_commentaire_libres
+     * const { count } = await prisma.tm_journal_commentaire_libre.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends tm_journal_commentaire_libreDeleteManyArgs>(args?: SelectSubset<T, tm_journal_commentaire_libreDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Tm_journal_commentaire_libres.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {tm_journal_commentaire_libreUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Tm_journal_commentaire_libres
+     * const tm_journal_commentaire_libre = await prisma.tm_journal_commentaire_libre.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends tm_journal_commentaire_libreUpdateManyArgs>(args: SelectSubset<T, tm_journal_commentaire_libreUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Tm_journal_commentaire_libre.
+     * @param {tm_journal_commentaire_libreUpsertArgs} args - Arguments to update or create a Tm_journal_commentaire_libre.
+     * @example
+     * // Update or create a Tm_journal_commentaire_libre
+     * const tm_journal_commentaire_libre = await prisma.tm_journal_commentaire_libre.upsert({
+     *   create: {
+     *     // ... data to create a Tm_journal_commentaire_libre
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Tm_journal_commentaire_libre we want to update
+     *   }
+     * })
+     */
+    upsert<T extends tm_journal_commentaire_libreUpsertArgs>(args: SelectSubset<T, tm_journal_commentaire_libreUpsertArgs<ExtArgs>>): Prisma__tm_journal_commentaire_libreClient<$Result.GetResult<Prisma.$tm_journal_commentaire_librePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Tm_journal_commentaire_libres.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {tm_journal_commentaire_libreCountArgs} args - Arguments to filter Tm_journal_commentaire_libres to count.
+     * @example
+     * // Count the number of Tm_journal_commentaire_libres
+     * const count = await prisma.tm_journal_commentaire_libre.count({
+     *   where: {
+     *     // ... the filter for the Tm_journal_commentaire_libres we want to count
+     *   }
+     * })
+    **/
+    count<T extends tm_journal_commentaire_libreCountArgs>(
+      args?: Subset<T, tm_journal_commentaire_libreCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], Tm_journal_commentaire_libreCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Tm_journal_commentaire_libre.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {Tm_journal_commentaire_libreAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends Tm_journal_commentaire_libreAggregateArgs>(args: Subset<T, Tm_journal_commentaire_libreAggregateArgs>): Prisma.PrismaPromise<GetTm_journal_commentaire_libreAggregateType<T>>
+
+    /**
+     * Group by Tm_journal_commentaire_libre.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {tm_journal_commentaire_libreGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends tm_journal_commentaire_libreGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: tm_journal_commentaire_libreGroupByArgs['orderBy'] }
+        : { orderBy?: tm_journal_commentaire_libreGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, tm_journal_commentaire_libreGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTm_journal_commentaire_libreGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the tm_journal_commentaire_libre model
+   */
+  readonly fields: tm_journal_commentaire_libreFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for tm_journal_commentaire_libre.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__tm_journal_commentaire_libreClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the tm_journal_commentaire_libre model
+   */
+  interface tm_journal_commentaire_libreFieldRefs {
+    readonly Id_Commentaire_Journal: FieldRef<"tm_journal_commentaire_libre", 'Int'>
+    readonly Code_Journal: FieldRef<"tm_journal_commentaire_libre", 'String'>
+    readonly Commentaire: FieldRef<"tm_journal_commentaire_libre", 'String'>
+    readonly Date_Creation: FieldRef<"tm_journal_commentaire_libre", 'DateTime'>
+    readonly Date_Modification: FieldRef<"tm_journal_commentaire_libre", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * tm_journal_commentaire_libre findUnique
+   */
+  export type tm_journal_commentaire_libreFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the tm_journal_commentaire_libre
+     */
+    select?: tm_journal_commentaire_libreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the tm_journal_commentaire_libre
+     */
+    omit?: tm_journal_commentaire_libreOmit<ExtArgs> | null
+    /**
+     * Filter, which tm_journal_commentaire_libre to fetch.
+     */
+    where: tm_journal_commentaire_libreWhereUniqueInput
+  }
+
+  /**
+   * tm_journal_commentaire_libre findUniqueOrThrow
+   */
+  export type tm_journal_commentaire_libreFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the tm_journal_commentaire_libre
+     */
+    select?: tm_journal_commentaire_libreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the tm_journal_commentaire_libre
+     */
+    omit?: tm_journal_commentaire_libreOmit<ExtArgs> | null
+    /**
+     * Filter, which tm_journal_commentaire_libre to fetch.
+     */
+    where: tm_journal_commentaire_libreWhereUniqueInput
+  }
+
+  /**
+   * tm_journal_commentaire_libre findFirst
+   */
+  export type tm_journal_commentaire_libreFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the tm_journal_commentaire_libre
+     */
+    select?: tm_journal_commentaire_libreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the tm_journal_commentaire_libre
+     */
+    omit?: tm_journal_commentaire_libreOmit<ExtArgs> | null
+    /**
+     * Filter, which tm_journal_commentaire_libre to fetch.
+     */
+    where?: tm_journal_commentaire_libreWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of tm_journal_commentaire_libres to fetch.
+     */
+    orderBy?: tm_journal_commentaire_libreOrderByWithRelationInput | tm_journal_commentaire_libreOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for tm_journal_commentaire_libres.
+     */
+    cursor?: tm_journal_commentaire_libreWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` tm_journal_commentaire_libres from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` tm_journal_commentaire_libres.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_journal_commentaire_libres.
+     */
+    distinct?: Tm_journal_commentaire_libreScalarFieldEnum | Tm_journal_commentaire_libreScalarFieldEnum[]
+  }
+
+  /**
+   * tm_journal_commentaire_libre findFirstOrThrow
+   */
+  export type tm_journal_commentaire_libreFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the tm_journal_commentaire_libre
+     */
+    select?: tm_journal_commentaire_libreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the tm_journal_commentaire_libre
+     */
+    omit?: tm_journal_commentaire_libreOmit<ExtArgs> | null
+    /**
+     * Filter, which tm_journal_commentaire_libre to fetch.
+     */
+    where?: tm_journal_commentaire_libreWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of tm_journal_commentaire_libres to fetch.
+     */
+    orderBy?: tm_journal_commentaire_libreOrderByWithRelationInput | tm_journal_commentaire_libreOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for tm_journal_commentaire_libres.
+     */
+    cursor?: tm_journal_commentaire_libreWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` tm_journal_commentaire_libres from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` tm_journal_commentaire_libres.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_journal_commentaire_libres.
+     */
+    distinct?: Tm_journal_commentaire_libreScalarFieldEnum | Tm_journal_commentaire_libreScalarFieldEnum[]
+  }
+
+  /**
+   * tm_journal_commentaire_libre findMany
+   */
+  export type tm_journal_commentaire_libreFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the tm_journal_commentaire_libre
+     */
+    select?: tm_journal_commentaire_libreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the tm_journal_commentaire_libre
+     */
+    omit?: tm_journal_commentaire_libreOmit<ExtArgs> | null
+    /**
+     * Filter, which tm_journal_commentaire_libres to fetch.
+     */
+    where?: tm_journal_commentaire_libreWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of tm_journal_commentaire_libres to fetch.
+     */
+    orderBy?: tm_journal_commentaire_libreOrderByWithRelationInput | tm_journal_commentaire_libreOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing tm_journal_commentaire_libres.
+     */
+    cursor?: tm_journal_commentaire_libreWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` tm_journal_commentaire_libres from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` tm_journal_commentaire_libres.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of tm_journal_commentaire_libres.
+     */
+    distinct?: Tm_journal_commentaire_libreScalarFieldEnum | Tm_journal_commentaire_libreScalarFieldEnum[]
+  }
+
+  /**
+   * tm_journal_commentaire_libre create
+   */
+  export type tm_journal_commentaire_libreCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the tm_journal_commentaire_libre
+     */
+    select?: tm_journal_commentaire_libreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the tm_journal_commentaire_libre
+     */
+    omit?: tm_journal_commentaire_libreOmit<ExtArgs> | null
+    /**
+     * The data needed to create a tm_journal_commentaire_libre.
+     */
+    data: XOR<tm_journal_commentaire_libreCreateInput, tm_journal_commentaire_libreUncheckedCreateInput>
+  }
+
+  /**
+   * tm_journal_commentaire_libre createMany
+   */
+  export type tm_journal_commentaire_libreCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many tm_journal_commentaire_libres.
+     */
+    data: tm_journal_commentaire_libreCreateManyInput | tm_journal_commentaire_libreCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * tm_journal_commentaire_libre update
+   */
+  export type tm_journal_commentaire_libreUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the tm_journal_commentaire_libre
+     */
+    select?: tm_journal_commentaire_libreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the tm_journal_commentaire_libre
+     */
+    omit?: tm_journal_commentaire_libreOmit<ExtArgs> | null
+    /**
+     * The data needed to update a tm_journal_commentaire_libre.
+     */
+    data: XOR<tm_journal_commentaire_libreUpdateInput, tm_journal_commentaire_libreUncheckedUpdateInput>
+    /**
+     * Choose, which tm_journal_commentaire_libre to update.
+     */
+    where: tm_journal_commentaire_libreWhereUniqueInput
+  }
+
+  /**
+   * tm_journal_commentaire_libre updateMany
+   */
+  export type tm_journal_commentaire_libreUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update tm_journal_commentaire_libres.
+     */
+    data: XOR<tm_journal_commentaire_libreUpdateManyMutationInput, tm_journal_commentaire_libreUncheckedUpdateManyInput>
+    /**
+     * Filter which tm_journal_commentaire_libres to update
+     */
+    where?: tm_journal_commentaire_libreWhereInput
+    /**
+     * Limit how many tm_journal_commentaire_libres to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * tm_journal_commentaire_libre upsert
+   */
+  export type tm_journal_commentaire_libreUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the tm_journal_commentaire_libre
+     */
+    select?: tm_journal_commentaire_libreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the tm_journal_commentaire_libre
+     */
+    omit?: tm_journal_commentaire_libreOmit<ExtArgs> | null
+    /**
+     * The filter to search for the tm_journal_commentaire_libre to update in case it exists.
+     */
+    where: tm_journal_commentaire_libreWhereUniqueInput
+    /**
+     * In case the tm_journal_commentaire_libre found by the `where` argument doesn't exist, create a new tm_journal_commentaire_libre with this data.
+     */
+    create: XOR<tm_journal_commentaire_libreCreateInput, tm_journal_commentaire_libreUncheckedCreateInput>
+    /**
+     * In case the tm_journal_commentaire_libre was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<tm_journal_commentaire_libreUpdateInput, tm_journal_commentaire_libreUncheckedUpdateInput>
+  }
+
+  /**
+   * tm_journal_commentaire_libre delete
+   */
+  export type tm_journal_commentaire_libreDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the tm_journal_commentaire_libre
+     */
+    select?: tm_journal_commentaire_libreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the tm_journal_commentaire_libre
+     */
+    omit?: tm_journal_commentaire_libreOmit<ExtArgs> | null
+    /**
+     * Filter which tm_journal_commentaire_libre to delete.
+     */
+    where: tm_journal_commentaire_libreWhereUniqueInput
+  }
+
+  /**
+   * tm_journal_commentaire_libre deleteMany
+   */
+  export type tm_journal_commentaire_libreDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which tm_journal_commentaire_libres to delete
+     */
+    where?: tm_journal_commentaire_libreWhereInput
+    /**
+     * Limit how many tm_journal_commentaire_libres to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * tm_journal_commentaire_libre without action
+   */
+  export type tm_journal_commentaire_libreDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the tm_journal_commentaire_libre
+     */
+    select?: tm_journal_commentaire_libreSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the tm_journal_commentaire_libre
+     */
+    omit?: tm_journal_commentaire_libreOmit<ExtArgs> | null
   }
 
 
@@ -18925,6 +19929,17 @@ export namespace Prisma {
   export type Tm_journal_codeScalarFieldEnum = (typeof Tm_journal_codeScalarFieldEnum)[keyof typeof Tm_journal_codeScalarFieldEnum]
 
 
+  export const Tm_journal_commentaire_libreScalarFieldEnum: {
+    Id_Commentaire_Journal: 'Id_Commentaire_Journal',
+    Code_Journal: 'Code_Journal',
+    Commentaire: 'Commentaire',
+    Date_Creation: 'Date_Creation',
+    Date_Modification: 'Date_Modification'
+  };
+
+  export type Tm_journal_commentaire_libreScalarFieldEnum = (typeof Tm_journal_commentaire_libreScalarFieldEnum)[keyof typeof Tm_journal_commentaire_libreScalarFieldEnum]
+
+
   export const Tm_compteur_id_tableScalarFieldEnum: {
     Id_Serveur_BDD: 'Id_Serveur_BDD',
     Nom_Table: 'Nom_Table',
@@ -19176,6 +20191,14 @@ export namespace Prisma {
   };
 
   export type tm_journal_codeOrderByRelevanceFieldEnum = (typeof tm_journal_codeOrderByRelevanceFieldEnum)[keyof typeof tm_journal_codeOrderByRelevanceFieldEnum]
+
+
+  export const tm_journal_commentaire_libreOrderByRelevanceFieldEnum: {
+    Code_Journal: 'Code_Journal',
+    Commentaire: 'Commentaire'
+  };
+
+  export type tm_journal_commentaire_libreOrderByRelevanceFieldEnum = (typeof tm_journal_commentaire_libreOrderByRelevanceFieldEnum)[keyof typeof tm_journal_commentaire_libreOrderByRelevanceFieldEnum]
 
 
   export const tm_compteur_id_tableOrderByRelevanceFieldEnum: {
@@ -19575,6 +20598,61 @@ export namespace Prisma {
     NOT?: tm_journal_codeScalarWhereWithAggregatesInput | tm_journal_codeScalarWhereWithAggregatesInput[]
     Code_Journal?: StringWithAggregatesFilter<"tm_journal_code"> | string
     Commentaire?: StringNullableWithAggregatesFilter<"tm_journal_code"> | string | null
+  }
+
+  export type tm_journal_commentaire_libreWhereInput = {
+    AND?: tm_journal_commentaire_libreWhereInput | tm_journal_commentaire_libreWhereInput[]
+    OR?: tm_journal_commentaire_libreWhereInput[]
+    NOT?: tm_journal_commentaire_libreWhereInput | tm_journal_commentaire_libreWhereInput[]
+    Id_Commentaire_Journal?: IntFilter<"tm_journal_commentaire_libre"> | number
+    Code_Journal?: StringFilter<"tm_journal_commentaire_libre"> | string
+    Commentaire?: StringFilter<"tm_journal_commentaire_libre"> | string
+    Date_Creation?: DateTimeFilter<"tm_journal_commentaire_libre"> | Date | string
+    Date_Modification?: DateTimeFilter<"tm_journal_commentaire_libre"> | Date | string
+  }
+
+  export type tm_journal_commentaire_libreOrderByWithRelationInput = {
+    Id_Commentaire_Journal?: SortOrder
+    Code_Journal?: SortOrder
+    Commentaire?: SortOrder
+    Date_Creation?: SortOrder
+    Date_Modification?: SortOrder
+    _relevance?: tm_journal_commentaire_libreOrderByRelevanceInput
+  }
+
+  export type tm_journal_commentaire_libreWhereUniqueInput = Prisma.AtLeast<{
+    Id_Commentaire_Journal?: number
+    AND?: tm_journal_commentaire_libreWhereInput | tm_journal_commentaire_libreWhereInput[]
+    OR?: tm_journal_commentaire_libreWhereInput[]
+    NOT?: tm_journal_commentaire_libreWhereInput | tm_journal_commentaire_libreWhereInput[]
+    Code_Journal?: StringFilter<"tm_journal_commentaire_libre"> | string
+    Commentaire?: StringFilter<"tm_journal_commentaire_libre"> | string
+    Date_Creation?: DateTimeFilter<"tm_journal_commentaire_libre"> | Date | string
+    Date_Modification?: DateTimeFilter<"tm_journal_commentaire_libre"> | Date | string
+  }, "Id_Commentaire_Journal">
+
+  export type tm_journal_commentaire_libreOrderByWithAggregationInput = {
+    Id_Commentaire_Journal?: SortOrder
+    Code_Journal?: SortOrder
+    Commentaire?: SortOrder
+    Date_Creation?: SortOrder
+    Date_Modification?: SortOrder
+    _count?: tm_journal_commentaire_libreCountOrderByAggregateInput
+    _avg?: tm_journal_commentaire_libreAvgOrderByAggregateInput
+    _max?: tm_journal_commentaire_libreMaxOrderByAggregateInput
+    _min?: tm_journal_commentaire_libreMinOrderByAggregateInput
+    _sum?: tm_journal_commentaire_libreSumOrderByAggregateInput
+  }
+
+  export type tm_journal_commentaire_libreScalarWhereWithAggregatesInput = {
+    AND?: tm_journal_commentaire_libreScalarWhereWithAggregatesInput | tm_journal_commentaire_libreScalarWhereWithAggregatesInput[]
+    OR?: tm_journal_commentaire_libreScalarWhereWithAggregatesInput[]
+    NOT?: tm_journal_commentaire_libreScalarWhereWithAggregatesInput | tm_journal_commentaire_libreScalarWhereWithAggregatesInput[]
+    Id_Commentaire_Journal?: IntWithAggregatesFilter<"tm_journal_commentaire_libre"> | number
+    Code_Journal?: StringWithAggregatesFilter<"tm_journal_commentaire_libre"> | string
+    Commentaire?: StringWithAggregatesFilter<"tm_journal_commentaire_libre"> | string
+    Date_Creation?: DateTimeWithAggregatesFilter<"tm_journal_commentaire_libre"> | Date | string
+    Date_Modification?: DateTimeWithAggregatesFilter<"tm_journal_commentaire_libre"> | Date | string
   }
 
   export type tm_compteur_id_tableWhereInput = {
@@ -20899,6 +21977,59 @@ export namespace Prisma {
   export type tm_journal_codeUncheckedUpdateManyInput = {
     Code_Journal?: StringFieldUpdateOperationsInput | string
     Commentaire?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type tm_journal_commentaire_libreCreateInput = {
+    Code_Journal: string
+    Commentaire: string
+    Date_Creation?: Date | string
+    Date_Modification?: Date | string
+  }
+
+  export type tm_journal_commentaire_libreUncheckedCreateInput = {
+    Id_Commentaire_Journal?: number
+    Code_Journal: string
+    Commentaire: string
+    Date_Creation?: Date | string
+    Date_Modification?: Date | string
+  }
+
+  export type tm_journal_commentaire_libreUpdateInput = {
+    Code_Journal?: StringFieldUpdateOperationsInput | string
+    Commentaire?: StringFieldUpdateOperationsInput | string
+    Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Modification?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type tm_journal_commentaire_libreUncheckedUpdateInput = {
+    Id_Commentaire_Journal?: IntFieldUpdateOperationsInput | number
+    Code_Journal?: StringFieldUpdateOperationsInput | string
+    Commentaire?: StringFieldUpdateOperationsInput | string
+    Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Modification?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type tm_journal_commentaire_libreCreateManyInput = {
+    Id_Commentaire_Journal?: number
+    Code_Journal: string
+    Commentaire: string
+    Date_Creation?: Date | string
+    Date_Modification?: Date | string
+  }
+
+  export type tm_journal_commentaire_libreUpdateManyMutationInput = {
+    Code_Journal?: StringFieldUpdateOperationsInput | string
+    Commentaire?: StringFieldUpdateOperationsInput | string
+    Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Modification?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type tm_journal_commentaire_libreUncheckedUpdateManyInput = {
+    Id_Commentaire_Journal?: IntFieldUpdateOperationsInput | number
+    Code_Journal?: StringFieldUpdateOperationsInput | string
+    Commentaire?: StringFieldUpdateOperationsInput | string
+    Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Modification?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type tm_compteur_id_tableCreateInput = {
@@ -22466,6 +23597,44 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
     _max?: NestedStringFilter<$PrismaModel>
+  }
+
+  export type tm_journal_commentaire_libreOrderByRelevanceInput = {
+    fields: tm_journal_commentaire_libreOrderByRelevanceFieldEnum | tm_journal_commentaire_libreOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type tm_journal_commentaire_libreCountOrderByAggregateInput = {
+    Id_Commentaire_Journal?: SortOrder
+    Code_Journal?: SortOrder
+    Commentaire?: SortOrder
+    Date_Creation?: SortOrder
+    Date_Modification?: SortOrder
+  }
+
+  export type tm_journal_commentaire_libreAvgOrderByAggregateInput = {
+    Id_Commentaire_Journal?: SortOrder
+  }
+
+  export type tm_journal_commentaire_libreMaxOrderByAggregateInput = {
+    Id_Commentaire_Journal?: SortOrder
+    Code_Journal?: SortOrder
+    Commentaire?: SortOrder
+    Date_Creation?: SortOrder
+    Date_Modification?: SortOrder
+  }
+
+  export type tm_journal_commentaire_libreMinOrderByAggregateInput = {
+    Id_Commentaire_Journal?: SortOrder
+    Code_Journal?: SortOrder
+    Commentaire?: SortOrder
+    Date_Creation?: SortOrder
+    Date_Modification?: SortOrder
+  }
+
+  export type tm_journal_commentaire_libreSumOrderByAggregateInput = {
+    Id_Commentaire_Journal?: SortOrder
   }
 
   export type tm_compteur_id_tableOrderByRelevanceInput = {

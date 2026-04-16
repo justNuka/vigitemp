@@ -111,6 +111,7 @@ export const GET = withAuthLogging(async (_req: NextRequest) => {
 const createSensorSchema = z.object({
   sondeType: z.string().min(1),
   serieNum: z.string().regex(/^[A-Z0-9-]+$/i, "Numéro de série invalide"),
+  probeAddress: z.string().optional(),
   moduleId: z.number().int().positive().nullable().optional(),
   sondeOffset: z.number().nullable().optional(),
 })
@@ -121,6 +122,9 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
     const data = createSensorSchema.parse(body)
     const { ip } = getRequestContext(req)
     const typeCode = data.sondeType.trim().toUpperCase()
+    const normalizedSerieNum = data.serieNum.trim().toUpperCase()
+    const normalizedProbeAddress = data.probeAddress?.trim().toUpperCase() || null
+    const usesLegacySeparateAddress = typeCode === "EN" || typeCode === "HN"
 
     const sensorType = await prisma.t_sonde_type.findUnique({
       where: { Sonde_Type: typeCode },
@@ -131,7 +135,9 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
       return apiError(400, "invalid_sensor_type", "Type de sonde introuvable")
     }
 
-    const creation = buildSensorSerialsFromInput(sensorType.Sonde_Type, data.serieNum)
+    const creation = usesLegacySeparateAddress
+      ? { type: sensorType.Sonde_Type, isGso: false, serials: [normalizedSerieNum] }
+      : buildSensorSerialsFromInput(sensorType.Sonde_Type, normalizedSerieNum)
     const serialsToCreate = Array.from(new Set(creation.serials))
     const isGsoFamily = sensorType.Famille_Sonde === "GSO"
 
@@ -169,6 +175,10 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
 
     const effectiveOffset = isPackEdition ? 0 : data.sondeOffset ?? 0
 
+    if (usesLegacySeparateAddress && (!normalizedProbeAddress || !/^[A-Z0-9-]+$/i.test(normalizedProbeAddress))) {
+      return apiError(400, "missing_probe_address", "Adresse de sonde requise pour ce type de sonde")
+    }
+
     const existing = await prisma.t_sonde.findMany({
       where: { Sonde_Numero_Serie: { in: serialsToCreate } },
       select: { Sonde_Numero_Serie: true },
@@ -199,7 +209,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
       serialsToCreate.map((serial) =>
         prisma.t_sonde.create({
           data: {
-            Adresse_Sonde: extractProbeAddressFromSerial(serial),
+            Adresse_Sonde: usesLegacySeparateAddress ? normalizedProbeAddress : extractProbeAddressFromSerial(serial),
             Sonde_Numero_Serie: serial,
             Sonde_Type: sensorType.Sonde_Type,
             Id_Module: data.moduleId ?? null,

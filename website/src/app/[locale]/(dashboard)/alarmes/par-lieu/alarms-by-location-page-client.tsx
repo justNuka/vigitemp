@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { Fragment, useMemo } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { useLocale, useTranslations } from "next-intl"
 import { BellOff, Thermometer, TriangleAlert } from "lucide-react"
@@ -128,7 +128,37 @@ export function AlarmsByLocationPageClient({ rows }: { rows: AlarmByLocationRow[
       </div>
 
       <Card className="border-border shadow-sm">
-        <CardContent className="p-4">
+        <CardContent className="space-y-4 p-4">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+            <span className="font-medium">{t("trend_by_location.legend.title")}</span>
+            {[
+              {
+                key: "high",
+                className: "border-destructive/50 text-destructive",
+                icon: <TriangleAlert className="h-3.5 w-3.5" />,
+                label: t("trend_by_location.legend.high"),
+              },
+              {
+                key: "low",
+                className: "border-info/50 text-info",
+                icon: <Thermometer className="h-3.5 w-3.5" />,
+                label: t("trend_by_location.legend.low"),
+              },
+              {
+                key: "no_response",
+                className: "border-warning/50 text-warning",
+                icon: <BellOff className="h-3.5 w-3.5" />,
+                label: t("trend_by_location.legend.no_response"),
+              },
+            ].map((item) => (
+              <Fragment key={item.key}>
+                <Badge variant="outline" className={cn("gap-1", item.className)}>
+                  {item.icon}
+                </Badge>
+                <span>{item.label}</span>
+              </Fragment>
+            ))}
+          </div>
           <TanStackTable
             columns={columns}
             data={rows}

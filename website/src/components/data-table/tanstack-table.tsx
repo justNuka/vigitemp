@@ -565,7 +565,7 @@ export function TanStackTable<TData extends Record<string, any>>({
         <Table className={tableClassName}>
           <TableHeader
             className={cn(
-              "sticky top-0 z-10 bg-muted/40 backdrop-blur supports-backdrop-filter:bg-muted/20",
+              "sticky top-0 z-20 bg-background shadow-sm dark:bg-card",
               headerClassName
             )}
           >
@@ -592,7 +592,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                         key={header.id}
                         className={cn(
                           canSort && 'cursor-pointer select-none hover:bg-muted/50',
-                          'transition-colors sticky top-0 bg-muted/40 backdrop-blur supports-backdrop-filter:bg-muted/20 border-b border-border border-r',
+                          'transition-colors sticky top-0 z-20 bg-background border-b border-border border-r shadow-[inset_0_-1px_0_hsl(var(--border))] dark:bg-card',
                           headerCellClassName,
                           headerCellMetaClass
                         )}

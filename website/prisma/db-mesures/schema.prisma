@@ -60,6 +60,17 @@ model tm_journal_code {
   Commentaire  String? @db.VarChar(200)
 }
 
+model tm_journal_commentaire_libre {
+  Id_Commentaire_Journal Int      @id @default(autoincrement())
+  Code_Journal           String   @db.VarChar(50)
+  Commentaire            String   @db.VarChar(255)
+  Date_Creation          DateTime @default(now()) @db.DateTime(0)
+  Date_Modification      DateTime @default(now()) @db.DateTime(0)
+
+  @@index([Code_Journal], map: "IDX_Code_Journal")
+  @@index([Date_Creation], map: "IDX_Date_Creation")
+}
+
 model tm_compteur_id_table {
   Id_Serveur_BDD Int
   Nom_Table      String @db.VarChar(100)

@@ -38,15 +38,15 @@ export function GroupsActions({
           <SelectItem value="2">{t('regroupement.two')}</SelectItem>
         </SelectContent>
       </Select>
-      <Button onClick={onNew} variant="default" size="sm" className="gap-2">
+      <Button type="button" onClick={onNew} variant="default" size="sm" className="gap-2">
         <Plus className="h-4 w-4" />
         {t('actions.new')}
       </Button>
-      <Button onClick={onEdit} disabled={!canEdit} variant="outline" size="sm" className="gap-2">
+      <Button type="button" onClick={onEdit} disabled={!canEdit} variant="outline" size="sm" className="gap-2">
         <Pencil className="h-4 w-4" />
         {t('actions.edit')}
       </Button>
-      <Button onClick={onArchive} disabled={!canArchive} variant="outline" size="sm" className="gap-2">
+      <Button type="button" onClick={onArchive} disabled={!canArchive} variant="outline" size="sm" className="gap-2">
         <Archive className="h-4 w-4" />
         {t('actions.archive')}
       </Button>

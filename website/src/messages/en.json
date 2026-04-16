@@ -2795,6 +2795,12 @@
         "active_locations": "Locations with active alarms",
         "active_locations_help": "At least one alarm still open"
       },
+      "legend": {
+        "title": "Legend:",
+        "high": "High alarm",
+        "low": "Low alarm",
+        "no_response": "No response"
+      },
       "meta": {
         "title": "Alarms by location",
         "description": "Overview of alarms grouped by location over the last 7 days."
@@ -2958,7 +2964,9 @@
       "show_no_response": "Show no-response values",
       "measure_count": "Points in chart: {count}",
       "drag_zoom_hint": "Use the wheel to zoom, drag to pan, and double-click to reset.",
-      "reset_zoom": "Reset zoom"
+      "reset_zoom": "Reset zoom",
+      "empty_title": "No measurements available",
+      "empty_description": "No measurements are available for the selected range or context."
     },
     "tooltip": {
       "value": "Value: {value}{unit}",
