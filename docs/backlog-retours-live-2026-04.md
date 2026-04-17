@@ -8,8 +8,6 @@ Règles de suivi:
 - `[x]` fait
 - priorité: `Rapide`, `Moyen`, `Lourd`
 
-## Quick Wins Prioritaires
-
 ### Dashboard utilisateur
 - [x] `Rapide` Remplacer `dernières 24h` par `derniers 7j`.
 - [x] `Rapide` Ajouter une échelle au graphique d'alarmes.

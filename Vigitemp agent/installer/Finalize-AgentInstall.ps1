@@ -51,10 +51,10 @@ function Resolve-InstallDir {
 
     $candidates = @()
     if ($env:ProgramFiles -and $env:ProgramFiles.Trim()) {
-        $candidates += (Join-Path $env:ProgramFiles "Vigitemp\Agent")
+        $candidates += (Join-Path $env:ProgramData "VigiSensys\agent")
     }
     if (${env:ProgramFiles(x86)} -and ${env:ProgramFiles(x86)}.Trim()) {
-        $candidates += (Join-Path ${env:ProgramFiles(x86)} "Vigitemp\Agent")
+        $candidates += (Join-Path ${env:ProgramData} "VigiSensys\agent")
     }
 
     foreach ($candidate in $candidates | Select-Object -Unique) {
@@ -64,10 +64,10 @@ function Resolve-InstallDir {
     }
 
     if (${env:ProgramFiles(x86)} -and ${env:ProgramFiles(x86)}.Trim()) {
-        return (Join-Path ${env:ProgramFiles(x86)} "Vigitemp\Agent")
+        return (Join-Path ${env:ProgramData} "VigiSensys\agent")
     }
 
-    return (Join-Path $env:ProgramFiles "Vigitemp\Agent")
+    return (Join-Path $env:ProgramData "VigiSensys\agent")
 }
 
 function Remove-UrlAclIfExists {
@@ -155,7 +155,7 @@ Ensure-Admin
 
 $exePath = Join-Path $InstallDir "VigitempAgent.exe"
 $configPath = Join-Path $InstallDir "VigitempAgent.exe.config"
-$logDir = Join-Path $env:ProgramData "Vigitemp\logs"
+$logDir = Join-Path $env:ProgramData "VigiSensys\logs"
 $logPath = Join-Path $logDir "Finalize-AgentInstall.log"
 
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null

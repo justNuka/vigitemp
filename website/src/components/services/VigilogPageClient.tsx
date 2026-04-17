@@ -53,7 +53,13 @@ import { useSitesSimple } from "@/hooks/useSites"
 import { useToast } from "@/hooks/use-toast"
 import { getJson, patchJson, postJson } from "@/lib/http"
 import type { VigilogAgentConfigureResponse } from "@/lib/vigilog-agent"
-import { presenceVigilogAgent, probeVigilogAgent } from "@/lib/vigilog-agent"
+import {
+  clearVigilogAgent,
+  configureVigilogAgent,
+  presenceVigilogAgent,
+  probeVigilogAgent,
+  readVigilogAgent,
+} from "@/lib/vigilog-agent"
 
 const CONFIG_QUERY_KEY = ["services", "vigilog", "configurations"] as const
 const LOGGERS_QUERY_KEY = ["services", "vigilog", "loggers"] as const
@@ -481,12 +487,21 @@ export function VigilogPageClient() {
 
       let serial = departureLoggerSerial
       if (!departureAlreadyPrepared) {
-        const configureResult = await postJson<VigilogAgentConfigureResponse>(
-          "/api/services/vigilog/agent/configure",
-          {
-            configurationId: Number(selectedConfigurationIdResolved),
-          },
-        )
+        if (!selectedConfiguration) {
+          throw new Error(t("feedback.prepareError.description"))
+        }
+        const configureResult = await configureVigilogAgent({
+          lowLimitActive: selectedConfiguration.lowLimitActive,
+          lowLimit: selectedConfiguration.lowLimit,
+          highLimitActive: selectedConfiguration.highLimitActive,
+          highLimit: selectedConfiguration.highLimit,
+          frequencyMinutes: selectedConfiguration.frequencyMinutes,
+          alarmDelayMinutes: selectedConfiguration.alarmDelayMinutes,
+          startDelayMinutes: selectedConfiguration.startDelayMinutes,
+          stopButtonEnabled: selectedConfiguration.stopButtonEnabled,
+          resetWithStartEnabled: selectedConfiguration.resetWithStartEnabled,
+          startAutomatically: false,
+        })
         const configuredSerial = (configureResult.loggerSerial || "").trim()
         if (configuredSerial) {
           serial = configuredSerial
@@ -532,12 +547,21 @@ export function VigilogPageClient() {
 
       let serial = resolvedLoggerSerial
       if (!arrivalAlreadyPrepared) {
-        const configureResult = await postJson<VigilogAgentConfigureResponse>(
-          "/api/services/vigilog/agent/configure",
-          {
-            configurationId: Number(selectedConfigurationIdResolved),
-          },
-        )
+        if (!selectedConfiguration) {
+          throw new Error(t("feedback.prepareError.description"))
+        }
+        const configureResult = await configureVigilogAgent({
+          lowLimitActive: selectedConfiguration.lowLimitActive,
+          lowLimit: selectedConfiguration.lowLimit,
+          highLimitActive: selectedConfiguration.highLimitActive,
+          highLimit: selectedConfiguration.highLimit,
+          frequencyMinutes: selectedConfiguration.frequencyMinutes,
+          alarmDelayMinutes: selectedConfiguration.alarmDelayMinutes,
+          startDelayMinutes: selectedConfiguration.startDelayMinutes,
+          stopButtonEnabled: selectedConfiguration.stopButtonEnabled,
+          resetWithStartEnabled: selectedConfiguration.resetWithStartEnabled,
+          startAutomatically: false,
+        })
         const configuredSerial = (configureResult.loggerSerial || "").trim()
         if (configuredSerial) {
           serial = configuredSerial
@@ -585,8 +609,21 @@ export function VigilogPageClient() {
         throw new Error(t("feedback.prepareError.description"))
       }
 
-      return postJson<VigilogAgentConfigureResponse>("/api/services/vigilog/agent/configure", {
-        configurationId: Number(selectedConfigurationIdResolved),
+      if (!selectedConfiguration) {
+        throw new Error(t("feedback.prepareError.description"))
+      }
+
+      return configureVigilogAgent({
+        lowLimitActive: selectedConfiguration.lowLimitActive,
+        lowLimit: selectedConfiguration.lowLimit,
+        highLimitActive: selectedConfiguration.highLimitActive,
+        highLimit: selectedConfiguration.highLimit,
+        frequencyMinutes: selectedConfiguration.frequencyMinutes,
+        alarmDelayMinutes: selectedConfiguration.alarmDelayMinutes,
+        startDelayMinutes: selectedConfiguration.startDelayMinutes,
+        stopButtonEnabled: selectedConfiguration.stopButtonEnabled,
+        resetWithStartEnabled: selectedConfiguration.resetWithStartEnabled,
+        startAutomatically: false,
       })
     },
     onSuccess: async (data) => {
@@ -641,12 +678,21 @@ export function VigilogPageClient() {
         throw new Error(t("feedback.temporaryUsageStartError.loggerAlreadyActive"))
       }
 
-      const configureResult = await postJson<VigilogAgentConfigureResponse>(
-        "/api/services/vigilog/agent/configure",
-        {
-            configurationId: Number(selectedConfigurationIdResolved),
-        },
-      )
+      if (!selectedConfiguration) {
+        throw new Error(t("feedback.prepareError.description"))
+      }
+      const configureResult = await configureVigilogAgent({
+        lowLimitActive: selectedConfiguration.lowLimitActive,
+        lowLimit: selectedConfiguration.lowLimit,
+        highLimitActive: selectedConfiguration.highLimitActive,
+        highLimit: selectedConfiguration.highLimit,
+        frequencyMinutes: selectedConfiguration.frequencyMinutes,
+        alarmDelayMinutes: selectedConfiguration.alarmDelayMinutes,
+        startDelayMinutes: selectedConfiguration.startDelayMinutes,
+        stopButtonEnabled: selectedConfiguration.stopButtonEnabled,
+        resetWithStartEnabled: selectedConfiguration.resetWithStartEnabled,
+        startAutomatically: false,
+      })
       const configuredSerial = (configureResult.loggerSerial || departureLoggerSerial).trim()
 
       const createdUsage = await postJson<{ id: number; reference: string; status: string }>(
@@ -717,6 +763,17 @@ export function VigilogPageClient() {
 
   const receiveMutation = useMutation({
     mutationFn: async () => {
+      const agentResponse = await readVigilogAgent()
+      if (!agentResponse.res) {
+        throw new Error(agentResponse.details || t("feedback.receiveError.description"))
+      }
+
+      const agentSerial = (agentResponse.loggerSerial || "").trim()
+      const expectedSerial = (selectedReceiveTournee?.loggerSerial || "").trim()
+      if (agentSerial && expectedSerial && agentSerial !== expectedSerial) {
+        throw new Error(t("feedback.receiveError.serialMismatch"))
+      }
+
       const persisted = await postJson<{
         id: number
         status: string
@@ -724,14 +781,27 @@ export function VigilogPageClient() {
         trafficLight: VigilogTournee["trafficLight"]
         measurementCount: number
         hasAlarm: boolean
-        loggerSerial: string | null
-        clearedAfterReceive: boolean
-        clearDetails: string | null
-      }>(`/api/services/vigilog/tournees/${receiveTourneeId}/receive-from-agent`, {
+      }>(`/api/services/vigilog/tournees/${receiveTourneeId}/receive`, {
         Commentaire: receiveComment.trim() || null,
+        Mesures: agentResponse.measures,
       })
 
-      return persisted
+      let clearedAfterReceive = false
+      let clearDetails: string | null = null
+      try {
+        const clearResponse = await clearVigilogAgent()
+        clearedAfterReceive = clearResponse.res
+        clearDetails = clearResponse.details
+      } catch (error) {
+        clearDetails = error instanceof Error ? error.message : null
+      }
+
+      return {
+        ...persisted,
+        loggerSerial: agentSerial || expectedSerial || null,
+        clearedAfterReceive,
+        clearDetails,
+      }
     },
     onSuccess: async (data) => {
       setReceiveDialogState({ mode: "closed" })
@@ -880,6 +950,15 @@ export function VigilogPageClient() {
       }
     },
     onError: (error, variables) => {
+      setDetectedLogger(null)
+      setAutoProbeAttempted(false)
+      setAutoDetectedSerial((currentAutoDetectedSerial) => {
+        if (!currentAutoDetectedSerial) return null
+        setLoggerSerial((currentSerial) =>
+          currentSerial.trim() === currentAutoDetectedSerial ? "" : currentSerial,
+        )
+        return null
+      })
       if (!variables?.silent) {
         toast({
           variant: "destructive",

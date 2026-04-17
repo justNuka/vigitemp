@@ -12,7 +12,10 @@ import { SurveillanceEmptyState } from "./_components/monitoring-empty-state"
 import { sortSensors, type SurveillanceSortMode } from "./_helpers/monitoring-derived"
 
 interface SensorsCardsGridProps {
-  sensors: SensorWithLocation[]
+  activeSensors: SensorWithLocation[]
+  disabledSensors: SensorWithLocation[]
+  activeTotalCount?: number
+  disabledTotalCount?: number
   disabledFirst?: boolean
   isLoading?: boolean
   onSurveillanceToggle?: (
@@ -24,6 +27,8 @@ interface SensorsCardsGridProps {
   ) => void
   requireActionComment?: boolean
   onEditLocation?: (idLieu: number) => void
+  onDetailsModalStateChange?: (idLieu: number, open: boolean) => void
+  backgroundPaused?: boolean
   showNullNonResponse?: boolean
   sortMode?: SurveillanceSortMode
 }
@@ -35,12 +40,17 @@ interface SensorsCardsGridProps {
  * Trie les capteurs par statut (alarmes en priorite).
  */
 export function SensorsCardsGrid({
-  sensors,
+  activeSensors,
+  disabledSensors,
+  activeTotalCount,
+  disabledTotalCount,
   disabledFirst = false,
   isLoading = false,
   onSurveillanceToggle,
   requireActionComment = false,
   onEditLocation,
+  onDetailsModalStateChange,
+  backgroundPaused = false,
   showNullNonResponse = false,
   sortMode = "status",
 }: SensorsCardsGridProps) {
@@ -52,7 +62,7 @@ export function SensorsCardsGrid({
     })
 
   // Afficher des skeleton cards pendant le chargement
-  if (isLoading && sensors.length === 0) {
+  if (isLoading && activeSensors.length === 0 && disabledSensors.length === 0) {
     return (
       <div className="p-4 md:p-6 space-y-8">
         <div className="space-y-4">
@@ -70,14 +80,14 @@ export function SensorsCardsGrid({
     )
   }
 
-  if (sensors.length === 0) {
+  if (activeSensors.length === 0 && disabledSensors.length === 0) {
     return <SurveillanceEmptyState title={t("grid.empty_title")} />
   }
 
-  const sortedSensors = sortSensors(sensors, sortMode)
-  const disabledSensors = sortedSensors.filter((sensor) => sensor.location.surveillanceDisabled)
-  const activeSensors = sortedSensors.filter((sensor) => !sensor.location.surveillanceDisabled)
-  const countLocations = (items: SensorWithLocation[]) => new Set(items.map((sensor) => Number(sensor.location.id ?? sensor.id)).filter((id) => Number.isFinite(id))).size
+  const sortedDisabledSensors = sortSensors(disabledSensors, sortMode)
+  const sortedActiveSensors = sortSensors(activeSensors, sortMode)
+  const countLocations = (items: SensorWithLocation[], fallback?: number) =>
+    fallback ?? new Set(items.map((sensor) => Number(sensor.location.id ?? sensor.id)).filter((id) => Number.isFinite(id))).size
 
   const renderSection = (
     title: string,
@@ -134,6 +144,8 @@ export function SensorsCardsGrid({
                 onSurveillanceToggle={handleSurveillanceToggle}
                 requireActionComment={requireActionComment}
                 onEditLocation={onEditLocation}
+                onDetailsModalStateChange={onDetailsModalStateChange}
+                backgroundPaused={backgroundPaused}
                 showNullNonResponse={showNullNonResponse}
               />
             )
@@ -147,16 +159,16 @@ export function SensorsCardsGrid({
     <div className="p-4 md:p-6 flex flex-col gap-8 animate-fade-in">
       <div style={{ order: disabledFirst ? 2 : 1 }}>
         {renderSection(
-          `${t("grid.active_title")} (${countLocations(activeSensors)})`,
+          `${t("grid.active_title")} (${countLocations(activeSensors, activeTotalCount)})`,
           <Power className="h-5 w-5 text-sky-500" />,
-          activeSensors,
+          sortedActiveSensors,
         )}
       </div>
       <div style={{ order: disabledFirst ? 1 : 2 }}>
         {renderSection(
-          `${t("grid.disabled_title")} (${countLocations(disabledSensors)})`,
+          `${t("grid.disabled_title")} (${countLocations(disabledSensors, disabledTotalCount)})`,
           <PowerOff className="h-5 w-5 text-slate-400" />,
-          disabledSensors,
+          sortedDisabledSensors,
           true,
         )}
       </div>

@@ -29,12 +29,34 @@ export async function prefetchNextSensorsPage(
   queryClient: { prefetchQuery: (args: { queryKey: readonly unknown[]; queryFn: () => Promise<unknown>; staleTime: number }) => void },
   page: number,
   limit: number,
-  keyBuilder: (limit: number, page: number) => readonly unknown[],
+  keyBuilder: (
+    limit: number,
+    page: number,
+    filters?: {
+      siteIds?: number[]
+      groupIds?: number[]
+      surveillanceDisabled?: boolean
+    },
+  ) => readonly unknown[],
+  filters?: {
+    siteIds?: number[]
+    groupIds?: number[]
+    surveillanceDisabled?: boolean
+  },
 ) {
   queryClient.prefetchQuery({
-    queryKey: keyBuilder(limit, page),
+    queryKey: keyBuilder(limit, page, filters),
     queryFn: async () => {
       const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+      if (filters?.siteIds?.length) {
+        params.set("siteIds", filters.siteIds.join(","))
+      }
+      if (filters?.groupIds?.length) {
+        params.set("groupIds", filters.groupIds.join(","))
+      }
+      if (typeof filters?.surveillanceDisabled === "boolean") {
+        params.set("surveillanceDisabled", filters.surveillanceDisabled ? "1" : "0")
+      }
       return getJson(`/api/capteurs/paginated?${params}`)
     },
     staleTime: 30 * 60 * 1000,

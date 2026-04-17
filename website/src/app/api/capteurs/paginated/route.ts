@@ -20,8 +20,15 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50", 10)))
     const siteIdsStr = searchParams.get("siteIds")
     const groupIdsStr = searchParams.get("groupIds")
+    const surveillanceDisabledParam = searchParams.get("surveillanceDisabled")
     const siteIds = siteIdsStr?.split(",").map(Number).filter(Boolean) || []
     const groupIds = groupIdsStr?.split(",").map(Number).filter(Boolean) || []
+    const surveillanceDisabledFilter =
+      surveillanceDisabledParam === "1" || surveillanceDisabledParam === "true"
+        ? "disabled"
+        : surveillanceDisabledParam === "0" || surveillanceDisabledParam === "false"
+          ? "active"
+          : "all"
 
     const skip = (page - 1) * limit
 
@@ -84,6 +91,12 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
       if (accessOr.length > 0) {
         where.OR = accessOr
       }
+    }
+
+    if (surveillanceDisabledFilter === "disabled") {
+      where.Lieu_Etat = "D"
+    } else if (surveillanceDisabledFilter === "active") {
+      where.NOT = [{ Lieu_Etat: "D" }]
     }
 
     const total = await prisma.t_lieu.count({ where })

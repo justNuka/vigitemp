@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 
 type Props = {
-  sentinelRef: React.RefObject<HTMLDivElement | null>
+  sentinelRef?: React.RefObject<HTMLDivElement | null>
   hasNextPage: boolean
   isFetching: boolean
   onLoadMore: () => void

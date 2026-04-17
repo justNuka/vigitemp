@@ -14,6 +14,11 @@ import { AVATAR_PRESETS, getInitialsForAvatar, resolveAvatarSrc, toAvatarPresetV
 import { cn } from '@/lib/utils'
 import { ImageCropDialog } from '@/components/image-crop-dialog'
 
+const CROPPABLE_AVATAR_TYPES = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+])
 
 type Props = {
   userInfo: CurrentUser | null | undefined
@@ -153,10 +158,15 @@ export function AccountInfoCard({ userInfo }: Props) {
             ref={fileInputRef}
             type="file"
             className="hidden"
-            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+            accept="image/png,image/jpeg,image/webp"
             onChange={(event) => {
               const file = event.target.files?.[0]
               if (file) {
+                if (!CROPPABLE_AVATAR_TYPES.has(file.type)) {
+                  toast.error(t('avatar.upload_error'))
+                  event.target.value = ''
+                  return
+                }
                 setPendingCropFile(file)
                 setIsCropOpen(true)
                 toast.info(t('avatar.crop_opened'))

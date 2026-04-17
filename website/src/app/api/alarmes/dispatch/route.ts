@@ -338,7 +338,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         : "N/A"
       alarmTypeLabel = alarmType
       lastValueLabel = valueLabel
-      triggeredAtDate = alarm.Date_Heure_Debut_Alarme_Vrai ?? alarm.Date_Heure_Debut ?? null
+      triggeredAtDate = alarm.Date_Heure_Debut ?? null
       endedAtDate = alarm.Date_Heure_Fin ?? null
       triggeredAtLabel = formatDateTime(triggeredAtDate)
       lastMeasureAtLabel = formatDateTime(alarm.Date_Heure_Derniere_Mesure)

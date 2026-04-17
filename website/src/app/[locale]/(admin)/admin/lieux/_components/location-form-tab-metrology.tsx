@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -28,12 +28,15 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
   const t = useTranslations('locationsForm.metrology')
   const tGeneral = useTranslations('locationsForm.general')
   const { register, watch, setValue } = useFormContext<LocationFormData>()
+  const formData = watch()
 
   const setUserValue = (name: keyof LocationFormData, value: unknown) => {
     setValue(name as never, value as never, { shouldDirty: true, shouldTouch: true })
   }
-
-  const formData = watch()
+  const setIfChanged = useCallback(<K extends keyof LocationFormData>(name: K, value: LocationFormData[K]) => {
+    if (Object.is(formData[name], value)) return
+    setValue(name, value as never)
+  }, [formData, setValue])
   const selectedSerial = formData.Sonde_Numero_Serie ?? null
   const { data: adjustments = [] } = useAdjustments(selectedSerial)
   const { data: calibrations = [] } = useCalibrations(selectedSerial)
@@ -45,11 +48,11 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
 
   useEffect(() => {
     if (!selectedSerial) {
-      setValue('Unite', defaultMetrologyUnit)
-      setValue('Erreur_Justesse', undefined)
-      setValue('Incertitude', undefined)
-      setValue('Derniere_Date_Etalonnage', undefined)
-      setValue('Applied_Etalonnage_Id', undefined)
+      setIfChanged('Unite', defaultMetrologyUnit)
+      setIfChanged('Erreur_Justesse', undefined)
+      setIfChanged('Incertitude', undefined)
+      setIfChanged('Derniere_Date_Etalonnage', undefined)
+      setIfChanged('Applied_Etalonnage_Id', undefined)
       const resetTimer = window.setTimeout(() => {
         setSelectedCalibrationId('')
       }, 0)
@@ -60,15 +63,21 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
     }
 
     const unit = normalizeMetrologyUnit(latestCalibration?.Unite ?? latestAdjustment?.Unite ?? defaultMetrologyUnit) || defaultMetrologyUnit
-    setValue('Unite', unit)
-    setValue('Erreur_Justesse', latestCalibration?.Err_Justesse ?? undefined)
-    setValue('Incertitude', latestCalibration?.Incertitude ?? undefined)
+    setIfChanged('Unite', unit)
+    setIfChanged('Erreur_Justesse', latestCalibration?.Err_Justesse ?? undefined)
+    setIfChanged('Incertitude', latestCalibration?.Incertitude ?? undefined)
   }, [
+    formData.Applied_Etalonnage_Id,
+    formData.Derniere_Date_Etalonnage,
+    formData.Erreur_Justesse,
+    formData.Incertitude,
+    formData.Unite,
     latestAdjustment?.Unite,
     latestCalibration?.Err_Justesse,
     latestCalibration?.Incertitude,
     latestCalibration?.Unite,
     selectedSerial,
+    setIfChanged,
     setValue,
   ])
 
@@ -122,30 +131,30 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
     if (isExpertEdition) return
 
     if (formData.EMT_Mode === 'uncertainties') {
-      setValue('EMT_Mode', 'quart')
+      setIfChanged('EMT_Mode', 'quart')
     }
     if (formData.Prendre_En_Compte_Derive) {
-      setValue('Prendre_En_Compte_Derive', false)
+      setIfChanged('Prendre_En_Compte_Derive', false)
     }
-  }, [formData.EMT_Mode, formData.Prendre_En_Compte_Derive, isExpertEdition, setValue])
+  }, [formData.EMT_Mode, formData.Prendre_En_Compte_Derive, isExpertEdition, setIfChanged])
 
   useEffect(() => {
     const previousMode = previousModeRef.current
     if (previousMode !== formData.EMT_Mode && formData.EMT_Mode === 'uncertainties') {
       if (formData.Prendre_En_Compte_Derive !== false) {
-        setValue('Prendre_En_Compte_Derive', false)
+        setIfChanged('Prendre_En_Compte_Derive', false)
       }
       if (formData.Corriger_Erreur_Justesse !== false) {
-        setValue('Corriger_Erreur_Justesse', false)
+        setIfChanged('Corriger_Erreur_Justesse', false)
       }
     }
     previousModeRef.current = formData.EMT_Mode
-  }, [formData.Corriger_Erreur_Justesse, formData.EMT_Mode, formData.Prendre_En_Compte_Derive, setValue])
+  }, [formData.Corriger_Erreur_Justesse, formData.EMT_Mode, formData.Prendre_En_Compte_Derive, setIfChanged])
 
   useEffect(() => {
     if (formData.EMT_Mode !== 'sans-objet' || formData.Prendre_En_Compte_Derive === false) return
-    setValue('Prendre_En_Compte_Derive', false)
-  }, [formData.EMT_Mode, formData.Prendre_En_Compte_Derive, setValue])
+    setIfChanged('Prendre_En_Compte_Derive', false)
+  }, [formData.EMT_Mode, formData.Prendre_En_Compte_Derive, setIfChanged])
 
   const emtPreview = useMemo(
     () =>
@@ -178,10 +187,10 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
     const nextInf = emtPreview.toleranceInf ?? undefined
 
     if ((formData.Tolerance_Surveillance_Sup ?? undefined) !== nextSup) {
-      setValue('Tolerance_Surveillance_Sup', nextSup)
+      setIfChanged('Tolerance_Surveillance_Sup', nextSup)
     }
     if ((formData.Tolerance_Surveillance_Inf ?? undefined) !== nextInf) {
-      setValue('Tolerance_Surveillance_Inf', nextInf)
+      setIfChanged('Tolerance_Surveillance_Inf', nextInf)
     }
   }, [
     emtPreview.toleranceInf,
@@ -189,7 +198,7 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
     formData.EMT_Mode,
     formData.Tolerance_Surveillance_Inf,
     formData.Tolerance_Surveillance_Sup,
-    setValue,
+    setIfChanged,
   ])
 
   useEffect(() => {
@@ -199,10 +208,10 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
     const nextInf = formData.Est_Consigne_Inf_Active ? (formData.Consigne_Inf ?? undefined) : undefined
 
     if ((formData.Tolerance_Surveillance_Sup ?? undefined) !== nextSup) {
-      setValue('Tolerance_Surveillance_Sup', nextSup)
+      setIfChanged('Tolerance_Surveillance_Sup', nextSup)
     }
     if ((formData.Tolerance_Surveillance_Inf ?? undefined) !== nextInf) {
-      setValue('Tolerance_Surveillance_Inf', nextInf)
+      setIfChanged('Tolerance_Surveillance_Inf', nextInf)
     }
   }, [
     formData.Consigne_Inf,
@@ -212,7 +221,7 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
     formData.EMT_Mode,
     formData.Tolerance_Surveillance_Inf,
     formData.Tolerance_Surveillance_Sup,
-    setValue,
+    setIfChanged,
   ])
 
   return (

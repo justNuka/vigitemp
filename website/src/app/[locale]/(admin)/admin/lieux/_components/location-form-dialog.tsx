@@ -30,7 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLicense } from "@/components/license/license-provider";
 import { isExpert, isStandardOrExpert } from "@/lib/license-access";
 import { Check, ChevronDown, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { FormProvider, type UseFormReturn, useForm, useWatch } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
@@ -63,7 +63,7 @@ type LocationFormDialogProps = {
   showActionComment?: boolean;
   requireActionComment?: boolean;
   onCancel: () => void;
-  onSubmit: (values: LocationFormData) => void | Promise<void>;
+  onSubmit: (values: LocationFormData, submitMode?: "stay" | "close") => void | Promise<void>;
 };
 
 export function LocationFormDialog({
@@ -135,7 +135,9 @@ export function LocationFormDialog({
       toast.error(validation.error.issues[0]?.message ?? tCommon('error'));
       return;
     }
-    await onSubmit(normalized);
+    await onSubmit(normalized, 'stay');
+    setLastCommittedValues(normalized);
+    resolvedForm.reset(normalized);
   }, (errors) => showFormValidationToast(errors));
 
   const submitAndClose = resolvedForm.handleSubmit(async (values) => {
@@ -156,13 +158,17 @@ export function LocationFormDialog({
       toast.error(validation.error.issues[0]?.message ?? tCommon('error'));
       return;
     }
-    await onSubmit(normalized);
+    await onSubmit(normalized, 'close');
+    setLastCommittedValues(normalized);
     onCancel();
   }, (errors) => showFormValidationToast(errors));
   const memoryKey = `location-form:${mode}:${resolvedForm.watch('Id_Lieu') ?? 'new'}`;
-  const resetValues = (resolvedForm.getValues() as LocationFormData) ?? getDefaultLocationFormData();
+  const resetValues = useMemo(() => (
+    (resolvedForm.getValues() as LocationFormData) ?? getDefaultLocationFormData()
+  ), [resolvedForm]);
   const [activeTab, setActiveTab] = useState<string>('general');
   const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
+  const [lastCommittedValues, setLastCommittedValues] = useState<LocationFormData>(() => getDefaultLocationFormData());
 
   const requestClose = () => {
     if (!hasChanges) {
@@ -175,7 +181,13 @@ export function LocationFormDialog({
   useEffect(() => {
     if (!open || form || !formData) return;
     internalForm.reset(formData);
+    setLastCommittedValues(formData);
   }, [open, form, formData, internalForm]);
+
+  useEffect(() => {
+    if (!open) return;
+    setLastCommittedValues(resolvedForm.getValues() as LocationFormData);
+  }, [open, resolvedForm]);
 
   useEffect(() => {
     if (!open || form || !setFormData || !internalFormValues) return;
@@ -326,7 +338,7 @@ export function LocationFormDialog({
                       <DropdownMenuItem onClick={requestClose}>
                         {t('submit.cancel_and_close')}
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => resolvedForm.reset()}>
+                      <DropdownMenuItem onClick={() => resolvedForm.reset(lastCommittedValues)}>
                         {t('submit.cancel_and_stay')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>

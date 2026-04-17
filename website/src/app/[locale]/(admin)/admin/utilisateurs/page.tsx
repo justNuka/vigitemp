@@ -46,7 +46,6 @@ async function getActiveAlarmsCount() {
       where: {
         Est_Acquittee: false,
         Date_Heure_Fin: null,
-        Est_Alarme_Vrai: true,
       },
     });
   } catch {

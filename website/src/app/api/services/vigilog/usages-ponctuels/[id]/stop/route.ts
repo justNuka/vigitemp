@@ -30,7 +30,14 @@ export const POST = withAnyAuthorizationLogging(
   VIGILOG_ACCESS_CODES,
   async (req: NextRequest, ctx: HandlerContext, routeContext: { params: Promise<{ id: string }> }) => {
     try {
-      await ensureVigilogTemporaryUsageTable()
+      const hasTable = await ensureVigilogTemporaryUsageTable()
+      if (!hasTable) {
+        return apiError(
+          503,
+          "vigilog_temp_usage_table_missing",
+          "La table des usages ponctuels VigiLog n'est pas disponible sur cette installation",
+        )
+      }
 
       const { id } = await routeContext.params
       const usageId = Number(id)

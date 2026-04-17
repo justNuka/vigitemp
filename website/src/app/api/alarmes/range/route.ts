@@ -52,7 +52,6 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
     }
 
     const impactAlarmFilter = {
-      Est_Alarme_Vrai: true,
       Type: { in: ["H", "B"] },
       ...dateFilter,
     }

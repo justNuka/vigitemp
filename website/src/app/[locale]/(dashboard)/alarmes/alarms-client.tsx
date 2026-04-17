@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition, type Dispatch, type SetStateAction } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ColumnDef } from "@tanstack/react-table";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -72,6 +72,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
   const canAcknowledgeAlarm = hasPermission("ALARM_ACK_ACCESS");
   const [isRefreshing, startTransition] = useTransition();
   const [selectedAlarm, setSelectedAlarm] = useState<AlarmWithDetails | null>(null);
+  const [durationNow, setDurationNow] = useState(() => new Date());
   const [localAlarms, setLocalAlarms] = useState<AlarmWithDetails[]>(alarms);
   const [typeFilters, setTypeFilters] = useState<AlarmRowType[]>([]);
   const [commentOptions, setCommentOptions] = useState<{ id: number; type: string | null; text: string }[]>([]);
@@ -319,9 +320,12 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
   const formattedDuration = useMemo(() => {
     if (!selectedAlarm?.triggeredAt) return t("dialog.na");
     const start = new Date(selectedAlarm.triggeredAt);
-    if (!selectedAlarm.resolvedAt) return formatDistanceToNow(start, { addSuffix: true, locale: fr });
-    return formatDistanceStrict(start, new Date(selectedAlarm.resolvedAt), { locale: fr });
-  }, [selectedAlarm, t]);
+    const end = selectedAlarm.resolvedAt ? new Date(selectedAlarm.resolvedAt) : durationNow;
+    return formatDistanceStrict(start, end, {
+      locale: fr,
+      roundingMethod: "floor",
+    });
+  }, [durationNow, selectedAlarm, t]);
   const focusRange = useMemo(() => {
     if (!selectedAlarm?.triggeredAt) return null;
     const start = new Date(selectedAlarm.triggeredAt);
@@ -331,6 +335,25 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
   }, [selectedAlarm]);
 
   const cardTitle = statusFilter === "active" ? t("titles.active") : statusFilter === "acknowledged" ? t("titles.acknowledged") : t("titles.resolved");
+  const handleCloseDialog = useCallback(() => {
+    setSelectedAlarm(null);
+    setSelectedCommentId("");
+    setShowGraph(false);
+    reset({ comment: "" });
+  }, [reset]);
+
+  useEffect(() => {
+    if (!selectedAlarm || selectedAlarm.resolvedAt) return;
+
+    setDurationNow(new Date());
+    const intervalId = window.setInterval(() => {
+      setDurationNow(new Date());
+    }, 60_000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [selectedAlarm]);
 
   const content = localAlarms.length === 0 ? (
     <Card className="overflow-hidden">
@@ -415,7 +438,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
         isStatsLoading={isStatsLoading}
         alarmCount30={alarmCount30}
         focusRange={focusRange}
-        onClose={() => setSelectedAlarm(null)}
+        onClose={handleCloseDialog}
       />
     </main>
   );

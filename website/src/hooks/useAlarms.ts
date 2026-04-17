@@ -25,7 +25,6 @@ export interface Alarm {
   Libelle_Site: string | null;
   Libelle_Lieu: string | null;
   Date_Heure_Debut: string | null;
-  Est_Alarme_Vrai: boolean | null;
   Date_Heure_Fin: string | null;
   Est_Acquittee: boolean | null;
   Type: AlarmListItem["type"];
@@ -66,7 +65,6 @@ export async function fetchAlarmsPage(
     Libelle_Site: item.siteName ?? null,
     Libelle_Lieu: item.locationName ?? null,
     Date_Heure_Debut: item.timestamp ?? null,
-    Est_Alarme_Vrai: item.status === "resolved" ? false : true,
     Date_Heure_Fin: item.resolvedAt ?? null,
     Est_Acquittee: item.status === "acknowledged",
     Type: item.type,

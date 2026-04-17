@@ -46,7 +46,6 @@ export const GET = withAuthLogging(
           Valeur: true,
           Unite: true,
           Date_Heure_Debut: true,
-          Date_Heure_Debut_Alarme_Vrai: true,
           Date_Heure_Fin: true,
           t_lieu: {
             select: {
@@ -86,10 +85,7 @@ export const GET = withAuthLogging(
         maxThreshold: hasConfiguredThresholds
           ? alarm.t_lieu?.Tolerance_Surveillance_Sup ?? alarm.t_lieu?.Consigne_Sup ?? null
           : null,
-        triggeredAt:
-          alarm.Date_Heure_Debut_Alarme_Vrai?.toISOString() ||
-          alarm.Date_Heure_Debut?.toISOString() ||
-          null,
+        triggeredAt: alarm.Date_Heure_Debut?.toISOString() || null,
         endedAt: alarm.Date_Heure_Fin?.toISOString() || null,
       })
     } catch (error) {

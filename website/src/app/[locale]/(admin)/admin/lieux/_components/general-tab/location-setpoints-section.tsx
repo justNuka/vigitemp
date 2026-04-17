@@ -51,15 +51,59 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
               <p className="text-xs font-medium text-muted-foreground">{t('labels.setpoint')}</p>
               <p className="mt-1 text-sm font-medium">{formData.Consigne ?? '?'}</p>
             </div>
-            <div className="rounded-md border bg-muted/30 px-4 py-3">
-              <p className="text-xs font-medium text-muted-foreground">{t('labels.frequency')}</p>
-              <p className="mt-1 text-sm font-medium">{formData.Frequence ?? '?'}</p>
+            <div className="space-y-2">
+              <Label>{t('labels.frequency')}</Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className={isGsoSensor ? 'cursor-not-allowed' : ''}>
+                      <Input
+                        type="number"
+                        min={1}
+                        step="any"
+                        {...register('Frequence', { setValueAs: toOptionalNumber })}
+                        placeholder={t('placeholders.frequency')}
+                        disabled={isGsoSensor}
+                        className={isGsoSensor ? 'bg-muted' : ''}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  {isGsoSensor ? (
+                    <TooltipContent>
+                      <p>{t('tooltips.frequency_gso')}</p>
+                    </TooltipContent>
+                  ) : null}
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="rounded-md border bg-muted/30 px-4 py-3">
-              <p className="text-xs font-medium text-muted-foreground">{t('labels.retrigger_delay_measures')}</p>
-              <p className="mt-1 text-sm font-medium">{formData.Nb_Mesures_Temporisation_Redeclenchement ?? '?'}</p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-1">
+                <Label>{t('labels.retrigger_delay_measures')}</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex h-4 w-4 items-center justify-center text-muted-foreground"
+                        aria-label={t('labels.retrigger_delay_measures')}
+                      >
+                        <CircleHelp className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{t('tooltips.retrigger_delay_measures')}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <Input
+                type="number"
+                min={0}
+                {...register('Nb_Mesures_Temporisation_Redeclenchement', { setValueAs: toOptionalNonNegativeInteger })}
+                placeholder={t('placeholders.retrigger_delay_measures')}
+              />
             </div>
           </div>
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -73,7 +117,14 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">{t('labels.alarm_delay_minutes')}</p>
-                  <p className="font-medium">{formData.Retard_Alarme_Haut ?? '?'}</p>
+                  <Input
+                    type="number"
+                    min={1}
+                    step="any"
+                    {...register('Retard_Alarme_Haut', { setValueAs: toOptionalNumber })}
+                    placeholder={t('placeholders.delay')}
+                    className="mt-1"
+                  />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">{t('labels.upper_pre_enable')}</p>
@@ -95,7 +146,14 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">{t('labels.alarm_delay_minutes')}</p>
-                  <p className="font-medium">{formData.Retard_Alarme_Bas ?? '?'}</p>
+                  <Input
+                    type="number"
+                    min={1}
+                    step="any"
+                    {...register('Retard_Alarme_Bas', { setValueAs: toOptionalNumber })}
+                    placeholder={t('placeholders.delay')}
+                    className="mt-1"
+                  />
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">{t('labels.lower_pre_enable')}</p>

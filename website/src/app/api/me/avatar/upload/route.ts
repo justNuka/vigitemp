@@ -14,7 +14,6 @@ const ALLOWED_MIME = new Map<string, string>([
   ["image/png", ".png"],
   ["image/jpeg", ".jpg"],
   ["image/webp", ".webp"],
-  ["image/svg+xml", ".svg"],
 ])
 
 export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext) => {

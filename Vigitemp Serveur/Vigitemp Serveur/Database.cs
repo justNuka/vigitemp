@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using MySql.Data.MySqlClient;
 using System.Configuration;
@@ -1617,10 +1617,9 @@ namespace Vigitemp_Serveur
                                     cmdInsert.Transaction = transaction;
                                     cmdInsert.CommandText =
                                         "INSERT INTO t_alarme " +
-                                        "(Date_Heure_Debut, Valeur, Type, Est_Alarme_Vrai, Id_Lieu, Sonde_Numero_Serie, Unite, " +
-                                        "Est_Acquittee, Date_Heure_Derniere_Mesure, Date_Heure_Debut_Alarme_Vrai, " +
-                                        "Est_Alarme_Pour_VigiTel, Est_Mail_Envoye, Est_Tel_Acquittee) " +
-                                        "VALUES (NOW(), NULL, @type, 1, @idLieu, @serie, NULL, 0, NOW(), NOW(), 0, 0, 0);";
+                                        "(Date_Heure_Debut, Valeur, Type, Id_Lieu, Sonde_Numero_Serie, Unite, " +
+                                        "Est_Acquittee, Date_Heure_Derniere_Mesure, Est_Alarme_Pour_VigiTel, Est_Mail_Envoye, Est_Tel_Acquittee) " +
+                                        "VALUES (NOW(), NULL, @type, @idLieu, @serie, NULL, 0, NOW(), 0, 0, 0);";
                                     cmdInsert.Parameters.AddWithValue("@idLieu", idLieu);
                                     cmdInsert.Parameters.AddWithValue("@type", alarmType);
                                     cmdInsert.Parameters.AddWithValue("@serie", sondeNumeroSerie ?? string.Empty);
@@ -1641,7 +1640,7 @@ namespace Vigitemp_Serveur
                                     var cmdUpdate = this.connection_vigitemp.CreateCommand();
                                     cmdUpdate.Transaction = transaction;
                                     cmdUpdate.CommandText =
-                                        "UPDATE t_alarme SET Date_Heure_Derniere_Mesure = NOW(), Est_Alarme_Vrai = 1, " +
+                                        "UPDATE t_alarme SET Date_Heure_Derniere_Mesure = NOW(), " +
                                         "Est_Acquittee = 0, Est_Tel_Acquittee = 0 " +
                                         "WHERE Id_Alarme = @idAlarme;";
                                     alarmId = Convert.ToInt32(existing);
@@ -1669,7 +1668,7 @@ namespace Vigitemp_Serveur
                         var cmdResolve = this.connection_vigitemp.CreateCommand();
                         cmdResolve.CommandText =
                             "UPDATE t_alarme " +
-                            "SET Date_Heure_Fin = NOW(), Est_Alarme_Vrai = 0 " +
+                            "SET Date_Heure_Fin = NOW() " +
                             "WHERE Id_Lieu = @idLieu AND Type = @type AND Date_Heure_Fin IS NULL;";
                         cmdResolve.Parameters.AddWithValue("@idLieu", idLieu);
                         cmdResolve.Parameters.AddWithValue("@type", alarmType);
@@ -1710,7 +1709,7 @@ namespace Vigitemp_Serveur
 
                     var cmd = this.connection_vigitemp.CreateCommand();
                     cmd.CommandText =
-                        "SELECT Id_Alarme, Type, Date_Heure_Debut, Date_Heure_Debut_Alarme_Vrai, Date_Heure_Derniere_Mesure, Valeur, Unite " +
+                        "SELECT Id_Alarme, Type, Date_Heure_Debut, Date_Heure_Derniere_Mesure, Valeur, Unite " +
                         "FROM t_alarme " +
                         "WHERE Id_Lieu = @idLieu AND Date_Heure_Fin IS NULL " +
                         "ORDER BY Date_Heure_Debut DESC LIMIT 1;";
@@ -1725,9 +1724,6 @@ namespace Vigitemp_Serveur
                             var dateDebut = reader["Date_Heure_Debut"] == DBNull.Value
                                 ? (DateTime?)null
                                 : Convert.ToDateTime(reader["Date_Heure_Debut"]);
-                            var dateDebutVrai = reader["Date_Heure_Debut_Alarme_Vrai"] == DBNull.Value
-                                ? (DateTime?)null
-                                : Convert.ToDateTime(reader["Date_Heure_Debut_Alarme_Vrai"]);
                             var dateDerniereMesure = reader["Date_Heure_Derniere_Mesure"] == DBNull.Value
                                 ? (DateTime?)null
                                 : Convert.ToDateTime(reader["Date_Heure_Derniere_Mesure"]);
@@ -1738,7 +1734,6 @@ namespace Vigitemp_Serveur
                                 id,
                                 type,
                                 dateDebut,
-                                dateDebutVrai,
                                 dateDerniereMesure,
                                 valeur,
                                 unite);
@@ -1795,10 +1790,9 @@ namespace Vigitemp_Serveur
                                     cmdInsert.Transaction = transaction;
                                     cmdInsert.CommandText =
                                         "INSERT INTO t_alarme " +
-                                        "(Date_Heure_Debut, Valeur, Type, Est_Alarme_Vrai, Id_Lieu, Sonde_Numero_Serie, Unite, " +
-                                        "Est_Acquittee, Date_Heure_Derniere_Mesure, Date_Heure_Debut_Alarme_Vrai, " +
-                                        "Est_Alarme_Pour_VigiTel, Est_Mail_Envoye, Est_Tel_Acquittee) " +
-                                        "VALUES (NOW(), @valeur, @type, 1, @idLieu, @serie, @unite, 0, NOW(), NOW(), 0, 0, 0);";
+                                        "(Date_Heure_Debut, Valeur, Type, Id_Lieu, Sonde_Numero_Serie, Unite, " +
+                                        "Est_Acquittee, Date_Heure_Derniere_Mesure, Est_Alarme_Pour_VigiTel, Est_Mail_Envoye, Est_Tel_Acquittee) " +
+                                        "VALUES (NOW(), @valeur, @type, @idLieu, @serie, @unite, 0, NOW(), 0, 0, 0);";
                                     cmdInsert.Parameters.AddWithValue("@idLieu", idLieu);
                                     cmdInsert.Parameters.AddWithValue("@type", type);
                                     cmdInsert.Parameters.AddWithValue("@valeur", value);
@@ -1821,7 +1815,7 @@ namespace Vigitemp_Serveur
                                     var cmdUpdate = this.connection_vigitemp.CreateCommand();
                                     cmdUpdate.Transaction = transaction;
                                     cmdUpdate.CommandText =
-                                        "UPDATE t_alarme SET Valeur = @valeur, Unite = @unite, Date_Heure_Derniere_Mesure = NOW(), Est_Alarme_Vrai = 1, " +
+                                        "UPDATE t_alarme SET Valeur = @valeur, Unite = @unite, Date_Heure_Derniere_Mesure = NOW(), " +
                                         "Est_Acquittee = 0, Est_Tel_Acquittee = 0 " +
                                         "WHERE Id_Alarme = @idAlarme;";
                                     cmdUpdate.Parameters.AddWithValue("@valeur", value);
@@ -1851,7 +1845,7 @@ namespace Vigitemp_Serveur
                         var cmdResolve = this.connection_vigitemp.CreateCommand();
                         cmdResolve.CommandText =
                             "UPDATE t_alarme " +
-                            "SET Date_Heure_Fin = NOW(), Est_Alarme_Vrai = 0 " +
+                            "SET Date_Heure_Fin = NOW() " +
                             "WHERE Id_Lieu = @idLieu AND Type = @type AND Date_Heure_Fin IS NULL;";
                         cmdResolve.Parameters.AddWithValue("@idLieu", idLieu);
                         cmdResolve.Parameters.AddWithValue("@type", type);
@@ -2032,7 +2026,7 @@ namespace Vigitemp_Serveur
                         "INNER JOIN t_sonde s ON l.Sonde_Numero_Serie = s.Sonde_Numero_Serie " +
                         "INNER JOIN t_module m ON s.Id_Module = m.Id_Module " +
                         "WHERE a.Id_Alarme > @lastId " +
-                        "AND a.Date_Heure_Debut_Alarme_Vrai IS NOT NULL " +
+                        "AND a.Date_Heure_Debut IS NOT NULL " +
                         "AND m.Id_Serveur = @idServeur " +
                         "ORDER BY a.Id_Alarme ASC " +
                         "LIMIT @limit;";

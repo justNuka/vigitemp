@@ -1,4 +1,5 @@
 import { AlertTriangle } from 'lucide-react'
+import { useMemo } from 'react'
 
 import MonitoringDetailsModal from '@/components/monitoring-details-modal'
 import { Button } from '@/components/ui/button'
@@ -10,6 +11,21 @@ import type { AlarmWithDetails } from '@/lib/api'
 const hasConfiguredThresholds = (alarm: { sensor: AlarmWithDetails['sensor'] }): boolean => {
   const sensorWithMeta = alarm.sensor as AlarmWithDetails['sensor'] & { hasThresholds?: boolean }
   return sensorWithMeta.hasThresholds !== false
+}
+
+function formatAlarmNumber(value: number | null | undefined) {
+  if (value == null || !Number.isFinite(value)) return "-"
+  const rounded = Math.round((value + Number.EPSILON) * 100) / 100
+  return new Intl.NumberFormat("fr-FR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(rounded)
+}
+
+function formatAlarmValue(value: number | null | undefined, unit: string | null | undefined) {
+  const formatted = formatAlarmNumber(value)
+  if (formatted === "-") return formatted
+  return `${formatted} ${unit ?? ""}`.trim()
 }
 
 export function AlarmDetailsDialog({
@@ -40,6 +56,12 @@ export function AlarmDetailsDialog({
   focusRange,
   onClose,
 }: any) {
+  const formattedLastValue = useMemo(() => {
+    return formatAlarmValue(selectedAlarm?.sensor.currentValue ?? selectedAlarm?.value ?? null, selectedAlarm?.sensor.unit)
+  }, [selectedAlarm])
+  const formattedSupThreshold = useMemo(() => formatAlarmNumber(selectedAlarm?.sensor.maxThreshold ?? null), [selectedAlarm])
+  const formattedInfThreshold = useMemo(() => formatAlarmNumber(selectedAlarm?.sensor.minThreshold ?? null), [selectedAlarm])
+
   return (
     <>
       <Dialog open={open} onOpenChange={onClose}>
@@ -61,15 +83,15 @@ export function AlarmDetailsDialog({
           <div className="space-y-4">
             <div className="grid gap-3 rounded-xl border border-border/50 bg-muted/30 p-4 dark:bg-muted/20 md:grid-cols-2">
               <div><p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.type_label')}</p><p className="text-sm font-medium">{alarmTypeLabel}</p></div>
-              <div><p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.last_value_label')}</p><p className="text-sm font-mono font-semibold text-primary">{selectedAlarm?.sensor.currentValue ?? selectedAlarm?.value ?? '-'} {selectedAlarm?.sensor.unit}</p></div>
+              <div><p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.last_value_label')}</p><p className="text-sm font-mono font-semibold text-primary">{formattedLastValue}</p></div>
               <div><p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.start_label')}</p><p className="text-sm font-medium">{formattedStart}</p></div>
               <div><p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.end_label')}</p><p className="text-sm font-medium">{formattedEnd}</p></div>
               <div><p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.duration_label')}</p><p className="text-sm font-medium">{formattedDuration}</p></div>
               <div><p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.count_30_label')}</p><p className="text-sm font-medium">{isStatsLoading ? t('dialog.loading') : alarmCount30 !== null ? t('dialog.count_30_value', { count: alarmCount30 }) : t('dialog.na')}</p></div>
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t('dialog.thresholds_label')}</p>
-                <p className="text-sm font-mono text-muted-foreground">{selectedAlarm && hasConfiguredThresholds(selectedAlarm) ? t('dialog.sup_value', { value: selectedAlarm.sensor.maxThreshold ?? '-', unit: selectedAlarm.sensor.unit ?? '' }) : '-'}</p>
-                <p className="text-sm font-mono text-muted-foreground">{selectedAlarm && hasConfiguredThresholds(selectedAlarm) ? t('dialog.inf_value', { value: selectedAlarm.sensor.minThreshold ?? '-', unit: selectedAlarm.sensor.unit ?? '' }) : '-'}</p>
+                <p className="text-sm font-mono text-muted-foreground">{selectedAlarm && hasConfiguredThresholds(selectedAlarm) ? t('dialog.sup_value', { value: formattedSupThreshold, unit: selectedAlarm.sensor.unit ?? '' }) : '-'}</p>
+                <p className="text-sm font-mono text-muted-foreground">{selectedAlarm && hasConfiguredThresholds(selectedAlarm) ? t('dialog.inf_value', { value: formattedInfThreshold, unit: selectedAlarm.sensor.unit ?? '' }) : '-'}</p>
               </div>
             </div>
 

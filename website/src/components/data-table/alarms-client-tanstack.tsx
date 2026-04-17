@@ -55,7 +55,6 @@ interface AlarmRow {
   Type: "high" | "low" | "no-response" | "sector" | "temperature";
   Libelle_Lieu: string;
   Date_Heure_Debut: string;
-  Est_Alarme_Vrai: boolean | null;
   Date_Heure_Fin: string | null;
   Est_Acquittee: boolean | null;
   Min_Threshold: number | null;
@@ -151,7 +150,6 @@ export function AlarmsClientTanStack() {
       Type: rawAlarm.Type,
       Libelle_Lieu: rawAlarm.Libelle_Lieu || t("unknown_location"),
       Date_Heure_Debut: String(rawAlarm.Date_Heure_Debut) || "",
-      Est_Alarme_Vrai: rawAlarm.Est_Alarme_Vrai,
       Date_Heure_Fin: rawAlarm.Date_Heure_Fin ? String(rawAlarm.Date_Heure_Fin) : null,
       Est_Acquittee: rawAlarm.Est_Acquittee,
       Min_Threshold: rawAlarm.Min_Threshold ?? null,
@@ -221,7 +219,6 @@ export function AlarmsClientTanStack() {
       Type: alarm.Type,
       Libelle_Lieu: alarm.Libelle_Lieu || t("unknown_location"),
       Date_Heure_Debut: String(alarm.Date_Heure_Debut) || "",
-      Est_Alarme_Vrai: alarm.Est_Alarme_Vrai,
       Date_Heure_Fin: alarm.Date_Heure_Fin ? String(alarm.Date_Heure_Fin) : null,
       Est_Acquittee: alarm.Est_Acquittee,
       Min_Threshold: alarm.Min_Threshold ?? null,
@@ -395,7 +392,7 @@ export function AlarmsClientTanStack() {
         ),
       },
       {
-        accessorKey: "Est_Alarme_Vrai",
+        accessorKey: "Status",
         header: t("columns.status"),
         meta: {
           headerClassName: "!border-l border-white/25 !border-r border-white/25",

@@ -34,6 +34,8 @@ type MonitoringSiteSectionProps = {
   ) => void
   requireActionComment?: boolean
   onEditLocation?: (idLieu: number) => void
+  onDetailsModalStateChange?: (idLieu: number, open: boolean) => void
+  backgroundPaused?: boolean
   showNullNonResponse: boolean
   sortMode: SurveillanceSortMode
 }
@@ -84,6 +86,8 @@ export function MonitoringSiteSection({
   onSurveillanceToggle,
   requireActionComment = false,
   onEditLocation,
+  onDetailsModalStateChange,
+  backgroundPaused = false,
   showNullNonResponse,
   sortMode,
 }: MonitoringSiteSectionProps) {
@@ -193,6 +197,8 @@ export function MonitoringSiteSection({
                           handleSurveillanceToggle,
                           requireActionComment,
                           onEditLocation,
+                          onDetailsModalStateChange,
+                          backgroundPaused,
                           showNullNonResponse,
                         )}
                       />

@@ -60,12 +60,15 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
 
   useEffect(() => {
     if (!isGsoSensor) return
+    if (formData.Frequence === 15) return
     setValue('Frequence', 15)
-  }, [isGsoSensor, setValue])
+  }, [formData.Frequence, isGsoSensor, setValue])
 
   useEffect(() => {
     if (!formData.Sonde_Numero_Serie) {
-      setValue('Id_Module', null)
+      if (formData.Id_Module !== null) {
+        setValue('Id_Module', null)
+      }
       if (formData.Lieu_Etat !== 'D') {
         setValue('Lieu_Etat', 'D', { shouldDirty: true })
         autoDisabledMonitoringRef.current = true
@@ -73,13 +76,16 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
       return
     }
 
-    setValue('Id_Module', selectedSensor?.Id_Module ?? null)
+    const nextModuleId = selectedSensor?.Id_Module ?? null
+    if ((formData.Id_Module ?? null) !== nextModuleId) {
+      setValue('Id_Module', nextModuleId)
+    }
 
     if (autoDisabledMonitoringRef.current && formData.Lieu_Etat === 'D') {
       setValue('Lieu_Etat', null, { shouldDirty: true })
       autoDisabledMonitoringRef.current = false
     }
-  }, [formData.Lieu_Etat, formData.Sonde_Numero_Serie, selectedSensor?.Id_Module, setValue])
+  }, [formData.Id_Module, formData.Lieu_Etat, formData.Sonde_Numero_Serie, selectedSensor?.Id_Module, setValue])
 
   return (
     <TabsContent value="general" className="space-y-4">

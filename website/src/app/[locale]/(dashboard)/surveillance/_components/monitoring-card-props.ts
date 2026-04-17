@@ -20,6 +20,8 @@ export function buildMonitoringCardProps(
   onSurveillanceToggle: SurveillanceToggleHandler,
   requireActionComment: boolean,
   onEditLocation: MonitoringCardProps["onEditLocation"],
+  onDetailsModalStateChange: MonitoringCardProps["onDetailsModalStateChange"],
+  backgroundPaused: boolean,
   showNullNonResponse: boolean,
 ): MonitoringCardProps {
   return {
@@ -58,6 +60,8 @@ export function buildMonitoringCardProps(
       onSurveillanceToggle(id, action, newState, durationMinutes ?? null, actionComment ?? null),
     requireActionComment,
     onEditLocation,
+    onDetailsModalStateChange,
+    backgroundPaused,
     showNullNonResponse,
   }
 }

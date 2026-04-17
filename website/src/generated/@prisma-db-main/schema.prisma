@@ -39,29 +39,25 @@ model t_actionneur {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model t_alarme {
-  Id_Alarme                    Int              @id @default(autoincrement())
-  Date_Heure_Debut             DateTime?        @db.DateTime(0)
-  Valeur                       Float?           @db.Float
-  Type                         String?          @db.VarChar(1)
-  Date_Heure_Fin               DateTime?        @db.DateTime(0)
-  Est_Alarme_Vrai              Boolean?         @default(false)
-  Id_Lieu                      Int?
-  Sonde_Numero_Serie           String?          @db.VarChar(50)
-  Unite                        String?          @db.VarChar(10)
-  Est_Acquittee                Boolean?         @default(false)
-  Date_Heure_Derniere_Mesure   DateTime?        @db.DateTime(0)
-  Date_Heure_Debut_Alarme_Vrai DateTime?        @db.DateTime(0)
-  Est_Alarme_Pour_VigiTel      Boolean?         @default(false)
-  Est_Mail_Envoye              Boolean?
-  Est_Tel_Acquittee            Boolean?
-  t_lieu                       t_lieu?          @relation("lieu_alarme", fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ALARME")
-  t_notification               t_notification[]
+  Id_Alarme                  Int              @id @default(autoincrement())
+  Date_Heure_Debut           DateTime?        @db.DateTime(0)
+  Valeur                     Float?           @db.Float
+  Type                       String?          @db.VarChar(1)
+  Date_Heure_Fin             DateTime?        @db.DateTime(0)
+  Id_Lieu                    Int?
+  Sonde_Numero_Serie         String?          @db.VarChar(50)
+  Unite                      String?          @db.VarChar(10)
+  Est_Acquittee              Boolean?         @default(false)
+  Date_Heure_Derniere_Mesure DateTime?        @db.DateTime(0)
+  Est_Alarme_Pour_VigiTel    Boolean?         @default(false)
+  Est_Mail_Envoye            Boolean?
+  Est_Tel_Acquittee          Boolean?
+  t_lieu                     t_lieu?          @relation("lieu_alarme", fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ALARME")
+  t_notification             t_notification[]
 
   @@index([Est_Acquittee], map: "IDX_Est_Acquittee")
-  @@index([Est_Alarme_Vrai], map: "IDX_Est_Alarme_Vrai")
   @@index([Date_Heure_Debut], map: "IDX_Date_Heure_Debut")
   @@index([Date_Heure_Fin], map: "IDX_Date_Heure_Fin")
-  @@index([Date_Heure_Debut_Alarme_Vrai], map: "IDX_Date_Heure_Debut_Alarme_Vrai")
   @@index([Date_Heure_Derniere_Mesure], map: "IDX_Date_Heure_Derniere_Mesure")
   @@index([Sonde_Numero_Serie], map: "IDX_Sonde_Numero_Serie")
   @@index([Id_Lieu], map: "IDX_Id_Lieu")
@@ -71,30 +67,26 @@ model t_alarme {
 }
 
 model t_alarme_histo {
-  Id_Alarme_Histo              Int       @id @default(autoincrement())
-  Id_Alarme                    Int
-  Date_Heure_Debut             DateTime? @db.DateTime(0)
-  Valeur                       Float?    @db.Float
-  Type                         String?   @db.VarChar(1)
-  Date_Heure_Fin               DateTime? @db.DateTime(0)
-  Est_Alarme_Vrai              Boolean?  @default(false)
-  Id_Lieu                      Int?
-  Sonde_Numero_Serie           String?   @db.VarChar(50)
-  Unite                        String?   @db.VarChar(10)
-  Est_Acquittee                Boolean?  @default(false)
-  Date_Heure_Derniere_Mesure   DateTime? @db.DateTime(0)
-  Date_Heure_Debut_Alarme_Vrai DateTime? @db.DateTime(0)
-  Est_Alarme_Pour_VigiTel      Boolean?
-  Est_Mail_Envoye              Boolean?
-  Est_Tel_Acquittee            Boolean?
-  Date_Heure_Acquittement      DateTime? @db.DateTime(0)
-  t_lieu                       t_lieu?   @relation("lieu_alarme_histo", fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ALARME_HISTO")
+  Id_Alarme_Histo            Int       @id @default(autoincrement())
+  Id_Alarme                  Int
+  Date_Heure_Debut           DateTime? @db.DateTime(0)
+  Valeur                     Float?    @db.Float
+  Type                       String?   @db.VarChar(1)
+  Date_Heure_Fin             DateTime? @db.DateTime(0)
+  Id_Lieu                    Int?
+  Sonde_Numero_Serie         String?   @db.VarChar(50)
+  Unite                      String?   @db.VarChar(10)
+  Est_Acquittee              Boolean?  @default(false)
+  Date_Heure_Derniere_Mesure DateTime? @db.DateTime(0)
+  Est_Alarme_Pour_VigiTel    Boolean?
+  Est_Mail_Envoye            Boolean?
+  Est_Tel_Acquittee          Boolean?
+  Date_Heure_Acquittement    DateTime? @db.DateTime(0)
+  t_lieu                     t_lieu?   @relation("lieu_alarme_histo", fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ALARME_HISTO")
 
   @@index([Est_Acquittee], map: "IDX_HISTO_Est_Acquittee")
-  @@index([Est_Alarme_Vrai], map: "IDX_HISTO_Est_Alarme_Vrai")
   @@index([Date_Heure_Debut], map: "IDX_HISTO_Date_Heure_Debut")
   @@index([Date_Heure_Fin], map: "IDX_HISTO_Date_Heure_Fin")
-  @@index([Date_Heure_Debut_Alarme_Vrai], map: "IDX_HISTO_Date_Heure_Debut_Alarme_Vrai")
   @@index([Date_Heure_Derniere_Mesure], map: "IDX_HISTO_Date_Heure_Derniere_Mesure")
   @@index([Sonde_Numero_Serie], map: "IDX_HISTO_Sonde_Numero_Serie")
   @@index([Id_Alarme], map: "IDX_HISTO_Id_Alarme")
@@ -395,7 +387,7 @@ model t_lieu {
   Est_Lieu_GSO                              Boolean?                @default(false)
   Est_Son_Alarme_Active                     Boolean                 @default(true)
   Planning_Actif                            Boolean                 @default(false)
-  Planning_Regle_Existe                     Boolean                 @default(false)
+  Planning_Regle_Existe                     Boolean?                @default(false)
   Planning_Source_Regle_Id                  Int?
   Planning_Derniere_Maj                     DateTime?               @db.DateTime(0)
   Est_Redeclenchement_Immediat              Boolean                 @default(false)
@@ -598,11 +590,11 @@ model t_utilisateur {
   t_notification_delivery                                                                   t_notification_delivery[]
   t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur    t_vigilog_configuration[]      @relation("t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur")
   t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur         t_vigilog_configuration[]      @relation("t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur")
-  t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur     t_vigilog_usage_ponctuel[]     @relation("t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur")
-  t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur t_vigilog_usage_ponctuel[]     @relation("t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur")
   t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur            t_vigilog_tournee[]            @relation("t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur")
   t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur                 t_vigilog_tournee[]            @relation("t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur")
   t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur                  t_vigilog_tournee[]            @relation("t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur")
+  t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur t_vigilog_usage_ponctuel[]     @relation("t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur")
+  t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur     t_vigilog_usage_ponctuel[]     @relation("t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur")
 
   @@index([Est_Archive], map: "IDX_Est_Archive")
   @@index([Profil_Utilisateur], map: "IDX_Profil_Utilisateur")
@@ -848,8 +840,8 @@ model t_vigilog_configuration {
   Date_Heure_Maj                                                               DateTime?                  @db.DateTime(0)
   t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur t_utilisateur?             @relation("t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur", fields: [Id_Utilisateur_Creation], references: [Id_Utilisateur], map: "FK_t_vigilog_configuration_user_creation")
   t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur      t_utilisateur?             @relation("t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur", fields: [Id_Utilisateur_Maj], references: [Id_Utilisateur], map: "FK_t_vigilog_configuration_user_maj")
-  t_vigilog_usage_ponctuel                                                     t_vigilog_usage_ponctuel[]
   t_vigilog_tournee                                                            t_vigilog_tournee[]
+  t_vigilog_usage_ponctuel                                                     t_vigilog_usage_ponctuel[]
 
   @@index([Id_Utilisateur_Creation], map: "IDX_t_vigilog_configuration_user_create")
   @@index([Id_Utilisateur_Maj], map: "IDX_t_vigilog_configuration_user_update")
@@ -894,15 +886,17 @@ model t_vigilog_usage_ponctuel {
   Commentaire_Arret                                                              String?                  @db.Text
   Date_Heure_Creation                                                            DateTime                 @default(now()) @db.DateTime(0)
   Date_Heure_Maj                                                                 DateTime?                @db.DateTime(0)
-  t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur t_utilisateur            @relation("t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur", fields: [Id_Utilisateur_Demarrage], references: [Id_Utilisateur], map: "FK_t_vigilog_usage_ponctuel_user_start")
-  t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur     t_utilisateur?           @relation("t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur", fields: [Id_Utilisateur_Arret], references: [Id_Utilisateur], map: "FK_t_vigilog_usage_ponctuel_user_stop")
-  t_vigilog_configuration                                                        t_vigilog_configuration? @relation(fields: [Id_VigiLog_Configuration], references: [Id_VigiLog_Configuration], map: "FK_t_vigilog_usage_ponctuel_configuration")
-  t_vigilog                                                                      t_vigilog?               @relation(fields: [Id_VigiLog], references: [Id_VigiLog], map: "FK_t_vigilog_usage_ponctuel_logger")
+  t_vigilog_configuration                                                        t_vigilog_configuration? @relation(fields: [Id_VigiLog_Configuration], references: [Id_VigiLog_Configuration], onDelete: NoAction, onUpdate: NoAction, map: "FK_t_vigilog_usage_ponctuel_configuration")
+  t_vigilog                                                                      t_vigilog?               @relation(fields: [Id_VigiLog], references: [Id_VigiLog], onDelete: NoAction, onUpdate: NoAction, map: "FK_t_vigilog_usage_ponctuel_logger")
+  t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur t_utilisateur            @relation("t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur", fields: [Id_Utilisateur_Demarrage], references: [Id_Utilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_t_vigilog_usage_ponctuel_user_start")
+  t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur     t_utilisateur?           @relation("t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur", fields: [Id_Utilisateur_Arret], references: [Id_Utilisateur], onDelete: NoAction, onUpdate: NoAction, map: "FK_t_vigilog_usage_ponctuel_user_stop")
 
   @@index([Statut], map: "IDX_t_vigilog_usage_ponctuel_statut")
   @@index([Numero_Serie_VigiLog], map: "IDX_t_vigilog_usage_ponctuel_logger")
   @@index([Id_Utilisateur_Demarrage], map: "IDX_t_vigilog_usage_ponctuel_started_by")
   @@index([Id_Utilisateur_Arret], map: "IDX_t_vigilog_usage_ponctuel_stopped_by")
+  @@index([Id_VigiLog_Configuration], map: "FK_t_vigilog_usage_ponctuel_configuration")
+  @@index([Id_VigiLog], map: "FK_t_vigilog_usage_ponctuel_logger")
 }
 
 model t_vigilog_tournee {

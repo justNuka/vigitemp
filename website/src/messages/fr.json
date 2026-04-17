@@ -298,8 +298,8 @@
       "alert_sensors": "Pré-alarmes + alarmes",
       "total_locations": "Nombre total de lieux affichés",
       "ok_locations": "Lieux sans alarme active",
-      "alert_locations": "Lieux en pré-alarme ou en alarme",
-      "critical_locations": "Lieux en alarme critique ou non-réponse"
+      "alert_locations": "Lieux en pré-alarme ou en alarme terminée à acquitter",
+      "critical_locations": "Lieux en alarme en cours"
     },
     "status": {
       "active": "Surveillance active",
@@ -345,7 +345,9 @@
     "legend": {
       "technical_alarm": "Alarme technique",
       "pre_alarm_threshold": "Seuil pré-alarme"
-    }
+    },
+    "load_more_active": "Charger plus de lieux en surveillance",
+    "load_more_disabled": "Charger plus de lieux d?sactiv?s"
   },
   "surveillanceStatus": {
     "inactive": "Désactivée",
@@ -610,6 +612,7 @@
         "type": "Type",
         "location": "Lieu / Sonde",
         "last_value": "Dernière valeur",
+        "triggered_value": "Valeur de déclenchement",
         "thresholds": "Consignes sup/inf",
         "triggered_at": "Déclenchée",
         "status": "Statut",
@@ -3859,6 +3862,9 @@
     },
     "observations": {
       "empty": "Aucune observation"
+    },
+    "details": {
+      "loading_hint": "Graphiques en pause pendant l'ouverture d'une fen?tre."
     }
   },
   "adminDashboard": {
@@ -5042,7 +5048,8 @@
       },
       "receiveError": {
         "title": "Réception impossible",
-        "description": "La réception de la tournée a échoué."
+        "description": "La réception de la tournée a échoué.",
+        "serialMismatch": "Le VigiLog détecté sur la base ne correspond pas à la tournée sélectionnée."
       },
       "ackSuccess": {
         "title": "Tournée acquittée",

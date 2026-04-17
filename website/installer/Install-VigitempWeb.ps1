@@ -357,10 +357,10 @@ $dbMain = Read-InstallValue (T "Nom BDD principale" "Main DB name") "vigi_main"
 $dbMeasure = Read-InstallValue (T "Nom BDD mesures" "Measure DB name") "vigi_mesures"
 $dbChat = Read-InstallValue (T "Nom BDD chat" "Chat DB name") "vigi_chat"
 $cacheTtl = Read-InstallValue (T "Cache TTL (secondes)" "Cache TTL (seconds)") "30"
-$logsDir = Read-InstallValue (T "Dossier des logs" "Logs directory") (Join-Path $programData "Vigitemp\web-logs")
-$licensePath = Read-InstallValue (T "Chemin licence site (.vtlic)" "Website license path (.vtlic)") (Join-Path $programData "Vigitemp\licenses\license.vtlic")
-$licensePublicKeyPath = Read-InstallValue (T "Chemin cle publique licence (.pem)" "License public key path (.pem)") (Join-Path $programData "Vigitemp\license_keys\public_key.pem")
-$agentSecretPrivateKeyPath = Read-InstallValue (T "Chemin cle privee secret agent (.pem)" "Agent secret private key path (.pem)") (Join-Path $programData "Vigitemp\license_keys\agent_secret_private.pem")
+$logsDir = Read-InstallValue (T "Dossier des logs" "Logs directory") (Join-Path $programData "VigiSensys\web-logs")
+$licensePath = Read-InstallValue (T "Chemin licence site (.vtlic)" "Website license path (.vtlic)") (Join-Path $programData "VigiSensys\licenses\license.vtlic")
+$licensePublicKeyPath = Read-InstallValue (T "Chemin cle publique licence (.pem)" "License public key path (.pem)") (Join-Path $programData "VigiSensys\license_keys\public_key.pem")
+$agentSecretPrivateKeyPath = Read-InstallValue (T "Chemin cle privee secret agent (.pem)" "Agent secret private key path (.pem)") (Join-Path $programData "VigiSensys\license_keys\agent_secret_private.pem")
 $agentPort = Read-InstallValue (T "Port agent local" "Local agent port") "8000"
 $agentTimeoutMs = Read-InstallValue (T "Timeout agent local (ms)" "Local agent timeout (ms)") "1500"
 $agentActiveWindowMinutes = Read-InstallValue (T "Fenetre active agent (minutes)" "Agent active window (minutes)") "15"
@@ -372,7 +372,7 @@ $hotlineRefreshTokenTtl = Read-InstallValue (T "TTL refresh hotline (minutes)" "
 $cspConnectSrc = Read-InstallValue (T "CSP connect-src supplementaires (CSV, optionnel)" "Additional CSP connect-src values (CSV, optional)") "http://127.0.0.1:8000,http://localhost:8000"
 $allowedDevOrigins = Read-InstallValue (T "Origins dev autorisees (CSV, optionnel)" "Allowed dev origins (CSV, optional)") ""
 if ([string]::IsNullOrWhiteSpace($AlarmDispatchSecretFile)) {
-    $AlarmDispatchSecretFile = Join-Path $programData "Vigitemp\shared-secrets\alarm-dispatch-secret.txt"
+    $AlarmDispatchSecretFile = Join-Path $programData "VigiSensys\shared-secrets\alarm-dispatch-secret.txt"
 }
 $dispatchSecret = Resolve-DispatchSecret -providedSecret $AlarmDispatchSecret -providedFilePath $AlarmDispatchSecretFile -interactiveMode (-not $Silent) -defaultSharedSecretPath $AlarmDispatchSecretFile
 $jwtSecret = Resolve-GeneratedSecretValue -label (T "JWT principal" "Primary JWT")

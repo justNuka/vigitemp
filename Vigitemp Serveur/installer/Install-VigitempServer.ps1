@@ -261,7 +261,7 @@ $licenseShowWhileSnoozed = Read-InstallValue (T "Afficher alarmes pendant snooze
 $settingsCacheSeconds = Read-InstallValue (T "Cache reglages alarmes (secondes)" "Alarm settings cache (seconds)") "60"
 $metrologyLogDetailed = Read-InstallValue (T "Logs metrologie detailles (true/false)" "Detailed metrology logs (true/false)") "false"
 if ([string]::IsNullOrWhiteSpace($AlarmDispatchSecretFile)) {
-    $AlarmDispatchSecretFile = Join-Path $programData "Vigitemp\shared-secrets\alarm-dispatch-secret.txt"
+    $AlarmDispatchSecretFile = Join-Path $programData "VigiSensys\shared-secrets\alarm-dispatch-secret.txt"
 }
 $alarmSecret = Resolve-DispatchSecret -providedSecret $AlarmDispatchSecret -providedFilePath $AlarmDispatchSecretFile -defaultSharedSecretPath $AlarmDispatchSecretFile
 

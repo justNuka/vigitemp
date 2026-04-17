@@ -370,11 +370,18 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
 
 
-    const [siteOptions, lieuOptions] = await Promise.all([
+    const [siteRows, lieuOptions] = await Promise.all([
       prisma.t_lieu.findMany({
         where: applyAccessFilter(siteId ? { Id_Site: siteId } : {}, accessFilter),
-        select: { Id_Site: true, t_site: { select: { Libelle_Site: true } } },
-        distinct: ["Id_Site"],
+        select: {
+          Id_Site: true,
+          t_site: {
+            select: {
+              Id_Site: true,
+              Libelle_Site: true,
+            },
+          },
+        },
         orderBy: { Id_Site: "asc" },
       }),
       prisma.t_lieu.findMany({
@@ -384,6 +391,14 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
       }),
     ])
 
+    const sitesById = new Map<number, { id: number; name: string }>()
+    for (const row of siteRows) {
+      const resolvedSiteId = row.t_site?.Id_Site ?? row.Id_Site ?? null
+      const resolvedSiteName = row.t_site?.Libelle_Site ?? null
+      if (!resolvedSiteId || !resolvedSiteName || sitesById.has(resolvedSiteId)) continue
+      sitesById.set(resolvedSiteId, { id: resolvedSiteId, name: resolvedSiteName })
+    }
+
     return apiOk(
 
       {
@@ -391,9 +406,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
         data: formatted,
 
         filters: {
-          sites: siteOptions
-            .filter((row) => row.Id_Site && row.t_site?.Libelle_Site)
-            .map((row) => ({ id: row.Id_Site as number, name: row.t_site?.Libelle_Site as string })),
+          sites: Array.from(sitesById.values()),
           lieux: lieuOptions
             .filter((row) => row.Id_Lieu && row.Nom_Lieu)
             .map((row) => ({ id: row.Id_Lieu, name: row.Nom_Lieu as string })),

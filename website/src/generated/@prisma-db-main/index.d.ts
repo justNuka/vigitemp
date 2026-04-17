@@ -5444,11 +5444,11 @@ export namespace Prisma {
     t_notification_delivery: number
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur: number
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur: number
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur: number
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur: number
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur: number
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur: number
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur: number
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur: number
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur: number
   }
 
   export type T_utilisateurCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5459,11 +5459,11 @@ export namespace Prisma {
     t_notification_delivery?: boolean | T_utilisateurCountOutputTypeCountT_notification_deliveryArgs
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: boolean | T_utilisateurCountOutputTypeCountT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurArgs
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: boolean | T_utilisateurCountOutputTypeCountT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurArgs
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: boolean | T_utilisateurCountOutputTypeCountT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: boolean | T_utilisateurCountOutputTypeCountT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurArgs
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: boolean | T_utilisateurCountOutputTypeCountT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurArgs
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: boolean | T_utilisateurCountOutputTypeCountT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurArgs
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: boolean | T_utilisateurCountOutputTypeCountT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurArgs
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: boolean | T_utilisateurCountOutputTypeCountT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurArgs
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: boolean | T_utilisateurCountOutputTypeCountT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs
   }
 
   // Custom InputTypes
@@ -5529,20 +5529,6 @@ export namespace Prisma {
   /**
    * T_utilisateurCountOutputType without action
    */
-  export type T_utilisateurCountOutputTypeCountT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: t_vigilog_usage_ponctuelWhereInput
-  }
-
-  /**
-   * T_utilisateurCountOutputType without action
-   */
-  export type T_utilisateurCountOutputTypeCountT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: t_vigilog_usage_ponctuelWhereInput
-  }
-
-  /**
-   * T_utilisateurCountOutputType without action
-   */
   export type T_utilisateurCountOutputTypeCountT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: t_vigilog_tourneeWhereInput
   }
@@ -5559,6 +5545,20 @@ export namespace Prisma {
    */
   export type T_utilisateurCountOutputTypeCountT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: t_vigilog_tourneeWhereInput
+  }
+
+  /**
+   * T_utilisateurCountOutputType without action
+   */
+  export type T_utilisateurCountOutputTypeCountT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: t_vigilog_usage_ponctuelWhereInput
+  }
+
+  /**
+   * T_utilisateurCountOutputType without action
+   */
+  export type T_utilisateurCountOutputTypeCountT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: t_vigilog_usage_ponctuelWhereInput
   }
 
 
@@ -5753,13 +5753,13 @@ export namespace Prisma {
    */
 
   export type T_vigilog_configurationCountOutputType = {
-    t_vigilog_usage_ponctuel: number
     t_vigilog_tournee: number
+    t_vigilog_usage_ponctuel: number
   }
 
   export type T_vigilog_configurationCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    t_vigilog_usage_ponctuel?: boolean | T_vigilog_configurationCountOutputTypeCountT_vigilog_usage_ponctuelArgs
     t_vigilog_tournee?: boolean | T_vigilog_configurationCountOutputTypeCountT_vigilog_tourneeArgs
+    t_vigilog_usage_ponctuel?: boolean | T_vigilog_configurationCountOutputTypeCountT_vigilog_usage_ponctuelArgs
   }
 
   // Custom InputTypes
@@ -5776,15 +5776,15 @@ export namespace Prisma {
   /**
    * T_vigilog_configurationCountOutputType without action
    */
-  export type T_vigilog_configurationCountOutputTypeCountT_vigilog_usage_ponctuelArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: t_vigilog_usage_ponctuelWhereInput
+  export type T_vigilog_configurationCountOutputTypeCountT_vigilog_tourneeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: t_vigilog_tourneeWhereInput
   }
 
   /**
    * T_vigilog_configurationCountOutputType without action
    */
-  export type T_vigilog_configurationCountOutputTypeCountT_vigilog_tourneeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: t_vigilog_tourneeWhereInput
+  export type T_vigilog_configurationCountOutputTypeCountT_vigilog_usage_ponctuelArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: t_vigilog_usage_ponctuelWhereInput
   }
 
 
@@ -7054,13 +7054,11 @@ export namespace Prisma {
     Valeur: number | null
     Type: string | null
     Date_Heure_Fin: Date | null
-    Est_Alarme_Vrai: boolean | null
     Id_Lieu: number | null
     Sonde_Numero_Serie: string | null
     Unite: string | null
     Est_Acquittee: boolean | null
     Date_Heure_Derniere_Mesure: Date | null
-    Date_Heure_Debut_Alarme_Vrai: Date | null
     Est_Alarme_Pour_VigiTel: boolean | null
     Est_Mail_Envoye: boolean | null
     Est_Tel_Acquittee: boolean | null
@@ -7072,13 +7070,11 @@ export namespace Prisma {
     Valeur: number | null
     Type: string | null
     Date_Heure_Fin: Date | null
-    Est_Alarme_Vrai: boolean | null
     Id_Lieu: number | null
     Sonde_Numero_Serie: string | null
     Unite: string | null
     Est_Acquittee: boolean | null
     Date_Heure_Derniere_Mesure: Date | null
-    Date_Heure_Debut_Alarme_Vrai: Date | null
     Est_Alarme_Pour_VigiTel: boolean | null
     Est_Mail_Envoye: boolean | null
     Est_Tel_Acquittee: boolean | null
@@ -7090,13 +7086,11 @@ export namespace Prisma {
     Valeur: number
     Type: number
     Date_Heure_Fin: number
-    Est_Alarme_Vrai: number
     Id_Lieu: number
     Sonde_Numero_Serie: number
     Unite: number
     Est_Acquittee: number
     Date_Heure_Derniere_Mesure: number
-    Date_Heure_Debut_Alarme_Vrai: number
     Est_Alarme_Pour_VigiTel: number
     Est_Mail_Envoye: number
     Est_Tel_Acquittee: number
@@ -7122,13 +7116,11 @@ export namespace Prisma {
     Valeur?: true
     Type?: true
     Date_Heure_Fin?: true
-    Est_Alarme_Vrai?: true
     Id_Lieu?: true
     Sonde_Numero_Serie?: true
     Unite?: true
     Est_Acquittee?: true
     Date_Heure_Derniere_Mesure?: true
-    Date_Heure_Debut_Alarme_Vrai?: true
     Est_Alarme_Pour_VigiTel?: true
     Est_Mail_Envoye?: true
     Est_Tel_Acquittee?: true
@@ -7140,13 +7132,11 @@ export namespace Prisma {
     Valeur?: true
     Type?: true
     Date_Heure_Fin?: true
-    Est_Alarme_Vrai?: true
     Id_Lieu?: true
     Sonde_Numero_Serie?: true
     Unite?: true
     Est_Acquittee?: true
     Date_Heure_Derniere_Mesure?: true
-    Date_Heure_Debut_Alarme_Vrai?: true
     Est_Alarme_Pour_VigiTel?: true
     Est_Mail_Envoye?: true
     Est_Tel_Acquittee?: true
@@ -7158,13 +7148,11 @@ export namespace Prisma {
     Valeur?: true
     Type?: true
     Date_Heure_Fin?: true
-    Est_Alarme_Vrai?: true
     Id_Lieu?: true
     Sonde_Numero_Serie?: true
     Unite?: true
     Est_Acquittee?: true
     Date_Heure_Derniere_Mesure?: true
-    Date_Heure_Debut_Alarme_Vrai?: true
     Est_Alarme_Pour_VigiTel?: true
     Est_Mail_Envoye?: true
     Est_Tel_Acquittee?: true
@@ -7263,13 +7251,11 @@ export namespace Prisma {
     Valeur: number | null
     Type: string | null
     Date_Heure_Fin: Date | null
-    Est_Alarme_Vrai: boolean | null
     Id_Lieu: number | null
     Sonde_Numero_Serie: string | null
     Unite: string | null
     Est_Acquittee: boolean | null
     Date_Heure_Derniere_Mesure: Date | null
-    Date_Heure_Debut_Alarme_Vrai: Date | null
     Est_Alarme_Pour_VigiTel: boolean | null
     Est_Mail_Envoye: boolean | null
     Est_Tel_Acquittee: boolean | null
@@ -7300,13 +7286,11 @@ export namespace Prisma {
     Valeur?: boolean
     Type?: boolean
     Date_Heure_Fin?: boolean
-    Est_Alarme_Vrai?: boolean
     Id_Lieu?: boolean
     Sonde_Numero_Serie?: boolean
     Unite?: boolean
     Est_Acquittee?: boolean
     Date_Heure_Derniere_Mesure?: boolean
-    Date_Heure_Debut_Alarme_Vrai?: boolean
     Est_Alarme_Pour_VigiTel?: boolean
     Est_Mail_Envoye?: boolean
     Est_Tel_Acquittee?: boolean
@@ -7323,19 +7307,17 @@ export namespace Prisma {
     Valeur?: boolean
     Type?: boolean
     Date_Heure_Fin?: boolean
-    Est_Alarme_Vrai?: boolean
     Id_Lieu?: boolean
     Sonde_Numero_Serie?: boolean
     Unite?: boolean
     Est_Acquittee?: boolean
     Date_Heure_Derniere_Mesure?: boolean
-    Date_Heure_Debut_Alarme_Vrai?: boolean
     Est_Alarme_Pour_VigiTel?: boolean
     Est_Mail_Envoye?: boolean
     Est_Tel_Acquittee?: boolean
   }
 
-  export type t_alarmeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Alarme" | "Date_Heure_Debut" | "Valeur" | "Type" | "Date_Heure_Fin" | "Est_Alarme_Vrai" | "Id_Lieu" | "Sonde_Numero_Serie" | "Unite" | "Est_Acquittee" | "Date_Heure_Derniere_Mesure" | "Date_Heure_Debut_Alarme_Vrai" | "Est_Alarme_Pour_VigiTel" | "Est_Mail_Envoye" | "Est_Tel_Acquittee", ExtArgs["result"]["t_alarme"]>
+  export type t_alarmeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Alarme" | "Date_Heure_Debut" | "Valeur" | "Type" | "Date_Heure_Fin" | "Id_Lieu" | "Sonde_Numero_Serie" | "Unite" | "Est_Acquittee" | "Date_Heure_Derniere_Mesure" | "Est_Alarme_Pour_VigiTel" | "Est_Mail_Envoye" | "Est_Tel_Acquittee", ExtArgs["result"]["t_alarme"]>
   export type t_alarmeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     t_lieu?: boolean | t_alarme$t_lieuArgs<ExtArgs>
     t_notification?: boolean | t_alarme$t_notificationArgs<ExtArgs>
@@ -7354,13 +7336,11 @@ export namespace Prisma {
       Valeur: number | null
       Type: string | null
       Date_Heure_Fin: Date | null
-      Est_Alarme_Vrai: boolean | null
       Id_Lieu: number | null
       Sonde_Numero_Serie: string | null
       Unite: string | null
       Est_Acquittee: boolean | null
       Date_Heure_Derniere_Mesure: Date | null
-      Date_Heure_Debut_Alarme_Vrai: Date | null
       Est_Alarme_Pour_VigiTel: boolean | null
       Est_Mail_Envoye: boolean | null
       Est_Tel_Acquittee: boolean | null
@@ -7740,13 +7720,11 @@ export namespace Prisma {
     readonly Valeur: FieldRef<"t_alarme", 'Float'>
     readonly Type: FieldRef<"t_alarme", 'String'>
     readonly Date_Heure_Fin: FieldRef<"t_alarme", 'DateTime'>
-    readonly Est_Alarme_Vrai: FieldRef<"t_alarme", 'Boolean'>
     readonly Id_Lieu: FieldRef<"t_alarme", 'Int'>
     readonly Sonde_Numero_Serie: FieldRef<"t_alarme", 'String'>
     readonly Unite: FieldRef<"t_alarme", 'String'>
     readonly Est_Acquittee: FieldRef<"t_alarme", 'Boolean'>
     readonly Date_Heure_Derniere_Mesure: FieldRef<"t_alarme", 'DateTime'>
-    readonly Date_Heure_Debut_Alarme_Vrai: FieldRef<"t_alarme", 'DateTime'>
     readonly Est_Alarme_Pour_VigiTel: FieldRef<"t_alarme", 'Boolean'>
     readonly Est_Mail_Envoye: FieldRef<"t_alarme", 'Boolean'>
     readonly Est_Tel_Acquittee: FieldRef<"t_alarme", 'Boolean'>
@@ -8192,13 +8170,11 @@ export namespace Prisma {
     Valeur: number | null
     Type: string | null
     Date_Heure_Fin: Date | null
-    Est_Alarme_Vrai: boolean | null
     Id_Lieu: number | null
     Sonde_Numero_Serie: string | null
     Unite: string | null
     Est_Acquittee: boolean | null
     Date_Heure_Derniere_Mesure: Date | null
-    Date_Heure_Debut_Alarme_Vrai: Date | null
     Est_Alarme_Pour_VigiTel: boolean | null
     Est_Mail_Envoye: boolean | null
     Est_Tel_Acquittee: boolean | null
@@ -8212,13 +8188,11 @@ export namespace Prisma {
     Valeur: number | null
     Type: string | null
     Date_Heure_Fin: Date | null
-    Est_Alarme_Vrai: boolean | null
     Id_Lieu: number | null
     Sonde_Numero_Serie: string | null
     Unite: string | null
     Est_Acquittee: boolean | null
     Date_Heure_Derniere_Mesure: Date | null
-    Date_Heure_Debut_Alarme_Vrai: Date | null
     Est_Alarme_Pour_VigiTel: boolean | null
     Est_Mail_Envoye: boolean | null
     Est_Tel_Acquittee: boolean | null
@@ -8232,13 +8206,11 @@ export namespace Prisma {
     Valeur: number
     Type: number
     Date_Heure_Fin: number
-    Est_Alarme_Vrai: number
     Id_Lieu: number
     Sonde_Numero_Serie: number
     Unite: number
     Est_Acquittee: number
     Date_Heure_Derniere_Mesure: number
-    Date_Heure_Debut_Alarme_Vrai: number
     Est_Alarme_Pour_VigiTel: number
     Est_Mail_Envoye: number
     Est_Tel_Acquittee: number
@@ -8268,13 +8240,11 @@ export namespace Prisma {
     Valeur?: true
     Type?: true
     Date_Heure_Fin?: true
-    Est_Alarme_Vrai?: true
     Id_Lieu?: true
     Sonde_Numero_Serie?: true
     Unite?: true
     Est_Acquittee?: true
     Date_Heure_Derniere_Mesure?: true
-    Date_Heure_Debut_Alarme_Vrai?: true
     Est_Alarme_Pour_VigiTel?: true
     Est_Mail_Envoye?: true
     Est_Tel_Acquittee?: true
@@ -8288,13 +8258,11 @@ export namespace Prisma {
     Valeur?: true
     Type?: true
     Date_Heure_Fin?: true
-    Est_Alarme_Vrai?: true
     Id_Lieu?: true
     Sonde_Numero_Serie?: true
     Unite?: true
     Est_Acquittee?: true
     Date_Heure_Derniere_Mesure?: true
-    Date_Heure_Debut_Alarme_Vrai?: true
     Est_Alarme_Pour_VigiTel?: true
     Est_Mail_Envoye?: true
     Est_Tel_Acquittee?: true
@@ -8308,13 +8276,11 @@ export namespace Prisma {
     Valeur?: true
     Type?: true
     Date_Heure_Fin?: true
-    Est_Alarme_Vrai?: true
     Id_Lieu?: true
     Sonde_Numero_Serie?: true
     Unite?: true
     Est_Acquittee?: true
     Date_Heure_Derniere_Mesure?: true
-    Date_Heure_Debut_Alarme_Vrai?: true
     Est_Alarme_Pour_VigiTel?: true
     Est_Mail_Envoye?: true
     Est_Tel_Acquittee?: true
@@ -8415,13 +8381,11 @@ export namespace Prisma {
     Valeur: number | null
     Type: string | null
     Date_Heure_Fin: Date | null
-    Est_Alarme_Vrai: boolean | null
     Id_Lieu: number | null
     Sonde_Numero_Serie: string | null
     Unite: string | null
     Est_Acquittee: boolean | null
     Date_Heure_Derniere_Mesure: Date | null
-    Date_Heure_Debut_Alarme_Vrai: Date | null
     Est_Alarme_Pour_VigiTel: boolean | null
     Est_Mail_Envoye: boolean | null
     Est_Tel_Acquittee: boolean | null
@@ -8454,13 +8418,11 @@ export namespace Prisma {
     Valeur?: boolean
     Type?: boolean
     Date_Heure_Fin?: boolean
-    Est_Alarme_Vrai?: boolean
     Id_Lieu?: boolean
     Sonde_Numero_Serie?: boolean
     Unite?: boolean
     Est_Acquittee?: boolean
     Date_Heure_Derniere_Mesure?: boolean
-    Date_Heure_Debut_Alarme_Vrai?: boolean
     Est_Alarme_Pour_VigiTel?: boolean
     Est_Mail_Envoye?: boolean
     Est_Tel_Acquittee?: boolean
@@ -8477,20 +8439,18 @@ export namespace Prisma {
     Valeur?: boolean
     Type?: boolean
     Date_Heure_Fin?: boolean
-    Est_Alarme_Vrai?: boolean
     Id_Lieu?: boolean
     Sonde_Numero_Serie?: boolean
     Unite?: boolean
     Est_Acquittee?: boolean
     Date_Heure_Derniere_Mesure?: boolean
-    Date_Heure_Debut_Alarme_Vrai?: boolean
     Est_Alarme_Pour_VigiTel?: boolean
     Est_Mail_Envoye?: boolean
     Est_Tel_Acquittee?: boolean
     Date_Heure_Acquittement?: boolean
   }
 
-  export type t_alarme_histoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Alarme_Histo" | "Id_Alarme" | "Date_Heure_Debut" | "Valeur" | "Type" | "Date_Heure_Fin" | "Est_Alarme_Vrai" | "Id_Lieu" | "Sonde_Numero_Serie" | "Unite" | "Est_Acquittee" | "Date_Heure_Derniere_Mesure" | "Date_Heure_Debut_Alarme_Vrai" | "Est_Alarme_Pour_VigiTel" | "Est_Mail_Envoye" | "Est_Tel_Acquittee" | "Date_Heure_Acquittement", ExtArgs["result"]["t_alarme_histo"]>
+  export type t_alarme_histoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Alarme_Histo" | "Id_Alarme" | "Date_Heure_Debut" | "Valeur" | "Type" | "Date_Heure_Fin" | "Id_Lieu" | "Sonde_Numero_Serie" | "Unite" | "Est_Acquittee" | "Date_Heure_Derniere_Mesure" | "Est_Alarme_Pour_VigiTel" | "Est_Mail_Envoye" | "Est_Tel_Acquittee" | "Date_Heure_Acquittement", ExtArgs["result"]["t_alarme_histo"]>
   export type t_alarme_histoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     t_lieu?: boolean | t_alarme_histo$t_lieuArgs<ExtArgs>
   }
@@ -8507,13 +8467,11 @@ export namespace Prisma {
       Valeur: number | null
       Type: string | null
       Date_Heure_Fin: Date | null
-      Est_Alarme_Vrai: boolean | null
       Id_Lieu: number | null
       Sonde_Numero_Serie: string | null
       Unite: string | null
       Est_Acquittee: boolean | null
       Date_Heure_Derniere_Mesure: Date | null
-      Date_Heure_Debut_Alarme_Vrai: Date | null
       Est_Alarme_Pour_VigiTel: boolean | null
       Est_Mail_Envoye: boolean | null
       Est_Tel_Acquittee: boolean | null
@@ -8894,13 +8852,11 @@ export namespace Prisma {
     readonly Valeur: FieldRef<"t_alarme_histo", 'Float'>
     readonly Type: FieldRef<"t_alarme_histo", 'String'>
     readonly Date_Heure_Fin: FieldRef<"t_alarme_histo", 'DateTime'>
-    readonly Est_Alarme_Vrai: FieldRef<"t_alarme_histo", 'Boolean'>
     readonly Id_Lieu: FieldRef<"t_alarme_histo", 'Int'>
     readonly Sonde_Numero_Serie: FieldRef<"t_alarme_histo", 'String'>
     readonly Unite: FieldRef<"t_alarme_histo", 'String'>
     readonly Est_Acquittee: FieldRef<"t_alarme_histo", 'Boolean'>
     readonly Date_Heure_Derniere_Mesure: FieldRef<"t_alarme_histo", 'DateTime'>
-    readonly Date_Heure_Debut_Alarme_Vrai: FieldRef<"t_alarme_histo", 'DateTime'>
     readonly Est_Alarme_Pour_VigiTel: FieldRef<"t_alarme_histo", 'Boolean'>
     readonly Est_Mail_Envoye: FieldRef<"t_alarme_histo", 'Boolean'>
     readonly Est_Tel_Acquittee: FieldRef<"t_alarme_histo", 'Boolean'>
@@ -23999,7 +23955,7 @@ export namespace Prisma {
     Est_Lieu_GSO: boolean | null
     Est_Son_Alarme_Active: boolean
     Planning_Actif: boolean
-    Planning_Regle_Existe: boolean
+    Planning_Regle_Existe: boolean | null
     Planning_Source_Regle_Id: number | null
     Planning_Derniere_Maj: Date | null
     Est_Redeclenchement_Immediat: boolean
@@ -24321,7 +24277,7 @@ export namespace Prisma {
       Est_Lieu_GSO: boolean | null
       Est_Son_Alarme_Active: boolean
       Planning_Actif: boolean
-      Planning_Regle_Existe: boolean
+      Planning_Regle_Existe: boolean | null
       Planning_Source_Regle_Id: number | null
       Planning_Derniere_Maj: Date | null
       Est_Redeclenchement_Immediat: boolean
@@ -36867,11 +36823,11 @@ export namespace Prisma {
     t_notification_delivery?: boolean | t_utilisateur$t_notification_deliveryArgs<ExtArgs>
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: boolean | t_utilisateur$t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurArgs<ExtArgs>
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: boolean | t_utilisateur$t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurArgs<ExtArgs>
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: boolean | t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs>
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: boolean | t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurArgs<ExtArgs>
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: boolean | t_utilisateur$t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurArgs<ExtArgs>
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: boolean | t_utilisateur$t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurArgs<ExtArgs>
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: boolean | t_utilisateur$t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurArgs<ExtArgs>
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: boolean | t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurArgs<ExtArgs>
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: boolean | t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs>
     _count?: boolean | T_utilisateurCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["t_utilisateur"]>
 
@@ -36910,11 +36866,11 @@ export namespace Prisma {
     t_notification_delivery?: boolean | t_utilisateur$t_notification_deliveryArgs<ExtArgs>
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: boolean | t_utilisateur$t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurArgs<ExtArgs>
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: boolean | t_utilisateur$t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurArgs<ExtArgs>
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: boolean | t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs>
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: boolean | t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurArgs<ExtArgs>
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: boolean | t_utilisateur$t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurArgs<ExtArgs>
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: boolean | t_utilisateur$t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurArgs<ExtArgs>
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: boolean | t_utilisateur$t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurArgs<ExtArgs>
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: boolean | t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurArgs<ExtArgs>
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: boolean | t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs>
     _count?: boolean | T_utilisateurCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -36928,11 +36884,11 @@ export namespace Prisma {
       t_notification_delivery: Prisma.$t_notification_deliveryPayload<ExtArgs>[]
       t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur: Prisma.$t_vigilog_configurationPayload<ExtArgs>[]
       t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur: Prisma.$t_vigilog_configurationPayload<ExtArgs>[]
-      t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur: Prisma.$t_vigilog_usage_ponctuelPayload<ExtArgs>[]
-      t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur: Prisma.$t_vigilog_usage_ponctuelPayload<ExtArgs>[]
       t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur: Prisma.$t_vigilog_tourneePayload<ExtArgs>[]
       t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur: Prisma.$t_vigilog_tourneePayload<ExtArgs>[]
       t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur: Prisma.$t_vigilog_tourneePayload<ExtArgs>[]
+      t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur: Prisma.$t_vigilog_usage_ponctuelPayload<ExtArgs>[]
+      t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur: Prisma.$t_vigilog_usage_ponctuelPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       Id_Utilisateur: number
@@ -37303,11 +37259,11 @@ export namespace Prisma {
     t_notification_delivery<T extends t_utilisateur$t_notification_deliveryArgs<ExtArgs> = {}>(args?: Subset<T, t_utilisateur$t_notification_deliveryArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_notification_deliveryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur<T extends t_utilisateur$t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurArgs<ExtArgs> = {}>(args?: Subset<T, t_utilisateur$t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_vigilog_configurationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur<T extends t_utilisateur$t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurArgs<ExtArgs> = {}>(args?: Subset<T, t_utilisateur$t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_vigilog_configurationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur<T extends t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs> = {}>(args?: Subset<T, t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_vigilog_usage_ponctuelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur<T extends t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurArgs<ExtArgs> = {}>(args?: Subset<T, t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_vigilog_usage_ponctuelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur<T extends t_utilisateur$t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurArgs<ExtArgs> = {}>(args?: Subset<T, t_utilisateur$t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_vigilog_tourneePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur<T extends t_utilisateur$t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurArgs<ExtArgs> = {}>(args?: Subset<T, t_utilisateur$t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_vigilog_tourneePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur<T extends t_utilisateur$t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurArgs<ExtArgs> = {}>(args?: Subset<T, t_utilisateur$t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_vigilog_tourneePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur<T extends t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurArgs<ExtArgs> = {}>(args?: Subset<T, t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_vigilog_usage_ponctuelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur<T extends t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs> = {}>(args?: Subset<T, t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_vigilog_usage_ponctuelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -37874,54 +37830,6 @@ export namespace Prisma {
   }
 
   /**
-   * t_utilisateur.t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur
-   */
-  export type t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_vigilog_usage_ponctuel
-     */
-    select?: t_vigilog_usage_ponctuelSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_vigilog_usage_ponctuel
-     */
-    omit?: t_vigilog_usage_ponctuelOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: t_vigilog_usage_ponctuelInclude<ExtArgs> | null
-    where?: t_vigilog_usage_ponctuelWhereInput
-    orderBy?: t_vigilog_usage_ponctuelOrderByWithRelationInput | t_vigilog_usage_ponctuelOrderByWithRelationInput[]
-    cursor?: t_vigilog_usage_ponctuelWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: T_vigilog_usage_ponctuelScalarFieldEnum | T_vigilog_usage_ponctuelScalarFieldEnum[]
-  }
-
-  /**
-   * t_utilisateur.t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur
-   */
-  export type t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_vigilog_usage_ponctuel
-     */
-    select?: t_vigilog_usage_ponctuelSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_vigilog_usage_ponctuel
-     */
-    omit?: t_vigilog_usage_ponctuelOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: t_vigilog_usage_ponctuelInclude<ExtArgs> | null
-    where?: t_vigilog_usage_ponctuelWhereInput
-    orderBy?: t_vigilog_usage_ponctuelOrderByWithRelationInput | t_vigilog_usage_ponctuelOrderByWithRelationInput[]
-    cursor?: t_vigilog_usage_ponctuelWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: T_vigilog_usage_ponctuelScalarFieldEnum | T_vigilog_usage_ponctuelScalarFieldEnum[]
-  }
-
-  /**
    * t_utilisateur.t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur
    */
   export type t_utilisateur$t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -37991,6 +37899,54 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: T_vigilog_tourneeScalarFieldEnum | T_vigilog_tourneeScalarFieldEnum[]
+  }
+
+  /**
+   * t_utilisateur.t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur
+   */
+  export type t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_vigilog_usage_ponctuel
+     */
+    select?: t_vigilog_usage_ponctuelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_vigilog_usage_ponctuel
+     */
+    omit?: t_vigilog_usage_ponctuelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_vigilog_usage_ponctuelInclude<ExtArgs> | null
+    where?: t_vigilog_usage_ponctuelWhereInput
+    orderBy?: t_vigilog_usage_ponctuelOrderByWithRelationInput | t_vigilog_usage_ponctuelOrderByWithRelationInput[]
+    cursor?: t_vigilog_usage_ponctuelWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: T_vigilog_usage_ponctuelScalarFieldEnum | T_vigilog_usage_ponctuelScalarFieldEnum[]
+  }
+
+  /**
+   * t_utilisateur.t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur
+   */
+  export type t_utilisateur$t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_vigilog_usage_ponctuel
+     */
+    select?: t_vigilog_usage_ponctuelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_vigilog_usage_ponctuel
+     */
+    omit?: t_vigilog_usage_ponctuelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_vigilog_usage_ponctuelInclude<ExtArgs> | null
+    where?: t_vigilog_usage_ponctuelWhereInput
+    orderBy?: t_vigilog_usage_ponctuelOrderByWithRelationInput | t_vigilog_usage_ponctuelOrderByWithRelationInput[]
+    cursor?: t_vigilog_usage_ponctuelWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: T_vigilog_usage_ponctuelScalarFieldEnum | T_vigilog_usage_ponctuelScalarFieldEnum[]
   }
 
   /**
@@ -54453,8 +54409,8 @@ export namespace Prisma {
     Date_Heure_Maj?: boolean
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: boolean | t_vigilog_configuration$t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurArgs<ExtArgs>
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: boolean | t_vigilog_configuration$t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurArgs<ExtArgs>
-    t_vigilog_usage_ponctuel?: boolean | t_vigilog_configuration$t_vigilog_usage_ponctuelArgs<ExtArgs>
     t_vigilog_tournee?: boolean | t_vigilog_configuration$t_vigilog_tourneeArgs<ExtArgs>
+    t_vigilog_usage_ponctuel?: boolean | t_vigilog_configuration$t_vigilog_usage_ponctuelArgs<ExtArgs>
     _count?: boolean | T_vigilog_configurationCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["t_vigilog_configuration"]>
 
@@ -54485,8 +54441,8 @@ export namespace Prisma {
   export type t_vigilog_configurationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: boolean | t_vigilog_configuration$t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurArgs<ExtArgs>
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: boolean | t_vigilog_configuration$t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurArgs<ExtArgs>
-    t_vigilog_usage_ponctuel?: boolean | t_vigilog_configuration$t_vigilog_usage_ponctuelArgs<ExtArgs>
     t_vigilog_tournee?: boolean | t_vigilog_configuration$t_vigilog_tourneeArgs<ExtArgs>
+    t_vigilog_usage_ponctuel?: boolean | t_vigilog_configuration$t_vigilog_usage_ponctuelArgs<ExtArgs>
     _count?: boolean | T_vigilog_configurationCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -54495,8 +54451,8 @@ export namespace Prisma {
     objects: {
       t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur: Prisma.$t_utilisateurPayload<ExtArgs> | null
       t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur: Prisma.$t_utilisateurPayload<ExtArgs> | null
-      t_vigilog_usage_ponctuel: Prisma.$t_vigilog_usage_ponctuelPayload<ExtArgs>[]
       t_vigilog_tournee: Prisma.$t_vigilog_tourneePayload<ExtArgs>[]
+      t_vigilog_usage_ponctuel: Prisma.$t_vigilog_usage_ponctuelPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       Id_VigiLog_Configuration: number
@@ -54859,8 +54815,8 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur<T extends t_vigilog_configuration$t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurArgs<ExtArgs> = {}>(args?: Subset<T, t_vigilog_configuration$t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurArgs<ExtArgs>>): Prisma__t_utilisateurClient<$Result.GetResult<Prisma.$t_utilisateurPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur<T extends t_vigilog_configuration$t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurArgs<ExtArgs> = {}>(args?: Subset<T, t_vigilog_configuration$t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurArgs<ExtArgs>>): Prisma__t_utilisateurClient<$Result.GetResult<Prisma.$t_utilisateurPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-    t_vigilog_usage_ponctuel<T extends t_vigilog_configuration$t_vigilog_usage_ponctuelArgs<ExtArgs> = {}>(args?: Subset<T, t_vigilog_configuration$t_vigilog_usage_ponctuelArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_vigilog_usage_ponctuelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     t_vigilog_tournee<T extends t_vigilog_configuration$t_vigilog_tourneeArgs<ExtArgs> = {}>(args?: Subset<T, t_vigilog_configuration$t_vigilog_tourneeArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_vigilog_tourneePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    t_vigilog_usage_ponctuel<T extends t_vigilog_configuration$t_vigilog_usage_ponctuelArgs<ExtArgs> = {}>(args?: Subset<T, t_vigilog_configuration$t_vigilog_usage_ponctuelArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_vigilog_usage_ponctuelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -55294,30 +55250,6 @@ export namespace Prisma {
   }
 
   /**
-   * t_vigilog_configuration.t_vigilog_usage_ponctuel
-   */
-  export type t_vigilog_configuration$t_vigilog_usage_ponctuelArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_vigilog_usage_ponctuel
-     */
-    select?: t_vigilog_usage_ponctuelSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_vigilog_usage_ponctuel
-     */
-    omit?: t_vigilog_usage_ponctuelOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: t_vigilog_usage_ponctuelInclude<ExtArgs> | null
-    where?: t_vigilog_usage_ponctuelWhereInput
-    orderBy?: t_vigilog_usage_ponctuelOrderByWithRelationInput | t_vigilog_usage_ponctuelOrderByWithRelationInput[]
-    cursor?: t_vigilog_usage_ponctuelWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: T_vigilog_usage_ponctuelScalarFieldEnum | T_vigilog_usage_ponctuelScalarFieldEnum[]
-  }
-
-  /**
    * t_vigilog_configuration.t_vigilog_tournee
    */
   export type t_vigilog_configuration$t_vigilog_tourneeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -55339,6 +55271,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: T_vigilog_tourneeScalarFieldEnum | T_vigilog_tourneeScalarFieldEnum[]
+  }
+
+  /**
+   * t_vigilog_configuration.t_vigilog_usage_ponctuel
+   */
+  export type t_vigilog_configuration$t_vigilog_usage_ponctuelArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_vigilog_usage_ponctuel
+     */
+    select?: t_vigilog_usage_ponctuelSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_vigilog_usage_ponctuel
+     */
+    omit?: t_vigilog_usage_ponctuelOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_vigilog_usage_ponctuelInclude<ExtArgs> | null
+    where?: t_vigilog_usage_ponctuelWhereInput
+    orderBy?: t_vigilog_usage_ponctuelOrderByWithRelationInput | t_vigilog_usage_ponctuelOrderByWithRelationInput[]
+    cursor?: t_vigilog_usage_ponctuelWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: T_vigilog_usage_ponctuelScalarFieldEnum | T_vigilog_usage_ponctuelScalarFieldEnum[]
   }
 
   /**
@@ -56799,10 +56755,10 @@ export namespace Prisma {
     Commentaire_Arret?: boolean
     Date_Heure_Creation?: boolean
     Date_Heure_Maj?: boolean
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: boolean | t_utilisateurDefaultArgs<ExtArgs>
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: boolean | t_vigilog_usage_ponctuel$t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs>
     t_vigilog_configuration?: boolean | t_vigilog_usage_ponctuel$t_vigilog_configurationArgs<ExtArgs>
     t_vigilog?: boolean | t_vigilog_usage_ponctuel$t_vigilogArgs<ExtArgs>
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: boolean | t_utilisateurDefaultArgs<ExtArgs>
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: boolean | t_vigilog_usage_ponctuel$t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs>
   }, ExtArgs["result"]["t_vigilog_usage_ponctuel"]>
 
 
@@ -56828,19 +56784,19 @@ export namespace Prisma {
 
   export type t_vigilog_usage_ponctuelOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_VigiLog_Usage_Ponctuel" | "Reference_Usage" | "Id_VigiLog_Configuration" | "Id_VigiLog" | "Nom_Configuration" | "Numero_Serie_VigiLog" | "Nom_Lieu_Temporaire" | "Statut" | "Id_Utilisateur_Demarrage" | "Date_Heure_Demarrage" | "Commentaire_Demarrage" | "Id_Utilisateur_Arret" | "Date_Heure_Arret" | "Commentaire_Arret" | "Date_Heure_Creation" | "Date_Heure_Maj", ExtArgs["result"]["t_vigilog_usage_ponctuel"]>
   export type t_vigilog_usage_ponctuelInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: boolean | t_utilisateurDefaultArgs<ExtArgs>
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: boolean | t_vigilog_usage_ponctuel$t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs>
     t_vigilog_configuration?: boolean | t_vigilog_usage_ponctuel$t_vigilog_configurationArgs<ExtArgs>
     t_vigilog?: boolean | t_vigilog_usage_ponctuel$t_vigilogArgs<ExtArgs>
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: boolean | t_utilisateurDefaultArgs<ExtArgs>
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: boolean | t_vigilog_usage_ponctuel$t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs>
   }
 
   export type $t_vigilog_usage_ponctuelPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "t_vigilog_usage_ponctuel"
     objects: {
-      t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur: Prisma.$t_utilisateurPayload<ExtArgs>
-      t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur: Prisma.$t_utilisateurPayload<ExtArgs> | null
       t_vigilog_configuration: Prisma.$t_vigilog_configurationPayload<ExtArgs> | null
       t_vigilog: Prisma.$t_vigilogPayload<ExtArgs> | null
+      t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur: Prisma.$t_utilisateurPayload<ExtArgs>
+      t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur: Prisma.$t_utilisateurPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       Id_VigiLog_Usage_Ponctuel: number
@@ -57199,10 +57155,10 @@ export namespace Prisma {
    */
   export interface Prisma__t_vigilog_usage_ponctuelClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur<T extends t_utilisateurDefaultArgs<ExtArgs> = {}>(args?: Subset<T, t_utilisateurDefaultArgs<ExtArgs>>): Prisma__t_utilisateurClient<$Result.GetResult<Prisma.$t_utilisateurPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur<T extends t_vigilog_usage_ponctuel$t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs> = {}>(args?: Subset<T, t_vigilog_usage_ponctuel$t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs>>): Prisma__t_utilisateurClient<$Result.GetResult<Prisma.$t_utilisateurPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     t_vigilog_configuration<T extends t_vigilog_usage_ponctuel$t_vigilog_configurationArgs<ExtArgs> = {}>(args?: Subset<T, t_vigilog_usage_ponctuel$t_vigilog_configurationArgs<ExtArgs>>): Prisma__t_vigilog_configurationClient<$Result.GetResult<Prisma.$t_vigilog_configurationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     t_vigilog<T extends t_vigilog_usage_ponctuel$t_vigilogArgs<ExtArgs> = {}>(args?: Subset<T, t_vigilog_usage_ponctuel$t_vigilogArgs<ExtArgs>>): Prisma__t_vigilogClient<$Result.GetResult<Prisma.$t_vigilogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur<T extends t_utilisateurDefaultArgs<ExtArgs> = {}>(args?: Subset<T, t_utilisateurDefaultArgs<ExtArgs>>): Prisma__t_utilisateurClient<$Result.GetResult<Prisma.$t_utilisateurPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur<T extends t_vigilog_usage_ponctuel$t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs> = {}>(args?: Subset<T, t_vigilog_usage_ponctuel$t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs>>): Prisma__t_utilisateurClient<$Result.GetResult<Prisma.$t_utilisateurPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -57596,25 +57552,6 @@ export namespace Prisma {
   }
 
   /**
-   * t_vigilog_usage_ponctuel.t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur
-   */
-  export type t_vigilog_usage_ponctuel$t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the t_utilisateur
-     */
-    select?: t_utilisateurSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the t_utilisateur
-     */
-    omit?: t_utilisateurOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: t_utilisateurInclude<ExtArgs> | null
-    where?: t_utilisateurWhereInput
-  }
-
-  /**
    * t_vigilog_usage_ponctuel.t_vigilog_configuration
    */
   export type t_vigilog_usage_ponctuel$t_vigilog_configurationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -57650,6 +57587,25 @@ export namespace Prisma {
      */
     include?: t_vigilogInclude<ExtArgs> | null
     where?: t_vigilogWhereInput
+  }
+
+  /**
+   * t_vigilog_usage_ponctuel.t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur
+   */
+  export type t_vigilog_usage_ponctuel$t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_utilisateur
+     */
+    select?: t_utilisateurSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_utilisateur
+     */
+    omit?: t_utilisateurOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: t_utilisateurInclude<ExtArgs> | null
+    where?: t_utilisateurWhereInput
   }
 
   /**
@@ -59234,13 +59190,11 @@ export namespace Prisma {
     Valeur: 'Valeur',
     Type: 'Type',
     Date_Heure_Fin: 'Date_Heure_Fin',
-    Est_Alarme_Vrai: 'Est_Alarme_Vrai',
     Id_Lieu: 'Id_Lieu',
     Sonde_Numero_Serie: 'Sonde_Numero_Serie',
     Unite: 'Unite',
     Est_Acquittee: 'Est_Acquittee',
     Date_Heure_Derniere_Mesure: 'Date_Heure_Derniere_Mesure',
-    Date_Heure_Debut_Alarme_Vrai: 'Date_Heure_Debut_Alarme_Vrai',
     Est_Alarme_Pour_VigiTel: 'Est_Alarme_Pour_VigiTel',
     Est_Mail_Envoye: 'Est_Mail_Envoye',
     Est_Tel_Acquittee: 'Est_Tel_Acquittee'
@@ -59256,13 +59210,11 @@ export namespace Prisma {
     Valeur: 'Valeur',
     Type: 'Type',
     Date_Heure_Fin: 'Date_Heure_Fin',
-    Est_Alarme_Vrai: 'Est_Alarme_Vrai',
     Id_Lieu: 'Id_Lieu',
     Sonde_Numero_Serie: 'Sonde_Numero_Serie',
     Unite: 'Unite',
     Est_Acquittee: 'Est_Acquittee',
     Date_Heure_Derniere_Mesure: 'Date_Heure_Derniere_Mesure',
-    Date_Heure_Debut_Alarme_Vrai: 'Date_Heure_Debut_Alarme_Vrai',
     Est_Alarme_Pour_VigiTel: 'Est_Alarme_Pour_VigiTel',
     Est_Mail_Envoye: 'Est_Mail_Envoye',
     Est_Tel_Acquittee: 'Est_Tel_Acquittee',
@@ -60701,13 +60653,11 @@ export namespace Prisma {
     Valeur?: FloatNullableFilter<"t_alarme"> | number | null
     Type?: StringNullableFilter<"t_alarme"> | string | null
     Date_Heure_Fin?: DateTimeNullableFilter<"t_alarme"> | Date | string | null
-    Est_Alarme_Vrai?: BoolNullableFilter<"t_alarme"> | boolean | null
     Id_Lieu?: IntNullableFilter<"t_alarme"> | number | null
     Sonde_Numero_Serie?: StringNullableFilter<"t_alarme"> | string | null
     Unite?: StringNullableFilter<"t_alarme"> | string | null
     Est_Acquittee?: BoolNullableFilter<"t_alarme"> | boolean | null
     Date_Heure_Derniere_Mesure?: DateTimeNullableFilter<"t_alarme"> | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: DateTimeNullableFilter<"t_alarme"> | Date | string | null
     Est_Alarme_Pour_VigiTel?: BoolNullableFilter<"t_alarme"> | boolean | null
     Est_Mail_Envoye?: BoolNullableFilter<"t_alarme"> | boolean | null
     Est_Tel_Acquittee?: BoolNullableFilter<"t_alarme"> | boolean | null
@@ -60721,13 +60671,11 @@ export namespace Prisma {
     Valeur?: SortOrderInput | SortOrder
     Type?: SortOrderInput | SortOrder
     Date_Heure_Fin?: SortOrderInput | SortOrder
-    Est_Alarme_Vrai?: SortOrderInput | SortOrder
     Id_Lieu?: SortOrderInput | SortOrder
     Sonde_Numero_Serie?: SortOrderInput | SortOrder
     Unite?: SortOrderInput | SortOrder
     Est_Acquittee?: SortOrderInput | SortOrder
     Date_Heure_Derniere_Mesure?: SortOrderInput | SortOrder
-    Date_Heure_Debut_Alarme_Vrai?: SortOrderInput | SortOrder
     Est_Alarme_Pour_VigiTel?: SortOrderInput | SortOrder
     Est_Mail_Envoye?: SortOrderInput | SortOrder
     Est_Tel_Acquittee?: SortOrderInput | SortOrder
@@ -60745,13 +60693,11 @@ export namespace Prisma {
     Valeur?: FloatNullableFilter<"t_alarme"> | number | null
     Type?: StringNullableFilter<"t_alarme"> | string | null
     Date_Heure_Fin?: DateTimeNullableFilter<"t_alarme"> | Date | string | null
-    Est_Alarme_Vrai?: BoolNullableFilter<"t_alarme"> | boolean | null
     Id_Lieu?: IntNullableFilter<"t_alarme"> | number | null
     Sonde_Numero_Serie?: StringNullableFilter<"t_alarme"> | string | null
     Unite?: StringNullableFilter<"t_alarme"> | string | null
     Est_Acquittee?: BoolNullableFilter<"t_alarme"> | boolean | null
     Date_Heure_Derniere_Mesure?: DateTimeNullableFilter<"t_alarme"> | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: DateTimeNullableFilter<"t_alarme"> | Date | string | null
     Est_Alarme_Pour_VigiTel?: BoolNullableFilter<"t_alarme"> | boolean | null
     Est_Mail_Envoye?: BoolNullableFilter<"t_alarme"> | boolean | null
     Est_Tel_Acquittee?: BoolNullableFilter<"t_alarme"> | boolean | null
@@ -60765,13 +60711,11 @@ export namespace Prisma {
     Valeur?: SortOrderInput | SortOrder
     Type?: SortOrderInput | SortOrder
     Date_Heure_Fin?: SortOrderInput | SortOrder
-    Est_Alarme_Vrai?: SortOrderInput | SortOrder
     Id_Lieu?: SortOrderInput | SortOrder
     Sonde_Numero_Serie?: SortOrderInput | SortOrder
     Unite?: SortOrderInput | SortOrder
     Est_Acquittee?: SortOrderInput | SortOrder
     Date_Heure_Derniere_Mesure?: SortOrderInput | SortOrder
-    Date_Heure_Debut_Alarme_Vrai?: SortOrderInput | SortOrder
     Est_Alarme_Pour_VigiTel?: SortOrderInput | SortOrder
     Est_Mail_Envoye?: SortOrderInput | SortOrder
     Est_Tel_Acquittee?: SortOrderInput | SortOrder
@@ -60791,13 +60735,11 @@ export namespace Prisma {
     Valeur?: FloatNullableWithAggregatesFilter<"t_alarme"> | number | null
     Type?: StringNullableWithAggregatesFilter<"t_alarme"> | string | null
     Date_Heure_Fin?: DateTimeNullableWithAggregatesFilter<"t_alarme"> | Date | string | null
-    Est_Alarme_Vrai?: BoolNullableWithAggregatesFilter<"t_alarme"> | boolean | null
     Id_Lieu?: IntNullableWithAggregatesFilter<"t_alarme"> | number | null
     Sonde_Numero_Serie?: StringNullableWithAggregatesFilter<"t_alarme"> | string | null
     Unite?: StringNullableWithAggregatesFilter<"t_alarme"> | string | null
     Est_Acquittee?: BoolNullableWithAggregatesFilter<"t_alarme"> | boolean | null
     Date_Heure_Derniere_Mesure?: DateTimeNullableWithAggregatesFilter<"t_alarme"> | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: DateTimeNullableWithAggregatesFilter<"t_alarme"> | Date | string | null
     Est_Alarme_Pour_VigiTel?: BoolNullableWithAggregatesFilter<"t_alarme"> | boolean | null
     Est_Mail_Envoye?: BoolNullableWithAggregatesFilter<"t_alarme"> | boolean | null
     Est_Tel_Acquittee?: BoolNullableWithAggregatesFilter<"t_alarme"> | boolean | null
@@ -60813,13 +60755,11 @@ export namespace Prisma {
     Valeur?: FloatNullableFilter<"t_alarme_histo"> | number | null
     Type?: StringNullableFilter<"t_alarme_histo"> | string | null
     Date_Heure_Fin?: DateTimeNullableFilter<"t_alarme_histo"> | Date | string | null
-    Est_Alarme_Vrai?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
     Id_Lieu?: IntNullableFilter<"t_alarme_histo"> | number | null
     Sonde_Numero_Serie?: StringNullableFilter<"t_alarme_histo"> | string | null
     Unite?: StringNullableFilter<"t_alarme_histo"> | string | null
     Est_Acquittee?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
     Date_Heure_Derniere_Mesure?: DateTimeNullableFilter<"t_alarme_histo"> | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: DateTimeNullableFilter<"t_alarme_histo"> | Date | string | null
     Est_Alarme_Pour_VigiTel?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
     Est_Mail_Envoye?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
     Est_Tel_Acquittee?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
@@ -60834,13 +60774,11 @@ export namespace Prisma {
     Valeur?: SortOrderInput | SortOrder
     Type?: SortOrderInput | SortOrder
     Date_Heure_Fin?: SortOrderInput | SortOrder
-    Est_Alarme_Vrai?: SortOrderInput | SortOrder
     Id_Lieu?: SortOrderInput | SortOrder
     Sonde_Numero_Serie?: SortOrderInput | SortOrder
     Unite?: SortOrderInput | SortOrder
     Est_Acquittee?: SortOrderInput | SortOrder
     Date_Heure_Derniere_Mesure?: SortOrderInput | SortOrder
-    Date_Heure_Debut_Alarme_Vrai?: SortOrderInput | SortOrder
     Est_Alarme_Pour_VigiTel?: SortOrderInput | SortOrder
     Est_Mail_Envoye?: SortOrderInput | SortOrder
     Est_Tel_Acquittee?: SortOrderInput | SortOrder
@@ -60859,13 +60797,11 @@ export namespace Prisma {
     Valeur?: FloatNullableFilter<"t_alarme_histo"> | number | null
     Type?: StringNullableFilter<"t_alarme_histo"> | string | null
     Date_Heure_Fin?: DateTimeNullableFilter<"t_alarme_histo"> | Date | string | null
-    Est_Alarme_Vrai?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
     Id_Lieu?: IntNullableFilter<"t_alarme_histo"> | number | null
     Sonde_Numero_Serie?: StringNullableFilter<"t_alarme_histo"> | string | null
     Unite?: StringNullableFilter<"t_alarme_histo"> | string | null
     Est_Acquittee?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
     Date_Heure_Derniere_Mesure?: DateTimeNullableFilter<"t_alarme_histo"> | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: DateTimeNullableFilter<"t_alarme_histo"> | Date | string | null
     Est_Alarme_Pour_VigiTel?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
     Est_Mail_Envoye?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
     Est_Tel_Acquittee?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
@@ -60880,13 +60816,11 @@ export namespace Prisma {
     Valeur?: SortOrderInput | SortOrder
     Type?: SortOrderInput | SortOrder
     Date_Heure_Fin?: SortOrderInput | SortOrder
-    Est_Alarme_Vrai?: SortOrderInput | SortOrder
     Id_Lieu?: SortOrderInput | SortOrder
     Sonde_Numero_Serie?: SortOrderInput | SortOrder
     Unite?: SortOrderInput | SortOrder
     Est_Acquittee?: SortOrderInput | SortOrder
     Date_Heure_Derniere_Mesure?: SortOrderInput | SortOrder
-    Date_Heure_Debut_Alarme_Vrai?: SortOrderInput | SortOrder
     Est_Alarme_Pour_VigiTel?: SortOrderInput | SortOrder
     Est_Mail_Envoye?: SortOrderInput | SortOrder
     Est_Tel_Acquittee?: SortOrderInput | SortOrder
@@ -60908,13 +60842,11 @@ export namespace Prisma {
     Valeur?: FloatNullableWithAggregatesFilter<"t_alarme_histo"> | number | null
     Type?: StringNullableWithAggregatesFilter<"t_alarme_histo"> | string | null
     Date_Heure_Fin?: DateTimeNullableWithAggregatesFilter<"t_alarme_histo"> | Date | string | null
-    Est_Alarme_Vrai?: BoolNullableWithAggregatesFilter<"t_alarme_histo"> | boolean | null
     Id_Lieu?: IntNullableWithAggregatesFilter<"t_alarme_histo"> | number | null
     Sonde_Numero_Serie?: StringNullableWithAggregatesFilter<"t_alarme_histo"> | string | null
     Unite?: StringNullableWithAggregatesFilter<"t_alarme_histo"> | string | null
     Est_Acquittee?: BoolNullableWithAggregatesFilter<"t_alarme_histo"> | boolean | null
     Date_Heure_Derniere_Mesure?: DateTimeNullableWithAggregatesFilter<"t_alarme_histo"> | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: DateTimeNullableWithAggregatesFilter<"t_alarme_histo"> | Date | string | null
     Est_Alarme_Pour_VigiTel?: BoolNullableWithAggregatesFilter<"t_alarme_histo"> | boolean | null
     Est_Mail_Envoye?: BoolNullableWithAggregatesFilter<"t_alarme_histo"> | boolean | null
     Est_Tel_Acquittee?: BoolNullableWithAggregatesFilter<"t_alarme_histo"> | boolean | null
@@ -61960,7 +61892,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: BoolNullableFilter<"t_lieu"> | boolean | null
     Est_Son_Alarme_Active?: BoolFilter<"t_lieu"> | boolean
     Planning_Actif?: BoolFilter<"t_lieu"> | boolean
-    Planning_Regle_Existe?: BoolFilter<"t_lieu"> | boolean
+    Planning_Regle_Existe?: BoolNullableFilter<"t_lieu"> | boolean | null
     Planning_Source_Regle_Id?: IntNullableFilter<"t_lieu"> | number | null
     Planning_Derniere_Maj?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFilter<"t_lieu"> | boolean
@@ -62057,7 +61989,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: SortOrderInput | SortOrder
     Est_Son_Alarme_Active?: SortOrder
     Planning_Actif?: SortOrder
-    Planning_Regle_Existe?: SortOrder
+    Planning_Regle_Existe?: SortOrderInput | SortOrder
     Planning_Source_Regle_Id?: SortOrderInput | SortOrder
     Planning_Derniere_Maj?: SortOrderInput | SortOrder
     Est_Redeclenchement_Immediat?: SortOrder
@@ -62158,7 +62090,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: BoolNullableFilter<"t_lieu"> | boolean | null
     Est_Son_Alarme_Active?: BoolFilter<"t_lieu"> | boolean
     Planning_Actif?: BoolFilter<"t_lieu"> | boolean
-    Planning_Regle_Existe?: BoolFilter<"t_lieu"> | boolean
+    Planning_Regle_Existe?: BoolNullableFilter<"t_lieu"> | boolean | null
     Planning_Source_Regle_Id?: IntNullableFilter<"t_lieu"> | number | null
     Planning_Derniere_Maj?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFilter<"t_lieu"> | boolean
@@ -62255,7 +62187,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: SortOrderInput | SortOrder
     Est_Son_Alarme_Active?: SortOrder
     Planning_Actif?: SortOrder
-    Planning_Regle_Existe?: SortOrder
+    Planning_Regle_Existe?: SortOrderInput | SortOrder
     Planning_Source_Regle_Id?: SortOrderInput | SortOrder
     Planning_Derniere_Maj?: SortOrderInput | SortOrder
     Est_Redeclenchement_Immediat?: SortOrder
@@ -62350,7 +62282,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: BoolNullableWithAggregatesFilter<"t_lieu"> | boolean | null
     Est_Son_Alarme_Active?: BoolWithAggregatesFilter<"t_lieu"> | boolean
     Planning_Actif?: BoolWithAggregatesFilter<"t_lieu"> | boolean
-    Planning_Regle_Existe?: BoolWithAggregatesFilter<"t_lieu"> | boolean
+    Planning_Regle_Existe?: BoolNullableWithAggregatesFilter<"t_lieu"> | boolean | null
     Planning_Source_Regle_Id?: IntNullableWithAggregatesFilter<"t_lieu"> | number | null
     Planning_Derniere_Maj?: DateTimeNullableWithAggregatesFilter<"t_lieu"> | Date | string | null
     Est_Redeclenchement_Immediat?: BoolWithAggregatesFilter<"t_lieu"> | boolean
@@ -63140,11 +63072,11 @@ export namespace Prisma {
     t_notification_delivery?: T_notification_deliveryListRelationFilter
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: T_vigilog_configurationListRelationFilter
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: T_vigilog_configurationListRelationFilter
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: T_vigilog_usage_ponctuelListRelationFilter
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: T_vigilog_usage_ponctuelListRelationFilter
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: T_vigilog_tourneeListRelationFilter
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: T_vigilog_tourneeListRelationFilter
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: T_vigilog_tourneeListRelationFilter
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: T_vigilog_usage_ponctuelListRelationFilter
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: T_vigilog_usage_ponctuelListRelationFilter
   }
 
   export type t_utilisateurOrderByWithRelationInput = {
@@ -63176,11 +63108,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryOrderByRelationAggregateInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationOrderByRelationAggregateInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationOrderByRelationAggregateInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelOrderByRelationAggregateInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelOrderByRelationAggregateInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeOrderByRelationAggregateInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeOrderByRelationAggregateInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeOrderByRelationAggregateInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelOrderByRelationAggregateInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelOrderByRelationAggregateInput
     _relevance?: t_utilisateurOrderByRelevanceInput
   }
 
@@ -63216,11 +63148,11 @@ export namespace Prisma {
     t_notification_delivery?: T_notification_deliveryListRelationFilter
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: T_vigilog_configurationListRelationFilter
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: T_vigilog_configurationListRelationFilter
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: T_vigilog_usage_ponctuelListRelationFilter
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: T_vigilog_usage_ponctuelListRelationFilter
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: T_vigilog_tourneeListRelationFilter
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: T_vigilog_tourneeListRelationFilter
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: T_vigilog_tourneeListRelationFilter
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: T_vigilog_usage_ponctuelListRelationFilter
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: T_vigilog_usage_ponctuelListRelationFilter
   }, "Id_Utilisateur" | "Login">
 
   export type t_utilisateurOrderByWithAggregationInput = {
@@ -64430,8 +64362,8 @@ export namespace Prisma {
     Date_Heure_Maj?: DateTimeNullableFilter<"t_vigilog_configuration"> | Date | string | null
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: XOR<T_utilisateurNullableScalarRelationFilter, t_utilisateurWhereInput> | null
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: XOR<T_utilisateurNullableScalarRelationFilter, t_utilisateurWhereInput> | null
-    t_vigilog_usage_ponctuel?: T_vigilog_usage_ponctuelListRelationFilter
     t_vigilog_tournee?: T_vigilog_tourneeListRelationFilter
+    t_vigilog_usage_ponctuel?: T_vigilog_usage_ponctuelListRelationFilter
   }
 
   export type t_vigilog_configurationOrderByWithRelationInput = {
@@ -64455,8 +64387,8 @@ export namespace Prisma {
     Date_Heure_Maj?: SortOrderInput | SortOrder
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_utilisateurOrderByWithRelationInput
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_utilisateurOrderByWithRelationInput
-    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelOrderByRelationAggregateInput
     t_vigilog_tournee?: t_vigilog_tourneeOrderByRelationAggregateInput
+    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelOrderByRelationAggregateInput
     _relevance?: t_vigilog_configurationOrderByRelevanceInput
   }
 
@@ -64484,8 +64416,8 @@ export namespace Prisma {
     Date_Heure_Maj?: DateTimeNullableFilter<"t_vigilog_configuration"> | Date | string | null
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: XOR<T_utilisateurNullableScalarRelationFilter, t_utilisateurWhereInput> | null
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: XOR<T_utilisateurNullableScalarRelationFilter, t_utilisateurWhereInput> | null
-    t_vigilog_usage_ponctuel?: T_vigilog_usage_ponctuelListRelationFilter
     t_vigilog_tournee?: T_vigilog_tourneeListRelationFilter
+    t_vigilog_usage_ponctuel?: T_vigilog_usage_ponctuelListRelationFilter
   }, "Id_VigiLog_Configuration" | "Nom_Configuration">
 
   export type t_vigilog_configurationOrderByWithAggregationInput = {
@@ -64664,10 +64596,10 @@ export namespace Prisma {
     Commentaire_Arret?: StringNullableFilter<"t_vigilog_usage_ponctuel"> | string | null
     Date_Heure_Creation?: DateTimeFilter<"t_vigilog_usage_ponctuel"> | Date | string
     Date_Heure_Maj?: DateTimeNullableFilter<"t_vigilog_usage_ponctuel"> | Date | string | null
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: XOR<T_utilisateurScalarRelationFilter, t_utilisateurWhereInput>
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: XOR<T_utilisateurNullableScalarRelationFilter, t_utilisateurWhereInput> | null
     t_vigilog_configuration?: XOR<T_vigilog_configurationNullableScalarRelationFilter, t_vigilog_configurationWhereInput> | null
     t_vigilog?: XOR<T_vigilogNullableScalarRelationFilter, t_vigilogWhereInput> | null
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: XOR<T_utilisateurScalarRelationFilter, t_utilisateurWhereInput>
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: XOR<T_utilisateurNullableScalarRelationFilter, t_utilisateurWhereInput> | null
   }
 
   export type t_vigilog_usage_ponctuelOrderByWithRelationInput = {
@@ -64687,10 +64619,10 @@ export namespace Prisma {
     Commentaire_Arret?: SortOrderInput | SortOrder
     Date_Heure_Creation?: SortOrder
     Date_Heure_Maj?: SortOrderInput | SortOrder
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_utilisateurOrderByWithRelationInput
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurOrderByWithRelationInput
     t_vigilog_configuration?: t_vigilog_configurationOrderByWithRelationInput
     t_vigilog?: t_vigilogOrderByWithRelationInput
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_utilisateurOrderByWithRelationInput
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurOrderByWithRelationInput
     _relevance?: t_vigilog_usage_ponctuelOrderByRelevanceInput
   }
 
@@ -64714,10 +64646,10 @@ export namespace Prisma {
     Commentaire_Arret?: StringNullableFilter<"t_vigilog_usage_ponctuel"> | string | null
     Date_Heure_Creation?: DateTimeFilter<"t_vigilog_usage_ponctuel"> | Date | string
     Date_Heure_Maj?: DateTimeNullableFilter<"t_vigilog_usage_ponctuel"> | Date | string | null
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: XOR<T_utilisateurScalarRelationFilter, t_utilisateurWhereInput>
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: XOR<T_utilisateurNullableScalarRelationFilter, t_utilisateurWhereInput> | null
     t_vigilog_configuration?: XOR<T_vigilog_configurationNullableScalarRelationFilter, t_vigilog_configurationWhereInput> | null
     t_vigilog?: XOR<T_vigilogNullableScalarRelationFilter, t_vigilogWhereInput> | null
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: XOR<T_utilisateurScalarRelationFilter, t_utilisateurWhereInput>
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: XOR<T_utilisateurNullableScalarRelationFilter, t_utilisateurWhereInput> | null
   }, "Id_VigiLog_Usage_Ponctuel" | "Reference_Usage">
 
   export type t_vigilog_usage_ponctuelOrderByWithAggregationInput = {
@@ -65166,12 +65098,10 @@ export namespace Prisma {
     Valeur?: number | null
     Type?: string | null
     Date_Heure_Fin?: Date | string | null
-    Est_Alarme_Vrai?: boolean | null
     Sonde_Numero_Serie?: string | null
     Unite?: string | null
     Est_Acquittee?: boolean | null
     Date_Heure_Derniere_Mesure?: Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: Date | string | null
     Est_Alarme_Pour_VigiTel?: boolean | null
     Est_Mail_Envoye?: boolean | null
     Est_Tel_Acquittee?: boolean | null
@@ -65185,13 +65115,11 @@ export namespace Prisma {
     Valeur?: number | null
     Type?: string | null
     Date_Heure_Fin?: Date | string | null
-    Est_Alarme_Vrai?: boolean | null
     Id_Lieu?: number | null
     Sonde_Numero_Serie?: string | null
     Unite?: string | null
     Est_Acquittee?: boolean | null
     Date_Heure_Derniere_Mesure?: Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: Date | string | null
     Est_Alarme_Pour_VigiTel?: boolean | null
     Est_Mail_Envoye?: boolean | null
     Est_Tel_Acquittee?: boolean | null
@@ -65203,12 +65131,10 @@ export namespace Prisma {
     Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
     Type?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Alarme_Vrai?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Unite?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Date_Heure_Derniere_Mesure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Alarme_Pour_VigiTel?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Mail_Envoye?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Tel_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -65222,13 +65148,11 @@ export namespace Prisma {
     Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
     Type?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Alarme_Vrai?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Id_Lieu?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Unite?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Date_Heure_Derniere_Mesure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Alarme_Pour_VigiTel?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Mail_Envoye?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Tel_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -65241,13 +65165,11 @@ export namespace Prisma {
     Valeur?: number | null
     Type?: string | null
     Date_Heure_Fin?: Date | string | null
-    Est_Alarme_Vrai?: boolean | null
     Id_Lieu?: number | null
     Sonde_Numero_Serie?: string | null
     Unite?: string | null
     Est_Acquittee?: boolean | null
     Date_Heure_Derniere_Mesure?: Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: Date | string | null
     Est_Alarme_Pour_VigiTel?: boolean | null
     Est_Mail_Envoye?: boolean | null
     Est_Tel_Acquittee?: boolean | null
@@ -65258,12 +65180,10 @@ export namespace Prisma {
     Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
     Type?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Alarme_Vrai?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Unite?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Date_Heure_Derniere_Mesure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Alarme_Pour_VigiTel?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Mail_Envoye?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Tel_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -65275,13 +65195,11 @@ export namespace Prisma {
     Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
     Type?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Alarme_Vrai?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Id_Lieu?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Unite?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Date_Heure_Derniere_Mesure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Alarme_Pour_VigiTel?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Mail_Envoye?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Tel_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -65293,12 +65211,10 @@ export namespace Prisma {
     Valeur?: number | null
     Type?: string | null
     Date_Heure_Fin?: Date | string | null
-    Est_Alarme_Vrai?: boolean | null
     Sonde_Numero_Serie?: string | null
     Unite?: string | null
     Est_Acquittee?: boolean | null
     Date_Heure_Derniere_Mesure?: Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: Date | string | null
     Est_Alarme_Pour_VigiTel?: boolean | null
     Est_Mail_Envoye?: boolean | null
     Est_Tel_Acquittee?: boolean | null
@@ -65313,13 +65229,11 @@ export namespace Prisma {
     Valeur?: number | null
     Type?: string | null
     Date_Heure_Fin?: Date | string | null
-    Est_Alarme_Vrai?: boolean | null
     Id_Lieu?: number | null
     Sonde_Numero_Serie?: string | null
     Unite?: string | null
     Est_Acquittee?: boolean | null
     Date_Heure_Derniere_Mesure?: Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: Date | string | null
     Est_Alarme_Pour_VigiTel?: boolean | null
     Est_Mail_Envoye?: boolean | null
     Est_Tel_Acquittee?: boolean | null
@@ -65332,12 +65246,10 @@ export namespace Prisma {
     Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
     Type?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Alarme_Vrai?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Unite?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Date_Heure_Derniere_Mesure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Alarme_Pour_VigiTel?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Mail_Envoye?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Tel_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -65352,13 +65264,11 @@ export namespace Prisma {
     Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
     Type?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Alarme_Vrai?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Id_Lieu?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Unite?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Date_Heure_Derniere_Mesure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Alarme_Pour_VigiTel?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Mail_Envoye?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Tel_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -65372,13 +65282,11 @@ export namespace Prisma {
     Valeur?: number | null
     Type?: string | null
     Date_Heure_Fin?: Date | string | null
-    Est_Alarme_Vrai?: boolean | null
     Id_Lieu?: number | null
     Sonde_Numero_Serie?: string | null
     Unite?: string | null
     Est_Acquittee?: boolean | null
     Date_Heure_Derniere_Mesure?: Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: Date | string | null
     Est_Alarme_Pour_VigiTel?: boolean | null
     Est_Mail_Envoye?: boolean | null
     Est_Tel_Acquittee?: boolean | null
@@ -65391,12 +65299,10 @@ export namespace Prisma {
     Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
     Type?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Alarme_Vrai?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Unite?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Date_Heure_Derniere_Mesure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Alarme_Pour_VigiTel?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Mail_Envoye?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Tel_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -65410,13 +65316,11 @@ export namespace Prisma {
     Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
     Type?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Alarme_Vrai?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Id_Lieu?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Unite?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Date_Heure_Derniere_Mesure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Alarme_Pour_VigiTel?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Mail_Envoye?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Tel_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -66469,7 +66373,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -66566,7 +66470,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -66652,7 +66556,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -66749,7 +66653,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -66841,7 +66745,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -66922,7 +66826,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -67009,7 +66913,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -67816,11 +67720,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurUncheckedCreateInput = {
@@ -67852,11 +67756,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUncheckedCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurUpdateInput = {
@@ -67887,11 +67791,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_utilisateurUncheckedUpdateInput = {
@@ -67923,11 +67827,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUncheckedUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_utilisateurCreateManyInput = {
@@ -69158,8 +69062,8 @@ export namespace Prisma {
     Date_Heure_Maj?: Date | string | null
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_vigilog_configurationInput
     t_vigilog_tournee?: t_vigilog_tourneeCreateNestedManyWithoutT_vigilog_configurationInput
+    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_vigilog_configurationInput
   }
 
   export type t_vigilog_configurationUncheckedCreateInput = {
@@ -69181,8 +69085,8 @@ export namespace Prisma {
     Date_Heure_Creation?: Date | string
     Id_Utilisateur_Maj?: number | null
     Date_Heure_Maj?: Date | string | null
-    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_vigilog_configurationInput
     t_vigilog_tournee?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_vigilog_configurationInput
+    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_vigilog_configurationInput
   }
 
   export type t_vigilog_configurationUpdateInput = {
@@ -69203,8 +69107,8 @@ export namespace Prisma {
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUpdateManyWithoutT_vigilog_configurationNestedInput
     t_vigilog_tournee?: t_vigilog_tourneeUpdateManyWithoutT_vigilog_configurationNestedInput
+    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUpdateManyWithoutT_vigilog_configurationNestedInput
   }
 
   export type t_vigilog_configurationUncheckedUpdateInput = {
@@ -69226,8 +69130,8 @@ export namespace Prisma {
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Id_Utilisateur_Maj?: NullableIntFieldUpdateOperationsInput | number | null
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_vigilog_configurationNestedInput
     t_vigilog_tournee?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_vigilog_configurationNestedInput
+    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_vigilog_configurationNestedInput
   }
 
   export type t_vigilog_configurationCreateManyInput = {
@@ -69426,10 +69330,10 @@ export namespace Prisma {
     Commentaire_Arret?: string | null
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur: t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
     t_vigilog_configuration?: t_vigilog_configurationCreateNestedOneWithoutT_vigilog_usage_ponctuelInput
     t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_usage_ponctuelInput
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur: t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_vigilog_usage_ponctuelUncheckedCreateInput = {
@@ -69463,10 +69367,10 @@ export namespace Prisma {
     Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_utilisateurUpdateOneRequiredWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
     t_vigilog_configuration?: t_vigilog_configurationUpdateOneWithoutT_vigilog_usage_ponctuelNestedInput
     t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_usage_ponctuelNestedInput
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_utilisateurUpdateOneRequiredWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_vigilog_usage_ponctuelUncheckedUpdateInput = {
@@ -70109,13 +70013,11 @@ export namespace Prisma {
     Valeur?: SortOrder
     Type?: SortOrder
     Date_Heure_Fin?: SortOrder
-    Est_Alarme_Vrai?: SortOrder
     Id_Lieu?: SortOrder
     Sonde_Numero_Serie?: SortOrder
     Unite?: SortOrder
     Est_Acquittee?: SortOrder
     Date_Heure_Derniere_Mesure?: SortOrder
-    Date_Heure_Debut_Alarme_Vrai?: SortOrder
     Est_Alarme_Pour_VigiTel?: SortOrder
     Est_Mail_Envoye?: SortOrder
     Est_Tel_Acquittee?: SortOrder
@@ -70133,13 +70035,11 @@ export namespace Prisma {
     Valeur?: SortOrder
     Type?: SortOrder
     Date_Heure_Fin?: SortOrder
-    Est_Alarme_Vrai?: SortOrder
     Id_Lieu?: SortOrder
     Sonde_Numero_Serie?: SortOrder
     Unite?: SortOrder
     Est_Acquittee?: SortOrder
     Date_Heure_Derniere_Mesure?: SortOrder
-    Date_Heure_Debut_Alarme_Vrai?: SortOrder
     Est_Alarme_Pour_VigiTel?: SortOrder
     Est_Mail_Envoye?: SortOrder
     Est_Tel_Acquittee?: SortOrder
@@ -70151,13 +70051,11 @@ export namespace Prisma {
     Valeur?: SortOrder
     Type?: SortOrder
     Date_Heure_Fin?: SortOrder
-    Est_Alarme_Vrai?: SortOrder
     Id_Lieu?: SortOrder
     Sonde_Numero_Serie?: SortOrder
     Unite?: SortOrder
     Est_Acquittee?: SortOrder
     Date_Heure_Derniere_Mesure?: SortOrder
-    Date_Heure_Debut_Alarme_Vrai?: SortOrder
     Est_Alarme_Pour_VigiTel?: SortOrder
     Est_Mail_Envoye?: SortOrder
     Est_Tel_Acquittee?: SortOrder
@@ -70212,13 +70110,11 @@ export namespace Prisma {
     Valeur?: SortOrder
     Type?: SortOrder
     Date_Heure_Fin?: SortOrder
-    Est_Alarme_Vrai?: SortOrder
     Id_Lieu?: SortOrder
     Sonde_Numero_Serie?: SortOrder
     Unite?: SortOrder
     Est_Acquittee?: SortOrder
     Date_Heure_Derniere_Mesure?: SortOrder
-    Date_Heure_Debut_Alarme_Vrai?: SortOrder
     Est_Alarme_Pour_VigiTel?: SortOrder
     Est_Mail_Envoye?: SortOrder
     Est_Tel_Acquittee?: SortOrder
@@ -70239,13 +70135,11 @@ export namespace Prisma {
     Valeur?: SortOrder
     Type?: SortOrder
     Date_Heure_Fin?: SortOrder
-    Est_Alarme_Vrai?: SortOrder
     Id_Lieu?: SortOrder
     Sonde_Numero_Serie?: SortOrder
     Unite?: SortOrder
     Est_Acquittee?: SortOrder
     Date_Heure_Derniere_Mesure?: SortOrder
-    Date_Heure_Debut_Alarme_Vrai?: SortOrder
     Est_Alarme_Pour_VigiTel?: SortOrder
     Est_Mail_Envoye?: SortOrder
     Est_Tel_Acquittee?: SortOrder
@@ -70259,13 +70153,11 @@ export namespace Prisma {
     Valeur?: SortOrder
     Type?: SortOrder
     Date_Heure_Fin?: SortOrder
-    Est_Alarme_Vrai?: SortOrder
     Id_Lieu?: SortOrder
     Sonde_Numero_Serie?: SortOrder
     Unite?: SortOrder
     Est_Acquittee?: SortOrder
     Date_Heure_Derniere_Mesure?: SortOrder
-    Date_Heure_Debut_Alarme_Vrai?: SortOrder
     Est_Alarme_Pour_VigiTel?: SortOrder
     Est_Mail_Envoye?: SortOrder
     Est_Tel_Acquittee?: SortOrder
@@ -75007,20 +74899,6 @@ export namespace Prisma {
     connect?: t_vigilog_configurationWhereUniqueInput | t_vigilog_configurationWhereUniqueInput[]
   }
 
-  export type t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput> | t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
-    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
-    createMany?: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInputEnvelope
-    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-  }
-
-  export type t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput> | t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
-    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
-    createMany?: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInputEnvelope
-    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-  }
-
   export type t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput = {
     create?: XOR<t_vigilog_tourneeCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput, t_vigilog_tourneeUncheckedCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput> | t_vigilog_tourneeCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput[] | t_vigilog_tourneeUncheckedCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput[]
     connectOrCreate?: t_vigilog_tourneeCreateOrConnectWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput | t_vigilog_tourneeCreateOrConnectWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput[]
@@ -75040,6 +74918,20 @@ export namespace Prisma {
     connectOrCreate?: t_vigilog_tourneeCreateOrConnectWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput | t_vigilog_tourneeCreateOrConnectWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput[]
     createMany?: t_vigilog_tourneeCreateManyT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInputEnvelope
     connect?: t_vigilog_tourneeWhereUniqueInput | t_vigilog_tourneeWhereUniqueInput[]
+  }
+
+  export type t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput> | t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
+    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
+    createMany?: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInputEnvelope
+    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+  }
+
+  export type t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput> | t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
+    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
+    createMany?: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInputEnvelope
+    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
   }
 
   export type t_ancien_mot_de_passeUncheckedCreateNestedManyWithoutT_utilisateurInput = {
@@ -75091,20 +74983,6 @@ export namespace Prisma {
     connect?: t_vigilog_configurationWhereUniqueInput | t_vigilog_configurationWhereUniqueInput[]
   }
 
-  export type t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput> | t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
-    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
-    createMany?: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInputEnvelope
-    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-  }
-
-  export type t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput> | t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
-    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
-    createMany?: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInputEnvelope
-    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-  }
-
   export type t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput = {
     create?: XOR<t_vigilog_tourneeCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput, t_vigilog_tourneeUncheckedCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput> | t_vigilog_tourneeCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput[] | t_vigilog_tourneeUncheckedCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput[]
     connectOrCreate?: t_vigilog_tourneeCreateOrConnectWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput | t_vigilog_tourneeCreateOrConnectWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput[]
@@ -75124,6 +75002,20 @@ export namespace Prisma {
     connectOrCreate?: t_vigilog_tourneeCreateOrConnectWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput | t_vigilog_tourneeCreateOrConnectWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput[]
     createMany?: t_vigilog_tourneeCreateManyT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInputEnvelope
     connect?: t_vigilog_tourneeWhereUniqueInput | t_vigilog_tourneeWhereUniqueInput[]
+  }
+
+  export type t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput> | t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
+    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
+    createMany?: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInputEnvelope
+    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+  }
+
+  export type t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput> | t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
+    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
+    createMany?: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInputEnvelope
+    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
   }
 
   export type t_ancien_mot_de_passeUpdateManyWithoutT_utilisateurNestedInput = {
@@ -75224,34 +75116,6 @@ export namespace Prisma {
     deleteMany?: t_vigilog_configurationScalarWhereInput | t_vigilog_configurationScalarWhereInput[]
   }
 
-  export type t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput = {
-    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput> | t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
-    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
-    upsert?: t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
-    createMany?: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInputEnvelope
-    set?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    disconnect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    delete?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    update?: t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
-    updateMany?: t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
-    deleteMany?: t_vigilog_usage_ponctuelScalarWhereInput | t_vigilog_usage_ponctuelScalarWhereInput[]
-  }
-
-  export type t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput = {
-    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput> | t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
-    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
-    upsert?: t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
-    createMany?: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInputEnvelope
-    set?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    disconnect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    delete?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    update?: t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
-    updateMany?: t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
-    deleteMany?: t_vigilog_usage_ponctuelScalarWhereInput | t_vigilog_usage_ponctuelScalarWhereInput[]
-  }
-
   export type t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput = {
     create?: XOR<t_vigilog_tourneeCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput, t_vigilog_tourneeUncheckedCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput> | t_vigilog_tourneeCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput[] | t_vigilog_tourneeUncheckedCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput[]
     connectOrCreate?: t_vigilog_tourneeCreateOrConnectWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput | t_vigilog_tourneeCreateOrConnectWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput[]
@@ -75292,6 +75156,34 @@ export namespace Prisma {
     update?: t_vigilog_tourneeUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput | t_vigilog_tourneeUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput[]
     updateMany?: t_vigilog_tourneeUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput | t_vigilog_tourneeUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput[]
     deleteMany?: t_vigilog_tourneeScalarWhereInput | t_vigilog_tourneeScalarWhereInput[]
+  }
+
+  export type t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput = {
+    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput> | t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
+    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
+    upsert?: t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
+    createMany?: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInputEnvelope
+    set?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    disconnect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    delete?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    update?: t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
+    updateMany?: t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
+    deleteMany?: t_vigilog_usage_ponctuelScalarWhereInput | t_vigilog_usage_ponctuelScalarWhereInput[]
+  }
+
+  export type t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput = {
+    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput> | t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
+    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
+    upsert?: t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
+    createMany?: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInputEnvelope
+    set?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    disconnect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    delete?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    update?: t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
+    updateMany?: t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
+    deleteMany?: t_vigilog_usage_ponctuelScalarWhereInput | t_vigilog_usage_ponctuelScalarWhereInput[]
   }
 
   export type t_ancien_mot_de_passeUncheckedUpdateManyWithoutT_utilisateurNestedInput = {
@@ -75392,34 +75284,6 @@ export namespace Prisma {
     deleteMany?: t_vigilog_configurationScalarWhereInput | t_vigilog_configurationScalarWhereInput[]
   }
 
-  export type t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput = {
-    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput> | t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
-    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
-    upsert?: t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
-    createMany?: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInputEnvelope
-    set?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    disconnect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    delete?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    update?: t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
-    updateMany?: t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
-    deleteMany?: t_vigilog_usage_ponctuelScalarWhereInput | t_vigilog_usage_ponctuelScalarWhereInput[]
-  }
-
-  export type t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput = {
-    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput> | t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
-    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
-    upsert?: t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
-    createMany?: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInputEnvelope
-    set?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    disconnect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    delete?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    update?: t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
-    updateMany?: t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
-    deleteMany?: t_vigilog_usage_ponctuelScalarWhereInput | t_vigilog_usage_ponctuelScalarWhereInput[]
-  }
-
   export type t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput = {
     create?: XOR<t_vigilog_tourneeCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput, t_vigilog_tourneeUncheckedCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput> | t_vigilog_tourneeCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput[] | t_vigilog_tourneeUncheckedCreateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput[]
     connectOrCreate?: t_vigilog_tourneeCreateOrConnectWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput | t_vigilog_tourneeCreateOrConnectWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput[]
@@ -75460,6 +75324,34 @@ export namespace Prisma {
     update?: t_vigilog_tourneeUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput | t_vigilog_tourneeUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput[]
     updateMany?: t_vigilog_tourneeUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput | t_vigilog_tourneeUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput[]
     deleteMany?: t_vigilog_tourneeScalarWhereInput | t_vigilog_tourneeScalarWhereInput[]
+  }
+
+  export type t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput = {
+    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput> | t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
+    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
+    upsert?: t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
+    createMany?: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInputEnvelope
+    set?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    disconnect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    delete?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    update?: t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
+    updateMany?: t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
+    deleteMany?: t_vigilog_usage_ponctuelScalarWhereInput | t_vigilog_usage_ponctuelScalarWhereInput[]
+  }
+
+  export type t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput = {
+    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput> | t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
+    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
+    upsert?: t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
+    createMany?: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInputEnvelope
+    set?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    disconnect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    delete?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    update?: t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
+    updateMany?: t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
+    deleteMany?: t_vigilog_usage_ponctuelScalarWhereInput | t_vigilog_usage_ponctuelScalarWhereInput[]
   }
 
   export type t_alarmeCreateNestedOneWithoutT_notificationInput = {
@@ -75920,13 +75812,6 @@ export namespace Prisma {
     connect?: t_utilisateurWhereUniqueInput
   }
 
-  export type t_vigilog_usage_ponctuelCreateNestedManyWithoutT_vigilog_configurationInput = {
-    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput> | t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput[]
-    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_vigilog_configurationInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_vigilog_configurationInput[]
-    createMany?: t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInputEnvelope
-    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-  }
-
   export type t_vigilog_tourneeCreateNestedManyWithoutT_vigilog_configurationInput = {
     create?: XOR<t_vigilog_tourneeCreateWithoutT_vigilog_configurationInput, t_vigilog_tourneeUncheckedCreateWithoutT_vigilog_configurationInput> | t_vigilog_tourneeCreateWithoutT_vigilog_configurationInput[] | t_vigilog_tourneeUncheckedCreateWithoutT_vigilog_configurationInput[]
     connectOrCreate?: t_vigilog_tourneeCreateOrConnectWithoutT_vigilog_configurationInput | t_vigilog_tourneeCreateOrConnectWithoutT_vigilog_configurationInput[]
@@ -75934,7 +75819,7 @@ export namespace Prisma {
     connect?: t_vigilog_tourneeWhereUniqueInput | t_vigilog_tourneeWhereUniqueInput[]
   }
 
-  export type t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_vigilog_configurationInput = {
+  export type t_vigilog_usage_ponctuelCreateNestedManyWithoutT_vigilog_configurationInput = {
     create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput> | t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput[]
     connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_vigilog_configurationInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_vigilog_configurationInput[]
     createMany?: t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInputEnvelope
@@ -75946,6 +75831,13 @@ export namespace Prisma {
     connectOrCreate?: t_vigilog_tourneeCreateOrConnectWithoutT_vigilog_configurationInput | t_vigilog_tourneeCreateOrConnectWithoutT_vigilog_configurationInput[]
     createMany?: t_vigilog_tourneeCreateManyT_vigilog_configurationInputEnvelope
     connect?: t_vigilog_tourneeWhereUniqueInput | t_vigilog_tourneeWhereUniqueInput[]
+  }
+
+  export type t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_vigilog_configurationInput = {
+    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput> | t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput[]
+    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_vigilog_configurationInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_vigilog_configurationInput[]
+    createMany?: t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInputEnvelope
+    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
   }
 
   export type NullableDecimalFieldUpdateOperationsInput = {
@@ -75976,20 +75868,6 @@ export namespace Prisma {
     update?: XOR<XOR<t_utilisateurUpdateToOneWithWhereWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput, t_utilisateurUpdateWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput>, t_utilisateurUncheckedUpdateWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput>
   }
 
-  export type t_vigilog_usage_ponctuelUpdateManyWithoutT_vigilog_configurationNestedInput = {
-    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput> | t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput[]
-    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_vigilog_configurationInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_vigilog_configurationInput[]
-    upsert?: t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_vigilog_configurationInput | t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_vigilog_configurationInput[]
-    createMany?: t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInputEnvelope
-    set?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    disconnect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    delete?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-    update?: t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_vigilog_configurationInput | t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_vigilog_configurationInput[]
-    updateMany?: t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_vigilog_configurationInput | t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_vigilog_configurationInput[]
-    deleteMany?: t_vigilog_usage_ponctuelScalarWhereInput | t_vigilog_usage_ponctuelScalarWhereInput[]
-  }
-
   export type t_vigilog_tourneeUpdateManyWithoutT_vigilog_configurationNestedInput = {
     create?: XOR<t_vigilog_tourneeCreateWithoutT_vigilog_configurationInput, t_vigilog_tourneeUncheckedCreateWithoutT_vigilog_configurationInput> | t_vigilog_tourneeCreateWithoutT_vigilog_configurationInput[] | t_vigilog_tourneeUncheckedCreateWithoutT_vigilog_configurationInput[]
     connectOrCreate?: t_vigilog_tourneeCreateOrConnectWithoutT_vigilog_configurationInput | t_vigilog_tourneeCreateOrConnectWithoutT_vigilog_configurationInput[]
@@ -76004,7 +75882,7 @@ export namespace Prisma {
     deleteMany?: t_vigilog_tourneeScalarWhereInput | t_vigilog_tourneeScalarWhereInput[]
   }
 
-  export type t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_vigilog_configurationNestedInput = {
+  export type t_vigilog_usage_ponctuelUpdateManyWithoutT_vigilog_configurationNestedInput = {
     create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput> | t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput[]
     connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_vigilog_configurationInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_vigilog_configurationInput[]
     upsert?: t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_vigilog_configurationInput | t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_vigilog_configurationInput[]
@@ -76030,6 +75908,20 @@ export namespace Prisma {
     update?: t_vigilog_tourneeUpdateWithWhereUniqueWithoutT_vigilog_configurationInput | t_vigilog_tourneeUpdateWithWhereUniqueWithoutT_vigilog_configurationInput[]
     updateMany?: t_vigilog_tourneeUpdateManyWithWhereWithoutT_vigilog_configurationInput | t_vigilog_tourneeUpdateManyWithWhereWithoutT_vigilog_configurationInput[]
     deleteMany?: t_vigilog_tourneeScalarWhereInput | t_vigilog_tourneeScalarWhereInput[]
+  }
+
+  export type t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_vigilog_configurationNestedInput = {
+    create?: XOR<t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput> | t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput[] | t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput[]
+    connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_vigilog_configurationInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_vigilog_configurationInput[]
+    upsert?: t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_vigilog_configurationInput | t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_vigilog_configurationInput[]
+    createMany?: t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInputEnvelope
+    set?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    disconnect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    delete?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
+    update?: t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_vigilog_configurationInput | t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_vigilog_configurationInput[]
+    updateMany?: t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_vigilog_configurationInput | t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_vigilog_configurationInput[]
+    deleteMany?: t_vigilog_usage_ponctuelScalarWhereInput | t_vigilog_usage_ponctuelScalarWhereInput[]
   }
 
   export type t_vigilog_tourneeCreateNestedManyWithoutT_vigilogInput = {
@@ -76116,18 +76008,6 @@ export namespace Prisma {
     deleteMany?: t_vigilog_usage_ponctuelScalarWhereInput | t_vigilog_usage_ponctuelScalarWhereInput[]
   }
 
-  export type t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    create?: XOR<t_utilisateurCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_utilisateurUncheckedCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
-    connectOrCreate?: t_utilisateurCreateOrConnectWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
-    connect?: t_utilisateurWhereUniqueInput
-  }
-
-  export type t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    create?: XOR<t_utilisateurCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_utilisateurUncheckedCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
-    connectOrCreate?: t_utilisateurCreateOrConnectWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    connect?: t_utilisateurWhereUniqueInput
-  }
-
   export type t_vigilog_configurationCreateNestedOneWithoutT_vigilog_usage_ponctuelInput = {
     create?: XOR<t_vigilog_configurationCreateWithoutT_vigilog_usage_ponctuelInput, t_vigilog_configurationUncheckedCreateWithoutT_vigilog_usage_ponctuelInput>
     connectOrCreate?: t_vigilog_configurationCreateOrConnectWithoutT_vigilog_usage_ponctuelInput
@@ -76140,22 +76020,16 @@ export namespace Prisma {
     connect?: t_vigilogWhereUniqueInput
   }
 
-  export type t_utilisateurUpdateOneRequiredWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput = {
+  export type t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
     create?: XOR<t_utilisateurCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_utilisateurUncheckedCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
     connectOrCreate?: t_utilisateurCreateOrConnectWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
-    upsert?: t_utilisateurUpsertWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     connect?: t_utilisateurWhereUniqueInput
-    update?: XOR<XOR<t_utilisateurUpdateToOneWithWhereWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_utilisateurUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>, t_utilisateurUncheckedUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
   }
 
-  export type t_utilisateurUpdateOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput = {
+  export type t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
     create?: XOR<t_utilisateurCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_utilisateurUncheckedCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
     connectOrCreate?: t_utilisateurCreateOrConnectWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    upsert?: t_utilisateurUpsertWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    disconnect?: t_utilisateurWhereInput | boolean
-    delete?: t_utilisateurWhereInput | boolean
     connect?: t_utilisateurWhereUniqueInput
-    update?: XOR<XOR<t_utilisateurUpdateToOneWithWhereWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_utilisateurUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>, t_utilisateurUncheckedUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
   }
 
   export type t_vigilog_configurationUpdateOneWithoutT_vigilog_usage_ponctuelNestedInput = {
@@ -76176,6 +76050,24 @@ export namespace Prisma {
     delete?: t_vigilogWhereInput | boolean
     connect?: t_vigilogWhereUniqueInput
     update?: XOR<XOR<t_vigilogUpdateToOneWithWhereWithoutT_vigilog_usage_ponctuelInput, t_vigilogUpdateWithoutT_vigilog_usage_ponctuelInput>, t_vigilogUncheckedUpdateWithoutT_vigilog_usage_ponctuelInput>
+  }
+
+  export type t_utilisateurUpdateOneRequiredWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput = {
+    create?: XOR<t_utilisateurCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_utilisateurUncheckedCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
+    connectOrCreate?: t_utilisateurCreateOrConnectWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    upsert?: t_utilisateurUpsertWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    connect?: t_utilisateurWhereUniqueInput
+    update?: XOR<XOR<t_utilisateurUpdateToOneWithWhereWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_utilisateurUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>, t_utilisateurUncheckedUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
+  }
+
+  export type t_utilisateurUpdateOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput = {
+    create?: XOR<t_utilisateurCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_utilisateurUncheckedCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
+    connectOrCreate?: t_utilisateurCreateOrConnectWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
+    upsert?: t_utilisateurUpsertWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
+    disconnect?: t_utilisateurWhereInput | boolean
+    delete?: t_utilisateurWhereInput | boolean
+    connect?: t_utilisateurWhereUniqueInput
+    update?: XOR<XOR<t_utilisateurUpdateToOneWithWhereWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_utilisateurUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>, t_utilisateurUncheckedUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
   }
 
   export type t_vigilog_configurationCreateNestedOneWithoutT_vigilog_tourneeInput = {
@@ -76818,7 +76710,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -76914,7 +76806,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -77048,7 +76940,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -77144,7 +77036,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -77260,7 +77152,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -77356,7 +77248,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -77457,7 +77349,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -77553,7 +77445,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -77827,11 +77719,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurUncheckedCreateWithoutT_liaison_utilisateur_groupeInput = {
@@ -77862,11 +77754,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUncheckedCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurCreateOrConnectWithoutT_liaison_utilisateur_groupeInput = {
@@ -77938,11 +77830,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_utilisateurUncheckedUpdateWithoutT_liaison_utilisateur_groupeInput = {
@@ -77973,11 +77865,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUncheckedUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_siteCreateWithoutT_liaison_utilisateur_siteInput = {
@@ -78031,11 +77923,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurUncheckedCreateWithoutT_liaison_utilisateur_siteInput = {
@@ -78066,11 +77958,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUncheckedCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurCreateOrConnectWithoutT_liaison_utilisateur_siteInput = {
@@ -78146,11 +78038,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_utilisateurUncheckedUpdateWithoutT_liaison_utilisateur_siteInput = {
@@ -78181,11 +78073,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUncheckedUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_groupeCreateWithoutT_lieu_groupeInput = {
@@ -78282,7 +78174,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -78378,7 +78270,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -78505,7 +78397,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -78601,7 +78493,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -78617,12 +78509,10 @@ export namespace Prisma {
     Valeur?: number | null
     Type?: string | null
     Date_Heure_Fin?: Date | string | null
-    Est_Alarme_Vrai?: boolean | null
     Sonde_Numero_Serie?: string | null
     Unite?: string | null
     Est_Acquittee?: boolean | null
     Date_Heure_Derniere_Mesure?: Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: Date | string | null
     Est_Alarme_Pour_VigiTel?: boolean | null
     Est_Mail_Envoye?: boolean | null
     Est_Tel_Acquittee?: boolean | null
@@ -78635,12 +78525,10 @@ export namespace Prisma {
     Valeur?: number | null
     Type?: string | null
     Date_Heure_Fin?: Date | string | null
-    Est_Alarme_Vrai?: boolean | null
     Sonde_Numero_Serie?: string | null
     Unite?: string | null
     Est_Acquittee?: boolean | null
     Date_Heure_Derniere_Mesure?: Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: Date | string | null
     Est_Alarme_Pour_VigiTel?: boolean | null
     Est_Mail_Envoye?: boolean | null
     Est_Tel_Acquittee?: boolean | null
@@ -78663,12 +78551,10 @@ export namespace Prisma {
     Valeur?: number | null
     Type?: string | null
     Date_Heure_Fin?: Date | string | null
-    Est_Alarme_Vrai?: boolean | null
     Sonde_Numero_Serie?: string | null
     Unite?: string | null
     Est_Acquittee?: boolean | null
     Date_Heure_Derniere_Mesure?: Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: Date | string | null
     Est_Alarme_Pour_VigiTel?: boolean | null
     Est_Mail_Envoye?: boolean | null
     Est_Tel_Acquittee?: boolean | null
@@ -78682,12 +78568,10 @@ export namespace Prisma {
     Valeur?: number | null
     Type?: string | null
     Date_Heure_Fin?: Date | string | null
-    Est_Alarme_Vrai?: boolean | null
     Sonde_Numero_Serie?: string | null
     Unite?: string | null
     Est_Acquittee?: boolean | null
     Date_Heure_Derniere_Mesure?: Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: Date | string | null
     Est_Alarme_Pour_VigiTel?: boolean | null
     Est_Mail_Envoye?: boolean | null
     Est_Tel_Acquittee?: boolean | null
@@ -78945,13 +78829,11 @@ export namespace Prisma {
     Valeur?: FloatNullableFilter<"t_alarme"> | number | null
     Type?: StringNullableFilter<"t_alarme"> | string | null
     Date_Heure_Fin?: DateTimeNullableFilter<"t_alarme"> | Date | string | null
-    Est_Alarme_Vrai?: BoolNullableFilter<"t_alarme"> | boolean | null
     Id_Lieu?: IntNullableFilter<"t_alarme"> | number | null
     Sonde_Numero_Serie?: StringNullableFilter<"t_alarme"> | string | null
     Unite?: StringNullableFilter<"t_alarme"> | string | null
     Est_Acquittee?: BoolNullableFilter<"t_alarme"> | boolean | null
     Date_Heure_Derniere_Mesure?: DateTimeNullableFilter<"t_alarme"> | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: DateTimeNullableFilter<"t_alarme"> | Date | string | null
     Est_Alarme_Pour_VigiTel?: BoolNullableFilter<"t_alarme"> | boolean | null
     Est_Mail_Envoye?: BoolNullableFilter<"t_alarme"> | boolean | null
     Est_Tel_Acquittee?: BoolNullableFilter<"t_alarme"> | boolean | null
@@ -78983,13 +78865,11 @@ export namespace Prisma {
     Valeur?: FloatNullableFilter<"t_alarme_histo"> | number | null
     Type?: StringNullableFilter<"t_alarme_histo"> | string | null
     Date_Heure_Fin?: DateTimeNullableFilter<"t_alarme_histo"> | Date | string | null
-    Est_Alarme_Vrai?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
     Id_Lieu?: IntNullableFilter<"t_alarme_histo"> | number | null
     Sonde_Numero_Serie?: StringNullableFilter<"t_alarme_histo"> | string | null
     Unite?: StringNullableFilter<"t_alarme_histo"> | string | null
     Est_Acquittee?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
     Date_Heure_Derniere_Mesure?: DateTimeNullableFilter<"t_alarme_histo"> | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: DateTimeNullableFilter<"t_alarme_histo"> | Date | string | null
     Est_Alarme_Pour_VigiTel?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
     Est_Mail_Envoye?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
     Est_Tel_Acquittee?: BoolNullableFilter<"t_alarme_histo"> | boolean | null
@@ -79349,7 +79229,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -79444,7 +79324,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -79599,7 +79479,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: BoolNullableFilter<"t_lieu"> | boolean | null
     Est_Son_Alarme_Active?: BoolFilter<"t_lieu"> | boolean
     Planning_Actif?: BoolFilter<"t_lieu"> | boolean
-    Planning_Regle_Existe?: BoolFilter<"t_lieu"> | boolean
+    Planning_Regle_Existe?: BoolNullableFilter<"t_lieu"> | boolean | null
     Planning_Source_Regle_Id?: IntNullableFilter<"t_lieu"> | number | null
     Planning_Derniere_Maj?: DateTimeNullableFilter<"t_lieu"> | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFilter<"t_lieu"> | boolean
@@ -79731,7 +79611,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -79826,7 +79706,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -80107,7 +79987,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -80202,7 +80082,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -80599,7 +80479,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -80694,7 +80574,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -80936,7 +80816,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -81031,7 +80911,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -81388,8 +81268,8 @@ export namespace Prisma {
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_vigilog_configurationInput
     t_vigilog_tournee?: t_vigilog_tourneeCreateNestedManyWithoutT_vigilog_configurationInput
+    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_vigilog_configurationInput
   }
 
   export type t_vigilog_configurationUncheckedCreateWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput = {
@@ -81410,8 +81290,8 @@ export namespace Prisma {
     Date_Heure_Creation?: Date | string
     Id_Utilisateur_Maj?: number | null
     Date_Heure_Maj?: Date | string | null
-    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_vigilog_configurationInput
     t_vigilog_tournee?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_vigilog_configurationInput
+    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_vigilog_configurationInput
   }
 
   export type t_vigilog_configurationCreateOrConnectWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput = {
@@ -81441,8 +81321,8 @@ export namespace Prisma {
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
-    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_vigilog_configurationInput
     t_vigilog_tournee?: t_vigilog_tourneeCreateNestedManyWithoutT_vigilog_configurationInput
+    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_vigilog_configurationInput
   }
 
   export type t_vigilog_configurationUncheckedCreateWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput = {
@@ -81463,8 +81343,8 @@ export namespace Prisma {
     Id_Utilisateur_Creation?: number | null
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
-    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_vigilog_configurationInput
     t_vigilog_tournee?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_vigilog_configurationInput
+    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_vigilog_configurationInput
   }
 
   export type t_vigilog_configurationCreateOrConnectWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput = {
@@ -81474,96 +81354,6 @@ export namespace Prisma {
 
   export type t_vigilog_configurationCreateManyT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInputEnvelope = {
     data: t_vigilog_configurationCreateManyT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput | t_vigilog_configurationCreateManyT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    Reference_Usage: string
-    Nom_Configuration: string
-    Numero_Serie_VigiLog: string
-    Nom_Lieu_Temporaire: string
-    Statut: string
-    Date_Heure_Demarrage: Date | string
-    Commentaire_Demarrage?: string | null
-    Date_Heure_Arret?: Date | string | null
-    Commentaire_Arret?: string | null
-    Date_Heure_Creation?: Date | string
-    Date_Heure_Maj?: Date | string | null
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur: t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
-    t_vigilog_configuration?: t_vigilog_configurationCreateNestedOneWithoutT_vigilog_usage_ponctuelInput
-    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_usage_ponctuelInput
-  }
-
-  export type t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    Id_VigiLog_Usage_Ponctuel?: number
-    Reference_Usage: string
-    Id_VigiLog_Configuration?: number | null
-    Id_VigiLog?: number | null
-    Nom_Configuration: string
-    Numero_Serie_VigiLog: string
-    Nom_Lieu_Temporaire: string
-    Statut: string
-    Id_Utilisateur_Demarrage: number
-    Date_Heure_Demarrage: Date | string
-    Commentaire_Demarrage?: string | null
-    Date_Heure_Arret?: Date | string | null
-    Commentaire_Arret?: string | null
-    Date_Heure_Creation?: Date | string
-    Date_Heure_Maj?: Date | string | null
-  }
-
-  export type t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    where: t_vigilog_usage_ponctuelWhereUniqueInput
-    create: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
-  }
-
-  export type t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInputEnvelope = {
-    data: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    Reference_Usage: string
-    Nom_Configuration: string
-    Numero_Serie_VigiLog: string
-    Nom_Lieu_Temporaire: string
-    Statut: string
-    Date_Heure_Demarrage: Date | string
-    Commentaire_Demarrage?: string | null
-    Date_Heure_Arret?: Date | string | null
-    Commentaire_Arret?: string | null
-    Date_Heure_Creation?: Date | string
-    Date_Heure_Maj?: Date | string | null
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_configuration?: t_vigilog_configurationCreateNestedOneWithoutT_vigilog_usage_ponctuelInput
-    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_usage_ponctuelInput
-  }
-
-  export type t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    Id_VigiLog_Usage_Ponctuel?: number
-    Reference_Usage: string
-    Id_VigiLog_Configuration?: number | null
-    Id_VigiLog?: number | null
-    Nom_Configuration: string
-    Numero_Serie_VigiLog: string
-    Nom_Lieu_Temporaire: string
-    Statut: string
-    Date_Heure_Demarrage: Date | string
-    Commentaire_Demarrage?: string | null
-    Id_Utilisateur_Arret?: number | null
-    Date_Heure_Arret?: Date | string | null
-    Commentaire_Arret?: string | null
-    Date_Heure_Creation?: Date | string
-    Date_Heure_Maj?: Date | string | null
-  }
-
-  export type t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    where: t_vigilog_usage_ponctuelWhereUniqueInput
-    create: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
-  }
-
-  export type t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInputEnvelope = {
-    data: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
     skipDuplicates?: boolean
   }
 
@@ -81840,6 +81630,96 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    Reference_Usage: string
+    Nom_Configuration: string
+    Numero_Serie_VigiLog: string
+    Nom_Lieu_Temporaire: string
+    Statut: string
+    Date_Heure_Demarrage: Date | string
+    Commentaire_Demarrage?: string | null
+    Date_Heure_Arret?: Date | string | null
+    Commentaire_Arret?: string | null
+    Date_Heure_Creation?: Date | string
+    Date_Heure_Maj?: Date | string | null
+    t_vigilog_configuration?: t_vigilog_configurationCreateNestedOneWithoutT_vigilog_usage_ponctuelInput
+    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_usage_ponctuelInput
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
+  }
+
+  export type t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    Id_VigiLog_Usage_Ponctuel?: number
+    Reference_Usage: string
+    Id_VigiLog_Configuration?: number | null
+    Id_VigiLog?: number | null
+    Nom_Configuration: string
+    Numero_Serie_VigiLog: string
+    Nom_Lieu_Temporaire: string
+    Statut: string
+    Date_Heure_Demarrage: Date | string
+    Commentaire_Demarrage?: string | null
+    Id_Utilisateur_Arret?: number | null
+    Date_Heure_Arret?: Date | string | null
+    Commentaire_Arret?: string | null
+    Date_Heure_Creation?: Date | string
+    Date_Heure_Maj?: Date | string | null
+  }
+
+  export type t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    where: t_vigilog_usage_ponctuelWhereUniqueInput
+    create: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
+  }
+
+  export type t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInputEnvelope = {
+    data: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput | t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    Reference_Usage: string
+    Nom_Configuration: string
+    Numero_Serie_VigiLog: string
+    Nom_Lieu_Temporaire: string
+    Statut: string
+    Date_Heure_Demarrage: Date | string
+    Commentaire_Demarrage?: string | null
+    Date_Heure_Arret?: Date | string | null
+    Commentaire_Arret?: string | null
+    Date_Heure_Creation?: Date | string
+    Date_Heure_Maj?: Date | string | null
+    t_vigilog_configuration?: t_vigilog_configurationCreateNestedOneWithoutT_vigilog_usage_ponctuelInput
+    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_usage_ponctuelInput
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur: t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+  }
+
+  export type t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    Id_VigiLog_Usage_Ponctuel?: number
+    Reference_Usage: string
+    Id_VigiLog_Configuration?: number | null
+    Id_VigiLog?: number | null
+    Nom_Configuration: string
+    Numero_Serie_VigiLog: string
+    Nom_Lieu_Temporaire: string
+    Statut: string
+    Id_Utilisateur_Demarrage: number
+    Date_Heure_Demarrage: Date | string
+    Commentaire_Demarrage?: string | null
+    Date_Heure_Arret?: Date | string | null
+    Commentaire_Arret?: string | null
+    Date_Heure_Creation?: Date | string
+    Date_Heure_Maj?: Date | string | null
+  }
+
+  export type t_vigilog_usage_ponctuelCreateOrConnectWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    where: t_vigilog_usage_ponctuelWhereUniqueInput
+    create: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
+  }
+
+  export type t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInputEnvelope = {
+    data: t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput | t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput[]
+    skipDuplicates?: boolean
+  }
+
   export type t_ancien_mot_de_passeUpsertWithWhereUniqueWithoutT_utilisateurInput = {
     where: t_ancien_mot_de_passeWhereUniqueInput
     update: XOR<t_ancien_mot_de_passeUpdateWithoutT_utilisateurInput, t_ancien_mot_de_passeUncheckedUpdateWithoutT_utilisateurInput>
@@ -81986,60 +81866,6 @@ export namespace Prisma {
     data: XOR<t_vigilog_configurationUpdateManyMutationInput, t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput>
   }
 
-  export type t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    where: t_vigilog_usage_ponctuelWhereUniqueInput
-    update: XOR<t_vigilog_usage_ponctuelUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
-    create: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
-  }
-
-  export type t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    where: t_vigilog_usage_ponctuelWhereUniqueInput
-    data: XOR<t_vigilog_usage_ponctuelUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
-  }
-
-  export type t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    where: t_vigilog_usage_ponctuelScalarWhereInput
-    data: XOR<t_vigilog_usage_ponctuelUpdateManyMutationInput, t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
-  }
-
-  export type t_vigilog_usage_ponctuelScalarWhereInput = {
-    AND?: t_vigilog_usage_ponctuelScalarWhereInput | t_vigilog_usage_ponctuelScalarWhereInput[]
-    OR?: t_vigilog_usage_ponctuelScalarWhereInput[]
-    NOT?: t_vigilog_usage_ponctuelScalarWhereInput | t_vigilog_usage_ponctuelScalarWhereInput[]
-    Id_VigiLog_Usage_Ponctuel?: IntFilter<"t_vigilog_usage_ponctuel"> | number
-    Reference_Usage?: StringFilter<"t_vigilog_usage_ponctuel"> | string
-    Id_VigiLog_Configuration?: IntNullableFilter<"t_vigilog_usage_ponctuel"> | number | null
-    Id_VigiLog?: IntNullableFilter<"t_vigilog_usage_ponctuel"> | number | null
-    Nom_Configuration?: StringFilter<"t_vigilog_usage_ponctuel"> | string
-    Numero_Serie_VigiLog?: StringFilter<"t_vigilog_usage_ponctuel"> | string
-    Nom_Lieu_Temporaire?: StringFilter<"t_vigilog_usage_ponctuel"> | string
-    Statut?: StringFilter<"t_vigilog_usage_ponctuel"> | string
-    Id_Utilisateur_Demarrage?: IntFilter<"t_vigilog_usage_ponctuel"> | number
-    Date_Heure_Demarrage?: DateTimeFilter<"t_vigilog_usage_ponctuel"> | Date | string
-    Commentaire_Demarrage?: StringNullableFilter<"t_vigilog_usage_ponctuel"> | string | null
-    Id_Utilisateur_Arret?: IntNullableFilter<"t_vigilog_usage_ponctuel"> | number | null
-    Date_Heure_Arret?: DateTimeNullableFilter<"t_vigilog_usage_ponctuel"> | Date | string | null
-    Commentaire_Arret?: StringNullableFilter<"t_vigilog_usage_ponctuel"> | string | null
-    Date_Heure_Creation?: DateTimeFilter<"t_vigilog_usage_ponctuel"> | Date | string
-    Date_Heure_Maj?: DateTimeNullableFilter<"t_vigilog_usage_ponctuel"> | Date | string | null
-  }
-
-  export type t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    where: t_vigilog_usage_ponctuelWhereUniqueInput
-    update: XOR<t_vigilog_usage_ponctuelUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
-    create: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
-  }
-
-  export type t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    where: t_vigilog_usage_ponctuelWhereUniqueInput
-    data: XOR<t_vigilog_usage_ponctuelUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
-  }
-
-  export type t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    where: t_vigilog_usage_ponctuelScalarWhereInput
-    data: XOR<t_vigilog_usage_ponctuelUpdateManyMutationInput, t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
-  }
-
   export type t_vigilog_tourneeUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput = {
     where: t_vigilog_tourneeWhereUniqueInput
     update: XOR<t_vigilog_tourneeUpdateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput, t_vigilog_tourneeUncheckedUpdateWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput>
@@ -82088,17 +81914,69 @@ export namespace Prisma {
     data: XOR<t_vigilog_tourneeUpdateManyMutationInput, t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput>
   }
 
+  export type t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    where: t_vigilog_usage_ponctuelWhereUniqueInput
+    update: XOR<t_vigilog_usage_ponctuelUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
+    create: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
+  }
+
+  export type t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    where: t_vigilog_usage_ponctuelWhereUniqueInput
+    data: XOR<t_vigilog_usage_ponctuelUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
+  }
+
+  export type t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    where: t_vigilog_usage_ponctuelScalarWhereInput
+    data: XOR<t_vigilog_usage_ponctuelUpdateManyMutationInput, t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
+  }
+
+  export type t_vigilog_usage_ponctuelScalarWhereInput = {
+    AND?: t_vigilog_usage_ponctuelScalarWhereInput | t_vigilog_usage_ponctuelScalarWhereInput[]
+    OR?: t_vigilog_usage_ponctuelScalarWhereInput[]
+    NOT?: t_vigilog_usage_ponctuelScalarWhereInput | t_vigilog_usage_ponctuelScalarWhereInput[]
+    Id_VigiLog_Usage_Ponctuel?: IntFilter<"t_vigilog_usage_ponctuel"> | number
+    Reference_Usage?: StringFilter<"t_vigilog_usage_ponctuel"> | string
+    Id_VigiLog_Configuration?: IntNullableFilter<"t_vigilog_usage_ponctuel"> | number | null
+    Id_VigiLog?: IntNullableFilter<"t_vigilog_usage_ponctuel"> | number | null
+    Nom_Configuration?: StringFilter<"t_vigilog_usage_ponctuel"> | string
+    Numero_Serie_VigiLog?: StringFilter<"t_vigilog_usage_ponctuel"> | string
+    Nom_Lieu_Temporaire?: StringFilter<"t_vigilog_usage_ponctuel"> | string
+    Statut?: StringFilter<"t_vigilog_usage_ponctuel"> | string
+    Id_Utilisateur_Demarrage?: IntFilter<"t_vigilog_usage_ponctuel"> | number
+    Date_Heure_Demarrage?: DateTimeFilter<"t_vigilog_usage_ponctuel"> | Date | string
+    Commentaire_Demarrage?: StringNullableFilter<"t_vigilog_usage_ponctuel"> | string | null
+    Id_Utilisateur_Arret?: IntNullableFilter<"t_vigilog_usage_ponctuel"> | number | null
+    Date_Heure_Arret?: DateTimeNullableFilter<"t_vigilog_usage_ponctuel"> | Date | string | null
+    Commentaire_Arret?: StringNullableFilter<"t_vigilog_usage_ponctuel"> | string | null
+    Date_Heure_Creation?: DateTimeFilter<"t_vigilog_usage_ponctuel"> | Date | string
+    Date_Heure_Maj?: DateTimeNullableFilter<"t_vigilog_usage_ponctuel"> | Date | string | null
+  }
+
+  export type t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    where: t_vigilog_usage_ponctuelWhereUniqueInput
+    update: XOR<t_vigilog_usage_ponctuelUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
+    create: XOR<t_vigilog_usage_ponctuelCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
+  }
+
+  export type t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    where: t_vigilog_usage_ponctuelWhereUniqueInput
+    data: XOR<t_vigilog_usage_ponctuelUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
+  }
+
+  export type t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    where: t_vigilog_usage_ponctuelScalarWhereInput
+    data: XOR<t_vigilog_usage_ponctuelUpdateManyMutationInput, t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
+  }
+
   export type t_alarmeCreateWithoutT_notificationInput = {
     Date_Heure_Debut?: Date | string | null
     Valeur?: number | null
     Type?: string | null
     Date_Heure_Fin?: Date | string | null
-    Est_Alarme_Vrai?: boolean | null
     Sonde_Numero_Serie?: string | null
     Unite?: string | null
     Est_Acquittee?: boolean | null
     Date_Heure_Derniere_Mesure?: Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: Date | string | null
     Est_Alarme_Pour_VigiTel?: boolean | null
     Est_Mail_Envoye?: boolean | null
     Est_Tel_Acquittee?: boolean | null
@@ -82111,13 +81989,11 @@ export namespace Prisma {
     Valeur?: number | null
     Type?: string | null
     Date_Heure_Fin?: Date | string | null
-    Est_Alarme_Vrai?: boolean | null
     Id_Lieu?: number | null
     Sonde_Numero_Serie?: string | null
     Unite?: string | null
     Est_Acquittee?: boolean | null
     Date_Heure_Derniere_Mesure?: Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: Date | string | null
     Est_Alarme_Pour_VigiTel?: boolean | null
     Est_Mail_Envoye?: boolean | null
     Est_Tel_Acquittee?: boolean | null
@@ -82183,12 +82059,10 @@ export namespace Prisma {
     Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
     Type?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Alarme_Vrai?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Unite?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Date_Heure_Derniere_Mesure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Alarme_Pour_VigiTel?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Mail_Envoye?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Tel_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -82201,13 +82075,11 @@ export namespace Prisma {
     Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
     Type?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Alarme_Vrai?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Id_Lieu?: NullableIntFieldUpdateOperationsInput | number | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Unite?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Date_Heure_Derniere_Mesure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Alarme_Pour_VigiTel?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Mail_Envoye?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Tel_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -82308,11 +82180,11 @@ export namespace Prisma {
     t_liaison_utilisateur_site?: t_liaison_utilisateur_siteCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurUncheckedCreateWithoutT_notification_deliveryInput = {
@@ -82343,11 +82215,11 @@ export namespace Prisma {
     t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUncheckedCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurCreateOrConnectWithoutT_notification_deliveryInput = {
@@ -82480,11 +82352,11 @@ export namespace Prisma {
     t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_utilisateurUncheckedUpdateWithoutT_notification_deliveryInput = {
@@ -82515,11 +82387,11 @@ export namespace Prisma {
     t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUncheckedUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_notification_eventUpsertWithWhereUniqueWithoutT_notification_deliveryInput = {
@@ -82717,11 +82589,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurUncheckedCreateWithoutT_ancien_mot_de_passeInput = {
@@ -82752,11 +82624,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUncheckedCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurCreateOrConnectWithoutT_ancien_mot_de_passeInput = {
@@ -82802,11 +82674,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_utilisateurUncheckedUpdateWithoutT_ancien_mot_de_passeInput = {
@@ -82837,11 +82709,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUncheckedUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_sondeCreateWithoutT_sonde_etatInput = {
@@ -82987,7 +82859,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -83083,7 +82955,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -83184,7 +83056,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -83280,7 +83152,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -83365,7 +83237,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -83461,7 +83333,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -83562,7 +83434,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -83658,7 +83530,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -83776,11 +83648,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurUncheckedCreateWithoutT_commande_materielInput = {
@@ -83811,11 +83683,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUncheckedCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurCreateOrConnectWithoutT_commande_materielInput = {
@@ -83916,11 +83788,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_utilisateurUncheckedUpdateWithoutT_commande_materielInput = {
@@ -83951,11 +83823,11 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUncheckedUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_commande_materiel_ligneUpsertWithWhereUniqueWithoutCommandeInput = {
@@ -84129,11 +84001,11 @@ export namespace Prisma {
     t_liaison_utilisateur_site?: t_liaison_utilisateur_siteCreateNestedManyWithoutT_utilisateurInput
     t_notification_delivery?: t_notification_deliveryCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurUncheckedCreateWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput = {
@@ -84164,11 +84036,11 @@ export namespace Prisma {
     t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUncheckedCreateNestedManyWithoutT_utilisateurInput
     t_notification_delivery?: t_notification_deliveryUncheckedCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurCreateOrConnectWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput = {
@@ -84203,11 +84075,11 @@ export namespace Prisma {
     t_liaison_utilisateur_site?: t_liaison_utilisateur_siteCreateNestedManyWithoutT_utilisateurInput
     t_notification_delivery?: t_notification_deliveryCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurUncheckedCreateWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput = {
@@ -84238,61 +84110,16 @@ export namespace Prisma {
     t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUncheckedCreateNestedManyWithoutT_utilisateurInput
     t_notification_delivery?: t_notification_deliveryUncheckedCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurCreateOrConnectWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput = {
     where: t_utilisateurWhereUniqueInput
     create: XOR<t_utilisateurCreateWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput, t_utilisateurUncheckedCreateWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput>
-  }
-
-  export type t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput = {
-    Reference_Usage: string
-    Nom_Configuration: string
-    Numero_Serie_VigiLog: string
-    Nom_Lieu_Temporaire: string
-    Statut: string
-    Date_Heure_Demarrage: Date | string
-    Commentaire_Demarrage?: string | null
-    Date_Heure_Arret?: Date | string | null
-    Commentaire_Arret?: string | null
-    Date_Heure_Creation?: Date | string
-    Date_Heure_Maj?: Date | string | null
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur: t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_usage_ponctuelInput
-  }
-
-  export type t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput = {
-    Id_VigiLog_Usage_Ponctuel?: number
-    Reference_Usage: string
-    Id_VigiLog?: number | null
-    Nom_Configuration: string
-    Numero_Serie_VigiLog: string
-    Nom_Lieu_Temporaire: string
-    Statut: string
-    Id_Utilisateur_Demarrage: number
-    Date_Heure_Demarrage: Date | string
-    Commentaire_Demarrage?: string | null
-    Id_Utilisateur_Arret?: number | null
-    Date_Heure_Arret?: Date | string | null
-    Commentaire_Arret?: string | null
-    Date_Heure_Creation?: Date | string
-    Date_Heure_Maj?: Date | string | null
-  }
-
-  export type t_vigilog_usage_ponctuelCreateOrConnectWithoutT_vigilog_configurationInput = {
-    where: t_vigilog_usage_ponctuelWhereUniqueInput
-    create: XOR<t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput>
-  }
-
-  export type t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInputEnvelope = {
-    data: t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInput | t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInput[]
-    skipDuplicates?: boolean
   }
 
   export type t_vigilog_tourneeCreateWithoutT_vigilog_configurationInput = {
@@ -84386,6 +84213,51 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput = {
+    Reference_Usage: string
+    Nom_Configuration: string
+    Numero_Serie_VigiLog: string
+    Nom_Lieu_Temporaire: string
+    Statut: string
+    Date_Heure_Demarrage: Date | string
+    Commentaire_Demarrage?: string | null
+    Date_Heure_Arret?: Date | string | null
+    Commentaire_Arret?: string | null
+    Date_Heure_Creation?: Date | string
+    Date_Heure_Maj?: Date | string | null
+    t_vigilog?: t_vigilogCreateNestedOneWithoutT_vigilog_usage_ponctuelInput
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur: t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
+  }
+
+  export type t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput = {
+    Id_VigiLog_Usage_Ponctuel?: number
+    Reference_Usage: string
+    Id_VigiLog?: number | null
+    Nom_Configuration: string
+    Numero_Serie_VigiLog: string
+    Nom_Lieu_Temporaire: string
+    Statut: string
+    Id_Utilisateur_Demarrage: number
+    Date_Heure_Demarrage: Date | string
+    Commentaire_Demarrage?: string | null
+    Id_Utilisateur_Arret?: number | null
+    Date_Heure_Arret?: Date | string | null
+    Commentaire_Arret?: string | null
+    Date_Heure_Creation?: Date | string
+    Date_Heure_Maj?: Date | string | null
+  }
+
+  export type t_vigilog_usage_ponctuelCreateOrConnectWithoutT_vigilog_configurationInput = {
+    where: t_vigilog_usage_ponctuelWhereUniqueInput
+    create: XOR<t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput>
+  }
+
+  export type t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInputEnvelope = {
+    data: t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInput | t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInput[]
+    skipDuplicates?: boolean
+  }
+
   export type t_utilisateurUpsertWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput = {
     update: XOR<t_utilisateurUpdateWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput, t_utilisateurUncheckedUpdateWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput>
     create: XOR<t_utilisateurCreateWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput, t_utilisateurUncheckedCreateWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput>
@@ -84424,11 +84296,11 @@ export namespace Prisma {
     t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUpdateManyWithoutT_utilisateurNestedInput
     t_notification_delivery?: t_notification_deliveryUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_utilisateurUncheckedUpdateWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput = {
@@ -84459,11 +84331,11 @@ export namespace Prisma {
     t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUncheckedUpdateManyWithoutT_utilisateurNestedInput
     t_notification_delivery?: t_notification_deliveryUncheckedUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_utilisateurUpsertWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput = {
@@ -84504,11 +84376,11 @@ export namespace Prisma {
     t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUpdateManyWithoutT_utilisateurNestedInput
     t_notification_delivery?: t_notification_deliveryUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_utilisateurUncheckedUpdateWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput = {
@@ -84539,27 +84411,11 @@ export namespace Prisma {
     t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUncheckedUpdateManyWithoutT_utilisateurNestedInput
     t_notification_delivery?: t_notification_deliveryUncheckedUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
-  }
-
-  export type t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_vigilog_configurationInput = {
-    where: t_vigilog_usage_ponctuelWhereUniqueInput
-    update: XOR<t_vigilog_usage_ponctuelUpdateWithoutT_vigilog_configurationInput, t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_vigilog_configurationInput>
-    create: XOR<t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput>
-  }
-
-  export type t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_vigilog_configurationInput = {
-    where: t_vigilog_usage_ponctuelWhereUniqueInput
-    data: XOR<t_vigilog_usage_ponctuelUpdateWithoutT_vigilog_configurationInput, t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_vigilog_configurationInput>
-  }
-
-  export type t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_vigilog_configurationInput = {
-    where: t_vigilog_usage_ponctuelScalarWhereInput
-    data: XOR<t_vigilog_usage_ponctuelUpdateManyMutationInput, t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_vigilog_configurationInput>
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_vigilog_tourneeUpsertWithWhereUniqueWithoutT_vigilog_configurationInput = {
@@ -84576,6 +84432,22 @@ export namespace Prisma {
   export type t_vigilog_tourneeUpdateManyWithWhereWithoutT_vigilog_configurationInput = {
     where: t_vigilog_tourneeScalarWhereInput
     data: XOR<t_vigilog_tourneeUpdateManyMutationInput, t_vigilog_tourneeUncheckedUpdateManyWithoutT_vigilog_configurationInput>
+  }
+
+  export type t_vigilog_usage_ponctuelUpsertWithWhereUniqueWithoutT_vigilog_configurationInput = {
+    where: t_vigilog_usage_ponctuelWhereUniqueInput
+    update: XOR<t_vigilog_usage_ponctuelUpdateWithoutT_vigilog_configurationInput, t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_vigilog_configurationInput>
+    create: XOR<t_vigilog_usage_ponctuelCreateWithoutT_vigilog_configurationInput, t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilog_configurationInput>
+  }
+
+  export type t_vigilog_usage_ponctuelUpdateWithWhereUniqueWithoutT_vigilog_configurationInput = {
+    where: t_vigilog_usage_ponctuelWhereUniqueInput
+    data: XOR<t_vigilog_usage_ponctuelUpdateWithoutT_vigilog_configurationInput, t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_vigilog_configurationInput>
+  }
+
+  export type t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_vigilog_configurationInput = {
+    where: t_vigilog_usage_ponctuelScalarWhereInput
+    data: XOR<t_vigilog_usage_ponctuelUpdateManyMutationInput, t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_vigilog_configurationInput>
   }
 
   export type t_vigilog_tourneeCreateWithoutT_vigilogInput = {
@@ -84681,9 +84553,9 @@ export namespace Prisma {
     Commentaire_Arret?: string | null
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
+    t_vigilog_configuration?: t_vigilog_configurationCreateNestedOneWithoutT_vigilog_usage_ponctuelInput
     t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur: t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurCreateNestedOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_configuration?: t_vigilog_configurationCreateNestedOneWithoutT_vigilog_usage_ponctuelInput
   }
 
   export type t_vigilog_usage_ponctuelUncheckedCreateWithoutT_vigilogInput = {
@@ -84744,154 +84616,6 @@ export namespace Prisma {
   export type t_vigilog_usage_ponctuelUpdateManyWithWhereWithoutT_vigilogInput = {
     where: t_vigilog_usage_ponctuelScalarWhereInput
     data: XOR<t_vigilog_usage_ponctuelUpdateManyMutationInput, t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_vigilogInput>
-  }
-
-  export type t_utilisateurCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    Login?: string | null
-    Mot_De_Passe?: string | null
-    Date_Validite?: Date | string | null
-    Date_Creation?: Date | string | null
-    Est_Archive?: boolean | null
-    Profil_Utilisateur?: string | null
-    Date_Heure_Derniere_Connexion?: Date | string | null
-    Adresse_IP_Connexion?: string | null
-    Nom_Machine_Connexion?: string | null
-    Id_Site?: number | null
-    Nom?: string | null
-    Prenom?: string | null
-    Tel_Num_Fixe?: string | null
-    Tel_Num_Mobile?: string | null
-    Adresse_Email?: string | null
-    Date_Derniere_Modification_MDP?: Date | string | null
-    Reset_Password_Token?: string | null
-    Reset_Password_Expires?: Date | string | null
-    Est_Mot_De_Passe_Temporaire?: boolean | null
-    Avatar_Utilisateur?: string | null
-    t_ancien_mot_de_passe?: t_ancien_mot_de_passeCreateNestedManyWithoutT_utilisateurInput
-    t_commande_materiel?: t_commande_materielCreateNestedManyWithoutT_utilisateurInput
-    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeCreateNestedManyWithoutT_utilisateurInput
-    t_liaison_utilisateur_site?: t_liaison_utilisateur_siteCreateNestedManyWithoutT_utilisateurInput
-    t_notification_delivery?: t_notification_deliveryCreateNestedManyWithoutT_utilisateurInput
-    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
-    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
-  }
-
-  export type t_utilisateurUncheckedCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    Id_Utilisateur?: number
-    Login?: string | null
-    Mot_De_Passe?: string | null
-    Date_Validite?: Date | string | null
-    Date_Creation?: Date | string | null
-    Est_Archive?: boolean | null
-    Profil_Utilisateur?: string | null
-    Date_Heure_Derniere_Connexion?: Date | string | null
-    Adresse_IP_Connexion?: string | null
-    Nom_Machine_Connexion?: string | null
-    Id_Site?: number | null
-    Nom?: string | null
-    Prenom?: string | null
-    Tel_Num_Fixe?: string | null
-    Tel_Num_Mobile?: string | null
-    Adresse_Email?: string | null
-    Date_Derniere_Modification_MDP?: Date | string | null
-    Reset_Password_Token?: string | null
-    Reset_Password_Expires?: Date | string | null
-    Est_Mot_De_Passe_Temporaire?: boolean | null
-    Avatar_Utilisateur?: string | null
-    t_ancien_mot_de_passe?: t_ancien_mot_de_passeUncheckedCreateNestedManyWithoutT_utilisateurInput
-    t_commande_materiel?: t_commande_materielUncheckedCreateNestedManyWithoutT_utilisateurInput
-    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUncheckedCreateNestedManyWithoutT_utilisateurInput
-    t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUncheckedCreateNestedManyWithoutT_utilisateurInput
-    t_notification_delivery?: t_notification_deliveryUncheckedCreateNestedManyWithoutT_utilisateurInput
-    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
-    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
-  }
-
-  export type t_utilisateurCreateOrConnectWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    where: t_utilisateurWhereUniqueInput
-    create: XOR<t_utilisateurCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_utilisateurUncheckedCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
-  }
-
-  export type t_utilisateurCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    Login?: string | null
-    Mot_De_Passe?: string | null
-    Date_Validite?: Date | string | null
-    Date_Creation?: Date | string | null
-    Est_Archive?: boolean | null
-    Profil_Utilisateur?: string | null
-    Date_Heure_Derniere_Connexion?: Date | string | null
-    Adresse_IP_Connexion?: string | null
-    Nom_Machine_Connexion?: string | null
-    Id_Site?: number | null
-    Nom?: string | null
-    Prenom?: string | null
-    Tel_Num_Fixe?: string | null
-    Tel_Num_Mobile?: string | null
-    Adresse_Email?: string | null
-    Date_Derniere_Modification_MDP?: Date | string | null
-    Reset_Password_Token?: string | null
-    Reset_Password_Expires?: Date | string | null
-    Est_Mot_De_Passe_Temporaire?: boolean | null
-    Avatar_Utilisateur?: string | null
-    t_ancien_mot_de_passe?: t_ancien_mot_de_passeCreateNestedManyWithoutT_utilisateurInput
-    t_commande_materiel?: t_commande_materielCreateNestedManyWithoutT_utilisateurInput
-    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeCreateNestedManyWithoutT_utilisateurInput
-    t_liaison_utilisateur_site?: t_liaison_utilisateur_siteCreateNestedManyWithoutT_utilisateurInput
-    t_notification_delivery?: t_notification_deliveryCreateNestedManyWithoutT_utilisateurInput
-    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
-    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
-  }
-
-  export type t_utilisateurUncheckedCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    Id_Utilisateur?: number
-    Login?: string | null
-    Mot_De_Passe?: string | null
-    Date_Validite?: Date | string | null
-    Date_Creation?: Date | string | null
-    Est_Archive?: boolean | null
-    Profil_Utilisateur?: string | null
-    Date_Heure_Derniere_Connexion?: Date | string | null
-    Adresse_IP_Connexion?: string | null
-    Nom_Machine_Connexion?: string | null
-    Id_Site?: number | null
-    Nom?: string | null
-    Prenom?: string | null
-    Tel_Num_Fixe?: string | null
-    Tel_Num_Mobile?: string | null
-    Adresse_Email?: string | null
-    Date_Derniere_Modification_MDP?: Date | string | null
-    Reset_Password_Token?: string | null
-    Reset_Password_Expires?: Date | string | null
-    Est_Mot_De_Passe_Temporaire?: boolean | null
-    Avatar_Utilisateur?: string | null
-    t_ancien_mot_de_passe?: t_ancien_mot_de_passeUncheckedCreateNestedManyWithoutT_utilisateurInput
-    t_commande_materiel?: t_commande_materielUncheckedCreateNestedManyWithoutT_utilisateurInput
-    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUncheckedCreateNestedManyWithoutT_utilisateurInput
-    t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUncheckedCreateNestedManyWithoutT_utilisateurInput
-    t_notification_delivery?: t_notification_deliveryUncheckedCreateNestedManyWithoutT_utilisateurInput
-    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
-    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
-  }
-
-  export type t_utilisateurCreateOrConnectWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    where: t_utilisateurWhereUniqueInput
-    create: XOR<t_utilisateurCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_utilisateurUncheckedCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
   }
 
   export type t_vigilog_configurationCreateWithoutT_vigilog_usage_ponctuelInput = {
@@ -84982,164 +84706,152 @@ export namespace Prisma {
     create: XOR<t_vigilogCreateWithoutT_vigilog_usage_ponctuelInput, t_vigilogUncheckedCreateWithoutT_vigilog_usage_ponctuelInput>
   }
 
-  export type t_utilisateurUpsertWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    update: XOR<t_utilisateurUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_utilisateurUncheckedUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
+  export type t_utilisateurCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    Login?: string | null
+    Mot_De_Passe?: string | null
+    Date_Validite?: Date | string | null
+    Date_Creation?: Date | string | null
+    Est_Archive?: boolean | null
+    Profil_Utilisateur?: string | null
+    Date_Heure_Derniere_Connexion?: Date | string | null
+    Adresse_IP_Connexion?: string | null
+    Nom_Machine_Connexion?: string | null
+    Id_Site?: number | null
+    Nom?: string | null
+    Prenom?: string | null
+    Tel_Num_Fixe?: string | null
+    Tel_Num_Mobile?: string | null
+    Adresse_Email?: string | null
+    Date_Derniere_Modification_MDP?: Date | string | null
+    Reset_Password_Token?: string | null
+    Reset_Password_Expires?: Date | string | null
+    Est_Mot_De_Passe_Temporaire?: boolean | null
+    Avatar_Utilisateur?: string | null
+    t_ancien_mot_de_passe?: t_ancien_mot_de_passeCreateNestedManyWithoutT_utilisateurInput
+    t_commande_materiel?: t_commande_materielCreateNestedManyWithoutT_utilisateurInput
+    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeCreateNestedManyWithoutT_utilisateurInput
+    t_liaison_utilisateur_site?: t_liaison_utilisateur_siteCreateNestedManyWithoutT_utilisateurInput
+    t_notification_delivery?: t_notification_deliveryCreateNestedManyWithoutT_utilisateurInput
+    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
+    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
+  }
+
+  export type t_utilisateurUncheckedCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    Id_Utilisateur?: number
+    Login?: string | null
+    Mot_De_Passe?: string | null
+    Date_Validite?: Date | string | null
+    Date_Creation?: Date | string | null
+    Est_Archive?: boolean | null
+    Profil_Utilisateur?: string | null
+    Date_Heure_Derniere_Connexion?: Date | string | null
+    Adresse_IP_Connexion?: string | null
+    Nom_Machine_Connexion?: string | null
+    Id_Site?: number | null
+    Nom?: string | null
+    Prenom?: string | null
+    Tel_Num_Fixe?: string | null
+    Tel_Num_Mobile?: string | null
+    Adresse_Email?: string | null
+    Date_Derniere_Modification_MDP?: Date | string | null
+    Reset_Password_Token?: string | null
+    Reset_Password_Expires?: Date | string | null
+    Est_Mot_De_Passe_Temporaire?: boolean | null
+    Avatar_Utilisateur?: string | null
+    t_ancien_mot_de_passe?: t_ancien_mot_de_passeUncheckedCreateNestedManyWithoutT_utilisateurInput
+    t_commande_materiel?: t_commande_materielUncheckedCreateNestedManyWithoutT_utilisateurInput
+    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUncheckedCreateNestedManyWithoutT_utilisateurInput
+    t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUncheckedCreateNestedManyWithoutT_utilisateurInput
+    t_notification_delivery?: t_notification_deliveryUncheckedCreateNestedManyWithoutT_utilisateurInput
+    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
+    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
+  }
+
+  export type t_utilisateurCreateOrConnectWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    where: t_utilisateurWhereUniqueInput
     create: XOR<t_utilisateurCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_utilisateurUncheckedCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
-    where?: t_utilisateurWhereInput
   }
 
-  export type t_utilisateurUpdateToOneWithWhereWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    where?: t_utilisateurWhereInput
-    data: XOR<t_utilisateurUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_utilisateurUncheckedUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
+  export type t_utilisateurCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    Login?: string | null
+    Mot_De_Passe?: string | null
+    Date_Validite?: Date | string | null
+    Date_Creation?: Date | string | null
+    Est_Archive?: boolean | null
+    Profil_Utilisateur?: string | null
+    Date_Heure_Derniere_Connexion?: Date | string | null
+    Adresse_IP_Connexion?: string | null
+    Nom_Machine_Connexion?: string | null
+    Id_Site?: number | null
+    Nom?: string | null
+    Prenom?: string | null
+    Tel_Num_Fixe?: string | null
+    Tel_Num_Mobile?: string | null
+    Adresse_Email?: string | null
+    Date_Derniere_Modification_MDP?: Date | string | null
+    Reset_Password_Token?: string | null
+    Reset_Password_Expires?: Date | string | null
+    Est_Mot_De_Passe_Temporaire?: boolean | null
+    Avatar_Utilisateur?: string | null
+    t_ancien_mot_de_passe?: t_ancien_mot_de_passeCreateNestedManyWithoutT_utilisateurInput
+    t_commande_materiel?: t_commande_materielCreateNestedManyWithoutT_utilisateurInput
+    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeCreateNestedManyWithoutT_utilisateurInput
+    t_liaison_utilisateur_site?: t_liaison_utilisateur_siteCreateNestedManyWithoutT_utilisateurInput
+    t_notification_delivery?: t_notification_deliveryCreateNestedManyWithoutT_utilisateurInput
+    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
+    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
   }
 
-  export type t_utilisateurUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    Login?: NullableStringFieldUpdateOperationsInput | string | null
-    Mot_De_Passe?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Validite?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Creation?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Profil_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Derniere_Connexion?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Adresse_IP_Connexion?: NullableStringFieldUpdateOperationsInput | string | null
-    Nom_Machine_Connexion?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
-    Nom?: NullableStringFieldUpdateOperationsInput | string | null
-    Prenom?: NullableStringFieldUpdateOperationsInput | string | null
-    Tel_Num_Fixe?: NullableStringFieldUpdateOperationsInput | string | null
-    Tel_Num_Mobile?: NullableStringFieldUpdateOperationsInput | string | null
-    Adresse_Email?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Derniere_Modification_MDP?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Reset_Password_Token?: NullableStringFieldUpdateOperationsInput | string | null
-    Reset_Password_Expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Mot_De_Passe_Temporaire?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Avatar_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
-    t_ancien_mot_de_passe?: t_ancien_mot_de_passeUpdateManyWithoutT_utilisateurNestedInput
-    t_commande_materiel?: t_commande_materielUpdateManyWithoutT_utilisateurNestedInput
-    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUpdateManyWithoutT_utilisateurNestedInput
-    t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUpdateManyWithoutT_utilisateurNestedInput
-    t_notification_delivery?: t_notification_deliveryUpdateManyWithoutT_utilisateurNestedInput
-    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
-    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+  export type t_utilisateurUncheckedCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    Id_Utilisateur?: number
+    Login?: string | null
+    Mot_De_Passe?: string | null
+    Date_Validite?: Date | string | null
+    Date_Creation?: Date | string | null
+    Est_Archive?: boolean | null
+    Profil_Utilisateur?: string | null
+    Date_Heure_Derniere_Connexion?: Date | string | null
+    Adresse_IP_Connexion?: string | null
+    Nom_Machine_Connexion?: string | null
+    Id_Site?: number | null
+    Nom?: string | null
+    Prenom?: string | null
+    Tel_Num_Fixe?: string | null
+    Tel_Num_Mobile?: string | null
+    Adresse_Email?: string | null
+    Date_Derniere_Modification_MDP?: Date | string | null
+    Reset_Password_Token?: string | null
+    Reset_Password_Expires?: Date | string | null
+    Est_Mot_De_Passe_Temporaire?: boolean | null
+    Avatar_Utilisateur?: string | null
+    t_ancien_mot_de_passe?: t_ancien_mot_de_passeUncheckedCreateNestedManyWithoutT_utilisateurInput
+    t_commande_materiel?: t_commande_materielUncheckedCreateNestedManyWithoutT_utilisateurInput
+    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUncheckedCreateNestedManyWithoutT_utilisateurInput
+    t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUncheckedCreateNestedManyWithoutT_utilisateurInput
+    t_notification_delivery?: t_notification_deliveryUncheckedCreateNestedManyWithoutT_utilisateurInput
+    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
+    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
   }
 
-  export type t_utilisateurUncheckedUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    Id_Utilisateur?: IntFieldUpdateOperationsInput | number
-    Login?: NullableStringFieldUpdateOperationsInput | string | null
-    Mot_De_Passe?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Validite?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Creation?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Profil_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Derniere_Connexion?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Adresse_IP_Connexion?: NullableStringFieldUpdateOperationsInput | string | null
-    Nom_Machine_Connexion?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
-    Nom?: NullableStringFieldUpdateOperationsInput | string | null
-    Prenom?: NullableStringFieldUpdateOperationsInput | string | null
-    Tel_Num_Fixe?: NullableStringFieldUpdateOperationsInput | string | null
-    Tel_Num_Mobile?: NullableStringFieldUpdateOperationsInput | string | null
-    Adresse_Email?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Derniere_Modification_MDP?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Reset_Password_Token?: NullableStringFieldUpdateOperationsInput | string | null
-    Reset_Password_Expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Mot_De_Passe_Temporaire?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Avatar_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
-    t_ancien_mot_de_passe?: t_ancien_mot_de_passeUncheckedUpdateManyWithoutT_utilisateurNestedInput
-    t_commande_materiel?: t_commande_materielUncheckedUpdateManyWithoutT_utilisateurNestedInput
-    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUncheckedUpdateManyWithoutT_utilisateurNestedInput
-    t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUncheckedUpdateManyWithoutT_utilisateurNestedInput
-    t_notification_delivery?: t_notification_deliveryUncheckedUpdateManyWithoutT_utilisateurNestedInput
-    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
-    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
-  }
-
-  export type t_utilisateurUpsertWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    update: XOR<t_utilisateurUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_utilisateurUncheckedUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
+  export type t_utilisateurCreateOrConnectWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    where: t_utilisateurWhereUniqueInput
     create: XOR<t_utilisateurCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_utilisateurUncheckedCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
-    where?: t_utilisateurWhereInput
-  }
-
-  export type t_utilisateurUpdateToOneWithWhereWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    where?: t_utilisateurWhereInput
-    data: XOR<t_utilisateurUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_utilisateurUncheckedUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
-  }
-
-  export type t_utilisateurUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    Login?: NullableStringFieldUpdateOperationsInput | string | null
-    Mot_De_Passe?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Validite?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Creation?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Profil_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Derniere_Connexion?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Adresse_IP_Connexion?: NullableStringFieldUpdateOperationsInput | string | null
-    Nom_Machine_Connexion?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
-    Nom?: NullableStringFieldUpdateOperationsInput | string | null
-    Prenom?: NullableStringFieldUpdateOperationsInput | string | null
-    Tel_Num_Fixe?: NullableStringFieldUpdateOperationsInput | string | null
-    Tel_Num_Mobile?: NullableStringFieldUpdateOperationsInput | string | null
-    Adresse_Email?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Derniere_Modification_MDP?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Reset_Password_Token?: NullableStringFieldUpdateOperationsInput | string | null
-    Reset_Password_Expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Mot_De_Passe_Temporaire?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Avatar_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
-    t_ancien_mot_de_passe?: t_ancien_mot_de_passeUpdateManyWithoutT_utilisateurNestedInput
-    t_commande_materiel?: t_commande_materielUpdateManyWithoutT_utilisateurNestedInput
-    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUpdateManyWithoutT_utilisateurNestedInput
-    t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUpdateManyWithoutT_utilisateurNestedInput
-    t_notification_delivery?: t_notification_deliveryUpdateManyWithoutT_utilisateurNestedInput
-    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
-    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
-  }
-
-  export type t_utilisateurUncheckedUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    Id_Utilisateur?: IntFieldUpdateOperationsInput | number
-    Login?: NullableStringFieldUpdateOperationsInput | string | null
-    Mot_De_Passe?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Validite?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Creation?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Profil_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Derniere_Connexion?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Adresse_IP_Connexion?: NullableStringFieldUpdateOperationsInput | string | null
-    Nom_Machine_Connexion?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
-    Nom?: NullableStringFieldUpdateOperationsInput | string | null
-    Prenom?: NullableStringFieldUpdateOperationsInput | string | null
-    Tel_Num_Fixe?: NullableStringFieldUpdateOperationsInput | string | null
-    Tel_Num_Mobile?: NullableStringFieldUpdateOperationsInput | string | null
-    Adresse_Email?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Derniere_Modification_MDP?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Reset_Password_Token?: NullableStringFieldUpdateOperationsInput | string | null
-    Reset_Password_Expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Mot_De_Passe_Temporaire?: NullableBoolFieldUpdateOperationsInput | boolean | null
-    Avatar_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
-    t_ancien_mot_de_passe?: t_ancien_mot_de_passeUncheckedUpdateManyWithoutT_utilisateurNestedInput
-    t_commande_materiel?: t_commande_materielUncheckedUpdateManyWithoutT_utilisateurNestedInput
-    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUncheckedUpdateManyWithoutT_utilisateurNestedInput
-    t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUncheckedUpdateManyWithoutT_utilisateurNestedInput
-    t_notification_delivery?: t_notification_deliveryUncheckedUpdateManyWithoutT_utilisateurNestedInput
-    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
-    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
-    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
   }
 
   export type t_vigilog_configurationUpsertWithoutT_vigilog_usage_ponctuelInput = {
@@ -85240,6 +84952,166 @@ export namespace Prisma {
     Id_Utilisateur_Maj?: NullableIntFieldUpdateOperationsInput | number | null
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     t_vigilog_tournee?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_vigilogNestedInput
+  }
+
+  export type t_utilisateurUpsertWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    update: XOR<t_utilisateurUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_utilisateurUncheckedUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
+    create: XOR<t_utilisateurCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_utilisateurUncheckedCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
+    where?: t_utilisateurWhereInput
+  }
+
+  export type t_utilisateurUpdateToOneWithWhereWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    where?: t_utilisateurWhereInput
+    data: XOR<t_utilisateurUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput, t_utilisateurUncheckedUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput>
+  }
+
+  export type t_utilisateurUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    Login?: NullableStringFieldUpdateOperationsInput | string | null
+    Mot_De_Passe?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Validite?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Date_Creation?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Profil_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Derniere_Connexion?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Adresse_IP_Connexion?: NullableStringFieldUpdateOperationsInput | string | null
+    Nom_Machine_Connexion?: NullableStringFieldUpdateOperationsInput | string | null
+    Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
+    Nom?: NullableStringFieldUpdateOperationsInput | string | null
+    Prenom?: NullableStringFieldUpdateOperationsInput | string | null
+    Tel_Num_Fixe?: NullableStringFieldUpdateOperationsInput | string | null
+    Tel_Num_Mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    Adresse_Email?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Derniere_Modification_MDP?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Reset_Password_Token?: NullableStringFieldUpdateOperationsInput | string | null
+    Reset_Password_Expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Est_Mot_De_Passe_Temporaire?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Avatar_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
+    t_ancien_mot_de_passe?: t_ancien_mot_de_passeUpdateManyWithoutT_utilisateurNestedInput
+    t_commande_materiel?: t_commande_materielUpdateManyWithoutT_utilisateurNestedInput
+    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUpdateManyWithoutT_utilisateurNestedInput
+    t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUpdateManyWithoutT_utilisateurNestedInput
+    t_notification_delivery?: t_notification_deliveryUpdateManyWithoutT_utilisateurNestedInput
+    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
+    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
+  }
+
+  export type t_utilisateurUncheckedUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    Id_Utilisateur?: IntFieldUpdateOperationsInput | number
+    Login?: NullableStringFieldUpdateOperationsInput | string | null
+    Mot_De_Passe?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Validite?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Date_Creation?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Profil_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Derniere_Connexion?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Adresse_IP_Connexion?: NullableStringFieldUpdateOperationsInput | string | null
+    Nom_Machine_Connexion?: NullableStringFieldUpdateOperationsInput | string | null
+    Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
+    Nom?: NullableStringFieldUpdateOperationsInput | string | null
+    Prenom?: NullableStringFieldUpdateOperationsInput | string | null
+    Tel_Num_Fixe?: NullableStringFieldUpdateOperationsInput | string | null
+    Tel_Num_Mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    Adresse_Email?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Derniere_Modification_MDP?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Reset_Password_Token?: NullableStringFieldUpdateOperationsInput | string | null
+    Reset_Password_Expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Est_Mot_De_Passe_Temporaire?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Avatar_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
+    t_ancien_mot_de_passe?: t_ancien_mot_de_passeUncheckedUpdateManyWithoutT_utilisateurNestedInput
+    t_commande_materiel?: t_commande_materielUncheckedUpdateManyWithoutT_utilisateurNestedInput
+    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUncheckedUpdateManyWithoutT_utilisateurNestedInput
+    t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUncheckedUpdateManyWithoutT_utilisateurNestedInput
+    t_notification_delivery?: t_notification_deliveryUncheckedUpdateManyWithoutT_utilisateurNestedInput
+    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
+    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
+  }
+
+  export type t_utilisateurUpsertWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    update: XOR<t_utilisateurUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_utilisateurUncheckedUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
+    create: XOR<t_utilisateurCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_utilisateurUncheckedCreateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
+    where?: t_utilisateurWhereInput
+  }
+
+  export type t_utilisateurUpdateToOneWithWhereWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    where?: t_utilisateurWhereInput
+    data: XOR<t_utilisateurUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput, t_utilisateurUncheckedUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput>
+  }
+
+  export type t_utilisateurUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    Login?: NullableStringFieldUpdateOperationsInput | string | null
+    Mot_De_Passe?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Validite?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Date_Creation?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Profil_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Derniere_Connexion?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Adresse_IP_Connexion?: NullableStringFieldUpdateOperationsInput | string | null
+    Nom_Machine_Connexion?: NullableStringFieldUpdateOperationsInput | string | null
+    Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
+    Nom?: NullableStringFieldUpdateOperationsInput | string | null
+    Prenom?: NullableStringFieldUpdateOperationsInput | string | null
+    Tel_Num_Fixe?: NullableStringFieldUpdateOperationsInput | string | null
+    Tel_Num_Mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    Adresse_Email?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Derniere_Modification_MDP?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Reset_Password_Token?: NullableStringFieldUpdateOperationsInput | string | null
+    Reset_Password_Expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Est_Mot_De_Passe_Temporaire?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Avatar_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
+    t_ancien_mot_de_passe?: t_ancien_mot_de_passeUpdateManyWithoutT_utilisateurNestedInput
+    t_commande_materiel?: t_commande_materielUpdateManyWithoutT_utilisateurNestedInput
+    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUpdateManyWithoutT_utilisateurNestedInput
+    t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUpdateManyWithoutT_utilisateurNestedInput
+    t_notification_delivery?: t_notification_deliveryUpdateManyWithoutT_utilisateurNestedInput
+    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
+    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+  }
+
+  export type t_utilisateurUncheckedUpdateWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    Id_Utilisateur?: IntFieldUpdateOperationsInput | number
+    Login?: NullableStringFieldUpdateOperationsInput | string | null
+    Mot_De_Passe?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Validite?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Date_Creation?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Est_Archive?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Profil_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Derniere_Connexion?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Adresse_IP_Connexion?: NullableStringFieldUpdateOperationsInput | string | null
+    Nom_Machine_Connexion?: NullableStringFieldUpdateOperationsInput | string | null
+    Id_Site?: NullableIntFieldUpdateOperationsInput | number | null
+    Nom?: NullableStringFieldUpdateOperationsInput | string | null
+    Prenom?: NullableStringFieldUpdateOperationsInput | string | null
+    Tel_Num_Fixe?: NullableStringFieldUpdateOperationsInput | string | null
+    Tel_Num_Mobile?: NullableStringFieldUpdateOperationsInput | string | null
+    Adresse_Email?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Derniere_Modification_MDP?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Reset_Password_Token?: NullableStringFieldUpdateOperationsInput | string | null
+    Reset_Password_Expires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Est_Mot_De_Passe_Temporaire?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    Avatar_Utilisateur?: NullableStringFieldUpdateOperationsInput | string | null
+    t_ancien_mot_de_passe?: t_ancien_mot_de_passeUncheckedUpdateManyWithoutT_utilisateurNestedInput
+    t_commande_materiel?: t_commande_materielUncheckedUpdateManyWithoutT_utilisateurNestedInput
+    t_liaison_utilisateur_groupe?: t_liaison_utilisateur_groupeUncheckedUpdateManyWithoutT_utilisateurNestedInput
+    t_liaison_utilisateur_site?: t_liaison_utilisateur_siteUncheckedUpdateManyWithoutT_utilisateurNestedInput
+    t_notification_delivery?: t_notification_deliveryUncheckedUpdateManyWithoutT_utilisateurNestedInput
+    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
+    t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
+    t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
   }
 
   export type t_vigilog_configurationCreateWithoutT_vigilog_tourneeInput = {
@@ -85366,10 +85238,10 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurUncheckedCreateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput = {
@@ -85401,10 +85273,10 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUncheckedCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurCreateOrConnectWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput = {
@@ -85440,10 +85312,10 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurUncheckedCreateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput = {
@@ -85475,10 +85347,10 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUncheckedCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurCreateOrConnectWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput = {
@@ -85514,10 +85386,10 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurUncheckedCreateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput = {
@@ -85549,10 +85421,10 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUncheckedCreateNestedManyWithoutT_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedCreateNestedManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput
   }
 
   export type t_utilisateurCreateOrConnectWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput = {
@@ -85753,10 +85625,10 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_utilisateurUncheckedUpdateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput = {
@@ -85788,10 +85660,10 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUncheckedUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_utilisateurUpsertWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput = {
@@ -85833,10 +85705,10 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_utilisateurUncheckedUpdateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurInput = {
@@ -85868,10 +85740,10 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUncheckedUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_utilisateurUpsertWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput = {
@@ -85913,10 +85785,10 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_utilisateurUncheckedUpdateWithoutT_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_DepartTot_utilisateurInput = {
@@ -85948,10 +85820,10 @@ export namespace Prisma {
     t_notification_delivery?: t_notification_deliveryUncheckedUpdateManyWithoutT_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
     t_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurNestedInput
     t_vigilog_tournee_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateur?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_tournee_Id_Utilisateur_ArriveeTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
   }
 
   export type t_vigilogUpsertWithoutT_vigilog_tourneeInput = {
@@ -86102,12 +85974,10 @@ export namespace Prisma {
     Valeur?: number | null
     Type?: string | null
     Date_Heure_Fin?: Date | string | null
-    Est_Alarme_Vrai?: boolean | null
     Sonde_Numero_Serie?: string | null
     Unite?: string | null
     Est_Acquittee?: boolean | null
     Date_Heure_Derniere_Mesure?: Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: Date | string | null
     Est_Alarme_Pour_VigiTel?: boolean | null
     Est_Mail_Envoye?: boolean | null
     Est_Tel_Acquittee?: boolean | null
@@ -86120,12 +85990,10 @@ export namespace Prisma {
     Valeur?: number | null
     Type?: string | null
     Date_Heure_Fin?: Date | string | null
-    Est_Alarme_Vrai?: boolean | null
     Sonde_Numero_Serie?: string | null
     Unite?: string | null
     Est_Acquittee?: boolean | null
     Date_Heure_Derniere_Mesure?: Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: Date | string | null
     Est_Alarme_Pour_VigiTel?: boolean | null
     Est_Mail_Envoye?: boolean | null
     Est_Tel_Acquittee?: boolean | null
@@ -86167,12 +86035,10 @@ export namespace Prisma {
     Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
     Type?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Alarme_Vrai?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Unite?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Date_Heure_Derniere_Mesure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Alarme_Pour_VigiTel?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Mail_Envoye?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Tel_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -86185,12 +86051,10 @@ export namespace Prisma {
     Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
     Type?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Alarme_Vrai?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Unite?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Date_Heure_Derniere_Mesure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Alarme_Pour_VigiTel?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Mail_Envoye?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Tel_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -86203,12 +86067,10 @@ export namespace Prisma {
     Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
     Type?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Alarme_Vrai?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Unite?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Date_Heure_Derniere_Mesure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Alarme_Pour_VigiTel?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Mail_Envoye?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Tel_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -86220,12 +86082,10 @@ export namespace Prisma {
     Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
     Type?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Alarme_Vrai?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Unite?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Date_Heure_Derniere_Mesure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Alarme_Pour_VigiTel?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Mail_Envoye?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Tel_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -86239,12 +86099,10 @@ export namespace Prisma {
     Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
     Type?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Alarme_Vrai?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Unite?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Date_Heure_Derniere_Mesure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Alarme_Pour_VigiTel?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Mail_Envoye?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Tel_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -86258,12 +86116,10 @@ export namespace Prisma {
     Valeur?: NullableFloatFieldUpdateOperationsInput | number | null
     Type?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Fin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Est_Alarme_Vrai?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Sonde_Numero_Serie?: NullableStringFieldUpdateOperationsInput | string | null
     Unite?: NullableStringFieldUpdateOperationsInput | string | null
     Est_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Date_Heure_Derniere_Mesure?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Date_Heure_Debut_Alarme_Vrai?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Alarme_Pour_VigiTel?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Mail_Envoye?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Tel_Acquittee?: NullableBoolFieldUpdateOperationsInput | boolean | null
@@ -86451,7 +86307,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -86575,7 +86431,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -86670,7 +86526,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -86761,7 +86617,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -86868,7 +86724,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -87011,7 +86867,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -87106,7 +86962,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -87197,7 +87053,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -87362,7 +87218,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -87542,7 +87398,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -87637,7 +87493,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -87728,7 +87584,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -88058,7 +87914,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -88139,7 +87995,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -88234,7 +88090,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -88325,7 +88181,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -88411,7 +88267,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: boolean | null
     Est_Son_Alarme_Active?: boolean
     Planning_Actif?: boolean
-    Planning_Regle_Existe?: boolean
+    Planning_Regle_Existe?: boolean | null
     Planning_Source_Regle_Id?: number | null
     Planning_Derniere_Maj?: Date | string | null
     Est_Redeclenchement_Immediat?: boolean
@@ -88513,7 +88369,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -88608,7 +88464,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -88699,7 +88555,7 @@ export namespace Prisma {
     Est_Lieu_GSO?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
     Planning_Actif?: BoolFieldUpdateOperationsInput | boolean
-    Planning_Regle_Existe?: BoolFieldUpdateOperationsInput | boolean
+    Planning_Regle_Existe?: NullableBoolFieldUpdateOperationsInput | boolean | null
     Planning_Source_Regle_Id?: NullableIntFieldUpdateOperationsInput | number | null
     Planning_Derniere_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
@@ -88940,42 +88796,6 @@ export namespace Prisma {
     Date_Heure_Maj?: Date | string | null
   }
 
-  export type t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    Id_VigiLog_Usage_Ponctuel?: number
-    Reference_Usage: string
-    Id_VigiLog_Configuration?: number | null
-    Id_VigiLog?: number | null
-    Nom_Configuration: string
-    Numero_Serie_VigiLog: string
-    Nom_Lieu_Temporaire: string
-    Statut: string
-    Id_Utilisateur_Demarrage: number
-    Date_Heure_Demarrage: Date | string
-    Commentaire_Demarrage?: string | null
-    Date_Heure_Arret?: Date | string | null
-    Commentaire_Arret?: string | null
-    Date_Heure_Creation?: Date | string
-    Date_Heure_Maj?: Date | string | null
-  }
-
-  export type t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    Id_VigiLog_Usage_Ponctuel?: number
-    Reference_Usage: string
-    Id_VigiLog_Configuration?: number | null
-    Id_VigiLog?: number | null
-    Nom_Configuration: string
-    Numero_Serie_VigiLog: string
-    Nom_Lieu_Temporaire: string
-    Statut: string
-    Date_Heure_Demarrage: Date | string
-    Commentaire_Demarrage?: string | null
-    Id_Utilisateur_Arret?: number | null
-    Date_Heure_Arret?: Date | string | null
-    Commentaire_Arret?: string | null
-    Date_Heure_Creation?: Date | string
-    Date_Heure_Maj?: Date | string | null
-  }
-
   export type t_vigilog_tourneeCreateManyT_utilisateur_t_vigilog_tournee_Id_Utilisateur_AcquittementTot_utilisateurInput = {
     Id_VigiLog_Tournee?: number
     Reference_Tournee: string
@@ -89095,6 +88915,42 @@ export namespace Prisma {
     Commentaire_Acquittement?: string | null
     Id_Utilisateur_Acquittement?: number | null
     Date_Heure_Acquittement?: Date | string | null
+    Date_Heure_Creation?: Date | string
+    Date_Heure_Maj?: Date | string | null
+  }
+
+  export type t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    Id_VigiLog_Usage_Ponctuel?: number
+    Reference_Usage: string
+    Id_VigiLog_Configuration?: number | null
+    Id_VigiLog?: number | null
+    Nom_Configuration: string
+    Numero_Serie_VigiLog: string
+    Nom_Lieu_Temporaire: string
+    Statut: string
+    Date_Heure_Demarrage: Date | string
+    Commentaire_Demarrage?: string | null
+    Id_Utilisateur_Arret?: number | null
+    Date_Heure_Arret?: Date | string | null
+    Commentaire_Arret?: string | null
+    Date_Heure_Creation?: Date | string
+    Date_Heure_Maj?: Date | string | null
+  }
+
+  export type t_vigilog_usage_ponctuelCreateManyT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    Id_VigiLog_Usage_Ponctuel?: number
+    Reference_Usage: string
+    Id_VigiLog_Configuration?: number | null
+    Id_VigiLog?: number | null
+    Nom_Configuration: string
+    Numero_Serie_VigiLog: string
+    Nom_Lieu_Temporaire: string
+    Statut: string
+    Id_Utilisateur_Demarrage: number
+    Date_Heure_Demarrage: Date | string
+    Commentaire_Demarrage?: string | null
+    Date_Heure_Arret?: Date | string | null
+    Commentaire_Arret?: string | null
     Date_Heure_Creation?: Date | string
     Date_Heure_Maj?: Date | string | null
   }
@@ -89250,8 +89106,8 @@ export namespace Prisma {
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUpdateManyWithoutT_vigilog_configurationNestedInput
     t_vigilog_tournee?: t_vigilog_tourneeUpdateManyWithoutT_vigilog_configurationNestedInput
+    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUpdateManyWithoutT_vigilog_configurationNestedInput
   }
 
   export type t_vigilog_configurationUncheckedUpdateWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput = {
@@ -89272,8 +89128,8 @@ export namespace Prisma {
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Id_Utilisateur_Maj?: NullableIntFieldUpdateOperationsInput | number | null
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_vigilog_configurationNestedInput
     t_vigilog_tournee?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_vigilog_configurationNestedInput
+    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_vigilog_configurationNestedInput
   }
 
   export type t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurInput = {
@@ -89313,8 +89169,8 @@ export namespace Prisma {
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     t_utilisateur_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput
-    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUpdateManyWithoutT_vigilog_configurationNestedInput
     t_vigilog_tournee?: t_vigilog_tourneeUpdateManyWithoutT_vigilog_configurationNestedInput
+    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUpdateManyWithoutT_vigilog_configurationNestedInput
   }
 
   export type t_vigilog_configurationUncheckedUpdateWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput = {
@@ -89335,8 +89191,8 @@ export namespace Prisma {
     Id_Utilisateur_Creation?: NullableIntFieldUpdateOperationsInput | number | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_vigilog_configurationNestedInput
     t_vigilog_tournee?: t_vigilog_tourneeUncheckedUpdateManyWithoutT_vigilog_configurationNestedInput
+    t_vigilog_usage_ponctuel?: t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_vigilog_configurationNestedInput
   }
 
   export type t_vigilog_configurationUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_configuration_Id_Utilisateur_MajTot_utilisateurInput = {
@@ -89355,112 +89211,6 @@ export namespace Prisma {
     Reinitialise_Avec_Bouton_Start?: BoolFieldUpdateOperationsInput | boolean
     Actif?: BoolFieldUpdateOperationsInput | boolean
     Id_Utilisateur_Creation?: NullableIntFieldUpdateOperationsInput | number | null
-    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
-    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  }
-
-  export type t_vigilog_usage_ponctuelUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    Reference_Usage?: StringFieldUpdateOperationsInput | string
-    Nom_Configuration?: StringFieldUpdateOperationsInput | string
-    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
-    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
-    Statut?: StringFieldUpdateOperationsInput | string
-    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
-    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
-    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_utilisateurUpdateOneRequiredWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
-    t_vigilog_configuration?: t_vigilog_configurationUpdateOneWithoutT_vigilog_usage_ponctuelNestedInput
-    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_usage_ponctuelNestedInput
-  }
-
-  export type t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    Id_VigiLog_Usage_Ponctuel?: IntFieldUpdateOperationsInput | number
-    Reference_Usage?: StringFieldUpdateOperationsInput | string
-    Id_VigiLog_Configuration?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_VigiLog?: NullableIntFieldUpdateOperationsInput | number | null
-    Nom_Configuration?: StringFieldUpdateOperationsInput | string
-    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
-    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
-    Statut?: StringFieldUpdateOperationsInput | string
-    Id_Utilisateur_Demarrage?: IntFieldUpdateOperationsInput | number
-    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
-    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
-    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  }
-
-  export type t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
-    Id_VigiLog_Usage_Ponctuel?: IntFieldUpdateOperationsInput | number
-    Reference_Usage?: StringFieldUpdateOperationsInput | string
-    Id_VigiLog_Configuration?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_VigiLog?: NullableIntFieldUpdateOperationsInput | number | null
-    Nom_Configuration?: StringFieldUpdateOperationsInput | string
-    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
-    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
-    Statut?: StringFieldUpdateOperationsInput | string
-    Id_Utilisateur_Demarrage?: IntFieldUpdateOperationsInput | number
-    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
-    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
-    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  }
-
-  export type t_vigilog_usage_ponctuelUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    Reference_Usage?: StringFieldUpdateOperationsInput | string
-    Nom_Configuration?: StringFieldUpdateOperationsInput | string
-    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
-    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
-    Statut?: StringFieldUpdateOperationsInput | string
-    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
-    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
-    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_configuration?: t_vigilog_configurationUpdateOneWithoutT_vigilog_usage_ponctuelNestedInput
-    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_usage_ponctuelNestedInput
-  }
-
-  export type t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    Id_VigiLog_Usage_Ponctuel?: IntFieldUpdateOperationsInput | number
-    Reference_Usage?: StringFieldUpdateOperationsInput | string
-    Id_VigiLog_Configuration?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_VigiLog?: NullableIntFieldUpdateOperationsInput | number | null
-    Nom_Configuration?: StringFieldUpdateOperationsInput | string
-    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
-    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
-    Statut?: StringFieldUpdateOperationsInput | string
-    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
-    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Utilisateur_Arret?: NullableIntFieldUpdateOperationsInput | number | null
-    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
-    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  }
-
-  export type t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
-    Id_VigiLog_Usage_Ponctuel?: IntFieldUpdateOperationsInput | number
-    Reference_Usage?: StringFieldUpdateOperationsInput | string
-    Id_VigiLog_Configuration?: NullableIntFieldUpdateOperationsInput | number | null
-    Id_VigiLog?: NullableIntFieldUpdateOperationsInput | number | null
-    Nom_Configuration?: StringFieldUpdateOperationsInput | string
-    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
-    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
-    Statut?: StringFieldUpdateOperationsInput | string
-    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
-    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Utilisateur_Arret?: NullableIntFieldUpdateOperationsInput | number | null
-    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -89831,6 +89581,112 @@ export namespace Prisma {
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
+  export type t_vigilog_usage_ponctuelUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    Reference_Usage?: StringFieldUpdateOperationsInput | string
+    Nom_Configuration?: StringFieldUpdateOperationsInput | string
+    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
+    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
+    Statut?: StringFieldUpdateOperationsInput | string
+    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
+    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    t_vigilog_configuration?: t_vigilog_configurationUpdateOneWithoutT_vigilog_usage_ponctuelNestedInput
+    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_usage_ponctuelNestedInput
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
+  }
+
+  export type t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    Id_VigiLog_Usage_Ponctuel?: IntFieldUpdateOperationsInput | number
+    Reference_Usage?: StringFieldUpdateOperationsInput | string
+    Id_VigiLog_Configuration?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_VigiLog?: NullableIntFieldUpdateOperationsInput | number | null
+    Nom_Configuration?: StringFieldUpdateOperationsInput | string
+    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
+    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
+    Statut?: StringFieldUpdateOperationsInput | string
+    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
+    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
+    Id_Utilisateur_Arret?: NullableIntFieldUpdateOperationsInput | number | null
+    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurInput = {
+    Id_VigiLog_Usage_Ponctuel?: IntFieldUpdateOperationsInput | number
+    Reference_Usage?: StringFieldUpdateOperationsInput | string
+    Id_VigiLog_Configuration?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_VigiLog?: NullableIntFieldUpdateOperationsInput | number | null
+    Nom_Configuration?: StringFieldUpdateOperationsInput | string
+    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
+    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
+    Statut?: StringFieldUpdateOperationsInput | string
+    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
+    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
+    Id_Utilisateur_Arret?: NullableIntFieldUpdateOperationsInput | number | null
+    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type t_vigilog_usage_ponctuelUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    Reference_Usage?: StringFieldUpdateOperationsInput | string
+    Nom_Configuration?: StringFieldUpdateOperationsInput | string
+    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
+    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
+    Statut?: StringFieldUpdateOperationsInput | string
+    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
+    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    t_vigilog_configuration?: t_vigilog_configurationUpdateOneWithoutT_vigilog_usage_ponctuelNestedInput
+    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_usage_ponctuelNestedInput
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_utilisateurUpdateOneRequiredWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+  }
+
+  export type t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    Id_VigiLog_Usage_Ponctuel?: IntFieldUpdateOperationsInput | number
+    Reference_Usage?: StringFieldUpdateOperationsInput | string
+    Id_VigiLog_Configuration?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_VigiLog?: NullableIntFieldUpdateOperationsInput | number | null
+    Nom_Configuration?: StringFieldUpdateOperationsInput | string
+    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
+    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
+    Statut?: StringFieldUpdateOperationsInput | string
+    Id_Utilisateur_Demarrage?: IntFieldUpdateOperationsInput | number
+    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
+    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurInput = {
+    Id_VigiLog_Usage_Ponctuel?: IntFieldUpdateOperationsInput | number
+    Reference_Usage?: StringFieldUpdateOperationsInput | string
+    Id_VigiLog_Configuration?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_VigiLog?: NullableIntFieldUpdateOperationsInput | number | null
+    Nom_Configuration?: StringFieldUpdateOperationsInput | string
+    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
+    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
+    Statut?: StringFieldUpdateOperationsInput | string
+    Id_Utilisateur_Demarrage?: IntFieldUpdateOperationsInput | number
+    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
+    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
   export type t_notification_deliveryCreateManyT_notificationInput = {
     Id_Delivery?: number
     Id_Poste: number
@@ -90169,24 +90025,6 @@ export namespace Prisma {
     Quantite?: IntFieldUpdateOperationsInput | number
   }
 
-  export type t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInput = {
-    Id_VigiLog_Usage_Ponctuel?: number
-    Reference_Usage: string
-    Id_VigiLog?: number | null
-    Nom_Configuration: string
-    Numero_Serie_VigiLog: string
-    Nom_Lieu_Temporaire: string
-    Statut: string
-    Id_Utilisateur_Demarrage: number
-    Date_Heure_Demarrage: Date | string
-    Commentaire_Demarrage?: string | null
-    Id_Utilisateur_Arret?: number | null
-    Date_Heure_Arret?: Date | string | null
-    Commentaire_Arret?: string | null
-    Date_Heure_Creation?: Date | string
-    Date_Heure_Maj?: Date | string | null
-  }
-
   export type t_vigilog_tourneeCreateManyT_vigilog_configurationInput = {
     Id_VigiLog_Tournee?: number
     Reference_Tournee: string
@@ -90228,57 +90066,22 @@ export namespace Prisma {
     Date_Heure_Maj?: Date | string | null
   }
 
-  export type t_vigilog_usage_ponctuelUpdateWithoutT_vigilog_configurationInput = {
-    Reference_Usage?: StringFieldUpdateOperationsInput | string
-    Nom_Configuration?: StringFieldUpdateOperationsInput | string
-    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
-    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
-    Statut?: StringFieldUpdateOperationsInput | string
-    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
-    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
-    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_utilisateurUpdateOneRequiredWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
-    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_usage_ponctuelNestedInput
-  }
-
-  export type t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_vigilog_configurationInput = {
-    Id_VigiLog_Usage_Ponctuel?: IntFieldUpdateOperationsInput | number
-    Reference_Usage?: StringFieldUpdateOperationsInput | string
-    Id_VigiLog?: NullableIntFieldUpdateOperationsInput | number | null
-    Nom_Configuration?: StringFieldUpdateOperationsInput | string
-    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
-    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
-    Statut?: StringFieldUpdateOperationsInput | string
-    Id_Utilisateur_Demarrage?: IntFieldUpdateOperationsInput | number
-    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
-    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Utilisateur_Arret?: NullableIntFieldUpdateOperationsInput | number | null
-    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
-    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  }
-
-  export type t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_vigilog_configurationInput = {
-    Id_VigiLog_Usage_Ponctuel?: IntFieldUpdateOperationsInput | number
-    Reference_Usage?: StringFieldUpdateOperationsInput | string
-    Id_VigiLog?: NullableIntFieldUpdateOperationsInput | number | null
-    Nom_Configuration?: StringFieldUpdateOperationsInput | string
-    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
-    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
-    Statut?: StringFieldUpdateOperationsInput | string
-    Id_Utilisateur_Demarrage?: IntFieldUpdateOperationsInput | number
-    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
-    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
-    Id_Utilisateur_Arret?: NullableIntFieldUpdateOperationsInput | number | null
-    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
-    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
-    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  export type t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInput = {
+    Id_VigiLog_Usage_Ponctuel?: number
+    Reference_Usage: string
+    Id_VigiLog?: number | null
+    Nom_Configuration: string
+    Numero_Serie_VigiLog: string
+    Nom_Lieu_Temporaire: string
+    Statut: string
+    Id_Utilisateur_Demarrage: number
+    Date_Heure_Demarrage: Date | string
+    Commentaire_Demarrage?: string | null
+    Id_Utilisateur_Arret?: number | null
+    Date_Heure_Arret?: Date | string | null
+    Commentaire_Arret?: string | null
+    Date_Heure_Creation?: Date | string
+    Date_Heure_Maj?: Date | string | null
   }
 
   export type t_vigilog_tourneeUpdateWithoutT_vigilog_configurationInput = {
@@ -90399,6 +90202,59 @@ export namespace Prisma {
     Commentaire_Acquittement?: NullableStringFieldUpdateOperationsInput | string | null
     Id_Utilisateur_Acquittement?: NullableIntFieldUpdateOperationsInput | number | null
     Date_Heure_Acquittement?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type t_vigilog_usage_ponctuelUpdateWithoutT_vigilog_configurationInput = {
+    Reference_Usage?: StringFieldUpdateOperationsInput | string
+    Nom_Configuration?: StringFieldUpdateOperationsInput | string
+    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
+    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
+    Statut?: StringFieldUpdateOperationsInput | string
+    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
+    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    t_vigilog?: t_vigilogUpdateOneWithoutT_vigilog_usage_ponctuelNestedInput
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_utilisateurUpdateOneRequiredWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
+    t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
+  }
+
+  export type t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_vigilog_configurationInput = {
+    Id_VigiLog_Usage_Ponctuel?: IntFieldUpdateOperationsInput | number
+    Reference_Usage?: StringFieldUpdateOperationsInput | string
+    Id_VigiLog?: NullableIntFieldUpdateOperationsInput | number | null
+    Nom_Configuration?: StringFieldUpdateOperationsInput | string
+    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
+    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
+    Statut?: StringFieldUpdateOperationsInput | string
+    Id_Utilisateur_Demarrage?: IntFieldUpdateOperationsInput | number
+    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
+    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
+    Id_Utilisateur_Arret?: NullableIntFieldUpdateOperationsInput | number | null
+    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
+    Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type t_vigilog_usage_ponctuelUncheckedUpdateManyWithoutT_vigilog_configurationInput = {
+    Id_VigiLog_Usage_Ponctuel?: IntFieldUpdateOperationsInput | number
+    Reference_Usage?: StringFieldUpdateOperationsInput | string
+    Id_VigiLog?: NullableIntFieldUpdateOperationsInput | number | null
+    Nom_Configuration?: StringFieldUpdateOperationsInput | string
+    Numero_Serie_VigiLog?: StringFieldUpdateOperationsInput | string
+    Nom_Lieu_Temporaire?: StringFieldUpdateOperationsInput | string
+    Statut?: StringFieldUpdateOperationsInput | string
+    Id_Utilisateur_Demarrage?: IntFieldUpdateOperationsInput | number
+    Date_Heure_Demarrage?: DateTimeFieldUpdateOperationsInput | Date | string
+    Commentaire_Demarrage?: NullableStringFieldUpdateOperationsInput | string | null
+    Id_Utilisateur_Arret?: NullableIntFieldUpdateOperationsInput | number | null
+    Date_Heure_Arret?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
@@ -90596,9 +90452,9 @@ export namespace Prisma {
     Commentaire_Arret?: NullableStringFieldUpdateOperationsInput | string | null
     Date_Heure_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
     Date_Heure_Maj?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    t_vigilog_configuration?: t_vigilog_configurationUpdateOneWithoutT_vigilog_usage_ponctuelNestedInput
     t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateur?: t_utilisateurUpdateOneRequiredWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_DemarrageTot_utilisateurNestedInput
     t_utilisateur_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateur?: t_utilisateurUpdateOneWithoutT_vigilog_usage_ponctuel_t_vigilog_usage_ponctuel_Id_Utilisateur_ArretTot_utilisateurNestedInput
-    t_vigilog_configuration?: t_vigilog_configurationUpdateOneWithoutT_vigilog_usage_ponctuelNestedInput
   }
 
   export type t_vigilog_usage_ponctuelUncheckedUpdateWithoutT_vigilogInput = {

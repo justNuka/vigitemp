@@ -50,7 +50,16 @@ function formatUserLabel(login: string | null, firstName: string | null, lastNam
 
 export const GET = withAnyAuthorizationLogging(VIGILOG_ACCESS_CODES, async (req: NextRequest) => {
   try {
-    await ensureVigilogTemporaryUsageTable()
+    const hasTable = await ensureVigilogTemporaryUsageTable()
+    if (!hasTable) {
+      return apiOk({
+        stats: {
+          activeCount: 0,
+          totalCount: 0,
+        },
+        usages: [],
+      })
+    }
 
     const { searchParams } = new URL(req.url)
     const rawStatus = searchParams.get("status")?.trim().toUpperCase() || null
@@ -159,7 +168,14 @@ export const POST = withAnyAuthorizationLogging(
   VIGILOG_ACCESS_CODES,
   async (req: NextRequest, ctx: HandlerContext) => {
     try {
-      await ensureVigilogTemporaryUsageTable()
+      const hasTable = await ensureVigilogTemporaryUsageTable()
+      if (!hasTable) {
+        return apiError(
+          503,
+          "vigilog_temp_usage_table_missing",
+          "La table des usages ponctuels VigiLog n'est pas disponible sur cette installation",
+        )
+      }
 
       const body = await req.json().catch(() => ({}))
       const parsed = vigilogTemporaryUsageStartSchema.safeParse(body)

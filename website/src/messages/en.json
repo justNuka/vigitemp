@@ -165,8 +165,8 @@
       "alert_sensors": "Pre-alarms + alarms",
       "total_locations": "Total number of displayed locations",
       "ok_locations": "Locations without active alarm",
-      "alert_locations": "Locations in pre-alarm or alarm",
-      "critical_locations": "Locations in critical alarm or no response"
+      "alert_locations": "Locations in pre-alarm or ended alarm awaiting acknowledgment",
+      "critical_locations": "Locations with an alarm in progress"
     },
     "one": {
       "title": "Dashboard",
@@ -569,7 +569,9 @@
     "legend": {
       "technical_alarm": "Technical alarm",
       "pre_alarm_threshold": "Pre-alarm threshold"
-    }
+    },
+    "load_more_active": "Load more monitored locations",
+    "load_more_disabled": "Load more disabled locations"
   },
   "locationsForm": {
     "dialog": {
@@ -3847,6 +3849,9 @@
     },
     "observations": {
       "empty": "No observation"
+    },
+    "details": {
+      "loading_hint": "Charts are paused while a dialog is open."
     }
   },
   "adminDashboard": {
@@ -5030,7 +5035,8 @@
       },
       "receiveError": {
         "title": "Arrival failed",
-        "description": "The run arrival could not be confirmed."
+        "description": "The run arrival could not be confirmed.",
+        "serialMismatch": "The VigiLog detected on the cradle does not match the selected run."
       },
       "ackSuccess": {
         "title": "Run acknowledged",

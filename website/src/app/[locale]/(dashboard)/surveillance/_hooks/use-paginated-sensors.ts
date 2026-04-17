@@ -14,15 +14,50 @@ export type PaginatedResponse = {
   sensors: SensorWithLocation[]
 }
 
-export const paginatedSensorsPageKey = (limit: number, page: number) =>
-  ["capteurs", "paginated", limit, "page", page] as const
+type Filters = {
+  siteIds?: number[]
+  groupIds?: number[]
+  surveillanceDisabled?: boolean
+}
+
+export const paginatedSensorsPageKey = (
+  limit: number,
+  page: number,
+  { siteIds = [], groupIds = [], surveillanceDisabled }: Filters = {},
+) =>
+  [
+    "capteurs",
+    "paginated",
+    limit,
+    "sites",
+    siteIds.join(","),
+    "groups",
+    groupIds.join(","),
+    "surveillanceDisabled",
+    surveillanceDisabled === undefined ? "all" : surveillanceDisabled ? "1" : "0",
+    "page",
+    page,
+  ] as const
 
 export function usePaginatedSensors({
   limit = 100,
   enabled = true,
-}: { limit?: number; enabled?: boolean } = {}) {
+  siteIds = [],
+  groupIds = [],
+  surveillanceDisabled,
+}: { limit?: number; enabled?: boolean } & Filters = {}) {
   const queryClient = useQueryClient()
-  const queryKey = ["capteurs", "paginated", limit] as const
+  const queryKey = [
+    "capteurs",
+    "paginated",
+    limit,
+    "sites",
+    siteIds.join(","),
+    "groups",
+    groupIds.join(","),
+    "surveillanceDisabled",
+    surveillanceDisabled === undefined ? "all" : surveillanceDisabled ? "1" : "0",
+  ] as const
   const bypassCacheRef = useRef(false)
 
   // Hardening: when the page subtree is re-rendered/remounted by App Router, avoid re-fetching
@@ -37,7 +72,7 @@ export function usePaginatedSensors({
       const page = Number(pageParam ?? 1)
       if (!bypassCacheRef.current) {
         const cached = queryClient.getQueryData<PaginatedResponse>(
-          paginatedSensorsPageKey(limit, page),
+          paginatedSensorsPageKey(limit, page, { siteIds, groupIds, surveillanceDisabled }),
         )
         if (cached) return cached
       }
@@ -52,12 +87,21 @@ export function usePaginatedSensors({
         page: String(page),
         limit: String(limit),
       })
+      if (siteIds.length > 0) {
+        params.set("siteIds", siteIds.join(","))
+      }
+      if (groupIds.length > 0) {
+        params.set("groupIds", groupIds.join(","))
+      }
+      if (typeof surveillanceDisabled === "boolean") {
+        params.set("surveillanceDisabled", surveillanceDisabled ? "1" : "0")
+      }
       if (bypassCacheRef.current) {
         params.set("fresh", "true")
       }
 
       const response = await getJson<PaginatedResponse>(`/api/capteurs/paginated?${params}`)
-      queryClient.setQueryData(paginatedSensorsPageKey(limit, page), response)
+      queryClient.setQueryData(paginatedSensorsPageKey(limit, page, { siteIds, groupIds, surveillanceDisabled }), response)
       return response
     },
     initialPageParam: 1,
@@ -80,12 +124,25 @@ export function usePaginatedSensors({
   const forceRefresh = useCallback(async () => {
     bypassCacheRef.current = true
     try {
-      await queryClient.removeQueries({ queryKey: ["capteurs", "paginated", limit, "page"] })
+      await queryClient.removeQueries({
+        queryKey: [
+          "capteurs",
+          "paginated",
+          limit,
+          "sites",
+          siteIds.join(","),
+          "groups",
+          groupIds.join(","),
+          "surveillanceDisabled",
+          surveillanceDisabled === undefined ? "all" : surveillanceDisabled ? "1" : "0",
+          "page",
+        ],
+      })
       await refetch()
     } finally {
       bypassCacheRef.current = false
     }
-  }, [limit, queryClient, refetch])
+  }, [groupIds, limit, queryClient, refetch, siteIds, surveillanceDisabled])
 
   return {
     ...query,

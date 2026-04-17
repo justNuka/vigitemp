@@ -33,7 +33,7 @@ export function useSurveillanceLocationEditor({
     setIsEditLocationOpen(true)
   }, [form, locations, t])
 
-  const handleEditLocationSubmit = useCallback(async (values: LocationFormData) => {
+  const handleEditLocationSubmit = useCallback(async (values: LocationFormData, submitMode: "stay" | "close" = "stay") => {
     if (!selectedLocationId) return
     const actionComment = typeof values.Commentaire_Action === "string" ? values.Commentaire_Action.trim() : ""
     if (requireActionComment && actionComment.length === 0) {
@@ -52,7 +52,9 @@ export function useSurveillanceLocationEditor({
       await queryClient.invalidateQueries({ queryKey: ['capteurs', 'paginated', 100] })
       toast.success(t('toast.location_updated'))
       window.dispatchEvent(new CustomEvent('vigitemp:lieu-updated', { detail: { idLieu: selectedLocationId } }))
-      setIsEditLocationOpen(false)
+      if (submitMode === "close") {
+        setIsEditLocationOpen(false)
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('toast.location_update_error'))
     } finally {

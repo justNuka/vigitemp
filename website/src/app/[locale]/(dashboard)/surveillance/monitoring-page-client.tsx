@@ -74,6 +74,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [showNullNonResponse] = useState(initialShowNullNonResponse);
   const [isRangeSelectionActive, setIsRangeSelectionActive] = useState(false);
+  const [openDetailModalIds, setOpenDetailModalIds] = useState<number[]>([]);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const performRefreshRef = useRef<(silent?: boolean) => Promise<void>>(async () => undefined);
   const queryClient = useQueryClient();
@@ -108,12 +109,40 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   );
   const { data: modules = [] } = useModules(shouldLoadLocationFormData);
   const { data: mailingUsers = [] } = useUsersForMailing(shouldLoadLocationFormData);
+  const serverFilterSiteIds = filters.siteIds;
+  const serverFilterGroupIds = filters.groupIds;
+  const isBackgroundPaused = isEditLocationOpen || isOverlayOpen || openDetailModalIds.length > 0;
 
-  const { data, isFetching, fetchNextPage, hasNextPage, forceRefresh } = usePaginatedSensors({ limit: 50 });
-  useSurveillanceLiveUpdates({ enabled: !isRangeSelectionActive, limit: 50 });
+  const {
+    data: activeData,
+    isFetching: isFetchingActive,
+    isFetchingNextPage: isFetchingNextActivePage,
+    fetchNextPage: fetchNextActivePage,
+    hasNextPage: hasNextActivePage,
+    forceRefresh: forceRefreshActive,
+  } = usePaginatedSensors({
+    limit: 50,
+    siteIds: serverFilterSiteIds,
+    groupIds: serverFilterGroupIds,
+    surveillanceDisabled: false,
+  });
+  const {
+    data: disabledData,
+    isFetching: isFetchingDisabled,
+    isFetchingNextPage: isFetchingNextDisabledPage,
+    fetchNextPage: fetchNextDisabledPage,
+    hasNextPage: hasNextDisabledPage,
+    forceRefresh: forceRefreshDisabled,
+  } = usePaginatedSensors({
+    limit: 50,
+    siteIds: serverFilterSiteIds,
+    groupIds: serverFilterGroupIds,
+    surveillanceDisabled: true,
+  });
+  useSurveillanceLiveUpdates({ enabled: !isRangeSelectionActive && !isBackgroundPaused });
 
-  const paginatedData = useMemo(() => {
-    const pages = data?.pages ?? [];
+  const activePaginatedData = useMemo(() => {
+    const pages = activeData?.pages ?? [];
     const sensors = pages.flatMap((p) => p.sensors ?? []);
     const last = pages[pages.length - 1];
 
@@ -124,11 +153,41 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       totalPages: last?.totalPages ?? 1,
       sensors,
     };
-  }, [data?.pages]);
+  }, [activeData?.pages]);
+  const disabledPaginatedData = useMemo(() => {
+    const pages = disabledData?.pages ?? [];
+    const sensors = pages.flatMap((p) => p.sensors ?? []);
+    const last = pages[pages.length - 1];
 
-  const allSensors = paginatedData.sensors;
-  const visibleSensors = applySurveillanceFilters(allSensors, filters);
-  const filtersActive = filters.siteIds.length > 0 || filters.groupIds.length > 0;
+    return {
+      total: last?.total ?? 0,
+      page: last?.page ?? 1,
+      limit: last?.limit ?? 100,
+      totalPages: last?.totalPages ?? 1,
+      sensors,
+    };
+  }, [disabledData?.pages]);
+
+  const allSensors = useMemo(
+    () => [...activePaginatedData.sensors, ...disabledPaginatedData.sensors],
+    [activePaginatedData.sensors, disabledPaginatedData.sensors],
+  );
+  const visibleSensors = applySurveillanceFilters(allSensors, { ...filters, siteIds: [], groupIds: [] });
+  const activeVisibleSensors = useMemo(
+    () => visibleSensors.filter((sensor) => !sensor.location.surveillanceDisabled),
+    [visibleSensors],
+  );
+  const disabledVisibleSensors = useMemo(
+    () => visibleSensors.filter((sensor) => sensor.location.surveillanceDisabled),
+    [visibleSensors],
+  );
+  const countVisibleLocations = useCallback(
+    (sensors: SensorWithLocation[]) =>
+      new Set(sensors.map((sensor) => Number(sensor.location.id ?? sensor.id)).filter((id) => Number.isFinite(id))).size,
+    [],
+  );
+  const activeSectionCount = filters.searchTerm.trim().length > 0 ? countVisibleLocations(activeVisibleSensors) : activePaginatedData.total;
+  const disabledSectionCount = filters.searchTerm.trim().length > 0 ? countVisibleLocations(disabledVisibleSensors) : disabledPaginatedData.total;
 
   const activeAlarmsCount = useMemo(() => {
     if (allSensors.length === 0) {
@@ -146,10 +205,14 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   }, [allSensors, initialStats?.activeAlarms]);
 
   const visibleLocationCount = useMemo(() => new Set(visibleSensors.map((sensor) => Number(sensor.location.id ?? sensor.id)).filter((id) => Number.isFinite(id))).size, [visibleSensors]);
+  const totalVisibleLocationCount = useMemo(
+    () => (filters.searchTerm.trim().length > 0 ? visibleLocationCount : activePaginatedData.total + disabledPaginatedData.total),
+    [activePaginatedData.total, disabledPaginatedData.total, filters.searchTerm, visibleLocationCount],
+  );
 
   const visibleStats = computeSurveillanceStats({
     sensors: visibleSensors,
-    total: visibleLocationCount,
+    total: totalVisibleLocationCount,
     activeAlarms: activeAlarmsCount,
   });
 
@@ -174,17 +237,16 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);
-    // Pas besoin de reset page puisque c'est du filtrage client-side
   }, []);
 
   const performRefresh = useCallback(
     async (silent = false) => {
-      await forceRefresh();
+      await Promise.all([forceRefreshActive(), forceRefreshDisabled()]);
       if (!silent) {
         toast.success(t("refresh.refreshed"));
       }
     },
-    [forceRefresh, t],
+    [forceRefreshActive, forceRefreshDisabled, t],
   );
 
   const handleRefresh = useCallback(async () => {
@@ -208,28 +270,64 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
 
   useEffect(() => {
     const interval = Number.isFinite(refreshIntervalSeconds) ? refreshIntervalSeconds : 15;
-    if (interval <= 0 || isRangeSelectionActive) return;
+    if (interval <= 0 || isRangeSelectionActive || isBackgroundPaused) return;
 
     const timer = window.setInterval(() => {
       void performRefresh(true);
     }, interval * 1000);
 
     return () => window.clearInterval(timer);
-  }, [isRangeSelectionActive, performRefresh, refreshIntervalSeconds]);
+  }, [isBackgroundPaused, isRangeSelectionActive, performRefresh, refreshIntervalSeconds]);
 
   useEffect(() => {
-    if (isRangeSelectionActive) return;
+    if (isRangeSelectionActive || isBackgroundPaused) return;
     void performRefreshRef.current(true);
-  }, [isRangeSelectionActive]);
+  }, [isBackgroundPaused, isRangeSelectionActive]);
+
+  const previousBackgroundPaused = useRef(false);
+  useEffect(() => {
+    if (previousBackgroundPaused.current && !isBackgroundPaused) {
+      void performRefreshRef.current(true);
+    }
+    previousBackgroundPaused.current = isBackgroundPaused;
+  }, [isBackgroundPaused]);
 
   useEffect(() => {
-    const pages = data?.pages ?? [];
+    const pages = activeData?.pages ?? [];
     if (pages.length === 0) return;
     const last = pages[pages.length - 1];
     if (!last?.page || !last?.totalPages || last.page >= last.totalPages) return;
 
-    void prefetchNextSensorsPage(queryClient, last.page + 1, paginatedData.limit, paginatedSensorsPageKey);
-  }, [data?.pages, paginatedData.limit, queryClient]);
+    void prefetchNextSensorsPage(queryClient, last.page + 1, activePaginatedData.limit, paginatedSensorsPageKey, {
+      siteIds: serverFilterSiteIds,
+      groupIds: serverFilterGroupIds,
+      surveillanceDisabled: false,
+    });
+  }, [activeData?.pages, activePaginatedData.limit, queryClient, serverFilterGroupIds, serverFilterSiteIds]);
+
+  useEffect(() => {
+    const pages = disabledData?.pages ?? [];
+    if (pages.length === 0) return;
+    const last = pages[pages.length - 1];
+    if (!last?.page || !last?.totalPages || last.page >= last.totalPages) return;
+
+    void prefetchNextSensorsPage(queryClient, last.page + 1, disabledPaginatedData.limit, paginatedSensorsPageKey, {
+      siteIds: serverFilterSiteIds,
+      groupIds: serverFilterGroupIds,
+      surveillanceDisabled: true,
+    });
+  }, [disabledData?.pages, disabledPaginatedData.limit, queryClient, serverFilterGroupIds, serverFilterSiteIds]);
+
+  const handleDetailsModalStateChange = useCallback((idLieu: number, open: boolean) => {
+    setOpenDetailModalIds((current) => {
+      const alreadyOpen = current.includes(idLieu);
+      if (open && !alreadyOpen) return [...current, idLieu];
+      if (!open && alreadyOpen) return current.filter((id) => id !== idLieu);
+      return current;
+    });
+  }, []);
+
+  const isFetching = isFetchingActive || isFetchingDisabled;
 
   const handleToggleOrder = useCallback(() => {
     setDisabledFirst((current) => {
@@ -245,7 +343,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
       lieuEtat: string | null | undefined,
       surveillanceDisabled: boolean,
     ) => {
-      queryClient.setQueryData<PaginatedSensorsData>(["capteurs", "paginated", 100], (data) =>
+      queryClient.setQueriesData<PaginatedSensorsData>({ queryKey: ["capteurs", "paginated"] }, (data) =>
         updateSurveillanceStateInCache(data, ids, (sensor) => ({
           ...sensor,
           location: {
@@ -261,7 +359,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
 
   const updateAlarmCache = useCallback(
     (ids: number[], alarmDisabled: boolean, alarmDisabledUntil: Date | null) => {
-      queryClient.setQueryData<PaginatedSensorsData>(["capteurs", "paginated", 100], (data) =>
+      queryClient.setQueriesData<PaginatedSensorsData>({ queryKey: ["capteurs", "paginated"] }, (data) =>
         updateSurveillanceStateInCache(data, ids, (sensor) => ({
           ...sensor,
           location: {
@@ -425,41 +523,63 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
           {viewMode === "tree" ? (
             <>
               <MonitoringCardsGrid
-                sensors={visibleSensors}
+                activeSensors={activeVisibleSensors}
+                disabledSensors={disabledVisibleSensors}
+                activeTotalCount={activeSectionCount}
+                disabledTotalCount={disabledSectionCount}
                 disabledFirst={disabledFirst}
                 onSurveillanceToggle={handleSurveillanceToggle}
                 requireActionComment={requireActionComment}
                 onEditLocation={handleOpenLocationEdit}
+                onDetailsModalStateChange={handleDetailsModalStateChange}
+                backgroundPaused={isBackgroundPaused}
                 isLoading={isFetching && visibleSensors.length === 0}
                 showNullNonResponse={showNullNonResponse}
                 sortMode={filters.sortMode}
               />
               <SurveillanceLoadMore
                 sentinelRef={loadMoreRef}
-                hasNextPage={!!hasNextPage}
-                isFetching={isFetching}
-                onLoadMore={fetchNextPage}
-                label={t("load_more")}
+                hasNextPage={!!hasNextActivePage}
+                isFetching={isFetchingNextActivePage}
+                onLoadMore={() => void fetchNextActivePage()}
+                label={t("load_more_active")}
+              />
+              <SurveillanceLoadMore
+                hasNextPage={!!hasNextDisabledPage}
+                isFetching={isFetchingNextDisabledPage}
+                onLoadMore={() => void fetchNextDisabledPage()}
+                label={t("load_more_disabled")}
               />
             </>
           ) : (
             <>
               <SensorsCardsGrid
-                sensors={visibleSensors}
+                activeSensors={activeVisibleSensors}
+                disabledSensors={disabledVisibleSensors}
+                activeTotalCount={activeSectionCount}
+                disabledTotalCount={disabledSectionCount}
                 disabledFirst={disabledFirst}
                 onSurveillanceToggle={handleSurveillanceToggle}
                 requireActionComment={requireActionComment}
                 onEditLocation={handleOpenLocationEdit}
+                onDetailsModalStateChange={handleDetailsModalStateChange}
+                backgroundPaused={isBackgroundPaused}
                 isLoading={isFetching && visibleSensors.length === 0}
                 showNullNonResponse={showNullNonResponse}
                 sortMode={filters.sortMode}
               />
               <SurveillanceLoadMore
                 sentinelRef={loadMoreRef}
-                hasNextPage={!!hasNextPage}
-                isFetching={isFetching}
-                onLoadMore={fetchNextPage}
-                label={t("load_more")}
+                hasNextPage={!!hasNextActivePage}
+                isFetching={isFetchingNextActivePage}
+                onLoadMore={() => void fetchNextActivePage()}
+                label={t("load_more_active")}
+              />
+              <SurveillanceLoadMore
+                hasNextPage={!!hasNextDisabledPage}
+                isFetching={isFetchingNextDisabledPage}
+                onLoadMore={() => void fetchNextDisabledPage()}
+                label={t("load_more_disabled")}
               />
             </>
           )}

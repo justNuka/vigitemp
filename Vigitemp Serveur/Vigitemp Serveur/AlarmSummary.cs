@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Vigitemp_Serveur
 {
@@ -7,7 +7,6 @@ namespace Vigitemp_Serveur
         public int IdAlarme { get; }
         public string Type { get; }
         public DateTime? DateHeureDebut { get; }
-        public DateTime? DateHeureDebutAlarmeVrai { get; }
         public DateTime? DateHeureDerniereMesure { get; }
         public double? Valeur { get; }
         public string Unite { get; }
@@ -16,7 +15,6 @@ namespace Vigitemp_Serveur
             int idAlarme,
             string type,
             DateTime? dateHeureDebut,
-            DateTime? dateHeureDebutAlarmeVrai,
             DateTime? dateHeureDerniereMesure,
             double? valeur,
             string unite)
@@ -24,7 +22,6 @@ namespace Vigitemp_Serveur
             IdAlarme = idAlarme;
             Type = type;
             DateHeureDebut = dateHeureDebut;
-            DateHeureDebutAlarmeVrai = dateHeureDebutAlarmeVrai;
             DateHeureDerniereMesure = dateHeureDerniereMesure;
             Valeur = valeur;
             Unite = unite;

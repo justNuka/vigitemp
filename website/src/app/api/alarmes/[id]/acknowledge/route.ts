@@ -84,7 +84,6 @@ export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_
                 where: {
                   Id_Lieu: lieuId,
                   Date_Heure_Fin: null,
-                  Est_Alarme_Vrai: true,
                   Est_Acquittee: false,
                 },
                 orderBy: { Date_Heure_Debut: "desc" },
@@ -189,7 +188,7 @@ export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_
           lieu: alarm.t_lieu?.Nom_Lieu || "Lieu inconnu",
           sonde: alarm.t_lieu?.Sonde_Numero_Serie,
           alarmTypeCode: alarm.Type,
-          triggeredAt: alarm.Date_Heure_Debut_Alarme_Vrai ?? alarm.Date_Heure_Debut,
+          triggeredAt: alarm.Date_Heure_Debut,
           endedAt: alarm.Date_Heure_Fin,
           acknowledgedAt,
           acknowledgedBy: ctx.user.username,

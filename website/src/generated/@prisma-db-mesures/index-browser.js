@@ -158,14 +158,6 @@ exports.Prisma.Tm_journal_codeScalarFieldEnum = {
   Commentaire: 'Commentaire'
 };
 
-exports.Prisma.Tm_journal_commentaire_libreScalarFieldEnum = {
-  Id_Commentaire_Journal: 'Id_Commentaire_Journal',
-  Code_Journal: 'Code_Journal',
-  Commentaire: 'Commentaire',
-  Date_Creation: 'Date_Creation',
-  Date_Modification: 'Date_Modification'
-};
-
 exports.Prisma.Tm_compteur_id_tableScalarFieldEnum = {
   Id_Serveur_BDD: 'Id_Serveur_BDD',
   Nom_Table: 'Nom_Table',
@@ -362,11 +354,6 @@ exports.Prisma.tm_journal_codeOrderByRelevanceFieldEnum = {
   Commentaire: 'Commentaire'
 };
 
-exports.Prisma.tm_journal_commentaire_libreOrderByRelevanceFieldEnum = {
-  Code_Journal: 'Code_Journal',
-  Commentaire: 'Commentaire'
-};
-
 exports.Prisma.tm_compteur_id_tableOrderByRelevanceFieldEnum = {
   Nom_Table: 'Nom_Table'
 };
@@ -444,7 +431,6 @@ exports.Prisma.ModelName = {
   tm_graphique: 'tm_graphique',
   tm_journal: 'tm_journal',
   tm_journal_code: 'tm_journal_code',
-  tm_journal_commentaire_libre: 'tm_journal_commentaire_libre',
   tm_compteur_id_table: 'tm_compteur_id_table',
   tm_mesures: 'tm_mesures',
   tm_mesures_gso: 'tm_mesures_gso',

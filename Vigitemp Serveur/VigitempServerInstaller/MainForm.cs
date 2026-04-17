@@ -152,7 +152,7 @@ public sealed class MainForm : Form
             return p;
         }
 
-        installDir = T(_s.InstallDir, placeholder: @"C:\ProgramData\Vigitemp\server");
+        installDir = T(_s.InstallDir, placeholder: @"C:\ProgramData\VigiSensys\server");
         installMode = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = FlatStyle.Flat, BackColor = Color.White, ForeColor = TextPrimary };
         installMode.Items.AddRange(new object[] { "Installation normale", "Mise ? jour Vigitemp -> VigiSensys" });
         installMode.SelectedItem = string.Equals(_s.InstallMode, "update", StringComparison.OrdinalIgnoreCase) ? "Mise ? jour Vigitemp -> VigiSensys" : "Installation normale";
@@ -603,7 +603,7 @@ public sealed class MainForm : Form
             var pd = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             return new Settings
             {
-                InstallDir = Path.Combine(pd, @"Vigitemp\server"),
+                InstallDir = Path.Combine(pd, @"VigiSensys\server"),
                 InstallMode = "normal",
                 ServiceName = "VigitempServeur",
                 WebsiteBaseUrl = "http://127.0.0.1:3000",
@@ -618,8 +618,8 @@ public sealed class MainForm : Form
                 DbCommandTimeoutSeconds = "30",
                 SqlServerEncrypt = "false",
                 SqlServerTrustServerCertificate = "true",
-                LicensePath = Path.Combine(pd, @"Vigitemp\licenses\license.vtlic"),
-                PublicKeyPath = Path.Combine(pd, @"Vigitemp\license_keys\public_key.pem"),
+                LicensePath = Path.Combine(pd, @"VigiSensys\licenses\license.vtlic"),
+                PublicKeyPath = Path.Combine(pd, @"VigiSensys\license_keys\public_key.pem"),
                 InstancePublicKey = string.Empty,
                 DispatchSecret = string.Empty,
                 LicenseHysteresisDelta = "0",

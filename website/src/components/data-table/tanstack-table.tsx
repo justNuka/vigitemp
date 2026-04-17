@@ -275,7 +275,7 @@ export function TanStackTable<TData extends Record<string, any>>({
 
     setSelectedExportColumnIds((current) => {
       if (availableExportColumnIds.length === 0) {
-        return [];
+        return current.length === 0 ? current : [];
       }
 
       if (current.length === 0) {
@@ -283,7 +283,14 @@ export function TanStackTable<TData extends Record<string, any>>({
       }
 
       const next = current.filter((id) => availableExportColumnIds.includes(id));
-      return next.length > 0 ? next : availableExportColumnIds;
+      const fallback = next.length > 0 ? next : availableExportColumnIds;
+      if (
+        fallback.length === current.length &&
+        fallback.every((id, index) => current[index] === id)
+      ) {
+        return current;
+      }
+      return fallback;
     });
   }, [enableExportColumnSelection, availableExportColumnIds]);
 
@@ -551,7 +558,7 @@ export function TanStackTable<TData extends Record<string, any>>({
       {/* Tableau */}
       <div
         className={cn(
-          "border rounded-lg overflow-hidden",
+          "isolate border rounded-lg overflow-hidden bg-background",
           "[&>div]:max-h-(--vt-table-max-height)",
           "[&>div]:overflow-auto",
           containerClassName
@@ -565,7 +572,7 @@ export function TanStackTable<TData extends Record<string, any>>({
         <Table className={tableClassName}>
           <TableHeader
             className={cn(
-              "sticky top-0 z-20 bg-background shadow-sm dark:bg-card",
+              "sticky top-0 z-10 bg-background dark:bg-card",
               headerClassName
             )}
           >
@@ -592,7 +599,7 @@ export function TanStackTable<TData extends Record<string, any>>({
                         key={header.id}
                         className={cn(
                           canSort && 'cursor-pointer select-none hover:bg-muted/50',
-                          'transition-colors sticky top-0 z-20 bg-background border-b border-border border-r shadow-[inset_0_-1px_0_hsl(var(--border))] dark:bg-card',
+                          'transition-colors sticky top-0 z-10 bg-background border-b border-border border-r shadow-none dark:bg-card',
                           headerCellClassName,
                           headerCellMetaClass
                         )}

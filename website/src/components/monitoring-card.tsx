@@ -61,6 +61,8 @@ interface MonitoringCardProps {
   gsoTension?: string | null
   alarmId?: number | null
   onEditLocation?: (idLieu: number) => void
+  onDetailsModalStateChange?: (idLieu: number, open: boolean) => void
+  backgroundPaused?: boolean
   onSurveillanceToggle: (
     idLieu: number,
     action: 'surveillance' | 'alarms',
@@ -105,6 +107,8 @@ export default function MonitoringCard({
   gsoTension,
   alarmId = null,
   onEditLocation,
+  onDetailsModalStateChange,
+  backgroundPaused = false,
   onSurveillanceToggle,
   requireActionComment = false,
   showNullNonResponse = false,
@@ -116,7 +120,7 @@ export default function MonitoringCard({
   const locale = useLocale()
   const localeTag = locale === 'fr' ? 'fr-FR' : locale
   const queryClient = useQueryClient()
-  const shouldLoadCardMeasurements = !isMobile
+  const shouldLoadCardMeasurements = !isMobile && !backgroundPaused
 
   const { data, isLoading, reload, meta } = useLieuMeasurements(idLieu, {
     enabled: shouldLoadCardMeasurements,
@@ -216,6 +220,10 @@ export default function MonitoringCard({
   useEffect(() => {
     if (isModalOpen) reload(true)
   }, [isModalOpen, reload])
+
+  useEffect(() => {
+    onDetailsModalStateChange?.(idLieu, isModalOpen)
+  }, [idLieu, isModalOpen, onDetailsModalStateChange])
 
   const handleAcknowledgeOpen = useCallback(() => {
     setAckComment('')
@@ -477,6 +485,10 @@ export default function MonitoringCard({
                 {isMobile ? (
                   <div className="py-2 text-center">
                     <p className="text-xs text-muted-foreground">{t('mobile.small_hint')}</p>
+                  </div>
+                ) : backgroundPaused ? (
+                  <div className="flex h-32.5 items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/20 text-xs text-muted-foreground">
+                    {t('details.loading_hint')}
                   </div>
                 ) : (
                   <MonitoringCardChartPreview

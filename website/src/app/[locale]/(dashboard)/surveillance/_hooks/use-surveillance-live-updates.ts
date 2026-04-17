@@ -20,10 +20,8 @@ type InfiniteSensorsData = {
 
 export function useSurveillanceLiveUpdates({
   enabled = true,
-  limit = 100,
 }: {
   enabled?: boolean
-  limit?: number
 }) {
   const queryClient = useQueryClient()
 
@@ -43,7 +41,7 @@ export function useSurveillanceLiveUpdates({
 
       const id = String(payload.idLieu)
 
-      queryClient.setQueryData(["capteurs", "paginated", limit], (old: unknown) => {
+      queryClient.setQueriesData({ queryKey: ["capteurs", "paginated"] }, (old: unknown) => {
         const data = old as InfiniteSensorsData | undefined
         if (!data?.pages?.length) return old
 
@@ -85,6 +83,6 @@ export function useSurveillanceLiveUpdates({
       es.removeEventListener("error", close)
       close()
     }
-  }, [enabled, limit, queryClient])
+  }, [enabled, queryClient])
 }
 

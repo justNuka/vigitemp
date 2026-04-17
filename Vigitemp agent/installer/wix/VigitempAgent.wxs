@@ -23,9 +23,9 @@
   </Package>
 
   <Fragment>
-    <StandardDirectory Id="ProgramFilesFolder">
-      <Directory Id="CompanyFolder" Name="Vigitemp">
-        <Directory Id="INSTALLFOLDER" Name="Agent" />
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="CompanyFolder" Name="VigiSensys">
+        <Directory Id="INSTALLFOLDER" Name="agent" />
       </Directory>
     </StandardDirectory>
   </Fragment>
