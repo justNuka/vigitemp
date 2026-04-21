@@ -1,108 +1,18 @@
-import { subDays } from "date-fns"
+import { addDays, format, startOfDay, subDays } from "date-fns"
 import { connection } from "next/server"
 import { getTranslations } from "next-intl/server"
 
-import { applyAccessFilter, buildAlarmAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
+import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
+import { prisma } from "@/lib/prisma"
 import { getServerAuthenticatedUserId } from "@/lib/server-auth"
-import { AlarmsByLocationPageClient, type AlarmByLocationRow } from "./alarms-by-location-page-client"
+import { hasUserAuthorizationCode } from "@/lib/authz"
+import { loadLocationStatisticsRows } from "@/lib/statistics/location-stats"
+import { AlarmsByLocationPageClient } from "./alarms-by-location-page-client"
 
-async function getAlarmRowsByLocation(): Promise<AlarmByLocationRow[]> {
-  const userId = await getServerAuthenticatedUserId()
-  if (!userId) return []
-
-  const { prisma } = await import("@/lib/prisma")
-  const scope = await getUserLocationScope(userId)
-  const alarmAccessFilter = buildAlarmAccessFilter(scope)
-  const since = subDays(new Date(), 7)
-
-  const select = {
-    Id_Lieu: true,
-    Type: true,
-    Date_Heure_Debut: true,
-    Date_Heure_Fin: true,
-    Est_Acquittee: true,
-    t_lieu: {
-      select: {
-        Nom_Lieu: true,
-        t_site: {
-          select: {
-            Libelle_Site: true,
-          },
-        },
-      },
-    },
-  } as const
-
-  const [activeRows, historyRows] = await Promise.all([
-    prisma.t_alarme.findMany({
-      where: applyAccessFilter(
-        {
-          Id_Lieu: { not: null },
-          Date_Heure_Debut: { gte: since },
-        },
-        alarmAccessFilter,
-      ),
-      select,
-    }),
-    prisma.t_alarme_histo.findMany({
-      where: applyAccessFilter(
-        {
-          Id_Lieu: { not: null },
-          Date_Heure_Debut: { gte: since },
-        },
-        alarmAccessFilter,
-      ),
-      select,
-    }),
-  ])
-
-  const rows = [...activeRows, ...historyRows]
-  const byLocation = new Map<number, AlarmByLocationRow>()
-
-  for (const alarm of rows) {
-    if (!alarm.Id_Lieu) continue
-
-    const siteLabel = alarm.t_lieu?.t_site?.Libelle_Site?.trim()
-    const siteName = siteLabel || "Site inconnu"
-    const locationName = alarm.t_lieu?.Nom_Lieu?.trim() || "Lieu inconnu"
-
-    const current =
-      byLocation.get(alarm.Id_Lieu) ??
-      {
-        locationId: alarm.Id_Lieu,
-        locationName,
-        siteName,
-        totalCount: 0,
-        activeCount: 0,
-        highCount: 0,
-        lowCount: 0,
-        noResponseCount: 0,
-        lastTriggeredAt: null,
-      }
-
-    current.totalCount += 1
-
-    if (!alarm.Date_Heure_Fin && !alarm.Est_Acquittee) {
-      current.activeCount += 1
-    }
-
-    if (alarm.Type === "H") current.highCount += 1
-    else if (alarm.Type === "B") current.lowCount += 1
-    else current.noResponseCount += 1
-
-    const alarmStartedAt = alarm.Date_Heure_Debut?.toISOString() ?? null
-    if (alarmStartedAt && (!current.lastTriggeredAt || alarmStartedAt > current.lastTriggeredAt)) {
-      current.lastTriggeredAt = alarmStartedAt
-    }
-
-    byLocation.set(alarm.Id_Lieu, current)
-  }
-
-  return Array.from(byLocation.values()).sort((a, b) => {
-    if (a.activeCount !== b.activeCount) return b.activeCount - a.activeCount
-    if (a.totalCount !== b.totalCount) return b.totalCount - a.totalCount
-    return a.locationName.localeCompare(b.locationName, "fr")
-  })
+function parseDateInput(raw: string | null, fallback: Date) {
+  if (!raw) return fallback
+  const candidate = new Date(`${raw}T00:00:00`)
+  return Number.isNaN(candidate.getTime()) ? fallback : candidate
 }
 
 export async function generateMetadata({
@@ -119,9 +29,50 @@ export async function generateMetadata({
   }
 }
 
-export default async function DashboardAlarmsByLocationPage() {
+export default async function DashboardAlarmsByLocationPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
   await connection()
-  const rows = await getAlarmRowsByLocation()
+  const params = await searchParams
+  const userId = await getServerAuthenticatedUserId()
+  if (!userId) {
+    return <AlarmsByLocationPageClient rows={[]} fromDate={format(subDays(new Date(), 6), "yyyy-MM-dd")} toDate={format(new Date(), "yyyy-MM-dd")} canManageReport={false} />
+  }
 
-  return <AlarmsByLocationPageClient rows={rows} />
+  const today = startOfDay(new Date())
+  const defaultFrom = startOfDay(subDays(today, 6))
+  const defaultTo = today
+  const from = parseDateInput(typeof params.from === "string" ? params.from : null, defaultFrom)
+  const to = parseDateInput(typeof params.to === "string" ? params.to : null, defaultTo)
+  const normalizedFrom = from <= to ? from : to
+  const normalizedTo = to >= from ? to : from
+  const toExclusive = addDays(startOfDay(normalizedTo), 1)
+
+  const scope = await getUserLocationScope(userId)
+  const lieuAccessFilter = buildLieuAccessFilter(scope)
+  const allowedLieux = await prisma.t_lieu.findMany({
+    where: applyAccessFilter({ Est_Archive: false, Lieu_Etat: "S" }, lieuAccessFilter),
+    select: { Id_Lieu: true },
+  })
+  const allowedIds = allowedLieux.map((l) => l.Id_Lieu)
+
+  const rows = await loadLocationStatisticsRows({
+    from: normalizedFrom,
+    toExclusive,
+    locationIds: allowedIds,
+  })
+
+  const canManageReport = await hasUserAuthorizationCode(userId, "GERER_PROFIL")
+
+  return (
+    <AlarmsByLocationPageClient
+      rows={rows}
+      fromDate={format(normalizedFrom, "yyyy-MM-dd")}
+      toDate={format(normalizedTo, "yyyy-MM-dd")}
+      canManageReport={canManageReport}
+    />
+  )
 }
+

@@ -41,8 +41,12 @@ namespace Vigitemp_Serveur
         private readonly bool _offsetDisabledForPack;
         private readonly int _alarmPollSeconds = GetSettingInt("Vigitemp.Alarms.PollSeconds", 15);
         private readonly int _alarmPollMaxBatch = GetSettingInt("Vigitemp.Alarms.PollMaxBatch", 50);
+        private readonly bool _statsMonthlyDispatchEnabled = GetSettingBool("Vigitemp.StatsMonthlyDispatch.Enabled", true);
+        private readonly int _statsMonthlyDispatchServerId = GetSettingInt("Vigitemp.StatsMonthlyDispatch.ServerId", 1);
+        private readonly int _statsMonthlyDispatchIntervalMinutes = GetSettingInt("Vigitemp.StatsMonthlyDispatch.IntervalMinutes", 60);
         private readonly object _alarmPollLock = new object();
         private DateTime _lastAlarmPollUtc = DateTime.MinValue;
+        private DateTime _lastStatsMonthlyDispatchAttemptUtc = DateTime.MinValue;
         private int _lastAlarmIdSeen = 0;
         private bool _alarmCursorInitialized = false;
         // NOTE: heure locale intentionnelle — correspond au NOW() MySQL qui utilise
@@ -1036,6 +1040,23 @@ namespace Vigitemp_Serveur
                 return "HN";
             }
 
+            // Legacy generic type "I" is used in DB for several concrete wired probes.
+            // When the serial already carries a concrete prefix (e.g. INX08J -> IN),
+            // prefer that concrete family so interrogation uses the right handler.
+            if (normalizedSondeType == "I")
+            {
+                switch (prefix)
+                {
+                    case "IN":
+                    case "IE":
+                    case "IP":
+                    case "IC":
+                    case "IH":
+                    case "IQ":
+                        return prefix;
+                }
+            }
+
             if (!string.IsNullOrWhiteSpace(normalizedSondeType))
             {
                 return normalizedSondeType;
@@ -1170,6 +1191,8 @@ namespace Vigitemp_Serveur
                         "R�activation automatique de la surveillance",
                         null);
                 }
+
+                await TriggerMonthlyStatsDispatchIfNeededAsync();
             }
             catch (Exception ex)
             {
@@ -1181,6 +1204,37 @@ namespace Vigitemp_Serveur
                 {
                     semaphore.Release();
                 }
+            }
+        }
+
+        private async Task TriggerMonthlyStatsDispatchIfNeededAsync()
+        {
+            try
+            {
+                if (!_statsMonthlyDispatchEnabled)
+                {
+                    return;
+                }
+
+                if (_idServer != _statsMonthlyDispatchServerId)
+                {
+                    return;
+                }
+
+                var nowUtc = DateTime.UtcNow;
+                var intervalMinutes = Math.Max(5, _statsMonthlyDispatchIntervalMinutes);
+                if (_lastStatsMonthlyDispatchAttemptUtc != DateTime.MinValue &&
+                    (nowUtc - _lastStatsMonthlyDispatchAttemptUtc).TotalMinutes < intervalMinutes)
+                {
+                    return;
+                }
+
+                _lastStatsMonthlyDispatchAttemptUtc = nowUtc;
+                await AlarmWebNotifier.TriggerMonthlyStatsRecapAsync();
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("TriggerMonthlyStatsDispatchIfNeededAsync error: " + ex.Message);
             }
         }
 

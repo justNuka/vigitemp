@@ -47,7 +47,10 @@ export function formatMeasureValue(
   if (value === null || value === undefined || Number.isNaN(value)) return ""
 
   if (decimals === null || decimals === undefined || Number.isNaN(decimals)) {
-    return value.toString()
+    return new Intl.NumberFormat(locale, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(value)
   }
 
   const fractionDigits = Math.max(0, Math.min(10, Math.trunc(decimals)))

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from "react"
 import { usePathname } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 
 import { buildLocalizedPath, resolveLocaleFromPathname, stripLocalePrefix } from "@/i18n/pathnames"
 import { useRouter } from "@/i18n/navigation"
@@ -18,6 +18,7 @@ import {
 } from "@/lib/http"
 import { markDisconnectReason } from "@/lib/auth-disconnect-marker"
 import { ALARM_AUDIO_STATE_EVENT, getAlarmAudioMuted } from "@/lib/alarm-audio"
+import { formatMeasureValue } from "@/lib/measurements"
 
 function isPublicRoute(pathname: string) {
   const normalized = stripLocalePrefix(pathname)
@@ -27,6 +28,7 @@ function isPublicRoute(pathname: string) {
 export function GlobalAppEffects() {
   const t = useTranslations("globalAppEffects")
   const tSessionExpired = useTranslations("login.toasts.session_expired")
+  const locale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
   const queryClient = useQueryClient()
@@ -110,7 +112,7 @@ export function GlobalAppEffects() {
         const value =
           data.valeur === null
             ? t("alarm.value.na")
-            : `${data.valeur}${data.unite ?? "\u00b0C"}`
+            : `${formatMeasureValue(data.valeur, 2, locale.toLowerCase().startsWith("fr") ? "fr-FR" : "en-US")}${data.unite ?? "\u00b0C"}`
 
         toast.error(t("alarm.toast.title", { type: labelType, lieu: data.lieu }), {
           description: t("alarm.toast.description", { value }),
@@ -155,7 +157,7 @@ export function GlobalAppEffects() {
       eventSource.close()
       stopAlarmAudio()
     }
-  }, [alarmStreamUrl, currentUser, router, t])
+  }, [alarmStreamUrl, currentUser, locale, router, t])
 
   useEffect(() => {
     const onApiError = (event: Event) => {

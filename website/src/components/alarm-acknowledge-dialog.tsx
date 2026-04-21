@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import MonitoringDetailsModal from "@/components/monitoring-details-modal";
 import { formatDbDateTime } from "@/lib/date-display";
+import { formatMeasureValue } from "@/lib/measurements";
 
 export type AcknowledgeDialogAlarm = {
   id: string;
@@ -212,6 +213,33 @@ export function AlarmAcknowledgeDialog({
     });
   }, [locale, resolvedAlarm.endedAt, resolvedAlarm.triggeredAt]);
 
+  const formattedCurrentValue = useMemo(() => {
+    const value = resolvedAlarm.currentValue ?? resolvedAlarm.value ?? null;
+    if (value === null) return "-";
+    const formatted = formatMeasureValue(value, null, locale);
+    return resolvedAlarm.unit ? `${formatted} ${resolvedAlarm.unit}` : formatted;
+  }, [locale, resolvedAlarm.currentValue, resolvedAlarm.unit, resolvedAlarm.value]);
+
+  const formattedThresholdSup = useMemo(() => {
+    if (resolvedAlarm.maxThreshold === null || resolvedAlarm.maxThreshold === undefined) {
+      return t("dialog.sup_value", { value: "-", unit: resolvedAlarm.unit ?? "" });
+    }
+    return t("dialog.sup_value", {
+      value: formatMeasureValue(resolvedAlarm.maxThreshold, null, locale),
+      unit: resolvedAlarm.unit ?? "",
+    });
+  }, [locale, resolvedAlarm.maxThreshold, resolvedAlarm.unit, t]);
+
+  const formattedThresholdInf = useMemo(() => {
+    if (resolvedAlarm.minThreshold === null || resolvedAlarm.minThreshold === undefined) {
+      return t("dialog.inf_value", { value: "-", unit: resolvedAlarm.unit ?? "" });
+    }
+    return t("dialog.inf_value", {
+      value: formatMeasureValue(resolvedAlarm.minThreshold, null, locale),
+      unit: resolvedAlarm.unit ?? "",
+    });
+  }, [locale, resolvedAlarm.minThreshold, resolvedAlarm.unit, t]);
+
   const alarmTypeLabel = useMemo(() => {
     switch (resolvedAlarm.type) {
       case "high":
@@ -267,7 +295,7 @@ export function AlarmAcknowledgeDialog({
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t("dialog.last_value_label")}</p>
                 <p className="text-sm font-mono font-semibold text-primary">
-                  {resolvedAlarm.currentValue ?? resolvedAlarm.value ?? "-"} {resolvedAlarm.unit ?? ""}
+                  {formattedCurrentValue}
                 </p>
               </div>
               <div>
@@ -295,10 +323,10 @@ export function AlarmAcknowledgeDialog({
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">{t("dialog.thresholds_label")}</p>
                 <p className="text-sm font-mono text-muted-foreground">
-                  {t("dialog.sup_value", { value: resolvedAlarm.maxThreshold ?? "-", unit: resolvedAlarm.unit ?? "" })}
+                  {formattedThresholdSup}
                 </p>
                 <p className="text-sm font-mono text-muted-foreground">
-                  {t("dialog.inf_value", { value: resolvedAlarm.minThreshold ?? "-", unit: resolvedAlarm.unit ?? "" })}
+                  {formattedThresholdInf}
                 </p>
               </div>
             </div>

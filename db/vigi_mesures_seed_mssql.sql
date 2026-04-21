@@ -7,6 +7,24 @@ GO
 USE [vigi_mesures];
 GO
 
+IF OBJECT_ID('dbo.tm_journal_commentaire_libre', 'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.tm_journal_commentaire_libre (
+    Id_Commentaire_Journal INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Code_Journal NVARCHAR(32) NOT NULL,
+    Commentaire NVARCHAR(MAX) NOT NULL,
+    Date_Creation DATETIME NOT NULL CONSTRAINT DF_tm_journal_commentaire_libre_DateCreation DEFAULT(GETDATE()),
+    Date_Modification DATETIME NULL
+  );
+
+  CREATE INDEX IDX_tm_journal_commentaire_libre_code
+    ON dbo.tm_journal_commentaire_libre(Code_Journal);
+
+  CREATE INDEX IDX_tm_journal_commentaire_libre_date_creation
+    ON dbo.tm_journal_commentaire_libre(Date_Creation);
+END;
+GO
+
 -- =====================================================================
 -- ALIGNEMENT SQL SERVER <-> SCHEMA PRISMA (Mise a jour 2026-02)
 -- Script idempotent (complement de seed)

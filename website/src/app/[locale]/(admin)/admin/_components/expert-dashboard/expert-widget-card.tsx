@@ -39,7 +39,7 @@ export function ExpertWidgetCard({
       </CardHeader>
       <CardContent className="space-y-2 overflow-hidden">
         <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">{value}</div>
-        {helper ? <p className="line-clamp-2 text-sm text-muted-foreground">{helper}</p> : null}
+        {helper ? <p className="line-clamp-3 whitespace-pre-line break-all text-sm text-muted-foreground">{helper}</p> : null}
         <Link
           href={href as never}
           className="inline-flex items-center gap-1 text-sm font-medium text-sky-600 transition-colors hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300"

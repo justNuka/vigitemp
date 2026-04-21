@@ -24,6 +24,11 @@ namespace VigitempAgentInstaller
         private const string ProductPublisher = "VigiSensys";
         private const int HttpPort = 8000;
         private const int MinimumStepDisplayMs = 700;
+        private static readonly string[] DriverUninstallRegistryRoots =
+        {
+            @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+            @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
+        };
 
         private readonly string _installDirectory;
         private readonly InstallerMode _mode;
@@ -334,6 +339,13 @@ namespace VigitempAgentInstaller
 
                 await RunStepAsync("driver", async () =>
                 {
+                    var installedDriverName = FindInstalledCradleDriverDisplayName();
+                    if (!string.IsNullOrWhiteSpace(installedDriverName))
+                    {
+                        await Task.CompletedTask;
+                        return "Driver cradle deja installe (" + installedDriverName + ") - etape ignoree.";
+                    }
+
                     var driverPath = FindEmbeddedDriverExecutable();
                     if (driverPath == null)
                     {
@@ -716,6 +728,46 @@ namespace VigitempAgentInstaller
             }
 
             return lastResult ?? new ProcessExecutionResult(-1, "Aucun resultat driver.");
+        }
+
+        private static string FindInstalledCradleDriverDisplayName()
+        {
+            foreach (var registryRoot in DriverUninstallRegistryRoots)
+            {
+                using (var rootKey = Registry.LocalMachine.OpenSubKey(registryRoot, false))
+                {
+                    if (rootKey == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var subKeyName in rootKey.GetSubKeyNames())
+                    {
+                        using (var subKey = rootKey.OpenSubKey(subKeyName, false))
+                        {
+                            var displayName = subKey?.GetValue("DisplayName") as string;
+                            if (string.IsNullOrWhiteSpace(displayName))
+                            {
+                                continue;
+                            }
+
+                            var normalized = displayName.Trim();
+                            if (normalized.IndexOf("cradle", StringComparison.OrdinalIgnoreCase) < 0)
+                            {
+                                continue;
+                            }
+
+                            if (normalized.IndexOf("logtag", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                normalized.IndexOf("usb interface", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                return normalized;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
 
         private static void CopyDirectory(string sourceDirectory, string destinationDirectory)

@@ -59,6 +59,9 @@ type AssignedUser = {
   Id_Utilisateur: number
 }
 
+const EMPTY_USERS: AssignableUser[] = []
+const EMPTY_ASSIGNED_USERS: AssignedUser[] = []
+
 export function GroupModal({ open, onOpenChange, group, isEditing }: GroupModalProps) {
   const queryClient = useQueryClient()
   const router = useRouter()
@@ -72,6 +75,9 @@ export function GroupModal({ open, onOpenChange, group, isEditing }: GroupModalP
   })
 
   type GroupFormValues = z.infer<typeof groupSchema>
+  const groupId = group?.Id_Groupe ?? null
+  const groupName = group?.Nom_Groupe || ''
+  const groupRegroupement = group?.Numero_Regroupement || ''
 
   const form = useForm<GroupFormValues>({
     resolver: zodResolver(groupSchema),
@@ -83,32 +89,43 @@ export function GroupModal({ open, onOpenChange, group, isEditing }: GroupModalP
     mode: 'onChange',
   })
 
-  const { data: users = [] } = useQuery({
+  const usersQuery = useQuery({
     queryKey: ['users', 'groups-dialog'],
     queryFn: () => getJson<Array<{ id: number; username: string; displayName: string }>>('/api/utilisateurs'),
     enabled: open,
   })
+  const users = usersQuery.data ?? EMPTY_USERS
 
-  const { data: assignedUsers = [] } = useQuery({
-    queryKey: ['groupUsers', group?.Id_Groupe, 'dialog'],
-    queryFn: () => getJson<AssignedUser[]>(`/api/groupes/${group?.Id_Groupe}/utilisateurs`),
-    enabled: open && Boolean(isEditing && group?.Id_Groupe),
+  const assignedUsersQuery = useQuery({
+    queryKey: ['groupUsers', groupId, 'dialog'],
+    queryFn: () => getJson<AssignedUser[]>(`/api/groupes/${groupId}/utilisateurs`),
+    enabled: open && Boolean(isEditing && groupId),
   })
+  const assignedUsers = assignedUsersQuery.data ?? EMPTY_ASSIGNED_USERS
 
   useEffect(() => {
     if (!open) return
 
-    if (isEditing && group) {
+    if (isEditing && groupId) {
       form.reset({
-        name: group.Nom_Groupe || '',
-        regroupement: group.Numero_Regroupement || '',
+        name: groupName,
+        regroupement: groupRegroupement,
         assignedUserIds: assignedUsers.map((user) => user.Id_Utilisateur),
       })
       return
     }
 
     form.reset({ name: '', regroupement: '', assignedUserIds: [] })
-  }, [assignedUsers, form, group, isEditing, open])
+  }, [
+    open,
+    isEditing,
+    groupId,
+    groupName,
+    groupRegroupement,
+    assignedUsers,
+    assignedUsersQuery.data,
+    form,
+  ])
 
   const handleSubmit = async (values: GroupFormValues) => {
     try {

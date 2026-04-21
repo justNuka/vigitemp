@@ -45,6 +45,9 @@ type AssignedUser = {
   Id_Utilisateur: number;
 };
 
+const EMPTY_USERS: AssignableUser[] = [];
+const EMPTY_ASSIGNED_USERS: AssignedUser[] = [];
+
 type EditSiteDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -65,24 +68,35 @@ export function EditSiteDialog({
   const t = useTranslations('sitesDialog');
   const tCommon = useTranslations('common');
   const memoryKey = `edit-site-form:${site?.Id_Site ?? 'unknown'}`;
-  const { data: users = [] } = useQuery({
+  const usersQuery = useQuery({
     queryKey: ['users', 'sites-dialog'],
     queryFn: () => getJson<AssignableUser[]>('/api/utilisateurs'),
     enabled: open,
   });
-  const { data: assignedUsers = [] } = useQuery({
+  const users = usersQuery.data ?? EMPTY_USERS;
+  const assignedUsersQuery = useQuery({
     queryKey: ['siteUsers', site?.Id_Site, 'dialog'],
     queryFn: () => getJson<AssignedUser[]>(`/api/sites/${site?.Id_Site}/utilisateurs`),
     enabled: open && Boolean(site?.Id_Site),
   });
+  const assignedUsers = assignedUsersQuery.data ?? EMPTY_ASSIGNED_USERS;
   const assignedUserIds = form.watch('assignedUserIds') || [];
   const allUserIds = users.map((user) => user.id);
   const allUsersSelected = allUserIds.length > 0 && allUserIds.every((userId) => assignedUserIds.includes(userId));
 
   useEffect(() => {
     if (!open) return;
-    form.setValue('assignedUserIds', assignedUsers.map((user) => user.Id_Utilisateur), { shouldDirty: false });
-  }, [assignedUsers, form, open]);
+    const nextAssignedUserIds = assignedUsers.map((user) => user.Id_Utilisateur);
+    const currentAssignedUserIds = form.getValues('assignedUserIds') || [];
+    const isSameLength = currentAssignedUserIds.length === nextAssignedUserIds.length;
+    const isSame =
+      isSameLength &&
+      currentAssignedUserIds.every((id, index) => id === nextAssignedUserIds[index]);
+
+    if (!isSame) {
+      form.setValue('assignedUserIds', nextAssignedUserIds, { shouldDirty: false });
+    }
+  }, [assignedUsers, assignedUsersQuery.data, form, open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

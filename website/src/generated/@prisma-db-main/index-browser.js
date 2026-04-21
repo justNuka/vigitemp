@@ -406,6 +406,38 @@ exports.Prisma.T_lieuScalarFieldEnum = {
   Nb_Mesures_Temporisation_Redeclenchement: 'Nb_Mesures_Temporisation_Redeclenchement'
 };
 
+exports.Prisma.T_lieu_templateScalarFieldEnum = {
+  Id_Lieu_Template: 'Id_Lieu_Template',
+  Nom_Template: 'Nom_Template',
+  Description: 'Description',
+  Lieu_Etat: 'Lieu_Etat',
+  Frequence: 'Frequence',
+  Retard_Alarme_Haut: 'Retard_Alarme_Haut',
+  Retard_Alarme_Bas: 'Retard_Alarme_Bas',
+  Retard_Non_Reponse: 'Retard_Non_Reponse',
+  Retard_Alarme_Changement_Consigne: 'Retard_Alarme_Changement_Consigne',
+  Consigne: 'Consigne',
+  Consigne_Sup: 'Consigne_Sup',
+  Consigne_Inf: 'Consigne_Inf',
+  Tolerance_Surveillance_Sup: 'Tolerance_Surveillance_Sup',
+  Tolerance_Surveillance_Inf: 'Tolerance_Surveillance_Inf',
+  Consigne_Sup_Pre_Alarme: 'Consigne_Sup_Pre_Alarme',
+  Consigne_Inf_Pre_Alarme: 'Consigne_Inf_Pre_Alarme',
+  Est_Consigne_Sup_Active: 'Est_Consigne_Sup_Active',
+  Est_Consigne_Inf_Active: 'Est_Consigne_Inf_Active',
+  Est_Consigne_Sup_Pre_Alarme_Active: 'Est_Consigne_Sup_Pre_Alarme_Active',
+  Est_Consigne_Inf_Pre_Alarme_Active: 'Est_Consigne_Inf_Pre_Alarme_Active',
+  Est_Son_Alarme_Active: 'Est_Son_Alarme_Active',
+  Est_Redeclenchement_Immediat: 'Est_Redeclenchement_Immediat',
+  Nb_Mesures_Temporisation_Redeclenchement: 'Nb_Mesures_Temporisation_Redeclenchement',
+  Observations_Info: 'Observations_Info',
+  Est_Archive: 'Est_Archive',
+  Date_Creation: 'Date_Creation',
+  Date_Maj: 'Date_Maj',
+  Id_Utilisateur_Creation: 'Id_Utilisateur_Creation',
+  Id_Utilisateur_Maj: 'Id_Utilisateur_Maj'
+};
+
 exports.Prisma.T_moduleScalarFieldEnum = {
   Id_Module: 'Id_Module',
   Module_Numero_Serie: 'Module_Numero_Serie',
@@ -914,6 +946,13 @@ exports.Prisma.t_lieuOrderByRelevanceFieldEnum = {
   Derniere_Val_Tension: 'Derniere_Val_Tension'
 };
 
+exports.Prisma.t_lieu_templateOrderByRelevanceFieldEnum = {
+  Nom_Template: 'Nom_Template',
+  Description: 'Description',
+  Lieu_Etat: 'Lieu_Etat',
+  Observations_Info: 'Observations_Info'
+};
+
 exports.Prisma.t_moduleOrderByRelevanceFieldEnum = {
   Module_Numero_Serie: 'Module_Numero_Serie',
   Port_Serie: 'Port_Serie',
@@ -1140,6 +1179,7 @@ exports.Prisma.ModelName = {
   t_liaison_utilisateur_site: 't_liaison_utilisateur_site',
   t_lieu_groupe: 't_lieu_groupe',
   t_lieu: 't_lieu',
+  t_lieu_template: 't_lieu_template',
   t_module: 't_module',
   t_module_type: 't_module_type',
   t_parametre: 't_parametre',

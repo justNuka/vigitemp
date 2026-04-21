@@ -299,6 +299,44 @@ namespace Vigitemp_Serveur
             }
         }
 
+        public static async Task TriggerMonthlyStatsRecapAsync()
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
+                {
+                    VigitempServeur.Log("AlarmWebNotifier: configuration manquante (BaseUrl/Secret) pour recap mensuel stats");
+                    return;
+                }
+
+                var url = Combine(BaseUrl, "/api/statistiques/recap-mensuel/send");
+                var req = new HttpRequestMessage(HttpMethod.Get, url);
+                req.Headers.Add("x-vigitemp-secret", Secret);
+
+                var response = await _http.SendAsync(req);
+                var statusCode = (int)response.StatusCode;
+                if (statusCode < 200 || statusCode >= 300)
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    if (body != null && body.Length > 200)
+                    {
+                        body = body.Substring(0, 200);
+                    }
+
+                    VigitempServeur.Log(
+                        "AlarmWebNotifier: WARNING recap mensuel stats non-2xx " +
+                        "(status=" + statusCode + ") body=" + (body ?? ""));
+                    return;
+                }
+
+                VigitempServeur.Log("AlarmWebNotifier: recap mensuel stats check OK (status=" + statusCode + ")");
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("AlarmWebNotifier: echec check recap mensuel stats: " + ex.Message);
+            }
+        }
+
         private static string EscapeJson(string value)
         {
             if (string.IsNullOrEmpty(value)) return "";

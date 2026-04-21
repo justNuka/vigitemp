@@ -318,6 +318,58 @@ BEGIN
 END;
 GO
 
+-- templates de lieu
+IF OBJECT_ID('dbo.t_lieu_template', 'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.t_lieu_template (
+    Id_Lieu_Template INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    Nom_Template VARCHAR(80) NOT NULL,
+    Description VARCHAR(255) NULL,
+    Lieu_Etat VARCHAR(1) NOT NULL DEFAULT 'D',
+    Frequence INT NULL,
+    Retard_Alarme_Haut INT NULL,
+    Retard_Alarme_Bas INT NULL,
+    Retard_Non_Reponse INT NULL DEFAULT 60,
+    Retard_Alarme_Changement_Consigne INT NULL,
+    Consigne DECIMAL(10,2) NULL,
+    Consigne_Sup DECIMAL(10,2) NULL,
+    Consigne_Inf DECIMAL(10,2) NULL,
+    Tolerance_Surveillance_Sup DECIMAL(10,2) NULL,
+    Tolerance_Surveillance_Inf DECIMAL(10,2) NULL,
+    Consigne_Sup_Pre_Alarme DECIMAL(10,2) NULL,
+    Consigne_Inf_Pre_Alarme DECIMAL(10,2) NULL,
+    Est_Consigne_Sup_Active BIT NOT NULL DEFAULT 0,
+    Est_Consigne_Inf_Active BIT NOT NULL DEFAULT 0,
+    Est_Consigne_Sup_Pre_Alarme_Active BIT NOT NULL DEFAULT 0,
+    Est_Consigne_Inf_Pre_Alarme_Active BIT NOT NULL DEFAULT 0,
+    Est_Son_Alarme_Active BIT NOT NULL DEFAULT 1,
+    Est_Redeclenchement_Immediat BIT NOT NULL DEFAULT 0,
+    Nb_Mesures_Temporisation_Redeclenchement INT NULL DEFAULT 0,
+    Observations_Info VARCHAR(MAX) NULL,
+    Est_Archive BIT NOT NULL DEFAULT 0,
+    Date_Creation DATETIME NOT NULL DEFAULT GETDATE(),
+    Date_Maj DATETIME NOT NULL DEFAULT GETDATE(),
+    Id_Utilisateur_Creation INT NULL,
+    Id_Utilisateur_Maj INT NULL
+  );
+
+  ALTER TABLE dbo.t_lieu_template
+    ADD CONSTRAINT UK_t_lieu_template_nom UNIQUE (Nom_Template);
+
+  CREATE INDEX IDX_t_lieu_template_archive ON dbo.t_lieu_template(Est_Archive);
+  CREATE INDEX IDX_t_lieu_template_user_create ON dbo.t_lieu_template(Id_Utilisateur_Creation);
+  CREATE INDEX IDX_t_lieu_template_user_update ON dbo.t_lieu_template(Id_Utilisateur_Maj);
+
+  IF OBJECT_ID('dbo.t_utilisateur', 'U') IS NOT NULL
+  BEGIN
+    ALTER TABLE dbo.t_lieu_template
+      ADD CONSTRAINT FK_t_lieu_template_user_create FOREIGN KEY (Id_Utilisateur_Creation) REFERENCES dbo.t_utilisateur(Id_Utilisateur) ON DELETE SET NULL;
+    ALTER TABLE dbo.t_lieu_template
+      ADD CONSTRAINT FK_t_lieu_template_user_update FOREIGN KEY (Id_Utilisateur_Maj) REFERENCES dbo.t_utilisateur(Id_Utilisateur) ON DELETE SET NULL;
+  END;
+END;
+GO
+
 -- parametres recents (uppercase)
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='GENERAL' AND Mot_Cle='GLOBAL_LANGUAGE')
   INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('GENERAL','GLOBAL_LANGUAGE','fr','Langue globale de l''application (mails et futurs modules)');
@@ -335,6 +387,36 @@ IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='NOTIFICATIONS' AND M
   INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('NOTIFICATIONS','GSP_BATTERY_NOTIFY_PERCENT','50','Seuil (%) notification batterie faible sonde GSP');
 IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='NOTIFICATIONS' AND Mot_Cle='GSP_BATTERY_EMAIL_PERCENT')
   INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('NOTIFICATIONS','GSP_BATTERY_EMAIL_PERCENT','25','Seuil (%) envoi email batterie faible sonde GSP');
+IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='ENABLED')
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','ENABLED','0','Activation envoi recap mensuel stats');
+IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='RECIPIENTS')
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','RECIPIENTS','','Destinataires separes par ; ou ,');
+IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='DAY_OF_MONTH')
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','DAY_OF_MONTH','1','Jour du mois (1..28)');
+IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='HOUR_LOCAL')
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','HOUR_LOCAL','8','Heure locale (0..23)');
+IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='INCLUDE_LOCATION_SUMMARY')
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','INCLUDE_LOCATION_SUMMARY','1','Inclure lieu/site/groupe');
+IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='INCLUDE_SETTINGS_SUMMARY')
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','INCLUDE_SETTINGS_SUMMARY','1','Inclure consignes/tolerances/frequence/retards');
+IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='INCLUDE_MAX')
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','INCLUDE_MAX','1','Inclure mesure max');
+IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='INCLUDE_MIN')
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','INCLUDE_MIN','1','Inclure mesure min');
+IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='INCLUDE_AVG')
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','INCLUDE_AVG','1','Inclure moyenne');
+IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='INCLUDE_ALARM_COUNT')
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','INCLUDE_ALARM_COUNT','1','Inclure nombre alarmes');
+IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='INCLUDE_ALARM_HIGH_DURATION')
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','INCLUDE_ALARM_HIGH_DURATION','1','Inclure duree alarme haute');
+IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='INCLUDE_ALARM_LOW_DURATION')
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','INCLUDE_ALARM_LOW_DURATION','1','Inclure duree alarme basse');
+IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='INCLUDE_OVER_HIGH_NO_ALARM')
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','INCLUDE_OVER_HIGH_NO_ALARM','1','Inclure depassement haut sans alarme');
+IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='INCLUDE_OVER_LOW_NO_ALARM')
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','INCLUDE_OVER_LOW_NO_ALARM','1','Inclure depassement bas sans alarme');
+IF NOT EXISTS (SELECT 1 FROM dbo.t_parametre WHERE Section='STATISTICS_MONTHLY_REPORT' AND Mot_Cle='LAST_SENT_MONTH')
+  INSERT INTO dbo.t_parametre(Section, Mot_Cle, Valeur, Commentaire) VALUES ('STATISTICS_MONTHLY_REPORT','LAST_SENT_MONTH','','Dernier mois envoye au format YYYY-MM');
 GO
 
 -- =====================================================================

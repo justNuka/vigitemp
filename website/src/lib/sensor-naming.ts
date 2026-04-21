@@ -12,6 +12,17 @@ const GSP_TYPE_CODES = new Set([
 const normalizeType = (value: string) => value.trim().toUpperCase().replace(/-+$/g, "");
 const normalizeSerial = (value: string) => value.trim().toUpperCase();
 
+const normalizeKnownTypeCodes = (knownTypeCodes?: Iterable<string> | null) => {
+  if (!knownTypeCodes) return [];
+  return Array.from(
+    new Set(
+      Array.from(knownTypeCodes)
+        .map((value) => normalizeType(value))
+        .filter((value) => value.length > 0),
+    ),
+  ).sort((a, b) => b.length - a.length);
+};
+
 export const isDualGsoType = (type: string) => DUAL_GSO_TYPES.has(normalizeType(type));
 
 export const isGsoType = (type: string) => {
@@ -26,11 +37,14 @@ export const extractAddressFromSerial = (serial: string) => {
   return normalized.slice(firstDash + 1);
 };
 
-export const extractProbeAddressFromSerial = (serial: string) => {
+export const extractProbeAddressFromSerial = (serial: string, knownTypeCodes?: Iterable<string> | null) => {
   const normalized = normalizeSerial(serial);
   const gsoAddress = extractAddressFromSerial(normalized);
   const dashIndex = normalized.indexOf("-");
-  const type = dashIndex >= 0 ? normalizeType(normalized.slice(0, dashIndex)) : normalizeType(normalized.slice(0, 2));
+  const type =
+    dashIndex >= 0
+      ? normalizeType(normalized.slice(0, dashIndex))
+      : extractTypeCodeFromSerial(normalized, knownTypeCodes);
 
   if (isGsoType(type)) {
     if (SINGLE_TEMPERATURE_GSO_TYPES.has(type)) {
@@ -40,6 +54,10 @@ export const extractProbeAddressFromSerial = (serial: string) => {
       return gsoAddress;
     }
     return stripGsoSuffix(gsoAddress);
+  }
+
+  if (dashIndex < 0 && normalized.length > type.length) {
+    return normalized.slice(type.length);
   }
 
   if (PREFIX_STRIPPED_ADDRESS_TYPES.has(type) && normalized.length > type.length) {
@@ -128,10 +146,19 @@ export const buildSensorSerialsFromInput = (rawType: string, rawSerieNum: string
 };
 
 
-export const extractTypeCodeFromSerial = (serial: string) => {
+export const extractTypeCodeFromSerial = (serial: string, knownTypeCodes?: Iterable<string> | null) => {
   const normalized = normalizeSerial(serial);
   const dashIndex = normalized.indexOf("-");
-  return dashIndex > 0 ? normalizeType(normalized.slice(0, dashIndex)) : normalizeType(normalized);
+  if (dashIndex > 0) return normalizeType(normalized.slice(0, dashIndex));
+
+  const knownCodes = normalizeKnownTypeCodes(knownTypeCodes);
+  const matchedKnownCode = knownCodes.find((code) => normalized.startsWith(code));
+  if (matchedKnownCode) return matchedKnownCode;
+
+  const alphaPrefix = normalized.match(/^[A-Z]+/)?.[0];
+  if (alphaPrefix) return normalizeType(alphaPrefix);
+
+  return normalizeType(normalized);
 };
 
 export const getSensorFamilyFromTypeCode = (rawType: string | null | undefined) => {

@@ -7,7 +7,7 @@ import { isOneOrPack } from "@/lib/license-access";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { getLocalizedPathname, stripLocalePrefix } from "@/i18n/pathnames";
 import { useLocale, useTranslations } from "next-intl";
-import { Gauge, Globe, MapPin, Radio, Ruler, Users, WifiCog, Wrench } from "lucide-react";
+import { Copy, Gauge, Globe, MapPin, Radio, Ruler, Users, WifiCog, Wrench } from "lucide-react";
 
 type DockItem = {
   key: string;
@@ -69,6 +69,13 @@ export function AdminNavDock() {
       label: tDock("lieux"),
       onClick: () => router.push("/admin/lieux"),
       isActive: normalizedPathname === getLocalizedPathname("/admin/lieux", locale as any),
+    },
+    {
+      key: "lieux_templates",
+      icon: <Copy size={20} />,
+      label: tDock("lieux_templates"),
+      onClick: () => router.push("/admin/lieux/templates"),
+      isActive: normalizedPathname === getLocalizedPathname("/admin/lieux/templates", locale as any),
     },
     {
       key: "sites",

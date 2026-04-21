@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { AcknowledgmentRecord } from "@/components/data-table/acknowledgment-columns";
 import type { ActiveAlarm } from "@/components/data-table/active-alarms-columns";
-import type { BackupRecord } from "@/components/data-table/backup-columns";
+import type { BackupsResponse } from "@/components/data-table/backup-columns";
 import type { ConnectedUser } from "@/components/data-table/connected-users-columns";
 import type { SystemLog } from "@/components/data-table/system-logs-columns";
 import { getJson, isUnauthorizedError } from "@/lib/http";
@@ -71,7 +71,7 @@ export function useBackups() {
   return useQuery({
     queryKey: ["admin", "sauvegardes"],
     queryFn: async () => {
-      return getJson<BackupRecord[]>("/api/admin/sauvegardes");
+      return getJson<BackupsResponse>("/api/admin/sauvegardes");
     },
     refetchInterval: (query) => (isUnauthorizedError(query.state.error) ? false : 30_000), // 30 seconds
     staleTime: 15_000, // 15 seconds

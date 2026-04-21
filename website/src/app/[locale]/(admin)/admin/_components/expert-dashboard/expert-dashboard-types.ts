@@ -21,6 +21,7 @@ export type Metrics = {
   latestAuditAction: string
   latestConnectedLabel: string
   lastBackupLabel: string
+  backupStoragePath: string
   hideStandards: boolean
 }
 

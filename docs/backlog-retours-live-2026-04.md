@@ -45,7 +45,7 @@ Règles de suivi:
 - [x] `Rapide` Ajouter une colonne / info `nombre de sondes sans lieu` sur dashboard admin.
 - [x] `Rapide` Supprimer le bouton `désactiver la surveillance d'un groupe` et le basculer en admin.
 - [x] `Rapide` Quand une plage est sélectionnée, décharger les graphs derrière puis recharger à la fermeture.
-- [ ] `Rapide/Moyen` Repasser sur le fonctionnement du bouton pour charger plus d'éléments : le count ne doit pas prendre en compte seulement ceux chargés (peu porter à confusion), et avoir 2 boutons charger plus, un pour les lieux en surveillance désactivée à rajouter -> ajuster le fonctionnement de celui des des lieux en surveillance.
+- [x] `Rapide/Moyen` Repasser sur le fonctionnement du bouton pour charger plus d'éléments : le count ne doit pas prendre en compte seulement ceux chargés (peu porter à confusion), et avoir 2 boutons charger plus, un pour les lieux en surveillance désactivée à rajouter -> ajuster le fonctionnement de celui des des lieux en surveillance.
 
 ### Surveillance - modal détails / historique
 - [x] `Rapide` Corriger les traductions `monitoringDetailsModal.chart.drag_zoom_hint` et `monitoringDetailsModal.chart.reset_zoom`.
@@ -235,22 +235,22 @@ Règles de suivi:
 ## Backlog d?taill? par page / fonctionnalit?
 
 ### Dashboard utilisateur
-- [x] `Rapide` Remplacer `derni?res 24h` par `derniers 7j`.
-- [x] `Rapide` Ajouter une ?chelle au graphique d'alarmes.
-- [x] `Moyen` Bouton `D?tails` vers une page de visualisation des alarmes par lieu.
+- [x] `Rapide` Remplacer `dernières 24h` par `derniers 7j`.
+- [x] `Rapide` Ajouter une échelle au graphique d'alarmes.
+- [x] `Moyen` Bouton `Détails` vers une page de visualisation des alarmes par lieu.
 
 ### Page statistiques
-- [ ] `Lourd` Cr?er une page `stats`, accessible depuis le dashboard utilisateur et la sidebar.
-- [ ] `Lourd` Afficher tous les lieux en surveillance auxquels l'utilisateur a acc?s.
-- [ ] `Lourd` Permettre la s?lection de p?riode.
-- [ ] `Lourd` Afficher pour la p?riode:
-  - r?cap lieu (nom, site-groupe, consignes/tol?rances, fr?quences, retards)
+- [ ] `Lourd` Créer une page `stats`, accessible depuis le dashboard utilisateur et la sidebar.
+- [ ] `Lourd` Afficher tous les lieux en surveillance auxquels l'utilisateur a accès.
+- [ ] `Lourd` Permettre la sélection de période.
+- [ ] `Lourd` Afficher pour la période:
+  - récap lieu (nom, site-groupe, consignes/tolérances, fréquences, retards)
   - mini
   - maxi
   - moyenne
   - nombre d'alarmes
-  - dur?e d'alarme cumul?e haute/basse s?par?e
-  - dur?e de d?passement haute/basse sans alarme.
+  - durée d'alarme cumulée haute/basse séparée
+  - durée de dépassement haute/basse sans alarme.
 
 ### Surveillance
 #### Filtres et navigation
@@ -327,21 +327,21 @@ Règles de suivi:
 - [x] `Moyen` Si plusieurs infos changent, les auditer dans une seule ligne BDD avec affichage multi-lignes propre.
 - [x] `Moyen` Param?tre admin pour imposer ou non le commentaire.
 
-#### Alarmes m?tier li?es ? la surveillance
+#### Alarmes mêtier liées à la surveillance
 - [x] `Lourd` Ajouter l'alarme `coupure secteur / coupure alimentation`.
 - [x] `Lourd` Pour `IE/IP`, interpr?ter `B` / `BAT` dans la trame.
 - [x] `Moyen` Int?grer ce type dans les tris et pages alarmes.
 - [x] `Moyen` Pour GSP, notifier si batterie < 50%.
 - [x] `Moyen` Pour GSP, mail si batterie < 25%.
-- [x] `Moyen` Ajouter ces seuils en param?tres.
-- [ ] `? cadrer` Voir avec Nico la possibilit? d'une valeur neutralisant les alarmes d'une sonde.
+- [x] `Moyen` Ajouter ces seuils en paramètres.
+- [ ] `À cadrer` Voir avec Nico la possibilité d'une valeur neutralisant les alarmes des sondes GSP.
 
 #### Templates
-- [ ] `Lourd` Mettre en place un syst?me de template de cr?ation/configuration de lieux.
+- [ ] `Lourd` Mettre en place un système de template de création/configuration de lieux.
 
-### Lieux - cr?ation / ?dition
+### Lieux - création / édition
 #### Modal globale
-- [x] `Rapide` Confirmation de sortie si modifs non enregistr?es.
+- [x] `Rapide` Confirmation de sortie si modifs non enregistrées.
 - [x] `Moyen` Boutons `Annuler` et `Enregistrer` avec mini-menu:
   - enregistrer/annuler et fermer
   - enregistrer/annuler et rester.
@@ -349,20 +349,20 @@ Règles de suivi:
 - [x] `Rapide` Les garder uniquement en cr?ation.
 
 #### Mise en page ?dition
-- [x] `Rapide` Site ? c?t? de groupe.
-- [x] `Rapide` Type de lieu supprim?.
-- [x] `Rapide` Observations ? la place, champ agrandissable.
+- [x] `Rapide` Site à côté de groupe.
+- [x] `Rapide` Type de lieu supprimé.
+- [x] `Rapide` Observations à la place, champ agrandissable.
 - [x] `Rapide` Site obligatoire.
 - [x] `Rapide` Groupe facultatif.
 
-#### Cr?ation
-- [x] `Rapide` Sans sonde, forcer `surveillance d?sactiv?e` et griser le champ.
-- [x] `Rapide` Ne pas pr?s?lectionner la surveillance.
-- [x] `Rapide` Forcer l'utilisateur ? choisir.
+#### Création
+- [x] `Rapide` Sans sonde, forcer `surveillance désactivée` et griser le champ.
+- [x] `Rapide` Ne pas présélectionner la surveillance.
+- [x] `Rapide` Forcer l'utilisateur à choisir.
 
 #### Consignes / validations
-- [x] `Rapide` Corriger tol?rance minimale affich?e ? tort.
-- [x] `Rapide` Bloquer les incoh?rences consigne inf/sup en UI et serveur.
+- [x] `Rapide` Corriger tolérance minimale affichée à tort.
+- [x] `Rapide` Bloquer les incohérences consigne inf/sup en UI et serveur.
 - [x] `Rapide` Revoir le message serveur.
 - [x] `Rapide` GSO = fr?quence forc?e ? 15 min.
 - [x] `Rapide` Ajouter le trait visuel au-dessus de consigne.
@@ -375,13 +375,13 @@ Règles de suivi:
 - [x] `Rapide` Ajouter un nom d'?talonnage non obligatoire.
 
 #### Mailing / escalade
-- [x] `Rapide` `ordre` -> `priorit?`.
-- [x] `Rapide` Griser `via t?l?phone`.
-- [ ] `Lourd` Planning hebdo type Teams pour destinataires mail/t?l?phone.
+- [x] `Rapide` `ordre` -> `priorité`.
+- [x] `Rapide` Griser `via téléphone`.
+- [ ] `Lourd` Planning hebdo type Teams pour destinataires mail/téléphone.
 
 #### Colonnes / liste admin des lieux
-- [x] `Rapide` Assigner une sonde ?talon.
-- [x] `Rapide` Unit? depuis derni?re unit? lieu.
+- [x] `Rapide` Assigner une sonde étalon.
+- [x] `Rapide` Unité depuis dernière unité lieu.
 - [x] `Rapide` Retirer type de lieu.
 - [x] `Rapide` Retirer `toutes les` de la fr?quence.
 - [x] `Rapide` Colonne planning de consigne.
@@ -435,8 +435,8 @@ Règles de suivi:
 
 #### M?tier
 - [x] `Moyen` Revoir le d?clenchement des alarmes GSO par mail.
-- [ ] `Lourd` Ajouter le type d'alarme `secteur / alimentation`.
-- [x] `Moyen` Calculer la dur?e d'alarme m?me non termin?e.
+- [ ] `Lourd` Nouveau type d’alarme : coupure secteur/coupure alimentation, IE et IE, si débranchée, envoie dans la trame un B ou BAT pour indiquer qu’elles sont sur batterie. Prévoir ça sur le tri des alarmes sur la page alarmes.
+- [x] `Moyen` Calculer la durée d'alarme même non terminée.
 
 #### Admin alarmes
 - [x] `Rapide` `derni?re valeur` -> `valeur de d?clenchement`.
@@ -478,10 +478,7 @@ Règles de suivi:
 - [x] `Rapide` `num?ro de s?rie` -> `num?ro de s?rie constructeur`.
 
 ### Dashboard admin
-- [ ] `Lourd` Mettre en place la sauvegarde syst?me:
-  - backup BDD
-  - t?che planifi?e
-  - contr?le dossier / nom du fichier / date de modification.
+- [x] `Rapide` Connecter le front avec ce que Jérôme a mis en place pour le backup BDD (voir Notion pour les détails).
 - [x] `Rapide` Tuile journal audit du jour courant, clic -> page audit filtr?e.
 - [x] `Rapide` Supprimer la tuile ?talons.
 - [x] `Rapide` `sondes sans lieu actif` sans les sondes archiv?es.

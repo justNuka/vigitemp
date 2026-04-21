@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { alarmsApi, type AlarmWithDetails } from "@/lib/api";
 import { formatDbDateTime } from "@/lib/date-display";
+import { formatMeasureValue } from "@/lib/measurements";
 import { cn } from "@/lib/utils";
 
 import { AlarmDetailsDialog } from "./_components/alarm-details-dialog";
@@ -229,7 +230,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
       cell: ({ row }) => {
         const alarm = row.original;
         const value = alarm.type === "no-response" || alarm.type === "sector" ? null : (alarm.value ?? alarm.sensor.currentValue ?? null);
-        return <div className="text-right font-mono font-medium">{value !== null ? `${value.toFixed(1)} ${alarm.sensor.unit}` : "-"}</div>;
+        return <div className="text-right font-mono font-medium">{value !== null ? `${formatMeasureValue(value)} ${alarm.sensor.unit}` : "-"}</div>;
       },
     },
     {

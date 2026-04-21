@@ -76,7 +76,8 @@
     "profils": "Profiles",
     "etalons": "Standards",
     "actionneurs": "Actuators",
-    "outils": "Tools"
+    "outils": "Tools",
+    "lieux_templates": "Location templates"
   },
   "mainNavbar": {
     "menu": "Menu"
@@ -129,7 +130,8 @@
     "admin_dashboard_tooltip": "Administrator dashboard",
     "services": "Services",
     "messaging": "Messaging",
-    "vigilog": "VigiLog"
+    "vigilog": "VigiLog",
+    "statistics": "Statistics"
   },
   "sidebarGroups": {
     "navigation": "Navigation",
@@ -597,6 +599,26 @@
         "restore": "Restore draft",
         "clear": "Clear form",
         "saved": "Draft available"
+      },
+      "template": {
+        "title": "Location template",
+        "description": "Apply a template to this form or save the current setup as a new template.",
+        "select_placeholder": "Choose a template",
+        "empty": "No template available",
+        "apply": "Apply",
+        "save_current": "Save as template",
+        "create_title": "New location template",
+        "create_description": "The template stores setpoints, tolerances, frequency and alarm behavior from the current form.",
+        "name_label": "Template name",
+        "name_placeholder": "e.g. Standard cold room",
+        "name_required": "Template name is required.",
+        "description_label": "Description",
+        "description_placeholder": "Optional",
+        "create_confirm": "Create template",
+        "create_saving": "Creating...",
+        "toast_apply_success": "Template \"{name}\" applied.",
+        "toast_create_success": "Location template created.",
+        "toast_create_error": "Failed to create location template."
       },
       "current_location_label": "Current location:",
       "action_comment_label": "Action comment",
@@ -1970,6 +1992,72 @@
       "description": "Monitored location management"
     }
   },
+  "locationTemplatesPage": {
+    "title": "Location templates",
+    "description": "Create and manage reusable templates for location creation.",
+    "count": "{count, plural, one {{count} template} other {{count} templates}}",
+    "tabs": {
+      "active": "Active ({count})",
+      "archived": "Archived ({count})"
+    },
+    "actions": {
+      "archive": "Archive"
+    },
+    "table": {
+      "name": "Name",
+      "state": "Monitoring state",
+      "frequency": "Frequency (min)",
+      "setpoint": "Setpoint",
+      "description": "Description"
+    },
+    "fields": {
+      "name": "Template name",
+      "description": "Description",
+      "surveillance_state": "Monitoring state (S/D)",
+      "frequency": "Frequency (min)",
+      "setpoint": "Setpoint",
+      "upper_setpoint": "Upper setpoint",
+      "lower_setpoint": "Lower setpoint",
+      "high_delay": "High alarm delay (min)",
+      "low_delay": "Low alarm delay (min)",
+      "non_response_delay": "Non-response delay (min)",
+      "setpoint_change_delay": "Setpoint change delay (min)",
+      "retrigger_count": "Retrigger delay (measures)",
+      "observations": "Observations",
+      "enable_upper": "Enable upper setpoint",
+      "enable_lower": "Enable lower setpoint",
+      "enable_upper_pre": "Enable upper pre-alarm",
+      "enable_lower_pre": "Enable lower pre-alarm",
+      "alarm_sound": "Enable alarm sound",
+      "immediate_retrigger": "Immediate retrigger"
+    },
+    "dialogs": {
+      "create_title": "Create template",
+      "create_description": "Define default values to apply when creating new locations.",
+      "edit_title": "Edit template",
+      "edit_description": "Update settings for the selected template.",
+      "archive_title": "Archive template",
+      "archive_description": "The template will be hidden from location creation selection.",
+      "delete_title": "Delete template",
+      "delete_description": "This deletion is permanent.",
+      "submitting": "Processing..."
+    },
+    "toast": {
+      "create_success": "Template created successfully.",
+      "create_error": "Failed to create template.",
+      "update_success": "Template updated successfully.",
+      "update_error": "Failed to update template.",
+      "archive_success": "Template archived successfully.",
+      "archive_error": "Failed to archive template.",
+      "delete_success": "Template deleted successfully.",
+      "delete_error": "Failed to delete template."
+    },
+    "errors": {
+      "name_required": "Template name is required.",
+      "no_template_selected": "No template selected."
+    },
+    "empty": "No template found"
+  },
   "locationsTable": {
     "columns": {
       "location": "Location",
@@ -2758,9 +2846,12 @@
     },
     "trend": {
       "title": "Alarm trend",
-      "subtitle": "Last 24 hours",
+      "subtitle": "Last 7 days",
       "count": "{count} alarm(s)",
-      "details": "Details"
+      "details": "Details",
+      "statistics_title": "Statistics by location",
+      "statistics_description": "Open detailed per-location statistics with custom period selection.",
+      "open_statistics": "Open statistics"
     },
     "ack_dialog": {
       "title": "Acknowledge alarm",
@@ -2780,32 +2871,76 @@
       "resolved": "Resolved"
     },
     "trend_by_location": {
-      "title": "Alarms by location",
-      "description": "Consolidated view of alarms from the last 7 days, grouped by location.",
-      "search_placeholder": "Search a location or site...",
-      "empty": "No alarms found for this period.",
+      "title": "Statistics by location",
+      "description": "Analysis of monitored locations over the selected period.",
+      "table_title": "Per-location indicators",
+      "table_description": "Measurements, alarms, and out-of-threshold durations without alarm grouped by location.",
+      "table_hint": "Durations without alarm are computed from out-of-threshold measurements while alarm state is inactive.",
+      "search_placeholder": "Search a location, site, or group...",
+      "empty": "No data found for this period.",
+      "period": {
+        "title": "Analysis period",
+        "from": "From",
+        "to": "To",
+        "apply": "Apply"
+      },
+      "units": {
+        "minutes_value": "{value} min",
+        "seconds_value": "{value} s"
+      },
+      "summary": {
+        "site_group": "Site: {site} - Group(s): {groups}",
+        "thresholds": "Setpoint: {consigne} {unit} - Upper tol: {sup} {unit} - Lower tol: {inf} {unit}",
+        "frequency_delay": "Frequency: {frequency} - High delay: {highDelay} min - Low delay: {lowDelay} min - Retrigger delay: {retrigger}"
+      },
       "columns": {
-        "location": "Location",
-        "total": "7d alarms",
-        "active": "Active",
-        "types": "Breakdown",
-        "last_triggered": "Last alarm"
+        "location_summary": "Location / Site / Group",
+        "settings_summary": "Setpoints / Tolerances / Frequency / Delays",
+        "max": "Max value",
+        "min": "Min value",
+        "avg": "Average",
+        "alarm_count": "Alarm count",
+        "alarm_high_duration": "High alarm duration",
+        "alarm_low_duration": "Low alarm duration",
+        "over_high_no_alarm": "High exceedance without alarm",
+        "over_low_no_alarm": "Low exceedance without alarm"
       },
       "stats": {
-        "locations": "Affected locations",
-        "total_alarms": "Alarms over 7 days",
-        "active_locations": "Locations with active alarms",
-        "active_locations_help": "At least one alarm still open"
-      },
-      "legend": {
-        "title": "Legend:",
-        "high": "High alarm",
-        "low": "Low alarm",
-        "no_response": "No response"
+        "locations": "Monitored locations",
+        "total_alarms": "Total alarm count",
+        "total_alarms_help": "Alarms in selected period"
       },
       "meta": {
-        "title": "Alarms by location",
-        "description": "Overview of alarms grouped by location over the last 7 days."
+        "title": "Statistics by location",
+        "description": "Detailed statistics for monitored locations."
+      },
+      "admin": {
+        "title": "Monthly email summary",
+        "description": "Configure which statistics are sent each month.",
+        "recipients": "Recipients (emails separated by ; or ,)",
+        "recipients_placeholder": "admin@example.com; quality@example.com",
+        "day_of_month": "Day of month (1-28)",
+        "hour_local": "Local hour (0-23)",
+        "enable_report": "Enable monthly delivery",
+        "enable_report_help": "The report is sent for the previous month.",
+        "save": "Save configuration",
+        "send_now": "Send now",
+        "save_success": "Configuration saved",
+        "save_error": "Error while saving configuration",
+        "send_success": "Summary sent ({sent} email(s))",
+        "send_error": "Error while sending summary",
+        "fields": {
+          "location_summary": "Location / site / group",
+          "settings_summary": "Setpoints, tolerances, frequencies, and delays",
+          "max": "Maximum measurement",
+          "min": "Minimum measurement",
+          "avg": "Average measurement",
+          "alarm_count": "Alarm count",
+          "alarm_high_duration": "Cumulative high alarm duration",
+          "alarm_low_duration": "Cumulative low alarm duration",
+          "over_high_no_alarm": "High exceedance duration without alarm",
+          "over_low_no_alarm": "Low exceedance duration without alarm"
+        }
       }
     }
   },
@@ -3070,7 +3205,8 @@
     "upgrade": "License upgrade",
     "hardware": "Hardware",
     "news": "MC2 news",
-    "vigilog": "VigiLog"
+    "vigilog": "VigiLog",
+    "statistics": "Statistics"
   },
   "servicesHub": {
     "meta": {

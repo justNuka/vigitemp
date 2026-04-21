@@ -1789,6 +1789,124 @@ FROM DUAL WHERE NOT EXISTS (
 );
 
 -- =====================================================================
+-- TEMPLATES DE LIEU
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS `t_lieu_template` (
+  `Id_Lieu_Template` int NOT NULL AUTO_INCREMENT,
+  `Nom_Template` varchar(80) NOT NULL,
+  `Description` varchar(255) DEFAULT NULL,
+  `Lieu_Etat` varchar(1) NOT NULL DEFAULT 'D',
+  `Frequence` int DEFAULT NULL,
+  `Retard_Alarme_Haut` int DEFAULT NULL,
+  `Retard_Alarme_Bas` int DEFAULT NULL,
+  `Retard_Non_Reponse` int DEFAULT '60',
+  `Retard_Alarme_Changement_Consigne` int DEFAULT NULL,
+  `Consigne` decimal(10,2) DEFAULT NULL,
+  `Consigne_Sup` decimal(10,2) DEFAULT NULL,
+  `Consigne_Inf` decimal(10,2) DEFAULT NULL,
+  `Tolerance_Surveillance_Sup` decimal(10,2) DEFAULT NULL,
+  `Tolerance_Surveillance_Inf` decimal(10,2) DEFAULT NULL,
+  `Consigne_Sup_Pre_Alarme` decimal(10,2) DEFAULT NULL,
+  `Consigne_Inf_Pre_Alarme` decimal(10,2) DEFAULT NULL,
+  `Est_Consigne_Sup_Active` tinyint(1) NOT NULL DEFAULT '0',
+  `Est_Consigne_Inf_Active` tinyint(1) NOT NULL DEFAULT '0',
+  `Est_Consigne_Sup_Pre_Alarme_Active` tinyint(1) NOT NULL DEFAULT '0',
+  `Est_Consigne_Inf_Pre_Alarme_Active` tinyint(1) NOT NULL DEFAULT '0',
+  `Est_Son_Alarme_Active` tinyint(1) NOT NULL DEFAULT '1',
+  `Est_Redeclenchement_Immediat` tinyint(1) NOT NULL DEFAULT '0',
+  `Nb_Mesures_Temporisation_Redeclenchement` int DEFAULT '0',
+  `Observations_Info` text,
+  `Est_Archive` tinyint(1) NOT NULL DEFAULT '0',
+  `Date_Creation` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Date_Maj` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `Id_Utilisateur_Creation` int DEFAULT NULL,
+  `Id_Utilisateur_Maj` int DEFAULT NULL,
+  PRIMARY KEY (`Id_Lieu_Template`),
+  UNIQUE KEY `UK_t_lieu_template_nom` (`Nom_Template`),
+  KEY `IDX_t_lieu_template_archive` (`Est_Archive`),
+  KEY `IDX_t_lieu_template_user_create` (`Id_Utilisateur_Creation`),
+  KEY `IDX_t_lieu_template_user_update` (`Id_Utilisateur_Maj`),
+  CONSTRAINT `FK_t_lieu_template_user_create` FOREIGN KEY (`Id_Utilisateur_Creation`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON DELETE SET NULL ON UPDATE NO ACTION,
+  CONSTRAINT `FK_t_lieu_template_user_update` FOREIGN KEY (`Id_Utilisateur_Maj`) REFERENCES `t_utilisateur` (`Id_Utilisateur`) ON DELETE SET NULL ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'STATISTICS_MONTHLY_REPORT','ENABLED','0','Activation envoi recap mensuel stats'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='ENABLED'
+);
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'STATISTICS_MONTHLY_REPORT','RECIPIENTS','','Destinataires separes par ; ou ,'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='RECIPIENTS'
+);
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'STATISTICS_MONTHLY_REPORT','DAY_OF_MONTH','1','Jour du mois (1..28)'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='DAY_OF_MONTH'
+);
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'STATISTICS_MONTHLY_REPORT','HOUR_LOCAL','8','Heure locale (0..23)'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='HOUR_LOCAL'
+);
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_LOCATION_SUMMARY','1','Inclure lieu/site/groupe'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_LOCATION_SUMMARY'
+);
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_SETTINGS_SUMMARY','1','Inclure consignes/tolerances/frequence/retards'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_SETTINGS_SUMMARY'
+);
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_MAX','1','Inclure mesure max'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_MAX'
+);
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_MIN','1','Inclure mesure min'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_MIN'
+);
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_AVG','1','Inclure moyenne'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_AVG'
+);
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_ALARM_COUNT','1','Inclure nombre alarmes'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_ALARM_COUNT'
+);
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_ALARM_HIGH_DURATION','1','Inclure duree alarme haute'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_ALARM_HIGH_DURATION'
+);
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_ALARM_LOW_DURATION','1','Inclure duree alarme basse'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_ALARM_LOW_DURATION'
+);
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_OVER_HIGH_NO_ALARM','1','Inclure depassement haut sans alarme'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_OVER_HIGH_NO_ALARM'
+);
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'STATISTICS_MONTHLY_REPORT','INCLUDE_OVER_LOW_NO_ALARM','1','Inclure depassement bas sans alarme'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='INCLUDE_OVER_LOW_NO_ALARM'
+);
+INSERT INTO `t_parametre` (`Section`, `Mot_Cle`, `Valeur`, `Commentaire`)
+SELECT 'STATISTICS_MONTHLY_REPORT','LAST_SENT_MONTH','','Dernier mois envoye au format YYYY-MM'
+FROM DUAL WHERE NOT EXISTS (
+  SELECT 1 FROM `t_parametre` WHERE `Section`='STATISTICS_MONTHLY_REPORT' AND `Mot_Cle`='LAST_SENT_MONTH'
+);
+
+-- =====================================================================
 -- NETTOYAGE AUTORISATIONS LEGACY NON UTILISEES (2026-04-13)
 -- =====================================================================
 SET @has_tbl_aut := (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 't_autorisation');

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useFormContext, Controller } from 'react-hook-form'
 import { useTranslations } from 'next-intl'
 
@@ -34,6 +34,7 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
   const {
     register,
     control,
+    getValues,
     setValue,
     watch,
     formState: { errors },
@@ -58,34 +59,43 @@ export function LocationFormTabGeneral({ sites, groups, availableSensors, module
     [standards],
   )
 
+  const setIfChanged = useCallback((name: keyof LocationFormData, value: unknown) => {
+    if (Object.is(getValues(name as any), value)) return
+    setValue(name as any, value as any)
+  }, [getValues, setValue])
+
   useEffect(() => {
     if (!isGsoSensor) return
-    if (formData.Frequence === 15) return
-    setValue('Frequence', 15)
-  }, [formData.Frequence, isGsoSensor, setValue])
+    if (Number(formData.Frequence) === 15) return
+    setIfChanged('Frequence', 15)
+  }, [formData.Frequence, isGsoSensor, setIfChanged])
 
   useEffect(() => {
     if (!formData.Sonde_Numero_Serie) {
       if (formData.Id_Module !== null) {
-        setValue('Id_Module', null)
+        setIfChanged('Id_Module', null)
       }
       if (formData.Lieu_Etat !== 'D') {
-        setValue('Lieu_Etat', 'D', { shouldDirty: true })
+        if (!Object.is(getValues('Lieu_Etat'), 'D')) {
+          setValue('Lieu_Etat', 'D', { shouldDirty: true })
+        }
         autoDisabledMonitoringRef.current = true
       }
       return
     }
 
     const nextModuleId = selectedSensor?.Id_Module ?? null
-    if ((formData.Id_Module ?? null) !== nextModuleId) {
-      setValue('Id_Module', nextModuleId)
+    if ((formData.Id_Module ?? null) !== (nextModuleId ?? null)) {
+      setIfChanged('Id_Module', nextModuleId)
     }
 
     if (autoDisabledMonitoringRef.current && formData.Lieu_Etat === 'D') {
-      setValue('Lieu_Etat', null, { shouldDirty: true })
+      if (!Object.is(getValues('Lieu_Etat'), null)) {
+        setValue('Lieu_Etat', null, { shouldDirty: true })
+      }
       autoDisabledMonitoringRef.current = false
     }
-  }, [formData.Id_Module, formData.Lieu_Etat, formData.Sonde_Numero_Serie, selectedSensor?.Id_Module, setValue])
+  }, [formData.Id_Module, formData.Lieu_Etat, formData.Sonde_Numero_Serie, getValues, selectedSensor?.Id_Module, setIfChanged, setValue])
 
   return (
     <TabsContent value="general" className="space-y-4">

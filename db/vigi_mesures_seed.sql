@@ -331,6 +331,21 @@ CREATE TABLE `tm_parametre` (
   PRIMARY KEY (`Id_Parametre`,`Cle_Parametre`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+DROP TABLE IF EXISTS `tm_journal_commentaire_libre`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tm_journal_commentaire_libre` (
+  `Id_Commentaire_Journal` int NOT NULL AUTO_INCREMENT,
+  `Code_Journal` varchar(32) NOT NULL,
+  `Commentaire` text NOT NULL,
+  `Date_Creation` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `Date_Modification` datetime DEFAULT NULL,
+  PRIMARY KEY (`Id_Commentaire_Journal`),
+  KEY `IDX_tm_journal_commentaire_libre_code` (`Code_Journal`),
+  KEY `IDX_tm_journal_commentaire_libre_date_creation` (`Date_Creation`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 SET FOREIGN_KEY_CHECKS=1;
 
 -- Cache tm_graphique: garder 150 mesures par sonde (nettoyage périodique)

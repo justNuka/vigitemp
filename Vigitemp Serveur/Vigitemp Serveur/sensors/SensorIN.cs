@@ -21,7 +21,7 @@ namespace Vigitemp_Serveur.sensors
         {
             try
             {
-                pendingResults = true;
+                BeginReadCycle();
                 m_port.Open();
                 m_port.DiscardInBuffer();
                 m_port.DiscardOutBuffer();
@@ -40,6 +40,10 @@ namespace Vigitemp_Serveur.sensors
                     await Task.Delay(25);
                     if (tmp_sw.Elapsed.TotalMilliseconds > 5000)
                     {
+                        if (!TryCompleteRead())
+                        {
+                            break;
+                        }
                         //Console.WriteLine("Delai de 5 secondes depasse");
                         //Trace.WriteLine("Delai de 5 secondes depasse");
                         VigitempServeur.Log("Delai de 5 secondes depasse");
@@ -52,7 +56,6 @@ namespace Vigitemp_Serveur.sensors
                         VigitempServeur.Log("-----------------------------------");
                         m_port.Close();
                         m_sensor_response = "";
-                        pendingResults = false;
                         HandleNoResponseAlarm(false, "timeout");
                         break;
                     }
@@ -78,6 +81,11 @@ namespace Vigitemp_Serveur.sensors
         {
             try
             {
+                if (HasReadCompleted())
+                {
+                    return;
+                }
+
                 SerialPort sp = (SerialPort)sender;
                 string regex_res;
                 var chunk = sp.ReadExisting();
@@ -98,6 +106,11 @@ namespace Vigitemp_Serveur.sensors
                     {
                         m_sensor_response = m_sensor_response.Substring(m_sensor_response.Length - 1024);
                     }
+                    return;
+                }
+
+                if (!TryCompleteRead())
+                {
                     return;
                 }
 
@@ -123,7 +136,6 @@ namespace Vigitemp_Serveur.sensors
                 //checkAlarmespourConsignes(float.Parse(String.Format("{0:0.00}", tmp_valeur)));
 
                 m_port.Close();
-                pendingResults = false;
                 //Trace.WriteLine("Fermeture du port " + m_comPort);
                 VigitempServeur.Log("Fermeture du port " + m_comPort);
                 //Trace.WriteLine("Taux de reponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
@@ -135,7 +147,7 @@ namespace Vigitemp_Serveur.sensors
             {
                 VigitempServeur.Log("SensorIN.DataReceived: " + error);
                 DisposePort();
-                pendingResults = false;
+                TryCompleteRead();
             }
            
         }

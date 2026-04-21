@@ -64,6 +64,10 @@ export const routing = defineRouting({
       fr: '/admin/lieux',
       en: '/admin/locations',
     },
+    '/admin/lieux/templates': {
+      fr: '/admin/lieux/templates',
+      en: '/admin/locations/templates',
+    },
     '/admin/modules': {
       fr: '/admin/modules',
       en: '/admin/modules',

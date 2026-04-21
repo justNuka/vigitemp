@@ -325,6 +325,14 @@ exports.Prisma.Tm_vigilog_mesureScalarFieldEnum = {
   Date_Heure_Import: 'Date_Heure_Import'
 };
 
+exports.Prisma.Tm_journal_commentaire_libreScalarFieldEnum = {
+  Id_Commentaire_Journal: 'Id_Commentaire_Journal',
+  Code_Journal: 'Code_Journal',
+  Commentaire: 'Commentaire',
+  Date_Creation: 'Date_Creation',
+  Date_Modification: 'Date_Modification'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -426,6 +434,11 @@ exports.Prisma.tm_vigilog_mesureOrderByRelevanceFieldEnum = {
   Details: 'Details'
 };
 
+exports.Prisma.tm_journal_commentaire_libreOrderByRelevanceFieldEnum = {
+  Code_Journal: 'Code_Journal',
+  Commentaire: 'Commentaire'
+};
+
 
 exports.Prisma.ModelName = {
   tm_graphique: 'tm_graphique',
@@ -444,7 +457,8 @@ exports.Prisma.ModelName = {
   tm_mesures_test_etalon: 'tm_mesures_test_etalon',
   tm_mode_degrade: 'tm_mode_degrade',
   tm_parametre: 'tm_parametre',
-  tm_vigilog_mesure: 'tm_vigilog_mesure'
+  tm_vigilog_mesure: 'tm_vigilog_mesure',
+  tm_journal_commentaire_libre: 'tm_journal_commentaire_libre'
 };
 
 /**

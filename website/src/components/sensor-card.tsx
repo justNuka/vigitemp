@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
+import { formatMeasureValue } from "@/lib/measurements";
 import { 
   Thermometer, 
   Droplets, 
@@ -98,7 +99,7 @@ export function SensorCard({ sensor, onClick, className }: SensorCardProps) {
           <div className="flex items-baseline gap-1">
             <span className="text-3xl md:text-4xl font-bold data-value">
               {sensor.currentValue != null && typeof sensor.currentValue === 'number' 
-                ? sensor.currentValue.toFixed(1) 
+                ? formatMeasureValue(sensor.currentValue) 
                 : "--"}
             </span>
             <span className="text-sm text-muted-foreground font-medium">
@@ -114,10 +115,10 @@ export function SensorCard({ sensor, onClick, className }: SensorCardProps) {
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-3">
               <span className="text-muted-foreground">
-                Min: <span className="font-medium text-foreground">{sensor.minThreshold !== null ? `${sensor.minThreshold}${sensor.unit}` : "-"}</span>
+                Min: <span className="font-medium text-foreground">{sensor.minThreshold !== null ? `${formatMeasureValue(sensor.minThreshold)}${sensor.unit}` : "-"}</span>
               </span>
               <span className="text-muted-foreground">
-                Max: <span className="font-medium text-foreground">{sensor.maxThreshold !== null ? `${sensor.maxThreshold}${sensor.unit}` : "-"}</span>
+                Max: <span className="font-medium text-foreground">{sensor.maxThreshold !== null ? `${formatMeasureValue(sensor.maxThreshold)}${sensor.unit}` : "-"}</span>
               </span>
             </div>
           </div>

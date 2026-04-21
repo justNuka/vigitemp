@@ -25,6 +25,8 @@ export function getDefaultLocationFormData(): LocationFormData {
     Consigne_Inf_Pre_Alarme: undefined,
     Est_Consigne_Inf_Pre_Alarme_Active: false,
     Retard_Alarme_Bas: 60,
+    Retard_Non_Reponse: 60,
+    Retard_Alarme_Changement_Consigne: undefined,
     Nb_Mesures_Temporisation_Redeclenchement: 0,
 
     Tolerance_Surveillance_Sup: undefined,

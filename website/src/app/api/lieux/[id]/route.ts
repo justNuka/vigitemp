@@ -65,6 +65,8 @@ const AUDIT_FIELD_LABELS: Record<string, string> = {
   Consigne_Inf: "Consigne inférieure",
   Retard_Alarme_Haut: "Retard alarme haut",
   Retard_Alarme_Bas: "Retard alarme bas",
+  Retard_Non_Reponse: "Retard non-reponse",
+  Retard_Alarme_Changement_Consigne: "Retard changement de consigne",
   Nb_Mesures_Temporisation_Redeclenchement: "Temporisation de redéclenchement",
   Derniere_Date_Etalonnage: "Date d'étalonnage appliquée",
   Erreur_Justesse: "Erreur de justesse",
@@ -177,6 +179,14 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
       message: "Le retard d'alarme bas doit être strictement supérieur à 0.",
     })
   }
+
+  if (Object.prototype.hasOwnProperty.call(data, "Retard_Non_Reponse") && data.Retard_Non_Reponse !== null && data.Retard_Non_Reponse !== undefined && Number(data.Retard_Non_Reponse) <= 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Retard_Non_Reponse"],
+      message: "Le retard de non-réponse doit être strictement supérieur à 0.",
+    })
+  }
 }
 
 const updateLieuSchema = z.object({
@@ -202,6 +212,8 @@ const updateLieuSchema = z.object({
   Consigne_Inf_Pre_Alarme: z.number().nullable().optional(),
   Est_Consigne_Inf_Pre_Alarme_Active: z.boolean().optional(),
   Retard_Alarme_Bas: z.number().nullable().optional(),
+  Retard_Non_Reponse: z.number().nullable().optional(),
+  Retard_Alarme_Changement_Consigne: z.number().nullable().optional(),
   Nb_Mesures_Temporisation_Redeclenchement: z.number().int().min(0).nullable().optional(),
   Est_Archive: z.boolean().optional(),
   surveillanceDurationMinutes: z.number().int().positive().nullable().optional(),
@@ -483,6 +495,8 @@ export const PATCH = withAnyAuthorizationLogging(
             Consigne_Inf: true,
             Retard_Alarme_Haut: true,
             Retard_Alarme_Bas: true,
+            Retard_Non_Reponse: true,
+            Retard_Alarme_Changement_Consigne: true,
             Nb_Mesures_Temporisation_Redeclenchement: true,
             Derniere_Erreur_Justesse: true,
             Derniere_Incertitude: true,
@@ -506,6 +520,8 @@ export const PATCH = withAnyAuthorizationLogging(
           Consigne_Inf: current?.Consigne_Inf,
           Retard_Alarme_Haut: current?.Retard_Alarme_Haut,
           Retard_Alarme_Bas: current?.Retard_Alarme_Bas,
+          Retard_Non_Reponse: current?.Retard_Non_Reponse,
+          Retard_Alarme_Changement_Consigne: current?.Retard_Alarme_Changement_Consigne,
           Nb_Mesures_Temporisation_Redeclenchement: current?.Nb_Mesures_Temporisation_Redeclenchement,
           Erreur_Justesse: current?.Derniere_Erreur_Justesse,
           Incertitude: current?.Derniere_Incertitude,
@@ -815,6 +831,16 @@ export const PATCH = withAnyAuthorizationLogging(
         if (Object.prototype.hasOwnProperty.call(body, "Retard_Alarme_Bas")) {
           trackChange("Retard_Alarme_Bas", previousValues.Retard_Alarme_Bas, validated.Retard_Alarme_Bas)
         }
+        if (Object.prototype.hasOwnProperty.call(body, "Retard_Non_Reponse")) {
+          trackChange("Retard_Non_Reponse", previousValues.Retard_Non_Reponse, validated.Retard_Non_Reponse)
+        }
+        if (Object.prototype.hasOwnProperty.call(body, "Retard_Alarme_Changement_Consigne")) {
+          trackChange(
+            "Retard_Alarme_Changement_Consigne",
+            previousValues.Retard_Alarme_Changement_Consigne,
+            validated.Retard_Alarme_Changement_Consigne,
+          )
+        }
 
         const TRACKED_FIELDS = [
           "Nom_Lieu",
@@ -824,6 +850,8 @@ export const PATCH = withAnyAuthorizationLogging(
           "Consigne",
           "Consigne_Sup",
           "Consigne_Inf",
+          "Retard_Non_Reponse",
+          "Retard_Alarme_Changement_Consigne",
           "Nb_Mesures_Temporisation_Redeclenchement",
           "Erreur_Justesse",
           "Incertitude",

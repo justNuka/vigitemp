@@ -11,6 +11,7 @@ import {
   Users,
   MapPin,
   Building2,
+  Copy,
   Menu,
   X,
 } from "lucide-react";
@@ -27,6 +28,7 @@ const menuItems = [
   { key: "actionneurs", labelKey: "actionneurs", href: "/admin/actionneurs", icon: Zap },
   { key: "groupes", labelKey: "groupes", href: "/admin/groupes", icon: Users },
   { key: "lieux", labelKey: "lieux", href: "/admin/lieux", icon: MapPin },
+  { key: "lieux_templates", labelKey: "lieux_templates", href: "/admin/lieux/templates", icon: Copy },
   { key: "sites", labelKey: "sites", href: "/admin/sites", icon: Building2 },
   { key: "outils", labelKey: "outils", href: "/admin/outils", icon: Wrench },
 ];
@@ -46,6 +48,9 @@ export function MainNavbar() {
   );
 
   const isActive = (href: string) => {
+    if (href === "/admin/lieux") {
+      return pathname === href;
+    }
     return pathname === href || pathname.startsWith(href + "/");
   };
 

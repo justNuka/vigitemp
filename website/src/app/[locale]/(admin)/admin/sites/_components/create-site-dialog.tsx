@@ -39,6 +39,8 @@ type AssignableUser = {
   role: string | null;
 };
 
+const EMPTY_USERS: AssignableUser[] = [];
+
 type CreateSiteDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -57,11 +59,12 @@ export function CreateSiteDialog({
   const t = useTranslations('sitesDialog');
   const tCommon = useTranslations('common');
   const memoryKey = 'create-site-form:new';
-  const { data: users = [] } = useQuery({
+  const usersQuery = useQuery({
     queryKey: ['users', 'sites-dialog'],
     queryFn: () => getJson<AssignableUser[]>('/api/utilisateurs'),
     enabled: open,
   });
+  const users = usersQuery.data ?? EMPTY_USERS;
   const assignedUserIds = form.watch('assignedUserIds') || [];
   const allUserIds = users.map((user) => user.id);
   const allUsersSelected = allUserIds.length > 0 && allUserIds.every((userId) => assignedUserIds.includes(userId));

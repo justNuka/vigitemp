@@ -29,6 +29,7 @@ import { useModules } from "@/hooks/useModules";
 import { useLocations } from "@/hooks/useLocations";
 import { useSitesSimple } from "@/hooks/useSites";
 import { useUsersForMailing } from "@/hooks/useUsersForMailing";
+import { useLocationTemplates } from "@/hooks/useLocationTemplates";
 import { prefetchNextSensorsPage, updateSurveillanceStateInCache, type PaginatedSensorsData } from "./_components/page-client/surveillance-page-helpers";
 import { useSurveillanceLocationEditor } from "./_components/page-client/use-surveillance-location-editor";
 
@@ -109,6 +110,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   );
   const { data: modules = [] } = useModules(shouldLoadLocationFormData);
   const { data: mailingUsers = [] } = useUsersForMailing(shouldLoadLocationFormData);
+  const { data: locationTemplates = [] } = useLocationTemplates(shouldLoadLocationFormData);
   const serverFilterSiteIds = filters.siteIds;
   const serverFilterGroupIds = filters.groupIds;
   const isBackgroundPaused = isEditLocationOpen || isOverlayOpen || openDetailModalIds.length > 0;
@@ -602,6 +604,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
         availableSensors={availableSensors}
         modules={modules}
         mailingUsers={mailingUsers}
+        locationTemplates={locationTemplates}
         isSubmitting={isLocationSaving}
         showActionComment
         requireActionComment={requireActionComment}

@@ -22,7 +22,7 @@ namespace Vigitemp_Serveur.sensors
         {
             try
             {
-                pendingResults = true;
+                BeginReadCycle();
                 m_port.Open();
                 m_port.DiscardInBuffer();
                 m_port.DiscardOutBuffer();
@@ -39,11 +39,14 @@ namespace Vigitemp_Serveur.sensors
                     await Task.Delay(25);
                     if (tmp_sw.Elapsed.TotalMilliseconds > 2000)
                     {
+                        if (!TryCompleteRead())
+                        {
+                            break;
+                        }
                         VigitempServeur.Log($"[SONDE][DONE] type=IC serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
                         HandleNoResponseAlarm(false, "timeout");
                         m_port.Close();
                         m_sensor_response = "";
-                        pendingResults = false;
                         break;
                     }
                 }
@@ -66,6 +69,11 @@ namespace Vigitemp_Serveur.sensors
         {
             try
             {
+                if (HasReadCompleted())
+                {
+                    return;
+                }
+
                 SerialPort sp = (SerialPort)sender;
                 string regex_res;
                 var chunk = sp.ReadExisting();
@@ -86,6 +94,11 @@ namespace Vigitemp_Serveur.sensors
                     {
                         m_sensor_response = m_sensor_response.Substring(m_sensor_response.Length - 1024);
                     }
+                    return;
+                }
+
+                if (!TryCompleteRead())
+                {
                     return;
                 }
 
@@ -112,13 +125,12 @@ namespace Vigitemp_Serveur.sensors
                 }
 
                 m_port.Close();
-                pendingResults = false;
             }
             catch (Exception ex)
             {
                 VigitempServeur.Log($"[SONDE][ERR] type=IC serial={m_sondeSerialNumber} port={m_comPort} error={ex}");
                 DisposePort();
-                pendingResults = false;
+                TryCompleteRead();
             }
         }
     }

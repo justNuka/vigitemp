@@ -12,6 +12,7 @@ import { useModules } from '@/hooks/useModules'
 import { useLocations, type LocationRow } from '@/hooks/useLocations'
 import { useSitesSimple } from '@/hooks/useSites'
 import { useUsersForMailing } from '@/hooks/useUsersForMailing'
+import { useLocationTemplates } from '@/hooks/useLocationTemplates'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   AlertDialog,
@@ -70,6 +71,7 @@ export function LocationsClient() {
   const { data: availableSensors = [] } = useAvailableSensors(watchedSensor, shouldLoadFormData)
   const { data: modules = [] } = useModules(shouldLoadFormData)
   const { data: mailingUsers = [] } = useUsersForMailing(shouldLoadFormData)
+  const { data: locationTemplates = [] } = useLocationTemplates(shouldLoadFormData)
 
   useEffect(() => {
     if (isLoading || didPrefetchRef.current) return
@@ -252,6 +254,7 @@ export function LocationsClient() {
         availableSensors={availableSensors}
         modules={modules}
         mailingUsers={mailingUsers}
+        locationTemplates={locationTemplates}
         isSubmitting={createMutation.isPending}
         onCancel={() => setIsCreateOpen(false)}
         onSubmit={(values) => {
@@ -273,6 +276,7 @@ export function LocationsClient() {
         availableSensors={availableSensors}
         modules={modules}
         mailingUsers={mailingUsers}
+        locationTemplates={locationTemplates}
         isSubmitting={updateMutation.isPending}
         onCancel={() => setIsEditOpen(false)}
         onSubmit={(values) => updateMutation.mutate(normalizePayload(values))}

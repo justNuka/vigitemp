@@ -95,7 +95,7 @@ export function renderExpertWidget({
         title={t("backup.title")}
         description={t("backup.description")}
         value={String(metrics.backupsTotal)}
-        helper={`${t("backup.last.label")}: ${metrics.lastBackupLabel}`}
+        helper={`${t("backup.last.label")}: ${metrics.lastBackupLabel}\n${metrics.backupStoragePath}`}
         href="/admin/outils"
         hrefLabel={accessLabel}
         icon={<Database className="h-5 w-5 text-violet-600" />}

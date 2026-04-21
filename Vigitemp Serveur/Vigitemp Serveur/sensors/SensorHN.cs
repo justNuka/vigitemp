@@ -25,7 +25,7 @@ namespace Vigitemp_Serveur.sensors
         {
             try
             {
-                pendingResults = true;
+                BeginReadCycle();
                 // L'encodage du port n'est pas utilisé directement : les bytes sont lus via
                 // sp.Read(buf) et décodés manuellement avec ISO-8859-1 dans le handler.
                 m_port.Encoding = Encoding.GetEncoding("ISO-8859-1");
@@ -66,11 +66,14 @@ namespace Vigitemp_Serveur.sensors
                             await Task.Delay(25);
                             if (tmp_sw.Elapsed.TotalMilliseconds > 2000)
                             {
+                                if (!TryCompleteRead())
+                                {
+                                    break;
+                                }
                                 VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
                                 HandleNoResponseAlarm(false, "timeout");
                                 m_port.Close();
                                 m_sensor_response = "";
-                                pendingResults = false;
                                 break;
                             }
                         }
@@ -95,6 +98,11 @@ namespace Vigitemp_Serveur.sensors
         {
             try
             {
+                if (HasReadCompleted())
+                {
+                    return;
+                }
+
                 VigitempServeur.Log($"[SONDE][RX] type=HN serial={m_sondeSerialNumber} port={m_comPort} event=read");
                 SerialPort sp = (SerialPort)sender;
                 Encoding iso = Encoding.GetEncoding("ISO-8859-1");
@@ -114,6 +122,11 @@ namespace Vigitemp_Serveur.sensors
                     m_sensor_response = "";
                 }
                 else
+                {
+                    return;
+                }
+
+                if (!TryCompleteRead())
                 {
                     return;
                 }
@@ -148,13 +161,12 @@ namespace Vigitemp_Serveur.sensors
                 m_port.DiscardInBuffer(); 
                 m_port.DiscardOutBuffer();
                 m_port.Close();
-                pendingResults = false;
             }
             catch (Exception ex)
             {
                 VigitempServeur.Log($"[SONDE][ERR] type=HN serial={m_sondeSerialNumber} port={m_comPort} error={ex}");
                 DisposePort();
-                pendingResults = false;
+                TryCompleteRead();
             }
         }
 

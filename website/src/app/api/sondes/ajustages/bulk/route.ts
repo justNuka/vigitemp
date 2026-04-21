@@ -161,19 +161,22 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
     let invalidatedEtalonnages = 0;
     let invalidatedEtalonnageMeasures = 0;
 
-    const serialTypeCodes = Array.from(new Set(serials.map((serial) => extractTypeCodeFromSerial(serial))));
-    const sensorTypeFamilies = serialTypeCodes.length > 0
-      ? await prisma.t_sonde_type.findMany({
-          where: { Sonde_Type: { in: serialTypeCodes } },
-          select: { Sonde_Type: true, Famille_Sonde: true },
-        })
-      : [];
+    const sensorTypes = await prisma.t_sonde_type.findMany({
+      select: { Sonde_Type: true, Famille_Sonde: true },
+    });
+    const knownTypeCodes = sensorTypes
+      .map((row) => row.Sonde_Type)
+      .filter((row): row is string => Boolean(row));
+    const serialTypeCodes = Array.from(new Set(serials.map((serial) => extractTypeCodeFromSerial(serial, knownTypeCodes))));
+    const sensorTypeFamilies = sensorTypes.filter(
+      (row) => typeof row.Sonde_Type === "string" && serialTypeCodes.includes(row.Sonde_Type),
+    );
     const familyByType = new Map(
       sensorTypeFamilies
         .filter((row) => row.Sonde_Type)
         .map((row) => [row.Sonde_Type as string, row.Famille_Sonde]),
     );
-    const getSerialTypeCode = (serial: string) => extractTypeCodeFromSerial(serial);
+    const getSerialTypeCode = (serial: string) => extractTypeCodeFromSerial(serial, knownTypeCodes);
     const isGsoSerial = (serial: string) => familyByType.get(getSerialTypeCode(serial)) === "GSO";
 
     await prisma.$transaction(async (tx) => {
@@ -197,7 +200,7 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
             return {
               Sonde_Numero_Serie: serial,
               Sonde_Type: getSerialTypeCode(serial),
-              Adresse_Sonde: extractProbeAddressFromSerial(serial),
+              Adresse_Sonde: extractProbeAddressFromSerial(serial, knownTypeCodes),
               Est_Sonde_GSO: gso,
               Surveillance_Etat: "D",
               Sonde_Offset: 0,

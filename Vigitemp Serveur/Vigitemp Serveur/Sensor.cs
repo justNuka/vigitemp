@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO.Ports;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Vigitemp_Serveur
 {
@@ -55,6 +56,7 @@ namespace Vigitemp_Serveur
         protected string tmp_valeur = "";
         protected string tmp_numeroSerie = "";
         protected Stopwatch sw;
+        private int _readCompletionState = 0;
 
         private static readonly HttpClient client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
         private static readonly ConcurrentDictionary<int, bool> _alarmStateByLieu =
@@ -220,6 +222,27 @@ namespace Vigitemp_Serveur
         protected double RoundMeasure(double value)
         {
             return Math.Round(value, 2, MidpointRounding.AwayFromZero);
+        }
+
+        protected void BeginReadCycle()
+        {
+            Interlocked.Exchange(ref _readCompletionState, 0);
+            pendingResults = true;
+        }
+
+        protected bool TryCompleteRead()
+        {
+            var completed = Interlocked.CompareExchange(ref _readCompletionState, 1, 0) == 0;
+            if (completed)
+            {
+                pendingResults = false;
+            }
+            return completed;
+        }
+
+        protected bool HasReadCompleted()
+        {
+            return Volatile.Read(ref _readCompletionState) != 0;
         }
 
         /// <summary>

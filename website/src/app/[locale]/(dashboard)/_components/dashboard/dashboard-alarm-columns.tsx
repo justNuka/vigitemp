@@ -5,6 +5,7 @@ import type { Locale } from "date-fns"
 
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { formatMeasureValue } from "@/lib/measurements"
 import { cn } from "@/lib/utils"
 import type { AlarmWithDetails } from "@/lib/api"
 import { DashboardStatusBadge } from "./dashboard-status-badge"
@@ -81,7 +82,7 @@ export function createDashboardAlarmColumns({
       cell: ({ row }) => {
         const alarm = row.original
         const value = alarm.sensor.currentValue ?? alarm.value ?? null
-        return <div className="text-right font-mono font-medium">{value !== null ? `${value.toFixed(1)} ${alarm.sensor.unit}` : "-"}</div>
+        return <div className="text-right font-mono font-medium">{value !== null ? `${formatMeasureValue(value)} ${alarm.sensor.unit}` : "-"}</div>
       },
     },
     {

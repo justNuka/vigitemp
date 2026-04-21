@@ -104,6 +104,11 @@ export type t_lieu_groupe = $Result.DefaultSelection<Prisma.$t_lieu_groupePayloa
  */
 export type t_lieu = $Result.DefaultSelection<Prisma.$t_lieuPayload>
 /**
+ * Model t_lieu_template
+ * 
+ */
+export type t_lieu_template = $Result.DefaultSelection<Prisma.$t_lieu_templatePayload>
+/**
  * Model t_module
  * 
  */
@@ -605,6 +610,16 @@ export class PrismaClient<
     * ```
     */
   get t_lieu(): Prisma.t_lieuDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.t_lieu_template`: Exposes CRUD operations for the **t_lieu_template** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more T_lieu_templates
+    * const t_lieu_templates = await prisma.t_lieu_template.findMany()
+    * ```
+    */
+  get t_lieu_template(): Prisma.t_lieu_templateDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.t_module`: Exposes CRUD operations for the **t_module** model.
@@ -1377,6 +1392,7 @@ export namespace Prisma {
     t_liaison_utilisateur_site: 't_liaison_utilisateur_site',
     t_lieu_groupe: 't_lieu_groupe',
     t_lieu: 't_lieu',
+    t_lieu_template: 't_lieu_template',
     t_module: 't_module',
     t_module_type: 't_module_type',
     t_parametre: 't_parametre',
@@ -1424,7 +1440,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "t_actionneur" | "t_alarme" | "t_alarme_histo" | "t_alarme_message" | "t_autorisation" | "t_milieu" | "t_ajustage" | "t_certif" | "t_certif_mesure" | "t_etalon" | "t_etalonnage" | "t_etalonnage_mesure" | "t_groupe" | "t_liaison_profil_autorisation" | "t_liaison_utilisateur_groupe" | "t_liaison_utilisateur_site" | "t_lieu_groupe" | "t_lieu" | "t_module" | "t_module_type" | "t_parametre" | "t_pdf" | "t_plan" | "t_postes_clients" | "t_profil" | "t_site" | "t_sonde" | "t_etat_surveillance" | "t_sonde_type" | "t_utilisateur" | "t_notification" | "t_notification_delivery" | "t_notification_event" | "liste_clients" | "t_actionneur_type" | "t_ancien_mot_de_passe" | "t_commentaire_acquittement_alarme" | "t_etalon_type" | "t_mem_gso" | "t_sonde_etat" | "t_lieu_mail_tel" | "t_lieu_planning_audit" | "t_lieu_planning_regle" | "t_materiel" | "t_commande_materiel" | "t_commande_materiel_ligne" | "t_vigilog_configuration" | "t_vigilog" | "t_vigilog_usage_ponctuel" | "t_vigilog_tournee"
+      modelProps: "t_actionneur" | "t_alarme" | "t_alarme_histo" | "t_alarme_message" | "t_autorisation" | "t_milieu" | "t_ajustage" | "t_certif" | "t_certif_mesure" | "t_etalon" | "t_etalonnage" | "t_etalonnage_mesure" | "t_groupe" | "t_liaison_profil_autorisation" | "t_liaison_utilisateur_groupe" | "t_liaison_utilisateur_site" | "t_lieu_groupe" | "t_lieu" | "t_lieu_template" | "t_module" | "t_module_type" | "t_parametre" | "t_pdf" | "t_plan" | "t_postes_clients" | "t_profil" | "t_site" | "t_sonde" | "t_etat_surveillance" | "t_sonde_type" | "t_utilisateur" | "t_notification" | "t_notification_delivery" | "t_notification_event" | "liste_clients" | "t_actionneur_type" | "t_ancien_mot_de_passe" | "t_commentaire_acquittement_alarme" | "t_etalon_type" | "t_mem_gso" | "t_sonde_etat" | "t_lieu_mail_tel" | "t_lieu_planning_audit" | "t_lieu_planning_regle" | "t_materiel" | "t_commande_materiel" | "t_commande_materiel_ligne" | "t_vigilog_configuration" | "t_vigilog" | "t_vigilog_usage_ponctuel" | "t_vigilog_tournee"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2613,6 +2629,72 @@ export namespace Prisma {
           count: {
             args: Prisma.t_lieuCountArgs<ExtArgs>
             result: $Utils.Optional<T_lieuCountAggregateOutputType> | number
+          }
+        }
+      }
+      t_lieu_template: {
+        payload: Prisma.$t_lieu_templatePayload<ExtArgs>
+        fields: Prisma.t_lieu_templateFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.t_lieu_templateFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_lieu_templatePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.t_lieu_templateFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_lieu_templatePayload>
+          }
+          findFirst: {
+            args: Prisma.t_lieu_templateFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_lieu_templatePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.t_lieu_templateFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_lieu_templatePayload>
+          }
+          findMany: {
+            args: Prisma.t_lieu_templateFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_lieu_templatePayload>[]
+          }
+          create: {
+            args: Prisma.t_lieu_templateCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_lieu_templatePayload>
+          }
+          createMany: {
+            args: Prisma.t_lieu_templateCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.t_lieu_templateDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_lieu_templatePayload>
+          }
+          update: {
+            args: Prisma.t_lieu_templateUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_lieu_templatePayload>
+          }
+          deleteMany: {
+            args: Prisma.t_lieu_templateDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.t_lieu_templateUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.t_lieu_templateUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$t_lieu_templatePayload>
+          }
+          aggregate: {
+            args: Prisma.T_lieu_templateAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateT_lieu_template>
+          }
+          groupBy: {
+            args: Prisma.t_lieu_templateGroupByArgs<ExtArgs>
+            result: $Utils.Optional<T_lieu_templateGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.t_lieu_templateCountArgs<ExtArgs>
+            result: $Utils.Optional<T_lieu_templateCountAggregateOutputType> | number
           }
         }
       }
@@ -4854,6 +4936,7 @@ export namespace Prisma {
     t_liaison_utilisateur_site?: t_liaison_utilisateur_siteOmit
     t_lieu_groupe?: t_lieu_groupeOmit
     t_lieu?: t_lieuOmit
+    t_lieu_template?: t_lieu_templateOmit
     t_module?: t_moduleOmit
     t_module_type?: t_module_typeOmit
     t_parametre?: t_parametreOmit
@@ -25323,6 +25406,1251 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: t_lieuInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model t_lieu_template
+   */
+
+  export type AggregateT_lieu_template = {
+    _count: T_lieu_templateCountAggregateOutputType | null
+    _avg: T_lieu_templateAvgAggregateOutputType | null
+    _sum: T_lieu_templateSumAggregateOutputType | null
+    _min: T_lieu_templateMinAggregateOutputType | null
+    _max: T_lieu_templateMaxAggregateOutputType | null
+  }
+
+  export type T_lieu_templateAvgAggregateOutputType = {
+    Id_Lieu_Template: number | null
+    Frequence: number | null
+    Retard_Alarme_Haut: number | null
+    Retard_Alarme_Bas: number | null
+    Retard_Non_Reponse: number | null
+    Retard_Alarme_Changement_Consigne: number | null
+    Consigne: Decimal | null
+    Consigne_Sup: Decimal | null
+    Consigne_Inf: Decimal | null
+    Tolerance_Surveillance_Sup: Decimal | null
+    Tolerance_Surveillance_Inf: Decimal | null
+    Consigne_Sup_Pre_Alarme: Decimal | null
+    Consigne_Inf_Pre_Alarme: Decimal | null
+    Nb_Mesures_Temporisation_Redeclenchement: number | null
+    Id_Utilisateur_Creation: number | null
+    Id_Utilisateur_Maj: number | null
+  }
+
+  export type T_lieu_templateSumAggregateOutputType = {
+    Id_Lieu_Template: number | null
+    Frequence: number | null
+    Retard_Alarme_Haut: number | null
+    Retard_Alarme_Bas: number | null
+    Retard_Non_Reponse: number | null
+    Retard_Alarme_Changement_Consigne: number | null
+    Consigne: Decimal | null
+    Consigne_Sup: Decimal | null
+    Consigne_Inf: Decimal | null
+    Tolerance_Surveillance_Sup: Decimal | null
+    Tolerance_Surveillance_Inf: Decimal | null
+    Consigne_Sup_Pre_Alarme: Decimal | null
+    Consigne_Inf_Pre_Alarme: Decimal | null
+    Nb_Mesures_Temporisation_Redeclenchement: number | null
+    Id_Utilisateur_Creation: number | null
+    Id_Utilisateur_Maj: number | null
+  }
+
+  export type T_lieu_templateMinAggregateOutputType = {
+    Id_Lieu_Template: number | null
+    Nom_Template: string | null
+    Description: string | null
+    Lieu_Etat: string | null
+    Frequence: number | null
+    Retard_Alarme_Haut: number | null
+    Retard_Alarme_Bas: number | null
+    Retard_Non_Reponse: number | null
+    Retard_Alarme_Changement_Consigne: number | null
+    Consigne: Decimal | null
+    Consigne_Sup: Decimal | null
+    Consigne_Inf: Decimal | null
+    Tolerance_Surveillance_Sup: Decimal | null
+    Tolerance_Surveillance_Inf: Decimal | null
+    Consigne_Sup_Pre_Alarme: Decimal | null
+    Consigne_Inf_Pre_Alarme: Decimal | null
+    Est_Consigne_Sup_Active: boolean | null
+    Est_Consigne_Inf_Active: boolean | null
+    Est_Consigne_Sup_Pre_Alarme_Active: boolean | null
+    Est_Consigne_Inf_Pre_Alarme_Active: boolean | null
+    Est_Son_Alarme_Active: boolean | null
+    Est_Redeclenchement_Immediat: boolean | null
+    Nb_Mesures_Temporisation_Redeclenchement: number | null
+    Observations_Info: string | null
+    Est_Archive: boolean | null
+    Date_Creation: Date | null
+    Date_Maj: Date | null
+    Id_Utilisateur_Creation: number | null
+    Id_Utilisateur_Maj: number | null
+  }
+
+  export type T_lieu_templateMaxAggregateOutputType = {
+    Id_Lieu_Template: number | null
+    Nom_Template: string | null
+    Description: string | null
+    Lieu_Etat: string | null
+    Frequence: number | null
+    Retard_Alarme_Haut: number | null
+    Retard_Alarme_Bas: number | null
+    Retard_Non_Reponse: number | null
+    Retard_Alarme_Changement_Consigne: number | null
+    Consigne: Decimal | null
+    Consigne_Sup: Decimal | null
+    Consigne_Inf: Decimal | null
+    Tolerance_Surveillance_Sup: Decimal | null
+    Tolerance_Surveillance_Inf: Decimal | null
+    Consigne_Sup_Pre_Alarme: Decimal | null
+    Consigne_Inf_Pre_Alarme: Decimal | null
+    Est_Consigne_Sup_Active: boolean | null
+    Est_Consigne_Inf_Active: boolean | null
+    Est_Consigne_Sup_Pre_Alarme_Active: boolean | null
+    Est_Consigne_Inf_Pre_Alarme_Active: boolean | null
+    Est_Son_Alarme_Active: boolean | null
+    Est_Redeclenchement_Immediat: boolean | null
+    Nb_Mesures_Temporisation_Redeclenchement: number | null
+    Observations_Info: string | null
+    Est_Archive: boolean | null
+    Date_Creation: Date | null
+    Date_Maj: Date | null
+    Id_Utilisateur_Creation: number | null
+    Id_Utilisateur_Maj: number | null
+  }
+
+  export type T_lieu_templateCountAggregateOutputType = {
+    Id_Lieu_Template: number
+    Nom_Template: number
+    Description: number
+    Lieu_Etat: number
+    Frequence: number
+    Retard_Alarme_Haut: number
+    Retard_Alarme_Bas: number
+    Retard_Non_Reponse: number
+    Retard_Alarme_Changement_Consigne: number
+    Consigne: number
+    Consigne_Sup: number
+    Consigne_Inf: number
+    Tolerance_Surveillance_Sup: number
+    Tolerance_Surveillance_Inf: number
+    Consigne_Sup_Pre_Alarme: number
+    Consigne_Inf_Pre_Alarme: number
+    Est_Consigne_Sup_Active: number
+    Est_Consigne_Inf_Active: number
+    Est_Consigne_Sup_Pre_Alarme_Active: number
+    Est_Consigne_Inf_Pre_Alarme_Active: number
+    Est_Son_Alarme_Active: number
+    Est_Redeclenchement_Immediat: number
+    Nb_Mesures_Temporisation_Redeclenchement: number
+    Observations_Info: number
+    Est_Archive: number
+    Date_Creation: number
+    Date_Maj: number
+    Id_Utilisateur_Creation: number
+    Id_Utilisateur_Maj: number
+    _all: number
+  }
+
+
+  export type T_lieu_templateAvgAggregateInputType = {
+    Id_Lieu_Template?: true
+    Frequence?: true
+    Retard_Alarme_Haut?: true
+    Retard_Alarme_Bas?: true
+    Retard_Non_Reponse?: true
+    Retard_Alarme_Changement_Consigne?: true
+    Consigne?: true
+    Consigne_Sup?: true
+    Consigne_Inf?: true
+    Tolerance_Surveillance_Sup?: true
+    Tolerance_Surveillance_Inf?: true
+    Consigne_Sup_Pre_Alarme?: true
+    Consigne_Inf_Pre_Alarme?: true
+    Nb_Mesures_Temporisation_Redeclenchement?: true
+    Id_Utilisateur_Creation?: true
+    Id_Utilisateur_Maj?: true
+  }
+
+  export type T_lieu_templateSumAggregateInputType = {
+    Id_Lieu_Template?: true
+    Frequence?: true
+    Retard_Alarme_Haut?: true
+    Retard_Alarme_Bas?: true
+    Retard_Non_Reponse?: true
+    Retard_Alarme_Changement_Consigne?: true
+    Consigne?: true
+    Consigne_Sup?: true
+    Consigne_Inf?: true
+    Tolerance_Surveillance_Sup?: true
+    Tolerance_Surveillance_Inf?: true
+    Consigne_Sup_Pre_Alarme?: true
+    Consigne_Inf_Pre_Alarme?: true
+    Nb_Mesures_Temporisation_Redeclenchement?: true
+    Id_Utilisateur_Creation?: true
+    Id_Utilisateur_Maj?: true
+  }
+
+  export type T_lieu_templateMinAggregateInputType = {
+    Id_Lieu_Template?: true
+    Nom_Template?: true
+    Description?: true
+    Lieu_Etat?: true
+    Frequence?: true
+    Retard_Alarme_Haut?: true
+    Retard_Alarme_Bas?: true
+    Retard_Non_Reponse?: true
+    Retard_Alarme_Changement_Consigne?: true
+    Consigne?: true
+    Consigne_Sup?: true
+    Consigne_Inf?: true
+    Tolerance_Surveillance_Sup?: true
+    Tolerance_Surveillance_Inf?: true
+    Consigne_Sup_Pre_Alarme?: true
+    Consigne_Inf_Pre_Alarme?: true
+    Est_Consigne_Sup_Active?: true
+    Est_Consigne_Inf_Active?: true
+    Est_Consigne_Sup_Pre_Alarme_Active?: true
+    Est_Consigne_Inf_Pre_Alarme_Active?: true
+    Est_Son_Alarme_Active?: true
+    Est_Redeclenchement_Immediat?: true
+    Nb_Mesures_Temporisation_Redeclenchement?: true
+    Observations_Info?: true
+    Est_Archive?: true
+    Date_Creation?: true
+    Date_Maj?: true
+    Id_Utilisateur_Creation?: true
+    Id_Utilisateur_Maj?: true
+  }
+
+  export type T_lieu_templateMaxAggregateInputType = {
+    Id_Lieu_Template?: true
+    Nom_Template?: true
+    Description?: true
+    Lieu_Etat?: true
+    Frequence?: true
+    Retard_Alarme_Haut?: true
+    Retard_Alarme_Bas?: true
+    Retard_Non_Reponse?: true
+    Retard_Alarme_Changement_Consigne?: true
+    Consigne?: true
+    Consigne_Sup?: true
+    Consigne_Inf?: true
+    Tolerance_Surveillance_Sup?: true
+    Tolerance_Surveillance_Inf?: true
+    Consigne_Sup_Pre_Alarme?: true
+    Consigne_Inf_Pre_Alarme?: true
+    Est_Consigne_Sup_Active?: true
+    Est_Consigne_Inf_Active?: true
+    Est_Consigne_Sup_Pre_Alarme_Active?: true
+    Est_Consigne_Inf_Pre_Alarme_Active?: true
+    Est_Son_Alarme_Active?: true
+    Est_Redeclenchement_Immediat?: true
+    Nb_Mesures_Temporisation_Redeclenchement?: true
+    Observations_Info?: true
+    Est_Archive?: true
+    Date_Creation?: true
+    Date_Maj?: true
+    Id_Utilisateur_Creation?: true
+    Id_Utilisateur_Maj?: true
+  }
+
+  export type T_lieu_templateCountAggregateInputType = {
+    Id_Lieu_Template?: true
+    Nom_Template?: true
+    Description?: true
+    Lieu_Etat?: true
+    Frequence?: true
+    Retard_Alarme_Haut?: true
+    Retard_Alarme_Bas?: true
+    Retard_Non_Reponse?: true
+    Retard_Alarme_Changement_Consigne?: true
+    Consigne?: true
+    Consigne_Sup?: true
+    Consigne_Inf?: true
+    Tolerance_Surveillance_Sup?: true
+    Tolerance_Surveillance_Inf?: true
+    Consigne_Sup_Pre_Alarme?: true
+    Consigne_Inf_Pre_Alarme?: true
+    Est_Consigne_Sup_Active?: true
+    Est_Consigne_Inf_Active?: true
+    Est_Consigne_Sup_Pre_Alarme_Active?: true
+    Est_Consigne_Inf_Pre_Alarme_Active?: true
+    Est_Son_Alarme_Active?: true
+    Est_Redeclenchement_Immediat?: true
+    Nb_Mesures_Temporisation_Redeclenchement?: true
+    Observations_Info?: true
+    Est_Archive?: true
+    Date_Creation?: true
+    Date_Maj?: true
+    Id_Utilisateur_Creation?: true
+    Id_Utilisateur_Maj?: true
+    _all?: true
+  }
+
+  export type T_lieu_templateAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which t_lieu_template to aggregate.
+     */
+    where?: t_lieu_templateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of t_lieu_templates to fetch.
+     */
+    orderBy?: t_lieu_templateOrderByWithRelationInput | t_lieu_templateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: t_lieu_templateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` t_lieu_templates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` t_lieu_templates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned t_lieu_templates
+    **/
+    _count?: true | T_lieu_templateCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: T_lieu_templateAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: T_lieu_templateSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: T_lieu_templateMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: T_lieu_templateMaxAggregateInputType
+  }
+
+  export type GetT_lieu_templateAggregateType<T extends T_lieu_templateAggregateArgs> = {
+        [P in keyof T & keyof AggregateT_lieu_template]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateT_lieu_template[P]>
+      : GetScalarType<T[P], AggregateT_lieu_template[P]>
+  }
+
+
+
+
+  export type t_lieu_templateGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: t_lieu_templateWhereInput
+    orderBy?: t_lieu_templateOrderByWithAggregationInput | t_lieu_templateOrderByWithAggregationInput[]
+    by: T_lieu_templateScalarFieldEnum[] | T_lieu_templateScalarFieldEnum
+    having?: t_lieu_templateScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: T_lieu_templateCountAggregateInputType | true
+    _avg?: T_lieu_templateAvgAggregateInputType
+    _sum?: T_lieu_templateSumAggregateInputType
+    _min?: T_lieu_templateMinAggregateInputType
+    _max?: T_lieu_templateMaxAggregateInputType
+  }
+
+  export type T_lieu_templateGroupByOutputType = {
+    Id_Lieu_Template: number
+    Nom_Template: string
+    Description: string | null
+    Lieu_Etat: string
+    Frequence: number | null
+    Retard_Alarme_Haut: number | null
+    Retard_Alarme_Bas: number | null
+    Retard_Non_Reponse: number | null
+    Retard_Alarme_Changement_Consigne: number | null
+    Consigne: Decimal | null
+    Consigne_Sup: Decimal | null
+    Consigne_Inf: Decimal | null
+    Tolerance_Surveillance_Sup: Decimal | null
+    Tolerance_Surveillance_Inf: Decimal | null
+    Consigne_Sup_Pre_Alarme: Decimal | null
+    Consigne_Inf_Pre_Alarme: Decimal | null
+    Est_Consigne_Sup_Active: boolean
+    Est_Consigne_Inf_Active: boolean
+    Est_Consigne_Sup_Pre_Alarme_Active: boolean
+    Est_Consigne_Inf_Pre_Alarme_Active: boolean
+    Est_Son_Alarme_Active: boolean
+    Est_Redeclenchement_Immediat: boolean
+    Nb_Mesures_Temporisation_Redeclenchement: number | null
+    Observations_Info: string | null
+    Est_Archive: boolean
+    Date_Creation: Date
+    Date_Maj: Date
+    Id_Utilisateur_Creation: number | null
+    Id_Utilisateur_Maj: number | null
+    _count: T_lieu_templateCountAggregateOutputType | null
+    _avg: T_lieu_templateAvgAggregateOutputType | null
+    _sum: T_lieu_templateSumAggregateOutputType | null
+    _min: T_lieu_templateMinAggregateOutputType | null
+    _max: T_lieu_templateMaxAggregateOutputType | null
+  }
+
+  type GetT_lieu_templateGroupByPayload<T extends t_lieu_templateGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<T_lieu_templateGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof T_lieu_templateGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], T_lieu_templateGroupByOutputType[P]>
+            : GetScalarType<T[P], T_lieu_templateGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type t_lieu_templateSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    Id_Lieu_Template?: boolean
+    Nom_Template?: boolean
+    Description?: boolean
+    Lieu_Etat?: boolean
+    Frequence?: boolean
+    Retard_Alarme_Haut?: boolean
+    Retard_Alarme_Bas?: boolean
+    Retard_Non_Reponse?: boolean
+    Retard_Alarme_Changement_Consigne?: boolean
+    Consigne?: boolean
+    Consigne_Sup?: boolean
+    Consigne_Inf?: boolean
+    Tolerance_Surveillance_Sup?: boolean
+    Tolerance_Surveillance_Inf?: boolean
+    Consigne_Sup_Pre_Alarme?: boolean
+    Consigne_Inf_Pre_Alarme?: boolean
+    Est_Consigne_Sup_Active?: boolean
+    Est_Consigne_Inf_Active?: boolean
+    Est_Consigne_Sup_Pre_Alarme_Active?: boolean
+    Est_Consigne_Inf_Pre_Alarme_Active?: boolean
+    Est_Son_Alarme_Active?: boolean
+    Est_Redeclenchement_Immediat?: boolean
+    Nb_Mesures_Temporisation_Redeclenchement?: boolean
+    Observations_Info?: boolean
+    Est_Archive?: boolean
+    Date_Creation?: boolean
+    Date_Maj?: boolean
+    Id_Utilisateur_Creation?: boolean
+    Id_Utilisateur_Maj?: boolean
+  }, ExtArgs["result"]["t_lieu_template"]>
+
+
+
+  export type t_lieu_templateSelectScalar = {
+    Id_Lieu_Template?: boolean
+    Nom_Template?: boolean
+    Description?: boolean
+    Lieu_Etat?: boolean
+    Frequence?: boolean
+    Retard_Alarme_Haut?: boolean
+    Retard_Alarme_Bas?: boolean
+    Retard_Non_Reponse?: boolean
+    Retard_Alarme_Changement_Consigne?: boolean
+    Consigne?: boolean
+    Consigne_Sup?: boolean
+    Consigne_Inf?: boolean
+    Tolerance_Surveillance_Sup?: boolean
+    Tolerance_Surveillance_Inf?: boolean
+    Consigne_Sup_Pre_Alarme?: boolean
+    Consigne_Inf_Pre_Alarme?: boolean
+    Est_Consigne_Sup_Active?: boolean
+    Est_Consigne_Inf_Active?: boolean
+    Est_Consigne_Sup_Pre_Alarme_Active?: boolean
+    Est_Consigne_Inf_Pre_Alarme_Active?: boolean
+    Est_Son_Alarme_Active?: boolean
+    Est_Redeclenchement_Immediat?: boolean
+    Nb_Mesures_Temporisation_Redeclenchement?: boolean
+    Observations_Info?: boolean
+    Est_Archive?: boolean
+    Date_Creation?: boolean
+    Date_Maj?: boolean
+    Id_Utilisateur_Creation?: boolean
+    Id_Utilisateur_Maj?: boolean
+  }
+
+  export type t_lieu_templateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"Id_Lieu_Template" | "Nom_Template" | "Description" | "Lieu_Etat" | "Frequence" | "Retard_Alarme_Haut" | "Retard_Alarme_Bas" | "Retard_Non_Reponse" | "Retard_Alarme_Changement_Consigne" | "Consigne" | "Consigne_Sup" | "Consigne_Inf" | "Tolerance_Surveillance_Sup" | "Tolerance_Surveillance_Inf" | "Consigne_Sup_Pre_Alarme" | "Consigne_Inf_Pre_Alarme" | "Est_Consigne_Sup_Active" | "Est_Consigne_Inf_Active" | "Est_Consigne_Sup_Pre_Alarme_Active" | "Est_Consigne_Inf_Pre_Alarme_Active" | "Est_Son_Alarme_Active" | "Est_Redeclenchement_Immediat" | "Nb_Mesures_Temporisation_Redeclenchement" | "Observations_Info" | "Est_Archive" | "Date_Creation" | "Date_Maj" | "Id_Utilisateur_Creation" | "Id_Utilisateur_Maj", ExtArgs["result"]["t_lieu_template"]>
+
+  export type $t_lieu_templatePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "t_lieu_template"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      Id_Lieu_Template: number
+      Nom_Template: string
+      Description: string | null
+      Lieu_Etat: string
+      Frequence: number | null
+      Retard_Alarme_Haut: number | null
+      Retard_Alarme_Bas: number | null
+      Retard_Non_Reponse: number | null
+      Retard_Alarme_Changement_Consigne: number | null
+      Consigne: Prisma.Decimal | null
+      Consigne_Sup: Prisma.Decimal | null
+      Consigne_Inf: Prisma.Decimal | null
+      Tolerance_Surveillance_Sup: Prisma.Decimal | null
+      Tolerance_Surveillance_Inf: Prisma.Decimal | null
+      Consigne_Sup_Pre_Alarme: Prisma.Decimal | null
+      Consigne_Inf_Pre_Alarme: Prisma.Decimal | null
+      Est_Consigne_Sup_Active: boolean
+      Est_Consigne_Inf_Active: boolean
+      Est_Consigne_Sup_Pre_Alarme_Active: boolean
+      Est_Consigne_Inf_Pre_Alarme_Active: boolean
+      Est_Son_Alarme_Active: boolean
+      Est_Redeclenchement_Immediat: boolean
+      Nb_Mesures_Temporisation_Redeclenchement: number | null
+      Observations_Info: string | null
+      Est_Archive: boolean
+      Date_Creation: Date
+      Date_Maj: Date
+      Id_Utilisateur_Creation: number | null
+      Id_Utilisateur_Maj: number | null
+    }, ExtArgs["result"]["t_lieu_template"]>
+    composites: {}
+  }
+
+  type t_lieu_templateGetPayload<S extends boolean | null | undefined | t_lieu_templateDefaultArgs> = $Result.GetResult<Prisma.$t_lieu_templatePayload, S>
+
+  type t_lieu_templateCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<t_lieu_templateFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: T_lieu_templateCountAggregateInputType | true
+    }
+
+  export interface t_lieu_templateDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['t_lieu_template'], meta: { name: 't_lieu_template' } }
+    /**
+     * Find zero or one T_lieu_template that matches the filter.
+     * @param {t_lieu_templateFindUniqueArgs} args - Arguments to find a T_lieu_template
+     * @example
+     * // Get one T_lieu_template
+     * const t_lieu_template = await prisma.t_lieu_template.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends t_lieu_templateFindUniqueArgs>(args: SelectSubset<T, t_lieu_templateFindUniqueArgs<ExtArgs>>): Prisma__t_lieu_templateClient<$Result.GetResult<Prisma.$t_lieu_templatePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one T_lieu_template that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {t_lieu_templateFindUniqueOrThrowArgs} args - Arguments to find a T_lieu_template
+     * @example
+     * // Get one T_lieu_template
+     * const t_lieu_template = await prisma.t_lieu_template.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends t_lieu_templateFindUniqueOrThrowArgs>(args: SelectSubset<T, t_lieu_templateFindUniqueOrThrowArgs<ExtArgs>>): Prisma__t_lieu_templateClient<$Result.GetResult<Prisma.$t_lieu_templatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first T_lieu_template that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {t_lieu_templateFindFirstArgs} args - Arguments to find a T_lieu_template
+     * @example
+     * // Get one T_lieu_template
+     * const t_lieu_template = await prisma.t_lieu_template.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends t_lieu_templateFindFirstArgs>(args?: SelectSubset<T, t_lieu_templateFindFirstArgs<ExtArgs>>): Prisma__t_lieu_templateClient<$Result.GetResult<Prisma.$t_lieu_templatePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first T_lieu_template that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {t_lieu_templateFindFirstOrThrowArgs} args - Arguments to find a T_lieu_template
+     * @example
+     * // Get one T_lieu_template
+     * const t_lieu_template = await prisma.t_lieu_template.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends t_lieu_templateFindFirstOrThrowArgs>(args?: SelectSubset<T, t_lieu_templateFindFirstOrThrowArgs<ExtArgs>>): Prisma__t_lieu_templateClient<$Result.GetResult<Prisma.$t_lieu_templatePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more T_lieu_templates that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {t_lieu_templateFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all T_lieu_templates
+     * const t_lieu_templates = await prisma.t_lieu_template.findMany()
+     * 
+     * // Get first 10 T_lieu_templates
+     * const t_lieu_templates = await prisma.t_lieu_template.findMany({ take: 10 })
+     * 
+     * // Only select the `Id_Lieu_Template`
+     * const t_lieu_templateWithId_Lieu_TemplateOnly = await prisma.t_lieu_template.findMany({ select: { Id_Lieu_Template: true } })
+     * 
+     */
+    findMany<T extends t_lieu_templateFindManyArgs>(args?: SelectSubset<T, t_lieu_templateFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$t_lieu_templatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a T_lieu_template.
+     * @param {t_lieu_templateCreateArgs} args - Arguments to create a T_lieu_template.
+     * @example
+     * // Create one T_lieu_template
+     * const T_lieu_template = await prisma.t_lieu_template.create({
+     *   data: {
+     *     // ... data to create a T_lieu_template
+     *   }
+     * })
+     * 
+     */
+    create<T extends t_lieu_templateCreateArgs>(args: SelectSubset<T, t_lieu_templateCreateArgs<ExtArgs>>): Prisma__t_lieu_templateClient<$Result.GetResult<Prisma.$t_lieu_templatePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many T_lieu_templates.
+     * @param {t_lieu_templateCreateManyArgs} args - Arguments to create many T_lieu_templates.
+     * @example
+     * // Create many T_lieu_templates
+     * const t_lieu_template = await prisma.t_lieu_template.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends t_lieu_templateCreateManyArgs>(args?: SelectSubset<T, t_lieu_templateCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a T_lieu_template.
+     * @param {t_lieu_templateDeleteArgs} args - Arguments to delete one T_lieu_template.
+     * @example
+     * // Delete one T_lieu_template
+     * const T_lieu_template = await prisma.t_lieu_template.delete({
+     *   where: {
+     *     // ... filter to delete one T_lieu_template
+     *   }
+     * })
+     * 
+     */
+    delete<T extends t_lieu_templateDeleteArgs>(args: SelectSubset<T, t_lieu_templateDeleteArgs<ExtArgs>>): Prisma__t_lieu_templateClient<$Result.GetResult<Prisma.$t_lieu_templatePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one T_lieu_template.
+     * @param {t_lieu_templateUpdateArgs} args - Arguments to update one T_lieu_template.
+     * @example
+     * // Update one T_lieu_template
+     * const t_lieu_template = await prisma.t_lieu_template.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends t_lieu_templateUpdateArgs>(args: SelectSubset<T, t_lieu_templateUpdateArgs<ExtArgs>>): Prisma__t_lieu_templateClient<$Result.GetResult<Prisma.$t_lieu_templatePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more T_lieu_templates.
+     * @param {t_lieu_templateDeleteManyArgs} args - Arguments to filter T_lieu_templates to delete.
+     * @example
+     * // Delete a few T_lieu_templates
+     * const { count } = await prisma.t_lieu_template.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends t_lieu_templateDeleteManyArgs>(args?: SelectSubset<T, t_lieu_templateDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more T_lieu_templates.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {t_lieu_templateUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many T_lieu_templates
+     * const t_lieu_template = await prisma.t_lieu_template.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends t_lieu_templateUpdateManyArgs>(args: SelectSubset<T, t_lieu_templateUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one T_lieu_template.
+     * @param {t_lieu_templateUpsertArgs} args - Arguments to update or create a T_lieu_template.
+     * @example
+     * // Update or create a T_lieu_template
+     * const t_lieu_template = await prisma.t_lieu_template.upsert({
+     *   create: {
+     *     // ... data to create a T_lieu_template
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the T_lieu_template we want to update
+     *   }
+     * })
+     */
+    upsert<T extends t_lieu_templateUpsertArgs>(args: SelectSubset<T, t_lieu_templateUpsertArgs<ExtArgs>>): Prisma__t_lieu_templateClient<$Result.GetResult<Prisma.$t_lieu_templatePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of T_lieu_templates.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {t_lieu_templateCountArgs} args - Arguments to filter T_lieu_templates to count.
+     * @example
+     * // Count the number of T_lieu_templates
+     * const count = await prisma.t_lieu_template.count({
+     *   where: {
+     *     // ... the filter for the T_lieu_templates we want to count
+     *   }
+     * })
+    **/
+    count<T extends t_lieu_templateCountArgs>(
+      args?: Subset<T, t_lieu_templateCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], T_lieu_templateCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a T_lieu_template.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {T_lieu_templateAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends T_lieu_templateAggregateArgs>(args: Subset<T, T_lieu_templateAggregateArgs>): Prisma.PrismaPromise<GetT_lieu_templateAggregateType<T>>
+
+    /**
+     * Group by T_lieu_template.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {t_lieu_templateGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends t_lieu_templateGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: t_lieu_templateGroupByArgs['orderBy'] }
+        : { orderBy?: t_lieu_templateGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, t_lieu_templateGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetT_lieu_templateGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the t_lieu_template model
+   */
+  readonly fields: t_lieu_templateFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for t_lieu_template.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__t_lieu_templateClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the t_lieu_template model
+   */
+  interface t_lieu_templateFieldRefs {
+    readonly Id_Lieu_Template: FieldRef<"t_lieu_template", 'Int'>
+    readonly Nom_Template: FieldRef<"t_lieu_template", 'String'>
+    readonly Description: FieldRef<"t_lieu_template", 'String'>
+    readonly Lieu_Etat: FieldRef<"t_lieu_template", 'String'>
+    readonly Frequence: FieldRef<"t_lieu_template", 'Int'>
+    readonly Retard_Alarme_Haut: FieldRef<"t_lieu_template", 'Int'>
+    readonly Retard_Alarme_Bas: FieldRef<"t_lieu_template", 'Int'>
+    readonly Retard_Non_Reponse: FieldRef<"t_lieu_template", 'Int'>
+    readonly Retard_Alarme_Changement_Consigne: FieldRef<"t_lieu_template", 'Int'>
+    readonly Consigne: FieldRef<"t_lieu_template", 'Decimal'>
+    readonly Consigne_Sup: FieldRef<"t_lieu_template", 'Decimal'>
+    readonly Consigne_Inf: FieldRef<"t_lieu_template", 'Decimal'>
+    readonly Tolerance_Surveillance_Sup: FieldRef<"t_lieu_template", 'Decimal'>
+    readonly Tolerance_Surveillance_Inf: FieldRef<"t_lieu_template", 'Decimal'>
+    readonly Consigne_Sup_Pre_Alarme: FieldRef<"t_lieu_template", 'Decimal'>
+    readonly Consigne_Inf_Pre_Alarme: FieldRef<"t_lieu_template", 'Decimal'>
+    readonly Est_Consigne_Sup_Active: FieldRef<"t_lieu_template", 'Boolean'>
+    readonly Est_Consigne_Inf_Active: FieldRef<"t_lieu_template", 'Boolean'>
+    readonly Est_Consigne_Sup_Pre_Alarme_Active: FieldRef<"t_lieu_template", 'Boolean'>
+    readonly Est_Consigne_Inf_Pre_Alarme_Active: FieldRef<"t_lieu_template", 'Boolean'>
+    readonly Est_Son_Alarme_Active: FieldRef<"t_lieu_template", 'Boolean'>
+    readonly Est_Redeclenchement_Immediat: FieldRef<"t_lieu_template", 'Boolean'>
+    readonly Nb_Mesures_Temporisation_Redeclenchement: FieldRef<"t_lieu_template", 'Int'>
+    readonly Observations_Info: FieldRef<"t_lieu_template", 'String'>
+    readonly Est_Archive: FieldRef<"t_lieu_template", 'Boolean'>
+    readonly Date_Creation: FieldRef<"t_lieu_template", 'DateTime'>
+    readonly Date_Maj: FieldRef<"t_lieu_template", 'DateTime'>
+    readonly Id_Utilisateur_Creation: FieldRef<"t_lieu_template", 'Int'>
+    readonly Id_Utilisateur_Maj: FieldRef<"t_lieu_template", 'Int'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * t_lieu_template findUnique
+   */
+  export type t_lieu_templateFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_lieu_template
+     */
+    select?: t_lieu_templateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_lieu_template
+     */
+    omit?: t_lieu_templateOmit<ExtArgs> | null
+    /**
+     * Filter, which t_lieu_template to fetch.
+     */
+    where: t_lieu_templateWhereUniqueInput
+  }
+
+  /**
+   * t_lieu_template findUniqueOrThrow
+   */
+  export type t_lieu_templateFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_lieu_template
+     */
+    select?: t_lieu_templateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_lieu_template
+     */
+    omit?: t_lieu_templateOmit<ExtArgs> | null
+    /**
+     * Filter, which t_lieu_template to fetch.
+     */
+    where: t_lieu_templateWhereUniqueInput
+  }
+
+  /**
+   * t_lieu_template findFirst
+   */
+  export type t_lieu_templateFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_lieu_template
+     */
+    select?: t_lieu_templateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_lieu_template
+     */
+    omit?: t_lieu_templateOmit<ExtArgs> | null
+    /**
+     * Filter, which t_lieu_template to fetch.
+     */
+    where?: t_lieu_templateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of t_lieu_templates to fetch.
+     */
+    orderBy?: t_lieu_templateOrderByWithRelationInput | t_lieu_templateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for t_lieu_templates.
+     */
+    cursor?: t_lieu_templateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` t_lieu_templates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` t_lieu_templates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_lieu_templates.
+     */
+    distinct?: T_lieu_templateScalarFieldEnum | T_lieu_templateScalarFieldEnum[]
+  }
+
+  /**
+   * t_lieu_template findFirstOrThrow
+   */
+  export type t_lieu_templateFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_lieu_template
+     */
+    select?: t_lieu_templateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_lieu_template
+     */
+    omit?: t_lieu_templateOmit<ExtArgs> | null
+    /**
+     * Filter, which t_lieu_template to fetch.
+     */
+    where?: t_lieu_templateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of t_lieu_templates to fetch.
+     */
+    orderBy?: t_lieu_templateOrderByWithRelationInput | t_lieu_templateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for t_lieu_templates.
+     */
+    cursor?: t_lieu_templateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` t_lieu_templates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` t_lieu_templates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_lieu_templates.
+     */
+    distinct?: T_lieu_templateScalarFieldEnum | T_lieu_templateScalarFieldEnum[]
+  }
+
+  /**
+   * t_lieu_template findMany
+   */
+  export type t_lieu_templateFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_lieu_template
+     */
+    select?: t_lieu_templateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_lieu_template
+     */
+    omit?: t_lieu_templateOmit<ExtArgs> | null
+    /**
+     * Filter, which t_lieu_templates to fetch.
+     */
+    where?: t_lieu_templateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of t_lieu_templates to fetch.
+     */
+    orderBy?: t_lieu_templateOrderByWithRelationInput | t_lieu_templateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing t_lieu_templates.
+     */
+    cursor?: t_lieu_templateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` t_lieu_templates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` t_lieu_templates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of t_lieu_templates.
+     */
+    distinct?: T_lieu_templateScalarFieldEnum | T_lieu_templateScalarFieldEnum[]
+  }
+
+  /**
+   * t_lieu_template create
+   */
+  export type t_lieu_templateCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_lieu_template
+     */
+    select?: t_lieu_templateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_lieu_template
+     */
+    omit?: t_lieu_templateOmit<ExtArgs> | null
+    /**
+     * The data needed to create a t_lieu_template.
+     */
+    data: XOR<t_lieu_templateCreateInput, t_lieu_templateUncheckedCreateInput>
+  }
+
+  /**
+   * t_lieu_template createMany
+   */
+  export type t_lieu_templateCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many t_lieu_templates.
+     */
+    data: t_lieu_templateCreateManyInput | t_lieu_templateCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * t_lieu_template update
+   */
+  export type t_lieu_templateUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_lieu_template
+     */
+    select?: t_lieu_templateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_lieu_template
+     */
+    omit?: t_lieu_templateOmit<ExtArgs> | null
+    /**
+     * The data needed to update a t_lieu_template.
+     */
+    data: XOR<t_lieu_templateUpdateInput, t_lieu_templateUncheckedUpdateInput>
+    /**
+     * Choose, which t_lieu_template to update.
+     */
+    where: t_lieu_templateWhereUniqueInput
+  }
+
+  /**
+   * t_lieu_template updateMany
+   */
+  export type t_lieu_templateUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update t_lieu_templates.
+     */
+    data: XOR<t_lieu_templateUpdateManyMutationInput, t_lieu_templateUncheckedUpdateManyInput>
+    /**
+     * Filter which t_lieu_templates to update
+     */
+    where?: t_lieu_templateWhereInput
+    /**
+     * Limit how many t_lieu_templates to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * t_lieu_template upsert
+   */
+  export type t_lieu_templateUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_lieu_template
+     */
+    select?: t_lieu_templateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_lieu_template
+     */
+    omit?: t_lieu_templateOmit<ExtArgs> | null
+    /**
+     * The filter to search for the t_lieu_template to update in case it exists.
+     */
+    where: t_lieu_templateWhereUniqueInput
+    /**
+     * In case the t_lieu_template found by the `where` argument doesn't exist, create a new t_lieu_template with this data.
+     */
+    create: XOR<t_lieu_templateCreateInput, t_lieu_templateUncheckedCreateInput>
+    /**
+     * In case the t_lieu_template was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<t_lieu_templateUpdateInput, t_lieu_templateUncheckedUpdateInput>
+  }
+
+  /**
+   * t_lieu_template delete
+   */
+  export type t_lieu_templateDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_lieu_template
+     */
+    select?: t_lieu_templateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_lieu_template
+     */
+    omit?: t_lieu_templateOmit<ExtArgs> | null
+    /**
+     * Filter which t_lieu_template to delete.
+     */
+    where: t_lieu_templateWhereUniqueInput
+  }
+
+  /**
+   * t_lieu_template deleteMany
+   */
+  export type t_lieu_templateDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which t_lieu_templates to delete
+     */
+    where?: t_lieu_templateWhereInput
+    /**
+     * Limit how many t_lieu_templates to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * t_lieu_template without action
+   */
+  export type t_lieu_templateDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the t_lieu_template
+     */
+    select?: t_lieu_templateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the t_lieu_template
+     */
+    omit?: t_lieu_templateOmit<ExtArgs> | null
   }
 
 
@@ -59499,6 +60827,41 @@ export namespace Prisma {
   export type T_lieuScalarFieldEnum = (typeof T_lieuScalarFieldEnum)[keyof typeof T_lieuScalarFieldEnum]
 
 
+  export const T_lieu_templateScalarFieldEnum: {
+    Id_Lieu_Template: 'Id_Lieu_Template',
+    Nom_Template: 'Nom_Template',
+    Description: 'Description',
+    Lieu_Etat: 'Lieu_Etat',
+    Frequence: 'Frequence',
+    Retard_Alarme_Haut: 'Retard_Alarme_Haut',
+    Retard_Alarme_Bas: 'Retard_Alarme_Bas',
+    Retard_Non_Reponse: 'Retard_Non_Reponse',
+    Retard_Alarme_Changement_Consigne: 'Retard_Alarme_Changement_Consigne',
+    Consigne: 'Consigne',
+    Consigne_Sup: 'Consigne_Sup',
+    Consigne_Inf: 'Consigne_Inf',
+    Tolerance_Surveillance_Sup: 'Tolerance_Surveillance_Sup',
+    Tolerance_Surveillance_Inf: 'Tolerance_Surveillance_Inf',
+    Consigne_Sup_Pre_Alarme: 'Consigne_Sup_Pre_Alarme',
+    Consigne_Inf_Pre_Alarme: 'Consigne_Inf_Pre_Alarme',
+    Est_Consigne_Sup_Active: 'Est_Consigne_Sup_Active',
+    Est_Consigne_Inf_Active: 'Est_Consigne_Inf_Active',
+    Est_Consigne_Sup_Pre_Alarme_Active: 'Est_Consigne_Sup_Pre_Alarme_Active',
+    Est_Consigne_Inf_Pre_Alarme_Active: 'Est_Consigne_Inf_Pre_Alarme_Active',
+    Est_Son_Alarme_Active: 'Est_Son_Alarme_Active',
+    Est_Redeclenchement_Immediat: 'Est_Redeclenchement_Immediat',
+    Nb_Mesures_Temporisation_Redeclenchement: 'Nb_Mesures_Temporisation_Redeclenchement',
+    Observations_Info: 'Observations_Info',
+    Est_Archive: 'Est_Archive',
+    Date_Creation: 'Date_Creation',
+    Date_Maj: 'Date_Maj',
+    Id_Utilisateur_Creation: 'Id_Utilisateur_Creation',
+    Id_Utilisateur_Maj: 'Id_Utilisateur_Maj'
+  };
+
+  export type T_lieu_templateScalarFieldEnum = (typeof T_lieu_templateScalarFieldEnum)[keyof typeof T_lieu_templateScalarFieldEnum]
+
+
   export const T_moduleScalarFieldEnum: {
     Id_Module: 'Id_Module',
     Module_Numero_Serie: 'Module_Numero_Serie',
@@ -60148,6 +61511,16 @@ export namespace Prisma {
   export type t_lieuOrderByRelevanceFieldEnum = (typeof t_lieuOrderByRelevanceFieldEnum)[keyof typeof t_lieuOrderByRelevanceFieldEnum]
 
 
+  export const t_lieu_templateOrderByRelevanceFieldEnum: {
+    Nom_Template: 'Nom_Template',
+    Description: 'Description',
+    Lieu_Etat: 'Lieu_Etat',
+    Observations_Info: 'Observations_Info'
+  };
+
+  export type t_lieu_templateOrderByRelevanceFieldEnum = (typeof t_lieu_templateOrderByRelevanceFieldEnum)[keyof typeof t_lieu_templateOrderByRelevanceFieldEnum]
+
+
   export const t_moduleOrderByRelevanceFieldEnum: {
     Module_Numero_Serie: 'Module_Numero_Serie',
     Port_Serie: 'Port_Serie',
@@ -60476,6 +61849,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Decimal'
+   */
+  export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
+    
+
+
+  /**
    * Reference to a field of type 'Bytes'
    */
   export type BytesFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Bytes'>
@@ -60500,13 +61880,6 @@ export namespace Prisma {
    * Reference to a field of type 't_commande_materiel_Statut_Commande'
    */
   export type Enumt_commande_materiel_Statut_CommandeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 't_commande_materiel_Statut_Commande'>
-    
-
-
-  /**
-   * Reference to a field of type 'Decimal'
-   */
-  export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
     
   /**
    * Deep Input Types
@@ -62287,6 +63660,181 @@ export namespace Prisma {
     Planning_Derniere_Maj?: DateTimeNullableWithAggregatesFilter<"t_lieu"> | Date | string | null
     Est_Redeclenchement_Immediat?: BoolWithAggregatesFilter<"t_lieu"> | boolean
     Nb_Mesures_Temporisation_Redeclenchement?: IntNullableWithAggregatesFilter<"t_lieu"> | number | null
+  }
+
+  export type t_lieu_templateWhereInput = {
+    AND?: t_lieu_templateWhereInput | t_lieu_templateWhereInput[]
+    OR?: t_lieu_templateWhereInput[]
+    NOT?: t_lieu_templateWhereInput | t_lieu_templateWhereInput[]
+    Id_Lieu_Template?: IntFilter<"t_lieu_template"> | number
+    Nom_Template?: StringFilter<"t_lieu_template"> | string
+    Description?: StringNullableFilter<"t_lieu_template"> | string | null
+    Lieu_Etat?: StringFilter<"t_lieu_template"> | string
+    Frequence?: IntNullableFilter<"t_lieu_template"> | number | null
+    Retard_Alarme_Haut?: IntNullableFilter<"t_lieu_template"> | number | null
+    Retard_Alarme_Bas?: IntNullableFilter<"t_lieu_template"> | number | null
+    Retard_Non_Reponse?: IntNullableFilter<"t_lieu_template"> | number | null
+    Retard_Alarme_Changement_Consigne?: IntNullableFilter<"t_lieu_template"> | number | null
+    Consigne?: DecimalNullableFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup?: DecimalNullableFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf?: DecimalNullableFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Sup?: DecimalNullableFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Inf?: DecimalNullableFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup_Pre_Alarme?: DecimalNullableFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf_Pre_Alarme?: DecimalNullableFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Est_Consigne_Sup_Active?: BoolFilter<"t_lieu_template"> | boolean
+    Est_Consigne_Inf_Active?: BoolFilter<"t_lieu_template"> | boolean
+    Est_Consigne_Sup_Pre_Alarme_Active?: BoolFilter<"t_lieu_template"> | boolean
+    Est_Consigne_Inf_Pre_Alarme_Active?: BoolFilter<"t_lieu_template"> | boolean
+    Est_Son_Alarme_Active?: BoolFilter<"t_lieu_template"> | boolean
+    Est_Redeclenchement_Immediat?: BoolFilter<"t_lieu_template"> | boolean
+    Nb_Mesures_Temporisation_Redeclenchement?: IntNullableFilter<"t_lieu_template"> | number | null
+    Observations_Info?: StringNullableFilter<"t_lieu_template"> | string | null
+    Est_Archive?: BoolFilter<"t_lieu_template"> | boolean
+    Date_Creation?: DateTimeFilter<"t_lieu_template"> | Date | string
+    Date_Maj?: DateTimeFilter<"t_lieu_template"> | Date | string
+    Id_Utilisateur_Creation?: IntNullableFilter<"t_lieu_template"> | number | null
+    Id_Utilisateur_Maj?: IntNullableFilter<"t_lieu_template"> | number | null
+  }
+
+  export type t_lieu_templateOrderByWithRelationInput = {
+    Id_Lieu_Template?: SortOrder
+    Nom_Template?: SortOrder
+    Description?: SortOrderInput | SortOrder
+    Lieu_Etat?: SortOrder
+    Frequence?: SortOrderInput | SortOrder
+    Retard_Alarme_Haut?: SortOrderInput | SortOrder
+    Retard_Alarme_Bas?: SortOrderInput | SortOrder
+    Retard_Non_Reponse?: SortOrderInput | SortOrder
+    Retard_Alarme_Changement_Consigne?: SortOrderInput | SortOrder
+    Consigne?: SortOrderInput | SortOrder
+    Consigne_Sup?: SortOrderInput | SortOrder
+    Consigne_Inf?: SortOrderInput | SortOrder
+    Tolerance_Surveillance_Sup?: SortOrderInput | SortOrder
+    Tolerance_Surveillance_Inf?: SortOrderInput | SortOrder
+    Consigne_Sup_Pre_Alarme?: SortOrderInput | SortOrder
+    Consigne_Inf_Pre_Alarme?: SortOrderInput | SortOrder
+    Est_Consigne_Sup_Active?: SortOrder
+    Est_Consigne_Inf_Active?: SortOrder
+    Est_Consigne_Sup_Pre_Alarme_Active?: SortOrder
+    Est_Consigne_Inf_Pre_Alarme_Active?: SortOrder
+    Est_Son_Alarme_Active?: SortOrder
+    Est_Redeclenchement_Immediat?: SortOrder
+    Nb_Mesures_Temporisation_Redeclenchement?: SortOrderInput | SortOrder
+    Observations_Info?: SortOrderInput | SortOrder
+    Est_Archive?: SortOrder
+    Date_Creation?: SortOrder
+    Date_Maj?: SortOrder
+    Id_Utilisateur_Creation?: SortOrderInput | SortOrder
+    Id_Utilisateur_Maj?: SortOrderInput | SortOrder
+    _relevance?: t_lieu_templateOrderByRelevanceInput
+  }
+
+  export type t_lieu_templateWhereUniqueInput = Prisma.AtLeast<{
+    Id_Lieu_Template?: number
+    Nom_Template?: string
+    AND?: t_lieu_templateWhereInput | t_lieu_templateWhereInput[]
+    OR?: t_lieu_templateWhereInput[]
+    NOT?: t_lieu_templateWhereInput | t_lieu_templateWhereInput[]
+    Description?: StringNullableFilter<"t_lieu_template"> | string | null
+    Lieu_Etat?: StringFilter<"t_lieu_template"> | string
+    Frequence?: IntNullableFilter<"t_lieu_template"> | number | null
+    Retard_Alarme_Haut?: IntNullableFilter<"t_lieu_template"> | number | null
+    Retard_Alarme_Bas?: IntNullableFilter<"t_lieu_template"> | number | null
+    Retard_Non_Reponse?: IntNullableFilter<"t_lieu_template"> | number | null
+    Retard_Alarme_Changement_Consigne?: IntNullableFilter<"t_lieu_template"> | number | null
+    Consigne?: DecimalNullableFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup?: DecimalNullableFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf?: DecimalNullableFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Sup?: DecimalNullableFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Inf?: DecimalNullableFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup_Pre_Alarme?: DecimalNullableFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf_Pre_Alarme?: DecimalNullableFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Est_Consigne_Sup_Active?: BoolFilter<"t_lieu_template"> | boolean
+    Est_Consigne_Inf_Active?: BoolFilter<"t_lieu_template"> | boolean
+    Est_Consigne_Sup_Pre_Alarme_Active?: BoolFilter<"t_lieu_template"> | boolean
+    Est_Consigne_Inf_Pre_Alarme_Active?: BoolFilter<"t_lieu_template"> | boolean
+    Est_Son_Alarme_Active?: BoolFilter<"t_lieu_template"> | boolean
+    Est_Redeclenchement_Immediat?: BoolFilter<"t_lieu_template"> | boolean
+    Nb_Mesures_Temporisation_Redeclenchement?: IntNullableFilter<"t_lieu_template"> | number | null
+    Observations_Info?: StringNullableFilter<"t_lieu_template"> | string | null
+    Est_Archive?: BoolFilter<"t_lieu_template"> | boolean
+    Date_Creation?: DateTimeFilter<"t_lieu_template"> | Date | string
+    Date_Maj?: DateTimeFilter<"t_lieu_template"> | Date | string
+    Id_Utilisateur_Creation?: IntNullableFilter<"t_lieu_template"> | number | null
+    Id_Utilisateur_Maj?: IntNullableFilter<"t_lieu_template"> | number | null
+  }, "Id_Lieu_Template" | "Nom_Template">
+
+  export type t_lieu_templateOrderByWithAggregationInput = {
+    Id_Lieu_Template?: SortOrder
+    Nom_Template?: SortOrder
+    Description?: SortOrderInput | SortOrder
+    Lieu_Etat?: SortOrder
+    Frequence?: SortOrderInput | SortOrder
+    Retard_Alarme_Haut?: SortOrderInput | SortOrder
+    Retard_Alarme_Bas?: SortOrderInput | SortOrder
+    Retard_Non_Reponse?: SortOrderInput | SortOrder
+    Retard_Alarme_Changement_Consigne?: SortOrderInput | SortOrder
+    Consigne?: SortOrderInput | SortOrder
+    Consigne_Sup?: SortOrderInput | SortOrder
+    Consigne_Inf?: SortOrderInput | SortOrder
+    Tolerance_Surveillance_Sup?: SortOrderInput | SortOrder
+    Tolerance_Surveillance_Inf?: SortOrderInput | SortOrder
+    Consigne_Sup_Pre_Alarme?: SortOrderInput | SortOrder
+    Consigne_Inf_Pre_Alarme?: SortOrderInput | SortOrder
+    Est_Consigne_Sup_Active?: SortOrder
+    Est_Consigne_Inf_Active?: SortOrder
+    Est_Consigne_Sup_Pre_Alarme_Active?: SortOrder
+    Est_Consigne_Inf_Pre_Alarme_Active?: SortOrder
+    Est_Son_Alarme_Active?: SortOrder
+    Est_Redeclenchement_Immediat?: SortOrder
+    Nb_Mesures_Temporisation_Redeclenchement?: SortOrderInput | SortOrder
+    Observations_Info?: SortOrderInput | SortOrder
+    Est_Archive?: SortOrder
+    Date_Creation?: SortOrder
+    Date_Maj?: SortOrder
+    Id_Utilisateur_Creation?: SortOrderInput | SortOrder
+    Id_Utilisateur_Maj?: SortOrderInput | SortOrder
+    _count?: t_lieu_templateCountOrderByAggregateInput
+    _avg?: t_lieu_templateAvgOrderByAggregateInput
+    _max?: t_lieu_templateMaxOrderByAggregateInput
+    _min?: t_lieu_templateMinOrderByAggregateInput
+    _sum?: t_lieu_templateSumOrderByAggregateInput
+  }
+
+  export type t_lieu_templateScalarWhereWithAggregatesInput = {
+    AND?: t_lieu_templateScalarWhereWithAggregatesInput | t_lieu_templateScalarWhereWithAggregatesInput[]
+    OR?: t_lieu_templateScalarWhereWithAggregatesInput[]
+    NOT?: t_lieu_templateScalarWhereWithAggregatesInput | t_lieu_templateScalarWhereWithAggregatesInput[]
+    Id_Lieu_Template?: IntWithAggregatesFilter<"t_lieu_template"> | number
+    Nom_Template?: StringWithAggregatesFilter<"t_lieu_template"> | string
+    Description?: StringNullableWithAggregatesFilter<"t_lieu_template"> | string | null
+    Lieu_Etat?: StringWithAggregatesFilter<"t_lieu_template"> | string
+    Frequence?: IntNullableWithAggregatesFilter<"t_lieu_template"> | number | null
+    Retard_Alarme_Haut?: IntNullableWithAggregatesFilter<"t_lieu_template"> | number | null
+    Retard_Alarme_Bas?: IntNullableWithAggregatesFilter<"t_lieu_template"> | number | null
+    Retard_Non_Reponse?: IntNullableWithAggregatesFilter<"t_lieu_template"> | number | null
+    Retard_Alarme_Changement_Consigne?: IntNullableWithAggregatesFilter<"t_lieu_template"> | number | null
+    Consigne?: DecimalNullableWithAggregatesFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup?: DecimalNullableWithAggregatesFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf?: DecimalNullableWithAggregatesFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Sup?: DecimalNullableWithAggregatesFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Inf?: DecimalNullableWithAggregatesFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup_Pre_Alarme?: DecimalNullableWithAggregatesFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf_Pre_Alarme?: DecimalNullableWithAggregatesFilter<"t_lieu_template"> | Decimal | DecimalJsLike | number | string | null
+    Est_Consigne_Sup_Active?: BoolWithAggregatesFilter<"t_lieu_template"> | boolean
+    Est_Consigne_Inf_Active?: BoolWithAggregatesFilter<"t_lieu_template"> | boolean
+    Est_Consigne_Sup_Pre_Alarme_Active?: BoolWithAggregatesFilter<"t_lieu_template"> | boolean
+    Est_Consigne_Inf_Pre_Alarme_Active?: BoolWithAggregatesFilter<"t_lieu_template"> | boolean
+    Est_Son_Alarme_Active?: BoolWithAggregatesFilter<"t_lieu_template"> | boolean
+    Est_Redeclenchement_Immediat?: BoolWithAggregatesFilter<"t_lieu_template"> | boolean
+    Nb_Mesures_Temporisation_Redeclenchement?: IntNullableWithAggregatesFilter<"t_lieu_template"> | number | null
+    Observations_Info?: StringNullableWithAggregatesFilter<"t_lieu_template"> | string | null
+    Est_Archive?: BoolWithAggregatesFilter<"t_lieu_template"> | boolean
+    Date_Creation?: DateTimeWithAggregatesFilter<"t_lieu_template"> | Date | string
+    Date_Maj?: DateTimeWithAggregatesFilter<"t_lieu_template"> | Date | string
+    Id_Utilisateur_Creation?: IntNullableWithAggregatesFilter<"t_lieu_template"> | number | null
+    Id_Utilisateur_Maj?: IntNullableWithAggregatesFilter<"t_lieu_template"> | number | null
   }
 
   export type t_moduleWhereInput = {
@@ -66920,6 +68468,227 @@ export namespace Prisma {
     Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
+  export type t_lieu_templateCreateInput = {
+    Nom_Template: string
+    Description?: string | null
+    Lieu_Etat?: string
+    Frequence?: number | null
+    Retard_Alarme_Haut?: number | null
+    Retard_Alarme_Bas?: number | null
+    Retard_Non_Reponse?: number | null
+    Retard_Alarme_Changement_Consigne?: number | null
+    Consigne?: Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup?: Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf?: Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Sup?: Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Inf?: Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup_Pre_Alarme?: Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf_Pre_Alarme?: Decimal | DecimalJsLike | number | string | null
+    Est_Consigne_Sup_Active?: boolean
+    Est_Consigne_Inf_Active?: boolean
+    Est_Consigne_Sup_Pre_Alarme_Active?: boolean
+    Est_Consigne_Inf_Pre_Alarme_Active?: boolean
+    Est_Son_Alarme_Active?: boolean
+    Est_Redeclenchement_Immediat?: boolean
+    Nb_Mesures_Temporisation_Redeclenchement?: number | null
+    Observations_Info?: string | null
+    Est_Archive?: boolean
+    Date_Creation?: Date | string
+    Date_Maj?: Date | string
+    Id_Utilisateur_Creation?: number | null
+    Id_Utilisateur_Maj?: number | null
+  }
+
+  export type t_lieu_templateUncheckedCreateInput = {
+    Id_Lieu_Template?: number
+    Nom_Template: string
+    Description?: string | null
+    Lieu_Etat?: string
+    Frequence?: number | null
+    Retard_Alarme_Haut?: number | null
+    Retard_Alarme_Bas?: number | null
+    Retard_Non_Reponse?: number | null
+    Retard_Alarme_Changement_Consigne?: number | null
+    Consigne?: Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup?: Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf?: Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Sup?: Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Inf?: Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup_Pre_Alarme?: Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf_Pre_Alarme?: Decimal | DecimalJsLike | number | string | null
+    Est_Consigne_Sup_Active?: boolean
+    Est_Consigne_Inf_Active?: boolean
+    Est_Consigne_Sup_Pre_Alarme_Active?: boolean
+    Est_Consigne_Inf_Pre_Alarme_Active?: boolean
+    Est_Son_Alarme_Active?: boolean
+    Est_Redeclenchement_Immediat?: boolean
+    Nb_Mesures_Temporisation_Redeclenchement?: number | null
+    Observations_Info?: string | null
+    Est_Archive?: boolean
+    Date_Creation?: Date | string
+    Date_Maj?: Date | string
+    Id_Utilisateur_Creation?: number | null
+    Id_Utilisateur_Maj?: number | null
+  }
+
+  export type t_lieu_templateUpdateInput = {
+    Nom_Template?: StringFieldUpdateOperationsInput | string
+    Description?: NullableStringFieldUpdateOperationsInput | string | null
+    Lieu_Etat?: StringFieldUpdateOperationsInput | string
+    Frequence?: NullableIntFieldUpdateOperationsInput | number | null
+    Retard_Alarme_Haut?: NullableIntFieldUpdateOperationsInput | number | null
+    Retard_Alarme_Bas?: NullableIntFieldUpdateOperationsInput | number | null
+    Retard_Non_Reponse?: NullableIntFieldUpdateOperationsInput | number | null
+    Retard_Alarme_Changement_Consigne?: NullableIntFieldUpdateOperationsInput | number | null
+    Consigne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Sup?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Inf?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup_Pre_Alarme?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf_Pre_Alarme?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Est_Consigne_Sup_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Consigne_Inf_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Consigne_Sup_Pre_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Consigne_Inf_Pre_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
+    Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
+    Observations_Info?: NullableStringFieldUpdateOperationsInput | string | null
+    Est_Archive?: BoolFieldUpdateOperationsInput | boolean
+    Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Maj?: DateTimeFieldUpdateOperationsInput | Date | string
+    Id_Utilisateur_Creation?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Utilisateur_Maj?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type t_lieu_templateUncheckedUpdateInput = {
+    Id_Lieu_Template?: IntFieldUpdateOperationsInput | number
+    Nom_Template?: StringFieldUpdateOperationsInput | string
+    Description?: NullableStringFieldUpdateOperationsInput | string | null
+    Lieu_Etat?: StringFieldUpdateOperationsInput | string
+    Frequence?: NullableIntFieldUpdateOperationsInput | number | null
+    Retard_Alarme_Haut?: NullableIntFieldUpdateOperationsInput | number | null
+    Retard_Alarme_Bas?: NullableIntFieldUpdateOperationsInput | number | null
+    Retard_Non_Reponse?: NullableIntFieldUpdateOperationsInput | number | null
+    Retard_Alarme_Changement_Consigne?: NullableIntFieldUpdateOperationsInput | number | null
+    Consigne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Sup?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Inf?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup_Pre_Alarme?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf_Pre_Alarme?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Est_Consigne_Sup_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Consigne_Inf_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Consigne_Sup_Pre_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Consigne_Inf_Pre_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
+    Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
+    Observations_Info?: NullableStringFieldUpdateOperationsInput | string | null
+    Est_Archive?: BoolFieldUpdateOperationsInput | boolean
+    Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Maj?: DateTimeFieldUpdateOperationsInput | Date | string
+    Id_Utilisateur_Creation?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Utilisateur_Maj?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type t_lieu_templateCreateManyInput = {
+    Id_Lieu_Template?: number
+    Nom_Template: string
+    Description?: string | null
+    Lieu_Etat?: string
+    Frequence?: number | null
+    Retard_Alarme_Haut?: number | null
+    Retard_Alarme_Bas?: number | null
+    Retard_Non_Reponse?: number | null
+    Retard_Alarme_Changement_Consigne?: number | null
+    Consigne?: Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup?: Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf?: Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Sup?: Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Inf?: Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup_Pre_Alarme?: Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf_Pre_Alarme?: Decimal | DecimalJsLike | number | string | null
+    Est_Consigne_Sup_Active?: boolean
+    Est_Consigne_Inf_Active?: boolean
+    Est_Consigne_Sup_Pre_Alarme_Active?: boolean
+    Est_Consigne_Inf_Pre_Alarme_Active?: boolean
+    Est_Son_Alarme_Active?: boolean
+    Est_Redeclenchement_Immediat?: boolean
+    Nb_Mesures_Temporisation_Redeclenchement?: number | null
+    Observations_Info?: string | null
+    Est_Archive?: boolean
+    Date_Creation?: Date | string
+    Date_Maj?: Date | string
+    Id_Utilisateur_Creation?: number | null
+    Id_Utilisateur_Maj?: number | null
+  }
+
+  export type t_lieu_templateUpdateManyMutationInput = {
+    Nom_Template?: StringFieldUpdateOperationsInput | string
+    Description?: NullableStringFieldUpdateOperationsInput | string | null
+    Lieu_Etat?: StringFieldUpdateOperationsInput | string
+    Frequence?: NullableIntFieldUpdateOperationsInput | number | null
+    Retard_Alarme_Haut?: NullableIntFieldUpdateOperationsInput | number | null
+    Retard_Alarme_Bas?: NullableIntFieldUpdateOperationsInput | number | null
+    Retard_Non_Reponse?: NullableIntFieldUpdateOperationsInput | number | null
+    Retard_Alarme_Changement_Consigne?: NullableIntFieldUpdateOperationsInput | number | null
+    Consigne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Sup?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Inf?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup_Pre_Alarme?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf_Pre_Alarme?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Est_Consigne_Sup_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Consigne_Inf_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Consigne_Sup_Pre_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Consigne_Inf_Pre_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
+    Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
+    Observations_Info?: NullableStringFieldUpdateOperationsInput | string | null
+    Est_Archive?: BoolFieldUpdateOperationsInput | boolean
+    Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Maj?: DateTimeFieldUpdateOperationsInput | Date | string
+    Id_Utilisateur_Creation?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Utilisateur_Maj?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
+  export type t_lieu_templateUncheckedUpdateManyInput = {
+    Id_Lieu_Template?: IntFieldUpdateOperationsInput | number
+    Nom_Template?: StringFieldUpdateOperationsInput | string
+    Description?: NullableStringFieldUpdateOperationsInput | string | null
+    Lieu_Etat?: StringFieldUpdateOperationsInput | string
+    Frequence?: NullableIntFieldUpdateOperationsInput | number | null
+    Retard_Alarme_Haut?: NullableIntFieldUpdateOperationsInput | number | null
+    Retard_Alarme_Bas?: NullableIntFieldUpdateOperationsInput | number | null
+    Retard_Non_Reponse?: NullableIntFieldUpdateOperationsInput | number | null
+    Retard_Alarme_Changement_Consigne?: NullableIntFieldUpdateOperationsInput | number | null
+    Consigne?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Sup?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Tolerance_Surveillance_Inf?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Consigne_Sup_Pre_Alarme?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Consigne_Inf_Pre_Alarme?: NullableDecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string | null
+    Est_Consigne_Sup_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Consigne_Inf_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Consigne_Sup_Pre_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Consigne_Inf_Pre_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Son_Alarme_Active?: BoolFieldUpdateOperationsInput | boolean
+    Est_Redeclenchement_Immediat?: BoolFieldUpdateOperationsInput | boolean
+    Nb_Mesures_Temporisation_Redeclenchement?: NullableIntFieldUpdateOperationsInput | number | null
+    Observations_Info?: NullableStringFieldUpdateOperationsInput | string | null
+    Est_Archive?: BoolFieldUpdateOperationsInput | boolean
+    Date_Creation?: DateTimeFieldUpdateOperationsInput | Date | string
+    Date_Maj?: DateTimeFieldUpdateOperationsInput | Date | string
+    Id_Utilisateur_Creation?: NullableIntFieldUpdateOperationsInput | number | null
+    Id_Utilisateur_Maj?: NullableIntFieldUpdateOperationsInput | number | null
+  }
+
   export type t_moduleCreateInput = {
     Module_Numero_Serie?: string | null
     Type_Module?: number | null
@@ -71354,6 +73123,231 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
+  export type StringFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[]
+    notIn?: string[]
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    search?: string
+    not?: NestedStringFilter<$PrismaModel> | string
+  }
+
+  export type DecimalNullableFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+  }
+
+  export type DateTimeFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
+  export type t_lieu_templateOrderByRelevanceInput = {
+    fields: t_lieu_templateOrderByRelevanceFieldEnum | t_lieu_templateOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type t_lieu_templateCountOrderByAggregateInput = {
+    Id_Lieu_Template?: SortOrder
+    Nom_Template?: SortOrder
+    Description?: SortOrder
+    Lieu_Etat?: SortOrder
+    Frequence?: SortOrder
+    Retard_Alarme_Haut?: SortOrder
+    Retard_Alarme_Bas?: SortOrder
+    Retard_Non_Reponse?: SortOrder
+    Retard_Alarme_Changement_Consigne?: SortOrder
+    Consigne?: SortOrder
+    Consigne_Sup?: SortOrder
+    Consigne_Inf?: SortOrder
+    Tolerance_Surveillance_Sup?: SortOrder
+    Tolerance_Surveillance_Inf?: SortOrder
+    Consigne_Sup_Pre_Alarme?: SortOrder
+    Consigne_Inf_Pre_Alarme?: SortOrder
+    Est_Consigne_Sup_Active?: SortOrder
+    Est_Consigne_Inf_Active?: SortOrder
+    Est_Consigne_Sup_Pre_Alarme_Active?: SortOrder
+    Est_Consigne_Inf_Pre_Alarme_Active?: SortOrder
+    Est_Son_Alarme_Active?: SortOrder
+    Est_Redeclenchement_Immediat?: SortOrder
+    Nb_Mesures_Temporisation_Redeclenchement?: SortOrder
+    Observations_Info?: SortOrder
+    Est_Archive?: SortOrder
+    Date_Creation?: SortOrder
+    Date_Maj?: SortOrder
+    Id_Utilisateur_Creation?: SortOrder
+    Id_Utilisateur_Maj?: SortOrder
+  }
+
+  export type t_lieu_templateAvgOrderByAggregateInput = {
+    Id_Lieu_Template?: SortOrder
+    Frequence?: SortOrder
+    Retard_Alarme_Haut?: SortOrder
+    Retard_Alarme_Bas?: SortOrder
+    Retard_Non_Reponse?: SortOrder
+    Retard_Alarme_Changement_Consigne?: SortOrder
+    Consigne?: SortOrder
+    Consigne_Sup?: SortOrder
+    Consigne_Inf?: SortOrder
+    Tolerance_Surveillance_Sup?: SortOrder
+    Tolerance_Surveillance_Inf?: SortOrder
+    Consigne_Sup_Pre_Alarme?: SortOrder
+    Consigne_Inf_Pre_Alarme?: SortOrder
+    Nb_Mesures_Temporisation_Redeclenchement?: SortOrder
+    Id_Utilisateur_Creation?: SortOrder
+    Id_Utilisateur_Maj?: SortOrder
+  }
+
+  export type t_lieu_templateMaxOrderByAggregateInput = {
+    Id_Lieu_Template?: SortOrder
+    Nom_Template?: SortOrder
+    Description?: SortOrder
+    Lieu_Etat?: SortOrder
+    Frequence?: SortOrder
+    Retard_Alarme_Haut?: SortOrder
+    Retard_Alarme_Bas?: SortOrder
+    Retard_Non_Reponse?: SortOrder
+    Retard_Alarme_Changement_Consigne?: SortOrder
+    Consigne?: SortOrder
+    Consigne_Sup?: SortOrder
+    Consigne_Inf?: SortOrder
+    Tolerance_Surveillance_Sup?: SortOrder
+    Tolerance_Surveillance_Inf?: SortOrder
+    Consigne_Sup_Pre_Alarme?: SortOrder
+    Consigne_Inf_Pre_Alarme?: SortOrder
+    Est_Consigne_Sup_Active?: SortOrder
+    Est_Consigne_Inf_Active?: SortOrder
+    Est_Consigne_Sup_Pre_Alarme_Active?: SortOrder
+    Est_Consigne_Inf_Pre_Alarme_Active?: SortOrder
+    Est_Son_Alarme_Active?: SortOrder
+    Est_Redeclenchement_Immediat?: SortOrder
+    Nb_Mesures_Temporisation_Redeclenchement?: SortOrder
+    Observations_Info?: SortOrder
+    Est_Archive?: SortOrder
+    Date_Creation?: SortOrder
+    Date_Maj?: SortOrder
+    Id_Utilisateur_Creation?: SortOrder
+    Id_Utilisateur_Maj?: SortOrder
+  }
+
+  export type t_lieu_templateMinOrderByAggregateInput = {
+    Id_Lieu_Template?: SortOrder
+    Nom_Template?: SortOrder
+    Description?: SortOrder
+    Lieu_Etat?: SortOrder
+    Frequence?: SortOrder
+    Retard_Alarme_Haut?: SortOrder
+    Retard_Alarme_Bas?: SortOrder
+    Retard_Non_Reponse?: SortOrder
+    Retard_Alarme_Changement_Consigne?: SortOrder
+    Consigne?: SortOrder
+    Consigne_Sup?: SortOrder
+    Consigne_Inf?: SortOrder
+    Tolerance_Surveillance_Sup?: SortOrder
+    Tolerance_Surveillance_Inf?: SortOrder
+    Consigne_Sup_Pre_Alarme?: SortOrder
+    Consigne_Inf_Pre_Alarme?: SortOrder
+    Est_Consigne_Sup_Active?: SortOrder
+    Est_Consigne_Inf_Active?: SortOrder
+    Est_Consigne_Sup_Pre_Alarme_Active?: SortOrder
+    Est_Consigne_Inf_Pre_Alarme_Active?: SortOrder
+    Est_Son_Alarme_Active?: SortOrder
+    Est_Redeclenchement_Immediat?: SortOrder
+    Nb_Mesures_Temporisation_Redeclenchement?: SortOrder
+    Observations_Info?: SortOrder
+    Est_Archive?: SortOrder
+    Date_Creation?: SortOrder
+    Date_Maj?: SortOrder
+    Id_Utilisateur_Creation?: SortOrder
+    Id_Utilisateur_Maj?: SortOrder
+  }
+
+  export type t_lieu_templateSumOrderByAggregateInput = {
+    Id_Lieu_Template?: SortOrder
+    Frequence?: SortOrder
+    Retard_Alarme_Haut?: SortOrder
+    Retard_Alarme_Bas?: SortOrder
+    Retard_Non_Reponse?: SortOrder
+    Retard_Alarme_Changement_Consigne?: SortOrder
+    Consigne?: SortOrder
+    Consigne_Sup?: SortOrder
+    Consigne_Inf?: SortOrder
+    Tolerance_Surveillance_Sup?: SortOrder
+    Tolerance_Surveillance_Inf?: SortOrder
+    Consigne_Sup_Pre_Alarme?: SortOrder
+    Consigne_Inf_Pre_Alarme?: SortOrder
+    Nb_Mesures_Temporisation_Redeclenchement?: SortOrder
+    Id_Utilisateur_Creation?: SortOrder
+    Id_Utilisateur_Maj?: SortOrder
+  }
+
+  export type StringWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel>
+    in?: string[]
+    notIn?: string[]
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    search?: string
+    not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedStringFilter<$PrismaModel>
+    _max?: NestedStringFilter<$PrismaModel>
+  }
+
+  export type DecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedDecimalNullableFilter<$PrismaModel>
+    _sum?: NestedDecimalNullableFilter<$PrismaModel>
+    _min?: NestedDecimalNullableFilter<$PrismaModel>
+    _max?: NestedDecimalNullableFilter<$PrismaModel>
+  }
+
+  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
   export type t_moduleOrderByRelevanceInput = {
     fields: t_moduleOrderByRelevanceFieldEnum | t_moduleOrderByRelevanceFieldEnum[]
     sort: SortOrder
@@ -71473,21 +73467,6 @@ export namespace Prisma {
     Id_Module_Type?: SortOrder
   }
 
-  export type StringFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[]
-    notIn?: string[]
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
-    not?: NestedStringFilter<$PrismaModel> | string
-  }
-
   export type t_parametreOrderByRelevanceInput = {
     fields: t_parametreOrderByRelevanceFieldEnum | t_parametreOrderByRelevanceFieldEnum[]
     sort: SortOrder
@@ -71521,24 +73500,6 @@ export namespace Prisma {
     Valeur?: SortOrder
     Commentaire?: SortOrder
     Champ_DATETIME?: SortOrder
-  }
-
-  export type StringWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel>
-    in?: string[]
-    notIn?: string[]
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    search?: string
-    not?: NestedStringWithAggregatesFilter<$PrismaModel> | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedStringFilter<$PrismaModel>
-    _max?: NestedStringFilter<$PrismaModel>
   }
 
   export type BytesNullableFilter<$PrismaModel = never> = {
@@ -72137,17 +74098,6 @@ export namespace Prisma {
     Id_Site?: SortOrder
   }
 
-  export type DateTimeFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
-  }
-
   export type T_alarmeNullableScalarRelationFilter = {
     is?: t_alarmeWhereInput | null
     isNot?: t_alarmeWhereInput | null
@@ -72205,20 +74155,6 @@ export namespace Prisma {
     Id_Notification?: SortOrder
     Id_Alarme?: SortOrder
     Priorite?: SortOrder
-  }
-
-  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
   export type T_notificationScalarRelationFilter = {
@@ -73047,17 +74983,6 @@ export namespace Prisma {
     Quantite?: SortOrder
   }
 
-  export type DecimalNullableFilter<$PrismaModel = never> = {
-    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
-    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
-  }
-
   export type t_vigilog_configurationOrderByRelevanceInput = {
     fields: t_vigilog_configurationOrderByRelevanceFieldEnum | t_vigilog_configurationOrderByRelevanceFieldEnum[]
     sort: SortOrder
@@ -73149,22 +75074,6 @@ export namespace Prisma {
     Delai_Demarrage_Min?: SortOrder
     Id_Utilisateur_Creation?: SortOrder
     Id_Utilisateur_Maj?: SortOrder
-  }
-
-  export type DecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
-    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    not?: NestedDecimalNullableWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedDecimalNullableFilter<$PrismaModel>
-    _sum?: NestedDecimalNullableFilter<$PrismaModel>
-    _min?: NestedDecimalNullableFilter<$PrismaModel>
-    _max?: NestedDecimalNullableFilter<$PrismaModel>
   }
 
   export type t_vigilogOrderByRelevanceInput = {
@@ -74202,6 +76111,18 @@ export namespace Prisma {
 
   export type StringFieldUpdateOperationsInput = {
     set?: string
+  }
+
+  export type NullableDecimalFieldUpdateOperationsInput = {
+    set?: Decimal | DecimalJsLike | number | string | null
+    increment?: Decimal | DecimalJsLike | number | string
+    decrement?: Decimal | DecimalJsLike | number | string
+    multiply?: Decimal | DecimalJsLike | number | string
+    divide?: Decimal | DecimalJsLike | number | string
+  }
+
+  export type DateTimeFieldUpdateOperationsInput = {
+    set?: Date | string
   }
 
   export type t_commande_materielCreateNestedManyWithoutT_pdfInput = {
@@ -75374,10 +77295,6 @@ export namespace Prisma {
     connect?: t_notification_deliveryWhereUniqueInput | t_notification_deliveryWhereUniqueInput[]
   }
 
-  export type DateTimeFieldUpdateOperationsInput = {
-    set?: Date | string
-  }
-
   export type t_alarmeUpdateOneWithoutT_notificationNestedInput = {
     create?: XOR<t_alarmeCreateWithoutT_notificationInput, t_alarmeUncheckedCreateWithoutT_notificationInput>
     connectOrCreate?: t_alarmeCreateOrConnectWithoutT_notificationInput
@@ -75838,14 +77755,6 @@ export namespace Prisma {
     connectOrCreate?: t_vigilog_usage_ponctuelCreateOrConnectWithoutT_vigilog_configurationInput | t_vigilog_usage_ponctuelCreateOrConnectWithoutT_vigilog_configurationInput[]
     createMany?: t_vigilog_usage_ponctuelCreateManyT_vigilog_configurationInputEnvelope
     connect?: t_vigilog_usage_ponctuelWhereUniqueInput | t_vigilog_usage_ponctuelWhereUniqueInput[]
-  }
-
-  export type NullableDecimalFieldUpdateOperationsInput = {
-    set?: Decimal | DecimalJsLike | number | string | null
-    increment?: Decimal | DecimalJsLike | number | string
-    decrement?: Decimal | DecimalJsLike | number | string
-    multiply?: Decimal | DecimalJsLike | number | string
-    divide?: Decimal | DecimalJsLike | number | string
   }
 
   export type t_utilisateurUpdateOneWithoutT_vigilog_configuration_t_vigilog_configuration_Id_Utilisateur_CreationTot_utilisateurNestedInput = {
@@ -76394,6 +78303,28 @@ export namespace Prisma {
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
+  export type NestedDecimalNullableFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+  }
+
+  export type NestedDateTimeFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -76410,6 +78341,36 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
     _max?: NestedStringFilter<$PrismaModel>
+  }
+
+  export type NestedDecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
+    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
+    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
+    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
+    not?: NestedDecimalNullableWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedDecimalNullableFilter<$PrismaModel>
+    _sum?: NestedDecimalNullableFilter<$PrismaModel>
+    _min?: NestedDecimalNullableFilter<$PrismaModel>
+    _max?: NestedDecimalNullableFilter<$PrismaModel>
+  }
+
+  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[]
+    notIn?: Date[] | string[]
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
   export type NestedBytesNullableFilter<$PrismaModel = never> = {
@@ -76443,31 +78404,6 @@ export namespace Prisma {
     _sum?: NestedFloatFilter<$PrismaModel>
     _min?: NestedFloatFilter<$PrismaModel>
     _max?: NestedFloatFilter<$PrismaModel>
-  }
-
-  export type NestedDateTimeFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
-  }
-
-  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[]
-    notIn?: Date[] | string[]
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
   export type NestedEnumt_lieu_planning_audit_TypeFilter<$PrismaModel = never> = {
@@ -76519,33 +78455,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumt_commande_materiel_Statut_CommandeFilter<$PrismaModel>
     _max?: NestedEnumt_commande_materiel_Statut_CommandeFilter<$PrismaModel>
-  }
-
-  export type NestedDecimalNullableFilter<$PrismaModel = never> = {
-    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
-    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    not?: NestedDecimalNullableFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
-  }
-
-  export type NestedDecimalNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel> | null
-    in?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
-    notIn?: Decimal[] | DecimalJsLike[] | number[] | string[] | null
-    lt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    lte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gt?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    gte?: Decimal | DecimalJsLike | number | string | DecimalFieldRefInput<$PrismaModel>
-    not?: NestedDecimalNullableWithAggregatesFilter<$PrismaModel> | Decimal | DecimalJsLike | number | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedDecimalNullableFilter<$PrismaModel>
-    _sum?: NestedDecimalNullableFilter<$PrismaModel>
-    _min?: NestedDecimalNullableFilter<$PrismaModel>
-    _max?: NestedDecimalNullableFilter<$PrismaModel>
   }
 
   export type t_planCreateWithoutT_actionneurInput = {

@@ -5,6 +5,7 @@ import type { Group } from '@/hooks/useGroups';
 import type { Module } from '@/hooks/useModules';
 import type { SiteSimple } from '@/hooks/useSites';
 import type { MailingUser } from '@/hooks/useUsersForMailing';
+import type { LocationTemplateRow } from '@/hooks/useLocationTemplates';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
@@ -26,6 +27,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLicense } from "@/components/license/license-provider";
 import { isExpert, isStandardOrExpert } from "@/lib/license-access";
@@ -33,15 +36,18 @@ import { Check, ChevronDown, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { FormProvider, type UseFormReturn, useForm, useWatch } from 'react-hook-form';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { showFormValidationToast } from '@/lib/form-toast';
+import { postJson } from '@/lib/http';
 
 import type { EmtMode } from "@/lib/emt"
 import type { LieuEmtParams } from "@/lib/planning-regle-schema"
 import type { LocationFormData, LocationFormMode } from './location-form-types';
 import { getDefaultLocationFormData } from "./location-form-defaults";
 import { locationFormSchema } from './location-form-schema';
+import { buildFormPatchFromTemplate, buildTemplatePayloadFromForm } from './location-template-utils';
 import { LocationFormTabGeneral } from './location-form-tab-general';
 import { LocationFormTabMetrology } from './location-form-tab-metrology';
 import { LocationFormTabTelephony } from './location-form-tab-telephony';
@@ -59,6 +65,7 @@ type LocationFormDialogProps = {
   availableSensors: AvailableSensor[];
   modules: Module[];
   mailingUsers: MailingUser[];
+  locationTemplates?: LocationTemplateRow[];
   isSubmitting: boolean;
   showActionComment?: boolean;
   requireActionComment?: boolean;
@@ -77,6 +84,7 @@ export function LocationFormDialog({
   availableSensors,
   modules,
   mailingUsers,
+  locationTemplates = [],
   isSubmitting,
   showActionComment = false,
   requireActionComment = false,
@@ -168,7 +176,27 @@ export function LocationFormDialog({
   ), [resolvedForm]);
   const [activeTab, setActiveTab] = useState<string>('general');
   const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+  const [isCreateTemplateDialogOpen, setIsCreateTemplateDialogOpen] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [templateDescription, setTemplateDescription] = useState("");
   const [lastCommittedValues, setLastCommittedValues] = useState<LocationFormData>(() => getDefaultLocationFormData());
+  const queryClient = useQueryClient();
+  const createTemplateMutation = useMutation({
+    mutationFn: async (payload: ReturnType<typeof buildTemplatePayloadFromForm>) =>
+      postJson('/api/lieux/templates', payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['location-templates'] });
+      toast.success(t('template.toast_create_success'));
+      setIsCreateTemplateDialogOpen(false);
+      setTemplateName("");
+      setTemplateDescription("");
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : t('template.toast_create_error');
+      toast.error(message);
+    },
+  });
 
   const requestClose = () => {
     if (!hasChanges) {
@@ -210,6 +238,33 @@ export function LocationFormDialog({
   if (!open) {
     return null;
   }
+
+  const selectedTemplate = locationTemplates.find((template) => String(template.Id_Lieu_Template) === selectedTemplateId) ?? null;
+
+  const applySelectedTemplate = () => {
+    if (!selectedTemplate) return;
+    const currentValues = resolvedForm.getValues();
+    const patch = buildFormPatchFromTemplate(selectedTemplate);
+    resolvedForm.reset({
+      ...currentValues,
+      ...patch,
+    }, {
+      keepDirty: true,
+      keepTouched: true,
+    });
+    toast.success(t('template.toast_apply_success', { name: selectedTemplate.Nom_Template }));
+  };
+
+  const handleCreateTemplate = () => {
+    const trimmedName = templateName.trim();
+    if (!trimmedName) {
+      toast.error(t('template.name_required'));
+      return;
+    }
+    const payload = buildTemplatePayloadFromForm(resolvedForm.getValues(), trimmedName, templateDescription);
+    createTemplateMutation.mutate(payload);
+  };
+
   return (
     <Dialog
       open={open}
@@ -238,6 +293,38 @@ export function LocationFormDialog({
                 }}
               />
             ) : null}
+            <div className="space-y-3 rounded-md border border-border/60 bg-muted/20 p-3">
+              <div className="space-y-1">
+                <p className="text-sm font-medium">{t('template.title')}</p>
+                <p className="text-xs text-muted-foreground">{t('template.description')}</p>
+              </div>
+              <div className="grid gap-2 md:grid-cols-[1fr_auto_auto]">
+                <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('template.select_placeholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locationTemplates.length === 0 ? (
+                      <SelectItem value="__empty" disabled>
+                        {t('template.empty')}
+                      </SelectItem>
+                    ) : (
+                      locationTemplates.map((template) => (
+                        <SelectItem key={template.Id_Lieu_Template} value={String(template.Id_Lieu_Template)}>
+                          {template.Nom_Template}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <Button type="button" variant="outline" onClick={applySelectedTemplate} disabled={!selectedTemplate}>
+                  {t('template.apply')}
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => setIsCreateTemplateDialogOpen(true)}>
+                  {t('template.save_current')}
+                </Button>
+              </div>
+            </div>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               {isEdit && resolvedForm.watch('Nom_Lieu') ? (
                 <div className="mb-3 rounded-md border border-sky-200 bg-sky-50 px-4 py-2 text-sm text-sky-900 dark:border-sky-500/40 dark:bg-sky-500/10 dark:text-sky-100">
@@ -367,6 +454,48 @@ export function LocationFormDialog({
           </form>
         </FormProvider>
       </DialogContent>
+
+      <AlertDialog open={isCreateTemplateDialogOpen} onOpenChange={setIsCreateTemplateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('template.create_title')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('template.create_description')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <label htmlFor="location-template-name" className="text-sm font-medium">
+                {t('template.name_label')}
+              </label>
+              <Input
+                id="location-template-name"
+                value={templateName}
+                onChange={(event) => setTemplateName(event.target.value)}
+                maxLength={80}
+                placeholder={t('template.name_placeholder')}
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="location-template-description" className="text-sm font-medium">
+                {t('template.description_label')}
+              </label>
+              <Textarea
+                id="location-template-description"
+                value={templateDescription}
+                onChange={(event) => setTemplateDescription(event.target.value)}
+                rows={3}
+                maxLength={255}
+                placeholder={t('template.description_placeholder')}
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCreateTemplate} disabled={createTemplateMutation.isPending}>
+              {createTemplateMutation.isPending ? t('template.create_saving') : t('template.create_confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={isDiscardDialogOpen} onOpenChange={setIsDiscardDialogOpen}>
         <AlertDialogContent>

@@ -77,7 +77,7 @@ function SummaryCard({
         </CardHeader>
         <CardContent className="space-y-2 pt-4">
           <div className="text-3xl font-bold tabular-nums">{value}</div>
-          {helper ? <p className="text-sm text-muted-foreground">{helper}</p> : null}
+          {helper ? <p className="whitespace-pre-line break-all text-sm text-muted-foreground">{helper}</p> : null}
           <Link
             href={href as any}
             className="inline-flex items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-primary/80"
@@ -120,12 +120,14 @@ export default function AdminDashboard() {
   const connectedUsersTotal = connectedUsersQuery.data?.pagination.total || 0
   const systemLogsTotal = systemLogsQuery.data?.pagination.total || 0
   const unassignedTotal = unassignedSensorsQuery.data?.pagination.total || 0
-  const backupsTotal = backupsQuery.data?.length || 0
+  const backupsTotal = backupsQuery.data?.summary.archiveCount ?? 0
+  const backupStoragePath = backupsQuery.data?.summary.storagePath ?? "-"
 
-  const lastBackupDate = (backupsQuery.data as any)?.[0]?.dateHeure
+  const lastBackupDate = backupsQuery.data?.data?.[0]?.dateHeure
   const lastBackupLabel = lastBackupDate
     ? new Date(lastBackupDate).toLocaleString(locale, { timeZone: timezone })
     : t("backup.last.none")
+  const backupHelper = `${t("backup.last.label")}: ${lastBackupLabel}\n${backupStoragePath}`
 
   const latestAck = acknowledgmentsQuery.data?.data?.[0]?.dateHeure || "-"
   const latestAuditAction = systemLogsQuery.data?.data?.[0]?.action || "-"
@@ -238,6 +240,7 @@ export default function AdminDashboard() {
             latestAuditAction,
             latestConnectedLabel,
             lastBackupLabel,
+            backupStoragePath,
             hideStandards,
           }}
         />
@@ -323,7 +326,7 @@ export default function AdminDashboard() {
             title={t("backup.title")}
             description={t("backup.description")}
             value={String(backupsTotal)}
-            helper={`${t("backup.last.label")}: ${lastBackupLabel}`}
+            helper={backupHelper}
             href={`/admin/outils`}
             hrefLabel={accessLabel}
             icon={<Database className="h-5 w-5 text-violet-600" />}

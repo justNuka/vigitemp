@@ -33,6 +33,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { formatMeasureValue } from "@/lib/measurements";
 
 type SelectedAlarm = {
   id: string;
@@ -350,7 +351,9 @@ export function AlarmsClientTanStack() {
           const unit = row.original.Unite;
           return (
             <div className="text-right font-mono font-medium">
-              {value !== null && value !== undefined ? `${value.toFixed(1)} ${unit ?? ""}` : "-"}
+              {value !== null && value !== undefined
+                ? `${formatMeasureValue(value)} ${unit ?? ""}`.trim()
+                : "-"}
             </div>
           );
         },

@@ -22,6 +22,18 @@ function Write-Log($message) {
     Write-Host "[$timestamp] $message"
 }
 
+function Invoke-RobocopySafe {
+    param(
+        [Parameter(Mandatory = $true)][string]$Source,
+        [Parameter(Mandatory = $true)][string]$Destination
+    )
+
+    & robocopy $Source $Destination /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
+    if ($LASTEXITCODE -ge 8) {
+        throw "robocopy failed with exit code $LASTEXITCODE (source='$Source', destination='$Destination')"
+    }
+}
+
 function Remove-DirectoryWithRetry {
     param(
         [Parameter(Mandatory = $true)][string]$Path,
@@ -224,15 +236,15 @@ $targetNext = Join-Path $OutputDir ".next"
 New-Item -ItemType Directory -Force -Path $targetNext | Out-Null
 
 Write-Log "Copying standalone server..."
-& robocopy $standaloneDir (Join-Path $targetNext "standalone") /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
+Invoke-RobocopySafe -Source $standaloneDir -Destination (Join-Path $targetNext "standalone")
 
 Write-Log "Copying static assets..."
-& robocopy $staticDir (Join-Path $targetNext "static") /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
+Invoke-RobocopySafe -Source $staticDir -Destination (Join-Path $targetNext "static")
 
 Write-Log "Copying static assets into standalone package..."
 $standaloneStaticDest = Join-Path $targetNext "standalone\.next\static"
 New-Item -ItemType Directory -Force -Path $standaloneStaticDest | Out-Null
-& robocopy $staticDir $standaloneStaticDest /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
+Invoke-RobocopySafe -Source $staticDir -Destination $standaloneStaticDest
 
 $standaloneNodeModules = Join-Path $targetNext "standalone\node_modules"
 $nextEnvTarget = Join-Path $standaloneNodeModules "@next\env"
@@ -253,7 +265,7 @@ if (-not (Test-Path $nextEnvTarget)) {
         if (Test-Path $directEnv) {
             Write-Log "Copying @next/env into standalone package..."
             New-Item -ItemType Directory -Force -Path (Split-Path $nextEnvTarget -Parent) | Out-Null
-            & robocopy $directEnv $nextEnvTarget /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
+            Invoke-RobocopySafe -Source $directEnv -Destination $nextEnvTarget
             break
         }
 
@@ -265,7 +277,7 @@ if (-not (Test-Path $nextEnvTarget)) {
                 if (Test-Path $storeEnv) {
                     Write-Log "Copying @next/env into standalone package..."
                     New-Item -ItemType Directory -Force -Path (Split-Path $nextEnvTarget -Parent) | Out-Null
-                    & robocopy $storeEnv $nextEnvTarget /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
+                    Invoke-RobocopySafe -Source $storeEnv -Destination $nextEnvTarget
                     break
                 }
             }

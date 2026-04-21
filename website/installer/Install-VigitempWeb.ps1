@@ -49,6 +49,18 @@ function Write-Log($message) {
     Write-Host "[$timestamp] $message"
 }
 
+function Invoke-RobocopySafe {
+    param(
+        [Parameter(Mandatory = $true)][string]$Source,
+        [Parameter(Mandatory = $true)][string]$Destination
+    )
+
+    & robocopy $Source $Destination /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
+    if ($LASTEXITCODE -ge 8) {
+        throw (T "robocopy a échoué (code $LASTEXITCODE) source='$Source' destination='$Destination'" "robocopy failed (exit code $LASTEXITCODE) source='$Source' destination='$Destination'")
+    }
+}
+
 function Test-Admin {
     $currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
     $principal = New-Object Security.Principal.WindowsPrincipal($currentIdentity)
@@ -177,6 +189,22 @@ function Write-InstallRegistryInfo($installPath, $version) {
     }
 }
 
+function Ensure-ServiceStoppedAndRemoved([string]$serviceName) {
+    $existingService = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+    if ($null -eq $existingService) {
+        return
+    }
+
+    $answer = Read-InstallValue (T "Le service $serviceName existe. Arrêter et réinstaller ? (y/n)" "Service $serviceName exists. Stop and reinstall? (y/n)") "y"
+    if ($answer -ne "y") {
+        throw (T "Installation annulée par l'utilisateur." "Installation cancelled by user.")
+    }
+
+    try { Stop-Service -Name $serviceName -Force -ErrorAction SilentlyContinue } catch { }
+    & sc.exe delete $serviceName | Out-Null
+    Start-Sleep -Seconds 2
+}
+
 function Compare-Version([string]$current, [string]$expected) {
     if ([string]::IsNullOrWhiteSpace($current)) { return -1 }
     try {
@@ -235,6 +263,7 @@ $logPath = Join-Path $logDir "install-web-$(Get-Date -Format yyyyMMdd-HHmmss).lo
 Start-Transcript -Path $logPath | Out-Null
 
 Write-Log (T "Installation du site Vigitemp vers $InstallDir" "Installing Vigitemp website to $InstallDir")
+Ensure-ServiceStoppedAndRemoved -serviceName $ServiceName
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 
 Write-Log (T "Copie des fichiers du site..." "Copying website files...")
@@ -244,15 +273,15 @@ if ($Offline -and $Standalone) {
     if (-not (Test-Path $standaloneSource) -or -not (Test-Path $staticSource)) {
         Write-Error (T "SourcePath invalide : dossier .next\\standalone ou .next\\static manquant. Indiquez le dossier racine du build standalone." "Invalid SourcePath: missing .next\\standalone or .next\\static. Point to the standalone build root folder.")
     }
-    & robocopy (Join-Path $SourcePath ".next") (Join-Path $InstallDir ".next") /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
+    Invoke-RobocopySafe -Source (Join-Path $SourcePath ".next") -Destination (Join-Path $InstallDir ".next")
     if (Test-Path (Join-Path $SourcePath "public")) {
-        & robocopy (Join-Path $SourcePath "public") (Join-Path $InstallDir "public") /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
+        Invoke-RobocopySafe -Source (Join-Path $SourcePath "public") -Destination (Join-Path $InstallDir "public")
     }
     $standaloneStatic = Join-Path $InstallDir ".next\\standalone\\.next\\static"
     if (-not (Test-Path $standaloneStatic)) {
         New-Item -ItemType Directory -Force -Path $standaloneStatic | Out-Null
     }
-    & robocopy (Join-Path $InstallDir ".next\\static") $standaloneStatic /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
+    Invoke-RobocopySafe -Source (Join-Path $InstallDir ".next\\static") -Destination $standaloneStatic
 } else {
     if ($Offline) {
         $excludeDirs = @(".git", "logs")
@@ -272,6 +301,9 @@ if ($Offline -and $Standalone) {
         "/NS"
     ) + $excludeArgs
     & robocopy @robocopyArgs | Out-Null
+    if ($LASTEXITCODE -ge 8) {
+        throw (T "robocopy a échoué (code $LASTEXITCODE) vers '$InstallDir'" "robocopy failed (exit code $LASTEXITCODE) to '$InstallDir'")
+    }
 }
 
 $version = ""
@@ -472,17 +504,6 @@ if ($Offline) {
             Write-Log (T "Attention : dossier .next absent. Le site ne démarrera pas sans build." "Warning: .next folder missing. The site will not start without a build.")
         }
     }
-}
-
-$existingService = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
-if ($null -ne $existingService) {
-    $answer = Read-InstallValue (T "Le service $ServiceName existe. Arrêter et réinstaller ? (y/n)" "Service $ServiceName exists. Stop and reinstall? (y/n)") "y"
-    if ($answer -ne "y") {
-        Write-Error (T "Installation annulée par l'utilisateur." "Installation cancelled by user.")
-    }
-    try { Stop-Service -Name $ServiceName -Force -ErrorAction SilentlyContinue } catch { }
-    & sc.exe delete $ServiceName | Out-Null
-    Start-Sleep -Seconds 2
 }
 
 $nodePathResolved = $nodeCmd.Source

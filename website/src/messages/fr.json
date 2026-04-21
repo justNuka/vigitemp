@@ -76,7 +76,8 @@
     "profils": "Profils",
     "etalons": "Étalons",
     "actionneurs": "Actionneurs",
-    "outils": "Outils"
+    "outils": "Outils",
+    "lieux_templates": "Templates lieux"
   },
   "mainNavbar": {
     "menu": "Menu"
@@ -129,7 +130,8 @@
     "admin_dashboard_tooltip": "Tableau de bord administrateur",
     "services": "Services",
     "messaging": "Messagerie",
-    "vigilog": "VigiLog"
+    "vigilog": "VigiLog",
+    "statistics": "Statistiques"
   },
   "sidebarGroups": {
     "navigation": "Navigation",
@@ -805,6 +807,72 @@
       "description": "Gestion des lieux de surveillance"
     }
   },
+  "locationTemplatesPage": {
+    "title": "Templates de lieux",
+    "description": "Créez et gérez les templates réutilisables pour la création de lieux.",
+    "count": "{count, plural, one {{count} template} other {{count} templates}}",
+    "tabs": {
+      "active": "Actifs ({count})",
+      "archived": "Archivés ({count})"
+    },
+    "actions": {
+      "archive": "Archiver"
+    },
+    "table": {
+      "name": "Nom",
+      "state": "État surveillance",
+      "frequency": "Fréquence (min)",
+      "setpoint": "Consigne",
+      "description": "Description"
+    },
+    "fields": {
+      "name": "Nom du template",
+      "description": "Description",
+      "surveillance_state": "État surveillance (S/D)",
+      "frequency": "Fréquence (min)",
+      "setpoint": "Consigne",
+      "upper_setpoint": "Consigne supérieure",
+      "lower_setpoint": "Consigne inférieure",
+      "high_delay": "Retard alarme haut (min)",
+      "low_delay": "Retard alarme bas (min)",
+      "non_response_delay": "Retard non-réponse (min)",
+      "setpoint_change_delay": "Retard changement consigne (min)",
+      "retrigger_count": "Temporisation redéclenchement (mesures)",
+      "observations": "Observations",
+      "enable_upper": "Activer consigne supérieure",
+      "enable_lower": "Activer consigne inférieure",
+      "enable_upper_pre": "Activer pré-alarme supérieure",
+      "enable_lower_pre": "Activer pré-alarme inférieure",
+      "alarm_sound": "Activer son d'alarme",
+      "immediate_retrigger": "Redéclenchement immédiat"
+    },
+    "dialogs": {
+      "create_title": "Créer un template",
+      "create_description": "Définissez les paramètres par défaut à appliquer sur les futurs lieux.",
+      "edit_title": "Modifier le template",
+      "edit_description": "Mettez à jour les paramètres du template sélectionné.",
+      "archive_title": "Archiver le template",
+      "archive_description": "Le template sera masqué de la liste de sélection lors de la création de lieu.",
+      "delete_title": "Supprimer le template",
+      "delete_description": "Cette suppression est définitive.",
+      "submitting": "Traitement..."
+    },
+    "toast": {
+      "create_success": "Template créé avec succès.",
+      "create_error": "Erreur lors de la création du template.",
+      "update_success": "Template mis à jour avec succès.",
+      "update_error": "Erreur lors de la mise à jour du template.",
+      "archive_success": "Template archivé avec succès.",
+      "archive_error": "Erreur lors de l'archivage du template.",
+      "delete_success": "Template supprimé avec succès.",
+      "delete_error": "Erreur lors de la suppression du template."
+    },
+    "errors": {
+      "name_required": "Le nom du template est obligatoire.",
+      "no_template_selected": "Aucun template sélectionné."
+    },
+    "empty": "Aucun template trouvé"
+  },
   "locationsTable": {
     "columns": {
       "location": "Lieu",
@@ -867,6 +935,26 @@
         "restore": "Restaurer le brouillon",
         "clear": "Vider le formulaire",
         "saved": "Brouillon disponible"
+      },
+      "template": {
+        "title": "Template de lieu",
+        "description": "Appliquez un template sur ce formulaire ou enregistrez la configuration actuelle.",
+        "select_placeholder": "Choisir un template",
+        "empty": "Aucun template disponible",
+        "apply": "Appliquer",
+        "save_current": "Enregistrer en template",
+        "create_title": "Nouveau template de lieu",
+        "create_description": "Le template reprendra les consignes, tolérances, fréquences et options d'alarme du formulaire.",
+        "name_label": "Nom du template",
+        "name_placeholder": "Ex: Chambre froide standard",
+        "name_required": "Le nom du template est requis.",
+        "description_label": "Description",
+        "description_placeholder": "Optionnel",
+        "create_confirm": "Créer le template",
+        "create_saving": "Création...",
+        "toast_apply_success": "Template \"{name}\" appliqué.",
+        "toast_create_success": "Template de lieu créé.",
+        "toast_create_error": "Erreur lors de la création du template."
       },
       "current_location_label": "Lieu en cours :",
       "action_comment_label": "Commentaire de l'action",
@@ -2774,7 +2862,10 @@
       "title": "Tendance des alarmes",
       "subtitle": "Derniers 7j",
       "count": "{count} alarme(s)",
-      "details": "Détails"
+      "details": "Détails",
+      "statistics_title": "Statistiques par lieu",
+      "statistics_description": "Consultez les statistiques detaillees par lieu avec selection de periode.",
+      "open_statistics": "Ouvrir les statistiques"
     },
     "ack_dialog": {
       "title": "Acquitter l'alarme",
@@ -2794,32 +2885,76 @@
       "resolved": "Résolue"
     },
     "trend_by_location": {
-      "title": "Alarmes par lieu",
-      "description": "Vue consolidée des alarmes des 7 derniers jours, regroupées par lieu.",
-      "search_placeholder": "Rechercher un lieu ou un site...",
-      "empty": "Aucune alarme trouvée sur la période.",
+      "title": "Statistiques par lieu",
+      "description": "Analyse des lieux en surveillance sur la periode selectionnee.",
+      "table_title": "Indicateurs par lieu",
+      "table_description": "Mesures, alarmes et depassements sans alarme agreges par lieu.",
+      "table_hint": "Les durees de depassement sans alarme sont calculees sur les mesures hors seuil quand l'etat alarme est inactif.",
+      "search_placeholder": "Rechercher un lieu, un site ou un groupe...",
+      "empty": "Aucune donnee trouvee sur la periode.",
+      "period": {
+        "title": "Periode d'analyse",
+        "from": "Du",
+        "to": "Au",
+        "apply": "Appliquer"
+      },
+      "units": {
+        "minutes_value": "{value} min",
+        "seconds_value": "{value} s"
+      },
+      "summary": {
+        "site_group": "Site : {site} - Groupe(s) : {groups}",
+        "thresholds": "Consigne: {consigne} {unit} - Tol sup: {sup} {unit} - Tol inf: {inf} {unit}",
+        "frequency_delay": "Frequence: {frequency} - Retard H: {highDelay} min - Retard B: {lowDelay} min - Temporisation redecl.: {retrigger}"
+      },
       "columns": {
-        "location": "Lieu",
-        "total": "Alarmes 7j",
-        "active": "Actives",
-        "types": "Répartition",
-        "last_triggered": "Dernière alarme"
+        "location_summary": "Lieu / Site / Groupe",
+        "settings_summary": "Consignes / Tolerances / Frequence / Retards",
+        "max": "Mesure max",
+        "min": "Mesure min",
+        "avg": "Moyenne",
+        "alarm_count": "Nombre d'alarmes",
+        "alarm_high_duration": "Duree alarme haute",
+        "alarm_low_duration": "Duree alarme basse",
+        "over_high_no_alarm": "Depassement haut sans alarme",
+        "over_low_no_alarm": "Depassement bas sans alarme"
       },
       "stats": {
-        "locations": "Lieux concernés",
-        "total_alarms": "Alarmes sur 7 jours",
-        "active_locations": "Lieux avec alarmes actives",
-        "active_locations_help": "Au moins une alarme encore ouverte"
-      },
-      "legend": {
-        "title": "L?gende :",
-        "high": "Alarme haute",
-        "low": "Alarme basse",
-        "no_response": "Non-r?ponse"
+        "locations": "Lieux en surveillance",
+        "total_alarms": "Nombre total d'alarmes",
+        "total_alarms_help": "Alarmes sur la periode selectionnee"
       },
       "meta": {
-        "title": "Alarmes par lieu",
-        "description": "Visualisation des alarmes regroupées par lieu sur les 7 derniers jours."
+        "title": "Statistiques par lieu",
+        "description": "Statistiques detaillees des lieux en surveillance."
+      },
+      "admin": {
+        "title": "Recap mensuel par mail",
+        "description": "Parametrez les indicateurs envoyes chaque mois.",
+        "recipients": "Destinataires (emails separes par ; ou ,)",
+        "recipients_placeholder": "admin@exemple.com; qualite@exemple.com",
+        "day_of_month": "Jour du mois (1-28)",
+        "hour_local": "Heure locale (0-23)",
+        "enable_report": "Activer l'envoi mensuel",
+        "enable_report_help": "Le recap est envoye sur le mois precedent.",
+        "save": "Enregistrer la configuration",
+        "send_now": "Envoyer maintenant",
+        "save_success": "Configuration enregistree",
+        "save_error": "Erreur lors de l'enregistrement",
+        "send_success": "Recap envoye ({sent} email(s))",
+        "send_error": "Erreur lors de l'envoi du recap",
+        "fields": {
+          "location_summary": "Nom du lieu / site / groupe",
+          "settings_summary": "Consignes, tolerances, frequences et retards",
+          "max": "Mesure maxi",
+          "min": "Mesure mini",
+          "avg": "Moyenne des mesures",
+          "alarm_count": "Nombre d'alarmes",
+          "alarm_high_duration": "Duree alarme haute cumulee",
+          "alarm_low_duration": "Duree alarme basse cumulee",
+          "over_high_no_alarm": "Duree depassement haut sans alarme",
+          "over_low_no_alarm": "Duree depassement bas sans alarme"
+        }
       }
     }
   },
@@ -3084,7 +3219,8 @@
     "upgrade": "Upgrade licence",
     "hardware": "Demande de matériel",
     "news": "Actualités MC2",
-    "vigilog": "VigiLog"
+    "vigilog": "VigiLog",
+    "statistics": "Statistiques"
   },
   "servicesHub": {
     "meta": {

@@ -300,3 +300,14 @@ model tm_vigilog_mesure {
   @@index([Est_Marqueur], map: "IDX_tm_vigilog_mesure_marker")
   @@index([Id_VigiLog_Tournee], map: "IDX_tm_vigilog_mesure_tournee")
 }
+
+model tm_journal_commentaire_libre {
+  Id_Commentaire_Journal Int       @id @default(autoincrement())
+  Code_Journal           String    @db.VarChar(32)
+  Commentaire            String    @db.Text
+  Date_Creation          DateTime  @default(now()) @db.DateTime(0)
+  Date_Modification      DateTime? @db.DateTime(0)
+
+  @@index([Code_Journal], map: "IDX_tm_journal_commentaire_libre_code")
+  @@index([Date_Creation], map: "IDX_tm_journal_commentaire_libre_date_creation")
+}

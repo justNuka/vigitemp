@@ -67,22 +67,22 @@ model t_alarme {
 }
 
 model t_alarme_histo {
-  Id_Alarme_Histo              Int       @id @default(autoincrement())
-  Id_Alarme                    Int
-  Date_Heure_Debut             DateTime? @db.DateTime(0)
-  Valeur                       Float?    @db.Float
-  Type                         String?   @db.VarChar(1)
-  Date_Heure_Fin               DateTime? @db.DateTime(0)
-  Id_Lieu                      Int?
-  Sonde_Numero_Serie           String?   @db.VarChar(50)
-  Unite                        String?   @db.VarChar(10)
-  Est_Acquittee                Boolean?  @default(false)
-  Date_Heure_Derniere_Mesure   DateTime? @db.DateTime(0)
-  Est_Alarme_Pour_VigiTel      Boolean?
-  Est_Mail_Envoye              Boolean?
-  Est_Tel_Acquittee            Boolean?
-  Date_Heure_Acquittement      DateTime? @db.DateTime(0)
-  t_lieu                       t_lieu?   @relation("lieu_alarme_histo", fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ALARME_HISTO")
+  Id_Alarme_Histo            Int       @id @default(autoincrement())
+  Id_Alarme                  Int
+  Date_Heure_Debut           DateTime? @db.DateTime(0)
+  Valeur                     Float?    @db.Float
+  Type                       String?   @db.VarChar(1)
+  Date_Heure_Fin             DateTime? @db.DateTime(0)
+  Id_Lieu                    Int?
+  Sonde_Numero_Serie         String?   @db.VarChar(50)
+  Unite                      String?   @db.VarChar(10)
+  Est_Acquittee              Boolean?  @default(false)
+  Date_Heure_Derniere_Mesure DateTime? @db.DateTime(0)
+  Est_Alarme_Pour_VigiTel    Boolean?
+  Est_Mail_Envoye            Boolean?
+  Est_Tel_Acquittee          Boolean?
+  Date_Heure_Acquittement    DateTime? @db.DateTime(0)
+  t_lieu                     t_lieu?   @relation("lieu_alarme_histo", fields: [Id_Lieu], references: [Id_Lieu], onDelete: NoAction, onUpdate: NoAction, map: "FK_LIEU_ALARME_HISTO")
 
   @@index([Est_Acquittee], map: "IDX_HISTO_Est_Acquittee")
   @@index([Date_Heure_Debut], map: "IDX_HISTO_Date_Heure_Debut")
@@ -416,6 +416,42 @@ model t_lieu {
   @@index([Tel_Code], map: "IDX_Tel_Code")
   @@index([Tel_Son_Lieu], map: "IDX_Tel_Son_Lieu")
   @@index([Est_Lieu_GSO, Lieu_Etat], map: "idx_lieu_gso_etat")
+}
+
+model t_lieu_template {
+  Id_Lieu_Template                          Int      @id @default(autoincrement())
+  Nom_Template                              String   @unique(map: "UK_t_lieu_template_nom") @db.VarChar(80)
+  Description                               String?  @db.VarChar(255)
+  Lieu_Etat                                 String   @default("D") @db.VarChar(1)
+  Frequence                                 Int?
+  Retard_Alarme_Haut                        Int?
+  Retard_Alarme_Bas                         Int?
+  Retard_Non_Reponse                        Int?     @default(60)
+  Retard_Alarme_Changement_Consigne         Int?
+  Consigne                                  Decimal? @db.Decimal(10, 2)
+  Consigne_Sup                              Decimal? @db.Decimal(10, 2)
+  Consigne_Inf                              Decimal? @db.Decimal(10, 2)
+  Tolerance_Surveillance_Sup                Decimal? @db.Decimal(10, 2)
+  Tolerance_Surveillance_Inf                Decimal? @db.Decimal(10, 2)
+  Consigne_Sup_Pre_Alarme                   Decimal? @db.Decimal(10, 2)
+  Consigne_Inf_Pre_Alarme                   Decimal? @db.Decimal(10, 2)
+  Est_Consigne_Sup_Active                   Boolean  @default(false)
+  Est_Consigne_Inf_Active                   Boolean  @default(false)
+  Est_Consigne_Sup_Pre_Alarme_Active        Boolean  @default(false)
+  Est_Consigne_Inf_Pre_Alarme_Active        Boolean  @default(false)
+  Est_Son_Alarme_Active                     Boolean  @default(true)
+  Est_Redeclenchement_Immediat              Boolean  @default(false)
+  Nb_Mesures_Temporisation_Redeclenchement  Int?     @default(0)
+  Observations_Info                          String?  @db.Text
+  Est_Archive                               Boolean  @default(false)
+  Date_Creation                             DateTime @default(now()) @db.DateTime(0)
+  Date_Maj                                  DateTime @default(now()) @updatedAt @db.DateTime(0)
+  Id_Utilisateur_Creation                   Int?
+  Id_Utilisateur_Maj                        Int?
+
+  @@index([Est_Archive], map: "IDX_t_lieu_template_archive")
+  @@index([Id_Utilisateur_Creation], map: "IDX_t_lieu_template_user_create")
+  @@index([Id_Utilisateur_Maj], map: "IDX_t_lieu_template_user_update")
 }
 
 model t_module {

@@ -94,7 +94,7 @@ namespace Vigitemp_Serveur
                          Unite, Sonde_Numero_Serie, Id_Sonde, Id_Lieu, Frequence, Est_Etat_Alarme, Est_Valeur_Null)
                         VALUES
                         (NOW(), @valeur, @valeurBrute, @consigne, @consigneSup, @consigneInf,
-                         @unite, @sondeNumeroSerie, @idSonde, @idLieu, @frequence, @etatAlarme, 0)";
+                         @unite, @sondeNumeroSerie, @idSonde, @idLieu, @frequence, @etatAlarme, @estValeurNull)";
 
                         cmd.Parameters.AddWithValue("@valeur", valeur.HasValue ? (object)valeur.Value : DBNull.Value);
                         cmd.Parameters.AddWithValue("@valeurBrute", resistance.HasValue ? (object)resistance.Value : DBNull.Value);
