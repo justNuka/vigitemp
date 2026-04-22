@@ -25,15 +25,68 @@ function Test-Admin {
     return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
+function Get-NodeMsiVersionFromName {
+    param([Parameter(Mandatory = $true)][string]$Path)
+    $name = [System.IO.Path]::GetFileName($Path)
+    $match = [regex]::Match($name, '^node-v(?<v>\d+\.\d+\.\d+)-x64\.msi$', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+    if ($match.Success) { return $match.Groups["v"].Value }
+    return $null
+}
+
+function Find-NodeInstaller {
+    param([Parameter(Mandatory = $true)][string]$BasePath)
+
+    $searchDirs = @(
+        (Join-Path $BasePath "prereqs"),
+        $BasePath
+    ) | Where-Object { Test-Path $_ }
+
+    $candidates = @()
+    foreach ($dir in $searchDirs) {
+        $candidates += Get-ChildItem -Path $dir -File -Filter "node-v*-x64.msi" -ErrorAction SilentlyContinue
+        $candidates += Get-ChildItem -Path $dir -File -Filter "node-*.msi" -ErrorAction SilentlyContinue
+    }
+
+    $uniqueCandidates = @($candidates | Sort-Object -Property FullName -Unique)
+    if ($uniqueCandidates.Count -eq 0) { return $null }
+
+    $decorated = $uniqueCandidates | ForEach-Object {
+        $version = Get-NodeMsiVersionFromName -Path $_.FullName
+        $versionObject = $null
+        if (-not [string]::IsNullOrWhiteSpace($version)) {
+            try { $versionObject = [version]$version } catch { $versionObject = $null }
+        }
+        [pscustomobject]@{
+            File = $_
+            Version = $version
+            VersionObject = $versionObject
+            HasVersion = -not [string]::IsNullOrWhiteSpace($version)
+            LastWriteTime = $_.LastWriteTimeUtc
+        }
+    }
+
+    $bestWithVersion = $decorated | Where-Object { $_.VersionObject -ne $null } | Sort-Object -Property @{ Expression = { $_.VersionObject }; Descending = $true } | Select-Object -First 1
+    if ($bestWithVersion) {
+        return $bestWithVersion.File.FullName
+    }
+
+    return ($decorated | Sort-Object -Property LastWriteTime -Descending | Select-Object -First 1).File.FullName
+}
+
 if (-not (Test-Admin)) {
     Write-Error "Ce script doit etre lance en tant qu'administrateur."
 }
 
 $scriptRoot = $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($InstallerPath)) {
-    $InstallerPath = Join-Path $scriptRoot "prereqs\\node-v24.12.0-x64.msi"
-    if (-not (Test-Path $InstallerPath)) {
-        $InstallerPath = Join-Path $scriptRoot "node-v24.12.0-x64.msi"
+    $InstallerPath = Find-NodeInstaller -BasePath $scriptRoot
+    if (-not [string]::IsNullOrWhiteSpace($InstallerPath)) {
+        $detectedVersion = Get-NodeMsiVersionFromName -Path $InstallerPath
+        if ($detectedVersion) {
+            Write-Log "Installateur Node detecte: $InstallerPath (version $detectedVersion)"
+        } else {
+            Write-Log "Installateur Node detecte: $InstallerPath"
+        }
     }
 }
 

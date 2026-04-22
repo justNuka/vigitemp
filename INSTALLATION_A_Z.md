@@ -58,7 +58,7 @@ vigi\\1 - prerequis\
 Contenu :
 - `install\Install-Node.ps1`
 - `install\Install-MySQL-And-VCredist.ps1`
-- `node\node-v24.12.0-x64.msi`
+- `node\node-vX.Y.Z-x64.msi` (version variable selon le package prepare)
 - `mysql\mysql-8.4.7-winx64.msi`
 - `vcredist\VC_redist.x64.exe`
 

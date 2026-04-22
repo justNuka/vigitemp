@@ -32,6 +32,7 @@ import { useUsersForMailing } from "@/hooks/useUsersForMailing";
 import { useLocationTemplates } from "@/hooks/useLocationTemplates";
 import { prefetchNextSensorsPage, updateSurveillanceStateInCache, type PaginatedSensorsData } from "./_components/page-client/surveillance-page-helpers";
 import { useSurveillanceLocationEditor } from "./_components/page-client/use-surveillance-location-editor";
+import { parseDbDateTime } from "@/lib/date-display";
 
 type ViewMode = "tree" | "graphs";
 
@@ -432,7 +433,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
           updateAlarmCache(
             [idLieu],
             payload.data.Notification_Active === false,
-            payload.data.Date_Heure_Reactivation_Alarme ? new Date(payload.data.Date_Heure_Reactivation_Alarme) : null,
+            payload.data.Date_Heure_Reactivation_Alarme ? parseDbDateTime(payload.data.Date_Heure_Reactivation_Alarme) : null,
           )
         }
       } catch (error) {

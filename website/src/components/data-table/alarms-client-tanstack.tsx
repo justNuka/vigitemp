@@ -24,7 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useTranslations } from "next-intl";
 import { ArrowDown, ArrowUp, Clock, PowerOff, RefreshCw, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatDbDateTime } from "@/lib/date-display";
+import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display";
 import { alarmsApi } from "@/lib/api";
 import { useAlarmMutations } from "@/components/data-table/alarms-mutations";
 import { AlarmsFilters } from "@/components/data-table/alarms-filters";
@@ -374,8 +374,8 @@ export function AlarmsClientTanStack() {
 
           return (
             <div className="text-right font-mono text-muted-foreground">
-              <div>{hasSup ? t("thresholds.sup", { value: sup, unit: unit ?? "" }) : t("thresholds.sup_empty")}</div>
-              <div>{hasInf ? t("thresholds.inf", { value: inf, unit: unit ?? "" }) : t("thresholds.inf_empty")}</div>
+              <div>{hasSup ? t("thresholds.sup", { value: formatMeasureValue(sup), unit: unit ?? "" }) : t("thresholds.sup_empty")}</div>
+              <div>{hasInf ? t("thresholds.inf", { value: formatMeasureValue(inf), unit: unit ?? "" }) : t("thresholds.inf_empty")}</div>
             </div>
           );
         },
@@ -419,9 +419,10 @@ export function AlarmsClientTanStack() {
           cellClassName: "!border-l border-border !border-r border-border",
         },
         cell: ({ row }) => {
-          const start = row.original.Date_Heure_Debut ? new Date(row.original.Date_Heure_Debut) : null;
-          const end = row.original.Date_Heure_Fin ? new Date(row.original.Date_Heure_Fin) : new Date();
+          const start = row.original.Date_Heure_Debut ? parseDbDateTime(row.original.Date_Heure_Debut) : null;
+          const end = row.original.Date_Heure_Fin ? parseDbDateTime(row.original.Date_Heure_Fin) : new Date();
           if (!start || Number.isNaN(start.getTime())) return t("date.na");
+          if (!end || Number.isNaN(end.getTime())) return t("date.na");
           const diff = end.getTime() - start.getTime();
           const totalMinutes = Math.max(Math.floor(diff / 60000), 0);
           const hours = Math.floor(totalMinutes / 60);
@@ -646,10 +647,10 @@ export function AlarmsClientTanStack() {
         alarmTypeLabel={selectedAlarm?.type === "high" ? tDialog("dialog.type_high") : selectedAlarm?.type === "low" ? tDialog("dialog.type_low") : selectedAlarm?.type === "no-response" ? tDialog("dialog.type_no_response") : selectedAlarm?.type === "sector" ? tDialog("dialog.type_sector") : tDialog("dialog.type_other")}
         formattedStart={selectedAlarm?.triggeredAt ? formatDbDateTime(selectedAlarm.triggeredAt) : tDialog("dialog.na")}
         formattedEnd={selectedAlarm?.resolvedAt ? formatDbDateTime(selectedAlarm.resolvedAt) : tDialog("dialog.end_in_progress")}
-        formattedDuration={selectedAlarm?.triggeredAt ? (() => { const s = new Date(selectedAlarm.triggeredAt); const e = selectedAlarm.resolvedAt ? new Date(selectedAlarm.resolvedAt) : new Date(); const m = Math.max(Math.floor((e.getTime()-s.getTime())/60000),0); const h = Math.floor(m/60); const mm=m%60; return h>0 ? `${h}h ${mm}min` : `${mm}min`; })() : tDialog("dialog.na")}
+        formattedDuration={selectedAlarm?.triggeredAt ? (() => { const s = parseDbDateTime(selectedAlarm.triggeredAt); const e = selectedAlarm.resolvedAt ? parseDbDateTime(selectedAlarm.resolvedAt) : new Date(); if (!s || !e) return tDialog("dialog.na"); const m = Math.max(Math.floor((e.getTime()-s.getTime())/60000),0); const h = Math.floor(m/60); const mm=m%60; return h>0 ? `${h}h ${mm}min` : `${mm}min`; })() : tDialog("dialog.na")}
         isStatsLoading={isStatsLoading}
         alarmCount30={alarmCount30}
-        focusRange={selectedAlarm?.triggeredAt ? { from: new Date(new Date(selectedAlarm.triggeredAt).getTime() - 3600000), to: new Date((selectedAlarm.resolvedAt ? new Date(selectedAlarm.resolvedAt) : new Date()).getTime() + 3600000) } : null}
+        focusRange={selectedAlarm?.triggeredAt ? (() => { const start = parseDbDateTime(selectedAlarm.triggeredAt); const end = selectedAlarm.resolvedAt ? parseDbDateTime(selectedAlarm.resolvedAt) : new Date(); if (!start || !end) return null; return { from: new Date(start.getTime() - 3600000), to: new Date(end.getTime() + 3600000) }; })() : null}
         onClose={() => { setSelectedAlarmId(null); setSelectedCommentId(""); reset({ comment: "" }); }}
       />
 

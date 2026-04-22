@@ -32,6 +32,7 @@ import { useLieuMeasurementsPaged } from "@/hooks/useLieuMeasurementsPaged";
 import { calculateYDomain, getMeasureSummary, sortMeasuresChronologically } from "@/lib/measurements";
 import { cn } from "@/lib/utils";
 import type { MeasureData } from "@/lib/measurements";
+import { parseDbDateTime } from "@/lib/date-display";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend, Filler);
 
@@ -240,9 +241,12 @@ export default function MonitoringDetailsModal({
     const firstIso = sorted[0]?.DateHeureMesureIso;
     const lastIso = sorted[sorted.length - 1]?.DateHeureMesureIso;
     if (!firstIso || !lastIso) return null;
+    const start = parseDbDateTime(firstIso);
+    const end = parseDbDateTime(lastIso);
+    if (!start || !end) return null;
     return {
-      start: new Date(firstIso),
-      end: new Date(lastIso),
+      start,
+      end,
     };
   }, [data, isSurveillanceActive, rangeEnabled]);
   const historyRangeStart = rangeEnabled ? explicitRangeStart : fallbackHistoryRange?.start ?? null;

@@ -2,7 +2,8 @@
 
 import type { CurrentUser } from '@/lib/types'
 import { AlertTriangle, Clock } from 'lucide-react'
-import { useLocale, useTranslations } from 'next-intl'
+import { useTranslations } from 'next-intl'
+import { formatDbDateTime } from '@/lib/date-display'
 
 import type { PasswordExpiryInfo } from './password-expiry'
 
@@ -13,7 +14,6 @@ type Props = {
 
 export function Cfr21Alert({ userInfo, passwordExpiry }: Props) {
   const t = useTranslations('profileCfr21')
-  const locale = useLocale()
   if (!userInfo?.cfr21?.enabled) return null
 
   return (
@@ -34,7 +34,7 @@ export function Cfr21Alert({ userInfo, passwordExpiry }: Props) {
           <span className="text-muted-foreground">{t('last_change_label')}</span>
           <span className="font-medium">
             {userInfo?.Date_Derniere_Modification_MDP
-              ? new Date(userInfo.Date_Derniere_Modification_MDP).toLocaleDateString(locale)
+              ? formatDbDateTime(userInfo.Date_Derniere_Modification_MDP, { dateOnly: true })
               : t('never')}
           </span>
         </div>
@@ -69,7 +69,7 @@ export function Cfr21Alert({ userInfo, passwordExpiry }: Props) {
                 <>
                   {t('valid_until', {
                     count: passwordExpiry.daysRemaining,
-                    date: new Date(passwordExpiry.expiryDate).toLocaleDateString(locale),
+                    date: formatDbDateTime(passwordExpiry.expiryDate, { dateOnly: true }),
                   })}
                 </>
               )}

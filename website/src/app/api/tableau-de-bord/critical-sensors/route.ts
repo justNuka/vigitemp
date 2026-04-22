@@ -5,6 +5,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { log } from "@/lib/logger"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 export const GET = withAuthLogging(async (_req: NextRequest, ctx) => {
   try {
@@ -42,7 +43,7 @@ export const GET = withAuthLogging(async (_req: NextRequest, ctx) => {
         value:
           location.Derniere_Valeur !== null ? parseFloat(location.Derniere_Valeur?.toString() ?? "") : null,
         unit: location.Derniere_Unite || "°C",
-        lastUpdate: location.Derniere_Date_Heure?.toISOString() || new Date().toISOString(),
+        lastUpdate: serializeDbDateTime(location.Derniere_Date_Heure) || serializeDbDateTime(new Date()) || null,
         location: {
           id: String(location.Id_Lieu),
           name: siteLabel,

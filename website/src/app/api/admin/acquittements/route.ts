@@ -4,6 +4,7 @@ import { withAdminLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { log } from "@/lib/logger"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 /**
  * GET /api/admin/acquittements?page=1&limit=10
@@ -44,7 +45,7 @@ export const GET = withAdminLogging(async (req: NextRequest) => {
 
     const formatted = acknowledgments.map((ack) => ({
       id: String(ack.Id_Alarme),
-      dateHeure: ack.Date_Heure_Fin?.toISOString() || new Date().toISOString(),
+      dateHeure: serializeDbDateTime(ack.Date_Heure_Fin) || serializeDbDateTime(new Date()) || null,
       utilisateur: "System",
       action: "Acquittement",
       sonde: ack.Sonde_Numero_Serie || "Unknown",

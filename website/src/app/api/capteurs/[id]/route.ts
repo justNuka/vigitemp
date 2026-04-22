@@ -6,6 +6,7 @@ import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 const updateSensorSchema = z.object({
   name: z.string().optional(),
@@ -69,7 +70,7 @@ export const GET = withAuthLogging(
         status,
         value: lieu.Derniere_Valeur !== null ? parseFloat(lieu.Derniere_Valeur.toString()) : null,
         unit: lieu.Derniere_Unite || "°C",
-        lastUpdate: lieu.Derniere_Date_Heure?.toISOString() || new Date().toISOString(),
+        lastUpdate: serializeDbDateTime(lieu.Derniere_Date_Heure) || serializeDbDateTime(new Date()) || null,
         location: {
           id: lieu.Id_Site || 0,
           name: lieu.t_site?.Libelle_Site || "Unknown",

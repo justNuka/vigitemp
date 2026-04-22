@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { alarmsApi, type AlarmWithDetails } from "@/lib/api";
-import { formatDbDateTime } from "@/lib/date-display";
+import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display";
 import { formatMeasureValue } from "@/lib/measurements";
 import { cn } from "@/lib/utils";
 
@@ -244,14 +244,15 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
         const hasSup = showThresholds && sup !== null && sup !== undefined;
         const hasInf = showThresholds && inf !== null && inf !== undefined;
         if (!hasSup && !hasInf) return <div className="text-right font-mono text-muted-foreground">-</div>;
-        return <div className="text-right font-mono text-muted-foreground"><div>{hasSup ? t("thresholds.sup", { value: sup, unit: alarm.sensor.unit }) : t("thresholds.sup_empty")}</div><div>{hasInf ? t("thresholds.inf", { value: inf, unit: alarm.sensor.unit }) : t("thresholds.inf_empty")}</div></div>;
+        return <div className="text-right font-mono text-muted-foreground"><div>{hasSup ? t("thresholds.sup", { value: formatMeasureValue(sup), unit: alarm.sensor.unit }) : t("thresholds.sup_empty")}</div><div>{hasInf ? t("thresholds.inf", { value: formatMeasureValue(inf), unit: alarm.sensor.unit }) : t("thresholds.inf_empty")}</div></div>;
       },
     },
     {
       accessorKey: "triggeredAt",
       header: t("table.columns.triggered_at"),
       cell: ({ row }) => {
-        const triggeredDate = new Date(row.getValue("triggeredAt") as string);
+        const triggeredDate = parseDbDateTime(row.getValue("triggeredAt") as string | Date);
+        if (!triggeredDate) return "-";
         return <div className="flex items-center gap-1.5 text-sm"><Clock className="h-3.5 w-3.5 text-muted-foreground" /><TooltipProvider><Tooltip><TooltipTrigger asChild><span className="cursor-help">{formatDistanceToNow(triggeredDate, { addSuffix: true, locale: fr })}</span></TooltipTrigger><TooltipContent><p className="text-xs">{formatTzDateTime(triggeredDate)}</p></TooltipContent></Tooltip></TooltipProvider></div>;
       },
     },
@@ -320,8 +321,9 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
   const formattedEnd = useMemo(() => !selectedAlarm ? t("dialog.na") : !selectedAlarm.resolvedAt ? t("dialog.end_in_progress") : formatTzDateTime(selectedAlarm.resolvedAt), [selectedAlarm, t]);
   const formattedDuration = useMemo(() => {
     if (!selectedAlarm?.triggeredAt) return t("dialog.na");
-    const start = new Date(selectedAlarm.triggeredAt);
-    const end = selectedAlarm.resolvedAt ? new Date(selectedAlarm.resolvedAt) : durationNow;
+    const start = parseDbDateTime(selectedAlarm.triggeredAt);
+    const end = selectedAlarm.resolvedAt ? parseDbDateTime(selectedAlarm.resolvedAt) : durationNow;
+    if (!start || !end) return t("dialog.na");
     return formatDistanceStrict(start, end, {
       locale: fr,
       roundingMethod: "floor",
@@ -329,8 +331,9 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
   }, [durationNow, selectedAlarm, t]);
   const focusRange = useMemo(() => {
     if (!selectedAlarm?.triggeredAt) return null;
-    const start = new Date(selectedAlarm.triggeredAt);
-    const end = selectedAlarm.resolvedAt ? new Date(selectedAlarm.resolvedAt) : new Date(selectedAlarm.triggeredAt);
+    const start = parseDbDateTime(selectedAlarm.triggeredAt);
+    const end = selectedAlarm.resolvedAt ? parseDbDateTime(selectedAlarm.resolvedAt) : parseDbDateTime(selectedAlarm.triggeredAt);
+    if (!start || !end) return null;
     const padMs = 60 * 60 * 1000;
     return { from: new Date(start.getTime() - padMs), to: new Date(end.getTime() + padMs) };
   }, [selectedAlarm]);

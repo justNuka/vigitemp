@@ -8,6 +8,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Shield } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useAppTimezone } from "@/components/timezone-provider";
+import { parseDbDateTime } from "@/lib/date-display";
 
 interface Props {
   users: User[];
@@ -80,13 +81,14 @@ export function UsersTable({
       header: t("columns.expiry"),
       cell: ({ row }) => {
         const date = row.getValue("expiry_date");
+        const parsedDate = date ? parseDbDateTime(date as string) : null;
         return date
-          ? new Date(date as string).toLocaleDateString(localeTag, {
+          ? parsedDate?.toLocaleDateString(localeTag, {
               timeZone: timezone,
               day: "2-digit",
               month: "2-digit",
               year: "numeric",
-            })
+            }) ?? t("placeholders.na")
           : t("placeholders.na");
       },
     },

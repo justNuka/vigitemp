@@ -21,6 +21,7 @@ import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { getJson } from "@/lib/http"
 import { toApiUtcDateTime } from "@/lib/date-range-api"
 import { formatTimeAxisLabel } from "@/lib/measurements"
+import { parseDbDateTime } from "@/lib/date-display"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
 
@@ -103,7 +104,11 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
     }
 
     const labels = Array.from(labelIsoMap.entries())
-      .sort((a, b) => new Date(a[1]).getTime() - new Date(b[1]).getTime())
+      .sort((a, b) => {
+        const dateA = parseDbDateTime(a[1])
+        const dateB = parseDbDateTime(b[1])
+        return (dateA?.getTime() ?? 0) - (dateB?.getTime() ?? 0)
+      })
       .map(([, iso]) => iso)
 
     const datasets = appliedLocations.map((location, index) => {
@@ -197,8 +202,8 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
 
   const chartSpanMs = useMemo(() => {
     if (chartPayload.labels.length <= 1) return 0
-    const first = new Date(chartPayload.labels[0]).getTime()
-    const last = new Date(chartPayload.labels[chartPayload.labels.length - 1]).getTime()
+    const first = parseDbDateTime(chartPayload.labels[0])?.getTime() ?? Number.NaN
+    const last = parseDbDateTime(chartPayload.labels[chartPayload.labels.length - 1])?.getTime() ?? Number.NaN
     if (!Number.isFinite(first) || !Number.isFinite(last)) return 0
     return Math.max(0, last - first)
   }, [chartPayload.labels])
@@ -222,7 +227,8 @@ export function CurvesOverlayModal({ open, onOpenChange, locations }: Props) {
         const value = dataset.data[rowIndex]
         return value === null || value === undefined ? "" : String(value)
       })
-      return [new Date(label).toLocaleString(localeTag), ...values]
+      const parsedLabel = parseDbDateTime(label)
+      return [parsedLabel ? parsedLabel.toLocaleString(localeTag) : label, ...values]
     })
 
     const escapeCell = (value: string) => {

@@ -215,6 +215,53 @@ function Compare-Version([string]$current, [string]$expected) {
     return -1
 }
 
+function Get-NodeMsiVersionFromName([string]$path) {
+    if ([string]::IsNullOrWhiteSpace($path)) { return $null }
+    $name = [System.IO.Path]::GetFileName($path)
+    $match = [regex]::Match($name, '^node-v(?<v>\d+\.\d+\.\d+)-x64\.msi$', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+    if ($match.Success) { return $match.Groups["v"].Value }
+    return $null
+}
+
+function Find-RequiredNodeVersionFromMsi([string]$baseDirectory) {
+    if ([string]::IsNullOrWhiteSpace($baseDirectory) -or -not (Test-Path $baseDirectory)) {
+        return $null
+    }
+
+    $searchDirs = @(
+        (Join-Path $baseDirectory "prereqs"),
+        $baseDirectory
+    ) | Where-Object { Test-Path $_ }
+
+    $candidates = @()
+    foreach ($dir in $searchDirs) {
+        $candidates += Get-ChildItem -Path $dir -File -Filter "node-v*-x64.msi" -ErrorAction SilentlyContinue
+    }
+    $uniqueCandidates = $candidates | Sort-Object -Property FullName -Unique
+    if ($uniqueCandidates.Count -eq 0) { return $null }
+
+    $best = $null
+    foreach ($candidate in $uniqueCandidates) {
+        $versionText = Get-NodeMsiVersionFromName $candidate.FullName
+        if ([string]::IsNullOrWhiteSpace($versionText)) { continue }
+        try {
+            $versionObj = [version]$versionText
+        } catch {
+            continue
+        }
+        if ($null -eq $best -or $versionObj -gt $best.Version) {
+            $best = [pscustomobject]@{
+                Version = $versionObj
+                VersionText = $versionText
+                FileName = $candidate.Name
+            }
+        }
+    }
+
+    if ($null -eq $best) { return $null }
+    return $best
+}
+
 if (-not (Test-Admin)) {
     Write-Error (T "Ce script doit ?tre lanc? en tant qu'administrateur." "This installer must be run as Administrator.")
 }
@@ -330,7 +377,8 @@ if ($null -eq $nodeCmd) {
     Write-Error (T "Node.js introuvable dans le PATH. Installer Node.js LTS avant de lancer ce script." "Node.js not found in PATH. Install Node.js LTS before running this script.")
 }
 
-$expectedNodeVersion = "24.12.0"
+$requiredNodeInfo = Find-RequiredNodeVersionFromMsi $scriptRoot
+$expectedNodeVersion = if ($null -ne $requiredNodeInfo) { $requiredNodeInfo.VersionText } else { $null }
 $installedNodeVersion = $null
 try {
     $rawVersion = & $nodeCmd.Source --version
@@ -339,13 +387,15 @@ try {
     }
 } catch { }
 
-if ($installedNodeVersion) {
+if ($installedNodeVersion -and $expectedNodeVersion) {
     $nodeCompare = Compare-Version $installedNodeVersion $expectedNodeVersion
     if ($nodeCompare -ge 0) {
-        Write-Log (T "Node.js detecte (version $installedNodeVersion). OK." "Node.js detected (version $installedNodeVersion). OK.")
+        Write-Log (T "Node.js detecte (version $installedNodeVersion). Requis via MSI: $expectedNodeVersion ($($requiredNodeInfo.FileName)). OK." "Node.js detected (version $installedNodeVersion). Required from MSI: $expectedNodeVersion ($($requiredNodeInfo.FileName)). OK.")
     } else {
-        Write-Log (T "Node.js detecte (version $installedNodeVersion). Version requise: $expectedNodeVersion." "Node.js detected (version $installedNodeVersion). Required: $expectedNodeVersion.")
+        Write-Log (T "Node.js detecte (version $installedNodeVersion). Version requise via MSI: $expectedNodeVersion ($($requiredNodeInfo.FileName))." "Node.js detected (version $installedNodeVersion). Required from MSI: $expectedNodeVersion ($($requiredNodeInfo.FileName)).")
     }
+} elseif ($installedNodeVersion) {
+    Write-Log (T "Node.js detecte (version $installedNodeVersion). Aucun MSI Node versionne detecte pour imposer une version minimale." "Node.js detected (version $installedNodeVersion). No versioned Node MSI found to enforce minimum version.")
 } else {
     Write-Log (T "Impossible de lire la version Node.js." "Unable to read Node.js version.")
 }

@@ -11,6 +11,7 @@ import { AlarmAcknowledgeDialog } from "@/components/alarm-acknowledge-dialog"
 import { useAppAccess } from "@/components/access/app-access-provider"
 import { useAppTimezone } from "@/components/timezone-provider"
 import { alarmsApi, type AlarmWithDetails, type Measurement, type SensorWithLocation } from "@/lib/api"
+import { parseDbDateTime } from "@/lib/date-display"
 import { markAlarmAcknowledgedInPaginatedSensorsCache } from "@/lib/surveillance-cache"
 import { staggerContainer, fadeInUp } from "@/lib/motion-variants"
 import { DashboardActiveAlarmsSection } from "./_components/dashboard/dashboard-active-alarms-section"
@@ -58,8 +59,8 @@ export function DashboardClient({
   )
 
   const formatTzDateTime = useCallback((value: string | Date) => {
-    const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return "-"
+    const date = parseDbDateTime(value)
+    if (!date || Number.isNaN(date.getTime())) return "-"
     return date.toLocaleString(localeTag, {
       timeZone: timezone,
       day: "2-digit",

@@ -11,6 +11,7 @@ import { sortSensors, type SurveillanceSortMode } from "../_helpers/monitoring-d
 import { formatAlarmes, formatGroupes, formatPreAlarmes, formatSondes } from "../_helpers/monitoring-labels"
 import { SurveillanceTreeStatsBadges } from "./monitoring-tree-stats-badges"
 import { buildMonitoringCardProps } from "./monitoring-card-props"
+import { parseDbDateTime } from "@/lib/date-display"
 
 type Translate = (key: string, values?: Record<string, string>) => string
 
@@ -47,7 +48,8 @@ function formatDisabledLabel(
   t: Translate,
 ) {
   if (!disabledUntil) return t("grid.disabled_badge")
-  const date = new Date(disabledUntil)
+  const date = parseDbDateTime(disabledUntil)
+  if (!date) return t("grid.disabled_badge")
   if (Number.isNaN(date.getTime())) return t("grid.disabled_badge")
   const formatted = new Intl.DateTimeFormat(locale, {
     ...(timezone ? { timeZone: timezone } : {}),
@@ -64,7 +66,8 @@ function getLatestDisabledUntil(sensors: SensorWithLocation[]) {
   return sensors
     .map((sensor) => sensor.location.alarmDisabledUntil)
     .filter((value) => value !== null && value !== undefined)
-    .map((value) => new Date(value as string | number | Date))
+    .map((value) => parseDbDateTime(value as string | number | Date))
+    .filter((date): date is Date => date !== null)
     .filter((date) => !Number.isNaN(date.getTime()))
     .reduce<Date | null>((latest, current) => {
       if (!latest) return current

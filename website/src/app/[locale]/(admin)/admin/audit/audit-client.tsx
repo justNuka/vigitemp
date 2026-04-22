@@ -19,6 +19,7 @@ import { getJson } from "@/lib/http";
 import { cn } from "@/lib/utils";
 import type { AuditLog } from "@/lib/api";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { parseDbDateTime } from "@/lib/date-display";
 
 import { LazyMotion, domAnimation, m } from "motion/react";
 import { fadeInUp } from "@/lib/motion-variants";
@@ -163,7 +164,8 @@ export function AuditClient({ logs: initialLogs }: Props) {
       accessorKey: "timestamp",
       header: t("table.columns.timestamp"),
       cell: ({ row }) => {
-        const timestamp = new Date(row.getValue("timestamp") as string);
+        const timestamp = parseDbDateTime(row.getValue("timestamp") as string);
+        if (!timestamp || Number.isNaN(timestamp.getTime())) return t("table.empty_value");
         return (
           <span className="font-mono text-sm whitespace-nowrap">
             {timestamp.toLocaleString(localeTag, {

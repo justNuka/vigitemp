@@ -5,6 +5,7 @@ import type { Locale } from "date-fns"
 
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { parseDbDateTime } from "@/lib/date-display"
 import { formatMeasureValue } from "@/lib/measurements"
 import { cn } from "@/lib/utils"
 import type { AlarmWithDetails } from "@/lib/api"
@@ -97,12 +98,12 @@ export function createDashboardAlarmColumns({
           <div className="text-right font-mono text-muted-foreground">
             <div>
               {showThresholds && sup !== null && sup !== undefined
-                ? t("table.thresholds.upper", { value: sup, unit: alarm.sensor.unit })
+                ? t("table.thresholds.upper", { value: formatMeasureValue(sup), unit: alarm.sensor.unit })
                 : t("table.thresholds.upper_na")}
             </div>
             <div>
               {showThresholds && inf !== null && inf !== undefined
-                ? t("table.thresholds.lower", { value: inf, unit: alarm.sensor.unit })
+                ? t("table.thresholds.lower", { value: formatMeasureValue(inf), unit: alarm.sensor.unit })
                 : t("table.thresholds.lower_na")}
             </div>
           </div>
@@ -113,7 +114,8 @@ export function createDashboardAlarmColumns({
       accessorKey: "triggeredAt",
       header: t("table.columns.triggered"),
       cell: ({ row }) => {
-        const triggeredDate = new Date(row.getValue("triggeredAt") as string)
+        const triggeredDate = parseDbDateTime(row.getValue("triggeredAt") as string | Date)
+        if (!triggeredDate) return "-"
         return (
           <div className="flex items-center gap-1.5 text-sm">
             <Clock className="h-3.5 w-3.5 text-muted-foreground" />

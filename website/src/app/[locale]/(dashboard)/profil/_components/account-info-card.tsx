@@ -8,11 +8,12 @@ import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { User, Upload, Trash2, Loader2 } from 'lucide-react'
-import { useLocale, useTranslations } from 'next-intl'
+import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
 import { AVATAR_PRESETS, getInitialsForAvatar, resolveAvatarSrc, toAvatarPresetValue } from '@/lib/avatar-library'
 import { cn } from '@/lib/utils'
 import { ImageCropDialog } from '@/components/image-crop-dialog'
+import { formatDbDateTime } from '@/lib/date-display'
 
 const CROPPABLE_AVATAR_TYPES = new Set([
   'image/png',
@@ -26,7 +27,6 @@ type Props = {
 
 export function AccountInfoCard({ userInfo }: Props) {
   const t = useTranslations('profileAccount')
-  const locale = useLocale()
   const queryClient = useQueryClient()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -232,7 +232,7 @@ export function AccountInfoCard({ userInfo }: Props) {
               type="text"
               value={
                 userInfo?.Date_Creation
-                  ? new Date(userInfo.Date_Creation).toLocaleDateString(locale)
+                  ? formatDbDateTime(userInfo.Date_Creation, { dateOnly: true })
                   : ''
               }
               readOnly

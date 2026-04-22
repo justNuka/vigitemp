@@ -10,6 +10,7 @@ import { revalidateTag } from "next/cache"
 import { sendAlarmEventEmails } from "@/lib/alarm-email"
 import { getPermissionAliases } from "@/lib/permissions"
 import { buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 const acknowledgeSchema = z.object({
   comment: z.string().optional(),
@@ -219,7 +220,7 @@ export const POST = withAnyAuthorizationLogging(getPermissionAliases("ALARM_ACK_
       return apiOk({
         id: alarm.Id_Alarme,
         status: "acknowledged",
-        acknowledgedAt: acknowledgedAt.toISOString(),
+        acknowledgedAt: serializeDbDateTime(acknowledgedAt),
         acknowledgedBy: ctx.user.username,
       })
     } catch (error) {

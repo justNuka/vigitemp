@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 export type AlarmRealtimeEventType = "triggered" | "ended"
 
@@ -70,7 +71,7 @@ export async function buildAlarmRealtimePayload(input: {
     type: alarm.Type ?? "",
     valeur: alarm.Valeur ?? null,
     unite: alarm.Unite ?? null,
-    dateDebut: alarm.Date_Heure_Debut ? alarm.Date_Heure_Debut.toISOString() : null,
+    dateDebut: serializeDbDateTime(alarm.Date_Heure_Debut),
     soundEnabled: alarm.t_lieu?.Est_Son_Alarme_Active ?? true,
   }
 }

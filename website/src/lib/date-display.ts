@@ -1,4 +1,4 @@
-﻿export type DbDateInput = string | number | Date | null | undefined;
+export type DbDateInput = string | number | Date | null | undefined;
 
 type FormatOptions = {
   withSeconds?: boolean;
@@ -9,14 +9,54 @@ type FormatOptions = {
 
 const pad2 = (value: number) => String(value).padStart(2, "0");
 
-const toDate = (value: DbDateInput): Date | null => {
+const TIMEZONE_AWARE_ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+\-]\d{2}:\d{2})$/;
+
+const reinterpretUtcAsLocal = (date: Date): Date =>
+  new Date(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+    date.getUTCHours(),
+    date.getUTCMinutes(),
+    date.getUTCSeconds(),
+    date.getUTCMilliseconds(),
+  );
+
+export const parseDbDateTime = (value: DbDateInput): Date | null => {
   if (value === null || value === undefined) return null;
+
   if (value instanceof Date) {
-    return Number.isNaN(value.getTime()) ? null : value;
+    return Number.isNaN(value.getTime()) ? null : reinterpretUtcAsLocal(value);
   }
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const parsed = new Date(trimmed);
+    if (Number.isNaN(parsed.getTime())) return null;
+
+    if (TIMEZONE_AWARE_ISO_RE.test(trimmed)) return reinterpretUtcAsLocal(parsed);
+    return parsed;
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
+
+export function serializeDbDateTime(value: DbDateInput): string | null {
+  const date = parseDbDateTime(value);
+  if (!date) return null;
+
+  const year = date.getFullYear();
+  const month = pad2(date.getMonth() + 1);
+  const day = pad2(date.getDate());
+  const hours = pad2(date.getHours());
+  const minutes = pad2(date.getMinutes());
+  const seconds = pad2(date.getSeconds());
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+}
 
 const maybeAlreadyFormatted = (value: string) => {
   const trimmed = value.trim();
@@ -34,15 +74,15 @@ export function formatDbDateTime(value: DbDateInput, options: FormatOptions = {}
     if (direct) return direct;
   }
 
-  const date = toDate(value);
+  const date = parseDbDateTime(value);
   if (!date) return fallback;
 
-  const day = pad2(date.getUTCDate());
-  const month = pad2(date.getUTCMonth() + 1);
-  const year = date.getUTCFullYear();
-  const hours = pad2(date.getUTCHours());
-  const minutes = pad2(date.getUTCMinutes());
-  const seconds = pad2(date.getUTCSeconds());
+  const day = pad2(date.getDate());
+  const month = pad2(date.getMonth() + 1);
+  const year = date.getFullYear();
+  const hours = pad2(date.getHours());
+  const minutes = pad2(date.getMinutes());
+  const seconds = pad2(date.getSeconds());
 
   if (dateOnly) return `${day}/${month}/${year}`;
   if (timeOnly) return withSeconds ? `${hours}:${minutes}:${seconds}` : `${hours}:${minutes}`;

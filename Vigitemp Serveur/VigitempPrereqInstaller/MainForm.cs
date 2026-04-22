@@ -2,7 +2,9 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32;
@@ -135,14 +137,17 @@ public sealed class MainForm : Form
 
         var startupDir = AppContext.BaseDirectory;
         var vcRedist = Path.Combine(startupDir, "vcredist", "VC_redist.x64.exe");
-        var nodeMsi = Path.Combine(startupDir, "node", "node-v24.12.0-x64.msi");
+        var nodeMsi = FindNodeInstaller(startupDir);
         var mySqlMsi = Path.Combine(startupDir, "mysql", "mysql-8.4.7-winx64.msi");
 
         vcRedist = Path.GetFullPath(vcRedist);
-        nodeMsi = Path.GetFullPath(nodeMsi);
+        if (!string.IsNullOrWhiteSpace(nodeMsi))
+        {
+            nodeMsi = Path.GetFullPath(nodeMsi);
+        }
         mySqlMsi = Path.GetFullPath(mySqlMsi);
 
-        if (!File.Exists(vcRedist) || !File.Exists(nodeMsi) || !File.Exists(mySqlMsi))
+        if (!File.Exists(vcRedist) || string.IsNullOrWhiteSpace(nodeMsi) || !File.Exists(nodeMsi) || !File.Exists(mySqlMsi))
         {
             MessageBox.Show("Les installeurs VC++, Node.js ou MySQL sont introuvables dans le package de prerequis.", "Installation impossible", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
@@ -193,6 +198,54 @@ public sealed class MainForm : Form
             _refreshButton.Enabled = true;
             _installButton.Enabled = true;
         }
+    }
+
+    private static string FindNodeInstaller(string startupDir)
+    {
+        var nodeDir = Path.Combine(startupDir, "node");
+        if (!Directory.Exists(nodeDir))
+        {
+            return null;
+        }
+
+        var candidates = Directory.GetFiles(nodeDir, "node-v*-x64.msi", SearchOption.TopDirectoryOnly)
+            .Concat(Directory.GetFiles(nodeDir, "node-*.msi", SearchOption.TopDirectoryOnly))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (candidates.Length == 0)
+        {
+            return null;
+        }
+
+        string bestPath = null;
+        Version bestVersion = null;
+        DateTime bestWriteTime = DateTime.MinValue;
+        var regex = new Regex(@"^node-v(?<v>\d+\.\d+\.\d+)-x64\.msi$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+        foreach (var candidate in candidates)
+        {
+            var fileName = Path.GetFileName(candidate);
+            var match = regex.Match(fileName);
+            if (match.Success && Version.TryParse(match.Groups["v"].Value, out var version))
+            {
+                if (bestVersion == null || version > bestVersion)
+                {
+                    bestVersion = version;
+                    bestPath = candidate;
+                }
+                continue;
+            }
+
+            var lastWrite = File.GetLastWriteTimeUtc(candidate);
+            if (bestPath == null || (bestVersion == null && lastWrite > bestWriteTime))
+            {
+                bestWriteTime = lastWrite;
+                bestPath = candidate;
+            }
+        }
+
+        return bestPath;
     }
 
     private async Task<int> RunInstallersAsync(string workingDirectory, string vcRedistPath, string nodeMsiPath, string mySqlMsiPath, PrerequisiteDetection detection)

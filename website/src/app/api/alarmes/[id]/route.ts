@@ -5,6 +5,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { log } from "@/lib/logger"
 import { applyAccessFilter, buildAlarmAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 function mapAlarmType(type: string | null | undefined) {
   switch ((type ?? "").trim().toUpperCase()) {
@@ -85,8 +86,8 @@ export const GET = withAuthLogging(
         maxThreshold: hasConfiguredThresholds
           ? alarm.t_lieu?.Tolerance_Surveillance_Sup ?? alarm.t_lieu?.Consigne_Sup ?? null
           : null,
-        triggeredAt: alarm.Date_Heure_Debut?.toISOString() || null,
-        endedAt: alarm.Date_Heure_Fin?.toISOString() || null,
+        triggeredAt: serializeDbDateTime(alarm.Date_Heure_Debut) || null,
+        endedAt: serializeDbDateTime(alarm.Date_Heure_Fin) || null,
       })
     } catch (error) {
       log.error("alarmes/[id]", "get_alarm_detail_failed", { error })

@@ -6,6 +6,7 @@ import { getPermissionAliases } from "@/lib/permissions"
 import { prisma, prismaMesure } from "@/lib/prisma"
 import { getAccessibleLieuIds } from "@/lib/location-access-scope"
 import { log } from "@/lib/logger"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 function extractAlarmId(comment: string | null | undefined): number | null {
   if (!comment) return null
@@ -198,8 +199,8 @@ export const GET = withAnyAuthorizationLogging(
           id: String(row.Id_Journal),
           alarmId,
           acknowledgedAt:
-            row.Date_Heure_Journal?.toISOString() ||
-            histo?.Date_Heure_Acquittement?.toISOString() ||
+            serializeDbDateTime(row.Date_Heure_Journal) ||
+            serializeDbDateTime(histo?.Date_Heure_Acquittement) ||
             null,
           acknowledgedBy: row.Nom_Utilisateur?.trim() || "-",
           comment: row.Commentaire_Utilisateur?.trim() || null,
@@ -209,8 +210,8 @@ export const GET = withAnyAuthorizationLogging(
           durationMs,
           alarmType: normalizeAlarmType(histo?.Type),
           alarmValue: value,
-          triggeredAt: histo?.Date_Heure_Debut?.toISOString() || null,
-          endedAt: histo?.Date_Heure_Fin?.toISOString() || null,
+          triggeredAt: serializeDbDateTime(histo?.Date_Heure_Debut) || null,
+          endedAt: serializeDbDateTime(histo?.Date_Heure_Fin) || null,
         }
       })
       const filteredData = type

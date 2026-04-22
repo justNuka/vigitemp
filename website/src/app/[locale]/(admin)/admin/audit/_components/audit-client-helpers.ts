@@ -1,4 +1,5 @@
 import type { AuditLog } from '@/lib/api'
+import { parseDbDateTime } from '@/lib/date-display'
 
 export interface AuditCode {
   Code_Journal: string
@@ -24,7 +25,8 @@ function joinParts(parts: string[], separator = ' - ') {
 }
 
 export function formatDateSafe(value: string, localeTag: string, timezone?: string): string | null {
-  const date = new Date(value)
+  const date = parseDbDateTime(value)
+  if (!date) return null
   if (Number.isNaN(date.getTime())) return null
 
   return date.toLocaleString(localeTag, {

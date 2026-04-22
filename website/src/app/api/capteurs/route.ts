@@ -7,6 +7,7 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 import { prisma } from "@/lib/prisma"
 import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 const createSensorSchema = z.object({
   name: z.string().min(1, "Name required"),
@@ -63,7 +64,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx: HandlerContext)
       status: lieu.Est_Lieu_En_Alarme === 1 ? "critical" : lieu.Est_Lieu_En_Pre_Alarme === 1 ? "warning" : "ok",
       value: lieu.Derniere_Valeur !== null ? parseFloat(lieu.Derniere_Valeur.toString()) : null,
       unit: lieu.Derniere_Unite || "°C",
-      lastUpdate: lieu.Derniere_Date_Heure?.toISOString() || new Date().toISOString(),
+      lastUpdate: serializeDbDateTime(lieu.Derniere_Date_Heure) || serializeDbDateTime(new Date()) || null,
       location: {
         id: lieu.Id_Site || 0,
         name: lieu.t_site?.Libelle_Site || "Unknown",

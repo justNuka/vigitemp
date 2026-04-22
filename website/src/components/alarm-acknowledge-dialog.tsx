@@ -21,7 +21,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import MonitoringDetailsModal from "@/components/monitoring-details-modal";
-import { formatDbDateTime } from "@/lib/date-display";
+import { formatDbDateTime, parseDbDateTime } from "@/lib/date-display";
 import { formatMeasureValue } from "@/lib/measurements";
 
 export type AcknowledgeDialogAlarm = {
@@ -204,10 +204,10 @@ export function AlarmAcknowledgeDialog({
 
   const formattedDuration = useMemo(() => {
     if (!resolvedAlarm.triggeredAt) return "-";
-    const start = new Date(resolvedAlarm.triggeredAt);
-    if (Number.isNaN(start.getTime())) return "-";
-    const end = resolvedAlarm.endedAt ? new Date(resolvedAlarm.endedAt) : new Date();
-    if (Number.isNaN(end.getTime())) return "-";
+    const start = parseDbDateTime(resolvedAlarm.triggeredAt);
+    if (!start || Number.isNaN(start.getTime())) return "-";
+    const end = resolvedAlarm.endedAt ? parseDbDateTime(resolvedAlarm.endedAt) : new Date();
+    if (!end || Number.isNaN(end.getTime())) return "-";
     return formatDistanceStrict(start, end, {
       locale: locale.toLowerCase().startsWith("fr") ? fr : undefined,
     });

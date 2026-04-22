@@ -37,6 +37,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useAppTimezone } from "@/components/timezone-provider";
+import { parseDbDateTime } from "@/lib/date-display";
 
 interface Props {
   logs: AuditLog[];
@@ -71,7 +72,10 @@ type ParsedDetails = {
 };
 
 function formatDateSafe(value: string, localeTag: string, timezone?: string): string | null {
-  const date = new Date(value);
+  const date = parseDbDateTime(value);
+  if (!date) {
+    return null;
+  }
   if (Number.isNaN(date.getTime())) {
     return null;
   }
@@ -243,7 +247,8 @@ export function AuditClient({ logs }: Props) {
       accessorKey: "timestamp",
       header: t("table.columns.timestamp"),
       cell: ({ row }) => {
-        const timestamp = new Date(row.getValue("timestamp") as string);
+        const timestamp = parseDbDateTime(row.getValue("timestamp") as string);
+        if (!timestamp || Number.isNaN(timestamp.getTime())) return t("table.empty_value");
         return (
           <span className="font-mono text-sm whitespace-nowrap">
             {timestamp.toLocaleString(localeTag, {

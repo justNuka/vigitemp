@@ -34,6 +34,50 @@ function Invoke-RobocopySafe {
     }
 }
 
+function Get-NodeMsiVersionFromName {
+    param([Parameter(Mandatory = $true)][string]$Path)
+    $name = [System.IO.Path]::GetFileName($Path)
+    $match = [regex]::Match($name, '^node-v(?<v>\d+\.\d+\.\d+)-x64\.msi$', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+    if ($match.Success) { return $match.Groups["v"].Value }
+    return $null
+}
+
+function Find-NodeInstaller {
+    param([Parameter(Mandatory = $true)][string]$InstallerDirectory)
+
+    if (-not (Test-Path $InstallerDirectory)) { return $null }
+
+    $candidates = @()
+    $candidates += Get-ChildItem -Path $InstallerDirectory -File -Filter "node-v*-x64.msi" -ErrorAction SilentlyContinue
+    $candidates += Get-ChildItem -Path $InstallerDirectory -File -Filter "node-*.msi" -ErrorAction SilentlyContinue
+    $uniqueCandidates = @($candidates | Sort-Object -Property FullName -Unique)
+    if ($uniqueCandidates.Count -eq 0) { return $null }
+
+    $decorated = $uniqueCandidates | ForEach-Object {
+        $version = Get-NodeMsiVersionFromName -Path $_.FullName
+        $versionObject = $null
+        if (-not [string]::IsNullOrWhiteSpace($version)) {
+            try { $versionObject = [version]$version } catch { $versionObject = $null }
+        }
+        [pscustomobject]@{
+            File = $_
+            Version = $version
+            VersionObject = $versionObject
+            LastWriteTime = $_.LastWriteTimeUtc
+        }
+    }
+
+    $bestWithVersion = $decorated |
+        Where-Object { $_.VersionObject -ne $null } |
+        Sort-Object -Property @{ Expression = { $_.VersionObject }; Descending = $true } |
+        Select-Object -First 1
+    if ($bestWithVersion) {
+        return $bestWithVersion.File.FullName
+    }
+
+    return ($decorated | Sort-Object -Property LastWriteTime -Descending | Select-Object -First 1).File.FullName
+}
+
 function Remove-DirectoryWithRetry {
     param(
         [Parameter(Mandatory = $true)][string]$Path,
@@ -317,9 +361,19 @@ New-Item -ItemType Directory -Force -Path $prereqRoot | Out-Null
 New-Item -ItemType Directory -Force -Path $prereqNodeDir | Out-Null
 
 
-$nodeMsiSource = Join-Path $installerSrc "node-v24.12.0-x64.msi"
-if (Test-Path $nodeMsiSource) {
-    Copy-Item -Path $nodeMsiSource -Destination (Join-Path $prereqNodeDir "node-v24.12.0-x64.msi") -Force
+$nodeMsiSource = Find-NodeInstaller -InstallerDirectory $installerSrc
+if (-not [string]::IsNullOrWhiteSpace($nodeMsiSource) -and (Test-Path $nodeMsiSource)) {
+    Get-ChildItem -Path $prereqNodeDir -File -Filter "node-*.msi" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+    $nodeMsiName = [System.IO.Path]::GetFileName($nodeMsiSource)
+    Copy-Item -Path $nodeMsiSource -Destination (Join-Path $prereqNodeDir $nodeMsiName) -Force
+    $detectedNodeVersion = Get-NodeMsiVersionFromName -Path $nodeMsiSource
+    if ($detectedNodeVersion) {
+        Write-Log "Node prerequisite copied: $nodeMsiName (version $detectedNodeVersion)"
+    } else {
+        Write-Log "Node prerequisite copied: $nodeMsiName"
+    }
+} else {
+    Write-Log "No Node MSI found in installer folder. Skipping Node prerequisite sync."
 }
 
 Write-Log "Done. Standalone package ready at: $OutputDir"

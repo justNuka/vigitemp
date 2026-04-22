@@ -5,6 +5,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getUserLocationScope, buildLieuAccessFilter } from "@/lib/location-access-scope"
 import { log } from "@/lib/logger"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 const querySchema = z.object({
   idLieu: z.coerce.number().int().positive(),
@@ -110,8 +111,8 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
     const alarms = merged.map((a) => ({
       Id_Alarme: a.Id_Alarme,
-      Date_Heure_Debut: a.Date_Heure_Debut?.toISOString() ?? startDate,
-      Date_Heure_Fin: a.Date_Heure_Fin?.toISOString() ?? null,
+      Date_Heure_Debut: serializeDbDateTime(a.Date_Heure_Debut) ?? startDate,
+      Date_Heure_Fin: serializeDbDateTime(a.Date_Heure_Fin) ?? null,
       Type: a.Type,
     }))
 

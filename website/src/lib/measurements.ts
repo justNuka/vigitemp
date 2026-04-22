@@ -1,4 +1,6 @@
-﻿export type MeasureData = {
+import { parseDbDateTime } from "@/lib/date-display"
+
+export type MeasureData = {
   id: string
   Valeur: number | null
   Unite: string
@@ -29,7 +31,8 @@ export type MeasureSummary = {
 export function getMeasureTimestamp(
   measure: Pick<MeasureData, "DateHeureMesureIso" | "DateHeureMesure">,
 ): number {
-  return Date.parse(measure.DateHeureMesureIso ?? measure.DateHeureMesure)
+  const parsed = parseDbDateTime(measure.DateHeureMesureIso ?? measure.DateHeureMesure)
+  return parsed ? parsed.getTime() : Number.NaN
 }
 
 export function sortMeasuresChronologically<T extends Pick<MeasureData, "DateHeureMesureIso" | "DateHeureMesure">>(
@@ -149,8 +152,8 @@ export function formatTimeAxisLabel(
   locale = "fr-FR",
   spanMs = 0,
 ): string | string[] {
-  const date = value instanceof Date ? value : new Date(value)
-  if (Number.isNaN(date.getTime())) {
+  const date = parseDbDateTime(value)
+  if (!date) {
     return typeof value === "string" ? value : ""
   }
 
@@ -172,4 +175,3 @@ export function formatTimeAxisLabel(
     minute: "2-digit",
   }).format(date)
 }
-

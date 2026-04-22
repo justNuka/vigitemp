@@ -18,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { useLieuMeasurements } from '@/hooks/useLieuMeasurements'
-import { formatDbDateTime } from '@/lib/date-display'
+import { formatDbDateTime, parseDbDateTime } from '@/lib/date-display'
 import type { LieuTypeValue } from '@/lib/lieu-types'
 import { calculateYDomain, formatMeasureValue, getMeasureSummary, sortMeasuresChronologically } from '@/lib/measurements'
 import { cn } from '@/lib/utils'
@@ -131,14 +131,15 @@ export default function MonitoringCard({
   const orderedData = useMemo(() => sortMeasuresChronologically(data), [data])
   const liveMeasurementDate = useMemo(() => {
     if (!lastMeasurement) return null
-    const parsed = new Date(lastMeasurement)
+    const parsed = parseDbDateTime(lastMeasurement)
+    if (!parsed) return null
     return Number.isNaN(parsed.getTime()) ? null : parsed
   }, [lastMeasurement])
 
   const previewData = useMemo(() => {
     if (currentValue === null || !liveMeasurementDate) return orderedData
     const lastPoint = orderedData[orderedData.length - 1]
-    const lastPointDate = lastPoint?.DateHeureMesureIso ? new Date(lastPoint.DateHeureMesureIso) : null
+    const lastPointDate = lastPoint?.DateHeureMesureIso ? parseDbDateTime(lastPoint.DateHeureMesureIso) : null
 
     if (lastPointDate && !Number.isNaN(lastPointDate.getTime()) && liveMeasurementDate <= lastPointDate) {
       return orderedData
@@ -269,7 +270,8 @@ export default function MonitoringCard({
   const surveillanceDisabledLabel = useMemo(() => {
     if (isSurveillanceActive) return null
     if (!surveillanceDisabledSince) return t('surveillance.disabled')
-    const date = new Date(surveillanceDisabledSince)
+    const date = parseDbDateTime(surveillanceDisabledSince)
+    if (!date) return t('surveillance.disabled')
     if (Number.isNaN(date.getTime())) return t('surveillance.disabled')
     const formattedDate = formatDbDateTime(date, { withSeconds: false })
     if (surveillanceDisabledBy) {
@@ -283,7 +285,8 @@ export default function MonitoringCard({
   const alarmDisabledLabel = useMemo(() => {
     if (isAlarmActive) return null
     if (!alarmDisabledUntil) return t('alarms.disabled')
-    const date = new Date(alarmDisabledUntil)
+    const date = parseDbDateTime(alarmDisabledUntil)
+    if (!date) return t('alarms.disabled')
     if (Number.isNaN(date.getTime())) return t('alarms.disabled')
     return t('alarms.disabled_until', { date: formatDbDateTime(date, { withSeconds: false }) })
   }, [alarmDisabledUntil, isAlarmActive, t])

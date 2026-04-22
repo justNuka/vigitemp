@@ -6,6 +6,7 @@ import { getRequestContext } from "@/lib/api-logger"
 import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { sendAlarmEventEmails } from "@/lib/alarm-email"
+import { serializeDbDateTime } from "@/lib/date-display"
 
 export const POST = withAuthLogging(
   async (req: NextRequest, ctx: HandlerContext, { params }: { params: Promise<{ id: string }> }) => {
@@ -73,7 +74,7 @@ export const POST = withAuthLogging(
       return apiOk({
         id: alarm.Id_Alarme,
         status: "resolved",
-        resolvedAt: alarm.Date_Heure_Fin?.toISOString() || null,
+        resolvedAt: serializeDbDateTime(alarm.Date_Heure_Fin),
       })
     } catch (error) {
       log.error("alarmes/resolve", "resolve_alarm_error", { error: error });
