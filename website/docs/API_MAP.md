@@ -1,4 +1,4 @@
-﻿# Map API (canon FR)
+# Map API (canon FR)
 
 Dernière mise à jour : audit des fichiers `website/src/app/api/**/route.ts`.
 

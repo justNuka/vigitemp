@@ -13,7 +13,7 @@ import {
 const configSchema = z.object({
   enabled: z.boolean(),
   recipients: z.string().default(""),
-  dayOfMonth: z.number().int().min(1).max(28),
+  dayOfMonth: z.number().int().min(1).max(31),
   hourLocal: z.number().int().min(0).max(23),
   includeLocationSummary: z.boolean(),
   includeSettingsSummary: z.boolean(),
@@ -55,4 +55,3 @@ export const PUT = withAuthorizationLogging("GERER_PROFIL", async (req: NextRequ
     return apiError(500, "monthly_stats_config_save_failed", "Erreur lors de l'enregistrement de la configuration")
   }
 })
-

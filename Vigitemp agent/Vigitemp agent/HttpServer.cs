@@ -10,6 +10,7 @@ using System.Text;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Web;
 using System.Windows.Forms;
 using System.ComponentModel;
@@ -23,6 +24,8 @@ namespace VigitempAgent
     {
         public static volatile HttpListener listener;
         private static int _resourceAssemblyResolverRegistered;
+        private static Mutex _singleInstanceMutex;
+        private const string SingleInstanceMutexName = @"Global\VigiSensys.VigitempAgent";
 
         public static string url_localhost = "http://127.0.0.1:8000/";
 
@@ -1035,6 +1038,12 @@ namespace VigitempAgent
                     return;
                 }
 
+                if (!TryAcquireSingleInstance())
+                {
+                    AgentLog.Info("Another VigitempAgent instance is already running. Exiting duplicate process.");
+                    return;
+                }
+
                 EnsureResourceAssemblyResolver();
 
                 Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
@@ -1092,8 +1101,10 @@ namespace VigitempAgent
                     // ignore
                 }
             }
-
-
+            finally
+            {
+                ReleaseSingleInstance();
+            }
         }
 
         private static void EnsureResourceAssemblyResolver()
@@ -1126,6 +1137,46 @@ namespace VigitempAgent
                     return null;
                 }
             };
+        }
+
+        private static bool TryAcquireSingleInstance()
+        {
+            try
+            {
+                bool createdNew;
+                _singleInstanceMutex = new Mutex(true, SingleInstanceMutexName, out createdNew);
+                if (!createdNew)
+                {
+                    _singleInstanceMutex.Dispose();
+                    _singleInstanceMutex = null;
+                }
+
+                return createdNew;
+            }
+            catch (Exception ex)
+            {
+                AgentLog.Error("Unable to acquire single instance mutex.", ex);
+                return true;
+            }
+        }
+
+        private static void ReleaseSingleInstance()
+        {
+            try
+            {
+                if (_singleInstanceMutex == null)
+                {
+                    return;
+                }
+
+                _singleInstanceMutex.ReleaseMutex();
+                _singleInstanceMutex.Dispose();
+                _singleInstanceMutex = null;
+            }
+            catch
+            {
+                // ignore
+            }
         }
     }
 }

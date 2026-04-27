@@ -1,3 +1,5 @@
+import { normalizeAvatarValue } from "@/lib/avatar-storage"
+
 type AvatarPreset = {
   id: string
   start: string
@@ -48,7 +50,7 @@ export function resolveAvatarSrc(
   _initials: string,
 ): string | null {
   if (!avatarValue) return null
-  if (!isAvatarPreset(avatarValue)) return avatarValue
+  if (!isAvatarPreset(avatarValue)) return normalizeAvatarValue(avatarValue)
 
   const presetId = getAvatarPresetId(avatarValue)
   if (!presetId) return null

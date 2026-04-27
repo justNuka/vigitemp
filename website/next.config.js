@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const withNextIntl = createNextIntlPlugin(
-  // optionnel : si le fichier n'est pas ? l'emplacement par d?faut
+  // optionnel : si le fichier n'est pas à l'emplacement par défaut
   "./src/i18n/request.ts"
 );
 

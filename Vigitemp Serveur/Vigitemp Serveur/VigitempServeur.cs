@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
 using System.Configuration;
+using System.Threading.Tasks;
 
 namespace Vigitemp_Serveur
 {
@@ -24,6 +25,7 @@ namespace Vigitemp_Serveur
         private static readonly object _lock = new object();
         private static readonly long _maxLogFileSizeBytes =
             GetSettingInt("Vigitemp.Log.MaxFileSizeMB", 10) * 1024L * 1024L;
+        private static int _exceptionHooksInitialized = 0;
         private System.Timers.Timer _timer;
         private HotlineApiServer _hotlineApi;
         private volatile bool _powerSuspendRequested;
@@ -33,6 +35,10 @@ namespace Vigitemp_Serveur
         private readonly object _workersLock = new object();
         private readonly Dictionary<int, (ThreadServeur worker, CancellationTokenSource cts)> _workers =
             new Dictionary<int, (ThreadServeur worker, CancellationTokenSource cts)>();
+        private const int MinWorkerCount = 1;
+        private const int MaxWorkerCount = 16;
+        private string _lastLoggedWorkerConfigSignature = null;
+        private static readonly TimeSpan WorkerHeartbeatStaleAfter = TimeSpan.FromMinutes(3);
         public VigitempServeur()
         {
             InitializeComponent();
@@ -257,15 +263,44 @@ namespace Vigitemp_Serveur
 
         private void StartWorker(int idServeur)
         {
+            ThreadServeur workerToStart = null;
+            CancellationTokenSource ctsToStart = null;
+
             lock (_workersLock)
             {
                 if (_workers.ContainsKey(idServeur)) return;
 
-                var cts = new CancellationTokenSource();
-                var worker = new ThreadServeur(cts.Token, idServeur, _offsetDisabledForPack);
-                worker.Start();
-                _workers[idServeur] = (worker, cts);
+                ctsToStart = new CancellationTokenSource();
+                workerToStart = new ThreadServeur(ctsToStart.Token, idServeur, GetConfiguredWorkerServerIdsSnapshot, _offsetDisabledForPack);
+                _workers[idServeur] = (workerToStart, ctsToStart);
             }
+
+            try
+            {
+                Log($"StartWorker request: worker={idServeur}");
+                workerToStart.Start();
+                Log($"StartWorker success: worker={idServeur}");
+            }
+            catch (Exception ex)
+            {
+                lock (_workersLock)
+                {
+                    if (_workers.TryGetValue(idServeur, out var current) && object.ReferenceEquals(current.worker, workerToStart))
+                    {
+                        _workers.Remove(idServeur);
+                    }
+                }
+
+                try { ctsToStart?.Cancel(); } catch { /* ignore */ }
+                try { ctsToStart?.Dispose(); } catch { /* ignore */ }
+                Log($"StartWorker failed: worker={idServeur} error={ex}");
+                throw;
+            }
+        }
+
+        private IReadOnlyList<int> GetConfiguredWorkerServerIdsSnapshot()
+        {
+            return GetConfiguredWorkerServerIds();
         }
 
         private void StopWorker(int idServeur)
@@ -299,16 +334,21 @@ namespace Vigitemp_Serveur
 
         private void SyncWorkersWithDatabase()
         {
-            List<int> arr_serveurs;
-            using (IDatabaseProvider db = DatabaseFactory.Create())
-            {
-                arr_serveurs = db.getDistinctIdServeur();
-            }
+            Log("SyncWorkersWithDatabase: start");
+            var arr_serveurs = GetConfiguredWorkerServerIds();
+            Log("SyncWorkersWithDatabase: configured workers=[" + string.Join(",", arr_serveurs) + "]");
 
             // ajout de potentiel nouveau serveur cr?? depuis le lancement du service
             foreach (int idServeur in arr_serveurs)
             {
-                StartWorker(idServeur);
+                try
+                {
+                    StartWorker(idServeur);
+                }
+                catch (Exception ex)
+                {
+                    Log($"SyncWorkersWithDatabase: start worker failed worker={idServeur} error={ex.Message}");
+                }
             }
 
             // suppression des serveurs qui ne sont plus utilis?s par les sondes
@@ -325,6 +365,7 @@ namespace Vigitemp_Serveur
                     StopWorker(idServeur);
                 }
             }
+            Log("SyncWorkersWithDatabase: done");
         }
 
         protected override void OnStart(string[] args)
@@ -343,6 +384,8 @@ namespace Vigitemp_Serveur
             {
                 // ignore
             }
+
+            EnsureGlobalExceptionHooks();
 
             VigitempServeur.Log("Demarrage du service Vigitemp");
             AppContext.SetSwitch("Switch.System.Threading.UseNetCoreTimer", true);
@@ -368,24 +411,54 @@ namespace Vigitemp_Serveur
                 VigitempServeur.Log("Mode licence Pack: application de l'offset des sondes desactivee.");
             }
 
+            VigitempServeur.Log("OnStart: pre-sync sleep 2s");
             Thread.Sleep(2000);
-            SyncWorkersWithDatabase();
+            VigitempServeur.Log("OnStart: worker sync begin");
+            var syncSw = Stopwatch.StartNew();
+            try
+            {
+                var syncTask = Task.Run(() => SyncWorkersWithDatabase());
+                if (!syncTask.Wait(TimeSpan.FromSeconds(45)))
+                {
+                    VigitempServeur.Log("OnStart: worker sync timeout after 45s (startup continues).");
+                }
+                else if (syncTask.IsFaulted && syncTask.Exception != null)
+                {
+                    VigitempServeur.Log("OnStart: worker sync failed: " + syncTask.Exception.GetBaseException());
+                }
+                else
+                {
+                    VigitempServeur.Log($"OnStart: worker sync complete in {syncSw.Elapsed.TotalSeconds:n1}s");
+                }
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("OnStart: worker sync exception: " + ex);
+            }
+            finally
+            {
+                syncSw.Stop();
+            }
 
             _timer = new System.Timers.Timer(60000);//timer de 1 minutes
                                                     //Set action associated to each tick
             _timer.Elapsed += Process;
             //Start the timer
             _timer.Start();
+            VigitempServeur.Log("OnStart: maintenance timer started (60s).");
 
             try
             {
                 _hotlineApi = new HotlineApiServer();
                 _hotlineApi.Start();
+                VigitempServeur.Log("OnStart: hotline API started.");
             }
             catch (Exception ex)
             {
                 VigitempServeur.Log("Hotline API start failed: " + ex.Message);
             }
+
+            VigitempServeur.Log("OnStart: completed.");
         }
 
         public void StartConsole(string[] args)
@@ -440,11 +513,7 @@ namespace Vigitemp_Serveur
                 Interlocked.Exchange(ref _lastResumeSuspendAtUtcTicks, 0L);
 
                 // Console.WriteLine("Guid: "+systemi());
-                List<int> arr_serveurs;
-                using (IDatabaseProvider db = DatabaseFactory.Create())
-                {
-                    arr_serveurs = db.getDistinctIdServeur();
-                }
+                var arr_serveurs = GetConfiguredWorkerServerIds();
                 //ajout de potentiel nouveau serveur cr?? depuis le lancement du service
                 foreach (int idServeur in arr_serveurs)
                 {
@@ -464,10 +533,57 @@ namespace Vigitemp_Serveur
                         StopWorker(idServeur);
                     }
                 }
+
+                RestartStalledWorkersIfNeeded();
             }
             catch (Exception ex)
             {
                 VigitempServeur.Log("VigitempServeur.Process error: " + ex);
+            }
+        }
+
+        private void RestartStalledWorkersIfNeeded()
+        {
+            var nowUtc = DateTime.UtcNow;
+            List<int> staleWorkers = null;
+
+            lock (_workersLock)
+            {
+                foreach (var kvp in _workers)
+                {
+                    var workerId = kvp.Key;
+                    var worker = kvp.Value.worker;
+                    if (worker == null) continue;
+
+                    var heartbeatUtc = worker.LastSchedulerHeartbeatUtc;
+                    if (heartbeatUtc == DateTime.MinValue) continue;
+
+                    if ((nowUtc - heartbeatUtc) > WorkerHeartbeatStaleAfter)
+                    {
+                        if (staleWorkers == null) staleWorkers = new List<int>();
+                        staleWorkers.Add(workerId);
+                    }
+                }
+            }
+
+            if (staleWorkers == null || staleWorkers.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var workerId in staleWorkers)
+            {
+                try
+                {
+                    VigitempServeur.Log(
+                        $"Worker heartbeat stale: worker={workerId} staleAfterMin={WorkerHeartbeatStaleAfter.TotalMinutes}. Restarting worker.");
+                    StopWorker(workerId);
+                    StartWorker(workerId);
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log($"Worker restart failed worker={workerId}: {ex}");
+                }
             }
         }
 
@@ -480,19 +596,15 @@ namespace Vigitemp_Serveur
 
                 using (IDatabaseProvider db = DatabaseFactory.Create())
                 {
-                    var serverIds = db.getDistinctIdServeur();
-                    foreach (var serverId in serverIds)
+                    var activeSondes = db.getSondesActivesAllServeurs();
+                    foreach (var sonde in activeSondes)
                     {
-                        var activeSondes = db.getSondesActivesByServeur(serverId);
-                        foreach (var sonde in activeSondes)
-                        {
-                            if (sonde == null || sonde.IdLieu <= 0) continue;
-                            if (!processedLieuIds.Add(sonde.IdLieu)) continue;
+                        if (sonde == null || sonde.IdLieu <= 0) continue;
+                        if (!processedLieuIds.Add(sonde.IdLieu)) continue;
 
-                            if (db.setPowerAlarm(sonde.IdLieu, sonde.SondeNumeroSerie, isActive))
-                            {
-                                updatedCount++;
-                            }
+                        if (db.setPowerAlarm(sonde.IdLieu, sonde.SondeNumeroSerie, isActive))
+                        {
+                            updatedCount++;
                         }
                     }
                 }
@@ -505,6 +617,79 @@ namespace Vigitemp_Serveur
             {
                 VigitempServeur.Log("SetPowerAlarmStateForAllLocations failed: " + ex.Message);
             }
+        }
+
+        private List<int> GetConfiguredWorkerServerIds()
+        {
+            var count = 1;
+            var ports = new List<string>();
+            try
+            {
+                using (var db = DatabaseFactory.Create())
+                {
+                    var rows = db.getSondesActivesAllServeurs();
+                    ports = rows
+                        .Where(r => r != null && !string.IsNullOrWhiteSpace(r.PortSerie))
+                        .Select(r => r.PortSerie.Trim().ToUpperInvariant())
+                        .Distinct(StringComparer.Ordinal)
+                        .OrderBy(p => p, StringComparer.Ordinal)
+                        .ToList();
+                }
+
+                count = Math.Max(1, ports.Count);
+            }
+            catch (Exception ex)
+            {
+                Log("Worker auto-config read failed, fallback to 1 worker: " + ex.Message);
+                count = 1;
+            }
+
+            if (count < MinWorkerCount) count = MinWorkerCount;
+            if (count > MaxWorkerCount) count = MaxWorkerCount;
+
+            var ids = Enumerable.Range(1, count).ToList();
+            var portsText = ports.Count == 0 ? "none" : string.Join(",", ports.Take(12));
+            var signature = $"count={count}|ports={portsText}|ids={string.Join(",", ids)}";
+            if (!string.Equals(_lastLoggedWorkerConfigSignature, signature, StringComparison.Ordinal))
+            {
+                _lastLoggedWorkerConfigSignature = signature;
+                Log("Worker auto-config: ports=" + ports.Count + " [" + portsText + "] => workers=[" + string.Join(",", ids) + "]");
+            }
+            return ids;
+        }
+
+        private static void EnsureGlobalExceptionHooks()
+        {
+            if (Interlocked.CompareExchange(ref _exceptionHooksInitialized, 1, 0) != 0)
+            {
+                return;
+            }
+
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+            {
+                try
+                {
+                    var ex = args.ExceptionObject as Exception;
+                    Log("UnhandledException: " + (ex != null ? ex.ToString() : args.ExceptionObject?.ToString()));
+                }
+                catch
+                {
+                    // ignore
+                }
+            };
+
+            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (sender, args) =>
+            {
+                try
+                {
+                    Log("UnobservedTaskException: " + args.Exception);
+                    args.SetObserved();
+                }
+                catch
+                {
+                    // ignore
+                }
+            };
         }
 
 

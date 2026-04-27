@@ -652,7 +652,7 @@ namespace Vigitemp_Serveur
                         cmd_vigitemp.CommandText = "SELECT Frequence, Consigne, " +
                                                     "Tolerance_Surveillance_Sup as Consigne_Sup, " +
                                                     "Tolerance_Surveillance_Inf as Consigne_Inf, " +
-                                                    "t_module.Id_Serveur, Nom_Lieu, Id_Lieu, t_lieu.Est_Lieu_En_Alarme, t_lieu.Sonde_Numero_Serie, t_sonde.Id_Sonde FROM t_lieu " +
+                                                    "Nom_Lieu, Id_Lieu, t_lieu.Est_Lieu_En_Alarme, t_lieu.Sonde_Numero_Serie, t_sonde.Id_Sonde FROM t_lieu " +
                                                     "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                                                     "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
                                       "LEFT JOIN t_sonde_type tt ON tt.Sonde_Type = t_sonde.Sonde_Type " +
@@ -668,7 +668,7 @@ namespace Vigitemp_Serveur
                         float consigneSup;
                         float consigneInf;
                         int frequence;
-                        object idServeur;
+                        const int idServeurBdd = 1;
                         int estEtatAlarme;
 
                         using (var dr_lieux = cmd_vigitemp.ExecuteReader())
@@ -686,7 +686,6 @@ namespace Vigitemp_Serveur
                             consigneSup = GetFloatOrDefault(dr_lieux["Consigne_Sup"]);
                             consigneInf = GetFloatOrDefault(dr_lieux["Consigne_Inf"]);
                             frequence = (int)dr_lieux["Frequence"];
-                            idServeur = dr_lieux["Id_Serveur"];
                             estEtatAlarme = Convert.ToInt32(dr_lieux["Est_Lieu_En_Alarme"]);
                         }
 
@@ -698,7 +697,7 @@ namespace Vigitemp_Serveur
                                                             "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, @estEtatAlarme)";
 
                         // utilisation de l'objet contact pass? en param?tre 
-                        cmd_vigitemp_mesure.Parameters.AddWithValue("@idserveurbdd", idServeur);
+                        cmd_vigitemp_mesure.Parameters.AddWithValue("@idserveurbdd", idServeurBdd);
                         cmd_vigitemp_mesure.Parameters.AddWithValue("@dateheuremesure", now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
                         cmd_vigitemp_mesure.Parameters.AddWithValue("@valeur", p_valeur);
                         cmd_vigitemp_mesure.Parameters.AddWithValue("@resistance", (object)p_resistance ?? DBNull.Value);
@@ -783,7 +782,7 @@ namespace Vigitemp_Serveur
                     cmd_vigitemp.CommandText = "SELECT Frequence, Consigne, " +
                                                 "Tolerance_Surveillance_Sup as Consigne_Sup, " +
                                                 "Tolerance_Surveillance_Inf as Consigne_Inf, " +
-                                                "t_module.Id_Serveur, Id_Lieu, t_lieu.Est_Lieu_En_Alarme FROM t_lieu " +
+                                                "Id_Lieu, t_lieu.Est_Lieu_En_Alarme FROM t_lieu " +
                                                 "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                                                 "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
                                                 "WHERE t_lieu.Sonde_Numero_Serie = @serial " +
@@ -796,7 +795,7 @@ namespace Vigitemp_Serveur
                     float consigneSup;
                     float consigneInf;
                     int frequence;
-                    object idServeur;
+                    const int idServeurBdd = 1;
                     int estEtatAlarme;
 
                     using (var reader = cmd_vigitemp.ExecuteReader())
@@ -812,7 +811,6 @@ namespace Vigitemp_Serveur
                         consigneSup = GetFloatOrDefault(reader["Consigne_Sup"]);
                         consigneInf = GetFloatOrDefault(reader["Consigne_Inf"]);
                         frequence = (int)reader["Frequence"];
-                        idServeur = reader["Id_Serveur"];
                         estEtatAlarme = Convert.ToInt32(reader["Est_Lieu_En_Alarme"]);
                     }
 
@@ -831,7 +829,7 @@ namespace Vigitemp_Serveur
                                             "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Etat_Alarme) " +
                                             "VALUES " +
                                             "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, @estEtatAlarme)";
-                    cmdInsert.Parameters.AddWithValue("@idserveurbdd", idServeur);
+                    cmdInsert.Parameters.AddWithValue("@idserveurbdd", idServeurBdd);
                     cmdInsert.Parameters.AddWithValue("@dateheuremesure", measureDateTime.ToString("yyyy-MM-dd HH:mm:ss.fff"));
                     cmdInsert.Parameters.AddWithValue("@valeur", p_valeur);
                     cmdInsert.Parameters.AddWithValue("@resistance", (object)p_resistance ?? DBNull.Value);
@@ -911,7 +909,7 @@ namespace Vigitemp_Serveur
                     cmd_vigitemp.CommandText = "SELECT Frequence, Consigne, " +
                                                 "Tolerance_Surveillance_Sup as Consigne_Sup, " +
                                                 "Tolerance_Surveillance_Inf as Consigne_Inf, " +
-                                                "t_module.Id_Serveur, Id_Lieu, t_lieu.Est_Lieu_En_Alarme, t_sonde.Id_Sonde FROM t_lieu " +
+                                                "Id_Lieu, t_lieu.Est_Lieu_En_Alarme, t_sonde.Id_Sonde FROM t_lieu " +
                                                 "INNER JOIN t_sonde ON t_lieu.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
                                                 "INNER JOIN t_module ON t_sonde.Id_Module = t_module.Id_Module " +
                                                 "WHERE t_lieu.Sonde_Numero_Serie = @serial " +
@@ -925,7 +923,7 @@ namespace Vigitemp_Serveur
                     float consigneSup;
                     float consigneInf;
                     int frequence;
-                    object idServeur;
+                    const int idServeurBdd = 1;
                     int estEtatAlarme;
 
                     using (var dr_lieux = cmd_vigitemp.ExecuteReader())
@@ -942,7 +940,6 @@ namespace Vigitemp_Serveur
                         consigneSup = GetFloatOrDefault(dr_lieux["Consigne_Sup"]);
                         consigneInf = GetFloatOrDefault(dr_lieux["Consigne_Inf"]);
                         frequence = (int)dr_lieux["Frequence"];
-                        idServeur = dr_lieux["Id_Serveur"];
                         estEtatAlarme = Convert.ToInt32(dr_lieux["Est_Lieu_En_Alarme"]);
                     }
 
@@ -954,7 +951,7 @@ namespace Vigitemp_Serveur
                                                         "VALUES " +
                                                         "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, @estEtatAlarme, 1)";
 
-                    cmd_vigitemp_mesure.Parameters.AddWithValue("@idserveurbdd", idServeur);
+                    cmd_vigitemp_mesure.Parameters.AddWithValue("@idserveurbdd", idServeurBdd);
                     cmd_vigitemp_mesure.Parameters.AddWithValue("@dateheuremesure", now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
                     cmd_vigitemp_mesure.Parameters.AddWithValue("@valeur", DBNull.Value);
                     cmd_vigitemp_mesure.Parameters.AddWithValue("@resistance", DBNull.Value);
@@ -997,6 +994,16 @@ namespace Vigitemp_Serveur
 
         public List<SondeScheduleInfo> getSondesActivesByServeur(int idServeur)
         {
+            return getSondesActivesInternal();
+        }
+
+        public List<SondeScheduleInfo> getSondesActivesAllServeurs()
+        {
+            return getSondesActivesInternal();
+        }
+
+        private List<SondeScheduleInfo> getSondesActivesInternal()
+        {
             lock (_lock)
             {
                 var list = new List<SondeScheduleInfo>();
@@ -1036,11 +1043,9 @@ namespace Vigitemp_Serveur
                                       "    FROM t_etalonnage" +
                                       "  ) ranked_e WHERE rn = 1" +
                                       ") te ON te.Sonde_Numero_Serie = t_sonde.Sonde_Numero_Serie " +
-                                      "WHERE t_module.Id_Serveur = @idServeur " +
-                                      "AND t_lieu.Lieu_Etat = 'S' " +
+                                      "WHERE t_lieu.Lieu_Etat = 'S' " +
                                       "AND t_sonde.Etat_Sonde = 'S' " +
                                       "AND IFNULL(t_sonde.Est_Sonde_GSO, 0) = 0;";
-                    cmd.Parameters.AddWithValue("@idServeur", idServeur);
 
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -1102,7 +1107,7 @@ namespace Vigitemp_Serveur
                 }
                 catch (Exception ex)
                 {
-                    VigitempServeur.Log("(getSondesActivesByServeur) SQL Erreur: " + ex);
+                    VigitempServeur.Log("(getSondesActivesInternal) SQL Erreur: " + ex);
                     return list;
                 }
             }
@@ -1166,38 +1171,9 @@ namespace Vigitemp_Serveur
 
         public List<int> getDistinctIdServeur()
         {
-            lock (_lock)
-            {
-                List<int> array_tmp = new List<int>();
-
-                if (!EnsureConnected())
-                {
-                    return array_tmp;
-                }
-
-                using (var cmd_vigitemp = connection_vigitemp.CreateCommand())
-                {
-                    cmd_vigitemp.CommandText = "SELECT distinct Id_Serveur FROM t_sonde " +
-                                                "where Etat_Sonde = 'S' " +
-                                                "AND IFNULL(Est_Sonde_GSO, 0) = 0;";
-
-                    // Ex?cution de la commande SQL
-                    using (var dr_lieux = cmd_vigitemp.ExecuteReader())
-                    {
-                        while (dr_lieux.Read())
-                        {
-                            if (dr_lieux["Id_Serveur"] == DBNull.Value)
-                            {
-                                continue;
-                            }
-
-                            array_tmp.Add(Convert.ToInt32(dr_lieux["Id_Serveur"]));
-                        }
-                    }
-                }
-
-                return array_tmp;
-            }
+            // Legacy API kept for backward compatibility.
+            // Worker orchestration no longer depends on t_sonde.Id_Serveur.
+            return new List<int> { 1 };
         }
 
         public (List<int>, List<DateTime>) getLieuxAvecAlarmesEnSnooze()
@@ -1596,6 +1572,7 @@ namespace Vigitemp_Serveur
 
                     if (isActive)
                     {
+                        var alarmUnit = getLieuUnite(idLieu) ?? string.Empty;
                         using (var transaction = connection_vigitemp.BeginTransaction())
                         {
                             try
@@ -1619,10 +1596,11 @@ namespace Vigitemp_Serveur
                                         "INSERT INTO t_alarme " +
                                         "(Date_Heure_Debut, Valeur, Type, Id_Lieu, Sonde_Numero_Serie, Unite, " +
                                         "Est_Acquittee, Date_Heure_Derniere_Mesure, Est_Alarme_Pour_VigiTel, Est_Mail_Envoye, Est_Tel_Acquittee) " +
-                                        "VALUES (NOW(), NULL, @type, @idLieu, @serie, NULL, 0, NOW(), 0, 0, 0);";
+                                        "VALUES (NOW(), NULL, @type, @idLieu, @serie, @unite, 0, NOW(), 0, 0, 0);";
                                     cmdInsert.Parameters.AddWithValue("@idLieu", idLieu);
                                     cmdInsert.Parameters.AddWithValue("@type", alarmType);
                                     cmdInsert.Parameters.AddWithValue("@serie", sondeNumeroSerie ?? string.Empty);
+                                    cmdInsert.Parameters.AddWithValue("@unite", alarmUnit);
                                     cmdInsert.ExecuteNonQuery();
 
                                     var cmdId = this.connection_vigitemp.CreateCommand();
@@ -1640,11 +1618,12 @@ namespace Vigitemp_Serveur
                                     var cmdUpdate = this.connection_vigitemp.CreateCommand();
                                     cmdUpdate.Transaction = transaction;
                                     cmdUpdate.CommandText =
-                                        "UPDATE t_alarme SET Date_Heure_Derniere_Mesure = NOW(), " +
+                                        "UPDATE t_alarme SET Date_Heure_Derniere_Mesure = NOW(), Unite = @unite, " +
                                         "Est_Acquittee = 0, Est_Tel_Acquittee = 0 " +
                                         "WHERE Id_Alarme = @idAlarme;";
                                     alarmId = Convert.ToInt32(existing);
                                     cmdUpdate.Parameters.AddWithValue("@idAlarme", alarmId.Value);
+                                    cmdUpdate.Parameters.AddWithValue("@unite", alarmUnit);
                                     cmdUpdate.ExecuteNonQuery();
                                 }
 
@@ -1986,12 +1965,7 @@ namespace Vigitemp_Serveur
                     var cmd = this.connection_vigitemp.CreateCommand();
                     cmd.CommandText =
                         "SELECT MAX(a.Id_Alarme) " +
-                        "FROM t_alarme a " +
-                        "INNER JOIN t_lieu l ON a.Id_Lieu = l.Id_Lieu " +
-                        "INNER JOIN t_sonde s ON l.Sonde_Numero_Serie = s.Sonde_Numero_Serie " +
-                        "INNER JOIN t_module m ON s.Id_Module = m.Id_Module " +
-                        "WHERE m.Id_Serveur = @idServeur;";
-                    cmd.Parameters.AddWithValue("@idServeur", idServeur);
+                        "FROM t_alarme a;";
 
                     var result = cmd.ExecuteScalar();
                     if (result == null || result == DBNull.Value) return 0;
@@ -2022,16 +1996,11 @@ namespace Vigitemp_Serveur
                     cmd.CommandText =
                         "SELECT a.Id_Alarme, a.Id_Lieu, a.Type, a.Valeur, a.Unite, a.Date_Heure_Debut " +
                         "FROM t_alarme a " +
-                        "INNER JOIN t_lieu l ON a.Id_Lieu = l.Id_Lieu " +
-                        "INNER JOIN t_sonde s ON l.Sonde_Numero_Serie = s.Sonde_Numero_Serie " +
-                        "INNER JOIN t_module m ON s.Id_Module = m.Id_Module " +
                         "WHERE a.Id_Alarme > @lastId " +
                         "AND a.Date_Heure_Debut IS NOT NULL " +
-                        "AND m.Id_Serveur = @idServeur " +
                         "ORDER BY a.Id_Alarme ASC " +
                         "LIMIT @limit;";
                     cmd.Parameters.AddWithValue("@lastId", lastAlarmId);
-                    cmd.Parameters.AddWithValue("@idServeur", idServeur);
                     cmd.Parameters.AddWithValue("@limit", limit);
 
                     using (var reader = cmd.ExecuteReader())
@@ -2086,19 +2055,14 @@ namespace Vigitemp_Serveur
                         "FROM (" +
                         "  SELECT a.Id_Lieu, MIN(a.Id_Alarme) AS First_Alarm_Id, MIN(a.Date_Heure_Fin) AS First_End " +
                         "  FROM t_alarme a " +
-                        "  INNER JOIN t_lieu l ON a.Id_Lieu = l.Id_Lieu " +
-                        "  INNER JOIN t_sonde s ON l.Sonde_Numero_Serie = s.Sonde_Numero_Serie " +
-                        "  INNER JOIN t_module m ON s.Id_Module = m.Id_Module " +
                         "  WHERE a.Date_Heure_Fin IS NOT NULL " +
                         "  AND a.Date_Heure_Fin > @since " +
-                        "  AND m.Id_Serveur = @idServeur " +
                         "  AND NOT EXISTS (SELECT 1 FROM t_alarme x WHERE x.Id_Lieu = a.Id_Lieu AND x.Date_Heure_Fin IS NULL) " +
                         "  GROUP BY a.Id_Lieu" +
                         ") ended " +
                         "ORDER BY ended.First_End ASC " +
                         "LIMIT @limit;";
                     cmd.Parameters.AddWithValue("@since", sinceLocalTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                    cmd.Parameters.AddWithValue("@idServeur", idServeur);
                     cmd.Parameters.AddWithValue("@limit", limit);
 
                     using (var reader = cmd.ExecuteReader())
@@ -2117,6 +2081,40 @@ namespace Vigitemp_Serveur
                 {
                     VigitempServeur.Log("(getEndedAlarmsSince) SQL Erreur: " + ex.Message + " | idServeur=" + idServeur + " | since=" + sinceLocalTime.ToString("yyyy-MM-dd HH:mm:ss") + " | maxCount=" + maxCount);
                     return list;
+                }
+            }
+        }
+
+        public bool markAlarmMailSent(int alarmId)
+        {
+            lock (_lock)
+            {
+                try
+                {
+                    if (alarmId <= 0)
+                    {
+                        return false;
+                    }
+
+                    if (!EnsureConnected())
+                    {
+                        return false;
+                    }
+
+                    var cmd = this.connection_vigitemp.CreateCommand();
+                    cmd.CommandText =
+                        "UPDATE t_alarme " +
+                        "SET Est_Mail_Envoye = 1 " +
+                        "WHERE Id_Alarme = @idAlarme;";
+                    cmd.Parameters.AddWithValue("@idAlarme", alarmId);
+                    cmd.ExecuteNonQuery();
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("(markAlarmMailSent) SQL Erreur: " + ex.Message + " | alarmId=" + alarmId);
+                    return false;
                 }
             }
         }

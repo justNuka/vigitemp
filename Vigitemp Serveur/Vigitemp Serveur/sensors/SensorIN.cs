@@ -19,60 +19,63 @@ namespace Vigitemp_Serveur.sensors
 
         public override async Task<bool> read()
         {
-            try
+            return await ExecuteWithPortLockAsync(async () =>
             {
-                BeginReadCycle();
-                m_port.Open();
-                m_port.DiscardInBuffer();
-                m_port.DiscardOutBuffer();
-                var command = "SM" + m_sondeAdresse + "0000000000000000";
-                VigitempServeur.Log($"[SONDE][TX] type=IN serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} cmd={command}");
-                m_port.Write(command);
-                Stopwatch tmp_sw = new Stopwatch();
-                tmp_sw.Start();
+                try
+                {
+                    BeginReadCycle();
+                    m_port.Open();
+                    m_port.DiscardInBuffer();
+                    m_port.DiscardOutBuffer();
+                    var command = "SM" + m_sondeAdresse + "0000000000000000";
+                    VigitempServeur.Log($"[SONDE][TX] type=IN serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} cmd={command}");
+                    m_port.Write(command);
+                    Stopwatch tmp_sw = new Stopwatch();
+                    tmp_sw.Start();
 
                 //Console.WriteLine("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
                 //Trace.WriteLine("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
                 VigitempServeur.Log("Donnees ecrites dans le port COM: " + "SM" + m_sondeAdresse + "0000000000000000");
 
-                while (pendingResults)
-                {
-                    await Task.Delay(25);
-                    if (tmp_sw.Elapsed.TotalMilliseconds > 5000)
+                    while (pendingResults)
                     {
-                        if (!TryCompleteRead())
+                        await Task.Delay(25);
+                        if (tmp_sw.Elapsed.TotalMilliseconds > 5000)
                         {
+                            if (!TryCompleteRead())
+                            {
+                                break;
+                            }
+                            //Console.WriteLine("Delai de 5 secondes depasse");
+                            //Trace.WriteLine("Delai de 5 secondes depasse");
+                            VigitempServeur.Log("Delai de 5 secondes depasse");
+                            //Trace.WriteLine("Fermeture du port " + m_comPort);
+                            VigitempServeur.Log("Fermeture du port " + m_comPort);
+                            VigitempServeur.Log($"[SONDE][DONE] type=IN serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
+                            //Trace.WriteLine("Taux de reponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
+                            VigitempServeur.Log("Taux de reponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
+                            //Trace.WriteLine("-----------------------------------");
+                            VigitempServeur.Log("-----------------------------------");
+                            m_port.Close();
+                            m_sensor_response = "";
+                            HandleNoResponseAlarm(false, "timeout");
                             break;
                         }
-                        //Console.WriteLine("Delai de 5 secondes depasse");
-                        //Trace.WriteLine("Delai de 5 secondes depasse");
-                        VigitempServeur.Log("Delai de 5 secondes depasse");
-                        //Trace.WriteLine("Fermeture du port " + m_comPort);
-                        VigitempServeur.Log("Fermeture du port " + m_comPort);
-                        VigitempServeur.Log($"[SONDE][DONE] type=IN serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
-                        //Trace.WriteLine("Taux de reponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
-                        VigitempServeur.Log("Taux de reponse:  " + VigitempServeur.nombres_reponses + "/" + VigitempServeur.nombres_interrogations + "(" + ((float)VigitempServeur.nombres_reponses / (float)VigitempServeur.nombres_interrogations * 100) + "%)");
-                        //Trace.WriteLine("-----------------------------------");
-                        VigitempServeur.Log("-----------------------------------");
-                        m_port.Close();
-                        m_sensor_response = "";
-                        HandleNoResponseAlarm(false, "timeout");
-                        break;
                     }
-                }
 
-                tmp_sw.Stop();
-            }
-            catch (Exception e)
-            {
-                //Console.WriteLine("erreur: " + e);
-                //Trace.WriteLine("erreur: " + e);
-                VigitempServeur.Log("erreur read(): " + e);
-                HandleNoResponseAlarm(false, "exception");
-                DisposePort();
-                return false;
-            }
-            return true;
+                    tmp_sw.Stop();
+                }
+                catch (Exception e)
+                {
+                    //Console.WriteLine("erreur: " + e);
+                    //Trace.WriteLine("erreur: " + e);
+                    VigitempServeur.Log("erreur read(): " + e);
+                    HandleNoResponseAlarm(false, "exception");
+                    DisposePort();
+                    return false;
+                }
+                return true;
+            });
         }
 
         protected override void DataReceivedHandler(

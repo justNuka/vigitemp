@@ -41,12 +41,17 @@ namespace Vigitemp_Serveur
         private readonly bool _offsetDisabledForPack;
         private readonly int _alarmPollSeconds = GetSettingInt("Vigitemp.Alarms.PollSeconds", 15);
         private readonly int _alarmPollMaxBatch = GetSettingInt("Vigitemp.Alarms.PollMaxBatch", 50);
+        private readonly int _alarmPollServerId = GetSettingInt("Vigitemp.Alarms.PollServerId", 1);
         private readonly bool _statsMonthlyDispatchEnabled = GetSettingBool("Vigitemp.StatsMonthlyDispatch.Enabled", true);
         private readonly int _statsMonthlyDispatchServerId = GetSettingInt("Vigitemp.StatsMonthlyDispatch.ServerId", 1);
         private readonly int _statsMonthlyDispatchIntervalMinutes = GetSettingInt("Vigitemp.StatsMonthlyDispatch.IntervalMinutes", 60);
+        private readonly Func<IReadOnlyList<int>> _activeWorkerIdsProvider;
+        private string _lastAssignmentLogSignature = null;
+        private string _lastPortOwnershipSignature = null;
         private readonly object _alarmPollLock = new object();
         private DateTime _lastAlarmPollUtc = DateTime.MinValue;
         private DateTime _lastStatsMonthlyDispatchAttemptUtc = DateTime.MinValue;
+        private int _statsMonthlyDispatchInFlight = 0;
         private int _lastAlarmIdSeen = 0;
         private bool _alarmCursorInitialized = false;
         // NOTE: heure locale intentionnelle — correspond au NOW() MySQL qui utilise
@@ -57,6 +62,8 @@ namespace Vigitemp_Serveur
             new ConcurrentDictionary<int, DateTime>();
         private readonly ConcurrentDictionary<int, (bool flag, DateTime expiry)> _retriggerFlagCache =
             new ConcurrentDictionary<int, (bool, DateTime)>();
+        private long _lastSchedulerHeartbeatUtcTicks;
+        private long _lastMaintenanceHeartbeatUtcTicks;
 
         private sealed class CachedLieuSettings
         {
@@ -117,14 +124,31 @@ namespace Vigitemp_Serveur
             public DateTime? RecoverUntilProbeDateTime { get; set; }
         }
 
-        public ThreadServeur(CancellationToken obj, int p_idServer, bool offsetDisabledForPack = false)
+        public ThreadServeur(
+            CancellationToken obj,
+            int p_idServer,
+            Func<IReadOnlyList<int>> activeWorkerIdsProvider = null,
+            bool offsetDisabledForPack = false)
         {
             this.m_cts = obj;
             this._idServer = p_idServer;
+            this._activeWorkerIdsProvider = activeWorkerIdsProvider;
             this._offsetDisabledForPack = offsetDisabledForPack;
+            var nowTicks = DateTime.UtcNow.Ticks;
+            Interlocked.Exchange(ref _lastSchedulerHeartbeatUtcTicks, nowTicks);
+            Interlocked.Exchange(ref _lastMaintenanceHeartbeatUtcTicks, nowTicks);
         }
 
         public bool LogMetrologyDetailed => _logMetrologyDetailed;
+
+        public DateTime LastSchedulerHeartbeatUtc
+        {
+            get
+            {
+                var ticks = Interlocked.Read(ref _lastSchedulerHeartbeatUtcTicks);
+                return ticks <= 0 ? DateTime.MinValue : new DateTime(ticks, DateTimeKind.Utc);
+            }
+        }
 
         public bool EnqueueGspMemo(string serialNumber, int totalCount, int batchSize, int? startOffset = null)
         {
@@ -458,6 +482,12 @@ namespace Vigitemp_Serveur
 
         private void EnsureAlarmCursorInitialized()
         {
+            if (_idServer != _alarmPollServerId)
+            {
+                _alarmCursorInitialized = true;
+                return;
+            }
+
             if (_alarmCursorInitialized)
             {
                 return;
@@ -479,6 +509,12 @@ namespace Vigitemp_Serveur
 
         private void EnsureAlarmEndCursorInitialized()
         {
+            if (_idServer != _alarmPollServerId)
+            {
+                _lastAlarmEndPollLocal = DateTime.Now;
+                return;
+            }
+
             if (_lastAlarmEndPollLocal != DateTime.MinValue)
             {
                 return;
@@ -490,6 +526,11 @@ namespace Vigitemp_Serveur
 
         private async Task PollNewAlarmsAsync()
         {
+            if (_idServer != _alarmPollServerId)
+            {
+                return;
+            }
+
             if (_alarmPollSeconds <= 0)
             {
                 return;
@@ -534,7 +575,17 @@ namespace Vigitemp_Serveur
             }
             _lastAlarmIdSeen = maxId;
 
-            await AlarmWebNotifier.NotifyAlarmBatchAsync(newAlarms);
+            var mailedAlarmIds = await AlarmWebNotifier.NotifyAlarmBatchAsync(newAlarms);
+            if (mailedAlarmIds != null)
+            {
+                foreach (var alarmId in mailedAlarmIds)
+                {
+                    if (alarmId > 0)
+                    {
+                        GetDatabase().markAlarmMailSent(alarmId);
+                    }
+                }
+            }
 
             // Legacy agent endpoint (/alarm?action=show) is deprecated.
             // Agent notifications now go through web dispatch (/api/alarmes/dispatch -> /notify).
@@ -542,6 +593,11 @@ namespace Vigitemp_Serveur
 
         private void PollEndedAlarms()
         {
+            if (_idServer != _alarmPollServerId)
+            {
+                return;
+            }
+
             if (_alarmPollSeconds <= 0)
             {
                 return;
@@ -704,6 +760,7 @@ namespace Vigitemp_Serveur
 
         private void ProcessSchedulerTick(object sender, ElapsedEventArgs e)
         {
+            Interlocked.Exchange(ref _lastSchedulerHeartbeatUtcTicks, DateTime.UtcNow.Ticks);
             _ = ProcessSchedulerTickAsync();
         }
 
@@ -943,8 +1000,7 @@ namespace Vigitemp_Serveur
                 return;
             }
 
-            VigitempServeur.Log("--------------------ID SERVEUR : " + _idServer + "---CAPTEUR : " + serial + "--------------------");
-            VigitempServeur.Log("Ouverture du port " + schedule.Port + " pour la sonde " + serial);
+            VigitempServeur.Log($"[SONDE][ASSIGN] workerServer={_idServer} idLieu={schedule.IdLieu} serial={serial} type={schedule.SondeType} port={schedule.Port}");
             var sensorType = ResolveSensorType(serial, schedule.SondeType, schedule.FamilleSonde, schedule.ModuleType);
 
             switch (sensorType)
@@ -952,13 +1008,13 @@ namespace Vigitemp_Serveur
                 case "IN":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorIN = new SensorIN(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"Interrogation sonde IN serial={serial} port={schedule.Port} adresse={schedule.Adresse}");
+                    VigitempServeur.Log($"Interrogation sonde IN serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     await sensorIN.read();
                     break;
                 case "IE":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorIE = new SensorIE(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"Interrogation sonde IE serial={serial} port={schedule.Port} adresse={schedule.Adresse}");
+                    VigitempServeur.Log($"Interrogation sonde IE serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     await sensorIE.read();
                     break;
                 case "IQ":
@@ -966,37 +1022,37 @@ namespace Vigitemp_Serveur
                 case "IP":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorIP = new SensorIP(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"Interrogation sonde IP serial={serial} port={schedule.Port} adresse={schedule.Adresse}");
+                    VigitempServeur.Log($"Interrogation sonde IP serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     await sensorIP.read();
                     break;
                 case "IC":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorIC = new SensorIC(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"Interrogation sonde IC serial={serial} port={schedule.Port} adresse={schedule.Adresse}");
+                    VigitempServeur.Log($"Interrogation sonde IC serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     await sensorIC.read();
                     break;
                 case "IH":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorIH = new SensorIH(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"Interrogation sonde IH serial={serial} port={schedule.Port} adresse={schedule.Adresse}");
+                    VigitempServeur.Log($"Interrogation sonde IH serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     await sensorIH.read();
                     break;
                 case "EN":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorEN = new SensorEN(this, schedule.Port, serial, schedule.Adresse);
-                    VigitempServeur.Log($"Interrogation sonde EN serial={serial} port={schedule.Port} adresse={schedule.Adresse}");
+                    VigitempServeur.Log($"Interrogation sonde EN serial={serial} port={schedule.Port} adresse={schedule.Adresse} workerServer={_idServer}");
                     await sensorEN.read();
                     break;
                 case "HN":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var sensorHN = new SensorHN(this, schedule.Port, serial, schedule.Adresse, schedule.Module);
-                    VigitempServeur.Log($"Interrogation sonde HN serial={serial} port={schedule.Port} adresse={schedule.Adresse} module={schedule.Module}");
+                    VigitempServeur.Log($"Interrogation sonde HN serial={serial} port={schedule.Port} adresse={schedule.Adresse} module={schedule.Module} workerServer={_idServer}");
                     await sensorHN.read();
                     break;
                 case "GSP":
                     Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                     var gspSensor = new SensorGSP(this, schedule.Port, serial, schedule.Adresse, schedule.FrequencySeconds, schedule.ConfigDirty);
-                    VigitempServeur.Log($"Interrogation sonde GSP serial={serial} port={schedule.Port} adresse={schedule.Adresse} configDirty={schedule.ConfigDirty}");
+                    VigitempServeur.Log($"Interrogation sonde GSP serial={serial} port={schedule.Port} adresse={schedule.Adresse} configDirty={schedule.ConfigDirty} workerServer={_idServer}");
                     await gspSensor.read();
                     if (gspSensor.ConfigurationSynchronized)
                     {
@@ -1067,6 +1123,7 @@ namespace Vigitemp_Serveur
 
         private void ProcessMaintenanceTick(object sender, ElapsedEventArgs e)
         {
+            Interlocked.Exchange(ref _lastMaintenanceHeartbeatUtcTicks, DateTime.UtcNow.Ticks);
             _ = ProcessMaintenanceTickAsync();
         }
 
@@ -1207,18 +1264,18 @@ namespace Vigitemp_Serveur
             }
         }
 
-        private async Task TriggerMonthlyStatsDispatchIfNeededAsync()
+        private Task TriggerMonthlyStatsDispatchIfNeededAsync()
         {
             try
             {
                 if (!_statsMonthlyDispatchEnabled)
                 {
-                    return;
+                    return Task.CompletedTask;
                 }
 
                 if (_idServer != _statsMonthlyDispatchServerId)
                 {
-                    return;
+                    return Task.CompletedTask;
                 }
 
                 var nowUtc = DateTime.UtcNow;
@@ -1226,22 +1283,47 @@ namespace Vigitemp_Serveur
                 if (_lastStatsMonthlyDispatchAttemptUtc != DateTime.MinValue &&
                     (nowUtc - _lastStatsMonthlyDispatchAttemptUtc).TotalMinutes < intervalMinutes)
                 {
-                    return;
+                    return Task.CompletedTask;
+                }
+
+                if (Interlocked.CompareExchange(ref _statsMonthlyDispatchInFlight, 1, 0) != 0)
+                {
+                    return Task.CompletedTask;
                 }
 
                 _lastStatsMonthlyDispatchAttemptUtc = nowUtc;
-                await AlarmWebNotifier.TriggerMonthlyStatsRecapAsync();
+                VigitempServeur.Log(
+                    $"Monthly stats dispatch trigger start server={_idServer} intervalMin={intervalMinutes}");
+
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await AlarmWebNotifier.TriggerMonthlyStatsRecapAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        VigitempServeur.Log("Monthly stats dispatch background error: " + ex);
+                    }
+                    finally
+                    {
+                        Interlocked.Exchange(ref _statsMonthlyDispatchInFlight, 0);
+                    }
+                });
             }
             catch (Exception ex)
             {
                 VigitempServeur.Log("TriggerMonthlyStatsDispatchIfNeededAsync error: " + ex.Message);
+                Interlocked.Exchange(ref _statsMonthlyDispatchInFlight, 0);
             }
+
+            return Task.CompletedTask;
         }
 
         private void RefreshSchedule()
         {
             var now = DateTime.Now;
-            var rows = GetDatabase().getSondesActivesByServeur(this._idServer);
+            var rows = GetAssignedSondesForCurrentWorker();
             var seen = new HashSet<int>();
 
             foreach (var row in rows)
@@ -1270,18 +1352,24 @@ namespace Vigitemp_Serveur
 
                 var hasChanges = row.InfosModifiees ||
                                  !string.Equals(schedule.Serial, row.SondeNumeroSerie, StringComparison.Ordinal) ||
+                                 !string.Equals(schedule.SondeType, row.SondeType, StringComparison.Ordinal) ||
+                                 !string.Equals(schedule.FamilleSonde, row.FamilleSonde, StringComparison.Ordinal) ||
                                  !string.Equals(schedule.Adresse, row.AdresseSonde, StringComparison.Ordinal) ||
                                  !string.Equals(schedule.Port, row.PortSerie, StringComparison.Ordinal) ||
                                  !string.Equals(schedule.Module, row.ModuleNumeroSerie, StringComparison.Ordinal) ||
+                                 schedule.ModuleType != row.ModuleType ||
                                  schedule.FrequencySeconds != row.FrequenceSecondes;
 
                 if (hasChanges)
                 {
                     SetSondeMetrologyFromSchedule(row);
                     schedule.Serial = row.SondeNumeroSerie;
+                    schedule.SondeType = row.SondeType;
+                    schedule.FamilleSonde = row.FamilleSonde;
                     schedule.Adresse = row.AdresseSonde;
                     schedule.Port = row.PortSerie;
                     schedule.Module = row.ModuleNumeroSerie;
+                    schedule.ModuleType = row.ModuleType;
                     schedule.ConfigDirty = row.InfosModifiees || schedule.ConfigDirty;
                     schedule.FrequencySeconds = row.FrequenceSecondes;
                     schedule.LastMeasure = row.DerniereDateHeure ?? schedule.LastMeasure;
@@ -1313,6 +1401,131 @@ namespace Vigitemp_Serveur
                     VigitempServeur.Log($"Scheduler remove idLieu={idLieu}");
                 }
             }
+        }
+
+        private List<SondeScheduleInfo> GetAssignedSondesForCurrentWorker()
+        {
+            var rows = GetDatabase().getSondesActivesAllServeurs();
+            if (rows == null || rows.Count == 0)
+            {
+                return new List<SondeScheduleInfo>();
+            }
+
+            var workerIds = _activeWorkerIdsProvider?.Invoke()?
+                .Where(id => id > 0)
+                .Distinct()
+                .OrderBy(id => id)
+                .ToList();
+
+            if (workerIds == null || workerIds.Count == 0)
+            {
+                workerIds = new List<int> { _idServer };
+            }
+            else if (!workerIds.Contains(_idServer))
+            {
+                workerIds.Add(_idServer);
+                workerIds = workerIds.Distinct().OrderBy(id => id).ToList();
+            }
+
+            var orderedRows = rows
+                .Where(r => r != null && r.FrequenceSecondes > 0)
+                .OrderBy(r => r.IdLieu)
+                .ThenBy(r => r.SondeNumeroSerie ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var assignmentByKey = new Dictionary<string, int>(StringComparer.Ordinal);
+            var portKeys = orderedRows
+                .Select(BuildAssignmentGroupKey)
+                .Where(IsPortGroupKey)
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(k => k, StringComparer.Ordinal)
+                .ToList();
+            for (var i = 0; i < portKeys.Count; i++)
+            {
+                var ownerWorkerId = workerIds[i % workerIds.Count];
+                assignmentByKey[portKeys[i]] = ownerWorkerId;
+            }
+
+            // Fallback pour les lignes sans port: repartition deterministe et equilibree.
+            var sensorKeysWithoutPort = orderedRows
+                .Select(BuildAssignmentGroupKey)
+                .Where(k => !IsPortGroupKey(k))
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(k => k, StringComparer.Ordinal)
+                .ToList();
+            for (var i = 0; i < sensorKeysWithoutPort.Count; i++)
+            {
+                var ownerWorkerId = workerIds[(i + portKeys.Count) % workerIds.Count];
+                assignmentByKey[sensorKeysWithoutPort[i]] = ownerWorkerId;
+            }
+
+            var assignedRows = orderedRows
+                .Where(r =>
+                {
+                    var groupKey = BuildAssignmentGroupKey(r);
+                    var ownerWorkerId = ResolveWorkerOwnerForKey(groupKey, workerIds, assignmentByKey);
+                    return ownerWorkerId == _idServer;
+                })
+                .ToList();
+
+            if (_logScheduler)
+            {
+                var assignmentSignature = string.Join("|", workerIds) + "#" + orderedRows.Count + "#" + assignedRows.Count;
+                if (!string.Equals(_lastAssignmentLogSignature, assignmentSignature, StringComparison.Ordinal))
+                {
+                    _lastAssignmentLogSignature = assignmentSignature;
+                    VigitempServeur.Log(
+                        $"[SCHED][ASSIGN] workerServer={_idServer} activeWorkers={string.Join(",", workerIds)} totalSensors={orderedRows.Count} assignedSensors={assignedRows.Count}");
+                }
+
+                var ownership = orderedRows
+                    .Select(r => BuildAssignmentGroupKey(r))
+                    .Distinct(StringComparer.Ordinal)
+                    .OrderBy(k => k, StringComparer.Ordinal)
+                    .Select(k => $"{k}->{ResolveWorkerOwnerForKey(k, workerIds, assignmentByKey)}")
+                    .ToList();
+                var ownershipSignature = string.Join("|", ownership);
+                if (!string.Equals(_lastPortOwnershipSignature, ownershipSignature, StringComparison.Ordinal))
+                {
+                    _lastPortOwnershipSignature = ownershipSignature;
+                    VigitempServeur.Log(
+                        $"[SCHED][PORT-OWNERSHIP] activeWorkers={string.Join(",", workerIds)} mapping={string.Join(", ", ownership)}");
+                }
+            }
+
+            return assignedRows;
+        }
+
+        private static string BuildAssignmentGroupKey(SondeScheduleInfo row)
+        {
+            var port = (row?.PortSerie ?? string.Empty).Trim();
+            if (!string.IsNullOrWhiteSpace(port))
+            {
+                return "port:" + port.ToUpperInvariant();
+            }
+
+            // Fallback deterministe si aucun port COM n'est renseigne.
+            return "sensor:" + ((row?.SondeNumeroSerie ?? string.Empty).Trim().ToUpperInvariant());
+        }
+
+        private static bool IsPortGroupKey(string key)
+        {
+            return !string.IsNullOrWhiteSpace(key) && key.StartsWith("port:", StringComparison.Ordinal);
+        }
+
+        private static int ResolveWorkerOwnerForKey(string key, List<int> workerIds, Dictionary<string, int> assignmentByKey)
+        {
+            if (workerIds == null || workerIds.Count == 0)
+            {
+                return 1;
+            }
+
+            if (assignmentByKey != null && assignmentByKey.TryGetValue(key ?? string.Empty, out var owner))
+            {
+                return owner;
+            }
+
+            return workerIds[0];
         }
 
         private static SensorSchedule BuildSchedule(SondeScheduleInfo info, DateTime now)

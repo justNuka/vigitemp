@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Vigitemp_Serveur
@@ -10,6 +11,7 @@ namespace Vigitemp_Serveur
     internal static class AlarmWebNotifier
     {
         private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        private static DateTime _monthlyStatsPauseUntilUtc = DateTime.MinValue;
 
         private static string BaseUrl => ConfigurationManager.AppSettings["Vigi.WebsiteBaseUrl"];
         private static string Secret => ConfigurationManager.AppSettings["Vigi.AlarmDispatchSecret"];
@@ -38,19 +40,22 @@ namespace Vigitemp_Serveur
             }
         }
 
-        public static async Task NotifyAlarmBatchAsync(IReadOnlyList<AlarmNotificationItem> alarms)
+        public static async Task<IReadOnlyList<int>> NotifyAlarmBatchAsync(IReadOnlyList<AlarmNotificationItem> alarms)
         {
+            var mailedAlarmIds = new List<int>();
+            var mailedAlarmIdsLock = new object();
+
             try
             {
                 if (alarms == null || alarms.Count == 0)
                 {
-                    return;
+                    return mailedAlarmIds;
                 }
 
                 if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
                 {
                     VigitempServeur.Log("AlarmWebNotifier: configuration manquante (BaseUrl/Secret)");
-                    return;
+                    return mailedAlarmIds;
                 }
 
                 var url = Combine(BaseUrl, "/api/alarmes/dispatch");
@@ -88,10 +93,16 @@ namespace Vigitemp_Serveur
                                     "idLieu=" + capturedAlarm.IdLieu +
                                     " alarmId=" + capturedAlarm.IdAlarme);
                             else
+                            {
                                 VigitempServeur.Log(
                                     "AlarmWebNotifier: notification triggered envoyee (status=" + statusCode + ") " +
                                     "idLieu=" + capturedAlarm.IdLieu +
                                     " alarmId=" + capturedAlarm.IdAlarme);
+                                lock (mailedAlarmIdsLock)
+                                {
+                                    mailedAlarmIds.Add(capturedAlarm.IdAlarme);
+                                }
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -106,6 +117,8 @@ namespace Vigitemp_Serveur
             {
                 VigitempServeur.Log("AlarmWebNotifier: echec envoi notification batch: " + ex.Message);
             }
+
+            return mailedAlarmIds;
         }
 
         public static async Task NotifyEndedAlarmBatchAsync(IReadOnlyList<AlarmNotificationItem> alarms)
@@ -303,6 +316,11 @@ namespace Vigitemp_Serveur
         {
             try
             {
+                if (_monthlyStatsPauseUntilUtc > DateTime.UtcNow)
+                {
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(BaseUrl) || string.IsNullOrWhiteSpace(Secret))
                 {
                     VigitempServeur.Log("AlarmWebNotifier: configuration manquante (BaseUrl/Secret) pour recap mensuel stats");
@@ -312,8 +330,11 @@ namespace Vigitemp_Serveur
                 var url = Combine(BaseUrl, "/api/statistiques/recap-mensuel/send");
                 var req = new HttpRequestMessage(HttpMethod.Get, url);
                 req.Headers.Add("x-vigitemp-secret", Secret);
+                VigitempServeur.Log("AlarmWebNotifier: trigger recap mensuel stats url=" + url);
 
-                var response = await _http.SendAsync(req);
+                using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8)))
+                {
+                    var response = await _http.SendAsync(req, cts.Token);
                 var statusCode = (int)response.StatusCode;
                 if (statusCode < 200 || statusCode >= 300)
                 {
@@ -330,10 +351,14 @@ namespace Vigitemp_Serveur
                 }
 
                 VigitempServeur.Log("AlarmWebNotifier: recap mensuel stats check OK (status=" + statusCode + ")");
+                _monthlyStatsPauseUntilUtc = DateTime.MinValue;
+                }
             }
             catch (Exception ex)
             {
-                VigitempServeur.Log("AlarmWebNotifier: echec check recap mensuel stats: " + ex.Message);
+                _monthlyStatsPauseUntilUtc = DateTime.UtcNow.AddHours(6);
+                VigitempServeur.Log("AlarmWebNotifier: echec check recap mensuel stats: " + ex);
+                VigitempServeur.Log("AlarmWebNotifier: recap mensuel stats en pause pendant 6h apres echec de connexion.");
             }
         }
 

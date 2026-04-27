@@ -60,7 +60,9 @@ export async function GET(req: NextRequest) {
     const now = new Date()
     const day = now.getDate()
     const hour = now.getHours()
-    if (day < config.dayOfMonth || (day === config.dayOfMonth && hour < config.hourLocal)) {
+    const lastDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+    const effectiveDayOfMonth = Math.min(config.dayOfMonth, lastDayOfCurrentMonth)
+    if (day < effectiveDayOfMonth || (day === effectiveDayOfMonth && hour < config.hourLocal)) {
       return apiOk({ message: "Pas encore l'heure d'envoi", sent: false })
     }
 

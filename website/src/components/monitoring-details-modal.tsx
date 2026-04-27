@@ -402,6 +402,8 @@ export default function MonitoringDetailsModal({
   const { logs: auditLogs, isLoading: auditLoading, error: auditError, reset: resetAuditState } = useMonitoringAuditLogs(idLieu, {
     enabled: shouldLoadAuditLogs,
     errorMessage: t("audit.error"),
+    rangeStart: historyRangeStart,
+    rangeEnd: historyRangeEnd,
   });
 
   useEffect(() => {

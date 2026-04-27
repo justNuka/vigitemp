@@ -7,9 +7,24 @@ import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
 import type { BackupsResponse, BackupRecord } from "@/components/data-table/backup-columns"
 
-const BACKUP_ROOT = path.join("C:", "ProgramData", "Vigitemp", "Backup_BDD", "BACKUP")
-const BACKUP_LOG_PATH = path.join(BACKUP_ROOT, "backup_bdd_vigisensys.log")
 const BACKUP_SLOT_NAMES = ["J", "J-1", "J-2", "J-3", "J-4", "J-5", "J-6", "J-7"]
+
+function resolveBackupRoot() {
+  const configured = process.env.VIGITEMP_BACKUP_ROOT?.trim()
+  if (configured) return configured
+
+  const programData = process.env.ProgramData ?? process.env.PROGRAMDATA
+  if (programData) {
+    return path.join(programData, "Vigitemp", "Backup_BDD", "BACKUP")
+  }
+
+  // Runtime fallback for Windows service environments where ProgramData is not propagated.
+  return "C:\\ProgramData\\Vigitemp\\Backup_BDD\\BACKUP"
+}
+
+function resolveBackupLogPath(backupRoot: string) {
+  return path.join(backupRoot, "backup_bdd_vigisensys.log")
+}
 
 type ParsedRun = {
   startedAt: string
@@ -112,20 +127,20 @@ function parseBackupRuns(rawLog: string): ParsedRun[] {
   return runs.sort((a, b) => Date.parse(b.startedAt) - Date.parse(a.startedAt))
 }
 
-async function readBackupRuns(): Promise<ParsedRun[]> {
+async function readBackupRuns(backupLogPath: string): Promise<ParsedRun[]> {
   try {
-    const rawLog = await fs.readFile(BACKUP_LOG_PATH, "utf8")
+    const rawLog = await fs.readFile(backupLogPath, "utf8")
     return parseBackupRuns(rawLog)
   } catch {
     return []
   }
 }
 
-async function readArchiveRecords(): Promise<BackupRecord[]> {
+async function readArchiveRecords(backupRoot: string): Promise<BackupRecord[]> {
   const records: BackupRecord[] = []
 
   for (const slotName of BACKUP_SLOT_NAMES) {
-    const slotPath = path.join(BACKUP_ROOT, slotName)
+    const slotPath = path.join(backupRoot, slotName)
     try {
       const entries = await fs.readdir(slotPath, { withFileTypes: true })
       for (const entry of entries) {
@@ -149,7 +164,12 @@ async function readArchiveRecords(): Promise<BackupRecord[]> {
 
 export const GET = withAdminLogging(async (_req: NextRequest) => {
   try {
-    const [archiveRecords, parsedRuns] = await Promise.all([readArchiveRecords(), readBackupRuns()])
+    const backupRoot = resolveBackupRoot()
+    const backupLogPath = resolveBackupLogPath(backupRoot)
+    const [archiveRecords, parsedRuns] = await Promise.all([
+      readArchiveRecords(backupRoot),
+      readBackupRuns(backupLogPath),
+    ])
 
     const runRecords: BackupRecord[] = parsedRuns.map((run, index) => ({
       id: `run:${index}:${run.startedAt}`,
@@ -172,8 +192,8 @@ export const GET = withAdminLogging(async (_req: NextRequest) => {
     const response: BackupsResponse = {
       data: merged.slice(0, 50),
       summary: {
-        storagePath: BACKUP_ROOT,
-        logFilePath: BACKUP_LOG_PATH,
+        storagePath: backupRoot,
+        logFilePath: backupLogPath,
         archiveCount: archiveRecords.length,
         slotCount: BACKUP_SLOT_NAMES.length,
       },

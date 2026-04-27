@@ -21,71 +21,74 @@ namespace Vigitemp_Serveur.sensors
 
         public override async Task<bool> read()
         {
-            if (!int.TryParse(m_sondeAdresse, out int sRelais1))
+            return await ExecuteWithPortLockAsync(async () =>
             {
-                VigitempServeur.Log($"[SONDE][ERR] type=EN serial={m_sondeSerialNumber} adresse invalide='{m_sondeAdresse}'");
-                HandleNoResponseAlarm(false, "invalid-address");
-                return false;
-            }
-
-            try
-            {
-                BeginReadCycle();
-                // L'encodage du port n'est pas utilisé directement : les bytes sont lus via
-                // sp.Read(buf) et décodés manuellement avec ISO-8859-1 dans le handler.
-                m_port.Encoding = Encoding.GetEncoding("ISO-8859-1");
-                m_port.Open();
-                m_port.DiscardInBuffer();
-                m_port.DiscardOutBuffer();
-
-
-                byte[] bytestosend = {  0x51,
-                                    Convert.ToByte(sRelais1),
-                                    Convert.ToByte(sRelais1),
-                                    Convert.ToByte(sRelais1),
-                                    Convert.ToByte(sRelais1),
-                                    Convert.ToByte(sRelais1),
-                                    0x30,
-                                    Convert.ToByte(sRelais1),
-                                    Convert.ToByte(sRelais1),
-                                    Convert.ToByte(sRelais1),
-                                    Convert.ToByte(sRelais1),
-                                    Convert.ToByte(sRelais1),
-                                    0x30,
-                                    0x30
-                                };
-                VigitempServeur.Log($"[SONDE][TX] type=EN serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} cmdHex={BitConverter.ToString(bytestosend)}");
-                m_port.Write(bytestosend, 0, bytestosend.Length);
-
-                Stopwatch tmp_sw = new Stopwatch();
-                tmp_sw.Start();
-                while (pendingResults)
+                if (!int.TryParse(m_sondeAdresse, out int sRelais1))
                 {
-                    await Task.Delay(25);
-                    if (tmp_sw.Elapsed.TotalMilliseconds > 2000)
-                    {
-                        if (!TryCompleteRead())
-                        {
-                            break;
-                        }
-                        VigitempServeur.Log($"[SONDE][DONE] type=EN serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
-                        HandleNoResponseAlarm(false, "timeout");
-                        m_port.Close();
-                        m_sensor_response = "";
-                        break;
-                    }
+                    VigitempServeur.Log($"[SONDE][ERR] type=EN serial={m_sondeSerialNumber} adresse invalide='{m_sondeAdresse}'");
+                    HandleNoResponseAlarm(false, "invalid-address");
+                    return false;
                 }
 
-                tmp_sw.Stop();
-            }
-            catch (Exception e)
-            {
-                VigitempServeur.Log($"[SONDE][ERR] type=EN serial={m_sondeSerialNumber} port={m_comPort} error={e}");
-                HandleNoResponseAlarm(false, "exception");
-                DisposePort();
-                return false;
-            }
-            return true;
+                try
+                {
+                    BeginReadCycle();
+                    // L'encodage du port n'est pas utilisé directement : les bytes sont lus via
+                    // sp.Read(buf) et décodés manuellement avec ISO-8859-1 dans le handler.
+                    m_port.Encoding = Encoding.GetEncoding("ISO-8859-1");
+                    m_port.Open();
+                    m_port.DiscardInBuffer();
+                    m_port.DiscardOutBuffer();
+
+
+                    byte[] bytestosend = {  0x51,
+                                        Convert.ToByte(sRelais1),
+                                        Convert.ToByte(sRelais1),
+                                        Convert.ToByte(sRelais1),
+                                        Convert.ToByte(sRelais1),
+                                        Convert.ToByte(sRelais1),
+                                        0x30,
+                                        Convert.ToByte(sRelais1),
+                                        Convert.ToByte(sRelais1),
+                                        Convert.ToByte(sRelais1),
+                                        Convert.ToByte(sRelais1),
+                                        Convert.ToByte(sRelais1),
+                                        0x30,
+                                        0x30
+                                    };
+                    VigitempServeur.Log($"[SONDE][TX] type=EN serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} cmdHex={BitConverter.ToString(bytestosend)}");
+                    m_port.Write(bytestosend, 0, bytestosend.Length);
+
+                    Stopwatch tmp_sw = new Stopwatch();
+                    tmp_sw.Start();
+                    while (pendingResults)
+                    {
+                        await Task.Delay(25);
+                        if (tmp_sw.Elapsed.TotalMilliseconds > 2000)
+                        {
+                            if (!TryCompleteRead())
+                            {
+                                break;
+                            }
+                            VigitempServeur.Log($"[SONDE][DONE] type=EN serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
+                            HandleNoResponseAlarm(false, "timeout");
+                            m_port.Close();
+                            m_sensor_response = "";
+                            break;
+                        }
+                    }
+
+                    tmp_sw.Stop();
+                }
+                catch (Exception e)
+                {
+                    VigitempServeur.Log($"[SONDE][ERR] type=EN serial={m_sondeSerialNumber} port={m_comPort} error={e}");
+                    HandleNoResponseAlarm(false, "exception");
+                    DisposePort();
+                    return false;
+                }
+                return true;
+            });
         }
 
         protected override void DataReceivedHandler(

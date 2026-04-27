@@ -115,8 +115,9 @@ function Invoke-Prepare {
 
     Write-Step "Preparation locale demarree (Only=$only)..."
     & $prepareScript -Only $only
-    if ($LASTEXITCODE -ne 0) {
-        throw "Prepare-All a echoue (code $LASTEXITCODE)."
+    if (-not $?) {
+        $exitCode = if ($null -ne $LASTEXITCODE) { $LASTEXITCODE } else { -1 }
+        throw "Prepare-All a echoue (code $exitCode)."
     }
     Write-Step "Preparation locale terminee."
 }
@@ -134,7 +135,7 @@ function New-LocalDeployPayload {
         Write-Step "Construction payload serveur (exclusions appliquees)..."
         Invoke-RobocopySafe -Source $ServerPackageDir -Destination $serverPayload -ExtraArgs @(
             "/XD", "installer",
-            "/XF", "*.config", "*setupserver*.exe"
+            "/XF", "*setupserver*.exe", "*serversetup*.exe", "VigitempServerSetup.exe", "setupserver.exe"
         )
     }
 
@@ -154,6 +155,13 @@ function New-LocalDeployPayload {
             $webPayload = Join-Path $tmpRoot "web\.next"
             Write-Step "Construction payload web (.next)..."
             Invoke-RobocopySafe -Source $webNext -Destination $webPayload
+        }
+
+        $webPublic = Join-Path $WebPackageDir "public"
+        if (Test-Path $webPublic) {
+            $publicPayload = Join-Path $tmpRoot "web-public"
+            Write-Step "Construction payload web (public)..."
+            Invoke-RobocopySafe -Source $webPublic -Destination $publicPayload -ExtraArgs @("/XD", "uploads")
         }
     }
 
@@ -211,6 +219,11 @@ function Copy-PayloadToRemote {
             $localWebNext = Join-Path $LocalPayloadRoot "web\.next"
             Copy-Item -Path $localWebNext -Destination (Join-Path $remoteWeb ".next") -Recurse -Force -ToSession $Session
         }
+
+        $localWebPublic = Join-Path $LocalPayloadRoot "web-public"
+        if (Test-Path $localWebPublic) {
+            Copy-Item -Path $localWebPublic -Destination (Join-Path $RemoteStagingDir "web-public") -Recurse -Force -ToSession $Session
+        }
     }
 }
 
@@ -221,31 +234,52 @@ function Invoke-RemoteDeploy {
 
     if ($Target -eq "All" -or $Target -eq "Server") {
         Write-Step "Deploiement serveur distant..."
-        Invoke-Command -Session $Session -ScriptBlock {
+        Write-Step "Options serveur: ServerNoService=$([bool]$ServerNoService) ServiceName='$ServerServiceName' ProcessName='$ServerProcessName' Args='$ServerProcessArgs'"
+        $serverLogs = Invoke-Command -Session $Session -ScriptBlock {
             param($serviceName, $stagingDir, $installDir, $noService, $serverProcName, $serverProcArgs)
 
+            function Write-RemoteLog {
+                param([string]$message)
+                $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+                Write-Output "[$ts] [REMOTE][SERVER] $message"
+            }
+
             function Invoke-RobocopySafeRemote {
-                param([string]$src, [string]$dst)
+                param([string]$src, [string]$dst, [string[]]$extraArgs = @())
                 New-Item -ItemType Directory -Force -Path $dst | Out-Null
-                & robocopy $src $dst /MIR /NFL /NDL /NJH /NJS /NC /NS | Out-Null
+                $args = @($src, $dst, "/MIR", "/NFL", "/NDL", "/NJH", "/NJS", "/NC", "/NS") + $extraArgs
+                & robocopy @args | Out-Null
                 if ($LASTEXITCODE -ge 8) {
                     throw "robocopy failed with exit code $LASTEXITCODE (source='$src', destination='$dst')"
                 }
+                Write-RemoteLog "Robocopy serveur OK (code=$LASTEXITCODE) src='$src' dst='$dst'"
             }
 
             function Stop-ServerProcessFallback {
                 param([string]$procName, [string]$targetInstallDir)
-                Get-Process -Name $procName -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+                $killedByName = 0
+                Get-Process -Name $procName -ErrorAction SilentlyContinue | ForEach-Object {
+                    try {
+                        Stop-Process -Id $_.Id -Force -ErrorAction Stop
+                        $killedByName++
+                    } catch { }
+                }
 
                 $targetExe = [System.IO.Path]::Combine($targetInstallDir, "Vigitemp Serveur.exe")
+                $killedByPath = 0
                 Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
                     Where-Object {
                         $_.ExecutablePath -and
                         [string]::Equals($_.ExecutablePath, $targetExe, [System.StringComparison]::OrdinalIgnoreCase)
                     } |
                     ForEach-Object {
-                        try { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue } catch { }
+                        try {
+                            Stop-Process -Id $_.ProcessId -Force -ErrorAction Stop
+                            $killedByPath++
+                        } catch { }
                     }
+
+                Write-RemoteLog "Process fallback stop: procName='$procName' killedByName=$killedByName killedByPath=$killedByPath"
             }
 
             function Start-ServerProcessFallback {
@@ -255,10 +289,50 @@ function Invoke-RemoteDeploy {
                     throw "Executable serveur introuvable pour demarrage process: $exePath"
                 }
 
-                if ([string]::IsNullOrWhiteSpace($procArgs)) {
-                    Start-Process -FilePath $exePath -WorkingDirectory $targetInstallDir -WindowStyle Hidden | Out-Null
+                # Demarrage detache (hors job WinRM) pour eviter l'arret quand la session remoting se ferme.
+                $commandLine = if ([string]::IsNullOrWhiteSpace($procArgs)) {
+                    "`"$exePath`""
                 } else {
-                    Start-Process -FilePath $exePath -ArgumentList $procArgs -WorkingDirectory $targetInstallDir -WindowStyle Hidden | Out-Null
+                    "`"$exePath`" $procArgs"
+                }
+                $create = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{
+                    CommandLine      = $commandLine
+                    CurrentDirectory = $targetInstallDir
+                }
+                if ($create.ReturnValue -ne 0) {
+                    throw "Win32_Process.Create a echoue (code=$($create.ReturnValue)) commandLine=$commandLine"
+                }
+                $startedPid = [int]$create.ProcessId
+                Write-RemoteLog "Start process fallback (detache): '$commandLine' pid=$startedPid"
+
+                Start-Sleep -Milliseconds 500
+                $running = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+                    Where-Object {
+                        $_.ProcessId -eq $startedPid
+                    } |
+                    Select-Object -First 1
+                if ($running) {
+                    Write-RemoteLog "Process fallback started OK (pid=$startedPid)."
+                } else {
+                    Write-RemoteLog "WARN: process fallback start non confirme."
+                }
+
+                # Verification retardee: certains process meurent juste apres le bootstrap.
+                Start-Sleep -Seconds 5
+                $runningAfterDelay = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+                    Where-Object {
+                        $_.ProcessId -eq $startedPid
+                    } |
+                    Select-Object -First 1
+                if ($runningAfterDelay) {
+                    Write-RemoteLog "Process fallback still running after 5s (pid=$startedPid)."
+                } else {
+                    $serverLogPath = "C:\ProgramData\Vigitemp\logs\vigitemp-serveur.log"
+                    if (Test-Path $serverLogPath) {
+                        Write-RemoteLog "Dernieres lignes log serveur:"
+                        Get-Content -Path $serverLogPath -Tail 30 | ForEach-Object { Write-Output ("[REMOTE][SERVER][LOG] " + $_) }
+                    }
+                    throw "Le serveur demarre puis s'arrete rapidement (pid=$startedPid non present apres 5s)."
                 }
             }
 
@@ -266,19 +340,28 @@ function Invoke-RemoteDeploy {
             if (-not (Test-Path $payload)) {
                 throw "Payload serveur introuvable: $payload"
             }
+            Write-RemoteLog "Payload serveur detecte: $payload"
 
             $useServiceMode = $false
             if (-not $noService) {
                 $svc = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
                 if ($svc) {
+                    Write-RemoteLog "Service '$serviceName' detecte (status=$($svc.Status)). Tentative stop..."
                     try {
                         Stop-Service -Name $serviceName -Force -ErrorAction Stop
                         Start-Sleep -Seconds 2
+                        $svcAfterStop = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+                        Write-RemoteLog "Service '$serviceName' stop demande (status=$($svcAfterStop.Status))."
                         $useServiceMode = $true
                     } catch {
+                        Write-RemoteLog "WARN: echec stop service '$serviceName'. Passage en fallback process."
                         $useServiceMode = $false
                     }
+                } else {
+                    Write-RemoteLog "Service '$serviceName' non trouve. Mode process fallback."
                 }
+            } else {
+                Write-RemoteLog "Option ServerNoService activee. Mode process fallback."
             }
 
             if (-not $useServiceMode) {
@@ -286,26 +369,43 @@ function Invoke-RemoteDeploy {
                 Start-Sleep -Seconds 1
             }
 
-            Invoke-RobocopySafeRemote -src $payload -dst $installDir
+            # Ne pas supprimer le .config local (config environnement) pendant le miroir.
+            Invoke-RobocopySafeRemote -src $payload -dst $installDir -extraArgs @(
+                "/XF", "Vigitemp Serveur.exe.config"
+            )
 
             if ($useServiceMode) {
+                Write-RemoteLog "Tentative start service '$serviceName'..."
                 try {
                     Start-Service -Name $serviceName -ErrorAction Stop
+                    Start-Sleep -Seconds 1
+                    $svcAfterStart = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+                    Write-RemoteLog "Service '$serviceName' start demande (status=$($svcAfterStart.Status))."
                 } catch {
                     # Fallback automatique en mode process si le service ne demarre pas
+                    Write-RemoteLog "WARN: echec start service '$serviceName'. Fallback process."
                     Stop-ServerProcessFallback -procName $serverProcName -targetInstallDir $installDir
                     Start-ServerProcessFallback -targetInstallDir $installDir -procArgs $serverProcArgs
                 }
             } else {
                 Start-ServerProcessFallback -targetInstallDir $installDir -procArgs $serverProcArgs
             }
-        } -ArgumentList $ServerServiceName, $RemoteStagingDir, $RemoteServerInstallDir, [bool]$ServerNoService, $ServerProcessName, $ServerProcessArgs | Out-Null
+        } -ArgumentList $ServerServiceName, $RemoteStagingDir, $RemoteServerInstallDir, [bool]$ServerNoService, $ServerProcessName, $ServerProcessArgs
+        if ($serverLogs) {
+            $serverLogs | ForEach-Object { Write-Step $_ }
+        }
     }
 
     if ($Target -eq "All" -or $Target -eq "Web") {
         Write-Step "Deploiement web distant..."
-        Invoke-Command -Session $Session -ScriptBlock {
+        $webLogs = Invoke-Command -Session $Session -ScriptBlock {
             param($serviceName, $stagingDir, $installDir)
+
+            function Write-RemoteLog {
+                param([string]$message)
+                $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+                Write-Output "[$ts] [REMOTE][WEB] $message"
+            }
 
             function Invoke-RobocopySafeRemote {
                 param([string]$src, [string]$dst)
@@ -314,38 +414,90 @@ function Invoke-RemoteDeploy {
                 if ($LASTEXITCODE -ge 8) {
                     throw "robocopy failed with exit code $LASTEXITCODE (source='$src', destination='$dst')"
                 }
+                Write-RemoteLog "Robocopy web OK (code=$LASTEXITCODE) src='$src' dst='$dst'"
+            }
+
+            function Invoke-RobocopyMergeRemote {
+                param([string]$src, [string]$dst, [string[]]$extraArgs = @())
+                New-Item -ItemType Directory -Force -Path $dst | Out-Null
+                $args = @($src, $dst, "/E", "/NFL", "/NDL", "/NJH", "/NJS", "/NC", "/NS") + $extraArgs
+                & robocopy @args | Out-Null
+                if ($LASTEXITCODE -ge 8) {
+                    throw "robocopy merge failed with exit code $LASTEXITCODE (source='$src', destination='$dst')"
+                }
+                Write-RemoteLog "Robocopy web merge OK (code=$LASTEXITCODE) src='$src' dst='$dst'"
             }
 
             $payloadNext = Join-Path $stagingDir "web\.next"
             if (-not (Test-Path $payloadNext)) {
                 throw "Payload web .next introuvable: $payloadNext"
             }
+            Write-RemoteLog "Payload web detecte: $payloadNext"
+            $payloadPublic = Join-Path $stagingDir "web-public"
+            if (Test-Path $payloadPublic) {
+                Write-RemoteLog "Payload web public detecte: $payloadPublic"
+            }
 
             $svc = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
             if ($svc) {
+                Write-RemoteLog "Service '$serviceName' detecte (status=$($svc.Status)). Tentative stop..."
                 Stop-Service -Name $serviceName -Force -ErrorAction SilentlyContinue
                 Start-Sleep -Seconds 2
+                $svcAfterStop = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+                Write-RemoteLog "Service '$serviceName' stop demande (status=$($svcAfterStop.Status))."
+            } else {
+                Write-RemoteLog "Service '$serviceName' non trouve."
             }
+
+            # Evite les melanges de chunks si un node residuel garde des fichiers verrouilles.
+            $killedNode = 0
+            Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+                Where-Object {
+                    $_.Name -eq "node.exe" -and
+                    $_.CommandLine -and
+                    $_.CommandLine -like "*$installDir*"
+                } |
+                ForEach-Object {
+                    try {
+                        Stop-Process -Id $_.ProcessId -Force -ErrorAction Stop
+                        $killedNode++
+                    } catch { }
+                }
+            Write-RemoteLog "Node residuels tues: $killedNode"
 
             $currentEnv = Join-Path $installDir ".env"
             $targetNext = Join-Path $installDir ".next"
+            $targetPublic = Join-Path $installDir "public"
 
             if (Test-Path $targetNext) {
                 Remove-Item -Path $targetNext -Recurse -Force
+                Write-RemoteLog "Ancien dossier .next supprime."
             }
 
             Invoke-RobocopySafeRemote -src $payloadNext -dst $targetNext
+
+            if (Test-Path $payloadPublic) {
+                Invoke-RobocopyMergeRemote -src $payloadPublic -dst $targetPublic -extraArgs @("/XD", "uploads")
+            }
 
             if (Test-Path $currentEnv) {
                 $standaloneDir = Join-Path $targetNext "standalone"
                 New-Item -ItemType Directory -Force -Path $standaloneDir | Out-Null
                 Copy-Item -Path $currentEnv -Destination (Join-Path $standaloneDir ".env") -Force
+                Write-RemoteLog "Fichier .env recopie vers standalone."
             }
 
             if ($svc) {
+                Write-RemoteLog "Tentative start service '$serviceName'..."
                 Start-Service -Name $serviceName
+                Start-Sleep -Seconds 1
+                $svcAfterStart = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+                Write-RemoteLog "Service '$serviceName' start demande (status=$($svcAfterStart.Status))."
             }
-        } -ArgumentList $WebServiceName, $RemoteStagingDir, $RemoteWebInstallDir | Out-Null
+        } -ArgumentList $WebServiceName, $RemoteStagingDir, $RemoteWebInstallDir
+        if ($webLogs) {
+            $webLogs | ForEach-Object { Write-Step $_ }
+        }
     }
 }
 

@@ -43,7 +43,7 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
   const [selectedCalibrationId, setSelectedCalibrationId] = useState<string>('')
   const latestAdjustment = adjustments[0] ?? null
   const latestCalibration = calibrations[0] ?? null
-  const isDeriveForced = formData.EMT_Mode === 'quart' || formData.EMT_Mode === 'manuel'
+  const isDeriveForced = isExpertEdition && (formData.EMT_Mode === 'quart' || formData.EMT_Mode === 'manuel')
   const previousModeRef = useRef(formData.EMT_Mode)
 
   useEffect(() => {
@@ -123,9 +123,9 @@ export function LocationFormTabMetrology({ isExpertEdition }: LocationFormTabMet
   }
 
   useEffect(() => {
-    if (!isDeriveForced || formData.Prendre_En_Compte_Derive === true) return
+    if (!isExpertEdition || !isDeriveForced || formData.Prendre_En_Compte_Derive === true) return
     setValue('Prendre_En_Compte_Derive', true)
-  }, [formData.Prendre_En_Compte_Derive, isDeriveForced, setValue])
+  }, [formData.Prendre_En_Compte_Derive, isDeriveForced, isExpertEdition, setValue])
 
   useEffect(() => {
     if (isExpertEdition) return

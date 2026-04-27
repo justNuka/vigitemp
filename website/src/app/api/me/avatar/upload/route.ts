@@ -7,6 +7,7 @@ import { NextRequest } from "next/server"
 import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getRequestContext } from "@/lib/api-logger"
+import { getAvatarUploadsDir, toAvatarApiUrl } from "@/lib/avatar-storage"
 import { log } from "@/lib/logger"
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024
@@ -40,15 +41,14 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx: HandlerContext
     const extension = ALLOWED_MIME.get(file.type) ?? (path.extname(file.name) || ".img")
     const filename = `${ctx.user.userId}_${Date.now()}_${randomUUID().slice(0, 8)}${extension}`
 
-    const relativeDir = path.posix.join("uploads", "avatars")
-    const absoluteDir = path.join(process.cwd(), "public", relativeDir)
+    const absoluteDir = getAvatarUploadsDir()
     await mkdir(absoluteDir, { recursive: true })
 
     const bytes = Buffer.from(await file.arrayBuffer())
     const absoluteFilePath = path.join(absoluteDir, filename)
     await writeFile(absoluteFilePath, bytes)
 
-    const publicUrl = `/${relativeDir}/${filename}`
+    const publicUrl = toAvatarApiUrl(filename)
 
     log.info("AVATAR_UPLOAD", "Self avatar upload completed", { user: ctx.user.username, userId: ctx.user.userId, ip, fileName: file.name, size: file.size, url: publicUrl })
 

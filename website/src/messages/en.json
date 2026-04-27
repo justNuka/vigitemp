@@ -2919,7 +2919,7 @@
         "description": "Configure which statistics are sent each month.",
         "recipients": "Recipients (emails separated by ; or ,)",
         "recipients_placeholder": "admin@example.com; quality@example.com",
-        "day_of_month": "Day of month (1-28)",
+        "day_of_month": "Day of month (1-31)",
         "hour_local": "Local hour (0-23)",
         "enable_report": "Enable monthly delivery",
         "enable_report_help": "The report is sent for the previous month.",

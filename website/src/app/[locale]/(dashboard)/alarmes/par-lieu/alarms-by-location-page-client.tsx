@@ -349,6 +349,7 @@ export function AlarmsByLocationPageClient({
           <TanStackTable
             columns={columns}
             data={rows}
+            maxHeight="calc(100dvh - 25rem)"
             searchField={["locationName", "siteName", "groups"]}
             searchPlaceholder={t("trend_by_location.search_placeholder")}
             emptyMessage={t("trend_by_location.empty")}
@@ -387,7 +388,7 @@ export function AlarmsByLocationPageClient({
                   <Input
                     type="number"
                     min={1}
-                    max={28}
+                    max={31}
                     value={config.dayOfMonth}
                     onChange={(e) => updateConfig("dayOfMonth", Number(e.target.value))}
                     disabled={isLoadingConfig}

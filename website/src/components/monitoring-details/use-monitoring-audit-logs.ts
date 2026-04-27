@@ -7,9 +7,11 @@ export function useMonitoringAuditLogs(
   options: {
     enabled: boolean
     errorMessage: string
+    rangeStart?: Date | null
+    rangeEnd?: Date | null
   },
 ) {
-  const { enabled, errorMessage } = options
+  const { enabled, errorMessage, rangeStart, rangeEnd } = options
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -25,7 +27,11 @@ export function useMonitoringAuditLogs(
         setIsLoading(true)
         setError(null)
 
-        const response = await fetch(`/api/lieux/${idLieu}/audit?limit=200`, {
+        const queryParams = new URLSearchParams({ limit: "200" })
+        if (rangeStart) queryParams.set("dateFrom", rangeStart.toISOString())
+        if (rangeEnd) queryParams.set("dateTo", rangeEnd.toISOString())
+
+        const response = await fetch(`/api/lieux/${idLieu}/audit?${queryParams.toString()}`, {
           signal: controller.signal,
         })
 
@@ -51,7 +57,7 @@ export function useMonitoringAuditLogs(
 
     void loadAudit()
     return () => controller.abort()
-  }, [enabled, errorMessage, idLieu, isLoaded])
+  }, [enabled, errorMessage, idLieu, isLoaded, rangeEnd, rangeStart])
 
   const reset = useCallback(() => {
     setLogs([])

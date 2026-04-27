@@ -5,6 +5,7 @@ import type { ColumnDef, SortingState, Updater } from "@tanstack/react-table"
 import { TanStackTable } from "@/components/data-table/tanstack-table"
 import { Button } from "@/components/ui/button"
 import type { MeasureData } from "@/lib/measurements"
+import { formatMeasureValue } from "@/lib/measurements"
 
 type PresentationExportRow = {
   label: string
@@ -116,20 +117,20 @@ export function MonitoringTableTab({
           (row.original.consigneInf !== null && value < row.original.consigneInf) ||
           (row.original.consigneSup !== null && value > row.original.consigneSup)
 
-        return <span className={isOutOfRange ? "text-red-600 dark:text-red-400 font-bold" : ""}>{value}{row.original.unit}</span>
+        return <span className={isOutOfRange ? "text-red-600 dark:text-red-400 font-bold" : ""}>{formatMeasureValue(value)}{row.original.unit}</span>
       },
     },
     {
       id: "consigneInf",
       accessorKey: "consigneInf",
       header: t("table.columns.lower_threshold"),
-      cell: ({ row }) => <span>{row.original.consigneInf !== null ? `${row.original.consigneInf}${unite}` : "-"}</span>,
+      cell: ({ row }) => <span>{row.original.consigneInf !== null ? `${formatMeasureValue(row.original.consigneInf)}${unite}` : "-"}</span>,
     },
     {
       id: "consigneSup",
       accessorKey: "consigneSup",
       header: t("table.columns.upper_threshold"),
-      cell: ({ row }) => <span>{row.original.consigneSup !== null ? `${row.original.consigneSup}${unite}` : "-"}</span>,
+      cell: ({ row }) => <span>{row.original.consigneSup !== null ? `${formatMeasureValue(row.original.consigneSup)}${unite}` : "-"}</span>,
     },
     {
       id: "statut",
@@ -158,9 +159,9 @@ export function MonitoringTableTab({
     return data.map((row) => [
       row.dateLabel,
       row.sensorSerial,
-      row.value === null ? t("table.status.no_response") : `${row.value}${row.unit}`,
-      row.consigneInf !== null ? `${row.consigneInf}${unite}` : "-",
-      row.consigneSup !== null ? `${row.consigneSup}${unite}` : "-",
+      row.value === null ? t("table.status.no_response") : `${formatMeasureValue(row.value)}${row.unit}`,
+      row.consigneInf !== null ? `${formatMeasureValue(row.consigneInf)}${unite}` : "-",
+      row.consigneSup !== null ? `${formatMeasureValue(row.consigneSup)}${unite}` : "-",
       getStatusLabel(row),
     ])
   }, [data, getStatusLabel, t, unite])

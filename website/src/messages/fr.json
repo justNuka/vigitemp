@@ -2886,14 +2886,14 @@
     },
     "trend_by_location": {
       "title": "Statistiques par lieu",
-      "description": "Analyse des lieux en surveillance sur la periode selectionnee.",
+      "description": "Analyse des lieux en surveillance sur la période sélectionnée.",
       "table_title": "Indicateurs par lieu",
-      "table_description": "Mesures, alarmes et depassements sans alarme agreges par lieu.",
-      "table_hint": "Les durees de depassement sans alarme sont calculees sur les mesures hors seuil quand l'etat alarme est inactif.",
+      "table_description": "Mesures, alarmes et dépassements sans alarme agrégés par lieu.",
+      "table_hint": "Les durées de dépassement sans alarme sont calculées sur les mesures hors seuil quand l'état alarme est inactif.",
       "search_placeholder": "Rechercher un lieu, un site ou un groupe...",
-      "empty": "Aucune donnee trouvee sur la periode.",
+      "empty": "Aucune donnée trouvée sur la période.",
       "period": {
-        "title": "Periode d'analyse",
+        "title": "Période d'analyse",
         "from": "Du",
         "to": "Au",
         "apply": "Appliquer"
@@ -2909,51 +2909,51 @@
       },
       "columns": {
         "location_summary": "Lieu / Site / Groupe",
-        "settings_summary": "Consignes / Tolerances / Frequence / Retards",
+        "settings_summary": "Consignes / Tolérances / Fréquence / Retards",
         "max": "Mesure max",
         "min": "Mesure min",
         "avg": "Moyenne",
         "alarm_count": "Nombre d'alarmes",
-        "alarm_high_duration": "Duree alarme haute",
-        "alarm_low_duration": "Duree alarme basse",
-        "over_high_no_alarm": "Depassement haut sans alarme",
-        "over_low_no_alarm": "Depassement bas sans alarme"
+        "alarm_high_duration": "Durée alarme haute",
+        "alarm_low_duration": "Durée alarme basse",
+        "over_high_no_alarm": "Dépassement haut sans alarme",
+        "over_low_no_alarm": "Dépassement bas sans alarme"
       },
       "stats": {
         "locations": "Lieux en surveillance",
         "total_alarms": "Nombre total d'alarmes",
-        "total_alarms_help": "Alarmes sur la periode selectionnee"
+        "total_alarms_help": "Alarmes sur la période sélectionnée"
       },
       "meta": {
         "title": "Statistiques par lieu",
-        "description": "Statistiques detaillees des lieux en surveillance."
+        "description": "Statistiques détaillées des lieux en surveillance."
       },
       "admin": {
-        "title": "Recap mensuel par mail",
-        "description": "Parametrez les indicateurs envoyes chaque mois.",
-        "recipients": "Destinataires (emails separes par ; ou ,)",
+        "title": "Récap mensuel par mail",
+        "description": "Paramétrez les indicateurs envoyés chaque mois.",
+        "recipients": "Destinataires (emails séparés par ; ou ,)",
         "recipients_placeholder": "admin@exemple.com; qualite@exemple.com",
-        "day_of_month": "Jour du mois (1-28)",
+        "day_of_month": "Jour du mois (1-31)",
         "hour_local": "Heure locale (0-23)",
         "enable_report": "Activer l'envoi mensuel",
-        "enable_report_help": "Le recap est envoye sur le mois precedent.",
+        "enable_report_help": "Le récap est envoyé sur le mois précédent.",
         "save": "Enregistrer la configuration",
         "send_now": "Envoyer maintenant",
-        "save_success": "Configuration enregistree",
+        "save_success": "Configuration enregistrée",
         "save_error": "Erreur lors de l'enregistrement",
-        "send_success": "Recap envoye ({sent} email(s))",
-        "send_error": "Erreur lors de l'envoi du recap",
+        "send_success": "Récap envoyé ({sent} email(s))",
+        "send_error": "Erreur lors de l'envoi du récap",
         "fields": {
           "location_summary": "Nom du lieu / site / groupe",
-          "settings_summary": "Consignes, tolerances, frequences et retards",
+          "settings_summary": "Consignes, tolerances, fréquences et retards",
           "max": "Mesure maxi",
           "min": "Mesure mini",
           "avg": "Moyenne des mesures",
           "alarm_count": "Nombre d'alarmes",
-          "alarm_high_duration": "Duree alarme haute cumulee",
-          "alarm_low_duration": "Duree alarme basse cumulee",
-          "over_high_no_alarm": "Duree depassement haut sans alarme",
-          "over_low_no_alarm": "Duree depassement bas sans alarme"
+          "alarm_high_duration": "Durée alarme haute cumulee",
+          "alarm_low_duration": "Durée alarme basse cumulee",
+          "over_high_no_alarm": "Durée depassement haut sans alarme",
+          "over_low_no_alarm": "Durée depassement bas sans alarme"
         }
       }
     }
@@ -3117,7 +3117,7 @@
       "drag_zoom_hint": "Molette pour zoomer, glisser pour se déplacer, double-clic pour réinitialiser.",
       "reset_zoom": "Réinitialiser le zoom",
       "empty_title": "Aucune mesure disponible",
-      "empty_description": "Aucune mesure n'est disponible sur la plage ou le contexte s?lectionn?."
+      "empty_description": "Aucune mesure n'est disponible sur la plage ou le contexte sélectionné."
     },
     "tooltip": {
       "value": "Valeur: {value}{unit}",
@@ -4000,7 +4000,7 @@
       "empty": "Aucune observation"
     },
     "details": {
-      "loading_hint": "Graphiques en pause pendant l'ouverture d'une fen?tre."
+      "loading_hint": "Graphiques en pause pendant l'ouverture d'une fenêtre."
     }
   },
   "adminDashboard": {

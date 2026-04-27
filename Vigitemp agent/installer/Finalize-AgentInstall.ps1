@@ -125,6 +125,67 @@ function Ensure-StartupRegistry {
     $runValue = '"' + $ExePath + '"'
     New-Item -Path $runKey -Force | Out-Null
     Set-ItemProperty -Path $runKey -Name "VigitempAgent" -Value $runValue
+    Remove-ItemProperty -Path $runKey -Name "VigiSensysAgent" -ErrorAction SilentlyContinue
+    Remove-ItemProperty -Path $runKey -Name "VigiTempAgent" -ErrorAction SilentlyContinue
+}
+
+function Ensure-AgentUninstallRegistry {
+    param(
+        [string]$InstallPath,
+        [string]$ExePath
+    )
+
+    $uninstallKeyPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VigiSensysAgent"
+    $uninstallScriptPath = Join-Path $InstallPath "Uninstall-VigiSensysAgent.ps1"
+
+    $uninstallScript = @"
+Param(
+    [switch]`$Force
+)
+
+Set-StrictMode -Version Latest
+`$ErrorActionPreference = 'Stop'
+
+`$installDir = '$InstallPath'
+`$runKey = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Run'
+
+try { Get-Process VigitempAgent -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue } catch { }
+
+try {
+    Remove-ItemProperty -Path `$runKey -Name 'VigitempAgent' -ErrorAction SilentlyContinue
+    Remove-ItemProperty -Path `$runKey -Name 'VigiSensysAgent' -ErrorAction SilentlyContinue
+    Remove-ItemProperty -Path `$runKey -Name 'VigiTempAgent' -ErrorAction SilentlyContinue
+} catch { }
+
+try { & netsh http delete urlacl url='http://127.0.0.1:8000/' | Out-Null } catch { }
+try { & netsh http delete urlacl url='http://localhost:8000/' | Out-Null } catch { }
+
+try { Remove-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VigiSensysAgent' -Recurse -Force -ErrorAction SilentlyContinue } catch { }
+
+if (Test-Path `$installDir) {
+    Remove-Item -LiteralPath `$installDir -Recurse -Force
+}
+"@
+
+    Set-Content -Path $uninstallScriptPath -Value $uninstallScript -Encoding UTF8
+
+    $displayVersion = "1.0.0"
+    try {
+        $displayVersion = (Get-Item $ExePath).VersionInfo.ProductVersion
+    } catch { }
+
+    $uninstallCommand = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$uninstallScriptPath`""
+
+    New-Item -Path $uninstallKeyPath -Force | Out-Null
+    Set-ItemProperty -Path $uninstallKeyPath -Name "DisplayName" -Value "VigiSensys Agent"
+    Set-ItemProperty -Path $uninstallKeyPath -Name "DisplayVersion" -Value $displayVersion
+    Set-ItemProperty -Path $uninstallKeyPath -Name "Publisher" -Value "VigiSensys"
+    Set-ItemProperty -Path $uninstallKeyPath -Name "InstallLocation" -Value $InstallPath
+    Set-ItemProperty -Path $uninstallKeyPath -Name "DisplayIcon" -Value $ExePath
+    Set-ItemProperty -Path $uninstallKeyPath -Name "UninstallString" -Value $uninstallCommand
+    Set-ItemProperty -Path $uninstallKeyPath -Name "QuietUninstallString" -Value ($uninstallCommand + " -Force")
+    Set-ItemProperty -Path $uninstallKeyPath -Name "NoModify" -Value 1 -Type DWord
+    Set-ItemProperty -Path $uninstallKeyPath -Name "NoRepair" -Value 1 -Type DWord
 }
 
 function Update-AgentConfig {
@@ -196,6 +257,7 @@ try {
 
     Write-Log "Configuration du demarrage automatique..."
     Ensure-StartupRegistry -ExePath $exePath
+    Ensure-AgentUninstallRegistry -InstallPath $InstallDir -ExePath $exePath
 
     Write-Log "Lancement de l'agent..."
     Start-Process -FilePath $exePath | Out-Null

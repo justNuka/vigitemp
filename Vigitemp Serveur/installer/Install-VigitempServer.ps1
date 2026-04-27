@@ -181,6 +181,60 @@ function Resolve-DispatchSecret([string]$providedSecret, [string]$providedFilePa
     return $secret
 }
 
+function Get-HardwareProfile {
+    $cpuCores = 0
+    $ramGb = 0
+
+    try {
+        $cpu = Get-CimInstance Win32_ComputerSystem -ErrorAction Stop
+        $cpuCores = [int]$cpu.NumberOfLogicalProcessors
+        $ramGb = [math]::Round(($cpu.TotalPhysicalMemory / 1GB), 1)
+    } catch {
+        $cpuCores = 0
+        $ramGb = 0
+    }
+
+    return @{
+        CpuCores = $cpuCores
+        RamGb = $ramGb
+    }
+}
+
+function Get-RecommendedWorkerCount([int]$sondeCount, [bool]$hasFastPolling, [int]$cpuCores, [double]$ramGb) {
+    $workers = 1
+
+    if ($sondeCount -le 60) {
+        $workers = 1
+    } elseif ($sondeCount -le 180) {
+        $workers = 2
+    } elseif ($sondeCount -le 350) {
+        $workers = 3
+    } elseif ($sondeCount -le 500) {
+        $workers = 4
+    } else {
+        $workers = 5
+    }
+
+    if ($hasFastPolling) {
+        $workers += 1
+    }
+
+    if ($cpuCores -gt 0 -and $cpuCores -le 2) {
+        $workers = [Math]::Min($workers, 2)
+    }
+    if ($ramGb -gt 0 -and $ramGb -lt 8) {
+        $workers = [Math]::Min($workers, 2)
+    }
+    if ($cpuCores -ge 4 -and $ramGb -ge 16) {
+        $workers = [Math]::Min($workers, 6)
+    }
+
+    if ($workers -lt 1) { $workers = 1 }
+    if ($workers -gt 16) { $workers = 16 }
+
+    return $workers
+}
+
 function Write-InstallRegistryInfo($installPath, $version) {
     try {
         $baseKey = "HKLM:\\SOFTWARE\\Vigitemp"
@@ -260,6 +314,82 @@ $licenseDebounceSeconds = Read-InstallValue (T "Debounce alarmes (secondes)" "Al
 $licenseShowWhileSnoozed = Read-InstallValue (T "Afficher alarmes pendant snooze (true/false)" "Show alarms while snoozed (true/false)") "true"
 $settingsCacheSeconds = Read-InstallValue (T "Cache reglages alarmes (secondes)" "Alarm settings cache (seconds)") "60"
 $metrologyLogDetailed = Read-InstallValue (T "Logs metrologie detailles (true/false)" "Detailed metrology logs (true/false)") "false"
+$hardwareProfile = Get-HardwareProfile
+$autoWorkerSizing = Read-InstallValue (T "Dimensionnement workers automatique (y/n)" "Automatic worker sizing (y/n)") "y"
+$autoWorkerSizing = $autoWorkerSizing.Trim().ToLowerInvariant()
+$workerCount = 1
+if ($autoWorkerSizing -eq "y") {
+    if ($hardwareProfile.CpuCores -gt 0) {
+        Write-Log (T "Materiel detecte: CPU logiques=$($hardwareProfile.CpuCores), RAM=$($hardwareProfile.RamGb) Go" "Detected hardware: logical CPU=$($hardwareProfile.CpuCores), RAM=$($hardwareProfile.RamGb) GB")
+    } else {
+        Write-Log (T "Materiel non detecte automatiquement (valeurs manuelles conseillees)." "Hardware could not be auto-detected (manual values recommended).")
+    }
+
+    $sondeCountRaw = Read-InstallValue (T "Nombre de sondes actives" "Active probe count") "60"
+    $sondeCount = 60
+    if (-not [int]::TryParse($sondeCountRaw, [ref]$sondeCount)) {
+        $sondeCount = 60
+    }
+    if ($sondeCount -lt 1) { $sondeCount = 1 }
+
+    $fastPollingAnswer = Read-InstallValue (T "Beaucoup de sondes en frequence <= 5 min ? (y/n)" "Many probes with frequency <= 5 min? (y/n)") "n"
+    $fastPolling = $fastPollingAnswer.Trim().ToLowerInvariant() -eq "y"
+
+    $recommendedWorkers = Get-RecommendedWorkerCount -sondeCount $sondeCount -hasFastPolling $fastPolling -cpuCores $hardwareProfile.CpuCores -ramGb $hardwareProfile.RamGb
+    $workerCountRaw = Read-InstallValue (T "Nombre de workers d'interrogation" "Interrogation worker count") ([string]$recommendedWorkers)
+    if (-not [int]::TryParse($workerCountRaw, [ref]$workerCount)) {
+        $workerCount = $recommendedWorkers
+    }
+} else {
+    $workerCountRaw = Read-InstallValue (T "Nombre de workers d'interrogation (1..16)" "Interrogation worker count (1..16)") "1"
+    if (-not [int]::TryParse($workerCountRaw, [ref]$workerCount)) {
+        $workerCount = 1
+    }
+}
+
+function Write-UninstallRegistryInfo($installPath, $serviceName, $version) {
+    try {
+        $uninstallScriptSource = Join-Path $scriptRoot "Uninstall-VigitempServer.ps1"
+        $uninstallScriptTarget = Join-Path $installPath "Uninstall-VigitempServer.ps1"
+        if (Test-Path $uninstallScriptSource) {
+            Copy-Item -Path $uninstallScriptSource -Destination $uninstallScriptTarget -Force
+        }
+
+        $uninstallCommand = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$uninstallScriptTarget`" -ServiceName `"$serviceName`" -InstallDir `"$installPath`""
+        $quietUninstallCommand = $uninstallCommand + " -Force"
+        $uninstallKey = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VigiSensysServer"
+
+        New-Item -Path $uninstallKey -Force | Out-Null
+        Set-ItemProperty -Path $uninstallKey -Name "DisplayName" -Value "VigiSensys Server"
+        $displayVersion = ""
+        if (-not [string]::IsNullOrWhiteSpace($version)) { $displayVersion = $version }
+        Set-ItemProperty -Path $uninstallKey -Name "DisplayVersion" -Value $displayVersion
+        Set-ItemProperty -Path $uninstallKey -Name "Publisher" -Value "VigiSensys"
+        Set-ItemProperty -Path $uninstallKey -Name "InstallLocation" -Value $installPath
+        Set-ItemProperty -Path $uninstallKey -Name "DisplayIcon" -Value (Join-Path $installPath "Vigitemp Serveur.exe")
+        Set-ItemProperty -Path $uninstallKey -Name "UninstallString" -Value $uninstallCommand
+        Set-ItemProperty -Path $uninstallKey -Name "QuietUninstallString" -Value $quietUninstallCommand
+        Set-ItemProperty -Path $uninstallKey -Name "NoModify" -Value 1 -Type DWord
+        Set-ItemProperty -Path $uninstallKey -Name "NoRepair" -Value 1 -Type DWord
+
+        try {
+            if (Test-Path $installPath) {
+                $sizeBytes = (Get-ChildItem -Path $installPath -File -Recurse -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
+                if ($sizeBytes -gt 0) {
+                    $sizeKb = [Math]::Max(1, [int][Math]::Ceiling($sizeBytes / 1KB))
+                    Set-ItemProperty -Path $uninstallKey -Name "EstimatedSize" -Value $sizeKb -Type DWord
+                }
+            }
+        } catch { }
+    } catch {
+        Write-Log (T "Impossible d'ecrire l'entree Applications installees du serveur." "Failed to write server installed-apps registry entry.")
+    }
+}
+
+if ($workerCount -lt 1) { $workerCount = 1 }
+if ($workerCount -gt 16) { $workerCount = 16 }
+Write-Log (T "Workers configures: $workerCount" "Configured workers: $workerCount")
+
 if ([string]::IsNullOrWhiteSpace($AlarmDispatchSecretFile)) {
     $AlarmDispatchSecretFile = Join-Path $programData "VigiSensys\shared-secrets\alarm-dispatch-secret.txt"
 }
@@ -347,6 +477,10 @@ Set-AppSetting $configPath "Vigi.License.DebounceSeconds" $licenseDebounceSecond
 Set-AppSetting $configPath "Vigi.License.ShowWhileSnoozed" $licenseShowWhileSnoozed
 Set-AppSetting $configPath "Vigi.License.SettingsCacheSeconds" $settingsCacheSeconds
 Set-AppSetting $configPath "Vigitemp.Metrology.LogDetailed" $metrologyLogDetailed
+Set-AppSetting $configPath "Vigitemp.Workers.Count" ([string]$workerCount)
+Set-AppSetting $configPath "Vigitemp.Alarms.PollServerId" "1"
+Set-AppSetting $configPath "Vigitemp.LegacyAgentNotifications.Enabled" "false"
+Set-AppSetting $configPath "Vigitemp.LegacyAgentNotifications.MaxRecipients" "25"
 Set-AppSetting $configPath "Vigi.License.Path" $licenseDestPath
 Set-AppSetting $configPath "Vigi.License.PublicKeyPath" $publicKeyDestPath
 Set-AppSetting $configPath "Vigi.License.InstancePublicKey" $instancePublicKey
@@ -397,6 +531,7 @@ try {
 
 
 Write-InstallRegistryInfo -installPath $InstallDir -version $version
+Write-UninstallRegistryInfo -installPath $InstallDir -serviceName $ServiceName -version $version
 
 try {
     $regServerRoot = "HKLM:\\SOFTWARE\\Vigitemp\\Server"
@@ -424,6 +559,7 @@ if (-not [string]::IsNullOrWhiteSpace($version)) {
     Write-Log (T "Version : $version" "Version: $version")
 }
 Write-Log (T "Config : $configPath" "Config: $configPath")
+Write-Log (T "Workers : $workerCount" "Workers: $workerCount")
 Write-Log (T "Licence : $licenseDestPath" "License: $licenseDestPath")
 Write-Log (T "Clé publique : $publicKeyDestPath" "Public key: $publicKeyDestPath")
 Write-Log (T "Log : $logPath" "Log: $logPath")

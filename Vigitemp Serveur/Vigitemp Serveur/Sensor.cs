@@ -1,4 +1,5 @@
 using System;
+using System.Configuration;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -59,6 +60,10 @@ namespace Vigitemp_Serveur
         private int _readCompletionState = 0;
 
         private static readonly HttpClient client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        private static readonly bool _legacyAgentNotificationsEnabled =
+            GetSettingBool("Vigitemp.LegacyAgentNotifications.Enabled", false);
+        private static readonly int _legacyAgentNotificationMaxRecipients =
+            GetSettingInt("Vigitemp.LegacyAgentNotifications.MaxRecipients", 25);
         private static readonly ConcurrentDictionary<int, bool> _alarmStateByLieu =
             new ConcurrentDictionary<int, bool>();
         private static readonly ConcurrentDictionary<int, bool> _preAlarmStateByLieu =
@@ -77,6 +82,8 @@ namespace Vigitemp_Serveur
             new ConcurrentDictionary<int, int>();
         private static readonly ConcurrentDictionary<int, bool> _sensorPowerAlarmStateByLieu =
             new ConcurrentDictionary<int, bool>();
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _portLocks =
+            new ConcurrentDictionary<string, SemaphoreSlim>(StringComparer.OrdinalIgnoreCase);
 
         // Constructeur
         public Sensor(ThreadServeur p_ths, string p_comPort, string p_sondeSerialNumber, string p_sondeAdresse)
@@ -230,12 +237,29 @@ namespace Vigitemp_Serveur
             pendingResults = true;
         }
 
+        protected async Task<bool> ExecuteWithPortLockAsync(Func<Task<bool>> readAction)
+        {
+            var portKey = string.IsNullOrWhiteSpace(m_comPort)
+                ? "__NO_PORT__"
+                : m_comPort.Trim().ToUpperInvariant();
+            var portSemaphore = _portLocks.GetOrAdd(portKey, _ => new SemaphoreSlim(1, 1));
+            await portSemaphore.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                return await readAction().ConfigureAwait(false);
+            }
+            finally
+            {
+                portSemaphore.Release();
+            }
+        }
+
         protected bool TryCompleteRead()
         {
             var completed = Interlocked.CompareExchange(ref _readCompletionState, 1, 0) == 0;
             if (completed)
             {
-                pendingResults = false;
+                _ = MarkReadLoopCompletedWhenPortReleasedAsync();
             }
             return completed;
         }
@@ -243,6 +267,48 @@ namespace Vigitemp_Serveur
         protected bool HasReadCompleted()
         {
             return Volatile.Read(ref _readCompletionState) != 0;
+        }
+
+        private async Task MarkReadLoopCompletedWhenPortReleasedAsync()
+        {
+            try
+            {
+                var timeoutAt = DateTime.UtcNow.AddSeconds(6);
+                while (DateTime.UtcNow < timeoutAt)
+                {
+                    try
+                    {
+                        if (m_port == null || !m_port.IsOpen)
+                        {
+                            pendingResults = false;
+                            return;
+                        }
+                    }
+                    catch
+                    {
+                        pendingResults = false;
+                        return;
+                    }
+
+                    await Task.Delay(10).ConfigureAwait(false);
+                }
+
+                try
+                {
+                    if (m_port != null && m_port.IsOpen)
+                    {
+                        m_port.Close();
+                    }
+                }
+                catch
+                {
+                    // Ignore: this path only exists to unblock a stuck read cycle.
+                }
+            }
+            finally
+            {
+                pendingResults = false;
+            }
         }
 
         /// <summary>
@@ -302,6 +368,11 @@ namespace Vigitemp_Serveur
 
         private void HideAlarmOnClientAsync(string ipClient)
         {
+            if (!_legacyAgentNotificationsEnabled)
+            {
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(ipClient))
             {
                 return;
@@ -692,11 +763,46 @@ namespace Vigitemp_Serveur
                 _retriggerLowWaitCountByLieu[m_idLieu] = 0;
                 _retriggerHighWaitCountByLieu[m_idLieu] = 0;
                 VigitempServeur.Log($"Alarme terminee (H/B) pour le lieu {m_idLieu} - sonde {m_sondeSerialNumber}");
-                var ips_clients = ths.GetDatabase().getPCsClients();
-                for (int i = 0; i < ips_clients.Count; i++)
+                if (_legacyAgentNotificationsEnabled)
                 {
-                    HideAlarmOnClientAsync(ips_clients[i]);
+                    var ips_clients = ths.GetDatabase().getPCsClients();
+                    var maxRecipients = Math.Max(1, _legacyAgentNotificationMaxRecipients);
+                    var count = Math.Min(ips_clients.Count, maxRecipients);
+                    for (int i = 0; i < count; i++)
+                    {
+                        HideAlarmOnClientAsync(ips_clients[i]);
+                    }
                 }
+            }
+        }
+
+        private static bool GetSettingBool(string key, bool defaultValue)
+        {
+            try
+            {
+                var raw = ConfigurationManager.AppSettings[key];
+                if (string.IsNullOrWhiteSpace(raw)) return defaultValue;
+                if (bool.TryParse(raw, out var value)) return value;
+                return defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private static int GetSettingInt(string key, int defaultValue)
+        {
+            try
+            {
+                var raw = ConfigurationManager.AppSettings[key];
+                if (string.IsNullOrWhiteSpace(raw)) return defaultValue;
+                if (int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value)) return value;
+                return defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
             }
         }
 

@@ -347,7 +347,7 @@ export function LocationTemplatesClient() {
         </Card>
 
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogContent className="max-w-4xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{t('dialogs.create_title')}</DialogTitle>
               <DialogDescription>{t('dialogs.create_description')}</DialogDescription>
@@ -361,7 +361,7 @@ export function LocationTemplatesClient() {
         </Dialog>
 
         <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-          <DialogContent className="max-w-4xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{t('dialogs.edit_title')}</DialogTitle>
               <DialogDescription>{t('dialogs.edit_description')}</DialogDescription>

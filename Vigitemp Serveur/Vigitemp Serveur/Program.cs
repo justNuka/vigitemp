@@ -51,6 +51,14 @@ namespace Vigitemp_Serveur
                 {
                     SafeLog("UnhandledException: " + eventArgs.ExceptionObject);
                 };
+                AppDomain.CurrentDomain.ProcessExit += (sender, eventArgs) =>
+                {
+                    SafeLog("ProcessExit received.");
+                };
+                AppDomain.CurrentDomain.DomainUnload += (sender, eventArgs) =>
+                {
+                    SafeLog("DomainUnload received.");
+                };
                 TaskScheduler.UnobservedTaskException += (sender, eventArgs) =>
                 {
                     SafeLog("UnobservedTaskException: " + eventArgs.Exception);

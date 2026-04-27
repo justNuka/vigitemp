@@ -79,5 +79,15 @@ try {
     Write-Log "Impossible de supprimer la cle de registre."
 }
 
+try {
+    $uninstallKey = "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\VigiSensysServer"
+    if (Test-Path $uninstallKey) {
+        Write-Log "Suppression registre: $uninstallKey"
+        Remove-Item -Path $uninstallKey -Recurse -Force
+    }
+} catch {
+    Write-Log "Impossible de supprimer l'entree Applications installees."
+}
+
 Write-Log "Desinstallation serveur terminee."
 

@@ -47,9 +47,22 @@ export const GET = withAuthLogging(
 			const searchParams = req.nextUrl.searchParams
 			const limitParam = Number.parseInt(searchParams.get("limit") || "150", 10)
 			const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 500) : 150
+			const dateFromParam = searchParams.get("dateFrom")
+			const dateToParam = searchParams.get("dateTo")
+			const parsedFrom = dateFromParam ? new Date(dateFromParam) : null
+			const parsedTo = dateToParam ? new Date(dateToParam) : null
+			const hasValidFrom = parsedFrom !== null && !Number.isNaN(parsedFrom.getTime())
+			const hasValidTo = parsedTo !== null && !Number.isNaN(parsedTo.getTime())
+
+			const dateFilter: { gte?: Date; lte?: Date } = {}
+			if (hasValidFrom && parsedFrom) dateFilter.gte = parsedFrom
+			if (hasValidTo && parsedTo) dateFilter.lte = parsedTo
 
 			const logs = await prismaMesure.tm_journal.findMany({
-				where: { Id_Lieu: lieuId },
+				where: {
+					Id_Lieu: lieuId,
+					...(Object.keys(dateFilter).length > 0 ? { Date_Heure_Journal: dateFilter } : {}),
+				},
 				take: limit,
 				orderBy: { Date_Heure_Journal: "desc" },
 				select: {

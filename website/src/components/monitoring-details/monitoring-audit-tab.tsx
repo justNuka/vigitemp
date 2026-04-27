@@ -36,6 +36,57 @@ function sanitizeAuditText(value: string | null | undefined) {
   return normalized || "-"
 }
 
+function toHumanAuditJson(raw: string) {
+  const normalized = raw.trim()
+  if (!normalized.startsWith("{") || !normalized.endsWith("}")) return null
+  try {
+    const parsed = JSON.parse(normalized) as Record<string, unknown>
+    const entries = Object.entries(parsed)
+    if (entries.length === 0) return "-"
+
+    const labels: Record<string, string> = {
+      disabled: "Désactivé",
+      enabled: "Activé",
+      durationMinutes: "Durée (min)",
+      reactivationAt: "Réactivation",
+      comment: "Commentaire",
+      action: "Action",
+      source: "Source",
+    }
+
+    return entries
+      .map(([key, value]) => {
+        const label = labels[key] ?? key
+        let rendered = "-"
+        if (typeof value === "boolean") rendered = value ? "Oui" : "Non"
+        else if (value != null) rendered = String(value)
+        return `${label}: ${rendered}`
+      })
+      .join("\n")
+  } catch {
+    return null
+  }
+}
+
+function formatAuditDetails(value: string | null | undefined) {
+  const sanitized = sanitizeAuditText(value)
+  if (sanitized === "-") return sanitized
+
+  const jsonStart = sanitized.indexOf("{")
+  const jsonEnd = sanitized.lastIndexOf("}")
+  if (jsonStart >= 0 && jsonEnd > jsonStart) {
+    const prefix = sanitized.slice(0, jsonStart).trim()
+    const jsonPart = sanitized.slice(jsonStart, jsonEnd + 1)
+    const humanJson = toHumanAuditJson(jsonPart)
+    if (humanJson) {
+      return prefix ? `${prefix}\n${humanJson}` : humanJson
+    }
+  }
+
+  const pureJson = toHumanAuditJson(sanitized)
+  if (pureJson) return pureJson
+  return sanitized
+}
 
 export function MonitoringAuditTab({ logs, isLoading, error, t }: MonitoringAuditTabProps) {
   const data = useMemo<AuditRow[]>(() => {
@@ -46,7 +97,7 @@ export function MonitoringAuditTab({ logs, isLoading, error, t }: MonitoringAudi
       dateIso: log.timestamp ?? "",
       dateLabel: log.timestamp ? formatDbDateTime(log.timestamp) : "-",
       user: log.user || "-",
-      details: sanitizeAuditText(log.commentaireUtilisateur || log.commentaire),
+      details: formatAuditDetails(log.commentaireUtilisateur || log.commentaire),
     }))
   }, [logs])
 

@@ -19,6 +19,12 @@ namespace VigitempAgentInstaller
         private const string AgentExeName = "VigitempAgent.exe";
         private const string SetupExeName = "VigiSensysAgentSetup.exe";
         private const string AgentRunRegistryName = "VigitempAgent";
+        private static readonly string[] LegacyAgentRunRegistryNames =
+        {
+            "VigitempAgent",
+            "VigiSensysAgent",
+            "VigiTempAgent",
+        };
         private const string UninstallRegistryKeyName = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VigiSensysAgent";
         private const string ProductDisplayName = "VigiSensys Agent";
         private const string ProductPublisher = "VigiSensys";
@@ -1038,6 +1044,18 @@ namespace VigitempAgentInstaller
                 }
 
                 key.SetValue(AgentRunRegistryName, "\"" + exePath + "\"");
+                foreach (var legacyName in LegacyAgentRunRegistryNames)
+                {
+                    if (string.Equals(legacyName, AgentRunRegistryName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    if (key.GetValue(legacyName) != null)
+                    {
+                        key.DeleteValue(legacyName, false);
+                    }
+                }
             }
         }
 
@@ -1050,9 +1068,12 @@ namespace VigitempAgentInstaller
                     return;
                 }
 
-                if (key.GetValue(AgentRunRegistryName) != null)
+                foreach (var registryName in LegacyAgentRunRegistryNames)
                 {
-                    key.DeleteValue(AgentRunRegistryName, false);
+                    if (key.GetValue(registryName) != null)
+                    {
+                        key.DeleteValue(registryName, false);
+                    }
                 }
             }
         }

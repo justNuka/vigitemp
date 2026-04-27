@@ -51,7 +51,7 @@ export function renderExpertWidget({
         description={t("acknowledgments.description", { total: metrics.acknowledgmentsTotal, max: 50 })}
         value={String(metrics.acknowledgmentsTotal)}
         helper={`${t("acknowledgments.columns.date_time")}: ${metrics.latestAck}`}
-        href="/admin/alarmes"
+        href="/alarmes/acquittements"
         hrefLabel={accessLabel}
         icon={<Clock className="h-5 w-5 text-amber-600" />}
       />

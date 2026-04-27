@@ -144,8 +144,12 @@ export function LocationFormDialog({
       return;
     }
     await onSubmit(normalized, 'stay');
-    setLastCommittedValues(normalized);
-    resolvedForm.reset(normalized);
+    const nextCommitted = {
+      ...normalized,
+      Commentaire_Action: null,
+    };
+    setLastCommittedValues(nextCommitted);
+    resolvedForm.reset(nextCommitted);
   }, (errors) => showFormValidationToast(errors));
 
   const submitAndClose = resolvedForm.handleSubmit(async (values) => {
@@ -175,7 +179,6 @@ export function LocationFormDialog({
     (resolvedForm.getValues() as LocationFormData) ?? getDefaultLocationFormData()
   ), [resolvedForm]);
   const [activeTab, setActiveTab] = useState<string>('general');
-  const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
   const [isCreateTemplateDialogOpen, setIsCreateTemplateDialogOpen] = useState(false);
   const [templateName, setTemplateName] = useState("");
@@ -197,14 +200,6 @@ export function LocationFormDialog({
       toast.error(message);
     },
   });
-
-  const requestClose = () => {
-    if (!hasChanges) {
-      onCancel();
-      return;
-    }
-    setIsDiscardDialogOpen(true);
-  };
 
   useEffect(() => {
     if (!open || form || !formData) return;
@@ -269,7 +264,7 @@ export function LocationFormDialog({
     <Dialog
       open={open}
       onOpenChange={(nextOpen) => {
-        if (!nextOpen) requestClose();
+        if (!nextOpen) onCancel();
       }}
     >
       <DialogContent className="max-w-4xl xl:max-w-5xl max-h-[96vh] overflow-y-auto bg-white p-0 dark:bg-card">
@@ -422,7 +417,7 @@ export function LocationFormDialog({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={requestClose}>
+                      <DropdownMenuItem onClick={onCancel}>
                         {t('submit.cancel_and_close')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => resolvedForm.reset(lastCommittedValues)}>
@@ -497,25 +492,6 @@ export function LocationFormDialog({
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={isDiscardDialogOpen} onOpenChange={setIsDiscardDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('unsaved_changes_title')}</AlertDialogTitle>
-            <AlertDialogDescription>{t('unsaved_changes_confirm')}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('submit.cancel_and_stay')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setIsDiscardDialogOpen(false);
-                onCancel();
-              }}
-            >
-              {t('submit.cancel_and_close')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Dialog>
   );
 }

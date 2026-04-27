@@ -105,6 +105,23 @@ export function AlarmsClientTanStack() {
   const [selectedCommentId, setSelectedCommentId] = useState<string>("" );
   const [alarmCount30, setAlarmCount30] = useState<number | null>(null);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
+  const normalizeCommentOptions = useCallback((raw: unknown): { id: number; type: string | null; text: string }[] => {
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .map((item) => {
+        if (!item || typeof item !== "object") return null;
+        const candidate = item as Record<string, unknown>;
+        const idValue = candidate.id ?? candidate.Id_Commentaire;
+        const id = typeof idValue === "number" ? idValue : Number(idValue);
+        if (!Number.isFinite(id)) return null;
+        const textValue = candidate.text ?? candidate.Texte ?? "";
+        const text = typeof textValue === "string" ? textValue : String(textValue ?? "");
+        const typeValue = candidate.type ?? candidate.Type_Commentaire ?? null;
+        const type = typeof typeValue === "string" ? typeValue : null;
+        return { id, type, text };
+      })
+      .filter((item): item is { id: number; type: string | null; text: string } => item !== null);
+  }, []);
   const page = pagination.pageIndex + 1;
   const limit = pagination.pageSize;
 
@@ -196,7 +213,7 @@ export function AlarmsClientTanStack() {
     setIsCommentsLoading(true);
     fetch('/api/alarmes/commentaires-acquittement')
       .then((res) => (res.ok ? res.json() : null))
-      .then((payload) => { if (active) setCommentOptions(Array.isArray(payload?.data) ? payload.data : []); })
+      .then((payload) => { if (active) setCommentOptions(normalizeCommentOptions(payload?.data)); })
       .catch(() => { if (active) setCommentOptions([]); })
       .finally(() => { if (active) setIsCommentsLoading(false); });
     fetch(`/api/alarmes/${selectedAlarmId}/stats`)
@@ -206,7 +223,7 @@ export function AlarmsClientTanStack() {
       .finally(() => { if (active) setIsStatsLoading(false); });
     setIsStatsLoading(true);
     return () => { active = false; };
-  }, [selectedAlarmId]);
+  }, [normalizeCommentOptions, selectedAlarmId]);
 
   const formatDateTime = useCallback((date: string | null) => {
     if (!date) return t("date.na");
@@ -604,6 +621,9 @@ export function AlarmsClientTanStack() {
               const next = typeof updater === "function" ? updater(prev) : updater;
               if (next.pageSize !== prev.pageSize) {
                 return { pageIndex: 0, pageSize: next.pageSize };
+              }
+              if (next.pageIndex === prev.pageIndex && next.pageSize === prev.pageSize) {
+                return prev;
               }
               return next;
             });

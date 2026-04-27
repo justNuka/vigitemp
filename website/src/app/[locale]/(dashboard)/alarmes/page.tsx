@@ -28,7 +28,7 @@ export default async function AlarmsPage({
 
   // Chargement parallèle des données côté serveur avec cache
   const [alarmsData, statsData] = await Promise.all([
-    ServerAlarms(status),
+    ServerAlarms(),
     ServerAlarmStats(),
   ]);
 

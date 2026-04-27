@@ -23,73 +23,71 @@ namespace Vigitemp_Serveur.sensors
 
         public override async Task<bool> read()
         {
-            try
+            return await ExecuteWithPortLockAsync(async () =>
             {
-                BeginReadCycle();
-                // L'encodage du port n'est pas utilisé directement : les bytes sont lus via
-                // sp.Read(buf) et décodés manuellement avec ISO-8859-1 dans le handler.
-                m_port.Encoding = Encoding.GetEncoding("ISO-8859-1");
-                m_port.Open();
-                m_port.DiscardInBuffer();
-                m_port.DiscardOutBuffer();
-
-                string sRelais1 = m_sondeAdresse; //adresse sonde
-                string sRelais2 = m_moduleSerialNumber; //adresse module 
-
-                byte[] bytestosend = checksumRequete("4D", sRelais1, sRelais2);
-                VigitempServeur.Log($"[SONDE][TX] type=HN serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} module={m_moduleSerialNumber} cmdHex={BitConverter.ToString(bytestosend)}");
-                m_port.Write(bytestosend, 0, bytestosend.Length);
-
-                Stopwatch tmp_sw = new Stopwatch();
-                tmp_sw.Start();
-                while (pendingResults)
+                try
                 {
-                    await Task.Delay(25);
-                    if (tmp_sw.Elapsed.TotalMilliseconds > 1000)
-                    {
-                        VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=retry elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
-                        if (!m_port.IsOpen)
-                        {
-                            m_port.Open();
-                        }
-                        m_port.DiscardInBuffer();
-                        m_port.DiscardOutBuffer();
-                        tmp_sw.Stop();
-                        bytestosend = checksumRequete("4D", sRelais1, sRelais2);
-                        VigitempServeur.Log($"[SONDE][TX] type=HN serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} module={m_moduleSerialNumber} cmdHex={BitConverter.ToString(bytestosend)} (retry)");
-                        m_port.Write(bytestosend, 0, bytestosend.Length);
-                        tmp_sw = new Stopwatch();
-                        tmp_sw.Start();
+                    BeginReadCycle();
+                    // L'encodage du port n'est pas utilisé directement : les bytes sont lus via
+                    // sp.Read(buf) et décodés manuellement avec ISO-8859-1 dans le handler.
+                    m_port.Encoding = Encoding.GetEncoding("ISO-8859-1");
+                    m_port.Open();
+                    m_port.DiscardInBuffer();
+                    m_port.DiscardOutBuffer();
 
-                        while (pendingResults)
+                    string sRelais1 = m_sondeAdresse; //adresse sonde
+                    string sRelais2 = m_moduleSerialNumber; //adresse module 
+
+                    byte[] bytestosend = checksumRequete("4D", sRelais1, sRelais2);
+                    VigitempServeur.Log($"[SONDE][TX] type=HN serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} module={m_moduleSerialNumber} cmdHex={BitConverter.ToString(bytestosend)}");
+                    m_port.Write(bytestosend, 0, bytestosend.Length);
+
+                    var tmp_sw = Stopwatch.StartNew();
+                    var retrySent = false;
+                    while (pendingResults)
+                    {
+                        await Task.Delay(25);
+
+                        if (!retrySent && tmp_sw.Elapsed.TotalMilliseconds > 1000)
                         {
-                            await Task.Delay(25);
-                            if (tmp_sw.Elapsed.TotalMilliseconds > 2000)
+                            VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=retry elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
+                            if (!m_port.IsOpen)
                             {
-                                if (!TryCompleteRead())
-                                {
-                                    break;
-                                }
-                                VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
-                                HandleNoResponseAlarm(false, "timeout");
-                                m_port.Close();
-                                m_sensor_response = "";
+                                m_port.Open();
+                            }
+                            m_port.DiscardInBuffer();
+                            m_port.DiscardOutBuffer();
+                            bytestosend = checksumRequete("4D", sRelais1, sRelais2);
+                            VigitempServeur.Log($"[SONDE][TX] type=HN serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} module={m_moduleSerialNumber} cmdHex={BitConverter.ToString(bytestosend)} (retry)");
+                            m_port.Write(bytestosend, 0, bytestosend.Length);
+                            retrySent = true;
+                        }
+
+                        if (tmp_sw.Elapsed.TotalMilliseconds > 3000)
+                        {
+                            if (!TryCompleteRead())
+                            {
                                 break;
                             }
+                            VigitempServeur.Log($"[SONDE][DONE] type=HN serial={m_sondeSerialNumber} port={m_comPort} status=timeout elapsedMs={tmp_sw.Elapsed.TotalMilliseconds:0}");
+                            HandleNoResponseAlarm(false, "timeout");
+                            m_port.Close();
+                            m_sensor_response = "";
+                            break;
                         }
                     }
-                }
 
-                tmp_sw.Stop();
-            }
-            catch (Exception e)
-            {
-                VigitempServeur.Log($"[SONDE][ERR] type=HN serial={m_sondeSerialNumber} port={m_comPort} error={e}");
-                HandleNoResponseAlarm(false, "exception");
-                DisposePort();
-                return false;
-            }
-            return true;
+                    tmp_sw.Stop();
+                }
+                catch (Exception e)
+                {
+                    VigitempServeur.Log($"[SONDE][ERR] type=HN serial={m_sondeSerialNumber} port={m_comPort} error={e}");
+                    HandleNoResponseAlarm(false, "exception");
+                    DisposePort();
+                    return false;
+                }
+                return true;
+            });
         }
 
         protected override void DataReceivedHandler(

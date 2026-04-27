@@ -58,7 +58,7 @@ function toConfig(params: ParamMap): MonthlyStatsReportConfig {
   return {
     enabled: parseBoolean(params.get(KEYS.enabled), false),
     recipients: params.get(KEYS.recipients) ?? "",
-    dayOfMonth: parseIntSafe(params.get(KEYS.dayOfMonth), 1, 1, 28),
+    dayOfMonth: parseIntSafe(params.get(KEYS.dayOfMonth), 1, 1, 31),
     hourLocal: parseIntSafe(params.get(KEYS.hourLocal), 8, 0, 23),
     includeLocationSummary: parseBoolean(params.get(KEYS.includeLocationSummary), true),
     includeSettingsSummary: parseBoolean(params.get(KEYS.includeSettingsSummary), true),
@@ -151,4 +151,3 @@ export async function getLastSentMonth() {
 export async function setLastSentMonth(value: string) {
   await upsertParam(KEYS.lastSentMonth, value)
 }
-

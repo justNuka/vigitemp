@@ -3,9 +3,7 @@ import { getServerAuthenticatedUserId } from "@/lib/server-auth"
 import { unstable_noStore } from "next/cache"
 import { getTranslations } from "next-intl/server"
 
-type AlarmStatus = "active" | "acknowledged" | "resolved"
-
-export async function ServerAlarms(status?: AlarmStatus) {
+export async function ServerAlarms() {
   unstable_noStore()
   const t = await getTranslations("alarmsPage")
   const { prisma } = await import("@/lib/prisma")
@@ -14,16 +12,6 @@ export async function ServerAlarms(status?: AlarmStatus) {
   if (!userId) return []
 
   const where: Record<string, unknown> = {}
-
-  if (status === "active") {
-    where.Est_Acquittee = false
-    where.Date_Heure_Fin = null
-  } else if (status === "acknowledged") {
-    where.Est_Acquittee = true
-  } else if (status === "resolved") {
-    where.Est_Acquittee = false
-    where.Date_Heure_Fin = { not: null }
-  }
 
   const scope = await getUserLocationScope(userId)
   const alarmAccessFilter = buildAlarmAccessFilter(scope)

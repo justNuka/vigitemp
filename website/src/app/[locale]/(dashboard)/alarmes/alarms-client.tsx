@@ -83,6 +83,23 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
   const [alarmCount30, setAlarmCount30] = useState<number | null>(null);
   const [isStatsLoading, setIsStatsLoading] = useState(false);
   const formatTzDateTime = (value: string | Date) => formatDbDateTime(value);
+  const normalizeCommentOptions = useCallback((raw: unknown): { id: number; type: string | null; text: string }[] => {
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .map((item) => {
+        if (!item || typeof item !== "object") return null;
+        const candidate = item as Record<string, unknown>;
+        const idValue = candidate.id ?? candidate.Id_Commentaire;
+        const id = typeof idValue === "number" ? idValue : Number(idValue);
+        if (!Number.isFinite(id)) return null;
+        const textValue = candidate.text ?? candidate.Texte ?? "";
+        const text = typeof textValue === "string" ? textValue : String(textValue ?? "");
+        const typeValue = candidate.type ?? candidate.Type_Commentaire ?? null;
+        const type = typeof typeValue === "string" ? typeValue : null;
+        return { id, type, text };
+      })
+      .filter((item): item is { id: number; type: string | null; text: string } => item !== null);
+  }, []);
 
   useEffect(() => {
     setLocalAlarms(alarms);
@@ -111,7 +128,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
     fetch("/api/alarmes/commentaires-acquittement")
       .then((res) => (res.ok ? res.json() : null))
       .then((payload) => {
-        if (isActive) setCommentOptions(Array.isArray(payload?.data) ? payload.data : []);
+        if (isActive) setCommentOptions(normalizeCommentOptions(payload?.data));
       })
       .catch(() => {
         if (isActive) setCommentOptions([]);
@@ -284,8 +301,24 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
     },
   ];
 
-  const tableData: AlarmRow[] = localAlarms
-    .filter((alarm) => typeFilters.length === 0 || typeFilters.includes(alarm.type))
+  const alarmsByStatus = useMemo(
+    () =>
+      localAlarms.filter((alarm) => {
+        if (statusFilter === "active") return alarm.status === "active";
+        if (statusFilter === "acknowledged") return alarm.status === "acknowledged";
+        return alarm.status === "resolved";
+      }),
+    [localAlarms, statusFilter],
+  );
+
+  const tableData: AlarmRow[] = alarmsByStatus
+    .filter((alarm) => {
+      if (typeFilters.length === 0) return true;
+      return typeFilters.some((type) => {
+        if (type === "ended") return alarm.status === "resolved";
+        return alarm.type === type;
+      });
+    })
     .map((alarm) => ({
       id: alarm.id,
       type: alarm.type,
@@ -332,11 +365,11 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
   const focusRange = useMemo(() => {
     if (!selectedAlarm?.triggeredAt) return null;
     const start = parseDbDateTime(selectedAlarm.triggeredAt);
-    const end = selectedAlarm.resolvedAt ? parseDbDateTime(selectedAlarm.resolvedAt) : parseDbDateTime(selectedAlarm.triggeredAt);
+    const end = selectedAlarm.resolvedAt ? parseDbDateTime(selectedAlarm.resolvedAt) : new Date();
     if (!start || !end) return null;
     const padMs = 60 * 60 * 1000;
     return { from: new Date(start.getTime() - padMs), to: new Date(end.getTime() + padMs) };
-  }, [selectedAlarm]);
+  }, [normalizeCommentOptions, selectedAlarm]);
 
   const cardTitle = statusFilter === "active" ? t("titles.active") : statusFilter === "acknowledged" ? t("titles.acknowledged") : t("titles.resolved");
   const handleCloseDialog = useCallback(() => {
@@ -359,7 +392,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
     };
   }, [selectedAlarm]);
 
-  const content = localAlarms.length === 0 ? (
+  const content = tableData.length === 0 ? (
     <Card className="overflow-hidden">
       <CardHeader className="space-y-4 bg-linear-to-r from-primary/5 to-transparent border-b border-border/50">
         <CardTitle className="flex items-center gap-2">
