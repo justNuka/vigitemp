@@ -5,7 +5,7 @@ import { getClientIp, withLogging } from "@/lib/api-logger"
 import { z } from "zod"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
-import { extractAddressFromSerial, isGsoType } from "@/lib/sensor-naming"
+import { extractAddressFromSerial, getSensorFamilyFromSerial, isGsoType } from "@/lib/sensor-naming"
 import { computeEmt, emtModeToDb, emtModeFromDb } from "@/lib/emt"
 import { requireStandardOrExpertIfFieldsUsed } from "@/lib/license-guards"
 import { applyAccessFilter, buildLieuAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
@@ -30,6 +30,8 @@ const STANDARD_METROLOGY_FIELDS = [
   "Incertitude",
   "Derive",
 ] as const
+
+const GSO_FIXED_FREQUENCY_SECONDS = 15 * 60
 
 function parseAppliedCalibrationDate(value: unknown) {
   if (value === undefined) return undefined
@@ -316,13 +318,6 @@ export const POST = withLogging(async (req: NextRequest) => {
     const validated = createLieuSchema.parse(body)
     const appliedCalibrationDate = parseAppliedCalibrationDate(validated.Derniere_Date_Etalonnage)
     const appliedCalibrationId = validated.Applied_Etalonnage_Id ?? null
-    const frequencySeconds =
-      validated.Frequence === undefined
-        ? undefined
-        : validated.Frequence === null
-        ? null
-        : Math.round(validated.Frequence * 60)
-
     const groupIds = Array.from(
       new Set(
         [...(validated.GroupIds ?? [])].filter((v): v is number => typeof v === "number" && !Number.isNaN(v)),
@@ -335,16 +330,27 @@ export const POST = withLogging(async (req: NextRequest) => {
 
     let estLieuGso = false
     let adresseSondeLieu: string | null = null
+    let estLieuGsp = false
     if (sondeNumeroSerie) {
       const gsoInfo = await prisma.t_sonde.findUnique({
         where: { Sonde_Numero_Serie: sondeNumeroSerie },
         select: { Est_Sonde_GSO: true, Adresse_Sonde: true },
       })
       estLieuGso = gsoInfo?.Est_Sonde_GSO ?? isGsoType(sondeNumeroSerie)
+      estLieuGsp = !estLieuGso && getSensorFamilyFromSerial(sondeNumeroSerie) === "GSP"
       if (estLieuGso) {
         adresseSondeLieu = gsoInfo?.Adresse_Sonde ?? extractAddressFromSerial(sondeNumeroSerie)
       }
     }
+
+    const frequencySeconds =
+      estLieuGso
+        ? GSO_FIXED_FREQUENCY_SECONDS
+        : validated.Frequence === undefined
+        ? undefined
+        : validated.Frequence === null
+        ? null
+        : Math.round(validated.Frequence * 60)
 
     const mailingContacts = normalizeMailingContacts(validated.MailingContacts)
     const dateCreation = new Date()
@@ -438,6 +444,7 @@ export const POST = withLogging(async (req: NextRequest) => {
         Date_Heure_Surveillance_On: surveillanceOnAt,
         Date_Heure_Surveillance_Off: surveillanceOffAt,
         Est_Lieu_GSO: estLieuGso,
+        Infos_Modifiees_Depuis_Derniere_Mesure: estLieuGsp,
         Est_Son_Alarme_Active: validated.Est_Son_Alarme_Active ?? true,
         Adresse_Sonde: adresseSondeLieu,
         t_etat_surveillance: {
@@ -484,7 +491,7 @@ export const POST = withLogging(async (req: NextRequest) => {
       }) as any,
     })
 
-    if (sondeNumeroSerie && Object.prototype.hasOwnProperty.call(validated, "Lieu_Etat")) {
+    if (sondeNumeroSerie) {
       await prisma.t_sonde.updateMany({
         where: { Sonde_Numero_Serie: sondeNumeroSerie },
         data: { Surveillance_Etat: lieuEtat },

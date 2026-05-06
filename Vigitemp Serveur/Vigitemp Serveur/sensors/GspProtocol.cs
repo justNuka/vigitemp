@@ -98,15 +98,21 @@ namespace Vigitemp_Serveur.sensors
 
             if (highLimit.HasValue || lowLimit.HasValue || frequencySeconds > 0 || alarmDelayMinutes > 0)
             {
+                var payload = string.Format(
+                    CultureInfo.InvariantCulture,
+                    "{0}h{1}l{2}f",
+                    FormatNumericPayload(highLimit ?? 0d),
+                    FormatNumericPayload(lowLimit ?? 0d),
+                    Math.Max(1, (int)Math.Round(Math.Max(1, frequencySeconds) / 60d, MidpointRounding.AwayFromZero)));
+
+                if (alarmDelayMinutes > 0)
+                {
+                    payload += string.Format(CultureInfo.InvariantCulture, "{0}d", Math.Max(0, alarmDelayMinutes));
+                }
+
                 commands.Add(new KeyValuePair<string, string>(
                     "ECON",
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "{0}h{1}l{2}f{3}d",
-                        FormatNumericPayload(highLimit ?? 0d),
-                        FormatNumericPayload(lowLimit ?? 0d),
-                        Math.Max(1, frequencySeconds),
-                        Math.Max(0, alarmDelayMinutes))));
+                    payload));
             }
 
             if (!string.IsNullOrWhiteSpace(channel))

@@ -5,7 +5,7 @@ import { log } from "@/lib/logger"
 import { z } from "zod"
 import { apiError, apiOk } from "@/lib/api-response"
 import { clearLocationCache } from "@/lib/measurement-cache"
-import { extractAddressFromSerial, isGsoType } from "@/lib/sensor-naming"
+import { extractAddressFromSerial, getSensorFamilyFromSerial, isGsoType } from "@/lib/sensor-naming"
 import { computeEmt, emtModeFromDb, emtModeToDb } from "@/lib/emt"
 import { requireStandardOrExpertIfFieldsUsed } from "@/lib/license-guards"
 import { isSurveillanceActionCommentRequired } from "@/lib/action-comment-policy"
@@ -32,6 +32,8 @@ const STANDARD_METROLOGY_FIELDS = [
   "Incertitude",
   "Derive",
 ] as const
+
+const GSO_FIXED_FREQUENCY_SECONDS = 15 * 60
 
 function parseAppliedCalibrationDate(value: unknown) {
   if (value === undefined) return undefined
@@ -129,8 +131,16 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
   const hasConsigne = data.Consigne !== null && data.Consigne !== undefined
   const hasSup = data.Consigne_Sup !== null && data.Consigne_Sup !== undefined
   const hasInf = data.Consigne_Inf !== null && data.Consigne_Inf !== undefined
+  const hasSupPreAlarm = data.Consigne_Sup_Pre_Alarme !== null && data.Consigne_Sup_Pre_Alarme !== undefined
+  const hasInfPreAlarm = data.Consigne_Inf_Pre_Alarme !== null && data.Consigne_Inf_Pre_Alarme !== undefined
   const supActive = (typeof data.Est_Consigne_Sup_Active === "boolean" ? data.Est_Consigne_Sup_Active : hasSup)
   const infActive = (typeof data.Est_Consigne_Inf_Active === "boolean" ? data.Est_Consigne_Inf_Active : hasInf)
+  const supPreAlarmActive = typeof data.Est_Consigne_Sup_Pre_Alarme_Active === "boolean"
+    ? data.Est_Consigne_Sup_Pre_Alarme_Active
+    : hasSupPreAlarm
+  const infPreAlarmActive = typeof data.Est_Consigne_Inf_Pre_Alarme_Active === "boolean"
+    ? data.Est_Consigne_Inf_Pre_Alarme_Active
+    : hasInfPreAlarm
 
   if (hasConsigne && supActive && hasSup && Number(data.Consigne_Sup) <= Number(data.Consigne)) {
     ctx.addIssue({
@@ -177,6 +187,30 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
       code: z.ZodIssueCode.custom,
       path: ["Retard_Alarme_Bas"],
       message: "Le retard d'alarme bas doit être strictement supérieur à 0.",
+    })
+  }
+
+  if (supActive && supPreAlarmActive && hasSup && hasSupPreAlarm && Number(data.Consigne_Sup_Pre_Alarme) >= Number(data.Consigne_Sup)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Consigne_Sup_Pre_Alarme"],
+      message: "La pré-alarme supérieure doit être strictement inférieure à la consigne supérieure.",
+    })
+  }
+
+  if (infActive && infPreAlarmActive && hasInf && hasInfPreAlarm && Number(data.Consigne_Inf_Pre_Alarme) <= Number(data.Consigne_Inf)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Consigne_Inf_Pre_Alarme"],
+      message: "La pré-alarme inférieure doit être strictement supérieure à la consigne inférieure.",
+    })
+  }
+
+  if (supPreAlarmActive && infPreAlarmActive && hasSupPreAlarm && hasInfPreAlarm && Number(data.Consigne_Inf_Pre_Alarme) >= Number(data.Consigne_Sup_Pre_Alarme)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Consigne_Inf_Pre_Alarme"],
+      message: "La pré-alarme inférieure doit être strictement inférieure à la pré-alarme supérieure.",
     })
   }
 
@@ -565,6 +599,22 @@ export const PATCH = withAnyAuthorizationLogging(
           lieuPatch.Observations_Info = normalizedObservation
         }
 
+        const effectiveEstLieuGso = nextEstLieuGso ?? current?.Est_Lieu_GSO ?? false
+        if (effectiveEstLieuGso) {
+          lieuPatch.Frequence = GSO_FIXED_FREQUENCY_SECONDS
+        }
+
+        const effectiveSerial = hasSondeNumeroSerie
+          ? (Sonde_Numero_Serie ?? null)
+          : (current?.Sonde_Numero_Serie ?? null)
+        const effectiveEstLieuGsp =
+          !effectiveEstLieuGso &&
+          !!effectiveSerial &&
+          getSensorFamilyFromSerial(effectiveSerial) === "GSP"
+        if (effectiveEstLieuGsp) {
+          lieuPatch.Infos_Modifiees_Depuis_Derniere_Mesure = true
+        }
+
         const effectiveLieuEtat = hasSondeNumeroSerie && !Sonde_Numero_Serie ? "D" : Lieu_Etat
         const shouldApplySurveillanceState = applyLieuEtat || (hasSondeNumeroSerie && !Sonde_Numero_Serie)
         const surveillanceStateHasChanged = shouldApplySurveillanceState && current?.Lieu_Etat !== effectiveLieuEtat
@@ -630,8 +680,10 @@ export const PATCH = withAnyAuthorizationLogging(
           })
         }
 
-        if (hasLieuEtat) {
-          const sondeNumeroSerie = validated.Sonde_Numero_Serie ?? current?.Sonde_Numero_Serie ?? null
+        if (shouldApplySurveillanceState) {
+          const sondeNumeroSerie = hasSondeNumeroSerie
+            ? (validated.Sonde_Numero_Serie ?? null)
+            : (current?.Sonde_Numero_Serie ?? null)
           if (sondeNumeroSerie) {
             await tx.t_sonde.updateMany({
               where: { Sonde_Numero_Serie: sondeNumeroSerie },

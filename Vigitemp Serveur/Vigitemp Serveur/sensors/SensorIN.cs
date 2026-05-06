@@ -11,6 +11,38 @@ namespace Vigitemp_Serveur.sensors
     {
         private string m_regexResponseTempSensor = @".*(R[A-Z0-9]{4}TEMP-?[0-9]{1,3}.[0-9]{2}'C).*";
 
+        private bool ContainsBatteryMarker(string response)
+        {
+            if (string.IsNullOrWhiteSpace(response))
+            {
+                return false;
+            }
+
+            var frame = Regex.Match(response, @"R[A-Z0-9]{4}[^\r\n]*", RegexOptions.IgnoreCase);
+            if (!frame.Success)
+            {
+                return false;
+            }
+
+            var payload = frame.Value.Substring(5).ToUpperInvariant();
+            if (string.IsNullOrEmpty(payload))
+            {
+                return false;
+            }
+
+            if (payload.Contains("BAT"))
+            {
+                return true;
+            }
+
+            if (payload.StartsWith("B", StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            return Regex.IsMatch(payload, @"(^|[^A-Z0-9])B([^A-Z0-9]|$)", RegexOptions.None);
+        }
+
         // Constructeur
         public SensorIN(ThreadServeur p_ths, string p_comPort, string p_sondeSerialNumber, string p_sondeAdresse) : base(p_ths, p_comPort, p_sondeSerialNumber, p_sondeAdresse)
         {
@@ -97,6 +129,7 @@ namespace Vigitemp_Serveur.sensors
                     AppendToResponse(chunk);
                 }
                 VigitempServeur.Log($"[SONDE][RX] type=IN serial={m_sondeSerialNumber} port={m_comPort} raw={m_sensor_response}");
+                var hasBatteryMarker = ContainsBatteryMarker(m_sensor_response);
                 var m = Regex.Match(m_sensor_response, m_regexResponseTempSensor, RegexOptions.None);
                 if (m.Groups[1].Value != "")
                 {
@@ -105,6 +138,20 @@ namespace Vigitemp_Serveur.sensors
                 }
                 else
                 {
+                    if (hasBatteryMarker)
+                    {
+                        if (!TryCompleteRead())
+                        {
+                            return;
+                        }
+
+                        HandleSensorPowerAlarm(true, "IN-BAT");
+                        HandleNoResponseAlarm(true);
+                        m_port.Close();
+                        VigitempServeur.Log($"[SONDE][DONE] type=IN serial={m_sondeSerialNumber} port={m_comPort} status=battery-flag");
+                        return;
+                    }
+
                     if (m_sensor_response.Length > 1024)
                     {
                         m_sensor_response = m_sensor_response.Substring(m_sensor_response.Length - 1024);
@@ -134,6 +181,7 @@ namespace Vigitemp_Serveur.sensors
                 // ThreadServeur.GetDatabase().AddMesure(m_serialNumber, float.Parse(String.Format("{0:0.00}", tmp_temperature)), "°C");
                 ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
                 VigitempServeur.Log($"[SONDE][DONE] type=IN serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=°C raw={ToInvariantRaw(rawValue)}");
+                HandleSensorPowerAlarm(hasBatteryMarker, hasBatteryMarker ? "IN-BAT" : "IN-NORMAL");
                 HandleNoResponseAlarm(true);
                 compareMeasuresAndLimits(correctedValue, "°C");
                 //checkAlarmespourConsignes(float.Parse(String.Format("{0:0.00}", tmp_valeur)));

@@ -28,6 +28,18 @@ export type MeasureSummary = {
   decimals: number | null
 }
 
+export function normalizeUnitLabel(unit: string | null | undefined): string {
+  const normalized = (unit ?? "")
+    .trim()
+    .replace(/Ã‚Â°/g, "°")
+    .replace(/Â°/g, "°")
+    .replace(/â°C/g, "°C")
+    .replace(/Â°C/g, "°C")
+
+  if (!normalized || normalized.toUpperCase() === "C") return "°C"
+  return normalized
+}
+
 export function getMeasureTimestamp(
   measure: Pick<MeasureData, "DateHeureMesureIso" | "DateHeureMesure">,
 ): number {
@@ -70,13 +82,13 @@ export function getMeasureSummary(
   const first = measures[0]
   const last = measures[measures.length - 1]
 
-  const unite = last?.Unite || first?.Unite || fallback?.unite || "\u00B0C"
+  const unite = normalizeUnitLabel(last?.Unite || first?.Unite || fallback?.unite || "\u00B0C")
   const frequence = last?.Frequence || first?.Frequence || fallback?.frequence || 15
   const decimals = last?.Nb_Decimal ?? first?.Nb_Decimal ?? null
 
   const lastWithValue = [...measures].reverse().find((item) => item.Valeur !== null)
   const formattedValue = lastWithValue ? formatMeasureValue(lastWithValue.Valeur, decimals) : ""
-  const lastMeasureText = lastWithValue ? `${formattedValue}${lastWithValue.Unite || unite}` : ""
+  const lastMeasureText = lastWithValue ? `${formattedValue}${normalizeUnitLabel(lastWithValue.Unite || unite)}` : ""
   const lastDateTime = last?.DateHeureMesure || ""
 
   return {

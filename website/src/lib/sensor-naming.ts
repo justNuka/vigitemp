@@ -1,22 +1,23 @@
+import {
+  GSO_SENSOR_TYPE_CODE_SET,
+  GSP_SENSOR_TYPE_CODE_SET,
+  KNOWN_SENSOR_TYPE_CODES,
+  getKnownSensorFamilyFromTypeCode,
+  normalizeSensorTypeCode,
+} from "@/lib/sensor-types";
+
 const DUAL_GSO_TYPES = new Set(["SOIH", "SOEH"]);
 const SINGLE_TEMPERATURE_GSO_TYPES = new Set(["SOIT", "SOET"]);
 const PREFIX_STRIPPED_ADDRESS_TYPES = new Set(["IN", "IE", "IP", "IC", "IH", "EN"]);
 
-const GSO_TYPE_CODES = new Set(["GSO", "SOIT", "SOIH", "SOET", "SOEH"]);
-const GSP_TYPE_CODES = new Set([
-  "GSP", "SPNB", "SPNG", "SPPS", "SPAL", "SPPC", "SPAU", "SPCF", "SPMI",
-  "SPCO", "SPHY", "SPTH", "SPDI", "SPAT", "SPLU", "SP01", "SP42", "SPOF",
-  "SPXB", "SPXG", "SPXP", "SPFB", "SPFG", "SPFP",
-]);
-
-const normalizeType = (value: string) => value.trim().toUpperCase().replace(/-+$/g, "");
+const normalizeType = normalizeSensorTypeCode;
 const normalizeSerial = (value: string) => value.trim().toUpperCase();
 
 const normalizeKnownTypeCodes = (knownTypeCodes?: Iterable<string> | null) => {
-  if (!knownTypeCodes) return [];
+  const source = knownTypeCodes ?? KNOWN_SENSOR_TYPE_CODES;
   return Array.from(
     new Set(
-      Array.from(knownTypeCodes)
+      Array.from(source)
         .map((value) => normalizeType(value))
         .filter((value) => value.length > 0),
     ),
@@ -27,7 +28,7 @@ export const isDualGsoType = (type: string) => DUAL_GSO_TYPES.has(normalizeType(
 
 export const isGsoType = (type: string) => {
   const normalized = normalizeType(type);
-  return normalized.startsWith("GSO") || normalized.startsWith("SOI") || normalized.startsWith("SOE");
+  return normalized === "GSO" || GSO_SENSOR_TYPE_CODE_SET.has(normalized);
 };
 
 export const extractAddressFromSerial = (serial: string) => {
@@ -164,9 +165,8 @@ export const extractTypeCodeFromSerial = (serial: string, knownTypeCodes?: Itera
 export const getSensorFamilyFromTypeCode = (rawType: string | null | undefined) => {
   if (!rawType) return "CLASSIC" as const;
   const type = normalizeType(rawType);
-  if (GSO_TYPE_CODES.has(type)) return "GSO" as const;
-  if (GSP_TYPE_CODES.has(type)) return "GSP" as const;
-  return "CLASSIC" as const;
+  if (type === "GSP" || GSP_SENSOR_TYPE_CODE_SET.has(type)) return "GSP" as const;
+  return getKnownSensorFamilyFromTypeCode(type);
 };
 
 export const getSensorFamilyFromSerial = (serial: string | null | undefined) => {

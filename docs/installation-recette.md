@@ -22,8 +22,7 @@ Vérifier dans le package :
 - `Vigitemp Serveur.exe`
 - `VigitempServerSetup.exe`
 - `installer\Install-VigitempServer.ps1`
-- `installer\db\vigi_main_seed.sql`
-- `installer\db\vigi_mesures_seed.sql`
+- `installer\db\vigisensys_seed.sql` (seed complet MySQL : `vigi_main`, `vigi_mesures`, `vigi_chat`)
 
 ### 1.2 Installation via bootstrapper
 
@@ -173,3 +172,4 @@ et jamais sous :
   - build composant
   - chemins de sortie
   - présence des payloads attendus
+

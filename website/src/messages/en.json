@@ -4237,6 +4237,7 @@
       "type": {
         "high": "High alarm",
         "low": "Low alarm",
+        "sector": "Power / mains",
         "default": "Alarm"
       },
       "value": {

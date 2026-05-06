@@ -44,6 +44,17 @@ namespace Vigitemp_Serveur
             return defaultValue;
         }
 
+        private static int GetSettingInt(string key, int defaultValue)
+        {
+            var raw = GetSetting(key, defaultValue.ToString(CultureInfo.InvariantCulture));
+            if (int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
+            {
+                return value;
+            }
+
+            return defaultValue;
+        }
+
         private static MySqlConnection CreateConnection(string databaseName)
         {
             var host = GetSetting("Vigi.Db.Host", "192.168.63.144");
@@ -690,6 +701,12 @@ namespace Vigitemp_Serveur
                         }
 
                         var now = DateTime.Now;
+                        if (HasRecentMeasurement(p_numeroSerie, now, requireNonNullValue: true))
+                        {
+                            VigitempServeur.Log($"(AddMesure) Doublon ignore sonde={p_numeroSerie} windowSec={GetDuplicateGuardSeconds()}");
+                            return false;
+                        }
+
                         MySqlCommand cmd_vigitemp_mesure = this.connection_vigitemp_mesure.CreateCommand();
                         cmd_vigitemp_mesure.CommandText = "INSERT INTO tm_mesures " +
                                                             "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Etat_Alarme) " +
@@ -945,6 +962,12 @@ namespace Vigitemp_Serveur
 
                     var unit = string.IsNullOrWhiteSpace(p_unite) ? getLieuUnite(idLieu) : p_unite;
                     var now = DateTime.Now;
+                    if (HasRecentMeasurement(p_numeroSerie, now, requireNonNullValue: false))
+                    {
+                        VigitempServeur.Log($"(AddMesureNoResponse) Doublon ignore sonde={p_numeroSerie} windowSec={GetDuplicateGuardSeconds()}");
+                        return false;
+                    }
+
                     MySqlCommand cmd_vigitemp_mesure = this.connection_vigitemp_mesure.CreateCommand();
                     cmd_vigitemp_mesure.CommandText = "INSERT INTO tm_mesures " +
                                                         "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Etat_Alarme, Est_Valeur_Null) " +
@@ -989,6 +1012,32 @@ namespace Vigitemp_Serveur
                     return false;
                 }
             }
+        }
+
+        private static int GetDuplicateGuardSeconds()
+        {
+            return Math.Max(0, GetSettingInt("Vigitemp.Measurements.DuplicateGuardSeconds", 10));
+        }
+
+        private bool HasRecentMeasurement(string serial, DateTime now, bool requireNonNullValue)
+        {
+            var guardSeconds = GetDuplicateGuardSeconds();
+            if (guardSeconds <= 0 || string.IsNullOrWhiteSpace(serial))
+            {
+                return false;
+            }
+
+            var cmd = this.connection_vigitemp_mesure.CreateCommand();
+            cmd.CommandText =
+                "SELECT 1 FROM tm_mesures " +
+                "WHERE Sonde_Numero_Serie = @serial " +
+                "AND Date_Heure_Mesure >= @since " +
+                (requireNonNullValue ? "AND Valeur IS NOT NULL " : string.Empty) +
+                "ORDER BY Date_Heure_Mesure DESC LIMIT 1;";
+            cmd.Parameters.AddWithValue("@serial", serial);
+            cmd.Parameters.AddWithValue("@since", now.AddSeconds(-guardSeconds).ToString("yyyy-MM-dd HH:mm:ss.fff"));
+            var existing = cmd.ExecuteScalar();
+            return existing != null && existing != DBNull.Value;
         }
 
 
@@ -1550,7 +1599,7 @@ namespace Vigitemp_Serveur
 
         public bool setPowerAlarm(int idLieu, string sondeNumeroSerie, bool isActive)
         {
-            return setTechnicalAlarm(idLieu, sondeNumeroSerie, "S", isActive, "setPowerAlarm");
+            return setTechnicalAlarm(idLieu, sondeNumeroSerie, "A", isActive, "setPowerAlarm");
         }
 
         private bool setTechnicalAlarm(int idLieu, string sondeNumeroSerie, string alarmType, bool isActive, string logContext)
@@ -1569,6 +1618,7 @@ namespace Vigitemp_Serveur
                     }
 
                     int? alarmId = null;
+                    var typeFilterSql = alarmType == "A" ? "Type IN ('A','S')" : "Type = @type";
 
                     if (isActive)
                     {
@@ -1581,7 +1631,7 @@ namespace Vigitemp_Serveur
                                 cmdCheck.Transaction = transaction;
                                 cmdCheck.CommandText =
                                     "SELECT Id_Alarme FROM t_alarme " +
-                                    "WHERE Id_Lieu = @idLieu AND Type = @type AND Date_Heure_Fin IS NULL " +
+                                    "WHERE Id_Lieu = @idLieu AND " + typeFilterSql + " AND Date_Heure_Fin IS NULL " +
                                     "ORDER BY Date_Heure_Debut DESC LIMIT 1;";
                                 cmdCheck.Parameters.AddWithValue("@idLieu", idLieu);
                                 cmdCheck.Parameters.AddWithValue("@type", alarmType);
@@ -1648,7 +1698,7 @@ namespace Vigitemp_Serveur
                         cmdResolve.CommandText =
                             "UPDATE t_alarme " +
                             "SET Date_Heure_Fin = NOW() " +
-                            "WHERE Id_Lieu = @idLieu AND Type = @type AND Date_Heure_Fin IS NULL;";
+                            "WHERE Id_Lieu = @idLieu AND " + typeFilterSql + " AND Date_Heure_Fin IS NULL;";
                         cmdResolve.Parameters.AddWithValue("@idLieu", idLieu);
                         cmdResolve.Parameters.AddWithValue("@type", alarmType);
                         var updated = cmdResolve.ExecuteNonQuery();
@@ -2036,6 +2086,68 @@ namespace Vigitemp_Serveur
             }
         }
 
+        public List<AlarmNotificationItem> getUnsentOpenAlarms(int maxCount, DateTime? maxStartLocalTime = null)
+        {
+            lock (_lock)
+            {
+                var list = new List<AlarmNotificationItem>();
+                try
+                {
+                    if (!EnsureConnected())
+                    {
+                        return list;
+                    }
+
+                    var limit = Math.Max(1, maxCount);
+                    var cmd = this.connection_vigitemp.CreateCommand();
+                    cmd.CommandText =
+                        "SELECT a.Id_Alarme, a.Id_Lieu, a.Type, a.Valeur, a.Unite, a.Date_Heure_Debut " +
+                        "FROM t_alarme a " +
+                        "WHERE a.Date_Heure_Fin IS NULL " +
+                        "AND IFNULL(a.Est_Mail_Envoye, 0) <> 1 " +
+                        "AND a.Date_Heure_Debut IS NOT NULL " +
+                        (maxStartLocalTime.HasValue ? "AND a.Date_Heure_Debut <= @maxStart " : string.Empty) +
+                        "ORDER BY a.Id_Alarme ASC " +
+                        "LIMIT @limit;";
+                    if (maxStartLocalTime.HasValue)
+                    {
+                        cmd.Parameters.AddWithValue("@maxStart", maxStartLocalTime.Value.ToString("yyyy-MM-dd HH:mm:ss"));
+                    }
+                    cmd.Parameters.AddWithValue("@limit", limit);
+
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var id = Convert.ToInt32(reader["Id_Alarme"]);
+                            var idLieu = Convert.ToInt32(reader["Id_Lieu"]);
+                            var type = reader["Type"] == DBNull.Value ? null : reader["Type"].ToString();
+                            var valeur = GetNullableDouble(reader, "Valeur");
+                            var unite = reader["Unite"] == DBNull.Value ? null : reader["Unite"].ToString();
+                            var dateDebut = reader["Date_Heure_Debut"] == DBNull.Value
+                                ? (DateTime?)null
+                                : Convert.ToDateTime(reader["Date_Heure_Debut"]);
+
+                            list.Add(new AlarmNotificationItem(
+                                id,
+                                idLieu,
+                                type,
+                                valeur,
+                                unite,
+                                dateDebut));
+                        }
+                    }
+
+                    return list;
+                }
+                catch (Exception ex)
+                {
+                    VigitempServeur.Log("(getUnsentOpenAlarms) SQL Erreur: " + ex.Message);
+                    return list;
+                }
+            }
+        }
+
         public List<AlarmNotificationItem> getEndedAlarmsSince(int idServeur, DateTime sinceLocalTime, int maxCount)
         {
             lock (_lock)
@@ -2051,16 +2163,11 @@ namespace Vigitemp_Serveur
                     var limit = Math.Max(1, maxCount);
                     var cmd = this.connection_vigitemp.CreateCommand();
                     cmd.CommandText =
-                        "SELECT ended.Id_Lieu, ended.First_Alarm_Id " +
-                        "FROM (" +
-                        "  SELECT a.Id_Lieu, MIN(a.Id_Alarme) AS First_Alarm_Id, MIN(a.Date_Heure_Fin) AS First_End " +
-                        "  FROM t_alarme a " +
-                        "  WHERE a.Date_Heure_Fin IS NOT NULL " +
-                        "  AND a.Date_Heure_Fin > @since " +
-                        "  AND NOT EXISTS (SELECT 1 FROM t_alarme x WHERE x.Id_Lieu = a.Id_Lieu AND x.Date_Heure_Fin IS NULL) " +
-                        "  GROUP BY a.Id_Lieu" +
-                        ") ended " +
-                        "ORDER BY ended.First_End ASC " +
+                        "SELECT a.Id_Lieu, a.Id_Alarme " +
+                        "FROM t_alarme a " +
+                        "WHERE a.Date_Heure_Fin IS NOT NULL " +
+                        "AND a.Date_Heure_Fin > @since " +
+                        "ORDER BY a.Date_Heure_Fin ASC " +
                         "LIMIT @limit;";
                     cmd.Parameters.AddWithValue("@since", sinceLocalTime.ToString("yyyy-MM-dd HH:mm:ss"));
                     cmd.Parameters.AddWithValue("@limit", limit);
@@ -2070,7 +2177,7 @@ namespace Vigitemp_Serveur
                         while (reader.Read())
                         {
                             var idLieu = Convert.ToInt32(reader["Id_Lieu"]);
-                            var idAlarme = Convert.ToInt32(reader["First_Alarm_Id"]);
+                            var idAlarme = Convert.ToInt32(reader["Id_Alarme"]);
                             list.Add(new AlarmNotificationItem(idAlarme, idLieu, "T", null, null, null));
                         }
                     }

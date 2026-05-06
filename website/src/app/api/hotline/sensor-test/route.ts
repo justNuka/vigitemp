@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
 
     const data = await response.json().catch(() => null)
     if (!response.ok || !data) {
-      return apiError(502, "sensor_test_failed", "Le serveur C# de test a renvoyé une erreur", {
+      return apiError(502, "sensor_test_failed", "Le serveur d'interrogation a renvoyé une erreur", {
         details: data,
       })
     }

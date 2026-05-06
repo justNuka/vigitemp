@@ -32,6 +32,7 @@ import { AlarmTypeFilter, type AlarmRowType } from "./_components/alarm-type-fil
 interface Props {
   alarms: AlarmWithDetails[];
   statusFilter: AlarmStatus;
+  initialLocationId?: string | null;
   stats: {
     active: number;
     acknowledged: number;
@@ -64,7 +65,7 @@ const hasConfiguredThresholds = (alarm: { sensor: AlarmWithDetails["sensor"] }):
   return sensorWithMeta.hasThresholds !== false;
 };
 
-export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onStatsChange }: Props) {
+export function AlarmsClient({ alarms, statusFilter, initialLocationId = null, stats, onStatusChange, onStatsChange }: Props) {
   const t = useTranslations("alarmsPage");
   const locale = useLocale();
   const router = useRouter();
@@ -76,6 +77,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
   const [durationNow, setDurationNow] = useState(() => new Date());
   const [localAlarms, setLocalAlarms] = useState<AlarmWithDetails[]>(alarms);
   const [typeFilters, setTypeFilters] = useState<AlarmRowType[]>([]);
+  const [locationFilterId, setLocationFilterId] = useState<string | null>(initialLocationId);
   const [commentOptions, setCommentOptions] = useState<{ id: number; type: string | null; text: string }[]>([]);
   const [isCommentsLoading, setIsCommentsLoading] = useState(false);
   const [selectedCommentId, setSelectedCommentId] = useState<string>("");
@@ -104,6 +106,10 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
   useEffect(() => {
     setLocalAlarms(alarms);
   }, [alarms]);
+
+  useEffect(() => {
+    setLocationFilterId(initialLocationId);
+  }, [initialLocationId]);
 
   const commentSchema = z.object({
     comment: z.string().max(200, t("validation.comment_max", { max: 200 })).optional(),
@@ -313,6 +319,7 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
 
   const tableData: AlarmRow[] = alarmsByStatus
     .filter((alarm) => {
+      if (locationFilterId && alarm.locationId !== locationFilterId) return false;
       if (typeFilters.length === 0) return true;
       return typeFilters.some((type) => {
         if (type === "ended") return alarm.status === "resolved";
@@ -403,7 +410,15 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
         </CardTitle>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <AlarmStatusTabs statusFilter={statusFilter} stats={stats} onStatusChange={onStatusChange} t={t} />
-          <div className="flex justify-end">{refreshButton}</div>
+          <div className="flex justify-end gap-2">
+            <AlarmTypeFilter
+              typeFilters={typeFilters}
+              onToggleType={toggleTypeFilter}
+              onReset={() => setTypeFilters([])}
+              t={t}
+            />
+            {refreshButton}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -480,4 +495,3 @@ export function AlarmsClient({ alarms, statusFilter, stats, onStatusChange, onSt
     </main>
   );
 }
-

@@ -2,7 +2,6 @@
     [string]$VcRedistPath,
     [string]$MySqlMsiPath,
     [string]$MainSeedPath,
-    [string]$MesuresSeedPath,
     [string]$MySqlHost = "127.0.0.1",
     [int]$MySqlPort = 3306,
     [string]$MySqlUser = "root",
@@ -106,10 +105,7 @@ if ([string]::IsNullOrWhiteSpace($MySqlMsiPath)) {
     }
 }
 if ([string]::IsNullOrWhiteSpace($MainSeedPath)) {
-    $MainSeedPath = Join-Path $scriptRoot "db\\vigi_main_seed.sql"
-}
-if ([string]::IsNullOrWhiteSpace($MesuresSeedPath)) {
-    $MesuresSeedPath = Join-Path $scriptRoot "db\\vigi_mesures_seed.sql"
+    $MainSeedPath = Join-Path $scriptRoot "db\\vigisensys_seed.sql"
 }
 
 if (-not (Test-Path $VcRedistPath)) {
@@ -158,10 +154,7 @@ Write-Log "Lancer le configurateur MySQL et terminer la configuration (port, mot
 $null = Read-Host "Appuyez sur Entrée quand la configuration MySQL est terminée"
 
 if (-not (Test-Path $MainSeedPath)) {
-    Write-Error "Seed principal introuvable : $MainSeedPath"
-}
-if (-not (Test-Path $MesuresSeedPath)) {
-    Write-Error "Seed mesures introuvable : $MesuresSeedPath"
+    Write-Error "Seed complet introuvable : $MainSeedPath"
 }
 
 $mysqlExe = Get-MySqlExePath
@@ -178,8 +171,8 @@ if (-not [string]::IsNullOrWhiteSpace($MySqlPassword)) {
     $mysqlArgs += "--password=$MySqlPassword"
 }
 
-Write-Log "Import des bases (vigi_main, vigi_mesures)..."
+Write-Log "Import des bases (vigi_main, vigi_mesures, vigi_chat)..."
 Get-Content -Path $MainSeedPath -Raw | & $mysqlExe @mysqlArgs
-Get-Content -Path $MesuresSeedPath -Raw | & $mysqlExe @mysqlArgs
 Write-Log "Import termine."
+
 

@@ -6,6 +6,7 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma, prismaMesure } from "@/lib/prisma"
 import { log } from "@/lib/logger"
+import { normalizeUnitLabel } from "@/lib/measurements"
 
 const NO_STORE_HEADERS = {
   "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
@@ -275,8 +276,7 @@ export const GET = withAuthLogging(async (request: NextRequest, ctx) => {
         const alarmDisabled = location.Notification_Active === false
         const surveillanceDisabled = location.Lieu_Etat === "D"
         const isGso = location.t_sonde?.Est_Sonde_GSO ?? location.Est_Lieu_GSO ?? false
-        const rawUnit = location.Derniere_Unite?.trim() || "°C"
-        const unit = rawUnit.toUpperCase() === "C" ? "°C" : rawUnit
+        const unit = normalizeUnitLabel(location.Derniere_Unite?.trim() || "°C")
         const decimals = location.Derniere_Nb_Decimal ?? null
         const minThreshold =
           location.Est_Consigne_Inf_Active === false

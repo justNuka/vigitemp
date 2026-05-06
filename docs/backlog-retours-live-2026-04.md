@@ -240,10 +240,10 @@ Règles de suivi:
 - [x] `Moyen` Bouton `Détails` vers une page de visualisation des alarmes par lieu.
 
 ### Page statistiques
-- [ ] `Lourd` Créer une page `stats`, accessible depuis le dashboard utilisateur et la sidebar.
-- [ ] `Lourd` Afficher tous les lieux en surveillance auxquels l'utilisateur a accès.
-- [ ] `Lourd` Permettre la sélection de période.
-- [ ] `Lourd` Afficher pour la période:
+- [x] `Lourd` Créer une page `stats`, accessible depuis le dashboard utilisateur et la sidebar.
+- [x] `Lourd` Afficher tous les lieux en surveillance auxquels l'utilisateur a accès.
+- [x] `Lourd` Permettre la sélection de période.
+- [x] `Lourd` Afficher pour la période:
   - récap lieu (nom, site-groupe, consignes/tolérances, fréquences, retards)
   - mini
   - maxi
@@ -337,7 +337,7 @@ Règles de suivi:
 - [ ] `À cadrer` Voir avec Nico la possibilité d'une valeur neutralisant les alarmes des sondes GSP.
 
 #### Templates
-- [ ] `Lourd` Mettre en place un système de template de création/configuration de lieux.
+- [x] `Lourd` Mettre en place un système de template de création/configuration de lieux.
 
 ### Lieux - création / édition
 #### Modal globale
@@ -397,8 +397,8 @@ Règles de suivi:
 - [x] `Moyen` R?p?ter une r?gle vers d'autres jours si un seul jour d?but/fin.
 - [x] `Rapide` Ne pas afficher l'id de r?gle.
 
-### Autorisations / profils / acc?s
-- [ ] `Lourd` Repasser sur toutes les autorisations et v?rifier les acc?s.
+### Autorisations / profils / accès
+- [ ] `Lourd` Repasser sur toutes les autorisations et vérifier les accès.
 
 #### Profils
 - [x] `Rapide` Inputs en fond blanc.
@@ -435,7 +435,7 @@ Règles de suivi:
 
 #### M?tier
 - [x] `Moyen` Revoir le d?clenchement des alarmes GSO par mail.
-- [ ] `Lourd` Nouveau type d’alarme : coupure secteur/coupure alimentation, IE et IE, si débranchée, envoie dans la trame un B ou BAT pour indiquer qu’elles sont sur batterie. Prévoir ça sur le tri des alarmes sur la page alarmes.
+- [x] `Lourd` Nouveau type d’alarme : coupure secteur/coupure alimentation, IE et IN, si débranchée, envoie dans la trame un B ou BAT pour indiquer qu’elles sont sur batterie. Prévoir ça sur le tri des alarmes sur la page alarmes.
 - [x] `Moyen` Calculer la durée d'alarme même non terminée.
 
 #### Admin alarmes
@@ -507,7 +507,7 @@ Règles de suivi:
 - [x] `Rapide` Revoir nombre d'alarmes r?elles.
 - [x] `Rapide` Interaction graphe comme surveillance.
 - [x] `Rapide` Format date/heure lisible.
-- [ ] `Lourd` Analyse d'impact en s?lectionnant un ?talonnage.
+- [ ] `Lourd` Analyse d'impact en sélectionnant un étalonnage.
 - [x] `Rapide` Corriger les pointill?s sur tol?rance inf.
 
 ### Admin - param?tres
@@ -536,7 +536,7 @@ Règles de suivi:
 - [x] `Rapide` M?me header visuel que les autres pages.
 - [x] `Rapide` Count affich? sur la page.
 
-### Admin - ?talons
+### Admin - étalons
 - [ ] `Moyen` Import XML quand disponible.
 
 ### Admin - outils
@@ -561,7 +561,7 @@ Règles de suivi:
 ### Technique / architecture
 - [x] `Moyen` Retirer l'impression sur les tables.
 - [x] `Rapide` Clarifier `tm_mesure_etalon` vs `tm_mesure_etalonnage`.
-- [ ] `Lourd` ?tudier un serveur d'interrogation principal (`Id_Serveur = 1`) pilotant les sous-serveurs, avec arr?t centralis?.
+- [x] `Lourd` ?tudier un serveur d'interrogation principal (`Id_Serveur = 1`) pilotant les sous-serveurs, avec arr?t centralis?.
 
 ## Notes de cadrage
 - Les quick wins sont la priorit? demand?e.
@@ -574,7 +574,7 @@ Règles de suivi:
   - architecture multi-serveurs d'interrogation
 
 ### Serveur d'interrogation / protocoles
-- [ ] `Moyen` D?bugger les sondes quand on envoie une fr?quence de `1 min (1f)`.
+- [x] `Moyen` Débugger les sondes quand on envoie une fréquence de `1 min (1f)`.
 
 ### Création / modification des sondes
 - [x] `Rapide` La liste déroulante de type n'est pas scrollable

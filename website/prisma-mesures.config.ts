@@ -3,7 +3,7 @@ import "dotenv/config";
 import { defineConfig, env } from "prisma/config";
 
 export default defineConfig({
-  schema: "prisma/db-mesures/schema.prisma",
+  schema: "prisma/.generated/db-mesures/schema.prisma",
   migrations: {
     path: "prisma/db-mesures/migrations",
   },

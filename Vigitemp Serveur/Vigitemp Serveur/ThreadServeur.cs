@@ -21,6 +21,8 @@ namespace Vigitemp_Serveur
         private volatile IDatabaseProvider m_database;
         private readonly ConcurrentDictionary<int, SensorSchedule> _schedules =
             new ConcurrentDictionary<int, SensorSchedule>();
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _portLocks =
+            new ConcurrentDictionary<string, SemaphoreSlim>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, GspMemoJob> _gspMemoJobs =
             new ConcurrentDictionary<string, GspMemoJob>(StringComparer.OrdinalIgnoreCase);
         private List<SerialPort> list_SerialPort_open = new List<SerialPort>();
@@ -42,6 +44,10 @@ namespace Vigitemp_Serveur
         private readonly int _alarmPollSeconds = GetSettingInt("Vigitemp.Alarms.PollSeconds", 15);
         private readonly int _alarmPollMaxBatch = GetSettingInt("Vigitemp.Alarms.PollMaxBatch", 50);
         private readonly int _alarmPollServerId = GetSettingInt("Vigitemp.Alarms.PollServerId", 1);
+        private readonly bool _alarmRetryUnsentEnabled = GetSettingBool("Vigitemp.Alarms.RetryUnsent.Enabled", true);
+        private readonly int _alarmRetryUnsentIntervalSeconds = GetSettingInt("Vigitemp.Alarms.RetryUnsent.IntervalSeconds", 60);
+        private readonly int _alarmRetryUnsentMaxBatch = GetSettingInt("Vigitemp.Alarms.RetryUnsent.MaxBatch", 50);
+        private readonly int _alarmRetryUnsentMinAgeMinutes = GetSettingInt("Vigitemp.Alarms.RetryUnsent.MinAgeMinutes", 2);
         private readonly bool _statsMonthlyDispatchEnabled = GetSettingBool("Vigitemp.StatsMonthlyDispatch.Enabled", true);
         private readonly int _statsMonthlyDispatchServerId = GetSettingInt("Vigitemp.StatsMonthlyDispatch.ServerId", 1);
         private readonly int _statsMonthlyDispatchIntervalMinutes = GetSettingInt("Vigitemp.StatsMonthlyDispatch.IntervalMinutes", 60);
@@ -50,6 +56,8 @@ namespace Vigitemp_Serveur
         private string _lastPortOwnershipSignature = null;
         private readonly object _alarmPollLock = new object();
         private DateTime _lastAlarmPollUtc = DateTime.MinValue;
+        private DateTime _lastAlarmRetryUtc = DateTime.MinValue;
+        private int _alarmRetryInFlight = 0;
         private DateTime _lastStatsMonthlyDispatchAttemptUtc = DateTime.MinValue;
         private int _statsMonthlyDispatchInFlight = 0;
         private int _lastAlarmIdSeen = 0;
@@ -560,35 +568,102 @@ namespace Vigitemp_Serveur
             }
 
             var newAlarms = GetDatabase().getNewAlarmsSince(_idServer, _lastAlarmIdSeen, _alarmPollMaxBatch);
-            if (newAlarms == null || newAlarms.Count == 0)
+            if (newAlarms != null && newAlarms.Count > 0)
             {
-                return;
-            }
-
-            var maxId = _lastAlarmIdSeen;
-            foreach (var alarm in newAlarms)
-            {
-                if (alarm != null && alarm.IdAlarme > maxId)
+                var maxId = _lastAlarmIdSeen;
+                foreach (var alarm in newAlarms)
                 {
-                    maxId = alarm.IdAlarme;
-                }
-            }
-            _lastAlarmIdSeen = maxId;
-
-            var mailedAlarmIds = await AlarmWebNotifier.NotifyAlarmBatchAsync(newAlarms);
-            if (mailedAlarmIds != null)
-            {
-                foreach (var alarmId in mailedAlarmIds)
-                {
-                    if (alarmId > 0)
+                    if (alarm != null && alarm.IdAlarme > maxId)
                     {
-                        GetDatabase().markAlarmMailSent(alarmId);
+                        maxId = alarm.IdAlarme;
+                    }
+                }
+                _lastAlarmIdSeen = maxId;
+
+                var mailedAlarmIds = await AlarmWebNotifier.NotifyAlarmBatchAsync(newAlarms);
+                if (mailedAlarmIds != null)
+                {
+                    foreach (var alarmId in mailedAlarmIds)
+                    {
+                        if (alarmId > 0)
+                        {
+                            GetDatabase().markAlarmMailSent(alarmId);
+                        }
                     }
                 }
             }
 
+            await RetryUnsentOpenAlarmsIfNeededAsync(nowUtc);
+
             // Legacy agent endpoint (/alarm?action=show) is deprecated.
             // Agent notifications now go through web dispatch (/api/alarmes/dispatch -> /notify).
+        }
+
+        private async Task RetryUnsentOpenAlarmsIfNeededAsync(DateTime nowUtc)
+        {
+            if (!_alarmRetryUnsentEnabled)
+            {
+                return;
+            }
+
+            if (_idServer != _alarmPollServerId)
+            {
+                return;
+            }
+
+            var retryIntervalSeconds = Math.Max(15, _alarmRetryUnsentIntervalSeconds);
+            if (_lastAlarmRetryUtc != DateTime.MinValue &&
+                (nowUtc - _lastAlarmRetryUtc).TotalSeconds < retryIntervalSeconds)
+            {
+                return;
+            }
+
+            if (Interlocked.CompareExchange(ref _alarmRetryInFlight, 1, 0) != 0)
+            {
+                return;
+            }
+
+            _lastAlarmRetryUtc = nowUtc;
+            try
+            {
+                var maxBatch = Math.Max(1, _alarmRetryUnsentMaxBatch);
+                var maxStartLocalTime = DateTime.Now.AddMinutes(-Math.Max(0, _alarmRetryUnsentMinAgeMinutes));
+                var pending = GetDatabase().getUnsentOpenAlarms(maxBatch, maxStartLocalTime);
+                if (pending == null || pending.Count == 0)
+                {
+                    return;
+                }
+
+                VigitempServeur.Log(
+                    $"Alarm retry unsent: server={_idServer} pending={pending.Count} maxBatch={maxBatch} minAgeMin={Math.Max(0, _alarmRetryUnsentMinAgeMinutes)}");
+
+                var mailedAlarmIds = await AlarmWebNotifier.NotifyAlarmBatchAsync(pending);
+                if (mailedAlarmIds == null || mailedAlarmIds.Count == 0)
+                {
+                    return;
+                }
+
+                foreach (var alarmId in mailedAlarmIds)
+                {
+                    if (alarmId <= 0)
+                    {
+                        continue;
+                    }
+
+                    GetDatabase().markAlarmMailSent(alarmId);
+                }
+
+                VigitempServeur.Log(
+                    $"Alarm retry unsent: marked mailed ids=[{string.Join(",", mailedAlarmIds)}]");
+            }
+            catch (Exception ex)
+            {
+                VigitempServeur.Log("Alarm retry unsent error: " + ex.Message);
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _alarmRetryInFlight, 0);
+            }
         }
 
         private void PollEndedAlarms()
@@ -645,6 +720,9 @@ namespace Vigitemp_Serveur
             {
                 return;
             }
+
+            VigitempServeur.Log(
+                $"Alarm ended dispatch: {filtered.Count} alarme(s) ids=[{string.Join(",", filtered.Select(a => a.IdAlarme))}]");
 
             // Legacy agent endpoint (/alarm?action=hide) is deprecated.
             // End-of-alarm handling is now done by web dispatch and email flow.
@@ -815,7 +893,7 @@ namespace Vigitemp_Serveur
                     schedule.InProgress = true;
                     try
                     {
-                        await InterrogateSchedule(schedule);
+                        await RunWithPortLockAsync(schedule.Port, schedule.Serial, () => InterrogateSchedule(schedule));
                     }
                     catch (Exception ex)
                     {
@@ -886,8 +964,12 @@ namespace Vigitemp_Serveur
             {
                 Interlocked.Increment(ref VigitempServeur.nombres_interrogations);
                 VigitempServeur.Log($"[SONDE][MEMO-JOB] serial={job.Serial} status=chunk-start count={count} offset={job.CurrentOffset}");
-                var sensor = new SensorGSP(this, schedule.Port, schedule.Serial, schedule.Adresse, schedule.FrequencySeconds, false);
-                var memo = await sensor.ReadMemoryChunkAsync(count, job.CurrentOffset);
+                GspMemoResponse memo = null;
+                await RunWithPortLockAsync(schedule.Port, schedule.Serial, async () =>
+                {
+                    var sensor = new SensorGSP(this, schedule.Port, schedule.Serial, schedule.Adresse, schedule.FrequencySeconds, false);
+                    memo = await sensor.ReadMemoryChunkAsync(count, job.CurrentOffset);
+                });
                 if (memo == null)
                 {
                     job.ConsecutiveFailures++;
@@ -991,6 +1073,82 @@ namespace Vigitemp_Serveur
             }
         }
 
+        private async Task RunWithPortLockAsync(string port, string serial, Func<Task> action)
+        {
+            if (action == null)
+            {
+                return;
+            }
+
+            var portKey = NormalizePortLockKey(port);
+            if (string.IsNullOrWhiteSpace(portKey))
+            {
+                await action();
+                return;
+            }
+
+            var localLock = _portLocks.GetOrAdd(portKey, _ => new SemaphoreSlim(1, 1));
+            await localLock.WaitAsync(m_cts);
+
+            Mutex namedMutex = null;
+            var mutexAcquired = false;
+            try
+            {
+                namedMutex = new Mutex(false, BuildPortMutexName(portKey));
+                try
+                {
+                    mutexAcquired = namedMutex.WaitOne(TimeSpan.FromMinutes(5));
+                }
+                catch (AbandonedMutexException)
+                {
+                    mutexAcquired = true;
+                }
+
+                if (!mutexAcquired)
+                {
+                    VigitempServeur.Log($"[SONDE][PORT-LOCK] port={portKey} serial={serial} status=timeout");
+                    return;
+                }
+
+                await action();
+            }
+            finally
+            {
+                if (mutexAcquired && namedMutex != null)
+                {
+                    try
+                    {
+                        namedMutex.ReleaseMutex();
+                    }
+                    catch (ApplicationException)
+                    {
+                        // Mutex deja relache ou non acquis: rien a faire.
+                    }
+                }
+
+                if (namedMutex != null)
+                {
+                    namedMutex.Dispose();
+                }
+
+                localLock.Release();
+            }
+        }
+
+        private static string NormalizePortLockKey(string port)
+        {
+            return (port ?? string.Empty).Trim().ToUpperInvariant();
+        }
+
+        private static string BuildPortMutexName(string portKey)
+        {
+            var safe = new string((portKey ?? string.Empty)
+                .Select(ch => char.IsLetterOrDigit(ch) ? ch : '_')
+                .ToArray());
+
+            return @"Global\VigitempSerialPort_" + safe;
+        }
+
         private async Task InterrogateSchedule(SensorSchedule schedule)
         {
             var serial = schedule.Serial;
@@ -1057,6 +1215,7 @@ namespace Vigitemp_Serveur
                     if (gspSensor.ConfigurationSynchronized)
                     {
                         schedule.ConfigDirty = false;
+                        GetDatabase().setLieuInfosModifiees(schedule.IdLieu, false);
                     }
                     break;
                 default:

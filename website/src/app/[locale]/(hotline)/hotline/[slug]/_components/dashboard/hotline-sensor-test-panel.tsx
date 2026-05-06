@@ -268,8 +268,19 @@ export function HotlineSensorTestPanel() {
     return payload ? `${prefix}${rawSerial} ${payload}` : `${prefix}${rawSerial}`
   }, [gsp.rawExactCommand, gsp.rawExactMode, gsp.rawPayload, gsp.rawPrefix, gsp.rawSerial])
 
-  const normalizedRawCommandValue = useMemo(() => normalizeRawCommand(rawCommandValue), [rawCommandValue])
-  const rawCommandForSubmit = useMemo(() => ensureTrailingSpace(normalizedRawCommandValue), [normalizedRawCommandValue])
+  const normalizedRawCommandValue = useMemo(() => {
+    if (gsp.rawExactMode) {
+      return rawCommandValue.trim()
+    }
+    return normalizeRawCommand(rawCommandValue)
+  }, [gsp.rawExactMode, rawCommandValue])
+
+  const rawCommandForSubmit = useMemo(() => {
+    if (gsp.rawExactMode) {
+      return normalizedRawCommandValue
+    }
+    return ensureTrailingSpace(normalizedRawCommandValue)
+  }, [gsp.rawExactMode, normalizedRawCommandValue])
 
   const commandPreview = useMemo(() => {
     if (!showGspFields) return "Commande generee selon le protocole de la sonde selectionnee."
@@ -724,12 +735,12 @@ export function HotlineSensorTestPanel() {
             <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
               <div className="font-medium">Vérification recommandée</div>
               <div className="mt-1">
-                Plusieurs erreurs consecutives ont été détectées. Vérifiez le numéro de série, le port COM, le type de sonde et les
+                Plusieurs erreurs consécutives ont été détectées. Vérifiez le numéro de série, le port COM, le type de sonde et les
                 paramètres utilisés.
               </div>
               {isGspRaw ? (
                 <div className="mt-2">
-                  En commande brute, les espaces manquants sont corriges automatiquement avant envoi.
+                  En commande brute, les espaces manquants sont corrigés automatiquement avant envoi.
                 </div>
               ) : null}
             </div>
@@ -821,9 +832,9 @@ export function HotlineSensorTestPanel() {
 
       <Card className="bg-white dark:bg-popover/95">
         <CardHeader>
-          <CardTitle>Recap des 10 dernieres mesures</CardTitle>
+          <CardTitle>Récap des 10 dernières mesures</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Propose a la fin du test pour la sonde connue en base.
+            Propose à la fin du test pour la sonde connue en base.
             {recentMeasuresSerial ? ` Sonde cible: ${recentMeasuresSerial}.` : ""}
           </p>
         </CardHeader>
@@ -962,7 +973,7 @@ function normalizeRawCommand(command: string) {
     return `${prefix}${splitByNSerial[1]} ${splitByNSerial[2].trim()}`
   }
 
-  const splitByLongSerial = rest.match(/^([A-Za-z]\d{4,})(.+)$/)
+  const splitByLongSerial = rest.match(/^([A-Za-z]\d{4,})([A-Za-z].+)$/)
   if (splitByLongSerial) {
     return `${prefix}${splitByLongSerial[1]} ${splitByLongSerial[2].trim()}`
   }

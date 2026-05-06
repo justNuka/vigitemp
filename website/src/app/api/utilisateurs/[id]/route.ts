@@ -9,6 +9,7 @@ import { revalidateTag } from "next/cache"
 import { apiError, apiOk } from "@/lib/api-response"
 import { auditRouteDelete, auditRouteUpdate } from "@/lib/audit-route"
 import { getUserAvatarValue, setUserAvatarValue } from "@/lib/user-avatar-db"
+import { checkUserLicenseCapacity } from "@/lib/license-user-limit"
 
 const updateUserSchema = z.object({
   nom: z.string().optional(),
@@ -69,6 +70,23 @@ export const PATCH = withAdminLogging(
       const existingUser = await prisma.t_utilisateur.findUnique({ where: { Id_Utilisateur: userId } })
       if (!existingUser) {
         return apiError(404, "not_found", "User not found")
+      }
+
+      if (data.reactivate && existingUser.Est_Archive) {
+        const capacity = await checkUserLicenseCapacity(1)
+        if (!capacity.allowed) {
+          return apiError(
+            403,
+            capacity.reason,
+            capacity.message,
+            {
+              activeUsers: capacity.activeUsers,
+              licensedMaxUsers: capacity.licensedMaxUsers,
+              effectiveMaxUsers: capacity.effectiveMaxUsers,
+              unlimited: capacity.unlimited,
+            },
+          )
+        }
       }
 
       const existingAvatar = await getUserAvatarValue(userId)

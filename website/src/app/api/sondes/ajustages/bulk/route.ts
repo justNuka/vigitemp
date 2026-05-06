@@ -168,6 +168,12 @@ export const POST = withAuthLogging(async (req: NextRequest, ctx) => {
       .map((row) => row.Sonde_Type)
       .filter((row): row is string => Boolean(row));
     const serialTypeCodes = Array.from(new Set(serials.map((serial) => extractTypeCodeFromSerial(serial, knownTypeCodes))));
+    const unknownTypeCodes = serialTypeCodes.filter((typeCode) => !knownTypeCodes.includes(typeCode));
+    if (unknownTypeCodes.length > 0) {
+      return apiError(400, "invalid_sensor_type", "Type de sonde introuvable pour certaines sondes", {
+        typeCodes: unknownTypeCodes,
+      });
+    }
     const sensorTypeFamilies = sensorTypes.filter(
       (row) => typeof row.Sonde_Type === "string" && serialTypeCodes.includes(row.Sonde_Type),
     );

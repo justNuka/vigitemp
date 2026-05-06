@@ -11,6 +11,7 @@ import { revalidateTag } from "next/cache"
 import { apiError, apiOk } from "@/lib/api-response"
 import { getUserAvatarMap, setUserAvatarValue } from "@/lib/user-avatar-db"
 import { getGlobalAppLanguage } from "@/lib/app-language"
+import { checkUserLicenseCapacity } from "@/lib/license-user-limit"
 
 const createUserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -60,6 +61,21 @@ export const POST = withAdminLogging(async (req: NextRequest, ctx: HandlerContex
 
     const body = await req.json()
     const data = createUserSchema.parse(body)
+
+    const capacity = await checkUserLicenseCapacity(1)
+    if (!capacity.allowed) {
+      return apiError(
+        403,
+        capacity.reason,
+        capacity.message,
+        {
+          activeUsers: capacity.activeUsers,
+          licensedMaxUsers: capacity.licensedMaxUsers,
+          effectiveMaxUsers: capacity.effectiveMaxUsers,
+          unlimited: capacity.unlimited,
+        },
+      )
+    }
 
     const existing = await prisma.t_utilisateur.findFirst({
       where: { Login: data.username, Est_Archive: false },

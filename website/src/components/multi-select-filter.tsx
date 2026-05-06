@@ -80,8 +80,11 @@ export function MultiSelectFilter({
     return options.filter((opt) => opt.label.toLowerCase().includes(needle));
   }, [enableSearch, options, search]);
 
-  const buttonClasses =
-    tone === "primary"
+  const hasSelection = selectedIds.length > 0;
+
+  const buttonClasses = hasSelection
+    ? "border-[#26A5DA]/70 bg-[#26A5DA]/15 text-[#075776] shadow-[0_0_0_1px_rgba(38,165,218,0.18)] hover:bg-[#26A5DA]/20 dark:border-[#26A5DA]/70 dark:bg-[#26A5DA]/20 dark:text-sky-50"
+    : tone === "primary"
       ? "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 dark:border-primary/50 dark:bg-primary/15 dark:text-primary-foreground/90"
       : "border-border bg-muted/30 text-foreground hover:bg-muted/50 dark:bg-muted/20 dark:hover:bg-muted/30";
 

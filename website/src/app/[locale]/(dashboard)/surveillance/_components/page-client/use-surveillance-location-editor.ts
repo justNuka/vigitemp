@@ -48,13 +48,15 @@ export function useSurveillanceLocationEditor({
         Sonde_Numero_Serie: values.Sonde_Numero_Serie ? values.Sonde_Numero_Serie : null,
         Commentaire_Action: actionComment || null,
       })
-      await queryClient.invalidateQueries({ queryKey: ['locations'] })
-      await queryClient.invalidateQueries({ queryKey: ['capteurs', 'paginated', 100] })
-      toast.success(t('toast.location_updated'))
-      window.dispatchEvent(new CustomEvent('vigitemp:lieu-updated', { detail: { idLieu: selectedLocationId } }))
       if (submitMode === "close") {
         setIsEditLocationOpen(false)
       }
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['locations'] }),
+        queryClient.invalidateQueries({ queryKey: ['capteurs', 'paginated', 100] }),
+      ])
+      toast.success(t('toast.location_updated'))
+      window.dispatchEvent(new CustomEvent('vigitemp:lieu-updated', { detail: { idLieu: selectedLocationId } }))
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('toast.location_update_error'))
     } finally {

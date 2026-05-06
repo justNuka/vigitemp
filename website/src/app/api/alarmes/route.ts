@@ -31,6 +31,11 @@ const NO_STORE_HEADERS: HeadersInit = {
 
 }
 
+function isPowerAlarmType(type: string | null | undefined) {
+  const normalized = type?.trim().toUpperCase()
+  return normalized === "A" || normalized === "S"
+}
+
 
 
 export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
@@ -251,7 +256,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
               ? "no-response"
 
-              : alarm.Type === "S"
+              : isPowerAlarmType(alarm.Type)
 
                 ? "sector"
 
@@ -265,7 +270,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
           ? "Alarme non réponse"
 
-          : alarm.Type === "S"
+          : isPowerAlarmType(alarm.Type)
 
             ? "Alarme coupure secteur"
 
@@ -321,7 +326,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
         severity:
 
-          alarm.Type === "N" || alarm.Type === "S"
+          alarm.Type === "N" || isPowerAlarmType(alarm.Type)
 
             ? "technical"
 
@@ -361,7 +366,7 @@ export const GET = withAuthLogging(async (req: NextRequest, ctx) => {
 
         unit,
 
-        currentValue: alarm.Type === "N" || alarm.Type === "S" ? null : (alarm.Valeur ?? alarm.t_lieu?.Derniere_Valeur ?? null),
+        currentValue: alarm.Type === "N" || isPowerAlarmType(alarm.Type) ? null : (alarm.Valeur ?? alarm.t_lieu?.Derniere_Valeur ?? null),
 
         count30Days: countsByLieu.get(alarm.t_lieu?.Id_Lieu ?? 0) ?? 0,
 

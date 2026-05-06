@@ -71,12 +71,15 @@ export const POST = async (req: NextRequest) => {
         .filter((row): row is string => Boolean(row));
       const typeCode = extractTypeCodeFromSerial(serial, knownTypeCodes);
       const sensorType = sensorTypes.find((row) => row.Sonde_Type === typeCode) ?? null;
+      if (!sensorType?.Sonde_Type) {
+        return apiError(400, "invalid_sensor_type", `Type de sonde introuvable pour ${serial}`);
+      }
       const isGsoFamily = sensorType?.Famille_Sonde === "GSO";
 
       await prisma.t_sonde.createMany({
         data: [{
           Sonde_Numero_Serie: serial,
-          Sonde_Type: sensorType?.Sonde_Type ?? typeCode,
+          Sonde_Type: sensorType.Sonde_Type,
           Adresse_Sonde: extractProbeAddressFromSerial(serial, knownTypeCodes),
           Est_Sonde_GSO: isGsoFamily,
           Surveillance_Etat: "D",
@@ -88,7 +91,7 @@ export const POST = async (req: NextRequest) => {
       await prisma.t_sonde.updateMany({
         where: { Sonde_Numero_Serie: serial },
         data: {
-          Sonde_Type: sensorType?.Sonde_Type ?? typeCode,
+          Sonde_Type: sensorType.Sonde_Type,
           Est_Sonde_GSO: isGsoFamily,
         },
       });

@@ -64,7 +64,7 @@ namespace Vigitemp_Serveur.sensors
             try
             {
                 pendingResults = true;
-                m_port.Open();
+                await OpenPortWithRetryAsync();
                 m_port.DiscardInBuffer();
                 m_port.DiscardOutBuffer();
                 VigitempServeur.Log($"[SONDE][OPEN] type=GSP serial={m_sondeSerialNumber} port={m_comPort} adresse={m_sondeAdresse} target={_commandTarget}");
@@ -139,6 +139,8 @@ namespace Vigitemp_Serveur.sensors
                     m_port.Close();
                 }
 
+                await Task.Delay(200);
+
                 VigitempServeur.Log($"[SONDE][CLOSE] type=GSP serial={m_sondeSerialNumber} port={m_comPort}");
             }
         }
@@ -146,6 +148,24 @@ namespace Vigitemp_Serveur.sensors
         protected override void DataReceivedHandler(object sender, SerialDataReceivedEventArgs e)
         {
             // GSP is polled synchronously for now to keep command/response logging deterministic.
+        }
+
+        private async Task OpenPortWithRetryAsync()
+        {
+            const int maxAttempts = 5;
+            for (var attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                try
+                {
+                    m_port.Open();
+                    return;
+                }
+                catch (UnauthorizedAccessException) when (attempt < maxAttempts)
+                {
+                    VigitempServeur.Log($"[SONDE][OPEN-RETRY] type=GSP serial={m_sondeSerialNumber} port={m_comPort} attempt={attempt}");
+                    await Task.Delay(300 * attempt);
+                }
+            }
         }
 
         private async Task<bool> TrySynchronizeConfigurationAsync()

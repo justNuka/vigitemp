@@ -4,10 +4,16 @@ import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { log } from "@/lib/logger"
+import { LEGACY_GENERIC_SENSOR_TYPE_CODES } from "@/lib/sensor-types"
 
 export const GET = withAuthLogging(async (_req: NextRequest) => {
   try {
     const types = await prisma.t_sonde_type.findMany({
+      where: {
+        Sonde_Type: {
+          notIn: [...LEGACY_GENERIC_SENSOR_TYPE_CODES],
+        },
+      },
       select: {
         Sonde_Type: true,
         Libelle_Sonde_Type: true,

@@ -151,15 +151,13 @@ if (Test-Path $installerSrc) {
 $seedSrc = Join-Path $repoRoot "db"
 $seedDest = Join-Path $OutputDir "installer\db"
 if (Test-Path $seedSrc) {
-    $mainSeed = Join-Path $seedSrc "vigi_main_seed.sql"
-    $mesuresSeed = Join-Path $seedSrc "vigi_mesures_seed.sql"
-    if ((Test-Path $mainSeed) -and (Test-Path $mesuresSeed)) {
-        Write-Log "Copying database seeds..."
+    $mainSeed = Join-Path $seedSrc "vigisensys_seed.sql"
+    if (Test-Path $mainSeed) {
+        Write-Log "Copying database seed..."
         New-Item -ItemType Directory -Force -Path $seedDest | Out-Null
         Copy-Item -Path $mainSeed -Destination $seedDest -Force
-        Copy-Item -Path $mesuresSeed -Destination $seedDest -Force
     } else {
-        Write-Log "Database seeds not found in $seedSrc (expected vigi_main_seed.sql and vigi_mesures_seed.sql)."
+        Write-Log "Database seed not found in $seedSrc (expected vigisensys_seed.sql)."
     }
 }
 
@@ -187,4 +185,5 @@ if (Test-Path $vcInstallerSource) {
 }
 
 Write-Log "Done. Package ready at: $OutputDir"
+
 

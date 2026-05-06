@@ -33,6 +33,7 @@ namespace Vigitemp_Serveur
         bool hasActiveAcknowledgedAlarm(int idLieu, string type);
         int getLastAlarmIdByServeur(int idServeur);
         List<AlarmNotificationItem> getNewAlarmsSince(int idServeur, int lastAlarmId, int maxCount);
+        List<AlarmNotificationItem> getUnsentOpenAlarms(int maxCount, DateTime? maxStartLocalTime = null);
         List<AlarmNotificationItem> getEndedAlarmsSince(int idServeur, DateTime sinceLocalTime, int maxCount);
         bool markAlarmMailSent(int alarmId);
         string getLieuUnite(int idLieu);

@@ -464,9 +464,14 @@ $agentSharedSecret = Resolve-GeneratedSecretValue -label (T "Secret partage agen
 New-Item -ItemType Directory -Force -Path $logsDir | Out-Null
 
 if ($dbProvider -eq "mssql") {
-    $databaseUrl = "sqlserver://${dbUser}:${dbPassword}@${dbHost}:${dbPort};database=${dbMain};encrypt=false;trustServerCertificate=true"
-    $databaseMesureUrl = "sqlserver://${dbUser}:${dbPassword}@${dbHost}:${dbPort};database=${dbMeasure};encrypt=false;trustServerCertificate=true"
-    $databaseChatUrl = "sqlserver://${dbUser}:${dbPassword}@${dbHost}:${dbPort};database=${dbChat};encrypt=false;trustServerCertificate=true"
+    $dbUserEscaped = "{$dbUser}"
+    $dbPasswordEscaped = "{$dbPassword}"
+    $dbMainEscaped = "{$dbMain}"
+    $dbMeasureEscaped = "{$dbMeasure}"
+    $dbChatEscaped = "{$dbChat}"
+    $databaseUrl = "sqlserver://${dbHost}:${dbPort};database=${dbMainEscaped};user=${dbUserEscaped};password=${dbPasswordEscaped};encrypt=true;trustServerCertificate=true;schema=dbo"
+    $databaseMesureUrl = "sqlserver://${dbHost}:${dbPort};database=${dbMeasureEscaped};user=${dbUserEscaped};password=${dbPasswordEscaped};encrypt=true;trustServerCertificate=true;schema=dbo"
+    $databaseChatUrl = "sqlserver://${dbHost}:${dbPort};database=${dbChatEscaped};user=${dbUserEscaped};password=${dbPasswordEscaped};encrypt=true;trustServerCertificate=true;schema=dbo"
 } else {
     $dbUserEscaped = [System.Uri]::EscapeDataString($dbUser)
     $dbPasswordEscaped = [System.Uri]::EscapeDataString($dbPassword)

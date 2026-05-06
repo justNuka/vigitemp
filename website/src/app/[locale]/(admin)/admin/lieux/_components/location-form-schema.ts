@@ -22,7 +22,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Lieu_Etat"],
-      message: "Sans sonde, la surveillance doit ?tre d?sactiv?e.",
+      message: "Sans sonde, la surveillance doit etre desactivee.",
     })
   }
 
@@ -37,14 +37,22 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
   const hasConsigne = data.Consigne !== null && data.Consigne !== undefined
   const hasSup = data.Consigne_Sup !== null && data.Consigne_Sup !== undefined
   const hasInf = data.Consigne_Inf !== null && data.Consigne_Inf !== undefined
+  const hasSupPreAlarm = data.Consigne_Sup_Pre_Alarme !== null && data.Consigne_Sup_Pre_Alarme !== undefined
+  const hasInfPreAlarm = data.Consigne_Inf_Pre_Alarme !== null && data.Consigne_Inf_Pre_Alarme !== undefined
   const supActive = (typeof data.Est_Consigne_Sup_Active === "boolean" ? data.Est_Consigne_Sup_Active : hasSup)
   const infActive = (typeof data.Est_Consigne_Inf_Active === "boolean" ? data.Est_Consigne_Inf_Active : hasInf)
+  const supPreAlarmActive = typeof data.Est_Consigne_Sup_Pre_Alarme_Active === "boolean"
+    ? data.Est_Consigne_Sup_Pre_Alarme_Active
+    : hasSupPreAlarm
+  const infPreAlarmActive = typeof data.Est_Consigne_Inf_Pre_Alarme_Active === "boolean"
+    ? data.Est_Consigne_Inf_Pre_Alarme_Active
+    : hasInfPreAlarm
 
   if (hasConsigne && supActive && hasSup && Number(data.Consigne_Sup) <= Number(data.Consigne)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Sup"],
-      message: "La consigne supérieure doit être strictement supérieure à la consigne.",
+      message: "La consigne superieure doit etre strictement superieure a la consigne.",
     })
   }
 
@@ -52,7 +60,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Inf"],
-      message: "La consigne inférieure doit être strictement inférieure à la consigne.",
+      message: "La consigne inferieure doit etre strictement inferieure a la consigne.",
     })
   }
 
@@ -60,7 +68,44 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Consigne_Inf"],
-      message: "La consigne inférieure doit être strictement inférieure à la consigne supérieure.",
+      message: "La consigne inferieure doit etre strictement inferieure a la consigne superieure.",
+    })
+  }
+
+  if (supActive && supPreAlarmActive && hasSup && hasSupPreAlarm && Number(data.Consigne_Sup_Pre_Alarme) >= Number(data.Consigne_Sup)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Consigne_Sup_Pre_Alarme"],
+      message: "La pre-alarme superieure doit etre strictement inferieure a la consigne superieure.",
+    })
+  }
+
+  if (hasConsigne && supPreAlarmActive && hasSupPreAlarm && Number(data.Consigne_Sup_Pre_Alarme) <= Number(data.Consigne)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Consigne_Sup_Pre_Alarme"],
+      message: "La pre-alarme superieure doit etre strictement superieure a la consigne.",
+    })
+  }
+  if (infActive && infPreAlarmActive && hasInf && hasInfPreAlarm && Number(data.Consigne_Inf_Pre_Alarme) <= Number(data.Consigne_Inf)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Consigne_Inf_Pre_Alarme"],
+      message: "La pre-alarme inferieure doit etre strictement superieure a la consigne inferieure.",
+    })
+  }
+  if (hasConsigne && infPreAlarmActive && hasInfPreAlarm && Number(data.Consigne_Inf_Pre_Alarme) >= Number(data.Consigne)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Consigne_Inf_Pre_Alarme"],
+      message: "La pre-alarme inferieure doit etre strictement inferieure a la consigne.",
+    })
+  }
+  if (supPreAlarmActive && infPreAlarmActive && hasSupPreAlarm && hasInfPreAlarm && Number(data.Consigne_Inf_Pre_Alarme) >= Number(data.Consigne_Sup_Pre_Alarme)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["Consigne_Inf_Pre_Alarme"],
+      message: "La pre-alarme inferieure doit etre strictement inferieure a la pre-alarme superieure.",
     })
   }
 
@@ -68,7 +113,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Frequence"],
-      message: "La fréquence de mesure est requise.",
+      message: "La frequence de mesure est requise.",
     })
   }
 
@@ -76,7 +121,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Frequence"],
-      message: "La fréquence de mesure doit être strictement supérieure à 0.",
+      message: "La frequence de mesure doit etre strictement superieure a 0.",
     })
   }
 
@@ -84,7 +129,7 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Retard_Alarme_Haut"],
-      message: "Le retard d'alarme haut doit être strictement supérieure à 0.",
+      message: "Le retard d'alarme haut doit etre strictement superieur a 0.",
     })
   }
 
@@ -92,14 +137,14 @@ function addConsigneGuards(data: Record<string, unknown>, ctx: z.RefinementCtx) 
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["Retard_Alarme_Bas"],
-      message: "Le retard d'alarme bas doit être strictement supérieure à 0.",
+      message: "Le retard d'alarme bas doit etre strictement superieur a 0.",
     })
   }
 }
 
 export const locationFormSchema = z.object({
   Nom_Lieu: z.string().min(1, "Nom du lieu requis").max(50),
-    Commentaire: z.string().optional().nullable(),
+  Commentaire: z.string().optional().nullable(),
   Lieu_Etat: z.string().optional().nullable(),
   Id_Site: z.number().optional().nullable(),
   GroupIds: z.array(z.number()).optional(),

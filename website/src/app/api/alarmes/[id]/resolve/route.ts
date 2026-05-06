@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server"
+﻿import { NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { log } from "@/lib/logger"
 import { getPublicAppUrl } from "@/lib/public-app-url"
@@ -57,7 +57,7 @@ export const POST = withAuthLogging(
           triggeredAt: alarm.Date_Heure_Debut,
           endedAt: alarm.Date_Heure_Fin,
           lastValue: alarm.Valeur != null ? `${alarm.Valeur}${alarm.Unite ?? "°C"}` : undefined,
-          details: "Alarme terminée",
+          details: "Alarme terminee",
           alarmUrl,
           idLieu: alarm.t_lieu?.Id_Lieu,
           unite: alarm.Unite,

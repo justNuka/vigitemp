@@ -96,12 +96,14 @@ export async function getSystemEmailCcRecipients(): Promise<string[]> {
 export async function sendEmail({
   to,
   cc,
+  includeSystemCc = true,
   subject,
   react,
   attachments,
 }: {
   to: string;
   cc?: string | string[];
+  includeSystemCc?: boolean;
   subject: string;
   react: React.ReactElement;
   attachments?: EmailAttachment[];
@@ -121,7 +123,7 @@ export async function sendEmail({
 
     const toNormalized = parseRecipients(to);
     const explicitCc = Array.isArray(cc) ? cc.flatMap((item) => parseRecipients(item)) : parseRecipients(cc);
-    const systemCc = await getSystemEmailCcRecipients();
+    const systemCc = includeSystemCc ? await getSystemEmailCcRecipients() : [];
 
     const toSet = new Set(toNormalized);
     const ccRecipients = Array.from(new Set([...explicitCc, ...systemCc])).filter((email) => !toSet.has(email));

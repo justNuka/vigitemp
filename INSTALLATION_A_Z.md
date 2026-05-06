@@ -127,6 +127,7 @@ Sur 2 machines differentes :
 
 Variables/elements ecrits :
 - web `.env` : `VIGITEMP_ALARM_DISPATCH_SECRET` (et compat `VIGITEMP_SURVEILLANCE_DISPATCH_SECRET`)
+- web `.env` : `VIGITEMP_EMAIL_TIMEZONE` (et `TZ`) depuis le setup web, etape `Parametres avances` (defaut `Europe/Paris`)
 - serveur C# `.config` : `Vigi.AlarmDispatchSecret`
 
 Chemins utiles apres install :

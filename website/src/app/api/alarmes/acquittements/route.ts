@@ -35,6 +35,7 @@ function normalizeAlarmType(type: string | null | undefined) {
       return "HIGH"
     case "B":
       return "LOW"
+    case "A":
     case "S":
       return "SECTOR"
     case "N":
@@ -132,7 +133,7 @@ export const GET = withAnyAuthorizationLogging(
         ),
       )
 
-      const [lieux, histos, siteOptionsRows] = await Promise.all([
+      const [lieux, histos] = await Promise.all([
         lieuIds.length > 0
           ? prisma.t_lieu.findMany({
               where: { Id_Lieu: { in: lieuIds } },
@@ -154,27 +155,37 @@ export const GET = withAnyAuthorizationLogging(
                 Type: true,
                 Valeur: true,
                 Unite: true,
+                Id_Lieu: true,
                 Date_Heure_Debut: true,
                 Date_Heure_Fin: true,
                 Date_Heure_Acquittement: true,
               },
             })
           : Promise.resolve([]),
-        prisma.t_lieu.findMany({
-          where: accessibleLieuWhere,
-          select: {
-            Id_Site: true,
-            t_site: { select: { Libelle_Site: true } },
-          },
-        }),
-        prisma.t_lieu.findMany({
-          where: accessibleLieuWhere,
-          select: { Id_Lieu: true, Nom_Lieu: true },
-          orderBy: { Nom_Lieu: "asc" },
-        }),
       ])
 
-      const lieuMap = new Map(lieux.map((lieu) => [lieu.Id_Lieu, lieu]))
+      const histoLieuIds = Array.from(
+        new Set(
+          histos
+            .map((histo) => histo.Id_Lieu)
+            .filter((value): value is number => typeof value === "number" && value > 0),
+        ),
+      )
+
+      const missingHistoLieuIds = histoLieuIds.filter((id) => !lieuIds.includes(id))
+      const extraLieux = missingHistoLieuIds.length
+        ? await prisma.t_lieu.findMany({
+            where: { Id_Lieu: { in: missingHistoLieuIds } },
+            select: {
+              Id_Lieu: true,
+              Nom_Lieu: true,
+              Sonde_Numero_Serie: true,
+              t_site: { select: { Libelle_Site: true } },
+            },
+          })
+        : []
+
+      const lieuMap = new Map([...lieux, ...extraLieux].map((lieu) => [lieu.Id_Lieu, lieu]))
       const histoMap = new Map<number, (typeof histos)[number]>()
       for (const histo of histos) {
         if (!histoMap.has(histo.Id_Alarme)) {
@@ -185,7 +196,8 @@ export const GET = withAnyAuthorizationLogging(
       const normalizedData = rawRows.map((row) => {
         const alarmId = extractAlarmId(row.Commentaire)
         const histo = alarmId ? histoMap.get(alarmId) : undefined
-        const lieu = row.Id_Lieu ? lieuMap.get(row.Id_Lieu) : undefined
+        const resolvedLieuId = row.Id_Lieu ?? histo?.Id_Lieu ?? null
+        const lieu = resolvedLieuId ? lieuMap.get(resolvedLieuId) : undefined
         const value =
           typeof histo?.Valeur === "number"
             ? `${histo.Valeur}${histo.Unite ? ` ${histo.Unite}` : ""}`

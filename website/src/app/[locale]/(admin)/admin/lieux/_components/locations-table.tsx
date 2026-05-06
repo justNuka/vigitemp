@@ -43,6 +43,12 @@ type LocationsTableProps = {
   onEditLocation?: (location: LocationRow) => void;
 };
 
+function formatFrequencyMinutes(value: number) {
+  return new Intl.NumberFormat('fr-FR', {
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
 export function LocationsTable({
   locations,
   isLoading,
@@ -138,7 +144,7 @@ export function LocationsTable({
       cell: ({ row }) =>
         row.original.Frequence === null || row.original.Frequence === undefined
           ? t('placeholders.na')
-          : `${Math.round(row.original.Frequence)} min`,
+          : `${formatFrequencyMinutes(row.original.Frequence)} min`,
     },
     {
       id: 'planning',

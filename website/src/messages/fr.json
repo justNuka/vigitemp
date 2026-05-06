@@ -4250,6 +4250,7 @@
       "type": {
         "high": "Alarme haute",
         "low": "Alarme basse",
+        "sector": "Secteur / alimentation",
         "default": "Alarme"
       },
       "value": {

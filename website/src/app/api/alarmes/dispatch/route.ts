@@ -9,6 +9,8 @@ import { getPublicAppUrl } from "@/lib/public-app-url"
 import { randomUUID } from "crypto"
 import { revalidateTag } from "next/cache"
 import { sendAlarmEventEmails } from "@/lib/alarm-email"
+import { formatMeasureValue } from "@/lib/measurements"
+import { sendTeamsWorkflowAlarmNotification } from "@/lib/notifications/teams-workflow"
 
 const AGENT_PORT = Number.parseInt(process.env.VIGITEMP_AGENT_PORT ?? "8000", 10)
 const AGENT_TIMEOUT_MS = Number.parseInt(process.env.VIGITEMP_AGENT_TIMEOUT_MS ?? "5000", 10)
@@ -17,6 +19,11 @@ const AGENT_ACTIVE_WINDOW_MINUTES = Number.parseInt(
   10,
 )
 const AGENT_SHARED_SECRET = process.env.VIGITEMP_AGENT_SECRET?.trim() ?? ""
+const DEFAULT_TEMPERATURE_UNIT = "\u00B0C"
+const DISPLAY_TIMEZONE =
+  process.env.VIGITEMP_EMAIL_TIMEZONE?.trim() ||
+  process.env.TZ?.trim() ||
+  "Europe/Paris"
 
 type AgentTarget = {
   idPoste: number
@@ -195,6 +202,7 @@ const dispatchSchema = z.object({
   triggeredAt: z.string().min(1).optional(),
   skipEmail: z.boolean().optional(),
   skipAgent: z.boolean().optional(),
+  skipTeams: z.boolean().optional(),
   eventType: z.enum(["triggered", "ended"]).optional(),
 })
 
@@ -204,12 +212,46 @@ function isAuthorized(req: NextRequest) {
   return req.headers.get("x-vigitemp-secret") === secret
 }
 
+function normalizeUnit(unit?: string | null) {
+  const trimmed = unit?.trim()
+  if (!trimmed) return DEFAULT_TEMPERATURE_UNIT
+  if (trimmed === "C") return DEFAULT_TEMPERATURE_UNIT
+  return trimmed
+}
+
+function formatIncomingLastValue(raw: string, fallbackUnit?: string | null) {
+  const text = raw.trim()
+  if (!text) return undefined
+
+  const match = text.match(/^(-?\d+(?:[.,]\d+)?)(.*)$/)
+  if (!match) return text
+
+  const parsed = Number.parseFloat(match[1].replace(",", "."))
+  if (Number.isNaN(parsed)) return text
+
+  const suffix = match[2]?.trim()
+  const unit = suffix || normalizeUnit(fallbackUnit)
+  return `${formatMeasureValue(parsed, 2, "fr-FR")}${unit}`
+}
+
+function formatDbLocalDateTime(value?: Date | null) {
+  if (!value) return undefined
+
+  const pad = (part: number) => String(part).padStart(2, "0")
+  return `${pad(value.getUTCDate())}/${pad(value.getUTCMonth() + 1)}/${value.getUTCFullYear()} ${pad(value.getUTCHours())}:${pad(value.getUTCMinutes())}:${pad(value.getUTCSeconds())}`
+}
+
+function isPowerAlarmType(type: string | null | undefined) {
+  const normalized = type?.trim().toUpperCase()
+  return normalized === "A" || normalized === "S"
+}
+
 export const POST = withLogging(async (req: NextRequest) => {
   const { ip } = getRequestContext(req)
 
   if (!isAuthorized(req)) {
     log.warn("ALARM_DISPATCH", "Rejected alarm dispatch: invalid secret", { ip })
-    return apiError(401, "unauthorized", "Non autorisé")
+    return apiError(401, "unauthorized", "Non autorise")
   }
 
   const body = await req.json().catch(() => null)
@@ -234,16 +276,15 @@ export const POST = withLogging(async (req: NextRequest) => {
   const alarmId = validated.data.alarmId
   const defaultUrl = `/${routing.defaultLocale}/alarmes`
   const baseUrl = getPublicAppUrl(req)
-  const formatDateTime = (value?: Date | null) =>
-    value
-      ? new Intl.DateTimeFormat("fr-FR", {
-          dateStyle: "short",
-          timeStyle: "medium",
-        }).format(value)
-      : undefined
+  const formatDateTime = (value?: Date | null) => formatDbLocalDateTime(value)
+  const formatValueWithUnit = (value?: number | null, unit?: string | null) => {
+    if (value === null || value === undefined || Number.isNaN(value)) return "N/A"
+    return `${formatMeasureValue(Number(value), 2, "fr-FR")}${normalizeUnit(unit)}`
+  }
   const dateLabel = new Intl.DateTimeFormat("fr-FR", {
     dateStyle: "short",
     timeStyle: "medium",
+    timeZone: DISPLAY_TIMEZONE,
   }).format(new Date())
   let lieuId: number | undefined
   let locationLabel = "Lieu inconnu"
@@ -261,8 +302,10 @@ export const POST = withLogging(async (req: NextRequest) => {
   let uniteLabel: string | undefined
   let lastValueLabel: string | undefined
   let lastMeasureAtLabel: string | undefined
+  let alarmExists = false
   const skipEmail = validated.data.skipEmail === true
   const skipAgent = validated.data.skipAgent === true
+  const skipTeams = validated.data.skipTeams === true
 
   if (validated.data.idLieu) {
     lieuId = validated.data.idLieu
@@ -271,7 +314,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     alarmTypeCode = validated.data.alarmTypeCode.trim()
   }
   if (validated.data.lastValue) {
-    lastValueLabel = validated.data.lastValue
+    lastValueLabel = formatIncomingLastValue(validated.data.lastValue)
   }
   if (validated.data.triggeredAt) {
     triggeredAtLabel = validated.data.triggeredAt
@@ -281,7 +324,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     }
   }
 
-  if (alarmId && (!title || !messageBody || !url)) {
+  if (alarmId) {
     const alarm = await prisma.t_alarme.findUnique({
       where: { Id_Alarme: alarmId },
       include: {
@@ -307,6 +350,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     })
 
     if (alarm) {
+      alarmExists = true
       lieuId = alarm.Id_Lieu ?? undefined
       const lieuName = alarm.t_lieu?.Nom_Lieu ?? "Lieu inconnu"
       lieuLabel = lieuName
@@ -328,13 +372,13 @@ export const POST = withLogging(async (req: NextRequest) => {
           : alarm.Type === "B"
             ? "Alarme basse"
             : alarm.Type === "N"
-              ? "Non réponse"
-              : alarm.Type === "S"
+              ? "Non reponse"
+              : isPowerAlarmType(alarm.Type)
                 ? "Coupure secteur"
                 : "Alarme"
       alarmTypeCode = alarm.Type ?? undefined
       const valueLabel = alarm.Type === "H" || alarm.Type === "B"
-        ? `${alarm.Valeur ?? "N/A"}${alarm.Unite ?? "°C"}`
+        ? formatValueWithUnit(alarm.Valeur, alarm.Unite)
         : "N/A"
       alarmTypeLabel = alarmType
       lastValueLabel = valueLabel
@@ -345,21 +389,22 @@ export const POST = withLogging(async (req: NextRequest) => {
       const supTolerance =
         alarm.t_lieu?.Tolerance_Surveillance_Sup ?? alarm.t_lieu?.Consigne_Sup ?? null
       consigneValue = alarm.t_lieu?.Consigne != null ? Number(alarm.t_lieu.Consigne) : null
-      uniteLabel = alarm.Unite ?? undefined
+      const displayUnit = normalizeUnit(alarm.Unite)
+      uniteLabel = displayUnit
       consigneSupValue = supTolerance != null ? Number(supTolerance) : null
       const infTolerance =
         alarm.t_lieu?.Tolerance_Surveillance_Inf ?? alarm.t_lieu?.Consigne_Inf ?? null
       consigneInfValue = infTolerance != null ? Number(infTolerance) : null
       const thresholds = [
-        supTolerance != null ? `Sup ${supTolerance}${alarm.Unite ?? "°C"}` : null,
-        infTolerance != null ? `Inf ${infTolerance}${alarm.Unite ?? "°C"}` : null,
+        supTolerance != null ? `Sup ${formatMeasureValue(Number(supTolerance), 2, "fr-FR")}${displayUnit}` : null,
+        infTolerance != null ? `Inf ${formatMeasureValue(Number(infTolerance), 2, "fr-FR")}${displayUnit}` : null,
       ].filter(Boolean).join(" / ")
       const preAlarms = [
         alarm.t_lieu?.Consigne_Sup_Pre_Alarme != null
-          ? `Pré sup ${alarm.t_lieu?.Consigne_Sup_Pre_Alarme}${alarm.Unite ?? "°C"}`
+          ? `Pre sup ${formatMeasureValue(Number(alarm.t_lieu?.Consigne_Sup_Pre_Alarme), 2, "fr-FR")}${displayUnit}`
           : null,
         alarm.t_lieu?.Consigne_Inf_Pre_Alarme != null
-          ? `Pré inf ${alarm.t_lieu?.Consigne_Inf_Pre_Alarme}${alarm.Unite ?? "°C"}`
+          ? `Pre inf ${formatMeasureValue(Number(alarm.t_lieu?.Consigne_Inf_Pre_Alarme), 2, "fr-FR")}${displayUnit}`
           : null,
       ].filter(Boolean).join(" / ")
       const delays = [
@@ -375,13 +420,17 @@ export const POST = withLogging(async (req: NextRequest) => {
         `Type: ${alarmType}`,
         `Valeur: ${valueLabel}`,
         thresholds ? `Seuils: ${thresholds}` : null,
-        preAlarms ? `Pré-alarmes: ${preAlarms}` : null,
+        preAlarms ? `Pre-alarmes: ${preAlarms}` : null,
         delays ? `Retards: ${delays}` : null,
       ].filter(Boolean)
 
       messageBody ??= detailLines.join(" | ")
       url ??= defaultUrl
     }
+  }
+
+  if (alarmId && !alarmExists) {
+    return apiError(404, "alarm_not_found", `Alarme ${alarmId} introuvable`)
   }
 
   if ((!locationLabel || locationLabel === "Lieu inconnu") && lieuId) {
@@ -405,7 +454,7 @@ export const POST = withLogging(async (req: NextRequest) => {
   }
 
   title ??= "Alarme VigiSensys"
-  messageBody ??= "Une alarme a été déclenchée."
+  messageBody ??= "Une alarme a ete declenchee."
   url ??= defaultUrl
 
   if (!alarmTypeLabel && alarmTypeCode === "GSP_BATTERY") {
@@ -416,6 +465,7 @@ export const POST = withLogging(async (req: NextRequest) => {
     ? url
     : `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`
   const eventType = validated.data.eventType ?? (endedAtDate ? "ended" : "triggered")
+  const endedAtLabel = formatDateTime(endedAtDate)
 
   const safeTitle = title.slice(0, 128)
   const safeMessage = messageBody.slice(0, 512)
@@ -532,6 +582,32 @@ export const POST = withLogging(async (req: NextRequest) => {
     usedSystemFallback: emailResult.usedSystemFallback ?? false,
   })
 
+  const teamsResult = skipTeams
+    ? { attempted: 0, sent: 0, skipped: "disabled_by_payload" }
+    : await sendTeamsWorkflowAlarmNotification({
+        eventType,
+        alarmId,
+        site: siteLabel,
+        lieu: lieuLabel,
+        sonde: sondeLabel,
+        alarmType: alarmTypeLabel ?? alarmTypeCode,
+        triggeredAt: triggeredAtLabel,
+        endedAt: endedAtLabel,
+        lastValue: lastValueLabel,
+        details: safeMessage,
+        alarmUrl,
+      })
+
+  log.info("TEAMS_WORKFLOW", "Teams workflow alarm notification result", {
+    ip,
+    alarmId,
+    eventType,
+    attempted: teamsResult.attempted,
+    sent: teamsResult.sent,
+    skipped: teamsResult.skipped,
+    skipTeams,
+  })
+
   revalidateTag("dashboard-active-alarms", "default")
   revalidateTag("dashboard-stats", "default")
   revalidateTag("dashboard-critical-sensors", "default")
@@ -545,7 +621,8 @@ export const POST = withLogging(async (req: NextRequest) => {
     emailSent: emailResult.sent,
     emailSkipped: emailResult.skipped,
     emailUsedSystemFallback: emailResult.usedSystemFallback ?? false,
+    teamsAttempted: teamsResult.attempted,
+    teamsSent: teamsResult.sent,
+    teamsSkipped: teamsResult.skipped,
   })
 })
-
-

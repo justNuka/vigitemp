@@ -21,7 +21,7 @@ export async function generateMetadata({
 export default async function AlarmsPage({
   searchParams,
 }: {
-  searchParams: { status?: "active" | "acknowledged" | "resolved" };
+  searchParams: { status?: "active" | "acknowledged" | "resolved"; locationId?: string };
 }) {
   await connection();
   const status = searchParams.status || "active";
@@ -38,6 +38,7 @@ export default async function AlarmsPage({
         alarms={alarmsData}
         stats={statsData}
         initialStatus={status}
+        initialLocationId={searchParams.locationId ?? null}
       />
     </Suspense>
   );

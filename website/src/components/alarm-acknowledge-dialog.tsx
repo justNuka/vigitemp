@@ -331,6 +331,25 @@ export function AlarmAcknowledgeDialog({
               </div>
             </div>
 
+            {Number(resolvedAlarm.locationId) > 0 && alarmCount30 !== null && alarmCount30 > 1 ? (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">
+                <span>
+                  Plusieurs alarmes existent pour ce lieu. Vous pouvez ouvrir la page des alarmes filtrees sur ce lieu.
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  onClick={() => {
+                    window.location.href = `/${locale}/alarmes?status=active&locationId=${encodeURIComponent(resolvedAlarm.locationId)}`
+                  }}
+                >
+                  Voir les alarmes du lieu
+                </Button>
+              </div>
+            ) : null}
+
             <div className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-4 py-3">
               <div className="space-y-0.5">
                 <p className="text-sm font-medium">{t("dialog.graph_label")}</p>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { History } from "lucide-react";
+import { BarChart3, History } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { AlarmsClient } from "./alarms-client";
 import type { AlarmWithDetails } from "@/lib/api";
@@ -24,11 +24,13 @@ interface Props {
   alarms: AlarmWithDetails[];
   stats: Stats;
   initialStatus: AlarmStatus;
+  initialLocationId?: string | null;
 }
 
-export function AlarmsPageClient({ alarms, stats, initialStatus }: Props) {
+export function AlarmsPageClient({ alarms, stats, initialStatus, initialLocationId = null }: Props) {
   const t = useTranslations("alarmsPage");
   const tAckHistory = useTranslations("alarmAckHistoryPage");
+  const tDashboard = useTranslations("dashboardClient");
   const { hasPermission } = useAppAccess();
   const router = useRouter();
   const pathname = usePathname();
@@ -59,6 +61,12 @@ export function AlarmsPageClient({ alarms, stats, initialStatus }: Props) {
         description={t("description")}
         activeAlarms={localStats.active}
       >
+        <Button asChild variant="outline" size="sm" className="gap-2">
+          <Link href="/alarmes/par-lieu">
+            <BarChart3 className="h-4 w-4" />
+            {tDashboard("trend_by_location.title")}
+          </Link>
+        </Button>
         {canViewAckHistory ? (
           <Button asChild variant="outline" size="sm" className="gap-2">
             <Link href="/alarmes/acquittements">
@@ -73,6 +81,7 @@ export function AlarmsPageClient({ alarms, stats, initialStatus }: Props) {
         alarms={alarms}
         statusFilter={statusFilter}
         stats={localStats}
+        initialLocationId={initialLocationId}
         onStatusChange={handleStatusChange}
         onStatsChange={setLocalStats}
       />

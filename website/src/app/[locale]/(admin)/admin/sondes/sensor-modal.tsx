@@ -39,6 +39,7 @@ import { useModules } from "@/hooks/useModules";
 import type { Sensor } from "@/hooks/useSensors";
 import { AlertCircle } from "lucide-react";
 import { patchJson, postJson } from "@/lib/http";
+import { isLegacyGenericSensorTypeCode } from "@/lib/sensor-types";
 import { toast } from "sonner";
 import { useRouter } from '@/i18n/navigation';
 
@@ -107,7 +108,7 @@ export function SensorModal({
 
   const selectedType = form.watch("sondeType");
   const requiresLegacyAddress = !isEdit && ["EN", "HN"].includes((selectedType || "").toUpperCase());
-  const availableSensorTypes = (sensorTypes ?? []).filter((type) => !["GSO", "GSP"].includes(type.Sonde_Type));
+  const availableSensorTypes = (sensorTypes ?? []).filter((type) => !isLegacyGenericSensorTypeCode(type.Sonde_Type));
   const memoryKey = `sensor-form:${isEdit ? sensor?.Id_Sonde ?? sensor?.Sonde_Numero_Serie ?? "edit" : "new"}`;
 
   useEffect(() => {

@@ -3,7 +3,7 @@ import "dotenv/config";
 import { defineConfig, env } from "prisma/config";
 
 export default defineConfig({
-  schema: "prisma/vigi-chat/schema.prisma",
+  schema: "prisma/.generated/vigi-chat/schema.prisma",
   migrations: {
     path: "prisma/vigi-chat/migrations",
   },

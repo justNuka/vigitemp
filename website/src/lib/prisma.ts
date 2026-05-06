@@ -1,5 +1,6 @@
 ﻿import "dotenv/config"
 import { PrismaMariaDb } from "@prisma/adapter-mariadb"
+import { PrismaMssql } from "@prisma/adapter-mssql"
 
 import { PrismaClient } from "../generated/@prisma-db-main/client"
 import { PrismaClient as PrismaMesureClient } from "../generated/@prisma-db-mesures/client"
@@ -22,8 +23,21 @@ function requireEnv(name: "DATABASE_URL" | "DATABASE_MESURES_URL"): string {
 const mainDbUrl = requireEnv("DATABASE_URL")
 const mesuresDbUrl = requireEnv("DATABASE_MESURES_URL")
 
-const mainAdapter = new PrismaMariaDb(mainDbUrl)
-const mesureAdapter = new PrismaMariaDb(mesuresDbUrl)
+function isMssqlUrl(url: string): boolean {
+  return url.trim().toLowerCase().startsWith("sqlserver://")
+}
+
+function shouldUseMssql(url: string): boolean {
+  const provider = process.env.DATABASE_PROVIDER?.trim().toLowerCase()
+  return provider === "mssql" || provider === "sqlserver" || isMssqlUrl(url)
+}
+
+function createAdapter(url: string) {
+  return shouldUseMssql(url) ? new PrismaMssql(url) : new PrismaMariaDb(url)
+}
+
+const mainAdapter = createAdapter(mainDbUrl)
+const mesureAdapter = createAdapter(mesuresDbUrl)
 
 function getPrismaClient() {
   if (!globalForPrisma.prisma) {
@@ -56,3 +70,5 @@ export const prismaMesure = new Proxy({} as PrismaMesureClient, {
     return (getPrismaMesureClient() as any)[prop]
   },
 })
+
+

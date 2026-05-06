@@ -1,5 +1,6 @@
-import "dotenv/config"
+﻿import "dotenv/config"
 import { PrismaMariaDb } from "@prisma/adapter-mariadb"
+import { PrismaMssql } from "@prisma/adapter-mssql"
 
 import { PrismaClient } from "../generated/@prisma-vigi-chat/client"
 
@@ -19,7 +20,16 @@ function requireEnv(name: "DATABASE_CHAT_URL"): string {
 
 const chatDbUrl = requireEnv("DATABASE_CHAT_URL")
 
-const chatAdapter = new PrismaMariaDb(chatDbUrl)
+function isMssqlUrl(url: string): boolean {
+  return url.trim().toLowerCase().startsWith("sqlserver://")
+}
+
+function shouldUseMssql(url: string): boolean {
+  const provider = process.env.DATABASE_PROVIDER?.trim().toLowerCase()
+  return provider === "mssql" || provider === "sqlserver" || isMssqlUrl(url)
+}
+
+const chatAdapter = shouldUseMssql(chatDbUrl) ? new PrismaMssql(chatDbUrl) : new PrismaMariaDb(chatDbUrl)
 
 function getPrismaChatClient(): PrismaClient {
   if (!globalForPrismaChat.prismaChat) {
@@ -36,3 +46,4 @@ export const prismaChat = new Proxy({} as PrismaClient, {
     return (getPrismaChatClient() as unknown as Record<string | symbol, unknown>)[prop]
   },
 })
+

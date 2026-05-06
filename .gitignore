@@ -791,3 +791,5 @@ sketch
 
 # Git worktrees
 .worktrees/
+
+/website/prisma/.generated/

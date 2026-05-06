@@ -2,6 +2,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypt
 
 const SMTP_PREFIX = "enc:smtp:v1:"
 const TELEPHONY_PREFIX = "enc:telephony:v1:"
+const TEAMS_PREFIX = "enc:teams:v1:"
 const INSECURE_FALLBACK_SECRET = "your-secret-key-change-this-in-production"
 
 function resolveSecretsKey(): Buffer {
@@ -85,4 +86,16 @@ export function decryptTelephonySecret(value: string): string {
 
 export function isEncryptedTelephonySecret(value: string | null | undefined): boolean {
   return hasPrefix(TELEPHONY_PREFIX, value)
+}
+
+export function encryptTeamsSecret(plain: string): string {
+  return encryptWithPrefix(TEAMS_PREFIX, plain)
+}
+
+export function decryptTeamsSecret(value: string): string {
+  return decryptWithPrefix(TEAMS_PREFIX, value)
+}
+
+export function isEncryptedTeamsSecret(value: string | null | undefined): boolean {
+  return hasPrefix(TEAMS_PREFIX, value)
 }

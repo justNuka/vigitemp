@@ -1,5 +1,6 @@
 import { applyAccessFilter, buildAlarmAccessFilter, getUserLocationScope } from "@/lib/location-access-scope"
 import { getServerAuthenticatedUserId } from "@/lib/server-auth"
+import { normalizeUnitLabel } from "@/lib/measurements"
 import { unstable_noStore } from "next/cache"
 import { getTranslations } from "next-intl/server"
 
@@ -38,6 +39,7 @@ export async function ServerAlarms() {
   })
 
   return alarms.map((alarm) => {
+    const isPowerAlarm = alarm.Type === "A" || alarm.Type === "S"
     const hasConfiguredThresholds =
       alarm.t_lieu?.Consigne_Sup !== null || alarm.t_lieu?.Consigne_Inf !== null
 
@@ -67,15 +69,14 @@ export async function ServerAlarms() {
     const thresholdValue =
       alarmType === "high" ? (consigneSup ?? 0) : alarmType === "low" ? (consigneInf ?? 0) : 0
 
-    const rawUnit = alarm.Unite?.trim() || t("fallback.unknown_unit")
-    const unit = rawUnit.toUpperCase() === "C" ? "°C" : rawUnit
+    const unit = normalizeUnitLabel(alarm.Unite?.trim() || t("fallback.unknown_unit"))
 
     return {
       id: alarm.Id_Alarme.toString(),
       sensorId: alarm.Id_Lieu?.toString() || "0",
       locationId: alarm.Id_Lieu?.toString() || "0",
       type: alarmType,
-      value: alarm.Type === "N" || alarm.Type === "S" ? null : (alarm.Valeur ?? null),
+      value: alarm.Type === "N" || isPowerAlarm ? null : (alarm.Valeur ?? null),
       threshold: thresholdValue,
       status: statusValue,
       triggeredAt: alarm.Date_Heure_Debut!,
@@ -139,4 +140,4 @@ export async function ServerAlarmStats() {
     resolved: resolvedCount,
     total: activeCount + acknowledgedCount + resolvedCount,
   }
-}
+}

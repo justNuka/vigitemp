@@ -142,6 +142,6 @@ if ($hasFail) {
     exit 1
 }
 
-Write-Host "Toutes les etapes sont de preparation terminees avec succes." -ForegroundColor Green
+Write-Host "Toutes les etapes de preparation se sont terminees avec succes." -ForegroundColor Green
 
 

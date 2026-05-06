@@ -32,7 +32,6 @@ import {
   Shield,
   MessageSquare,
   Truck,
-  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ALARM_AUDIO_STATE_EVENT, getAlarmAudioMuted, setAlarmAudioMuted } from "@/lib/alarm-audio";
@@ -49,7 +48,7 @@ import { hasAuthorizationCode, hasPermission } from "@/lib/permissions";
 import { WEB_APP_VERSION } from "@/lib/app-version";
 
 interface NavItem {
-  href: "/" | "/surveillance" | "/alarmes" | "/alarmes/par-lieu" | "/messages" | "/vigilog" | "/profil" | "/admin";
+  href: "/" | "/surveillance" | "/alarmes" | "/messages" | "/vigilog" | "/profil" | "/admin";
   icon: typeof LayoutDashboard;
   badge?: number;
   badgeVariant?: "default" | "destructive";
@@ -60,7 +59,6 @@ const mainNavItems: NavItem[] = [
   { titleKey: "dashboard", href: "/", icon: LayoutDashboard },
   { titleKey: "monitoring", href: "/surveillance", icon: Activity },
   { titleKey: "alarms", href: "/alarmes", icon: Bell },
-  { titleKey: "statistics", href: "/alarmes/par-lieu", icon: BarChart3 },
   { titleKey: "messaging", href: "/messages", icon: MessageSquare },
   { titleKey: "vigilog", href: "/vigilog", icon: Truck },
 ];
@@ -137,7 +135,6 @@ export function AppSidebar({ activeAlarms = 0, currentUser, onLogout }: AppSideb
     .filter((item) => item.href !== "/" || canAccessDashboard)
     .filter((item) => item.href !== "/surveillance" || canAccessSurveillance)
     .filter((item) => item.href !== "/alarmes" || canAccessSurveillance)
-    .filter((item) => item.href !== "/alarmes/par-lieu" || canAccessSurveillance)
     .filter((item) => item.href !== "/vigilog" || canAccessVigilog)
     .filter((item) => item.href !== "/messages" || canAccessMessaging)
     .map((item) => {

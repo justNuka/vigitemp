@@ -370,129 +370,176 @@ namespace Vigitemp_Serveur
             var targetSource = string.IsNullOrWhiteSpace(address) ? request.Serial : address;
             var target = GspProtocol.NormalizeCommandTarget(targetSource);
 
-            using (var port = CreatePort(portName, request))
+            Mutex namedMutex = null;
+            var mutexAcquired = false;
+            try
             {
-                port.Open();
-                port.DiscardInBuffer();
-                port.DiscardOutBuffer();
-
-                if (request.Action == "sync-config" || gsp.SyncConfiguration)
+                namedMutex = new Mutex(false, BuildPortMutexName(portName));
+                try
                 {
-                    foreach (var command in BuildGspSyncCommands(gsp, address))
+                    mutexAcquired = namedMutex.WaitOne(TimeSpan.FromMinutes(5));
+                }
+                catch (AbandonedMutexException)
+                {
+                    mutexAcquired = true;
+                }
+
+                if (!mutexAcquired)
+                {
+                    result.Error = "Port serie occupe, impossible d'obtenir le verrou dans le delai imparti.";
+                    return;
+                }
+
+                using (var port = CreatePort(portName, request))
+                {
+                    port.Open();
+                    port.DiscardInBuffer();
+                    port.DiscardOutBuffer();
+
+                    if (request.Action == "sync-config" || gsp.SyncConfiguration)
                     {
-                        result.RequestedCommand = GspProtocol.BuildCommand(command.Key, target, command.Value);
-                        var response = SendGspCommand(port, result, command.Key, target, command.Value, true, gsp.ListenWindowMs);
-                        if (!string.IsNullOrWhiteSpace(response))
+                        foreach (var command in BuildGspSyncCommands(gsp, address))
                         {
-                            result.RawValue = response;
-                            result.DetectedSerials = GspProtocol.ExtractDetectedSerials(response);
+                            result.RequestedCommand = GspProtocol.BuildCommand(command.Key, target, command.Value);
+                            var response = SendGspCommand(port, result, command.Key, target, command.Value, true, gsp.ListenWindowMs);
+                            if (!string.IsNullOrWhiteSpace(response))
+                            {
+                                result.RawValue = response;
+                                result.DetectedSerials = GspProtocol.ExtractDetectedSerials(response);
+                            }
                         }
+                        result.Unit = "config";
+                        return;
                     }
-                    result.Unit = "config";
-                    return;
-                }
 
-                if (request.Action == "read-config")
-                {
-                    foreach (var prefix in new[] { "DD-H", "DCAL", "DETA", "DCON" })
+                    if (request.Action == "read-config")
                     {
-                        result.RequestedCommand = GspProtocol.BuildCommand(prefix, target, string.Empty);
-                        var response = SendGspCommand(port, result, prefix, target, string.Empty, true, gsp.ListenWindowMs);
-                        if (!string.IsNullOrWhiteSpace(response))
+                        foreach (var prefix in new[] { "DD-H", "DCAL", "DETA", "DCON" })
                         {
-                            result.RawValue = response;
-                            result.DetectedSerials = GspProtocol.ExtractDetectedSerials(response);
+                            result.RequestedCommand = GspProtocol.BuildCommand(prefix, target, string.Empty);
+                            var response = SendGspCommand(port, result, prefix, target, string.Empty, true, gsp.ListenWindowMs);
+                            if (!string.IsNullOrWhiteSpace(response))
+                            {
+                                result.RawValue = response;
+                                result.DetectedSerials = GspProtocol.ExtractDetectedSerials(response);
+                            }
                         }
+                        result.Unit = "config";
+                        return;
                     }
-                    result.Unit = "config";
-                    return;
+
+                    if (request.Action == "read-memory")
+                    {
+                        var memoryCount = Math.Max(1, gsp.MemoryCount ?? 1);
+                        var recommendedReadTimeoutMs = GetRecommendedMemoReadTimeoutMs(memoryCount);
+                        var recommendedListenWindowMs = GetRecommendedMemoListenWindowMs(memoryCount);
+                        var effectiveReadTimeoutMs = Math.Max(port.ReadTimeout, recommendedReadTimeoutMs);
+                        var effectiveListenWindowMs = Math.Max(gsp.ListenWindowMs ?? 0, recommendedListenWindowMs);
+
+                        if (effectiveReadTimeoutMs != port.ReadTimeout)
+                        {
+                            port.ReadTimeout = effectiveReadTimeoutMs;
+                        }
+
+                        AddExchange(result, "info", "ascii", string.Format(CultureInfo.InvariantCulture,
+                            "<memo-timeout readTimeoutMs={0} listenWindowMs={1} count={2}>",
+                            effectiveReadTimeoutMs,
+                            effectiveListenWindowMs,
+                            memoryCount));
+
+                        var payload = memoryCount.ToString(CultureInfo.InvariantCulture) + "x";
+                        if (gsp.MemoryOffset.HasValue)
+                        {
+                            payload += gsp.MemoryOffset.Value.ToString(CultureInfo.InvariantCulture) + "o";
+                        }
+                        result.RequestedCommand = GspProtocol.BuildCommand("MEMO", target, payload);
+                        var response = SendGspCommand(port, result, "MEMO", target, payload, false, effectiveListenWindowMs);
+                        result.RawValue = response;
+                        result.DetectedSerials = GspProtocol.ExtractDetectedSerials(response);
+                        result.Unit = "memory";
+                        return;
+                    }
+
+                    if (request.Action == "raw")
+                    {
+                        result.RequestedCommand = gsp.RawCommand;
+                        var response = SendRawCommand(port, result, gsp.RawCommand, false, gsp.ListenWindowMs);
+                        result.RawValue = response;
+                        result.DetectedSerials = GspProtocol.ExtractDetectedSerials(response);
+                        var rawCommand = (gsp.RawCommand ?? string.Empty).Trim();
+                        var rawReadsTemperature = rawCommand.StartsWith("TEMP", StringComparison.OrdinalIgnoreCase)
+                            || rawCommand.StartsWith("FTEM", StringComparison.OrdinalIgnoreCase)
+                            || rawCommand.StartsWith("RTEMP", StringComparison.OrdinalIgnoreCase);
+                        if (rawReadsTemperature && GspProtocol.TryExtractTemperature(response, target, out var targetedRawValue))
+                        {
+                            result.Value = targetedRawValue;
+                            result.Unit = "°C";
+                        }
+                        else if (!rawReadsTemperature && TryExtractGspValue(response, gsp.RawCommand, out var rawValue))
+                        {
+                            result.Value = rawValue;
+                        }
+                        else if (IsCommandEchoOnly(response, gsp.RawCommand))
+                        {
+                            result.Error = "Reponse recue mais elle correspond uniquement a un echo de la commande.";
+                        }
+                        else if (!string.IsNullOrWhiteSpace(response))
+                        {
+                            result.Error = "Reponse recue mais aucune valeur exploitable pour la sonde demandee n'a ete detectee.";
+                        }
+                        return;
+                    }
+
+                    var readPrefix = string.Equals(request.Action, "force-read", StringComparison.OrdinalIgnoreCase) ? "FTEM" : "TEMP";
+                    result.RequestedCommand = GspProtocol.BuildCommand(readPrefix, target, string.Empty);
+                    var readResponse = SendGspCommand(port, result, readPrefix, target, string.Empty, false, gsp.ListenWindowMs);
+                    if (string.IsNullOrWhiteSpace(readResponse))
+                    {
+                        AddExchange(result, "info", "ascii", "<wait-10s-before-retry>");
+                        Thread.Sleep(10000);
+                        readResponse = SendGspCommand(port, result, readPrefix, target, string.Empty, false, gsp.ListenWindowMs);
+                    }
+
+                    result.RawValue = readResponse;
+                    result.DetectedSerials = GspProtocol.ExtractDetectedSerials(readResponse);
+                    if (!GspProtocol.TryExtractTemperature(readResponse, target, out var value))
+                    {
+                        result.Error = IsCommandEchoOnly(readResponse, result.RequestedCommand)
+                            ? "Reponse recue mais elle correspond uniquement a un echo de la commande."
+                            : "Aucune temperature exploitable pour la sonde demandee dans la reponse GSP.";
+                        return;
+                    }
+
+                    result.Value = value;
+                    result.Unit = "°C";
                 }
-
-                if (request.Action == "read-memory")
-                {
-                    var memoryCount = Math.Max(1, gsp.MemoryCount ?? 1);
-                    var recommendedReadTimeoutMs = GetRecommendedMemoReadTimeoutMs(memoryCount);
-                    var recommendedListenWindowMs = GetRecommendedMemoListenWindowMs(memoryCount);
-                    var effectiveReadTimeoutMs = Math.Max(port.ReadTimeout, recommendedReadTimeoutMs);
-                    var effectiveListenWindowMs = Math.Max(gsp.ListenWindowMs ?? 0, recommendedListenWindowMs);
-
-                    if (effectiveReadTimeoutMs != port.ReadTimeout)
-                    {
-                        port.ReadTimeout = effectiveReadTimeoutMs;
-                    }
-
-                    AddExchange(result, "info", "ascii", string.Format(CultureInfo.InvariantCulture,
-                        "<memo-timeout readTimeoutMs={0} listenWindowMs={1} count={2}>",
-                        effectiveReadTimeoutMs,
-                        effectiveListenWindowMs,
-                        memoryCount));
-
-                    var payload = memoryCount.ToString(CultureInfo.InvariantCulture) + "x";
-                    if (gsp.MemoryOffset.HasValue)
-                    {
-                        payload += gsp.MemoryOffset.Value.ToString(CultureInfo.InvariantCulture) + "o";
-                    }
-                    result.RequestedCommand = GspProtocol.BuildCommand("MEMO", target, payload);
-                    var response = SendGspCommand(port, result, "MEMO", target, payload, false, effectiveListenWindowMs);
-                    result.RawValue = response;
-                    result.DetectedSerials = GspProtocol.ExtractDetectedSerials(response);
-                    result.Unit = "memory";
-                    return;
-                }
-
-                if (request.Action == "raw")
-                {
-                    result.RequestedCommand = gsp.RawCommand;
-                    var response = SendRawCommand(port, result, gsp.RawCommand, false, gsp.ListenWindowMs);
-                    result.RawValue = response;
-                    result.DetectedSerials = GspProtocol.ExtractDetectedSerials(response);
-                    var rawCommand = (gsp.RawCommand ?? string.Empty).Trim();
-                    var rawReadsTemperature = rawCommand.StartsWith("TEMP", StringComparison.OrdinalIgnoreCase)
-                        || rawCommand.StartsWith("FTEM", StringComparison.OrdinalIgnoreCase)
-                        || rawCommand.StartsWith("RTEMP", StringComparison.OrdinalIgnoreCase);
-                    if (rawReadsTemperature && GspProtocol.TryExtractTemperature(response, target, out var targetedRawValue))
-                    {
-                        result.Value = targetedRawValue;
-                        result.Unit = "°C";
-                    }
-                    else if (!rawReadsTemperature && TryExtractGspValue(response, gsp.RawCommand, out var rawValue))
-                    {
-                        result.Value = rawValue;
-                    }
-                    else if (IsCommandEchoOnly(response, gsp.RawCommand))
-                    {
-                        result.Error = "Reponse recue mais elle correspond uniquement a un echo de la commande.";
-                    }
-                    else if (!string.IsNullOrWhiteSpace(response))
-                    {
-                        result.Error = "Reponse recue mais aucune valeur exploitable pour la sonde demandee n'a ete detectee.";
-                    }
-                    return;
-                }
-
-                var readPrefix = string.Equals(request.Action, "force-read", StringComparison.OrdinalIgnoreCase) ? "FTEM" : "TEMP";
-                result.RequestedCommand = GspProtocol.BuildCommand(readPrefix, target, string.Empty);
-                var readResponse = SendGspCommand(port, result, readPrefix, target, string.Empty, false, gsp.ListenWindowMs);
-                if (string.IsNullOrWhiteSpace(readResponse))
-                {
-                    AddExchange(result, "info", "ascii", "<wait-10s-before-retry>");
-                    Thread.Sleep(10000);
-                    readResponse = SendGspCommand(port, result, readPrefix, target, string.Empty, false, gsp.ListenWindowMs);
-                }
-
-                result.RawValue = readResponse;
-                result.DetectedSerials = GspProtocol.ExtractDetectedSerials(readResponse);
-                if (!GspProtocol.TryExtractTemperature(readResponse, target, out var value))
-                {
-                    result.Error = IsCommandEchoOnly(readResponse, result.RequestedCommand)
-                        ? "Reponse recue mais elle correspond uniquement a un echo de la commande."
-                        : "Aucune temperature exploitable pour la sonde demandee dans la reponse GSP.";
-                    return;
-                }
-
-                result.Value = value;
-                result.Unit = "°C";
             }
+            finally
+            {
+                if (mutexAcquired && namedMutex != null)
+                {
+                    try
+                    {
+                        namedMutex.ReleaseMutex();
+                    }
+                    catch (ApplicationException)
+                    {
+                    }
+                }
+                if (namedMutex != null)
+                {
+                    namedMutex.Dispose();
+                }
+            }
+        }
+
+        private static string BuildPortMutexName(string portName)
+        {
+            var normalized = string.IsNullOrWhiteSpace(portName)
+                ? "__NO_PORT__"
+                : portName.Trim().ToUpperInvariant();
+            var safe = new string(normalized.Select(ch => char.IsLetterOrDigit(ch) ? ch : '_').ToArray());
+            return "Global\\VigitempSerialPort_" + safe;
         }
 
         private static IEnumerable<KeyValuePair<string, string>> BuildGspSyncCommands(GspSensorTestRequest gsp, string address)

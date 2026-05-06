@@ -96,7 +96,7 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
           selectedIds={filters.siteIds || []}
           onChange={(selectedIds) => handleSiteChange((selectedIds || []) as number[])}
           placeholder={t('sites.placeholder')}
-          tone="default"
+          tone="primary"
         />
       </div>
 
@@ -122,7 +122,7 @@ export function SurveillanceFilters({ onFilterChange, sites, groups }: Props) {
             }))
           }}
           placeholder={t('groups.placeholder')}
-          tone="default"
+          tone="primary"
         />
       </div>
 

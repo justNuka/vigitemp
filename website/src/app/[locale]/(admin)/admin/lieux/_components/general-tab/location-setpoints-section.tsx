@@ -270,16 +270,6 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
           </div>
           {formData.Est_Consigne_Inf_Active && (
             <div className="space-y-3 pl-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t('labels.lower_min')}</Label>
-                  <Input type="number" step="any" {...register('Consigne_Inf', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
-                </div>
-                <div className="space-y-2">
-                  <Label>{t('labels.alarm_delay_minutes')}</Label>
-                  <Input type="number" min={1} step="any" {...register('Retard_Alarme_Bas', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.delay')} />
-                </div>
-              </div>
               <div className="flex items-center gap-2">
                 <Checkbox checked={formData.Est_Consigne_Inf_Pre_Alarme_Active || false} onCheckedChange={(checked) => setValue('Est_Consigne_Inf_Pre_Alarme_Active', !!checked)} />
                 <Label>{t('labels.lower_pre_enable')}</Label>
@@ -290,6 +280,16 @@ export function LocationSetpointsSection({ isGsoSensor, idLieu, onGoToPlanning }
                   <Input type="number" step="any" {...register('Consigne_Inf_Pre_Alarme', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
                 </div>
               )}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t('labels.lower_min')}</Label>
+                  <Input type="number" step="any" {...register('Consigne_Inf', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.numeric')} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('labels.alarm_delay_minutes')}</Label>
+                  <Input type="number" min={1} step="any" {...register('Retard_Alarme_Bas', { setValueAs: toOptionalNumber })} placeholder={t('placeholders.delay')} />
+                </div>
+              </div>
             </div>
           )}
         </div>
