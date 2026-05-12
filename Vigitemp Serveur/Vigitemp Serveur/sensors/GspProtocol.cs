@@ -68,15 +68,7 @@ namespace Vigitemp_Serveur.sensors
             var now = DateTime.Now;
             commands.Add(new KeyValuePair<string, string>(
                 "ED-H",
-                string.Format(
-                    CultureInfo.InvariantCulture,
-                    "{0:00},{1:00},{2:00},{3:00},{4:00},{5:00},",
-                    now.Year % 100,
-                    now.Month,
-                    now.Day,
-                    now.Hour,
-                    now.Minute,
-                    now.Second)));
+                BuildDateTimePayload(now)));
 
             if (metrology != null)
             {
@@ -176,6 +168,19 @@ namespace Vigitemp_Serveur.sensors
             return string.IsNullOrWhiteSpace(normalizedPayload)
                 ? normalizedPrefix + normalizedTarget
                 : normalizedPrefix + normalizedTarget + " " + normalizedPayload.Trim();
+        }
+
+        internal static string BuildDateTimePayload(DateTime value)
+        {
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                "{0:00},{1:00},{2:00},{3:00},{4:00},{5:00},",
+                value.Year % 100,
+                value.Month,
+                value.Day,
+                value.Hour,
+                value.Minute,
+                value.Second);
         }
 
         internal static bool TryExtractTemperature(string response, string target, out double temperature)

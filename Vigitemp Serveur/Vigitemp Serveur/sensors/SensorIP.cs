@@ -136,10 +136,10 @@ namespace Vigitemp_Serveur.sensors
                 var rawValue = Convert.ToDouble(tmp_resistance, System.Globalization.CultureInfo.InvariantCulture);
                 var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
 
-                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
                 HandleSensorPowerAlarm(hasBatteryMarker, hasBatteryMarker ? "IP-BAT" : "IP-NORMAL");
                 HandleNoResponseAlarm(true);
                 compareMeasuresAndLimits(correctedValue, "°C");
+                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
                 VigitempServeur.Log($"[SONDE][DONE] type=IP serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=°C raw={ToInvariantRaw(rawValue)}");
 
                 m_port.Close();

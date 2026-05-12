@@ -643,7 +643,7 @@ namespace Vigitemp_Serveur
         }
 
 
-        public bool AddMesure(string p_numeroSerie, double p_valeur, string p_unite, string p_resistance)
+        public bool AddMesure(string p_numeroSerie, double p_valeur, string p_unite, string p_resistance, string p_rssi = null)
         {
             lock (_lock)
             {
@@ -709,9 +709,9 @@ namespace Vigitemp_Serveur
 
                         MySqlCommand cmd_vigitemp_mesure = this.connection_vigitemp_mesure.CreateCommand();
                         cmd_vigitemp_mesure.CommandText = "INSERT INTO tm_mesures " +
-                                                            "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Etat_Alarme) " +
+                                                            "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Etat_Alarme, Rssi) " +
                                                             "VALUES " +
-                                                            "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, @estEtatAlarme)";
+                                                            "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, @estEtatAlarme, @rssi)";
 
                         // utilisation de l'objet contact pass? en param?tre 
                         cmd_vigitemp_mesure.Parameters.AddWithValue("@idserveurbdd", idServeurBdd);
@@ -726,6 +726,7 @@ namespace Vigitemp_Serveur
                         cmd_vigitemp_mesure.Parameters.AddWithValue("@sondenumeroserie", p_numeroSerie);
                         cmd_vigitemp_mesure.Parameters.AddWithValue("@idlieu", idLieu);
                         cmd_vigitemp_mesure.Parameters.AddWithValue("@estEtatAlarme", estEtatAlarme);
+                        cmd_vigitemp_mesure.Parameters.AddWithValue("@rssi", string.IsNullOrWhiteSpace(p_rssi) ? (object)DBNull.Value : p_rssi);
 
                         cmd_vigitemp_mesure.ExecuteNonQuery();
 

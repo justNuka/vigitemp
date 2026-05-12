@@ -154,10 +154,10 @@ namespace Vigitemp_Serveur.sensors
                     var rawValue = Convert.ToDouble(float.Parse(tmp_resistance, CultureInfo.InvariantCulture.NumberFormat));
                     var correctedValue = RoundMeasure(ApplyMetrology(rawValue));
 
-                    ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "C", ToInvariantRaw(rawValue));
-                    VigitempServeur.Log($"[SONDE][DONE] type=EN serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=C raw={ToInvariantRaw(rawValue)}");
                     HandleNoResponseAlarm(true);
                     compareMeasuresAndLimits(correctedValue, "C");
+                    ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "C", ToInvariantRaw(rawValue));
+                    VigitempServeur.Log($"[SONDE][DONE] type=EN serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=C raw={ToInvariantRaw(rawValue)}");
                 }
                 else
                 {

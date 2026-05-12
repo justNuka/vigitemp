@@ -165,11 +165,11 @@ namespace Vigitemp_Serveur.sensors
 
 
                 // ThreadServeur.GetDatabase().AddMesure(m_serialNumber, float.Parse(String.Format("{0:0.00}", tmp_temperature)), "°C");
-                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
-                VigitempServeur.Log($"[SONDE][DONE] type=IE serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=°C raw={ToInvariantRaw(rawValue)}");
                 HandleSensorPowerAlarm(hasBatteryMarker, hasBatteryMarker ? "IE-BAT" : "IE-NORMAL");
                 HandleNoResponseAlarm(true);
                 compareMeasuresAndLimits(correctedValue, "°C");
+                ths.GetDatabase().AddMesure(m_sondeSerialNumber, correctedValue, "°C", ToInvariantRaw(rawValue));
+                VigitempServeur.Log($"[SONDE][DONE] type=IE serial={m_sondeSerialNumber} port={m_comPort} status=success value={correctedValue} unit=°C raw={ToInvariantRaw(rawValue)}");
                 m_port.Close();
             }
             catch (Exception ex)

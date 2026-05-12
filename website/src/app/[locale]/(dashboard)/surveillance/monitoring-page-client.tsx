@@ -76,6 +76,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [showNullNonResponse] = useState(initialShowNullNonResponse);
   const [isRangeSelectionActive, setIsRangeSelectionActive] = useState(false);
+  const [isModalRefreshPending, setIsModalRefreshPending] = useState(false);
   const [openDetailModalIds, setOpenDetailModalIds] = useState<number[]>([]);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const performRefreshRef = useRef<(silent?: boolean) => Promise<void>>(async () => undefined);
@@ -282,17 +283,23 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
     return () => window.clearInterval(timer);
   }, [isBackgroundPaused, isRangeSelectionActive, performRefresh, refreshIntervalSeconds]);
 
-  useEffect(() => {
-    if (isRangeSelectionActive || isBackgroundPaused) return;
-    void performRefreshRef.current(true);
-  }, [isBackgroundPaused, isRangeSelectionActive]);
-
   const previousBackgroundPaused = useRef(false);
   useEffect(() => {
+    let refreshTimer: number | undefined;
     if (previousBackgroundPaused.current && !isBackgroundPaused) {
-      void performRefreshRef.current(true);
+      refreshTimer = window.setTimeout(() => {
+        setIsModalRefreshPending(true);
+        void performRefreshRef.current(true).finally(() => {
+          setIsModalRefreshPending(false);
+        });
+      }, 0);
     }
     previousBackgroundPaused.current = isBackgroundPaused;
+    return () => {
+      if (refreshTimer !== undefined) {
+        window.clearTimeout(refreshTimer);
+      }
+    };
   }, [isBackgroundPaused]);
 
   useEffect(() => {
@@ -331,6 +338,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
   }, []);
 
   const isFetching = isFetchingActive || isFetchingDisabled;
+  const showGridSkeleton = isModalRefreshPending || (isFetching && visibleSensors.length === 0);
 
   const handleToggleOrder = useCallback(() => {
     setDisabledFirst((current) => {
@@ -536,7 +544,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                 onEditLocation={handleOpenLocationEdit}
                 onDetailsModalStateChange={handleDetailsModalStateChange}
                 backgroundPaused={isBackgroundPaused}
-                isLoading={isFetching && visibleSensors.length === 0}
+                isLoading={showGridSkeleton}
                 showNullNonResponse={showNullNonResponse}
                 sortMode={filters.sortMode}
               />
@@ -567,7 +575,7 @@ export function SurveillancePageClient({ initialStats, sites, groups, refreshInt
                 onEditLocation={handleOpenLocationEdit}
                 onDetailsModalStateChange={handleDetailsModalStateChange}
                 backgroundPaused={isBackgroundPaused}
-                isLoading={isFetching && visibleSensors.length === 0}
+                isLoading={showGridSkeleton}
                 showNullNonResponse={showNullNonResponse}
                 sortMode={filters.sortMode}
               />

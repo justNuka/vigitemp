@@ -511,6 +511,20 @@ namespace Vigitemp_Serveur
                 {
                     VigitempServeur.Log($"Retard changement consigne actif lieu {m_idLieu} - sonde {m_sondeSerialNumber} jusqu'a {settings.PlanningDerniereMaj.AddMinutes(settings.RetardAlarmeChangementConsigneMinutes):O}");
                 }
+                else
+                {
+                    if (outLowNow && !lowEval.IsActive)
+                    {
+                        VigitempServeur.Log(
+                            $"Depassement bas sonde {m_sondeSerialNumber}: valeur={p_valeur} en attente retard={Math.Max(0, settings.RetardAlarmeBasMinutes)}m lieu={m_idLieu}");
+                    }
+
+                    if (outHighNow && !highEval.IsActive)
+                    {
+                        VigitempServeur.Log(
+                            $"Depassement haut sonde {m_sondeSerialNumber}: valeur={p_valeur} en attente retard={Math.Max(0, settings.RetardAlarmeHautMinutes)}m lieu={m_idLieu}");
+                    }
+                }
 
                 var unit = string.IsNullOrWhiteSpace(p_unite)
                     ? ths.GetDatabase().getLieuUnite(m_idLieu)
@@ -611,16 +625,6 @@ namespace Vigitemp_Serveur
 
                 var nowUtc = DateTime.UtcNow;
 
-                if (!ok)
-                {
-                    var noResponseUnit = ths.GetDatabase().getLieuUnite(m_idLieu);
-                    var insertedNoResponse = ths.GetDatabase().AddMesureNoResponse(m_sondeSerialNumber, noResponseUnit);
-                    if (!insertedNoResponse)
-                    {
-                        VigitempServeur.Log($"HandleNoResponseAlarm: echec insertion mesure null sonde={m_sondeSerialNumber} lieu={m_idLieu}");
-                    }
-                }
-
                 var value = ok ? 0d : 1d;
                 var retriggerDelayMeasures = Math.Max(0, settings.NbMesuresTemporisationRedeclenchement);
                 var forceRetriggerFlag = ths.GetLieuRetriggerFlagCached(m_idLieu);
@@ -657,6 +661,21 @@ namespace Vigitemp_Serveur
                     ignorePolicyDebounce: forceImmediate,
                     nowUtc: nowUtc);
 
+                if (!ok && eval.IsActive)
+                {
+                    var noResponseUnit = ths.GetDatabase().getLieuUnite(m_idLieu);
+                    var insertedNoResponse = ths.GetDatabase().AddMesureNoResponse(m_sondeSerialNumber, noResponseUnit);
+                    if (!insertedNoResponse)
+                    {
+                        VigitempServeur.Log($"HandleNoResponseAlarm: echec insertion mesure null sonde={m_sondeSerialNumber} lieu={m_idLieu}");
+                    }
+                }
+                else if (!ok)
+                {
+                    VigitempServeur.Log(
+                        $"Non-reponse sonde {m_sondeSerialNumber}: {reason ?? "unknown"} en attente retard={Math.Max(0, settings.RetardNonReponseMinutes)}m lieu={m_idLieu}");
+                }
+
                 if (eval.TransitionToActive)
                 {
                     if (forceImmediate)
@@ -692,7 +711,7 @@ namespace Vigitemp_Serveur
 
                 ApplyAlarmState(overallAlarmActive, preAlarmActive: false, valueForNotify: ok ? (double?)null : 0d);
 
-                if (!ok && !string.IsNullOrWhiteSpace(reason))
+                if (!ok && eval.IsActive && !string.IsNullOrWhiteSpace(reason))
                 {
                     VigitempServeur.Log($"Non-reponse sonde {m_sondeSerialNumber}: {reason}");
                 }

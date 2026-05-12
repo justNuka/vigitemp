@@ -8,7 +8,7 @@ namespace Vigitemp_Serveur
         int getIDLieuBySerialNumber(string p_sondSerialNumber);
         LieuAlarmSettings getLieuAlarmSettings(int idLieu);
         List<string> getPCsClients();
-        bool AddMesure(string p_numeroSerie, double p_valeur, string p_unite, string p_resistance);
+        bool AddMesure(string p_numeroSerie, double p_valeur, string p_unite, string p_resistance, string p_rssi = null);
         bool AddHistoricalMesureIfMissing(string p_numeroSerie, double p_valeur, string p_unite, string p_resistance, DateTime measureDateTime);
         bool AddMesureNoResponse(string p_numeroSerie, string p_unite);
         bool UpdateLieuWirelessMetrics(string p_numeroSerie, int? batteryPercent, int? rssi);

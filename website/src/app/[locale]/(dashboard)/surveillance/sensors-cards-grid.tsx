@@ -62,7 +62,7 @@ export function SensorsCardsGrid({
     })
 
   // Afficher des skeleton cards pendant le chargement
-  if (isLoading && activeSensors.length === 0 && disabledSensors.length === 0) {
+  if (isLoading) {
     return (
       <div className="p-4 md:p-6 space-y-8">
         <div className="space-y-4">

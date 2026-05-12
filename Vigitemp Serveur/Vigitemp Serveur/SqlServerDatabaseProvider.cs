@@ -540,7 +540,7 @@ namespace Vigitemp_Serveur
                 }
             }
         }
-        public bool AddMesure(string p_numeroSerie, double p_valeur, string p_unite, string p_resistance)
+        public bool AddMesure(string p_numeroSerie, double p_valeur, string p_unite, string p_resistance, string p_rssi = null)
         {
             lock (_lock)
             {
@@ -602,9 +602,9 @@ namespace Vigitemp_Serveur
                     using (var cmdMeasure = CreateCommand(
                         _connectionMeasure,
                         "INSERT INTO tm_mesures " +
-                        "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Etat_Alarme) " +
+                        "(Id_Serveur_BDD, Date_Heure_Mesure, Valeur, Valeur_Brute, Consigne, Consigne_Sup, Consigne_Inf, Unite, Frequence, Sonde_Numero_Serie, Id_Lieu, Est_Etat_Alarme, Rssi) " +
                         "VALUES " +
-                        "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, @estEtatAlarme)"))
+                        "(@idserveurbdd, @dateheuremesure, @valeur, @resistance, @consigne, @consignesup, @consigneinf, @unite, @frequence, @sondenumeroserie, @idlieu, @estEtatAlarme, @rssi)"))
                     {
                         cmdMeasure.Parameters.AddWithValue("@idserveurbdd", idServeurBdd);
                         cmdMeasure.Parameters.AddWithValue("@dateheuremesure", now);
@@ -618,6 +618,7 @@ namespace Vigitemp_Serveur
                         cmdMeasure.Parameters.AddWithValue("@sondenumeroserie", p_numeroSerie);
                         cmdMeasure.Parameters.AddWithValue("@idlieu", idLieu);
                         cmdMeasure.Parameters.AddWithValue("@estEtatAlarme", estEtatAlarme);
+                        cmdMeasure.Parameters.AddWithValue("@rssi", string.IsNullOrWhiteSpace(p_rssi) ? (object)DBNull.Value : p_rssi);
                         cmdMeasure.ExecuteNonQuery();
                     }
 
