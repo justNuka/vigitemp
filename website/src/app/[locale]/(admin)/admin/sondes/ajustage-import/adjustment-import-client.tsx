@@ -3,9 +3,11 @@
 import { useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   AlertDialog,
@@ -46,8 +48,25 @@ type ModuleAssignment = {
   moduleLabel: string;
 };
 
+const COMMON_UNIT_OPTIONS = ["\u00B0C", "C", "%", "Pa", "hPa", "bar", "mbar", "ppm", "lux", "V", "mA"];
+
+const formatDateTime = (value: string | Date | null | undefined, locale: string) => {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(locale, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(date);
+};
+
 export function AdjustmentImportClient() {
   const t = useTranslations("sensorAdjustmentImport");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<AdjustmentImportRow[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -56,6 +75,8 @@ export function AdjustmentImportClient() {
   const [editOperator, setEditOperator] = useState("");
   const [editUnit, setEditUnit] = useState("");
   const [selectedModuleId, setSelectedModuleId] = useState<string>("");
+  const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+  const [bulkUnit, setBulkUnit] = useState<string>("");
   const [confirmOverwriteOpen, setConfirmOverwriteOpen] = useState(false);
   const [confirmOverwriteAdjustments, setConfirmOverwriteAdjustments] = useState<string[]>([]);
   const [confirmOverwriteOffsets, setConfirmOverwriteOffsets] = useState<string[]>([]);
@@ -85,9 +106,22 @@ export function AdjustmentImportClient() {
 
   const selectedModuleNumericId = selectedModuleId ? Number(selectedModuleId) : null;
   const pendingRows = useMemo(() => rows.filter((row) => !row.persisted), [rows]);
+  const pendingRowIds = useMemo(() => pendingRows.map((row) => row.id), [pendingRows]);
+  const selectedPendingRowIds = useMemo(
+    () => selectedRowIds.filter((id) => pendingRowIds.includes(id)),
+    [pendingRowIds, selectedRowIds],
+  );
+  const allPendingSelected = pendingRowIds.length > 0 && pendingRowIds.every((id) => selectedRowIds.includes(id));
+  const unitOptions = useMemo(() => {
+    const importedUnits = rows.map((row) => row.unit?.trim()).filter((unit): unit is string => !!unit);
+    return Array.from(new Set([...COMMON_UNIT_OPTIONS, ...importedUnits]));
+  }, [rows]);
 
   const handleUploadResult = (result: AdjustmentImportResult) => {
-    const dateText = result.dateText ?? (typeof result.date === "string" ? result.date : null);
+    const dateText =
+      formatDateTime(result.date, locale) ??
+      result.dateText ??
+      (typeof result.date === "string" ? result.date : null);
     setRows((prev) => {
       const nextRow: AdjustmentImportRow = {
         id: result.id,
@@ -186,13 +220,51 @@ export function AdjustmentImportClient() {
     closeEdit();
   };
 
+  const toggleSelected = (rowId: string, checked: boolean) => {
+    setSelectedRowIds((prev) => (checked ? [...new Set([...prev, rowId])] : prev.filter((id) => id !== rowId)));
+  };
+
+  const toggleSelectAll = (checked: boolean) => {
+    setSelectedRowIds(checked ? pendingRowIds : []);
+  };
+
+  const applyBulkUnit = () => {
+    const normalizedUnit = bulkUnit.trim();
+    if (selectedPendingRowIds.length === 0) {
+      toast.error(t("toast.no_unit_selection"));
+      return;
+    }
+    if (!normalizedUnit) {
+      toast.error(t("toast.unit_required"));
+      return;
+    }
+
+    setRows((prev) =>
+      prev.map((row) =>
+        !selectedPendingRowIds.includes(row.id)
+          ? row
+          : {
+              ...row,
+              unit: normalizedUnit,
+              insertData: {
+                ...row.insertData,
+                Unite: normalizedUnit,
+              },
+            },
+      ),
+    );
+    toast.success(t("toast.unit_applied", { count: selectedPendingRowIds.length }));
+  };
+
   const handleRemoveRow = (rowId: string) => {
     setRows((prev) => prev.filter((row) => row.id !== rowId));
+    setSelectedRowIds((prev) => prev.filter((id) => id !== rowId));
     if (editRowId === rowId) closeEdit();
   };
 
   const handleClearRows = () => {
     setRows([]);
+    setSelectedRowIds([]);
     closeEdit();
   };
 
@@ -225,6 +297,7 @@ export function AdjustmentImportClient() {
 
       notifyBulkSaveResult(result.payload, t);
       setRows([]);
+      setSelectedRowIds([]);
       setOpen(false);
       setStepperSessionKey((prev) => prev + 1);
       closeEdit();
@@ -261,6 +334,7 @@ export function AdjustmentImportClient() {
 
       notifyBulkSaveResult(result.payload, t);
       setRows([]);
+      setSelectedRowIds([]);
       setOpen(false);
       setStepperSessionKey((prev) => prev + 1);
       closeEdit();
@@ -275,6 +349,25 @@ export function AdjustmentImportClient() {
   };
 
   const columns: ColumnDef<AdjustmentImportRow>[] = [
+    {
+      id: "selection",
+      header: () => (
+        <Checkbox
+          checked={allPendingSelected}
+          onCheckedChange={(checked) => toggleSelectAll(checked === true)}
+          aria-label={t("actions.select_all")}
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={selectedRowIds.includes(row.original.id)}
+          onCheckedChange={(checked) => toggleSelected(row.original.id, checked === true)}
+          disabled={row.original.persisted}
+          aria-label={t("actions.select_row")}
+        />
+      ),
+      enableSorting: false,
+    },
     {
       accessorKey: "file",
       header: t("table.columns.file"),
@@ -292,7 +385,7 @@ export function AdjustmentImportClient() {
                 <TooltipTrigger asChild>
                   <span className="inline-flex rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700">{assignment.moduleLabel}</span>
                 </TooltipTrigger>
-                <TooltipContent>{t("tooltips.existing_assigned")}</TooltipContent>
+                <TooltipContent className="max-w-72 whitespace-normal break-words">{t("tooltips.existing_assigned")}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           );
@@ -305,7 +398,7 @@ export function AdjustmentImportClient() {
                 <TooltipTrigger asChild>
                   <span className="inline-flex rounded-md bg-sky-100 px-2 py-1 text-xs font-medium text-sky-700">{assignment.moduleLabel}</span>
                 </TooltipTrigger>
-                <TooltipContent>{t("tooltips.created_on_import")}</TooltipContent>
+                <TooltipContent className="max-w-72 whitespace-normal break-words">{t("tooltips.created_on_import")}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           );
@@ -336,6 +429,31 @@ export function AdjustmentImportClient() {
     },
   ];
 
+  const unitAssignmentToolbar = rows.length > 0 ? (
+    <div className="flex flex-wrap items-center gap-3 rounded-md border bg-muted/30 p-3 text-sm">
+      <span className="text-muted-foreground">
+        {t("labels.selected_rows", { count: selectedPendingRowIds.length })}
+      </span>
+      <div className="w-40">
+        <Select value={bulkUnit} onValueChange={setBulkUnit}>
+          <SelectTrigger>
+            <SelectValue placeholder={t("labels.select_unit")} />
+          </SelectTrigger>
+          <SelectContent>
+            {unitOptions.map((unit) => (
+              <SelectItem key={unit} value={unit}>
+                {unit}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <Button size="sm" variant="outline" onClick={applyBulkUnit} disabled={selectedPendingRowIds.length === 0 || isSaving}>
+        {t("actions.apply_unit")}
+      </Button>
+    </div>
+  ) : null;
+
   return (
     <div className="space-y-6">
       <AdjustmentImportTableCard
@@ -349,10 +467,9 @@ export function AdjustmentImportClient() {
         columns={columns}
         rows={rows}
         emptyMessage={t("table.empty")}
-        createdSensors={summaryCounts.createdSensors}
-        existingAssigned={summaryCounts.existingAssigned}
-        summaryCreatedLabel="Sondes créées suite à l'ajustage"
-        summaryExistingLabel="Sondes existantes déjà affectées à un module"
+        toolbarContent={unitAssignmentToolbar}
+        summaryCreatedLabel={t("toast.created_sensors_from_adjustment", { count: summaryCounts.createdSensors })}
+        summaryExistingLabel={t("toast.existing_sensors_with_module", { count: summaryCounts.existingAssigned })}
         onSave={handleSaveToDb}
         saveLabel={isSaving ? t("actions.saving_to_db") : t("actions.save_to_db")}
         disabled={pendingRows.length === 0 || isSaving || !selectedModuleNumericId}

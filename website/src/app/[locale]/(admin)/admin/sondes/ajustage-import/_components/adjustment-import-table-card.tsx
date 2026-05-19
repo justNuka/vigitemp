@@ -1,5 +1,6 @@
 "use client"
 
+import type { ReactNode } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -19,8 +20,7 @@ interface AdjustmentImportTableCardProps<Row extends Record<string, any>> {
   columns: ColumnDef<Row>[]
   rows: Row[]
   emptyMessage: string
-  createdSensors: number
-  existingAssigned: number
+  toolbarContent?: ReactNode
   summaryCreatedLabel: string
   summaryExistingLabel: string
   onSave: () => void
@@ -42,8 +42,7 @@ export function AdjustmentImportTableCard<Row extends Record<string, any>>({
   columns,
   rows,
   emptyMessage,
-  createdSensors,
-  existingAssigned,
+  toolbarContent,
   summaryCreatedLabel,
   summaryExistingLabel,
   onSave,
@@ -78,6 +77,8 @@ export function AdjustmentImportTableCard<Row extends Record<string, any>>({
         </div>
       </CardHeader>
       <CardContent className="space-y-4 p-2 md:p-4 xl:p-4">
+        {toolbarContent}
+
         <TanStackTable
           columns={columns}
           data={rows}
@@ -90,8 +91,8 @@ export function AdjustmentImportTableCard<Row extends Record<string, any>>({
         />
 
         <div className="grid gap-1 rounded-md border border-dashed p-3 text-sm text-muted-foreground">
-          <div>{summaryCreatedLabel}: {createdSensors}</div>
-          <div>{summaryExistingLabel}: {existingAssigned}</div>
+          <div>{summaryCreatedLabel}</div>
+          <div>{summaryExistingLabel}</div>
         </div>
 
         <div className="flex justify-end gap-2">

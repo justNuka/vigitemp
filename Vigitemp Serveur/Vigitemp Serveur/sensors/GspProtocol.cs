@@ -167,9 +167,12 @@ namespace Vigitemp_Serveur.sensors
                 yield break;
             }
 
-            yield return baseCommand.Contains(" ") || baseCommand.EndsWith(" ", StringComparison.Ordinal)
-                ? baseCommand
-                : baseCommand + " ";
+            yield return baseCommand;
+
+            if (!baseCommand.EndsWith(" ", StringComparison.Ordinal))
+            {
+                yield return baseCommand + " ";
+            }
         }
 
         internal static string BuildCommand(string prefix, string target, string payload)

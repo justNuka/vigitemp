@@ -1664,7 +1664,7 @@ namespace Vigitemp_Serveur
                 Port = info.PortSerie,
                 Module = info.ModuleNumeroSerie,
                 ModuleType = info.ModuleType,
-                ConfigDirty = info.InfosModifiees || string.Equals(info.FamilleSonde, "GSP", StringComparison.OrdinalIgnoreCase) || GspProtocol.IsGspSerial(info.SondeNumeroSerie),
+                ConfigDirty = info.InfosModifiees,
                 FrequencySeconds = info.FrequenceSecondes,
                 LastMeasure = lastMeasure,
                 NextDue = ComputeNextDue(now, lastMeasure, info.FrequenceSecondes)

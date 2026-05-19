@@ -182,6 +182,52 @@ export const expandRelatedGsoSerials = (serial: string) => {
   return [`${address}-T`, `${address}-H`];
 };
 
+export const buildMetrologyLookupSerials = (serial: string | null | undefined) => {
+  if (!serial) return [];
+
+  const normalized = normalizeSerial(serial);
+  if (!normalized) return [];
+
+  const variants = new Set<string>([normalized]);
+  const gsoParts = getGsoTypedParts(normalized);
+
+  if (gsoParts && isGsoType(gsoParts.typeCode)) {
+    const address = gsoParts.address;
+    const baseAddress = stripGsoSuffix(address);
+    variants.add(address);
+    variants.add(baseAddress);
+
+    if (isDualGsoType(gsoParts.typeCode)) {
+      const suffix = address.match(/-(T|H)$/i)?.[1]?.toUpperCase();
+      if (suffix) {
+        variants.add(`${baseAddress}-${suffix}`);
+        variants.add(`${gsoParts.typeCode}-${baseAddress}-${suffix}`);
+      } else {
+        variants.add(`${baseAddress}-T`);
+        variants.add(`${baseAddress}-H`);
+      }
+    } else if (SINGLE_TEMPERATURE_GSO_TYPES.has(gsoParts.typeCode)) {
+      variants.add(`${gsoParts.typeCode}-${baseAddress}`);
+    }
+  } else {
+    const untypedDualMatch = normalized.match(/^(.+)-(T|H)$/i);
+    if (untypedDualMatch) {
+      const baseAddress = stripGsoSuffix(normalized);
+      const suffix = untypedDualMatch[2].toUpperCase();
+      variants.add(baseAddress);
+      for (const type of DUAL_GSO_TYPES) {
+        variants.add(`${type}-${baseAddress}-${suffix}`);
+      }
+    } else if (/^\d+$/.test(normalized)) {
+      for (const type of SINGLE_TEMPERATURE_GSO_TYPES) {
+        variants.add(`${type}-${normalized}`);
+      }
+    }
+  }
+
+  return Array.from(variants);
+};
+
 export const buildSensorSerialsFromInput = (rawType: string, rawSerieNum: string) => {
   const type = normalizeType(rawType);
   const serie = normalizeSerial(rawSerieNum);

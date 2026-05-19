@@ -2218,8 +2218,11 @@
       "edit": "Edit",
       "cancel": "Cancel",
       "apply": "Apply",
+      "apply_unit": "Apply unit",
       "clear_list": "Clear list",
-      "remove": "Remove row"
+      "remove": "Remove row",
+      "select_all": "Select all rows",
+      "select_row": "Select row"
     },
     "filters": {
       "site": "Site",
@@ -2250,7 +2253,9 @@
     "labels": {
       "no_module": "No module",
       "module_not_selected": "No module selected",
-      "select_module": "Select a module"
+      "select_module": "Select a module",
+      "select_unit": "Select a unit",
+      "selected_rows": "{count} selected row(s)"
     },
     "tooltips": {
       "existing_assigned": "A module is already assigned to this sensor. To assign this sensor to another module, go to the sensors management page and edit it.",
@@ -2283,6 +2288,9 @@
       "overwrite_done": "Adjustments replaced for {count} sensor(s).",
       "offsets_cleared": "Offsets reset to 0 for {count} sensor(s).",
       "module_required": "Please select a module.",
+      "no_unit_selection": "Select at least one row before applying a unit.",
+      "unit_required": "Please select a unit.",
+      "unit_applied": "Unit applied to {count} row(s).",
       "created_sensors_from_adjustment": "Sensors created from adjustment import: {count}",
       "existing_sensors_with_module": "Existing sensors already assigned to a module: {count}"
     }

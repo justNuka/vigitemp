@@ -2,6 +2,7 @@ Param(
     [string]$SourcePath,
     [string]$InstallDir,
     [string]$ServiceName,
+    [string]$InstallMode,
     [string]$AlarmDispatchSecret,
     [string]$AlarmDispatchSecretFile
 )
@@ -75,6 +76,15 @@ function Read-InstallSecret($label, $defaultValue = $null) {
         return $defaultValue
     }
     return $value
+}
+
+function Normalize-InstallMode([string]$value) {
+    if ([string]::IsNullOrWhiteSpace($value)) { return "" }
+    $normalized = $value.Trim().ToLowerInvariant()
+    if ($normalized -in @("update", "upgrade", "migration", "migrate", "maj", "mise-a-jour", "miseajour", "vigitemp-to-vigisensys")) {
+        return "update"
+    }
+    return "normal"
 }
 
 function Resolve-PathInput($value) {
@@ -267,6 +277,14 @@ if ([string]::IsNullOrWhiteSpace($InstallDir)) {
  $InstallDir = Resolve-PathInput $InstallDir
 if ([string]::IsNullOrWhiteSpace($ServiceName)) {
     $ServiceName = Read-InstallValue (T "Nom du service Windows" "Windows service name") $defaultServiceName
+}
+$InstallMode = Normalize-InstallMode $InstallMode
+if ([string]::IsNullOrWhiteSpace($InstallMode)) {
+    $modeAnswer = Read-InstallValue (T "Mode d'installation (normal/update-vigitemp)" "Install mode (normal/update-vigitemp)") "normal"
+    $InstallMode = Normalize-InstallMode $modeAnswer
+}
+if ($InstallMode -eq "update") {
+    Write-Log (T "Mode migration Vigitemp -> VigiSensys: aucune seed SQL ne sera appliquee par l'installation serveur." "Vigitemp -> VigiSensys migration mode: no SQL seed will be applied by the server installer.")
 }
 
 if (-not (Test-Path $SourcePath)) {

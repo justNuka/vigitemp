@@ -9,6 +9,9 @@ namespace VigitempServerInstaller;
 
 public sealed class MainForm : Form
 {
+    private const string InstallModeNormalLabel = "Installation normale";
+    private const string InstallModeUpdateLabel = "Migration Vigitemp -> VigiSensys (sans seeds SQL)";
+
     private static readonly Color AppBackground = Color.FromArgb(245, 247, 251);
     private static readonly Color CardBackground = Color.White;
     private static readonly Color Accent = Color.FromArgb(14, 116, 144);
@@ -154,8 +157,8 @@ public sealed class MainForm : Form
 
         installDir = T(_s.InstallDir, placeholder: @"C:\ProgramData\VigiSensys\server");
         installMode = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList, FlatStyle = FlatStyle.Flat, BackColor = Color.White, ForeColor = TextPrimary };
-        installMode.Items.AddRange(new object[] { "Installation normale", "Mise ? jour Vigitemp -> VigiSensys" });
-        installMode.SelectedItem = string.Equals(_s.InstallMode, "update", StringComparison.OrdinalIgnoreCase) ? "Mise ? jour Vigitemp -> VigiSensys" : "Installation normale";
+        installMode.Items.AddRange(new object[] { InstallModeNormalLabel, InstallModeUpdateLabel });
+        installMode.SelectedItem = string.Equals(_s.InstallMode, "update", StringComparison.OrdinalIgnoreCase) ? InstallModeUpdateLabel : InstallModeNormalLabel;
         serviceName = T(_s.ServiceName, placeholder: "VigiSensysServeur");
         websiteBaseUrl = T(_s.WebsiteBaseUrl, placeholder: "http://127.0.0.1:3000");
         dbProvider = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
@@ -313,7 +316,7 @@ public sealed class MainForm : Form
     private void Persist()
     {
         _s.InstallDir = installDir.Text.Trim();
-        _s.InstallMode = string.Equals(installMode.SelectedItem?.ToString(), "Mise ? jour Vigitemp -> VigiSensys", StringComparison.OrdinalIgnoreCase) ? "update" : "normal";
+        _s.InstallMode = string.Equals(installMode.SelectedItem?.ToString(), InstallModeUpdateLabel, StringComparison.OrdinalIgnoreCase) ? "update" : "normal";
         _s.ServiceName = serviceName.Text.Trim();
         _s.WebsiteBaseUrl = websiteBaseUrl.Text.Trim();
         _s.DbProvider = string.Equals(dbProvider.SelectedItem?.ToString(), "mssql", StringComparison.OrdinalIgnoreCase) ? "mssql" : "mysql";
@@ -403,7 +406,7 @@ public sealed class MainForm : Form
         var sb = new StringBuilder();
         sb.AppendLine("G�n�ral");
         sb.AppendLine($"- Dossier d'installation : {_s.InstallDir}");
-        sb.AppendLine($"- Mode : {(_s.InstallMode == "update" ? "Mise ? jour Vigitemp -> VigiSensys" : "Installation normale")}");
+        sb.AppendLine($"- Mode : {(_s.InstallMode == "update" ? InstallModeUpdateLabel : InstallModeNormalLabel)}");
         sb.AppendLine($"- Service Windows : {_s.ServiceName}");
         sb.AppendLine($"- URL du site web : {_s.WebsiteBaseUrl}");
         sb.AppendLine();
@@ -466,7 +469,7 @@ public sealed class MainForm : Form
             AppendLog($"[INFO] Secrets partag?s utilis?s: {sharedSecretsDir}");
             if (_s.InstallMode == "update")
             {
-                AppendLog("[INFO] Mode mise ? jour: aucune seed SQL n'est ex?cut?e, les bases existantes sont conserv?es.");
+                AppendLog("[INFO] Mode migration Vigitemp -> VigiSensys: aucune seed SQL n'est appliquee, les bases existantes sont conservees.");
             }
 
             var licenseDir = Path.Combine(programData, "VigiSensys", "licenses");

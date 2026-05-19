@@ -5,7 +5,9 @@
     [string]$MySqlHost = "127.0.0.1",
     [int]$MySqlPort = 3306,
     [string]$MySqlUser = "root",
-    [string]$MySqlPassword
+    [string]$MySqlPassword,
+    [string]$InstallMode,
+    [switch]$SkipDatabaseSeed
 )
 
 Set-StrictMode -Version Latest
@@ -87,8 +89,37 @@ function Convert-SecureStringToPlainText([Security.SecureString]$secureValue) {
     }
 }
 
+function Read-InstallValue($label, $defaultValue = $null) {
+    if ([string]::IsNullOrWhiteSpace($defaultValue)) {
+        return Read-Host $label
+    }
+    $value = Read-Host "$label [$defaultValue]"
+    if ([string]::IsNullOrWhiteSpace($value)) { return $defaultValue }
+    return $value
+}
+
+function Normalize-InstallMode([string]$value, [bool]$skipSeed) {
+    if ($skipSeed) { return "update" }
+    if ([string]::IsNullOrWhiteSpace($value)) { return "" }
+    $normalized = $value.Trim().ToLowerInvariant()
+    if ($normalized -in @("update", "upgrade", "migration", "migrate", "maj", "mise-a-jour", "miseajour", "vigitemp-to-vigisensys")) {
+        return "update"
+    }
+    return "normal"
+}
+
 if (-not (Test-Admin)) {
     Write-Error "Ce script doit etre lance en tant qu'administrateur."
+}
+
+$effectiveInstallMode = Normalize-InstallMode $InstallMode $SkipDatabaseSeed.IsPresent
+if ([string]::IsNullOrWhiteSpace($effectiveInstallMode)) {
+    $modeAnswer = Read-InstallValue "Mode BDD: normal ou update (migration Vigitemp -> VigiSensys, sans seed SQL)" "normal"
+    $effectiveInstallMode = Normalize-InstallMode $modeAnswer $false
+}
+$skipSeedImport = $effectiveInstallMode -eq "update"
+if ($skipSeedImport) {
+    Write-Log "Mode migration Vigitemp -> VigiSensys: les seeds SQL ne seront pas importes."
 }
 
 $scriptRoot = $PSScriptRoot
@@ -153,26 +184,30 @@ if (-not (Test-Path $MySqlMsiPath)) {
 Write-Log "Lancer le configurateur MySQL et terminer la configuration (port, mot de passe root, service...)."
 $null = Read-Host "Appuyez sur Entrée quand la configuration MySQL est terminée"
 
-if (-not (Test-Path $MainSeedPath)) {
-    Write-Error "Seed complet introuvable : $MainSeedPath"
-}
+if ($skipSeedImport) {
+    Write-Log "Import SQL ignore: bases existantes conservees."
+} else {
+    if (-not (Test-Path $MainSeedPath)) {
+        Write-Error "Seed complet introuvable : $MainSeedPath"
+    }
 
-$mysqlExe = Get-MySqlExePath
-if (-not $mysqlExe) {
-    Write-Error "mysql.exe introuvable. Ajoutez MySQL au PATH ou indiquez le chemin dans le script."
-}
+    $mysqlExe = Get-MySqlExePath
+    if (-not $mysqlExe) {
+        Write-Error "mysql.exe introuvable. Ajoutez MySQL au PATH ou indiquez le chemin dans le script."
+    }
 
-if ([string]::IsNullOrWhiteSpace($MySqlPassword)) {
-    $MySqlPassword = Convert-SecureStringToPlainText (Read-Host "Mot de passe MySQL ($MySqlUser)" -AsSecureString)
-}
+    if ([string]::IsNullOrWhiteSpace($MySqlPassword)) {
+        $MySqlPassword = Convert-SecureStringToPlainText (Read-Host "Mot de passe MySQL ($MySqlUser)" -AsSecureString)
+    }
 
-$mysqlArgs = @("--host=$MySqlHost", "--port=$MySqlPort", "--user=$MySqlUser", "--default-character-set=utf8mb4")
-if (-not [string]::IsNullOrWhiteSpace($MySqlPassword)) {
-    $mysqlArgs += "--password=$MySqlPassword"
-}
+    $mysqlArgs = @("--host=$MySqlHost", "--port=$MySqlPort", "--user=$MySqlUser", "--default-character-set=utf8mb4")
+    if (-not [string]::IsNullOrWhiteSpace($MySqlPassword)) {
+        $mysqlArgs += "--password=$MySqlPassword"
+    }
 
-Write-Log "Import des bases (vigi_main, vigi_mesures, vigi_chat)..."
-Get-Content -Path $MainSeedPath -Raw | & $mysqlExe @mysqlArgs
-Write-Log "Import termine."
+    Write-Log "Import des bases (vigi_main, vigi_mesures, vigi_chat)..."
+    Get-Content -Path $MainSeedPath -Raw | & $mysqlExe @mysqlArgs
+    Write-Log "Import termine."
+}
 
 

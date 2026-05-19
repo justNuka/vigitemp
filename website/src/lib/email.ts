@@ -77,17 +77,29 @@ async function getEmailConfig(): Promise<EmailConfig> {
 }
 
 export async function getSystemEmailCcRecipients(): Promise<string[]> {
-  const setting = await prisma.t_parametre.findFirst({
+  const settings = await prisma.t_parametre.findMany({
     where: {
       OR: [
         { Section: "notifications", Mot_Cle: "alarm_email_recipients" },
         { Section: "NOTIFICATIONS", Mot_Cle: "ALARM_EMAIL_RECIPIENTS" },
       ],
     },
-    select: { Valeur: true },
+    select: { Section: true, Mot_Cle: true, Valeur: true },
   });
 
-  return Array.from(new Set(parseRecipients(setting?.Valeur)));
+  const canonical = settings.find(
+    (setting) => setting.Section === "NOTIFICATIONS" && setting.Mot_Cle === "ALARM_EMAIL_RECIPIENTS",
+  );
+  const selected = canonical ?? settings[0] ?? null;
+
+  if (settings.length > 1) {
+    log.warn("EMAIL", "multiple_alarm_email_recipient_settings", {
+      selected: selected ? `${selected.Section}:${selected.Mot_Cle}` : null,
+      candidates: settings.map((setting) => `${setting.Section}:${setting.Mot_Cle}`),
+    });
+  }
+
+  return Array.from(new Set(parseRecipients(selected?.Valeur)));
 }
 
 /**

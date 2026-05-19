@@ -584,6 +584,15 @@ export async function sendAlarmEventEmails(input: SendAlarmEventEmailInput) {
 
   const recipients = recipientsState.recipients;
   const ccRecipients = recipientsState.ccRecipients;
+  log.info("ALARM_EMAIL", "Alarm email recipients resolved", {
+    eventType: input.eventType,
+    alarmId: input.alarmId,
+    idLieu: input.idLieu,
+    to: recipients,
+    cc: ccRecipients,
+    usedSystemFallback: recipientsState.usedSystemFallback,
+  });
+
   const smtpEnabled = await isEmailEnabled();
   if (!smtpEnabled) {
     return { attempted: recipients.length, sent: 0, skipped: "smtp_not_ready" as const };

@@ -1,16 +1,31 @@
 import { NextRequest } from "next/server"
 
-import { withAuthLogging } from "@/lib/api-wrappers"
+import { withAuthLogging, type HandlerContext } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { log } from "@/lib/logger"
+import { getRequestContext } from "@/lib/api-logger"
 
-export const POST = withAuthLogging(async (_request: NextRequest) => {
+export const POST = withAuthLogging(async (request: NextRequest, ctx: HandlerContext) => {
   try {
+    const { ip } = getRequestContext(request)
     const [dbNowRow] = await prisma.$queryRaw<Array<{ nowAt: Date }>>`SELECT NOW() AS nowAt`
     const reactivatedAt = dbNowRow?.nowAt ?? new Date()
 
     const result = await prisma.$transaction(async (tx) => {
+      const alarmSnoozesToReactivate = await tx.t_lieu.findMany({
+        where: {
+          Est_Archive: false,
+          Notification_Active: false,
+          Date_Heure_Reactivation_Alarme: { lte: reactivatedAt },
+        },
+        select: {
+          Id_Lieu: true,
+          Nom_Lieu: true,
+          Date_Heure_Reactivation_Alarme: true,
+        },
+      })
+
       const alarmResult = await tx.t_lieu.updateMany({
         where: {
           Est_Archive: false,
@@ -31,7 +46,9 @@ export const POST = withAuthLogging(async (_request: NextRequest) => {
         },
         select: {
           Id_Lieu: true,
+          Nom_Lieu: true,
           Sonde_Numero_Serie: true,
+          Date_Heure_Reactivation_Surveillance: true,
         },
       })
 
@@ -66,10 +83,51 @@ export const POST = withAuthLogging(async (_request: NextRequest) => {
         reactivatedAlarms: alarmResult.count,
         reactivatedSurveillance: lieuxToReactivate.length,
         reactivatedSensors,
+        alarmSnoozesToReactivate,
+        lieuxToReactivate,
       }
     })
 
-    return apiOk(result)
+    for (const lieu of result.lieuxToReactivate) {
+      log.audit("ACT", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        userProfile: ctx.user.profile,
+        ip,
+        resource: `Lieu: ${lieu.Nom_Lieu || "Sans nom"}`,
+        resourceId: lieu.Id_Lieu,
+        lieuId: lieu.Id_Lieu,
+        changes: {
+          action: "reactivate_surveillance",
+          scheduledAt: lieu.Date_Heure_Reactivation_Surveillance?.toISOString() ?? null,
+          reactivatedAt: reactivatedAt.toISOString(),
+          sensorSerial: lieu.Sonde_Numero_Serie ?? null,
+        },
+      })
+    }
+
+    for (const lieu of result.alarmSnoozesToReactivate) {
+      log.audit("ACT", {
+        user: ctx.user.username,
+        userId: ctx.user.userId,
+        userProfile: ctx.user.profile,
+        ip,
+        resource: `Notifications alarme: ${lieu.Nom_Lieu || "Sans nom"}`,
+        resourceId: lieu.Id_Lieu,
+        lieuId: lieu.Id_Lieu,
+        changes: {
+          action: "reactivate_alarm_notifications",
+          scheduledAt: lieu.Date_Heure_Reactivation_Alarme?.toISOString() ?? null,
+          reactivatedAt: reactivatedAt.toISOString(),
+        },
+      })
+    }
+
+    return apiOk({
+      reactivatedAlarms: result.reactivatedAlarms,
+      reactivatedSurveillance: result.reactivatedSurveillance,
+      reactivatedSensors: result.reactivatedSensors,
+    })
   } catch (error) {
     log.error("capteurs/reactivate", "reactivate_snooze_error", { error })
     return apiError(500, "internal_error", "Erreur lors de la reactivation des snooze")

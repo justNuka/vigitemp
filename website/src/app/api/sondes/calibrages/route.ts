@@ -3,6 +3,7 @@ import { getAuthenticatedUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { apiError, apiOk } from "@/lib/api-response"
 import { log } from "@/lib/logger"
+import { buildMetrologyLookupSerials } from "@/lib/sensor-naming"
 
 export const GET = async (req: NextRequest) => {
   const user = getAuthenticatedUser(req)
@@ -13,9 +14,10 @@ export const GET = async (req: NextRequest) => {
     // Backward compatible: support both ?sonde= and legacy ?serie=
     const sondeSerie = searchParams.get("sonde") ?? searchParams.get("serie")
     if (!sondeSerie) return apiError(400, "missing_param", "Parametre 'sonde' ou 'serie' requis")
+    const serials = buildMetrologyLookupSerials(sondeSerie)
 
     const ajustages = await prisma.t_ajustage.findMany({
-      where: { Sonde_Numero_Serie: sondeSerie },
+      where: { Sonde_Numero_Serie: { in: serials } },
       orderBy: { Date_Heure_Ajustage: "desc" },
       take: 50,
     })

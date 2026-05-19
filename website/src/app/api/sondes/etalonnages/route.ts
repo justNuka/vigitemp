@@ -1,10 +1,12 @@
 import { NextRequest } from "next/server"
+import { Prisma } from "../../../../generated/@prisma-db-main"
 
 import { withAuthLogging } from "@/lib/api-wrappers"
 import { apiError, apiOk } from "@/lib/api-response"
 import { prisma } from "@/lib/prisma"
 import { requireStandardOrExpertLicense } from "@/lib/license-guards"
 import { log } from "@/lib/logger"
+import { buildMetrologyLookupSerials } from "@/lib/sensor-naming"
 
 type CalibrationRow = {
   Id_Etalonnage: number
@@ -32,7 +34,12 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
       return apiError(400, "invalid_input", "Numero de serie requis")
     }
 
-    const etalonnages = await prisma.$queryRaw<CalibrationRow[]>`
+    const serials = buildMetrologyLookupSerials(serieNum)
+    if (serials.length === 0) {
+      return apiOk([])
+    }
+
+    const etalonnages = await prisma.$queryRaw<CalibrationRow[]>(Prisma.sql`
       SELECT
         Id_Etalonnage,
         Date_Heure_Etalonnage,
@@ -46,9 +53,9 @@ export const GET = withAuthLogging(async (req: NextRequest) => {
         Err_Justesse,
         Nom_Etalonnage
       FROM t_etalonnage
-      WHERE Sonde_Numero_Serie = ${serieNum}
+      WHERE Sonde_Numero_Serie IN (${Prisma.join(serials)})
       ORDER BY Date_Heure_Etalonnage DESC
-    `
+    `)
 
     return apiOk(etalonnages)
   } catch (error) {

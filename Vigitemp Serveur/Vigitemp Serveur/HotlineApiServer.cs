@@ -579,8 +579,10 @@ namespace Vigitemp_Serveur
             if (string.IsNullOrWhiteSpace(prefix)) return string.Empty;
 
             var baseCommand = GspProtocol.BuildCommand(prefix, target, payload);
-            foreach (var command in GspProtocol.BuildCandidateCommands(baseCommand))
+            var commands = GspProtocol.BuildCandidateCommands(baseCommand).ToList();
+            for (var index = 0; index < commands.Count; index++)
             {
+                var command = commands[index];
                 var drained = DrainBufferedData(port);
                 if (!string.IsNullOrWhiteSpace(drained)) AddExchange(result, "drain", "ascii", EscapeForLog(drained));
 
@@ -598,7 +600,7 @@ namespace Vigitemp_Serveur
                 }
 
                 AddExchange(result, "rx", "ascii", "<empty>");
-                if (allowEmptyResponse) return string.Empty;
+                if (allowEmptyResponse && index == commands.Count - 1) return string.Empty;
             }
 
             AddExchange(result, "rx", "ascii", "<timeout>");
@@ -840,7 +842,14 @@ namespace Vigitemp_Serveur
 
         private static string EscapeForLog(string value)
         {
-            return (value ?? string.Empty).Replace("\r", "\\r").Replace("\n", "\\n");
+            var escaped = (value ?? string.Empty).Replace("\r", "\\r").Replace("\n", "\\n");
+            var trailingSpaces = escaped.Length - escaped.TrimEnd(' ').Length;
+            if (trailingSpaces <= 0)
+            {
+                return escaped;
+            }
+
+            return escaped.TrimEnd(' ') + new string(' ', trailingSpaces).Replace(" ", "<space>");
         }
     }
 }

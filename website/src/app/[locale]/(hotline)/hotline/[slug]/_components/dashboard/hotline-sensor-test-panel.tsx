@@ -17,6 +17,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { RssiBars } from "@/components/monitoring-card/rssi-bars"
+import { formatDbDateTime } from "@/lib/date-display"
 
 type SensorType = "IN" | "IE" | "IP" | "IC" | "IH" | "EN" | "HN" | "GSP"
 type GspAction = "read" | "force-read" | "sync-config" | "read-config" | "read-memory" | "raw"
@@ -937,19 +938,7 @@ function parseOptionalInteger(value: string) {
 }
 
 function formatMeasureDate(value: string) {
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) {
-    return value
-  }
-
-  return parsed.toLocaleString("fr-FR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  })
+  return formatDbDateTime(value, { fallback: value })
 }
 
 function formatMeasureValue(value: number) {

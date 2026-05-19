@@ -19,6 +19,7 @@ namespace Vigitemp_Serveur.sensors
         private const int PortPurgeCooldownSeconds = 60;
         private const int EndOfResponseSilenceMs = 500;
         private const int ConfigurationResponseSilenceMs = 1200;
+        private const int ConfigurationReadTimeoutMs = 10000;
         private const int InterCommandDelayMs = 150;
         private const int TemperatureRetryDelayMs = 5000;
         private const int ClockCheckIntervalHours = 6;
@@ -246,7 +247,7 @@ namespace Vigitemp_Serveur.sensors
 
                 foreach (var command in commands)
                 {
-                    var response = await SendRequestAndReadAsync(command.Key, command.Value, allowEmptyResponse: true, ConfigurationResponseSilenceMs);
+                    var response = await SendRequestAndReadWithTimeoutAsync(command.Key, command.Value, allowEmptyResponse: true, ConfigurationResponseSilenceMs, ConfigurationReadTimeoutMs);
                     if (!GspProtocol.IsAcknowledgementForTarget(response, command.Key, _commandTarget))
                     {
                         VigitempServeur.Log(
@@ -278,7 +279,7 @@ namespace Vigitemp_Serveur.sensors
                     return false;
                 }
 
-                var response = await SendRequestAndReadAsync("DCON", string.Empty, allowEmptyResponse: true, ConfigurationResponseSilenceMs);
+                var response = await SendRequestAndReadWithTimeoutAsync("DCON", string.Empty, allowEmptyResponse: true, ConfigurationResponseSilenceMs, ConfigurationReadTimeoutMs);
                 if (string.IsNullOrWhiteSpace(response))
                 {
                     VigitempServeur.Log($"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=no-response");
@@ -308,13 +309,14 @@ namespace Vigitemp_Serveur.sensors
 
                 if (!highMismatch && !lowMismatch && !frequencyMismatch && !delayMismatch)
                 {
-                    VigitempServeur.Log(
-                        $"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=ok high={(current.HighLimit.HasValue ? current.HighLimit.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} low={(current.LowLimit.HasValue ? current.LowLimit.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} freqMin={(current.FrequencyMinutes.HasValue ? current.FrequencyMinutes.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} delayMin={(current.AlarmDelayMinutes.HasValue ? current.AlarmDelayMinutes.Value.ToString(CultureInfo.InvariantCulture) : "unknown")}");
-
                     if (hasUnknownCriticalField)
                     {
                         VigitempServeur.Log($"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=partial expectedDelayMin={expectedDelayMinutes}");
+                        return await SendExpectedEconomyConfigurationAsync(alarmSettings);
                     }
+
+                    VigitempServeur.Log(
+                        $"[SONDE][CFG-CHECK] type=GSP serial={m_sondeSerialNumber} status=ok high={(current.HighLimit.HasValue ? current.HighLimit.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} low={(current.LowLimit.HasValue ? current.LowLimit.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} freqMin={(current.FrequencyMinutes.HasValue ? current.FrequencyMinutes.Value.ToString(CultureInfo.InvariantCulture) : "unknown")} delayMin={(current.AlarmDelayMinutes.HasValue ? current.AlarmDelayMinutes.Value.ToString(CultureInfo.InvariantCulture) : "unknown")}");
 
                     return false;
                 }
@@ -346,7 +348,7 @@ namespace Vigitemp_Serveur.sensors
                     continue;
                 }
 
-                var response = await SendRequestAndReadAsync(command.Key, command.Value, allowEmptyResponse: true, ConfigurationResponseSilenceMs);
+                var response = await SendRequestAndReadWithTimeoutAsync(command.Key, command.Value, allowEmptyResponse: true, ConfigurationResponseSilenceMs, ConfigurationReadTimeoutMs);
                 if (!GspProtocol.IsAcknowledgementForTarget(response, command.Key, _commandTarget))
                 {
                     VigitempServeur.Log(
@@ -459,8 +461,10 @@ namespace Vigitemp_Serveur.sensors
         private async Task<string> SendRequestAndReadAsync(string commandPrefix, string payload, bool allowEmptyResponse, int endOfResponseSilenceMs)
         {
             var command = GspProtocol.BuildCommand(commandPrefix, _commandTarget, payload);
-            foreach (var candidate in GspProtocol.BuildCandidateCommands(command))
+            var candidates = new List<string>(GspProtocol.BuildCandidateCommands(command));
+            for (var index = 0; index < candidates.Count; index++)
             {
+                var candidate = candidates[index];
                 var drained = await DrainBufferedDataAsync();
                 if (!string.IsNullOrWhiteSpace(drained))
                 {
@@ -493,7 +497,7 @@ namespace Vigitemp_Serveur.sensors
 
                 VigitempServeur.Log($"[SONDE][RX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} raw=<empty>");
 
-                if (allowEmptyResponse)
+                if (allowEmptyResponse && index == candidates.Count - 1)
                 {
                     return string.Empty;
                 }
@@ -501,6 +505,24 @@ namespace Vigitemp_Serveur.sensors
 
             VigitempServeur.Log($"[SONDE][RX] type=GSP serial={m_sondeSerialNumber} port={m_comPort} raw=<timeout>");
             return string.Empty;
+        }
+
+        private async Task<string> SendRequestAndReadWithTimeoutAsync(string commandPrefix, string payload, bool allowEmptyResponse, int endOfResponseSilenceMs, int readTimeoutMs)
+        {
+            var originalReadTimeout = m_port.ReadTimeout;
+            try
+            {
+                if (readTimeoutMs > originalReadTimeout)
+                {
+                    m_port.ReadTimeout = readTimeoutMs;
+                }
+
+                return await SendRequestAndReadAsync(commandPrefix, payload, allowEmptyResponse, endOfResponseSilenceMs);
+            }
+            finally
+            {
+                m_port.ReadTimeout = originalReadTimeout;
+            }
         }
 
         private async Task<string> ReadResponseAsync(int endOfResponseSilenceMs)

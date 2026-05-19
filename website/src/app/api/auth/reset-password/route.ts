@@ -101,6 +101,19 @@ export const POST = withLogging(async (req: NextRequest) => {
       },
     })
 
+    log.audit("MDP", {
+      user: user.Login || "UNKNOWN",
+      userId: user.Id_Utilisateur,
+      ip,
+      resource: "Reset password",
+      success: true,
+      changes: {
+        action: "reset_password",
+        temporaryPasswordCleared: true,
+        resetTokenCleared: true,
+      },
+    })
+
     return apiOk({
       message: "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.",
     })

@@ -105,6 +105,13 @@ export const POST = async (req: NextRequest) => {
       data: parsed.data,
     });
 
+    if (parsed.data.Sonde_Numero_Serie) {
+      await prisma.t_lieu.updateMany({
+        where: { Sonde_Numero_Serie: parsed.data.Sonde_Numero_Serie },
+        data: { Infos_Modifiees_Depuis_Derniere_Mesure: true },
+      });
+    }
+
     log.info("ADJUSTMENT_IMPORT_SINGLE", "Ajustage import inserted", {
       user: user.username,
       userId: user.userId,

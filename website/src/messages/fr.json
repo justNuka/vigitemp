@@ -2231,8 +2231,11 @@
       "edit": "Modifier",
       "cancel": "Annuler",
       "apply": "Appliquer",
+      "apply_unit": "Appliquer l'unite",
       "clear_list": "Vider la liste",
-      "remove": "Supprimer la ligne"
+      "remove": "Supprimer la ligne",
+      "select_all": "Selectionner toutes les lignes",
+      "select_row": "Selectionner la ligne"
     },
     "filters": {
       "site": "Site",
@@ -2263,7 +2266,9 @@
     "labels": {
       "no_module": "Aucun module",
       "module_not_selected": "Module non sélectionné",
-      "select_module": "Sélectionner un module"
+      "select_module": "Sélectionner un module",
+      "select_unit": "Selectionner une unite",
+      "selected_rows": "{count} ligne(s) selectionnee(s)"
     },
     "tooltips": {
       "existing_assigned": "Module déjà affecté à cette sonde. Pour affecter cette sonde à un nouveau module, rendez-vous sur la page de gestion des sondes et modifiez celle-ci.",
@@ -2296,6 +2301,9 @@
       "overwrite_done": "Ajustages remplacés pour {count} sonde(s).",
       "offsets_cleared": "Offsets remis à 0 pour {count} sonde(s).",
       "module_required": "Veuillez sélectionner un module.",
+      "no_unit_selection": "Selectionnez au moins une ligne avant d'appliquer une unite.",
+      "unit_required": "Veuillez selectionner une unite.",
+      "unit_applied": "Unite appliquee sur {count} ligne(s).",
       "created_sensors_from_adjustment": "Sondes créées suite à l'ajustage : {count}",
       "existing_sensors_with_module": "Sondes existantes déjà affectées à un module : {count}"
     }
